@@ -346,7 +346,7 @@ dispatch_ipc_data(const char *buffer, pcmk_ipc_api_t *api)
     }
 
     more = call_api_dispatch(api, msg);
-    free_xml(msg);
+    pcmk__xml_free(msg);
 
     if (more) {
         return EINPROGRESS;
@@ -697,7 +697,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
     if (reply != NULL) {
         bool more = call_api_dispatch(api, reply);
 
-        free_xml(reply);
+        pcmk__xml_free(reply);
 
         while (more) {
             rc = crm_ipc_read(api->ipc);
@@ -769,7 +769,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
             request = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL,
                                      pcmk_ipc_name(api, false), client, NULL);
             if (nodeid > 0) {
-                crm_xml_set_id(request, "%lu", (unsigned long) nodeid);
+                pcmk__xe_set_id(request, "%lu", (unsigned long) nodeid);
             }
             crm_xml_add(request, PCMK_XA_UNAME, node_name);
             break;
@@ -811,7 +811,7 @@ pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name, uint32_t nodeid)
         return EOPNOTSUPP;
     }
     rc = pcmk__send_ipc_request(api, request);
-    free_xml(request);
+    pcmk__xml_free(request);
 
     crm_debug("%s peer cache purge of node %s[%lu]: rc=%d",
               pcmk_ipc_name(api, true), node_name, (unsigned long) nodeid, rc);
@@ -1133,7 +1133,7 @@ crm_ipc_decompress(crm_ipc_t * client)
         rc = pcmk__bzlib2rc(rc);
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
+            crm_err("Decompression failed: %s " QB_XS " rc=%d",
                     pcmk_rc_str(rc), rc);
             free(uncompressed);
             return rc;
@@ -1350,7 +1350,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     CRM_LOG_ASSERT(id != 0); /* Crude wrap-around detection */
     rc = pcmk__ipc_prepare_iov(id, message, client->max_buf_size, &iov, &bytes);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't prepare %s IPC request: %s " CRM_XS " rc=%d",
+        crm_warn("Couldn't prepare %s IPC request: %s " QB_XS " rc=%d",
                  client->server_name, pcmk_rc_str(rc), rc);
         return pcmk_rc2legacy(rc);
     }
@@ -1441,16 +1441,16 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
   send_cleanup:
     if (!crm_ipc_connected(client)) {
         crm_notice("Couldn't send %s IPC request %d: Connection closed "
-                   CRM_XS " rc=%d", client->server_name, header->qb.id, rc);
+                   QB_XS " rc=%d", client->server_name, header->qb.id, rc);
 
     } else if (rc == -ETIMEDOUT) {
-        crm_warn("%s IPC request %d failed: %s after %dms " CRM_XS " rc=%d",
+        crm_warn("%s IPC request %d failed: %s after %dms " QB_XS " rc=%d",
                  client->server_name, header->qb.id, pcmk_strerror(rc),
                  ms_timeout, rc);
         crm_write_blackbox(0, NULL);
 
     } else if (rc <= 0) {
-        crm_warn("%s IPC request %d failed: %s " CRM_XS " rc=%d",
+        crm_warn("%s IPC request %d failed: %s " QB_XS " rc=%d",
                  client->server_name, header->qb.id,
                  ((rc == 0)? "No bytes sent" : pcmk_strerror(rc)), rc);
     }
@@ -1641,7 +1641,7 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     qb_rc = qb_ipcc_fd_get(c, &fd);
     if (qb_rc != 0) {
         rc = (int) -qb_rc; // System errno
-        crm_err("Could not get fd from %s IPC: %s " CRM_XS " rc=%d",
+        crm_err("Could not get fd from %s IPC: %s " QB_XS " rc=%d",
                 name, pcmk_rc_str(rc), rc);
         goto bail;
     }
@@ -1660,7 +1660,7 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     if (auth_rc != pcmk_rc_ok) {
         rc = auth_rc;
         crm_err("Could not get peer credentials from %s IPC: %s "
-                CRM_XS " rc=%d", name, pcmk_rc_str(rc), rc);
+                QB_XS " rc=%d", name, pcmk_rc_str(rc), rc);
         goto bail;
     }
 

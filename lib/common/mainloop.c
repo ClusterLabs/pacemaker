@@ -255,7 +255,7 @@ crm_signal_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
     crm_signal_t *sig = (crm_signal_t *) source;
 
     if(sig->signal != SIGCHLD) {
-        crm_notice("Caught '%s' signal "CRM_XS" %d (%s handler)",
+        crm_notice("Caught '%s' signal " QB_XS " %d (%s handler)",
                    strsignal(sig->signal), sig->signal,
                    (sig->handler? "invoking" : "no"));
     }
@@ -758,7 +758,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
     }
 
     if (client->ipc && !crm_ipc_connected(client->ipc)) {
-        crm_err("Connection to %s closed " CRM_XS "client=%p condition=%d",
+        crm_err("Connection to %s closed " QB_XS "client=%p condition=%d",
                 client->name, client, condition);
         rc = G_SOURCE_REMOVE;
 
@@ -1465,17 +1465,3 @@ pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(guint))
         g_source_remove(timer);
     }
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/mainloop_compat.h>
-
-gboolean
-crm_signal(int sig, void (*dispatch) (int sig))
-{
-    return crm_signal_handler(sig, dispatch) != SIG_ERR;
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

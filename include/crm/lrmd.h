@@ -514,10 +514,6 @@ lrmd_event_type2str(enum lrmd_callback_event type)
     return "unknown";
 }
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/lrmd_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
 #endif

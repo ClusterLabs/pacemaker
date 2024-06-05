@@ -27,7 +27,7 @@ cib_not_connected(void **state)
      */
     assert_int_equal(pcmk_ticket_set_attr(&xml, NULL, NULL, false), ENOTCONN);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static int
@@ -59,7 +59,7 @@ bad_arguments(void **state)
 
     assert_int_equal(pcmk_ticket_set_attr(&xml, NULL, NULL, false), EINVAL);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -75,7 +75,7 @@ unknown_ticket_no_attrs(void **state)
     /* Setting no attributes on a ticket that doesn't exist is a no-op */
     assert_int_equal(pcmk_ticket_set_attr(&xml, "XYZ", NULL, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     xml = NULL;
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
@@ -85,7 +85,7 @@ unknown_ticket_no_attrs(void **state)
     /* Another way of specifying no attributes */
     assert_int_equal(pcmk_ticket_set_attr(&xml, "XYZ", attrs, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
                      &xml_search, cib_xpath | cib_scope_local);
@@ -111,7 +111,7 @@ unknown_ticket_with_attrs(void **state)
      */
     assert_int_equal(pcmk_ticket_set_attr(&xml, "XYZ", attrs, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
@@ -121,7 +121,7 @@ unknown_ticket_with_attrs(void **state)
     assert_string_equal("123", crm_element_value(xml_search, "attrA"));
     assert_string_equal("456", crm_element_value(xml_search, "attrB"));
 
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);
     cib__clean_up_connection(&cib);
 }
@@ -138,7 +138,7 @@ overwrite_existing_attr(void **state)
 
     assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketA", attrs, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
@@ -147,7 +147,7 @@ overwrite_existing_attr(void **state)
 
     assert_string_equal("2", crm_element_value(xml_search, "owner"));
 
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);
     cib__clean_up_connection(&cib);
 }
@@ -164,7 +164,7 @@ not_granted_to_granted_without_force(void **state)
 
     assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketA", attrs, false), EACCES);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
@@ -174,7 +174,7 @@ not_granted_to_granted_without_force(void **state)
     assert_string_equal("false", crm_element_value(xml_search, PCMK__XA_GRANTED));
     assert_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
 
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);
     cib__clean_up_connection(&cib);
 }
@@ -191,7 +191,7 @@ not_granted_to_granted_with_force(void **state)
 
     assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketA", attrs, true), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
@@ -201,7 +201,7 @@ not_granted_to_granted_with_force(void **state)
     assert_string_equal("true", crm_element_value(xml_search, PCMK__XA_GRANTED));
     assert_non_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
 
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);
     cib__clean_up_connection(&cib);
 }
@@ -218,7 +218,7 @@ granted_to_not_granted_without_force(void **state)
 
     assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketB", attrs, false), EACCES);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
@@ -228,7 +228,7 @@ granted_to_not_granted_without_force(void **state)
     assert_string_equal("true", crm_element_value(xml_search, PCMK__XA_GRANTED));
     assert_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
 
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);
     cib__clean_up_connection(&cib);
 }
@@ -245,7 +245,7 @@ granted_to_not_granted_with_force(void **state)
 
     assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketB", attrs, true), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
@@ -255,7 +255,7 @@ granted_to_not_granted_with_force(void **state)
     assert_string_equal("false", crm_element_value(xml_search, PCMK__XA_GRANTED));
     assert_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
 
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);
     cib__clean_up_connection(&cib);
 }
@@ -269,7 +269,7 @@ granted_to_not_granted_with_force(void **state)
  * minimal overall setup for the entire group, and then setup the CIB for
  * those tests that need it.
  */
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(cib_not_connected),
                 cmocka_unit_test_setup_teardown(bad_arguments, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(unknown_ticket_no_attrs, setup_test, teardown_test),

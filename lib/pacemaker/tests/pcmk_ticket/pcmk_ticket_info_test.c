@@ -49,7 +49,7 @@ unknown_ticket(void **state)
 
     assert_int_equal(pcmk_ticket_info(&xml, "XYZ"), ENXIO);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -101,7 +101,7 @@ all_tickets(void **state)
     assert_null(crm_element_value(node, "owner"));
 
     freeXpathObject(xpath_obj);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -128,10 +128,10 @@ single_ticket(void **state)
     assert_string_equal(crm_element_value(node, "owner"), "1");
 
     freeXpathObject(xpath_obj);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test_setup_teardown(bad_arguments, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(unknown_ticket, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(all_tickets, setup_test, teardown_test),

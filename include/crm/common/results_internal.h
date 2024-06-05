@@ -7,10 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__COMMON_RESULTS_INTERNAL__H
-#define PCMK__COMMON_RESULTS_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_RESULTS_INTERNAL__H
+#define PCMK__CRM_COMMON_RESULTS_INTERNAL__H
+
+#include <stdbool.h>
 
 #include <glib.h>               // GQuark
+
+#include <crm/common/results.h>
 
 extern const size_t pcmk__n_rc;
 

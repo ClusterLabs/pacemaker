@@ -139,41 +139,36 @@ static gboolean
 check_next_subdaemon(gpointer user_data)
 {
     static int next_child = 0;
-    int rc = child_liveness(&pcmk_children[next_child]);
+
+    pcmk_child_t *child = &(pcmk_children[next_child]);
+    const long long pid = PCMK__SPECIAL_PID_AS_0(child->pid);
+    int rc = child_liveness(child);
 
     crm_trace("Checked %s[%lld]: %s (%d)",
-              pcmk_children[next_child].name,
-              (long long) PCMK__SPECIAL_PID_AS_0(pcmk_children[next_child].pid),
-              pcmk_rc_str(rc), rc);
+              child->name, pid, pcmk_rc_str(rc), rc);
 
     switch (rc) {
         case pcmk_rc_ok:
-            pcmk_children[next_child].check_count = 0;
+            child->check_count = 0;
             subdaemon_check_progress = time(NULL);
             break;
-        case pcmk_rc_ipc_pid_only: // This case: it was previously OK
-            pcmk_children[next_child].check_count++;
-            if (pcmk_children[next_child].check_count >= PCMK_PROCESS_CHECK_RETRIES) {
-                crm_err("%s[%lld] is unresponsive to ipc after %d tries but "
-                        "we found the pid so have it killed that we can restart",
-                        pcmk_children[next_child].name,
-                        (long long) PCMK__SPECIAL_PID_AS_0(
-                            pcmk_children[next_child].pid),
-                        pcmk_children[next_child].check_count);
-                stop_child(&pcmk_children[next_child], SIGKILL);
-                if (pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
-                    /* as long as the respawn-limit isn't reached
-                       give it another round of check retries
-                     */
-                    pcmk_children[next_child].check_count = 0;
+
+        case pcmk_rc_ipc_pid_only: // Child was previously OK
+            if (++(child->check_count) >= PCMK_PROCESS_CHECK_RETRIES) {
+                crm_crit("%s[%lld] is unresponsive to IPC after %d attempt%s "
+                         "and will now be killed",
+                         child->name, pid, child->check_count,
+                         pcmk__plural_s(child->check_count));
+                stop_child(child, SIGKILL);
+                if (pcmk_is_set(child->flags, child_respawn)) {
+                    // Respawn limit hasn't been reached, so retry another round
+                    child->check_count = 0;
                 }
             } else {
-                crm_notice("%s[%lld] is unresponsive to ipc after %d tries",
-                        pcmk_children[next_child].name,
-                        (long long) PCMK__SPECIAL_PID_AS_0(
-                            pcmk_children[next_child].pid),
-                        pcmk_children[next_child].check_count);
-                if (pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
+                crm_notice("%s[%lld] is unresponsive to IPC after %d attempt%s",
+                           child->name, pid, child->check_count,
+                           pcmk__plural_s(child->check_count));
+                if (pcmk_is_set(child->flags, child_respawn)) {
                     /* as long as the respawn-limit isn't reached
                        and we haven't run out of connect retries
                        we account this as progress we are willing
@@ -187,46 +182,36 @@ check_next_subdaemon(gpointer user_data)
              */
             break;
         case pcmk_rc_ipc_unresponsive:
-            if (!pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
+            if (!pcmk_is_set(child->flags, child_respawn)) {
                 /* if a subdaemon is down and we don't want it
                    to be restarted this is a success during
                    shutdown. if it isn't restarted anymore
                    due to MAX_RESPAWN it is
                    rather no success.
                  */
-                if (pcmk_children[next_child].respawn_count <= MAX_RESPAWN) {
+                if (child->respawn_count <= MAX_RESPAWN) {
                     subdaemon_check_progress = time(NULL);
                 }
             }
-            if (!pcmk_is_set(pcmk_children[next_child].flags, child_active_before_startup)) {
-                crm_trace("found %s[%lld] missing - signal-handler "
-                          "will take care of it",
-                           pcmk_children[next_child].name,
-                           (long long) PCMK__SPECIAL_PID_AS_0(
-                            pcmk_children[next_child].pid));
+            if (!pcmk_is_set(child->flags, child_active_before_startup)) {
+                crm_trace("%s[%lld] terminated (relying on SIGCHLD handler)",
+                          child->name, pid);
                 break;
             }
-            if (pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
-                crm_err("%s[%lld] terminated",
-                        pcmk_children[next_child].name,
-                        (long long) PCMK__SPECIAL_PID_AS_0(
-                            pcmk_children[next_child].pid));
+            if (pcmk_is_set(child->flags, child_respawn)) {
+                crm_err("%s[%lld] terminated", child->name, pid);
             } else {
                 /* orderly shutdown */
-                crm_notice("%s[%lld] terminated",
-                           pcmk_children[next_child].name,
-                           (long long) PCMK__SPECIAL_PID_AS_0(
-                                pcmk_children[next_child].pid));
+                crm_notice("%s[%lld] terminated", child->name, pid);
             }
-            pcmk_process_exit(&(pcmk_children[next_child]));
+            pcmk_process_exit(child);
             break;
         default:
             crm_exit(CRM_EX_FATAL);
             break;  /* static analysis/noreturn */
     }
 
-    next_child++;
-    if (next_child >= PCMK__NELEM(pcmk_children)) {
+    if (++next_child >= PCMK__NELEM(pcmk_children)) {
         next_child = 0;
     }
 
@@ -376,7 +361,7 @@ pcmk_shutdown_worker(gpointer user_data)
             } else if (now >= next_log) {
                 next_log = now + 30;
                 crm_notice("Still waiting for %s to terminate "
-                           CRM_XS " pid=%lld",
+                           QB_XS " pid=%lld",
                            child->name, (long long) child->pid);
             }
             return TRUE;
@@ -595,7 +580,7 @@ child_liveness(pcmk_child_t *child)
         if (legacy_rc < 0) {
             rc = pcmk_legacy2rc(legacy_rc);
             crm_err("Could not find user and group IDs for user %s: %s "
-                    CRM_XS " rc=%d", CRM_DAEMON_USER, pcmk_rc_str(rc), rc);
+                    QB_XS " rc=%d", CRM_DAEMON_USER, pcmk_rc_str(rc), rc);
         } else {
             rc = pcmk__ipc_is_authentic_process_active(child->endpoint,
                                                        *ref_uid, *ref_gid,
@@ -792,7 +777,7 @@ find_and_track_existing_processes(void)
                              WAIT_TRIES - pcmk_children[i].respawn_count);
                     continue;
                 default:
-                    crm_crit("Checked liveness of %s: %s " CRM_XS " rc=%d",
+                    crm_crit("Checked liveness of %s: %s " QB_XS " rc=%d",
                              pcmk_children[i].name, pcmk_rc_str(rc), rc);
                     return rc;
             }
@@ -890,7 +875,7 @@ stop_child(pcmk_child_t * child, int signal)
 
     errno = 0;
     if (kill(child->pid, signal) == 0) {
-        crm_notice("Stopping %s "CRM_XS" sent signal %d to process %lld",
+        crm_notice("Stopping %s " QB_XS " sent signal %d to process %lld",
                    child->name, signal, (long long) child->pid);
 
     } else {

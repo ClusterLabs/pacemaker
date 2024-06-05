@@ -286,7 +286,7 @@ stonith_connection_destroy(gpointer user_data)
     crm_xml_add(blob.xml, PCMK__XA_SUBT, PCMK__VALUE_ST_NOTIFY_DISCONNECT);
 
     foreach_notify_entry(native, stonith_send_notification, &blob);
-    free_xml(blob.xml);
+    pcmk__xml_free(blob.xml);
 }
 
 xmlNode *
@@ -340,7 +340,7 @@ stonith_api_register_device(stonith_t *st, int call_options,
                                           agent, params, NULL);
 
     rc = stonith_send_command(st, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc;
 }
@@ -355,7 +355,7 @@ stonith_api_remove_device(stonith_t * st, int call_options, const char *name)
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK_XA_ID, name);
     rc = stonith_send_command(st, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc;
 }
@@ -386,7 +386,7 @@ stonith_api_remove_level_full(stonith_t *st, int options,
 
     crm_xml_add_int(data, PCMK_XA_INDEX, level);
     rc = stonith_send_command(st, STONITH_OP_LEVEL_DEL, data, NULL, options, 0);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc;
 }
@@ -463,7 +463,7 @@ stonith_api_register_level_full(stonith_t *st, int options, const char *node,
     CRM_CHECK(data != NULL, return -EINVAL);
 
     rc = stonith_send_command(st, STONITH_OP_LEVEL_ADD, data, NULL, options, 0);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc;
 }
@@ -584,8 +584,8 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
         freeXpathObject(xpathObj);
     }
 
-    free_xml(output);
-    free_xml(data);
+    pcmk__xml_free(output);
+    pcmk__xml_free(data);
     return max;
 }
 
@@ -617,7 +617,7 @@ stonith_api_call(stonith_t *stonith, int call_options, const char *id,
 
     rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, output,
                               call_options, timeout_sec);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc;
 }
@@ -643,7 +643,7 @@ stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **l
     }
 
     if (output) {
-        free_xml(output);
+        pcmk__xml_free(output);
     }
 
     return rc;
@@ -679,7 +679,7 @@ stonith_api_fence_with_delay(stonith_t * stonith, int call_options, const char *
     crm_xml_add_int(data, PCMK__XA_ST_DELAY, delay);
 
     rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, timeout);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc;
 }
@@ -719,7 +719,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
     stonith__set_call_options(call_options, node, st_opt_sync_call);
     rc = stonith_send_command(stonith, STONITH_OP_FENCE_HISTORY, data, &output,
                               call_options, timeout);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     if (rc == 0) {
         xmlNode *op = NULL;
@@ -754,7 +754,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
         }
     }
 
-    free_xml(output);
+    pcmk__xml_free(output);
 
     return rc;
 }
@@ -1085,7 +1085,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
         crm_log_xml_warn(blob.xml, "BadReply");
     }
 
-    free_xml(blob.xml);
+    pcmk__xml_free(blob.xml);
     return 1;
 }
 
@@ -1149,7 +1149,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 
         if (rc < 0) {
             crm_debug("Couldn't register with the fencer: %s "
-                      CRM_XS " rc=%d", pcmk_strerror(rc), rc);
+                      QB_XS " rc=%d", pcmk_strerror(rc), rc);
             rc = -ECOMM;
 
         } else if (reply == NULL) {
@@ -1178,13 +1178,13 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             }
         }
 
-        free_xml(reply);
-        free_xml(hello);
+        pcmk__xml_free(reply);
+        pcmk__xml_free(hello);
     }
 
     if (rc != pcmk_ok) {
         crm_debug("Connection attempt to fencer by %s failed: %s "
-                  CRM_XS " rc=%d", display_name, pcmk_strerror(rc), rc);
+                  QB_XS " rc=%d", display_name, pcmk_strerror(rc), rc);
         stonith->cmds->disconnect(stonith);
     }
     return rc;
@@ -1215,7 +1215,7 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
         }
     }
 
-    free_xml(notify_msg);
+    pcmk__xml_free(notify_msg);
     return rc;
 }
 
@@ -1600,7 +1600,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         rc = crm_ipc_send(native->ipc, op_msg, ipc_flags,
                           1000 * (timeout + 60), &op_reply);
     }
-    free_xml(op_msg);
+    pcmk__xml_free(op_msg);
 
     if (rc < 0) {
         crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%ds): %d", op, timeout, rc);
@@ -1612,7 +1612,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 
     if (!(call_options & st_opt_sync_call)) {
         crm_trace("Async call %d, returning", stonith->call_id);
-        free_xml(op_reply);
+        pcmk__xml_free(op_reply);
         return stonith->call_id;
     }
 
@@ -1638,13 +1638,13 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     } else if (reply_id <= 0) {
         crm_err("Received bad reply: No id set");
         crm_log_xml_err(op_reply, "Bad reply");
-        free_xml(op_reply);
+        pcmk__xml_free(op_reply);
         rc = -ENOMSG;
 
     } else {
         crm_err("Received bad reply: %d (wanted %d)", reply_id, stonith->call_id);
         crm_log_xml_err(op_reply, "Old reply");
-        free_xml(op_reply);
+        pcmk__xml_free(op_reply);
         rc = -ENOMSG;
     }
 
@@ -1655,7 +1655,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         stonith->state = stonith_disconnected;
     }
 
-    free_xml(op_reply);
+    pcmk__xml_free(op_reply);
     return rc;
 }
 
@@ -1916,12 +1916,12 @@ stonith_api_connect_retry(stonith_t *st, const char *name, int max_attempts)
             return pcmk_ok;
         } else if (attempt < max_attempts) {
             crm_notice("Fencer connection attempt %d of %d failed (retrying in 2s): %s "
-                       CRM_XS " rc=%d",
+                       QB_XS " rc=%d",
                        attempt, max_attempts, pcmk_strerror(rc), rc);
             sleep(2);
         }
     }
-    crm_notice("Could not connect to fencer: %s " CRM_XS " rc=%d",
+    crm_notice("Could not connect to fencer: %s " QB_XS " rc=%d",
                pcmk_strerror(rc), rc);
     return rc;
 }
@@ -2169,7 +2169,7 @@ parse_list_line(const char *line, int len, GList **output)
             rc = sscanf(line + entry_start, "%[a-zA-Z0-9_-.]", entry);
             if (rc != 1) {
                 crm_warn("Could not parse list output entry: %s "
-                         CRM_XS " entry_start=%d position=%d",
+                         QB_XS " entry_start=%d position=%d",
                          line + entry_start, entry_start, i);
                 free(entry);
 

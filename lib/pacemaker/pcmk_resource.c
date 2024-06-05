@@ -42,7 +42,8 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 
     // Find node's resource history
     xpath = crm_strdup_printf(XPATH_OP_HISTORY, node->details->uname, rsc->id);
-    history = get_xpath_object(xpath, rsc->cluster->input, LOG_NEVER);
+    history = get_xpath_object(xpath, rsc->private->scheduler->input,
+                               LOG_NEVER);
     free(xpath);
 
     // Examine each history entry
@@ -140,7 +141,7 @@ pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
     rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, msg_data, cib_opts);
     rc = pcmk_legacy2rc(rc);
 
-    free_xml(msg_data);
+    pcmk__xml_free(msg_data);
     return rc;
 }
 
@@ -205,6 +206,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
     if ((out == NULL) || (rsc == NULL) || (node == NULL)) {
         return EINVAL;
     }
+
     if (!pcmk__is_primitive(rsc)) {
         // Only primitives get operation digests
         return EOPNOTSUPP;
@@ -225,7 +227,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     // Calculate and show digests
     digests = pe__calculate_digests(rsc, task, &interval_ms, node, xml_op,
-                                    overrides, true, rsc->cluster);
+                                    overrides, true, rsc->private->scheduler);
     rc = out->message(out, "digests", rsc, node, task, interval_ms, digests);
 
     pe__free_digests(digests);

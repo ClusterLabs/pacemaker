@@ -28,76 +28,10 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Use pcmk_evaluate_rule() on each rule instead
-gboolean pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash,
-                           crm_time_t *now, crm_time_t *next_change);
-
-//! \deprecated Use pcmk_evaluate_rule() on each rule instead
-gboolean pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
-                       crm_time_t *next_change);
-
-//! \deprecated Use pcmk_evaluate_rule() on each rule instead
-gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
-
+// @COMPAT sbd's configure script checks for this (as of at least 1.5.2)
 //! \deprecated Use pcmk_evaluate_rule() instead
 gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
                    crm_time_t *now);
-
-//! \deprecated Use pcmk_evaluate_rule() instead
-gboolean pe_test_rule(xmlNode *rule, GHashTable *node_hash,
-                      enum rsc_role_e role, crm_time_t *now,
-                      crm_time_t *next_change, pe_match_data_t *match_data);
-
-//! \deprecated Use pcmk_evaluate_rule() instead
-gboolean pe_test_rule_re(xmlNode *rule, GHashTable *node_hash,
-                         enum rsc_role_e role, crm_time_t *now,
-                         pe_re_match_data_t *re_match_data);
-
-//! \deprecated Use pcmk_evaluate_rule() instead
-gboolean pe_test_rule_full(xmlNode *rule, GHashTable *node_hash,
-                           enum rsc_role_e role, crm_time_t *now,
-                           pe_match_data_t *match_data);
-
-//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
-gboolean pe_test_expression(xmlNode *expr, GHashTable *node_hash,
-                            enum rsc_role_e role, crm_time_t *now,
-                            crm_time_t *next_change,
-                            pe_match_data_t *match_data);
-
-//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
-gboolean test_expression(xmlNode *expr, GHashTable *node_hash,
-                         enum rsc_role_e role, crm_time_t *now);
-
-//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
-gboolean pe_test_expression_re(xmlNode *expr, GHashTable *node_hash,
-                         enum rsc_role_e role, crm_time_t *now,
-                         pe_re_match_data_t *re_match_data);
-
-//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
-gboolean pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
-                                 enum rsc_role_e role,
-                                 crm_time_t *now, pe_match_data_t *match_data);
-
-//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
-gboolean pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
-                      crm_time_t *next_change);
-
-//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
-gboolean pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
-                         crm_time_t *next_change);
-
-//! \deprecated Use pe_unpack_nvpairs() instead
-void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
-                                const char *set_name, GHashTable *node_hash,
-                                GHashTable *hash, const char *always_first,
-                                gboolean overwrite, crm_time_t *now);
-
-//! \deprecated Do not use
-enum expression_type find_expression_type(xmlNode *expr);
-
-//! \deprecated Do not use
-char *pe_expand_re_matches(const char *string,
-                           const pe_re_match_data_t *match_data);
 
 #ifdef __cplusplus
 }

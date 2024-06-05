@@ -63,8 +63,8 @@ is_op_dup(const pcmk_resource_t *rsc, const char *name, guint interval_ms)
 {
     const char *id = NULL;
 
-    for (xmlNode *op = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP, NULL,
-                                            NULL);
+    for (xmlNode *op = pcmk__xe_first_child(rsc->private->ops_xml, PCMK_XE_OP,
+                                            NULL, NULL);
          op != NULL; op = pcmk__xe_next_same(op)) {
 
         // Check whether action name and interval match
@@ -208,7 +208,7 @@ active_recurring_should_be_optional(const pcmk_resource_t *rsc,
         return false;
     }
 
-    if (!pcmk_is_set(rsc->cmds->action_flags(start, NULL),
+    if (!pcmk_is_set(rsc->private->cmds->action_flags(start, NULL),
                      pcmk_action_optional)) {
         pcmk__rsc_trace(rsc, "%s will be mandatory because %s is",
                         key, start->uuid);
@@ -303,7 +303,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
             if (after_key) {
                 pcmk__new_ordering(rsc, NULL, cancel_op, rsc, after_key, NULL,
                                    pcmk__ar_unrunnable_first_blocks,
-                                   rsc->cluster);
+                                   rsc->private->scheduler);
             }
         }
 
@@ -323,7 +323,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                     pcmk__node_name(node));
 
     mon = custom_action(rsc, strdup(op->key), op->name, node, is_optional,
-                        rsc->cluster);
+                        rsc->private->scheduler);
 
     if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {
         pcmk__rsc_trace(rsc, "%s is unrunnable because start is", mon->uuid);
@@ -346,32 +346,32 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
     }
 
     // Order monitor relative to other actions
-    if ((node == NULL) || pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    if ((node == NULL) || pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__new_ordering(rsc, start_key(rsc), NULL,
                            NULL, strdup(mon->uuid), mon,
                            pcmk__ar_first_implies_then
                            |pcmk__ar_unrunnable_first_blocks,
-                           rsc->cluster);
+                           rsc->private->scheduler);
 
         pcmk__new_ordering(rsc, reload_key(rsc), NULL,
                            NULL, strdup(mon->uuid), mon,
                            pcmk__ar_first_implies_then
                            |pcmk__ar_unrunnable_first_blocks,
-                           rsc->cluster);
+                           rsc->private->scheduler);
 
         if (rsc->next_role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, promote_key(rsc), NULL,
                                rsc, NULL, mon,
                                pcmk__ar_ordered
                                |pcmk__ar_unrunnable_first_blocks,
-                               rsc->cluster);
+                               rsc->private->scheduler);
 
         } else if (rsc->role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, demote_key(rsc), NULL,
                                rsc, NULL, mon,
                                pcmk__ar_ordered
                                |pcmk__ar_unrunnable_first_blocks,
-                               rsc->cluster);
+                               rsc->private->scheduler);
         }
     }
 }
@@ -410,7 +410,8 @@ cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
              */
             pcmk__new_ordering(rsc, NULL, cancel_op,
                                rsc, start_key(rsc), NULL,
-                               pcmk__ar_unrunnable_first_blocks, rsc->cluster);
+                               pcmk__ar_unrunnable_first_blocks,
+                               rsc->private->scheduler);
             break;
         default:
             break;
@@ -462,7 +463,7 @@ order_after_stops(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         if (!pcmk_is_set(stop->flags, pcmk_action_optional)
             && !pcmk_is_set(action->flags, pcmk_action_optional)
-            && !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+            && !pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
             pcmk__rsc_trace(rsc, "%s optional on %s: unmanaged",
                             action->uuid, pcmk__node_name(node));
             pcmk__set_action_flags(action, pcmk_action_optional);
@@ -474,12 +475,12 @@ order_after_stops(pcmk_resource_t *rsc, const pcmk_node_t *node,
             pcmk__clear_action_flags(action, pcmk_action_runnable);
         }
 
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
             pcmk__new_ordering(rsc, stop_key(rsc), stop,
                                NULL, NULL, action,
                                pcmk__ar_first_implies_then
                                |pcmk__ar_unrunnable_first_blocks,
-                               rsc->cluster);
+                               rsc->private->scheduler);
         }
     }
     g_list_free(stop_ops);
@@ -504,7 +505,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
         return;
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
         crm_notice("Ignoring %s (recurring monitors for " PCMK_ROLE_STOPPED
                    " role are not supported for anonymous clones)", op->id);
         return; // @TODO add support
@@ -514,7 +515,9 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
                     "Creating recurring action %s for %s on nodes "
                     "where it should not be running", op->id, rsc->id);
 
-    for (GList *iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->scheduler->nodes;
+         iter != NULL; iter = iter->next) {
+
         pcmk_node_t *stop_node = (pcmk_node_t *) iter->data;
 
         bool is_optional = true;
@@ -540,11 +543,11 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
                         op->key, op->id, rsc->id, pcmk__node_name(stop_node));
 
         stopped_mon = custom_action(rsc, strdup(op->key), op->name, stop_node,
-                                    is_optional, rsc->cluster);
+                                    is_optional, rsc->private->scheduler);
 
         pe__add_action_expected_result(stopped_mon, CRM_EX_NOT_RUNNING);
 
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
             order_after_probes(rsc, stop_node, stopped_mon);
         }
 
@@ -580,14 +583,14 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
 {
     pcmk_action_t *start = NULL;
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
         pcmk__rsc_trace(rsc,
                         "Skipping recurring actions for blocked resource %s",
                         rsc->id);
         return;
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)) {
         pcmk__rsc_trace(rsc,
                         "Skipping recurring actions for %s "
                         "in maintenance mode", rsc->id);
@@ -604,7 +607,7 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
                         rsc->id, pcmk__node_name(rsc->allocated_to));
 
     } else if ((rsc->next_role != pcmk_role_stopped)
-        || !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+        || !pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         // Recurring actions for active roles needed
         start = start_action(rsc, rsc->allocated_to, TRUE);
     }
@@ -612,8 +615,8 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
     pcmk__rsc_trace(rsc, "Creating any recurring actions needed for %s",
                     rsc->id);
 
-    for (xmlNode *op = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP, NULL,
-                                            NULL);
+    for (xmlNode *op = pcmk__xe_first_child(rsc->private->ops_xml, PCMK_XE_OP,
+                                            NULL, NULL);
          op != NULL; op = pcmk__xe_next_same(op)) {
 
         struct op_history op_history = { NULL, };
@@ -658,7 +661,7 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
      * cancel_op->task.
      */
     cancel_op = custom_action(rsc, key, PCMK_ACTION_CANCEL, node, FALSE,
-                              rsc->cluster);
+                              rsc->private->scheduler);
 
     pcmk__str_update(&(cancel_op->task), PCMK_ACTION_CANCEL);
     pcmk__str_update(&(cancel_op->cancel_task), task);
@@ -701,7 +704,7 @@ pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
 
     // Cancellations happen after stops
     pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
-                       pcmk__ar_ordered, rsc->cluster);
+                       pcmk__ar_ordered, rsc->private->scheduler);
 }
 
 /*!
@@ -720,9 +723,9 @@ pcmk__reschedule_recurring(pcmk_resource_t *rsc, const char *task,
     pcmk_action_t *op = NULL;
 
     trigger_unfencing(rsc, node, "Device parameters changed (reschedule)",
-                      NULL, rsc->cluster);
+                      NULL, rsc->private->scheduler);
     op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
-                       task, node, TRUE, rsc->cluster);
+                       task, node, TRUE, rsc->private->scheduler);
     pcmk__set_action_flags(op, pcmk_action_reschedule);
 }
 

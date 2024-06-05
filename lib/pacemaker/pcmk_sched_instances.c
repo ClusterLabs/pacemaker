@@ -32,7 +32,7 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
 {
     pcmk_node_t *allowed_node = NULL;
 
-    if (pcmk_is_set(instance->flags, pcmk_rsc_removed)) {
+    if (pcmk_is_set(instance->flags, pcmk__rsc_removed)) {
         pcmk__rsc_trace(instance, "%s cannot run on %s: orphaned",
                         instance->id, pcmk__node_name(node));
         return false;
@@ -151,9 +151,10 @@ apply_parent_colocations(const pcmk_resource_t *rsc, GHashTable **nodes)
         pcmk_resource_t *other = colocation->primary;
         float factor = colocation->score / (float) PCMK_SCORE_INFINITY;
 
-        other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
-                                               colocation, factor,
-                                               pcmk__coloc_select_default);
+        other->private->cmds->add_colocated_node_scores(other, rsc, rsc->id,
+                                                        nodes, colocation,
+                                                        factor,
+                                                        pcmk__coloc_select_default);
     }
     g_list_free(colocations);
     colocations = pcmk__with_this_colocations(rsc);
@@ -166,9 +167,10 @@ apply_parent_colocations(const pcmk_resource_t *rsc, GHashTable **nodes)
         if (!pcmk__colocation_has_influence(colocation, rsc)) {
             continue;
         }
-        other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
-                                               colocation, factor,
-                                               pcmk__coloc_select_nonnegative);
+        other->private->cmds->add_colocated_node_scores(other, rsc, rsc->id,
+                                                        nodes, colocation,
+                                                        factor,
+                                                        pcmk__coloc_select_nonnegative);
     }
     g_list_free(colocations);
 }
@@ -200,8 +202,8 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
     GHashTable *colocated_scores1 = NULL;
     GHashTable *colocated_scores2 = NULL;
 
-    CRM_ASSERT((instance1 != NULL) && (instance1->parent != NULL)
-               && (instance2 != NULL) && (instance2->parent != NULL)
+    CRM_ASSERT((instance1 != NULL) && (instance1->private->parent != NULL)
+               && (instance2 != NULL) && (instance2->private->parent != NULL)
                && (current_node1 != NULL) && (current_node2 != NULL));
 
     // Create node tables initialized with each node
@@ -246,7 +248,7 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
 static bool
 did_fail(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         return true;
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -360,8 +362,8 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
 
     CRM_ASSERT((instance1 != NULL) && (instance2 != NULL));
 
-    node1 = instance1->fns->active_node(instance1, &nnodes1, NULL);
-    node2 = instance2->fns->active_node(instance2, &nnodes2, NULL);
+    node1 = instance1->private->fns->active_node(instance1, &nnodes1, NULL);
+    node2 = instance2->private->fns->active_node(instance2, &nnodes2, NULL);
 
     /* If both instances are running and at least one is multiply
      * active, prefer instance that's running on fewer nodes.
@@ -398,16 +400,16 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     }
 
     // Prefer instance with higher configured priority
-    if (instance1->priority > instance2->priority) {
+    if (instance1->private->priority > instance2->private->priority) {
         crm_trace("Assign %s before %s: priority (%d > %d)",
                   instance1->id, instance2->id,
-                  instance1->priority, instance2->priority);
+                  instance1->private->priority, instance2->private->priority);
         return -1;
 
-    } else if (instance1->priority < instance2->priority) {
+    } else if (instance1->private->priority < instance2->private->priority) {
         crm_trace("Assign %s after %s: priority (%d < %d)",
                   instance1->id, instance2->id,
-                  instance1->priority, instance2->priority);
+                  instance1->private->priority, instance2->private->priority);
         return 1;
     }
 
@@ -533,7 +535,7 @@ increment_parent_count(pcmk_resource_t *instance,
          * shouldn't be possible if the resource is managed, and we won't be
          * able to limit the number of instances assigned to the node.
          */
-        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pcmk_rsc_managed));
+        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pcmk__rsc_managed));
 
     } else {
         allowed->count++;
@@ -561,7 +563,7 @@ assign_instance(pcmk_resource_t *instance, const pcmk_node_t *prefer,
     pcmk__rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                     ((prefer == NULL)? "no node" : prefer->details->uname));
 
-    if (pcmk_is_set(instance->flags, pcmk_rsc_assigning)) {
+    if (pcmk_is_set(instance->flags, pcmk__rsc_assigning)) {
         pcmk__rsc_debug(instance,
                         "Assignment loop detected involving %s colocations",
                         instance->id);
@@ -570,7 +572,8 @@ assign_instance(pcmk_resource_t *instance, const pcmk_node_t *prefer,
     ban_unavailable_allowed_nodes(instance, max_per_node);
 
     // Failed early assignments are reversible (stop_if_fail=false)
-    chosen = instance->cmds->assign(instance, prefer, (prefer == NULL));
+    chosen = instance->private->cmds->assign(instance, prefer,
+                                             (prefer == NULL));
     increment_parent_count(instance, chosen);
     return chosen;
 }
@@ -596,7 +599,7 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
     const pcmk_node_t *chosen = NULL;
     int reserved = 0;
 
-    pcmk_resource_t *parent = instance->parent;
+    pcmk_resource_t *parent = instance->private->parent;
     GHashTable *allowed_orig = NULL;
     GHashTable *allowed_orig_parent = parent->allowed_nodes;
     const pcmk_node_t *allowed_node = NULL;
@@ -654,7 +657,7 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
             pcmk__rsc_info(instance,
                            "Not assigning %s to current node %s: unavailable",
                            instance->id, pcmk__node_name(current));
-            pcmk__set_rsc_flags(instance, pcmk_rsc_unassigned);
+            pcmk__set_rsc_flags(instance, pcmk__rsc_unassigned);
             break;
         }
 
@@ -742,8 +745,8 @@ preferred_node(const pcmk_resource_t *instance, int optimal_per_node)
 
     // Check whether instance is active, healthy, and not yet assigned
     if ((instance->running_on == NULL)
-        || !pcmk_is_set(instance->flags, pcmk_rsc_unassigned)
-        || pcmk_is_set(instance->flags, pcmk_rsc_failed)) {
+        || !pcmk_is_set(instance->flags, pcmk__rsc_unassigned)
+        || pcmk_is_set(instance->flags, pcmk__rsc_failed)) {
         return NULL;
     }
 
@@ -810,7 +813,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
         int available = max_total - assigned;
 
         instance = iter->data;
-        if (!pcmk_is_set(instance->flags, pcmk_rsc_unassigned)) {
+        if (!pcmk_is_set(instance->flags, pcmk__rsc_unassigned)) {
             continue;   // Already assigned
         }
 
@@ -828,7 +831,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
     for (iter = instances; iter != NULL; iter = iter->next) {
         instance = (pcmk_resource_t *) iter->data;
 
-        if (!pcmk_is_set(instance->flags, pcmk_rsc_unassigned)) {
+        if (!pcmk_is_set(instance->flags, pcmk__rsc_unassigned)) {
             continue; // Already assigned
         }
 
@@ -837,7 +840,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
             if (pcmk__top_allowed_node(instance, current) == NULL) {
                 const char *unmanaged = "";
 
-                if (!pcmk_is_set(instance->flags, pcmk_rsc_managed)) {
+                if (!pcmk_is_set(instance->flags, pcmk__rsc_managed)) {
                     unmanaged = "Unmanaged resource ";
                 }
                 crm_notice("%s%s is running on %s which is no longer allowed",
@@ -851,7 +854,8 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
                             "already assigned",
                             instance->id, max_total);
             resource_location(instance, NULL, -PCMK_SCORE_INFINITY,
-                              "collective_limit_reached", collective->cluster);
+                              "collective_limit_reached",
+                              collective->private->scheduler);
 
         } else if (assign_instance(instance, NULL, max_per_node) != NULL) {
             assigned++;
@@ -899,7 +903,7 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
     }
 
     // If instance is a collective (a cloned group), check its children instead
-    if (instance->variant > pcmk_rsc_variant_primitive) {
+    if (instance->private->variant > pcmk__rsc_variant_primitive) {
         for (iter = instance->children;
              (iter != NULL) && !pcmk_all_flags_set(*state, instance_all);
              iter = iter->next) {
@@ -989,7 +993,7 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
     for (GList *iter = instances; iter != NULL; iter = iter->next) {
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
-        instance->cmds->create_actions(instance);
+        instance->private->cmds->create_actions(instance);
         check_instance_state(instance, &state);
     }
 
@@ -1081,16 +1085,17 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
     CRM_CHECK((instance != NULL) && (node != NULL), return false);
 
     if ((role != pcmk_role_unknown)
-        && (role != instance->fns->state(instance, current))) {
+        && (role != instance->private->fns->state(instance, current))) {
         pcmk__rsc_trace(instance,
                         "%s is not a compatible instance (role is not %s)",
                         instance->id, pcmk_role_text(role));
         return false;
     }
 
-    if (!is_set_recursive(instance, pcmk_rsc_blocked, true)) {
+    if (!is_set_recursive(instance, pcmk__rsc_blocked, true)) {
         // We only want instances that haven't failed
-        instance_node = instance->fns->location(instance, NULL, current);
+        instance_node = instance->private->fns->location(instance, NULL,
+                                                         current);
     }
 
     if (instance_node == NULL) {
@@ -1182,7 +1187,7 @@ pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
     const pcmk_node_t *node = NULL;
 
     // If match_rsc has a node, check only that node
-    node = match_rsc->fns->location(match_rsc, NULL, current);
+    node = match_rsc->private->fns->location(match_rsc, NULL, current);
     if (node != NULL) {
         return find_compatible_instance_on_node(match_rsc, rsc, node, role,
                                                 current);
@@ -1303,12 +1308,12 @@ find_instance_action(const pcmk_action_t *action, const pcmk_resource_t *instanc
         return matching_action;
     }
 
-    if (pcmk_is_set(instance->flags, pcmk_rsc_removed)
+    if (pcmk_is_set(instance->flags, pcmk__rsc_removed)
         || pcmk__str_any_of(action_name, PCMK_ACTION_STOP, PCMK_ACTION_DEMOTE,
                             NULL)) {
         crm_trace("No %s action found for %s%s",
                   action_name,
-                  pcmk_is_set(instance->flags, pcmk_rsc_removed)? "orphan " : "",
+                  pcmk_is_set(instance->flags, pcmk__rsc_removed)? "orphan " : "",
                   instance->id);
     } else {
         crm_err("No %s action found for %s to interleave (bug?)",
@@ -1429,10 +1434,10 @@ update_interleaved_actions(pcmk_action_t *first, pcmk_action_t *then,
                                     pcmk__updated_first|pcmk__updated_then);
         }
 
-        changed |= then_instance->cmds->update_ordered_actions(
+        changed |= then_instance->private->cmds->update_ordered_actions(
             first_action, then_action, node,
-            first_instance->cmds->action_flags(first_action, node), filter,
-            type, then->rsc->cluster);
+            first_instance->private->cmds->action_flags(first_action, node),
+            filter, type, then->rsc->private->scheduler);
     }
     free_instance_list(then->rsc, instances);
     return changed;
@@ -1465,8 +1470,8 @@ can_interleave_actions(const pcmk_action_t *first, const pcmk_action_t *then)
         return false;
     }
 
-    if ((first->rsc->variant < pcmk_rsc_variant_clone)
-        || (then->rsc->variant < pcmk_rsc_variant_clone)) {
+    if ((first->rsc->private->variant < pcmk__rsc_variant_clone)
+        || (then->rsc->private->variant < pcmk__rsc_variant_clone)) {
         crm_trace("Not interleaving %s with %s: not clones or bundles",
                   first->uuid, then->uuid);
         return false;
@@ -1515,6 +1520,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
                               uint32_t flags, uint32_t filter, uint32_t type)
 {
     pcmk_action_t *instance_action = NULL;
+    pcmk_scheduler_t *scheduler = instance->private->scheduler;
     uint32_t instance_flags = 0;
     uint32_t changed = pcmk__updated_none;
 
@@ -1526,15 +1532,18 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
     }
 
     // Check whether action is runnable
-    instance_flags = instance->cmds->action_flags(instance_action, node);
+    instance_flags = instance->private->cmds->action_flags(instance_action,
+                                                           node);
     if (!pcmk_is_set(instance_flags, pcmk_action_runnable)) {
         return changed;
     }
 
     // If so, update actions for the instance
-    changed = instance->cmds->update_ordered_actions(first, instance_action,
-                                                     node, flags, filter, type,
-                                                     instance->cluster);
+    changed = instance->private->cmds->update_ordered_actions(first,
+                                                              instance_action,
+                                                              node, flags,
+                                                              filter, type,
+                                                              scheduler);
 
     // Propagate any changes to later actions
     if (pcmk_is_set(changed, pcmk__updated_then)) {
@@ -1542,7 +1551,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
              after_iter != NULL; after_iter = after_iter->next) {
             pcmk__related_action_t *after = after_iter->data;
 
-            pcmk__update_action_for_orderings(after->action, instance->cluster);
+            pcmk__update_action_for_orderings(after->action, scheduler);
         }
     }
 
@@ -1657,7 +1666,8 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
                         instance->id, instance_action->uuid, action_name,
                         pcmk__node_name(node));
 
-        instance_flags = instance->cmds->action_flags(instance_action, node);
+        instance_flags = instance->private->cmds->action_flags(instance_action,
+                                                               node);
 
         // If any instance action is mandatory, so is the collective action
         if (pcmk_is_set(flags, pcmk_action_optional)

@@ -126,7 +126,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     enum rsc_role_e role = pcmk_role_unknown;
     enum pcmk__combine combine = pcmk__combine_unknown;
 
-    rule_xml = expand_idref(rule_xml, rsc->cluster->input);
+    rule_xml = pcmk__xe_resolve_idref(rule_xml, rsc->private->scheduler->input);
     if (rule_xml == NULL) {
         return false; // Error already logged
     }
@@ -195,11 +195,14 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         }
     }
 
-    for (iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->scheduler->nodes;
+         iter != NULL; iter = iter->next) {
+
         pcmk_node_t *node = iter->data;
 
         rule_input->node_attrs = node->details->attrs;
-        rule_input->rsc_params = pe_rsc_params(rsc, node, rsc->cluster);
+        rule_input->rsc_params = pe_rsc_params(rsc, node,
+                                               rsc->private->scheduler);
 
         if (pcmk_evaluate_rule(rule_xml, rule_input,
                                next_change) == pcmk_rc_ok) {
@@ -234,7 +237,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
 {
     const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
-    const char *node = crm_element_value(xml_obj, PCMK_XE_NODE);
+    const char *node = crm_element_value(xml_obj, PCMK_XA_NODE);
     const char *discovery = crm_element_value(xml_obj,
                                               PCMK_XA_RESOURCE_DISCOVERY);
 
@@ -250,7 +253,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
 
     if ((node != NULL) && (score != NULL)) {
         int score_i = char2score(score);
-        pcmk_node_t *match = pcmk_find_node(rsc->cluster, node);
+        pcmk_node_t *match = pcmk_find_node(rsc->private->scheduler, node);
         enum rsc_role_e role = pcmk_role_unknown;
         pcmk__location_t *location = NULL;
 
@@ -286,7 +289,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         bool empty = true;
         crm_time_t *next_change = crm_time_new_undefined();
         pcmk_rule_input_t rule_input = {
-            .now = rsc->cluster->now,
+            .now = rsc->private->scheduler->now,
             .rsc_meta = rsc->meta,
             .rsc_id = rsc_id_match,
             .rsc_id_submatches = rsc_id_submatches,
@@ -333,7 +336,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         if (crm_time_is_defined(next_change)) {
             time_t t = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
-            pe__update_recheck_time(t, rsc->cluster,
+            pe__update_recheck_time(t, rsc->private->scheduler,
                                     "location rule evaluation");
         }
         crm_time_free(next_change);
@@ -462,7 +465,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC,
                           false, scheduler)) {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
     }
@@ -479,7 +482,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     } else {
         // No sets
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
     }
 
@@ -550,19 +553,19 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
          set != NULL; set = pcmk__xe_next_same(set)) {
 
         any_sets = true;
-        set = expand_idref(set, scheduler->input);
+        set = pcmk__xe_resolve_idref(set, scheduler->input);
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_location_set(xml_obj, set, scheduler) != pcmk_rc_ok)) {
 
             if (expanded_xml) {
-                free_xml(expanded_xml);
+                pcmk__xml_free(expanded_xml);
             }
             return;
         }
     }
 
     if (expanded_xml) {
-        free_xml(expanded_xml);
+        pcmk__xml_free(expanded_xml);
         xml_obj = orig_xml;
     }
 
@@ -620,7 +623,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
     } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_EXCLUSIVE,
                             pcmk__str_casei)) {
         new_con->discover_mode = pcmk_probe_exclusive;
-        rsc->exclusive_discover = TRUE;
+        pcmk__set_rsc_flags(rsc, pcmk__rsc_exclusive_probes);
 
     } else {
         pcmk__config_err("Invalid " PCMK_XA_RESOURCE_DISCOVERY " value %s "
@@ -634,8 +637,8 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
         new_con->nodes = g_list_prepend(NULL, copy);
     }
 
-    rsc->cluster->placement_constraints = g_list_prepend(
-        rsc->cluster->placement_constraints, new_con);
+    rsc->private->scheduler->placement_constraints =
+        g_list_prepend(rsc->private->scheduler->placement_constraints, new_con);
     rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
 
     return new_con;
@@ -654,7 +657,7 @@ pcmk__apply_locations(pcmk_scheduler_t *scheduler)
          iter != NULL; iter = iter->next) {
         pcmk__location_t *location = iter->data;
 
-        location->rsc->cmds->apply_location(location->rsc, location);
+        location->rsc->private->cmds->apply_location(location->rsc, location);
     }
 }
 
@@ -717,7 +720,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
         if (allowed_node->rsc_discover_mode < location->discover_mode) {
             if (location->discover_mode == pcmk_probe_exclusive) {
-                rsc->exclusive_discover = TRUE;
+                pcmk__set_rsc_flags(rsc, pcmk__rsc_exclusive_probes);
             }
             /* exclusive > never > always... always is default */
             allowed_node->rsc_discover_mode = location->discover_mode;

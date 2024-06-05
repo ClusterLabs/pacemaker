@@ -1204,7 +1204,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
 
     CRM_CHECK(node != NULL,
               crm_err("Could not set state for unknown host to %s"
-                      CRM_XS " source=%s", state, source);
+                      QB_XS " source=%s", state, source);
               return NULL);
 
     is_member = pcmk__str_eq(state, CRM_NODE_MEMBER, pcmk__str_casei);
@@ -1226,7 +1226,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
         }
 
         node->state = strdup(state);
-        crm_notice("Node %s state is now %s " CRM_XS
+        crm_notice("Node %s state is now %s " QB_XS
                    " nodeid=%u previous=%s source=%s", node->uname, state,
                    node->id, (last? last : "unknown"), source);
         if (peer_status_callback != NULL) {
@@ -1253,7 +1253,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
         }
 
     } else {
-        crm_trace("Node %s state is unchanged (%s) " CRM_XS
+        crm_trace("Node %s state is unchanged (%s) " QB_XS
                   " nodeid=%u source=%s", node->uname, state, node->id, source);
     }
     return node;
@@ -1447,123 +1447,10 @@ pcmk__refresh_node_caches_from_cib(xmlNode *cib)
 
 #include <crm/cluster/compat.h>
 
-int
-crm_terminate_member(int nodeid, const char *uname, void *unused)
-{
-    return stonith_api_kick(nodeid, uname, 120, TRUE);
-}
-
-int
-crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
-{
-    return stonith_api_kick(nodeid, uname, 120, TRUE);
-}
-
-crm_node_t *
-crm_get_peer(unsigned int id, const char *uname)
-{
-    return pcmk__get_node(id, uname, NULL, pcmk__node_search_cluster_member);
-}
-
-crm_node_t *
-crm_get_peer_full(unsigned int id, const char *uname, int flags)
-{
-    return pcmk__get_node(id, uname, NULL, flags);
-}
-
-int
-crm_remote_peer_cache_size(void)
-{
-    unsigned int count = pcmk__cluster_num_remote_nodes();
-
-    return QB_MIN(count, INT_MAX);
-}
-
-void
-crm_remote_peer_cache_refresh(xmlNode *cib)
-{
-    refresh_remote_nodes(cib);
-}
-
-crm_node_t *
-crm_remote_peer_get(const char *node_name)
-{
-    return pcmk__cluster_lookup_remote_node(node_name);
-}
-
-void
-crm_remote_peer_cache_remove(const char *node_name)
-{
-    pcmk__cluster_forget_remote_node(node_name);
-}
-
-gboolean
-crm_is_peer_active(const crm_node_t * node)
-{
-    return pcmk__cluster_is_node_active(node);
-}
-
-guint
-crm_active_peers(void)
-{
-    return pcmk__cluster_num_active_nodes();
-}
-
-guint
-reap_crm_member(uint32_t id, const char *name)
-{
-    int matches = 0;
-    crm_node_t search = { 0, };
-
-    if (crm_peer_cache == NULL) {
-        crm_trace("Membership cache not initialized, ignoring purge request");
-        return 0;
-    }
-
-    search.id = id;
-    search.uname = pcmk__str_copy(name);
-    matches = g_hash_table_foreach_remove(crm_peer_cache,
-                                          should_forget_cluster_node, &search);
-    if(matches) {
-        crm_notice("Purged %d peer%s with " PCMK_XA_ID
-                   "=%u%s%s from the membership cache",
-                   matches, pcmk__plural_s(matches), search.id,
-                   (search.uname? " and/or uname=" : ""),
-                   (search.uname? search.uname : ""));
-
-    } else {
-        crm_info("No peers with " PCMK_XA_ID
-                 "=%u%s%s to purge from the membership cache",
-                 search.id, (search.uname? " and/or uname=" : ""),
-                 (search.uname? search.uname : ""));
-    }
-
-    free(search.uname);
-    return matches;
-}
-
 void
 crm_peer_init(void)
 {
     pcmk__cluster_init_node_caches();
-}
-
-void
-crm_peer_destroy(void)
-{
-    pcmk__cluster_destroy_node_caches();
-}
-
-void
-crm_set_autoreap(gboolean enable)
-{
-    pcmk__cluster_set_autoreap(enable);
-}
-
-void
-crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *))
-{
-    pcmk__cluster_set_status_callback(dispatch);
 }
 
 // LCOV_EXCL_STOP

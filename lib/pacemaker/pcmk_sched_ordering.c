@@ -348,7 +348,8 @@ clone_min_ordering(const char *id,
 {
     // Create a pseudo-action for when the minimum instances are active
     char *task = crm_strdup_printf(PCMK_ACTION_CLONE_ONE_OR_MORE ":%s", id);
-    pcmk_action_t *clone_min_met = get_pseudo_op(task, rsc_first->cluster);
+    pcmk_action_t *clone_min_met = get_pseudo_op(task,
+                                                 rsc_first->private->scheduler);
 
     free(task);
 
@@ -366,14 +367,14 @@ clone_min_ordering(const char *id,
                            NULL, NULL, NULL, clone_min_met,
                            pcmk__ar_min_runnable
                            |pcmk__ar_first_implies_then_graphed,
-                           rsc_first->cluster);
+                           rsc_first->private->scheduler);
     }
 
     // Order "then" action after the pseudo-action (if runnable)
     pcmk__new_ordering(NULL, NULL, clone_min_met, rsc_then,
                        pcmk__op_key(rsc_then->id, action_then, 0),
                        NULL, flags|pcmk__ar_unrunnable_first_blocks,
-                       rsc_first->cluster);
+                       rsc_first->private->scheduler);
 }
 
 /*!
@@ -386,14 +387,14 @@ clone_min_ordering(const char *id,
  * \param[in,out] flags  Ordering flag set to update
  *
  * \compat The \c PCMK__META_RESTART_TYPE resource meta-attribute is deprecated.
- *         Eventually, it will be removed, and \c pe_restart_ignore will be the
- *         only behavior, at which time this can just be removed entirely.
+ *         Eventually, it will be removed, and \c pcmk__restart_ignore will be
+ *         the only behavior, at which time this can just be removed entirely.
  */
-#define handle_restart_type(rsc, kind, flag, flags) do {        \
-        if (((kind) == pe_order_kind_optional)                  \
-            && ((rsc)->restart_type == pe_restart_restart)) {   \
-            pcmk__set_relation_flags((flags), (flag));          \
-        }                                                       \
+#define handle_restart_type(rsc, kind, flag, flags) do {                    \
+        if (((kind) == pe_order_kind_optional)                              \
+            && ((rsc)->private->restart_type == pcmk__restart_restart)) {   \
+            pcmk__set_relation_flags((flags), (flag));                      \
+        }                                                                   \
     } while (0)
 
 /*!
@@ -972,7 +973,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_first, PCMK_XA_FIRST, true,
                           scheduler)) {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
     }
@@ -993,7 +994,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, PCMK_XA_THEN, true,
                           scheduler)) {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
     }
@@ -1012,7 +1013,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (any_sets) {
         crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
     } else {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
     }
 
@@ -1055,12 +1056,12 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
          set != NULL; set = pcmk__xe_next_same(set)) {
 
-        set = expand_idref(set, scheduler->input);
+        set = pcmk__xe_resolve_idref(set, scheduler->input);
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_order_set(set, kind, invert, scheduler) != pcmk_rc_ok)) {
 
             if (expanded_xml != NULL) {
-                free_xml(expanded_xml);
+                pcmk__xml_free(expanded_xml);
             }
             return;
         }
@@ -1070,7 +1071,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             if (order_rsc_sets(id, last, set, kind, scheduler,
                                symmetry) != pcmk_rc_ok) {
                 if (expanded_xml != NULL) {
-                    free_xml(expanded_xml);
+                    pcmk__xml_free(expanded_xml);
                 }
                 return;
             }
@@ -1079,7 +1080,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
                 && (order_rsc_sets(id, set, last, kind, scheduler,
                                    ordering_symmetric_inverse) != pcmk_rc_ok)) {
                 if (expanded_xml != NULL) {
-                    free_xml(expanded_xml);
+                    pcmk__xml_free(expanded_xml);
                 }
                 return;
             }
@@ -1089,7 +1090,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     }
 
     if (expanded_xml) {
-        free_xml(expanded_xml);
+        pcmk__xml_free(expanded_xml);
         xml_obj = orig_xml;
     }
 
@@ -1172,7 +1173,7 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
 
         // Resources and nodes in maintenance mode won't be touched
 
-        if (pcmk_is_set(action->rsc->flags, pcmk_rsc_maintenance)) {
+        if (pcmk_is_set(action->rsc->flags, pcmk__rsc_maintenance)) {
             pcmk__rsc_trace(action->rsc,
                             "Not ordering %s before shutdown of %s because "
                             "resource in maintenance mode",
@@ -1192,7 +1193,7 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
          * we may still end up blocking)
          */
         if (!pcmk_any_flags_set(action->rsc->flags,
-                                pcmk_rsc_managed|pcmk_rsc_blocked)) {
+                                pcmk__rsc_managed|pcmk__rsc_blocked)) {
             pcmk__rsc_trace(action->rsc,
                             "Not ordering %s before shutdown of %s because "
                             "resource is unmanaged or blocked",
@@ -1339,11 +1340,13 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
         char *key = NULL;
         char *op_type = NULL;
         guint interval_ms = 0;
+        enum rsc_role_e first_role;
 
         parse_op_key(order->task1, NULL, &op_type, &interval_ms);
         key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
-        if ((first_rsc->fns->state(first_rsc, TRUE) == pcmk_role_stopped)
+        first_role = first_rsc->private->fns->state(first_rsc, TRUE);
+        if ((first_role == pcmk_role_stopped)
             && pcmk__str_eq(op_type, PCMK_ACTION_STOP, pcmk__str_none)) {
             free(key);
             pcmk__rsc_trace(first_rsc,
@@ -1351,8 +1354,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
                             "not found",
                             order->id, order->task1, first_rsc->id);
 
-        } else if ((first_rsc->fns->state(first_rsc,
-                                          TRUE) == pcmk_role_unpromoted)
+        } else if ((first_role == pcmk_role_unpromoted)
                    && pcmk__str_eq(op_type, PCMK_ACTION_DEMOTE,
                                    pcmk__str_none)) {
             free(key);
@@ -1366,7 +1368,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
                             "Creating first (%s for %s) for constraint %d ",
                             order->task1, first_rsc->id, order->id);
             first_action = custom_action(first_rsc, key, op_type, NULL, TRUE,
-                                         first_rsc->cluster);
+                                         first_rsc->private->scheduler);
             first_actions = g_list_prepend(NULL, first_action);
         }
 

@@ -26,11 +26,9 @@
 
 #include "pacemaker-execd.h"
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
+#include <gnutls/gnutls.h>
 
-#  include <gnutls/gnutls.h>
-
-#  define LRMD_REMOTE_AUTH_TIMEOUT 10000
+#define LRMD_REMOTE_AUTH_TIMEOUT 10000
 gnutls_psk_server_credentials_t psk_cred_s;
 gnutls_dh_params_t dh_params;
 static int ssock = -1;
@@ -126,7 +124,7 @@ lrmd_remote_client_msg(gpointer data)
         crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
         process_lrmd_message(client, id, request);
-        free_xml(request);
+        pcmk__xml_free(request);
 
         /* process all the messages in the current buffer */
         request = pcmk__remote_message_xml(client->remote);
@@ -234,7 +232,7 @@ lrmd_remote_listen(gpointer data)
                                                      lrmd_auth_timeout_cb,
                                                      new_client);
     crm_info("Remote client pending authentication "
-             CRM_XS " %p id: %s", new_client, new_client->id);
+             QB_XS " %p id: %s", new_client, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("pacemaker-remote-client", G_PRIORITY_DEFAULT, csock,
@@ -429,4 +427,3 @@ execd_stop_tls_server(void)
         ssock = -1;
     }
 }
-#endif

@@ -37,10 +37,6 @@ extern "C" {
 void save_xml_to_file(const xmlNode *xml, const char *desc,
                       const char *filename);
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/common/xml_io_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
 #endif

@@ -266,7 +266,7 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     if (rc == 0) {
         crm_debug("Deletion of %s (via CIB call %d) succeeded", desc, call_id);
     } else {
-        crm_warn("Deletion of %s (via CIB call %d) failed: %s " CRM_XS " rc=%d",
+        crm_warn("Deletion of %s (via CIB call %d) failed: %s " QB_XS " rc=%d",
                  desc, call_id, pcmk_strerror(rc), rc);
     }
 }
@@ -379,7 +379,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
                           cib_xpath|cib_multiple);
     cib_rc = cib->cmds->remove(cib, xpath, NULL, options);
     fsa_register_cib_callback(cib_rc, desc, cib_delete_callback);
-    crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
+    crm_info("Deleting %s (via CIB call %d) " QB_XS " xpath=%s",
              desc, cib_rc, xpath);
 
     // CIB library handles freeing desc
@@ -433,7 +433,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
         crm_err("Could not delete resource status of %s on %s%s%s: %s "
-                CRM_XS " rc=%d", rsc_id, node,
+                QB_XS " rc=%d", rsc_id, node,
                 (user_name? " for user " : ""), (user_name? user_name : ""),
                 pcmk_rc_str(rc), rc);
         free(desc);
@@ -450,7 +450,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
         free(desc);
 
     } else {
-        crm_info("Clearing %s (via CIB call %d) " CRM_XS " xpath=%s",
+        crm_info("Clearing %s (via CIB call %d) " QB_XS " xpath=%s",
                  desc, rc, xpath);
         fsa_register_cib_callback(rc, desc, cib_delete_callback);
         // CIB library handles freeing desc
@@ -477,7 +477,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
  *       secure digest, we want parameters that *are* marked private for the
  *       string, but parameters that are *not* marked private for the XML.
  * \note It is the caller's responsibility to free the string return value with
- *       \p g_string_free() and the XML result with \p free_xml().
+ *       \p g_string_free() and the XML result with \p pcmk__xml_free().
  */
 static GString *
 build_parameter_list(const lrmd_event_data_t *op,
@@ -590,7 +590,7 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
         return;
     }
 
-    digest = calculate_operation_digest(restart, version);
+    digest = pcmk__digest_operation(restart);
     /* Add PCMK__XA_OP_FORCE_RESTART and PCMK__XA_OP_RESTART_DIGEST to indicate
      * the resource supports reload, no matter if it actually supports any
      * reloadable parameters
@@ -608,7 +608,7 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     if (list != NULL) {
         g_string_free(list, TRUE);
     }
-    free_xml(restart);
+    pcmk__xml_free(restart);
     free(digest);
 }
 
@@ -628,7 +628,7 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     list = build_parameter_list(op, metadata, ra_param_private, &secure);
 
     if (list != NULL) {
-        digest = calculate_operation_digest(secure, version);
+        digest = pcmk__digest_operation(secure);
         crm_xml_add(update, PCMK__XA_OP_SECURE_PARAMS,
                     (const char *) list->str);
         crm_xml_add(update, PCMK__XA_OP_SECURE_DIGEST, digest);
@@ -639,7 +639,7 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
         crm_trace("%s: no secure parameters", op->rsc_id);
     }
 
-    free_xml(secure);
+    pcmk__xml_free(secure);
     free(digest);
 }
 
@@ -773,9 +773,9 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
         default:
             if (call_id > 0) {
                 crm_warn("Resource history update %d failed: %s "
-                         CRM_XS " rc=%d", call_id, pcmk_strerror(rc), rc);
+                         QB_XS " rc=%d", call_id, pcmk_strerror(rc), rc);
             } else {
-                crm_warn("Resource history update failed: %s " CRM_XS " rc=%d",
+                crm_warn("Resource history update failed: %s " QB_XS " rc=%d",
                          pcmk_strerror(rc), rc);
             }
     }
@@ -945,7 +945,7 @@ controld_update_resource_history(const char *node_name,
      */
     crm_log_xml_trace(update, __func__);
     controld_update_cib(PCMK_XE_STATUS, update, call_opt, cib_rsc_callback);
-    free_xml(update);
+    pcmk__xml_free(update);
 }
 
 /*!
@@ -979,7 +979,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
                                             PCMK_XE_STATUS, xml_top, cib_none);
     crm_log_xml_trace(xml_top, "op:cancel");
-    free_xml(xml_top);
+    pcmk__xml_free(xml_top);
 }
 
 /* Define xpath to find LRM resource history entry by node and resource */

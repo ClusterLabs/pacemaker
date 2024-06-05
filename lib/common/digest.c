@@ -9,11 +9,15 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <md5.h>
+
+#include <glib.h>               // GString, etc.
+#include <gnutls/crypto.h>      // gnutls_hash_fast(), gnutls_hash_get_len()
+#include <gnutls/gnutls.h>      // gnutls_strerror()
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -43,31 +47,23 @@ dump_xml_for_digest(xmlNodePtr xml)
 }
 
 /*!
+ * \internal
  * \brief Calculate and return v1 digest of XML tree
  *
- * \param[in] input Root of XML to digest
- * \param[in] sort Whether to sort the XML before calculating digest
- * \param[in] ignored Not used
+ * \param[in] input  Root of XML to digest
  *
  * \return Newly allocated string containing digest
+ *
  * \note Example return value: "c048eae664dba840e1d2060f00299e9d"
  */
 static char *
-calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean ignored)
+calculate_xml_digest_v1(xmlNode *input)
 {
+    GString *buffer = dump_xml_for_digest(input);
     char *digest = NULL;
-    GString *buffer = NULL;
-    xmlNode *copy = NULL;
 
-    if (sort) {
-        crm_trace("Sorting xml...");
-        copy = sorted_xml(input, NULL, TRUE);
-        crm_trace("Done");
-        input = copy;
-    }
-
-    buffer = dump_xml_for_digest(input);
-    CRM_CHECK(buffer->len > 0, free_xml(copy);
+    // buffer->len > 2 for initial space and trailing newline
+    CRM_CHECK(buffer->len > 2,
               g_string_free(buffer, TRUE);
               return NULL);
 
@@ -75,27 +71,25 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean ignored)
     crm_log_xml_trace(input, "digest:source");
 
     g_string_free(buffer, TRUE);
-    free_xml(copy);
     return digest;
 }
 
 /*!
+ * \internal
  * \brief Calculate and return v2 digest of XML tree
  *
- * \param[in] source Root of XML to digest
- * \param[in] do_filter Whether to filter certain XML attributes
+ * \param[in] source  Root of XML to digest
+ * \param[in] filter  Whether to filter certain XML attributes
  *
  * \return Newly allocated string containing digest
  */
 static char *
-calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
+calculate_xml_digest_v2(const xmlNode *source, bool filter)
 {
     char *digest = NULL;
     GString *buf = g_string_sized_new(1024);
 
-    crm_trace("Begin digest %s", do_filter?"filtered":"");
-
-    pcmk__xml_string(source, (do_filter? pcmk__xml_fmt_filtered : 0), buf, 0);
+    pcmk__xml_string(source, (filter? pcmk__xml_fmt_filtered : 0), buf, 0);
     digest = crm_md5sum(buf->str);
 
     pcmk__if_tracing(
@@ -113,78 +107,84 @@ calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
         },
         {}
     );
-    crm_trace("End digest");
     g_string_free(buf, TRUE);
     return digest;
 }
 
 /*!
- * \brief Calculate and return digest of XML tree, suitable for storing on disk
+ * \internal
+ * \brief Calculate and return the digest of a CIB, suitable for storing on disk
  *
- * \param[in] input Root of XML to digest
+ * \param[in] input  Root of XML to digest
  *
  * \return Newly allocated string containing digest
  */
 char *
-calculate_on_disk_digest(xmlNode *input)
+pcmk__digest_on_disk_cib(xmlNode *input)
 {
-    /* Always use the v1 format for on-disk digests
-     * a) it's a compatibility nightmare
-     * b) we only use this once at startup, all other
-     *    invocations are in a separate child process
+    /* Always use the v1 format for on-disk digests.
+     * * Switching to v2 is a compatibility nightmare.
+     * * We only use this once at startup. All other invocations are in a
+     *   separate child process.
      */
-    return calculate_xml_digest_v1(input, FALSE, FALSE);
+    return calculate_xml_digest_v1(input);
 }
 
 /*!
- * \brief Calculate and return digest of XML operation
+ * \internal
+ * \brief Calculate and return digest of an operation XML element
+ *
+ * The digest is invariant to changes in the order of XML attributes, provided
+ * that \p input has no children.
+ *
+ * \param[in] input  Root of XML to digest
+ *
+ * \return Newly allocated string containing digest
+ */
+char *
+pcmk__digest_operation(xmlNode *input)
+{
+    xmlNode *sorted = pcmk__xml_copy(NULL, input);
+    char *digest = NULL;
+
+    pcmk__xe_sort_attrs(sorted);
+    digest = calculate_xml_digest_v1(sorted);
+
+    pcmk__xml_free(sorted);
+    return digest;
+}
+
+/*!
+ * \internal
+ * \brief Calculate and return the digest of an XML tree
  *
  * \param[in] input    Root of XML to digest
- * \param[in] version  Unused
+ * \param[in] filter   Whether to filter certain XML attributes (ignored if
+ *                     version is less than or equal to "3.0.5")
+ * \param[in] version  CRM feature set version (used to select v1/v2 digest)
  *
  * \return Newly allocated string containing digest
  */
 char *
-calculate_operation_digest(xmlNode *input, const char *version)
+pcmk__digest_xml(xmlNode *input, bool filter, const char *version)
 {
-    /* We still need the sorting for operation digests */
-    return calculate_xml_digest_v1(input, TRUE, FALSE);
-}
-
-/*!
- * \brief Calculate and return digest of XML tree
- *
- * \param[in] input      Root of XML to digest
- * \param[in] sort       Whether to sort XML before calculating digest
- * \param[in] do_filter  Whether to filter certain XML attributes
- * \param[in] version    CRM feature set version (used to select v1/v2 digest)
- *
- * \return Newly allocated string containing digest
- */
-char *
-calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
-                               gboolean do_filter, const char *version)
-{
-    /*
-     * @COMPAT digests (on-disk or in diffs/patchsets) created <1.1.4;
-     * removing this affects even full-restart upgrades from old versions
+    /* @COMPAT Digests (on-disk or in diffs/patchsets) created <1.1.4 (commit
+     * 3032878) were always v1. Removing this affects even full-restart upgrades
+     * from old versions.
      *
      * The sorting associated with v1 digest creation accounted for 23% of
      * the CIB manager's CPU usage on the server. v2 drops this.
      *
      * The filtering accounts for an additional 2.5% and we may want to
      * remove it in future.
-     *
-     * v2 also uses the xmlBuffer contents directly to avoid additional copying
      */
-    if (version == NULL || compare_version("3.0.5", version) > 0) {
+    if ((version == NULL) || (compare_version("3.0.5", version) > 0)) {
         crm_trace("Using v1 digest algorithm for %s",
                   pcmk__s(version, "unknown feature set"));
-        return calculate_xml_digest_v1(input, sort, do_filter);
+        return calculate_xml_digest_v1(input);
     }
-    crm_trace("Using v2 digest algorithm for %s",
-              pcmk__s(version, "unknown feature set"));
-    return calculate_xml_digest_v2(input, do_filter);
+    crm_trace("Using v2 digest algorithm for %s", version);
+    return calculate_xml_digest_v2(input, filter);
 }
 
 /*!
@@ -203,7 +203,7 @@ pcmk__verify_digest(xmlNode *input, const char *expected)
     bool passed;
 
     if (input != NULL) {
-        calculated = calculate_on_disk_digest(input);
+        calculated = pcmk__digest_on_disk_cib(input);
         if (calculated == NULL) {
             crm_perror(LOG_ERR, "Could not calculate digest for comparison");
             return false;
@@ -250,28 +250,39 @@ pcmk__xa_filterable(const char *name)
 char *
 crm_md5sum(const char *buffer)
 {
-    int lpc = 0, len = 0;
+    unsigned int dlen = gnutls_hash_get_len(GNUTLS_DIG_MD5);
+    unsigned char *raw_digest = NULL;
     char *digest = NULL;
-    unsigned char raw_digest[MD5_DIGEST_SIZE];
+    int rc = 0;
+
+    if (dlen == 0) {
+        return NULL;
+    }
 
     if (buffer == NULL) {
-        buffer = "";
+        return NULL;
     }
-    len = strlen(buffer);
 
-    crm_trace("Beginning digest of %d bytes", len);
-    digest = malloc(2 * MD5_DIGEST_SIZE + 1);
-    if (digest) {
-        md5_buffer(buffer, len, raw_digest);
-        for (lpc = 0; lpc < MD5_DIGEST_SIZE; lpc++) {
-            sprintf(digest + (2 * lpc), "%02x", raw_digest[lpc]);
-        }
-        digest[(2 * MD5_DIGEST_SIZE)] = 0;
-        crm_trace("Digest %s.", digest);
+    raw_digest = pcmk__assert_alloc(dlen, sizeof(unsigned char));
 
-    } else {
-        crm_err("Could not create digest");
+    rc = gnutls_hash_fast(GNUTLS_DIG_MD5, buffer, strlen(buffer), raw_digest);
+
+    if (rc < 0) {
+        free(raw_digest);
+        crm_err("Failed to calculate hash: %s", gnutls_strerror(rc));
+        return NULL;
     }
+
+    digest = pcmk__assert_alloc(1 + (2 * dlen), sizeof(char));
+
+    for (int i = 0; i < dlen; i++) {
+        sprintf(digest + (2 * i), "%02x", raw_digest[i]);
+    }
+
+    digest[(2 * dlen)] = 0;
+    free(raw_digest);
+
+    crm_trace("Digest %s.", digest);
     return digest;
 }
 
@@ -334,3 +345,53 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
     free(timeout);
     free(key);
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
+
+char *
+calculate_on_disk_digest(xmlNode *input)
+{
+    return calculate_xml_digest_v1(input);
+}
+
+char *
+calculate_operation_digest(xmlNode *input, const char *version)
+{
+    xmlNode *sorted = sorted_xml(input, NULL, true);
+    char *digest = calculate_xml_digest_v1(sorted);
+
+    pcmk__xml_free(sorted);
+    return digest;
+}
+
+char *
+calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
+                               gboolean do_filter, const char *version)
+{
+    if ((version == NULL) || (compare_version("3.0.5", version) > 0)) {
+        xmlNode *sorted = NULL;
+        char *digest = NULL;
+
+        if (sort) {
+            xmlNode *sorted = sorted_xml(input, NULL, true);
+
+            input = sorted;
+        }
+
+        crm_trace("Using v1 digest algorithm for %s",
+                  pcmk__s(version, "unknown feature set"));
+
+        digest = calculate_xml_digest_v1(input);
+
+        pcmk__xml_free(sorted);
+        return digest;
+    }
+    crm_trace("Using v2 digest algorithm for %s", version);
+    return calculate_xml_digest_v2(input, do_filter);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

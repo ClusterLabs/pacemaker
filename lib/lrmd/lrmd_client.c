@@ -37,10 +37,7 @@
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>   // stonith__*
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
-#  include <gnutls/gnutls.h>
-#endif
-
+#include <gnutls/gnutls.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -59,13 +56,13 @@ int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
 void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg));
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
-#  define LRMD_CLIENT_HANDSHAKE_TIMEOUT 5000    /* 5 seconds */
+// GnuTLS client handshake timeout in seconds
+#define TLS_HANDSHAKE_TIMEOUT 5
+
 gnutls_psk_client_credentials_t psk_cred_s;
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
 static void lrmd_tls_connection_destroy(gpointer userdata);
-#endif
 
 typedef struct lrmd_private_s {
     uint64_t type;
@@ -79,7 +76,6 @@ typedef struct lrmd_private_s {
 
     /* Extra TLS parameters */
     char *remote_nodename;
-#ifdef HAVE_GNUTLS_GNUTLS_H
     char *server;
     int port;
     gnutls_psk_client_credentials_t psk_cred_c;
@@ -95,7 +91,6 @@ typedef struct lrmd_private_s {
     int expected_late_replies;
     GList *pending_notify;
     crm_trigger_t *process_notify;
-#endif
 
     lrmd_event_callback callback;
 
@@ -361,16 +356,15 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
         xmlNode *msg = pcmk__xml_parse(buffer);
 
         lrmd_dispatch_internal(lrmd, msg);
-        free_xml(msg);
+        pcmk__xml_free(msg);
     }
     return 0;
 }
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
 static void
 lrmd_free_xml(gpointer userdata)
 {
-    free_xml((xmlNode *) userdata);
+    pcmk__xml_free((xmlNode *) userdata);
 }
 
 static bool
@@ -449,7 +443,7 @@ lrmd_tls_dispatch(gpointer userdata)
                 crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
             }
         }
-        free_xml(xml);
+        pcmk__xml_free(xml);
         xml = pcmk__remote_message_xml(native->remote);
     }
 
@@ -461,7 +455,6 @@ lrmd_tls_dispatch(gpointer userdata)
     }
     return 1;
 }
-#endif
 
 /* Not used with mainloop */
 int
@@ -473,7 +466,6 @@ lrmd_poll(lrmd_t * lrmd, int timeout)
         case pcmk__client_ipc:
             return crm_ipc_ready(native->ipc);
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
             if (native->pending_notify) {
                 return 1;
@@ -489,7 +481,6 @@ lrmd_poll(lrmd_t * lrmd, int timeout)
                         return pcmk_rc2legacy(rc);
                 }
             }
-#endif
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
                     native->type);
@@ -516,11 +507,9 @@ lrmd_dispatch(lrmd_t * lrmd)
                 }
             }
             break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
             lrmd_tls_dispatch(lrmd);
             break;
-#endif
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
                     private->type);
@@ -569,12 +558,10 @@ lrmd_ipc_connection_destroy(gpointer userdata)
         case pcmk__client_ipc:
             crm_info("Disconnected from local executor");
             break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
             crm_info("Disconnected from remote executor on %s",
                      native->remote_nodename);
             break;
-#endif
         default:
             crm_err("Unsupported executor connection type %d (bug?)",
                     native->type);
@@ -592,7 +579,6 @@ lrmd_ipc_connection_destroy(gpointer userdata)
     }
 }
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
 static void
 lrmd_tls_connection_destroy(gpointer userdata)
 {
@@ -698,7 +684,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
 
         if (!msg_type) {
             crm_err("Empty msg type received while waiting for reply");
-            free_xml(*reply);
+            pcmk__xml_free(*reply);
             *reply = NULL;
         } else if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
             /* got a notify while waiting for reply, trigger the notify to be processed later */
@@ -712,7 +698,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
         } else if (!pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
             /* msg isn't a reply, make some noise */
             crm_err("Expected a reply, got %s", msg_type);
-            free_xml(*reply);
+            pcmk__xml_free(*reply);
             *reply = NULL;
         } else if (reply_id != expected_reply_id) {
             if (native->expected_late_replies > 0) {
@@ -720,7 +706,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
             } else {
                 crm_err("Got outdated reply, expected id %d got id %d", expected_reply_id, reply_id);
             }
-            free_xml(*reply);
+            pcmk__xml_free(*reply);
             *reply = NULL;
         }
     }
@@ -772,7 +758,7 @@ lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
     rc = read_remote_reply(lrmd, timeout, global_remote_msg_id, &xml);
     if (rc != pcmk_rc_ok) {
         crm_err("Disconnecting remote after request %d reply not received: %s "
-                CRM_XS " rc=%d timeout=%dms",
+                QB_XS " rc=%d timeout=%dms",
                 global_remote_msg_id, pcmk_rc_str(rc), rc, timeout);
         lrmd_tls_disconnect(lrmd);
     }
@@ -780,12 +766,11 @@ lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
     if (reply) {
         *reply = xml;
     } else {
-        free_xml(xml);
+        pcmk__xml_free(xml);
     }
 
     return pcmk_rc2legacy(rc);
 }
-#endif
 
 static int
 lrmd_send_xml(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
@@ -797,11 +782,9 @@ lrmd_send_xml(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
         case pcmk__client_ipc:
             rc = crm_ipc_send(native->ipc, msg, crm_ipc_client_response, timeout, reply);
             break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
             rc = lrmd_tls_send_recv(lrmd, msg, timeout, reply);
             break;
-#endif
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
                     native->type);
@@ -821,7 +804,6 @@ lrmd_send_xml_no_reply(lrmd_t * lrmd, xmlNode * msg)
         case pcmk__client_ipc:
             rc = crm_ipc_send(native->ipc, msg, crm_ipc_flags_none, 0, NULL);
             break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
             rc = send_remote_message(lrmd, msg);
             if (rc == pcmk_rc_ok) {
@@ -832,7 +814,6 @@ lrmd_send_xml_no_reply(lrmd_t * lrmd, xmlNode * msg)
             }
             rc = pcmk_rc2legacy(rc);
             break;
-#endif
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
                     native->type);
@@ -850,10 +831,8 @@ lrmd_api_is_connected(lrmd_t * lrmd)
     switch (native->type) {
         case pcmk__client_ipc:
             return crm_ipc_connected(native->ipc);
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
             return remote_executor_connected(lrmd);
-#endif
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
                     native->type);
@@ -943,8 +922,8 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
         crm_err("Executor disconnected");
     }
 
-    free_xml(op_msg);
-    free_xml(op_reply);
+    pcmk__xml_free(op_msg);
+    pcmk__xml_free(op_reply);
     return rc;
 }
 
@@ -958,7 +937,7 @@ lrmd_api_poke_connection(lrmd_t * lrmd)
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     rc = lrmd_send_command(lrmd, LRMD_OP_POKE, data, NULL, 0, 0,
                            (native->type == pcmk__client_ipc));
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc < 0 ? rc : pcmk_ok;
 }
@@ -982,7 +961,7 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
 
     rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0,
                            (native->type == pcmk__client_ipc));
-    free_xml(data);
+    pcmk__xml_free(data);
     return (rc < 0)? pcmk_legacy2rc(rc) : pcmk_rc_ok;
 }
 
@@ -1056,8 +1035,8 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         }
     }
 
-    free_xml(reply);
-    free_xml(hello);
+    pcmk__xml_free(reply);
+    pcmk__xml_free(hello);
 
     if (rc != pcmk_ok) {
         lrmd_api_disconnect(lrmd);
@@ -1104,7 +1083,6 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
     return rc;
 }
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
 static void
 copy_gnutls_datum(gnutls_datum_t *dest, gnutls_datum_t *source)
 {
@@ -1384,7 +1362,6 @@ lrmd_gnutls_global_init(void)
     }
     gnutls_init = 1;
 }
-#endif
 
 static void
 report_async_connection_result(lrmd_t * lrmd, int rc)
@@ -1400,11 +1377,33 @@ report_async_connection_result(lrmd_t * lrmd, int rc)
     }
 }
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
-static inline int
-lrmd__tls_client_handshake(pcmk__remote_t *remote)
+/*!
+ * \internal
+ * \brief Perform a TLS client handshake with a Pacemaker Remote server
+ *
+ * \param[in] lrmd  Newly established Pacemaker Remote executor connection
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+tls_client_handshake(lrmd_t *lrmd)
 {
-    return pcmk__tls_client_handshake(remote, LRMD_CLIENT_HANDSHAKE_TIMEOUT);
+    lrmd_private_t *native = lrmd->lrmd_private;
+    int tls_rc = GNUTLS_E_SUCCESS;
+    int rc = pcmk__tls_client_handshake(native->remote, TLS_HANDSHAKE_TIMEOUT,
+                                        &tls_rc);
+
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Disconnecting after TLS handshake with "
+                 "Pacemaker Remote server %s:%d failed: %s",
+                 native->server, native->port,
+                 (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
+        gnutls_deinit(*native->remote->tls_session);
+        gnutls_free(native->remote->tls_session);
+        native->remote->tls_session = NULL;
+        lrmd_tls_connection_destroy(lrmd);
+    }
+    return rc;
 }
 
 /*!
@@ -1461,7 +1460,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
     if (rc != pcmk_rc_ok) {
         lrmd_tls_connection_destroy(lrmd);
         crm_info("Could not connect to Pacemaker Remote at %s:%d: %s "
-                 CRM_XS " rc=%d",
+                 QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
         return;
@@ -1476,7 +1475,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
     rc = lrmd__init_remote_key(&psk_key);
     if (rc != pcmk_rc_ok) {
         crm_info("Could not connect to Pacemaker Remote at %s:%d: %s "
-                 CRM_XS " rc=%d",
+                 QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         lrmd_tls_connection_destroy(lrmd);
         report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
@@ -1496,13 +1495,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
         return;
     }
 
-    if (lrmd__tls_client_handshake(native->remote) != pcmk_rc_ok) {
-        crm_warn("Disconnecting after TLS handshake with Pacemaker Remote server %s:%d failed",
-                 native->server, native->port);
-        gnutls_deinit(*native->remote->tls_session);
-        gnutls_free(native->remote->tls_session);
-        native->remote->tls_session = NULL;
-        lrmd_tls_connection_destroy(lrmd);
+    if (tls_client_handshake(lrmd) != pcmk_rc_ok) {
         report_async_connection_result(lrmd, -EKEYREJECTED);
         return;
     }
@@ -1526,7 +1519,7 @@ lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
                               &(native->sock), lrmd, lrmd_tcp_connect_cb);
     if (rc != pcmk_rc_ok) {
         crm_warn("Pacemaker Remote connection to %s:%d failed: %s "
-                 CRM_XS " rc=%d",
+                 QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         return pcmk_rc2legacy(rc);
     }
@@ -1549,7 +1542,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
                               &(native->sock), NULL, NULL);
     if (rc != pcmk_rc_ok) {
         crm_warn("Pacemaker Remote connection to %s:%d failed: %s "
-                 CRM_XS " rc=%d",
+                 QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         lrmd_tls_connection_destroy(lrmd);
         return -ENOTCONN;
@@ -1573,12 +1566,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
         return -EPROTO;
     }
 
-    if (lrmd__tls_client_handshake(native->remote) != pcmk_rc_ok) {
-        crm_err("Session creation for %s:%d failed", native->server, native->port);
-        gnutls_deinit(*native->remote->tls_session);
-        gnutls_free(native->remote->tls_session);
-        native->remote->tls_session = NULL;
-        lrmd_tls_connection_destroy(lrmd);
+    if (tls_client_handshake(lrmd) != pcmk_rc_ok) {
         return -EKEYREJECTED;
     }
 
@@ -1592,7 +1580,6 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     }
     return pcmk_ok;
 }
-#endif
 
 static int
 lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
@@ -1604,11 +1591,9 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
         case pcmk__client_ipc:
             rc = lrmd_ipc_connect(lrmd, fd);
             break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
             rc = lrmd_tls_connect(lrmd, fd);
             break;
-#endif
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
                     native->type);
@@ -1639,7 +1624,6 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
                 report_async_connection_result(lrmd, rc);
             }
             break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
             rc = lrmd_tls_connect_async(lrmd, timeout);
             if (rc) {
@@ -1647,7 +1631,6 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
                 report_async_connection_result(lrmd, rc);
             }
             break;
-#endif
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
                     native->type);
@@ -1678,7 +1661,6 @@ lrmd_ipc_disconnect(lrmd_t * lrmd)
     }
 }
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
 static void
 lrmd_tls_disconnect(lrmd_t * lrmd)
 {
@@ -1711,7 +1693,6 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
         native->pending_notify = NULL;
     }
 }
-#endif
 
 static int
 lrmd_api_disconnect(lrmd_t * lrmd)
@@ -1724,13 +1705,11 @@ lrmd_api_disconnect(lrmd_t * lrmd)
             crm_debug("Disconnecting from local executor");
             lrmd_ipc_disconnect(lrmd);
             break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
             crm_debug("Disconnecting from remote executor on %s",
                       native->remote_nodename);
             lrmd_tls_disconnect(lrmd);
             break;
-#endif
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
                     native->type);
@@ -1770,7 +1749,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     crm_xml_add(data, PCMK__XA_LRMD_PROVIDER, provider);
     crm_xml_add(data, PCMK__XA_LRMD_TYPE, type);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_REG, data, NULL, 0, options, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc;
 }
@@ -1784,7 +1763,7 @@ lrmd_api_unregister_rsc(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_option
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_UNREG, data, NULL, 0, options, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc;
 }
@@ -1835,7 +1814,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     if (!output) {
         return NULL;
@@ -1846,16 +1825,16 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     type = crm_element_value(output, PCMK__XA_LRMD_TYPE);
 
     if (!class || !type) {
-        free_xml(output);
+        pcmk__xml_free(output);
         return NULL;
     } else if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
                && !provider) {
-        free_xml(output);
+        pcmk__xml_free(output);
         return NULL;
     }
 
     rsc_info = lrmd_new_rsc_info(rsc_id, class, provider, type);
-    free_xml(output);
+    pcmk__xml_free(output);
     return rsc_info;
 }
 
@@ -1893,7 +1872,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
     rc = lrmd_send_command(lrmd, LRMD_OP_GET_RECURRING, data, &output_xml,
                            timeout_ms, options, TRUE);
     if (data) {
-        free_xml(data);
+        pcmk__xml_free(data);
     }
 
     // Process reply
@@ -1932,7 +1911,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
             *output = g_list_prepend(*output, op_info);
         }
     }
-    free_xml(output_xml);
+    pcmk__xml_free(output_xml);
     return rc;
 }
 
@@ -2088,7 +2067,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
     return rc;
@@ -2115,7 +2094,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
 
     rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout,
                            lrmd_opt_notify_orig_only, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
     return rc;
@@ -2133,7 +2112,7 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     crm_xml_add_ms(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
     return rc;
 }
 
@@ -2344,7 +2323,6 @@ lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port)
     if ((nodename == NULL) && (server == NULL)) {
         pvt->type = pcmk__client_ipc;
     } else {
-#ifdef HAVE_GNUTLS_GNUTLS_H
         if (nodename == NULL) {
             nodename = server;
         } else if (server == NULL) {
@@ -2362,13 +2340,6 @@ lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port)
         if (pvt->port == 0) {
             pvt->port = crm_default_remote_port();
         }
-#else
-        crm_err("Cannot communicate with Pacemaker Remote "
-                "because GnuTLS is not enabled for this build");
-        lrmd_api_delete(*api);
-        *api = NULL;
-        return EOPNOTSUPP;
-#endif
     }
     return pcmk_rc_ok;
 }
@@ -2406,9 +2377,7 @@ lrmd_api_delete(lrmd_t * lrmd)
     if (lrmd->lrmd_private != NULL) {
         lrmd_private_t *native = lrmd->lrmd_private;
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
         free(native->server);
-#endif
         free(native->remote_nodename);
         free(native->remote);
         free(native->token);

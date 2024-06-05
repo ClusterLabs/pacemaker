@@ -1,3 +1,4 @@
+Setting effective cluster time: 2005-020T11:30
 Current cluster status:
   * Node List:
     * OFFLINE: [ router1 router2 ]
@@ -10,6 +11,7 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
+Setting effective cluster time: 2005-020T11:30
 
 Revised Cluster Status:
   * Node List:

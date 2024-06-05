@@ -464,22 +464,10 @@ pcmk_get_cluster_layer(void)
 
 #include <crm/cluster/compat.h>
 
-void
-set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
-{
-    crm_xml_add(xml, attr, pcmk__cluster_node_uuid(node));
-}
-
 gboolean
 crm_cluster_connect(pcmk_cluster_t *cluster)
 {
     return pcmk_cluster_connect(cluster) == pcmk_rc_ok;
-}
-
-void
-crm_cluster_disconnect(pcmk_cluster_t *cluster)
-{
-    pcmk_cluster_disconnect(cluster);
 }
 
 const char *
@@ -501,43 +489,6 @@ enum cluster_type_e
 get_cluster_type(void)
 {
     return (enum cluster_type_e) pcmk_get_cluster_layer();
-}
-
-gboolean
-is_corosync_cluster(void)
-{
-    return pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync;
-}
-
-gboolean
-send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
-                     const xmlNode *data, gboolean ordered)
-{
-    return pcmk__cluster_send_message(node, service, data);
-}
-
-const char *
-crm_peer_uuid(crm_node_t *peer)
-{
-    return pcmk__cluster_node_uuid(peer);
-}
-
-char *
-get_node_name(uint32_t nodeid)
-{
-    return pcmk__cluster_node_name(nodeid);
-}
-
-const char *
-get_local_node_name(void)
-{
-    return pcmk__cluster_local_node_name();
-}
-
-const char *
-crm_peer_uname(const char *uuid)
-{
-    return pcmk__node_name_from_uuid(uuid);
 }
 
 // LCOV_EXCL_STOP

@@ -76,7 +76,7 @@ unknown_ticket(void **state)
 
     assert_int_equal(pcmk__get_ticket_state(cib, "XYZ", &xml), ENXIO);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     cib__clean_up_connection(&cib);
 }
 
@@ -98,7 +98,7 @@ ticket_exists(void **state)
     assert_int_equal(numXpathResults(xpath_obj), 1);
 
     freeXpathObject(xpath_obj);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     cib__clean_up_connection(&cib);
 }
 
@@ -134,7 +134,7 @@ multiple_tickets(void **state)
     assert_string_equal(crm_element_value(ticket_node, PCMK_XA_ID), "ticketC");
 
     freeXpathObject(xpath_obj);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     cib__clean_up_connection(&cib);
 }
 
@@ -156,7 +156,7 @@ duplicate_tickets(void **state)
 
     assert_int_equal(numXpathResults(xpath_obj), 2);
     freeXpathObject(xpath_obj);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     cib__clean_up_connection(&cib);
 }
 
@@ -169,7 +169,7 @@ duplicate_tickets(void **state)
  * minimal overall setup for the entire group, and then setup the CIB for
  * those tests that need it.
  */
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test_setup_teardown(cib_not_connected, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(bad_arguments, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(unknown_ticket, setup_test, teardown_test),

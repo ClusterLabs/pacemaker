@@ -13,6 +13,7 @@ include $(top_srcdir)/mk/unittest.mk
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = pcmk__add_time_from_xml_test		\
 		 pcmk__readable_interval_test		\
-		 pcmk__set_time_if_earlier_test
+		 pcmk__set_time_if_earlier_test		\
+		 pcmk__time_format_hr_test
 
 TESTS = $(check_PROGRAMS)

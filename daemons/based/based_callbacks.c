@@ -152,7 +152,7 @@ struct qb_ipcs_service_handlers ipc_rw_callbacks = {
  * \return Reply XML
  *
  * \note The caller is responsible for freeing the return value using
- *       \p free_xml().
+ *       \p pcmk__xml_free().
  */
 static xmlNode *
 create_cib_reply(const char *op, const char *call_id, const char *client_id,
@@ -182,68 +182,57 @@ static void
 do_local_notify(const xmlNode *notify_src, const char *client_id,
                 bool sync_reply, bool from_peer)
 {
-    int rid = 0;
-    int call_id = 0;
+    int msg_id = 0;
+    int rc = pcmk_rc_ok;
     pcmk__client_t *client_obj = NULL;
+    uint32_t flags = crm_ipc_server_event;
 
-    CRM_ASSERT(notify_src && client_id);
+    CRM_CHECK((notify_src != NULL) && (client_id != NULL), return);
 
-    crm_element_value_int(notify_src, PCMK__XA_CIB_CALLID, &call_id);
+    crm_element_value_int(notify_src, PCMK__XA_CIB_CALLID, &msg_id);
 
     client_obj = pcmk__find_client_by_id(client_id);
     if (client_obj == NULL) {
-        crm_debug("Could not send response %d: client %s not found",
-                  call_id, client_id);
+        crm_debug("Could not notify client %s%s %s of call %d result: "
+                  "client no longer exists", client_id,
+                  (from_peer? " (originator of delegated request)" : ""),
+                  (sync_reply? "synchronously" : "asynchronously"), msg_id);
         return;
     }
 
     if (sync_reply) {
-        if (client_obj->ipcs) {
-            CRM_LOG_ASSERT(client_obj->request_id);
-
-            rid = client_obj->request_id;
+        flags = crm_ipc_flags_none;
+        if (client_obj->ipcs != NULL) {
+            msg_id = client_obj->request_id;
             client_obj->request_id = 0;
-
-            crm_trace("Sending response %d to client %s%s",
-                      rid, pcmk__client_name(client_obj),
-                      (from_peer? " (originator of delegated request)" : ""));
-        } else {
-            crm_trace("Sending response (call %d) to client %s%s",
-                      call_id, pcmk__client_name(client_obj),
-                      (from_peer? " (originator of delegated request)" : ""));
         }
-
-    } else {
-        crm_trace("Sending event %d to client %s%s",
-                  call_id, pcmk__client_name(client_obj),
-                  (from_peer? " (originator of delegated request)" : ""));
     }
 
     switch (PCMK__CLIENT_TYPE(client_obj)) {
         case pcmk__client_ipc:
-            {
-                int rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
-                                            (sync_reply? crm_ipc_flags_none
-                                             : crm_ipc_server_event));
-
-                if (rc != pcmk_rc_ok) {
-                    crm_warn("%s reply to client %s failed: %s " CRM_XS " rc=%d",
-                             (sync_reply? "Synchronous" : "Asynchronous"),
-                             pcmk__client_name(client_obj), pcmk_rc_str(rc),
-                             rc);
-                }
-            }
+            rc = pcmk__ipc_send_xml(client_obj, msg_id, notify_src, flags);
             break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
-#endif
         case pcmk__client_tcp:
-            pcmk__remote_send_xml(client_obj->remote, notify_src);
+            rc = pcmk__remote_send_xml(client_obj->remote, notify_src);
             break;
         default:
-            crm_err("Unknown transport for client %s "
-                    CRM_XS " flags=%#016" PRIx64,
-                    pcmk__client_name(client_obj), client_obj->flags);
+            rc = EPROTONOSUPPORT;
+            break;
+    }
+    if (rc == pcmk_rc_ok) {
+        crm_trace("Notified %s client %s%s %s of call %d result",
+                  pcmk__client_type_str(PCMK__CLIENT_TYPE(client_obj)),
+                  pcmk__client_name(client_obj),
+                  (from_peer? " (originator of delegated request)" : ""),
+                  (sync_reply? "synchronously" : "asynchronously"), msg_id);
+    } else {
+        crm_warn("Could not notify %s client %s%s %s of call %d result: %s",
+                 pcmk__client_type_str(PCMK__CLIENT_TYPE(client_obj)),
+                 pcmk__client_name(client_obj),
+                 (from_peer? " (originator of delegated request)" : ""),
+                 (sync_reply? "synchronously" : "asynchronously"), msg_id,
+                 pcmk_rc_str(rc));
     }
 }
 
@@ -271,7 +260,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
             crm_xml_add(ack, PCMK__XA_CIB_CLIENTID, cib_client->id);
             pcmk__ipc_send_xml(cib_client, id, ack, flags);
             cib_client->request_id = 0;
-            free_xml(ack);
+            pcmk__xml_free(ack);
         }
         return;
 
@@ -385,7 +374,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     pcmk__update_acl_user(op_request, PCMK__XA_CIB_USER, cib_client->user);
 
     cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
-    free_xml(op_request);
+    pcmk__xml_free(op_request);
 
     return 0;
 }
@@ -415,7 +404,7 @@ cib_digester_cb(gpointer data)
         crm_xml_add(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
         pcmk__cluster_send_message(NULL, crm_msg_cib, ping);
 
-        free_xml(ping);
+        pcmk__xml_free(ping);
     }
     return FALSE;
 }
@@ -460,7 +449,7 @@ process_ping_reply(xmlNode *reply)
 
         if(ping_digest == NULL) {
             crm_trace("Calculating new digest");
-            ping_digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, version);
+            ping_digest = pcmk__digest_xml(the_cib, true, version);
         }
 
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
@@ -498,7 +487,7 @@ process_ping_reply(xmlNode *reply)
                 crm_trace("End of differences");
             }
 
-            free_xml(remote_cib);
+            pcmk__xml_free(remote_cib);
             sync_our_cib(reply, FALSE);
         }
     }
@@ -509,7 +498,7 @@ local_notify_destroy_callback(gpointer data)
 {
     cib_local_notify_t *notify = data;
 
-    free_xml(notify->notify_src);
+    pcmk__xml_free(notify->notify_src);
     free(notify->client_id);
     free(notify);
 }
@@ -1289,8 +1278,8 @@ cib_process_request(xmlNode *request, gboolean privileged,
         }
     }
 
-    free_xml(op_reply);
-    free_xml(result_diff);
+    pcmk__xml_free(op_reply);
+    pcmk__xml_free(result_diff);
 
     return rc;
 }
@@ -1421,7 +1410,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                             request, input, false, &config_changed, &the_cib,
                             &result_cib, NULL, &output);
 
-        CRM_CHECK(result_cib == NULL, free_xml(result_cib));
+        CRM_CHECK(result_cib == NULL, pcmk__xml_free(result_cib));
         goto done;
     }
 
@@ -1526,7 +1515,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
         if (output != NULL) {
             crm_log_xml_info(output, "cib:output");
-            free_xml(output);
+            pcmk__xml_free(output);
         }
 
         output = result_cib;
@@ -1537,7 +1526,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                   crm_element_value(result_cib, PCMK_XA_NUM_UPDATES));
 
         if (result_cib != the_cib) {
-            free_xml(result_cib);
+            pcmk__xml_free(result_cib);
         }
     }
 
@@ -1558,7 +1547,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     }
 
     if (output != the_cib) {
-        free_xml(output);
+        pcmk__xml_free(output);
     }
     crm_trace("done");
     return rc;
@@ -1639,7 +1628,7 @@ initiate_exit(void)
     crm_xml_add(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
 
     pcmk__cluster_send_message(NULL, crm_msg_cib, leaving);
-    free_xml(leaving);
+    pcmk__xml_free(leaving);
 
     g_timeout_add(EXIT_ESCALATION_MS, cib_force_exit, NULL);
 }

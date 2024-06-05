@@ -155,7 +155,7 @@ set_format_string(int method, const char *daemon, pid_t use_pid,
 {
     if (method == QB_LOG_SYSLOG) {
         // The system log gets a simplified, user-friendly format
-        crm_extended_logging(method, QB_FALSE);
+        qb_log_ctl(method, QB_LOG_CONF_EXTENDED, QB_FALSE);
         qb_log_format_set(method, "%g %p: %b");
 
     } else {
@@ -352,14 +352,14 @@ pcmk__add_logfile(const char *filename)
     logfile = fopen(filename, "a");
     if (logfile == NULL) {
         rc = errno;
-        crm_warn("Logging to '%s' is disabled: %s " CRM_XS " uid=%u gid=%u",
+        crm_warn("Logging to '%s' is disabled: %s " QB_XS " uid=%u gid=%u",
                  filename, strerror(rc), geteuid(), getegid());
         return rc;
     }
 
     rc = set_logfile_permissions(filename, logfile);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Logging to '%s' is disabled: %s " CRM_XS " permissions",
+        crm_warn("Logging to '%s' is disabled: %s " QB_XS " permissions",
                  filename, strerror(rc));
         fclose(logfile);
         return rc;
@@ -369,7 +369,7 @@ pcmk__add_logfile(const char *filename)
     fclose(logfile);
     fd = qb_log_file_open(filename);
     if (fd < 0) {
-        crm_warn("Logging to '%s' is disabled: %s " CRM_XS " qb_log_file_open",
+        crm_warn("Logging to '%s' is disabled: %s " QB_XS " qb_log_file_open",
                  filename, strerror(-fd));
         return -fd; // == +errno
     }
@@ -823,7 +823,7 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
 
     have_logging = true;
 
-    crm_xml_init(); /* Sets buffer allocation strategy */
+    pcmk__xml_init();
 
     if (crm_trace_nonlog == 0) {
         crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
@@ -1256,33 +1256,6 @@ pcmk__free_common_logger(void)
         logger_out = NULL;
     }
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/logging_compat.h>
-
-gboolean
-crm_log_cli_init(const char *entity)
-{
-    pcmk__cli_init_logging(entity, 0);
-    return TRUE;
-}
-
-gboolean
-crm_add_logfile(const char *filename)
-{
-    return pcmk__add_logfile(filename) == pcmk_rc_ok;
-}
-
-void
-pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
-{
-    pcmk_log_xml_as(__FILE__, __func__, __LINE__, 0, level, text, xml);
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API
 
 void pcmk__set_config_error_handler(pcmk__config_error_func error_handler, void *error_context)
 {

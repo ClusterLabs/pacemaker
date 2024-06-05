@@ -28,16 +28,13 @@
 #include <crm/common/remote_internal.h>
 #include <crm/common/output_internal.h>
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
+#include <gnutls/gnutls.h>
 
-#  include <gnutls/gnutls.h>
-
-#  define TLS_HANDSHAKE_TIMEOUT_MS 5000
+// GnuTLS handshake timeout in seconds
+#define TLS_HANDSHAKE_TIMEOUT 5
 
 static gnutls_anon_client_credentials_t anon_cred_c;
 static gboolean remote_gnutls_credentials_init = FALSE;
-
-#endif // HAVE_GNUTLS_GNUTLS_H
 
 #include <arpa/inet.h>
 
@@ -88,7 +85,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
 
     if (pcmk_is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, op_msg);
-        free_xml(op_msg);
+        pcmk__xml_free(op_msg);
         return rc;
     }
 
@@ -98,7 +95,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     } else {
         pcmk__remote_send_xml(&private->command, op_msg);
     }
-    free_xml(op_msg);
+    pcmk__xml_free(op_msg);
 
     if ((call_options & cib_discard_reply)) {
         crm_trace("Discarding reply");
@@ -143,7 +140,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
             crm_err("Received a __future__ reply:" " %d (wanted %d)", reply_id, msg_id);
         }
 
-        free_xml(op_reply);
+        pcmk__xml_free(op_reply);
         op_reply = NULL;
 
         /* wasn't the right reply, try and read some more */
@@ -200,7 +197,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         }
     }
 
-    free_xml(op_reply);
+    pcmk__xml_free(op_reply);
 
     return rc;
 }
@@ -234,7 +231,7 @@ cib_remote_callback_dispatch(gpointer user_data)
             crm_err("Unknown message type: %s", type);
         }
 
-        free_xml(msg);
+        pcmk__xml_free(msg);
         msg = pcmk__remote_message_xml(&private->callback);
     }
 
@@ -269,7 +266,6 @@ cib_tls_close(cib_t *cib)
 {
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
     if (private->encrypted) {
         if (private->command.tls_session) {
             gnutls_bye(*(private->command.tls_session), GNUTLS_SHUT_RDWR);
@@ -290,7 +286,6 @@ cib_tls_close(cib_t *cib)
             remote_gnutls_credentials_init = FALSE;
         }
     }
-#endif
 
     if (private->command.tcp_socket) {
         shutdown(private->command.tcp_socket, SHUT_RDWR);       /* no more receptions */
@@ -315,9 +310,7 @@ static void
 cib_remote_connection_destroy(gpointer user_data)
 {
     crm_err("Connection destroyed");
-#ifdef HAVE_GNUTLS_GNUTLS_H
     cib_tls_close(user_data);
-#endif
 }
 
 static int
@@ -336,20 +329,19 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     cib_fd_callbacks.destroy = cib_remote_connection_destroy;
 
     connection->tcp_socket = -1;
-#ifdef HAVE_GNUTLS_GNUTLS_H
     connection->tls_session = NULL;
-#endif
     rc = pcmk__connect_remote(private->server, private->port, 0, NULL,
                               &(connection->tcp_socket), NULL, NULL);
     if (rc != pcmk_rc_ok) {
-        crm_info("Remote connection to %s:%d failed: %s " CRM_XS " rc=%d",
+        crm_info("Remote connection to %s:%d failed: %s " QB_XS " rc=%d",
                  private->server, private->port, pcmk_rc_str(rc), rc);
         return -ENOTCONN;
     }
 
     if (private->encrypted) {
+        int tls_rc = GNUTLS_E_SUCCESS;
+
         /* initialize GnuTls lib */
-#ifdef HAVE_GNUTLS_GNUTLS_H
         if (remote_gnutls_credentials_init == FALSE) {
             crm_gnutls_global_init();
             gnutls_anon_allocate_client_credentials(&anon_cred_c);
@@ -366,19 +358,18 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             return -1;
         }
 
-        if (pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT_MS)
-                != pcmk_rc_ok) {
-            crm_err("Session creation for %s:%d failed", private->server, private->port);
-
+        rc = pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
+                                        &tls_rc);
+        if (rc != pcmk_rc_ok) {
+            crm_err("Remote CIB session creation for %s:%d failed: %s",
+                    private->server, private->port,
+                    (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
             gnutls_deinit(*connection->tls_session);
             gnutls_free(connection->tls_session);
             connection->tls_session = NULL;
             cib_tls_close(cib);
             return -1;
         }
-#else
-        return -EPROTONOSUPPORT;
-#endif
     }
 
     /* login to server */
@@ -389,7 +380,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     crm_xml_add(login, PCMK__XA_HIDDEN, PCMK__VALUE_PASSWORD);
 
     pcmk__remote_send_xml(connection, login);
-    free_xml(login);
+    pcmk__xml_free(login);
 
     rc = pcmk_ok;
     if (pcmk__read_remote_message(connection, -1) == ENOTCONN) {
@@ -419,7 +410,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             connection->token = strdup(tmp_ticket);
         }
     }
-    free_xml(answer);
+    pcmk__xml_free(answer);
     answer = NULL;
 
     if (rc != 0) {
@@ -472,7 +463,7 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     if (rc == pcmk_ok) {
         rc = pcmk__remote_send_xml(&private->command, hello);
         rc = pcmk_rc2legacy(rc);
-        free_xml(hello);
+        pcmk__xml_free(hello);
     }
 
     if (rc == pcmk_ok) {
@@ -495,9 +486,7 @@ cib_remote_signoff(cib_t *cib)
     int rc = pcmk_ok;
 
     crm_debug("Disconnecting from the CIB manager");
-#ifdef HAVE_GNUTLS_GNUTLS_H
     cib_tls_close(cib);
-#endif
 
     cib->cmds->end_transaction(cib, false, cib_none);
     cib->state = cib_disconnected;
@@ -548,7 +537,7 @@ cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
     crm_xml_add(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
     crm_xml_add_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
     pcmk__remote_send_xml(&private->callback, notify_msg);
-    free_xml(notify_msg);
+    pcmk__xml_free(notify_msg);
     return pcmk_ok;
 }
 

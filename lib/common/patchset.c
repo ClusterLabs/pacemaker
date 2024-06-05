@@ -405,7 +405,7 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
     }
 
     version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
-    digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
+    digest = pcmk__digest_xml(target, true, version);
 
     crm_xml_add(patch, PCMK__XA_DIGEST, digest);
     free(digest);
@@ -602,7 +602,7 @@ subtract_v1_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     }
 
     if (!*changed) {
-        free_xml(diff);
+        pcmk__xml_free(diff);
         return NULL;
 
     } else if (!full && (id != NULL)) {
@@ -656,7 +656,7 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     if ((value != NULL) && (strcmp(value, "removed:top") == 0)) {
         crm_trace("We are the root of the deletion: %s.id=%s",
                   target->name, id);
-        free_xml(target);
+        pcmk__xml_free(target);
         free(id);
         return;
     }
@@ -977,7 +977,7 @@ apply_v1_patchset(xmlNode *xml, const xmlNode *patchset)
 
     purge_v1_diff_markers(xml); // Purge prior to checking digest
 
-    free_xml(old);
+    pcmk__xml_free(old);
     return rc;
 }
 
@@ -1194,7 +1194,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             }
 
         } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
-            free_xml(match);
+            pcmk__xml_free(match);
 
         } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
             const xmlNode *child = pcmk__xe_first_child(change,
@@ -1375,7 +1375,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         char *new_digest = NULL;
         char *version = crm_element_value_copy(xml, PCMK_XA_CRM_FEATURE_SET);
 
-        new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
+        new_digest = pcmk__digest_xml(xml, true, version);
         if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
             crm_info("v%d digest mis-match: expected %s, calculated %s",
                      format, digest, new_digest);
@@ -1396,7 +1396,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         free(new_digest);
         free(version);
     }
-    free_xml(old);
+    pcmk__xml_free(old);
     return rc;
 }
 
@@ -1434,7 +1434,7 @@ can_prune_leaf_v1(xmlNode *node)
 
         cIter = pcmk__xml_next(cIter);
         if (can_prune_leaf_v1(child)) {
-            free_xml(child);
+            pcmk__xml_free(child);
         } else {
             can_prune = false;
         }
@@ -1456,141 +1456,18 @@ pcmk__diff_v1_xml_object(xmlNode *old, xmlNode *new, bool suppress)
     tmp1 = subtract_v1_xml_object(removed, old, new, false, NULL,
                                   "removed:top");
     if (suppress && (tmp1 != NULL) && can_prune_leaf_v1(tmp1)) {
-        free_xml(tmp1);
+        pcmk__xml_free(tmp1);
     }
 
     tmp1 = subtract_v1_xml_object(added, new, old, true, NULL, "added:top");
     if (suppress && (tmp1 != NULL) && can_prune_leaf_v1(tmp1)) {
-        free_xml(tmp1);
+        pcmk__xml_free(tmp1);
     }
 
     if ((added->children == NULL) && (removed->children == NULL)) {
-        free_xml(diff);
+        pcmk__xml_free(diff);
         diff = NULL;
     }
 
     return diff;
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/xml_compat.h>
-
-gboolean
-apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
-{
-    gboolean result = TRUE;
-    int root_nodes_seen = 0;
-    const char *digest = crm_element_value(diff, PCMK__XA_DIGEST);
-    const char *version = crm_element_value(diff, PCMK_XA_CRM_FEATURE_SET);
-
-    xmlNode *child_diff = NULL;
-    xmlNode *added = pcmk__xe_first_child(diff, PCMK__XE_DIFF_ADDED, NULL,
-                                          NULL);
-    xmlNode *removed = pcmk__xe_first_child(diff, PCMK__XE_DIFF_REMOVED, NULL,
-                                            NULL);
-
-    CRM_CHECK(new_xml != NULL, return FALSE);
-
-    crm_trace("Subtraction Phase");
-    for (child_diff = pcmk__xml_first_child(removed); child_diff != NULL;
-         child_diff = pcmk__xml_next(child_diff)) {
-        CRM_CHECK(root_nodes_seen == 0, result = FALSE);
-        if (root_nodes_seen == 0) {
-            *new_xml = subtract_v1_xml_object(NULL, old_xml, child_diff, false,
-                                              NULL, NULL);
-        }
-        root_nodes_seen++;
-    }
-
-    if (root_nodes_seen == 0) {
-        *new_xml = pcmk__xml_copy(NULL, old_xml);
-
-    } else if (root_nodes_seen > 1) {
-        crm_err("(-) Diffs cannot contain more than one change set... saw %d",
-                root_nodes_seen);
-        result = FALSE;
-    }
-
-    root_nodes_seen = 0;
-    crm_trace("Addition Phase");
-    if (result) {
-        xmlNode *child_diff = NULL;
-
-        for (child_diff = pcmk__xml_first_child(added); child_diff != NULL;
-             child_diff = pcmk__xml_next(child_diff)) {
-            CRM_CHECK(root_nodes_seen == 0, result = FALSE);
-            if (root_nodes_seen == 0) {
-                pcmk__xml_update(NULL, *new_xml, child_diff, pcmk__xaf_none,
-                                 true);
-            }
-            root_nodes_seen++;
-        }
-    }
-
-    if (root_nodes_seen > 1) {
-        crm_err("(+) Diffs cannot contain more than one change set... saw %d",
-                root_nodes_seen);
-        result = FALSE;
-
-    } else if (result && (digest != NULL)) {
-        char *new_digest = NULL;
-
-        purge_v1_diff_markers(*new_xml);    // Purge now so diff is ok
-        new_digest = calculate_xml_versioned_digest(*new_xml, FALSE, TRUE,
-                                                    version);
-        if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
-            crm_info("Digest mis-match: expected %s, calculated %s",
-                     digest, new_digest);
-            result = FALSE;
-
-            pcmk__if_tracing(
-                {
-                    save_xml_to_file(old_xml, "diff:original", NULL);
-                    save_xml_to_file(diff, "diff:input", NULL);
-                    save_xml_to_file(*new_xml, "diff:new", NULL);
-                },
-                {}
-            );
-
-        } else {
-            crm_trace("Digest matched: expected %s, calculated %s",
-                      digest, new_digest);
-        }
-        free(new_digest);
-
-    } else if (result) {
-        purge_v1_diff_markers(*new_xml);    // Purge now so diff is ok
-    }
-
-    return result;
-}
-
-void
-purge_diff_markers(xmlNode *a_node)
-{
-    purge_v1_diff_markers(a_node);
-}
-
-xmlNode *
-diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
-{
-    return pcmk__diff_v1_xml_object(old, new, suppress);
-}
-
-xmlNode *
-subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
-                    gboolean full, gboolean *changed, const char *marker)
-{
-    return subtract_v1_xml_object(parent, left, right, full, changed, marker);
-}
-
-gboolean
-can_prune_leaf(xmlNode *xml_node)
-{
-    return can_prune_leaf_v1(xml_node);
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

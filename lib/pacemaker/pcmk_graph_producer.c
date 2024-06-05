@@ -159,7 +159,9 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
                                   action->node, add_node_to_xml, downed);
         }
 
-    } else if (action->rsc && action->rsc->is_remote_node
+    } else if ((action->rsc != NULL)
+               && pcmk_is_set(action->rsc->flags,
+                              pcmk__rsc_is_remote_connection)
                && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
                                pcmk__str_none)) {
 
@@ -204,15 +206,12 @@ clone_op_key(const pcmk_action_t *action, guint interval_ms)
         const char *n_task = g_hash_table_lookup(action->meta,
                                                  "notify_operation");
 
-        CRM_LOG_ASSERT((n_type != NULL) && (n_task != NULL));
-        return pcmk__notify_key(action->rsc->clone_name, n_type, n_task);
-
-    } else if (action->cancel_task != NULL) {
-        return pcmk__op_key(action->rsc->clone_name, action->cancel_task,
-                            interval_ms);
-    } else {
-        return pcmk__op_key(action->rsc->clone_name, action->task, interval_ms);
+        return pcmk__notify_key(action->rsc->private->history_id, n_type,
+                                n_task);
     }
+    return pcmk__op_key(action->rsc->private->history_id,
+                        pcmk__s(action->cancel_task, action->task),
+                        interval_ms);
 }
 
 /*!
@@ -263,9 +262,9 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
     // List affected resource
 
     rsc_xml = pcmk__xe_create(action_xml,
-                              (const char *) action->rsc->xml->name);
-    if (pcmk_is_set(action->rsc->flags, pcmk_rsc_removed)
-        && (action->rsc->clone_name != NULL)) {
+                              (const char *) action->rsc->private->xml->name);
+    if (pcmk_is_set(action->rsc->flags, pcmk__rsc_removed)
+        && (action->rsc->private->history_id != NULL)) {
         /* Use the numbered instance name here, because if there is more
          * than one instance on a node, we need to make sure the command
          * goes to the right one.
@@ -274,16 +273,16 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * unique meta-attribute might have just been toggled from on to
          * off.
          */
-        crm_debug("Using orphan clone name %s instead of %s",
-                  action->rsc->id, action->rsc->clone_name);
-        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->clone_name);
+        crm_debug("Using orphan clone name %s instead of history ID %s",
+                  action->rsc->id, action->rsc->private->history_id);
+        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->private->history_id);
         crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
 
-    } else if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_unique)) {
-        const char *xml_id = pcmk__xe_id(action->rsc->xml);
+    } else if (!pcmk_is_set(action->rsc->flags, pcmk__rsc_unique)) {
+        const char *xml_id = pcmk__xe_id(action->rsc->private->xml);
 
         crm_debug("Using anonymous clone name %s for %s (aka %s)",
-                  xml_id, action->rsc->id, action->rsc->clone_name);
+                  xml_id, action->rsc->id, action->rsc->private->history_id);
 
         /* ID is what we'd like client to use
          * LONG_ID is what they might know it as instead
@@ -299,16 +298,17 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * and fall into the clause above instead
          */
         crm_xml_add(rsc_xml, PCMK_XA_ID, xml_id);
-        if ((action->rsc->clone_name != NULL)
-            && !pcmk__str_eq(xml_id, action->rsc->clone_name,
+        if ((action->rsc->private->history_id != NULL)
+            && !pcmk__str_eq(xml_id, action->rsc->private->history_id,
                              pcmk__str_none)) {
-            crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->clone_name);
+            crm_xml_add(rsc_xml, PCMK__XA_LONG_ID,
+                        action->rsc->private->history_id);
         } else {
             crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
         }
 
     } else {
-        CRM_ASSERT(action->rsc->clone_name == NULL);
+        CRM_ASSERT(action->rsc->private->history_id == NULL);
         crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->id);
     }
 
@@ -329,40 +329,40 @@ static void
 add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
 {
     xmlNode *args_xml = NULL;
+    pcmk_resource_t *rsc = action->rsc;
 
     /* We create free-standing XML to start, so we can sort the attributes
      * before adding it to action_xml, which keeps the scheduler regression
      * test graphs comparable.
      */
-    args_xml = pcmk__xe_create(NULL, PCMK__XE_ATTRIBUTES);
+    args_xml = pcmk__xe_create(action_xml, PCMK__XE_ATTRIBUTES);
 
     crm_xml_add(args_xml, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     g_hash_table_foreach(action->extra, hash2field, args_xml);
 
-    if ((action->rsc != NULL) && (action->node != NULL)) {
+    if ((rsc != NULL) && (action->node != NULL)) {
         // Get the resource instance attributes, evaluated properly for node
-        GHashTable *params = pe_rsc_params(action->rsc, action->node,
-                                           action->rsc->cluster);
+        GHashTable *params = pe_rsc_params(rsc, action->node,
+                                           rsc->private->scheduler);
 
-        pcmk__substitute_remote_addr(action->rsc, params);
+        pcmk__substitute_remote_addr(rsc, params);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
 
-    } else if ((action->rsc != NULL)
-               && (action->rsc->variant <= pcmk_rsc_variant_primitive)) {
-        GHashTable *params = pe_rsc_params(action->rsc, NULL,
-                                           action->rsc->cluster);
+    } else if ((rsc != NULL)
+               && (rsc->private->variant <= pcmk__rsc_variant_primitive)) {
+        GHashTable *params = pe_rsc_params(rsc, NULL, rsc->private->scheduler);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
     }
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
-    if (action->rsc != NULL) {
-        pcmk_resource_t *parent = action->rsc;
+    if (rsc != NULL) {
+        pcmk_resource_t *parent = rsc;
 
         while (parent != NULL) {
-            parent->cmds->add_graph_meta(parent, args_xml);
-            parent = parent->parent;
+            parent->private->cmds->add_graph_meta(parent, args_xml);
+            parent = parent->private->parent;
         }
 
         pcmk__add_guest_meta_to_xml(args_xml, action);
@@ -379,8 +379,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
                              args_xml);
     }
 
-    sorted_xml(args_xml, action_xml, FALSE);
-    free_xml(args_xml);
+    pcmk__xe_sort_attrs(args_xml);
 }
 
 /*!
@@ -440,7 +439,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
     crm_xml_add_int(action_xml, PCMK_XA_ID, action->id);
     crm_xml_add(action_xml, PCMK_XA_OPERATION, action->task);
 
-    if ((action->rsc != NULL) && (action->rsc->clone_name != NULL)) {
+    if ((action->rsc != NULL) && (action->rsc->private->history_id != NULL)) {
         char *clone_key = NULL;
         guint interval_ms;
 
@@ -517,7 +516,7 @@ should_add_action_to_graph(const pcmk_action_t *action)
      * with the exception of monitors and cancellation of recurring monitors.
      */
     if ((action->rsc != NULL)
-        && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
+        && !pcmk_is_set(action->rsc->flags, pcmk__rsc_managed)
         && !pcmk__str_eq(action->task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
 
         const char *interval_ms_s;
@@ -729,8 +728,8 @@ should_add_input_to_graph(const pcmk_action_t *action,
 
     } else if (input->action->rsc
                && input->action->rsc != action->rsc
-               && pcmk_is_set(input->action->rsc->flags, pcmk_rsc_failed)
-               && !pcmk_is_set(input->action->rsc->flags, pcmk_rsc_managed)
+               && pcmk_is_set(input->action->rsc->flags, pcmk__rsc_failed)
+               && !pcmk_is_set(input->action->rsc->flags, pcmk__rsc_managed)
                && pcmk__ends_with(input->action->uuid, "_stop_0")
                && pcmk__is_clone(action->rsc)) {
         crm_warn("Ignoring requirement that %s complete before %s:"
@@ -857,7 +856,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
     scheduler->num_synapse++;
 
     if (action->rsc != NULL) {
-        synapse_priority = action->rsc->priority;
+        synapse_priority = action->rsc->private->priority;
     }
     if (action->priority > synapse_priority) {
         synapse_priority = action->priority;
@@ -979,16 +978,17 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
     GList *iter = NULL;
 
     CRM_ASSERT(rsc != NULL);
+
     pcmk__rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
 
     // First add the resource's own actions
-    g_list_foreach(rsc->actions, add_action_to_graph, rsc->cluster);
+    g_list_foreach(rsc->actions, add_action_to_graph, rsc->private->scheduler);
 
     // Then recursively add its children's actions (appropriate to variant)
     for (iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) iter->data;
 
-        child_rsc->cmds->add_actions_to_graph(child_rsc);
+        child_rsc->private->cmds->add_actions_to_graph(child_rsc);
     }
 }
 
@@ -1054,7 +1054,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pcmk__rsc_trace(rsc, "Processing actions for %s", rsc->id);
-        rsc->cmds->add_actions_to_graph(rsc);
+        rsc->private->cmds->add_actions_to_graph(rsc);
     }
 
     // Add pseudo-action for list of nodes with maintenance state update
@@ -1067,7 +1067,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         if ((action->rsc != NULL)
             && (action->node != NULL)
             && action->node->details->shutdown
-            && !pcmk_is_set(action->rsc->flags, pcmk_rsc_maintenance)
+            && !pcmk_is_set(action->rsc->flags, pcmk__rsc_maintenance)
             && !pcmk_any_flags_set(action->flags,
                                    pcmk_action_optional|pcmk_action_runnable)
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {
@@ -1078,9 +1078,9 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
             if (pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
                 || (scheduler->no_quorum_policy == pcmk_no_quorum_ignore)) {
                 const bool managed = pcmk_is_set(action->rsc->flags,
-                                                 pcmk_rsc_managed);
+                                                 pcmk__rsc_managed);
                 const bool failed = pcmk_is_set(action->rsc->flags,
-                                                pcmk_rsc_failed);
+                                                pcmk__rsc_failed);
 
                 crm_crit("Cannot %s %s because of %s:%s%s (%s)",
                          action->node->details->unclean? "fence" : "shut down",

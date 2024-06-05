@@ -125,7 +125,7 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
          an_attr != NULL; an_attr = pcmk__xe_next(an_attr)) {
 
         if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
-            xmlNode *ref_nvpair = expand_idref(an_attr, NULL);
+            xmlNode *ref_nvpair = pcmk__xe_resolve_idref(an_attr, NULL);
 
             name = crm_element_value(an_attr, PCMK_XA_NAME);
             if ((name == NULL) && (ref_nvpair != NULL)) {
@@ -206,7 +206,7 @@ make_pairs(const xmlNode *xml_obj, const char *set_name)
          attr_set != NULL; attr_set = pcmk__xe_next(attr_set)) {
 
         if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
-            xmlNode *expanded_attr_set = expand_idref(attr_set, NULL);
+            xmlNode *expanded_attr_set = pcmk__xe_resolve_idref(attr_set, NULL);
 
             if (expanded_attr_set == NULL) {
                 continue; // Not possible with schema validation enabled
@@ -289,30 +289,7 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 
 #include <crm/pengine/rules_compat.h>
 
-gboolean
-pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
-              crm_time_t *next_change)
-{
-    pcmk_rule_input_t rule_input = { NULL, };
-
-    map_rule_input(&rule_input, rule_data);
-    return pcmk__evaluate_rules(ruleset, &rule_input,
-                                next_change) == pcmk_rc_ok;
-}
-
-gboolean
-pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
-                  crm_time_t *next_change)
-{
-    pcmk_rule_input_t rule_input = {
-        .node_attrs = node_hash,
-        .now = now,
-    };
-
-    return pcmk__evaluate_rules(ruleset, &rule_input, next_change);
-}
-
-gboolean
+static gboolean
 pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
              crm_time_t *now, crm_time_t *next_change,
              pe_match_data_t *match_data)
@@ -335,136 +312,9 @@ pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
 }
 
 gboolean
-test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now)
-{
-    return pe_evaluate_rules(ruleset, node_hash, now, NULL);
-}
-
-gboolean
 test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
     return pe_test_rule(rule, node_hash, role, now, NULL, NULL);
-}
-
-gboolean
-pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
-{
-    pe_match_data_t match_data = {
-                                    .re = re_match_data,
-                                    .params = NULL,
-                                    .meta = NULL,
-                                 };
-    return pe_test_rule(rule, node_hash, role, now, NULL, &match_data);
-}
-
-gboolean
-pe_test_rule_full(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
-                  crm_time_t *now, pe_match_data_t *match_data)
-{
-    return pe_test_rule(rule, node_hash, role, now, NULL, match_data);
-}
-
-gboolean
-pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
-                   crm_time_t *now, crm_time_t *next_change,
-                   pe_match_data_t *match_data)
-{
-    pcmk_rule_input_t rule_input = {
-        .now = now,
-        .node_attrs = node_hash,
-    };
-
-    if (match_data != NULL) {
-        rule_input.rsc_params = match_data->params;
-        rule_input.rsc_meta = match_data->meta;
-        if (match_data->re != NULL) {
-            rule_input.rsc_id = match_data->re->string;
-            rule_input.rsc_id_submatches = match_data->re->pmatch;
-            rule_input.rsc_id_nmatches = match_data->re->nregs;
-        }
-    }
-    return pcmk__evaluate_condition(expr, &rule_input,
-                                    next_change) == pcmk_rc_ok;
-}
-
-gboolean
-test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
-{
-    return pe_test_expression(expr, node_hash, role, now, NULL, NULL);
-}
-
-gboolean
-pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
-{
-    pe_match_data_t match_data = {
-                                    .re = re_match_data,
-                                    .params = NULL,
-                                    .meta = NULL,
-                                 };
-    return pe_test_expression(expr, node_hash, role, now, NULL, &match_data);
-}
-
-gboolean
-pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
-                        enum rsc_role_e role, crm_time_t *now,
-                        pe_match_data_t *match_data)
-{
-    return pe_test_expression(expr, node_hash, role, now, NULL, match_data);
-}
-
-gboolean
-pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
-             crm_time_t *next_change)
-{
-    pcmk_rule_input_t rule_input = { NULL, };
-
-    map_rule_input(&rule_input, rule_data);
-    return pcmk_evaluate_rule(rule, &rule_input, next_change) == pcmk_rc_ok;
-}
-
-gboolean
-pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
-                crm_time_t *next_change)
-{
-    pcmk_rule_input_t rule_input = { NULL, };
-
-    map_rule_input(&rule_input, rule_data);
-    return pcmk__evaluate_condition(expr, &rule_input,
-                                    next_change) == pcmk_rc_ok;
-}
-
-void
-unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
-                           GHashTable *node_hash, GHashTable *hash,
-                           const char *always_first, gboolean overwrite,
-                           crm_time_t *now)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = node_hash,
-        .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    pe_eval_nvpairs(NULL, xml_obj, set_name, &rule_data, hash, always_first,
-                    overwrite, NULL);
-}
-
-enum expression_type
-find_expression_type(xmlNode *expr)
-{
-    return pcmk__condition_type(expr);
-}
-
-char *
-pe_expand_re_matches(const char *string, const pe_re_match_data_t *match_data)
-{
-    if (match_data == NULL) {
-        return NULL;
-    }
-    return pcmk__replace_submatches(string, match_data->string,
-                                    match_data->pmatch, match_data->nregs);
 }
 
 // LCOV_EXCL_STOP

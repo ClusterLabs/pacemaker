@@ -88,7 +88,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     if ((crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc) != 0)
         || (rc != pcmk_ok)) {
 
-        crm_warn("Ignore failed CIB update: %s " CRM_XS " rc=%d",
+        crm_warn("Ignore failed CIB update: %s " QB_XS " rc=%d",
                  pcmk_strerror(rc), rc);
         crm_log_xml_debug(msg, "failed");
         return pcmk_legacy2rc(rc);
@@ -222,7 +222,9 @@ cib__element_in_patchset(const xmlNode *patchset, const char *element)
  * \param[in] cib_epoch  What to use as \c PCMK_XA_EPOCH CIB attribute
  *
  * \return Newly created XML for empty CIB
- * \note It is the caller's responsibility to free the result with free_xml().
+ *
+ * \note It is the caller's responsibility to free the result with
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 createEmptyCib(int cib_epoch)
@@ -401,7 +403,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
             *output = pcmk__xml_copy(NULL, *output);
         }
 
-        free_xml(cib_filtered);
+        pcmk__xml_free(cib_filtered);
         return rc;
     }
 
@@ -558,7 +560,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                             format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
                             test_rc);
                 }
-                free_xml(cib_copy);
+                pcmk__xml_free(cib_copy);
             },
             {}
         );
@@ -642,16 +644,16 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
         if (*result_cib == NULL) {
             crm_debug("Pre-filtered the entire cib result");
         }
-        free_xml(scratch);
+        pcmk__xml_free(scratch);
     }
 
     if(diff) {
         *diff = local_diff;
     } else {
-        free_xml(local_diff);
+        pcmk__xml_free(local_diff);
     }
 
-    free_xml(top);
+    pcmk__xml_free(top);
     crm_trace("Done");
     return rc;
 }
@@ -690,7 +692,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 
     if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
         CRM_CHECK(pcmk_is_set(call_options, cib_scope_local),
-                  free_xml(*op_msg); return -EPROTO);
+                  pcmk__xml_free(*op_msg); return -EPROTO);
     }
     return pcmk_ok;
 }
@@ -945,7 +947,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                 crm_trace("Masking error, we already have the supplied update");
                 return pcmk_ok;
             }
-            free_xml(*output);
+            pcmk__xml_free(*output);
             *output = NULL;
             return rc;
         }
@@ -1029,71 +1031,3 @@ cib__clean_up_connection(cib_t **cib)
     *cib = NULL;
     return pcmk_legacy2rc(rc);
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/cib/util_compat.h>
-
-xmlNode *
-cib_get_generation(cib_t * cib)
-{
-    xmlNode *the_cib = NULL;
-    xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
-
-    cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
-    if (the_cib != NULL) {
-        pcmk__xe_copy_attrs(generation, the_cib, pcmk__xaf_none);
-        free_xml(the_cib);
-    }
-
-    return generation;
-}
-
-const char *
-get_object_path(const char *object_type)
-{
-    return pcmk_cib_xpath_for(object_type);
-}
-
-const char *
-get_object_parent(const char *object_type)
-{
-    return pcmk_cib_parent_name_for(object_type);
-}
-
-xmlNode *
-get_object_root(const char *object_type, xmlNode *the_root)
-{
-    return pcmk_find_cib_element(the_root, object_type);
-}
-
-const char *
-cib_pref(GHashTable * options, const char *name)
-{
-    return pcmk__cluster_option(options, name);
-}
-
-void
-cib_metadata(void)
-{
-    pcmk__output_t *out = NULL;
-    int rc = pcmk__output_new(&out, "text", NULL, NULL);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("Unable to output metadata: %s", pcmk_rc_str(rc));
-        return;
-    }
-
-    pcmk__daemon_metadata(out, "pacemaker-based",
-                          "Cluster Information Base manager options",
-                          "Cluster options used by Pacemaker's Cluster "
-                          "Information Base manager",
-                          pcmk__opt_based);
-
-    out->finish(out, CRM_EX_OK, true, NULL);
-    pcmk__output_free(out);
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

@@ -888,7 +888,8 @@ parse_date(const char *date_str)
         goto invalid;
     }
 
-    if ((date_str[0] == 'T') || (date_str[2] == ':')) {
+    if ((date_str[0] == 'T')
+        || ((strlen(date_str) > 2) && (date_str[2] == ':'))) {
         /* Just a time supplied - Infer current date */
         dt = crm_time_new(NULL);
         if (date_str[0] == 'T') {
@@ -1027,53 +1028,54 @@ invalid:
 }
 
 // Parse an ISO 8601 numeric value and return number of characters consumed
-// @TODO This cannot handle >INT_MAX int values
-// @TODO Fractions appear to be not working
-// @TODO Error out on invalid specifications
 static int
-parse_int(const char *str, int field_width, int upper_bound, int *result)
+parse_int(const char *str, int *result)
 {
-    int lpc = 0;
-    int offset = 0;
-    int intermediate = 0;
-    gboolean fraction = FALSE;
-    gboolean negate = FALSE;
+    unsigned int lpc;
+    int offset = (str[0] == 'T')? 1 : 0;
+    bool fraction = false;
+    bool negate = false;
 
     *result = 0;
     if (*str == '\0') {
         return 0;
     }
 
-    if (str[offset] == 'T') {
-        offset++;
+    // @TODO This cannot handle combinations of these characters
+    switch (str[offset]) {
+        case '.':
+        case ',':
+            fraction = true;
+            offset++;
+            break;
+
+        case '-':
+            negate = true;
+            offset++;
+            break;
+
+        case '+':
+        case ':':
+            offset++;
+            break;
+
+        default:
+            break;
     }
 
-    if (str[offset] == '.' || str[offset] == ',') {
-        fraction = TRUE;
-        field_width = -1;
-        offset++;
-    } else if (str[offset] == '-') {
-        negate = TRUE;
-        offset++;
-    } else if (str[offset] == '+' || str[offset] == ':') {
-        offset++;
-    }
+    for (lpc = 0; (fraction || (lpc < 10)) && isdigit(str[offset]); lpc++) {
+        const int digit = str[offset++] - '0';
 
-    for (; (fraction || lpc < field_width) && isdigit((int)str[offset]); lpc++) {
         if (fraction) {
-            intermediate = (str[offset] - '0') / (10 ^ lpc);
+            /* @TODO The previous code here had bugs that always yielded a
+             * result of 0. Since it never worked, it has been removed rather
+             * than fixed. Effort would be better spent replacing our ISO 8601
+             * code with GDateTime.
+             */
         } else {
-            *result *= 10;
-            intermediate = str[offset] - '0';
+            // @TODO lpc == 9 could yield a 32-bit integer overflow
+            *result = *result * 10 + digit;
         }
-        *result += intermediate;
-        offset++;
-    }
-    if (fraction) {
-        *result = (int)(*result * upper_bound);
-
-    } else if (upper_bound > 0 && *result > upper_bound) {
-        *result = upper_bound;
     }
     if (negate) {
         *result = 0 - *result;
@@ -1136,7 +1138,7 @@ crm_time_parse_duration(const char *period_s)
         }
 
         // An integer must be next
-        rc = parse_int(current, 10, 0, &an_int);
+        rc = parse_int(current, &an_int);
         if (rc == 0) {
             crm_err("'%s' is not a valid ISO 8601 time duration "
                     "because no integer at '%s'", period_s, current);
@@ -1914,59 +1916,82 @@ pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
     free(hr_dt);
 }
 
+/*!
+ * \internal
+ * \brief Expand a date/time format string, including %N for nanoseconds
+ *
+ * \param[in] format  Date/time format string as per strftime(3) with the
+ *                    addition of %N for nanoseconds
+ * \param[in] hr_dt   Time value to format
+ *
+ * \return Newly allocated string with formatted string
+ */
 char *
 pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 {
 #define DATE_LEN_MAX 128
-    const char *mark_s = NULL;
-    int scanned_pos = 0;
-    int printed_pos = 0;
-    int fmt_pos = 0;
+    int scanned_pos = 0; // How many characters of format have been parsed
+    int printed_pos = 0; // How many characters of format have been processed
     size_t date_len = 0;
-    int nano_digits = 0;
 
     char nano_s[10] = { '\0', };
     char date_s[DATE_LEN_MAX] = { '\0', };
-    char nanofmt_s[5] = "%";
-    char *tmp_fmt_s = NULL;
 
     struct tm tm = { 0, };
     crm_time_t dt = { 0, };
 
-    if (!format) {
+    if (format == NULL) {
         return NULL;
     }
     pcmk__time_set_hr_dt(&dt, hr_dt);
     ha_get_tm_time(&tm, &dt);
     sprintf(nano_s, "%06d000", hr_dt->useconds);
 
-    while ((format[scanned_pos]) != '\0') {
-        mark_s = strchr(&format[scanned_pos], '%');
-        if (mark_s) {
-            int fmt_len = 1;
+    while (format[scanned_pos] != '\0') {
+        int fmt_pos;            // Index after last character to pass as-is
+        int nano_digits = 0;    // Length of %N field width (if any)
+        char *tmp_fmt_s = NULL;
 
-            fmt_pos = mark_s - format;
-            while ((format[fmt_pos+fmt_len] != '\0') &&
-                (format[fmt_pos+fmt_len] >= '0') &&
-                (format[fmt_pos+fmt_len] <= '9')) {
-                fmt_len++;
-            }
-            scanned_pos = fmt_pos + fmt_len + 1;
-            if (format[fmt_pos+fmt_len] == 'N') {
-                nano_digits = atoi(&format[fmt_pos+1]);
-                nano_digits = (nano_digits > 6)?6:nano_digits;
-                nano_digits = (nano_digits < 0)?0:nano_digits;
-                sprintf(&nanofmt_s[1], ".%ds", nano_digits);
-            } else {
-                if (format[scanned_pos] != '\0') {
-                    continue;
-                }
-                fmt_pos = scanned_pos; /* print till end */
-            }
-        } else {
+        // Look for next format specifier
+        const char *mark_s = strchr(&format[scanned_pos], '%');
+
+        if (mark_s == NULL) {
+            // No more specifiers, so pass remaining string to strftime() as-is
             scanned_pos = strlen(format);
-            fmt_pos = scanned_pos; /* print till end */
+            fmt_pos = scanned_pos;
+
+        } else {
+            fmt_pos = mark_s - format; // Index of %
+
+            // Skip % and any field width
+            scanned_pos = fmt_pos + 1;
+            while (isdigit(format[scanned_pos])) {
+                scanned_pos++;
+            }
+
+            switch (format[scanned_pos]) {
+                case '\0': // Literal % and possibly digits at end of string
+                    fmt_pos = scanned_pos; // Pass remaining string as-is
+                    break;
+
+                case 'N': // %[width]N
+                    scanned_pos++;
+
+                    // Parse field width
+                    nano_digits = atoi(&format[fmt_pos + 1]);
+                    nano_digits = QB_MAX(nano_digits, 0);
+                    nano_digits = QB_MIN(nano_digits, 6);
+                    break;
+
+                default: // Some other specifier
+                    if (format[++scanned_pos] != '\0') { // More to parse
+                        continue;
+                    }
+                    fmt_pos = scanned_pos; // Pass remaining string as-is
+                    break;
+            }
         }
+
         tmp_fmt_s = strndup(&format[printed_pos], fmt_pos - printed_pos);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push
@@ -1979,21 +2004,13 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 #endif
         printed_pos = scanned_pos;
         free(tmp_fmt_s);
-        if (nano_digits) {
-#ifdef HAVE_FORMAT_NONLITERAL
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-#endif
+        if (nano_digits != 0) {
             date_len += snprintf(&date_s[date_len], DATE_LEN_MAX - date_len,
-                                 nanofmt_s, nano_s);
-#ifdef HAVE_FORMAT_NONLITERAL
-#pragma GCC diagnostic pop
-#endif
-            nano_digits = 0;
+                                 "%.*s", nano_digits, nano_s);
         }
     }
 
-    return (date_len == 0)?NULL:strdup(date_s);
+    return (date_len == 0)? NULL : pcmk__str_copy(date_s);
 #undef DATE_LEN_MAX
 }
 

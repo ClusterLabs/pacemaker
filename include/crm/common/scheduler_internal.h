@@ -15,7 +15,7 @@
 #include <crm/common/attrs_internal.h>
 #include <crm/common/bundles_internal.h>
 #include <crm/common/clone_internal.h>
-#include <crm/common/digests_internal.h>
+#include <crm/common/digest_internal.h>
 #include <crm/common/failcounts_internal.h>
 #include <crm/common/group_internal.h>
 #include <crm/common/history_internal.h>

@@ -109,6 +109,7 @@ static void
 register_if_fencing_device(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
+    const char *rsc_id = pcmk__s(rsc->private->history_id, rsc->id);
 
     xmlNode *xml = NULL;
     GHashTableIter hash_iter;
@@ -131,7 +132,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         return;
     }
 
-    rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+    rclass = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
     if (!pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         return; // Not a fencing device
     }
@@ -163,8 +164,8 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     }
 
     // If device is in a group, check whether local node is allowed for group
-    if (pcmk__is_group(rsc->parent)) {
-        pcmk_node_t *group_node = local_node_allowed_for(rsc->parent);
+    if (pcmk__is_group(rsc->private->parent)) {
+        pcmk_node_t *group_node = local_node_allowed_for(rsc->private->parent);
 
         if ((group_node != NULL) && (group_node->weight < 0)) {
             crm_info("Ignoring fencing device %s "
@@ -176,7 +177,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
 
     crm_debug("Reloading configuration of fencing device %s", rsc->id);
 
-    agent = crm_element_value(rsc->xml, PCMK_XA_TYPE);
+    agent = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
 
     /* @COMPAT Support for node attribute expressions in rules for resource
      * meta-attributes is deprecated. When we can break behavioral backward
@@ -194,12 +195,11 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         params = stonith_key_value_add(params, name, value);
     }
 
-    xml = create_device_registration_xml(pcmk__s(rsc->clone_name, rsc->id),
-                                         st_namespace_any, agent, params,
-                                         rsc_provides);
+    xml = create_device_registration_xml(rsc_id, st_namespace_any, agent,
+                                         params, rsc_provides);
     stonith_key_value_freeall(params, 1, 1);
     CRM_ASSERT(stonith_device_register(xml, TRUE) == pcmk_ok);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 /*!

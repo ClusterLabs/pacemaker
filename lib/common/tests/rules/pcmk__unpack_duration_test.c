@@ -43,7 +43,7 @@ null_invalid(void **state)
     assert_int_equal(pcmk__unpack_duration(NULL, NULL, &end), EINVAL);
 
     crm_time_free(start);
-    free_xml(duration);
+    pcmk__xml_free(duration);
 }
 
 static void
@@ -57,7 +57,7 @@ nonnull_end_invalid(void **state)
 
     crm_time_free(start);
     crm_time_free(end);
-    free_xml(duration);
+    pcmk__xml_free(duration);
 }
 
 static void
@@ -74,7 +74,7 @@ no_id(void **state)
     crm_time_free(start);
     crm_time_free(end);
     crm_time_free(reference);
-    free_xml(duration);
+    pcmk__xml_free(duration);
 }
 
 static void
@@ -92,7 +92,7 @@ years_invalid(void **state)
     crm_time_free(start);
     crm_time_free(end);
     crm_time_free(reference);
-    free_xml(duration);
+    pcmk__xml_free(duration);
 }
 
 static void
@@ -109,10 +109,10 @@ all_valid(void **state)
     crm_time_free(start);
     crm_time_free(end);
     crm_time_free(reference);
-    free_xml(duration);
+    pcmk__xml_free(duration);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(null_invalid),
                 cmocka_unit_test(nonnull_end_invalid),
                 cmocka_unit_test(no_id),

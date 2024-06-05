@@ -43,7 +43,7 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
      * return the flags as determined by the resource method without a node
      * specified.
      */
-    flags = action->rsc->cmds->action_flags(action, NULL);
+    flags = action->rsc->private->cmds->action_flags(action, NULL);
     if ((node == NULL) || !pcmk__is_clone(action->rsc)) {
         return flags;
     }
@@ -54,7 +54,7 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
     runnable = pcmk_is_set(flags, pcmk_action_runnable);
 
     // Then recheck the resource method with the node
-    flags = action->rsc->cmds->action_flags(action, node);
+    flags = action->rsc->private->cmds->action_flags(action, node);
 
     /* For clones in ordering constraints, the node-specific "runnable" doesn't
      * matter, just the non-node-specific setting (i.e., is the action runnable
@@ -102,7 +102,7 @@ action_uuid_for_ordering(const char *first_uuid,
 
     // Only non-notify actions for collective resources need remapping
     if ((strstr(first_uuid, PCMK_ACTION_NOTIFY) != NULL)
-        || (first_rsc->variant < pcmk_rsc_variant_group)) {
+        || (first_rsc->private->variant < pcmk__rsc_variant_group)) {
         goto done;
     }
 
@@ -141,7 +141,7 @@ action_uuid_for_ordering(const char *first_uuid,
         /* If a clone or bundle has notifications enabled, the ordering will be
          * relative to when notifications have been sent for the remapped task.
          */
-        if (pcmk_is_set(first_rsc->flags, pcmk_rsc_notify)
+        if (pcmk_is_set(first_rsc->flags, pcmk__rsc_notify)
             && (pcmk__is_clone(first_rsc) || pcmk__is_bundled(first_rsc))) {
             uuid = pcmk__notify_key(rid, "confirmed-post",
                                     pcmk_action_text(remapped_task));
@@ -181,7 +181,11 @@ action_for_ordering(pcmk_action_t *action)
     pcmk_action_t *result = action;
     pcmk_resource_t *rsc = action->rsc;
 
-    if ((rsc != NULL) && (rsc->variant >= pcmk_rsc_variant_group)
+    if (rsc == NULL) {
+        return result;
+    }
+
+    if ((rsc->private->variant >= pcmk__rsc_variant_group)
         && (action->uuid != NULL)) {
         char *uuid = action_uuid_for_ordering(action->uuid, rsc);
 
@@ -220,8 +224,8 @@ update(pcmk_resource_t *rsc, pcmk_action_t *first, pcmk_action_t *then,
        const pcmk_node_t *node, uint32_t flags, uint32_t filter, uint32_t type,
        pcmk_scheduler_t *scheduler)
 {
-    return rsc->cmds->update_ordered_actions(first, then, node, flags, filter,
-                                             type, scheduler);
+    return rsc->private->cmds->update_ordered_actions(first, then, node, flags,
+                                                      filter, type, scheduler);
 }
 
 /*!
@@ -463,8 +467,8 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                                         |pcmk__ar_then_implies_first
                                         |pcmk__ar_intermediate_stop)
         && (first->rsc != NULL)
-        && !pcmk_is_set(first->rsc->flags, pcmk_rsc_managed)
-        && pcmk_is_set(first->rsc->flags, pcmk_rsc_blocked)
+        && !pcmk_is_set(first->rsc->flags, pcmk__rsc_managed)
+        && pcmk_is_set(first->rsc->flags, pcmk__rsc_blocked)
         && !pcmk_is_set(first->flags, pcmk_action_runnable)
         && pcmk__str_eq(first->task, PCMK_ACTION_STOP, pcmk__str_none)) {
 
@@ -550,7 +554,8 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             && pcmk__is_group(first->rsc)
             && pcmk__str_eq(first->task, PCMK_ACTION_START, pcmk__str_none)) {
 
-            first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
+            first_node = first->rsc->private->fns->location(first->rsc, NULL,
+                                                            FALSE);
             if (first_node != NULL) {
                 pcmk__rsc_trace(first->rsc, "Found %s for 'first' %s",
                                 pcmk__node_name(first_node), first->uuid);
@@ -560,7 +565,8 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         if (pcmk__is_group(then->rsc)
             && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)) {
 
-            then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
+            then_node = then->rsc->private->fns->location(then->rsc, NULL,
+                                                          FALSE);
             if (then_node != NULL) {
                 pcmk__rsc_trace(then->rsc, "Found %s for 'then' %s",
                                 pcmk__node_name(then_node), then->uuid);
@@ -592,7 +598,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
              */
             pcmk__set_action_flags(other->action, pcmk_action_optional);
             if (!strcmp(first->task, PCMK_ACTION_RELOAD_AGENT)) {
-                pcmk__clear_rsc_flags(first->rsc, pcmk_rsc_reload);
+                pcmk__clear_rsc_flags(first->rsc, pcmk__rsc_reload);
             }
         }
 
@@ -726,7 +732,9 @@ handle_asymmetric_ordering(const pcmk_action_t *first, pcmk_action_t *then)
 
     // Certain optional 'then' actions are unaffected by unrunnable 'first'
     if (pcmk_is_set(then->flags, pcmk_action_optional)) {
-        enum rsc_role_e then_rsc_role = then->rsc->fns->state(then->rsc, TRUE);
+        enum rsc_role_e then_rsc_role;
+
+        then_rsc_role = then->rsc->private->fns->state(then->rsc, TRUE);
 
         if ((then_rsc_role == pcmk_role_stopped)
             && pcmk__str_eq(then->task, PCMK_ACTION_STOP, pcmk__str_none)) {
@@ -751,14 +759,14 @@ handle_asymmetric_ordering(const pcmk_action_t *first, pcmk_action_t *then)
 
 /*!
  * \internal
- * \brief Set action bits appropriately when pe_restart_order is used
+ * \brief Set action bits appropriately when pcmk__ar_intermediate_stop is used
  *
- * \param[in,out] first   'First' action in an ordering with pe_restart_order
- * \param[in,out] then    'Then' action in an ordering with pe_restart_order
+ * \param[in,out] first   'First' action in ordering
+ * \param[in,out] then    'Then' action in ordering
  * \param[in]     filter  What action flags to care about
  *
- * \note pe_restart_order is set for "stop resource before starting it" and
- *       "stop later group member before stopping earlier group member"
+ * \note pcmk__ar_intermediate_stop is set for "stop resource before starting
+ *       it" and "stop later group member before stopping earlier group member"
  */
 static void
 handle_restart_ordering(pcmk_action_t *first, pcmk_action_t *then,
@@ -782,7 +790,7 @@ handle_restart_ordering(pcmk_action_t *first, pcmk_action_t *then,
      */
     if (pcmk_is_set(filter, pcmk_action_runnable)
         && !pcmk_is_set(then->flags, pcmk_action_runnable)
-        && pcmk_is_set(then->rsc->flags, pcmk_rsc_managed)
+        && pcmk_is_set(then->rsc->flags, pcmk__rsc_managed)
         && (first->rsc == then->rsc)) {
         reason = "stop";
     }
@@ -936,7 +944,7 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                         then->uuid, pcmk__node_name(then->node),
                         then->flags, then_flags, first->uuid, first->flags);
 
-        if ((then->rsc != NULL) && (then->rsc->parent != NULL)) {
+        if ((then->rsc != NULL) && (then->rsc->private->parent != NULL)) {
             // Required to handle "X_stop then X_start" for cloned groups
             pcmk__update_action_for_orderings(then, scheduler);
         }
@@ -1095,9 +1103,9 @@ add_op_digest_to_xml(const lrmd_event_data_t *op, xmlNode *update)
     args_xml = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
     g_hash_table_foreach(op->params, hash2field, args_xml);
     pcmk__filter_op_for_digest(args_xml);
-    digest = calculate_operation_digest(args_xml, NULL);
+    digest = pcmk__digest_operation(args_xml);
     crm_xml_add(update, PCMK__XA_OP_DIGEST, digest);
-    free_xml(args_xml);
+    pcmk__xml_free(args_xml);
     free(digest);
 }
 
@@ -1447,7 +1455,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->cmds->output_actions(rsc);
+        rsc->private->cmds->output_actions(rsc);
     }
 }
 
@@ -1525,11 +1533,11 @@ force_restart(pcmk_resource_t *rsc, const char *task, guint interval_ms,
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
     pcmk_action_t *required = custom_action(rsc, key, task, NULL, FALSE,
-                                            rsc->cluster);
+                                            rsc->private->scheduler);
 
     pe_action_set_reason(required, "resource definition change", true);
     trigger_unfencing(rsc, node, "Device parameters changed", NULL,
-                      rsc->cluster);
+                      rsc->private->scheduler);
 }
 
 /*!
@@ -1544,22 +1552,23 @@ schedule_reload(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
+
     pcmk_action_t *reload = NULL;
 
     // For collective resources, just call recursively for children
-    if (rsc->variant > pcmk_rsc_variant_primitive) {
+    if (rsc->private->variant > pcmk__rsc_variant_primitive) {
         g_list_foreach(rsc->children, schedule_reload, user_data);
         return;
     }
 
     // Skip the reload in certain situations
     if ((node == NULL)
-        || !pcmk_is_set(rsc->flags, pcmk_rsc_managed)
-        || pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+        || !pcmk_is_set(rsc->flags, pcmk__rsc_managed)
+        || pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         pcmk__rsc_trace(rsc, "Skip reload of %s:%s%s %s",
                         rsc->id,
-                        pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " unmanaged",
-                        pcmk_is_set(rsc->flags, pcmk_rsc_failed)? " failed" : "",
+                        pcmk_is_set(rsc->flags, pcmk__rsc_managed)? "" : " unmanaged",
+                        pcmk_is_set(rsc->flags, pcmk__rsc_failed)? " failed" : "",
                         (node == NULL)? "inactive" : node->details->uname);
         return;
     }
@@ -1567,28 +1576,28 @@ schedule_reload(gpointer data, gpointer user_data)
     /* If a resource's configuration changed while a start was pending,
      * force a full restart instead of a reload.
      */
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_start_pending)) {
         pcmk__rsc_trace(rsc,
                         "%s: preventing agent reload because start pending",
                         rsc->id);
         custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE,
-                      rsc->cluster);
+                      rsc->private->scheduler);
         return;
     }
 
     // Schedule the reload
-    pcmk__set_rsc_flags(rsc, pcmk_rsc_reload);
+    pcmk__set_rsc_flags(rsc, pcmk__rsc_reload);
     reload = custom_action(rsc, reload_key(rsc), PCMK_ACTION_RELOAD_AGENT, node,
-                           FALSE, rsc->cluster);
+                           FALSE, rsc->private->scheduler);
     pe_action_set_reason(reload, "resource definition change", FALSE);
 
     // Set orderings so that a required stop or demote cancels the reload
     pcmk__new_ordering(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
                        pcmk__ar_ordered|pcmk__ar_then_cancels_first,
-                       rsc->cluster);
+                       rsc->private->scheduler);
     pcmk__new_ordering(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
                        pcmk__ar_ordered|pcmk__ar_then_cancels_first,
-                       rsc->cluster);
+                       rsc->private->scheduler);
 }
 
 /*!
@@ -1628,7 +1637,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                             "%s-interval %s for %s on %s is in configuration",
                             pcmk__readable_interval(interval_ms), task, rsc->id,
                             pcmk__node_name(node));
-        } else if (pcmk_is_set(rsc->cluster->flags,
+        } else if (pcmk_is_set(rsc->private->scheduler->flags,
                                pcmk_sched_cancel_removed_actions)) {
             pcmk__schedule_cancel(rsc,
                                   crm_element_value(xml_op, PCMK__XA_CALL_ID),
@@ -1646,11 +1655,12 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
               pcmk__readable_interval(interval_ms), task, rsc->id,
               pcmk__node_name(node));
     task = task_for_digest(task, interval_ms);
-    digest_data = rsc_action_digest_cmp(rsc, xml_op, node, rsc->cluster);
+    digest_data = rsc_action_digest_cmp(rsc, xml_op, node,
+                                        rsc->private->scheduler);
 
-    if (only_sanitized_changed(xml_op, digest_data, rsc->cluster)) {
-        if (!pcmk__is_daemon && (rsc->cluster->priv != NULL)) {
-            pcmk__output_t *out = rsc->cluster->priv;
+    if (only_sanitized_changed(xml_op, digest_data, rsc->private->scheduler)) {
+        if (!pcmk__is_daemon && (rsc->private->scheduler->priv != NULL)) {
+            pcmk__output_t *out = rsc->private->scheduler->priv;
 
             out->info(out,
                       "Only 'private' parameters to %s-interval %s for %s "
@@ -1685,7 +1695,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                 // Agent supports reload, so use it
                 trigger_unfencing(rsc, node,
                                   "Device parameters changed (reload)", NULL,
-                                  rsc->cluster);
+                                  rsc->private->scheduler);
                 crm_log_xml_debug(digest_data->params_all, "params:reload");
                 schedule_reload((gpointer) rsc, (gpointer) node);
 
@@ -1753,7 +1763,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
     int start_index = 0;
     GList *sorted_op_list = NULL;
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         if (pcmk__is_anonymous_clone(pe__const_top_resource(rsc, false))) {
             pcmk__rsc_trace(rsc,
                             "Skipping configuration check "
@@ -1805,7 +1815,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
         crm_element_value_ms(rsc_op, PCMK_META_INTERVAL, &interval_ms);
 
         if ((interval_ms > 0)
-            && (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)
+            && (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)
                 || node->details->maintenance)) {
             // Maintenance mode cancels recurring operations
             pcmk__schedule_cancel(rsc,
@@ -1830,13 +1840,13 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                  * later in this case.
                  */
                 pe__add_param_check(rsc_op, rsc, node, pcmk__check_active,
-                                    rsc->cluster);
+                                    rsc->private->scheduler);
 
             } else if (pcmk__check_action_config(rsc, node, rsc_op)
                        && (pe_get_failcount(node, rsc, NULL, pcmk__fc_effective,
                                             NULL) != 0)) {
                 pe__clear_failcount(rsc, node, "action definition changed",
-                                    rsc->cluster);
+                                    rsc->private->scheduler);
             }
         }
     }

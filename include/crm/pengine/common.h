@@ -51,10 +51,6 @@ typedef struct pe_rule_eval_data {
     pe_op_eval_data_t *op_data;     // @COMPAT could be const
 } pe_rule_eval_data_t;
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/pengine/common_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
 #endif

@@ -96,7 +96,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                         "='" PCMK_VALUE_BLOCK "']",
                                     xml_name);
 
-    xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
+    xmlXPathObject *xpathObj = xpath_search(rsc->private->xml, xpath);
     gboolean should_block = FALSE;
 
     free(xpath);
@@ -137,7 +137,8 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                                  node->details->uname, xml_name,
                                                  conf_op_name,
                                                  conf_op_interval_ms);
-                lrm_op_xpathObj = xpath_search(rsc->cluster->input, lrm_op_xpath);
+                lrm_op_xpathObj = xpath_search(rsc->private->scheduler->input,
+                                               lrm_op_xpath);
 
                 free(lrm_op_xpath);
 
@@ -183,9 +184,9 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
 static inline char *
 rsc_fail_name(const pcmk_resource_t *rsc)
 {
-    const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
+    const char *name = pcmk__s(rsc->private->history_id, rsc->id);
 
-    return pcmk_is_set(rsc->flags, pcmk_rsc_unique)? strdup(name) : clone_strip(name);
+    return pcmk_is_set(rsc->flags, pcmk__rsc_unique)? strdup(name) : clone_strip(name);
 }
 
 /*!
@@ -250,20 +251,20 @@ generate_fail_regexes(const pcmk_resource_t *rsc,
 {
     int rc = pcmk_rc_ok;
     char *rsc_name = rsc_fail_name(rsc);
-    const char *version = crm_element_value(rsc->cluster->input,
+    const char *version = crm_element_value(rsc->private->scheduler->input,
                                             PCMK_XA_CRM_FEATURE_SET);
 
     // @COMPAT Pacemaker <= 1.1.16 used a single fail count per resource
     gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
 
     if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
-                            pcmk_is_set(rsc->flags, pcmk_rsc_unique),
+                            pcmk_is_set(rsc->flags, pcmk__rsc_unique),
                             failcount_re) != pcmk_rc_ok) {
         rc = EINVAL;
 
     } else if (generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name,
                                    is_legacy,
-                                   pcmk_is_set(rsc->flags, pcmk_rsc_unique),
+                                   pcmk_is_set(rsc->flags, pcmk__rsc_unique),
                                    lastfailure_re) != pcmk_rc_ok) {
         rc = EINVAL;
         regfree(failcount_re);
@@ -341,6 +342,9 @@ update_failcount_for_filler(gpointer data, gpointer user_data)
     fc_data->last_failure = QB_MAX(fc_data->last_failure, filler_last_failure);
 }
 
+#define readable_expiration(rsc)    \
+    pcmk__readable_interval((rsc)->private->failure_expiration_ms)
+
 /*!
  * \internal
  * \brief Get a resource's fail count on a node
@@ -380,26 +384,28 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
     regfree(&(fc_data.lastfailure_re));
 
     // If failure blocks the resource, disregard any failure timeout
-    if ((fc_data.failcount > 0) && (rsc->failure_timeout > 0)
+    if ((fc_data.failcount > 0) && (rsc->private->failure_expiration_ms > 0)
         && block_failure(node, rsc, xml_op)) {
 
-        pcmk__config_warn("Ignoring failure timeout %d for %s "
+        pcmk__config_warn("Ignoring failure timeout (%s) for %s "
                           "because it conflicts with "
                           PCMK_META_ON_FAIL "=" PCMK_VALUE_BLOCK,
-                          rsc->failure_timeout, rsc->id);
-        rsc->failure_timeout = 0;
+                          readable_expiration(rsc), rsc->id);
+        rsc->private->failure_expiration_ms = 0;
     }
 
     // If all failures have expired, ignore fail count
     if (pcmk_is_set(flags, pcmk__fc_effective) && (fc_data.failcount > 0)
-        && (fc_data.last_failure > 0) && (rsc->failure_timeout != 0)) {
+        && (fc_data.last_failure > 0)
+        && (rsc->private->failure_expiration_ms > 0)) {
 
-        time_t now = get_effective_time(rsc->cluster);
+        time_t now = get_effective_time(rsc->private->scheduler);
+        const guint expiration = rsc->private->failure_expiration_ms / 1000;
 
-        if (now > (fc_data.last_failure + rsc->failure_timeout)) {
-            pcmk__rsc_debug(rsc, "Failcount for %s on %s expired after %ds",
+        if (now > (fc_data.last_failure + expiration)) {
+            pcmk__rsc_debug(rsc, "Failcount for %s on %s expired after %s",
                             rsc->id, pcmk__node_name(node),
-                            rsc->failure_timeout);
+                            readable_expiration(rsc));
             fc_data.failcount = 0;
         }
     }
@@ -467,7 +473,7 @@ pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
     clear = custom_action(rsc, key, PCMK_ACTION_CLEAR_FAILCOUNT, node, FALSE,
                           scheduler);
     pcmk__insert_meta(clear, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
-    crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
+    crm_notice("Clearing failure of %s on %s because %s " QB_XS " %s",
                rsc->id, pcmk__node_name(node), reason, clear->uuid);
     return clear;
 }

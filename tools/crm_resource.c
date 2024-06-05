@@ -864,14 +864,15 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
                               cib_conn, cib_sync_call,
                               options.promoted_role_only, PCMK_ROLE_PROMOTED);
 
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
         int count = 0;
         GList *iter = NULL;
 
         current = NULL;
         for(iter = rsc->children; iter; iter = iter->next) {
             pcmk_resource_t *child = (pcmk_resource_t *)iter->data;
-            enum rsc_role_e child_role = child->fns->state(child, TRUE);
+            enum rsc_role_e child_role = child->private->fns->state(child,
+                                                                    TRUE);
 
             if (child_role == pcmk_role_promoted) {
                 count++;
@@ -978,7 +979,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         _("Could not get modified CIB: %s\n"), pcmk_rc_str(rc));
             g_list_free(before);
-            free_xml(*cib_xml_copy);
+            pcmk__xml_free(*cib_xml_copy);
             *cib_xml_copy = NULL;
             return rc;
         }
@@ -1030,7 +1031,7 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
     }
 
     if (rc != pcmk_rc_ok) {
-        free_xml(*cib_xml_copy);
+        pcmk__xml_free(*cib_xml_copy);
         *cib_xml_copy = NULL;
         return rc;
     }
@@ -1155,7 +1156,7 @@ set_property(void)
     rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_RESOURCES, msg_data,
                                 cib_sync_call);
     rc = pcmk_legacy2rc(rc);
-    free_xml(msg_data);
+    pcmk__xml_free(msg_data);
 
     return rc;
 }
@@ -1743,7 +1744,8 @@ main(int argc, char **argv)
         /* The --ban, --clear, --move, and --restart commands do not work with
          * instances of clone resourcs.
          */
-        if (pcmk__is_clone(rsc->parent) && (strchr(options.rsc_id, ':') != NULL)
+        if (pcmk__is_clone(rsc->private->parent)
+            && (strchr(options.rsc_id, ':') != NULL)
             && !accept_clone_instance()) {
 
             exit_code = CRM_EX_INVALID_PARAM;
@@ -1992,7 +1994,8 @@ main(int argc, char **argv)
         case cmd_get_param: {
             unsigned int count = 0;
             GHashTable *params = NULL;
-            pcmk_node_t *current = rsc->fns->active_node(rsc, &count, NULL);
+            pcmk_node_t *current = rsc->private->fns->active_node(rsc, &count,
+                                                                  NULL);
             bool free_params = true;
             const char* value = NULL;
 
@@ -2021,7 +2024,7 @@ main(int argc, char **argv)
 
             } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
 
-                value = crm_element_value(rsc->xml, options.prop_name);
+                value = crm_element_value(rsc->private->xml, options.prop_name);
                 free_params = false;
 
             } else {
@@ -2030,9 +2033,9 @@ main(int argc, char **argv)
                 };
 
                 params = pcmk__strkey_table(free, free);
-                pe__unpack_dataset_nvpairs(rsc->xml, PCMK_XE_UTILIZATION,
-                                           &rule_data, params, NULL, FALSE,
-                                           scheduler);
+                pe__unpack_dataset_nvpairs(rsc->private->xml,
+                                           PCMK_XE_UTILIZATION, &rule_data,
+                                           params, NULL, FALSE, scheduler);
 
                 value = g_hash_table_lookup(params, options.prop_name);
             }

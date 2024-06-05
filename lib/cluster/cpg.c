@@ -353,7 +353,7 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
     if (payload_size < 1) {
         crm_err("%sCPG message %d from %s invalid: "
                 "Claimed size of %d bytes is too small "
-                CRM_XS " from %s[%u] to %s@%s",
+                QB_XS " from %s[%u] to %s@%s",
                 (msg->is_compressed? "Compressed " : ""),
                 msg->id, ais_dest(&(msg->sender)),
                 (int) msg->header.size,
@@ -365,7 +365,7 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
     if (msg->header.error != CS_OK) {
         crm_err("%sCPG message %d from %s invalid: "
                 "Sender indicated error %d "
-                CRM_XS " from %s[%u] to %s@%s",
+                QB_XS " from %s[%u] to %s@%s",
                 (msg->is_compressed? "Compressed " : ""),
                 msg->id, ais_dest(&(msg->sender)),
                 msg->header.error,
@@ -377,7 +377,7 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
     if (msg_data_len(msg) != payload_size) {
         crm_err("%sCPG message %d from %s invalid: "
                 "Total size %d inconsistent with payload size %d "
-                CRM_XS " from %s[%u] to %s@%s",
+                QB_XS " from %s[%u] to %s@%s",
                 (msg->is_compressed? "Compressed " : ""),
                 msg->id, ais_dest(&(msg->sender)),
                 (int) msg->header.size, (int) msg_data_len(msg),
@@ -394,7 +394,7 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
          || (msg->data[msg->size - 1] != '\0'))) {
         crm_err("CPG message %d from %s invalid: "
                 "Payload does not end at byte %llu "
-                CRM_XS " from %s[%u] to %s@%s",
+                QB_XS " from %s[%u] to %s@%s",
                 msg->id, ais_dest(&(msg->sender)),
                 (unsigned long long) msg->size,
                 msg_type2text(msg->sender.type), msg->sender.pid,
@@ -504,7 +504,7 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
         rc = pcmk__bzlib2rc(rc);
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
+            crm_err("Decompression failed: %s " QB_XS " rc=%d",
                     pcmk_rc_str(rc), rc);
             free(uncompressed);
             goto badmsg;
@@ -1100,105 +1100,3 @@ pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
     g_string_free(data, TRUE);
     return rc;
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/cluster/compat.h>
-
-gboolean
-cluster_connect_cpg(pcmk_cluster_t *cluster)
-{
-    return pcmk__cpg_connect(cluster) == pcmk_rc_ok;
-}
-
-void
-cluster_disconnect_cpg(pcmk_cluster_t *cluster)
-{
-    pcmk__cpg_disconnect(cluster);
-}
-
-uint32_t
-get_local_nodeid(cpg_handle_t handle)
-{
-    return pcmk__cpg_local_nodeid(handle);
-}
-
-void
-pcmk_cpg_membership(cpg_handle_t handle,
-                    const struct cpg_name *group_name,
-                    const struct cpg_address *member_list,
-                    size_t member_list_entries,
-                    const struct cpg_address *left_list,
-                    size_t left_list_entries,
-                    const struct cpg_address *joined_list,
-                    size_t joined_list_entries)
-{
-    pcmk__cpg_confchg_cb(handle, group_name, member_list, member_list_entries,
-                         left_list, left_list_entries,
-                         joined_list, joined_list_entries);
-}
-
-gboolean
-send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
-                  gboolean local, const crm_node_t *node,
-                  enum crm_ais_msg_types dest)
-{
-    switch (msg_class) {
-        case crm_class_cluster:
-            return send_cpg_text(data, local, node, dest);
-        default:
-            crm_err("Invalid message class: %d", msg_class);
-            return FALSE;
-    }
-}
-
-char *
-pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
-                       void *content, uint32_t *kind, const char **from)
-{
-    return pcmk__cpg_message_data(handle, nodeid, pid, content, kind, from);
-}
-
-enum crm_ais_msg_types
-text2msg_type(const char *text)
-{
-    int type = crm_msg_none;
-
-    CRM_CHECK(text != NULL, return type);
-    text = pcmk__message_name(text);
-    if (pcmk__str_eq(text, "ais", pcmk__str_casei)) {
-        type = crm_msg_ais;
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_casei)) {
-        type = crm_msg_cib;
-    } else if (pcmk__strcase_any_of(text, CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL)) {
-        type = crm_msg_crmd;
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
-        type = crm_msg_te;
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_PENGINE, pcmk__str_casei)) {
-        type = crm_msg_pe;
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_LRMD, pcmk__str_casei)) {
-        type = crm_msg_lrmd;
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_STONITHD, pcmk__str_casei)) {
-        type = crm_msg_stonithd;
-    } else if (pcmk__str_eq(text, "stonith-ng", pcmk__str_casei)) {
-        type = crm_msg_stonith_ng;
-    } else if (pcmk__str_eq(text, "attrd", pcmk__str_casei)) {
-        type = crm_msg_attrd;
-
-    } else {
-        /* This will normally be a transient client rather than
-         * a cluster daemon.  Set the type to the pid of the client
-         */
-        int scan_rc = sscanf(text, "%d", &type);
-
-        if (scan_rc != 1 || type <= crm_msg_stonith_ng) {
-            /* Ensure it's sane */
-            type = crm_msg_none;
-        }
-    }
-    return type;
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

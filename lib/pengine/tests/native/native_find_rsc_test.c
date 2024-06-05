@@ -27,7 +27,7 @@ static int
 setup(void **state) {
     char *path = NULL;
 
-    crm_xml_init();
+    pcmk__xml_init();
 
     path = crm_strdup_printf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
     input = pcmk__xml_read(path);
@@ -79,7 +79,7 @@ setup(void **state) {
 static int
 teardown(void **state) {
     pe_free_working_set(scheduler);
-
+    pcmk__xml_cleanup();
     return 0;
 }
 
@@ -504,7 +504,7 @@ renamed_rsc(void **state) {
     assert_non_null(promotable_0);
     assert_non_null(promotable_1);
 
-    // Passes because pcmk_rsc_match_history means base name matches clone_name
+    // Passes because pcmk_rsc_match_history means base name matches history_id
     assert_ptr_equal(promotable_0,
                      native_find_rsc(promotable_0, "promotable-rsc", NULL,
                                      pcmk_rsc_match_history));

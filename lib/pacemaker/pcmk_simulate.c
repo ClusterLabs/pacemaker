@@ -46,7 +46,7 @@ create_action_name(const pcmk_action_t *action, bool verbose)
     char *action_name = NULL;
     const char *prefix = "";
     const char *action_host = NULL;
-    const char *clone_name = NULL;
+    const char *history_id = NULL;
     const char *task = action->task;
 
     if (action->node != NULL) {
@@ -61,10 +61,10 @@ create_action_name(const pcmk_action_t *action, bool verbose)
     }
 
     if (action->rsc != NULL) {
-        clone_name = action->rsc->clone_name;
+        history_id = action->rsc->private->history_id;
     }
 
-    if (clone_name != NULL) {
+    if (history_id != NULL) {
         char *key = NULL;
         guint interval_ms = 0;
 
@@ -82,9 +82,9 @@ create_action_name(const pcmk_action_t *action, bool verbose)
 
             CRM_ASSERT(n_type != NULL);
             CRM_ASSERT(n_task != NULL);
-            key = pcmk__notify_key(clone_name, n_type, n_task);
+            key = pcmk__notify_key(history_id, n_type, n_task);
         } else {
-            key = pcmk__op_key(clone_name, task, interval_ms);
+            key = pcmk__op_key(history_id, task, interval_ms);
         }
 
         if (action_host != NULL) {
@@ -247,7 +247,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
             color = "green";
 
         } else if ((action->rsc != NULL)
-                   && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)) {
+                   && !pcmk_is_set(action->rsc->flags, pcmk__rsc_managed)) {
             color = "red";
             font = "purple";
             if (!all_actions) {
@@ -346,12 +346,12 @@ profile_file(const char *xml_file, long long repeat,
     }
 
     if (pcmk_update_configured_schema(&cib_object, false) != pcmk_rc_ok) {
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
         return;
     }
 
     if (!pcmk__validate_xml(cib_object, NULL, NULL, NULL)) {
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
         return;
     }
 
@@ -584,7 +584,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         crm_err("Could not simulate action %d history for resource %s",
                 action->id, resource);
         free(node);
-        free_xml(cib_node);
+        pcmk__xml_free(cib_node);
         return EINVAL;
     }
 
@@ -650,7 +650,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
   done:
     free(node);
-    free_xml(cib_node);
+    pcmk__xml_free(cib_node);
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
     return pcmk_rc_ok;
@@ -726,7 +726,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
                                cib_xpath|cib_sync_call|cib_scope_local);
 
-        free_xml(cib_node);
+        pcmk__xml_free(cib_node);
         g_string_free(xpath, TRUE);
     }
 

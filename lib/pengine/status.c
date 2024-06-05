@@ -113,7 +113,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
     crm_trace("Beginning unpack");
 
     if (scheduler->failed != NULL) {
-        free_xml(scheduler->failed);
+        pcmk__xml_free(scheduler->failed);
     }
     scheduler->failed = pcmk__xe_create(NULL, "failed-ops");
 
@@ -172,7 +172,9 @@ cluster_status(pcmk_scheduler_t * scheduler)
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_no_counts)) {
         for (GList *item = scheduler->resources; item != NULL;
              item = item->next) {
-            ((pcmk_resource_t *) (item->data))->fns->count(item->data);
+            pcmk_resource_t *rsc = item->data;
+
+            rsc->private->fns->count(item->data);
         }
         crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
                   scheduler->ninstances, scheduler->disabled_resources,
@@ -203,7 +205,7 @@ pe_free_resources(GList *resources)
     while (iterator != NULL) {
         rsc = (pcmk_resource_t *) iterator->data;
         iterator = iterator->next;
-        rsc->fns->free(rsc);
+        rsc->private->fns->free(rsc);
     }
     if (resources != NULL) {
         g_list_free(resources);
@@ -351,10 +353,10 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
 
     pe__free_param_checks(scheduler);
     g_list_free(scheduler->stop_needed);
-    free_xml(scheduler->graph);
+    pcmk__xml_free(scheduler->graph);
     crm_time_free(scheduler->now);
-    free_xml(scheduler->input);
-    free_xml(scheduler->failed);
+    pcmk__xml_free(scheduler->input);
+    pcmk__xml_free(scheduler->failed);
 
     set_working_set_defaults(scheduler);
 
@@ -435,9 +437,9 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         pcmk_resource_t *parent = rIter->data;
+        pcmk_resource_t *match = parent->private->fns->find_rsc(parent, id,
+                                                                NULL, flags);
 
-        pcmk_resource_t *match =
-            parent->fns->find_rsc(parent, id, NULL, flags);
         if (match != NULL) {
             return match;
         }

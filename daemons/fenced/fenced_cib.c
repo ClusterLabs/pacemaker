@@ -95,7 +95,7 @@ topology_remove_helper(const char *node, int level)
     fenced_unregister_level(data, &desc, &result);
     fenced_send_config_notification(STONITH_OP_LEVEL_DEL, &result, desc);
     pcmk__reset_result(&result);
-    free_xml(data);
+    pcmk__xml_free(data);
     free(desc);
 }
 
@@ -433,7 +433,7 @@ watchdog_device_update(void)
                            */
                     NULL);
             rc = stonith_device_register(xml, TRUE);
-            free_xml(xml);
+            pcmk__xml_free(xml);
             if (rc != pcmk_ok) {
                 rc = pcmk_legacy2rc(rc);
                 exit_code = CRM_EX_FATAL;
@@ -467,7 +467,7 @@ fenced_query_cib(void)
     if (rc == pcmk_rc_ok) {
         CRM_ASSERT(local_cib != NULL);
     } else {
-        crm_err("Couldn't retrieve the CIB: %s " CRM_XS " rc=%d",
+        crm_err("Couldn't retrieve the CIB: %s " QB_XS " rc=%d",
                 pcmk_rc_str(rc), rc);
     }
     return rc;
@@ -654,12 +654,12 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
                 crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
-                free_xml(local_cib);
+                pcmk__xml_free(local_cib);
                 local_cib = NULL;
                 break;
             default:
                 crm_warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
-                free_xml(local_cib);
+                pcmk__xml_free(local_cib);
                 local_cib = NULL;
         }
     }
@@ -732,7 +732,7 @@ fenced_cib_cleanup(void)
                                            update_cib_cache_cb);
         cib__clean_up_connection(&cib_api);
     }
-    free_xml(local_cib);
+    pcmk__xml_free(local_cib);
     local_cib = NULL;
 }
 

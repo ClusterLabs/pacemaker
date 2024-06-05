@@ -218,7 +218,7 @@ delete_fsa_input(fsa_data_t * fsa_data)
 
             case fsa_dt_xml:
                 foo = fsa_data->data;
-                free_xml(foo);
+                pcmk__xml_free(foo);
                 break;
 
             case fsa_dt_lrm:
@@ -518,7 +518,7 @@ authorize_version(xmlNode *message_data, const char *field,
         || (version_num < 0LL)) {
 
         crm_warn("Rejected IPC hello from %s: '%s' is not a valid protocol %s "
-                 CRM_XS " ref=%s uuid=%s",
+                 QB_XS " ref=%s uuid=%s",
                  client_name, ((version == NULL)? "" : version),
                  field, (ref? ref : "none"), uuid);
         return false;
@@ -554,7 +554,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
 
     if (uuid == NULL) {
         crm_warn("IPC message from client rejected: No client identifier "
-                 CRM_XS " ref=%s", (ref? ref : "none"));
+                 QB_XS " ref=%s", (ref? ref : "none"));
         goto rejected;
     }
 
@@ -569,7 +569,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
     client_name = crm_element_value(message_data, PCMK__XA_CLIENT_NAME);
     if (pcmk__str_empty(client_name)) {
         crm_warn("IPC hello from client rejected: No client name",
-                 CRM_XS " ref=%s uuid=%s", (ref? ref : "none"), uuid);
+                 QB_XS " ref=%s uuid=%s", (ref? ref : "none"), uuid);
         goto rejected;
     }
     if (!authorize_version(message_data, PCMK__XA_MAJOR_VERSION, client_name,
@@ -834,10 +834,10 @@ handle_ping(const xmlNode *msg)
 
     // Send reply
     reply = create_reply(msg, ping);
-    free_xml(ping);
+    pcmk__xml_free(ping);
     if (reply != NULL) {
         (void) relay_message(reply, TRUE);
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     // Nothing further to do
@@ -872,10 +872,10 @@ handle_node_list(const xmlNode *request)
 
     // Create and send reply
     reply = create_reply(request, reply_data);
-    free_xml(reply_data);
+    pcmk__xml_free(reply_data);
     if (reply) {
         (void) relay_message(reply, TRUE);
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     // Nothing further to do
@@ -931,10 +931,10 @@ handle_node_info_request(const xmlNode *msg)
 
     // Send reply
     reply = create_reply(msg, reply_data);
-    free_xml(reply_data);
+    pcmk__xml_free(reply_data);
     if (reply != NULL) {
         (void) relay_message(reply, TRUE);
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     // Nothing further to do
@@ -1159,7 +1159,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
             } else {
                 crm_notice("Instructing peers to remove references to node %s/%u", name, id);
             }
-            free_xml(msg);
+            pcmk__xml_free(msg);
 
         } else {
             pcmk__cluster_forget_cluster_node(id, name);
@@ -1324,7 +1324,7 @@ delete_ha_msg_input(ha_msg_input_t * orig)
     if (orig == NULL) {
         return;
     }
-    free_xml(orig->msg);
+    pcmk__xml_free(orig->msg);
     free(orig);
 }
 
@@ -1353,6 +1353,6 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
     }
 
     pcmk__cluster_send_message(NULL, crm_msg_crmd, msg);
-    free_xml(msg);
+    pcmk__xml_free(msg);
 }
 

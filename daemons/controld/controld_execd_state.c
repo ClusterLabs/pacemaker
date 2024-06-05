@@ -585,7 +585,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
             remote_proxy_relay_response(proxy, op_reply, msg_id);
 
-            free_xml(op_reply);
+            pcmk__xml_free(op_reply);
         }
 
     } else {
@@ -607,7 +607,7 @@ controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
         rc = lrmd__new(&api, lrm_state->node_name, server, port);
         if (rc != pcmk_rc_ok) {
             crm_warn("Pacemaker Remote connection to %s:%s failed: %s "
-                     CRM_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
+                     QB_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
 
             return rc;
         }

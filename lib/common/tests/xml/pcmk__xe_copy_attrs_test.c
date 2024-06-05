@@ -24,7 +24,7 @@ null_args(void **state)
     assert_int_equal(pcmk__xe_copy_attrs(xml, NULL, pcmk__xaf_none), EINVAL);
     assert_ptr_equal(xml->properties, NULL);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -44,8 +44,8 @@ no_source_attrs(void **state)
                      pcmk_rc_ok);
     assert_string_equal(crm_element_value(target, "attr"), "value");
 
-    free_xml(src);
-    free_xml(target);
+    pcmk__xml_free(src);
+    pcmk__xml_free(target);
 }
 
 static void
@@ -61,8 +61,8 @@ copy_one(void **state)
     assert_string_equal(crm_element_value(src, "attr"),
                         crm_element_value(target, "attr"));
 
-    free_xml(src);
-    free_xml(target);
+    pcmk__xml_free(src);
+    pcmk__xml_free(target);
 }
 
 static void
@@ -86,8 +86,8 @@ copy_multiple(void **state)
     assert_string_equal(crm_element_value(src, "attr3"),
                         crm_element_value(target, "attr3"));
 
-    free_xml(src);
-    free_xml(target);
+    pcmk__xml_free(src);
+    pcmk__xml_free(target);
 }
 
 static void
@@ -104,8 +104,8 @@ overwrite(void **state)
                      pcmk_rc_ok);
     assert_string_equal(crm_element_value(src, "attr"),
                         crm_element_value(target, "attr"));
-    free_xml(src);
-    free_xml(target);
+    pcmk__xml_free(src);
+    pcmk__xml_free(target);
 }
 
 static void
@@ -130,8 +130,8 @@ no_overwrite(void **state)
     assert_string_equal(crm_element_value(src, "attr"),
                         crm_element_value(target, "attr"));
 
-    free_xml(src);
-    free_xml(target);
+    pcmk__xml_free(src);
+    pcmk__xml_free(target);
 }
 
 static void
@@ -150,8 +150,8 @@ score_update(void **state)
     assert_string_equal(crm_element_value(target, "plus_plus_attr"), "2");
     assert_string_equal(crm_element_value(target, "plus_two_attr"), "3");
 
-    free_xml(src);
-    free_xml(target);
+    pcmk__xml_free(src);
+    pcmk__xml_free(target);
 }
 
 static void
@@ -173,11 +173,11 @@ no_score_update(void **state)
     assert_string_equal(crm_element_value(target, "plus_two_attr"),
                         "plus_two_attr+=2");
 
-    free_xml(src);
-    free_xml(target);
+    pcmk__xml_free(src);
+    pcmk__xml_free(target);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(null_args),
                 cmocka_unit_test(no_source_attrs),
                 cmocka_unit_test(copy_one),

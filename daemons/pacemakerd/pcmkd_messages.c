@@ -62,7 +62,7 @@ handle_ping_request(pcmk__request_t *request)
     crm_xml_add(ping, PCMK_XA_RESULT, "ok");
     reply = create_reply(msg, ping);
 
-    free_xml(ping);
+    pcmk__xml_free(ping);
 
     if (reply == NULL) {
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
@@ -124,7 +124,7 @@ handle_shutdown_request(pcmk__request_t *request)
     }
 
     reply = create_reply(msg, shutdown);
-    free_xml(shutdown);
+    pcmk__xml_free(shutdown);
 
     if (reply == NULL) {
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
@@ -245,7 +245,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
         if (reply != NULL) {
             pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event);
-            free_xml(reply);
+            pcmk__xml_free(reply);
         }
 
         reason = request.result.exit_reason;
@@ -268,7 +268,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         pcmk__reset_request(&request);
     }
 
-    free_xml(msg);
+    pcmk__xml_free(msg);
     return 0;
 }
 

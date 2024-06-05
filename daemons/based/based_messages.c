@@ -131,7 +131,7 @@ send_sync_request(const char *host)
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
     pcmk__cluster_send_message(peer, crm_msg_cib, sync_me);
-    free_xml(sync_me);
+    pcmk__xml_free(sync_me);
 }
 
 int
@@ -140,7 +140,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 {
     const char *host = crm_element_value(req, PCMK__XA_SRC);
     const char *seq = crm_element_value(req, PCMK__XA_CIB_PING_ID);
-    char *digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
+    char *digest = pcmk__digest_xml(the_cib, true, CRM_FEATURE_SET);
 
     xmlNode *wrapper = NULL;
 
@@ -244,7 +244,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 pcmk__cluster_send_message(NULL, crm_msg_cib, up);
             }
 
-            free_xml(up);
+            pcmk__xml_free(up);
 
         } else if(rc == pcmk_ok) {
             rc = -pcmk_err_schema_unchanged;
@@ -258,7 +258,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                                               pcmk__node_search_cluster_member);
 
             crm_info("Rejecting upgrade request from %s: %s "
-                     CRM_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
+                     QB_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
                      (origin? origin->uname : "lost"));
 
             if (origin) {
@@ -275,10 +275,10 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 if (!pcmk__cluster_send_message(origin, crm_msg_cib, up)) {
                     crm_warn("Could not send CIB upgrade result to %s", host);
                 }
-                free_xml(up);
+                pcmk__xml_free(up);
             }
         }
-        free_xml(scratch);
+        pcmk__xml_free(scratch);
     }
     return rc;
 }
@@ -331,7 +331,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
               (based_is_primary? "primary": "secondary"));
 
     if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
-        free_xml(*result_cib);
+        pcmk__xml_free(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);
 
@@ -343,10 +343,10 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
 
     } else if ((rc != pcmk_ok) && !based_is_primary && cib_legacy_mode()) {
         crm_warn("Requesting full CIB refresh because update failed: %s"
-                 CRM_XS " rc=%d", pcmk_strerror(rc), rc);
+                 QB_XS " rc=%d", pcmk_strerror(rc), rc);
 
         pcmk__log_xml_patchset(LOG_INFO, input);
-        free_xml(*result_cib);
+        pcmk__xml_free(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);
     }
@@ -447,7 +447,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     pcmk__xe_set_bool_attr(replace_request, PCMK__XA_CIB_UPDATE, true);
 
     crm_xml_add(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-    digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
+    digest = pcmk__digest_xml(the_cib, true, CRM_FEATURE_SET);
     crm_xml_add(replace_request, PCMK__XA_DIGEST, digest);
 
     wrapper = pcmk__xe_create(replace_request, PCMK__XE_CIB_CALLDATA);
@@ -459,7 +459,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     if (!pcmk__cluster_send_message(peer, crm_msg_cib, replace_request)) {
         result = -ENOTCONN;
     }
-    free_xml(replace_request);
+    pcmk__xml_free(replace_request);
     free(digest);
     return result;
 }

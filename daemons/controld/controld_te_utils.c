@@ -401,7 +401,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
 
     if (reason == NULL) {
         do_crm_log(level,
-                   "Transition %d aborted: %s " CRM_XS " source=%s:%d "
+                   "Transition %d aborted: %s " QB_XS " source=%s:%d "
                    "complete=%s", controld_globals.transition_graph->id,
                    abort_text, fn, line,
                    pcmk__btoa(controld_globals.transition_graph->complete));
@@ -411,7 +411,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         CRM_ASSERT(local_path != NULL);
 
         do_crm_log(level, "Transition %d aborted by %s.%s: %s "
-                   CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
+                   QB_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                    controld_globals.transition_graph->id, reason->name,
                    pcmk__xe_id(reason), abort_text, add[0], add[1], add[2], fn,
                    line, (const char *) local_path->str,
@@ -440,7 +440,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             const char *shortpath = strrchr(path, '/');
 
             do_crm_log(level, "Transition %d aborted by deletion of %s: %s "
-                       CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
+                       QB_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
                        (shortpath? (shortpath + 1) : path), abort_text,
                        add[0], add[1], add[2], fn, line, path,
@@ -448,7 +448,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
 
         } else if (pcmk__xe_is(reason, PCMK_XE_NVPAIR)) {
             do_crm_log(level, "Transition %d aborted by %s doing %s %s=%s: %s "
-                       CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
+                       QB_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
                        crm_element_value(reason, PCMK_XA_ID), op,
                        crm_element_value(reason, PCMK_XA_NAME),
@@ -461,7 +461,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                                                   PCMK__XA_TRANSITION_MAGIC);
 
             do_crm_log(level, "Transition %d aborted by operation %s '%s' on %s: %s "
-                       CRM_XS " magic=%s cib=%d.%d.%d source=%s:%d complete=%s",
+                       QB_XS " magic=%s cib=%d.%d.%d source=%s:%d complete=%s",
                        controld_globals.transition_graph->id,
                        crm_element_value(reason, PCMK__XA_OPERATION_KEY), op,
                        crm_element_value(reason, PCMK__META_ON_NODE),
@@ -474,7 +474,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             const char *uname = pcmk__node_name_from_uuid(pcmk__xe_id(reason));
 
             do_crm_log(level, "Transition %d aborted by %s '%s' on %s: %s "
-                       CRM_XS " cib=%d.%d.%d source=%s:%d complete=%s",
+                       QB_XS " cib=%d.%d.%d source=%s:%d complete=%s",
                        controld_globals.transition_graph->id,
                        reason->name, op, pcmk__s(uname, pcmk__xe_id(reason)),
                        abort_text, add[0], add[1], add[2], fn, line,
@@ -484,7 +484,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             const char *id = pcmk__xe_id(reason);
 
             do_crm_log(level, "Transition %d aborted by %s.%s '%s': %s "
-                       CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
+                       QB_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
                        reason->name, pcmk__s(id, ""), pcmk__s(op, "change"),
                        abort_text, add[0], add[1], add[2], fn, line, path,

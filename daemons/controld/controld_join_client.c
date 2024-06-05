@@ -56,7 +56,7 @@ do_cl_join_query(long long action,
     update_dc(NULL);            /* Unset any existing value so that the result is not discarded */
     crm_debug("Querying for a DC");
     pcmk__cluster_send_message(NULL, crm_msg_crmd, req);
-    free_xml(req);
+    pcmk__xml_free(req);
 }
 
 /*	 A_CL_JOIN_ANNOUNCE	*/
@@ -85,7 +85,7 @@ do_cl_join_announce(long long action,
         crm_debug("Announcing availability");
         update_dc(NULL);
         pcmk__cluster_send_message(NULL, crm_msg_crmd, req);
-        free_xml(req);
+        pcmk__xml_free(req);
 
     } else {
         /* Delay announce until we have finished local startup */
@@ -114,7 +114,7 @@ do_cl_join_offer_respond(long long action,
 
     welcome_from = crm_element_value(input->msg, PCMK__XA_SRC);
     join_id = crm_element_value(input->msg, PCMK__XA_JOIN_ID);
-    crm_trace("Accepting cluster join offer from node %s "CRM_XS" join-%s",
+    crm_trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
               welcome_from, crm_element_value(input->msg, PCMK__XA_JOIN_ID));
 
     /* we only ever want the last one */
@@ -181,11 +181,11 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
         crm_xml_add(reply, PCMK__XA_JOIN_ID, join_id);
         crm_xml_add(reply, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
         pcmk__cluster_send_message(dc_node, crm_msg_crmd, reply);
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
   done:
-    free_xml(generation);
+    pcmk__xml_free(generation);
 }
 
 void
@@ -278,7 +278,7 @@ do_cl_join_finalize_respond(long long action,
 
     if (was_nack) {
         crm_err("Shutting down because cluster join with leader %s failed "
-                CRM_XS" join-%d NACK'd", welcome_from, join_id);
+                QB_XS " join-%d NACK'd", welcome_from, join_id);
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_set_fsa_input_flags(R_STAYDOWN);
         return;
@@ -342,14 +342,14 @@ do_cl_join_finalize_respond(long long action,
         }
 
         pcmk__cluster_send_message(dc_node, crm_msg_crmd, reply);
-        free_xml(reply);
+        pcmk__xml_free(reply);
 
         if (AM_I_DC == FALSE) {
             register_fsa_input_adv(cause, I_NOT_DC, NULL, A_NOTHING, TRUE,
                                    __func__);
         }
 
-        free_xml(tmp1);
+        pcmk__xml_free(tmp1);
 
         /* Update the remote node cache with information about which node
          * is hosting the connection.

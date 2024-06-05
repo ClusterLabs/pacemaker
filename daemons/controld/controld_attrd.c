@@ -80,7 +80,7 @@ update_attrd(const char *host, const char *name, const char *value,
     if (rc != pcmk_rc_ok) {
         do_crm_log(AM_I_DC? LOG_CRIT : LOG_ERR,
                    "Could not update attribute %s=%s for %s node %s%s: %s "
-                   CRM_XS " rc=%d", name, value, node_type(is_remote_node),
+                   QB_XS " rc=%d", name, value, node_type(is_remote_node),
                    host, when(), pcmk_rc_str(rc), rc);
         handle_attr_error();
     }
@@ -101,7 +101,7 @@ update_attrd_list(GList *attrs, uint32_t opts)
     if (rc != pcmk_rc_ok) {
         do_crm_log(AM_I_DC? LOG_CRIT : LOG_ERR,
                    "Could not update multiple node attributes: %s "
-                   CRM_XS " rc=%d", pcmk_rc_str(rc), rc);
+                   QB_XS " rc=%d", pcmk_rc_str(rc), rc);
         handle_attr_error();
     }
 }
@@ -121,7 +121,7 @@ update_attrd_remote_node_removed(const char *host, const char *user_name)
     }
     if (rc != pcmk_rc_ok) {
         crm_err("Could not purge Pacemaker Remote node %s "
-                "in attribute manager%s: %s " CRM_XS " rc=%d",
+                "in attribute manager%s: %s " QB_XS " rc=%d",
                 host, when(), pcmk_rc_str(rc), rc);
     }
 }
@@ -151,7 +151,7 @@ update_attrd_clear_failures(const char *host, const char *rsc, const char *op,
             interval_desc = pcmk__s(interval_spec, "nonrecurring");
         }
         crm_err("Could not clear failure of %s %s for %s on %s node %s%s: %s "
-                CRM_XS " rc=%d", interval_desc, pcmk__s(op, "operations"),
+                QB_XS " rc=%d", interval_desc, pcmk__s(op, "operations"),
                 pcmk__s(rsc, "all resources"), node_type(is_remote_node), host,
                 when(), pcmk_rc_str(rc), rc);
     }

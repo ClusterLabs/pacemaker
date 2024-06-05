@@ -33,7 +33,7 @@ static int
 setup(void **state)
 {
     setenv("PCMK_schema_directory", PCMK__TEST_SCHEMA_DIR, 1);
-    crm_schema_init();
+    pcmk__schema_init();
     pcmk__xml_test_setup_group(state);
     return 0;
 }
@@ -41,7 +41,8 @@ setup(void **state)
 static int
 teardown(void **state)
 {
-    crm_schema_cleanup();
+    pcmk__xml_test_teardown_group(state);
+    pcmk__schema_cleanup();
     unsetenv("PCMK_schema_directory");
     return 0;
 }
@@ -55,7 +56,7 @@ invalid_name(void **state)
     pcmk__build_schema_xml_node(parent, "pacemaker-9.0", &already_included);
     assert_null(parent->children);
     assert_null(already_included);
-    free_xml(parent);
+    pcmk__xml_free(parent);
 }
 
 static void
@@ -97,7 +98,7 @@ single_schema(void **state)
     }
 
     g_list_free_full(already_included, free);
-    free_xml(parent);
+    pcmk__xml_free(parent);
 }
 
 static void
@@ -149,7 +150,7 @@ multiple_schemas(void **state)
     }
 
     g_list_free_full(already_included, free);
-    free_xml(parent);
+    pcmk__xml_free(parent);
 }
 
 PCMK__UNIT_TEST(setup, teardown,

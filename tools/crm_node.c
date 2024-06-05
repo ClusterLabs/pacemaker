@@ -549,11 +549,11 @@ remove_from_section(cib_t *cib, const char *element, const char *section,
 
     crm_xml_add(xml, PCMK_XA_UNAME, node_name);
     if (node_id > 0) {
-        crm_xml_set_id(xml, "%ld", node_id);
+        pcmk__xe_set_id(xml, "%ld", node_id);
     }
 
     rc = cib->cmds->remove(cib, section, xml, cib_transaction);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     return (rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(rc);
 }
 
@@ -689,7 +689,7 @@ purge_node_from_fencer(const char *node_name, long node_id)
     cmd = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, "stonith-ng",
                          crm_system_name, NULL);
     if (node_id > 0) {
-        crm_xml_set_id(cmd, "%ld", node_id);
+        pcmk__xe_set_id(cmd, "%ld", node_id);
     }
     crm_xml_add(cmd, PCMK_XA_UNAME, node_name);
 
@@ -703,7 +703,7 @@ purge_node_from_fencer(const char *node_name, long node_id)
         fprintf(stderr, "Could not purge node %s from fencer: %s\n",
                 pcmk__s(node_name, "by ID"), pcmk_rc_str(rc));
     }
-    free_xml(cmd);
+    pcmk__xml_free(cmd);
     crm_ipc_close(conn);
     crm_ipc_destroy(conn);
     return rc;

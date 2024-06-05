@@ -17,8 +17,10 @@
 #include <sys/stat.h>                   // stat(), S_ISREG, etc.
 #include <sys/types.h>
 
+#include <glib.h>                       // gboolean, GString
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <libxml/xmlstring.h>           // xmlGetUTF8Char()
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -608,6 +610,66 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
 
 /*!
  * \internal
+ * \brief Move an XML attribute to the end of its element's attribute list
+ *
+ * This does not consider ACLs and does not mark the attribute as deleted or
+ * dirty. Upon return, the attribute still exists and is set to the same value
+ * as before the call. Only its position in the attribute list may change.
+ *
+ * \param[in]     data       \c pcmk_nvpair_t representing an XML attribute
+ * \param[in,out] user_data  XML element whose attribute to move
+ */
+static void
+move_xml_attr_to_end(gpointer data, gpointer user_data)
+{
+    const pcmk_nvpair_t *pair = data;
+    xmlNode *xml = user_data;
+
+    xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) pair->name);
+    xml_node_private_t *nodepriv = attr->_private;
+    uint32_t flags = (nodepriv != NULL)? nodepriv->flags : pcmk__xf_none;
+
+    xmlRemoveProp(attr);
+    attr = xmlSetProp(xml, (pcmkXmlStr) pair->name, (pcmkXmlStr) pair->value);
+
+    nodepriv = attr->_private;
+    if (nodepriv != NULL) {
+        nodepriv->flags = flags;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Sort an XML element's attributes by name
+ *
+ * This does not consider ACLs and does not mark the attributes as deleted or
+ * dirty. Upon return, all attributes still exist and are set to the same values
+ * as before the call. The only thing that may change is the order of the
+ * attribute list.
+ *
+ * \param[in,out] xml  XML element whose attributes to sort
+ */
+void
+pcmk__xe_sort_attrs(xmlNode *xml)
+{
+    xmlAttr *attr = pcmk__xe_first_attr(xml);
+    GSList *nvpairs = NULL;
+
+    if ((attr == NULL) || (attr->next == NULL)) {
+        return;
+    }
+
+    nvpairs = pcmk_xml_attrs2nvpairs(xml);
+    nvpairs = pcmk_sort_nvpairs(nvpairs);
+
+    // Reset attributes in sorted order
+    g_slist_foreach(nvpairs, move_xml_attr_to_end, xml);
+
+    pcmk_free_nvpairs(nvpairs);
+}
+
+/*!
+ * \internal
  * \brief Remove an XML attribute from an element
  *
  * \param[in,out] element  XML element that owns \p attr
@@ -787,40 +849,262 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
 }
 
 /*!
- * Free an XML element and all of its children, removing it from its parent
+ * \internal
+ * \brief Check whether the first character of a string is an XML NameStartChar
  *
- * \param[in,out] xml  XML element to free
+ * See https://www.w3.org/TR/xml/#NT-NameStartChar.
+ *
+ * This is almost identical to libxml2's \c xmlIsDocNameStartChar(), but they
+ * don't expose it as part of the public API.
+ *
+ * \param[in]  utf8  UTF-8 encoded string
+ * \param[out] len   If not \c NULL, where to store size in bytes of first
+ *                   character in \p utf8
+ *
+ * \return \c true if \p utf8 begins with a valid XML NameStartChar, or \c false
+ *         otherwise
  */
-void
-pcmk_free_xml_subtree(xmlNode *xml)
+bool
+pcmk__xml_is_name_start_char(const char *utf8, int *len)
 {
-    xmlUnlinkNode(xml); // Detaches from parent and siblings
-    xmlFreeNode(xml);   // Frees
+    int c = 0;
+    int local_len = 0;
+
+    if (len == NULL) {
+        len = &local_len;
+    }
+
+    /* xmlGetUTF8Char() abuses the len argument. At call time, it must be set to
+     * "the minimum number of bytes present in the sequence... to assure the
+     * next character is completely contained within the sequence." It's similar
+     * to the "n" in the strn*() functions. However, this doesn't make any sense
+     * for null-terminated strings, and there's no value that indicates "keep
+     * going until '\0'." So we set it to 4, the max number of bytes in a UTF-8
+     * character.
+     *
+     * At return, it's set to the actual number of bytes in the char, or 0 on
+     * error.
+     */
+    *len = 4;
+
+    // Note: xmlGetUTF8Char() assumes a 32-bit int
+    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    if (c < 0) {
+        GString *buf = g_string_sized_new(32);
+
+        for (int i = 0; (i < 4) && (utf8[i] != '\0'); i++) {
+            g_string_append_printf(buf, " 0x%.2X", utf8[i]);
+        }
+        crm_info("Invalid UTF-8 character (bytes:%s)",
+                 (pcmk__str_empty(buf->str)? " <none>" : buf->str));
+        g_string_free(buf, TRUE);
+        return false;
+    }
+
+    return (c == '_')
+           || (c == ':')
+           || ((c >= 'a') && (c <= 'z'))
+           || ((c >= 'A') && (c <= 'Z'))
+           || ((c >= 0xC0) && (c <= 0xD6))
+           || ((c >= 0xD8) && (c <= 0xF6))
+           || ((c >= 0xF8) && (c <= 0x2FF))
+           || ((c >= 0x370) && (c <= 0x37D))
+           || ((c >= 0x37F) && (c <= 0x1FFF))
+           || ((c >= 0x200C) && (c <= 0x200D))
+           || ((c >= 0x2070) && (c <= 0x218F))
+           || ((c >= 0x2C00) && (c <= 0x2FEF))
+           || ((c >= 0x3001) && (c <= 0xD7FF))
+           || ((c >= 0xF900) && (c <= 0xFDCF))
+           || ((c >= 0xFDF0) && (c <= 0xFFFD))
+           || ((c >= 0x10000) && (c <= 0xEFFFF));
 }
 
+/*!
+ * \internal
+ * \brief Check whether the first character of a string is an XML NameChar
+ *
+ * See https://www.w3.org/TR/xml/#NT-NameChar.
+ *
+ * This is almost identical to libxml2's \c xmlIsDocNameChar(), but they don't
+ * expose it as part of the public API.
+ *
+ * \param[in]  utf8  UTF-8 encoded string
+ * \param[out] len   If not \c NULL, where to store size in bytes of first
+ *                   character in \p utf8
+ *
+ * \return \c true if \p utf8 begins with a valid XML NameChar, or \c false
+ *         otherwise
+ */
+bool
+pcmk__xml_is_name_char(const char *utf8, int *len)
+{
+    int c = 0;
+    int local_len = 0;
+
+    if (len == NULL) {
+        len = &local_len;
+    }
+
+    // See comment regarding len in pcmk__xml_is_name_start_char()
+    *len = 4;
+
+    // Note: xmlGetUTF8Char() assumes a 32-bit int
+    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    if (c < 0) {
+        GString *buf = g_string_sized_new(32);
+
+        for (int i = 0; (i < 4) && (utf8[i] != '\0'); i++) {
+            g_string_append_printf(buf, " 0x%.2X", utf8[i]);
+        }
+        crm_info("Invalid UTF-8 character (bytes:%s)",
+                 (pcmk__str_empty(buf->str)? " <none>" : buf->str));
+        g_string_free(buf, TRUE);
+        return false;
+    }
+
+    return ((c >= 'a') && (c <= 'z'))
+           || ((c >= 'A') && (c <= 'Z'))
+           || ((c >= '0') && (c <= '9'))
+           || (c == '_')
+           || (c == ':')
+           || (c == '-')
+           || (c == '.')
+           || (c == 0xB7)
+           || ((c >= 0xC0) && (c <= 0xD6))
+           || ((c >= 0xD8) && (c <= 0xF6))
+           || ((c >= 0xF8) && (c <= 0x2FF))
+           || ((c >= 0x300) && (c <= 0x36F))
+           || ((c >= 0x370) && (c <= 0x37D))
+           || ((c >= 0x37F) && (c <= 0x1FFF))
+           || ((c >= 0x200C) && (c <= 0x200D))
+           || ((c >= 0x203F) && (c <= 0x2040))
+           || ((c >= 0x2070) && (c <= 0x218F))
+           || ((c >= 0x2C00) && (c <= 0x2FEF))
+           || ((c >= 0x3001) && (c <= 0xD7FF))
+           || ((c >= 0xF900) && (c <= 0xFDCF))
+           || ((c >= 0xFDF0) && (c <= 0xFFFD))
+           || ((c >= 0x10000) && (c <= 0xEFFFF));
+}
+
+/*!
+ * \internal
+ * \brief Sanitize a string so it is usable as an XML ID
+ *
+ * An ID must match the Name production as defined here:
+ * https://www.w3.org/TR/xml/#NT-Name.
+ *
+ * Convert an invalid start character to \c '_'. Convert an invalid character
+ * after the start character to \c '.'.
+ *
+ * \param[in,out] id  String to sanitize
+ */
+void
+pcmk__xml_sanitize_id(char *id)
+{
+    bool valid = true;
+    int len = 0;
+
+    // If id is empty or NULL, there's no way to make it a valid XML ID
+    CRM_ASSERT(!pcmk__str_empty(id));
+
+    /* @TODO Suppose there are two strings and each has an invalid ID character
+     * in the same position. The strings are otherwise identical. Both strings
+     * will be sanitized to the same valid ID, which is incorrect.
+     *
+     * The caller is responsible for ensuring the sanitized ID does not already
+     * exist in a given XML document before using it, if uniqueness is desired.
+     */
+    valid = pcmk__xml_is_name_start_char(id, &len);
+    CRM_CHECK(len > 0, return); // UTF-8 encoding error
+    if (!valid) {
+        *id = '_';
+        for (int i = 1; i < len; i++) {
+            id[i] = '.';
+        }
+    }
+
+    for (id += len; *id != '\0'; id += len) {
+        valid = pcmk__xml_is_name_char(id, &len);
+        CRM_CHECK(len > 0, return); // UTF-8 encoding error
+        if (!valid) {
+            for (int i = 0; i < len; i++) {
+                id[i] = '.';
+            }
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Set a formatted string as an XML element's ID
+ *
+ * If the formatted string would not be a valid ID, it's first sanitized by
+ * \c pcmk__xml_sanitize_id().
+ *
+ * \param[in,out] node    Node whose ID to set
+ * \param[in]     format  <tt>printf(3)</tt>-style format string
+ * \param[in]     ...     Arguments for \p format
+ */
+G_GNUC_PRINTF(2, 3)
+void
+pcmk__xe_set_id(xmlNode *node, const char *format, ...)
+{
+    char *id = NULL;
+    va_list ap;
+
+    CRM_ASSERT(!pcmk__str_empty(format));
+
+    if (node == NULL) {
+        return;
+    }
+
+    va_start(ap, format);
+    CRM_ASSERT(vasprintf(&id, format, ap) >= 0);
+    va_end(ap);
+
+    if (!xmlValidateNameValue((pcmkXmlStr) id)) {
+        pcmk__xml_sanitize_id(id);
+    }
+    crm_xml_add(node, PCMK_XA_ID, id);
+    free(id);
+}
+
+/*!
+ * \internal
+ * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
+ *
+ * If \p node is the root of its document, free the entire document.
+ *
+ * \param[in,out] node      XML node to free
+ * \param[in]     position  Position of \p node among its siblings for change
+ *                          tracking (negative to calculate automatically if
+ *                          needed)
+ */
 static void
-free_xml_with_position(xmlNode *child, int position)
+free_xml_with_position(xmlNode *node, int position)
 {
     xmlDoc *doc = NULL;
     xml_node_private_t *nodepriv = NULL;
 
-    if (child == NULL) {
+    if (node == NULL) {
         return;
     }
-    doc = child->doc;
-    nodepriv = child->_private;
+    doc = node->doc;
+    nodepriv = node->_private;
 
-    if ((doc != NULL) && (xmlDocGetRootElement(doc) == child)) {
-        // Free everything
+    if ((doc != NULL) && (xmlDocGetRootElement(doc) == node)) {
+        /* @TODO Should we check ACLs first? Otherwise it seems like we could
+         * free the root element without write permission.
+         */
         xmlFreeDoc(doc);
         return;
     }
 
-    if (!pcmk__check_acl(child, NULL, pcmk__xf_acl_write)) {
+    if (!pcmk__check_acl(node, NULL, pcmk__xf_acl_write)) {
         GString *xpath = NULL;
 
         pcmk__if_tracing({}, return);
-        xpath = pcmk__element_xpath(child);
+        xpath = pcmk__element_xpath(node);
         qb_log_from_external_source(__func__, __FILE__,
                                     "Cannot remove %s %x", LOG_TRACE,
                                     __LINE__, 0, xpath->str, nodepriv->flags);
@@ -828,45 +1112,53 @@ free_xml_with_position(xmlNode *child, int position)
         return;
     }
 
-    if ((doc != NULL) && pcmk__tracking_xml_changes(child, false)
+    if ((doc != NULL) && pcmk__tracking_xml_changes(node, false)
         && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
 
         xml_doc_private_t *docpriv = doc->_private;
-        GString *xpath = pcmk__element_xpath(child);
+        GString *xpath = pcmk__element_xpath(node);
 
         if (xpath != NULL) {
             pcmk__deleted_xml_t *deleted_obj = NULL;
 
-            crm_trace("Deleting %s %p from %p", xpath->str, child, doc);
+            crm_trace("Deleting %s %p from %p", xpath->str, node, doc);
 
             deleted_obj = pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
             deleted_obj->path = g_string_free(xpath, FALSE);
             deleted_obj->position = -1;
 
             // Record the position only for XML comments for now
-            if (child->type == XML_COMMENT_NODE) {
+            if (node->type == XML_COMMENT_NODE) {
                 if (position >= 0) {
                     deleted_obj->position = position;
 
                 } else {
-                    deleted_obj->position = pcmk__xml_position(child,
+                    deleted_obj->position = pcmk__xml_position(node,
                                                                pcmk__xf_skip);
                 }
             }
 
             docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
                                                   deleted_obj);
-            pcmk__set_xml_doc_flag(child, pcmk__xf_dirty);
+            pcmk__set_xml_doc_flag(node, pcmk__xf_dirty);
         }
     }
-    pcmk_free_xml_subtree(child);
+    xmlUnlinkNode(node);
+    xmlFreeNode(node);
 }
 
-
+/*!
+ * \internal
+ * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
+ *
+ * If \p xml is the root of its document, free the entire document.
+ *
+ * \param[in,out] xml  XML node to free
+ */
 void
-free_xml(xmlNode * child)
+pcmk__xml_free(xmlNode *xml)
 {
-    free_xml_with_position(child, -1);
+    free_xml_with_position(xml, -1);
 }
 
 /*!
@@ -929,8 +1221,8 @@ pcmk__strip_xml_text(xmlNode *xml)
 
         switch (iter->type) {
             case XML_TEXT_NODE:
-                /* Remove it */
-                pcmk_free_xml_subtree(iter);
+                xmlUnlinkNode(iter);
+                xmlFreeNode(iter);
                 break;
 
             case XML_ELEMENT_NODE:
@@ -965,51 +1257,6 @@ pcmk__xe_add_last_written(xmlNode *xe)
                          pcmk__s(now_s, "Could not determine current time"));
     free(now_s);
     return result;
-}
-
-/*!
- * \brief Sanitize a string so it is usable as an XML ID
- *
- * \param[in,out] id  String to sanitize
- */
-void
-crm_xml_sanitize_id(char *id)
-{
-    char *c;
-
-    for (c = id; *c; ++c) {
-        /* @TODO Sanitize more comprehensively */
-        switch (*c) {
-            case ':':
-            case '#':
-                *c = '.';
-        }
-    }
-}
-
-/*!
- * \brief Set the ID of an XML element using a format
- *
- * \param[in,out] xml  XML element
- * \param[in]     fmt  printf-style format
- * \param[in]     ...  any arguments required by format
- */
-void
-crm_xml_set_id(xmlNode *xml, const char *format, ...)
-{
-    va_list ap;
-    int len = 0;
-    char *id = NULL;
-
-    /* equivalent to crm_strdup_printf() */
-    va_start(ap, format);
-    len = vasprintf(&id, format, ap);
-    va_end(ap);
-    CRM_ASSERT(len > 0);
-
-    crm_xml_sanitize_id(id);
-    crm_xml_add(xml, PCMK_XA_ID, id);
-    free(id);
 }
 
 /*!
@@ -1811,7 +2058,7 @@ delete_xe_if_matching(xmlNode *xml, void *user_data)
 
     crm_log_xml_trace(xml, "delete-match");
     crm_log_xml_trace(search, "delete-search");
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     // Found a match and deleted it; stop traversing tree
     return false;
@@ -2068,34 +2315,6 @@ pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags)
     return ENXIO;
 }
 
-xmlNode *
-sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
-{
-    xmlNode *child = NULL;
-    GSList *nvpairs = NULL;
-    xmlNode *result = NULL;
-
-    CRM_CHECK(input != NULL, return NULL);
-
-    result = pcmk__xe_create(parent, (const char *) input->name);
-    nvpairs = pcmk_xml_attrs2nvpairs(input);
-    nvpairs = pcmk_sort_nvpairs(nvpairs);
-    pcmk_nvpairs2xml_attrs(nvpairs, result);
-    pcmk_free_nvpairs(nvpairs);
-
-    for (child = pcmk__xe_first_child(input, NULL, NULL, NULL); child != NULL;
-         child = pcmk__xe_next(child)) {
-
-        if (recursive) {
-            sorted_xml(child, result, recursive);
-        } else {
-            pcmk__xml_copy(result, child);
-        }
-    }
-
-    return result;
-}
-
 /*!
  * \internal
  * \brief Get next sibling XML element with the same name as a given element
@@ -2117,64 +2336,92 @@ pcmk__xe_next_same(const xmlNode *node)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Initialize the Pacemaker XML environment
+ *
+ * Set an XML buffer allocation scheme, set XML node create and destroy
+ * callbacks, and load schemas into the cache.
+ */
 void
-crm_xml_init(void)
+pcmk__xml_init(void)
 {
-    static bool init = true;
+    // @TODO Try to find a better caller than crm_log_preinit()
+    static bool initialized = false;
 
-    if(init) {
-        init = false;
-        /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
-         * pcmk__realloc()s and it can take upwards of 18 seconds (yes, seconds)
-         * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
-         * less than 1 second.
+    if (!initialized) {
+        initialized = true;
+
+        /* Double the buffer size when the buffer needs to grow. The default
+         * allocator XML_BUFFER_ALLOC_EXACT was found to cause poor performance
+         * due to the number of reallocs.
          */
         xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
 
-        /* Populate and free the _private field when nodes are created and destroyed */
-        xmlDeregisterNodeDefault(free_private_data);
+        // Initialize private data at node creation
         xmlRegisterNodeDefault(new_private_data);
 
-        crm_schema_init();
+        // Free private data at node destruction
+        xmlDeregisterNodeDefault(free_private_data);
+
+        // Load schemas into the cache
+        pcmk__schema_init();
     }
 }
 
+/*!
+ * \internal
+ * \brief Tear down the Pacemaker XML environment
+ *
+ * Destroy schema cache and clean up memory allocated by libxml2.
+ */
 void
-crm_xml_cleanup(void)
+pcmk__xml_cleanup(void)
 {
-    crm_schema_cleanup();
+    pcmk__schema_cleanup();
     xmlCleanupParser();
 }
 
-#define XPATH_MAX 512
-
+/*!
+ * \internal
+ * \brief Get the XML element whose \c PCMK_XA_ID matches an \c PCMK_XA_ID_REF
+ *
+ * \param[in] xml     Element whose \c PCMK_XA_ID_REF attribute to check
+ * \param[in] search  Node whose document to search for node with matching
+ *                    \c PCMK_XA_ID (\c NULL to use \p xml)
+ *
+ * \return If \p xml has a \c PCMK_XA_ID_REF attribute, node in
+ *         <tt>search</tt>'s document whose \c PCMK_XA_ID attribute matches;
+ *         otherwise, \p xml
+ */
 xmlNode *
-expand_idref(xmlNode * input, xmlNode * top)
+pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
 {
     char *xpath = NULL;
     const char *ref = NULL;
     xmlNode *result = NULL;
 
-    if (input == NULL) {
+    if (xml == NULL) {
         return NULL;
     }
 
-    ref = crm_element_value(input, PCMK_XA_ID_REF);
+    ref = crm_element_value(xml, PCMK_XA_ID_REF);
     if (ref == NULL) {
-        return input;
+        return xml;
     }
 
-    if (top == NULL) {
-        top = input;
+    if (search == NULL) {
+        search = xml;
     }
 
-    xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", input->name, ref);
-    result = get_xpath_object(xpath, top, LOG_DEBUG);
-    if (result == NULL) { // Not possible with schema validation enabled
+    xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", xml->name, ref);
+    result = get_xpath_object(xpath, search, LOG_DEBUG);
+    if (result == NULL) {
+        // Not possible with schema validation enabled
         pcmk__config_err("Ignoring invalid %s configuration: "
                          PCMK_XA_ID_REF " '%s' does not reference "
-                         "a valid object " CRM_XS " xpath=%s",
-                         input->name, ref, xpath);
+                         "a valid object " QB_XS " xpath=%s",
+                         xml->name, ref, xpath);
     }
     free(xpath);
     return result;
@@ -2314,150 +2561,6 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
 #include <crm/common/xml_compat.h>
 
 xmlNode *
-find_entity(xmlNode *parent, const char *node_name, const char *id)
-{
-    return pcmk__xe_first_child(parent, node_name,
-                                ((id == NULL)? id : PCMK_XA_ID), id);
-}
-
-void
-crm_destroy_xml(gpointer data)
-{
-    free_xml(data);
-}
-
-xmlDoc *
-getDocPtr(xmlNode *node)
-{
-    xmlDoc *doc = NULL;
-
-    CRM_CHECK(node != NULL, return NULL);
-
-    doc = node->doc;
-    if (doc == NULL) {
-        doc = xmlNewDoc(PCMK__XML_VERSION);
-        xmlDocSetRootElement(doc, node);
-    }
-    return doc;
-}
-
-xmlNode *
-add_node_copy(xmlNode *parent, xmlNode *src_node)
-{
-    xmlNode *child = NULL;
-
-    CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
-
-    child = xmlDocCopyNode(src_node, parent->doc, 1);
-    if (child == NULL) {
-        return NULL;
-    }
-    xmlAddChild(parent, child);
-    pcmk__xml_mark_created(child);
-    return child;
-}
-
-int
-add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child)
-{
-    add_node_copy(parent, child);
-    free_xml(child);
-    return 1;
-}
-
-gboolean
-xml_has_children(const xmlNode * xml_root)
-{
-    if (xml_root != NULL && xml_root->children != NULL) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
-static char *
-replace_text(char *text, size_t *index, size_t *length, const char *replace)
-{
-    // We have space for 1 char already
-    size_t offset = strlen(replace) - 1;
-
-    if (offset > 0) {
-        *length += offset;
-        text = pcmk__realloc(text, *length + 1);
-
-        // Shift characters to the right to make room for the replacement string
-        for (size_t i = *length; i > (*index + offset); i--) {
-            text[i] = text[i - offset];
-        }
-    }
-
-    // Replace the character at index by the replacement string
-    memcpy(text + *index, replace, offset + 1);
-
-    // Reset index to the end of replacement string
-    *index += offset;
-    return text;
-}
-
-char *
-crm_xml_escape(const char *text)
-{
-    size_t length = 0;
-    char *copy = NULL;
-
-    if (text == NULL) {
-        return NULL;
-    }
-
-    length = strlen(text);
-    copy = pcmk__str_copy(text);
-    for (size_t index = 0; index <= length; index++) {
-        if(copy[index] & 0x80 && copy[index+1] & 0x80){
-            index++;
-            continue;
-        }
-        switch (copy[index]) {
-            case 0:
-                // Sanity only; loop should stop at the last non-null byte
-                break;
-            case '<':
-                copy = replace_text(copy, &index, &length, "&lt;");
-                break;
-            case '>':
-                copy = replace_text(copy, &index, &length, "&gt;");
-                break;
-            case '"':
-                copy = replace_text(copy, &index, &length, "&quot;");
-                break;
-            case '\'':
-                copy = replace_text(copy, &index, &length, "&apos;");
-                break;
-            case '&':
-                copy = replace_text(copy, &index, &length, "&amp;");
-                break;
-            case '\t':
-                /* Might as well just expand to a few spaces... */
-                copy = replace_text(copy, &index, &length, "    ");
-                break;
-            case '\n':
-                copy = replace_text(copy, &index, &length, "\\n");
-                break;
-            case '\r':
-                copy = replace_text(copy, &index, &length, "\\r");
-                break;
-            default:
-                /* Check for and replace non-printing characters with their octal equivalent */
-                if(copy[index] < ' ' || copy[index] > '~') {
-                    char *replace = crm_strdup_printf("\\%.3o", copy[index]);
-
-                    copy = replace_text(copy, &index, &length, replace);
-                    free(replace);
-                }
-        }
-    }
-    return copy;
-}
-
-xmlNode *
 copy_xml(xmlNode *src)
 {
     xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
@@ -2472,253 +2575,95 @@ copy_xml(xmlNode *src)
     return copy;
 }
 
-xmlNode *
-create_xml_node(xmlNode *parent, const char *name)
+void
+crm_xml_init(void)
 {
-    // Like pcmk__xe_create(), but returns NULL on failure
-    xmlNode *node = NULL;
+    pcmk__xml_init();
+}
 
-    CRM_CHECK(!pcmk__str_empty(name), return NULL);
+void
+crm_xml_cleanup(void)
+{
+    pcmk__xml_cleanup();
+}
 
-    if (parent == NULL) {
-        xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
+void
+pcmk_free_xml_subtree(xmlNode *xml)
+{
+    xmlUnlinkNode(xml); // Detaches from parent and siblings
+    xmlFreeNode(xml);   // Frees
+}
 
-        if (doc == NULL) {
-            return NULL;
-        }
+void
+free_xml(xmlNode *child)
+{
+    pcmk__xml_free(child);
+}
 
-        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
-        if (node == NULL) {
-            xmlFreeDoc(doc);
-            return NULL;
-        }
-        xmlDocSetRootElement(doc, node);
+xmlNode *
+expand_idref(xmlNode *input, xmlNode *top)
+{
+    return pcmk__xe_resolve_idref(input, top);
+}
 
-    } else {
-        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
-        if (node == NULL) {
-            return NULL;
+void
+crm_xml_sanitize_id(char *id)
+{
+    char *c;
+
+    for (c = id; *c; ++c) {
+        switch (*c) {
+            case ':':
+            case '#':
+                *c = '.';
         }
     }
-    pcmk__xml_mark_created(node);
-    return node;
+}
+
+void
+crm_xml_set_id(xmlNode *xml, const char *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *id = NULL;
+
+    /* equivalent to crm_strdup_printf() */
+    va_start(ap, format);
+    len = vasprintf(&id, format, ap);
+    va_end(ap);
+    CRM_ASSERT(len > 0);
+
+    crm_xml_sanitize_id(id);
+    crm_xml_add(xml, PCMK_XA_ID, id);
+    free(id);
 }
 
 xmlNode *
-pcmk_create_xml_text_node(xmlNode *parent, const char *name,
-                          const char *content)
+sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 {
-    xmlNode *node = pcmk__xe_create(parent, name);
-
-    pcmk__xe_set_content(node, "%s", content);
-    return node;
-}
-
-xmlNode *
-pcmk_create_html_node(xmlNode *parent, const char *element_name, const char *id,
-                      const char *class_name, const char *text)
-{
-    xmlNode *node = pcmk__html_create(parent, element_name, id, class_name);
-
-    pcmk__xe_set_content(node, "%s", text);
-    return node;
-}
-
-xmlNode *
-first_named_child(const xmlNode *parent, const char *name)
-{
-    return pcmk__xe_first_child(parent, name, NULL, NULL);
-}
-
-xmlNode *
-find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
-{
+    xmlNode *child = NULL;
+    GSList *nvpairs = NULL;
     xmlNode *result = NULL;
 
-    if (search_path == NULL) {
-        crm_warn("Will never find <NULL>");
-        return NULL;
-    }
+    CRM_CHECK(input != NULL, return NULL);
 
-    result = pcmk__xe_first_child(root, search_path, NULL, NULL);
+    result = pcmk__xe_create(parent, (const char *) input->name);
+    nvpairs = pcmk_xml_attrs2nvpairs(input);
+    nvpairs = pcmk_sort_nvpairs(nvpairs);
+    pcmk_nvpairs2xml_attrs(nvpairs, result);
+    pcmk_free_nvpairs(nvpairs);
 
-    if (must_find && (result == NULL)) {
-        crm_warn("Could not find %s in %s",
-                 search_path,
-                 ((root != NULL)? (const char *) root->name : "<NULL>"));
+    for (child = pcmk__xe_first_child(input, NULL, NULL, NULL); child != NULL;
+         child = pcmk__xe_next(child)) {
+
+        if (recursive) {
+            sorted_xml(child, result, recursive);
+        } else {
+            pcmk__xml_copy(result, child);
+        }
     }
 
     return result;
-}
-
-xmlNode *
-crm_next_same_xml(const xmlNode *sibling)
-{
-    return pcmk__xe_next_same(sibling);
-}
-
-void
-xml_remove_prop(xmlNode * obj, const char *name)
-{
-    pcmk__xe_remove_attr(obj, name);
-}
-
-gboolean
-replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean delete_only)
-{
-    bool is_match = false;
-    const char *child_id = NULL;
-    const char *update_id = NULL;
-
-    CRM_CHECK(child != NULL, return FALSE);
-    CRM_CHECK(update != NULL, return FALSE);
-
-    child_id = pcmk__xe_id(child);
-    update_id = pcmk__xe_id(update);
-
-    /* Match element name and (if provided in update XML) element ID. Don't
-     * match search root (child is search root if parent == NULL).
-     */
-    is_match = (parent != NULL)
-               && pcmk__xe_is(update, (const char *) child->name)
-               && ((update_id == NULL)
-                   || pcmk__str_eq(update_id, child_id, pcmk__str_none));
-
-    /* For deletion, match all attributes provided in update. A matching node
-     * can have additional attributes, but values must match for provided ones.
-     */
-    if (is_match && delete_only) {
-        for (xmlAttr *attr = pcmk__xe_first_attr(update); attr != NULL;
-             attr = attr->next) {
-            const char *name = (const char *) attr->name;
-            const char *update_val = pcmk__xml_attr_value(attr);
-            const char *child_val = crm_element_value(child, name);
-
-            if (!pcmk__str_eq(update_val, child_val, pcmk__str_casei)) {
-                is_match = false;
-                break;
-            }
-        }
-    }
-
-    if (is_match) {
-        if (delete_only) {
-            crm_log_xml_trace(child, "delete-match");
-            crm_log_xml_trace(update, "delete-search");
-            free_xml(child);
-
-        } else {
-            crm_log_xml_trace(child, "replace-match");
-            crm_log_xml_trace(update, "replace-with");
-            replace_node(child, update);
-        }
-        return TRUE;
-    }
-
-    // Current node not a match; search the rest of the subtree depth-first
-    parent = child;
-    for (child = pcmk__xml_first_child(parent); child != NULL;
-         child = pcmk__xml_next(child)) {
-
-        // Only delete/replace the first match
-        if (replace_xml_child(parent, child, update, delete_only)) {
-            return TRUE;
-        }
-    }
-
-    // No match found in this subtree
-    return FALSE;
-}
-
-gboolean
-update_xml_child(xmlNode *child, xmlNode *to_update)
-{
-    return pcmk__xe_update_match(child, to_update,
-                                 pcmk__xaf_score_update) == pcmk_rc_ok;
-}
-
-int
-find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
-                  const char *field, const char *value, gboolean search_matches)
-{
-    int match_found = 0;
-
-    CRM_CHECK(root != NULL, return FALSE);
-    CRM_CHECK(children != NULL, return FALSE);
-
-    if ((tag != NULL) && !pcmk__xe_is(root, tag)) {
-
-    } else if ((value != NULL)
-               && !pcmk__str_eq(value, crm_element_value(root, field),
-                                pcmk__str_casei)) {
-
-    } else {
-        if (*children == NULL) {
-            *children = pcmk__xe_create(NULL, __func__);
-        }
-        pcmk__xml_copy(*children, root);
-        match_found = 1;
-    }
-
-    if (search_matches || match_found == 0) {
-        xmlNode *child = NULL;
-
-        for (child = pcmk__xml_first_child(root); child != NULL;
-             child = pcmk__xml_next(child)) {
-            match_found += find_xml_children(children, child, tag, field, value,
-                                             search_matches);
-        }
-    }
-
-    return match_found;
-}
-
-void
-fix_plus_plus_recursive(xmlNode *target)
-{
-    /* TODO: Remove recursion and use xpath searches for value++ */
-    xmlNode *child = NULL;
-
-    for (xmlAttrPtr a = pcmk__xe_first_attr(target); a != NULL; a = a->next) {
-        const char *p_name = (const char *) a->name;
-        const char *p_value = pcmk__xml_attr_value(a);
-
-        expand_plus_plus(target, p_name, p_value);
-    }
-    for (child = pcmk__xe_first_child(target, NULL, NULL, NULL); child != NULL;
-         child = pcmk__xe_next(child)) {
-
-        fix_plus_plus_recursive(child);
-    }
-}
-
-void
-copy_in_properties(xmlNode *target, const xmlNode *src)
-{
-    if (src == NULL) {
-        crm_warn("No node to copy properties from");
-
-    } else if (target == NULL) {
-        crm_err("No node to copy properties into");
-
-    } else {
-        for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
-            const char *p_name = (const char *) a->name;
-            const char *p_value = pcmk__xml_attr_value(a);
-
-            expand_plus_plus(target, p_name, p_value);
-            if (xml_acl_denied(target)) {
-                crm_trace("Cannot copy %s=%s to %s", p_name, p_value, target->name);
-                return;
-            }
-        }
-    }
-}
-
-void
-expand_plus_plus(xmlNode * target, const char *name, const char *value)
-{
-    pcmk__xe_set_score(target, name, value);
 }
 
 // LCOV_EXCL_STOP

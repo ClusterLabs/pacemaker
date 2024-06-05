@@ -120,14 +120,14 @@ do_shutdown_req(long long action,
     if (!pcmk__cluster_send_message(NULL, crm_msg_crmd, msg)) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
-    free_xml(msg);
+    pcmk__xml_free(msg);
 }
 
 void
 crmd_fast_exit(crm_exit_t exit_code)
 {
     if (pcmk_is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
-        crm_warn("Inhibiting respawn "CRM_XS" remapping exit code %d to %d",
+        crm_warn("Inhibiting respawn " QB_XS " remapping exit code %d to %d",
                  exit_code, CRM_EX_FATAL);
         exit_code = CRM_EX_FATAL;
 
@@ -399,7 +399,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     }
 
     controld_trigger_fsa();
-    free_xml(msg);
+    pcmk__xml_free(msg);
     return 0;
 }
 

@@ -78,7 +78,25 @@ pcmk__xml_test_setup_group(void **state)
      * segmentation faults or assertions in functions related to change
      * tracking and ACLs. There's no harm in doing this before all tests.
      */
-    crm_xml_init();
+    pcmk__xml_init();
+    return 0;
+}
+
+/*!
+ * \internal
+ * \brief Perform teardown for a group of unit tests that manipulated XML
+ *
+ * This function is suitable for being passed as the second argument to the
+ * \c PCMK__UNIT_TEST macro.
+ *
+ * \param[in] state  Ignored
+ *
+ * \return 0
+ */
+int
+pcmk__xml_test_teardown_group(void **state)
+{
+    pcmk__xml_cleanup();
     return 0;
 }
 
@@ -123,6 +141,25 @@ pcmk__cib_test_cleanup(char *out_path)
     unlink(out_path);
     free(out_path);
     unsetenv("CIB_file");
+}
+
+/*!
+ * \internal
+ * \brief Initialize logging for unit testing purposes
+ *
+ * \param[in] name      What to use as system name for logging
+ * \param[in] filename  If not NULL, enable debug logs to this file (intended
+ *                      for debugging during development rather than committed
+ *                      unit tests)
+ */
+void
+pcmk__test_init_logging(const char *name, const char *filename)
+{
+    pcmk__cli_init_logging(name, 0);
+    if (filename != NULL) {
+        pcmk__add_logfile(filename);
+        set_crm_log_level(LOG_DEBUG);
+    }
 }
 
 // LCOV_EXCL_STOP

@@ -265,14 +265,14 @@ pcmk__daemon_user_can_write(const char *target_name, struct stat *target_stat)
         return FALSE;
     }
     if (target_stat->st_uid != sys_user->pw_uid) {
-        crm_notice("%s is not owned by user %s " CRM_XS " uid %d != %d",
+        crm_notice("%s is not owned by user %s " QB_XS " uid %d != %d",
                    target_name, CRM_DAEMON_USER, sys_user->pw_uid,
                    target_stat->st_uid);
         return FALSE;
     }
     if ((target_stat->st_mode & (S_IRUSR | S_IWUSR)) == 0) {
         crm_notice("%s is not readable and writable by user %s "
-                   CRM_XS " st_mode=0%lo",
+                   QB_XS " st_mode=0%lo",
                    target_name, CRM_DAEMON_USER,
                    (unsigned long) target_stat->st_mode);
         return FALSE;
@@ -294,7 +294,7 @@ pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
     }
 
     if (target_stat->st_gid != sys_grp->gr_gid) {
-        crm_notice("%s is not owned by group %s " CRM_XS " uid %d != %d",
+        crm_notice("%s is not owned by group %s " QB_XS " uid %d != %d",
                    target_name, CRM_DAEMON_GROUP,
                    sys_grp->gr_gid, target_stat->st_gid);
         return FALSE;
@@ -302,7 +302,7 @@ pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
 
     if ((target_stat->st_mode & (S_IRGRP | S_IWGRP)) == 0) {
         crm_notice("%s is not readable and writable by group %s "
-                   CRM_XS " st_mode=0%lo",
+                   QB_XS " st_mode=0%lo",
                    target_name, CRM_DAEMON_GROUP,
                    (unsigned long) target_stat->st_mode);
         return FALSE;
@@ -348,7 +348,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
             target = NULL;
 
         } else if (S_ISREG(buf.st_mode) == FALSE) {
-            crm_err("%s must be a regular file " CRM_XS " st_mode=0%lo",
+            crm_err("%s must be a regular file " QB_XS " st_mode=0%lo",
                     target, (unsigned long) buf.st_mode);
             free(full_file);
             return false;
@@ -364,7 +364,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
             return false;
 
         } else if (S_ISDIR(buf.st_mode) == FALSE) {
-            crm_err("%s must be a directory " CRM_XS " st_mode=0%lo",
+            crm_err("%s must be a directory " QB_XS " st_mode=0%lo",
                     dir, (unsigned long) buf.st_mode);
             return false;
         }
@@ -374,7 +374,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
         && !pcmk__daemon_group_can_write(target, &buf)) {
 
         crm_err("%s must be owned and writable by either user %s or group %s "
-                CRM_XS " st_mode=0%lo",
+                QB_XS " st_mode=0%lo",
                 target, CRM_DAEMON_USER, CRM_DAEMON_GROUP,
                 (unsigned long) buf.st_mode);
         free(full_file);
@@ -641,22 +641,3 @@ pcmk__full_path(const char *filename, const char *dirname)
     CRM_ASSERT(dirname != NULL);
     return crm_strdup_printf("%s/%s", dirname, filename);
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/util_compat.h>
-
-void
-crm_build_path(const char *path_c, mode_t mode)
-{
-    int rc = pcmk__build_path(path_c, mode);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not create directory '%s': %s",
-                path_c, pcmk_rc_str(rc));
-    }
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

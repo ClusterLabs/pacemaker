@@ -7,14 +7,16 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__SCHEMAS_INTERNAL__H
-#define PCMK__SCHEMAS_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_SCHEMAS_INTERNAL__H
+#define PCMK__CRM_COMMON_SCHEMAS_INTERNAL__H
 
+#include <stdbool.h>
 #include <glib.h>           // GList, gboolean
-#include <libxml/tree.h>    // xmlNode, xmlRelaxNGValidityErrorFunc
+#include <libxml/relaxng.h> // xmlRelaxNGValidityErrorFunc
+#include <libxml/tree.h>    // xmlNode
 
-void crm_schema_init(void);
-void crm_schema_cleanup(void);
+void pcmk__schema_init(void);
+void pcmk__schema_cleanup(void);
 
 void pcmk__load_schemas_from_dir(const char *dir);
 void pcmk__sort_schemas(void);

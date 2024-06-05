@@ -42,7 +42,7 @@ assert_rsc_expression(const char *xml_string, int reference_rc)
 
     assert_int_equal(pcmk__evaluate_rsc_expression(xml, &rule_input),
                      reference_rc);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 
@@ -65,7 +65,7 @@ null_invalid(void **state)
 
     xml = pcmk__xml_parse(EXPR_ALL_MATCH);
     assert_int_equal(pcmk__evaluate_rsc_expression(xml, NULL), EINVAL);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     assert_rsc_expression(NULL, EINVAL);
 }
@@ -214,7 +214,7 @@ all_match(void **state)
     assert_rsc_expression(EXPR_ALL_MATCH, pcmk_rc_ok);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(null_invalid),
                 cmocka_unit_test(id_missing),
                 cmocka_unit_test(fail_standard),

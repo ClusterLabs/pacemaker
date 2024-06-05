@@ -107,7 +107,6 @@ configure
 /agents/ocf/attribute
 /agents/ocf/controld
 /agents/ocf/ifspeed
-/agents/ocf/o2cb
 /agents/ocf/ping
 /agents/ocf/remote
 /agents/stonith/fence_legacy
@@ -120,7 +119,6 @@ configure
 /cts/cts-exec
 /cts/cts-fencing
 /cts/cts-lab
-/cts/cts-log-watcher
 /cts/cts-regression
 /cts/cts-scheduler
 /cts/lab/CTS.py
@@ -274,6 +272,7 @@ pacemaker_*.info
 /HTML
 /abi_dumps
 /abi-check
+/agents/ocf/o2cb
 /build.counter
 /compat_reports
 /compile
@@ -291,6 +290,7 @@ pacemaker_*.info
 /cts/LSBDummy
 /cts/OCFIPraTest.py
 /cts/cts-coverage
+/cts/cts-log-watcher
 /cts/cts-support
 /cts/fence_dummy
 /cts/lab/CTSlab.py

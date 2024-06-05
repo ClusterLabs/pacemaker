@@ -35,9 +35,9 @@ pe__free_digests(gpointer ptr)
     pcmk__op_digest_t *data = ptr;
 
     if (data != NULL) {
-        free_xml(data->params_all);
-        free_xml(data->params_secure);
-        free_xml(data->params_restart);
+        pcmk__xml_free(data->params_all);
+        pcmk__xml_free(data->params_secure);
+        pcmk__xml_free(data->params_restart);
 
         free(data->digest_all_calc);
         free(data->digest_restart_calc);
@@ -161,8 +161,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
 
     pcmk__filter_op_for_digest(data->params_all);
 
-    data->digest_all_calc = calculate_operation_digest(data->params_all,
-                                                       op_version);
+    data->digest_all_calc = pcmk__digest_operation(data->params_all);
 }
 
 // Return true if XML attribute name is a Pacemaker-defined fencing parameter
@@ -188,7 +187,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                         GHashTable *params, const xmlNode *xml_op,
                         const char *op_version, GHashTable *overrides)
 {
-    const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+    const char *class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
     const char *secure_list = NULL;
     bool old_version = (compare_version(op_version, "3.16.0") < 0);
 
@@ -239,8 +238,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                              CRM_META "_" PCMK_META_TIMEOUT);
     }
 
-    data->digest_secure_calc = calculate_operation_digest(data->params_secure,
-                                                          op_version);
+    data->digest_secure_calc = pcmk__digest_operation(data->params_secure);
 }
 
 /*!
@@ -281,8 +279,7 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
     }
 
     value = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
-    data->digest_restart_calc = calculate_operation_digest(data->params_restart,
-                                                           value);
+    data->digest_restart_calc = pcmk__digest_operation(data->params_restart);
 }
 
 /*!

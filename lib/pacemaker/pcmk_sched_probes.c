@@ -57,7 +57,7 @@ pcmk__probe_resource_list(GList *rscs, pcmk_node_t *node)
     for (GList *iter = rscs; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        if (rsc->cmds->create_probe(rsc, node)) {
+        if (rsc->private->cmds->create_probe(rsc, node)) {
             any_created = true;
         }
     }
@@ -83,7 +83,7 @@ probe_then_start(pcmk_resource_t *rsc1, pcmk_resource_t *rsc2)
                            NULL,
                            rsc2, pcmk__op_key(rsc2->id, PCMK_ACTION_START, 0),
                            NULL,
-                           pcmk__ar_ordered, rsc1->cluster);
+                           pcmk__ar_ordered, rsc1->private->scheduler);
     }
 }
 
@@ -105,7 +105,7 @@ guest_resource_will_stop(const pcmk_node_t *node)
      */
     return node->details->remote_requires_reset
            || node->details->unclean
-           || pcmk_is_set(guest_rsc->flags, pcmk_rsc_failed)
+           || pcmk_is_set(guest_rsc->flags, pcmk__rsc_failed)
            || (guest_rsc->next_role == pcmk_role_stopped)
 
            // Guest is moving
@@ -134,7 +134,7 @@ probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
               pcmk_role_text(rsc->role), rsc->id, pcmk__node_name(node));
 
     probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE,
-                          rsc->cluster);
+                          rsc->private->scheduler);
     pcmk__clear_action_flags(probe, pcmk_action_optional);
 
     pcmk__order_vs_unfence(rsc, node, probe, pcmk__ar_ordered);
@@ -164,24 +164,26 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
 
     CRM_ASSERT((rsc != NULL) && (node != NULL));
 
-    if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_probe_resources)) {
+    if (!pcmk_is_set(rsc->private->scheduler->flags,
+                     pcmk_sched_probe_resources)) {
         reason = "start-up probes are disabled";
         goto no_probe;
     }
 
     if (pcmk__is_pacemaker_remote_node(node)) {
-        const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+        const char *class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
 
         if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_none)) {
             reason = "Pacemaker Remote nodes cannot run stonith agents";
             goto no_probe;
 
         } else if (pcmk__is_guest_or_bundle_node(node)
-                   && pe__resource_contains_guest_node(rsc->cluster, rsc)) {
+                   && pe__resource_contains_guest_node(rsc->private->scheduler,
+                                                       rsc)) {
             reason = "guest nodes cannot run resources containing guest nodes";
             goto no_probe;
 
-        } else if (rsc->is_remote_node) {
+        } else if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
             reason = "Pacemaker Remote nodes cannot host remote connections";
             goto no_probe;
         }
@@ -192,11 +194,12 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         return pcmk__probe_resource_list(rsc->children, node);
     }
 
-    if ((rsc->container != NULL) && !rsc->is_remote_node) {
+    if ((rsc->container != NULL)
+        && !pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
         reason = "resource is inside a container";
         goto no_probe;
 
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         reason = "resource is orphaned";
         goto no_probe;
 
@@ -207,7 +210,8 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
 
     allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
 
-    if (rsc->exclusive_discover || top->exclusive_discover) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
+        || pcmk_is_set(top->flags, pcmk__rsc_exclusive_probes)) {
         // Exclusive discovery is enabled ...
 
         if (allowed == NULL) {
@@ -249,7 +253,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
                                pcmk__op_key(guest->id, PCMK_ACTION_STOP, 0),
                                NULL, top,
                                pcmk__op_key(top->id, PCMK_ACTION_START, 0),
-                               NULL, pcmk__ar_ordered, rsc->cluster);
+                               NULL, pcmk__ar_ordered, rsc->private->scheduler);
             goto no_probe;
         }
     }
@@ -277,9 +281,9 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     // Start or reload after probing the resource
     pcmk__new_ordering(rsc, NULL, probe,
                        top, pcmk__op_key(top->id, PCMK_ACTION_START, 0), NULL,
-                       flags, rsc->cluster);
+                       flags, rsc->private->scheduler);
     pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
-                       pcmk__ar_ordered, rsc->cluster);
+                       pcmk__ar_ordered, rsc->private->scheduler);
 
     return true;
 
@@ -483,7 +487,7 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
      * starting unless the probe is runnable so that we don't risk starting too
      * many instances before we know the state on all nodes.
      */
-    if ((after->action->rsc->variant <= pcmk_rsc_variant_group)
+    if ((after->action->rsc->private->variant <= pcmk__rsc_variant_group)
         || pcmk_is_set(probe->flags, pcmk_action_runnable)
         // The order type is already enforced for its parent.
         || pcmk_is_set(after->type, pcmk__ar_unrunnable_first_blocks)
@@ -593,7 +597,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
      * to add orderings only for the relevant instance.
      */
     if ((after->rsc != NULL)
-        && (after->rsc->variant > pcmk_rsc_variant_group)) {
+        && (after->rsc->private->variant > pcmk__rsc_variant_group)) {
         const char *interleave_s = g_hash_table_lookup(after->rsc->meta,
                                                        PCMK_META_INTERLEAVE);
 
@@ -612,6 +616,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
      */
     for (iter = after->actions_after; iter != NULL; iter = iter->next) {
         pcmk__related_action_t *after_wrapper = iter->data;
+        const pcmk_resource_t *chained_rsc = NULL;
 
         /* pcmk__ar_first_implies_then is the reason why a required A.start
          * implies/enforces B.start to be required too, which is the cause of
@@ -631,20 +636,25 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
              * its children.
              */
             if ((after->rsc == NULL)
-                || (after->rsc->variant < pcmk_rsc_variant_group)
-                || (probe->rsc->parent == after->rsc)
-                || (after_wrapper->action->rsc == NULL)
-                || (after_wrapper->action->rsc->variant > pcmk_rsc_variant_group)
-                || (after->rsc != after_wrapper->action->rsc->parent)) {
+                || (after->rsc->private->variant < pcmk__rsc_variant_group)
+                || (probe->rsc->private->parent == after->rsc)
+                || (after_wrapper->action->rsc == NULL)) {
+                continue;
+            }
+            chained_rsc = after_wrapper->action->rsc;
+
+            if ((chained_rsc->private->variant > pcmk__rsc_variant_group)
+                || (after->rsc != chained_rsc->private->parent)) {
                 continue;
             }
 
             /* Proceed to the children of a group or a non-interleaved clone.
              * For an interleaved clone, proceed only to the relevant child.
              */
-            if ((after->rsc->variant > pcmk_rsc_variant_group) && interleave
+            if ((after->rsc->private->variant > pcmk__rsc_variant_group)
+                && interleave
                 && ((compatible_rsc == NULL)
-                    || (compatible_rsc != after_wrapper->action->rsc))) {
+                    || (compatible_rsc != chained_rsc))) {
                 continue;
             }
         }
@@ -710,7 +720,7 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
 
             add_start_orderings_for_probe(probe, then);
             add_restart_orderings_for_probe(probe, then->action);
-            clear_actions_tracking_flag(rsc->cluster);
+            clear_actions_tracking_flag(rsc->private->scheduler);
         }
     }
 
@@ -821,8 +831,7 @@ order_then_probes(pcmk_scheduler_t *scheduler)
                 continue;
             }
 
-            crm_debug("Applying %s before %s %d", first->uuid, start->uuid,
-                      pe__const_top_resource(first_rsc, false)->variant);
+            crm_debug("Applying %s before %s", first->uuid, start->uuid);
 
             for (GList *probe_iter = probes; probe_iter != NULL;
                  probe_iter = probe_iter->next) {

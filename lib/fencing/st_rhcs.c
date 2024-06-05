@@ -61,7 +61,7 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
             if (dirfd == -1) {
                 if (i == 0) {
                     crm_notice("Problem with listing %s directory"
-                               CRM_XS "errno=%d", RH_STONITH_PREFIX, errno);
+                               QB_XS "errno=%d", RH_STONITH_PREFIX, errno);
                 }
                 free(namelist[i]);
                 continue;
@@ -137,7 +137,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
     if (result == NULL) {
         if (rc < 0) {
             crm_warn("Could not execute metadata action for %s: %s "
-                     CRM_XS " rc=%d", agent, pcmk_strerror(rc), rc);
+                     QB_XS " rc=%d", agent, pcmk_strerror(rc), rc);
         }
         stonith__destroy_action(action);
         return rc;
@@ -208,7 +208,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         *metadata = xml;
 
     } else {
-        free_xml(xml);
+        pcmk__xml_free(xml);
     }
 
     return pcmk_ok;
@@ -249,7 +249,7 @@ done:
     if (buffer != NULL) {
         g_string_free(buffer, TRUE);
     }
-    free_xml(xml);
+    pcmk__xml_free(xml);
     return rc;
 }
 
@@ -294,7 +294,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
             }
         }
 
-        free_xml(metadata);
+        pcmk__xml_free(metadata);
 
         remaining_timeout -= time(NULL) - start_time;
 

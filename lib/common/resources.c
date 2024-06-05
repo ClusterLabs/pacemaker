@@ -40,27 +40,27 @@ pcmk_resource_id(const pcmk_resource_t *rsc)
 bool
 pcmk_resource_is_managed(const pcmk_resource_t *rsc)
 {
-    return (rsc == NULL)? false : pcmk_is_set(rsc->flags, pcmk_rsc_managed);
+    return (rsc == NULL)? false : pcmk_is_set(rsc->flags, pcmk__rsc_managed);
 }
 
 /*!
  * \brief Get readable description of a multiply-active recovery type
  *
- * \param[in] recovery  Recovery type
+ * \param[in] rsc  Resource with recovery type to check
  *
- * \return Static string describing \p recovery
+ * \return Static string describing recovery type of \p rsc
  */
 const char *
-pcmk__multiply_active_text(enum rsc_recovery_type recovery)
+pcmk__multiply_active_text(const pcmk_resource_t *rsc)
 {
-    switch (recovery) {
-        case pcmk_multiply_active_stop:
+    switch (rsc->private->multiply_active_policy) {
+        case pcmk__multiply_active_stop:
             return "shutting it down";
-        case pcmk_multiply_active_restart:
+        case pcmk__multiply_active_restart:
             return "attempting recovery";
-        case pcmk_multiply_active_block:
+        case pcmk__multiply_active_block:
             return "waiting for an administrator";
-        case pcmk_multiply_active_unexpected:
+        case pcmk__multiply_active_unexpected:
             return "stopping unexpected instances";
     }
     return "Unknown";

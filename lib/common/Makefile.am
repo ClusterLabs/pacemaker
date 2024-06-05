@@ -38,8 +38,7 @@ libcrmcommon_la_LDFLAGS	= -version-info 47:0:13
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libcrmcommon_la_LIBADD	= @LIBADD_DL@ 				\
-			  $(top_builddir)/lib/gnu/libgnu.la
+libcrmcommon_la_LIBADD = @LIBADD_DL@
 
 # If configured with --with-profiling or --with-coverage, BUILD_PROFILING will
 # be set and -fno-builtin will be added to the CFLAGS.  However, libcrmcommon

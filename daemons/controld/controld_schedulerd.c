@@ -90,7 +90,7 @@ handle_disconnect(void)
         char *uuid_str = crm_generate_uuid();
 
         crm_crit("Lost connection to the scheduler "
-                 CRM_XS " CIB will be saved to " PE_STATE_DIR "/pe-core-%s.bz2",
+                 QB_XS " CIB will be saved to " PE_STATE_DIR "/pe-core-%s.bz2",
                  uuid_str);
 
         /*
@@ -152,7 +152,7 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
         pcmk__xml_copy(crm_data_node, reply->data.graph.tgraph);
         register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
-        free_xml(fsa_input.msg);
+        pcmk__xml_free(fsa_input.msg);
 
     } else {
         crm_info("%s calculation %s is obsolete", CRM_OP_PECALC, msg_ref);
@@ -431,8 +431,8 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 
         xml = pcmk__xe_create(cluster_property_set, PCMK_XE_NVPAIR);
 
-        crm_xml_set_id(xml, "%s-%s",
-                       PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name);
+        pcmk__xe_set_id(xml, "%s-%s",
+                        PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name);
         crm_xml_add(xml, PCMK_XA_NAME, attr_name);
         crm_xml_add(xml, PCMK_XA_VALUE, attr_value);
     }
@@ -447,7 +447,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     if (rc != pcmk_ok) {
         crm_err("Could not retrieve the Cluster Information Base: %s "
-                CRM_XS " rc=%d call=%d", pcmk_strerror(rc), rc, call_id);
+                QB_XS " rc=%d call=%d", pcmk_strerror(rc), rc, call_id);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
         return;
 
@@ -497,7 +497,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     rc = pcmk_rc2legacy(pcmk_schedulerd_api_graph(schedulerd_api, output, &ref));
 
     if (rc < 0) {
-        crm_err("Could not contact the scheduler: %s " CRM_XS " rc=%d",
+        crm_err("Could not contact the scheduler: %s " QB_XS " rc=%d",
                 pcmk_strerror(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
     } else {

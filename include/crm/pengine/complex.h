@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,10 +17,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// @COMPAT Make internal when we can break API backward compatibility
-//! \deprecated Do not use
-extern pcmk_rsc_methods_t resource_class_functions[];
 
 GHashTable *pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
                           pcmk_scheduler_t *scheduler);

@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__XML_INTERNAL__H
-#define PCMK__XML_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_XML_INTERNAL__H
+#define PCMK__CRM_COMMON_XML_INTERNAL__H
 
 /*
  * Internal-only wrappers for and extensions to libxml2 (libxslt)
@@ -23,6 +23,7 @@
 #include <crm/common/output_internal.h>
 #include <crm/common/xml_io_internal.h>
 #include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
+#include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE
 
 #include <libxml/relaxng.h>
 
@@ -165,6 +166,9 @@ enum pcmk__xml_fmt_options {
     pcmk__xml_fmt_diff_short = (1 << 9),
 };
 
+void pcmk__xml_init(void);
+void pcmk__xml_cleanup(void);
+
 int pcmk__xml_show(pcmk__output_t *out, const char *prefix, const xmlNode *data,
                    int depth, uint32_t options);
 int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
@@ -217,6 +221,8 @@ const char *pcmk__xe_add_last_written(xmlNode *xe);
 xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                               const char *attr_n, const char *attr_v);
 
+
+xmlNode *pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search);
 
 void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 bool pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data);
@@ -422,6 +428,7 @@ pcmk__xe_next(const xmlNode *child)
 }
 
 xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
+void pcmk__xml_free(xmlNode *xml);
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
 xmlNode *pcmk__xe_next_same(const xmlNode *node);
 
@@ -448,6 +455,11 @@ enum pcmk__xa_flags {
 };
 
 int pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags);
+void pcmk__xe_sort_attrs(xmlNode *xml);
+
+void pcmk__xml_sanitize_id(char *id);
+void pcmk__xe_set_id(xmlNode *xml, const char *format, ...)
+    G_GNUC_PRINTF(2, 3);
 
 /*!
  * \internal
@@ -591,4 +603,4 @@ pcmk__map_element_name(const xmlNode *xml)
     }
 }
 
-#endif // PCMK__XML_INTERNAL__H
+#endif // PCMK__CRM_COMMON_XML_INTERNAL__H

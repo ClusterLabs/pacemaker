@@ -43,10 +43,10 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     CRM_ASSERT(pcmk__is_group(rsc));
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unassigned)) {
         return rsc->allocated_to; // Assignment already done
     }
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_assigning)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_assigning)) {
         pcmk__rsc_debug(rsc, "Assignment dependency loop detected involving %s",
                         rsc->id);
         return NULL;
@@ -54,17 +54,18 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     if (rsc->children == NULL) {
         // No members to assign
-        pcmk__clear_rsc_flags(rsc, pcmk_rsc_unassigned);
+        pcmk__clear_rsc_flags(rsc, pcmk__rsc_unassigned);
         return NULL;
     }
 
-    pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
+    pcmk__set_rsc_flags(rsc, pcmk__rsc_assigning);
     first_member = (pcmk_resource_t *) rsc->children->data;
     rsc->role = first_member->role;
 
-    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
+    pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
                                       pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+                         rsc, __func__, rsc->allowed_nodes,
+                         rsc->private->scheduler);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *member = (pcmk_resource_t *) iter->data;
@@ -72,14 +73,14 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
         pcmk__rsc_trace(rsc, "Assigning group %s member %s",
                         rsc->id, member->id);
-        node = member->cmds->assign(member, prefer, stop_if_fail);
+        node = member->private->cmds->assign(member, prefer, stop_if_fail);
         if (first_assigned_node == NULL) {
             first_assigned_node = node;
         }
     }
 
     pe__set_next_role(rsc, first_member->next_role, "first group member");
-    pcmk__clear_rsc_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
+    pcmk__clear_rsc_flags(rsc, pcmk__rsc_assigning|pcmk__rsc_unassigned);
 
     if (!pe__group_flag_is_set(rsc, pcmk__group_colocated)) {
         return NULL;
@@ -100,7 +101,8 @@ static pcmk_action_t *
 create_group_pseudo_op(pcmk_resource_t *group, const char *action)
 {
     pcmk_action_t *op = custom_action(group, pcmk__op_key(group->id, action, 0),
-                                      action, NULL, TRUE, group->cluster);
+                                      action, NULL, TRUE,
+                                      group->private->scheduler);
 
     pcmk__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     return op;
@@ -123,7 +125,7 @@ pcmk__group_create_actions(pcmk_resource_t *rsc)
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *member = (pcmk_resource_t *) iter->data;
 
-        member->cmds->create_actions(member);
+        member->private->cmds->create_actions(member);
     }
 
     // Create pseudo-actions for group itself to serve as ordering points
@@ -170,7 +172,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
     uint32_t post_down_flags = pcmk__ar_first_implies_then_graphed;
 
     // Create the individual member's implicit constraints
-    member->cmds->internal_constraints(member);
+    member->private->cmds->internal_constraints(member);
 
     if (member_data->previous_member == NULL) {
         // This is first member
@@ -182,7 +184,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
     } else if (member_data->colocated) {
         uint32_t flags = pcmk__coloc_none;
 
-        if (pcmk_is_set(member->flags, pcmk_rsc_critical)) {
+        if (pcmk_is_set(member->flags, pcmk__rsc_critical)) {
             flags |= pcmk__coloc_influence;
         }
 
@@ -194,45 +196,49 @@ member_internal_constraints(gpointer data, gpointer user_data)
 
     if (member_data->promotable) {
         // Demote group -> demote member -> group is demoted
-        pcmk__order_resource_actions(member->parent, PCMK_ACTION_DEMOTE,
+        pcmk__order_resource_actions(member->private->parent,
+                                     PCMK_ACTION_DEMOTE,
                                      member, PCMK_ACTION_DEMOTE, down_flags);
         pcmk__order_resource_actions(member, PCMK_ACTION_DEMOTE,
-                                     member->parent, PCMK_ACTION_DEMOTED,
-                                     post_down_flags);
+                                     member->private->parent,
+                                     PCMK_ACTION_DEMOTED, post_down_flags);
 
         // Promote group -> promote member -> group is promoted
         pcmk__order_resource_actions(member, PCMK_ACTION_PROMOTE,
-                                     member->parent, PCMK_ACTION_PROMOTED,
+                                     member->private->parent,
+                                     PCMK_ACTION_PROMOTED,
                                      pcmk__ar_unrunnable_first_blocks
                                      |pcmk__ar_first_implies_then
                                      |pcmk__ar_first_implies_then_graphed);
-        pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
+        pcmk__order_resource_actions(member->private->parent,
+                                     PCMK_ACTION_PROMOTE,
                                      member, PCMK_ACTION_PROMOTE,
                                      pcmk__ar_then_implies_first_graphed);
     }
 
     // Stop group -> stop member -> group is stopped
-    pcmk__order_stops(member->parent, member, down_flags);
+    pcmk__order_stops(member->private->parent, member, down_flags);
     pcmk__order_resource_actions(member, PCMK_ACTION_STOP,
-                                 member->parent, PCMK_ACTION_STOPPED,
+                                 member->private->parent, PCMK_ACTION_STOPPED,
                                  post_down_flags);
 
     // Start group -> start member -> group is started
-    pcmk__order_starts(member->parent, member,
+    pcmk__order_starts(member->private->parent, member,
                        pcmk__ar_then_implies_first_graphed);
     pcmk__order_resource_actions(member, PCMK_ACTION_START,
-                                 member->parent, PCMK_ACTION_RUNNING,
+                                 member->private->parent, PCMK_ACTION_RUNNING,
                                  pcmk__ar_unrunnable_first_blocks
                                  |pcmk__ar_first_implies_then
                                  |pcmk__ar_first_implies_then_graphed);
 
     if (!member_data->ordered) {
-        pcmk__order_starts(member->parent, member,
+        pcmk__order_starts(member->private->parent, member,
                            pcmk__ar_first_implies_then
                            |pcmk__ar_unrunnable_first_blocks
                            |pcmk__ar_then_implies_first_graphed);
         if (member_data->promotable) {
-            pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
+            pcmk__order_resource_actions(member->private->parent,
+                                         PCMK_ACTION_PROMOTE,
                                          member, PCMK_ACTION_PROMOTE,
                                          pcmk__ar_first_implies_then
                                          |pcmk__ar_unrunnable_first_blocks
@@ -240,9 +246,10 @@ member_internal_constraints(gpointer data, gpointer user_data)
         }
 
     } else if (member_data->previous_member == NULL) {
-        pcmk__order_starts(member->parent, member, pcmk__ar_none);
+        pcmk__order_starts(member->private->parent, member, pcmk__ar_none);
         if (member_data->promotable) {
-            pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
+            pcmk__order_resource_actions(member->private->parent,
+                                         PCMK_ACTION_PROMOTE,
                                          member, PCMK_ACTION_PROMOTE,
                                          pcmk__ar_none);
         }
@@ -329,7 +336,7 @@ pcmk__group_internal_constraints(pcmk_resource_t *rsc)
 
     member_data.ordered = pe__group_flag_is_set(rsc, pcmk__group_ordered);
     member_data.colocated = pe__group_flag_is_set(rsc, pcmk__group_colocated);
-    member_data.promotable = pcmk_is_set(top->flags, pcmk_rsc_promotable);
+    member_data.promotable = pcmk_is_set(top->flags, pcmk__rsc_promotable);
     g_list_foreach(rsc->children, member_internal_constraints, &member_data);
 }
 
@@ -361,7 +368,8 @@ colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
     if (pe__group_flag_is_set(dependent, pcmk__group_colocated)) {
         // Colocate first member (internal colocations will handle the rest)
         member = (pcmk_resource_t *) dependent->children->data;
-        member->cmds->apply_coloc_score(member, primary, colocation, true);
+        member->private->cmds->apply_coloc_score(member, primary, colocation,
+                                                 true);
         return;
     }
 
@@ -375,7 +383,8 @@ colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
     // Colocate each member individually
     for (GList *iter = dependent->children; iter != NULL; iter = iter->next) {
         member = (pcmk_resource_t *) iter->data;
-        member->cmds->apply_coloc_score(member, primary, colocation, true);
+        member->private->cmds->apply_coloc_score(member, primary, colocation,
+                                                 true);
     }
 }
 
@@ -401,7 +410,7 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
                     "Processing colocation %s (%s with group %s) for primary",
                     colocation->id, dependent->id, primary->id);
 
-    if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
+    if (pcmk_is_set(primary->flags, pcmk__rsc_unassigned)) {
         return;
     }
 
@@ -424,7 +433,8 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
             return; // Nothing to colocate with
         }
 
-        member->cmds->apply_coloc_score(dependent, member, colocation, false);
+        member->private->cmds->apply_coloc_score(dependent, member, colocation,
+                                                 false);
         return;
     }
 
@@ -439,7 +449,8 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
     for (const GList *iter = primary->children; iter != NULL;
          iter = iter->next) {
         member = iter->data;
-        member->cmds->apply_coloc_score(dependent, member, colocation, false);
+        member->private->cmds->apply_coloc_score(dependent, member, colocation,
+                                                 false);
     }
 }
 
@@ -506,7 +517,9 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
                                                          task_s, node);
 
         if (member_action != NULL) {
-            uint32_t member_flags = member->cmds->action_flags(member_action,
+            uint32_t member_flags = 0U;
+
+            member_flags = member->private->cmds->action_flags(member_action,
                                                                node);
 
             // Group action is mandatory if any member action is
@@ -591,12 +604,14 @@ pcmk__group_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
         pcmk_action_t *member_action = find_first_action(member->actions, NULL,
                                                          then->task, node);
 
-        if (member_action != NULL) {
-            changed |= member->cmds->update_ordered_actions(first,
-                                                            member_action, node,
-                                                            flags, filter, type,
-                                                            scheduler);
+        if (member_action == NULL) {
+            continue;
         }
+        changed |= member->private->cmds->update_ordered_actions(first,
+                                                                 member_action,
+                                                                 node, flags,
+                                                                 filter, type,
+                                                                 scheduler);
     }
     return changed;
 }
@@ -628,7 +643,7 @@ pcmk__group_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *member = (pcmk_resource_t *) iter->data;
 
-        member->cmds->apply_location(member, location);
+        member->private->cmds->apply_location(member, location);
 
         if (reset_scores) {
             /* The first member of colocated groups needs to use the original
@@ -644,14 +659,12 @@ pcmk__group_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
     g_list_free_full(node_list_copy, free);
 }
 
-// Group implementation of pcmk_assignment_methods_t:colocated_resources()
+// Group implementation of pcmk__assignment_methods_t:colocated_resources()
 GList *
 pcmk__group_colocated_resources(const pcmk_resource_t *rsc,
                                 const pcmk_resource_t *orig_rsc,
                                 GList *colocated_rscs)
 {
-    const pcmk_resource_t *member = NULL;
-
     CRM_ASSERT(pcmk__is_group(rsc));
 
     if (orig_rsc == NULL) {
@@ -659,7 +672,7 @@ pcmk__group_colocated_resources(const pcmk_resource_t *rsc,
     }
 
     if (pe__group_flag_is_set(rsc, pcmk__group_colocated)
-        || pcmk__is_clone(rsc->parent)) {
+        || pcmk__is_clone(rsc->private->parent)) {
         /* This group has colocated members and/or is cloned -- either way,
          * add every child's colocated resources to the list. The first and last
          * members will include the group's own colocations.
@@ -667,10 +680,11 @@ pcmk__group_colocated_resources(const pcmk_resource_t *rsc,
         colocated_rscs = g_list_prepend(colocated_rscs, (gpointer) rsc);
         for (const GList *iter = rsc->children;
              iter != NULL; iter = iter->next) {
+            const pcmk_resource_t *member = iter->data;
 
-            member = (const pcmk_resource_t *) iter->data;
-            colocated_rscs = member->cmds->colocated_resources(member, orig_rsc,
-                                                               colocated_rscs);
+            colocated_rscs = member->private->cmds->colocated_resources(member,
+                                                                        orig_rsc,
+                                                                        colocated_rscs);
         }
 
     } else if (rsc->children != NULL) {
@@ -684,13 +698,16 @@ pcmk__group_colocated_resources(const pcmk_resource_t *rsc,
     return colocated_rscs;
 }
 
-// Group implementation of pcmk_assignment_methods_t:with_this_colocations()
+// Group implementation of pcmk__assignment_methods_t:with_this_colocations()
 void
 pcmk__with_group_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
 
 {
+    const pcmk_resource_t *parent = NULL;
+
     CRM_ASSERT((orig_rsc != NULL) && (list != NULL) && pcmk__is_group(rsc));
+    parent = rsc->private->parent;
 
     // Ignore empty groups
     if (rsc->children == NULL) {
@@ -712,9 +729,8 @@ pcmk__with_group_colocations(const pcmk_resource_t *rsc,
     pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
 
     // If cloned, add any relevant colocations with the clone
-    if (rsc->parent != NULL) {
-        rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc,
-                                                 list);
+    if (parent != NULL) {
+        parent->private->cmds->with_this_colocations(parent, orig_rsc, list);
     }
 
     if (!pe__group_flag_is_set(rsc, pcmk__group_colocated)) {
@@ -726,20 +742,23 @@ pcmk__with_group_colocations(const pcmk_resource_t *rsc,
     for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         const pcmk_resource_t *member = iter->data;
 
-        if (member != orig_rsc) {
-            member->cmds->with_this_colocations(member, orig_rsc, list);
+        if (member == orig_rsc) {
+            continue;
         }
+        member->private->cmds->with_this_colocations(member, orig_rsc, list);
     }
 }
 
-// Group implementation of pcmk_assignment_methods_t:this_with_colocations()
+// Group implementation of pcmk__assignment_methods_t:this_with_colocations()
 void
 pcmk__group_with_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
 {
+    const pcmk_resource_t *parent = NULL;
     const pcmk_resource_t *member = NULL;
 
     CRM_ASSERT((orig_rsc != NULL) && (list != NULL) && pcmk__is_group(rsc));
+    parent = rsc->private->parent;
 
     // Ignore empty groups
     if (rsc->children == NULL) {
@@ -758,9 +777,9 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
         pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
 
         // If cloned, add any relevant colocations involving the clone
-        if (rsc->parent != NULL) {
-            rsc->parent->cmds->this_with_colocations(rsc->parent, orig_rsc,
-                                                     list);
+        if (parent != NULL) {
+            parent->private->cmds->this_with_colocations(parent, orig_rsc,
+                                                         list);
         }
 
         if (!pe__group_flag_is_set(rsc, pcmk__group_colocated)) {
@@ -772,9 +791,11 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
         for (const GList *iter = rsc->children;
              iter != NULL; iter = iter->next) {
             member = iter->data;
-            if (member != orig_rsc) {
-                member->cmds->this_with_colocations(member, orig_rsc, list);
+            if (member == orig_rsc) {
+                continue;
             }
+            member->private->cmds->this_with_colocations(member, orig_rsc,
+                                                         list);
         }
         return;
     }
@@ -790,7 +811,7 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
             break; // We've seen all earlier members, and none are unmanaged
         }
 
-        if (!pcmk_is_set(member->flags, pcmk_rsc_managed)) {
+        if (!pcmk_is_set(member->flags, pcmk__rsc_managed)) {
             crm_trace("Adding mandatory '%s with' colocations to list for "
                       "member %s because earlier member %s is unmanaged",
                       rsc->id, orig_rsc->id, member->id);
@@ -837,7 +858,7 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
  *       \c cmp_resources()).
  * \note The caller remains responsible for freeing \p *nodes.
  * \note This is the group implementation of
- *       \c pcmk_assignment_methods_t:add_colocated_node_scores().
+ *       \c pcmk__assignment_methods_t:add_colocated_node_scores().
  */
 void
 pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
@@ -857,12 +878,12 @@ pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
     }
 
     // Avoid infinite recursion
-    if (pcmk_is_set(source_rsc->flags, pcmk_rsc_updating_nodes)) {
+    if (pcmk_is_set(source_rsc->flags, pcmk__rsc_updating_nodes)) {
         pcmk__rsc_info(source_rsc, "%s: Breaking dependency loop at %s",
                        log_id, source_rsc->id);
         return;
     }
-    pcmk__set_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
+    pcmk__set_rsc_flags(source_rsc, pcmk__rsc_updating_nodes);
 
     // Ignore empty groups (only possible with schema validation disabled)
     if (source_rsc->children == NULL) {
@@ -884,14 +905,16 @@ pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
     } else {
         member = source_rsc->children->data;
     }
+
     pcmk__rsc_trace(source_rsc, "%s: Merging scores from group %s using member %s "
                     "(at %.6f)", log_id, source_rsc->id, member->id, factor);
-    member->cmds->add_colocated_node_scores(member, target_rsc, log_id, nodes,
-                                            colocation, factor, flags);
-    pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
+    member->private->cmds->add_colocated_node_scores(member, target_rsc, log_id,
+                                                     nodes, colocation, factor,
+                                                     flags);
+    pcmk__clear_rsc_flags(source_rsc, pcmk__rsc_updating_nodes);
 }
 
-// Group implementation of pcmk_assignment_methods_t:add_utilization()
+// Group implementation of pcmk__assignment_methods_t:add_utilization()
 void
 pcmk__group_add_utilization(const pcmk_resource_t *rsc,
                             const pcmk_resource_t *orig_rsc, GList *all_rscs,
@@ -902,22 +925,22 @@ pcmk__group_add_utilization(const pcmk_resource_t *rsc,
     CRM_ASSERT((orig_rsc != NULL) && (utilization != NULL)
                && pcmk__is_group(rsc));
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unassigned)) {
         return;
     }
 
     pcmk__rsc_trace(orig_rsc, "%s: Adding group %s as colocated utilization",
                     orig_rsc->id, rsc->id);
     if (pe__group_flag_is_set(rsc, pcmk__group_colocated)
-        || pcmk__is_clone(rsc->parent)) {
+        || pcmk__is_clone(rsc->private->parent)) {
         // Every group member will be on same node, so sum all members
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             member = (pcmk_resource_t *) iter->data;
 
-            if (pcmk_is_set(member->flags, pcmk_rsc_unassigned)
+            if (pcmk_is_set(member->flags, pcmk__rsc_unassigned)
                 && (g_list_find(all_rscs, member) == NULL)) {
-                member->cmds->add_utilization(member, orig_rsc, all_rscs,
-                                              utilization);
+                member->private->cmds->add_utilization(member, orig_rsc,
+                                                       all_rscs, utilization);
             }
         }
 
@@ -925,11 +948,11 @@ pcmk__group_add_utilization(const pcmk_resource_t *rsc,
         // Just add first member's utilization
         member = (pcmk_resource_t *) rsc->children->data;
         if ((member != NULL)
-            && pcmk_is_set(member->flags, pcmk_rsc_unassigned)
+            && pcmk_is_set(member->flags, pcmk__rsc_unassigned)
             && (g_list_find(all_rscs, member) == NULL)) {
 
-            member->cmds->add_utilization(member, orig_rsc, all_rscs,
-                                          utilization);
+            member->private->cmds->add_utilization(member, orig_rsc, all_rscs,
+                                                   utilization);
         }
     }
 }
@@ -942,6 +965,6 @@ pcmk__group_shutdown_lock(pcmk_resource_t *rsc)
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *member = (pcmk_resource_t *) iter->data;
 
-        member->cmds->shutdown_lock(member);
+        member->private->cmds->shutdown_lock(member);
     }
 }

@@ -21,8 +21,8 @@
 
 #include <crm/common/xml.h>
 
-#ifndef CRM_COMMON_UNITTEST_INTERNAL__H
-#define CRM_COMMON_UNITTEST_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_UNITTEST_INTERNAL__H
+#define PCMK__CRM_COMMON_UNITTEST_INTERNAL__H
 
 /* internal unit testing related utilities */
 
@@ -62,6 +62,8 @@ void pcmk__assert_validates(xmlNode *xml);
  */
 int pcmk__xml_test_setup_group(void **state);
 
+int pcmk__xml_test_teardown_group(void **state);
+
 /*!
  * \internal
  * \brief Copy the given CIB file to a temporary file so it can be modified
@@ -95,6 +97,8 @@ char *pcmk__cib_test_copy_cib(const char *in_file);
  *                          \c pcmk__cib_test_copy_cib.
  */
 void pcmk__cib_test_cleanup(char *out_path);
+
+void pcmk__test_init_logging(const char *name, const char *filename);
 
 /*!
  * \internal
@@ -202,4 +206,4 @@ main(int argc, char **argv) \
     return cmocka_run_group_tests(t, group_setup, group_teardown); \
 }
 
-#endif /* CRM_COMMON_UNITTEST_INTERNAL__H */
+#endif /* PCMK__CRM_COMMON_UNITTEST_INTERNAL__H */

@@ -34,7 +34,8 @@
  * \note One of sys_from or uuid_from must be non-NULL
  * \note This function should not be called directly, but via the
  *       create_request() wrapper.
- * \note The caller is responsible for freeing the result using free_xml().
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 create_request_adv(const char *task, xmlNode *msg_data,
@@ -98,7 +99,8 @@ create_request_adv(const char *task, xmlNode *msg_data,
  *
  * \note This function should not be called directly, but via the
  *       create_reply() wrapper.
- * \note The caller is responsible for freeing the result using free_xml().
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
@@ -280,28 +282,3 @@ pcmk__reset_request(pcmk__request_t *request)
 
     pcmk__reset_result(&(request->result));
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/xml_compat.h>
-
-gboolean
-add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
-{
-    xmlNode *holder = pcmk__xe_create(msg, field);
-
-    pcmk__xml_copy(holder, xml);
-    return TRUE;
-}
-
-xmlNode *
-get_message_xml(const xmlNode *msg, const char *field)
-{
-    xmlNode *child = pcmk__xe_first_child(msg, field, NULL, NULL);
-
-    return pcmk__xe_first_child(child, NULL, NULL, NULL);
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

@@ -2556,6 +2556,14 @@ function test_dates() {
         test_assert $CRM_EX_INVALID_PARAM 0
     done
 
+    desc="'2005-040/2005-043' period"
+    cmd="iso8601 -p '2005-040/2005-043'"
+    test_assert $CRM_EX_OK 0
+
+    desc="'2005-040/2005-043' period (XML)"
+    cmd="iso8601 -p '2005-040/2005-043' --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="2014-01-01 00:30:00 - 1 Hour"
     cmd="iso8601 -d '2014-01-01 00:30:00Z' -D P-1H -E '2013-12-31 23:30:00Z'"
     test_assert $CRM_EX_OK 0
@@ -2594,6 +2602,10 @@ function test_dates() {
     cmd="iso8601 -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z'"
     test_assert $CRM_EX_OK 0
 
+    desc="2009-W53-07 (XML)"
+    cmd="iso8601 -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z' --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="epoch + 2 Years 5 Months 6 Minutes"
     cmd="iso8601 -d 'epoch' -D P2Y5MT6M -E '1972-06-01 00:06:00Z'"
     test_assert $CRM_EX_OK 0
@@ -2614,9 +2626,17 @@ function test_dates() {
     cmd="iso8601 -d '2009-03-31 01:00:00 +01:00' -D P-1M -E '2009-02-28 00:00:00Z'"
     test_assert $CRM_EX_OK 0
 
+    desc="2009-03-31 - 1 Month (XML)"
+    cmd="iso8601 -d '2009-03-31 01:00:00 +01:00' -D P-1M -E '2009-02-28 00:00:00Z' --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="2038-01-01 + 3 Months"
     cmd="iso8601 -d '2038-01-01 00:00:00Z' -D P3M -E '2038-04-01 00:00:00Z'"
     test_assert $CRM_EX_OK 0
+
+    desc="2038-01-01 + 3 Months (XML)"
+    cmd="iso8601 -d '2038-01-01 00:00:00Z' -D P3M -E '2038-04-01 00:00:00Z' --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 }
 
 function test_acl_loop() {
@@ -3554,6 +3574,7 @@ for t in $tests; do
         -e 's/\(\* Possible values.*: .*\)(default: [^)]*)/\1(default: )/g' \
         -e 's/ version="[^"]*"/ version=""/' \
         -e 's/request=\".*\(crm_[a-zA-Z0-9]*\)/request=\"\1/' \
+        -e 's/request=\".*iso8601/request=\"iso8601/' \
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/@crm_feature_set=[0-9.]*, //'\
         -e 's/\(<change-attr name="crm_feature_set" .* value="\)[0-9.]*"/\1"/' \
@@ -3586,10 +3607,6 @@ for t in $tests; do
         -e 's/\(Injecting attribute last-failure-ping#monitor_10000=\)[0-9]*/\1/' \
         -e 's/^lt-//' \
         -e 's/ocf::/ocf:/' \
-        -e 's/Masters:/Promoted:/' \
-        -e 's/Slaves:/Unpromoted:/' \
-        -e 's/Master/Promoted/' \
-        -e 's/Slave/Unpromoted/' \
         -e 's/\x1b/\\x1b/' \
         -e "/$suppress/d" \
         "$TMPFILE" > "${TMPFILE}.$$"

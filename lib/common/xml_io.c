@@ -93,7 +93,7 @@ decompress_file(const char *filename)
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         crm_err("Could not prepare to read compressed %s: %s "
-                CRM_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
+                QB_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
         goto done;
     }
 
@@ -114,7 +114,7 @@ decompress_file(const char *filename)
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         rc = pcmk__bzlib2rc(rc);
-        crm_err("Could not read compressed %s: %s " CRM_XS " rc=%d",
+        crm_err("Could not read compressed %s: %s " QB_XS " rc=%d",
                 filename, pcmk_rc_str(rc), rc);
         free(buffer);
         buffer = NULL;
@@ -344,7 +344,7 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
  * \brief Append XML text content to a buffer
  *
  * \param[in]     data     XML whose content to append
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of <tt>enum pcmk__xml_fmt_options</tt>
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  * \param[in]     depth    Current indentation level
  */
@@ -513,7 +513,7 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
             dump_xml_cdata(data, options, buffer, depth);
             break;
         default:
-            crm_warn("Cannot convert XML %s node to text " CRM_XS " type=%d",
+            crm_warn("Cannot convert XML %s node to text " QB_XS " type=%d",
                      xml_element_type_text(data->type), data->type);
             break;
     }
@@ -543,7 +543,7 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         crm_warn("Not compressing %s: could not prepare file stream: %s "
-                 CRM_XS " rc=%d",
+                 QB_XS " rc=%d",
                  filename, pcmk_rc_str(rc), rc);
         goto done;
     }
@@ -552,7 +552,7 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         crm_warn("Not compressing %s: could not compress data: %s "
-                 CRM_XS " rc=%d errno=%d",
+                 QB_XS " rc=%d errno=%d",
                  filename, pcmk_rc_str(rc), rc, errno);
         goto done;
     }
@@ -562,7 +562,7 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         crm_warn("Not compressing %s: could not write compressed data: %s "
-                 CRM_XS " rc=%d errno=%d",
+                 QB_XS " rc=%d errno=%d",
                  filename, pcmk_rc_str(rc), rc, errno);
         goto done;
     }
@@ -747,94 +747,3 @@ save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
     pcmk__xml_write_file(xml, filename, false, NULL);
     free(f);
 }
-
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/xml_io_compat.h>
-
-xmlNode *
-filename2xml(const char *filename)
-{
-    return pcmk__xml_read(filename);
-}
-
-xmlNode *
-stdin2xml(void)
-{
-    return pcmk__xml_read(NULL);
-}
-
-xmlNode *
-string2xml(const char *input)
-{
-    return pcmk__xml_parse(input);
-}
-
-char *
-dump_xml_formatted(const xmlNode *xml)
-{
-    char *str = NULL;
-    GString *buffer = g_string_sized_new(1024);
-
-    pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buffer, 0);
-
-    str = pcmk__str_copy(buffer->str);
-    g_string_free(buffer, TRUE);
-    return str;
-}
-
-char *
-dump_xml_formatted_with_text(const xmlNode *xml)
-{
-    char *str = NULL;
-    GString *buffer = g_string_sized_new(1024);
-
-    pcmk__xml_string(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, buffer, 0);
-
-    str = pcmk__str_copy(buffer->str);
-    g_string_free(buffer, TRUE);
-    return str;
-}
-
-char *
-dump_xml_unformatted(const xmlNode *xml)
-{
-    char *str = NULL;
-    GString *buffer = g_string_sized_new(1024);
-
-    pcmk__xml_string(xml, 0, buffer, 0);
-
-    str = pcmk__str_copy(buffer->str);
-    g_string_free(buffer, TRUE);
-    return str;
-}
-
-int
-write_xml_fd(const xmlNode *xml, const char *filename, int fd,
-             gboolean compress)
-{
-    unsigned int nbytes = 0;
-    int rc = pcmk__xml_write_fd(xml, filename, fd, compress, &nbytes);
-
-    if (rc != pcmk_rc_ok) {
-        return pcmk_rc2legacy(rc);
-    }
-    return (int) nbytes;
-}
-
-int
-write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
-{
-    unsigned int nbytes = 0;
-    int rc = pcmk__xml_write_file(xml, filename, compress, &nbytes);
-
-    if (rc != pcmk_rc_ok) {
-        return pcmk_rc2legacy(rc);
-    }
-    return (int) nbytes;
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

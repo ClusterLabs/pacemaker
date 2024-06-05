@@ -58,9 +58,9 @@ xml_log(int priority, const char *fmt, ...)
 static int
 xml_latest_schema_index(void)
 {
-    /* This function assumes that crm_schema_init() has been called beforehand,
-     * so we have at least three schemas (one real schema, the "pacemaker-next"
-     * schema, and the "none" schema).
+    /* This function assumes that pcmk__schema_init() has been called
+     * beforehand, so we have at least three schemas (one real schema, the
+     * "pacemaker-next" schema, and the "none" schema).
      *
      * @COMPAT: pacemaker-next is deprecated since 2.1.5 and none since 2.1.8.
      * Update this when we drop those.
@@ -451,7 +451,8 @@ schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
  *        version order, then pacemaker-next, then none
  *
  * This function should be called whenever additional schemas are loaded using
- * pcmk__load_schemas_from_dir(), after the initial sets in crm_schema_init().
+ * \c pcmk__load_schemas_from_dir(), after the initial sets in
+ * \c pcmk__schema_init().
  */
 void
 pcmk__sort_schemas(void)
@@ -467,7 +468,7 @@ pcmk__sort_schemas(void)
  *       generic initialization of the libxslt library.
  */
 void
-crm_schema_init(void)
+pcmk__schema_init(void)
 {
     if (!initialized) {
         const char *remote_schema_dir = pcmk__remote_schema_dir();
@@ -640,7 +641,7 @@ free_schema(gpointer data)
  * \brief Clean up global memory associated with XML schemas
  */
 void
-crm_schema_cleanup(void)
+pcmk__schema_cleanup(void)
 {
     if (known_schemas != NULL) {
         g_list_free_full(known_schemas, free_schema);
@@ -1058,7 +1059,7 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
               schema->name, upgraded_schema->name, schema->transform);
     final = apply_transformation(xml, schema->transform, to_logs);
     if (upgrade != xml) {
-        free_xml(upgrade);
+        pcmk__xml_free(upgrade);
         upgrade = NULL;
     }
 
@@ -1078,7 +1079,7 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
                      transform_leave);
             final = upgrade;
         } else {
-            free_xml(upgrade);
+            pcmk__xml_free(upgrade);
         }
         free(transform_leave);
     }
@@ -1094,7 +1095,7 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
                 "XSL transform %s produced an invalid configuration",
                 schema->name, upgraded_schema->name, schema->transform);
         crm_log_xml_debug(final, "bad-transform-result");
-        free_xml(final);
+        pcmk__xml_free(final);
         return NULL;
     }
 
@@ -1221,7 +1222,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
             rc = pcmk_rc_transform_failed;
         } else {
             best_schema = current_schema;
-            free_xml(*xml);
+            pcmk__xml_free(*xml);
             *xml = upgrade;
         }
     }
@@ -1328,13 +1329,13 @@ pcmk_update_configured_schema(xmlNode **xml, bool to_logs)
                 }
             }
 
-            free_xml(converted);
+            pcmk__xml_free(converted);
             converted = NULL;
             rc = pcmk_rc_transform_failed;
 
         } else {
             // Updated configuration schema is acceptable
-            free_xml(*xml);
+            pcmk__xml_free(*xml);
             *xml = converted;
 
             if (schema->schema_index < xml_latest_schema_index()) {
@@ -1451,7 +1452,7 @@ external_refs_in_schema(GList **list, const char *contents)
     xmlNode *xml = pcmk__xml_parse(contents);
 
     crm_foreach_xpath_result(xml, search, append_href, list);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static int
@@ -1552,7 +1553,7 @@ pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_i
 
     if (schema_node->children == NULL) {
         // Not needed if empty. May happen if name was invalid, for example.
-        free_xml(schema_node);
+        pcmk__xml_free(schema_node);
     }
 }
 
@@ -1595,129 +1596,6 @@ pcmk__warn_if_schema_deprecated(const char *schema)
 // LCOV_EXCL_START
 
 #include <crm/common/xml_compat.h>
-
-const char *
-xml_latest_schema(void)
-{
-    return pcmk__highest_schema_name();
-}
-
-const char *
-get_schema_name(int version)
-{
-    pcmk__schema_t *schema = g_list_nth_data(known_schemas, version);
-
-    return (schema != NULL)? schema->name : "unknown";
-}
-
-int
-get_schema_version(const char *name)
-{
-    int lpc = 0;
-
-    if (name == NULL) {
-        name = PCMK_VALUE_NONE;
-    }
-
-    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
-        pcmk__schema_t *schema = iter->data;
-
-        if (pcmk__str_eq(name, schema->name, pcmk__str_casei)) {
-            return lpc;
-        }
-
-        lpc++;
-    }
-
-    return -1;
-}
-
-int
-update_validation(xmlNode **xml, int *best, int max, gboolean transform,
-                  gboolean to_logs)
-{
-    int rc = pcmk__update_schema(xml, get_schema_name(max), transform, to_logs);
-
-    if ((best != NULL) && (xml != NULL) && (rc == pcmk_rc_ok)) {
-        const char *schema_name = crm_element_value(*xml,
-                                                    PCMK_XA_VALIDATE_WITH);
-        GList *schema_entry = pcmk__get_schema(schema_name);
-
-        if (schema_entry != NULL) {
-            *best = ((pcmk__schema_t *)(schema_entry->data))->schema_index;
-        }
-    }
-
-    return pcmk_rc2legacy(rc);
-}
-
-gboolean
-validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
-{
-    bool rc = pcmk__validate_xml(xml_blob, validation,
-                                 to_logs? (xmlRelaxNGValidityErrorFunc) xml_log : NULL,
-                                 GUINT_TO_POINTER(LOG_ERR));
-    return rc? TRUE : FALSE;
-}
-
-static void
-dump_file(const char *filename)
-{
-
-    FILE *fp = NULL;
-    int ch, line = 0;
-
-    CRM_CHECK(filename != NULL, return);
-
-    fp = fopen(filename, "r");
-    if (fp == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for reading", filename);
-        return;
-    }
-
-    fprintf(stderr, "%4d ", ++line);
-    do {
-        ch = getc(fp);
-        if (ch == EOF) {
-            putc('\n', stderr);
-            break;
-        } else if (ch == '\n') {
-            fprintf(stderr, "\n%4d ", ++line);
-        } else {
-            putc(ch, stderr);
-        }
-    } while (1);
-
-    fclose(fp);
-}
-
-gboolean
-validate_xml_verbose(const xmlNode *xml_blob)
-{
-    int fd = 0;
-    xmlDoc *doc = NULL;
-    xmlNode *xml = NULL;
-    gboolean rc = FALSE;
-    char *filename = NULL;
-
-    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", pcmk__get_tmpdir());
-
-    umask(S_IWGRP | S_IWOTH | S_IROTH);
-    fd = mkstemp(filename);
-    pcmk__xml_write_fd(xml_blob, filename, fd, false, NULL);
-
-    dump_file(filename);
-
-    doc = xmlReadFile(filename, NULL, 0);
-    xml = xmlDocGetRootElement(doc);
-    rc = pcmk__validate_xml(xml, NULL, NULL, NULL);
-    free_xml(xml);
-
-    unlink(filename);
-    free(filename);
-
-    return rc? TRUE : FALSE;
-}
 
 gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)

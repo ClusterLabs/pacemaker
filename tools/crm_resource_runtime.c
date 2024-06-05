@@ -36,8 +36,11 @@ build_node_info_list(const pcmk_resource_t *rsc)
             node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
 
             ni->node_name = node->details->uname;
-            ni->promoted = pcmk_is_set(rsc->flags, pcmk_rsc_promotable) &&
-                           child->fns->state(child, TRUE) == pcmk_role_promoted;
+            if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)
+                && (child->private->fns->state(child,
+                                               TRUE) == pcmk_role_promoted)) {
+                ni->promoted = true;
+            }
 
             retval = g_list_prepend(retval, ni);
         }
@@ -58,9 +61,10 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
 
     /* The anonymous clone children's common ID is supplied */
     } else if (pcmk__is_clone(parent)
-               && !pcmk_is_set(rsc->flags, pcmk_rsc_unique)
-               && rsc->clone_name
-               && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_none)
+               && !pcmk_is_set(rsc->flags, pcmk__rsc_unique)
+               && (rsc->private->history_id != NULL)
+               && pcmk__str_eq(requested_name, rsc->private->history_id,
+                               pcmk__str_none)
                && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_none)) {
 
         retval = build_node_info_list(parent);
@@ -71,7 +75,9 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
             node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
 
             ni->node_name = node->details->uname;
-            ni->promoted = (rsc->fns->state(rsc, TRUE) == pcmk_role_promoted);
+            if (rsc->private->fns->state(rsc, TRUE) == pcmk_role_promoted) {
+                ni->promoted = true;
+            }
 
             retval = g_list_prepend(retval, ni);
         }
@@ -147,7 +153,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     if (result) {
         *result = xml_search;
     } else {
-        free_xml(xml_search);
+        pcmk__xml_free(xml_search);
     }
 
     g_string_free(xpath, TRUE);
@@ -201,24 +207,25 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
     int rc = pcmk_rc_ok;
     char *lookup_id = NULL;
     GList * result = NULL;
+
     /* If --force is used, update only the requested resource (clone or primitive).
      * Otherwise, if the primitive has the attribute, use that.
      * Otherwise use the clone. */
     if(force == TRUE) {
         return g_list_append(result, rsc);
     }
-    if (pcmk__is_clone(rsc->parent)) {
+    if (pcmk__is_clone(rsc->private->parent)) {
         int rc = find_resource_attr(out, cib, PCMK_XA_ID, rsc_id, attr_set_type,
                                     attr_set, attr_id, attr_name, NULL);
 
         if(rc != pcmk_rc_ok) {
-            rsc = rsc->parent;
+            rsc = rsc->private->parent;
             out->info(out, "Performing %s of '%s' on '%s', the parent of '%s'",
                       cmd, attr_name, rsc->id, rsc_id);
         }
         return g_list_append(result, rsc);
 
-    } else if ((rsc->parent == NULL) && (rsc->children != NULL)
+    } else if ((rsc->private->parent == NULL) && (rsc->children != NULL)
                && pcmk__is_clone(rsc)) {
         pcmk_resource_t *child = rsc->children->data;
 
@@ -254,9 +261,10 @@ update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
         return ENOTCONN;
     }
 
-    crm_xml_add(rsc->xml, attr_name, attr_value);
+    crm_xml_add(rsc->private->xml, attr_name, attr_value);
 
-    rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_sync_call);
+    rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->private->xml,
+                            cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     if (rc == pcmk_rc_ok) {
         out->info(out, "Set attribute: " PCMK_XA_NAME "=%s value=%s",
@@ -299,11 +307,11 @@ resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
                 }
 
                 free(found_attr_id);
-                free_xml(xml_search);
+                pcmk__xml_free(xml_search);
                 return ENOTUNIQ;
             }
 
-            free_xml(xml_search);
+            pcmk__xml_free(xml_search);
         }
 
         *resources = g_list_append(*resources, rsc);
@@ -354,7 +362,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                  const char *attr_value, gboolean recursive, cib_t *cib,
                  gboolean force, GList **results)
 {
-    pcmk__output_t *out = rsc->cluster->priv;
+    pcmk__output_t *out = rsc->private->scheduler->priv;
     int rc = pcmk_rc_ok;
 
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
@@ -409,7 +417,9 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                     rsc_attr_id = found_attr_id;
                 }
 
-                xml_top = pcmk__xe_create(NULL, (const char *) rsc->xml->name);
+                xml_top = pcmk__xe_create(NULL,
+                                          (const char *)
+                                          rsc->private->xml->name);
                 crm_xml_add(xml_top, PCMK_XA_ID, lookup_id);
 
                 xml_obj = pcmk__xe_create(xml_top, attr_set_type);
@@ -419,7 +429,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
             default:
                 free(lookup_id);
                 free(found_attr_id);
-                free_xml(xml_search);
+                pcmk__xml_free(xml_search);
                 g_list_free(resources);
                 return rc;
         }
@@ -456,8 +466,8 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
             *results = g_list_append(*results, ud);
         }
 
-        free_xml(xml_top);
-        free_xml(xml_search);
+        pcmk__xml_free(xml_top);
+        pcmk__xml_free(xml_search);
 
         free(lookup_id);
         free(found_attr_id);
@@ -470,13 +480,13 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
              * colocated with this one, so we use rsc->rsc_cons_lhs directly
              * rather than the with_this_colocations() method.
              */
-            pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
+            pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
             for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
                 crm_debug("Checking %s %d", cons->id, cons->score);
 
-                if (pcmk_is_set(cons->dependent->flags, pcmk_rsc_detect_loop)
+                if (pcmk_is_set(cons->dependent->flags, pcmk__rsc_detect_loop)
                     || (cons->score <= 0)) {
                     continue;
                 }
@@ -506,7 +516,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
     int rc = pcmk_rc_ok;
 
     GList *results = NULL;
-    pcmk__output_t *out = rsc->cluster->priv;
+    pcmk__output_t *out = rsc->private->scheduler->priv;
 
     /* If we were asked to update the attribute in a resource element (for
      * instance, <primitive class="ocf">) there's really not much we need to do.
@@ -518,8 +528,9 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
     /* One time initialization - clear flags so we can detect loops */
     if (need_init) {
         need_init = false;
-        pcmk__unpack_constraints(rsc->cluster);
-        pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);
+        pcmk__unpack_constraints(rsc->private->scheduler);
+        pe__clear_resource_flags_on_all(rsc->private->scheduler,
+                                        pcmk__rsc_detect_loop);
     }
 
     rc = update_attribute(rsc, requested_name, attr_set, attr_set_type,
@@ -545,7 +556,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_id, const char *attr_name,
                               cib_t *cib, int cib_options, gboolean force)
 {
-    pcmk__output_t *out = rsc->cluster->priv;
+    pcmk__output_t *out = rsc->private->scheduler->priv;
     int rc = pcmk_rc_ok;
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
 
@@ -562,9 +573,10 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                                                  "delete", force);
 
     } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        pcmk__xe_remove_attr(rsc->xml, attr_name);
+        pcmk__xe_remove_attr(rsc->private->xml, attr_name);
         CRM_ASSERT(cib != NULL);
-        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
+        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->private->xml,
+                                cib_options);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Deleted attribute: %s", attr_name);
@@ -590,17 +602,17 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         switch (rc) {
             case pcmk_rc_ok:
                 found_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
-                free_xml(xml_search);
+                pcmk__xml_free(xml_search);
                 break;
 
             case ENXIO:
                 free(lookup_id);
-                free_xml(xml_search);
+                pcmk__xml_free(xml_search);
                 continue;
 
             default:
                 free(lookup_id);
-                free_xml(xml_search);
+                pcmk__xml_free(xml_search);
                 g_list_free(resources);
                 return rc;
         }
@@ -626,7 +638,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         }
 
         free(lookup_id);
-        free_xml(xml_obj);
+        pcmk__xml_free(xml_obj);
         free(found_attr_id);
     }
     g_list_free(resources);
@@ -658,9 +670,9 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         return EINVAL;
     }
 
-    rsc_class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
-    rsc_provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER),
-    rsc_type = crm_element_value(rsc->xml, PCMK_XA_TYPE);
+    rsc_class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
+    rsc_provider = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER);
+    rsc_type = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
     if ((rsc_class == NULL) || (rsc_type == NULL)) {
         out->err(out, "Resource %s does not have a class and type", rsc_id);
         return EINVAL;
@@ -693,8 +705,8 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         }
     }
 
-    if (rsc->clone_name) {
-        rsc_api_id = rsc->clone_name;
+    if (rsc->private->history_id != NULL) {
+        rsc_api_id = rsc->private->history_id;
         rsc_long_id = rsc->id;
     } else {
         rsc_api_id = rsc->id;
@@ -722,9 +734,9 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
 static inline char *
 rsc_fail_name(const pcmk_resource_t *rsc)
 {
-    const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
+    const char *name = pcmk__s(rsc->private->history_id, rsc->id);
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
         return strdup(name);
     }
     return clone_strip(name);
@@ -898,7 +910,8 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         if(nodes == NULL && force) {
             nodes = pcmk__copy_node_list(scheduler->nodes, false);
 
-        } else if(nodes == NULL && rsc->exclusive_discover) {
+        } else if ((nodes == NULL)
+                   && pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)) {
             GHashTableIter iter;
             pcmk_node_t *node = NULL;
 
@@ -1052,7 +1065,7 @@ check_role(resource_checks_t *checks)
 
         case pcmk_role_unpromoted:
             if (pcmk_is_set(pe__const_top_resource(checks->rsc, false)->flags,
-                            pcmk_rsc_promotable)) {
+                            pcmk__rsc_promotable)) {
                 checks->flags |= rsc_unpromotable;
             }
             break;
@@ -1205,7 +1218,7 @@ bool resource_is_running_on(pcmk_resource_t *rsc, const char *host)
         return false;
     }
 
-    rsc->fns->location(rsc, &hosts, TRUE);
+    rsc->private->fns->location(rsc, &hosts, TRUE);
     for (hIter = hosts; host != NULL && hIter != NULL; hIter = hIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) hIter->data;
 
@@ -1334,7 +1347,7 @@ update_scheduler_input_to_cib(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
     rc = update_scheduler_input(scheduler, &cib_xml_copy);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Could not upgrade the current CIB XML");
-        free_xml(cib_xml_copy);
+        pcmk__xml_free(cib_xml_copy);
         return rc;
     }
 
@@ -1404,7 +1417,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
     }
 
   done:
-    // Do not free scheduler->input here, we need rsc->xml to be valid later on
+    // Do not free scheduler->input because rsc->private->xml must remain valid
     cib_delete(shadow_cib);
     free(pid);
 
@@ -1561,14 +1574,14 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     pcmk_resource_t *parent = uber_parent(rsc);
 
     bool running = false;
-    const char *id = rsc->clone_name ? rsc->clone_name : rsc->id;
+    const char *id = pcmk__s(rsc->private->history_id, rsc->id);
     const char *host = node ? node->details->uname : NULL;
 
     /* If the implicit resource or primitive resource of a bundle is given, operate on the
      * bundle itself instead.
      */
     if (pcmk__is_bundled(rsc)) {
-        rsc = parent->parent;
+        rsc = parent->private->parent;
     }
 
     running = resource_is_running_on(rsc, host);
@@ -1580,9 +1593,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             lookup_id = clone_strip(rsc->id);
         }
 
-        rsc = parent->fns->find_rsc(parent, lookup_id, node,
-                                    pcmk_rsc_match_basename
-                                    |pcmk_rsc_match_current_node);
+        rsc = parent->private->fns->find_rsc(parent, lookup_id, node,
+                                             pcmk_rsc_match_basename
+                                             |pcmk_rsc_match_current_node);
         free(lookup_id);
         running = resource_is_running_on(rsc, host);
     }
@@ -1596,7 +1609,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         return ENXIO;
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         out->err(out, "Unmanaged resources cannot be restarted.");
         return EAGAIN;
     }
@@ -1678,7 +1691,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             orig_target_role = crm_element_value_copy(xml_search, PCMK_XA_VALUE);
         }
 
-        free_xml(xml_search);
+        pcmk__xml_free(xml_search);
 
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
@@ -2220,7 +2233,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 {
     pcmk__output_t *out = scheduler->priv;
     crm_exit_t exit_code = CRM_EX_OK;
-    const char *rid = NULL;
+    const char *rid = requested_name;
     const char *rtype = NULL;
     const char *rprov = NULL;
     const char *rclass = NULL;
@@ -2257,9 +2270,9 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         return CRM_EX_UNIMPLEMENT_FEATURE;
     }
 
-    rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
-    rprov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
-    rtype = crm_element_value(rsc->xml, PCMK_XA_TYPE);
+    rclass = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
+    rprov = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER);
+    rtype = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
 
     params = generate_resource_params(rsc, NULL /* @TODO use local node */,
                                       scheduler);
@@ -2268,7 +2281,9 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         timeout_ms = get_action_timeout(rsc, get_action(rsc_action));
     }
 
-    rid = pcmk__is_anonymous_clone(rsc->parent)? requested_name : rsc->id;
+    if (!pcmk__is_anonymous_clone(rsc->private->parent)) {
+        rid = rsc->id;
+    }
 
     exit_code = cli_resource_execute_from_params(out, rid, rclass, rprov, rtype, rsc_action,
                                                  params, override_hash, timeout_ms,
@@ -2295,11 +2310,11 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     }
 
     if (promoted_role_only
-        && !pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
+        && !pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
 
         const pcmk_resource_t *p = pe__const_top_resource(rsc, false);
 
-        if (pcmk_is_set(p->flags, pcmk_rsc_promotable)) {
+        if (pcmk_is_set(p->flags, pcmk__rsc_promotable)) {
             out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
             rsc_id = p->id;
             rsc = p;
@@ -2313,13 +2328,14 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
 
     current = pe__find_active_requires(rsc, &count);
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
         unsigned int promoted_count = 0;
         pcmk_node_t *promoted_node = NULL;
 
         for (const GList *iter = rsc->children; iter; iter = iter->next) {
             const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
-            enum rsc_role_e child_role = child->fns->state(child, TRUE);
+            enum rsc_role_e child_role = child->private->fns->state(child,
+                                                                    TRUE);
 
             if (child_role == pcmk_role_promoted) {
                 rsc = child;

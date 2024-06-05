@@ -696,7 +696,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 
     if (cmd->start_delay > 0) {
-        crm_notice("Delaying '%s' action%s%s using %s for %ds " CRM_XS
+        crm_notice("Delaying '%s' action%s%s using %s for %ds " QB_XS
                    " timeout=%ds requested_delay=%ds base=%ds max=%ds",
                    cmd->action,
                    (cmd->target == NULL)? "" : " targeting ",
@@ -735,7 +735,7 @@ free_device(gpointer data)
 
     mainloop_destroy_trigger(device->work);
 
-    free_xml(device->agent_metadata);
+    pcmk__xml_free(device->agent_metadata);
     free(device->namespace);
     if (device->on_target_actions != NULL) {
         g_string_free(device->on_target_actions, TRUE);
@@ -1372,7 +1372,7 @@ device_has_duplicate(const stonith_device_t *device)
         return NULL;
     }
 
-    /* Use calculate_operation_digest() here? */
+    // Use pcmk__digest_operation() here?
     if (device_params_diff(device->params, dup->params) ||
         device_params_diff(dup->params, device->params)) {
         return NULL;
@@ -2525,7 +2525,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
                        client);
 
 done:
-    free_xml(query->reply);
+    pcmk__xml_free(query->reply);
     free(query->remote_peer);
     free(query->client_id);
     free(query->target);
@@ -2605,7 +2605,7 @@ log_async_result(const async_command_t *cmd,
                                (unsigned int) devices_remaining,
                                pcmk__plural_s(devices_remaining));
     }
-    g_string_append_printf(msg, " " CRM_XS " %scall %d from %s",
+    g_string_append_printf(msg, " " QB_XS " %scall %d from %s",
                            (op_merged? "merged " : ""), cmd->id,
                            cmd->client_name);
 
@@ -2671,7 +2671,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
     }
 
     crm_log_xml_trace(reply, "Reply");
-    free_xml(reply);
+    pcmk__xml_free(reply);
 
     if (stand_alone) {
         /* Do notification with a clean data object */
@@ -3438,7 +3438,7 @@ handle_history_request(pcmk__request_t *request)
          */
         reply = fenced_construct_reply(request->xml, data, &request->result);
     }
-    free_xml(data);
+    pcmk__xml_free(data);
     return reply;
 }
 
@@ -3609,7 +3609,7 @@ handle_request(pcmk__request_t *request)
             stonith_send_reply(reply, request->call_options,
                                request->peer, request->ipc_client);
         }
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     reason = request->result.exit_reason;

@@ -316,14 +316,12 @@ pcmk__free_client(pcmk__client_t *c)
         if (c->remote->auth_timeout) {
             g_source_remove(c->remote->auth_timeout);
         }
-#ifdef HAVE_GNUTLS_GNUTLS_H
         if (c->remote->tls_session != NULL) {
             /* @TODO Reduce duplication at callers. Put here everything
              * necessary to tear down and free tls_session.
              */
             gnutls_free(c->remote->tls_session);
         }
-#endif  // HAVE_GNUTLS_GNUTLS_H
         free(c->remote->buffer);
         free(c->remote);
     }
@@ -417,7 +415,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         rc = pcmk__bzlib2rc(rc);
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
+            crm_err("Decompression failed: %s " QB_XS " rc=%d",
                     pcmk_rc_str(rc), rc);
             free(uncompressed);
             return NULL;
@@ -538,10 +536,10 @@ crm_ipcs_flush_events(pcmk__client_t *c)
             if ((c->queue_backlog <= 1) || (queue_len < c->queue_backlog)) {
                 /* Don't evict for a new or shrinking backlog */
                 crm_warn("Client with process ID %u has a backlog of %u messages "
-                         CRM_XS " %p", c->pid, queue_len, c->ipcs);
+                         QB_XS " %p", c->pid, queue_len, c->ipcs);
             } else {
                 crm_err("Evicting client with process ID %u due to backlog of %u messages "
-                         CRM_XS " %p", c->pid, queue_len, c->ipcs);
+                         QB_XS " %p", c->pid, queue_len, c->ipcs);
                 c->queue_backlog = 0;
                 qb_ipcs_disconnect(c->ipcs);
                 return rc;
@@ -718,7 +716,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
                 rc = (int) -qb_rc;
             }
             crm_notice("Response %d to pid %d failed: %s "
-                       CRM_XS " bytes=%u rc=%lld ipcs=%p",
+                       QB_XS " bytes=%u rc=%lld ipcs=%p",
                        header->qb.id, c->pid, pcmk_rc_str(rc),
                        header->qb.size, (long long) qb_rc, c->ipcs);
 
@@ -761,7 +759,7 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
         rc = pcmk__ipc_send_iov(c, iov, flags);
     } else {
         pcmk_free_ipc_event(iov);
-        crm_notice("IPC message to pid %d failed: %s " CRM_XS " rc=%d",
+        crm_notice("IPC message to pid %d failed: %s " QB_XS " rc=%d",
                    c->pid, pcmk_rc_str(rc), rc);
     }
     return rc;
@@ -779,7 +777,9 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
  * \param[in] status    Exit status code to add to ack
  *
  * \return Newly created XML for ack
- * \note The caller is responsible for freeing the return value with free_xml().
+ *
+ * \note The caller is responsible for freeing the return value with
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
@@ -826,7 +826,7 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
         crm_log_xml_trace(ack, "sent-ack");
         c->request_id = 0;
         rc = pcmk__ipc_send_xml(c, request, ack, flags);
-        free_xml(ack);
+        pcmk__xml_free(ack);
     }
     return rc;
 }

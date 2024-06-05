@@ -10,9 +10,12 @@
 #ifndef PCMK__CRM_COMMON_CLONE_INTERNAL__H
 #define PCMK__CRM_COMMON_CLONE_INTERNAL__H
 
-#include <stdbool.h>                    // bool
-#include <crm/common/scheduler_types.h> // pcmk_resource_t
-#include <crm/common/resources.h>       // pcmk_rsc_variant_clone
+#include <stdio.h>                          // NULL
+#include <stdbool.h>                        // bool
+#include <crm/common/scheduler_types.h>     // pcmk_resource_t
+#include <crm/common/resources.h>           // pcmk_rsc_unique,
+#include <crm/common/resources_internal.h>  // pcmk__rsc_variant_clone etc.
+#include <crm/common/util.h>                // pcmk_is_set
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,7 +46,7 @@ enum pcmk__clone_flags {
 static inline bool
 pcmk__is_clone(const pcmk_resource_t *rsc)
 {
-    return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_clone);
+    return (rsc != NULL) && (rsc->private->variant == pcmk__rsc_variant_clone);
 }
 
 /*!
@@ -57,7 +60,7 @@ pcmk__is_clone(const pcmk_resource_t *rsc)
 static inline bool
 pcmk__is_unique_clone(const pcmk_resource_t *rsc)
 {
-    return pcmk__is_clone(rsc) && pcmk_is_set(rsc->flags, pcmk_rsc_unique);
+    return pcmk__is_clone(rsc) && pcmk_is_set(rsc->flags, pcmk__rsc_unique);
 }
 
 /*!
@@ -71,7 +74,7 @@ pcmk__is_unique_clone(const pcmk_resource_t *rsc)
 static inline bool
 pcmk__is_anonymous_clone(const pcmk_resource_t *rsc)
 {
-    return pcmk__is_clone(rsc) && !pcmk_is_set(rsc->flags, pcmk_rsc_unique);
+    return pcmk__is_clone(rsc) && !pcmk_is_set(rsc->flags, pcmk__rsc_unique);
 }
 
 #ifdef __cplusplus

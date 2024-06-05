@@ -943,12 +943,12 @@ crm_exit(crm_exit_t rc)
     }
 
     mainloop_cleanup();
-    crm_xml_cleanup();
+    pcmk__xml_cleanup();
 
     free(pcmk__our_nodename);
 
     if (crm_system_name) {
-        crm_info("Exiting %s " CRM_XS " with status %d", crm_system_name, rc);
+        crm_info("Exiting %s " QB_XS " with status %d", crm_system_name, rc);
         free(crm_system_name);
     } else {
         crm_trace("Exiting with status %d", rc);
@@ -1095,50 +1095,3 @@ pcmk__copy_result(const pcmk__action_result_t *src, pcmk__action_result_t *dst)
     dst->action_stdout = pcmk__str_copy(src->action_stdout);
     dst->action_stderr = pcmk__str_copy(src->action_stderr);
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/results_compat.h>
-
-const char *
-bz2_strerror(int rc)
-{
-    // See ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC17
-    switch (rc) {
-        case BZ_OK:
-        case BZ_RUN_OK:
-        case BZ_FLUSH_OK:
-        case BZ_FINISH_OK:
-        case BZ_STREAM_END:
-            return "Ok";
-        case BZ_CONFIG_ERROR:
-            return "libbz2 has been improperly compiled on your platform";
-        case BZ_SEQUENCE_ERROR:
-            return "library functions called in the wrong order";
-        case BZ_PARAM_ERROR:
-            return "parameter is out of range or otherwise incorrect";
-        case BZ_MEM_ERROR:
-            return "memory allocation failed";
-        case BZ_DATA_ERROR:
-            return "data integrity error is detected during decompression";
-        case BZ_DATA_ERROR_MAGIC:
-            return "the compressed stream does not start with the correct magic bytes";
-        case BZ_IO_ERROR:
-            return "error reading or writing in the compressed file";
-        case BZ_UNEXPECTED_EOF:
-            return "compressed file finishes before the logical end of stream is detected";
-        case BZ_OUTBUFF_FULL:
-            return "output data will not fit into the buffer provided";
-    }
-    return "Data compression error";
-}
-
-crm_exit_t
-crm_errno2exit(int rc)
-{
-    return pcmk_rc2exitc(pcmk_legacy2rc(rc));
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

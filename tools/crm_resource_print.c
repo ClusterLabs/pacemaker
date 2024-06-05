@@ -67,9 +67,9 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
 {
     const char *host = NULL;
     bool needs_quorum = TRUE;
-    const char *rtype = crm_element_value(rsc->xml, PCMK_XA_TYPE);
-    const char *rprov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
-    const char *rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+    const char *rtype = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
+    const char *rprov = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER);
+    const char *rclass = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
     pcmk_node_t *node = pcmk__current_node(rsc);
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
@@ -83,8 +83,9 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
     }
 
     out->info(out, "Resource: %s %s %s %s %s %s %s %s %d %lld %#.16llx",
-              rsc->xml->name, rsc->id,
-              rsc->clone_name ? rsc->clone_name : rsc->id, rsc->parent ? rsc->parent->id : "NA",
+              rsc->private->xml->name, rsc->id,
+              pcmk__s(rsc->private->history_id, rsc->id),
+              ((rsc->private->parent == NULL)? "NA" : rsc->private->parent->id),
               rprov ? rprov : "NA", rclass, rtype, host ? host : "NA", needs_quorum, rsc->flags,
               rsc->flags);
 
@@ -128,8 +129,8 @@ cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
     all = g_list_prepend(all, (gpointer) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
-    out->message(out, pcmk__map_element_name(rsc->xml), show_opts, rsc, all,
-                 all);
+    out->message(out, pcmk__map_element_name(rsc->private->xml), show_opts, rsc,
+                 all, all);
     out->message(out, "resource-config", rsc, !expanded);
     out->end_list(out);
 
@@ -160,7 +161,8 @@ attribute_changed_xml(pcmk__output_t *out, va_list args)
 {
     attr_update_data_t *ud = va_arg(args, attr_update_data_t *);
 
-    pcmk__output_xml_create_parent(out, (const char *) ud->rsc->xml->name,
+    pcmk__output_xml_create_parent(out,
+                                   (const char *) ud->rsc->private->xml->name,
                                    PCMK_XA_ID, ud->rsc->id,
                                    NULL);
 
@@ -374,7 +376,7 @@ property_list_default(pcmk__output_t *out, va_list args) {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     const char *attr = va_arg(args, char *);
 
-    const char *value = crm_element_value(rsc->xml, attr);
+    const char *value = crm_element_value(rsc->private->xml, attr);
 
     if (value != NULL) {
         out->begin_list(out, NULL, NULL, "Properties");
@@ -391,7 +393,7 @@ property_list_text(pcmk__output_t *out, va_list args) {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     const char *attr = va_arg(args, const char *);
 
-    const char *value = crm_element_value(rsc->xml, attr);
+    const char *value = crm_element_value(rsc->private->xml, attr);
 
     if (value != NULL) {
         pcmk__formatted_printf(out, "%s\n", value);
@@ -535,6 +537,7 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
     const pcmk_resource_t *parent = pe__const_top_resource(checks->rsc, false);
+    const pcmk_scheduler_t *scheduler = checks->rsc->private->scheduler;
 
     if (checks->flags == 0) {
         return pcmk_rc_no_output;
@@ -567,7 +570,7 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
                        "'%s' cannot run on unhealthy nodes due to "
                        PCMK_OPT_NODE_HEALTH_STRATEGY "='%s'",
                        parent->id,
-                       pcmk__cluster_option(checks->rsc->cluster->config_hash,
+                       pcmk__cluster_option(scheduler->config_hash,
                                             PCMK_OPT_NODE_HEALTH_STRATEGY));
     }
 
@@ -639,11 +642,7 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
             const char *role_text = "";
 
             if (ni->promoted) {
-#ifdef PCMK__COMPAT_2_0
-                role_text = " " PCMK__ROLE_PROMOTED_LEGACY;
-#else
                 role_text = " " PCMK_ROLE_PROMOTED;
-#endif
             }
             out->list_item(out, "node", "resource %s is running on: %s%s",
                            requested_name, ni->node_name, role_text);
@@ -702,7 +701,8 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
 
         for (lpc = resources; lpc != NULL; lpc = lpc->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
-            rsc->fns->location(rsc, &hosts, TRUE);
+
+            rsc->private->fns->location(rsc, &hosts, TRUE);
 
             if (hosts == NULL) {
                 out->list_item(out, "reason", "Resource %s is not running", rsc->id);
@@ -754,7 +754,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
     } else if ((rsc != NULL) && (host_uname == NULL)) {
         GList *hosts = NULL;
 
-        rsc->fns->location(rsc, &hosts, TRUE);
+        rsc->private->fns->location(rsc, &hosts, TRUE);
         out->list_item(out, "reason", "Resource %s is %srunning",
                        rsc->id, (hosts? "" : "not "));
         cli_resource_check(out, rsc, NULL);
@@ -789,7 +789,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
             const char *running = NULL;
 
-            rsc->fns->location(rsc, &hosts, TRUE);
+            rsc->private->fns->location(rsc, &hosts, TRUE);
             running = pcmk__btoa(hosts != NULL);
 
             pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE,
@@ -855,7 +855,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
     } else if ((rsc != NULL) && (host_uname == NULL)) {
         GList *hosts = NULL;
 
-        rsc->fns->location(rsc, &hosts, TRUE);
+        rsc->private->fns->location(rsc, &hosts, TRUE);
         crm_xml_add(xml_node, PCMK_XA_RUNNING, pcmk__btoa(hosts != NULL));
         cli_resource_check(out, rsc, NULL);
         g_list_free(hosts);

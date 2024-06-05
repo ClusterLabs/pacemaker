@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_INTERNAL__H
-#  define CRM_INTERNAL__H
+#ifndef PCMK__CRM_INTERNAL__H
+#  define PCMK__CRM_INTERNAL__H
 
 #  ifndef PCMK__CONFIG_H
 #    define PCMK__CONFIG_H
@@ -36,6 +36,7 @@
 
 #  include <crm/lrmd.h>
 #  include <crm/cluster/internal.h>
+#  include <crm/common/digest_internal.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/logging_internal.h>
 #  include <crm/common/ipc_internal.h>

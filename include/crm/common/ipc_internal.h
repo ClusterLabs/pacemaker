@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__IPC_INTERNAL_H
-#define PCMK__IPC_INTERNAL_H
+#ifndef PCMK__CRM_COMMON_IPC_INTERNAL__H
+#define PCMK__CRM_COMMON_IPC_INTERNAL__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,9 +19,7 @@ extern "C" {
 #include <sys/uio.h>                // struct iovec
 #include <sys/types.h>              // uid_t, gid_t, pid_t, size_t
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
 #include <gnutls/gnutls.h>        // gnutls_session_t
-#endif
 
 #include <glib.h>                   // guint, gpointer, GQueue, ...
 #include <libxml/tree.h>            // xmlNode
@@ -122,9 +120,7 @@ struct pcmk__remote_s {
     char *token;
 
     /* TLS only */
-#ifdef HAVE_GNUTLS_GNUTLS_H
     gnutls_session_t *tls_session;
-#endif
 };
 
 enum pcmk__client_flags {
@@ -138,10 +134,8 @@ enum pcmk__client_flags {
     //! Client uses TCP connection
     pcmk__client_tcp                    = (UINT64_C(1) << 33),
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
     //! Client uses TCP with TLS
     pcmk__client_tls                    = (UINT64_C(1) << 34),
-#endif
 
     // The rest are client attributes
 
@@ -161,10 +155,8 @@ enum pcmk__client_flags {
      */
     pcmk__client_authenticated          = (UINT64_C(1) << 43),
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
     //! Client TLS handshake is complete
     pcmk__client_tls_handshake_complete = (UINT64_C(1) << 44),
-#endif
 };
 
 #define PCMK__CLIENT_TYPE(client) ((client)->flags & UINT64_C(0xff00000000))

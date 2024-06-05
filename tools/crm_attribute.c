@@ -471,7 +471,7 @@ command_delete(pcmk__output_t *out, cib_t *cib)
     }
 
 done_deleting:
-    free_xml(result);
+    pcmk__xml_free(result);
 
     if (rc == ENXIO) {
         /* Nothing to delete...
@@ -544,7 +544,7 @@ command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
     }
 
 done_updating:
-    free_xml(result);
+    pcmk__xml_free(result);
     return rc;
 }
 
@@ -630,7 +630,7 @@ command_query(pcmk__output_t *out, cib_t *cib)
         output_one_attribute(result, &od);
     }
 
-    free_xml(result);
+    pcmk__xml_free(result);
     return rc;
 }
 

@@ -44,7 +44,7 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
     if (consider_guest && pcmk__is_guest_or_bundle_node(node)) {
         pcmk_resource_t *guest = node->details->remote_rsc->container;
 
-        if (guest->fns->location(guest, NULL, FALSE) == NULL) {
+        if (guest->private->fns->location(guest, NULL, FALSE) == NULL) {
             return false;
         }
     }
@@ -428,10 +428,12 @@ pcmk__top_allowed_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 
     if ((rsc == NULL) || (node == NULL)) {
         return NULL;
-    } else if (rsc->parent == NULL) {
+    }
+
+    if (rsc->private->parent == NULL) {
         allowed_nodes = rsc->allowed_nodes;
     } else {
-        allowed_nodes = rsc->parent->allowed_nodes;
+        allowed_nodes = rsc->private->parent->allowed_nodes;
     }
     return g_hash_table_lookup(allowed_nodes, node->details->id);
 }

@@ -57,7 +57,7 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
 
         case pcmk__check_last_failure:
             digest_data = rsc_action_digest_cmp(rsc, rsc_op, node,
-                                                rsc->cluster);
+                                                rsc->private->scheduler);
             switch (digest_data->rc) {
                 case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s has "
@@ -73,7 +73,7 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
             break;
     }
     if (reason != NULL) {
-        pe__clear_failcount(rsc, node, reason, rsc->cluster);
+        pe__clear_failcount(rsc, node, reason, rsc->private->scheduler);
     }
 }
 
@@ -135,7 +135,7 @@ check_failure_threshold(gpointer data, gpointer user_data)
 
         if (pcmk__threshold_reached(rsc, node, &failed)) {
             resource_location(failed, node, -PCMK_SCORE_INFINITY,
-                              "__fail_limit__", rsc->cluster);
+                              "__fail_limit__", rsc->private->scheduler);
         }
     }
 }
@@ -159,8 +159,9 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
     pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
 
-    if (rsc->exclusive_discover
-        || pe__const_top_resource(rsc, false)->exclusive_discover) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
+        || pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                       pcmk__rsc_exclusive_probes)) {
         pcmk_node_t *match = NULL;
 
         // If this is a collective resource, apply recursively to children
@@ -196,8 +197,9 @@ apply_stickiness(gpointer data, gpointer user_data)
     /* A resource is sticky if it is managed, has stickiness configured, and is
      * active on a single node.
      */
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)
-        || (rsc->stickiness < 1) || !pcmk__list_of_1(rsc->running_on)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)
+        || (rsc->private->stickiness < 1)
+        || !pcmk__list_of_1(rsc->running_on)) {
         return;
     }
 
@@ -208,7 +210,8 @@ apply_stickiness(gpointer data, gpointer user_data)
      * allowed on the node, so we don't keep the resource somewhere it is no
      * longer explicitly enabled.
      */
-    if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_symmetric_cluster)
+    if (!pcmk_is_set(rsc->private->scheduler->flags,
+                     pcmk_sched_symmetric_cluster)
         && (g_hash_table_lookup(rsc->allowed_nodes,
                                 node->details->id) == NULL)) {
         pcmk__rsc_debug(rsc,
@@ -219,8 +222,9 @@ apply_stickiness(gpointer data, gpointer user_data)
     }
 
     pcmk__rsc_debug(rsc, "Resource %s has %d stickiness on %s",
-                    rsc->id, rsc->stickiness, pcmk__node_name(node));
-    resource_location(rsc, node, rsc->stickiness, "stickiness", rsc->cluster);
+                    rsc->id, rsc->private->stickiness, pcmk__node_name(node));
+    resource_location(rsc, node, rsc->private->stickiness, "stickiness",
+                      rsc->private->scheduler);
 }
 
 /*!
@@ -238,7 +242,7 @@ apply_shutdown_locks(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->cmds->shutdown_lock(rsc);
+        rsc->private->cmds->shutdown_lock(rsc);
     }
 }
 
@@ -321,10 +325,11 @@ assign_resources(pcmk_scheduler_t *scheduler)
         for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-            if (rsc->is_remote_node) {
+            if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
                 pcmk__rsc_trace(rsc, "Assigning remote connection resource '%s'",
                                 rsc->id);
-                rsc->cmds->assign(rsc, rsc->partial_migration_target, true);
+                rsc->private->cmds->assign(rsc, rsc->partial_migration_target,
+                                           true);
             }
         }
     }
@@ -333,10 +338,10 @@ assign_resources(pcmk_scheduler_t *scheduler)
     for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        if (!rsc->is_remote_node) {
+        if (!pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
             pcmk__rsc_trace(rsc, "Assigning %s resource '%s'",
-                            rsc->xml->name, rsc->id);
-            rsc->cmds->assign(rsc, NULL, true);
+                            rsc->private->xml->name, rsc->id);
+            rsc->private->cmds->assign(rsc, NULL, true);
         }
     }
 
@@ -355,7 +360,7 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         return;
     }
     crm_trace("Clear fail counts for orphaned resource %s", rsc->id);
@@ -364,7 +369,9 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
      * should just be unassigned clone instances.
      */
 
-    for (GList *iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->scheduler->nodes;
+         iter != NULL; iter = iter->next) {
+
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
         pcmk_action_t *clear_op = NULL;
 
@@ -376,13 +383,13 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
         }
 
         clear_op = pe__clear_failcount(rsc, node, "it is orphaned",
-                                       rsc->cluster);
+                                       rsc->private->scheduler);
 
         /* We can't use order_action_then_stop() here because its
          * pcmk__ar_guest_allowed breaks things
          */
         pcmk__new_ordering(clear_op->rsc, NULL, clear_op, rsc, stop_key(rsc),
-                           NULL, pcmk__ar_ordered, rsc->cluster);
+                           NULL, pcmk__ar_ordered, rsc->private->scheduler);
     }
 }
 
@@ -413,7 +420,7 @@ schedule_resource_actions(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->cmds->create_actions(rsc);
+        rsc->private->cmds->create_actions(rsc);
     }
 }
 
@@ -428,7 +435,7 @@ schedule_resource_actions(pcmk_scheduler_t *scheduler)
 static bool
 is_managed(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         return true;
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -667,10 +674,10 @@ log_resource_details(pcmk_scheduler_t *scheduler)
         pcmk_resource_t *rsc = (pcmk_resource_t *) item->data;
 
         // Log all resources except inactive orphans
-        if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
+        if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)
             || (rsc->role != pcmk_role_stopped)) {
-            out->message(out, pcmk__map_element_name(rsc->xml), 0UL, rsc, all,
-                         all);
+            out->message(out, pcmk__map_element_name(rsc->private->xml), 0UL,
+                         rsc, all, all);
         }
     }
 

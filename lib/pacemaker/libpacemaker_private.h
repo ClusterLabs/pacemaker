@@ -66,7 +66,7 @@ enum pcmk__updated {
     } while (0)
 
 // Resource assignment methods
-struct resource_alloc_functions_s {
+struct pcmk__assignment_methods {
     /*!
      * \internal
      * \brief Assign a resource to a node
@@ -626,8 +626,8 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
      * perpetually swap places.
      */
     if (pcmk_is_set(colocation->dependent->flags,
-                    pcmk_rsc_remote_nesting_allowed)
-        && !pcmk_is_set(rsc->flags, pcmk_rsc_failed)
+                    pcmk__rsc_remote_nesting_allowed)
+        && !pcmk_is_set(rsc->flags, pcmk__rsc_failed)
         && pcmk__list_of_1(rsc->running_on)) {
         return false;
     }
@@ -682,7 +682,7 @@ void pcmk__order_after_each(pcmk_action_t *after, GList *list);
                        NULL,                                                \
                        (then_rsc),                                          \
                        pcmk__op_key((then_rsc)->id, (then_task), 0),        \
-                       NULL, (flags), (first_rsc)->cluster)
+                       NULL, (flags), (first_rsc)->private->scheduler)
 
 #define pcmk__order_starts(rsc1, rsc2, flags)                \
     pcmk__order_resource_actions((rsc1), PCMK_ACTION_START,  \

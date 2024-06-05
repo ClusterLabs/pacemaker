@@ -587,7 +587,7 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
             msg = pcmk_rc_str(rc);
             break;
     }
-    do_crm_log(log_level, "Could not notify client %s: %s " CRM_XS " rc=%d",
+    do_crm_log(log_level, "Could not notify client %s: %s " QB_XS " rc=%d",
                pcmk__client_name(client), msg, rc);
 }
 
@@ -682,7 +682,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
         pcmk__foreach_ipc_client(send_client_notify, notify);
     }
 
-    free_xml(notify);
+    pcmk__xml_free(notify);
 }
 
 static void
@@ -707,7 +707,7 @@ send_generic_notify(int rc, xmlNode * request)
 
         pcmk__foreach_ipc_client(send_client_notify, notify);
 
-        free_xml(notify);
+        pcmk__xml_free(notify);
     }
 }
 
@@ -790,7 +790,7 @@ notify_of_new_client(pcmk__client_t *new_client)
     crm_xml_add(data.notify, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data.notify, PCMK__XA_LRMD_OP, LRMD_OP_NEW_CLIENT);
     pcmk__foreach_ipc_client(notify_one_client, &data);
-    free_xml(data.notify);
+    pcmk__xml_free(data.notify);
 }
 
 void
@@ -1953,9 +1953,9 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
             reply = create_lrmd_reply(__func__, rc, call_id);
         }
         send_rc = lrmd_server_send_reply(client, id, reply);
-        free_xml(reply);
+        pcmk__xml_free(reply);
         if (send_rc != pcmk_rc_ok) {
-            crm_warn("Reply to client %s failed: %s " CRM_XS " rc=%d",
+            crm_warn("Reply to client %s failed: %s " QB_XS " rc=%d",
                      pcmk__client_name(client), pcmk_rc_str(send_rc), send_rc);
         }
     }

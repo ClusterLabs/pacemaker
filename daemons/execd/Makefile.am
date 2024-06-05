@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2023 the Pacemaker project contributors
+# Copyright 2012-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -27,7 +27,6 @@ pacemaker_execd_SOURCES	= pacemaker-execd.c 	\
 			  execd_commands.c 	\
 			  execd_alerts.c
 
-if BUILD_REMOTE
 sbin_PROGRAMS		= pacemaker-remoted
 if BUILD_SYSTEMD
 systemdsystemunit_DATA	= pacemaker_remote.service
@@ -52,7 +51,6 @@ pacemaker_remoted_SOURCES	= $(pacemaker_execd_SOURCES) 	\
 				  remoted_pidone.c 		\
 				  remoted_proxy.c 		\
 				  remoted_schemas.c
-endif
 
 cts_exec_helper_LDADD = $(top_builddir)/lib/pengine/libpe_status.la
 cts_exec_helper_LDADD += $(top_builddir)/lib/cib/libcib.la
@@ -70,18 +68,8 @@ CLEANFILES = $(man8_MANS)
 # Pacemaker 1 (>=1.1.17).
 .PHONY: install-exec-hook
 install-exec-hook:
-if BUILD_LEGACY_LINKS
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd && $(LN_S) pacemaker-execd lrmd
-endif
-if BUILD_REMOTE
 	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted && $(LN_S) pacemaker-remoted pacemaker_remoted
-endif
 
 .PHONY: uninstall-hook
 uninstall-hook:
-if BUILD_LEGACY_LINKS
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd
-endif
-if BUILD_REMOTE
 	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted
-endif

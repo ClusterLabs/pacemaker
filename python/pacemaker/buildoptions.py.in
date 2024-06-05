@@ -39,6 +39,18 @@ class BuildOptions:
     DAEMON_USER = "@CRM_DAEMON_USER@"
     """User to run Pacemaker daemons as."""
 
+    DATA_DIR = "@datadir@"
+    """Where read-only architecture-independent data is stored."""
+
+    _FENCE_BINDIR = "@PCMK__FENCE_BINDIR@"
+    """Where executable fence agents are installed."""
+
+    INIT_DIR = "@INITDIR@"
+    """Where LSB init scripts are stored."""
+
+    LIBEXEC_DIR = "@libexecdir@"
+    """Where programs started by other programs are stored."""
+
     LOCAL_STATE_DIR = "@localstatedir@"
     """Where miscellaneous temporary state files are stored."""
 
@@ -54,12 +66,17 @@ class BuildOptions:
     RSC_TMP_DIR = "@CRM_RSCTMP_DIR@"
     """Where resource agents should keep state files."""
 
-    # pylint: disable=comparison-of-constants
-    REMOTE_ENABLED = "@PC_NAME_GNUTLS@" != ""
+    REMOTE_ENABLED = True
     """True if Pacemaker Remote support is enabled."""
+
+    RUNTIME_STATE_DIR = "@runstatedir@"
+    """Where runtime data is stored."""
 
     SBIN_DIR = "@sbindir@"
     """Where administrative programs are installed."""
 
     SCHEMA_DIR = "@CRM_SCHEMA_DIRECTORY@"
     """Where Relax-NG schema files are stored."""
+
+    UNIT_DIR = "@systemdsystemunitdir@"
+    """Where system-wide systemd unit files are stored."""

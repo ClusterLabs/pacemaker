@@ -48,6 +48,6 @@ main(int argc, char **argv)
     }
 
     top = pcmk__xml_read(xml_file);
-    free_xml(top);
+    pcmk__xml_free(top);
     return 0;
 }

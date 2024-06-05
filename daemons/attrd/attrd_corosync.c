@@ -91,7 +91,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
              */
             crm_debug("Sending %s a confirmation", peer->uname);
             attrd_send_message(peer, reply, false);
-            free_xml(reply);
+            pcmk__xml_free(reply);
         }
 
         pcmk__reset_request(&request);
@@ -124,7 +124,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
                            xml);
     }
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     free(data);
 }
 
@@ -156,7 +156,7 @@ attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v)
     crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     attrd_add_value_xml(op, a, v, false);
     attrd_send_message(NULL, op, false);
-    free_xml(op);
+    pcmk__xml_free(op);
 }
 
 #define state_text(state) pcmk__s((state), "in unknown state")
@@ -269,7 +269,7 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
 
     } else if (changed) {
         crm_notice("Setting %s[%s]%s%s: %s -> %s "
-                   CRM_XS " from %s with %s write delay",
+                   QB_XS " from %s with %s write delay",
                    attr, host, a->set_type ? " in " : "",
                    pcmk__s(a->set_type, ""), readable_value(v),
                    pcmk__s(value, "(unset)"), peer->uname,
@@ -401,7 +401,7 @@ broadcast_unseen_local_values(void)
     if (sync != NULL) {
         crm_debug("Broadcasting local-only values");
         attrd_send_message(NULL, sync, false);
-        free_xml(sync);
+        pcmk__xml_free(sync);
     }
 }
 
@@ -522,7 +522,7 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
 
     CRM_CHECK(host != NULL, return);
     crm_notice("Removing all %s attributes for node %s "
-               CRM_XS " %s reaping node from cache",
+               QB_XS " %s reaping node from cache",
                host, source, (uncache? "and" : "without"));
 
     g_hash_table_iter_init(&aIter, attributes);
@@ -568,7 +568,7 @@ attrd_peer_sync(crm_node_t *peer)
 
     crm_debug("Syncing values to %s", readable_peer(peer));
     attrd_send_message(peer, sync, false);
-    free_xml(sync);
+    pcmk__xml_free(sync);
 }
 
 void

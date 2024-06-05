@@ -78,8 +78,7 @@ handle_pecalc_request(pcmk__request_t *request)
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
-    digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE,
-                                            CRM_FEATURE_SET);
+    digest = pcmk__digest_xml(xml_data, false, CRM_FEATURE_SET);
     converted = pcmk__xml_copy(NULL, xml_data);
     if (pcmk_update_configured_schema(&converted, true) != pcmk_rc_ok) {
         scheduler->graph = pcmk__xe_create(NULL, PCMK__XE_TRANSITION_GRAPH);
@@ -174,7 +173,7 @@ handle_pecalc_request(pcmk__request_t *request)
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 
 done:
-    free_xml(converted);
+    pcmk__xml_free(converted);
     pe_free_working_set(scheduler);
 
     return reply;
@@ -283,7 +282,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
         if (reply != NULL) {
             pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event);
-            free_xml(reply);
+            pcmk__xml_free(reply);
         }
 
         reason = request.result.exit_reason;
@@ -306,7 +305,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         pcmk__reset_request(&request);
     }
 
-    free_xml(msg);
+    pcmk__xml_free(msg);
     return 0;
 }
 

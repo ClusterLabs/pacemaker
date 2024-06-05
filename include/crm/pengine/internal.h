@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PE_INTERNAL__H
-#  define PE_INTERNAL__H
+#ifndef PCMK__CRM_PENGINE_INTERNAL__H
+#  define PCMK__CRM_PENGINE_INTERNAL__H
 
 #  include <stdbool.h>
 #  include <stdint.h>
@@ -73,22 +73,6 @@ gboolean native_active(pcmk_resource_t *rsc, gboolean all);
 gboolean group_active(pcmk_resource_t *rsc, gboolean all);
 gboolean clone_active(pcmk_resource_t *rsc, gboolean all);
 gboolean pe__bundle_active(pcmk_resource_t *rsc, gboolean all);
-
-//! \deprecated This function will be removed in a future release
-void native_print(pcmk_resource_t *rsc, const char *pre_text, long options,
-                  void *print_data);
-
-//! \deprecated This function will be removed in a future release
-void group_print(pcmk_resource_t *rsc, const char *pre_text, long options,
-                 void *print_data);
-
-//! \deprecated This function will be removed in a future release
-void clone_print(pcmk_resource_t *rsc, const char *pre_text, long options,
-                 void *print_data);
-
-//! \deprecated This function will be removed in a future release
-void pe__print_bundle(pcmk_resource_t *rsc, const char *pre_text, long options,
-                      void *print_data);
 
 gchar *pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
                                   const pcmk_node_t *node, uint32_t show_opts,
@@ -205,31 +189,32 @@ pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
                              const pcmk_node_t *on_node, gboolean optional,
                              pcmk_scheduler_t *scheduler);
 
-#  define delete_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DELETE, 0)
-#  define delete_action(rsc, node, optional) custom_action(		\
-		rsc, delete_key(rsc), PCMK_ACTION_DELETE, node, \
-		optional, rsc->cluster);
+#define delete_key(rsc)  pcmk__op_key((rsc)->id, PCMK_ACTION_DELETE, 0)
+#define stop_key(rsc)    pcmk__op_key((rsc)->id, PCMK_ACTION_STOP, 0)
+#define reload_key(rsc)  pcmk__op_key((rsc)->id, PCMK_ACTION_RELOAD_AGENT, 0)
+#define start_key(rsc)   pcmk__op_key((rsc)->id, PCMK_ACTION_START, 0)
+#define promote_key(rsc) pcmk__op_key((rsc)->id, PCMK_ACTION_PROMOTE, 0)
+#define demote_key(rsc)  pcmk__op_key((rsc)->id, PCMK_ACTION_DEMOTE, 0)
 
-#  define stop_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0)
-#  define stop_action(rsc, node, optional) custom_action(			\
-		rsc, stop_key(rsc), PCMK_ACTION_STOP, node,		\
-		optional, rsc->cluster);
+#define delete_action(rsc, node, optional)                          \
+    custom_action((rsc), delete_key(rsc), PCMK_ACTION_DELETE,       \
+                  (node), (optional), (rsc)->private->scheduler)
 
-#  define reload_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_RELOAD_AGENT, 0)
-#  define start_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_START, 0)
-#  define start_action(rsc, node, optional) custom_action(		\
-		rsc, start_key(rsc), PCMK_ACTION_START, node,           \
-		optional, rsc->cluster)
+#define stop_action(rsc, node, optional)                            \
+    custom_action((rsc), stop_key(rsc), PCMK_ACTION_STOP,           \
+                  (node), (optional), (rsc)->private->scheduler)
 
-#  define promote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_PROMOTE, 0)
-#  define promote_action(rsc, node, optional) custom_action(		\
-		rsc, promote_key(rsc), PCMK_ACTION_PROMOTE, node,	\
-		optional, rsc->cluster)
+#define start_action(rsc, node, optional)                           \
+    custom_action((rsc), start_key(rsc), PCMK_ACTION_START,         \
+                  (node), (optional), (rsc)->private->scheduler)
 
-#  define demote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTE, 0)
-#  define demote_action(rsc, node, optional) custom_action(		\
-		rsc, demote_key(rsc), PCMK_ACTION_DEMOTE, node, \
-		optional, rsc->cluster)
+#define promote_action(rsc, node, optional)                         \
+    custom_action((rsc), promote_key(rsc), PCMK_ACTION_PROMOTE,     \
+                  (node), (optional), (rsc)->private->scheduler)
+
+#define demote_action(rsc, node, optional)                          \
+    custom_action((rsc), demote_key(rsc), PCMK_ACTION_DEMOTE,       \
+                  (node), (optional), (rsc)->private->scheduler)
 
 pcmk_action_t *find_first_action(const GList *input, const char *uuid,
                                  const char *task, const pcmk_node_t *on_node);
@@ -317,9 +302,6 @@ void pe__clear_resource_flags_on_all(pcmk_scheduler_t *scheduler,
 
 gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 
-//! \deprecated This function will be removed in a future release
-void print_rscs_brief(GList *rsc_list, const char * pre_text, long options,
-                      void * print_data, gboolean print_all);
 int pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int options);
 void pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                    const char *reason, bool priority_delay);
@@ -327,9 +309,6 @@ void pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 pcmk_node_t *pe_create_node(const char *id, const char *uname, const char *type,
                             const char *score, pcmk_scheduler_t *scheduler);
 
-//! \deprecated This function will be removed in a future release
-void common_print(pcmk_resource_t *rsc, const char *pre_text, const char *name,
-                  const pcmk_node_t *node, long options, void *print_data);
 int pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
                            const char *name, const pcmk_node_t *node,
                            unsigned int options);

@@ -12,5 +12,4 @@ headerdir=$(pkgincludedir)/crm/cib
 
 noinst_HEADERS		= internal.h
 header_HEADERS		= cib_types.h	\
-			  util.h	\
-			  util_compat.h
+			  util.h
