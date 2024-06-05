@@ -171,14 +171,16 @@ To perform a rolling upgrade, on each node in turn:
 #. Put the node into standby mode, and wait for any active resources
    to be moved cleanly to another node. (This step is optional, but
    allows you to deal with any resource issues before the upgrade.)
-#. Shutdown the cluster software (pacemaker and the messaging layer) on the node.
+#. Shut down Pacemaker or ``pacemaker-remoted``.
+#. If a cluster node, shut down the messaging layer.
 #. Upgrade the Pacemaker software. This may also include upgrading the
    messaging layer and/or the underlying operating system.
 #. If this is the first node to be upgraded, check the configuration
    with the ``crm_verify`` tool.
-#. Start the messaging layer.
+#. If a cluster node, start the messaging layer.
    This must be the same messaging layer (currently only Corosync version 2 and
    greater is supported) that the rest of the cluster is using.
+#. Start Pacemaker or ``pacemaker-remoted``.
 
 .. note::
 
@@ -187,24 +189,40 @@ To perform a rolling upgrade, on each node in turn:
    rolling upgrade in multiple steps, by upgrading to an intermediate version
    first.
 
-The following table lists compatible versions for other nodes in the cluster
-while upgrading a cluster node.
+The following table lists compatible versions for all other nodes in the cluster
+when upgrading a cluster node, or for other Pacemaker Remote nodes when
+upgrading a Pacemaker Remote node.
 
-.. list-table:: **Version Compatibility Table for Cluster Nodes**
+.. list-table:: **Version Compatibility**
    :class: longtable
    :widths: 1 1
    :header-rows: 1
 
    * - Version Being Installed
-     - Oldest Compatible Version
+     - Minimum Compatible Version
    * - Pacemaker 3.y.z
      - Pacemaker 2.0.0
    * - Pacemaker 2.y.z
      - Pacemaker 1.1.11 [#]_
    * - Pacemaker 1.y.z
      - Pacemaker 1.0.0
-   * - Pacemaker 0.7.z
+   * - Pacemaker 0.6.z to 0.7.z
      - Pacemaker 0.6.z
+
+When upgrading a Pacemaker Remote node, cluster nodes must follow different
+compatibility requirements, listed in the table below.
+
+.. list-table:: **Cluster Node Version Compatibility for Pacemaker Remote Nodes**
+   :class: longtable
+   :widths: 1 1
+   :header-rows: 1
+
+   * - Pacemaker Remote Version
+     - Minimum Cluster Node Version
+   * - Pacemaker 3.y.z
+     - Pacemaker 2.0.0
+   * - Pacemaker 1.1.9 to 2.1.z
+     - Pacemaker 1.1.9 [#]_
 
 .. index::
    single: upgrade; detach and reattach
@@ -538,6 +556,11 @@ _______
        cluster uses corosync version 2 or greater as its messaging layer, and
        the Cluster Information Base (CIB) uses schema 1.0 or higher in its
        ``validate-with`` property.
+
+.. [#] Pacemaker Remote versions 1.1.15 through 1.1.17 require cluster nodes to
+       be at least version 1.1.15. Version 1.1.15 introduced an accidental
+       remote protocol version bump, breaking rolling upgrade compatibility with
+       older versions. This was fixed in 1.1.18.
 
 .. [#] As of Pacemaker 2.0.0, only schema versions pacemaker-1.0 and higher
        are supported (excluding pacemaker-1.1, which was a special case).
