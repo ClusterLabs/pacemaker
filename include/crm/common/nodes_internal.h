@@ -83,6 +83,13 @@ typedef struct pcmk__node_private {
      */
     const char *id;
 
+    /*
+     * Sum of priorities of all resources active on node and on any guest nodes
+     * connected to this node, with +1 for promoted instances (used to compare
+     * nodes for PCMK_OPT_PRIORITY_FENCING_DELAY)
+     */
+    int priority;
+
     const char *name;                   // Node name in cluster
     enum pcmk__node_variant variant;    // Node variant
     uint32_t flags;                     // Group of enum pcmk__node_flags

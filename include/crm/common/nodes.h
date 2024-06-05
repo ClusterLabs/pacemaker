@@ -85,13 +85,6 @@ struct pe_node_shared_s {
     // \deprecated Call pcmk_foreach_active_resource() instead
     GList *running_rsc;             // List of resources active on node
 
-    /*
-     * Sum of priorities of all resources active on node and on any guest nodes
-     * connected to this node, with +1 for promoted instances (used to compare
-     * nodes for PCMK_OPT_PRIORITY_FENCING_DELAY)
-     */
-    int priority;
-
     pcmk_scheduler_t *data_set;     // Cluster that node is part of
 };
 //!@}

@@ -1225,13 +1225,13 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         }
 
         if (member_count == 1
-            || n->details->priority > top_priority) {
-            top_priority = n->details->priority;
+            || n->private->priority > top_priority) {
+            top_priority = n->private->priority;
         }
 
         if (member_count == 1
-            || n->details->priority < lowest_priority) {
-            lowest_priority = n->details->priority;
+            || n->private->priority < lowest_priority) {
+            lowest_priority = n->private->priority;
         }
     }
 
@@ -1246,7 +1246,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         return 0;
     }
 
-    if (node->details->priority < top_priority) {
+    if (node->private->priority < top_priority) {
         return 0;
     }
 

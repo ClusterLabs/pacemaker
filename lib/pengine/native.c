@@ -53,9 +53,9 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
         priority = rsc->private->priority;
     }
 
-    node->details->priority += priority;
+    node->private->priority += priority;
     pcmk__rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s)",
-                    pcmk__node_name(node), node->details->priority,
+                    pcmk__node_name(node), node->private->priority,
                     (promoted? "promoted " : ""),
                     rsc->id, rsc->private->priority, (promoted? " + 1" : ""));
 
@@ -71,11 +71,11 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
 
             pcmk_node_t *a_node = gIter->data;
 
-            a_node->details->priority += priority;
+            a_node->private->priority += priority;
             pcmk__rsc_trace(rsc,
                             "%s now has priority %d with %s'%s' "
                             "(priority: %d%s) from guest node %s",
-                            pcmk__node_name(a_node), a_node->details->priority,
+                            pcmk__node_name(a_node), a_node->private->priority,
                             (promoted? "promoted " : ""), rsc->id,
                             rsc->private->priority, (promoted? " + 1" : ""),
                             pcmk__node_name(node));
