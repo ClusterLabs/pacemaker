@@ -838,12 +838,9 @@ timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     long long timeout_ms = crm_get_msec(optarg);
 
     if (timeout_ms < 0) {
-        // @COMPAT When we can break backward compatibilty, return FALSE
-        crm_warn("Ignoring invalid timeout '%s'", optarg);
-        options.timeout_ms = 0U;
-    } else {
-        options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
+        return FALSE;
     }
+    options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
     return TRUE;
 }
 
