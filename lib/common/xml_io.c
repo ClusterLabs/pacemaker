@@ -586,15 +586,13 @@ done:
  * \param[in,out] stream    Open file stream corresponding to filename (closed
  *                          when this function returns)
  * \param[in]     compress  Whether to compress XML before writing
- * \param[out]    nbytes    Number of bytes written
  *
  * \return Standard Pacemaker return code
  */
 static int
 write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
-                 bool compress, unsigned int *nbytes)
+                 bool compress)
 {
-    // @COMPAT Drop nbytes as arg when we drop write_xml_fd()/write_xml_file()
     GString *buffer = g_string_sized_new(1024);
     unsigned int bytes_out = 0;
     int rc = pcmk_rc_ok;
@@ -637,9 +635,6 @@ done:
     fclose(stream);
     crm_trace("Saved %u bytes to %s as XML", bytes_out, filename);
 
-    if (nbytes != NULL) {
-        *nbytes = bytes_out;
-    }
     g_string_free(buffer, TRUE);
     return rc;
 }
@@ -666,7 +661,7 @@ pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd)
     }
 
     return write_xml_stream(xml, pcmk__s(filename, "unnamed file"), stream,
-                            false, NULL);
+                            false);
 }
 
 /*!
@@ -690,7 +685,7 @@ pcmk__xml_write_file(const xmlNode *xml, const char *filename, bool compress)
         return errno;
     }
 
-    return write_xml_stream(xml, filename, stream, compress, NULL);
+    return write_xml_stream(xml, filename, stream, compress);
 }
 
 /*!
