@@ -1061,8 +1061,7 @@ common_free(pcmk_resource_t * rsc)
         return;
     }
 
-    pcmk__rsc_trace(rsc, "Freeing %s %s",
-                    (const char *) rsc->private->xml->name, rsc->id);
+    pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
 
     if (rsc->private->parameter_cache != NULL) {
         g_hash_table_destroy(rsc->private->parameter_cache);
