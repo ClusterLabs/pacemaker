@@ -3955,10 +3955,10 @@ Revised Cluster Status:
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4009,10 +4009,10 @@ crm_resource: Error performing operation: Requested item already exists
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4072,10 +4072,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4126,10 +4126,10 @@ Removing constraint: cli-ban-dummy-on-node1
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4180,10 +4180,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4233,10 +4233,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4318,10 +4318,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4385,10 +4385,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4441,10 +4441,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4498,10 +4498,10 @@ true
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4554,10 +4554,10 @@ true
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4624,10 +4624,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4680,10 +4680,10 @@ false
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4752,10 +4752,10 @@ ticketB	revoked
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4808,10 +4808,10 @@ ticketB	revoked
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4866,10 +4866,10 @@ ticketB	revoked
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -4944,10 +4944,10 @@ Constraints XML:
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5002,10 +5002,10 @@ Error performing operation: No such object
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5090,10 +5090,10 @@ Revised Cluster Status:
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5105,10 +5105,10 @@ Revised Cluster Status:
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5117,10 +5117,10 @@ Revised Cluster Status:
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5177,10 +5177,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5192,10 +5192,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5204,10 +5204,10 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5274,10 +5274,10 @@ Locations:
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5289,10 +5289,10 @@ Locations:
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5301,10 +5301,10 @@ Locations:
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5381,10 +5381,10 @@ Revised Cluster Status:
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5396,10 +5396,10 @@ Revised Cluster Status:
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5408,10 +5408,10 @@ Revised Cluster Status:
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5469,10 +5469,10 @@ Revised Cluster Status:
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5484,10 +5484,10 @@ Revised Cluster Status:
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5496,10 +5496,10 @@ Revised Cluster Status:
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5554,10 +5554,10 @@ Removing constraint: cli-ban-dummy-on-node2
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5569,10 +5569,10 @@ Removing constraint: cli-ban-dummy-on-node2
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node2" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5581,10 +5581,10 @@ Removing constraint: cli-ban-dummy-on-node2
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node3" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

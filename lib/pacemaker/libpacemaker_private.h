@@ -1045,7 +1045,8 @@ void pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn,
 
 G_GNUC_INTERNAL
 xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
-                                    lrmd_event_data_t *op, int target_rc);
+                                    lrmd_event_data_t *op, const char *node,
+                                    int target_rc);
 
 
 // Nodes (pcmk_sched_nodes.c)

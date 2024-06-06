@@ -642,7 +642,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         break;
     }
 
-    pcmk__inject_action_result(cib_resource, op, target_outcome);
+    pcmk__inject_action_result(cib_resource, op, node, target_outcome);
     lrmd_free_event(op);
     rc = fake_cib->cmds->modify(fake_cib, PCMK_XE_STATUS, cib_node,
                                 cib_sync_call);
