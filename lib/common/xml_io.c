@@ -651,16 +651,12 @@ done:
  * \param[in]  xml       XML to write
  * \param[in]  filename  Name of file being written (for logging only)
  * \param[in]  fd        Open file descriptor corresponding to \p filename
- * \param[in]  compress  If \c true, compress XML before writing
- * \param[out] nbytes    Number of bytes written (can be \c NULL)
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
-                   bool compress, unsigned int *nbytes)
+pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd)
 {
-    // @COMPAT Drop compress and nbytes arguments when we drop write_xml_fd()
     FILE *stream = NULL;
 
     CRM_CHECK((xml != NULL) && (fd > 0), return EINVAL);
@@ -670,7 +666,7 @@ pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
     }
 
     return write_xml_stream(xml, pcmk__s(filename, "unnamed file"), stream,
-                            compress, nbytes);
+                            false, NULL);
 }
 
 /*!
