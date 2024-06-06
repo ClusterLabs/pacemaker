@@ -865,7 +865,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
                         action->interval_ms);
     lrmd__set_result(op, rc, status, exit_reason);
     op->t_run = time(NULL);
-    op->t_rcchange = op->t_run;
+    op->t_rcchange = (unsigned int) op->t_run;
     op->params = pcmk__strkey_table(free, free);
 
     g_hash_table_iter_init(&iter, action->params);

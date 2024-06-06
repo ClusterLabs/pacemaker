@@ -1249,9 +1249,10 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         || (op->queue_time > 0)) {
 
         crm_trace("Timing data (" PCMK__OP_FMT "): "
-                  "last=%u change=%u exec=%u queue=%u",
+                  "last=%lld change=%u exec=%u queue=%u",
                   op->rsc_id, op->op_type, op->interval_ms,
-                  op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
+                  (long long) op->t_run, op->t_rcchange, op->exec_time,
+                  op->queue_time);
 
         if ((op->interval_ms > 0) && (op->t_rcchange > 0)) {
             // Recurring ops may have changed rc after initial run

@@ -738,7 +738,7 @@ controld_record_pending_op(const char *node_name, const lrmd_rsc_info_t *rsc,
 
     op->call_id = -1;
     op->t_run = time(NULL);
-    op->t_rcchange = op->t_run;
+    op->t_rcchange = (unsigned int) op->t_run;
 
     lrmd__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
 

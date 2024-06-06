@@ -1027,7 +1027,7 @@ fake_op_status(lrm_state_t *lrm_state, lrmd_event_data_t *op, int op_status,
 {
     op->call_id = get_fake_call_id(lrm_state, op->rsc_id);
     op->t_run = time(NULL);
-    op->t_rcchange = op->t_run;
+    op->t_rcchange = (unsigned int) op->t_run;
     lrmd__set_result(op, op_exitcode, op_status, exit_reason);
 }
 

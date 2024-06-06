@@ -469,7 +469,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     op.user_data = cmd->userdata;
     op.timeout = cmd->timeout;
     op.interval_ms = cmd->interval_ms;
-    op.t_run = (unsigned int) cmd->start_time;
+    op.t_run = cmd->start_time;
     op.t_rcchange = (unsigned int) cmd->start_time;
 
     lrmd__set_result(&op, cmd->result.exit_status, cmd->result.execution_status,
@@ -486,7 +486,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
          * basically, we are not guaranteed that the first successful monitor op and
          * a subsequent failed monitor op will not occur in the same timestamp. We have to
          * make it look like the operations occurred at separate times though. */
-        if (op.t_rcchange == op.t_run) {
+        if (op.t_rcchange == (unsigned int) op.t_run) {
             op.t_rcchange++;
         }
     }
@@ -624,8 +624,8 @@ synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *
     op.type = lrmd_event_exec_complete;
     op.rsc_id = rsc_id;
     op.op_type = op_type;
-    op.t_run = (unsigned int) time(NULL);
-    op.t_rcchange = op.t_run;
+    op.t_run = time(NULL);
+    op.t_rcchange = (unsigned int) op.t_run;
     op.call_id = generate_callid();
     lrmd__set_result(&op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
     process_lrm_event(lrm_state, &op, NULL, NULL);
