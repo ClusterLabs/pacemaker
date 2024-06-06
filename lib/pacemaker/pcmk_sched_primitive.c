@@ -189,7 +189,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     if ((prefer != NULL) && (nodes != NULL)) {
         // Get the allowed node version of prefer
         chosen = g_hash_table_lookup(rsc->private->allowed_nodes,
-                                     prefer->details->id);
+                                     prefer->private->id);
 
         if (chosen == NULL) {
             pcmk__rsc_trace(rsc, "Preferred node %s for %s was unknown",
@@ -355,9 +355,9 @@ remote_connection_assigned(const pcmk_resource_t *connection)
         && (connection->private->next_role != pcmk_role_stopped)) {
 
         crm_trace("Pacemaker Remote node %s will be online",
-                  remote_node->details->id);
+                  remote_node->private->id);
         remote_node->details->online = TRUE;
-        if (remote_node->details->unseen) {
+        if (!pcmk_is_set(remote_node->private->flags, pcmk__node_seen)) {
             // Avoid unnecessary fence, since we will attempt connection
             remote_node->details->unclean = FALSE;
         }
@@ -365,7 +365,7 @@ remote_connection_assigned(const pcmk_resource_t *connection)
     } else {
         crm_trace("Pacemaker Remote node %s will be shut down "
                   "(%sassigned connection's next role is %s)",
-                  remote_node->details->id,
+                  remote_node->private->id,
                   ((connection->private->assigned_node == NULL)? "un" : ""),
                   pcmk_role_text(connection->private->next_role));
         remote_node->details->shutdown = TRUE;
@@ -523,7 +523,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
             reason = "active";
         }
         pcmk__rsc_info(rsc, "Unmanaged resource %s assigned to %s: %s", rsc->id,
-                       (assign_to? assign_to->details->uname : "no node"),
+                       (assign_to? assign_to->private->name : "no node"),
                        reason);
         pcmk__assign_resource(rsc, assign_to, true, stop_if_fail);
 
@@ -879,7 +879,7 @@ rsc_avoids_remote_nodes(const pcmk_resource_t *rsc)
 
     g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-        if (node->details->remote_rsc != NULL) {
+        if (node->private->remote != NULL) {
             node->weight = -PCMK_SCORE_INFINITY;
         }
     }
@@ -1044,7 +1044,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
             for (GList *item = allowed_nodes; item; item = item->next) {
                 pcmk_node_t *node = item->data;
 
-                if (node->details->remote_rsc != remote_rsc) {
+                if (node->private->remote != remote_rsc) {
                     node->weight = -PCMK_SCORE_INFINITY;
                 }
             }
@@ -1620,7 +1620,7 @@ shutdown_time(pcmk_node_t *node)
             result = (time_t) result_ll;
         }
     }
-    return (result == 0)? get_effective_time(node->details->data_set) : result;
+    return (result == 0)? get_effective_time(node->private->scheduler) : result;
 }
 
 /*!

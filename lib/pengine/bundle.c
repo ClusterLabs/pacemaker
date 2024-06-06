@@ -775,7 +775,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         }
         replica->child->private->allowed_nodes = pcmk__strkey_table(NULL, free);
         g_hash_table_insert(replica->child->private->allowed_nodes,
-                            (gpointer) replica->node->details->id,
+                            (gpointer) replica->node->private->id,
                             pe__copy_node(replica->node));
 
         {
@@ -784,7 +784,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
 
             copy->weight = -PCMK_SCORE_INFINITY;
             g_hash_table_insert(parent->private->allowed_nodes,
-                                (gpointer) replica->node->details->id, copy);
+                                (gpointer) replica->node->private->id, copy);
         }
         if (pe__unpack_resource(xml_remote, &replica->remote, parent,
                                 parent->private->scheduler) != pcmk_rc_ok) {
@@ -799,7 +799,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             }
         }
 
-        replica->node->details->remote_rsc = replica->remote;
+        replica->node->private->remote = replica->remote;
 
         // Ensure pcmk__is_guest_or_bundle_node() functions correctly
         replica->remote->private->launcher = replica->container;
@@ -807,7 +807,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         /* A bundle's #kind is closer to "container" (guest node) than the
          * "remote" set by pe_create_node().
          */
-        pcmk__insert_dup(replica->node->details->attrs,
+        pcmk__insert_dup(replica->node->private->attrs,
                          CRM_ATTR_KIND, "container");
 
         /* One effect of this is that unpack_launcher() will add
@@ -976,10 +976,10 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
     crm_trace("Setting address for bundle connection %s to bundle host %s",
               rsc->id, pcmk__node_name(node));
     if(xml != NULL && field != NULL) {
-        crm_xml_add(xml, field, node->details->uname);
+        crm_xml_add(xml, field, node->private->name);
     }
 
-    return node->details->uname;
+    return node->private->name;
 }
 
 #define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \

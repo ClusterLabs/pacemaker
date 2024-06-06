@@ -12,11 +12,12 @@
 
 #include <stdio.h>          // NULL
 #include <stdbool.h>        // bool
+#include <gnutls/gnutls.h>  // gnutls_session_t, etc.
 #include <libxml/tree.h>    // xmlNode
 #include <gnutls/gnutls.h>  // gnutls_session_t, gnutls_dh_params_t, etc.
 
 #include <crm/common/ipc_internal.h>        // pcmk__client_t
-#include <crm/common/nodes.h>               // pcmk_node_variant_remote
+#include <crm/common/nodes_internal.h>      // pcmk__node_variant_remote, etc.
 #include <crm/common/resources_internal.h>  // struct pcmk__remote_private
 #include <crm/common/scheduler_types.h>     // pcmk_node_t
 
@@ -45,7 +46,8 @@ void pcmk__sockaddr2str(const void *sa, char *s);
 static inline bool
 pcmk__is_pacemaker_remote_node(const pcmk_node_t *node)
 {
-    return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
+    return (node != NULL)
+            && (node->private->variant == pcmk__node_variant_remote);
 }
 
 /*!
@@ -60,8 +62,8 @@ static inline bool
 pcmk__is_remote_node(const pcmk_node_t *node)
 {
     return pcmk__is_pacemaker_remote_node(node)
-           && ((node->details->remote_rsc == NULL)
-               || (node->details->remote_rsc->private->launcher == NULL));
+           && ((node->private->remote == NULL)
+               || (node->private->remote->private->launcher == NULL));
 }
 
 /*!
@@ -76,8 +78,8 @@ static inline bool
 pcmk__is_guest_or_bundle_node(const pcmk_node_t *node)
 {
     return pcmk__is_pacemaker_remote_node(node)
-           && (node->details->remote_rsc != NULL)
-           && (node->details->remote_rsc->private->launcher != NULL);
+           && (node->private->remote != NULL)
+           && (node->private->remote->private->launcher != NULL);
 }
 
 gnutls_session_t *pcmk__new_tls_session(int csock, unsigned int conn_type,

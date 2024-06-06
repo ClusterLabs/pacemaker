@@ -30,7 +30,7 @@ add_expected_result(pcmk_action_t *probe, const pcmk_resource_t *rsc,
 {
     // Check whether resource is currently active on node
     pcmk_node_t *running = pe_find_node_id(rsc->private->active_nodes,
-                                           node->details->id);
+                                           node->private->id);
 
     // The expected result is what we think the resource's current state is
     if (running == NULL) {
@@ -79,7 +79,7 @@ probe_then_start(pcmk_resource_t *rsc1, pcmk_resource_t *rsc2)
 
     if ((rsc1_node != NULL)
         && (g_hash_table_lookup(rsc1->private->probed_nodes,
-                                rsc1_node->details->id) == NULL)) {
+                                rsc1_node->private->id) == NULL)) {
 
         pcmk__new_ordering(rsc1,
                            pcmk__op_key(rsc1->id, PCMK_ACTION_MONITOR, 0),
@@ -104,13 +104,13 @@ guest_resource_will_stop(const pcmk_node_t *node)
     const pcmk_resource_t *guest_rsc = NULL;
     const pcmk_node_t *guest_node = NULL;
 
-    guest_rsc = node->details->remote_rsc->private->launcher;
+    guest_rsc = node->private->remote->private->launcher;
     guest_node = guest_rsc->private->assigned_node;
 
     /* Ideally, we'd check whether the guest has a required stop, but that
      * information doesn't exist yet, so approximate it ...
      */
-    return node->details->remote_requires_reset
+    return pcmk_is_set(node->private->flags, pcmk__node_remote_reset)
            || node->details->unclean
            || pcmk_is_set(guest_rsc->flags, pcmk__rsc_failed)
            || (guest_rsc->private->next_role == pcmk_role_stopped)
@@ -119,7 +119,7 @@ guest_resource_will_stop(const pcmk_node_t *node)
            || ((guest_rsc->private->orig_role > pcmk_role_stopped)
                && (guest_node != NULL)
                && pcmk__find_node_in_list(guest_rsc->private->active_nodes,
-                                          guest_node->details->uname) == NULL);
+                                          guest_node->private->name) == NULL);
 }
 
 /*!
@@ -212,13 +212,13 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         goto no_probe;
 
     } else if (g_hash_table_lookup(rsc->private->probed_nodes,
-                                   node->details->id) != NULL) {
+                                   node->private->id) != NULL) {
         reason = "resource state is already known";
         goto no_probe;
     }
 
     allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
-                                  node->details->id);
+                                  node->private->id);
 
     if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
         || pcmk_is_set(top->flags, pcmk__rsc_exclusive_probes)) {
@@ -247,7 +247,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     if (pcmk__is_guest_or_bundle_node(node)) {
-        pcmk_resource_t *guest = node->details->remote_rsc->private->launcher;
+        pcmk_resource_t *guest = node->private->remote->private->launcher;
 
         if (guest->private->orig_role == pcmk_role_stopped) {
             // The guest is stopped, so we know no resource is active there
@@ -300,7 +300,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
 no_probe:
     pcmk__rsc_trace(rsc,
                     "Skipping probe for %s on %s because %s",
-                    rsc->id, node->details->id, reason);
+                    rsc->id, node->private->id, reason);
     return false;
 }
 
@@ -893,7 +893,8 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
         } else if (node->details->unclean) { // ... or nodes that need fencing
             continue;
 
-        } else if (!node->details->rsc_discovery_enabled) {
+        } else if (!pcmk_is_set(node->private->flags,
+                                pcmk__node_probes_allowed)) {
             // The user requested that probes not be done on this node
             continue;
         }
@@ -910,7 +911,7 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
 
             probe_op = custom_action(NULL,
                                      crm_strdup_printf("%s-%s", CRM_OP_REPROBE,
-                                                       node->details->uname),
+                                                       node->private->name),
                                      CRM_OP_REPROBE, node, FALSE, scheduler);
             pcmk__insert_meta(probe_op, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
             continue;

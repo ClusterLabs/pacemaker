@@ -57,7 +57,7 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
              */
             pcmk__new_colocation("#replica-remote-with-host-remote", NULL,
                                  PCMK_SCORE_INFINITY, replica->remote,
-                                 container_host->details->remote_rsc, NULL,
+                                 container_host->private->remote, NULL,
                                  NULL, pcmk__coloc_influence);
         }
         pcmk__rsc_trace(bundle, "Assigning bundle %s connection %s",
@@ -403,7 +403,7 @@ get_bundle_node_host(const pcmk_node_t *node)
     if (pcmk__is_bundle_node(node)) {
         const pcmk_resource_t *container = NULL;
 
-        container = node->details->remote_rsc->private->launcher;
+        container = node->private->remote->private->launcher;
         return container->private->fns->location(container, NULL, 0);
     }
     return node;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -75,7 +75,7 @@ pe__unames_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
         }
 
         /* Get the uname for the node and add it to the return list. */
-        retval = g_list_append(retval, strdup(node->details->uname));
+        retval = g_list_append(retval, strdup(node->private->name));
     }
 
     return retval;

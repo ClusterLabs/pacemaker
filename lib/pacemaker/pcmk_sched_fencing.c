@@ -31,12 +31,12 @@ rsc_is_known_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     const pcmk_resource_t *parent = rsc->private->parent;
 
     if (g_hash_table_lookup(rsc->private->probed_nodes,
-                            node->details->id) != NULL) {
+                            node->private->id) != NULL) {
         return TRUE;
 
     } else if (pcmk__is_primitive(rsc) && pcmk__is_anonymous_clone(parent)
                && (g_hash_table_lookup(parent->private->probed_nodes,
-                                       node->details->id) != NULL)) {
+                                       node->private->id) != NULL)) {
         /* We check only the parent, not the uber-parent, because we cannot
          * assume that the resource is known if it is in an anonymously cloned
          * group (which may be only partially known).
@@ -77,7 +77,7 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                 if (pcmk__str_eq(action->task, PCMK_ACTION_START,
                                  pcmk__str_none)
                     && (g_hash_table_lookup(rsc->private->allowed_nodes,
-                                            target->details->id) != NULL)
+                                            target->private->id) != NULL)
                     && !rsc_is_known_on(rsc, target)) {
 
                     /* If we don't know the status of the resource on the node
@@ -329,7 +329,7 @@ pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
          * whenever a new resource is added -- which would be highly suboptimal.
          */
         pcmk_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, TRUE, NULL,
-                                           FALSE, node->details->data_set);
+                                           FALSE, node->private->scheduler);
 
         order_actions(unfence, action, order);
 
@@ -339,7 +339,7 @@ pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
                                              rsc->id, action->task);
 
             trigger_unfencing(NULL, node, reason, NULL,
-                              node->details->data_set);
+                              node->private->scheduler);
             free(reason);
         }
     }
@@ -371,7 +371,7 @@ pcmk__fence_guest(pcmk_node_t *node)
     /* Check whether guest's launcher has any explicit stop or start (the stop
      * may be implied by fencing of the guest's host).
      */
-    launcher = node->details->remote_rsc->private->launcher;
+    launcher = node->private->remote->private->launcher;
     if (launcher != NULL) {
         stop = find_first_action(launcher->private->actions, NULL,
                                  PCMK_ACTION_STOP, NULL);
@@ -386,7 +386,7 @@ pcmk__fence_guest(pcmk_node_t *node)
      * against, and the controller can always detect it.
      */
     stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean",
-                             FALSE, node->details->data_set);
+                             FALSE, node->private->scheduler);
     pcmk__set_action_flags(stonith_op, pcmk_action_pseudo|pcmk_action_runnable);
 
     /* We want to imply stops/demotes after the guest is stopped, not wait until
@@ -396,7 +396,7 @@ pcmk__fence_guest(pcmk_node_t *node)
     if ((stop != NULL) && pcmk_is_set(stop->flags, pcmk_action_pseudo)) {
         pcmk_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE,
                                                      NULL, FALSE,
-                                                     node->details->data_set);
+                                                     node->private->scheduler);
 
         crm_info("Implying guest %s is down (action %d) after %s fencing",
                  pcmk__node_name(node), stonith_op->id,
@@ -421,7 +421,7 @@ pcmk__fence_guest(pcmk_node_t *node)
          * order the pseudo-fencing after any stop of the connection resource,
          * which will be ordered after any launcher (re-)probe.
          */
-        stop = find_first_action(node->details->remote_rsc->private->actions,
+        stop = find_first_action(node->private->remote->private->actions,
                                  NULL, PCMK_ACTION_STOP, NULL);
 
         if (stop) {
@@ -439,7 +439,7 @@ pcmk__fence_guest(pcmk_node_t *node)
     }
 
     // Order/imply other actions relative to pseudo-fence as with real fence
-    pcmk__order_vs_fence(stonith_op, node->details->data_set);
+    pcmk__order_vs_fence(stonith_op, node->private->scheduler);
 }
 
 /*!

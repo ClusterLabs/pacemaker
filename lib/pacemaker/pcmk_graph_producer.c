@@ -32,7 +32,7 @@
     (pcmk_is_set((flags), pcmk_action_runnable)? "runnable" : "unrunnable")
 
 #define action_node_str(a) \
-    (((a)->node == NULL)? "no node" : (a)->node->details->uname)
+    (((a)->node == NULL)? "no node" : (a)->node->private->name)
 
 /*!
  * \internal
@@ -62,7 +62,7 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
 static void
 add_node_to_xml(const pcmk_node_t *node, void *xml)
 {
-    add_node_to_xml_by_id(node->details->id, (xmlNode *) xml);
+    add_node_to_xml_by_id(node->private->id, (xmlNode *) xml);
 }
 
 /*!
@@ -88,11 +88,16 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *scheduler)
          iter != NULL; iter = iter->next) {
         const pcmk_node_t *node = iter->data;
 
-        if (pcmk__is_pacemaker_remote_node(node) &&
-            (node->details->maintenance != node->details->remote_maintenance)) {
+        if (!pcmk__is_pacemaker_remote_node(node)) {
+            continue;
+        }
+        if ((node->details->maintenance
+             && !pcmk_is_set(node->private->flags, pcmk__node_remote_maint))
+            || (!node->details->maintenance
+                && pcmk_is_set(node->private->flags, pcmk__node_remote_maint))) {
 
             if (maintenance != NULL) {
-                crm_xml_add(add_node_to_xml_by_id(node->details->id,
+                crm_xml_add(add_node_to_xml_by_id(node->private->id,
                                                   maintenance),
                             PCMK__XA_NODE_IN_MAINTENANCE,
                             (node->details->maintenance? "1" : "0"));
@@ -143,7 +148,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
 
         /* Shutdown makes the action's node down */
         xmlNode *downed = pcmk__xe_create(xml, PCMK__XE_DOWNED);
-        add_node_to_xml_by_id(action->node->details->id, downed);
+        add_node_to_xml_by_id(action->node->private->id, downed);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
                             pcmk__str_none)) {
@@ -154,8 +159,8 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
 
         if (pcmk__is_fencing_action(fence)) {
             xmlNode *downed = pcmk__xe_create(xml, PCMK__XE_DOWNED);
-            add_node_to_xml_by_id(action->node->details->id, downed);
-            pe_foreach_guest_node(action->node->details->data_set,
+            add_node_to_xml_by_id(action->node->private->id, downed);
+            pe_foreach_guest_node(action->node->private->scheduler,
                                   action->node, add_node_to_xml, downed);
         }
 
@@ -226,10 +231,10 @@ add_node_details(const pcmk_action_t *action, xmlNode *xml)
 {
     pcmk_node_t *router_node = pcmk__connection_host_for_action(action);
 
-    crm_xml_add(xml, PCMK__META_ON_NODE, action->node->details->uname);
-    crm_xml_add(xml, PCMK__META_ON_NODE_UUID, action->node->details->id);
+    crm_xml_add(xml, PCMK__META_ON_NODE, action->node->private->name);
+    crm_xml_add(xml, PCMK__META_ON_NODE_UUID, action->node->private->id);
     if (router_node != NULL) {
-        crm_xml_add(xml, PCMK__XA_ROUTER_NODE, router_node->details->uname);
+        crm_xml_add(xml, PCMK__XA_ROUTER_NODE, router_node->private->name);
     }
 }
 
@@ -376,7 +381,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
          * added in 33d99707, probably for the libfence-based implementation in
          * c9a90bd, which is no longer used.
          */
-        g_hash_table_foreach(action->node->details->attrs, hash2metafield,
+        g_hash_table_foreach(action->node->private->attrs, hash2metafield,
                              args_xml);
     }
 
@@ -460,9 +465,9 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
     if (needs_node_info && (action->node != NULL)) {
         add_node_details(action, action_xml);
         pcmk__insert_dup(action->meta, PCMK__META_ON_NODE,
-                         action->node->details->uname);
+                         action->node->private->name);
         pcmk__insert_dup(action->meta, PCMK__META_ON_NODE_UUID,
-                         action->node->details->id);
+                         action->node->private->id);
     }
 
     if (skip_details) {
@@ -558,7 +563,8 @@ should_add_action_to_graph(const pcmk_action_t *action)
                   action->uuid, action->id, pcmk__node_name(action->node));
 
     } else if (pcmk__is_guest_or_bundle_node(action->node)
-               && !action->node->details->remote_requires_reset) {
+               && !pcmk_is_set(action->node->private->flags,
+                               pcmk__node_remote_reset)) {
         crm_trace("Action %s (%d) should be dumped: "
                   "assuming will be runnable on guest %s",
                   action->uuid, action->id, pcmk__node_name(action->node));
@@ -682,8 +688,8 @@ should_add_input_to_graph(const pcmk_action_t *action,
                           "migration target %s is not same as input node %s",
                           action->uuid, action->id,
                           input->action->uuid, input->action->id,
-                          (assigned? assigned->details->uname : "<none>"),
-                          (input_node? input_node->details->uname : "<none>"));
+                          (assigned? assigned->private->name : "<none>"),
+                          (input_node? input_node->private->name : "<none>"));
                 input->type = (enum pe_ordering) pcmk__ar_none;
                 return false;
             }
@@ -693,8 +699,8 @@ should_add_input_to_graph(const pcmk_action_t *action,
                       "not on same node (%s vs %s)",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id,
-                      (action->node? action->node->details->uname : "<none>"),
-                      (input_node? input_node->details->uname : "<none>"));
+                      (action->node? action->node->private->name : "<none>"),
+                      (input_node? input_node->private->name : "<none>"));
             input->type = (enum pe_ordering) pcmk__ar_none;
             return false;
 
@@ -780,9 +786,9 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
     if (pcmk_is_set(input->action->flags, pcmk_action_detect_loop)) {
         crm_trace("Breaking tracking loop: %s@%s -> %s@%s (%#.6x)",
                   input->action->uuid,
-                  input->action->node? input->action->node->details->uname : "",
+                  input->action->node? input->action->node->private->name : "",
                   action->uuid,
-                  action->node? action->node->details->uname : "",
+                  action->node? action->node->private->name : "",
                   input->type);
         return false;
     }
@@ -795,9 +801,9 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
     if (input->action == init_action) {
         crm_debug("Input loop found in %s@%s ->...-> %s@%s",
                   action->uuid,
-                  action->node? action->node->details->uname : "",
+                  action->node? action->node->private->name : "",
                   init_action->uuid,
-                  init_action->node? init_action->node->details->uname : "");
+                  init_action->node? init_action->node->private->name : "");
         return true;
     }
 
@@ -806,12 +812,12 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
     crm_trace("Checking inputs of action %s@%s input %s@%s (%#.6x)"
               "for graph loop with %s@%s ",
               action->uuid,
-              action->node? action->node->details->uname : "",
+              action->node? action->node->private->name : "",
               input->action->uuid,
-              input->action->node? input->action->node->details->uname : "",
+              input->action->node? input->action->node->private->name : "",
               input->type,
               init_action->uuid,
-              init_action->node? init_action->node->details->uname : "");
+              init_action->node? init_action->node->private->name : "");
 
     // Recursively check input itself for loops
     for (GList *iter = input->action->actions_before;
@@ -830,9 +836,9 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
     if (!has_loop) {
         crm_trace("No input loop found in %s@%s -> %s@%s (%#.6x)",
                   input->action->uuid,
-                  input->action->node? input->action->node->details->uname : "",
+                  input->action->node? input->action->node->private->name : "",
                   action->uuid,
-                  action->node? action->node->details->uname : "",
+                  action->node? action->node->private->name : "",
                   input->type);
     }
     return has_loop;
@@ -912,7 +918,7 @@ add_action_to_graph(gpointer data, gpointer user_data)
     crm_trace("Adding action %d (%s%s%s) to graph",
               action->id, action->uuid,
               ((action->node == NULL)? "" : " on "),
-              ((action->node == NULL)? "" : action->node->details->uname));
+              ((action->node == NULL)? "" : action->node->private->name));
 
     syn = create_graph_synapse(action, scheduler);
     set = pcmk__xe_create(syn, "action_set");

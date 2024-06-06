@@ -53,29 +53,29 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
         priority = rsc->private->priority;
     }
 
-    node->details->priority += priority;
+    node->private->priority += priority;
     pcmk__rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s)",
-                    pcmk__node_name(node), node->details->priority,
+                    pcmk__node_name(node), node->private->priority,
                     (promoted? "promoted " : ""),
                     rsc->id, rsc->private->priority, (promoted? " + 1" : ""));
 
     /* Priority of a resource running on a guest node is added to the cluster
      * node as well. */
-    if (node->details->remote_rsc
-        && (node->details->remote_rsc->private->launcher != NULL)) {
+    if ((node->private->remote != NULL)
+        && (node->private->remote->private->launcher != NULL)) {
         const pcmk_resource_t *launcher = NULL;
 
-        launcher = node->details->remote_rsc->private->launcher;
+        launcher = node->private->remote->private->launcher;
         for (GList *gIter = launcher->private->active_nodes;
              gIter != NULL; gIter = gIter->next) {
 
             pcmk_node_t *a_node = gIter->data;
 
-            a_node->details->priority += priority;
+            a_node->private->priority += priority;
             pcmk__rsc_trace(rsc,
                             "%s now has priority %d with %s'%s' "
                             "(priority: %d%s) from guest node %s",
-                            pcmk__node_name(a_node), a_node->details->priority,
+                            pcmk__node_name(a_node), a_node->private->priority,
                             (promoted? "promoted " : ""), rsc->id,
                             rsc->private->priority, (promoted? " + 1" : ""),
                             pcmk__node_name(node));
@@ -96,8 +96,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         pcmk_node_t *a_node = (pcmk_node_t *) gIter->data;
 
-        CRM_CHECK(a_node != NULL, return);
-        if (pcmk__str_eq(a_node->details->id, node->details->id, pcmk__str_casei)) {
+        if (pcmk__same_node(a_node, node)) {
             return;
         }
     }
@@ -557,7 +556,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 
     // Failed probe operation
     if (native_displayable_role(rsc) == pcmk_role_stopped) {
-        xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node ? node->details->uname : NULL);
+        xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node ? node->private->name : NULL);
         if (probe_op != NULL) {
             int rc;
 
@@ -657,7 +656,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 
             pcmk_node_t *n = (pcmk_node_t *) iter->data;
 
-            have_nodes = add_output_node(outstr, n->details->uname, have_nodes);
+            have_nodes = add_output_node(outstr, n->private->name, have_nodes);
         }
         if (have_nodes) {
             g_string_append(outstr, " ]");
@@ -799,7 +798,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     nodes_running_on = pcmk__itoa(g_list_length(rsc->private->active_nodes));
 
     if (rsc->private->lock_node != NULL) {
-        locked_to = rsc->private->lock_node->details->uname;
+        locked_to = rsc->private->lock_node->private->name;
     }
 
     rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_RESOURCE,
@@ -830,8 +829,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         const char *cached = pcmk__btoa(node->details->online);
 
         rc = pe__name_and_nvpairs_xml(out, false, PCMK_XE_NODE,
-                                      PCMK_XA_NAME, node->details->uname,
-                                      PCMK_XA_ID, node->details->id,
+                                      PCMK_XA_NAME, node->private->name,
+                                      PCMK_XA_ID, node->private->id,
                                       PCMK_XA_CACHED, cached,
                                       NULL);
         CRM_ASSERT(rc == pcmk_rc_ok);
@@ -943,7 +942,7 @@ native_location(const pcmk_resource_t *rsc, GList **list, int current)
         result = g_list_copy(rsc->private->active_nodes);
         if ((current == 2) && (rsc->private->pending_node != NULL)
             && !pe_find_node_id(result,
-                                rsc->private->pending_node->details->id)) {
+                                rsc->private->pending_node->private->id)) {
 
                 result = g_list_append(result,
                                        (gpointer) rsc->private->pending_node);
@@ -963,7 +962,8 @@ native_location(const pcmk_resource_t *rsc, GList **list, int current)
         for (; gIter != NULL; gIter = gIter->next) {
             pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
-            if (*list == NULL || pe_find_node_id(*list, node->details->id) == NULL) {
+            if ((*list == NULL)
+                || (pe_find_node_id(*list, node->private->id) == NULL)) {
                 *list = g_list_append(*list, node);
             }
         }
@@ -1029,10 +1029,12 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
                     continue;
                 }
 
-                node_table = g_hash_table_lookup(active_table, node->details->uname);
+                node_table = g_hash_table_lookup(active_table, node->private->name);
                 if (node_table == NULL) {
                     node_table = pcmk__strkey_table(free, free);
-                    g_hash_table_insert(active_table, strdup(node->details->uname), node_table);
+                    g_hash_table_insert(active_table,
+                                        strdup(node->private->name),
+                                        node_table);
                 }
 
                 active_counter = g_hash_table_lookup(node_table, buffer);

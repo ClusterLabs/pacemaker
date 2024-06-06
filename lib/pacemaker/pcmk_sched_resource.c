@@ -368,8 +368,8 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
 static inline void
 add_assigned_resource(pcmk_node_t *node, pcmk_resource_t *rsc)
 {
-    node->details->allocated_rsc = g_list_prepend(node->details->allocated_rsc,
-                                                  rsc);
+    node->private->assigned_resources =
+        g_list_prepend(node->private->assigned_resources, rsc);
 }
 
 /*!
@@ -512,9 +512,9 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     rsc->private->assigned_node = pe__copy_node(node);
 
     add_assigned_resource(node, rsc);
-    node->details->num_resources++;
+    node->private->num_resources++;
     node->count++;
-    pcmk__consume_node_capacity(node->details->utilization, rsc);
+    pcmk__consume_node_capacity(node->private->utilization, rsc);
 
     if (pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
         pcmk__output_t *out = scheduler->priv;
@@ -557,10 +557,10 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
         /* We're going to free the pcmk_node_t, but its details member is shared
          * and will remain, so update that appropriately first.
          */
-        old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc,
-                                                    rsc);
-        old->details->num_resources--;
-        pcmk__release_node_capacity(old->details->utilization, rsc);
+        old->private->assigned_resources =
+            g_list_remove(old->private->assigned_resources, rsc);
+        old->private->num_resources--;
+        pcmk__release_node_capacity(old->private->utilization, rsc);
         free(old);
         return;
     }
@@ -650,7 +650,7 @@ get_node_score(const pcmk_node_t *node, GHashTable *nodes)
     pcmk_node_t *found_node = NULL;
 
     if ((node != NULL) && (nodes != NULL)) {
-        found_node = g_hash_table_lookup(nodes, node->details->id);
+        found_node = g_hash_table_lookup(nodes, node->private->id);
     }
     return (found_node == NULL)? -PCMK_SCORE_INFINITY : found_node->weight;
 }
@@ -759,11 +759,11 @@ done:
     crm_trace("%s (%d)%s%s %c %s (%d)%s%s: %s",
               resource1->id, r1_score,
               ((r1_node == NULL)? "" : " on "),
-              ((r1_node == NULL)? "" : r1_node->details->id),
+              ((r1_node == NULL)? "" : r1_node->private->id),
               ((rc < 0)? '>' : ((rc > 0)? '<' : '=')),
               resource2->id, r2_score,
               ((r2_node == NULL)? "" : " on "),
-              ((r2_node == NULL)? "" : r2_node->details->id),
+              ((r2_node == NULL)? "" : r2_node->private->id),
               reason);
     if (r1_nodes != NULL) {
         g_hash_table_destroy(r1_nodes);

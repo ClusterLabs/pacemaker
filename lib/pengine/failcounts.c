@@ -134,7 +134,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                   "[@" PCMK_META_INTERVAL "='%u']"
 
                 lrm_op_xpath = crm_strdup_printf(XPATH_FMT,
-                                                 node->details->uname, xml_name,
+                                                 node->private->name, xml_name,
                                                  conf_op_name,
                                                  conf_op_interval_ms);
                 lrm_op_xpathObj = xpath_search(rsc->private->scheduler->input,
@@ -378,7 +378,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
     CRM_CHECK(generate_fail_regexes(rsc, &fc_data.failcount_re,
                                     &fc_data.lastfailure_re) == pcmk_rc_ok,
               return 0);
-    g_hash_table_foreach(node->details->attrs, update_failcount_for_attr,
+    g_hash_table_foreach(node->private->attrs, update_failcount_for_attr,
                          &fc_data);
     regfree(&(fc_data.failcount_re));
     regfree(&(fc_data.lastfailure_re));

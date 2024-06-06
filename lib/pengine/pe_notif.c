@@ -25,7 +25,7 @@ typedef struct notify_entry_s {
  * \brief Compare two notification entries
  *
  * Compare two notification entries, where the one with the alphabetically first
- * resource name (or if equal, node name) sorts as first, with NULL sorting as
+ * resource name (or if equal, node ID) sorts as first, with NULL sorting as
  * less than non-NULL.
  *
  * \param[in] a  First notification entry to compare
@@ -79,8 +79,8 @@ compare_notify_entries(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    // Finally, compare node names
-    return strcmp(entry_a->node->details->id, entry_b->node->details->id);
+    // Finally, compare node IDs
+    return strcmp(entry_a->node->private->id, entry_b->node->private->id);
 }
 
 /*!
@@ -129,13 +129,13 @@ get_node_names(const GList *list, GString **all_node_names,
     for (const GList *iter = list; iter != NULL; iter = iter->next) {
         const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
 
-        if (node->details->uname == NULL) {
+        if (node->private->name == NULL) {
             continue;
         }
 
         // Always add to list of all node names
         if (all_node_names != NULL) {
-            pcmk__add_word(all_node_names, 1024, node->details->uname);
+            pcmk__add_word(all_node_names, 1024, node->private->name);
         }
 
         // Add to host node name list if appropriate
@@ -143,15 +143,15 @@ get_node_names(const GList *list, GString **all_node_names,
             if (pcmk__is_guest_or_bundle_node(node)) {
                 const pcmk_resource_t *launcher = NULL;
 
-                launcher = node->details->remote_rsc->private->launcher;
+                launcher = node->private->remote->private->launcher;
                 if (launcher->private->active_nodes != NULL) {
                     node = pcmk__current_node(launcher);
-                    if (node->details->uname == NULL) {
+                    if (node->private->name == NULL) {
                         continue;
                     }
                 }
             }
-            pcmk__add_word(host_node_names, 1024, node->details->uname);
+            pcmk__add_word(host_node_names, 1024, node->private->name);
         }
     }
 
@@ -220,8 +220,8 @@ notify_entries_to_strings(GList *list, GString **rsc_names,
         if (rsc_names != NULL) {
             pcmk__add_word(rsc_names, 1024, entry->rsc->id);
         }
-        if ((node_names != NULL) && (entry->node->details->uname != NULL)) {
-            pcmk__add_word(node_names, 1024, entry->node->details->uname);
+        if ((node_names != NULL) && (entry->node->private->name != NULL)) {
+            pcmk__add_word(node_names, 1024, entry->node->private->name);
         }
     }
 
@@ -785,7 +785,7 @@ static pcmk_action_t *
 find_remote_start(pcmk_action_t *action)
 {
     if ((action != NULL) && (action->node != NULL)) {
-        pcmk_resource_t *remote_rsc = action->node->details->remote_rsc;
+        pcmk_resource_t *remote_rsc = action->node->private->remote;
 
         if (remote_rsc != NULL) {
             return find_first_action(remote_rsc->private->actions, NULL,
@@ -889,7 +889,8 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             if ((stop != NULL)
                 && pcmk_is_set(stop->flags, pcmk_action_pseudo)
                 && (current_node->details->unclean
-                    || current_node->details->remote_requires_reset)) {
+                    || pcmk_is_set(current_node->private->flags,
+                                   pcmk__node_remote_reset))) {
                 continue;
             }
 
@@ -1006,7 +1007,7 @@ pe__order_notifs_after_fencing(const pcmk_action_t *stop, pcmk_resource_t *rsc,
     if (n_data != NULL) {
         collect_resource_data(rsc, false, n_data);
         add_notify_env(n_data, "notify_stop_resource", rsc->id);
-        add_notify_env(n_data, "notify_stop_uname", stop->node->details->uname);
+        add_notify_env(n_data, "notify_stop_uname", stop->node->private->name);
         create_notify_actions(uber_parent(rsc), n_data);
         pe__free_action_notification_data(n_data);
     }

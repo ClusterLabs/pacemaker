@@ -62,7 +62,7 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
                 case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s has "
                               "no digest to compare",
-                              rsc->id, pcmk__xe_id(rsc_op), node->details->id);
+                              rsc->id, pcmk__xe_id(rsc_op), node->private->id);
                     break;
                 case pcmk__digest_match:
                     break;
@@ -170,7 +170,7 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
                        user_data);
 
         match = g_hash_table_lookup(rsc->private->allowed_nodes,
-                                    node->details->id);
+                                    node->private->id);
         if ((match != NULL)
             && (match->rsc_discover_mode != pcmk_probe_exclusive)) {
             match->weight = -PCMK_SCORE_INFINITY;
@@ -216,7 +216,7 @@ apply_stickiness(gpointer data, gpointer user_data)
     if (!pcmk_is_set(rsc->private->scheduler->flags,
                      pcmk_sched_symmetric_cluster)
         && (g_hash_table_lookup(rsc->private->allowed_nodes,
-                                node->details->id) == NULL)) {
+                                node->private->id) == NULL)) {
         pcmk__rsc_debug(rsc,
                         "Ignoring %s stickiness because the cluster is "
                         "asymmetric and %s is not explicitly allowed",
@@ -267,7 +267,7 @@ count_available_nodes(pcmk_scheduler_t *scheduler)
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         if ((node != NULL) && (node->weight >= 0) && node->details->online
-            && (node->details->type != node_ping)) {
+            && (node->private->variant != pcmk__node_variant_ping)) {
             scheduler->max_valid_nodes++;
         }
     }
@@ -484,7 +484,7 @@ static bool
 needs_fencing(const pcmk_node_t *node, bool have_managed)
 {
     return have_managed && node->details->unclean
-           && pe_can_fence(node->details->data_set, node);
+           && pe_can_fence(node->private->scheduler, node);
 }
 
 /*!
@@ -543,10 +543,10 @@ static pcmk_action_t *
 schedule_fencing(pcmk_node_t *node)
 {
     pcmk_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
-                                       FALSE, node->details->data_set);
+                                       FALSE, node->private->scheduler);
 
     pcmk__sched_warn("Scheduling node %s for fencing", pcmk__node_name(node));
-    pcmk__order_vs_fence(fencing, node->details->data_set);
+    pcmk__order_vs_fence(fencing, node->private->scheduler);
     return fencing;
 }
 
@@ -575,13 +575,14 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
         pcmk_action_t *fencing = NULL;
+        const bool is_dc = pcmk__same_node(node, scheduler->dc_node);
 
         /* Guest nodes are "fenced" by recovering their container resource,
          * so handle them separately.
          */
         if (pcmk__is_guest_or_bundle_node(node)) {
-            if (node->details->remote_requires_reset && have_managed
-                && pe_can_fence(scheduler, node)) {
+            if (pcmk_is_set(node->private->flags, pcmk__node_remote_reset)
+                && have_managed && pe_can_fence(scheduler, node)) {
                 pcmk__fence_guest(node);
             }
             continue;
@@ -591,7 +592,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
             fencing = schedule_fencing(node);
 
             // Track DC and non-DC fence actions separately
-            if (node->details->is_dc) {
+            if (is_dc) {
                 dc_down = fencing;
             } else {
                 fencing_ops = add_nondc_fencing(fencing_ops, fencing,
@@ -602,7 +603,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
             pcmk_action_t *down_op = pcmk__new_shutdown_action(node);
 
             // Track DC and non-DC shutdown actions separately
-            if (node->details->is_dc) {
+            if (is_dc) {
                 dc_down = down_op;
             } else {
                 shutdown_ops = g_list_prepend(shutdown_ops, down_op);

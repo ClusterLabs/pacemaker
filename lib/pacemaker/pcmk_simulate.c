@@ -50,7 +50,7 @@ create_action_name(const pcmk_action_t *action, bool verbose)
     const char *task = action->task;
 
     if (action->node != NULL) {
-        action_host = action->node->details->uname;
+        action_host = action->node->private->name;
     } else if (!pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         action_host = "<none>";
     }

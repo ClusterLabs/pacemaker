@@ -102,7 +102,7 @@ ban_unavailable_allowed_nodes(pcmk_resource_t *instance, int max_per_node)
 
                     child_node =
                         g_hash_table_lookup(child->private->allowed_nodes,
-                                            node->details->id);
+                                            node->private->id);
                     if (child_node != NULL) {
                         pcmk__rsc_trace(instance,
                                         "Banning %s child %s "
@@ -133,7 +133,7 @@ new_node_table(pcmk_node_t *node)
     GHashTable *table = pcmk__strkey_table(NULL, free);
 
     node = pe__copy_node(node);
-    g_hash_table_insert(table, (gpointer) node->details->id, node);
+    g_hash_table_insert(table, (gpointer) node->private->id, node);
     return table;
 }
 
@@ -218,8 +218,8 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
     apply_parent_colocations(instance2, &colocated_scores2);
 
     // Find original nodes again, with scores updated for colocations
-    node1 = g_hash_table_lookup(colocated_scores1, current_node1->details->id);
-    node2 = g_hash_table_lookup(colocated_scores2, current_node2->details->id);
+    node1 = g_hash_table_lookup(colocated_scores1, current_node1->private->id);
+    node2 = g_hash_table_lookup(colocated_scores2, current_node2->private->id);
 
     // Compare nodes by updated scores
     if (node1->weight < node2->weight) {
@@ -279,7 +279,7 @@ node_is_allowed(const pcmk_resource_t *rsc, pcmk_node_t **node)
 {
     if (*node != NULL) {
         pcmk_node_t *allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
-                                                   (*node)->details->id);
+                                                   (*node)->private->id);
 
         if ((allowed == NULL) || (allowed->weight < 0)) {
             pcmk__rsc_trace(rsc, "%s: current location (%s) is unavailable",
@@ -567,7 +567,7 @@ assign_instance(pcmk_resource_t *instance, const pcmk_node_t *prefer,
     pcmk_node_t *chosen = NULL;
 
     pcmk__rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
-                    ((prefer == NULL)? "no node" : prefer->details->uname));
+                    ((prefer == NULL)? "no node" : prefer->private->name));
 
     if (pcmk_is_set(instance->flags, pcmk__rsc_assigning)) {
         pcmk__rsc_debug(instance,
@@ -614,7 +614,7 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
                     instance->id, pcmk__node_name(current));
 
     allowed_node = g_hash_table_lookup(instance->private->allowed_nodes,
-                                       current->details->id);
+                                       current->private->id);
     if (!pcmk__node_available(allowed_node, true, false)) {
         pcmk__rsc_info(instance,
                        "Not assigning %s to current node %s: unavailable",

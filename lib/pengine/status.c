@@ -242,22 +242,23 @@ pe_free_nodes(GList *nodes)
         }
 
         /* This is called after pe_free_resources(), which means that we can't
-         * use node->details->uname for Pacemaker Remote nodes.
+         * use node->private->name for Pacemaker Remote nodes.
          */
         crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
                   "(guest or remote)" : pcmk__node_name(node)));
 
-        if (node->details->attrs != NULL) {
-            g_hash_table_destroy(node->details->attrs);
+        if (node->private->attrs != NULL) {
+            g_hash_table_destroy(node->private->attrs);
         }
-        if (node->details->utilization != NULL) {
-            g_hash_table_destroy(node->details->utilization);
+        if (node->private->utilization != NULL) {
+            g_hash_table_destroy(node->private->utilization);
         }
-        if (node->details->digest_cache != NULL) {
-            g_hash_table_destroy(node->details->digest_cache);
+        if (node->private->digest_cache != NULL) {
+            g_hash_table_destroy(node->private->digest_cache);
         }
         g_list_free(node->details->running_rsc);
-        g_list_free(node->details->allocated_rsc);
+        g_list_free(node->private->assigned_resources);
+        free(node->private);
         free(node->details);
         free(node);
     }
@@ -491,7 +492,7 @@ pe_find_node_id(const GList *nodes, const char *id)
          * probably depend on the node type, so functionizing the comparison
          * would be worthwhile
          */
-        if (pcmk__str_eq(node->details->id, id, pcmk__str_casei)) {
+        if (pcmk__str_eq(node->private->id, id, pcmk__str_casei)) {
             return node;
         }
     }
