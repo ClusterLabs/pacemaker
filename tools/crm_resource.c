@@ -1433,10 +1433,10 @@ is_scheduler_required(void)
 static bool
 accept_clone_instance(void)
 {
-    // @COMPAT At 3.0.0, add cmd_delete; for now, don't throw error
     switch (options.rsc_cmd) {
         case cmd_ban:
         case cmd_clear:
+        case cmd_delete:
         case cmd_move:
         case cmd_restart:
             return false;
