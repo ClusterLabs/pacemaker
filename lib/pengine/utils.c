@@ -93,6 +93,8 @@ pe__copy_node(const pcmk_node_t *this_node)
     CRM_ASSERT(this_node != NULL);
 
     new_node = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
+    new_node->assign = pcmk__assert_alloc(1,
+                                          sizeof(struct pcmk__node_assignment));
 
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
     new_node->weight = this_node->weight;

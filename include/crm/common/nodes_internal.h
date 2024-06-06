@@ -73,6 +73,14 @@ enum pcmk__node_flags {
     pcmk__node_unpacked         = (UINT32_C(1) << 8),
 };
 
+/* Per-node data used in resource assignment
+ *
+ * @COMPAT When we can make the pcmk_node_t implementation internal, move these
+ * there and drop this struct.
+ */
+struct pcmk__node_assignment {
+};
+
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow
  * copies, so all pcmk_node_t objects for the same node will share the same
  * private data)

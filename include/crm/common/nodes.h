@@ -92,6 +92,8 @@ struct pe_node_shared_s {
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 struct pcmk__scored_node {
+    struct pcmk__node_assignment *assign;
+
     int weight;         // Node score for a given resource
     int count;          // Counter reused by assignment and promotion code
 
