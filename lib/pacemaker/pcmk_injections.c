@@ -190,7 +190,7 @@ create_op(const xmlNode *cib_resource, const char *task, guint interval_ms,
     lrmd__set_result(op, outcome, PCMK_EXEC_DONE, "Simulated action result");
     op->params = NULL; // Not needed for simulation purposes
     op->t_run = time(NULL);
-    op->t_rcchange = (unsigned int) op->t_run;
+    op->t_rcchange = op->t_run;
 
     // Use a call ID higher than any existing history entries
     op->call_id = 0;

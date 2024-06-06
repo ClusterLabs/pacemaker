@@ -79,7 +79,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     lrmd__set_result(&event, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_NOT_CONNECTED,
                      "Action was pending when executor connection was dropped");
     event.t_run = op->start_time;
-    event.t_rcchange = (unsigned int) op->start_time;
+    event.t_rcchange = op->start_time;
 
     event.call_id = op->call_id;
     event.remote_nodename = lrm_state->node_name;

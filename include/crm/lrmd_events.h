@@ -74,7 +74,7 @@ typedef struct lrmd_event_data_s {
     time_t t_run;
 
     /*! Timestamp of last rc change */
-    unsigned int t_rcchange;
+    time_t t_rcchange;
 
     /*! Time in length op took to execute */
     unsigned int exec_time;
