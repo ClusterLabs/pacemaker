@@ -165,7 +165,7 @@ handle_pecalc_request(pcmk__request_t *request)
         unlink(filename);
         crm_xml_add_ll(xml_data, PCMK_XA_EXECUTION_DATE,
                        (long long) execution_date);
-        pcmk__xml_write_file(xml_data, filename, true, NULL);
+        pcmk__xml_write_file(xml_data, filename, true);
         pcmk__write_series_sequence(PE_STATE_DIR, series[series_id].name,
                                     ++seq, series_wrap);
     }

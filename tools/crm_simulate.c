@@ -396,7 +396,7 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         free(pid);
     }
 
-    rc = pcmk__xml_write_file(cib_object, output, false, NULL);
+    rc = pcmk__xml_write_file(cib_object, output, false);
     if (rc != pcmk_rc_ok) {
         g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT,
                     "Could not create '%s': %s", output, pcmk_rc_str(rc));

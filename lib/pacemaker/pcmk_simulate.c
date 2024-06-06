@@ -873,7 +873,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     }
 
     if (input_file != NULL) {
-        rc = pcmk__xml_write_file(input, input_file, false, NULL);
+        rc = pcmk__xml_write_file(input, input_file, false);
         if (rc != pcmk_rc_ok) {
             goto simulate_done;
         }
@@ -931,8 +931,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         input = NULL;           /* Don't try and free it twice */
 
         if (graph_file != NULL) {
-            rc = pcmk__xml_write_file(scheduler->graph, graph_file, false,
-                                      NULL);
+            rc = pcmk__xml_write_file(scheduler->graph, graph_file, false);
             if (rc != pcmk_rc_ok) {
                 rc = pcmk_rc_graph_error;
                 goto simulate_done;

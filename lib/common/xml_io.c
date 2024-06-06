@@ -676,15 +676,12 @@ pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd)
  * \param[in]  xml       XML to write
  * \param[in]  filename  Name of file to write
  * \param[in]  compress  If \c true, compress XML before writing
- * \param[out] nbytes    Number of bytes written (can be \c NULL)
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__xml_write_file(const xmlNode *xml, const char *filename, bool compress,
-                     unsigned int *nbytes)
+pcmk__xml_write_file(const xmlNode *xml, const char *filename, bool compress)
 {
-    // @COMPAT Drop nbytes argument when we drop write_xml_fd()
     FILE *stream = NULL;
 
     CRM_CHECK((xml != NULL) && (filename != NULL), return EINVAL);
@@ -693,7 +690,7 @@ pcmk__xml_write_file(const xmlNode *xml, const char *filename, bool compress,
         return errno;
     }
 
-    return write_xml_stream(xml, filename, stream, compress, nbytes);
+    return write_xml_stream(xml, filename, stream, compress, NULL);
 }
 
 /*!
@@ -740,6 +737,6 @@ save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
     }
 
     crm_info("Saving %s to %s", desc, filename);
-    pcmk__xml_write_file(xml, filename, false, NULL);
+    pcmk__xml_write_file(xml, filename, false);
     free(f);
 }

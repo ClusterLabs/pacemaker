@@ -552,7 +552,7 @@ cib_file_signoff(cib_t *cib)
             bool compress = pcmk__ends_with_ext(private->filename, ".bz2");
 
             if (pcmk__xml_write_file(private->cib_xml, private->filename,
-                                     compress, NULL) != pcmk_rc_ok) {
+                                     compress) != pcmk_rc_ok) {
                 rc = pcmk_err_generic;
             }
         }
