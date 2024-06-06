@@ -1639,12 +1639,14 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         crm_err("Received bad reply: No id set");
         crm_log_xml_err(op_reply, "Bad reply");
         pcmk__xml_free(op_reply);
+        op_reply = NULL;
         rc = -ENOMSG;
 
     } else {
         crm_err("Received bad reply: %d (wanted %d)", reply_id, stonith->call_id);
         crm_log_xml_err(op_reply, "Old reply");
         pcmk__xml_free(op_reply);
+        op_reply = NULL;
         rc = -ENOMSG;
     }
 
