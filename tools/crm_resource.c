@@ -1671,9 +1671,12 @@ main(int argc, char **argv)
         }
 
     } else if (options.cmdline_params != NULL) {
-        // @COMPAT @TODO error out here when we can break backward compatibility
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    _("--option must be used with --validate and without -r"));
         g_hash_table_destroy(options.cmdline_params);
         options.cmdline_params = NULL;
+        goto done;
     }
 
     if (is_resource_required() && (options.rsc_id == NULL)) {
