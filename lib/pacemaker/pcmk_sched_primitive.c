@@ -201,7 +201,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
          * An alternative would be to favor the preferred node even if the best
          * node is better, when the best node's score is less than INFINITY.
          */
-        } else if (chosen->weight < best->weight) {
+        } else if (chosen->assign->score < best->assign->score) {
             pcmk__rsc_trace(rsc, "Preferred node %s for %s was unsuitable",
                             pcmk__node_name(chosen), rsc->id);
             chosen = NULL;
@@ -228,7 +228,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         chosen = best;
 
         if (!pcmk__is_unique_clone(rsc->private->parent)
-            && (chosen->weight > 0) // Zero not acceptable
+            && (chosen->assign->score > 0) // Zero not acceptable
             && pcmk__node_available(chosen, false, false)) {
             /* If the resource is already running on a node, prefer that node if
              * it is just as good as the chosen node.
@@ -255,7 +255,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                 for (GList *iter = nodes->next; iter; iter = iter->next) {
                     pcmk_node_t *allowed = (pcmk_node_t *) iter->data;
 
-                    if (allowed->weight != chosen->weight) {
+                    if (allowed->assign->score != chosen->assign->score) {
                         // The nodes are sorted by score, so no more are equal
                         break;
                     }
@@ -269,14 +269,14 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                 if (nodes_with_best_score > 1) {
                     uint8_t log_level = LOG_INFO;
 
-                    if (chosen->weight >= PCMK_SCORE_INFINITY) {
+                    if (chosen->assign->score >= PCMK_SCORE_INFINITY) {
                         log_level = LOG_WARNING;
                     }
                     do_crm_log(log_level,
                                "Chose %s for %s from %d nodes with score %s",
                                pcmk__node_name(chosen), rsc->id,
                                nodes_with_best_score,
-                               pcmk_readable_score(chosen->weight));
+                               pcmk_readable_score(chosen->assign->score));
                 }
             }
         }
@@ -880,7 +880,7 @@ rsc_avoids_remote_nodes(const pcmk_resource_t *rsc)
     g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         if (node->private->remote != NULL) {
-            node->weight = -PCMK_SCORE_INFINITY;
+            node->assign->score = -PCMK_SCORE_INFINITY;
         }
     }
 }
@@ -1045,7 +1045,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                 pcmk_node_t *node = item->data;
 
                 if (node->private->remote != remote_rsc) {
-                    node->weight = -PCMK_SCORE_INFINITY;
+                    node->assign->score = -PCMK_SCORE_INFINITY;
                 }
             }
 
@@ -1359,7 +1359,7 @@ start_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 
     pcmk__rsc_trace(rsc, "Scheduling %s start of %s on %s (score %d)",
                     (optional? "optional" : "required"), rsc->id,
-                    pcmk__node_name(node), node->weight);
+                    pcmk__node_name(node), node->assign->score);
     start = start_action(rsc, node, TRUE);
 
     pcmk__order_vs_unfence(rsc, node, start, pcmk__ar_first_implies_then);

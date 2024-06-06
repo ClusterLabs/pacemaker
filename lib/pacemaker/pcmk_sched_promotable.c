@@ -139,7 +139,7 @@ apply_promoted_locations(pcmk_resource_t *child,
         }
         if (constraint_node != NULL) {
             int new_priority = pcmk__add_scores(child->private->priority,
-                                                constraint_node->weight);
+                                                constraint_node->assign->score);
 
             pcmk__rsc_trace(child,
                             "Applying location %s to %s promotion priority on "
@@ -147,7 +147,7 @@ apply_promoted_locations(pcmk_resource_t *child,
                             location->id, child->id,
                             pcmk__node_name(constraint_node),
                             pcmk_readable_score(child->private->priority),
-                            pcmk_readable_score(constraint_node->weight),
+                            pcmk_readable_score(constraint_node->assign->score),
                             pcmk_readable_score(new_priority));
             child->private->priority = new_priority;
         }
@@ -342,12 +342,13 @@ add_promotion_priority_to_node_score(gpointer data, gpointer user_data)
                                chosen->private->id);
     CRM_ASSERT(node != NULL);
 
-    node->weight = pcmk__add_scores(promotion_priority, node->weight);
+    node->assign->score = pcmk__add_scores(promotion_priority,
+                                           node->assign->score);
     pcmk__rsc_trace(clone,
                     "Added cumulative priority of %s (%s) to score on %s "
                     "(now %d)",
                     child->id, pcmk_readable_score(promotion_priority),
-                    pcmk__node_name(node), node->weight);
+                    pcmk__node_name(node), node->assign->score);
 }
 
 /*!
@@ -459,7 +460,7 @@ set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
                                    chosen->private->id);
 
         CRM_ASSERT(node != NULL);
-        child->private->promotion_priority = node->weight;
+        child->private->promotion_priority = node->assign->score;
         pcmk__rsc_trace(clone,
                         "Adding scores for %s: "
                         "final promotion priority for %s is %s",
@@ -603,7 +604,7 @@ is_allowed(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     pcmk_node_t *allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
                                                node->private->id);
 
-    return (allowed != NULL) && (allowed->weight >= 0);
+    return (allowed != NULL) && (allowed->assign->score >= 0);
 }
 
 /*!
@@ -834,9 +835,9 @@ pcmk__add_promotion_scores(pcmk_resource_t *rsc)
 
             score = promotion_score(child_rsc, node, NULL);
             if (score > 0) {
-                new_score = pcmk__add_scores(node->weight, score);
-                if (new_score != node->weight) { // Could remain INFINITY
-                    node->weight = new_score;
+                new_score = pcmk__add_scores(node->assign->score, score);
+                if (new_score != node->assign->score) { // Could remain INFINITY
+                    node->assign->score = new_score;
                     pcmk__rsc_trace(rsc,
                                     "Added %s promotion priority (%s) to score "
                                     "on %s (now %s)",
@@ -1262,13 +1263,14 @@ update_dependent_allowed_nodes(pcmk_resource_t *dependent,
                                                                  dependent);
 
         if (pcmk__str_eq(primary_value, dependent_value, pcmk__str_casei)) {
-            node->weight = pcmk__add_scores(node->weight, colocation->score);
+            node->assign->score = pcmk__add_scores(node->assign->score,
+                                                   colocation->score);
             pcmk__rsc_trace(colocation->primary,
                             "Added %s score (%s) to %s (now %s)",
                             colocation->id,
                             pcmk_readable_score(colocation->score),
                             pcmk__node_name(node),
-                            pcmk_readable_score(node->weight));
+                            pcmk_readable_score(node->assign->score));
         }
     }
 }

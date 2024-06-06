@@ -340,7 +340,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
                 && !is_set_recursive(instance, pcmk__rsc_blocked, TRUE)) {
                 pcmk__rsc_trace(primary, "Allowing %s: %s %d",
                                 colocation->id, pcmk__node_name(chosen),
-                                chosen->weight);
+                                chosen->assign->score);
                 primary_nodes = g_list_prepend(primary_nodes, chosen);
             }
         }

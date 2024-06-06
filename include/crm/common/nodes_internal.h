@@ -79,6 +79,7 @@ enum pcmk__node_flags {
  * there and drop this struct.
  */
 struct pcmk__node_assignment {
+    int score;      // Node's score for relevant resource
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow

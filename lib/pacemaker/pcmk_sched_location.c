@@ -209,10 +209,10 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
             pcmk_node_t *local = pe__copy_node(node);
 
             location_rule->nodes = g_list_prepend(location_rule->nodes, local);
-            local->weight = get_node_score(rule_id, score, raw_score, node,
-                                           rsc);
+            local->assign->score = get_node_score(rule_id, score, raw_score,
+                                                  node, rsc);
             crm_trace("%s has score %s after %s", pcmk__node_name(node),
-                      pcmk_readable_score(local->weight), rule_id);
+                      pcmk_readable_score(local->assign->score), rule_id);
         }
     }
 
@@ -633,7 +633,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
     if (node != NULL) {
         pcmk_node_t *copy = pe__copy_node(node);
 
-        copy->weight = node_score;
+        copy->assign->score = node_score;
         new_con->nodes = g_list_prepend(NULL, copy);
     }
 
@@ -709,16 +709,17 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
                                            node->private->id);
         if (allowed_node == NULL) {
             pcmk__rsc_trace(rsc, "* = %d on %s",
-                            node->weight, pcmk__node_name(node));
+                            node->assign->score, pcmk__node_name(node));
             allowed_node = pe__copy_node(node);
             g_hash_table_insert(rsc->private->allowed_nodes,
                                 (gpointer) allowed_node->private->id,
                                 allowed_node);
         } else {
             pcmk__rsc_trace(rsc, "* + %d on %s",
-                            node->weight, pcmk__node_name(node));
-            allowed_node->weight = pcmk__add_scores(allowed_node->weight,
-                                                    node->weight);
+                            node->assign->score, pcmk__node_name(node));
+            allowed_node->assign->score =
+                pcmk__add_scores(allowed_node->assign->score,
+                                 node->assign->score);
         }
 
         if (allowed_node->rsc_discover_mode < location->discover_mode) {

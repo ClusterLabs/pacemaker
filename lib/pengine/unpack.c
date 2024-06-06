@@ -469,8 +469,6 @@ pe_create_node(const char *id, const char *uname, const char *type,
         return NULL;
     }
 
-    new_node->weight = char2score(score);
-
     new_node->assign = calloc(1, sizeof(struct pcmk__node_assignment));
     new_node->details = calloc(1, sizeof(struct pe_node_shared_s));
     new_node->private = calloc(1, sizeof(pcmk__node_private_t));
@@ -485,6 +483,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     }
 
     crm_trace("Creating node for entry %s/%s", uname, id);
+    new_node->assign->score = char2score(score);
     new_node->private->id = id;
     new_node->private->name = uname;
     new_node->private->flags = pcmk__node_probes_allowed;
@@ -1863,12 +1862,12 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
 
     } else {
         /* remove node from contention */
-        this_node->weight = -PCMK_SCORE_INFINITY;
+        this_node->assign->score = -PCMK_SCORE_INFINITY;
     }
 
     if (online && this_node->details->shutdown) {
         /* don't run resources here */
-        this_node->weight = -PCMK_SCORE_INFINITY;
+        this_node->assign->score = -PCMK_SCORE_INFINITY;
     }
 
     if (this_node->private->variant == pcmk__node_variant_ping) {
@@ -2924,7 +2923,7 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
     pcmk_node_t *node = value;
     int *score = user_data;
 
-    node->weight = *score;
+    node->assign->score = *score;
 }
 
 #define XPATH_NODE_STATE "/" PCMK_XE_CIB "/" PCMK_XE_STATUS \

@@ -97,7 +97,7 @@ pe__copy_node(const pcmk_node_t *this_node)
                                           sizeof(struct pcmk__node_assignment));
 
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
-    new_node->weight = this_node->weight;
+    new_node->assign->score = this_node->assign->score;
     new_node->count = this_node->count;
     new_node->details = this_node->details;
     new_node->private = this_node->private;
@@ -187,7 +187,7 @@ pe__output_node_weights(const pcmk_resource_t *rsc, const char *comment,
         const pcmk_node_t *node = (const pcmk_node_t *) gIter->data;
 
         out->message(out, "node-weight", rsc, comment, node->private->name,
-                     pcmk_readable_score(node->weight));
+                     pcmk_readable_score(node->assign->score));
     }
     g_list_free(list);
 }
@@ -222,12 +222,12 @@ pe__log_node_weights(const char *file, const char *function, int line,
                                         LOG_TRACE, line, 0,
                                         comment, rsc->id,
                                         pcmk__node_name(node),
-                                        pcmk_readable_score(node->weight));
+                                        pcmk_readable_score(node->assign->score));
         } else {
             qb_log_from_external_source(function, file, "%s: %s = %s",
                                         LOG_TRACE, line, 0,
                                         comment, pcmk__node_name(node),
-                                        pcmk_readable_score(node->weight));
+                                        pcmk_readable_score(node->assign->score));
         }
     }
 }
@@ -351,11 +351,12 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         g_hash_table_insert(rsc->private->allowed_nodes,
                             (gpointer) match->private->id, match);
     }
-    match->weight = pcmk__add_scores(match->weight, score);
+    match->assign->score = pcmk__add_scores(match->assign->score, score);
     pcmk__rsc_trace(rsc,
                     "Enabling %s preference (%s) for %s on %s (now %s)",
                     tag, pcmk_readable_score(score), rsc->id,
-                    pcmk__node_name(node), pcmk_readable_score(match->weight));
+                    pcmk__node_name(node),
+                    pcmk_readable_score(match->assign->score));
 }
 
 void

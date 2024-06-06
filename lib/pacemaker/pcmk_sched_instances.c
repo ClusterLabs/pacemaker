@@ -52,11 +52,11 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
         return false;
     }
 
-    if (allowed_node->weight < 0) {
+    if (allowed_node->assign->score < 0) {
         pcmk__rsc_trace(instance,
                         "%s cannot run on %s: parent score is %s there",
                         instance->id, pcmk__node_name(node),
-                        pcmk_readable_score(allowed_node->weight));
+                        pcmk_readable_score(allowed_node->assign->score));
         return false;
     }
 
@@ -92,7 +92,7 @@ ban_unavailable_allowed_nodes(pcmk_resource_t *instance, int max_per_node)
             if (!can_run_instance(instance, node, max_per_node)) {
                 pcmk__rsc_trace(instance, "Banning %s from unavailable node %s",
                                 instance->id, pcmk__node_name(node));
-                node->weight = -PCMK_SCORE_INFINITY;
+                node->assign->score = -PCMK_SCORE_INFINITY;
 
                 for (GList *child_iter = instance->private->children;
                      child_iter != NULL; child_iter = child_iter->next) {
@@ -109,7 +109,7 @@ ban_unavailable_allowed_nodes(pcmk_resource_t *instance, int max_per_node)
                                         "from unavailable node %s",
                                         instance->id, child->id,
                                         pcmk__node_name(node));
-                        child_node->weight = -PCMK_SCORE_INFINITY;
+                        child_node->assign->score = -PCMK_SCORE_INFINITY;
                     }
                 }
             }
@@ -222,16 +222,16 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
     node2 = g_hash_table_lookup(colocated_scores2, current_node2->private->id);
 
     // Compare nodes by updated scores
-    if (node1->weight < node2->weight) {
+    if (node1->assign->score < node2->assign->score) {
         crm_trace("Assign %s (%d on %s) after %s (%d on %s)",
-                  instance1->id, node1->weight, pcmk__node_name(node1),
-                  instance2->id, node2->weight, pcmk__node_name(node2));
+                  instance1->id, node1->assign->score, pcmk__node_name(node1),
+                  instance2->id, node2->assign->score, pcmk__node_name(node2));
         rc = 1;
 
-    } else if (node1->weight > node2->weight) {
+    } else if (node1->assign->score > node2->assign->score) {
         crm_trace("Assign %s (%d on %s) before %s (%d on %s)",
-                  instance1->id, node1->weight, pcmk__node_name(node1),
-                  instance2->id, node2->weight, pcmk__node_name(node2));
+                  instance1->id, node1->assign->score, pcmk__node_name(node1),
+                  instance2->id, node2->assign->score, pcmk__node_name(node2));
         rc = -1;
     }
 
@@ -281,7 +281,7 @@ node_is_allowed(const pcmk_resource_t *rsc, pcmk_node_t **node)
         pcmk_node_t *allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
                                                    (*node)->private->id);
 
-        if ((allowed == NULL) || (allowed->weight < 0)) {
+        if ((allowed == NULL) || (allowed->assign->score < 0)) {
             pcmk__rsc_trace(rsc, "%s: current location (%s) is unavailable",
                             rsc->id, pcmk__node_name(*node));
             *node = NULL;

@@ -31,8 +31,11 @@ null_dc(void **state)
 static void
 valid_dc(void **state)
 {
+    struct pcmk__node_assignment assign = {
+        .score = 1,
+    };
     pcmk_node_t dc = {
-        .weight = 1,
+        .assign = &assign,
     };
     pcmk_scheduler_t scheduler = {
         .dc_node = &dc,

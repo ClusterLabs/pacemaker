@@ -146,7 +146,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                         pe__node_list2table(scheduler->nodes);
                     g_hash_table_iter_init(&gIter, rsc->private->allowed_nodes);
                     while (g_hash_table_iter_next(&gIter, NULL, (void **)&local_node)) {
-                        local_node->weight = -PCMK_SCORE_INFINITY;
+                        local_node->assign->score = -PCMK_SCORE_INFINITY;
                     }
                 }
                 break;

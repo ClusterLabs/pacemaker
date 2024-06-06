@@ -73,9 +73,9 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
         g_hash_table_iter_init(&iter, replica->child->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (!pcmk__same_node(node, replica->node)) {
-                node->weight = -PCMK_SCORE_INFINITY;
+                node->assign->score = -PCMK_SCORE_INFINITY;
             } else if (!pcmk__threshold_reached(replica->child, node, NULL)) {
-                node->weight = PCMK_SCORE_INFINITY;
+                node->assign->score = PCMK_SCORE_INFINITY;
             }
         }
 
@@ -146,9 +146,9 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         g_hash_table_iter_init(&iter, bundled_resource->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
             if (pe__node_is_bundle_instance(rsc, node)) {
-                node->weight = 0;
+                node->assign->score = 0;
             } else {
-                node->weight = -PCMK_SCORE_INFINITY;
+                node->assign->score = -PCMK_SCORE_INFINITY;
             }
         }
         bundled_resource->private->cmds->assign(bundled_resource, prefer,
@@ -502,7 +502,7 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
     pcmk__rsc_trace(pe__const_top_resource(container, true),
                     "Allowing mandatory colocation %s using %s @%d",
                     coloc_data->colocation->id, pcmk__node_name(chosen),
-                    chosen->weight);
+                    chosen->assign->score);
     coloc_data->container_hosts = g_list_prepend(coloc_data->container_hosts,
                                                  chosen);
     return true;

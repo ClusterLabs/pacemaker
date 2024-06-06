@@ -692,7 +692,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
     const char *promoted_only = pcmk__btoa(location->role_filter == pcmk_role_promoted);
-    char *weight_s = pcmk__itoa(pe_node->weight);
+    char *weight_s = pcmk__itoa(pe_node->assign->score);
 
     pcmk__output_create_xml_node(out, PCMK_XE_BAN,
                                  PCMK_XA_ID, location->id,
@@ -746,7 +746,7 @@ ban_list(pcmk__output_t *out, va_list args) {
         for (gIter2 = location->nodes; gIter2 != NULL; gIter2 = gIter2->next) {
             pcmk_node_t *node = (pcmk_node_t *) gIter2->data;
 
-            if (node->weight < 0) {
+            if (node->assign->score < 0) {
                 PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Negative Location Constraints");
                 out->message(out, "ban", node, location, show_opts);
             }
