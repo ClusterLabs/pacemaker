@@ -233,8 +233,7 @@ extern void pe_free_action(pcmk_action_t *action);
 void resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
                        const char *tag, pcmk_scheduler_t *scheduler);
 
-extern int pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
-                           bool same_node_default);
+int pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b);
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 gboolean get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role);
 void pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role,
