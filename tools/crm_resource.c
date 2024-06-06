@@ -2096,9 +2096,8 @@ main(int argc, char **argv)
              * command line arguments.
              */
             if (options.rsc_type == NULL) {
-                // @COMPAT @TODO change this to exit_code = CRM_EX_USAGE
-                rc = ENXIO;
-                g_set_error(&error, PCMK__RC_ERROR, rc,
+                exit_code = CRM_EX_USAGE;
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                             _("You need to specify a resource type with -t"));
             } else {
                 rc = pcmk__resource_delete(cib_conn, cib_sync_call,
