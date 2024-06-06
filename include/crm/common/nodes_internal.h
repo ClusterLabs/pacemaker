@@ -80,6 +80,7 @@ enum pcmk__node_flags {
  */
 struct pcmk__node_assignment {
     int score;      // Node's score for relevant resource
+    int count;      // Counter reused by assignment and promotion code
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow

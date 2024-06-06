@@ -60,7 +60,7 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
         return false;
     }
 
-    if (allowed_node->count >= max_per_node) {
+    if (allowed_node->assign->count >= max_per_node) {
         pcmk__rsc_trace(instance,
                         "%s cannot run on %s: node already has %d instance%s",
                         instance->id, pcmk__node_name(node), max_per_node,
@@ -69,7 +69,8 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
     }
 
     pcmk__rsc_trace(instance, "%s can run on %s (%d already running)",
-                    instance->id, pcmk__node_name(node), allowed_node->count);
+                    instance->id, pcmk__node_name(node),
+                    allowed_node->assign->count);
     return true;
 }
 
@@ -469,12 +470,12 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     }
 
     // Prefer instance whose current node is running fewer other instances
-    if (node1->count < node2->count) {
+    if (node1->assign->count < node2->assign->count) {
         crm_trace("Assign %s before %s: fewer active instances on current node",
                   instance1->id, instance2->id);
         return -1;
 
-    } else if (node1->count > node2->count) {
+    } else if (node1->assign->count > node2->assign->count) {
         crm_trace("Assign %s after %s: more active instances on current node",
                   instance1->id, instance2->id);
         return 1;
@@ -544,7 +545,7 @@ increment_parent_count(pcmk_resource_t *instance,
         CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pcmk__rsc_managed));
 
     } else {
-        allowed->count++;
+        allowed->assign->count++;
     }
 }
 
@@ -727,7 +728,7 @@ reset_allowed_node_counts(pcmk_resource_t *rsc)
 
     g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        node->count = 0;
+        node->assign->count = 0;
         if (pcmk__node_available(node, false, false)) {
             available_nodes++;
         }
@@ -767,7 +768,8 @@ preferred_node(const pcmk_resource_t *instance, int optimal_per_node)
 
     // Check whether node already has optimal number of instances assigned
     parent_node = pcmk__top_allowed_node(instance, node);
-    if ((parent_node != NULL) && (parent_node->count >= optimal_per_node)) {
+    if ((parent_node != NULL)
+        && (parent_node->assign->count >= optimal_per_node)) {
         pcmk__rsc_trace(instance,
                         "Not assigning %s to %s early "
                         "(optimal instances already assigned)",

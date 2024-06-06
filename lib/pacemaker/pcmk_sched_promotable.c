@@ -229,7 +229,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
         } // else the instance is unmanaged and already promoted
         return NULL;
 
-    } else if ((local_node->count >= pe__clone_promoted_node_max(parent))
+    } else if ((local_node->assign->count >= pe__clone_promoted_node_max(parent))
                && pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__rsc_trace(rsc,
                         "%s can't be promoted because %s has "
@@ -1092,7 +1092,7 @@ set_instance_role(gpointer data, gpointer user_data)
         return;
     }
 
-    chosen->count++;
+    chosen->assign->count++;
     pcmk__rsc_info(clone, "Choosing %s (%s) on %s for promotion",
                    instance->id, pcmk_role_text(instance->private->orig_role),
                    pcmk__node_name(chosen));
@@ -1116,7 +1116,7 @@ pcmk__set_instance_roles(pcmk_resource_t *rsc)
     // Repurpose count to track the number of promoted instances assigned
     g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        node->count = 0;
+        node->assign->count = 0;
     }
 
     // Set instances' promotion priorities and sort by highest priority first

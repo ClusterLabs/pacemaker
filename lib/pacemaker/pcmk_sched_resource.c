@@ -513,7 +513,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
 
     add_assigned_resource(node, rsc);
     node->private->num_resources++;
-    node->count++;
+    node->assign->count++;
     pcmk__consume_node_capacity(node->private->utilization, rsc);
 
     if (pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {

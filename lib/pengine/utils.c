@@ -98,7 +98,7 @@ pe__copy_node(const pcmk_node_t *this_node)
 
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
     new_node->assign->score = this_node->assign->score;
-    new_node->count = this_node->count;
+    new_node->assign->count = this_node->assign->count;
     new_node->details = this_node->details;
     new_node->private = this_node->private;
 

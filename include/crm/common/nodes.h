@@ -94,8 +94,6 @@ struct pe_node_shared_s {
 struct pcmk__scored_node {
     struct pcmk__node_assignment *assign;
 
-    int count;          // Counter reused by assignment and promotion code
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     struct pe_node_shared_s *details;   // Basic node information
 
