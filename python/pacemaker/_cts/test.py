@@ -206,57 +206,6 @@ class Test:
             self._result_txt = msg % (self.name, n_failed_matches, len(self._patterns), n_negative_matches)
             self.exitcode = ExitStatus.ERROR
 
-    def _new_cmd(self, cmd, args, exitcode, **kwargs):
-        """
-        Add a command to be executed as part of this test.
-
-        Arguments:
-        cmd         -- The program to run.
-        args        -- Commands line arguments to pass to cmd, as a string.
-        exitcode    -- The expected exit code of cmd.  This can be used to
-                       run a command that is expected to fail.
-
-        Keyword arguments:
-        stdout_match    -- If not None, a string that is expected to be
-                           present in the stdout of cmd.  This can be a
-                           regular expression.
-        no_wait         -- Do not wait for cmd to complete.
-        stdout_no_match -- If not None, a string that is expected to be
-                           missing in the stdout of cmd.  This can be a
-                           regualr expression.
-        kill            -- A command to be run after cmd, typically in
-                           order to kill a failed process.  This should be
-                           the entire command line including arguments as
-                           a single string.
-        validate        -- If True, the output of cmd will be passed to
-                           xmllint for validation.  If validation fails,
-                           XmlValidationError will be raised.
-        check_rng       -- If True and validate is True, command output
-                           will additionally be checked against the
-                           api-result.rng file.
-        check_stderr    -- If True, the stderr of cmd will be included in
-                           output.
-        env             -- If not None, variables to set in the environment
-        """
-        if cmd is None:
-            raise ValueError("cmd cannot be None")
-
-        self._cmds.append(
-            {
-                "args": args,
-                "check_rng": kwargs.get("check_rng", True),
-                "check_stderr": kwargs.get("check_stderr", True),
-                "cmd": cmd,
-                "expected_exitcode": exitcode,
-                "kill": kwargs.get("kill"),
-                "no_wait": kwargs.get("no_wait", False),
-                "stdout_match": kwargs.get("stdout_match"),
-                "stdout_no_match": kwargs.get("stdout_no_match"),
-                "validate": kwargs.get("validate", True),
-                "env": kwargs.get("env"),
-            }
-        )
-
     def _start_daemons(self):
         """Start any necessary daemons in preparation for executing the test."""
         raise NotImplementedError("_start_daemons not provided by subclass")

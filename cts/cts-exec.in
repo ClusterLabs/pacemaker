@@ -95,20 +95,6 @@ class ExecTest(Test):
         # We additionally need to keep track of a stonith process.
         self._stonith_process = None
 
-    def _new_cmd(self, cmd, args, exitcode, **kwargs):
-        """Add a command to be executed as part of this test."""
-        if self.verbose and cmd == self._test_tool_location:
-            args += " -V "
-
-        if (cmd == self._test_tool_location) and self.tls:
-            args += " -S "
-
-        kwargs["validate"] = False
-        kwargs["check_rng"] = False
-        kwargs["check_stderr"] = False
-
-        Test._new_cmd(self, cmd, args, exitcode, **kwargs)
-
     def _kill_daemons(self):
         killall([
             "pacemaker-fenced",
