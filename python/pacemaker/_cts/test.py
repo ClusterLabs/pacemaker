@@ -217,26 +217,26 @@ class Test:
                        run a command that is expected to fail.
 
         Keyword arguments:
-        stdout_match          -- If not None, a string that is expected to be
-                                 present in the stdout of cmd.  This can be a
-                                 regular expression.
-        no_wait               -- Do not wait for cmd to complete.
-        stdout_negative_match -- If not None, a string that is expected to be
-                                 missing in the stdout of cmd.  This can be a
-                                 regualr expression.
-        kill                  -- A command to be run after cmd, typically in
-                                 order to kill a failed process.  This should be
-                                 the entire command line including arguments as
-                                 a single string.
-        validate              -- If True, the output of cmd will be passed to
-                                 xmllint for validation.  If validation fails,
-                                 XmlValidationError will be raised.
-        check_rng             -- If True and validate is True, command output
-                                 will additionally be checked against the
-                                 api-result.rng file.
-        check_stderr          -- If True, the stderr of cmd will be included in
-                                 output.
-        env                   -- If not None, variables to set in the environment
+        stdout_match    -- If not None, a string that is expected to be
+                           present in the stdout of cmd.  This can be a
+                           regular expression.
+        no_wait         -- Do not wait for cmd to complete.
+        stdout_no_match -- If not None, a string that is expected to be
+                           missing in the stdout of cmd.  This can be a
+                           regualr expression.
+        kill            -- A command to be run after cmd, typically in
+                           order to kill a failed process.  This should be
+                           the entire command line including arguments as
+                           a single string.
+        validate        -- If True, the output of cmd will be passed to
+                           xmllint for validation.  If validation fails,
+                           XmlValidationError will be raised.
+        check_rng       -- If True and validate is True, command output
+                           will additionally be checked against the
+                           api-result.rng file.
+        check_stderr    -- If True, the stderr of cmd will be included in
+                           output.
+        env             -- If not None, variables to set in the environment
         """
         if cmd is None:
             raise ValueError("cmd cannot be None")
@@ -251,7 +251,7 @@ class Test:
                 "kill": kwargs.get("kill", None),
                 "no_wait": kwargs.get("no_wait", False),
                 "stdout_match": kwargs.get("stdout_match", None),
-                "stdout_negative_match": kwargs.get("stdout_negative_match", None),
+                "stdout_no_match": kwargs.get("stdout_no_match", None),
                 "validate": kwargs.get("validate", True),
                 "env": kwargs.get("env", None),
             }
@@ -282,7 +282,7 @@ class Test:
         """Add a simple command with expected output to be executed as part of this test."""
         self._new_cmd(cmd, kwargs.pop("args", ""), ExitStatus.OK,
                       stdout_match=kwargs.get("match"),
-                      stdout_negative_match=kwargs.get("no_match"),
+                      stdout_no_match=kwargs.get("stdout_no_match"),
                       env=kwargs.get("env"))
 
     def add_cmd_expected_fail(self, cmd=None, **kwargs):
@@ -366,7 +366,7 @@ class Test:
                 self.set_error(i, cmd)
                 break
             except OutputFoundError as e:
-                print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_negative_match'], e))
+                print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_no_match'], e))
                 self.set_error(i, cmd)
                 break
             except XmlValidationError as e:
@@ -436,8 +436,8 @@ class Test:
            re.search(args['stdout_match'], output) is None:
             raise OutputNotFoundError(output)
 
-        if args['stdout_negative_match'] is not None and \
-           re.search(args['stdout_negative_match'], output) is not None:
+        if args['stdout_no_match'] is not None and \
+           re.search(args['stdout_no_match'], output) is not None:
             raise OutputFoundError(output)
 
         if args['validate']:

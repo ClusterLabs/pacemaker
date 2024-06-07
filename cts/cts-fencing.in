@@ -498,9 +498,9 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin",
                          args='--output-as=xml -R true3 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -l node1 -V",
-                                      stdout_match="true2", stdout_negative_match="true1")
+                                      stdout_match="true2", stdout_no_match="true1")
             test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -l node1 -V",
-                                      stdout_match="true3", stdout_negative_match="true1")
+                                      stdout_match="true3", stdout_no_match="true1")
 
         # simple test of device monitor
         for test_type in test_types:
