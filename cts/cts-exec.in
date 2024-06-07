@@ -170,13 +170,6 @@ class ExecTest(Test):
 
         Test.add_cmd(self, cmd, **kwargs)
 
-    def add_cmd_and_kill(self, cmd=None, **kwargs):
-        """Add a cts-exec-helper command and system command to be executed as part of this test."""
-        if cmd is None:
-            cmd = self._test_tool_location
-
-        self._new_cmd(cmd, kwargs.pop("args"), ExitStatus.OK, **kwargs)
-
     def add_cmd_check_stdout(self, cmd=None, **kwargs):
         """Add a command with expected output to be executed as part of this test."""
         if cmd is None:
@@ -535,8 +528,8 @@ class ExecTests(Tests):
                      '-l "NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:monitor rc:ok op_status:complete" '
                      + self._action_timeout)
 
-        test.add_cmd_and_kill(args='-l "NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:monitor rc:error op_status:error" -t 15000',
-                              kill="killall -9 -q pacemaker-fenced lt-pacemaker-fenced")
+        test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:stonith_test_rsc action:monitor rc:error op_status:error" -t 15000',
+                     kill="killall -9 -q pacemaker-fenced lt-pacemaker-fenced")
         test.add_cmd(args=self._build_cmd_str("stonith", "unreg"))
 
         # monitor fail for ocf resources
@@ -553,8 +546,8 @@ class ExecTests(Tests):
                      + self._action_timeout)
         test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete"'
                      + self._action_timeout)
-        test.add_cmd_and_kill(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
-                              kill="rm -f %s/run/Dummy-test_rsc.state" % BuildOptions.LOCAL_STATE_DIR)
+        test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
+                     kill="rm -f %s/run/Dummy-test_rsc.state" % BuildOptions.LOCAL_STATE_DIR)
         test.add_cmd(args='-c cancel -r test_rsc -a monitor -i 1s ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ')
         test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" '
@@ -574,8 +567,8 @@ class ExecTests(Tests):
                      + ' -o -l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ')
         test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
                                    expected_exitcode=ExitStatus.TIMEOUT)
-        test.add_cmd_and_kill(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self._action_timeout,
-                              kill='rm -f %s/run/Dummy-test_rsc.state' % BuildOptions.LOCAL_STATE_DIR)
+        test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self._action_timeout,
+                     kill='rm -f %s/run/Dummy-test_rsc.state' % BuildOptions.LOCAL_STATE_DIR)
         test.add_cmd(args='-c cancel -r test_rsc -a monitor -i 1s' + self._action_timeout
                      + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ')
         test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
@@ -598,8 +591,8 @@ class ExecTests(Tests):
                          + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ')
             test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout)
             test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout)
-            test.add_cmd_and_kill(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self._action_timeout,
-                                  kill="pkill -9 -f pacemaker-cts-dummyd")
+            test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self._action_timeout,
+                         kill="pkill -9 -f pacemaker-cts-dummyd")
             test.add_cmd(args='-c cancel -r test_rsc -a monitor -i 1s' + self._action_timeout
                          + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ')
             test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
@@ -622,8 +615,8 @@ class ExecTests(Tests):
                          + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ')
             test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout)
             test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout)
-            test.add_cmd_and_kill(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self._action_timeout,
-                                  kill='killall -9 -q dd')
+            test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self._action_timeout,
+                         kill='killall -9 -q dd')
             test.add_cmd(args='-c cancel -r test_rsc -a monitor -i 1s' + self._action_timeout
                          + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ')
             test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
