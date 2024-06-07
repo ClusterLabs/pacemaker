@@ -313,11 +313,6 @@ class Test:
             }
         )
 
-    def add_cmd_no_wait(self, cmd=None, **kwargs):
-        """Add a simple command to be executed (without waiting) as part of this test."""
-        self._new_cmd(cmd, kwargs.pop("args", ""), ExitStatus.OK,
-                      no_wait=kwargs.get("no_wait", True))
-
     def add_log_pattern(self, pattern, negative=False, regex=False):
         """Add a pattern that should appear in the test's logs."""
         self._patterns.append(Pattern(pattern, negative=negative, regex=regex))

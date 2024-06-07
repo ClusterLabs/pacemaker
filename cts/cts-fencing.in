@@ -160,7 +160,7 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", args="--output-as=xml -R false1 -a fence_dummy -o mode=fail -o pcmk_host_list=node3")
         test.add_cmd("stonith_admin", args="--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3")
         test.add_cmd("stonith_admin", args="--output-as=xml -R false2 -a fence_dummy -o mode=fail -o pcmk_host_list=node3")
-        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10", no_wait=True)
         test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10")
         ### one merger will happen
         test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
@@ -175,10 +175,10 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin",
                      args="--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o delay=2 -o pcmk_host_list=node3")
         test.add_cmd("stonith_admin", args="--output-as=xml -R false2 -a fence_dummy -o mode=fail -o pcmk_host_list=node3")
-        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10", no_wait=True)
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10", no_wait=True)
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10", no_wait=True)
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10", no_wait=True)
         test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10")
         ### 4 mergers should occur
         test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
@@ -202,10 +202,10 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false1")
         test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false2")
         test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true1")
-        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10", no_wait=True)
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10", no_wait=True)
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10", no_wait=True)
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10", no_wait=True)
         test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10")
         ### 4 mergers should occur
         test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
@@ -230,7 +230,7 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false1")
         test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false2")
         test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true1")
-        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node2 -t 10")
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node2 -t 10", no_wait=True)
         test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10")
         test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client",
                              negative=True)
