@@ -313,10 +313,6 @@ class Test:
             }
         )
 
-    def add_cmd_expected_fail(self, cmd=None, **kwargs):
-        """Add a command that is expected to fail to be executed as part of this test."""
-        self._new_cmd(cmd, kwargs.pop("args", ""), kwargs.get("expected_exitcode", ExitStatus.ERROR))
-
     def add_cmd_no_wait(self, cmd=None, **kwargs):
         """Add a simple command to be executed (without waiting) as part of this test."""
         self._new_cmd(cmd, kwargs.pop("args", ""), ExitStatus.OK,

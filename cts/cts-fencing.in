@@ -261,12 +261,10 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin",
                          args='--output-as=xml -R false3 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
             if test_type["use_cpg"]:
-                test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -F node3 -t 2",
-                                           expected_exitcode=ExitStatus.TIMEOUT)
+                test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 2", expected_exitcode=ExitStatus.TIMEOUT)
                 test.add_log_pattern("Total timeout set to 7s")
             else:
-                test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -F node3 -t 2",
-                                           expected_exitcode=ExitStatus.ERROR)
+                test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 2", expected_exitcode=ExitStatus.ERROR)
 
             test.add_log_pattern("targeting node3 using false1 returned ")
             test.add_log_pattern("targeting node3 using false2 returned ")
@@ -298,8 +296,7 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin",
                          args="--output-as=xml -R true2 -a fence_dummy -o mode=pass -o pcmk_host_list=node2")
 
-            test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -F node3 -t 5",
-                                       expected_exitcode=ExitStatus.NOSUCH)
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 5", expected_exitcode=ExitStatus.NOSUCH)
             test.add_cmd("stonith_admin", args="--output-as=xml -F node2 -t 5")
 
         # simple topology test for one device
@@ -512,8 +509,7 @@ class FenceTests(Tests):
 
             test.add_cmd("stonith_admin", args="--output-as=xml -Q true1")
             test.add_cmd("stonith_admin", args="--output-as=xml -Q false1")
-            test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -Q true2",
-                                       expected_exitcode=ExitStatus.NOSUCH)
+            test.add_cmd("stonith_admin", args="--output-as=xml -Q true2", expected_exitcode=ExitStatus.NOSUCH)
 
         # Verify monitor occurs for duration of timeout period on failure
         for test_type in test_types:
@@ -522,8 +518,7 @@ class FenceTests(Tests):
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
                          args='--output-as=xml -R true1 -a fence_dummy -o mode=fail -o monitor_mode=fail -o pcmk_host_list=node3')
-            test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -Q true1 -t 5",
-                                       expected_exitcode=ExitStatus.ERROR)
+            test.add_cmd("stonith_admin", args="--output-as=xml -Q true1 -t 5", expected_exitcode=ExitStatus.ERROR)
             test.add_log_pattern("Attempt 2 to execute")
 
         # Verify monitor occurs for duration of timeout period on failure, but stops at max retries
@@ -533,8 +528,7 @@ class FenceTests(Tests):
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
                          args='--output-as=xml -R true1  -a fence_dummy -o mode=fail -o monitor_mode=fail -o pcmk_host_list=node3')
-            test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -Q true1 -t 15",
-                                       expected_exitcode=ExitStatus.ERROR)
+            test.add_cmd("stonith_admin", args="--output-as=xml -Q true1 -t 15", expected_exitcode=ExitStatus.ERROR)
             test.add_log_pattern("Attempted to execute agent fence_dummy (list) the maximum number of times")
 
         # simple register test
@@ -543,13 +537,9 @@ class FenceTests(Tests):
                                  "Verify devices can be registered and un-registered",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin", args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3')
-
             test.add_cmd("stonith_admin", args="--output-as=xml -Q true1")
-
             test.add_cmd("stonith_admin", args="--output-as=xml -D true1")
-
-            test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -Q true1",
-                                       expected_exitcode=ExitStatus.NOSUCH)
+            test.add_cmd("stonith_admin", args="--output-as=xml -Q true1", expected_exitcode=ExitStatus.NOSUCH)
 
         # simple reboot test
         for test_type in test_types:
@@ -557,13 +547,9 @@ class FenceTests(Tests):
                                  "Verify devices can be rebooted",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin", args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3')
-
             test.add_cmd("stonith_admin", args="--output-as=xml -B node3 -t 5")
-
             test.add_cmd("stonith_admin", args="--output-as=xml -D true1")
-
-            test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -Q true1",
-                                       expected_exitcode=ExitStatus.NOSUCH)
+            test.add_cmd("stonith_admin", args="--output-as=xml -Q true1", expected_exitcode=ExitStatus.NOSUCH)
 
         # test fencing history.
         for test_type in test_types:
@@ -573,9 +559,7 @@ class FenceTests(Tests):
                                  "Verify last fencing operation is returned.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin", args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3')
-
             test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 5 -V")
-
             test.add_cmd("stonith_admin", args="--output-as=xml -H node3",
                          stdout_match='action="off" target="node3" .* status="success"')
 
@@ -751,8 +735,7 @@ class FenceTests(Tests):
                      args='--output-as=xml -R true1 -a fence_dummy_auto_unfence -o mode=pass -o "pcmk_host_list=%s"' % our_uname)
         test.add_cmd('stonith_admin',
                      args='--output-as=xml -R true2 -a fence_dummy_auto_unfence -o mode=fail -o "pcmk_host_list=%s"' % our_uname)
-        test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -U %s -t 6" % our_uname,
-                                   expected_exitcode=ExitStatus.ERROR)
+        test.add_cmd("stonith_admin", args="--output-as=xml -U %s -t 6" % our_uname, expected_exitcode=ExitStatus.ERROR)
 
         ### verify unfencing using automatic devices with topology
         test = self.new_test("cpg_unfence_required_3",
@@ -821,8 +804,7 @@ class FenceTests(Tests):
                              True)
         test.add_cmd("stonith_admin",
                      args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=%s node_fake_1234"' % our_uname)
-        test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -U node_fake_1234 -t 3",
-                                   expected_exitcode=ExitStatus.NOSUCH)
+        test.add_cmd("stonith_admin", args="--output-as=xml -U node_fake_1234 -t 3", expected_exitcode=ExitStatus.NOSUCH)
         test.add_log_pattern("(on) to be executed on target")
 
         ### verify unfencing using on_target device with topology
@@ -854,8 +836,7 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", args="--output-as=xml -r node_fake -i 1 -v true1")
         test.add_cmd("stonith_admin", args="--output-as=xml -r node_fake -i 2 -v true2")
 
-        test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -U node_fake -t 3",
-                                   expected_exitcode=ExitStatus.NOSUCH)
+        test.add_cmd("stonith_admin", args="--output-as=xml -U node_fake -t 3", expected_exitcode=ExitStatus.NOSUCH)
         test.add_log_pattern("(on) to be executed on target")
 
     def build_remap_tests(self):
@@ -996,9 +977,11 @@ class FenceTests(Tests):
 
         test = self.new_test("validate_dummy",
                              "Run stonith_admin --validate-all and check output", False)
-        test.add_cmd_expected_fail("stonith_admin", args="-a fence_dummy --validate --output-as=xml")
+        test.add_cmd("stonith_admin", args="-a fence_dummy --validate --output-as=xml",
+                     expected_exitcode=ExitStatus.ERROR)
         test.add_cmd("stonith_admin", args='-a fence_dummy --validate -o delay=5 --output-as=xml', check_rng=False)
-        test.add_cmd_expected_fail("stonith_admin", args='-a fence_dummy --validate -o delay=15 --output-as=xml')
+        test.add_cmd("stonith_admin", args='-a fence_dummy --validate -o delay=15 --output-as=xml',
+                     expected_exitcode=ExitStatus.ERROR)
 
     def setup_environment(self, use_corosync):
         """ Prepare the host before executing any tests """

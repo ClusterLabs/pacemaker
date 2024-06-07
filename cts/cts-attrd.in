@@ -180,8 +180,8 @@ class AttributeTests(Tests):
 
         test = self.new_test("missing_attr_1",
                              "Query an attribute that does not exist")
-        test.add_cmd_expected_fail("attrd_updater", args="--name NOSUCH --output-as=xml",
-                                   expected_exitcode=ExitStatus.CONFIG)
+        test.add_cmd("attrd_updater", args="--name NOSUCH --output-as=xml",
+                     expected_exitcode=ExitStatus.CONFIG)
 
         test = self.new_test("delete_attr_1",
                              "Delete an existing attribute")
