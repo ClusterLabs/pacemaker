@@ -157,7 +157,18 @@ class ExecTest(Test):
         if cmd is None:
             cmd = self._test_tool_location
 
-        self._new_cmd(cmd, kwargs.pop("args"), ExitStatus.OK, **kwargs)
+        if cmd == self._test_tool_location:
+            if self.verbose:
+                kwargs["args"] += " -V "
+
+            if self.tls:
+                kwargs["args"] += " -S "
+
+        kwargs["validate"] = False
+        kwargs["check_rng"] = False
+        kwargs["check_stderr"] = False
+
+        Test.add_cmd(self, cmd, **kwargs)
 
     def add_cmd_and_kill(self, cmd=None, **kwargs):
         """Add a cts-exec-helper command and system command to be executed as part of this test."""
