@@ -248,12 +248,12 @@ class Test:
                 "check_stderr": kwargs.get("check_stderr", True),
                 "cmd": cmd,
                 "expected_exitcode": exitcode,
-                "kill": kwargs.get("kill", None),
+                "kill": kwargs.get("kill"),
                 "no_wait": kwargs.get("no_wait", False),
-                "stdout_match": kwargs.get("stdout_match", None),
-                "stdout_no_match": kwargs.get("stdout_no_match", None),
+                "stdout_match": kwargs.get("stdout_match"),
+                "stdout_no_match": kwargs.get("stdout_no_match"),
                 "validate": kwargs.get("validate", True),
-                "env": kwargs.get("env", None),
+                "env": kwargs.get("env"),
             }
         )
 
