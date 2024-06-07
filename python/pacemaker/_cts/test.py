@@ -313,11 +313,6 @@ class Test:
             }
         )
 
-    def add_cmd_and_kill(self, cmd=None, **kwargs):
-        """Add a command and system command to be executed as part of this test."""
-        self._new_cmd(cmd, kwargs.pop("args", ""), ExitStatus.OK,
-                      kill=kwargs.get("kill"))
-
     def add_cmd_check_stdout(self, cmd=None, **kwargs):
         """Add a simple command with expected output to be executed as part of this test."""
         self._new_cmd(cmd, kwargs.pop("args", ""), ExitStatus.OK,
