@@ -170,13 +170,6 @@ class ExecTest(Test):
 
         Test.add_cmd(self, cmd, **kwargs)
 
-    def add_cmd_expected_fail(self, cmd=None, **kwargs):
-        """Add a cts-exec-helper command to be executed as part of this test and expected to fail."""
-        if cmd is None:
-            cmd = self._test_tool_location
-
-        self._new_cmd(cmd, kwargs.pop("args"), kwargs.pop("expected_exitcode", ExitStatus.ERROR), **kwargs)
-
     def add_sys_cmd(self, cmd, args):
         """Add a simple command to be executed as part of this test."""
         self._new_cmd(cmd, args, ExitStatus.OK)
@@ -400,11 +393,11 @@ class ExecTests(Tests):
             test.add_cmd(args=common_cmds["%s_monitor_event" % rsc])
             test.add_cmd(args=self._build_cmd_str(rsc, "cancel"))
             # If this happens the monitor did not actually cancel correctly
-            test.add_cmd_expected_fail(args=common_cmds["%s_monitor_event" % rsc],
-                                       expected_exitcode=ExitStatus.TIMEOUT)
+            test.add_cmd(args=common_cmds["%s_monitor_event" % rsc],
+                         expected_exitcode=ExitStatus.TIMEOUT)
             # If this happens the monitor did not actually cancel correctly
-            test.add_cmd_expected_fail(args=common_cmds["%s_monitor_event" % rsc],
-                                       expected_exitcode=ExitStatus.TIMEOUT)
+            test.add_cmd(args=common_cmds["%s_monitor_event" % rsc],
+                         expected_exitcode=ExitStatus.TIMEOUT)
             test.add_cmd(args=self._build_cmd_str(rsc, "stop"))
             test.add_cmd(args=self._build_cmd_str(rsc, "unreg"))
 
@@ -432,11 +425,11 @@ class ExecTests(Tests):
             # cancel the monitor, if the duplicate merged with the original, we should no longer see monitor updates
             test.add_cmd(args=self._build_cmd_str(rsc, "cancel"))
             # If this happens the monitor did not actually cancel correctly
-            test.add_cmd_expected_fail(args=common_cmds["%s_monitor_event" % rsc],
-                                       expected_exitcode=ExitStatus.TIMEOUT)
+            test.add_cmd(args=common_cmds["%s_monitor_event" % rsc],
+                         expected_exitcode=ExitStatus.TIMEOUT)
             # If this happens the monitor did not actually cancel correctly
-            test.add_cmd_expected_fail(args=common_cmds["%s_monitor_event" % rsc],
-                                       expected_exitcode=ExitStatus.TIMEOUT)
+            test.add_cmd(args=common_cmds["%s_monitor_event" % rsc],
+                         expected_exitcode=ExitStatus.TIMEOUT)
             test.add_cmd(args=self._build_cmd_str(rsc, "stop"))
             test.add_cmd(args=self._build_cmd_str(rsc, "unreg"))
 
@@ -453,11 +446,11 @@ class ExecTests(Tests):
             test.add_cmd(args=common_cmds["%s_monitor_event" % rsc])
             test.add_cmd(args=self._build_cmd_str(rsc, "stop"))
             # If this happens the monitor did not actually cancel correctly
-            test.add_cmd_expected_fail(args=common_cmds["%s_monitor_event" % rsc],
-                                       expected_exitcode=ExitStatus.TIMEOUT)
+            test.add_cmd(args=common_cmds["%s_monitor_event" % rsc],
+                         expected_exitcode=ExitStatus.TIMEOUT)
             # If this happens the monitor did not actually cancel correctly
-            test.add_cmd_expected_fail(args=common_cmds["%s_monitor_event" % rsc],
-                                       expected_exitcode=ExitStatus.TIMEOUT)
+            test.add_cmd(args=common_cmds["%s_monitor_event" % rsc],
+                         expected_exitcode=ExitStatus.TIMEOUT)
             test.add_cmd(args=self._build_cmd_str(rsc, "unreg"))
 
     def build_multi_rsc_tests(self):
@@ -543,10 +536,10 @@ class ExecTests(Tests):
                      kill="rm -f %s/run/Dummy-test_rsc.state" % BuildOptions.LOCAL_STATE_DIR)
         test.add_cmd(args='-c cancel -r test_rsc -a monitor -i 1s ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ')
-        test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" '
-                                   + self._action_timeout, expected_exitcode=ExitStatus.TIMEOUT)
-        test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" '
-                                   + self._action_timeout, expected_exitcode=ExitStatus.TIMEOUT)
+        test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" '
+                     + self._action_timeout, expected_exitcode=ExitStatus.TIMEOUT)
+        test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" '
+                     + self._action_timeout, expected_exitcode=ExitStatus.TIMEOUT)
         test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
 
@@ -558,16 +551,16 @@ class ExecTests(Tests):
                      '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete" ')
         test.add_cmd(args='-c exec -r test_rsc -a monitor -i 1s ' + self._action_timeout
                      + ' -o -l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ')
-        test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
-                                   expected_exitcode=ExitStatus.TIMEOUT)
+        test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
+                     expected_exitcode=ExitStatus.TIMEOUT)
         test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self._action_timeout,
                      kill='rm -f %s/run/Dummy-test_rsc.state' % BuildOptions.LOCAL_STATE_DIR)
         test.add_cmd(args='-c cancel -r test_rsc -a monitor -i 1s' + self._action_timeout
                      + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ')
-        test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
-                                   expected_exitcode=ExitStatus.TIMEOUT)
-        test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
-                                   expected_exitcode=ExitStatus.TIMEOUT)
+        test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
+                     expected_exitcode=ExitStatus.TIMEOUT)
+        test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
+                     expected_exitcode=ExitStatus.TIMEOUT)
         test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete"')
 
@@ -588,10 +581,10 @@ class ExecTests(Tests):
                          kill="pkill -9 -f pacemaker-cts-dummyd")
             test.add_cmd(args='-c cancel -r test_rsc -a monitor -i 1s' + self._action_timeout
                          + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ')
-            test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
-                                       expected_exitcode=ExitStatus.TIMEOUT)
-            test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
-                                       expected_exitcode=ExitStatus.TIMEOUT)
+            test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
+                         expected_exitcode=ExitStatus.TIMEOUT)
+            test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
+                         expected_exitcode=ExitStatus.TIMEOUT)
             test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
                          + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
 
@@ -612,10 +605,10 @@ class ExecTests(Tests):
                          kill='killall -9 -q dd')
             test.add_cmd(args='-c cancel -r test_rsc -a monitor -i 1s' + self._action_timeout
                          + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ')
-            test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
-                                       expected_exitcode=ExitStatus.TIMEOUT)
-            test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
-                                       expected_exitcode=ExitStatus.TIMEOUT)
+            test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
+                         expected_exitcode=ExitStatus.TIMEOUT)
+            test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
+                         expected_exitcode=ExitStatus.TIMEOUT)
             test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
                          + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
 
@@ -631,24 +624,30 @@ class ExecTests(Tests):
                      + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ')
         test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout)
         # interval is wrong, should fail
-        test.add_cmd_expected_fail(args='-c cancel -r test_rsc -a monitor -i 2s' + self._action_timeout
-                                   + ' -l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ')
+        test.add_cmd(args='-c cancel -r test_rsc -a monitor -i 2s' + self._action_timeout
+                     + ' -l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ',
+                     expected_exitcode=ExitStatus.ERROR)
         # action name is wrong, should fail
-        test.add_cmd_expected_fail(args='-c cancel -r test_rsc -a stop -i 1s' + self._action_timeout
-                                   + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ')
+        test.add_cmd(args='-c cancel -r test_rsc -a stop -i 1s' + self._action_timeout
+                     + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ',
+                     expected_exitcode=ExitStatus.ERROR)
         test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
 
         # Attempt to invoke non-existent rsc id
         test = self.new_test("invoke_non_existent_rsc", "Attempt to perform operations on a non-existent rsc id.")
-        test.add_cmd_expected_fail(args='-c exec -r test_rsc -a start ' + self._action_timeout
-                                   + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:error op_status:complete" ')
-        test.add_cmd_expected_fail(args='-c exec -r test_rsc -a stop ' + self._action_timeout
-                                   + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete" ')
-        test.add_cmd_expected_fail(args='-c exec -r test_rsc -a monitor -i 6s ' + self._action_timeout
-                                   + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ')
-        test.add_cmd_expected_fail(args='-c cancel -r test_rsc -a start ' + self._action_timeout
-                                   + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:Cancelled" ')
+        test.add_cmd(args='-c exec -r test_rsc -a start ' + self._action_timeout
+                     + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:error op_status:complete" ',
+                     expected_exitcode=ExitStatus.ERROR)
+        test.add_cmd(args='-c exec -r test_rsc -a stop ' + self._action_timeout
+                     + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete" ',
+                     expected_exitcode=ExitStatus.ERROR)
+        test.add_cmd(args='-c exec -r test_rsc -a monitor -i 6s ' + self._action_timeout
+                     + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ',
+                     expected_exitcode=ExitStatus.ERROR)
+        test.add_cmd(args='-c cancel -r test_rsc -a start ' + self._action_timeout
+                     + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:Cancelled" ',
+                     expected_exitcode=ExitStatus.ERROR)
         test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
 
@@ -691,10 +690,12 @@ class ExecTests(Tests):
 
         # Register ocf with empty provider field
         test = self.new_test("start_ocf_no_provider", "Register ocf agent with a no provider, verify expected failure.")
-        test.add_cmd_expected_fail(args='-c register_rsc -r test_rsc -C ocf -T Dummy ' + self._action_timeout
-                                   + '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete" ')
-        test.add_cmd_expected_fail(args='-c exec -r test_rsc -a start ' + self._action_timeout
-                                   + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:Error" ')
+        test.add_cmd(args='-c register_rsc -r test_rsc -C ocf -T Dummy ' + self._action_timeout
+                     + '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete" ',
+                     expected_exitcode=ExitStatus.ERROR)
+        test.add_cmd(args='-c exec -r test_rsc -a start ' + self._action_timeout
+                     + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:Error" ',
+                     expected_exitcode=ExitStatus.ERROR)
         test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
 
@@ -758,8 +759,8 @@ class ExecTests(Tests):
         test.add_cmd(args='-c register_rsc -r test_rsc -P pacemaker -C ocf -T Dummy '
                      '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete" ' + self._action_timeout)
         test.add_cmd(args='-c exec -r test_rsc -s 6000 -a start -w -t 6000')
-        test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete" -t 2000',
-                                   expected_exitcode=ExitStatus.TIMEOUT)
+        test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete" -t 2000',
+                     expected_exitcode=ExitStatus.TIMEOUT)
         test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete" -t 6000')
         test.add_cmd(args='-c exec -r test_rsc -a stop ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete" ')
@@ -773,8 +774,8 @@ class ExecTests(Tests):
         test.add_cmd(args='-c exec -r test_rsc -s 5000 -a start -w -t 4000')
         test.add_cmd(args='-c cancel -r test_rsc -a start ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:Cancelled" ')
-        test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete" -t 5000',
-                                   expected_exitcode=ExitStatus.TIMEOUT)
+        test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete" -t 5000',
+                     expected_exitcode=ExitStatus.TIMEOUT)
         test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
 
@@ -784,18 +785,18 @@ class ExecTests(Tests):
             test.add_cmd(args='-c register_rsc -r rsc1 -C systemd -T pacemaker-cts-dummyd@3 ' + self._action_timeout)
             test.add_cmd(args='-c get_rsc_info -r rsc1 ')
             test.add_cmd(args='-c unregister_rsc -r rsc1 ' + self._action_timeout)
-            test.add_cmd_expected_fail(args='-c get_rsc_info -r rsc1 ')
+            test.add_cmd(args='-c get_rsc_info -r rsc1 ', expected_exitcode=ExitStatus.ERROR)
 
         if "upstart" in self._rsc_classes:
             test.add_cmd(args='-c register_rsc -r rsc1 -C upstart -T pacemaker-cts-dummyd ' + self._action_timeout)
             test.add_cmd(args='-c get_rsc_info -r rsc1 ')
             test.add_cmd(args='-c unregister_rsc -r rsc1 ' + self._action_timeout)
-            test.add_cmd_expected_fail(args='-c get_rsc_info -r rsc1 ')
+            test.add_cmd(args='-c get_rsc_info -r rsc1 ', expected_exitcode=ExitStatus.ERROR)
 
         test.add_cmd(args='-c register_rsc -r rsc2 -C ocf -T Dummy -P pacemaker ' + self._action_timeout)
         test.add_cmd(args='-c get_rsc_info -r rsc2 ')
         test.add_cmd(args='-c unregister_rsc -r rsc2 ' + self._action_timeout)
-        test.add_cmd_expected_fail(args='-c get_rsc_info -r rsc2 ')
+        test.add_cmd(args='-c get_rsc_info -r rsc2 ', expected_exitcode=ExitStatus.ERROR)
 
         # Register duplicate, verify only one entry exists and can still be removed
         test = self.new_test("duplicate_registration", "Register resource multiple times, verify only one entry exists and can be removed.")
@@ -809,7 +810,7 @@ class ExecTests(Tests):
         test.add_cmd(args="-c get_rsc_info -r rsc2 ",
                      stdout_match="id:rsc2 class:ocf provider:pacemaker type:Stateful")
         test.add_cmd(args='-c unregister_rsc -r rsc2 ' + self._action_timeout)
-        test.add_cmd_expected_fail(args='-c get_rsc_info -r rsc2 ')
+        test.add_cmd(args='-c get_rsc_info -r rsc2 ', expected_exitcode=ExitStatus.ERROR)
 
         # verify the option to only send notification to the original client
         test = self.new_test("notify_orig_client_only", "Verify option to only send notifications to the client originating the action.")
@@ -820,8 +821,8 @@ class ExecTests(Tests):
         test.add_cmd(args='-c exec -r test_rsc -a monitor -i 1s ' + self._action_timeout + ' -n '
                      '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete"')
         # this will fail because the monitor notifications should only go to the original caller, which no longer exists.
-        test.add_cmd_expected_fail(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
-                                   expected_exitcode=ExitStatus.TIMEOUT)
+        test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
+                     expected_exitcode=ExitStatus.TIMEOUT)
         test.add_cmd(args='-c cancel -r test_rsc -a monitor -i 1s -t 6000 ')
         test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
@@ -831,8 +832,8 @@ class ExecTests(Tests):
         test.add_cmd(args="-c metadata -C ocf -P pacemaker -T Dummy",
                      stdout_match="resource-agent name=\"Dummy\"")
         test.add_cmd(args="-c metadata -C ocf -P pacemaker -T Stateful")
-        test.add_cmd_expected_fail(args="-c metadata -P pacemaker -T Stateful")
-        test.add_cmd_expected_fail(args="-c metadata -C ocf -P pacemaker -T fake_agent")
+        test.add_cmd(args="-c metadata -P pacemaker -T Stateful", expected_exitcode=ExitStatus.ERROR)
+        test.add_cmd(args="-c metadata -C ocf -P pacemaker -T fake_agent", expected_exitcode=ExitStatus.ERROR)
 
         # get metadata
         test = self.new_test("get_lsb_metadata", "Retrieve metadata for a resource")
