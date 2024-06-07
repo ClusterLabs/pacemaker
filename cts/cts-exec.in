@@ -170,10 +170,6 @@ class ExecTest(Test):
 
         Test.add_cmd(self, cmd, **kwargs)
 
-    def add_sys_cmd(self, cmd, args):
-        """Add a simple command to be executed as part of this test."""
-        self._new_cmd(cmd, args, ExitStatus.OK)
-
     def run(self):
         """Execute this test."""
         if self.tls and self.name.count("stonith") != 0:
@@ -744,12 +740,12 @@ class ExecTests(Tests):
         """Register tests that target specific cases."""
         # verify resource temporary folder is created and used by OCF agents
         test = self.new_test("rsc_tmp_dir", "Verify creation and use of rsc temporary state directory")
-        test.add_sys_cmd("ls", "-al %s" % BuildOptions.RSC_TMP_DIR)
+        test.add_cmd("ls", args="-al %s" % BuildOptions.RSC_TMP_DIR)
         test.add_cmd(args='-c register_rsc -r test_rsc -P heartbeat -C ocf -T Dummy '
                      '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete" ' + self._action_timeout)
         test.add_cmd(args='-c exec -r test_rsc -a start -t 4000')
-        test.add_sys_cmd("ls", "-al %s" % BuildOptions.RSC_TMP_DIR)
-        test.add_sys_cmd("ls", "%s/Dummy-test_rsc.state" % BuildOptions.RSC_TMP_DIR)
+        test.add_cmd("ls", args="-al %s" % BuildOptions.RSC_TMP_DIR)
+        test.add_cmd("ls", args="%s/Dummy-test_rsc.state" % BuildOptions.RSC_TMP_DIR)
         test.add_cmd(args='-c exec -r test_rsc -a stop -t 4000')
         test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
                      + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
