@@ -804,13 +804,13 @@ class ExecTests(Tests):
         test = self.new_test("duplicate_registration", "Register resource multiple times, verify only one entry exists and can be removed.")
         test.add_cmd(args='-c register_rsc -r rsc2 -C ocf -T Dummy -P pacemaker ' + self._action_timeout)
         test.add_cmd_check_stdout(args="-c get_rsc_info -r rsc2 ",
-                                  match="id:rsc2 class:ocf provider:pacemaker type:Dummy")
+                                  stdout_match="id:rsc2 class:ocf provider:pacemaker type:Dummy")
         test.add_cmd(args='-c register_rsc -r rsc2 -C ocf -T Dummy -P pacemaker ' + self._action_timeout)
         test.add_cmd_check_stdout(args="-c get_rsc_info -r rsc2 ",
-                                  match="id:rsc2 class:ocf provider:pacemaker type:Dummy")
+                                  stdout_match="id:rsc2 class:ocf provider:pacemaker type:Dummy")
         test.add_cmd(args='-c register_rsc -r rsc2 -C ocf -T Stateful -P pacemaker ' + self._action_timeout)
         test.add_cmd_check_stdout(args="-c get_rsc_info -r rsc2 ",
-                                  match="id:rsc2 class:ocf provider:pacemaker type:Stateful")
+                                  stdout_match="id:rsc2 class:ocf provider:pacemaker type:Stateful")
         test.add_cmd(args='-c unregister_rsc -r rsc2 ' + self._action_timeout)
         test.add_cmd_expected_fail(args='-c get_rsc_info -r rsc2 ')
 
@@ -832,7 +832,7 @@ class ExecTests(Tests):
         # get metadata
         test = self.new_test("get_ocf_metadata", "Retrieve metadata for a resource")
         test.add_cmd_check_stdout(args="-c metadata -C ocf -P pacemaker -T Dummy",
-                                  match="resource-agent name=\"Dummy\"")
+                                  stdout_match="resource-agent name=\"Dummy\"")
         test.add_cmd(args="-c metadata -C ocf -P pacemaker -T Stateful")
         test.add_cmd_expected_fail(args="-c metadata -P pacemaker -T Stateful")
         test.add_cmd_expected_fail(args="-c metadata -C ocf -P pacemaker -T fake_agent")
@@ -840,67 +840,67 @@ class ExecTests(Tests):
         # get metadata
         test = self.new_test("get_lsb_metadata", "Retrieve metadata for a resource")
         test.add_cmd_check_stdout(args="-c metadata -C lsb -T LSBDummy",
-                                  match="resource-agent name='LSBDummy'")
+                                  stdout_match="resource-agent name='LSBDummy'")
 
         # get stonith metadata
         test = self.new_test("get_stonith_metadata", "Retrieve stonith metadata for a resource")
         test.add_cmd_check_stdout(args="-c metadata -C stonith -P pacemaker -T fence_dummy",
-                                  match="resource-agent name=\"fence_dummy\"")
+                                  stdout_match="resource-agent name=\"fence_dummy\"")
 
         # get metadata
         if "systemd" in self._rsc_classes:
             test = self.new_test("get_systemd_metadata", "Retrieve metadata for a resource")
             test.add_cmd_check_stdout(args="-c metadata -C systemd -T pacemaker-cts-dummyd@",
-                                      match="resource-agent name=\"pacemaker-cts-dummyd@\"")
+                                      stdout_match="resource-agent name=\"pacemaker-cts-dummyd@\"")
 
         # get metadata
         if "upstart" in self._rsc_classes:
             test = self.new_test("get_upstart_metadata", "Retrieve metadata for a resource")
             test.add_cmd_check_stdout(args="-c metadata -C upstart -T pacemaker-cts-dummyd",
-                                      match="resource-agent name=\"pacemaker-cts-dummyd\"")
+                                      stdout_match="resource-agent name=\"pacemaker-cts-dummyd\"")
 
         # get ocf providers
         test = self.new_test("list_ocf_providers",
                              "Retrieve list of available resource providers, verifies pacemaker is a provider.")
-        test.add_cmd_check_stdout(args="-c list_ocf_providers ", match="pacemaker")
-        test.add_cmd_check_stdout(args="-c list_ocf_providers -T ping", match="pacemaker")
+        test.add_cmd_check_stdout(args="-c list_ocf_providers ", stdout_match="pacemaker")
+        test.add_cmd_check_stdout(args="-c list_ocf_providers -T ping", stdout_match="pacemaker")
 
         # Verify agents only exist in their lists
         test = self.new_test("verify_agent_lists", "Verify the agent lists contain the right data.")
-        test.add_cmd_check_stdout(args="-c list_agents ", match="Stateful")                                          # ocf
-        test.add_cmd_check_stdout(args="-c list_agents -C ocf", match="Stateful")
-        test.add_cmd_check_stdout(args="-c list_agents -C lsb", match="", stdout_no_match="Stateful")                # should not exist
-        test.add_cmd_check_stdout(args="-c list_agents -C service", match="", stdout_no_match="Stateful")            # should not exist
-        test.add_cmd_check_stdout(args="-c list_agents ", match="LSBDummy")                                          # init.d
-        test.add_cmd_check_stdout(args="-c list_agents -C lsb", match="LSBDummy")
-        test.add_cmd_check_stdout(args="-c list_agents -C service", match="LSBDummy")
-        test.add_cmd_check_stdout(args="-c list_agents -C ocf", match="", stdout_no_match="pacemaker-cts-dummyd@")   # should not exist
+        test.add_cmd_check_stdout(args="-c list_agents ", stdout_match="Stateful")                                          # ocf
+        test.add_cmd_check_stdout(args="-c list_agents -C ocf", stdout_match="Stateful")
+        test.add_cmd_check_stdout(args="-c list_agents -C lsb", stdout_match="", stdout_no_match="Stateful")                # should not exist
+        test.add_cmd_check_stdout(args="-c list_agents -C service", stdout_match="", stdout_no_match="Stateful")            # should not exist
+        test.add_cmd_check_stdout(args="-c list_agents ", stdout_match="LSBDummy")                                          # init.d
+        test.add_cmd_check_stdout(args="-c list_agents -C lsb", stdout_match="LSBDummy")
+        test.add_cmd_check_stdout(args="-c list_agents -C service", stdout_match="LSBDummy")
+        test.add_cmd_check_stdout(args="-c list_agents -C ocf", stdout_match="", stdout_no_match="pacemaker-cts-dummyd@")   # should not exist
 
-        test.add_cmd_check_stdout(args="-c list_agents -C ocf", match="", stdout_no_match="pacemaker-cts-dummyd@")   # should not exist
-        test.add_cmd_check_stdout(args="-c list_agents -C lsb", match="", stdout_no_match="fence_dummy")             # should not exist
-        test.add_cmd_check_stdout(args="-c list_agents -C service", match="", stdout_no_match="fence_dummy")         # should not exist
-        test.add_cmd_check_stdout(args="-c list_agents -C ocf", match="", stdout_no_match="fence_dummy")             # should not exist
+        test.add_cmd_check_stdout(args="-c list_agents -C ocf", stdout_match="", stdout_no_match="pacemaker-cts-dummyd@")   # should not exist
+        test.add_cmd_check_stdout(args="-c list_agents -C lsb", stdout_match="", stdout_no_match="fence_dummy")             # should not exist
+        test.add_cmd_check_stdout(args="-c list_agents -C service", stdout_match="", stdout_no_match="fence_dummy")         # should not exist
+        test.add_cmd_check_stdout(args="-c list_agents -C ocf", stdout_match="", stdout_no_match="fence_dummy")             # should not exist
 
         if "systemd" in self._rsc_classes:
-            test.add_cmd_check_stdout(args="-c list_agents ", match="pacemaker-cts-dummyd@")                         # systemd
-            test.add_cmd_check_stdout(args="-c list_agents -C service", match="LSBDummy")
-            test.add_cmd_check_stdout(args="-c list_agents -C systemd", match="", stdout_no_match="Stateful")        # should not exist
-            test.add_cmd_check_stdout(args="-c list_agents -C systemd", match="pacemaker-cts-dummyd@")
-            test.add_cmd_check_stdout(args="-c list_agents -C systemd", match="", stdout_no_match="fence_dummy")     # should not exist
+            test.add_cmd_check_stdout(args="-c list_agents ", stdout_match="pacemaker-cts-dummyd@")                         # systemd
+            test.add_cmd_check_stdout(args="-c list_agents -C service", stdout_match="LSBDummy")
+            test.add_cmd_check_stdout(args="-c list_agents -C systemd", stdout_match="", stdout_no_match="Stateful")        # should not exist
+            test.add_cmd_check_stdout(args="-c list_agents -C systemd", stdout_match="pacemaker-cts-dummyd@")
+            test.add_cmd_check_stdout(args="-c list_agents -C systemd", stdout_match="", stdout_no_match="fence_dummy")     # should not exist
 
         if "upstart" in self._rsc_classes:
-            test.add_cmd_check_stdout(args="-c list_agents ", match="pacemaker-cts-dummyd")                          # upstart
-            test.add_cmd_check_stdout(args="-c list_agents -C service", match="LSBDummy")
-            test.add_cmd_check_stdout(args="-c list_agents -C upstart", match="", stdout_no_match="Stateful")        # should not exist
-            test.add_cmd_check_stdout(args="-c list_agents -C upstart", match="pacemaker-cts-dummyd")
-            test.add_cmd_check_stdout(args="-c list_agents -C upstart", match="", stdout_no_match="fence_dummy")     # should not exist
+            test.add_cmd_check_stdout(args="-c list_agents ", stdout_match="pacemaker-cts-dummyd")                          # upstart
+            test.add_cmd_check_stdout(args="-c list_agents -C service", stdout_match="LSBDummy")
+            test.add_cmd_check_stdout(args="-c list_agents -C upstart", stdout_match="", stdout_no_match="Stateful")        # should not exist
+            test.add_cmd_check_stdout(args="-c list_agents -C upstart", stdout_match="pacemaker-cts-dummyd")
+            test.add_cmd_check_stdout(args="-c list_agents -C upstart", stdout_match="", stdout_no_match="fence_dummy")     # should not exist
 
         if "stonith" in self._rsc_classes:
-            test.add_cmd_check_stdout(args="-c list_agents -C stonith", match="fence_dummy")                         # stonith
-            test.add_cmd_check_stdout(args="-c list_agents -C stonith", match="",                                    # should not exist
+            test.add_cmd_check_stdout(args="-c list_agents -C stonith", stdout_match="fence_dummy")                         # stonith
+            test.add_cmd_check_stdout(args="-c list_agents -C stonith", stdout_match="",                                    # should not exist
                                       stdout_no_match="pacemaker-cts-dummyd@")
-            test.add_cmd_check_stdout(args="-c list_agents -C stonith", match="", stdout_no_match="Stateful")        # should not exist
-            test.add_cmd_check_stdout(args="-c list_agents ", match="fence_dummy")
+            test.add_cmd_check_stdout(args="-c list_agents -C stonith", stdout_match="", stdout_no_match="Stateful")        # should not exist
+            test.add_cmd_check_stdout(args="-c list_agents ", stdout_match="fence_dummy")
 
 
 def build_options():

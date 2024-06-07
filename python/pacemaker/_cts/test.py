@@ -316,7 +316,7 @@ class Test:
     def add_cmd_check_stdout(self, cmd=None, **kwargs):
         """Add a simple command with expected output to be executed as part of this test."""
         self._new_cmd(cmd, kwargs.pop("args", ""), ExitStatus.OK,
-                      stdout_match=kwargs.get("match"),
+                      stdout_match=kwargs.get("stdout_match"),
                       stdout_no_match=kwargs.get("stdout_no_match"),
                       env=kwargs.get("env"))
 
