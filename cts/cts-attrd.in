@@ -113,8 +113,8 @@ class AttributeTests(Tests):
         test = self.new_test("set_attr_1",
                              "Set and query an attribute")
         test.add_cmd("attrd_updater", args="--name AAA -U 111 --output-as=xml")
-        test.add_cmd_check_stdout("attrd_updater", args="--name AAA -Q --output-as=xml",
-                                  stdout_match='name="AAA" value="111"')
+        test.add_cmd("attrd_updater", args="--name AAA -Q --output-as=xml",
+                     stdout_match='name="AAA" value="111"')
         test.add_log_pattern(r"Setting AAA\[.*\] in instance_attributes: \(unset\) -> 111",
                              regex=True)
 
@@ -129,16 +129,16 @@ class AttributeTests(Tests):
         test = self.new_test("set_attr_3",
                              "Set and query an attribute's delay and value")
         test.add_cmd("attrd_updater", args="--name AAA -B 111 -d 5 --output-as=xml")
-        test.add_cmd_check_stdout("attrd_updater", args="--name AAA -Q --output-as=xml",
-                                  stdout_match='name="AAA" value="111"')
+        test.add_cmd("attrd_updater", args="--name AAA -Q --output-as=xml",
+                     stdout_match='name="AAA" value="111"')
         test.add_log_pattern(r"Setting AAA\[.*\] in instance_attributes: \(unset\) -> 111 \| from .* with 5s write delay",
                              regex=True)
 
         test = self.new_test("set_attr_4",
                              "Update an attribute that does not exist with a delay")
         test.add_cmd("attrd_updater", args="--name BBB -U 999 -d 10 --output-as=xml")
-        test.add_cmd_check_stdout("attrd_updater", args="--name BBB -Q --output-as=xml",
-                                  stdout_match='name="BBB" value="999"')
+        test.add_cmd("attrd_updater", args="--name BBB -Q --output-as=xml",
+                     stdout_match='name="BBB" value="999"')
         test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: \(unset\) -> 999 \| from .* with 10s write delay",
                              regex=True)
 
@@ -146,8 +146,8 @@ class AttributeTests(Tests):
                              "Update an attribute that already exists")
         test.add_cmd("attrd_updater", args="--name BBB -U 222 --output-as=xml")
         test.add_cmd("attrd_updater", args="--name BBB -U 333 --output-as=xml")
-        test.add_cmd_check_stdout("attrd_updater", args="--name BBB -Q --output-as=xml",
-                                  stdout_match='name="BBB" value="333"')
+        test.add_cmd("attrd_updater", args="--name BBB -Q --output-as=xml",
+                     stdout_match='name="BBB" value="333"')
         test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: \(unset\) -> 222",
                              regex=True)
         test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: 222 -> 333",
@@ -199,8 +199,8 @@ class AttributeTests(Tests):
         test = self.new_test("attr_in_set_1",
                              "Set and query an attribute in a specific set")
         test.add_cmd("attrd_updater", args="--name DDD -U 555 --set=foo --output-as=xml")
-        test.add_cmd_check_stdout("attrd_updater", args="--name DDD -Q --output-as=xml",
-                                  stdout_match='name="DDD" value="555"')
+        test.add_cmd("attrd_updater", args="--name DDD -Q --output-as=xml",
+                     stdout_match='name="DDD" value="555"')
         test.add_log_pattern("Processed 1 private change for DDD (set foo)")
 
     def build_multiple_query_tests(self):
@@ -213,21 +213,21 @@ class AttributeTests(Tests):
                              "Query an attribute set across multiple nodes")
         test.add_cmd("attrd_updater", args="--name AAA -U 111 --node cluster1 --output-as=xml")
         test.add_cmd("attrd_updater", args="--name AAA -U 222 --node cluster2 --output-as=xml")
-        test.add_cmd_check_stdout("attrd_updater", args="--name AAA -QA --output-as=xml",
-                                  stdout_match=r'<attribute name="AAA" value="111" host="cluster1"/>\n.*<attribute name="AAA" value="222" host="cluster2"/>')
-        test.add_cmd_check_stdout("attrd_updater", args="--name AAA -Q --node=cluster1 --output-as=xml",
-                                  stdout_match='<attribute name="AAA" value="111" host="cluster1"/>')
-        test.add_cmd_check_stdout("attrd_updater", args="--name AAA -Q --node=cluster2 --output-as=xml",
-                                  stdout_match='<attribute name="AAA" value="222" host="cluster2"/>')
-        test.add_cmd_check_stdout("attrd_updater", args="--name AAA -QA --output-as=xml",
-                                  stdout_match=r'<attribute name="AAA" value="111" host="cluster1"/>\n.*<attribute name="AAA" value="222" host="cluster2"/>',
-                                  env={"OCF_RESKEY_CRM_meta_on_node": "cluster1"})
-        test.add_cmd_check_stdout("attrd_updater", args="--name AAA -Q --output-as=xml",
-                                  stdout_match='<attribute name="AAA" value="111" host="cluster1"/>',
-                                  env={"OCF_RESKEY_CRM_meta_on_node": "cluster1"})
-        test.add_cmd_check_stdout("attrd_updater", args="--name AAA -Q --node=cluster2 --output-as=xml",
-                                  stdout_match='<attribute name="AAA" value="222" host="cluster2"/>',
-                                  env={"OCF_RESKEY_CRM_meta_on_node": "cluster1"})
+        test.add_cmd("attrd_updater", args="--name AAA -QA --output-as=xml",
+                     stdout_match=r'<attribute name="AAA" value="111" host="cluster1"/>\n.*<attribute name="AAA" value="222" host="cluster2"/>')
+        test.add_cmd("attrd_updater", args="--name AAA -Q --node=cluster1 --output-as=xml",
+                     stdout_match='<attribute name="AAA" value="111" host="cluster1"/>')
+        test.add_cmd("attrd_updater", args="--name AAA -Q --node=cluster2 --output-as=xml",
+                     stdout_match='<attribute name="AAA" value="222" host="cluster2"/>')
+        test.add_cmd("attrd_updater", args="--name AAA -QA --output-as=xml",
+                     stdout_match=r'<attribute name="AAA" value="111" host="cluster1"/>\n.*<attribute name="AAA" value="222" host="cluster2"/>',
+                     env={"OCF_RESKEY_CRM_meta_on_node": "cluster1"})
+        test.add_cmd("attrd_updater", args="--name AAA -Q --output-as=xml",
+                     stdout_match='<attribute name="AAA" value="111" host="cluster1"/>',
+                     env={"OCF_RESKEY_CRM_meta_on_node": "cluster1"})
+        test.add_cmd("attrd_updater", args="--name AAA -Q --node=cluster2 --output-as=xml",
+                     stdout_match='<attribute name="AAA" value="222" host="cluster2"/>',
+                     env={"OCF_RESKEY_CRM_meta_on_node": "cluster1"})
 
     def build_regex_tests(self):
         """Add tests that use regexes."""
@@ -236,10 +236,10 @@ class AttributeTests(Tests):
         test.add_cmd("attrd_updater", args="--name AAA -U 111 --output-as=xml")
         test.add_cmd("attrd_updater", args="--name ABB -U 222 --output-as=xml")
         test.add_cmd("attrd_updater", args="-P 'A.*' -U 333 --output-as=xml")
-        test.add_cmd_check_stdout("attrd_updater", args="--name AAA -Q --output-as=xml",
-                                  stdout_match='name="AAA" value="333"')
-        test.add_cmd_check_stdout("attrd_updater", args="--name ABB -Q --output-as=xml",
-                                  stdout_match='name="ABB" value="333"')
+        test.add_cmd("attrd_updater", args="--name AAA -Q --output-as=xml",
+                     stdout_match='name="AAA" value="333"')
+        test.add_cmd("attrd_updater", args="--name ABB -Q --output-as=xml",
+                     stdout_match='name="ABB" value="333"')
         test.add_log_pattern(r"Setting AAA\[.*\] in instance_attributes: \(unset\) -> 111",
                              regex=True)
         test.add_log_pattern(r"Setting ABB\[.*\] in instance_attributes: \(unset\) -> 222",
@@ -268,8 +268,8 @@ class AttributeTests(Tests):
         test = self.new_test("utilization_1",
                              "Set and query a utilization attribute")
         test.add_cmd("attrd_updater", args="--name AAA -U ABC -z --output-as=xml")
-        test.add_cmd_check_stdout("attrd_updater", args="--name AAA -Q --output-as=xml",
-                                  stdout_match='name="AAA" value="ABC"')
+        test.add_cmd("attrd_updater", args="--name AAA -Q --output-as=xml",
+                     stdout_match='name="AAA" value="ABC"')
         test.add_log_pattern(r"Setting AAA\[.*\] in utilization: \(unset\) -> ABC",
                              regex=True)
 
@@ -278,16 +278,16 @@ class AttributeTests(Tests):
         test = self.new_test("local_sync_point",
                              "Wait for a local sync point")
         test.add_cmd("attrd_updater", args="--name AAA -U 123 --wait=local --output-as=xml")
-        test.add_cmd_check_stdout("attrd_updater", args="--name AAA -Q --output-as=xml",
-                                  stdout_match='name="AAA" value="123"')
+        test.add_cmd("attrd_updater", args="--name AAA -Q --output-as=xml",
+                     stdout_match='name="AAA" value="123"')
         test.add_log_pattern(r"Alerting client .* for reached local sync point",
                              regex=True)
 
         test = self.new_test("cluster_sync_point",
                              "Wait for a cluster-wide sync point")
         test.add_cmd("attrd_updater", args="--name BBB -U 456 --wait=cluster --output-as=xml")
-        test.add_cmd_check_stdout("attrd_updater", args="--name BBB -Q --output-as=xml",
-                                  stdout_match='name="BBB" value="456"')
+        test.add_cmd("attrd_updater", args="--name BBB -Q --output-as=xml",
+                     stdout_match='name="BBB" value="456"')
         test.add_log_pattern(r"Alerting client .* for reached cluster sync point",
                              regex=True)
 

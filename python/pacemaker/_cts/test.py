@@ -313,13 +313,6 @@ class Test:
             }
         )
 
-    def add_cmd_check_stdout(self, cmd=None, **kwargs):
-        """Add a simple command with expected output to be executed as part of this test."""
-        self._new_cmd(cmd, kwargs.pop("args", ""), ExitStatus.OK,
-                      stdout_match=kwargs.get("stdout_match"),
-                      stdout_no_match=kwargs.get("stdout_no_match"),
-                      env=kwargs.get("env"))
-
     def add_cmd_expected_fail(self, cmd=None, **kwargs):
         """Add a command that is expected to fail to be executed as part of this test."""
         self._new_cmd(cmd, kwargs.pop("args", ""), kwargs.get("expected_exitcode", ExitStatus.ERROR))

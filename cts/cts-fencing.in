@@ -498,10 +498,10 @@ class FenceTests(Tests):
                          args='--output-as=xml -R true2 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
                          args='--output-as=xml -R true3 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
-            test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -l node1 -V",
-                                      stdout_match="true2", stdout_no_match="true1")
-            test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -l node1 -V",
-                                      stdout_match="true3", stdout_no_match="true1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -l node1 -V",
+                         stdout_match="true2", stdout_no_match="true1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -l node1 -V",
+                         stdout_match="true3", stdout_no_match="true1")
 
         # simple test of device monitor
         for test_type in test_types:
@@ -576,8 +576,8 @@ class FenceTests(Tests):
 
             test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 5 -V")
 
-            test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -H node3",
-                                      stdout_match='action="off" target="node3" .* status="success"')
+            test.add_cmd("stonith_admin", args="--output-as=xml -H node3",
+                         stdout_match='action="off" target="node3" .* status="success"')
 
         # simple test of dynamic list query
         for test_type in test_types:
@@ -588,8 +588,8 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", args="--output-as=xml -R true2 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
             test.add_cmd("stonith_admin", args="--output-as=xml -R true3 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
 
-            test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -l fake_port_1",
-                                      stdout_match='count="3"')
+            test.add_cmd("stonith_admin", args="--output-as=xml -l fake_port_1",
+                         stdout_match='count="3"')
 
 
         # fence using dynamic list query
@@ -612,8 +612,8 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", args='--output-as=xml -R true2  -a fence_dummy -o mode=pass -o pcmk_host_check=status')
             test.add_cmd("stonith_admin", args='--output-as=xml -R true3  -a fence_dummy -o mode=pass -o pcmk_host_check=status')
 
-            test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -l fake_port_1",
-                                      stdout_match='count="3"')
+            test.add_cmd("stonith_admin", args="--output-as=xml -l fake_port_1",
+                         stdout_match='count="3"')
 
         # test what happens when no reboot action is advertised
         for test_type in test_types:
@@ -976,8 +976,8 @@ class FenceTests(Tests):
 
         test = self.new_test("get_metadata",
                              "Run stonith_admin --metadata for the fence_dummy agent", True)
-        test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -a fence_dummy --metadata",
-                                  stdout_match='<shortdesc lang')
+        test.add_cmd("stonith_admin", args="--output-as=xml -a fence_dummy --metadata",
+                     stdout_match='<shortdesc lang')
 
     def build_metadata_tests(self):
         """ run fence-agents coming with pacemaker with -o metadata and check for valid xml """
