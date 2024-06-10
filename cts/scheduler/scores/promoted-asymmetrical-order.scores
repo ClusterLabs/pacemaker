@@ -23,7 +23,7 @@ pcmk__primitive_assign: rsc2:0 allocation score on node1: 1
 pcmk__primitive_assign: rsc2:0 allocation score on node2: 0
 pcmk__primitive_assign: rsc2:1 allocation score on node1: -INFINITY
 pcmk__primitive_assign: rsc2:1 allocation score on node2: 1
-rsc1:0 promotion score on none: 0
-rsc1:1 promotion score on none: 0
+rsc1:0 promotion score (inactive): -INFINITY
+rsc1:1 promotion score (inactive): -INFINITY
 rsc2:0 promotion score on node1: -1
 rsc2:1 promotion score on node2: 99

@@ -97,4 +97,4 @@ pcmk__primitive_assign: stateful-1:2 allocation score on 18node3: -INFINITY
 pcmk__primitive_assign: stateful-1:2 allocation score on remote1: -INFINITY
 stateful-1:0 promotion score on 18node1: 10
 stateful-1:1 promotion score on 18node3: 5
-stateful-1:2 promotion score on none: 0
+stateful-1:2 promotion score (inactive): -INFINITY

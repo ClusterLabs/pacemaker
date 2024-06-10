@@ -1,7 +1,7 @@
 
-galera:0 promotion score on none: 0
-galera:1 promotion score on none: 0
-galera:2 promotion score on none: 0
+galera:0 promotion score (inactive): -INFINITY
+galera:1 promotion score (inactive): -INFINITY
+galera:2 promotion score (inactive): -INFINITY
 pcmk__bundle_assign: galera-bundle allocation score on centos1: -INFINITY
 pcmk__bundle_assign: galera-bundle allocation score on centos2: 0
 pcmk__bundle_assign: galera-bundle allocation score on centos3: -INFINITY

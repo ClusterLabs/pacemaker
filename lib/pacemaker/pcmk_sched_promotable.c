@@ -425,7 +425,14 @@ set_sort_index_to_node_score(gpointer data, gpointer user_data)
                         "(unmanaged promoted)",
                         child->id);
 
-    } else if ((chosen == NULL) || (child->sort_index < 0)) {
+    } else if (chosen == NULL) {
+        child->sort_index = -PCMK_SCORE_INFINITY;
+        pcmk__rsc_trace(clone,
+                        "Final promotion priority for %s is %s "
+                        "(will not be active)",
+                        child->id, pcmk_readable_score(-PCMK_SCORE_INFINITY));
+
+    } else if (child->sort_index < 0) {
         pcmk__rsc_trace(clone,
                         "Final sort index for %s is %d (ignoring node score)",
                         child->id, child->sort_index);
@@ -895,13 +902,18 @@ show_promotion_score(pcmk_resource_t *instance)
 
         out->message(out, "promotion-score", instance, chosen,
                      pcmk_readable_score(instance->sort_index));
+
+    } else if (chosen == NULL) {
+        pcmk__rsc_debug(pe__const_top_resource(instance, false),
+                        "%s promotion score (inactive): %s (priority=%d)",
+                        instance->id, pcmk_readable_score(instance->sort_index), instance->priority);
+
     } else {
         pcmk__rsc_debug(pe__const_top_resource(instance, false),
-                        "%s promotion score on %s: sort=%s priority=%s",
-                        instance->id,
-                        ((chosen == NULL)? "none" : pcmk__node_name(chosen)),
+                        "%s promotion score on %s: %s (priority=%d)",
+                        instance->id, pcmk__node_name(chosen),
                         pcmk_readable_score(instance->sort_index),
-                        pcmk_readable_score(instance->priority));
+                        instance->priority);
     }
 }
 

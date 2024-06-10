@@ -79,5 +79,5 @@ pcmk__primitive_assign: vip-rep allocation score on bl460g8n3: -INFINITY
 pcmk__primitive_assign: vip-rep allocation score on bl460g8n4: -INFINITY
 pcmk__primitive_assign: vip-rep allocation score on pgsr01: 0
 pcmk__primitive_assign: vip-rep allocation score on pgsr02: -INFINITY
-pgsql:0 promotion score on none: 0
+pgsql:0 promotion score (inactive): -INFINITY
 pgsql:1 promotion score on pgsr01: 10

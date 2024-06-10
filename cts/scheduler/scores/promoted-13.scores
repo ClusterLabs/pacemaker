@@ -1,7 +1,7 @@
 
 drbd0:0 promotion score on odin: 75
 drbd0:1 promotion score on frigg: 1
-drbd0:2 promotion score on none: 0
+drbd0:2 promotion score (inactive): -INFINITY
 pcmk__clone_assign: drbd0:0 allocation score on frigg: 0
 pcmk__clone_assign: drbd0:0 allocation score on odin: INFINITY
 pcmk__clone_assign: drbd0:1 allocation score on frigg: INFINITY
