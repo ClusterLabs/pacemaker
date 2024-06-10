@@ -11,10 +11,13 @@
 #define PCMK__CRM_COMMON_ACTIONS_INTERNAL__H
 
 #include <stdbool.h>                        // bool
-#include <glib.h>                           // guint
+#include <glib.h>                           // guint, GList, GHashTable
 #include <libxml/tree.h>                    // xmlNode
 
-#include <crm/common/actions.h>             // PCMK_ACTION_MONITOR
+#include <crm/common/actions.h>             // PCMK_ACTION_MONITOR, etc.
+#include <crm/common/resources.h>           // enum rsc_start_requirement
+#include <crm/common/roles.h>               // enum rsc_role_e
+#include <crm/common/scheduler_types.h>     // pcmk_resource_t, pcmk_node_t
 #include <crm/common/strings_internal.h>    // pcmk__str_eq()
 
 #ifdef __cplusplus
@@ -117,6 +120,51 @@ enum pcmk__action_type {
 
     pcmk__action_shutdown,          // Shut down node
     pcmk__action_fence,             // Fence node
+};
+
+// Implementation of pcmk_action_t
+struct pcmk__action {
+    int id;                 // Counter to identify action
+
+    /*
+     * When the controller aborts a transition graph, it sets an abort priority.
+     * If this priority is higher, the action will still be executed anyway.
+     * Pseudo-actions are always allowed, so this is irrelevant for them.
+     */
+    int priority;
+
+    pcmk_resource_t *rsc;   // Resource to apply action to, if any
+    pcmk_node_t *node;      // Node to execute action on, if any
+    xmlNode *op_entry;      // Action XML configuration, if any
+    char *task;             // Action name
+    char *uuid;             // Action key
+    char *cancel_task;      // If task is "cancel", the action being cancelled
+    char *reason;           // Readable description of why action is needed
+
+    //@ TODO Change to uint32_t
+    enum pe_action_flags flags;         // Group of enum pe_action_flags
+
+    enum rsc_start_requirement needs;   // Prerequisite for recovery
+    enum action_fail_response on_fail;  // Response to failure
+    enum rsc_role_e fail_role;          // Resource role if action fails
+    GHashTable *meta;                   // Meta-attributes relevant to action
+    GHashTable *extra;                  // Action-specific instance attributes
+
+    /* Current count of runnable instance actions for "first" action in an
+     * ordering dependency with pcmk__ar_min_runnable set.
+     */
+    int runnable_before;
+
+    /*
+     * Number of instance actions for "first" action in an ordering dependency
+     * with pcmk__ar_min_runnable set that must be runnable before this action
+     * can be runnable.
+     */
+    int required_runnable_before;
+
+    // Actions in a relation with this one (as pcmk__related_action_t *)
+    GList *actions_before;
+    GList *actions_after;
 };
 
 char *pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms);
