@@ -172,8 +172,8 @@ xmlNode *pcmk__find_action_config(const pcmk_resource_t *rsc,
                                   const char *action_name, guint interval_ms,
                                   bool include_disabled);
 
-enum rsc_start_requirement pcmk__action_requires(const pcmk_resource_t *rsc,
-                                                 const char *action_name);
+enum pcmk__requires pcmk__action_requires(const pcmk_resource_t *rsc,
+                                          const char *action_name);
 
 enum pcmk__on_fail pcmk__parse_on_fail(const pcmk_resource_t *rsc,
                                        const char *action_name,

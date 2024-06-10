@@ -28,23 +28,6 @@ extern "C" {
  * \ingroup core
  */
 
-//!@{
-//! \deprecated Do not use
-
-// What resource needs before it can be recovered from a failed node
-enum rsc_start_requirement {
-    pcmk_requires_nothing   = 0,    // Resource can be recovered immediately
-    pcmk_requires_quorum    = 1,    // Resource can be recovered if quorate
-    pcmk_requires_fencing   = 2,    // Resource can be recovered after fencing
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    rsc_req_nothing         = pcmk_requires_nothing,
-    rsc_req_quorum          = pcmk_requires_quorum,
-    rsc_req_stonith         = pcmk_requires_fencing,
-#endif
-};
-//!@}
-
 //! Search options for resources (exact resource ID always matches)
 enum pe_find {
     //! Also match clone instance ID from resource history

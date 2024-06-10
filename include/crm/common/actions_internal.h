@@ -15,8 +15,7 @@
 #include <glib.h>                           // guint, GList, GHashTable
 #include <libxml/tree.h>                    // xmlNode
 
-#include <crm/common/actions.h>             // PCMK_ACTION_MONITOR, etc.
-#include <crm/common/resources.h>           // enum rsc_start_requirement
+#include <crm/common/actions.h>             // PCMK_ACTION_MONITOR
 #include <crm/common/roles.h>               // enum rsc_role_e
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t, pcmk_node_t
 #include <crm/common/strings_internal.h>    // pcmk__str_eq()
@@ -197,6 +196,13 @@ enum pcmk__on_fail {
     pcmk__on_fail_fence_node,           // Fence resource's node
 };
 
+// What resource needs before it can be recovered from a failed node
+enum pcmk__requires {
+    pcmk__requires_nothing   = 0,   // Resource can be recovered immediately
+    pcmk__requires_quorum    = 1,   // Resource can be recovered if quorate
+    pcmk__requires_fencing   = 2,   // Resource can be recovered after fencing
+};
+
 // Implementation of pcmk_action_t
 struct pcmk__action {
     int id;                 // Counter to identify action
@@ -216,7 +222,7 @@ struct pcmk__action {
     char *cancel_task;      // If task is "cancel", the action being cancelled
     char *reason;           // Readable description of why action is needed
     uint32_t flags;         // Group of enum pcmk__action_flags
-    enum rsc_start_requirement needs;   // Prerequisite for recovery
+    enum pcmk__requires needs;          // Prerequisite for recovery
     enum pcmk__on_fail on_fail;         // Response to failure
     enum rsc_role_e fail_role;          // Resource role if action fails
     GHashTable *meta;                   // Meta-attributes relevant to action

@@ -355,7 +355,7 @@ update_resource_action_runnable(pcmk_action_t *action,
                    "Action %s on %s is unrunnable (node is pending)",
                    action->uuid, pcmk__node_name(action->node));
 
-    } else if (action->needs == pcmk_requires_nothing) {
+    } else if (action->needs == pcmk__requires_nothing) {
         pe_action_set_reason(action, NULL, TRUE);
         if (pcmk__is_guest_or_bundle_node(action->node)
             && !pe_can_fence(scheduler, action->node)) {
@@ -823,11 +823,11 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
  *
  * \return Quorum and fencing dependency appropriate to action
  */
-enum rsc_start_requirement
+enum pcmk__requires
 pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
 {
     const char *value = NULL;
-    enum rsc_start_requirement requires = pcmk_requires_nothing;
+    enum pcmk__requires requires = pcmk__requires_nothing;
 
     CRM_CHECK((rsc != NULL) && (action_name != NULL), return requires);
 
@@ -836,11 +836,11 @@ pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
         value = "nothing (not start or promote)";
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
-        requires = pcmk_requires_fencing;
+        requires = pcmk__requires_fencing;
         value = "fencing";
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_quorum)) {
-        requires = pcmk_requires_quorum;
+        requires = pcmk__requires_quorum;
         value = "quorum";
 
     } else {
