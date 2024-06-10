@@ -66,6 +66,6 @@ pcmk__primitive_assign: rsc2 allocation score on rhel7-4: 0
 pcmk__primitive_assign: rsc2 allocation score on rhel7-5: 0
 rsc1:0 promotion score on rhel7-1: 10
 rsc1:1 promotion score on rhel7-2: 5
-rsc1:2 promotion score on none: 0
-rsc1:3 promotion score on none: 0
-rsc1:4 promotion score on none: 0
+rsc1:2 promotion score (inactive): -INFINITY
+rsc1:3 promotion score (inactive): -INFINITY
+rsc1:4 promotion score (inactive): -INFINITY

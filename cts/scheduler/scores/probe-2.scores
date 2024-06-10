@@ -1,8 +1,8 @@
 
 drbd_mysql:0 promotion score on wc01: 75
-drbd_mysql:1 promotion score on none: 0
+drbd_mysql:1 promotion score (inactive): -INFINITY
 drbd_www:0 promotion score on wc01: 175
-drbd_www:1 promotion score on none: 0
+drbd_www:1 promotion score (inactive): -INFINITY
 pcmk__clone_assign: DoFencing allocation score on wc01: 0
 pcmk__clone_assign: DoFencing allocation score on wc02: 0
 pcmk__clone_assign: apache2:0 allocation score on wc01: 1

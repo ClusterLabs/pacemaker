@@ -5,8 +5,8 @@ ocf_msdummy:2 promotion score on sles-2: -1
 ocf_msdummy:3 promotion score on sles-4: -1
 ocf_msdummy:4 promotion score on sles-1: -1
 ocf_msdummy:5 promotion score on sles-2: -1
-ocf_msdummy:6 promotion score on none: 0
-ocf_msdummy:7 promotion score on none: 0
+ocf_msdummy:6 promotion score (inactive): -INFINITY
+ocf_msdummy:7 promotion score (inactive): -INFINITY
 pcmk__clone_assign: DoFencing allocation score on sles-1: 0
 pcmk__clone_assign: DoFencing allocation score on sles-2: 0
 pcmk__clone_assign: DoFencing allocation score on sles-3: 0

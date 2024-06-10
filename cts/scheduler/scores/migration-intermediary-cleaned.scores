@@ -197,5 +197,5 @@ pcmk__primitive_assign: stateful-1:4 allocation score on rhel8-5: -INFINITY
 stateful-1:0 promotion score on rhel8-3: 10
 stateful-1:1 promotion score on rhel8-4: 5
 stateful-1:2 promotion score on rhel8-5: 5
-stateful-1:3 promotion score on none: 0
-stateful-1:4 promotion score on none: 0
+stateful-1:3 promotion score (inactive): -INFINITY
+stateful-1:4 promotion score (inactive): -INFINITY

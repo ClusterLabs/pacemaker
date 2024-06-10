@@ -31,6 +31,8 @@
 - Fixes since Pacemaker-2.1.7
   + tools: restore the (deprecated) ability to automatically correct malformed
     XML passed via standard input (regression introduced in 2.1.7)
+  + CIB manager: avoid memory leak from asynchronous client requests
+    (regression introduced in 2.1.7)
   + CIB: restore the (deprecated) ability to use validate-with="pacemaker-next"
     (regression introduced in 2.1.6)
   + controller: avoid zombie children when asynchronous actions exit while a

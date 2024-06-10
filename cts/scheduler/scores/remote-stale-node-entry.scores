@@ -119,6 +119,6 @@ pcmk__primitive_assign: stateful-1:2 allocation score on remote1: -INFINITY
 pcmk__primitive_assign: stateful-1:2 allocation score on rhel7-node1: -INFINITY
 pcmk__primitive_assign: stateful-1:2 allocation score on rhel7-node2: -INFINITY
 pcmk__primitive_assign: stateful-1:2 allocation score on rhel7-node3: -INFINITY
-stateful-1:0 promotion score on none: 0
-stateful-1:1 promotion score on none: 0
-stateful-1:2 promotion score on none: 0
+stateful-1:0 promotion score (inactive): -INFINITY
+stateful-1:1 promotion score (inactive): -INFINITY
+stateful-1:2 promotion score (inactive): -INFINITY
