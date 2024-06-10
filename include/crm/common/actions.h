@@ -331,10 +331,6 @@ struct pe_action_s {
 };
 //!@}
 
-// @COMPAT Make this internal when we can break API backward compatibility
-//! \deprecated Do not use (public access will be removed in a future release)
-const char *pcmk_on_fail_text(enum action_fail_response on_fail);
-
 // For parsing various action-related string specifications
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
                       guint *interval_ms);

@@ -128,6 +128,7 @@ void pcmk__filter_op_for_digest(xmlNode *param_set);
 bool pcmk__is_fencing_action(const char *action);
 enum pcmk__action_type pcmk__parse_action(const char *action_name);
 const char *pcmk__action_text(enum pcmk__action_type action);
+const char *pcmk__on_fail_text(enum action_fail_response on_fail);
 
 
 /*!

@@ -144,7 +144,7 @@ pcmk__parse_action(const char *action_name)
  * \return Static string describing \p on_fail
  */
 const char *
-pcmk_on_fail_text(enum action_fail_response on_fail)
+pcmk__on_fail_text(enum action_fail_response on_fail)
 {
     switch (on_fail) {
         case pcmk_on_fail_ignore:
