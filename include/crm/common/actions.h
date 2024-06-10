@@ -222,7 +222,7 @@ enum pe_action_flags {
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
-struct pe_action_s {
+struct pcmk__action {
     int id;                 // Counter to identify action
 
     /*
