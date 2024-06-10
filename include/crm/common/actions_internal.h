@@ -11,7 +11,7 @@
 #define PCMK__CRM_COMMON_ACTIONS_INTERNAL__H
 
 #include <stdbool.h>                        // bool
-#include <stdint.h>                         // UINT32_C()
+#include <stdint.h>                         // uint32_t, UINT32_C()
 #include <glib.h>                           // guint, GList, GHashTable
 #include <libxml/tree.h>                    // xmlNode
 
@@ -191,10 +191,7 @@ struct pcmk__action {
     char *uuid;             // Action key
     char *cancel_task;      // If task is "cancel", the action being cancelled
     char *reason;           // Readable description of why action is needed
-
-    //@ TODO Change to uint32_t
-    enum pcmk__action_flags flags;      // Group of enum pcmk__action_flags
-
+    uint32_t flags;         // Group of enum pcmk__action_flags
     enum rsc_start_requirement needs;   // Prerequisite for recovery
     enum action_fail_response on_fail;  // Response to failure
     enum rsc_role_e fail_role;          // Resource role if action fails
