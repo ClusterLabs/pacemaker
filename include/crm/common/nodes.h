@@ -97,9 +97,6 @@ struct pcmk__scored_node {
     // NOTE: sbd (as of at least 1.5.2) uses this
     struct pe_node_shared_s *details;   // Basic node information
 
-    // @COMPAT This should be enum pe_discover_e
-    int rsc_discover_mode;              // Probe mode (enum pe_discover_e)
-
     //! \internal Do not use
     pcmk__node_private_t *private;
 };

@@ -96,7 +96,7 @@ pe__copy_node(const pcmk_node_t *this_node)
     new_node->assign = pcmk__assert_alloc(1,
                                           sizeof(struct pcmk__node_assignment));
 
-    new_node->rsc_discover_mode = this_node->rsc_discover_mode;
+    new_node->assign->probe_mode = this_node->assign->probe_mode;
     new_node->assign->score = this_node->assign->score;
     new_node->assign->count = this_node->assign->count;
     new_node->details = this_node->details;
@@ -327,7 +327,7 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
     pcmk_node_t *match = NULL;
 
     if ((pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
-         || (node->rsc_discover_mode == pcmk_probe_never))
+         || (node->assign->probe_mode == pcmk_probe_never))
         && pcmk__str_eq(tag, "symmetric_default", pcmk__str_casei)) {
         /* This string comparision may be fragile, but exclusive resources and
          * exclusive nodes should not have the symmetric_default constraint

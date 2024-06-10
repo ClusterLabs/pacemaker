@@ -722,12 +722,12 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
                                  node->assign->score);
         }
 
-        if (allowed_node->rsc_discover_mode < location->discover_mode) {
+        if (allowed_node->assign->probe_mode < location->discover_mode) {
             if (location->discover_mode == pcmk_probe_exclusive) {
                 pcmk__set_rsc_flags(rsc, pcmk__rsc_exclusive_probes);
             }
             /* exclusive > never > always... always is default */
-            allowed_node->rsc_discover_mode = location->discover_mode;
+            allowed_node->assign->probe_mode = location->discover_mode;
         }
     }
 }

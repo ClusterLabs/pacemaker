@@ -81,6 +81,7 @@ enum pcmk__node_flags {
 struct pcmk__node_assignment {
     int score;      // Node's score for relevant resource
     int count;      // Counter reused by assignment and promotion code
+    enum pe_discover_e probe_mode;  // When to probe resource on this node
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow

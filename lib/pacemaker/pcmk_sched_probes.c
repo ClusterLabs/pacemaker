@@ -230,7 +230,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
                      "on node";
             goto no_probe;
 
-        } else if (allowed->rsc_discover_mode != pcmk_probe_exclusive) {
+        } else if (allowed->assign->probe_mode != pcmk_probe_exclusive) {
             // ... but no constraint marks this node for discovery of resource
             reason = "resource has exclusive discovery but is not enabled "
                      "on node";
@@ -241,7 +241,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     if (allowed == NULL) {
         allowed = node;
     }
-    if (allowed->rsc_discover_mode == pcmk_probe_never) {
+    if (allowed->assign->probe_mode == pcmk_probe_never) {
         reason = "node has discovery disabled";
         goto no_probe;
     }
