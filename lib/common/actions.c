@@ -34,7 +34,7 @@
  * \return Static string describing \p action
  */
 const char *
-pcmk_action_text(enum action_tasks action)
+pcmk__action_text(enum action_tasks action)
 {
     switch (action) {
         case pcmk_action_stop:

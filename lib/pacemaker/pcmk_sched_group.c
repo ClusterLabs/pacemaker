@@ -524,7 +524,7 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 
         // Check whether member has the same action
         enum action_tasks task = get_complex_task(member, action->task);
-        const char *task_s = pcmk_action_text(task);
+        const char *task_s = pcmk__action_text(task);
         pcmk_action_t *member_action = NULL;
 
         member_action = find_first_action(member->private->actions, NULL,
