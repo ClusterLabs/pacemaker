@@ -218,20 +218,12 @@ enum pe_action_flags {
 };
 //!@}
 
-/* @COMPAT enum pe_link_state and enum pe_ordering should be removed at an
+/* @COMPAT enum pe_ordering should be removed at an
  * API compatibility break when struct pcmk__related_action can be refactored
  */
 
 //!@{
 //! \deprecated Do not use
-enum pe_link_state {
-    pe_link_not_dumped  = 0,
-    pe_link_dumped      = 1,
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    pe_link_dup         = 2,
-#endif
-};
-
 enum pe_ordering {
     pe_order_none                  = 0x0,
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)

@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
 #define PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
 
+#include <stdbool.h>                        // bool
 #include <stdint.h>                         // uint32_t
 #include <crm/common/actions.h>             // enum pe_ordering, etc.
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t, pcmk_action_t
@@ -152,10 +153,8 @@ typedef struct pcmk__related_action {
     // @TODO This should be uint32_t
     enum pe_ordering type;      // Group of enum pcmk__action_relation_flags
 
-    // @TODO This should be a bool
-    enum pe_link_state state;   // Whether action has been added to graph yet
-
     pcmk_action_t *action;      // Action to be sequenced
+    bool graphed;               // Whether action has been added to graph yet
 } pcmk__related_action_t;
 
 /*!

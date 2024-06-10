@@ -1384,8 +1384,8 @@ pcmk__deduplicate_action_inputs(pcmk_action_t *action)
              * dot graph. Combining the flags is sufficient for that purpose.
              */
             last_input->type |= input->type;
-            if (input->state == pe_link_dumped) {
-                last_input->state = pe_link_dumped;
+            if (input->graphed) {
+                last_input->graphed = true;
             }
 
             free(item->data);
@@ -1393,7 +1393,7 @@ pcmk__deduplicate_action_inputs(pcmk_action_t *action)
                                                         item);
         } else {
             last_input = input;
-            input->state = pe_link_not_dumped;
+            input->graphed = false;
         }
     }
 }

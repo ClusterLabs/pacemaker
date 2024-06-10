@@ -618,7 +618,7 @@ static bool
 should_add_input_to_graph(const pcmk_action_t *action,
                           pcmk__related_action_t *input)
 {
-    if (input->state == pe_link_dumped) {
+    if (input->graphed) {
         return true;
     }
 
@@ -932,7 +932,7 @@ add_action_to_graph(gpointer data, gpointer user_data)
         if (should_add_input_to_graph(action, input)) {
             xmlNode *input_xml = pcmk__xe_create(in, "trigger");
 
-            input->state = pe_link_dumped;
+            input->graphed = true;
             create_graph_action(input_xml, input->action, true, scheduler);
         }
     }

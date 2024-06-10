@@ -285,7 +285,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
             const char *style = "dashed";
             bool optional = true;
 
-            if (before->state == pe_link_dumped) {
+            if (before->graphed) {
                 optional = false;
                 style = PCMK__VALUE_BOLD;
             } else if ((uint32_t) before->type == pcmk__ar_none) {
