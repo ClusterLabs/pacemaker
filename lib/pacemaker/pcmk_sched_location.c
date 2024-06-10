@@ -581,7 +581,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
  * \param[in]     id             XML ID of location constraint
  * \param[in,out] rsc            Resource in location constraint
  * \param[in]     node_score     Constraint score
- * \param[in]     discover_mode  Resource discovery option for constraint
+ * \param[in]     probe_mode     When resource should be probed on node
  * \param[in]     node           Node in constraint (or NULL if rule-based)
  *
  * \return Newly allocated location constraint on success, otherwise NULL
@@ -590,7 +590,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
  */
 pcmk__location_t *
 pcmk__new_location(const char *id, pcmk_resource_t *rsc,
-                   int node_score, const char *discover_mode, pcmk_node_t *node)
+                   int node_score, const char *probe_mode, pcmk_node_t *node)
 {
     pcmk__location_t *new_con = NULL;
 
@@ -612,22 +612,21 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
     new_con->nodes = NULL;
     new_con->role_filter = pcmk_role_unknown;
 
-    if (pcmk__str_eq(discover_mode, PCMK_VALUE_ALWAYS,
+    if (pcmk__str_eq(probe_mode, PCMK_VALUE_ALWAYS,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        new_con->discover_mode = pcmk_probe_always;
+        new_con->probe_mode = pcmk_probe_always;
 
-    } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_NEVER,
-                            pcmk__str_casei)) {
-        new_con->discover_mode = pcmk_probe_never;
+    } else if (pcmk__str_eq(probe_mode, PCMK_VALUE_NEVER, pcmk__str_casei)) {
+        new_con->probe_mode = pcmk_probe_never;
 
-    } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_EXCLUSIVE,
+    } else if (pcmk__str_eq(probe_mode, PCMK_VALUE_EXCLUSIVE,
                             pcmk__str_casei)) {
-        new_con->discover_mode = pcmk_probe_exclusive;
+        new_con->probe_mode = pcmk_probe_exclusive;
         pcmk__set_rsc_flags(rsc, pcmk__rsc_exclusive_probes);
 
     } else {
         pcmk__config_err("Invalid " PCMK_XA_RESOURCE_DISCOVERY " value %s "
-                         "in location constraint", discover_mode);
+                         "in location constraint", probe_mode);
     }
 
     if (node != NULL) {
@@ -722,12 +721,12 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
                                  node->assign->score);
         }
 
-        if (allowed_node->assign->probe_mode < location->discover_mode) {
-            if (location->discover_mode == pcmk_probe_exclusive) {
+        if (allowed_node->assign->probe_mode < location->probe_mode) {
+            if (location->probe_mode == pcmk_probe_exclusive) {
                 pcmk__set_rsc_flags(rsc, pcmk__rsc_exclusive_probes);
             }
             /* exclusive > never > always... always is default */
-            allowed_node->assign->probe_mode = location->discover_mode;
+            allowed_node->assign->probe_mode = location->probe_mode;
         }
     }
 }

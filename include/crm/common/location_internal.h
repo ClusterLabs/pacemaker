@@ -25,7 +25,7 @@ typedef struct {
     char *id;                           // XML ID of location constraint
     pcmk_resource_t *rsc;               // Resource with location preference
     enum rsc_role_e role_filter;        // Limit to instances with this role
-    enum pe_discover_e discover_mode;   // How to probe resource on node
+    enum pe_discover_e probe_mode;      // How to probe resource on node
     GList *nodes;                       // Affected nodes, with preference score
 } pcmk__location_t;
 
