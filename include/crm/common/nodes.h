@@ -32,23 +32,6 @@ extern "C" {
 #define PCMK_NODE_ATTR_TERMINATE            "terminate"
 
 
-// When to probe a resource on a node (as specified in location constraints)
-// @COMPAT Make this internal when we can break API backward compatibility
-//!@{
-//! \deprecated Do not use (public access will be removed in a future release)
-enum pe_discover_e {
-    pcmk_probe_always       = 0,    // Always probe resource on node
-    pcmk_probe_never        = 1,    // Never probe resource on node
-    pcmk_probe_exclusive    = 2,    // Probe only on designated nodes
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    pe_discover_always      = pcmk_probe_always,
-    pe_discover_never       = pcmk_probe_never,
-    pe_discover_exclusive   = pcmk_probe_exclusive,
-#endif
-};
-//!@}
-
 //! \internal Do not use
 typedef struct pcmk__node_private pcmk__node_private_t;
 

@@ -614,14 +614,14 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
 
     if (pcmk__str_eq(probe_mode, PCMK_VALUE_ALWAYS,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        new_con->probe_mode = pcmk_probe_always;
+        new_con->probe_mode = pcmk__probe_always;
 
     } else if (pcmk__str_eq(probe_mode, PCMK_VALUE_NEVER, pcmk__str_casei)) {
-        new_con->probe_mode = pcmk_probe_never;
+        new_con->probe_mode = pcmk__probe_never;
 
     } else if (pcmk__str_eq(probe_mode, PCMK_VALUE_EXCLUSIVE,
                             pcmk__str_casei)) {
-        new_con->probe_mode = pcmk_probe_exclusive;
+        new_con->probe_mode = pcmk__probe_exclusive;
         pcmk__set_rsc_flags(rsc, pcmk__rsc_exclusive_probes);
 
     } else {
@@ -722,7 +722,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
         }
 
         if (allowed_node->assign->probe_mode < location->probe_mode) {
-            if (location->probe_mode == pcmk_probe_exclusive) {
+            if (location->probe_mode == pcmk__probe_exclusive) {
                 pcmk__set_rsc_flags(rsc, pcmk__rsc_exclusive_probes);
             }
             /* exclusive > never > always... always is default */

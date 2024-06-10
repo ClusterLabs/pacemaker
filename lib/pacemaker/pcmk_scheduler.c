@@ -172,7 +172,7 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
         match = g_hash_table_lookup(rsc->private->allowed_nodes,
                                     node->private->id);
         if ((match != NULL)
-            && (match->assign->probe_mode != pcmk_probe_exclusive)) {
+            && (match->assign->probe_mode != pcmk__probe_exclusive)) {
             match->assign->score = -PCMK_SCORE_INFINITY;
         }
     }
