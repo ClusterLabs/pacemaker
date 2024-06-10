@@ -77,10 +77,10 @@
       <lrm id="lrm.auto-1">
         <lrm_resources id="lrm_resources.id22789">
           <lrm_resource id="resource_t21" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="resource_t21_monitor_0" operation="monitor" transition-key="4:201:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;4:201:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="61" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_t21_monitor_0" operation="monitor" transition-key="4:201:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;4:201:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="61" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="power720-2"/>
           </lrm_resource>
           <lrm_resource id="resource_t11" type="nfsserver" class="lsb">
-            <lrm_rsc_op id="resource_t11_monitor_0" operation="monitor" transition-key="4:197:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;4:197:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="60" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_t11_monitor_0" operation="monitor" transition-key="4:197:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;4:197:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="60" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="power720-2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -94,10 +94,10 @@
       <lrm id="lrm.auto-2">
         <lrm_resources id="lrm_resources.id22922">
           <lrm_resource id="resource_t21" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="resource_t21_monitor_0" operation="monitor" transition-key="6:202:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;6:202:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="46" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_t21_monitor_0" operation="monitor" transition-key="6:202:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;6:202:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="46" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="power720-4"/>
           </lrm_resource>
           <lrm_resource id="resource_t11" type="nfsserver" class="lsb">
-            <lrm_rsc_op id="resource_t11_monitor_0" operation="monitor" transition-key="6:198:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;6:198:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="45" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_t11_monitor_0" operation="monitor" transition-key="6:198:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;6:198:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="45" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="power720-4"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -111,10 +111,10 @@
       <lrm id="lrm.auto-3">
         <lrm_resources id="lrm_resources.id23055">
           <lrm_resource id="resource_t11" type="nfsserver" class="lsb">
-            <lrm_rsc_op id="resource_t11_monitor_0" operation="monitor" transition-key="7:200:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;7:200:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="38" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_t11_monitor_0" operation="monitor" transition-key="7:200:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;7:200:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="38" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="power720-1"/>
           </lrm_resource>
           <lrm_resource id="resource_t21" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="resource_t21_monitor_0" operation="monitor" transition-key="7:204:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;7:204:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="39" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_t21_monitor_0" operation="monitor" transition-key="7:204:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;7:204:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="39" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="power720-1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -128,10 +128,10 @@
       <lrm id="lrm.auto-4">
         <lrm_resources id="lrm_resources.id23188">
           <lrm_resource id="resource_t21" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="resource_t21_monitor_0" operation="monitor" transition-key="5:203:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;5:203:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="67" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_t21_monitor_0" operation="monitor" transition-key="5:203:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;5:203:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="67" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="power720-3"/>
           </lrm_resource>
           <lrm_resource id="resource_t11" type="nfsserver" class="lsb">
-            <lrm_rsc_op id="resource_t11_monitor_0" operation="monitor" transition-key="5:199:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;5:199:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="66" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_t11_monitor_0" operation="monitor" transition-key="5:199:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" transition-magic="0:7;5:199:7:702f6718-e13c-48e7-8fb7-a06ca88ffa55" call-id="66" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="power720-3"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

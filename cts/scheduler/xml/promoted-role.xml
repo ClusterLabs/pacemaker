@@ -29,8 +29,8 @@
       <lrm id="8165b1f7-da29-43db-8510-065ac1d33469">
         <lrm_resources>
           <lrm_resource id="res_Stateful_1:1" type="Stateful" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="res_Stateful_1:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" transition-magic="0:0;6:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1255599645" last-rc-change="1255599645" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="res_Stateful_1:1_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="12:3:0:b80fe701-5e5a-4be3-9646-d49845b65ba2" transition-magic="0:0;12:3:0:b80fe701-5e5a-4be3-9646-d49845b65ba2" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1255599715" last-rc-change="1255599715" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" transition-magic="0:0;6:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1255599645" last-rc-change="1255599645" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="sles11-b"/>
+            <lrm_rsc_op id="res_Stateful_1:1_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="12:3:0:b80fe701-5e5a-4be3-9646-d49845b65ba2" transition-magic="0:0;12:3:0:b80fe701-5e5a-4be3-9646-d49845b65ba2" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1255599715" last-rc-change="1255599715" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="sles11-b"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -45,7 +45,7 @@
       <lrm id="bb56fda4-7d0d-405c-a6e4-c21b0e070303">
         <lrm_resources>
           <lrm_resource id="res_Stateful_1:0" type="Stateful" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="res_Stateful_1:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="4:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" transition-magic="0:8;4:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" call-id="2" rc-code="8" op-status="0" interval="0" last-run="1255599645" last-rc-change="1255599645" exec-time="150" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="4:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" transition-magic="0:8;4:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" call-id="2" rc-code="8" op-status="0" interval="0" last-run="1255599645" last-rc-change="1255599645" exec-time="150" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="sles11-a"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

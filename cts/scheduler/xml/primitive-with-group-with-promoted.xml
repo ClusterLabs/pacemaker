@@ -94,8 +94,7 @@
     </resources>
     <constraints>
       <rsc_colocation id="colocation-rsc1-group1-INFINITY" rsc="rsc1" score="INFINITY" with-rsc="group1"/>
-      <rsc_colocation id="colocation-group1-rsc2-clone-INFINITY" rsc="group1" score="INFINITY"
-        with-rsc="rsc2-clone" with-rsc-role="Promoted"/>
+      <rsc_colocation id="colocation-group1-rsc2-clone-INFINITY" rsc="group1" score="INFINITY" with-rsc="rsc2-clone" with-rsc-role="Promoted"/>
       <rsc_location id="location-rsc1-node5-100000" node="node5" rsc="rsc1" score="123456"/>
     </constraints>
     <fencing-topology/>

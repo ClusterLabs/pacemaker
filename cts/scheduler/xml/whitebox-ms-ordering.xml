@@ -80,7 +80,7 @@
       <lrm id="1">
         <lrm_resources>
           <lrm_resource id="shooter" type="fence_xvm" class="stonith">
-            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="22:4:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;22:4:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="33" rc-code="0" op-status="0" interval="0" last-run="1377195228" last-rc-change="1377195228" exec-time="0" queue-time="0" op-digest="7908d87bf63da67d2346f2ae12b61068"/>
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="22:4:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;22:4:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="33" rc-code="0" op-status="0" interval="0" last-run="1377195228" last-rc-change="1377195228" exec-time="0" queue-time="0" op-digest="7908d87bf63da67d2346f2ae12b61068" on_node="18node1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -94,8 +94,8 @@
       <lrm id="2">
         <lrm_resources>
           <lrm_resource id="shooter" type="fence_xvm" class="stonith">
-            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="23:4:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;23:4:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="26" rc-code="0" op-status="0" interval="0" last-run="1377195229" last-rc-change="1377195229" exec-time="1382" queue-time="0" op-digest="7908d87bf63da67d2346f2ae12b61068"/>
-            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="9:5:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;9:5:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="29" rc-code="0" op-status="0" interval="60000" last-rc-change="1377195231" exec-time="9" queue-time="0" op-digest="f41ae9427c053ffa62947ab85d954d6e"/>
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="23:4:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;23:4:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="26" rc-code="0" op-status="0" interval="0" last-run="1377195229" last-rc-change="1377195229" exec-time="1382" queue-time="0" op-digest="7908d87bf63da67d2346f2ae12b61068" on_node="18node2"/>
+            <lrm_rsc_op id="shooter_monitor_60000" operation_key="shooter_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="9:5:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;9:5:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="29" rc-code="0" op-status="0" interval="60000" last-rc-change="1377195231" exec-time="9" queue-time="0" op-digest="f41ae9427c053ffa62947ab85d954d6e" on_node="18node2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -109,7 +109,7 @@
       <lrm id="3">
         <lrm_resources>
           <lrm_resource id="shooter" type="fence_xvm" class="stonith">
-            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="8:3:7:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:7;8:3:7:7646a86f-3975-414e-8ecc-6d9899595921" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1377177177" last-rc-change="1377177177" exec-time="988" queue-time="0" op-digest="7908d87bf63da67d2346f2ae12b61068"/>
+            <lrm_rsc_op id="shooter_last_0" operation_key="shooter_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="8:3:7:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:7;8:3:7:7646a86f-3975-414e-8ecc-6d9899595921" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1377177177" last-rc-change="1377177177" exec-time="988" queue-time="0" op-digest="7908d87bf63da67d2346f2ae12b61068" on_node="18node3"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -123,7 +123,7 @@
       <lrm id="lxc1">
         <lrm_resources>
           <lrm_resource id="lxc-ms" type="Stateful" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="lxc-ms_last_0" operation_key="lxc-ms_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="17:7:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;17:7:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="17" rc-code="0" op-status="0" interval="0" last-run="1377195234" last-rc-change="1377195234" exec-time="411" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="lxc-ms_last_0" operation_key="lxc-ms_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="17:7:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;17:7:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="17" rc-code="0" op-status="0" interval="0" last-run="1377195234" last-rc-change="1377195234" exec-time="411" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="lxc1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -137,8 +137,8 @@
       <lrm id="lxc2">
         <lrm_resources>
           <lrm_resource id="lxc-ms" type="Stateful" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="lxc-ms_last_0" operation_key="lxc-ms_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="15:6:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;15:6:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1377195232" last-rc-change="1377195232" exec-time="1421" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="lxc-ms_monitor_10000" operation_key="lxc-ms_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="20:7:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;20:7:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="17" rc-code="0" op-status="0" interval="10000" last-rc-change="1377195234" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+            <lrm_rsc_op id="lxc-ms_last_0" operation_key="lxc-ms_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="15:6:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;15:6:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1377195232" last-rc-change="1377195232" exec-time="1421" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="lxc2"/>
+            <lrm_rsc_op id="lxc-ms_monitor_10000" operation_key="lxc-ms_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="20:7:0:7646a86f-3975-414e-8ecc-6d9899595921" transition-magic="0:0;20:7:0:7646a86f-3975-414e-8ecc-6d9899595921" call-id="17" rc-code="0" op-status="0" interval="10000" last-rc-change="1377195234" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="lxc2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

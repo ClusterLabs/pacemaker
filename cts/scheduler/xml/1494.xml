@@ -68,11 +68,11 @@
       <lrm id="lrm.auto-1">
         <lrm_resources id="lrm_resources.id22180">
           <lrm_resource id="ima_rscid:0" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="ima_rscid-0_monitor_0" operation="monitor" transition-key="3:3:7:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="4:7;3:3:7:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="12" crm_feature_set="1.0.5" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-            <lrm_rsc_op id="ima_rscid-0_start_0" operation="start" transition-key="16:5:0:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:0;16:5:0:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="14" crm_feature_set="1.0.5" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+            <lrm_rsc_op id="ima_rscid-0_monitor_0" operation="monitor" transition-key="3:3:7:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="4:7;3:3:7:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="12" crm_feature_set="1.0.5" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" on_node="hb1"/>
+            <lrm_rsc_op id="ima_rscid-0_start_0" operation="start" transition-key="16:5:0:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:0;16:5:0:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="14" crm_feature_set="1.0.5" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" on_node="hb1"/>
           </lrm_resource>
           <lrm_resource id="ima_rscid:1" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="ima_rscid-1_monitor_0" operation="monitor" transition-key="12:0:7:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="4:7;12:0:7:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="11" crm_feature_set="1.0.5" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+            <lrm_rsc_op id="ima_rscid-1_monitor_0" operation="monitor" transition-key="12:0:7:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="4:7;12:0:7:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="11" crm_feature_set="1.0.5" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" on_node="hb1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -81,11 +81,11 @@
       <lrm id="lrm.auto-2">
         <lrm_resources id="lrm_resources.id22316">
           <lrm_resource id="ima_rscid:0" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="ima_rscid-0_monitor_0" operation="monitor" transition-key="11:6:7:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:7;11:6:7:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="10" crm_feature_set="1.0.5" rc-code="7" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+            <lrm_rsc_op id="ima_rscid-0_monitor_0" operation="monitor" transition-key="11:6:7:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:7;11:6:7:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="10" crm_feature_set="1.0.5" rc-code="7" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" on_node="hb2"/>
           </lrm_resource>
           <lrm_resource id="ima_rscid:1" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="ima_rscid-1_monitor_0" operation="monitor" transition-key="12:6:7:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:7;12:6:7:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="11" crm_feature_set="1.0.5" rc-code="7" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-            <lrm_rsc_op id="ima_rscid-1_start_0" operation="start" transition-key="30:6:0:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:0;30:6:0:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="12" crm_feature_set="1.0.5" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+            <lrm_rsc_op id="ima_rscid-1_monitor_0" operation="monitor" transition-key="12:6:7:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:7;12:6:7:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="11" crm_feature_set="1.0.5" rc-code="7" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" on_node="hb2"/>
+            <lrm_rsc_op id="ima_rscid-1_start_0" operation="start" transition-key="30:6:0:4bebe060-ef49-4030-9528-60e8e57310bd" transition-magic="0:0;30:6:0:4bebe060-ef49-4030-9528-60e8e57310bd" call-id="12" crm_feature_set="1.0.5" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" on_node="hb2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

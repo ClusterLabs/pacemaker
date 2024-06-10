@@ -21,7 +21,7 @@
       <lrm id="node1">
         <lrm_resources id="lrm_resources.id21894">
           <lrm_resource id="rsc1" class="ocf" provider="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc1_stop_0" operation="stop" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+            <lrm_rsc_op id="rsc1_stop_0" operation="stop" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" on_node="node1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
