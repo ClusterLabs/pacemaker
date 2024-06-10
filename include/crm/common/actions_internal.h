@@ -11,6 +11,7 @@
 #define PCMK__CRM_COMMON_ACTIONS_INTERNAL__H
 
 #include <stdbool.h>                        // bool
+#include <stdint.h>                         // UINT32_C()
 #include <glib.h>                           // guint, GList, GHashTable
 #include <libxml/tree.h>                    // xmlNode
 
@@ -38,7 +39,7 @@ extern "C" {
  * \brief Set action flags for an action
  *
  * \param[in,out] action        Action to set flags for
- * \param[in]     flags_to_set  Group of enum pe_action_flags to set
+ * \param[in]     flags_to_set  Group of enum pcmk__action_flags to set
  */
 #define pcmk__set_action_flags(action, flags_to_set) do {               \
         (action)->flags = pcmk__set_flags_as(__func__, __LINE__,        \
@@ -54,7 +55,7 @@ extern "C" {
  * \brief Clear action flags for an action
  *
  * \param[in,out] action          Action to clear flags for
- * \param[in]     flags_to_clear  Group of enum pe_action_flags to clear
+ * \param[in]     flags_to_clear  Group of enum pcmk__action_flags to clear
  */
 #define pcmk__clear_action_flags(action, flags_to_clear) do {               \
         (action)->flags = pcmk__clear_flags_as(__func__, __LINE__,          \
@@ -71,7 +72,7 @@ extern "C" {
  *
  * \param[in,out] action_flags  Flag group to set flags for
  * \param[in]     action_name   Name of action being modified (for logging)
- * \param[in]     to_set        Group of enum pe_action_flags to set
+ * \param[in]     to_set        Group of enum pcmk__action_flags to set
  */
 #define pcmk__set_raw_action_flags(action_flags, action_name, to_set) do {  \
         action_flags = pcmk__set_flags_as(__func__, __LINE__,               \
@@ -86,7 +87,7 @@ extern "C" {
  *
  * \param[in,out] action_flags  Flag group to clear flags for
  * \param[in]     action_name   Name of action being modified (for logging)
- * \param[in]     to_clear      Group of enum pe_action_flags to clear
+ * \param[in]     to_clear      Group of enum pcmk__action_flags to clear
  */
 #define pcmk__clear_raw_action_flags(action_flags, action_name, to_clear)   \
     do {                                                                    \
@@ -122,6 +123,56 @@ enum pcmk__action_type {
     pcmk__action_fence,             // Fence node
 };
 
+// Action scheduling flags
+enum pcmk__action_flags {
+    // No action flags set (compare with equality rather than bit set)
+    pcmk__no_action_flags               = 0,
+
+    // Whether action does not require invoking an agent
+    pcmk__action_pseudo                 = (UINT32_C(1) << 0),
+
+    // Whether action is runnable
+    pcmk__action_runnable               = (UINT32_C(1) << 1),
+
+    // Whether action should not be executed
+    pcmk__action_optional               = (UINT32_C(1) << 2),
+
+    // Whether action should be added to transition graph even if optional
+    pcmk__action_always_in_graph        = (UINT32_C(1) << 3),
+
+    // Whether operation-specific instance attributes have been unpacked yet
+    pcmk__action_attrs_evaluated        = (UINT32_C(1) << 4),
+
+    // Whether action is allowed to be part of a live migration
+    pcmk__action_migratable             = (UINT32_C(1) << 7),
+
+    // Whether action has been added to transition graph
+    pcmk__action_added_to_graph         = (UINT32_C(1) << 8),
+
+    // Whether action is a stop to abort a dangling migration
+    pcmk__action_migration_abort        = (UINT32_C(1) << 11),
+
+    /*
+     * Whether action is an ordering point for minimum required instances
+     * (used to implement ordering after clones with \c PCMK_META_CLONE_MIN
+     * configured, and ordered sets with \c PCMK_XA_REQUIRE_ALL set to
+     * \c PCMK_VALUE_FALSE).
+     */
+    pcmk__action_min_runnable           = (UINT32_C(1) << 12),
+
+    // Whether action is recurring monitor that must be rescheduled if active
+    pcmk__action_reschedule             = (UINT32_C(1) << 13),
+
+    // Whether action has already been processed by a recursive procedure
+    pcmk__action_detect_loop            = (UINT32_C(1) << 14),
+
+    // Whether action's inputs have been de-duplicated yet
+    pcmk__action_inputs_deduplicated    = (UINT32_C(1) << 15),
+
+    // Whether action can be executed on DC rather than own node
+    pcmk__action_on_dc                  = (UINT32_C(1) << 16),
+};
+
 // Implementation of pcmk_action_t
 struct pcmk__action {
     int id;                 // Counter to identify action
@@ -142,7 +193,7 @@ struct pcmk__action {
     char *reason;           // Readable description of why action is needed
 
     //@ TODO Change to uint32_t
-    enum pe_action_flags flags;         // Group of enum pe_action_flags
+    enum pcmk__action_flags flags;      // Group of enum pcmk__action_flags
 
     enum rsc_start_requirement needs;   // Prerequisite for recovery
     enum action_fail_response on_fail;  // Response to failure

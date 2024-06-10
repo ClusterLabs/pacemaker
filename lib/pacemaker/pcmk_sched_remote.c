@@ -439,7 +439,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * real actions and vice versa later in update_actions() at the end of
          * pcmk__apply_orderings().
          */
-        if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
             continue;
         }
 

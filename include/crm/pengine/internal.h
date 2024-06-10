@@ -290,7 +290,8 @@ void trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node,
                        const char *reason, pcmk_action_t *dependency,
                        pcmk_scheduler_t *scheduler);
 
-char *pe__action2reason(const pcmk_action_t *action, enum pe_action_flags flag);
+char *pe__action2reason(const pcmk_action_t *action,
+                        enum pcmk__action_flags flag);
 void pe_action_set_reason(pcmk_action_t *action, const char *reason,
                           bool overwrite);
 void pe__add_action_expected_result(pcmk_action_t *action, int expected_result);

@@ -935,11 +935,11 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
          iter = iter->next) {
 
         const pcmk_action_t *action = (const pcmk_action_t *) iter->data;
-        const bool optional = pcmk_is_set(action->flags, pcmk_action_optional);
+        const bool optional = pcmk_is_set(action->flags, pcmk__action_optional);
 
         if (pcmk__str_eq(PCMK_ACTION_START, action->task, pcmk__str_none)) {
             if (!optional
-                && pcmk_is_set(action->flags, pcmk_action_runnable)) {
+                && pcmk_is_set(action->flags, pcmk__action_runnable)) {
 
                 pcmk__rsc_trace(instance, "Instance is starting due to %s",
                                 action->uuid);
@@ -957,8 +957,8 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
              * is implied rather than actually executed.
              */
             if (!optional
-                && pcmk_any_flags_set(action->flags, pcmk_action_pseudo
-                                                     |pcmk_action_runnable)) {
+                && pcmk_any_flags_set(action->flags, pcmk__action_pseudo
+                                                     |pcmk__action_runnable)) {
                 pcmk__rsc_trace(instance, "Instance is stopping due to %s",
                                 action->uuid);
                 instance_state |= instance_stopping;
@@ -1015,7 +1015,7 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
                                         false);
     started->priority = PCMK_SCORE_INFINITY;
     if (pcmk_any_flags_set(state, instance_active|instance_starting)) {
-        pcmk__set_action_flags(started, pcmk_action_runnable);
+        pcmk__set_action_flags(started, pcmk__action_runnable);
     }
 
     // Create pseudo-actions for rsc stop and stopped
@@ -1027,7 +1027,7 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
                                         true);
     stopped->priority = PCMK_SCORE_INFINITY;
     if (!pcmk_is_set(state, instance_restarting)) {
-        pcmk__set_action_flags(stop, pcmk_action_migratable);
+        pcmk__set_action_flags(stop, pcmk__action_migratable);
     }
 
     if (pcmk__is_clone(collective)) {
@@ -1383,8 +1383,8 @@ orig_action_name(const pcmk_action_t *action)
  * \param[in,out] then      'Then' action in an ordering
  * \param[in]     node      If not NULL, limit scope of ordering to this node
  * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pcmk_action_optional to affect only
- *                          mandatory actions, and pcmk_action_runnable to
+ *                          include pcmk__action_optional to affect only
+ *                          mandatory actions, and pcmk__action_runnable to
  *                          affect only runnable actions)
  * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
  *
@@ -1517,8 +1517,8 @@ can_interleave_actions(const pcmk_action_t *first, const pcmk_action_t *then)
  * \param[in]     node      If not NULL, limit scope of ordering to this node
  * \param[in]     flags     Action flags for \p first for ordering purposes
  * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pcmk_action_optional to affect only
- *                          mandatory actions, and pcmk_action_runnable to
+ *                          include pcmk__action_optional to affect only
+ *                          mandatory actions, and pcmk__action_runnable to
  *                          affect only runnable actions)
  * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
  *
@@ -1544,7 +1544,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
     // Check whether action is runnable
     instance_flags = instance->private->cmds->action_flags(instance_action,
                                                            node);
-    if (!pcmk_is_set(instance_flags, pcmk_action_runnable)) {
+    if (!pcmk_is_set(instance_flags, pcmk__action_runnable)) {
         return changed;
     }
 
@@ -1583,8 +1583,8 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
  *                           (only used when interleaving instances)
  * \param[in]     flags      Action flags for \p first for ordering purposes
  * \param[in]     filter     Action flags to limit scope of certain updates (may
- *                           include pcmk_action_optional to affect only
- *                           mandatory actions, and pcmk_action_runnable to
+ *                           include pcmk__action_optional to affect only
+ *                           mandatory actions, and pcmk__action_runnable to
  *                           affect only runnable actions)
  * \param[in]     type       Group of enum pcmk__action_relation_flags to apply
  * \param[in,out] scheduler  Scheduler data
@@ -1649,9 +1649,9 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
     const char *action_name = orig_action_name(action);
 
     // Set original assumptions (optional and runnable may be cleared below)
-    uint32_t flags = pcmk_action_optional
-                     |pcmk_action_runnable
-                     |pcmk_action_pseudo;
+    uint32_t flags = pcmk__action_optional
+                     |pcmk__action_runnable
+                     |pcmk__action_pseudo;
 
     for (const GList *iter = instances; iter != NULL; iter = iter->next) {
         const pcmk_resource_t *instance = iter->data;
@@ -1680,17 +1680,17 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
                                                                node);
 
         // If any instance action is mandatory, so is the collective action
-        if (pcmk_is_set(flags, pcmk_action_optional)
-            && !pcmk_is_set(instance_flags, pcmk_action_optional)) {
+        if (pcmk_is_set(flags, pcmk__action_optional)
+            && !pcmk_is_set(instance_flags, pcmk__action_optional)) {
             pcmk__rsc_trace(instance, "%s is mandatory because %s is",
                             action->uuid, instance_action->uuid);
             pe__clear_action_summary_flags(flags, action,
-                                           pcmk_action_optional);
-            pcmk__clear_action_flags(action, pcmk_action_optional);
+                                           pcmk__action_optional);
+            pcmk__clear_action_flags(action, pcmk__action_optional);
         }
 
         // If any instance action is runnable, so is the collective action
-        if (pcmk_is_set(instance_flags, pcmk_action_runnable)) {
+        if (pcmk_is_set(instance_flags, pcmk__action_runnable)) {
             any_runnable = true;
         }
     }
@@ -1699,9 +1699,9 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
         pcmk__rsc_trace(action->rsc,
                         "%s is not runnable because no instance can run %s",
                         action->uuid, action_name);
-        pe__clear_action_summary_flags(flags, action, pcmk_action_runnable);
+        pe__clear_action_summary_flags(flags, action, pcmk__action_runnable);
         if (node == NULL) {
-            pcmk__clear_action_flags(action, pcmk_action_runnable);
+            pcmk__clear_action_flags(action, pcmk__action_runnable);
         }
     }
 

@@ -98,7 +98,7 @@ check_for_role_change(const pcmk_resource_t *rsc, bool *demoting,
         if (*promoting && *demoting) {
             return;
 
-        } else if (pcmk_is_set(action->flags, pcmk_action_optional)) {
+        } else if (pcmk_is_set(action->flags, pcmk__action_optional)) {
             continue;
 
         } else if (pcmk__str_eq(PCMK_ACTION_DEMOTE, action->task,

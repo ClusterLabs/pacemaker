@@ -282,9 +282,10 @@ struct pcmk__assignment_methods {
      *                           node (only used when interleaving instances)
      * \param[in]     flags      Action flags for \p first for ordering purposes
      * \param[in]     filter     Action flags to limit scope of certain updates
-     *                           (may include pcmk_action_optional to affect
-     *                           only mandatory actions and pcmk_action_runnable
-     *                           to affect only runnable actions)
+     *                           (may include pcmk__action_optional to affect
+     *                           only mandatory actions and
+     *                           pcmk__action_runnable to affect only runnable
+     *                           actions)
      * \param[in]     type       Group of enum pcmk__action_relation_flags
      * \param[in,out] scheduler  Scheduler data
      *

@@ -1045,10 +1045,10 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
     for (iter = rsc->private->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
 
-        if (pcmk_is_set(action->flags, pcmk_action_runnable)
+        if (pcmk_is_set(action->flags, pcmk__action_runnable)
             && pcmk__str_eq(action->task, task, pcmk__str_none)) {
 
-            pcmk__clear_action_flags(action, pcmk_action_runnable);
+            pcmk__clear_action_flags(action, pcmk__action_runnable);
             pe_action_set_reason(action, reason_text, false);
             pcmk__block_colocation_dependents(action);
             pcmk__update_action_for_orderings(action, rsc->private->scheduler);
@@ -1080,7 +1080,7 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
     pcmk_resource_t *rsc = NULL;
     bool is_start = false;
 
-    if (pcmk_is_set(action->flags, pcmk_action_runnable)) {
+    if (pcmk_is_set(action->flags, pcmk__action_runnable)) {
         return; // Only unrunnable actions block dependents
     }
 
@@ -1109,7 +1109,7 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
         child_action = find_first_action(child->private->actions, NULL,
                                          action->task, NULL);
         if ((child_action == NULL)
-            || pcmk_is_set(child_action->flags, pcmk_action_runnable)) {
+            || pcmk_is_set(child_action->flags, pcmk__action_runnable)) {
             crm_trace("Not blocking %s colocation dependents because "
                       "at least %s has runnable %s",
                       rsc->id, child->id, action->task);

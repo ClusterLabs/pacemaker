@@ -290,9 +290,9 @@ new_notify_pseudo_action(pcmk_resource_t *rsc, const pcmk_action_t *action,
     notify = custom_action(rsc,
                            pcmk__notify_key(rsc->id, notif_type, action->task),
                            notif_action, NULL,
-                           pcmk_is_set(action->flags, pcmk_action_optional),
+                           pcmk_is_set(action->flags, pcmk__action_optional),
                            rsc->private->scheduler);
-    pcmk__set_action_flags(notify, pcmk_action_pseudo);
+    pcmk__set_action_flags(notify, pcmk__action_pseudo);
     pcmk__insert_meta(notify, "notify_key_type", notif_type);
     pcmk__insert_meta(notify, "notify_key_operation", action->task);
     return notify;
@@ -330,7 +330,7 @@ new_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
         skip_reason = "no parent notification";
     } else if (!node->details->online) {
         skip_reason = "node offline";
-    } else if (!pcmk_is_set(op->flags, pcmk_action_runnable)) {
+    } else if (!pcmk_is_set(op->flags, pcmk__action_runnable)) {
         skip_reason = "original action not runnable";
     }
     if (skip_reason != NULL) {
@@ -348,7 +348,7 @@ new_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
     // Create the notify action
     key = pcmk__notify_key(rsc->id, value, task);
     notify_action = custom_action(rsc, key, op->task, node,
-                                  pcmk_is_set(op->flags, pcmk_action_optional),
+                                  pcmk_is_set(op->flags, pcmk__action_optional),
                                   rsc->private->scheduler);
 
     // Add meta-data to notify action
@@ -451,7 +451,7 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         // Create "pre-" notify pseudo-action for clone
         n_data->pre = new_notify_pseudo_action(rsc, action, PCMK_ACTION_NOTIFY,
                                                "pre");
-        pcmk__set_action_flags(n_data->pre, pcmk_action_runnable);
+        pcmk__set_action_flags(n_data->pre, pcmk__action_runnable);
         pcmk__insert_meta(n_data->pre, "notify_type", "pre");
         pcmk__insert_meta(n_data->pre, "notify_operation", n_data->action);
 
@@ -459,7 +459,7 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         n_data->pre_done = new_notify_pseudo_action(rsc, action,
                                                     PCMK_ACTION_NOTIFIED,
                                                     "confirmed-pre");
-        pcmk__set_action_flags(n_data->pre_done, pcmk_action_runnable);
+        pcmk__set_action_flags(n_data->pre_done, pcmk__action_runnable);
         pcmk__insert_meta(n_data->pre_done, "notify_type", "pre");
         pcmk__insert_meta(n_data->pre_done, "notify_operation", n_data->action);
 
@@ -474,10 +474,10 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         n_data->post = new_notify_pseudo_action(rsc, complete,
                                                 PCMK_ACTION_NOTIFY, "post");
         n_data->post->priority = PCMK_SCORE_INFINITY;
-        if (pcmk_is_set(complete->flags, pcmk_action_runnable)) {
-            pcmk__set_action_flags(n_data->post, pcmk_action_runnable);
+        if (pcmk_is_set(complete->flags, pcmk__action_runnable)) {
+            pcmk__set_action_flags(n_data->post, pcmk__action_runnable);
         } else {
-            pcmk__clear_action_flags(n_data->post, pcmk_action_runnable);
+            pcmk__clear_action_flags(n_data->post, pcmk__action_runnable);
         }
         pcmk__insert_meta(n_data->post, "notify_type", "post");
         pcmk__insert_meta(n_data->post, "notify_operation", n_data->action);
@@ -487,10 +487,10 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
                                                      PCMK_ACTION_NOTIFIED,
                                                      "confirmed-post");
         n_data->post_done->priority = PCMK_SCORE_INFINITY;
-        if (pcmk_is_set(complete->flags, pcmk_action_runnable)) {
-            pcmk__set_action_flags(n_data->post_done, pcmk_action_runnable);
+        if (pcmk_is_set(complete->flags, pcmk__action_runnable)) {
+            pcmk__set_action_flags(n_data->post_done, pcmk__action_runnable);
         } else {
-            pcmk__clear_action_flags(n_data->post_done, pcmk_action_runnable);
+            pcmk__clear_action_flags(n_data->post_done, pcmk__action_runnable);
         }
         pcmk__insert_meta(n_data->post_done, "notify_type", "post");
         pcmk__insert_meta(n_data->post_done,
@@ -609,13 +609,13 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
     for (iter = rsc->private->actions; iter != NULL; iter = iter->next) {
         const pcmk_action_t *op = (const pcmk_action_t *) iter->data;
 
-        if (!pcmk_is_set(op->flags, pcmk_action_optional)
+        if (!pcmk_is_set(op->flags, pcmk__action_optional)
             && (op->node != NULL)) {
             enum pcmk__action_type task = pcmk__parse_action(op->task);
 
             if ((task == pcmk__action_stop) && op->node->details->unclean) {
                 // Create anyway (additional noise if node can't be fenced)
-            } else if (!pcmk_is_set(op->flags, pcmk_action_runnable)) {
+            } else if (!pcmk_is_set(op->flags, pcmk__action_runnable)) {
                 continue;
             }
 
@@ -763,13 +763,13 @@ add_notif_keys(const pcmk_resource_t *rsc, notify_data_t *n_data)
     add_notify_env_free_gs(n_data, "notify_all_uname", node_list);
 
     if (required && (n_data->pre != NULL)) {
-        pcmk__clear_action_flags(n_data->pre, pcmk_action_optional);
-        pcmk__clear_action_flags(n_data->pre_done, pcmk_action_optional);
+        pcmk__clear_action_flags(n_data->pre, pcmk__action_optional);
+        pcmk__clear_action_flags(n_data->pre_done, pcmk__action_optional);
     }
 
     if (required && (n_data->post != NULL)) {
-        pcmk__clear_action_flags(n_data->post, pcmk_action_optional);
-        pcmk__clear_action_flags(n_data->post_done, pcmk_action_optional);
+        pcmk__clear_action_flags(n_data->post, pcmk__action_optional);
+        pcmk__clear_action_flags(n_data->post_done, pcmk__action_optional);
     }
 }
 
@@ -822,7 +822,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     for (iter = rsc->private->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *op = (pcmk_action_t *) iter->data;
 
-        if (!pcmk_is_set(op->flags, pcmk_action_optional)
+        if (!pcmk_is_set(op->flags, pcmk__action_optional)
             && (op->node != NULL)) {
             switch (pcmk__parse_action(op->task)) {
                 case pcmk__action_start:
@@ -887,7 +887,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
              * notify the node getting fenced.
              */
             if ((stop != NULL)
-                && pcmk_is_set(stop->flags, pcmk_action_pseudo)
+                && pcmk_is_set(stop->flags, pcmk__action_pseudo)
                 && (current_node->details->unclean
                     || pcmk_is_set(current_node->private->flags,
                                    pcmk__node_remote_reset))) {
@@ -898,7 +898,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
                               n_data->pre_done, n_data);
 
             if ((task == pcmk__action_demote) || (stop == NULL)
-                || pcmk_is_set(stop->flags, pcmk_action_optional)) {
+                || pcmk_is_set(stop->flags, pcmk__action_optional)) {
                 new_post_notify_action(rsc, current_node, n_data);
             }
         }
@@ -914,7 +914,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             pcmk_action_t *remote_start = find_remote_start(start);
 
             if ((remote_start != NULL)
-                && !pcmk_is_set(remote_start->flags, pcmk_action_runnable)) {
+                && !pcmk_is_set(remote_start->flags, pcmk__action_runnable)) {
                 /* Start and promote actions for a clone instance behind
                  * a Pacemaker Remote connection happen after the
                  * connection starts. If the connection start is blocked, do
@@ -929,7 +929,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             return;
         }
         if ((task != pcmk__action_start) || (start == NULL)
-            || pcmk_is_set(start->flags, pcmk_action_optional)) {
+            || pcmk_is_set(start->flags, pcmk__action_optional)) {
 
             new_notify_action(rsc, rsc->private->assigned_node, n_data->pre,
                               n_data->pre_done, n_data);
