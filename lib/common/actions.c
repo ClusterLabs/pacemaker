@@ -89,7 +89,7 @@ pcmk_action_text(enum action_tasks action)
  * \return Action type corresponding to \p action_name
  */
 enum action_tasks
-pcmk_parse_action(const char *action_name)
+pcmk__parse_action(const char *action_name)
 {
     if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)) {
         return pcmk_action_stop;

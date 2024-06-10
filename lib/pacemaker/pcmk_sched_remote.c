@@ -170,7 +170,7 @@ static void
 apply_remote_ordering(pcmk_action_t *action)
 {
     pcmk_resource_t *remote_rsc = NULL;
-    enum action_tasks task = pcmk_parse_action(action->task);
+    enum action_tasks task = pcmk__parse_action(action->task);
     enum remote_connection_state state = get_remote_node_state(action->node);
 
     uint32_t order_opts = pcmk__ar_none;
@@ -301,7 +301,7 @@ apply_launcher_ordering(pcmk_action_t *action)
 {
     pcmk_resource_t *remote_rsc = NULL;
     pcmk_resource_t *launcher = NULL;
-    enum action_tasks task = pcmk_parse_action(action->task);
+    enum action_tasks task = pcmk__parse_action(action->task);
 
     CRM_ASSERT(action->rsc != NULL);
     CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
@@ -689,10 +689,10 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
     }
     launcher = guest->private->remote->private->launcher;
 
-    task = pcmk_parse_action(action->task);
+    task = pcmk__parse_action(action->task);
     if ((task == pcmk_action_notify) || (task == pcmk_action_notified)) {
-        task = pcmk_parse_action(g_hash_table_lookup(action->meta,
-                                                     "notify_operation"));
+        task = pcmk__parse_action(g_hash_table_lookup(action->meta,
+                                                      "notify_operation"));
     }
 
     switch (task) {

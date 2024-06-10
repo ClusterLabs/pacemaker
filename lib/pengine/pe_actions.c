@@ -1391,7 +1391,7 @@ pe_free_action(pcmk_action_t *action)
 enum action_tasks
 get_complex_task(const pcmk_resource_t *rsc, const char *name)
 {
-    enum action_tasks task = pcmk_parse_action(name);
+    enum action_tasks task = pcmk__parse_action(name);
 
     if (pcmk__is_primitive(rsc)) {
         switch (task) {

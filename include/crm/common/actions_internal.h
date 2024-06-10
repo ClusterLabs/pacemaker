@@ -100,6 +100,8 @@ char *pcmk__transition_key(int transition_id, int action_id, int target_rc,
                            const char *node);
 void pcmk__filter_op_for_digest(xmlNode *param_set);
 bool pcmk__is_fencing_action(const char *action);
+enum action_tasks pcmk__parse_action(const char *action_name);
+
 
 /*!
  * \internal
