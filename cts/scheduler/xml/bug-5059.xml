@@ -93,15 +93,8 @@
     <node_state id="gluster02.h" uname="gluster02.h" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
       <transient_attributes id="gluster02.h">
         <instance_attributes id="status-gluster02.h">
-          <nvpair id="status-gluster02.h-last-failure-p_fs_export01.0" name="last-failure-p_fs_export01:0" value="1335791231"/>
-          <nvpair id="status-gluster02.h-last-failure-p_glusterd.0" name="last-failure-p_glusterd:0" value="1335791251"/>
-          <nvpair id="status-gluster02.h-last-failure-iptest2" name="last-failure-iptest2" value="1335791253"/>
-          <nvpair id="status-gluster02.h-last-failure-routetest" name="last-failure-routetest" value="1335791253"/>
-          <nvpair id="status-gluster02.h-last-failure-p_volume_demo.0" name="last-failure-p_volume_demo:0" value="1335791371"/>
-          <nvpair id="status-gluster02.h-last-failure-p_volume_export01.0" name="last-failure-p_volume_export01:0" value="1335791351"/>
           <nvpair id="status-gluster02.h-promoted-p_stateful1.0" name="master-p_stateful1:0" value="10"/>
           <nvpair id="status-gluster02.h-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-gluster02.h-last-failure-p_stateful2.0" name="last-failure-p_stateful2:0" value="1335797394"/>
           <nvpair id="status-gluster02.h-promoted-p_stateful1.1" name="master-p_stateful1:1" value="5"/>
         </instance_attributes>
       </transient_attributes>

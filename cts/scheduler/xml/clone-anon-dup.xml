@@ -124,11 +124,10 @@
         <instance_attributes id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396">
           <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-pingd" name="pingd" value="100"/>
           <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-fail-count-stonith_rackpdu:0" name="fail-count-stonith_rackpdu:0" value="1000000"/>
-          <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-last-failure-stonith_rackpdu:0" name="last-failure-stonith_rackpdu:0" value="1235174838"/>
+          <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-fail-count-stonith_rackpdu:0.start_0" name="fail-count-stonith_rackpdu:0#start_0" value="1000000"/>
+          <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-last-failure-stonith_rackpdu:0.start_0" name="last-failure-stonith_rackpdu:0#start_0" value="1235174838"/>
           <nvpair id="status-promoted-drbd_www:1-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="master-drbd_www:1" value="75"/>
           <nvpair id="status-promoted-drbd_mysql:1-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="master-drbd_mysql:1" value="75"/>
-          <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-last-failure-apache2:0" name="last-failure-apache2:0" value="1235670173"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="f36760d8-d84a-46b2-b452-4c8cac8b3396">
@@ -192,7 +191,6 @@
       <transient_attributes id="f61edb1d-6f49-4ffa-a46a-42ceef796f6e">
         <instance_attributes id="status-f61edb1d-6f49-4ffa-a46a-42ceef796f6e">
           <nvpair id="status-f61edb1d-6f49-4ffa-a46a-42ceef796f6e-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-f61edb1d-6f49-4ffa-a46a-42ceef796f6e-last-failure-mysql-server" name="last-failure-mysql-server" value="1235750234"/>
           <nvpair id="status-f61edb1d-6f49-4ffa-a46a-42ceef796f6e-pingd" name="pingd" value="100"/>
         </instance_attributes>
       </transient_attributes>

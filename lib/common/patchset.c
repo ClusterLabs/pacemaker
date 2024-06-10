@@ -285,7 +285,6 @@ void
 patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
                         bool with_digest)
 {
-    const char *version = NULL;
     char *digest = NULL;
 
     if ((patch == NULL) || (source == NULL) || (target == NULL)
@@ -298,8 +297,7 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
      */
     CRM_LOG_ASSERT(!xml_document_dirty(target));
 
-    version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
-    digest = pcmk__digest_xml(target, true, version);
+    digest = pcmk__digest_xml(target, true);
 
     crm_xml_add(patch, PCMK__XA_DIGEST, digest);
     free(digest);
@@ -810,9 +808,8 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 
     if ((rc == pcmk_ok) && (digest != NULL)) {
         char *new_digest = NULL;
-        char *version = crm_element_value_copy(xml, PCMK_XA_CRM_FEATURE_SET);
 
-        new_digest = pcmk__digest_xml(xml, true, version);
+        new_digest = pcmk__digest_xml(xml, true);
         if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
             crm_info("v%d digest mis-match: expected %s, calculated %s",
                      format, digest, new_digest);
@@ -831,7 +828,6 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
                       format, digest, new_digest);
         }
         free(new_digest);
-        free(version);
     }
     pcmk__xml_free(old);
     return rc;

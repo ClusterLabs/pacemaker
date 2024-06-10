@@ -776,8 +776,8 @@
       </lrm>
       <transient_attributes id="redis-bundle-2">
         <instance_attributes id="status-redis-bundle-2">
-          <nvpair id="status-redis-bundle-2-fail-count-redis" name="fail-count-redis" value="1"/>
-          <nvpair id="status-redis-bundle-2-last-failure-redis" name="last-failure-redis" value="1505143894"/>
+          <nvpair id="status-redis-bundle-2-fail-count-redis.monitor_60000" name="fail-count-redis#monitor_60000" value="1"/>
+          <nvpair id="status-redis-bundle-2-last-failure-redis.monitor_60000" name="last-failure-redis#monitor_60000" value="1505143894"/>
           <nvpair id="status-redis-bundle-2-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>

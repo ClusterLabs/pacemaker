@@ -65,10 +65,10 @@
       <transient_attributes id="fc16-builder">
         <instance_attributes id="status-fc16-builder">
           <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-fc16-builder-fail-count-virt-fencing" name="fail-count-virt-fencing" value="INFINITY"/>
-          <nvpair id="status-fc16-builder-last-failure-virt-fencing" name="last-failure-virt-fencing" value="1332193320"/>
-          <nvpair id="status-fc16-builder-fail-count-A" name="fail-count-A" value="1"/>
-          <nvpair id="status-fc16-builder-last-failure-A" name="last-failure-A" value="1332193424"/>
+          <nvpair id="status-fc16-builder-fail-count-virt-fencing.start_0" name="fail-count-virt-fencing#start_0" value="INFINITY"/>
+          <nvpair id="status-fc16-builder-last-failure-virt-fencing.start_0" name="last-failure-virt-fencing#start_0" value="1332193320"/>
+          <nvpair id="status-fc16-builder-fail-count-A.monitor_30000" name="fail-count-A#monitor_30000" value="1"/>
+          <nvpair id="status-fc16-builder-last-failure-A.monitor_30000" name="last-failure-A#monitor_30000" value="1332193424"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

@@ -111,7 +111,7 @@
       <transient_attributes id="e3aa8547-3d52-47df-a8a3-ca94538a5282">
         <instance_attributes id="instance_attributes.id22655">
           <nvpair id="nvpair.id22662" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id22672" name="fail-count-ocfs2:2" value="4"/>
+          <nvpair id="nvpair.id22672" name="fail-count-ocfs2:2#monitor_10000" value="4"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="e3aa8547-3d52-47df-a8a3-ca94538a5282">

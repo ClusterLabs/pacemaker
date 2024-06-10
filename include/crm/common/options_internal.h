@@ -155,20 +155,6 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__ENV_TRACE_TAGS                "trace_tags"
 #define PCMK__ENV_VALGRIND_ENABLED          "valgrind_enabled"
 
-// @COMPAT Drop at 3.0.0; default is plenty
-#define PCMK__ENV_CIB_TIMEOUT               "cib_timeout"
-
-// @COMPAT Drop at 3.0.0; likely last used in 1.1.24
-#define PCMK__ENV_MCP                       "mcp"
-
-// @COMPAT Drop at 3.0.0; added unused in 1.1.9
-#define PCMK__ENV_QUORUM_TYPE               "quorum_type"
-
-/* @COMPAT Drop at 3.0.0; added to debug shutdown issues when Pacemaker is
- * managed by systemd, but no longer useful.
- */
-#define PCMK__ENV_SHUTDOWN_DELAY            "shutdown_delay"
-
 // @COMPAT Deprecated since 2.1.0
 #define PCMK__OPT_REMOVE_AFTER_STOP         "remove-after-stop"
 

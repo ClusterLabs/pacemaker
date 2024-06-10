@@ -190,10 +190,9 @@ To perform a rolling upgrade, on each node in turn:
    first.
 
 The following table lists compatible versions for all other nodes in the cluster
-when upgrading a cluster node, or for other Pacemaker Remote nodes when
-upgrading a Pacemaker Remote node.
+when upgrading a cluster node.
 
-.. list-table:: **Version Compatibility**
+.. list-table:: **Version Compatibility for Cluster Nodes**
    :class: longtable
    :widths: 1 1
    :header-rows: 1
@@ -209,8 +208,8 @@ upgrading a Pacemaker Remote node.
    * - Pacemaker 0.6.z to 0.7.z
      - Pacemaker 0.6.z
 
-When upgrading a Pacemaker Remote node, cluster nodes must follow different
-compatibility requirements, listed in the table below.
+When upgrading a Pacemaker Remote node, all cluster nodes must be running at
+least the minimum version listed in the table below.
 
 .. list-table:: **Cluster Node Version Compatibility for Pacemaker Remote Nodes**
    :class: longtable

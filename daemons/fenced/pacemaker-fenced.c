@@ -499,8 +499,7 @@ fencer_metadata(void)
                                 "\"stonith\"-class resources");
     const char *desc_long = N_("Instance attributes available for all "
                                "\"stonith\"-class resources and used by "
-                               "Pacemaker's fence daemon, formerly known as "
-                               "stonithd");
+                               "Pacemaker's fence daemon");
 
     return pcmk__daemon_metadata(out, name, desc_short, desc_long,
                                  pcmk__opt_fencing);

@@ -750,7 +750,6 @@ main(int argc, char **argv)
 
     } else if (strcmp(options.cib_action, "md5-sum-versioned") == 0) {
         char *digest = NULL;
-        const char *version = NULL;
 
         if (input == NULL) {
             exit_code = CRM_EX_USAGE;
@@ -759,9 +758,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        version = crm_element_value(input, PCMK_XA_CRM_FEATURE_SET);
-        digest = pcmk__digest_xml(input, true, version);
-        fprintf(stderr, "Versioned (%s) digest: ", version);
+        digest = pcmk__digest_xml(input, true);
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
         goto done;

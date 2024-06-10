@@ -87,8 +87,8 @@
       <transient_attributes id="1">
         <instance_attributes id="status-1">
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-1-fail-count-nfs_snet_ip" name="fail-count-nfs_snet_ip" value="2"/>
-          <nvpair id="status-1-last-failure-nfs_snet_ip" name="last-failure-nfs_snet_ip" value="1509027829"/>
+          <nvpair id="status-1-fail-count-nfs_snet_ip.monitor_10000" name="fail-count-nfs_snet_ip#monitor_10000" value="2"/>
+          <nvpair id="status-1-last-failure-nfs_snet_ip.monitor_10000" name="last-failure-nfs_snet_ip#monitor_10000" value="1509027829"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

@@ -502,11 +502,9 @@
           <nvpair id="status-dresproddns01-cpu_speed" name="cpu_speed" value="5867.00"/>
           <nvpair id="status-dresproddns01-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-dresproddns01-at-ping-sjim" name="at-ping-sjim" value="100"/>
-          <nvpair id="status-dresproddns01-last-failure-re-openfire-lsb.1" name="last-failure-re-openfire-lsb:1" value="1340103682"/>
           <nvpair id="status-dresproddns01-at-ping-sjho" name="at-ping-sjho" value="100"/>
-          <nvpair id="status-dresproddns01-last-failure-re-haproxy-lsb.1" name="last-failure-re-haproxy-lsb:1" value="1343837493"/>
-          <nvpair id="status-dresproddns01-fail-count-re-openfire-lsb.0" name="fail-count-re-openfire-lsb:0" value="1"/>
-          <nvpair id="status-dresproddns01-last-failure-re-openfire-lsb.0" name="last-failure-re-openfire-lsb:0" value="1344986684"/>
+          <nvpair id="status-dresproddns01-fail-count-re-openfire-lsb.0.monitor_15000" name="fail-count-re-openfire-lsb:0#monitor_15000" value="1"/>
+          <nvpair id="status-dresproddns01-last-failure-re-openfire-lsb.0.monitor_15000" name="last-failure-re-openfire-lsb:0#monitor_15000" value="1344986684"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="dresproddns01">
@@ -651,13 +649,8 @@
           <nvpair id="status-dresproddns02-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-dresproddns02-at-ping-sjim" name="at-ping-sjim" value="100"/>
           <nvpair id="status-dresproddns02-at-ping-sjho" name="at-ping-sjho" value="100"/>
-          <nvpair id="status-dresproddns02-last-failure-re-monitoring-lv.1" name="last-failure-re-monitoring-lv:1" value="1340570034"/>
-          <nvpair id="status-dresproddns02-last-failure-re-wesbprod-ip.0" name="last-failure-re-wesbprod-ip:0" value="1340816563"/>
-          <nvpair id="status-dresproddns02-last-failure-re-adproxy-ip.0" name="last-failure-re-adproxy-ip:0" value="1340816575"/>
-          <nvpair id="status-dresproddns02-last-failure-re-haproxy-lsb.0" name="last-failure-re-haproxy-lsb:0" value="1343837532"/>
-          <nvpair id="status-dresproddns02-last-failure-re-wesbprod-ipvs.0" name="last-failure-re-wesbprod-ipvs:0" value="1344248915"/>
-          <nvpair id="status-dresproddns02-fail-count-re-openfire-lsb.1" name="fail-count-re-openfire-lsb:1" value="1"/>
-          <nvpair id="status-dresproddns02-last-failure-re-openfire-lsb.1" name="last-failure-re-openfire-lsb:1" value="1344986592"/>
+          <nvpair id="status-dresproddns02-fail-count-re-openfire-lsb.1.monitor_15000" name="fail-count-re-openfire-lsb:1#monitor_15000" value="1"/>
+          <nvpair id="status-dresproddns02-last-failure-re-openfire-lsb.1.monitor_15000" name="last-failure-re-openfire-lsb:1#monitor_15000" value="1344986592"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="dresproddns02">

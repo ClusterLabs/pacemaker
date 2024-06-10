@@ -344,8 +344,8 @@
           <nvpair id="status-act3-diskcheck_status_internal" name="diskcheck_status_internal" value="normal"/>
           <nvpair id="status-act3-diskcheck_status" name="diskcheck_status" value="normal"/>
           <nvpair id="status-act3-default_ping_set" name="default_ping_set" value="100"/>
-          <nvpair id="status-act3-fail-count-prmExPostgreSQLDB3" name="fail-count-prmExPostgreSQLDB3" value="1"/>
-          <nvpair id="status-act3-last-failure-prmExPostgreSQLDB3" name="last-failure-prmExPostgreSQLDB3" value="1312284379"/>
+          <nvpair id="status-act3-fail-count-prmExPostgreSQLDB3.monitor_5000" name="fail-count-prmExPostgreSQLDB3#monitor_5000" value="1"/>
+          <nvpair id="status-act3-last-failure-prmExPostgreSQLDB3.monitor_5000" name="last-failure-prmExPostgreSQLDB3#monitor_5000" value="1312284379"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

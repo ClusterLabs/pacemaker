@@ -37,8 +37,8 @@
       <transient_attributes id="fc16-builder">
         <instance_attributes id="status-fc16-builder">
           <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-fc16-builder-fail-count-A" name="fail-count-A" value="1"/>
-          <nvpair id="status-fc16-builder-last-failure-A" name="last-failure-A" value="1334242314"/>
+          <nvpair id="status-fc16-builder-fail-count-A.monitor_20000" name="fail-count-A#monitor_20000" value="1"/>
+          <nvpair id="status-fc16-builder-last-failure-A.monitor_20000" name="last-failure-A#monitor_20000" value="1334242314"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

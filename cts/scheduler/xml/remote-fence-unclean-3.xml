@@ -667,7 +667,7 @@
       <transient_attributes id="1">
         <instance_attributes id="status-1">
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-rabbitmq-foo" name="fail-count-overcloud-novacompute-0" value="INFINITY"/>
+          <nvpair id="status-rabbitmq-foo" name="fail-count-overcloud-novacompute-0#start_0" value="INFINITY"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

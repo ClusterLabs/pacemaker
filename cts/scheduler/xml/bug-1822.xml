@@ -98,7 +98,7 @@
         <instance_attributes id="instance_attributes.id22381">
           <nvpair id="nvpair.id22388" name="default_ping_set" value="100"/>
           <nvpair id="nvpair.id22397" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id22407" name="fail-count-promotable_procdctl:0" value="1"/>
+          <nvpair id="nvpair.id22407" name="fail-count-promotable_procdctl:0#monitor_600000" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="lrm.auto-1">
@@ -135,8 +135,8 @@
         <instance_attributes id="instance_attributes.id22931">
           <nvpair id="nvpair.id22938" name="default_ping_set" value="100"/>
           <nvpair id="nvpair.id22947" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id22957" name="fail-count-promotable_procdctl:1" value="1"/>
-          <nvpair id="nvpair.id22966" name="fail-count-promotable_procdctl:0" value="1"/>
+          <nvpair id="nvpair.id22957" name="fail-count-promotable_procdctl:1#monitor_600000" value="1"/>
+          <nvpair id="nvpair.id22966" name="fail-count-promotable_procdctl:0#monitor_600000" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="e38f935d-6059-4540-8679-bc32a8256839">

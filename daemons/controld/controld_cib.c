@@ -212,23 +212,13 @@ do_cib_control(long long action,
 unsigned int
 cib_op_timeout(void)
 {
-    // @COMPAT: Drop env_timeout at 3.0.0
-    static int env_timeout = -1;
-    unsigned int calculated_timeout = 0;
+    unsigned int calculated_timeout = 10U * (pcmk__cluster_num_active_nodes()
+                                             + pcmk__cluster_num_remote_nodes()
+                                             + 1U);
 
-    if (env_timeout == -1) {
-        const char *env = pcmk__env_option(PCMK__ENV_CIB_TIMEOUT);
-
-        pcmk__scan_min_int(env, &env_timeout, MIN_CIB_OP_TIMEOUT);
-        crm_trace("Minimum CIB op timeout: %ds (environment: %s)",
-                  env_timeout, (env? env : "none"));
-    }
-
-    calculated_timeout = 10U * (1U
-                                + pcmk__cluster_num_active_nodes()
-                                + pcmk__cluster_num_remote_nodes());
-    calculated_timeout = QB_MAX(calculated_timeout, env_timeout);
-    crm_trace("Calculated timeout: %us", calculated_timeout);
+    calculated_timeout = QB_MAX(calculated_timeout, MIN_CIB_OP_TIMEOUT);
+    crm_trace("Calculated timeout: %s",
+              pcmk__readable_interval(calculated_timeout * 1000));
 
     if (controld_globals.cib_conn) {
         controld_globals.cib_conn->call_timeout = calculated_timeout;

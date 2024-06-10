@@ -288,11 +288,13 @@ remote_node_up(const char *node_name)
 
     call_opt = crmd_cib_smart_opt();
 
-    /* Delete node's probe_complete attribute. This serves two purposes:
+    /* Delete node's CRM_OP_PROBED attribute. Deleting any attribute ensures
+     * that the attribute manager learns the node is remote. Deletion of this
+     * specfic attribute is a holdover from when it had special meaning.
      *
-     * - @COMPAT DCs < 1.1.14 in a rolling upgrade might use it
-     * - deleting it (or any attribute for that matter) here ensures the
-     *   attribute manager learns the node is remote
+     * @COMPAT Find another way to tell attrd that the node is remote, without
+     * risking deletion or overwrite of an arbitrary attribute. Then work on
+     * deprecating CRM_OP_PROBED.
      */
     update_attrd(node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
 

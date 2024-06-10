@@ -121,7 +121,7 @@
         <instance_attributes id="instance_attributes.id22727">
           <nvpair id="nvpair.id22734" name="pingd" value="400"/>
           <nvpair id="nvpair.id22743" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id22752" name="fail-count-IPaddr0" value="1"/>
+          <nvpair id="nvpair.id22752" name="fail-count-IPaddr0#monitor_5000" value="1"/>
         </instance_attributes>
         <instance_attributes id="instance_attributes.id22764">
           <nvpair id="nvpair.id22770" name="master-drbd0:0" value="75"/>

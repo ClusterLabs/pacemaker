@@ -59,8 +59,8 @@
       </lrm>
       <transient_attributes id="yingying.site">
         <instance_attributes id="yingying.site">
-          <nvpair id="fail-count-rsc4-yingying.site" name="fail-count-rsc4" value="1"/>
-          <nvpair id="last-failure-rsc4-yingying.site" name="last-failure-rsc4" value="1400821937"/>
+          <nvpair id="fail-count-rsc4-yingying.site.monitor_10000" name="fail-count-rsc4#monitor_10000" value="1"/>
+          <nvpair id="last-failure-rsc4-yingying.site.monitor_10000" name="last-failure-rsc4#monitor_10000" value="1400821937"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

@@ -342,10 +342,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         const char *digest = crm_element_value(req, PCMK__XA_DIGEST);
 
         if (digest) {
-            const char *version =
-                pcmk__s(crm_element_value(req, PCMK_XA_CRM_FEATURE_SET),
-                        CRM_FEATURE_SET);
-            char *digest_verify = pcmk__digest_xml(input, true, version);
+            char *digest_verify = pcmk__digest_xml(input, true);
 
             if (!pcmk__str_eq(digest_verify, digest, pcmk__str_casei)) {
                 crm_err("Digest mis-match on replace from %s: %s vs. %s (expected)", peer,

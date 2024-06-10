@@ -431,7 +431,6 @@
         <instance_attributes id="status-cvmh01">
           <nvpair id="status-cvmh01-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-cvmh01-ethmonitor-ib0" name="ethmonitor-ib0" value="1"/>
-          <nvpair id="status-cvmh01-last-failure-vm-swbuildsl6" name="last-failure-vm-swbuildsl6" value="1368727987"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="cvmh01">

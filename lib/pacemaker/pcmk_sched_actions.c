@@ -1245,25 +1245,25 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     crm_xml_add_int(xml_op, PCMK__XA_OP_STATUS, op->op_status);
     crm_xml_add_ms(xml_op, PCMK_META_INTERVAL, op->interval_ms);
 
-    if (compare_version("2.1", caller_version) <= 0) {
-        if (op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
-            crm_trace("Timing data (" PCMK__OP_FMT
-                      "): last=%u change=%u exec=%u queue=%u",
-                      op->rsc_id, op->op_type, op->interval_ms,
-                      op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
+    if ((op->t_run > 0) || (op->t_rcchange > 0) || (op->exec_time > 0)
+        || (op->queue_time > 0)) {
 
-            if ((op->interval_ms != 0) && (op->t_rcchange != 0)) {
-                // Recurring ops may have changed rc after initial run
-                crm_xml_add_ll(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                               (long long) op->t_rcchange);
-            } else {
-                crm_xml_add_ll(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                               (long long) op->t_run);
-            }
+        crm_trace("Timing data (" PCMK__OP_FMT "): "
+                  "last=%u change=%u exec=%u queue=%u",
+                  op->rsc_id, op->op_type, op->interval_ms,
+                  op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 
-            crm_xml_add_int(xml_op, PCMK_XA_EXEC_TIME, op->exec_time);
-            crm_xml_add_int(xml_op, PCMK_XA_QUEUE_TIME, op->queue_time);
+        if ((op->interval_ms > 0) && (op->t_rcchange > 0)) {
+            // Recurring ops may have changed rc after initial run
+            crm_xml_add_ll(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                           (long long) op->t_rcchange);
+        } else {
+            crm_xml_add_ll(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                           (long long) op->t_run);
         }
+
+        crm_xml_add_int(xml_op, PCMK_XA_EXEC_TIME, op->exec_time);
+        crm_xml_add_int(xml_op, PCMK_XA_QUEUE_TIME, op->queue_time);
     }
 
     if (pcmk__str_any_of(op->op_type, PCMK_ACTION_MIGRATE_TO,

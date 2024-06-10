@@ -188,8 +188,8 @@
         <instance_attributes id="status-act1">
           <nvpair id="status-act1-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-act1-default_ping_set" name="default_ping_set" value="100"/>
-          <nvpair id="status-act1-fail-count-prmPingd.0" name="fail-count-prmPingd:0" value="1"/>
-          <nvpair id="status-act1-last-failure-prmPingd.0" name="last-failure-prmPingd:0" value="1310451222"/>
+          <nvpair id="status-act1-fail-count-prmPingd.0.monitor_10000" name="fail-count-prmPingd:0#monitor_10000" value="1"/>
+          <nvpair id="status-act1-last-failure-prmPingd.0.monitor_10000" name="last-failure-prmPingd:0#monitor_10000" value="1310451222"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="act1">

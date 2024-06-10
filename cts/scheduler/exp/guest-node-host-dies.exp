@@ -625,7 +625,7 @@
   <synapse id="38">
     <action_set>
       <pseudo_event id="39" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1">
-        <attributes CRM_meta_last_failure_lxc_ms="1458766329" CRM_meta_master_lxc_ms="10" CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_master_lxc_ms="10" CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="lxc1"/>
         </downed>

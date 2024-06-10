@@ -87,8 +87,8 @@
     <node_state id="103" uname="pcmk-3" crmd="offline" join="down" crm-debug-origin="do_state_transition">
       <transient_attributes id="103">
         <instance_attributes id="status-103">
-          <nvpair id="status-103-last-failure-clvm" name="last-failure-clvm" value="1371014555"/>
-          <nvpair id="status-103-fail-count-clvm" name="fail-count-clvm" value="INFINITY"/>
+          <nvpair id="status-103-last-failure-clvm.start_0" name="last-failure-clvm#start_0" value="1371014555"/>
+          <nvpair id="status-103-fail-count-clvm.start_0" name="fail-count-clvm#start_0" value="INFINITY"/>
           <nvpair id="status-103-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-103-shutdown" name="shutdown" value="1371014551"/>
         </instance_attributes>

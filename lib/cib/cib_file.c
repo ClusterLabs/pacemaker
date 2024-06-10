@@ -329,7 +329,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     if (rc != pcmk_ok) {
         return rc;
     }
-    crm_xml_add(request, PCMK_XE_ACL_TARGET, user_name);
+    crm_xml_add(request, PCMK__XA_ACL_TARGET, user_name);
     crm_xml_add(request, PCMK__XA_CIB_CLIENTID, private->id);
 
     if (pcmk_is_set(call_options, cib_transaction)) {

@@ -2927,47 +2927,50 @@ function test_acls() {
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.acls.xml.XXXXXXXXXX)
 
-    create_shadow_cib --create-empty pacemaker-1.3
+    create_shadow_cib --create-empty
 
     cat <<EOF > "$TMPXML"
     <acls>
-      <acl_user id="l33t-haxor">
-        <deny id="crook-nothing" xpath="/cib"/>
-      </acl_user>
-      <acl_user id="niceguy">
-        <role_ref id="observer"/>
-      </acl_user>
-      <acl_user id="bob">
-        <role_ref id="admin"/>
-      </acl_user>
-      <acl_user id="joe">
-        <role_ref id="super_user"/>
-      </acl_user>
-      <acl_user id="mike">
-        <role_ref id="rsc_writer"/>
-      </acl_user>
-      <acl_user id="chris">
-        <role_ref id="rsc_denied"/>
-      </acl_user>
+      <acl_target id="l33t-haxor">
+        <role id="nothing"/>
+      </acl_target>
+      <acl_target id="niceguy">
+        <role id="observer"/>
+      </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
+      <acl_target id="joe">
+        <role id="super_user"/>
+      </acl_target>
+      <acl_target id="mike">
+        <role id="rsc_writer"/>
+      </acl_target>
+      <acl_target id="chris">
+        <role id="rsc_denied"/>
+      </acl_target>
+      <acl_role id="nothing">
+        <acl_permission id="nothing-deny" kind="deny" xpath="/cib"/>
+      </acl_role>
       <acl_role id="observer">
-        <read id="observer-read-1" xpath="/cib"/>
-        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
-        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
-        <read id="admin-read-1" xpath="/cib"/>
-        <write id="admin-write-1" xpath="//resources"/>
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_role id="super_user">
-        <write id="super_user-write-1" xpath="/cib"/>
+        <acl_permission id="super_user-write-1" kind="write" xpath="/cib"/>
       </acl_role>
       <acl_role id="rsc_writer">
-        <deny id="rsc-writer-deny-1" xpath="/cib"/>
-        <write id="rsc-writer-write-1" xpath="//resources"/>
+        <acl_permission id="rsc-writer-deny-1" kind="deny" xpath="/cib"/>
+        <acl_permission id="rsc-writer-write-1" kind="write" xpath="//resources"/>
       </acl_role>
       <acl_role id="rsc_denied">
-        <write id="rsc-denied-write-1" xpath="/cib"/>
-        <deny id="rsc-denied-deny-1" xpath="//resources"/>
+        <acl_permission id="rsc-denied-write-1" kind="write" xpath="/cib"/>
+        <acl_permission id="rsc-denied-deny-1" kind="deny" xpath="//resources"/>
       </acl_role>
     </acls>
 EOF
@@ -2984,29 +2987,59 @@ EOF
     cmd="crm_attribute -n no-quorum-policy -v ignore"
     test_assert $CRM_EX_OK
 
-    desc="New ACL"
-    cmd="cibadmin --create -o acls --xml-text '<acl_user id=\"badidea\"><read id=\"badidea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    cat <<EOF > "$TMPXML"
+    <acl_role id="badidea-role">
+      <acl_permission id="badidea-resources" kind="read"
+                      xpath="//meta_attributes"/>
+    </acl_role>
+EOF
+
+    desc="New ACL role"
+    cmd="cibadmin --create -o acls --xml-file $TMPXML"
     test_assert $CRM_EX_OK
 
-    desc="Another ACL"
-    cmd="cibadmin --create -o acls --xml-text '<acl_user id=\"betteridea\"><read id=\"betteridea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    cat <<EOF > "$TMPXML"
+    <acl_target id="badidea">
+      <role id="badidea-role"/>
+    </acl_target>
+EOF
+
+    desc="New ACL target"
+    cmd="cibadmin --create -o acls --xml-file $TMPXML"
     test_assert $CRM_EX_OK
+
+    cat <<EOF > "$TMPXML"
+    <acl_role id="betteridea-role">
+      <acl_permission id="betteridea-resources" kind="read"
+                      xpath="//meta_attributes"/>
+    </acl_role>
+EOF
+
+    desc="Another ACL role"
+    cmd="cibadmin --create -o acls --xml-file $TMPXML"
+    test_assert $CRM_EX_OK
+
+    cat <<EOF > "$TMPXML"
+    <acl_target id="betteridea">
+      <role id="betteridea-role"/>
+    </acl_target>
+EOF
+
+    desc="Another ACL target"
+    cmd="cibadmin --create -o acls --xml-file $TMPXML"
+    test_assert $CRM_EX_OK
+
+    cat <<EOF > "$TMPXML"
+    <acl_role id="betteridea-role">
+      <acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/>
+      <acl_permission id="betteridea-resources" kind="read"
+                      xpath="//meta_attributes"/>
+    </acl_role>
+EOF
 
     desc="Updated ACL"
-    cmd="cibadmin --replace -o acls --xml-text '<acl_user id=\"betteridea\"><deny id=\"betteridea-nothing\" xpath=\"/cib\"/><read id=\"betteridea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    cmd="cibadmin --replace -o acls --xml-file $TMPXML"
     test_assert $CRM_EX_OK
-
-    test_acl_loop "$TMPXML"
-
-    printf "\n\n    !#!#!#!#! Upgrading to latest CIB schema and re-testing !#!#!#!#!\n"
-    printf "\nUpgrading to latest CIB schema and re-testing\n" 1>&2
-
-    export CIB_user=root
-    desc="$CIB_user: Upgrade to latest CIB schema"
-    cmd="cibadmin --upgrade --force -V"
-    test_assert $CRM_EX_OK
-
-    reset_shadow_cib_version
 
     test_acl_loop "$TMPXML"
 

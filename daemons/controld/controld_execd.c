@@ -1073,9 +1073,6 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     /* Now delete the copy in the CIB */
     controld_delete_node_state(lrm_state->node_name, controld_section_lrm,
                                cib_none);
-
-    // @COMPAT DCs < 1.1.14 need this deleted (in case it was explicitly false)
-    update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 }
 
 /*!
@@ -1300,24 +1297,6 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
             g_hash_table_remove(lrm_state->active_ops, op_id);
         }
         free(op_id);
-
-    } else {
-        /* No ack is needed since abcdaa8, but peers with older versions
-         * in a rolling upgrade need one. We didn't bump the feature set
-         * at that commit, so we can only compare against the previous
-         * CRM version (3.0.8). If any peers have feature set 3.0.9 but
-         * not abcdaa8, they will time out waiting for the ack (no
-         * released versions of Pacemaker are affected).
-         */
-        const char *peer_version = crm_element_value(params,
-                                                     PCMK_XA_CRM_FEATURE_SET);
-
-        if (compare_version(peer_version, "3.0.8") <= 0) {
-            crm_info("Sending compatibility ack for %s cancellation to %s (CRM version %s)",
-                     op_key, from_host, peer_version);
-            send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
-                             from_host, from_sys);
-        }
     }
 
     free(op_key);
@@ -1467,19 +1446,6 @@ do_lrm_invoke(long long action,
     if (pcmk__str_eq(crm_op, CRM_OP_LRM_FAIL, pcmk__str_none)) {
         fail_lrm_resource(input->xml, lrm_state, user_name, from_host,
                           from_sys);
-
-    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_REFRESH, pcmk__str_none)) {
-        /* @COMPAT This can only be sent by crm_resource --refresh on a
-         * Pacemaker Remote node running Pacemaker 1.1.9, which is extremely
-         * unlikely. It previously would cause the controller to re-write its
-         * resource history to the CIB. Just ignore it.
-         */
-        crm_notice("Ignoring refresh request from Pacemaker Remote 1.1.9 node");
-
-    // @COMPAT DCs <1.1.14 in a rolling upgrade might schedule this op
-    } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_none)) {
-        update_attrd(lrm_state->node_name, CRM_OP_PROBED, PCMK_VALUE_TRUE,
-                     user_name, is_remote_node);
 
     } else if (pcmk__str_eq(crm_op, CRM_OP_REPROBE, pcmk__str_none)
                || pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {

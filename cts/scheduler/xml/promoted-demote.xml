@@ -186,8 +186,8 @@
         <instance_attributes id="instance_attributes.id23074">
           <nvpair id="nvpair.id23081" name="probe_complete" value="true"/>
           <nvpair id="nvpair.id23090" name="pingd" value="200"/>
-          <nvpair id="nvpair.id23099" name="fail-count-named_drbd_node:0" value="2"/>
-          <nvpair id="nvpair.id23109" name="fail-count-cyrus_drbd_node:0" value="2"/>
+          <nvpair id="nvpair.id23099" name="fail-count-named_drbd_node:0#monitor_10000" value="2"/>
+          <nvpair id="nvpair.id23109" name="fail-count-cyrus_drbd_node:0#monitor_10000" value="2"/>
         </instance_attributes>
         <instance_attributes id="instance_attributes.id23120">
           <nvpair id="nvpair.id23127" name="master-named_drbd_node:0" value="75"/>

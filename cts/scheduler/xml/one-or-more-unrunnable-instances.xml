@@ -1223,9 +1223,7 @@
         <instance_attributes id="status-1">
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-1-promoted-redis" name="master-redis" value="1000"/>
-          <nvpair id="status-1-last-failure-galera" name="last-failure-galera" value="1432144180"/>
           <nvpair id="status-1-rmq-node-attr-rabbitmq-server" name="rmq-node-attr-rabbitmq-server" value="rabbit@rdo7-node1"/>
-          <nvpair id="status-1-last-failure-mrg-08" name="last-failure-mrg-08" value="1432146884"/>
           <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-1-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>
@@ -1517,8 +1515,6 @@
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-2-rmq-node-attr-rabbitmq-server" name="rmq-node-attr-rabbitmq-server" value="rabbit@rdo7-node2"/>
           <nvpair id="status-2-promoted-redis" name="master-redis" value="1"/>
-          <nvpair id="status-2-last-failure-galera" name="last-failure-galera" value="1432145923"/>
-          <nvpair id="status-2-last-failure-mrg-08" name="last-failure-mrg-08" value="1432154266"/>
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-2-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>
@@ -1812,7 +1808,6 @@
           <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3-promoted-redis" name="master-redis" value="1"/>
           <nvpair id="status-3-rmq-node-attr-rabbitmq-server" name="rmq-node-attr-rabbitmq-server" value="rabbit@rdo7-node3"/>
-          <nvpair id="status-3-last-failure-mrg-08" name="last-failure-mrg-08" value="1432154324"/>
           <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-3-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>

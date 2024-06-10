@@ -51,7 +51,7 @@
       <transient_attributes id="transient_attributes.auto-1">
         <instance_attributes id="instance_attributes.id22034">
           <nvpair id="nvpair.id22041" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id22050" name="fail-count-resource_idvscommon" value="5"/>
+          <nvpair id="nvpair.id22050" name="fail-count-resource_idvscommon#monitor_30000" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="lrm.auto-1">
@@ -88,7 +88,7 @@
       <transient_attributes id="transient_attributes.auto-2">
         <instance_attributes id="instance_attributes.id22502">
           <nvpair id="nvpair.id22509" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id22518" name="fail-count-resource_idvscommon" value="8"/>
+          <nvpair id="nvpair.id22518" name="fail-count-resource_idvscommon#monitor_30000" value="8"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

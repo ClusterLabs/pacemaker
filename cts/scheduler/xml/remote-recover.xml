@@ -103,7 +103,6 @@
       <transient_attributes id="rhel7-alt4">
         <instance_attributes id="status-rhel7-alt4">
           <nvpair id="status-rhel7-alt4-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-rhel7-alt4-last-failure-fake" name="last-failure-fake" value="1411503989"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

@@ -31,7 +31,7 @@
  * --------  ---------  -------------------
  *     1       1.1.11   PCMK__ATTRD_CMD_UPDATE (PCMK__XA_ATTR_NAME only),
  *                      PCMK__ATTRD_CMD_PEER_REMOVE, PCMK__ATTRD_CMD_REFRESH,
- *                      PCMK__ATTRD_CMD_FLUSH, PCMK__ATTRD_CMD_SYNC_RESPONSE
+ *                      "flush", PCMK__ATTRD_CMD_SYNC_RESPONSE
  *     1       1.1.13   PCMK__ATTRD_CMD_UPDATE (with PCMK__XA_ATTR_REGEX),
  *                      PCMK__ATTRD_CMD_QUERY
  *     1       1.1.15   PCMK__ATTRD_CMD_UPDATE_BOTH,
@@ -42,8 +42,9 @@
  *                      message
  *     5       2.1.5    Peers can request confirmation of a sent message
  *     6       2.1.7    PCMK__ATTRD_CMD_PEER_REMOVE supports PCMK__XA_REAP
+ *     7       3.0.0    "flush" support dropped
  */
-#define ATTRD_PROTOCOL_VERSION "6"
+#define ATTRD_PROTOCOL_VERSION "7"
 
 #define ATTRD_SUPPORTS_MULTI_MESSAGE(x) ((x) >= 4)
 #define ATTRD_SUPPORTS_CONFIRMATION(x)  ((x) >= 5)
@@ -77,19 +78,13 @@ int attrd_expand_value(const char *value, const char *old_value);
 
 /* regular expression to clear failure of all operations for one resource
  * (format takes resource name)
- *
- * @COMPAT attributes set < 1.1.17:
- * also match older attributes that do not have the operation part
  */
-#define ATTRD_RE_CLEAR_ONE ATTRD_RE_CLEAR_ALL "%s(#.+_[0-9]+)?$"
+#define ATTRD_RE_CLEAR_ONE ATTRD_RE_CLEAR_ALL "%s#.+_[0-9]+$"
 
 /* regular expression to clear failure of one operation for one resource
  * (format takes resource name, operation name, and interval)
- *
- * @COMPAT attributes set < 1.1.17:
- * also match older attributes that do not have the operation part
  */
-#define ATTRD_RE_CLEAR_OP ATTRD_RE_CLEAR_ALL "%s(#%s_%u)?$"
+#define ATTRD_RE_CLEAR_OP ATTRD_RE_CLEAR_ALL "%s#%s_%u$"
 
 int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
                         guint interval_ms);

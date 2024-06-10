@@ -129,10 +129,10 @@
       <transient_attributes id="2">
         <instance_attributes id="status-2">
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-2-fail-count-container1" name="fail-count-container1" value="1"/>
-          <nvpair id="status-2-last-failure-container1" name="last-failure-container1" value="1361562571"/>
-          <nvpair id="status-2-fail-count-lxc1" name="fail-count-lxc1" value="1"/>
-          <nvpair id="status-2-last-failure-lxc1" name="last-failure-lxc1" value="1361563080"/>
+          <nvpair id="status-2-fail-count-container1.asyncmon_0" name="fail-count-container1#asyncmon_0" value="1"/>
+          <nvpair id="status-2-last-failure-container1.asyncmon_0" name="last-failure-container1#asyncmon_0" value="1361562571"/>
+          <nvpair id="status-2-fail-count-lxc1.asyncmon_0" name="fail-count-lxc1#asyncmon_0" value="1"/>
+          <nvpair id="status-2-last-failure-lxc1.asyncmon_0" name="last-failure-lxc1#asyncmon_0" value="1361563080"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="2">

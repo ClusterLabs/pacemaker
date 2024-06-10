@@ -190,9 +190,8 @@
       <transient_attributes id="hex-0">
         <instance_attributes id="status-hex-0">
           <nvpair id="status-hex-0-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-hex-0-last-failure-vg1.0" name="last-failure-vg1:0" value="1311185706"/>
-          <nvpair id="status-hex-0-fail-count-vm-01" name="fail-count-vm-01" value="INFINITY"/>
-          <nvpair id="status-hex-0-last-failure-vm-01" name="last-failure-vm-01" value="1311186719"/>
+          <nvpair id="status-hex-0-fail-count-vm-01.start_0" name="fail-count-vm-01#start_0" value="INFINITY"/>
+          <nvpair id="status-hex-0-last-failure-vm-01.start_0" name="last-failure-vm-01#start_0" value="1311186719"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -200,8 +199,6 @@
       <transient_attributes id="hex-9">
         <instance_attributes id="status-hex-9">
           <nvpair id="status-hex-9-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-hex-9-last-failure-vg1.0" name="last-failure-vg1:0" value="1311185255"/>
-          <nvpair id="status-hex-9-last-failure-vg1.1" name="last-failure-vg1:1" value="1311185706"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="hex-9">

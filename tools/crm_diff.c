@@ -129,13 +129,11 @@ apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
     }
 
     if (output != NULL) {
-        const char *version;
         char *buffer;
 
         print_patch(output);
 
-        version = crm_element_value(output, PCMK_XA_CRM_FEATURE_SET);
-        buffer = pcmk__digest_xml(output, true, version);
+        buffer = pcmk__digest_xml(output, true);
         crm_trace("Digest: %s", pcmk__s(buffer, "<null>\n"));
         free(buffer);
         pcmk__xml_free(output);

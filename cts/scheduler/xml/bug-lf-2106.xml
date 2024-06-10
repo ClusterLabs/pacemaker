@@ -386,8 +386,8 @@
         <instance_attributes id="status-cl-virt-1">
           <nvpair id="status-cl-virt-1-pingd" name="pingd" value="3"/>
           <nvpair id="status-cl-virt-1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-cl-virt-1-fail-count-pingd:0" name="fail-count-pingd:0" value="1"/>
-          <nvpair id="status-cl-virt-1-last-failure-pingd:0" name="last-failure-pingd:0" value="1239009742"/>
+          <nvpair id="status-cl-virt-1-fail-count-pingd:0.monitor_30000" name="fail-count-pingd:0#monitor_30000" value="1"/>
+          <nvpair id="status-cl-virt-1-last-failure-pingd:0.monitor_30000" name="last-failure-pingd:0#monitor_30000" value="1239009742"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -472,8 +472,8 @@
           <nvpair id="status-promoted-drbd-medomus-cvs:0-cl-virt-2" name="master-drbd-medomus-cvs:0" value="75"/>
           <nvpair id="status-promoted-drbd-infotos:0-cl-virt-2" name="master-drbd-infotos:0" value="75"/>
           <nvpair id="status-cl-virt-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-cl-virt-2-fail-count-pingd:0" name="fail-count-pingd:0" value="1"/>
-          <nvpair id="status-cl-virt-2-last-failure-pingd:0" name="last-failure-pingd:0" value="1239009742"/>
+          <nvpair id="status-cl-virt-2-fail-count-pingd:0.monitor_30000" name="fail-count-pingd:0#monitor_30000" value="1"/>
+          <nvpair id="status-cl-virt-2-last-failure-pingd:0.monitor_30000" name="last-failure-pingd:0#monitor_30000" value="1239009742"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

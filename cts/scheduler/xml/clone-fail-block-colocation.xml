@@ -113,9 +113,8 @@
       <transient_attributes id="DEM-1">
         <instance_attributes id="status-DEM-1">
           <nvpair id="status-DEM-1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-DEM-1-last-failure-d_bird" name="last-failure-d_bird" value="1375341129"/>
-          <nvpair id="status-DEM-1-fail-count-d_bird6" name="fail-count-d_bird6" value="1"/>
-          <nvpair id="status-DEM-1-last-failure-d_bird6" name="last-failure-d_bird6" value="1375341530"/>
+          <nvpair id="status-DEM-1-fail-count-d_bird6.monitor_10000" name="fail-count-d_bird6#monitor_10000" value="1"/>
+          <nvpair id="status-DEM-1-last-failure-d_bird6.monitor_10000" name="last-failure-d_bird6#monitor_10000" value="1375341530"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="DEM-1">
@@ -156,7 +155,6 @@
       <transient_attributes id="DEM-2">
         <instance_attributes id="status-DEM-2">
           <nvpair id="status-DEM-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-DEM-2-last-failure-d_bird" name="last-failure-d_bird" value="1375341085"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="DEM-2">

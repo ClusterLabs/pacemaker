@@ -74,7 +74,7 @@
         <instance_attributes id="instance_attributes.id22261">
           <nvpair id="nvpair.id22268" name="pingd10220" value="750"/>
           <nvpair id="nvpair.id22277" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id22286" name="fail-count-drbd1:0" value="1"/>
+          <nvpair id="nvpair.id22286" name="fail-count-drbd1:0#monitor_11000" value="1"/>
         </instance_attributes>
         <instance_attributes id="instance_attributes.id22298">
           <nvpair id="nvpair.id22305" name="master-drbd1:0" value="10"/>
