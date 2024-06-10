@@ -173,53 +173,28 @@ enum pcmk__action_flags {
     pcmk__action_on_dc                  = (UINT32_C(1) << 16),
 };
 
-// Possible responses to a resource action failure
+/* Possible responses to a resource action failure
+ *
+ * The order is significant; the values are in order of increasing severity so
+ * that they can be compared with less than and greater than.
+ */
 enum pcmk__on_fail {
-    /* The order is (partially) significant here; the values from
-     * pcmk__on_fail_ignore through pcmk__on_fail_fence_node are in order of
-     * increasing severity.
-     *
-     * @TODO   The values should be ordered and numbered per the "TODO" comments
-     *         below, so all values are in order of severity and there is room for
-     *         future additions. For now, we just use a function to compare the
-     *         values specially, but we should arrange things properly so we can
-     *         compare with less than and greater than.
-     */
+    pcmk__on_fail_ignore,               // Act as if failure didn't happen
+    pcmk__on_fail_demote,               // Demote if promotable, else stop
+    pcmk__on_fail_restart,              // Restart resource
 
-    // @TODO Define as 10
-    pcmk__on_fail_ignore            = 0,    // Act as if failure didn't happen
-
-    // @TODO Define as 30
-    pcmk__on_fail_restart           = 1,    // Restart resource
-
-    // @TODO Define as 60
-    pcmk__on_fail_ban               = 2,    // Ban resource from current node
-
-    // @TODO Define as 70
-    pcmk__on_fail_block             = 3,    // Treat resource as unmanaged
-
-    // @TODO Define as 80
-    pcmk__on_fail_stop              = 4,    // Stop resource and leave stopped
-
-    // @TODO Define as 90
-    pcmk__on_fail_standby_node      = 5,    // Put resource's node in standby
-
-    // @TODO Define as 100
-    pcmk__on_fail_fence_node        = 6,    // Fence resource's node
-
-    // @TODO Define as 50
-    pcmk__on_fail_restart_container = 7,    // Restart resource's container
-
-    // @TODO Define as 40
-    /*
-     * Fence the remote node created by the resource if fencing is enabled,
+    /* Fence the remote node created by the resource if fencing is enabled,
      * otherwise attempt to restart the resource (used internally for some
      * remote connection failures).
      */
-    pcmk__on_fail_reset_remote      = 8,
+    pcmk__on_fail_reset_remote,
 
-    // @TODO Define as 20
-    pcmk__on_fail_demote            = 9,    // Demote if promotable, else stop
+    pcmk__on_fail_restart_container,    // Restart resource's container
+    pcmk__on_fail_ban,                  // Ban resource from current node
+    pcmk__on_fail_block,                // Treat resource as unmanaged
+    pcmk__on_fail_stop,                 // Stop resource and leave stopped
+    pcmk__on_fail_standby_node,         // Put resource's node in standby
+    pcmk__on_fail_fence_node,           // Fence resource's node
 };
 
 // Implementation of pcmk_action_t

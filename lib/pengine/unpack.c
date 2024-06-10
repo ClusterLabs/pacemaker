@@ -3570,96 +3570,6 @@ last_change_str(const xmlNode *xml_op)
 
 /*!
  * \internal
- * \brief Compare two on-fail values
- *
- * \param[in] first   One on-fail value to compare
- * \param[in] second  The other on-fail value to compare
- *
- * \return A negative number if second is more severe than first, zero if they
- *         are equal, or a positive number if first is more severe than second.
- * \note This is only needed until the pcmk__on_fail values can be
- *       renumbered at the next API compatibility break.
- */
-static int
-cmp_on_fail(enum pcmk__on_fail first, enum pcmk__on_fail second)
-{
-    switch (first) {
-        case pcmk__on_fail_demote:
-            switch (second) {
-                case pcmk__on_fail_ignore:
-                    return 1;
-                case pcmk__on_fail_demote:
-                    return 0;
-                default:
-                    return -1;
-            }
-            break;
-
-        case pcmk__on_fail_reset_remote:
-            switch (second) {
-                case pcmk__on_fail_ignore:
-                case pcmk__on_fail_demote:
-                case pcmk__on_fail_restart:
-                    return 1;
-                case pcmk__on_fail_reset_remote:
-                    return 0;
-                default:
-                    return -1;
-            }
-            break;
-
-        case pcmk__on_fail_restart_container:
-            switch (second) {
-                case pcmk__on_fail_ignore:
-                case pcmk__on_fail_demote:
-                case pcmk__on_fail_restart:
-                case pcmk__on_fail_reset_remote:
-                    return 1;
-                case pcmk__on_fail_restart_container:
-                    return 0;
-                default:
-                    return -1;
-            }
-            break;
-
-        default:
-            break;
-    }
-    switch (second) {
-        case pcmk__on_fail_demote:
-            return (first == pcmk__on_fail_ignore)? -1 : 1;
-
-        case pcmk__on_fail_reset_remote:
-            switch (first) {
-                case pcmk__on_fail_ignore:
-                case pcmk__on_fail_demote:
-                case pcmk__on_fail_restart:
-                    return -1;
-                default:
-                    return 1;
-            }
-            break;
-
-        case pcmk__on_fail_restart_container:
-            switch (first) {
-                case pcmk__on_fail_ignore:
-                case pcmk__on_fail_demote:
-                case pcmk__on_fail_restart:
-                case pcmk__on_fail_reset_remote:
-                    return -1;
-                default:
-                    return 1;
-            }
-            break;
-
-        default:
-            break;
-    }
-    return first - second;
-}
-
-/*!
- * \internal
  * \brief Ban a resource (or its clone if an anonymous instance) from all nodes
  *
  * \param[in,out] rsc  Resource to ban
@@ -3783,7 +3693,7 @@ unpack_rsc_op_failure(struct action_history *history,
 
     free(last_change_s);
 
-    if (cmp_on_fail(*on_fail, config_on_fail) < 0) {
+    if (*on_fail < config_on_fail) {
         pcmk__rsc_trace(history->rsc, "on-fail %s -> %s for %s",
                         pcmk__on_fail_text(*on_fail),
                         pcmk__on_fail_text(config_on_fail), history->key);
@@ -4968,7 +4878,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
         record_failed_op(&history);
 
         if ((failure_strategy == pcmk__on_fail_restart_container)
-            && cmp_on_fail(*on_fail, pcmk__on_fail_restart) <= 0) {
+            && (*on_fail <= pcmk__on_fail_restart)) {
             *on_fail = failure_strategy;
         }
 
