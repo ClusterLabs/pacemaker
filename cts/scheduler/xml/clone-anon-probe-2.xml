@@ -59,9 +59,9 @@
       <lrm id="lrm.auto-1">
         <lrm_resources id="lrm_resources.id22114">
           <lrm_resource id="drbd0:0" type="drbd" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="drbd0-0_monitor_0" operation="monitor" transition-key="3:0:7:d6a6782c-9da6-4670-912b-c091b6b711dc" transition-magic="0:7;3:0:7:d6a6782c-9da6-4670-912b-c091b6b711dc" call-id="2" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-            <lrm_rsc_op id="drbd0-0_start_0" operation="start" transition-key="5:2:0:d6a6782c-9da6-4670-912b-c091b6b711dc" transition-magic="0:0;5:2:0:d6a6782c-9da6-4670-912b-c091b6b711dc" call-id="7" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
-            <lrm_rsc_op id="drbd0-0_post_notify_start_0" operation="notify" transition-key="53:13:0:d6a6782c-9da6-4670-912b-c091b6b711dc" transition-magic="0:0;53:13:0:d6a6782c-9da6-4670-912b-c091b6b711dc" call-id="40" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd0-0_monitor_0" operation="monitor" transition-key="3:0:7:d6a6782c-9da6-4670-912b-c091b6b711dc" transition-magic="0:7;3:0:7:d6a6782c-9da6-4670-912b-c091b6b711dc" call-id="2" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e" on_node="mysql-02"/>
+            <lrm_rsc_op id="drbd0-0_start_0" operation="start" transition-key="5:2:0:d6a6782c-9da6-4670-912b-c091b6b711dc" transition-magic="0:0;5:2:0:d6a6782c-9da6-4670-912b-c091b6b711dc" call-id="7" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e" on_node="mysql-02"/>
+            <lrm_rsc_op id="drbd0-0_post_notify_start_0" operation="notify" transition-key="53:13:0:d6a6782c-9da6-4670-912b-c091b6b711dc" transition-magic="0:0;53:13:0:d6a6782c-9da6-4670-912b-c091b6b711dc" call-id="40" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e" on_node="mysql-02"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -79,7 +79,7 @@
       <lrm id="lrm.auto-2">
         <lrm_resources id="lrm_resources.id22289">
           <lrm_resource id="drbd0:0" type="drbd" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="drbd0-0_monitor_0" operation="monitor" transition-key="4:17:7:d6a6782c-9da6-4670-912b-c091b6b711dc" transition-magic="0:7;4:17:7:d6a6782c-9da6-4670-912b-c091b6b711dc" call-id="29" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e"/>
+            <lrm_rsc_op id="drbd0-0_monitor_0" operation="monitor" transition-key="4:17:7:d6a6782c-9da6-4670-912b-c091b6b711dc" transition-magic="0:7;4:17:7:d6a6782c-9da6-4670-912b-c091b6b711dc" call-id="29" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="c0e018b73fdf522b6cdd355e125af15e" on_node="mysql-01"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

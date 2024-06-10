@@ -49,10 +49,10 @@
       <lrm id="fc16-builder">
         <lrm_resources>
           <lrm_resource id="ClusterIP2" type="IPaddr2" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="ClusterIP2_last_0" operation_key="ClusterIP2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="5:0:7:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" transition-magic="0:7;5:0:7:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" call-id="3" rc-code="7" op-status="0" interval="0" op-digest="db8ed0d5f246c9076190133e86a498c8"/>
+            <lrm_rsc_op id="ClusterIP2_last_0" operation_key="ClusterIP2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="5:0:7:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" transition-magic="0:7;5:0:7:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" call-id="3" rc-code="7" op-status="0" interval="0" op-digest="db8ed0d5f246c9076190133e86a498c8" on_node="fc16-builder"/>
           </lrm_resource>
           <lrm_resource id="ClusterIP" type="IPaddr2" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="ClusterIP_last_0" operation_key="ClusterIP_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="4:0:7:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" transition-magic="0:7;4:0:7:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" call-id="2" rc-code="7" op-status="0" interval="0" op-digest="aa23ce1258f88c74b84a630cb3427eea"/>
+            <lrm_rsc_op id="ClusterIP_last_0" operation_key="ClusterIP_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="4:0:7:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" transition-magic="0:7;4:0:7:27a1a048-ddb5-4ba3-9ffa-add1c7e2afc6" call-id="2" rc-code="7" op-status="0" interval="0" op-digest="aa23ce1258f88c74b84a630cb3427eea" on_node="fc16-builder"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

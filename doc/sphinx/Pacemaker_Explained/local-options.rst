@@ -447,17 +447,6 @@ environment variables when Pacemaker daemons start up.
        set, this overrides the :ref:`node-action-limit <node_action_limit>`
        cluster option on this node.
 
-   * - .. _pcmk_shutdown_delay:
-
-       .. index::
-          pair: node option; PCMK_shutdown_delay
-
-       PCMK_shutdown_delay
-     - :ref:`timeout <timeout>`
-     -
-     - Specify a delay before shutting down ``pacemakerd`` after shutting down
-       all other Pacemaker daemons.
-
    * - .. _pcmk_fail_fast:
 
        .. index::

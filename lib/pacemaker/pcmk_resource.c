@@ -95,7 +95,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
         }
 
         // Do not use an older op if there's a newer one.
-        if (pe__is_newer_op(best, lrm_rsc_op, true) > 0) {
+        if (pe__is_newer_op(best, lrm_rsc_op) > 0) {
             continue;
         }
 

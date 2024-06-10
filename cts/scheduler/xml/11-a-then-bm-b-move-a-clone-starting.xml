@@ -44,7 +44,7 @@
       <lrm id="2">
         <lrm_resources>
           <lrm_resource id="vm" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="vm_last_0" operation_key="vm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="6:5:7:b3d70708-4445-4dd8-87ab-60fda1621353" transition-magic="0:7;6:5:7:b3d70708-4445-4dd8-87ab-60fda1621353" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1387647853" last-rc-change="1387647853" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="vm_last_0" operation_key="vm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="6:5:7:b3d70708-4445-4dd8-87ab-60fda1621353" transition-magic="0:7;6:5:7:b3d70708-4445-4dd8-87ab-60fda1621353" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1387647853" last-rc-change="1387647853" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="f20node2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -58,10 +58,10 @@
       <lrm id="1">
         <lrm_resources>
           <lrm_resource id="vm" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="vm_last_0" operation_key="vm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="15:5:0:b3d70708-4445-4dd8-87ab-60fda1621353" transition-magic="0:0;15:5:0:b3d70708-4445-4dd8-87ab-60fda1621353" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1387647852" last-rc-change="1387647852" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="vm_last_0" operation_key="vm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="15:5:0:b3d70708-4445-4dd8-87ab-60fda1621353" transition-magic="0:0;15:5:0:b3d70708-4445-4dd8-87ab-60fda1621353" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1387647852" last-rc-change="1387647852" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="f20node1"/>
           </lrm_resource>
           <lrm_resource id="myclone" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="myclone_last_0" operation_key="myclone_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="5:4:0:b3d70708-4445-4dd8-87ab-60fda1621353" transition-magic="0:0;5:4:0:b3d70708-4445-4dd8-87ab-60fda1621353" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1387647836" last-rc-change="1387647836" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="myclone_last_0" operation_key="myclone_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.8" transition-key="5:4:0:b3d70708-4445-4dd8-87ab-60fda1621353" transition-magic="0:0;5:4:0:b3d70708-4445-4dd8-87ab-60fda1621353" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1387647836" last-rc-change="1387647836" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="f20node1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

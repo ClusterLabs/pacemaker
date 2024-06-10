@@ -59,7 +59,7 @@
       <lrm id="fs1">
         <lrm_resources>
           <lrm_resource id="test:0" type="Filesystem" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="4:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;4:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="161" rc-code="7" op-status="0" interval="0" last-run="1259145978" last-rc-change="1259145978" exec-time="60" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712"/>
+            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="4:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;4:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="161" rc-code="7" op-status="0" interval="0" last-run="1259145978" last-rc-change="1259145978" exec-time="60" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712" on_node="fs1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -74,7 +74,7 @@
       <lrm id="fs2">
         <lrm_resources>
           <lrm_resource id="test:0" type="Filesystem" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="6:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;6:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="119" rc-code="7" op-status="0" interval="0" last-run="1259145978" last-rc-change="1259145978" exec-time="100" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712"/>
+            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="6:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;6:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="119" rc-code="7" op-status="0" interval="0" last-run="1259145978" last-rc-change="1259145978" exec-time="100" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712" on_node="fs2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -88,7 +88,7 @@
       <lrm id="web2">
         <lrm_resources>
           <lrm_resource id="test:0" type="Filesystem" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="6:1589:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;6:1589:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1259146293" last-rc-change="1259146293" exec-time="150" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712"/>
+            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="6:1589:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;6:1589:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1259146293" last-rc-change="1259146293" exec-time="150" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712" on_node="web2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -97,7 +97,7 @@
       <lrm id="web1">
         <lrm_resources>
           <lrm_resource id="test:0" type="Filesystem" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:1592:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;6:1592:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1259146306" last-rc-change="1259146306" exec-time="170" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712"/>
+            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:1592:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;6:1592:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1259146306" last-rc-change="1259146306" exec-time="170" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712" on_node="web1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

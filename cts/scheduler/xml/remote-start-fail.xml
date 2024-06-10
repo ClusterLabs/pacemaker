@@ -80,7 +80,7 @@
           </lrm_resource>
           <lrm_resource id="rhel7-auto4" type="remote" class="ocf" provider="pacemaker">
             <lrm_rsc_op id="rhel7-auto4_last_0" operation_key="rhel7-auto4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="2:1;13:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="2" rc-code="1" op-status="2" interval="0" last-run="1418237281" last-rc-change="1418237281" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
-            <lrm_rsc_op id="rhel7-auto4_last_failure_0" operation_key="rhel7-auto4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="2:1;13:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="2" rc-code="1" op-status="2" interval="0" last-run="1418237281" last-rc-change="1418237281" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rhel7-auto4_last_failure_0" operation_key="rhel7-auto4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" transition-magic="2:1;13:15:0:d38b5504-008d-47e7-b5e6-d85f9c599954" call-id="2" rc-code="1" op-status="2" interval="0" last-run="1418237281" last-rc-change="1418237281" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

@@ -50,14 +50,14 @@
       <lrm id="c19.chepkov.lan">
         <lrm_resources>
           <lrm_resource id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="dummy1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c19.chepkov.lan"/>
+            <lrm_rsc_op id="dummy1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c19.chepkov.lan"/>
           </lrm_resource>
           <lrm_resource id="dummy2" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c19.chepkov.lan"/>
           </lrm_resource>
           <lrm_resource id="dummy3" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c19.chepkov.lan"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -66,14 +66,14 @@
       <lrm id="c20.chepkov.lan">
         <lrm_resources>
           <lrm_resource id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c20.chepkov.lan"/>
           </lrm_resource>
           <lrm_resource id="dummy2" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="dummy2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c20.chepkov.lan"/>
+            <lrm_rsc_op id="dummy2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c20.chepkov.lan"/>
           </lrm_resource>
           <lrm_resource id="dummy3" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c20.chepkov.lan"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -82,14 +82,14 @@
       <lrm id="c21.chepkov.lan">
         <lrm_resources>
           <lrm_resource id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c21.chepkov.lan"/>
           </lrm_resource>
           <lrm_resource id="dummy2" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c21.chepkov.lan"/>
           </lrm_resource>
           <lrm_resource id="dummy3" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="dummy3_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c21.chepkov.lan"/>
+            <lrm_rsc_op id="dummy3_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="c21.chepkov.lan"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

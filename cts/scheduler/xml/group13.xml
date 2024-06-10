@@ -36,12 +36,12 @@
       <lrm id="cd13842c-3f58-4e7d-8126-685259527532">
         <lrm_resources id="lrm_resources.id21980">
           <lrm_resource id="resource_nfs" type="nfs" class="lsb">
-            <lrm_rsc_op id="resource_nfs_monitor_0" operation="monitor" transition-key="0:0:7:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="0:0;0:0:7:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="2" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resource_nfs_monitor_0" operation="monitor" transition-key="0:0:7:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="0:0;0:0:7:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="2" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="jamesltc"/>
           </lrm_resource>
           <lrm_resource id="resource_fs" type="Filesystem" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="resource_fs_monitor_0" operation="monitor" transition-key="0:0:7:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="4:7;0:0:7:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="3" crm_feature_set="1.0.6" rc-code="7" op-status="4" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747"/>
-            <lrm_rsc_op id="resource_fs_start_0" operation="start" transition-key="0:251:0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="4:2;0:251:0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="504" crm_feature_set="1.0.6" rc-code="1" op-status="4" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747"/>
-            <lrm_rsc_op id="resource_fs_stop_0" operation="stop" transition-key="0:253:0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="0:0;0:253:0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="505" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747"/>
+            <lrm_rsc_op id="resource_fs_monitor_0" operation="monitor" transition-key="0:0:7:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="4:7;0:0:7:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="3" crm_feature_set="1.0.6" rc-code="7" op-status="4" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747" on_node="jamesltc"/>
+            <lrm_rsc_op id="resource_fs_start_0" operation="start" transition-key="0:251:0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="4:2;0:251:0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="504" crm_feature_set="1.0.6" rc-code="1" op-status="4" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747" on_node="jamesltc"/>
+            <lrm_rsc_op id="resource_fs_stop_0" operation="stop" transition-key="0:253:0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition-magic="0:0;0:253:0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call-id="505" crm_feature_set="1.0.6" rc-code="0" op-status="0" interval="0" op-digest="018dec0f53e0e4d161c44af3eed91747" on_node="jamesltc"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

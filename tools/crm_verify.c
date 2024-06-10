@@ -217,7 +217,7 @@ main(int argc, char **argv)
     }
 
     if (options.cib_save != NULL) {
-        pcmk__xml_write_file(cib_object, options.cib_save, false, NULL);
+        pcmk__xml_write_file(cib_object, options.cib_save, false);
     }
 
     scheduler = pe_new_working_set();

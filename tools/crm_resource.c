@@ -838,12 +838,9 @@ timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     long long timeout_ms = crm_get_msec(optarg);
 
     if (timeout_ms < 0) {
-        // @COMPAT When we can break backward compatibilty, return FALSE
-        crm_warn("Ignoring invalid timeout '%s'", optarg);
-        options.timeout_ms = 0U;
-    } else {
-        options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
+        return FALSE;
     }
+    options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
     return TRUE;
 }
 
@@ -1275,8 +1272,6 @@ get_find_flags(void)
         case cmd_why:
             return pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
 
-        // @COMPAT See note in is_scheduler_required()
-        case cmd_delete:
         case cmd_delete_param:
         case cmd_get_param:
         case cmd_get_property:
@@ -1410,13 +1405,8 @@ is_scheduler_required(void)
         return false;
     }
 
-    /* @COMPAT cmd_delete does not actually need the scheduler and should not
-     * set find_flags. However, crm_resource --delete currently throws a
-     * "resource not found" error if the resource doesn't exist. This is
-     * incorrect behavior (deleting a nonexistent resource should be considered
-     * success); however, we shouldn't change it until 3.0.0.
-     */
     switch (options.rsc_cmd) {
+        case cmd_delete:
         case cmd_list_agents:
         case cmd_list_alternatives:
         case cmd_list_options:
@@ -1440,10 +1430,10 @@ is_scheduler_required(void)
 static bool
 accept_clone_instance(void)
 {
-    // @COMPAT At 3.0.0, add cmd_delete; for now, don't throw error
     switch (options.rsc_cmd) {
         case cmd_ban:
         case cmd_clear:
+        case cmd_delete:
         case cmd_move:
         case cmd_restart:
             return false;
@@ -1678,9 +1668,12 @@ main(int argc, char **argv)
         }
 
     } else if (options.cmdline_params != NULL) {
-        // @COMPAT @TODO error out here when we can break backward compatibility
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    _("--option must be used with --validate and without -r"));
         g_hash_table_destroy(options.cmdline_params);
         options.cmdline_params = NULL;
+        goto done;
     }
 
     if (is_resource_required() && (options.rsc_id == NULL)) {
@@ -2103,9 +2096,8 @@ main(int argc, char **argv)
              * command line arguments.
              */
             if (options.rsc_type == NULL) {
-                // @COMPAT @TODO change this to exit_code = CRM_EX_USAGE
-                rc = ENXIO;
-                g_set_error(&error, PCMK__RC_ERROR, rc,
+                exit_code = CRM_EX_USAGE;
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                             _("You need to specify a resource type with -t"));
             } else {
                 rc = pcmk__resource_delete(cib_conn, cib_sync_call,

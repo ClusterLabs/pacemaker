@@ -3034,21 +3034,20 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
 }
 
 /*!
+ * \internal
  * \brief Check whether a probe/monitor indicating the resource was not running
- * on a node happened after some event
+ *        on a node happened after some event
  *
  * \param[in]     rsc_id     Resource being checked
  * \param[in]     node_name  Node being checked
  * \param[in]     xml_op     Event that monitor is being compared to
- * \param[in]     same_node  Whether the operations are on the same node
  * \param[in,out] scheduler  Scheduler data
  *
  * \return true if such a monitor happened after event, false otherwise
  */
 static bool
 monitor_not_running_after(const char *rsc_id, const char *node_name,
-                          const xmlNode *xml_op, bool same_node,
-                          pcmk_scheduler_t *scheduler)
+                          const xmlNode *xml_op, pcmk_scheduler_t *scheduler)
 {
     /* Any probe/monitor operation on the node indicating it was not running
      * there
@@ -3056,25 +3055,24 @@ monitor_not_running_after(const char *rsc_id, const char *node_name,
     xmlNode *monitor = find_lrm_op(rsc_id, PCMK_ACTION_MONITOR, node_name,
                                    NULL, PCMK_OCF_NOT_RUNNING, scheduler);
 
-    return (monitor && pe__is_newer_op(monitor, xml_op, same_node) > 0);
+    return (monitor != NULL) && (pe__is_newer_op(monitor, xml_op) > 0);
 }
 
 /*!
+ * \internal
  * \brief Check whether any non-monitor operation on a node happened after some
- * event
+ *        event
  *
  * \param[in]     rsc_id     Resource being checked
  * \param[in]     node_name  Node being checked
  * \param[in]     xml_op     Event that non-monitor is being compared to
- * \param[in]     same_node  Whether the operations are on the same node
  * \param[in,out] scheduler  Scheduler data
  *
  * \return true if such a operation happened after event, false otherwise
  */
 static bool
 non_monitor_after(const char *rsc_id, const char *node_name,
-                  const xmlNode *xml_op, bool same_node,
-                  pcmk_scheduler_t *scheduler)
+                  const xmlNode *xml_op, pcmk_scheduler_t *scheduler)
 {
     xmlNode *lrm_resource = NULL;
 
@@ -3098,7 +3096,7 @@ non_monitor_after(const char *rsc_id, const char *node_name,
         if (pcmk__str_any_of(task, PCMK_ACTION_START, PCMK_ACTION_STOP,
                              PCMK_ACTION_MIGRATE_TO, PCMK_ACTION_MIGRATE_FROM,
                              NULL)
-            && pe__is_newer_op(op, xml_op, same_node) > 0) {
+            && pe__is_newer_op(op, xml_op) > 0) {
             return true;
         }
     }
@@ -3107,8 +3105,9 @@ non_monitor_after(const char *rsc_id, const char *node_name,
 }
 
 /*!
+ * \internal
  * \brief Check whether the resource has newer state on a node after a migration
- * attempt
+ *        attempt
  *
  * \param[in]     rsc_id        Resource being checked
  * \param[in]     node_name     Node being checked
@@ -3124,47 +3123,24 @@ newer_state_after_migrate(const char *rsc_id, const char *node_name,
                           const xmlNode *migrate_from,
                           pcmk_scheduler_t *scheduler)
 {
-    const xmlNode *xml_op = migrate_to;
-    const char *source = NULL;
-    const char *target = NULL;
-    bool same_node = false;
-
-    if (migrate_from) {
-        xml_op = migrate_from;
-    }
-
-    source = crm_element_value(xml_op, PCMK__META_MIGRATE_SOURCE);
-    target = crm_element_value(xml_op, PCMK__META_MIGRATE_TARGET);
+    const xmlNode *xml_op = (migrate_from != NULL)? migrate_from : migrate_to;
+    const char *source = crm_element_value(xml_op, PCMK__META_MIGRATE_SOURCE);
 
     /* It's preferred to compare to the migrate event on the same node if
      * existing, since call ids are more reliable.
      */
-    if (pcmk__str_eq(node_name, target, pcmk__str_casei)) {
-        if (migrate_from) {
-           xml_op = migrate_from;
-           same_node = true;
+    if ((xml_op != migrate_to) && (migrate_to != NULL)
+        && pcmk__str_eq(node_name, source, pcmk__str_casei)) {
 
-        } else {
-           xml_op = migrate_to;
-        }
-
-    } else if (pcmk__str_eq(node_name, source, pcmk__str_casei)) {
-        if (migrate_to) {
-           xml_op = migrate_to;
-           same_node = true;
-
-        } else {
-           xml_op = migrate_from;
-        }
+        xml_op = migrate_to;
     }
 
     /* If there's any newer non-monitor operation on the node, or any newer
      * probe/monitor operation on the node indicating it was not running there,
      * the migration events potentially no longer matter for the node.
      */
-    return non_monitor_after(rsc_id, node_name, xml_op, same_node, scheduler)
-           || monitor_not_running_after(rsc_id, node_name, xml_op, same_node,
-                                        scheduler);
+    return non_monitor_after(rsc_id, node_name, xml_op, scheduler)
+           || monitor_not_running_after(rsc_id, node_name, xml_op, scheduler);
 }
 
 /*!
@@ -3298,7 +3274,7 @@ unpack_migrate_to_success(struct action_history *history)
 
     // Check for newer state on the source
     source_newer_op = non_monitor_after(history->rsc->id, source, history->xml,
-                                        true, scheduler);
+                                        scheduler);
 
     // Check for a migrate_from action from this source on the target
     migrate_from = find_lrm_op(history->rsc->id, PCMK_ACTION_MIGRATE_FROM,
@@ -3440,7 +3416,7 @@ unpack_migrate_to_failure(struct action_history *history)
             native_add_running(history->rsc, target_node, scheduler, FALSE);
         }
 
-    } else if (!non_monitor_after(history->rsc->id, source, history->xml, true,
+    } else if (!non_monitor_after(history->rsc->id, source, history->xml,
                                   scheduler)) {
         /* We know the resource has newer state on the target, but this
          * migrate_to still matters for the source as long as there's no newer

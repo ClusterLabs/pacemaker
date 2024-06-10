@@ -41,7 +41,7 @@
       <lrm id="lrm.auto-1">
         <lrm_resources id="lrm_resources.id22051">
           <lrm_resource id="mysql-bin" type="mysql" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="mysql-bin_monitor_0" operation="monitor" transition-key="4:3:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" transition-magic="0:0;4:3:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" call-id="5" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="693708d1be85bff163c441a522df1ff4"/>
+            <lrm_rsc_op id="mysql-bin_monitor_0" operation="monitor" transition-key="4:3:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" transition-magic="0:0;4:3:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" call-id="5" crm_feature_set="2.1" rc-code="0" op-status="0" interval="0" op-digest="693708d1be85bff163c441a522df1ff4" on_node="dktest2sles10"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -56,7 +56,7 @@
       <lrm id="c231fc78-1eba-4b49-a003-a1cfef80bfc6">
         <lrm_resources id="lrm_resources.id22156">
           <lrm_resource id="mysql-bin" type="mysql" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="mysql-bin_monitor_0" operation="monitor" transition-key="6:0:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" transition-magic="0:7;6:0:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" call-id="2" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="693708d1be85bff163c441a522df1ff4"/>
+            <lrm_rsc_op id="mysql-bin_monitor_0" operation="monitor" transition-key="6:0:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" transition-magic="0:7;6:0:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" call-id="2" crm_feature_set="2.1" rc-code="7" op-status="0" interval="0" op-digest="693708d1be85bff163c441a522df1ff4" on_node="dktest1sles10"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

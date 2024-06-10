@@ -552,7 +552,7 @@ cib_file_signoff(cib_t *cib)
             bool compress = pcmk__ends_with_ext(private->filename, ".bz2");
 
             if (pcmk__xml_write_file(private->cib_xml, private->filename,
-                                     compress, NULL) != pcmk_rc_ok) {
+                                     compress) != pcmk_rc_ok) {
                 rc = pcmk_err_generic;
             }
         }
@@ -978,7 +978,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     }
 
     /* Write out the CIB */
-    if (pcmk__xml_write_fd(cib_root, tmp_cib, fd, false, NULL) != pcmk_rc_ok) {
+    if (pcmk__xml_write_fd(cib_root, tmp_cib, fd) != pcmk_rc_ok) {
         crm_err("Changes couldn't be written to %s", tmp_cib);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;

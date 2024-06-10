@@ -56,10 +56,10 @@
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22023">
           <lrm_resource id="rsc1" class="ocf" provider="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="9d52bf4c88392688f8b12775fdbb957a" crm_feature_set="1.0.5" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+            <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="9d52bf4c88392688f8b12775fdbb957a" crm_feature_set="1.0.5" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" on_node="node1"/>
           </lrm_resource>
           <lrm_resource id="rsc4" class="ocf" provider="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc4_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="832a553db174ca6fa88a2fca778f277a" crm_feature_set="1.0.5" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+            <lrm_rsc_op id="rsc4_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="832a553db174ca6fa88a2fca778f277a" crm_feature_set="1.0.5" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" on_node="node1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

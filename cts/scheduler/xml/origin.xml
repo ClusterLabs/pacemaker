@@ -25,7 +25,7 @@
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="resD" class="ocf" provider="heartbeat" type="Dummy">
-            <lrm_rsc_op id="resD_last_0" operation_key="resD_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1399261328" last-rc-change="1399261328" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="resD_last_0" operation_key="resD_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.9" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1399261328" last-rc-change="1399261328" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="node1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
