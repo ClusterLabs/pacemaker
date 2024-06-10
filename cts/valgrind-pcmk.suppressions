@@ -92,31 +92,32 @@
 }
 
 {
-   glib mainloop internals - default
+   glib - mainloop new calloc
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
    fun:g_main_context_new
    fun:g_main_context_default
    fun:g_main_loop_new
+   ...
    fun:main
 }
 
 {
-   glib mainloop internals - default
+   glib - mainloop new malloc
    Memcheck:Leak
    fun:malloc
    fun:g_malloc
-   fun:g_slice_alloc
-   fun:*
+   ...
    fun:g_main_context_new
    fun:g_main_context_default
    fun:g_main_loop_new
+   ...
    fun:main
 }
 
 {
-   glib mainloop internals - default
+   glib - mainloop new calloc 2
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
@@ -129,7 +130,7 @@
 }
 
 {
-   glib mainloop internals - run
+   glib - mainloop run calloc
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
@@ -138,7 +139,7 @@
 }
 
 {
-   glib mainloop internals - run
+   glib - mainloop run malloc
    Memcheck:Leak
    fun:malloc
    fun:g_malloc
@@ -147,7 +148,7 @@
 }
 
 {
-   glib mainloop internals - run
+   glib - mainloop run malloc 2
    Memcheck:Leak
    fun:malloc
    fun:realloc
@@ -160,20 +161,7 @@
 }
 
 {
-   glib mainloop internals - run
-   Memcheck:Leak
-   fun:malloc
-   fun:g_malloc
-   fun:g_slice_alloc
-   fun:g_slice_alloc0
-   obj:*/libglib-2.*
-   fun:g_main_context_dispatch
-   obj:*/libglib-2.*
-   fun:g_main_loop_run
-}
-
-{
-   glib mainloop internals - run
+   glib - mainloop run malloc 3
    Memcheck:Leak
    fun:malloc
    fun:realloc
@@ -188,7 +176,39 @@
 }
 
 {
-   glib mainloop internals - run
+   glib - mainloop run malloc 4
+   Memcheck:Leak
+   fun:malloc
+   obj:*/libglib-2.*
+   fun:g_private_get
+   fun:g_thread_self
+   fun:g_main_loop_run
+}
+
+{
+   glib - mainloop run malloc 5
+   Memcheck:Leak
+   fun:malloc
+   fun:realloc
+   obj:*/libglib-2.*
+   fun:g_private_get
+   fun:g_thread_self
+   fun:g_main_loop_run
+}
+
+{
+   glib - mainloop run malloc 6
+   Memcheck:Leak
+   fun:malloc
+   obj:*/libglib-2.*
+   fun:g_private_get
+   fun:g_main_context_dispatch
+   obj:*/libglib-2.*
+   fun:g_main_loop_run
+}
+
+{
+   glib - mainloop run malloc 7
    Memcheck:Leak
    fun:malloc
    fun:g_malloc
@@ -202,7 +222,18 @@
 }
 
 {
-   glib types
+   glib - mainloop run malloc 8
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:realloc
+   fun:g_realloc
+   obj:*/libgobject-*
+   fun:g_type_register_static
+}
+
+{
+   glib - register malloc
    Memcheck:Leak
    fun:malloc
    fun:realloc
@@ -212,7 +243,7 @@
 }
 
 {
-   glib types 2
+   glib - register realloc
    Memcheck:Leak
    fun:realloc
    fun:g_realloc
@@ -222,47 +253,38 @@
 }
 
 {
-   glib types 3
+   glib - types register calloc
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
+   ...
    obj:*/libgobject-*
    fun:g_type_register_fundamental
 }
 
 {
-   glib types 4
+   glib - init calloc
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
-   obj:*/libgobject-*
-   obj:*/libgobject-*
-   fun:g_type_register_fundamental
-}
-
-{
-   glib - the return
-   Memcheck:Leak
-   fun:calloc
-   fun:g_malloc0
-   obj:*/libgobject-*
+   ...
    obj:*/libgobject-*
    fun:_dl_init
 }
 
 {
-   glib - seriously?
+   glib - init calloc 2
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
+   ...
    obj:*/libgobject-*
-   obj:*/libgobject-*
-   obj:*/libgobject-*
+   fun:call_init*
    fun:_dl_init
 }
 
 {
-   glib - this is not funny anymore
+   glib - register malloc 2
    Memcheck:Leak
    fun:malloc
    fun:realloc
@@ -272,24 +294,58 @@
 }
 
 {
-   glib - why do you hate me?
+   glib - hashtable new calloc
    Memcheck:Leak
+   match-leak-kinds: reachable
    fun:calloc
    fun:g_malloc0
-   obj:*/libgobject-*
-   obj:*/libgobject-*
-   fun:call_init.part.0
+   ...
+   fun:g_hash_table_new_full
+   ...
+   obj:*/libglib-*
+   ...
+   fun:call_init
    fun:_dl_init
 }
 
 {
-   dear glib - you suck at memory management
+   glib - hashtable new malloc
    Memcheck:Leak
-   fun:calloc
-   fun:g_malloc0
-   obj:*/libgobject-*
-   obj:*/libgobject-*
-   obj:*/libgobject-*
-   fun:call_init.part.0
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   fun:g_hash_table_new_full
+   ...
+   obj:*/libglib-*
+   ...
+   fun:call_init
+   fun:_dl_init
+}
+
+{
+   glib - hashtable new malloc 2
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:g_malloc
+   ...
+   obj:*/libglib-*
+   ...
+   fun:call_init
+   fun:_dl_init
+}
+
+{
+   glib - hashtable new realloc
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:realloc
+   fun:g_realloc
+   ...
+   fun:g_hash_table_new_full
+   ...
+   obj:*/libglib-*
+   ...
+   fun:call_init
    fun:_dl_init
 }

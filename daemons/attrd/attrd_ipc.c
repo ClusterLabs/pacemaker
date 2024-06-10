@@ -611,6 +611,9 @@ attrd_ipc_fini(void)
         qb_ipcs_destroy(ipcs);
         ipcs = NULL;
     }
+
+    attrd_unregister_handlers();
+    pcmk__client_cleanup();
 }
 
 /*!

@@ -154,6 +154,7 @@ attrd_cib_disconnect(void)
     the_cib->cmds->del_notify_callback(the_cib, PCMK__VALUE_CIB_DIFF_NOTIFY,
                                        attrd_cib_updated_cb);
     cib__clean_up_connection(&the_cib);
+    mainloop_destroy_trigger(attrd_config_read);
 }
 
 static void
