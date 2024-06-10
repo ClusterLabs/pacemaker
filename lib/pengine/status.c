@@ -260,6 +260,7 @@ pe_free_nodes(GList *nodes)
         g_list_free(node->private->assigned_resources);
         free(node->private);
         free(node->details);
+        free(node->assign);
         free(node);
     }
     if (nodes != NULL) {

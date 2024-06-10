@@ -340,7 +340,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
                 && !is_set_recursive(instance, pcmk__rsc_blocked, TRUE)) {
                 pcmk__rsc_trace(primary, "Allowing %s: %s %d",
                                 colocation->id, pcmk__node_name(chosen),
-                                chosen->weight);
+                                chosen->assign->score);
                 primary_nodes = g_list_prepend(primary_nodes, chosen);
             }
         }
@@ -599,7 +599,7 @@ pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
                                                    node->private->id);
 
         if ((allowed == NULL)
-            || (allowed->rsc_discover_mode != pcmk_probe_exclusive)) {
+            || (allowed->assign->probe_mode != pcmk__probe_exclusive)) {
             /* This node is not marked for resource discovery. Remove it from
              * allowed nodes so that notifications contain only nodes that the
              * clone can possibly run on.

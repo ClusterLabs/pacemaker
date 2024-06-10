@@ -37,7 +37,7 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
         return false;
     }
 
-    if (consider_score && (node->weight < 0)) {
+    if (consider_score && (node->assign->score < 0)) {
         return false;
     }
 
@@ -182,7 +182,7 @@ pcmk__copy_node_list(const GList *list, bool reset)
 
         new_node = pe__copy_node(this_node);
         if (reset) {
-            new_node->weight = 0;
+            new_node->assign->score = 0;
         }
         result = g_list_prepend(result, new_node);
     }
@@ -225,10 +225,10 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     // Compare node scores
 
     if (pcmk__node_available(node1, false, false)) {
-        node1_score = node1->weight;
+        node1_score = node1->assign->score;
     }
     if (pcmk__node_available(node2, false, false)) {
-        node2_score = node2->weight;
+        node2_score = node2->assign->score;
     }
 
     if (node1_score > node2_score) {

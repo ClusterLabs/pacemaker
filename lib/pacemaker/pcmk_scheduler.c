@@ -172,8 +172,8 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
         match = g_hash_table_lookup(rsc->private->allowed_nodes,
                                     node->private->id);
         if ((match != NULL)
-            && (match->rsc_discover_mode != pcmk_probe_exclusive)) {
-            match->weight = -PCMK_SCORE_INFINITY;
+            && (match->assign->probe_mode != pcmk__probe_exclusive)) {
+            match->assign->score = -PCMK_SCORE_INFINITY;
         }
     }
 }
@@ -266,7 +266,8 @@ count_available_nodes(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
-        if ((node != NULL) && (node->weight >= 0) && node->details->online
+        if ((node != NULL) && (node->assign->score >= 0)
+            && node->details->online
             && (node->private->variant != pcmk__node_variant_ping)) {
             scheduler->max_valid_nodes++;
         }

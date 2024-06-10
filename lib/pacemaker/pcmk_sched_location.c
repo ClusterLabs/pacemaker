@@ -209,10 +209,10 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
             pcmk_node_t *local = pe__copy_node(node);
 
             location_rule->nodes = g_list_prepend(location_rule->nodes, local);
-            local->weight = get_node_score(rule_id, score, raw_score, node,
-                                           rsc);
+            local->assign->score = get_node_score(rule_id, score, raw_score,
+                                                  node, rsc);
             crm_trace("%s has score %s after %s", pcmk__node_name(node),
-                      pcmk_readable_score(local->weight), rule_id);
+                      pcmk_readable_score(local->assign->score), rule_id);
         }
     }
 
@@ -581,7 +581,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
  * \param[in]     id             XML ID of location constraint
  * \param[in,out] rsc            Resource in location constraint
  * \param[in]     node_score     Constraint score
- * \param[in]     discover_mode  Resource discovery option for constraint
+ * \param[in]     probe_mode     When resource should be probed on node
  * \param[in]     node           Node in constraint (or NULL if rule-based)
  *
  * \return Newly allocated location constraint on success, otherwise NULL
@@ -590,7 +590,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
  */
 pcmk__location_t *
 pcmk__new_location(const char *id, pcmk_resource_t *rsc,
-                   int node_score, const char *discover_mode, pcmk_node_t *node)
+                   int node_score, const char *probe_mode, pcmk_node_t *node)
 {
     pcmk__location_t *new_con = NULL;
 
@@ -612,28 +612,27 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
     new_con->nodes = NULL;
     new_con->role_filter = pcmk_role_unknown;
 
-    if (pcmk__str_eq(discover_mode, PCMK_VALUE_ALWAYS,
+    if (pcmk__str_eq(probe_mode, PCMK_VALUE_ALWAYS,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        new_con->discover_mode = pcmk_probe_always;
+        new_con->probe_mode = pcmk__probe_always;
 
-    } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_NEVER,
-                            pcmk__str_casei)) {
-        new_con->discover_mode = pcmk_probe_never;
+    } else if (pcmk__str_eq(probe_mode, PCMK_VALUE_NEVER, pcmk__str_casei)) {
+        new_con->probe_mode = pcmk__probe_never;
 
-    } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_EXCLUSIVE,
+    } else if (pcmk__str_eq(probe_mode, PCMK_VALUE_EXCLUSIVE,
                             pcmk__str_casei)) {
-        new_con->discover_mode = pcmk_probe_exclusive;
+        new_con->probe_mode = pcmk__probe_exclusive;
         pcmk__set_rsc_flags(rsc, pcmk__rsc_exclusive_probes);
 
     } else {
         pcmk__config_err("Invalid " PCMK_XA_RESOURCE_DISCOVERY " value %s "
-                         "in location constraint", discover_mode);
+                         "in location constraint", probe_mode);
     }
 
     if (node != NULL) {
         pcmk_node_t *copy = pe__copy_node(node);
 
-        copy->weight = node_score;
+        copy->assign->score = node_score;
         new_con->nodes = g_list_prepend(NULL, copy);
     }
 
@@ -709,24 +708,25 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
                                            node->private->id);
         if (allowed_node == NULL) {
             pcmk__rsc_trace(rsc, "* = %d on %s",
-                            node->weight, pcmk__node_name(node));
+                            node->assign->score, pcmk__node_name(node));
             allowed_node = pe__copy_node(node);
             g_hash_table_insert(rsc->private->allowed_nodes,
                                 (gpointer) allowed_node->private->id,
                                 allowed_node);
         } else {
             pcmk__rsc_trace(rsc, "* + %d on %s",
-                            node->weight, pcmk__node_name(node));
-            allowed_node->weight = pcmk__add_scores(allowed_node->weight,
-                                                    node->weight);
+                            node->assign->score, pcmk__node_name(node));
+            allowed_node->assign->score =
+                pcmk__add_scores(allowed_node->assign->score,
+                                 node->assign->score);
         }
 
-        if (allowed_node->rsc_discover_mode < location->discover_mode) {
-            if (location->discover_mode == pcmk_probe_exclusive) {
+        if (allowed_node->assign->probe_mode < location->probe_mode) {
+            if (location->probe_mode == pcmk__probe_exclusive) {
                 pcmk__set_rsc_flags(rsc, pcmk__rsc_exclusive_probes);
             }
             /* exclusive > never > always... always is default */
-            allowed_node->rsc_discover_mode = location->discover_mode;
+            allowed_node->assign->probe_mode = location->probe_mode;
         }
     }
 }

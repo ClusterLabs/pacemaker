@@ -927,7 +927,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 
             g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
             while (g_hash_table_iter_next(&iter, NULL, (void**)&node)) {
-                if(node->weight >= 0) {
+                if (node->assign->score >= 0) {
                     nodes = g_list_prepend(nodes, node);
                 }
             }

@@ -39,7 +39,7 @@ extern "C" {
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
-typedef struct pe_node_s node_t;
+typedef struct pcmk__scored_node node_t;
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated use pcmk_resource_t instead

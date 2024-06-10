@@ -671,8 +671,8 @@ disallow_node(pcmk_resource_t *rsc, const char *uname)
     gpointer match = g_hash_table_lookup(rsc->private->allowed_nodes, uname);
 
     if (match) {
-        ((pcmk_node_t *) match)->weight = -PCMK_SCORE_INFINITY;
-        ((pcmk_node_t *) match)->rsc_discover_mode = pcmk_probe_never;
+        ((pcmk_node_t *) match)->assign->score = -PCMK_SCORE_INFINITY;
+        ((pcmk_node_t *) match)->assign->probe_mode = pcmk__probe_never;
     }
     g_list_foreach(rsc->private->children, (GFunc) disallow_node,
                    (gpointer) uname);
@@ -741,9 +741,9 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                                   PCMK_VALUE_MINUS_INFINITY,
                                   parent->private->scheduler);
         } else {
-            node->weight = -PCMK_SCORE_INFINITY;
+            node->assign->score = -PCMK_SCORE_INFINITY;
         }
-        node->rsc_discover_mode = pcmk_probe_never;
+        node->assign->probe_mode = pcmk__probe_never;
 
         /* unpack_remote_nodes() ensures that each remote node and guest node
          * has a pcmk_node_t entry. Ideally, it would do the same for bundle
@@ -766,8 +766,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                        (GFunc) disallow_node, (gpointer) uname);
 
         replica->node = pe__copy_node(node);
-        replica->node->weight = 500;
-        replica->node->rsc_discover_mode = pcmk_probe_exclusive;
+        replica->node->assign->score = 500;
+        replica->node->assign->probe_mode = pcmk__probe_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
         if (replica->child->private->allowed_nodes != NULL) {
@@ -782,7 +782,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             const pcmk_resource_t *parent = replica->child->private->parent;
             pcmk_node_t *copy = pe__copy_node(replica->node);
 
-            copy->weight = -PCMK_SCORE_INFINITY;
+            copy->assign->score = -PCMK_SCORE_INFINITY;
             g_hash_table_insert(parent->private->allowed_nodes,
                                 (gpointer) replica->node->private->id, copy);
         }
@@ -795,7 +795,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
             if (pcmk__is_pacemaker_remote_node(node)) {
                 /* Remote resources can only run on 'normal' cluster node */
-                node->weight = -PCMK_SCORE_INFINITY;
+                node->assign->score = -PCMK_SCORE_INFINITY;
             }
         }
 

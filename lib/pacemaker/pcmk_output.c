@@ -93,7 +93,7 @@ do_locations_list_xml(pcmk__output_t *out, pcmk_resource_t *rsc,
                                          PCMK_XA_RSC, rsc->id,
                                          PCMK_XA_ID, cons->id,
                                          PCMK_XA_SCORE,
-                                         pcmk_readable_score(node->weight),
+                                         pcmk_readable_score(node->assign->score),
                                          NULL);
         }
     }
@@ -576,7 +576,7 @@ locations_list(pcmk__output_t *out, va_list args) {
             PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Locations");
             out->list_item(out, NULL, "Node %s (score=%s, id=%s, rsc=%s)",
                            pcmk__node_name(node),
-                           pcmk_readable_score(node->weight), cons->id,
+                           pcmk_readable_score(node->assign->score), cons->id,
                            rsc->id);
         }
     }

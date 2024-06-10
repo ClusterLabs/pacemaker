@@ -1332,13 +1332,14 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
     g_hash_table_iter_init(&iter, work);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
         if (primary->private->assigned_node == NULL) {
-            node->weight = pcmk__add_scores(-colocation->score, node->weight);
+            node->assign->score = pcmk__add_scores(-colocation->score,
+                                                   node->assign->score);
             pcmk__rsc_trace(dependent,
                             "Applied %s to %s score on %s (now %s after "
                             "subtracting %s because primary %s inactive)",
                             colocation->id, dependent->id,
                             pcmk__node_name(node),
-                            pcmk_readable_score(node->weight),
+                            pcmk_readable_score(node->assign->score),
                             pcmk_readable_score(colocation->score), primary->id);
             continue;
         }
@@ -1353,14 +1354,14 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
              * the primary isn't active there (via the condition above).
              */
             if (colocation->score < PCMK_SCORE_INFINITY) {
-                node->weight = pcmk__add_scores(colocation->score,
-                                                node->weight);
+                node->assign->score = pcmk__add_scores(colocation->score,
+                                                       node->assign->score);
                 pcmk__rsc_trace(dependent,
                                 "Applied %s to %s score on %s (now %s after "
                                 "adding %s)",
                                 colocation->id, dependent->id,
                                 pcmk__node_name(node),
-                                pcmk_readable_score(node->weight),
+                                pcmk_readable_score(node->assign->score),
                                 pcmk_readable_score(colocation->score));
             }
             continue;
@@ -1372,7 +1373,7 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
              * a negative preference -- the colocation is simply relevant only
              * where it matches.
              */
-            node->weight = -PCMK_SCORE_INFINITY;
+            node->assign->score = -PCMK_SCORE_INFINITY;
             pcmk__rsc_trace(dependent,
                             "Banned %s from %s because colocation %s attribute %s "
                             "does not match",
@@ -1490,12 +1491,12 @@ best_node_score_matching_attr(const pcmk_resource_t *rsc, const char *attr,
     g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
-        if ((node->weight > best_score)
+        if ((node->assign->score > best_score)
             && pcmk__node_available(node, false, false)
             && pcmk__str_eq(value, pcmk__colocation_node_attr(node, attr, rsc),
                             pcmk__str_casei)) {
 
-            best_score = node->weight;
+            best_score = node->assign->score;
             best_node = node->private->name;
         }
     }
@@ -1530,7 +1531,7 @@ allowed_on_one(const pcmk_resource_t *rsc)
 
     g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &allowed_node)) {
-        if ((allowed_node->weight >= 0) && (++allowed_nodes > 1)) {
+        if ((allowed_node->assign->score >= 0) && (++allowed_nodes > 1)) {
             pcmk__rsc_trace(rsc, "%s is allowed on multiple nodes", rsc->id);
             return false;
         }
@@ -1619,14 +1620,16 @@ add_node_scores_matching_attr(GHashTable *nodes,
                 || !allowed_on_one(colocation->dependent)) {
                 crm_trace("%s: Filtering %d + %f * %d "
                           "(double negative disallowed)",
-                          pcmk__node_name(node), node->weight, factor, score);
+                          pcmk__node_name(node), node->assign->score, factor,
+                          score);
                 continue;
             }
         }
 
-        if (node->weight == INFINITY_HACK) {
+        if (node->assign->score == INFINITY_HACK) {
             crm_trace("%s: Filtering %d + %f * %d (node was marked unusable)",
-                      pcmk__node_name(node), node->weight, factor, score);
+                      pcmk__node_name(node), node->assign->score, factor,
+                      score);
             continue;
         }
 
@@ -1647,27 +1650,27 @@ add_node_scores_matching_attr(GHashTable *nodes,
             }
         }
 
-        new_score = pcmk__add_scores(delta, node->weight);
+        new_score = pcmk__add_scores(delta, node->assign->score);
 
-        if (only_positive && (new_score < 0) && (node->weight > 0)) {
+        if (only_positive && (new_score < 0) && (node->assign->score > 0)) {
             crm_trace("%s: Filtering %d + %f * %d = %d "
                       "(negative disallowed, marking node unusable)",
-                      pcmk__node_name(node), node->weight, factor, score,
+                      pcmk__node_name(node), node->assign->score, factor, score,
                       new_score);
-            node->weight = INFINITY_HACK;
+            node->assign->score = INFINITY_HACK;
             continue;
         }
 
-        if (only_positive && (new_score < 0) && (node->weight == 0)) {
+        if (only_positive && (new_score < 0) && (node->assign->score == 0)) {
             crm_trace("%s: Filtering %d + %f * %d = %d (negative disallowed)",
-                      pcmk__node_name(node), node->weight, factor, score,
+                      pcmk__node_name(node), node->assign->score, factor, score,
                       new_score);
             continue;
         }
 
         crm_trace("%s: %d + %f * %d = %d", pcmk__node_name(node),
-                  node->weight, factor, score, new_score);
-        node->weight = new_score;
+                  node->assign->score, factor, score, new_score);
+        node->assign->score = new_score;
     }
 }
 
@@ -1808,8 +1811,8 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
 
         g_hash_table_iter_init(&iter, work);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            if (node->weight == INFINITY_HACK) {
-                node->weight = 1;
+            if (node->assign->score == INFINITY_HACK) {
+                node->assign->score = 1;
             }
         }
     }
@@ -1892,22 +1895,23 @@ pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
         primary_node = pe_find_node_id(primary_nodes,
                                        dependent_node->private->id);
         if (primary_node == NULL) {
-            dependent_node->weight = -PCMK_SCORE_INFINITY;
+            dependent_node->assign->score = -PCMK_SCORE_INFINITY;
             pcmk__rsc_trace(dependent,
                             "Banning %s from %s (no primary instance) for %s",
                             dependent->id, pcmk__node_name(dependent_node),
                             colocation->id);
 
         } else if (merge_scores) {
-            dependent_node->weight = pcmk__add_scores(dependent_node->weight,
-                                                      primary_node->weight);
+            dependent_node->assign->score =
+                pcmk__add_scores(dependent_node->assign->score,
+                                 primary_node->assign->score);
             pcmk__rsc_trace(dependent,
-                            "Added %s's score %s to %s's score for %s (now %s) "
+                            "Added %s's score %s to %s's score for %s (now %d) "
                             "for colocation %s",
-                            primary->id, pcmk_readable_score(primary_node->weight),
+                            primary->id,
+                            pcmk_readable_score(primary_node->assign->score),
                             dependent->id, pcmk__node_name(dependent_node),
-                            pcmk_readable_score(dependent_node->weight),
-                            colocation->id);
+                            dependent_node->assign->score, colocation->id);
         }
     }
 }

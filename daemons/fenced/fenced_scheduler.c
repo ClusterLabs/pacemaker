@@ -159,10 +159,10 @@ register_if_fencing_device(gpointer data, gpointer user_data)
                  "because local node is not allowed to run it", rsc->id);
         return;
     }
-    if (node->weight < 0) {
+    if (node->assign->score < 0) {
         crm_info("Ignoring fencing device %s "
                  "because local node has preference %s for it",
-                 rsc->id, pcmk_readable_score(node->weight));
+                 rsc->id, pcmk_readable_score(node->assign->score));
         return;
     }
 
@@ -170,10 +170,10 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     if (pcmk__is_group(rsc->private->parent)) {
         pcmk_node_t *group_node = local_node_allowed_for(rsc->private->parent);
 
-        if ((group_node != NULL) && (group_node->weight < 0)) {
+        if ((group_node != NULL) && (group_node->assign->score < 0)) {
             crm_info("Ignoring fencing device %s "
                      "because local node has preference %s for its group",
-                     rsc->id, pcmk_readable_score(group_node->weight));
+                     rsc->id, pcmk_readable_score(group_node->assign->score));
             return;
         }
     }

@@ -433,7 +433,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     // Assigning a primitive
 
     if (!force && (node != NULL)
-        && ((node->weight < 0)
+        && ((node->assign->score < 0)
             // Allow graph to assume that guest node connections will come up
             || (!pcmk__node_available(node, true, false)
                 && !pcmk__is_guest_or_bundle_node(node)))) {
@@ -443,7 +443,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
                         "shutting down (%s can%s run resources, with score %s)",
                         rsc->id, pcmk__node_name(node),
                         (pcmk__node_available(node, true, false)? "" : "not"),
-                        pcmk_readable_score(node->weight));
+                        pcmk_readable_score(node->assign->score));
 
         if (stop_if_fail) {
             pe__set_next_role(rsc, pcmk_role_stopped, "node availability");
@@ -513,7 +513,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
 
     add_assigned_resource(node, rsc);
     node->private->num_resources++;
-    node->count++;
+    node->assign->count++;
     pcmk__consume_node_capacity(node->private->utilization, rsc);
 
     if (pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
@@ -652,7 +652,10 @@ get_node_score(const pcmk_node_t *node, GHashTable *nodes)
     if ((node != NULL) && (nodes != NULL)) {
         found_node = g_hash_table_lookup(nodes, node->private->id);
     }
-    return (found_node == NULL)? -PCMK_SCORE_INFINITY : found_node->weight;
+    if (found_node == NULL) {
+        return -PCMK_SCORE_INFINITY;
+    }
+    return found_node->assign->score;
 }
 
 /*!
