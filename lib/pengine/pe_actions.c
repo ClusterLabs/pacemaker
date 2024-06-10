@@ -861,13 +861,13 @@ pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
  *
  * \return Action failure response parsed from \p text
  */
-enum action_fail_response
+enum pcmk__on_fail
 pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                     guint interval_ms, const char *value)
 {
     const char *desc = NULL;
     bool needs_remote_reset = false;
-    enum action_fail_response on_fail = pcmk_on_fail_ignore;
+    enum pcmk__on_fail on_fail = pcmk__on_fail_ignore;
     const pcmk_scheduler_t *scheduler = NULL;
 
     // There's no enum value for unknown or invalid, so assert
@@ -878,24 +878,24 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         // Use default
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_BLOCK, pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_block;
+        on_fail = pcmk__on_fail_block;
         desc = "block";
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_FENCE, pcmk__str_casei)) {
         if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-            on_fail = pcmk_on_fail_fence_node;
+            on_fail = pcmk__on_fail_fence_node;
             desc = "node fencing";
         } else {
             pcmk__config_err("Resetting '" PCMK_META_ON_FAIL "' for "
                              "%s of %s to 'stop' because 'fence' is not "
                              "valid when fencing is disabled",
                              action_name, rsc->id);
-            on_fail = pcmk_on_fail_stop;
+            on_fail = pcmk__on_fail_stop;
             desc = "stop resource";
         }
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_STANDBY, pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_standby_node;
+        on_fail = pcmk__on_fail_standby_node;
         desc = "node standby";
 
     } else if (pcmk__strcase_any_of(value,
@@ -904,15 +904,15 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         desc = "ignore";
 
     } else if (pcmk__str_eq(value, "migrate", pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_ban;
+        on_fail = pcmk__on_fail_ban;
         desc = "force migration";
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_STOP, pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_stop;
+        on_fail = pcmk__on_fail_stop;
         desc = "stop resource";
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_RESTART, pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_restart;
+        on_fail = pcmk__on_fail_restart;
         desc = "restart (and possibly migrate)";
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_RESTART_CONTAINER,
@@ -923,12 +923,12 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                             "of %s because it does not have a launcher",
                             action_name, rsc->id);
         } else {
-            on_fail = pcmk_on_fail_restart_container;
+            on_fail = pcmk__on_fail_restart_container;
             desc = "restart container (and possibly migrate)";
         }
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_demote;
+        on_fail = pcmk__on_fail_demote;
         desc = "demote instance";
 
     } else {
@@ -956,7 +956,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         // Explicit value used, default not needed
 
     } else if (rsc->private->launcher != NULL) {
-        on_fail = pcmk_on_fail_restart_container;
+        on_fail = pcmk__on_fail_restart_container;
         desc = "restart container (and possibly migrate) (default)";
 
     } else if (needs_remote_reset) {
@@ -966,23 +966,23 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             } else {
                 desc = "recover remote node connection (default)";
             }
-            on_fail = pcmk_on_fail_reset_remote;
+            on_fail = pcmk__on_fail_reset_remote;
         } else {
-            on_fail = pcmk_on_fail_stop;
+            on_fail = pcmk__on_fail_stop;
             desc = "stop unmanaged remote node (enforcing default)";
         }
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)) {
         if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-            on_fail = pcmk_on_fail_fence_node;
+            on_fail = pcmk__on_fail_fence_node;
             desc = "resource fence (default)";
         } else {
-            on_fail = pcmk_on_fail_block;
+            on_fail = pcmk__on_fail_block;
             desc = "resource block (default)";
         }
 
     } else {
-        on_fail = pcmk_on_fail_restart;
+        on_fail = pcmk__on_fail_restart;
         desc = "restart (and possibly migrate) (default)";
     }
 
@@ -1005,18 +1005,18 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
  */
 enum rsc_role_e
 pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
-                         enum action_fail_response on_fail, GHashTable *meta)
+                         enum pcmk__on_fail on_fail, GHashTable *meta)
 {
     const char *value = NULL;
     enum rsc_role_e role = pcmk_role_unknown;
 
     // Set default for role after failure specially in certain circumstances
     switch (on_fail) {
-        case pcmk_on_fail_stop:
+        case pcmk__on_fail_stop:
             role = pcmk_role_stopped;
             break;
 
-        case pcmk_on_fail_reset_remote:
+        case pcmk__on_fail_reset_remote:
             if (rsc->private->remote_reconnect_ms != 0U) {
                 role = pcmk_role_stopped;
             }

@@ -173,6 +173,55 @@ enum pcmk__action_flags {
     pcmk__action_on_dc                  = (UINT32_C(1) << 16),
 };
 
+// Possible responses to a resource action failure
+enum pcmk__on_fail {
+    /* The order is (partially) significant here; the values from
+     * pcmk__on_fail_ignore through pcmk__on_fail_fence_node are in order of
+     * increasing severity.
+     *
+     * @TODO   The values should be ordered and numbered per the "TODO" comments
+     *         below, so all values are in order of severity and there is room for
+     *         future additions. For now, we just use a function to compare the
+     *         values specially, but we should arrange things properly so we can
+     *         compare with less than and greater than.
+     */
+
+    // @TODO Define as 10
+    pcmk__on_fail_ignore            = 0,    // Act as if failure didn't happen
+
+    // @TODO Define as 30
+    pcmk__on_fail_restart           = 1,    // Restart resource
+
+    // @TODO Define as 60
+    pcmk__on_fail_ban               = 2,    // Ban resource from current node
+
+    // @TODO Define as 70
+    pcmk__on_fail_block             = 3,    // Treat resource as unmanaged
+
+    // @TODO Define as 80
+    pcmk__on_fail_stop              = 4,    // Stop resource and leave stopped
+
+    // @TODO Define as 90
+    pcmk__on_fail_standby_node      = 5,    // Put resource's node in standby
+
+    // @TODO Define as 100
+    pcmk__on_fail_fence_node        = 6,    // Fence resource's node
+
+    // @TODO Define as 50
+    pcmk__on_fail_restart_container = 7,    // Restart resource's container
+
+    // @TODO Define as 40
+    /*
+     * Fence the remote node created by the resource if fencing is enabled,
+     * otherwise attempt to restart the resource (used internally for some
+     * remote connection failures).
+     */
+    pcmk__on_fail_reset_remote      = 8,
+
+    // @TODO Define as 20
+    pcmk__on_fail_demote            = 9,    // Demote if promotable, else stop
+};
+
 // Implementation of pcmk_action_t
 struct pcmk__action {
     int id;                 // Counter to identify action
@@ -193,7 +242,7 @@ struct pcmk__action {
     char *reason;           // Readable description of why action is needed
     uint32_t flags;         // Group of enum pcmk__action_flags
     enum rsc_start_requirement needs;   // Prerequisite for recovery
-    enum action_fail_response on_fail;  // Response to failure
+    enum pcmk__on_fail on_fail;         // Response to failure
     enum rsc_role_e fail_role;          // Resource role if action fails
     GHashTable *meta;                   // Meta-attributes relevant to action
     GHashTable *extra;                  // Action-specific instance attributes
@@ -224,7 +273,7 @@ void pcmk__filter_op_for_digest(xmlNode *param_set);
 bool pcmk__is_fencing_action(const char *action);
 enum pcmk__action_type pcmk__parse_action(const char *action_name);
 const char *pcmk__action_text(enum pcmk__action_type action);
-const char *pcmk__on_fail_text(enum action_fail_response on_fail);
+const char *pcmk__on_fail_text(enum pcmk__on_fail on_fail);
 
 
 /*!

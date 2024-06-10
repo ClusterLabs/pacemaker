@@ -144,37 +144,37 @@ pcmk__parse_action(const char *action_name)
  * \return Static string describing \p on_fail
  */
 const char *
-pcmk__on_fail_text(enum action_fail_response on_fail)
+pcmk__on_fail_text(enum pcmk__on_fail on_fail)
 {
     switch (on_fail) {
-        case pcmk_on_fail_ignore:
+        case pcmk__on_fail_ignore:
             return "ignore";
 
-        case pcmk_on_fail_demote:
+        case pcmk__on_fail_demote:
             return "demote";
 
-        case pcmk_on_fail_block:
+        case pcmk__on_fail_block:
             return "block";
 
-        case pcmk_on_fail_restart:
+        case pcmk__on_fail_restart:
             return "recover";
 
-        case pcmk_on_fail_ban:
+        case pcmk__on_fail_ban:
             return "migrate";
 
-        case pcmk_on_fail_stop:
+        case pcmk__on_fail_stop:
             return "stop";
 
-        case pcmk_on_fail_fence_node:
+        case pcmk__on_fail_fence_node:
             return "fence";
 
-        case pcmk_on_fail_standby_node:
+        case pcmk__on_fail_standby_node:
             return "standby";
 
-        case pcmk_on_fail_restart_container:
+        case pcmk__on_fail_restart_container:
             return "restart-container";
 
-        case pcmk_on_fail_reset_remote:
+        case pcmk__on_fail_reset_remote:
             return "reset-remote";
     }
     return "<unknown>";
