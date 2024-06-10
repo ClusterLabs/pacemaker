@@ -1108,7 +1108,7 @@ ordering_is_invalid(pcmk_action_t *action, pcmk__related_action_t *input)
     /* Prevent user-defined ordering constraints between resources
      * running in a guest node and the resource that defines that node.
      */
-    if (!pcmk_is_set(input->type, pcmk__ar_guest_allowed)
+    if (!pcmk_is_set(input->flags, pcmk__ar_guest_allowed)
         && (input->action->rsc != NULL)
         && pcmk__rsc_corresponds_to_guest(action->rsc, input->action->node)) {
 
@@ -1124,7 +1124,7 @@ ordering_is_invalid(pcmk_action_t *action, pcmk__related_action_t *input)
      * migrated from node2 to node1. If there would be a graph loop,
      * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
      */
-    if (((uint32_t) input->type == pcmk__ar_if_on_same_node_or_target)
+    if ((input->flags == pcmk__ar_if_on_same_node_or_target)
         && (action->rsc != NULL)
         && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO, pcmk__str_none)
         && pcmk__graph_has_loop(action, action, input)) {
@@ -1146,7 +1146,7 @@ pcmk__disable_invalid_orderings(pcmk_scheduler_t *scheduler)
 
             input = input_iter->data;
             if (ordering_is_invalid(action, input)) {
-                input->type = (enum pe_ordering) pcmk__ar_none;
+                input->flags = pcmk__ar_none;
             }
         }
     }

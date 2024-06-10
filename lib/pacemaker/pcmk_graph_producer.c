@@ -597,7 +597,7 @@ should_add_action_to_graph(const pcmk_action_t *action)
 static bool
 ordering_can_change_actions(const pcmk__related_action_t *ordering)
 {
-    return pcmk_any_flags_set(ordering->type,
+    return pcmk_any_flags_set(ordering->flags,
                               ~(pcmk__ar_then_implies_first_graphed
                                 |pcmk__ar_first_implies_then_graphed
                                 |pcmk__ar_ordered));
@@ -622,7 +622,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
         return true;
     }
 
-    if ((uint32_t) input->type == pcmk__ar_none) {
+    if (input->flags == pcmk__ar_none) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "ordering disabled",
                   action->uuid, action->id,
@@ -638,14 +638,14 @@ should_add_input_to_graph(const pcmk_action_t *action,
         return false;
 
     } else if (!pcmk_is_set(input->action->flags, pcmk_action_runnable)
-               && pcmk_is_set(input->type, pcmk__ar_min_runnable)) {
+               && pcmk_is_set(input->flags, pcmk__ar_min_runnable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "minimum number of instances required but input unrunnable",
                   action->uuid, action->id,
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (pcmk_is_set(input->type, pcmk__ar_unmigratable_then_blocks)
+    } else if (pcmk_is_set(input->flags, pcmk__ar_unmigratable_then_blocks)
                && !pcmk_is_set(input->action->flags, pcmk_action_runnable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "input blocked if 'then' unmigratable",
@@ -653,7 +653,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (pcmk_is_set(input->type, pcmk__ar_if_first_unmigratable)
+    } else if (pcmk_is_set(input->flags, pcmk__ar_if_first_unmigratable)
                && pcmk_is_set(input->action->flags, pcmk_action_migratable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): ordering applies "
                   "only if input is unmigratable, but it is migratable",
@@ -661,7 +661,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (((uint32_t) input->type == pcmk__ar_ordered)
+    } else if ((input->flags == pcmk__ar_ordered)
                && pcmk_is_set(input->action->flags, pcmk_action_migratable)
                && pcmk__ends_with(input->action->uuid, "_stop_0")) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
@@ -670,7 +670,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if ((uint32_t) input->type == pcmk__ar_if_on_same_node_or_target) {
+    } else if (input->flags == pcmk__ar_if_on_same_node_or_target) {
         pcmk_node_t *input_node = input->action->node;
 
         if ((action->rsc != NULL)
@@ -690,7 +690,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
                           input->action->uuid, input->action->id,
                           (assigned? assigned->private->name : "<none>"),
                           (input_node? input_node->private->name : "<none>"));
-                input->type = (enum pe_ordering) pcmk__ar_none;
+                input->flags = pcmk__ar_none;
                 return false;
             }
 
@@ -701,7 +701,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
                       input->action->uuid, input->action->id,
                       (action->node? action->node->private->name : "<none>"),
                       (input_node? input_node->private->name : "<none>"));
-            input->type = (enum pe_ordering) pcmk__ar_none;
+            input->flags = pcmk__ar_none;
             return false;
 
         } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
@@ -709,11 +709,11 @@ should_add_input_to_graph(const pcmk_action_t *action,
                       "ordering optional",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id);
-            input->type = (enum pe_ordering) pcmk__ar_none;
+            input->flags = pcmk__ar_none;
             return false;
         }
 
-    } else if ((uint32_t) input->type == pcmk__ar_if_required_on_same_node) {
+    } else if (input->flags == pcmk__ar_if_required_on_same_node) {
         if (input->action->node && action->node
             && !pcmk__same_node(input->action->node, action->node)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
@@ -722,14 +722,14 @@ should_add_input_to_graph(const pcmk_action_t *action,
                       input->action->uuid, input->action->id,
                       pcmk__node_name(action->node),
                       pcmk__node_name(input->action->node));
-            input->type = (enum pe_ordering) pcmk__ar_none;
+            input->flags = pcmk__ar_none;
             return false;
 
         } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
             crm_trace("Ignoring %s (%d) input %s (%d): optional",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id);
-            input->type = (enum pe_ordering) pcmk__ar_none;
+            input->flags = pcmk__ar_none;
             return false;
         }
 
@@ -761,7 +761,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
               input->action->uuid, input->action->id,
               action_node_str(input->action),
               action_runnable_str(input->action->flags),
-              action_optional_str(input->action->flags), input->type);
+              action_optional_str(input->action->flags), input->flags);
     return true;
 }
 
@@ -789,7 +789,7 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
                   input->action->node? input->action->node->private->name : "",
                   action->uuid,
                   action->node? action->node->private->name : "",
-                  input->type);
+                  input->flags);
         return false;
     }
 
@@ -815,7 +815,7 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
               action->node? action->node->private->name : "",
               input->action->uuid,
               input->action->node? input->action->node->private->name : "",
-              input->type,
+              input->flags,
               init_action->uuid,
               init_action->node? init_action->node->private->name : "");
 
@@ -839,7 +839,7 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
                   input->action->node? input->action->node->private->name : "",
                   action->uuid,
                   action->node? action->node->private->name : "",
-                  input->type);
+                  input->flags);
     }
     return has_loop;
 }

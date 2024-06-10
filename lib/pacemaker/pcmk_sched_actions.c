@@ -256,15 +256,15 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
      */
     pcmk_node_t *node = then->node;
 
-    if (pcmk_is_set(order->type, pcmk__ar_first_implies_same_node_then)) {
+    if (pcmk_is_set(order->flags, pcmk__ar_first_implies_same_node_then)) {
         /* For unfencing, only instances of 'then' on the same node as 'first'
          * (the unfencing operation) should restart, so reset node to
          * first->node, at which point this case is handled like a normal
          * pcmk__ar_first_implies_then.
          */
-        pcmk__clear_relation_flags(order->type,
+        pcmk__clear_relation_flags(order->flags,
                                    pcmk__ar_first_implies_same_node_then);
-        pcmk__set_relation_flags(order->type, pcmk__ar_first_implies_then);
+        pcmk__set_relation_flags(order->flags, pcmk__ar_first_implies_then);
         node = first->node;
         pcmk__rsc_trace(then->rsc,
                         "%s then %s: mapped "
@@ -273,7 +273,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         first->uuid, then->uuid, pcmk__node_name(node));
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_first_implies_then)) {
+    if (pcmk_is_set(order->flags, pcmk__ar_first_implies_then)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node,
                               first_flags & pcmk_action_optional,
@@ -290,7 +290,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_intermediate_stop)
+    if (pcmk_is_set(order->flags, pcmk__ar_intermediate_stop)
         && (then->rsc != NULL)) {
         enum pe_action_flags restart = pcmk_action_optional
                                        |pcmk_action_runnable;
@@ -303,7 +303,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_then_implies_first)) {
+    if (pcmk_is_set(order->flags, pcmk__ar_then_implies_first)) {
         if (first->rsc != NULL) {
             changed |= update(first->rsc, first, then, node, first_flags,
                               pcmk_action_optional, pcmk__ar_then_implies_first,
@@ -319,7 +319,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_promoted_then_implies_first)) {
+    if (pcmk_is_set(order->flags, pcmk__ar_promoted_then_implies_first)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node,
                               first_flags & pcmk_action_optional,
@@ -333,7 +333,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_min_runnable)) {
+    if (pcmk_is_set(order->flags, pcmk__ar_min_runnable)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_runnable, pcmk__ar_min_runnable,
@@ -358,7 +358,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_nested_remote_probe)
+    if (pcmk_is_set(order->flags, pcmk__ar_nested_remote_probe)
         && (then->rsc != NULL)) {
 
         if (!pcmk_is_set(first_flags, pcmk_action_runnable)
@@ -368,7 +368,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
             pcmk__rsc_trace(then->rsc,
                             "%s then %s: ignoring because first is stopping",
                             first->uuid, then->uuid);
-            order->type = (enum pe_ordering) pcmk__ar_none;
+            order->flags = pcmk__ar_none;
         } else {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_runnable,
@@ -380,7 +380,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_unrunnable_first_blocks)) {
+    if (pcmk_is_set(order->flags, pcmk__ar_unrunnable_first_blocks)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_runnable,
@@ -398,7 +398,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_unmigratable_then_blocks)) {
+    if (pcmk_is_set(order->flags, pcmk__ar_unmigratable_then_blocks)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_optional,
@@ -411,7 +411,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_first_else_then)) {
+    if (pcmk_is_set(order->flags, pcmk__ar_first_else_then)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_optional, pcmk__ar_first_else_then,
@@ -423,7 +423,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_ordered)) {
+    if (pcmk_is_set(order->flags, pcmk__ar_ordered)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_runnable, pcmk__ar_ordered,
@@ -434,7 +434,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_asymmetric)) {
+    if (pcmk_is_set(order->flags, pcmk__ar_asymmetric)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_runnable, pcmk__ar_asymmetric,
@@ -446,7 +446,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
     }
 
     if (pcmk_is_set(first->flags, pcmk_action_runnable)
-        && pcmk_is_set(order->type, pcmk__ar_first_implies_then_graphed)
+        && pcmk_is_set(order->flags, pcmk__ar_first_implies_then_graphed)
         && !pcmk_is_set(first_flags, pcmk_action_optional)) {
 
         pcmk__rsc_trace(then->rsc, "%s will be in graph because %s is required",
@@ -455,7 +455,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         // Don't bother marking 'then' as changed just for this
     }
 
-    if (pcmk_is_set(order->type, pcmk__ar_then_implies_first_graphed)
+    if (pcmk_is_set(order->flags, pcmk__ar_then_implies_first_graphed)
         && !pcmk_is_set(then_flags, pcmk_action_optional)) {
 
         pcmk__rsc_trace(then->rsc, "%s will be in graph because %s is required",
@@ -464,9 +464,9 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         // Don't bother marking 'first' as changed just for this
     }
 
-    if (pcmk_any_flags_set(order->type, pcmk__ar_first_implies_then
-                                        |pcmk__ar_then_implies_first
-                                        |pcmk__ar_intermediate_stop)
+    if (pcmk_any_flags_set(order->flags, pcmk__ar_first_implies_then
+                                         |pcmk__ar_then_implies_first
+                                         |pcmk__ar_intermediate_stop)
         && (first->rsc != NULL)
         && !pcmk_is_set(first->rsc->flags, pcmk__rsc_managed)
         && pcmk_is_set(first->rsc->flags, pcmk__rsc_blocked)
@@ -575,7 +575,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         }
 
         // Disable constraint if it only applies when on same node, but isn't
-        if (pcmk_is_set(other->type, pcmk__ar_if_on_same_node)
+        if (pcmk_is_set(other->flags, pcmk__ar_if_on_same_node)
             && (first_node != NULL) && (then_node != NULL)
             && !pcmk__same_node(first_node, then_node)) {
 
@@ -584,14 +584,14 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
                             "not same node",
                             other->action->uuid, pcmk__node_name(first_node),
                             then->uuid, pcmk__node_name(then_node));
-            other->type = (enum pe_ordering) pcmk__ar_none;
+            other->flags = pcmk__ar_none;
             continue;
         }
 
         pcmk__clear_updated_flags(changed, then, pcmk__updated_first);
 
         if ((first->rsc != NULL)
-            && pcmk_is_set(other->type, pcmk__ar_then_cancels_first)
+            && pcmk_is_set(other->flags, pcmk__ar_then_cancels_first)
             && !pcmk_is_set(then->flags, pcmk_action_optional)) {
 
             /* 'then' is required, so we must abandon 'first'
@@ -615,7 +615,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         pcmk__rsc_trace(then->rsc,
                         "%s (%#.6x) then %s (%#.6x): type=%#.6x node=%s",
                         first->uuid, first->flags, then->uuid, then->flags,
-                        other->type, action_node_str(first));
+                        other->flags, action_node_str(first));
 
         if (first == other->action) {
             /* 'first' was not remapped (e.g. from 'start' to 'running'), which
@@ -634,7 +634,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             /* 'first' was for a complex resource (clone, group, etc),
              * create a new dependency if necessary
              */
-        } else if (order_actions(first, then, other->type)) {
+        } else if (order_actions(first, then, other->flags)) {
             /* This was the first time 'first' and 'then' were associated,
              * start again to get the new actions_before list
              */
@@ -644,7 +644,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
                             "then %s",
                             other->action->uuid, then->uuid, first->uuid,
                             then->uuid);
-            other->type = (enum pe_ordering) pcmk__ar_none;
+            other->flags = pcmk__ar_none;
         }
 
 
@@ -1383,7 +1383,7 @@ pcmk__deduplicate_action_inputs(pcmk_action_t *action)
              * matter, but crm_simulate looks at certain ones when creating a
              * dot graph. Combining the flags is sufficient for that purpose.
              */
-            last_input->type |= input->type;
+            pcmk__set_relation_flags(last_input->flags, input->flags);
             if (input->graphed) {
                 last_input->graphed = true;
             }

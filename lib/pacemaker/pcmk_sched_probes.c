@@ -501,7 +501,7 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
     if ((after->action->rsc->private->variant <= pcmk__rsc_variant_group)
         || pcmk_is_set(probe->flags, pcmk_action_runnable)
         // The order type is already enforced for its parent.
-        || pcmk_is_set(after->type, pcmk__ar_unrunnable_first_blocks)
+        || pcmk_is_set(after->flags, pcmk__ar_unrunnable_first_blocks)
         || (pe__const_top_resource(probe->rsc, false) != after->action->rsc)
         || !pcmk__str_eq(after->action->task, PCMK_ACTION_START,
                          pcmk__str_none)) {
@@ -636,7 +636,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
          * only used for unfencing case, which tends to introduce transition
          * loops...
          */
-        if (!pcmk_is_set(after_wrapper->type, pcmk__ar_first_implies_then)) {
+        if (!pcmk_is_set(after_wrapper->flags, pcmk__ar_first_implies_then)) {
             /* The order type between a group/clone and its child such as
              * B.start-> B_child.start is:
              * pcmk__ar_then_implies_first_graphed
@@ -674,7 +674,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
                   after->uuid, pcmk__node_name(after->node),
                   after_wrapper->action->uuid,
                   pcmk__node_name(after_wrapper->action->node),
-                  after_wrapper->type);
+                  after_wrapper->flags);
 
         add_restart_orderings_for_probe(probe, after_wrapper->action);
     }

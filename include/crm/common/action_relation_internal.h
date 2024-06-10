@@ -12,15 +12,9 @@
 
 #include <stdbool.h>                        // bool
 #include <stdint.h>                         // uint32_t
-#include <crm/common/actions.h>             // enum pe_ordering, etc.
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t, pcmk_action_t
 
-/*!
- * Flags to indicate the relationship between two actions
- *
- * @COMPAT The values and semantics of these flags should not be changed until
- * the deprecated enum pe_ordering is dropped from the public API.
- */
+// Flags to indicate the relationship between two actions
 enum pcmk__action_relation_flags {
     //! No relation (compare with equality rather than bit set)
     pcmk__ar_none                           = 0U,
@@ -150,10 +144,8 @@ typedef struct {
 
 // Action sequenced relative to another action
 typedef struct pcmk__related_action {
-    // @TODO This should be uint32_t
-    enum pe_ordering type;      // Group of enum pcmk__action_relation_flags
-
     pcmk_action_t *action;      // Action to be sequenced
+    uint32_t flags;             // Group of enum pcmk__action_relation_flags
     bool graphed;               // Whether action has been added to graph yet
 } pcmk__related_action_t;
 

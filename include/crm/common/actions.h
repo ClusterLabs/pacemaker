@@ -218,42 +218,6 @@ enum pe_action_flags {
 };
 //!@}
 
-/* @COMPAT enum pe_ordering should be removed at an
- * API compatibility break when struct pcmk__related_action can be refactored
- */
-
-//!@{
-//! \deprecated Do not use
-enum pe_ordering {
-    pe_order_none                  = 0x0,
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    pe_order_optional              = 0x1,
-    pe_order_apply_first_non_migratable = 0x2,
-    pe_order_implies_first         = 0x10,
-    pe_order_implies_then          = 0x20,
-    pe_order_promoted_implies_first = 0x40,
-    pe_order_implies_first_migratable  = 0x80,
-    pe_order_runnable_left         = 0x100,
-    pe_order_pseudo_left           = 0x200,
-    pe_order_implies_then_on_node  = 0x400,
-    pe_order_probe                 = 0x800,
-    pe_order_restart               = 0x1000,
-    pe_order_stonith_stop          = 0x2000,
-    pe_order_serialize_only        = 0x4000,
-    pe_order_same_node             = 0x8000,
-    pe_order_implies_first_printed = 0x10000,
-    pe_order_implies_then_printed  = 0x20000,
-    pe_order_asymmetrical          = 0x100000,
-    pe_order_load                  = 0x200000,
-    pe_order_one_or_more           = 0x400000,
-    pe_order_anti_colocation       = 0x800000,
-    pe_order_preserve              = 0x1000000,
-    pe_order_then_cancels_first    = 0x2000000,
-    pe_order_trace                 = 0x4000000,
-    pe_order_implies_first_master  = pe_order_promoted_implies_first,
-#endif
-};
-
 // Implementation of pcmk_action_t
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{

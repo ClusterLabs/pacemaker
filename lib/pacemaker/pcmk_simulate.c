@@ -288,12 +288,12 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
             if (before->graphed) {
                 optional = false;
                 style = PCMK__VALUE_BOLD;
-            } else if ((uint32_t) before->type == pcmk__ar_none) {
+            } else if (before->flags == pcmk__ar_none) {
                 continue;
             } else if (pcmk_is_set(before->action->flags,
                                    pcmk_action_added_to_graph)
                        && pcmk_is_set(action->flags, pcmk_action_added_to_graph)
-                       && (uint32_t) before->type != pcmk__ar_if_on_same_node_or_target) {
+                       && before->flags != pcmk__ar_if_on_same_node_or_target) {
                 optional = false;
             }
 
