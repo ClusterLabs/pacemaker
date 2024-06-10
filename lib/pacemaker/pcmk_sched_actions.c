@@ -97,8 +97,8 @@ action_uuid_for_ordering(const char *first_uuid,
     char *uuid = NULL;
     char *rid = NULL;
     char *first_task_str = NULL;
-    enum action_tasks first_task = pcmk_action_unspecified;
-    enum action_tasks remapped_task = pcmk_action_unspecified;
+    enum pcmk__action_type first_task = pcmk__action_unspecified;
+    enum pcmk__action_type remapped_task = pcmk__action_unspecified;
 
     // Only non-notify actions for collective resources need remapping
     if ((strstr(first_uuid, PCMK_ACTION_NOTIFY) != NULL)
@@ -114,30 +114,30 @@ action_uuid_for_ordering(const char *first_uuid,
 
     first_task = pcmk__parse_action(first_task_str);
     switch (first_task) {
-        case pcmk_action_stop:
-        case pcmk_action_start:
-        case pcmk_action_notify:
-        case pcmk_action_promote:
-        case pcmk_action_demote:
+        case pcmk__action_stop:
+        case pcmk__action_start:
+        case pcmk__action_notify:
+        case pcmk__action_promote:
+        case pcmk__action_demote:
             remapped_task = first_task + 1;
             break;
-        case pcmk_action_stopped:
-        case pcmk_action_started:
-        case pcmk_action_notified:
-        case pcmk_action_promoted:
-        case pcmk_action_demoted:
+        case pcmk__action_stopped:
+        case pcmk__action_started:
+        case pcmk__action_notified:
+        case pcmk__action_promoted:
+        case pcmk__action_demoted:
             remapped_task = first_task;
             break;
-        case pcmk_action_monitor:
-        case pcmk_action_shutdown:
-        case pcmk_action_fence:
+        case pcmk__action_monitor:
+        case pcmk__action_shutdown:
+        case pcmk__action_fence:
             break;
         default:
             crm_err("Unknown action '%s' in ordering", first_task_str);
             break;
     }
 
-    if (remapped_task != pcmk_action_unspecified) {
+    if (remapped_task != pcmk__action_unspecified) {
         /* If a clone or bundle has notifications enabled, the ordering will be
          * relative to when notifications have been sent for the remapped task.
          */
@@ -992,8 +992,8 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
     }
 
     switch (pcmk__parse_action(action->task)) {
-        case pcmk_action_fence:
-        case pcmk_action_shutdown:
+        case pcmk__action_fence:
+        case pcmk__action_shutdown:
             if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
                 desc = "Pseudo ";
             } else if (pcmk_is_set(action->flags, pcmk_action_optional)) {

@@ -1388,17 +1388,17 @@ pe_free_action(pcmk_action_t *action)
     free(action);
 }
 
-enum action_tasks
+enum pcmk__action_type
 get_complex_task(const pcmk_resource_t *rsc, const char *name)
 {
-    enum action_tasks task = pcmk__parse_action(name);
+    enum pcmk__action_type task = pcmk__parse_action(name);
 
     if (pcmk__is_primitive(rsc)) {
         switch (task) {
-            case pcmk_action_stopped:
-            case pcmk_action_started:
-            case pcmk_action_demoted:
-            case pcmk_action_promoted:
+            case pcmk__action_stopped:
+            case pcmk__action_started:
+            case pcmk__action_demoted:
+            case pcmk__action_promoted:
                 crm_trace("Folding %s back into its atomic counterpart for %s",
                           name, rsc->id);
                 --task;

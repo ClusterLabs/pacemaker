@@ -1353,16 +1353,16 @@ orig_action_name(const pcmk_action_t *action)
 
     char *action_type = NULL;
     const char *action_name = action->task;
-    enum action_tasks orig_task = pcmk_action_unspecified;
+    enum pcmk__action_type orig_task = pcmk__action_unspecified;
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_NOTIFY,
                              PCMK_ACTION_NOTIFIED, NULL)) {
         // action->uuid is RSC_(confirmed-){pre,post}_notify_ACTION_INTERVAL
         CRM_CHECK(parse_op_key(action->uuid, NULL, &action_type, NULL),
-                  return pcmk__action_text(pcmk_action_unspecified));
+                  return pcmk__action_text(pcmk__action_unspecified));
         action_name = strstr(action_type, "_notify_");
         CRM_CHECK(action_name != NULL,
-                  return pcmk__action_text(pcmk_action_unspecified));
+                  return pcmk__action_text(pcmk__action_unspecified));
         action_name += strlen("_notify_");
     }
     orig_task = get_complex_task(instance, action_name);

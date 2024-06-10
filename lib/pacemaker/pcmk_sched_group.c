@@ -523,7 +523,7 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
         pcmk_resource_t *member = (pcmk_resource_t *) iter->data;
 
         // Check whether member has the same action
-        enum action_tasks task = get_complex_task(member, action->task);
+        enum pcmk__action_type task = get_complex_task(member, action->task);
         const char *task_s = pcmk__action_text(task);
         pcmk_action_t *member_action = NULL;
 
@@ -560,7 +560,8 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
         /* Group (pseudo-)actions other than stop or demote are unrunnable
          * unless every member will do it.
          */
-        } else if ((task != pcmk_action_stop) && (task != pcmk_action_demote)) {
+        } else if ((task != pcmk__action_stop)
+                    && (task != pcmk__action_demote)) {
             pcmk__rsc_trace(action->rsc,
                             "%s is not runnable because %s will not %s",
                             action->uuid, member->id, task_s);

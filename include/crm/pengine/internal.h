@@ -219,8 +219,8 @@ pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 pcmk_action_t *find_first_action(const GList *input, const char *uuid,
                                  const char *task, const pcmk_node_t *on_node);
 
-enum action_tasks get_complex_task(const pcmk_resource_t *rsc,
-                                   const char *name);
+enum pcmk__action_type get_complex_task(const pcmk_resource_t *rsc,
+                                        const char *name);
 
 GList *find_actions(GList *input, const char *key, const pcmk_node_t *on_node);
 GList *find_actions_exact(GList *input, const char *key,

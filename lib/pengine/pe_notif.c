@@ -611,9 +611,9 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
 
         if (!pcmk_is_set(op->flags, pcmk_action_optional)
             && (op->node != NULL)) {
-            enum action_tasks task = pcmk__parse_action(op->task);
+            enum pcmk__action_type task = pcmk__parse_action(op->task);
 
-            if ((task == pcmk_action_stop) && op->node->details->unclean) {
+            if ((task == pcmk__action_stop) && op->node->details->unclean) {
                 // Create anyway (additional noise if node can't be fenced)
             } else if (!pcmk_is_set(op->flags, pcmk_action_runnable)) {
                 continue;
@@ -622,16 +622,16 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
             entry = new_notify_entry(rsc, op->node);
 
             switch (task) {
-                case pcmk_action_start:
+                case pcmk__action_start:
                     n_data->start = g_list_prepend(n_data->start, entry);
                     break;
-                case pcmk_action_stop:
+                case pcmk__action_stop:
                     n_data->stop = g_list_prepend(n_data->stop, entry);
                     break;
-                case pcmk_action_promote:
+                case pcmk__action_promote:
                     n_data->promote = g_list_prepend(n_data->promote, entry);
                     break;
-                case pcmk_action_demote:
+                case pcmk__action_demote:
                     n_data->demote = g_list_prepend(n_data->demote, entry);
                     break;
                 default:
@@ -809,7 +809,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     GList *iter = NULL;
     pcmk_action_t *stop = NULL;
     pcmk_action_t *start = NULL;
-    enum action_tasks task = pcmk__parse_action(n_data->action);
+    enum pcmk__action_type task = pcmk__parse_action(n_data->action);
 
     // If this is a clone, call recursively for each instance
     if (rsc->private->children != NULL) {
@@ -825,10 +825,10 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
         if (!pcmk_is_set(op->flags, pcmk_action_optional)
             && (op->node != NULL)) {
             switch (pcmk__parse_action(op->task)) {
-                case pcmk_action_start:
-                case pcmk_action_stop:
-                case pcmk_action_promote:
-                case pcmk_action_demote:
+                case pcmk__action_start:
+                case pcmk__action_stop:
+                case pcmk__action_promote:
+                case pcmk__action_demote:
                     add_notify_data_to_action_meta(n_data, op);
                     break;
                 default:
@@ -839,7 +839,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
 
     // Skip notify action itself if original action was not needed
     switch (task) {
-        case pcmk_action_start:
+        case pcmk__action_start:
             if (n_data->start == NULL) {
                 pcmk__rsc_trace(rsc, "No notify action needed for %s %s",
                                 rsc->id, n_data->action);
@@ -847,7 +847,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             }
             break;
 
-        case pcmk_action_promote:
+        case pcmk__action_promote:
             if (n_data->promote == NULL) {
                 pcmk__rsc_trace(rsc, "No notify action needed for %s %s",
                                 rsc->id, n_data->action);
@@ -855,7 +855,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             }
             break;
 
-        case pcmk_action_demote:
+        case pcmk__action_demote:
             if (n_data->demote == NULL) {
                 pcmk__rsc_trace(rsc, "No notify action needed for %s %s",
                                 rsc->id, n_data->action);
@@ -873,7 +873,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
 
     // Create notify actions for stop or demote
     if ((rsc->private->orig_role != pcmk_role_stopped)
-        && ((task == pcmk_action_stop) || (task == pcmk_action_demote))) {
+        && ((task == pcmk__action_stop) || (task == pcmk__action_demote))) {
 
         stop = find_first_action(rsc->private->actions, NULL, PCMK_ACTION_STOP,
                                  NULL);
@@ -897,7 +897,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             new_notify_action(rsc, current_node, n_data->pre,
                               n_data->pre_done, n_data);
 
-            if ((task == pcmk_action_demote) || (stop == NULL)
+            if ((task == pcmk__action_demote) || (stop == NULL)
                 || pcmk_is_set(stop->flags, pcmk_action_optional)) {
                 new_post_notify_action(rsc, current_node, n_data);
             }
@@ -906,7 +906,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
 
     // Create notify actions for start or promote
     if ((rsc->private->next_role != pcmk_role_stopped)
-        && ((task == pcmk_action_start) || (task == pcmk_action_promote))) {
+        && ((task == pcmk__action_start) || (task == pcmk__action_promote))) {
 
         start = find_first_action(rsc->private->actions, NULL,
                                   PCMK_ACTION_START, NULL);
@@ -928,7 +928,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
                             pcmk_role_text(rsc->private->next_role), rsc->id);
             return;
         }
-        if ((task != pcmk_action_start) || (start == NULL)
+        if ((task != pcmk__action_start) || (start == NULL)
             || pcmk_is_set(start->flags, pcmk_action_optional)) {
 
             new_notify_action(rsc, rsc->private->assigned_node, n_data->pre,

@@ -93,6 +93,32 @@ extern "C" {
                                             (to_clear), #to_clear);         \
     } while (0)
 
+// Possible actions (including some pseudo-actions)
+enum pcmk__action_type {
+    pcmk__action_unspecified = 0,   // Unspecified or unknown action
+    pcmk__action_monitor,           // Monitor
+
+    // Each "completed" action must be the regular action plus 1
+
+    pcmk__action_stop,              // Stop
+    pcmk__action_stopped,           // Stop completed
+
+    pcmk__action_start,             // Start
+    pcmk__action_started,           // Start completed
+
+    pcmk__action_notify,            // Notify
+    pcmk__action_notified,          // Notify completed
+
+    pcmk__action_promote,           // Promote
+    pcmk__action_promoted,          // Promoted
+
+    pcmk__action_demote,            // Demote
+    pcmk__action_demoted,           // Demoted
+
+    pcmk__action_shutdown,          // Shut down node
+    pcmk__action_fence,             // Fence node
+};
+
 char *pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms);
 char *pcmk__notify_key(const char *rsc_id, const char *notify_type,
                        const char *op_type);
@@ -100,8 +126,8 @@ char *pcmk__transition_key(int transition_id, int action_id, int target_rc,
                            const char *node);
 void pcmk__filter_op_for_digest(xmlNode *param_set);
 bool pcmk__is_fencing_action(const char *action);
-enum action_tasks pcmk__parse_action(const char *action_name);
-const char *pcmk__action_text(enum action_tasks action);
+enum pcmk__action_type pcmk__parse_action(const char *action_name);
+const char *pcmk__action_text(enum pcmk__action_type action);
 
 
 /*!

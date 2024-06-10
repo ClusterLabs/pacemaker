@@ -704,13 +704,13 @@ pcmk__bundle_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 
         // Clone actions are done on the bundled clone resource, not container
         switch (get_complex_task(bundled_resource, action->task)) {
-            case pcmk_action_unspecified:
-            case pcmk_action_notify:
-            case pcmk_action_notified:
-            case pcmk_action_promote:
-            case pcmk_action_promoted:
-            case pcmk_action_demote:
-            case pcmk_action_demoted:
+            case pcmk__action_unspecified:
+            case pcmk__action_notify:
+            case pcmk__action_notified:
+            case pcmk__action_promote:
+            case pcmk__action_promoted:
+            case pcmk__action_demote:
+            case pcmk__action_demoted:
                 return pcmk__collective_action_flags(action, children, node);
             default:
                 break;

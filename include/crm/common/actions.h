@@ -76,53 +76,6 @@ extern "C" {
 #define PCMK_ACTION_STOPPED             "stopped"
 #define PCMK_ACTION_VALIDATE_ALL        "validate-all"
 
-// Possible actions (including some pseudo-actions)
-// @COMPAT Make this internal when we can break API backward compatibility
-//!@{
-//! \deprecated Do not use (public access will be removed in a future release)
-enum action_tasks {
-    pcmk_action_unspecified = 0,    // Unspecified or unknown action
-    pcmk_action_monitor,            // Monitor
-
-    // Each "completed" action must be the regular action plus 1
-
-    pcmk_action_stop,               // Stop
-    pcmk_action_stopped,            // Stop completed
-
-    pcmk_action_start,              // Start
-    pcmk_action_started,            // Start completed
-
-    pcmk_action_notify,             // Notify
-    pcmk_action_notified,           // Notify completed
-
-    pcmk_action_promote,            // Promote
-    pcmk_action_promoted,           // Promoted
-
-    pcmk_action_demote,             // Demote
-    pcmk_action_demoted,            // Demoted
-
-    pcmk_action_shutdown,           // Shut down node
-    pcmk_action_fence,              // Fence node
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    no_action               = pcmk_action_unspecified,
-    monitor_rsc             = pcmk_action_monitor,
-    stop_rsc                = pcmk_action_stop,
-    stopped_rsc             = pcmk_action_stopped,
-    start_rsc               = pcmk_action_start,
-    started_rsc             = pcmk_action_started,
-    action_notify           = pcmk_action_notify,
-    action_notified         = pcmk_action_notified,
-    action_promote          = pcmk_action_promote,
-    action_promoted         = pcmk_action_promoted,
-    action_demote           = pcmk_action_demote,
-    action_demoted          = pcmk_action_demoted,
-    shutdown_crm            = pcmk_action_shutdown,
-    stonith_node            = pcmk_action_fence,
-#endif
-};
-//!@}
-
 // Possible responses to a resource action failure
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{
