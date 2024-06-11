@@ -27,6 +27,7 @@
 #include <crm/common/scheduler.h>
 
 /*!
+ * \internal
  * \brief Get string equivalent of an action type
  *
  * \param[in] action  Action type
@@ -82,6 +83,7 @@ pcmk__action_text(enum pcmk__action_type action)
 }
 
 /*!
+ * \internal
  * \brief Parse an action type from an action name
  *
  * \param[in] action_name  Action name
@@ -137,6 +139,7 @@ pcmk__parse_action(const char *action_name)
 }
 
 /*!
+ * \internal
  * \brief Get string equivalent of a failure handling type
  *
  * \param[in] on_fail  Failure handling type
