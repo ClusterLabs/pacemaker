@@ -686,17 +686,6 @@ bool stonith_agent_exists(const char *agent, int timeout);
  */
 const char *stonith_action_str(const char *action);
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-/* Normally we'd put this section in a separate file (crm/fencing/compat.h), but
- * we can't do that for the reason noted at the top of this file. That does mean
- * we have to duplicate these declarations where they're implemented.
- */
-
-//! \deprecated Use stonith_get_namespace() instead
-const char *get_stonith_provider(const char *agent, const char *provider);
-
-#endif
-
 #ifdef __cplusplus
 }
 #endif
