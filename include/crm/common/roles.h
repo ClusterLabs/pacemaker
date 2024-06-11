@@ -37,11 +37,6 @@ enum rsc_role_e {
     pcmk_role_started       = 2, //!< Started
     pcmk_role_unpromoted    = 3, //!< Unpromoted
     pcmk_role_promoted      = 4, //!< Promoted
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_role_promoted instead
-    RSC_ROLE_MASTER             = pcmk_role_promoted,
-#endif
 };
 
 const char *pcmk_role_text(enum rsc_role_e role);
