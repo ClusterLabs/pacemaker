@@ -407,7 +407,7 @@ new_load_stopped_op(pcmk_node_t *node)
 
     if (load_stopped->node == NULL) {
         load_stopped->node = pe__copy_node(node);
-        pcmk__clear_action_flags(load_stopped, pcmk_action_optional);
+        pcmk__clear_action_flags(load_stopped, pcmk__action_optional);
     }
     free(load_stopped_task);
     return load_stopped;

@@ -486,21 +486,22 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__related_action_t *after = gIter->data;
 
-        if (after->action == rh_action && (after->type & flags)) {
+        if ((after->action == rh_action)
+            && pcmk_any_flags_set(after->flags, flags)) {
             return FALSE;
         }
     }
 
     wrapper = pcmk__assert_alloc(1, sizeof(pcmk__related_action_t));
     wrapper->action = rh_action;
-    wrapper->type = flags;
+    wrapper->flags = flags;
     list = lh_action->actions_after;
     list = g_list_prepend(list, wrapper);
     lh_action->actions_after = list;
 
     wrapper = pcmk__assert_alloc(1, sizeof(pcmk__related_action_t));
     wrapper->action = lh_action;
-    wrapper->type = flags;
+    wrapper->flags = flags;
     list = rh_action->actions_before;
     list = g_list_prepend(list, wrapper);
     rh_action->actions_before = list;

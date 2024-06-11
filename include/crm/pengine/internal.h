@@ -172,17 +172,16 @@ xmlNode *pcmk__find_action_config(const pcmk_resource_t *rsc,
                                   const char *action_name, guint interval_ms,
                                   bool include_disabled);
 
-enum rsc_start_requirement pcmk__action_requires(const pcmk_resource_t *rsc,
-                                                 const char *action_name);
+enum pcmk__requires pcmk__action_requires(const pcmk_resource_t *rsc,
+                                          const char *action_name);
 
-enum action_fail_response pcmk__parse_on_fail(const pcmk_resource_t *rsc,
-                                              const char *action_name,
-                                              guint interval_ms,
-                                              const char *value);
+enum pcmk__on_fail pcmk__parse_on_fail(const pcmk_resource_t *rsc,
+                                       const char *action_name,
+                                       guint interval_ms, const char *value);
 
 enum rsc_role_e pcmk__role_after_failure(const pcmk_resource_t *rsc,
                                          const char *action_name,
-                                         enum action_fail_response on_fail,
+                                         enum pcmk__on_fail on_fail,
                                          GHashTable *meta);
 
 pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
@@ -219,8 +218,8 @@ pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 pcmk_action_t *find_first_action(const GList *input, const char *uuid,
                                  const char *task, const pcmk_node_t *on_node);
 
-enum action_tasks get_complex_task(const pcmk_resource_t *rsc,
-                                   const char *name);
+enum pcmk__action_type get_complex_task(const pcmk_resource_t *rsc,
+                                        const char *name);
 
 GList *find_actions(GList *input, const char *key, const pcmk_node_t *on_node);
 GList *find_actions_exact(GList *input, const char *key,
@@ -289,7 +288,8 @@ void trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node,
                        const char *reason, pcmk_action_t *dependency,
                        pcmk_scheduler_t *scheduler);
 
-char *pe__action2reason(const pcmk_action_t *action, enum pe_action_flags flag);
+char *pe__action2reason(const pcmk_action_t *action,
+                        enum pcmk__action_flags flag);
 void pe_action_set_reason(pcmk_action_t *action, const char *reason,
                           bool overwrite);
 void pe__add_action_expected_result(pcmk_action_t *action, int expected_result);

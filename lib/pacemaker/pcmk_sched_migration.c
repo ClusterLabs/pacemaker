@@ -70,15 +70,15 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
                                  rsc->private->assigned_node, TRUE,
                                  rsc->private->scheduler);
 
-    pcmk__set_action_flags(start, pcmk_action_migratable);
-    pcmk__set_action_flags(stop, pcmk_action_migratable);
+    pcmk__set_action_flags(start, pcmk__action_migratable);
+    pcmk__set_action_flags(stop, pcmk__action_migratable);
 
     // This is easier than trying to delete it from the graph
-    pcmk__set_action_flags(start, pcmk_action_pseudo);
+    pcmk__set_action_flags(start, pcmk__action_pseudo);
 
     if (target_node == NULL) {
-        pcmk__set_action_flags(migrate_from, pcmk_action_migratable);
-        pcmk__set_action_flags(migrate_to, pcmk_action_migratable);
+        pcmk__set_action_flags(migrate_from, pcmk__action_migratable);
+        pcmk__set_action_flags(migrate_to, pcmk__action_migratable);
         migrate_to->needs = start->needs;
 
         // Probe -> migrate_to -> migrate_from
@@ -95,7 +95,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
                            pcmk__ar_ordered|pcmk__ar_unmigratable_then_blocks,
                            rsc->private->scheduler);
     } else {
-        pcmk__set_action_flags(migrate_from, pcmk_action_migratable);
+        pcmk__set_action_flags(migrate_from, pcmk__action_migratable);
         migrate_from->needs = start->needs;
 
         // Probe -> migrate_from (migrate_to already completed)
@@ -167,7 +167,7 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
                     (cleanup? " and cleanup" : ""), rsc->id,
                     pcmk__node_name(dangling_source));
     stop = stop_action(rsc, dangling_source, FALSE);
-    pcmk__set_action_flags(stop, pcmk_action_migration_abort);
+    pcmk__set_action_flags(stop, pcmk__action_migration_abort);
     if (cleanup) {
         pcmk__schedule_cleanup(rsc, dangling_source, false);
     }

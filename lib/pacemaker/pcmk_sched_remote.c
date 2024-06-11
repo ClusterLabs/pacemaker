@@ -170,7 +170,7 @@ static void
 apply_remote_ordering(pcmk_action_t *action)
 {
     pcmk_resource_t *remote_rsc = NULL;
-    enum action_tasks task = pcmk_parse_action(action->task);
+    enum pcmk__action_type task = pcmk__parse_action(action->task);
     enum remote_connection_state state = get_remote_node_state(action->node);
 
     uint32_t order_opts = pcmk__ar_none;
@@ -191,15 +191,15 @@ apply_remote_ordering(pcmk_action_t *action)
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
-        /* Migration ops map to pcmk_action_unspecified, but we need to apply
+        /* Migration ops map to pcmk__action_unspecified, but we need to apply
          * the same ordering as for stop or demote (see get_router_node()).
          */
-        task = pcmk_action_stop;
+        task = pcmk__action_stop;
     }
 
     switch (task) {
-        case pcmk_action_start:
-        case pcmk_action_promote:
+        case pcmk__action_start:
+        case pcmk__action_promote:
             order_opts = pcmk__ar_none;
 
             if (state == remote_state_failed) {
@@ -212,7 +212,7 @@ apply_remote_ordering(pcmk_action_t *action)
             order_start_then_action(remote_rsc, action, order_opts);
             break;
 
-        case pcmk_action_stop:
+        case pcmk__action_stop:
             if (state == remote_state_alive) {
                 order_action_then_stop(action, remote_rsc,
                                        pcmk__ar_then_implies_first);
@@ -245,7 +245,7 @@ apply_remote_ordering(pcmk_action_t *action)
             }
             break;
 
-        case pcmk_action_demote:
+        case pcmk__action_demote:
             /* Only order this demote relative to the connection start if the
              * connection isn't being torn down. Otherwise, the demote would be
              * blocked because the connection start would not be allowed.
@@ -270,7 +270,8 @@ apply_remote_ordering(pcmk_action_t *action)
             } else {
                 pcmk_node_t *cluster_node = pcmk__current_node(remote_rsc);
 
-                if ((task == pcmk_action_monitor) && (state == remote_state_failed)) {
+                if ((task == pcmk__action_monitor)
+                    && (state == remote_state_failed)) {
                     /* We would only be here if we do not know the state of the
                      * resource on the remote node. Since we have no way to find
                      * out, it is necessary to fence the node.
@@ -301,7 +302,7 @@ apply_launcher_ordering(pcmk_action_t *action)
 {
     pcmk_resource_t *remote_rsc = NULL;
     pcmk_resource_t *launcher = NULL;
-    enum action_tasks task = pcmk_parse_action(action->task);
+    enum pcmk__action_type task = pcmk__parse_action(action->task);
 
     CRM_ASSERT(action->rsc != NULL);
     CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
@@ -326,15 +327,15 @@ apply_launcher_ordering(pcmk_action_t *action)
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
-        /* Migration ops map to pcmk_action_unspecified, but we need to apply
+        /* Migration ops map to pcmk__action_unspecified, but we need to apply
          * the same ordering as for stop or demote (see get_router_node()).
          */
-        task = pcmk_action_stop;
+        task = pcmk__action_stop;
     }
 
     switch (task) {
-        case pcmk_action_start:
-        case pcmk_action_promote:
+        case pcmk__action_start:
+        case pcmk__action_promote:
             // Force resource recovery if the launcher is recovered
             order_start_then_action(launcher, action,
                                     pcmk__ar_first_implies_then);
@@ -343,8 +344,8 @@ apply_launcher_ordering(pcmk_action_t *action)
             order_start_then_action(remote_rsc, action, pcmk__ar_none);
             break;
 
-        case pcmk_action_stop:
-        case pcmk_action_demote:
+        case pcmk__action_stop:
+        case pcmk__action_demote:
             if (pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
                 /* When the launcher representing a guest node fails, any stop
                  * or demote actions for resources running on the guest node
@@ -372,7 +373,7 @@ apply_launcher_ordering(pcmk_action_t *action)
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established
                  */
-                if (task != pcmk_action_unspecified) {
+                if (task != pcmk__action_unspecified) {
                     order_start_then_action(remote_rsc, action,
                                             pcmk__ar_first_implies_then);
                 }
@@ -438,7 +439,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * real actions and vice versa later in update_actions() at the end of
          * pcmk__apply_orderings().
          */
-        if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
             continue;
         }
 
@@ -682,33 +683,33 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
     const pcmk_node_t *guest = action->node;
     const pcmk_node_t *host = NULL;
     const pcmk_resource_t *launcher = NULL;
-    enum action_tasks task;
+    enum pcmk__action_type task;
 
     if (!pcmk__is_guest_or_bundle_node(guest)) {
         return;
     }
     launcher = guest->private->remote->private->launcher;
 
-    task = pcmk_parse_action(action->task);
-    if ((task == pcmk_action_notify) || (task == pcmk_action_notified)) {
-        task = pcmk_parse_action(g_hash_table_lookup(action->meta,
-                                                     "notify_operation"));
+    task = pcmk__parse_action(action->task);
+    if ((task == pcmk__action_notify) || (task == pcmk__action_notified)) {
+        task = pcmk__parse_action(g_hash_table_lookup(action->meta,
+                                                      "notify_operation"));
     }
 
     switch (task) {
-        case pcmk_action_stop:
-        case pcmk_action_stopped:
-        case pcmk_action_demote:
-        case pcmk_action_demoted:
+        case pcmk__action_stop:
+        case pcmk__action_stopped:
+        case pcmk__action_demote:
+        case pcmk__action_demoted:
             // "Down" actions take place on guest's current host
             host = pcmk__current_node(launcher);
             break;
 
-        case pcmk_action_start:
-        case pcmk_action_started:
-        case pcmk_action_monitor:
-        case pcmk_action_promote:
-        case pcmk_action_promoted:
+        case pcmk__action_start:
+        case pcmk__action_started:
+        case pcmk__action_monitor:
+        case pcmk__action_promote:
+        case pcmk__action_promoted:
             // "Up" actions take place on guest's next host
             host = launcher->private->assigned_node;
             break;

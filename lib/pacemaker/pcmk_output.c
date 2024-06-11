@@ -217,13 +217,13 @@ rsc_action_item(pcmk__output_t *out, va_list args)
     }
 
     if ((source->reason != NULL)
-        && !pcmk_is_set(action->flags, pcmk_action_runnable)) {
+        && !pcmk_is_set(action->flags, pcmk__action_runnable)) {
         reason = crm_strdup_printf("due to %s (blocked)", source->reason);
 
     } else if (source->reason) {
         reason = crm_strdup_printf("due to %s", source->reason);
 
-    } else if (!pcmk_is_set(action->flags, pcmk_action_runnable)) {
+    } else if (!pcmk_is_set(action->flags, pcmk__action_runnable)) {
         reason = strdup("blocked");
 
     }
@@ -361,7 +361,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     }
 
     if ((source->reason != NULL)
-        && !pcmk_is_set(action->flags, pcmk_action_runnable)) {
+        && !pcmk_is_set(action->flags, pcmk__action_runnable)) {
         pcmk__xe_set_props(xml,
                            PCMK_XA_REASON, source->reason,
                            PCMK_XA_BLOCKED, PCMK_VALUE_TRUE,
@@ -370,7 +370,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (source->reason != NULL) {
         crm_xml_add(xml, PCMK_XA_REASON, source->reason);
 
-    } else if (!pcmk_is_set(action->flags, pcmk_action_runnable)) {
+    } else if (!pcmk_is_set(action->flags, pcmk__action_runnable)) {
         pcmk__xe_set_bool_attr(xml, PCMK_XA_BLOCKED, true);
 
     }
@@ -1081,18 +1081,18 @@ digests_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-#define STOP_SANITY_ASSERT(lineno) do {                                 \
-        if ((current != NULL) && current->details->unclean) {           \
-            /* It will be a pseudo op */                                \
-        } else if (stop == NULL) {                                      \
-            crm_err("%s:%d: No stop action exists for %s",              \
-                    __func__, lineno, rsc->id);                         \
-            CRM_ASSERT(stop != NULL);                                   \
-        } else if (pcmk_is_set(stop->flags, pcmk_action_optional)) {    \
-            crm_err("%s:%d: Action %s is still optional",               \
-                    __func__, lineno, stop->uuid);                      \
-            CRM_ASSERT(!pcmk_is_set(stop->flags, pcmk_action_optional));\
-        }                                                               \
+#define STOP_SANITY_ASSERT(lineno) do {                                     \
+        if ((current != NULL) && current->details->unclean) {               \
+            /* It will be a pseudo op */                                    \
+        } else if (stop == NULL) {                                          \
+            crm_err("%s:%d: No stop action exists for %s",                  \
+                    __func__, lineno, rsc->id);                             \
+            CRM_ASSERT(stop != NULL);                                       \
+        } else if (pcmk_is_set(stop->flags, pcmk__action_optional)) {       \
+            crm_err("%s:%d: Action %s is still optional",                   \
+                    __func__, lineno, stop->uuid);                          \
+            CRM_ASSERT(!pcmk_is_set(stop->flags, pcmk__action_optional));   \
+        }                                                                   \
     } while (0)
 
 PCMK__OUTPUT_ARGS("rsc-action", "pcmk_resource_t *", "pcmk_node_t *",
@@ -1137,7 +1137,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     }
 
     if ((start == NULL)
-        || !pcmk_is_set(start->flags, pcmk_action_runnable)) {
+        || !pcmk_is_set(start->flags, pcmk__action_runnable)) {
         start_node = NULL;
     } else {
         start_node = current;
@@ -1187,7 +1187,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         }
 
         if ((migrate_op != NULL) && (current != NULL)
-            && pcmk_is_set(migrate_op->flags, pcmk_action_runnable)) {
+            && pcmk_is_set(migrate_op->flags, pcmk__action_runnable)) {
             rc = out->message(out, "rsc-action-item", "Migrate", rsc, current,
                               next, start, NULL);
 
@@ -1196,10 +1196,10 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                               next, start, NULL);
 
         } else if ((start == NULL)
-                   || pcmk_is_set(start->flags, pcmk_action_optional)) {
+                   || pcmk_is_set(start->flags, pcmk__action_optional)) {
             if ((demote != NULL) && (promote != NULL)
-                && !pcmk_is_set(demote->flags, pcmk_action_optional)
-                && !pcmk_is_set(promote->flags, pcmk_action_optional)) {
+                && !pcmk_is_set(demote->flags, pcmk__action_optional)
+                && !pcmk_is_set(promote->flags, pcmk__action_optional)) {
                 rc = out->message(out, "rsc-action-item", "Re-promote", rsc,
                                   current, next, promote, demote);
             } else {
@@ -1208,7 +1208,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                                pcmk__node_name(next));
             }
 
-        } else if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {
+        } else if (!pcmk_is_set(start->flags, pcmk__action_runnable)) {
             if ((stop == NULL) || (stop->reason == NULL)) {
                 reason_op = start;
             } else {
@@ -1248,7 +1248,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     if ((stop != NULL)
         && ((rsc->private->next_role == pcmk_role_stopped)
             || ((start != NULL)
-                && !pcmk_is_set(start->flags, pcmk_action_runnable)))) {
+                && !pcmk_is_set(start->flags, pcmk__action_runnable)))) {
 
         key = stop_key(rsc);
         for (GList *iter = rsc->private->active_nodes;
@@ -1265,7 +1265,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
             }
 
             if (stop_op != NULL) {
-                if (pcmk_is_set(stop_op->flags, pcmk_action_runnable)) {
+                if (pcmk_is_set(stop_op->flags, pcmk__action_runnable)) {
                     STOP_SANITY_ASSERT(__LINE__);
                 }
                 if (stop_op->reason != NULL) {
@@ -1300,7 +1300,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                           start, NULL);
 
     } else if ((stop != NULL)
-               && !pcmk_is_set(stop->flags, pcmk_action_optional)) {
+               && !pcmk_is_set(stop->flags, pcmk__action_optional)) {
         rc = out->message(out, "rsc-action-item", "Restart", rsc, current,
                           next, start, NULL);
         STOP_SANITY_ASSERT(__LINE__);

@@ -10,15 +10,11 @@
 #ifndef PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
 #define PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
 
-#include <stdint.h>                     // uint32_t
-#include <crm/common/scheduler_types.h> // pcmk_resource_t, pcmk_action_t
+#include <stdbool.h>                        // bool
+#include <stdint.h>                         // uint32_t
+#include <crm/common/scheduler_types.h>     // pcmk_resource_t, pcmk_action_t
 
-/*!
- * Flags to indicate the relationship between two actions
- *
- * @COMPAT The values and semantics of these flags should not be changed until
- * the deprecated enum pe_ordering is dropped from the public API.
- */
+// Flags to indicate the relationship between two actions
 enum pcmk__action_relation_flags {
     //! No relation (compare with equality rather than bit set)
     pcmk__ar_none                           = 0U,
@@ -146,7 +142,12 @@ typedef struct {
     char *task2;                // Action name or key for second action
 } pcmk__action_relation_t;
 
-typedef struct pe_action_wrapper_s pcmk__related_action_t;
+// Action sequenced relative to another action
+typedef struct pcmk__related_action {
+    pcmk_action_t *action;      // Action to be sequenced
+    uint32_t flags;             // Group of enum pcmk__action_relation_flags
+    bool graphed;               // Whether action has been added to graph yet
+} pcmk__related_action_t;
 
 /*!
  * \internal

@@ -727,9 +727,9 @@ log_all_actions(pcmk_scheduler_t *scheduler)
 static void
 log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
 {
-    const uint64_t flags = pcmk_action_optional
-                           |pcmk_action_runnable
-                           |pcmk_action_pseudo;
+    const uint64_t flags = pcmk__action_optional
+                           |pcmk__action_runnable
+                           |pcmk__action_pseudo;
 
     crm_trace("Required but unrunnable actions:");
     for (const GList *iter = scheduler->actions;

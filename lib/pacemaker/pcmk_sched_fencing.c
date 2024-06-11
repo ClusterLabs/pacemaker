@@ -65,15 +65,15 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
         pcmk_action_t *action = iter->data;
 
         switch (action->needs) {
-            case pcmk_requires_nothing:
+            case pcmk__requires_nothing:
                 // Anything other than start or promote requires nothing
                 break;
 
-            case pcmk_requires_fencing:
+            case pcmk__requires_fencing:
                 order_actions(stonith_op, action, pcmk__ar_ordered);
                 break;
 
-            case pcmk_requires_quorum:
+            case pcmk__requires_quorum:
                 if (pcmk__str_eq(action->task, PCMK_ACTION_START,
                                  pcmk__str_none)
                     && (g_hash_table_lookup(rsc->private->allowed_nodes,
@@ -145,7 +145,8 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
         pcmk_action_t *action = iter->data;
 
         // The stop would never complete, so convert it into a pseudo-action.
-        pcmk__set_action_flags(action, pcmk_action_pseudo|pcmk_action_runnable);
+        pcmk__set_action_flags(action,
+                               pcmk__action_pseudo|pcmk__action_runnable);
 
         if (order_implicit) {
             /* Order the stonith before the parent stop (if any).
@@ -232,7 +233,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
              * fencing, so convert it into a pseudo-action.
              */
             pcmk__set_action_flags(action,
-                                   pcmk_action_pseudo|pcmk_action_runnable);
+                                   pcmk__action_pseudo|pcmk__action_runnable);
 
             if (pcmk__is_bundled(rsc)) {
                 // Recovery will be ordered as usual after parent's implied stop
@@ -387,13 +388,14 @@ pcmk__fence_guest(pcmk_node_t *node)
      */
     stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean",
                              FALSE, node->private->scheduler);
-    pcmk__set_action_flags(stonith_op, pcmk_action_pseudo|pcmk_action_runnable);
+    pcmk__set_action_flags(stonith_op,
+                           pcmk__action_pseudo|pcmk__action_runnable);
 
     /* We want to imply stops/demotes after the guest is stopped, not wait until
      * it is restarted, so we always order pseudo-fencing after stop, not start
      * (even though start might be closer to what is done for a real reboot).
      */
-    if ((stop != NULL) && pcmk_is_set(stop->flags, pcmk_action_pseudo)) {
+    if ((stop != NULL) && pcmk_is_set(stop->flags, pcmk__action_pseudo)) {
         pcmk_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE,
                                                      NULL, FALSE,
                                                      node->private->scheduler);

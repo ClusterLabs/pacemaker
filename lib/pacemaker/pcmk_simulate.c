@@ -51,7 +51,7 @@ create_action_name(const pcmk_action_t *action, bool verbose)
 
     if (action->node != NULL) {
         action_host = action->node->private->name;
-    } else if (!pcmk_is_set(action->flags, pcmk_action_pseudo)) {
+    } else if (!pcmk_is_set(action->flags, pcmk__action_pseudo)) {
         action_host = "<none>";
     }
 
@@ -238,11 +238,11 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         const char *color = "black";
         char *action_name = create_action_name(action, verbose);
 
-        if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
             font = "orange";
         }
 
-        if (pcmk_is_set(action->flags, pcmk_action_added_to_graph)) {
+        if (pcmk_is_set(action->flags, pcmk__action_added_to_graph)) {
             style = PCMK__VALUE_BOLD;
             color = "green";
 
@@ -254,7 +254,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
                 goto do_not_write;
             }
 
-        } else if (pcmk_is_set(action->flags, pcmk_action_optional)) {
+        } else if (pcmk_is_set(action->flags, pcmk__action_optional)) {
             color = "blue";
             if (!all_actions) {
                 goto do_not_write;
@@ -262,10 +262,10 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
 
         } else {
             color = "red";
-            CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pcmk_action_runnable));
+            CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pcmk__action_runnable));
         }
 
-        pcmk__set_action_flags(action, pcmk_action_added_to_graph);
+        pcmk__set_action_flags(action, pcmk__action_added_to_graph);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
                 action_name, style, color, font);
   do_not_write:
@@ -285,15 +285,15 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
             const char *style = "dashed";
             bool optional = true;
 
-            if (before->state == pe_link_dumped) {
+            if (before->graphed) {
                 optional = false;
                 style = PCMK__VALUE_BOLD;
-            } else if ((uint32_t) before->type == pcmk__ar_none) {
+            } else if (before->flags == pcmk__ar_none) {
                 continue;
             } else if (pcmk_is_set(before->action->flags,
-                                   pcmk_action_added_to_graph)
-                       && pcmk_is_set(action->flags, pcmk_action_added_to_graph)
-                       && (uint32_t) before->type != pcmk__ar_if_on_same_node_or_target) {
+                                   pcmk__action_added_to_graph)
+                       && pcmk_is_set(action->flags, pcmk__action_added_to_graph)
+                       && before->flags != pcmk__ar_if_on_same_node_or_target) {
                 optional = false;
             }
 

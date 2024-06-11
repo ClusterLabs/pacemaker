@@ -27,6 +27,7 @@
 #include <crm/common/scheduler.h>
 
 /*!
+ * \internal
  * \brief Get string equivalent of an action type
  *
  * \param[in] action  Action type
@@ -34,109 +35,111 @@
  * \return Static string describing \p action
  */
 const char *
-pcmk_action_text(enum action_tasks action)
+pcmk__action_text(enum pcmk__action_type action)
 {
     switch (action) {
-        case pcmk_action_stop:
+        case pcmk__action_stop:
             return PCMK_ACTION_STOP;
 
-        case pcmk_action_stopped:
+        case pcmk__action_stopped:
             return PCMK_ACTION_STOPPED;
 
-        case pcmk_action_start:
+        case pcmk__action_start:
             return PCMK_ACTION_START;
 
-        case pcmk_action_started:
+        case pcmk__action_started:
             return PCMK_ACTION_RUNNING;
 
-        case pcmk_action_shutdown:
+        case pcmk__action_shutdown:
             return PCMK_ACTION_DO_SHUTDOWN;
 
-        case pcmk_action_fence:
+        case pcmk__action_fence:
             return PCMK_ACTION_STONITH;
 
-        case pcmk_action_monitor:
+        case pcmk__action_monitor:
             return PCMK_ACTION_MONITOR;
 
-        case pcmk_action_notify:
+        case pcmk__action_notify:
             return PCMK_ACTION_NOTIFY;
 
-        case pcmk_action_notified:
+        case pcmk__action_notified:
             return PCMK_ACTION_NOTIFIED;
 
-        case pcmk_action_promote:
+        case pcmk__action_promote:
             return PCMK_ACTION_PROMOTE;
 
-        case pcmk_action_promoted:
+        case pcmk__action_promoted:
             return PCMK_ACTION_PROMOTED;
 
-        case pcmk_action_demote:
+        case pcmk__action_demote:
             return PCMK_ACTION_DEMOTE;
 
-        case pcmk_action_demoted:
+        case pcmk__action_demoted:
             return PCMK_ACTION_DEMOTED;
 
-        default: // pcmk_action_unspecified or invalid
+        default: // pcmk__action_unspecified or invalid
             return "no_action";
     }
 }
 
 /*!
+ * \internal
  * \brief Parse an action type from an action name
  *
  * \param[in] action_name  Action name
  *
  * \return Action type corresponding to \p action_name
  */
-enum action_tasks
-pcmk_parse_action(const char *action_name)
+enum pcmk__action_type
+pcmk__parse_action(const char *action_name)
 {
     if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)) {
-        return pcmk_action_stop;
+        return pcmk__action_stop;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_STOPPED, pcmk__str_none)) {
-        return pcmk_action_stopped;
+        return pcmk__action_stopped;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)) {
-        return pcmk_action_start;
+        return pcmk__action_start;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_RUNNING, pcmk__str_none)) {
-        return pcmk_action_started;
+        return pcmk__action_started;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_DO_SHUTDOWN,
                             pcmk__str_none)) {
-        return pcmk_action_shutdown;
+        return pcmk__action_shutdown;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_STONITH, pcmk__str_none)) {
-        return pcmk_action_fence;
+        return pcmk__action_fence;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_MONITOR, pcmk__str_none)) {
-        return pcmk_action_monitor;
+        return pcmk__action_monitor;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
-        return pcmk_action_notify;
+        return pcmk__action_notify;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_NOTIFIED,
                             pcmk__str_none)) {
-        return pcmk_action_notified;
+        return pcmk__action_notified;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_PROMOTE, pcmk__str_none)) {
-        return pcmk_action_promote;
+        return pcmk__action_promote;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_DEMOTE, pcmk__str_none)) {
-        return pcmk_action_demote;
+        return pcmk__action_demote;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_PROMOTED,
                             pcmk__str_none)) {
-        return pcmk_action_promoted;
+        return pcmk__action_promoted;
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_DEMOTED, pcmk__str_none)) {
-        return pcmk_action_demoted;
+        return pcmk__action_demoted;
     }
-    return pcmk_action_unspecified;
+    return pcmk__action_unspecified;
 }
 
 /*!
+ * \internal
  * \brief Get string equivalent of a failure handling type
  *
  * \param[in] on_fail  Failure handling type
@@ -144,37 +147,37 @@ pcmk_parse_action(const char *action_name)
  * \return Static string describing \p on_fail
  */
 const char *
-pcmk_on_fail_text(enum action_fail_response on_fail)
+pcmk__on_fail_text(enum pcmk__on_fail on_fail)
 {
     switch (on_fail) {
-        case pcmk_on_fail_ignore:
+        case pcmk__on_fail_ignore:
             return "ignore";
 
-        case pcmk_on_fail_demote:
+        case pcmk__on_fail_demote:
             return "demote";
 
-        case pcmk_on_fail_block:
+        case pcmk__on_fail_block:
             return "block";
 
-        case pcmk_on_fail_restart:
+        case pcmk__on_fail_restart:
             return "recover";
 
-        case pcmk_on_fail_ban:
+        case pcmk__on_fail_ban:
             return "migrate";
 
-        case pcmk_on_fail_stop:
+        case pcmk__on_fail_stop:
             return "stop";
 
-        case pcmk_on_fail_fence_node:
+        case pcmk__on_fail_fence_node:
             return "fence";
 
-        case pcmk_on_fail_standby_node:
+        case pcmk__on_fail_standby_node:
             return "standby";
 
-        case pcmk_on_fail_restart_container:
+        case pcmk__on_fail_restart_container:
             return "restart-container";
 
-        case pcmk_on_fail_reset_remote:
+        case pcmk__on_fail_reset_remote:
             return "reset-remote";
     }
     return "<unknown>";

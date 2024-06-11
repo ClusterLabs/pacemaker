@@ -107,7 +107,7 @@ create_group_pseudo_op(pcmk_resource_t *group, const char *action)
                                       action, NULL, TRUE,
                                       group->private->scheduler);
 
-    pcmk__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
+    pcmk__set_action_flags(op, pcmk__action_pseudo|pcmk__action_runnable);
     return op;
 }
 
@@ -510,9 +510,9 @@ uint32_t
 pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 {
     // Default flags for a group action
-    uint32_t flags = pcmk_action_optional
-                     |pcmk_action_runnable
-                     |pcmk_action_pseudo;
+    uint32_t flags = pcmk__action_optional
+                     |pcmk__action_runnable
+                     |pcmk__action_pseudo;
 
     CRM_ASSERT(action != NULL);
 
@@ -523,8 +523,8 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
         pcmk_resource_t *member = (pcmk_resource_t *) iter->data;
 
         // Check whether member has the same action
-        enum action_tasks task = get_complex_task(member, action->task);
-        const char *task_s = pcmk_action_text(task);
+        enum pcmk__action_type task = get_complex_task(member, action->task);
+        const char *task_s = pcmk__action_text(task);
         pcmk_action_t *member_action = NULL;
 
         member_action = find_first_action(member->private->actions, NULL,
@@ -536,36 +536,37 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
                                                                node);
 
             // Group action is mandatory if any member action is
-            if (pcmk_is_set(flags, pcmk_action_optional)
-                && !pcmk_is_set(member_flags, pcmk_action_optional)) {
+            if (pcmk_is_set(flags, pcmk__action_optional)
+                && !pcmk_is_set(member_flags, pcmk__action_optional)) {
                 pcmk__rsc_trace(action->rsc, "%s is mandatory because %s is",
                                 action->uuid, member_action->uuid);
                 pcmk__clear_raw_action_flags(flags, "group action",
-                                             pcmk_action_optional);
-                pcmk__clear_action_flags(action, pcmk_action_optional);
+                                             pcmk__action_optional);
+                pcmk__clear_action_flags(action, pcmk__action_optional);
             }
 
             // Group action is unrunnable if any member action is
             if (!pcmk__str_eq(task_s, action->task, pcmk__str_none)
-                && pcmk_is_set(flags, pcmk_action_runnable)
-                && !pcmk_is_set(member_flags, pcmk_action_runnable)) {
+                && pcmk_is_set(flags, pcmk__action_runnable)
+                && !pcmk_is_set(member_flags, pcmk__action_runnable)) {
 
                 pcmk__rsc_trace(action->rsc, "%s is unrunnable because %s is",
                                 action->uuid, member_action->uuid);
                 pcmk__clear_raw_action_flags(flags, "group action",
-                                             pcmk_action_runnable);
-                pcmk__clear_action_flags(action, pcmk_action_runnable);
+                                             pcmk__action_runnable);
+                pcmk__clear_action_flags(action, pcmk__action_runnable);
             }
 
         /* Group (pseudo-)actions other than stop or demote are unrunnable
          * unless every member will do it.
          */
-        } else if ((task != pcmk_action_stop) && (task != pcmk_action_demote)) {
+        } else if ((task != pcmk__action_stop)
+                    && (task != pcmk__action_demote)) {
             pcmk__rsc_trace(action->rsc,
                             "%s is not runnable because %s will not %s",
                             action->uuid, member->id, task_s);
             pcmk__clear_raw_action_flags(flags, "group action",
-                                         pcmk_action_runnable);
+                                         pcmk__action_runnable);
         }
     }
 
@@ -586,8 +587,8 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
  *                           (only used when interleaving instances)
  * \param[in]     flags      Action flags for \p first for ordering purposes
  * \param[in]     filter     Action flags to limit scope of certain updates (may
- *                           include pcmk_action_optional to affect only
- *                           mandatory actions, and pcmk_action_runnable to
+ *                           include pcmk__action_optional to affect only
+ *                           mandatory actions, and pcmk__action_runnable to
  *                           affect only runnable actions)
  * \param[in]     type       Group of enum pcmk__action_relation_flags to apply
  * \param[in,out] scheduler  Scheduler data
