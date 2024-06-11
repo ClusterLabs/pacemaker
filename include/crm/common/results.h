@@ -203,9 +203,6 @@ enum ocf_exitcode {
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    // Former Pacemaker extensions
-    PCMK_OCF_OTHER_ERROR          = 199, //!< \deprecated (Unused)
-
     //! \deprecated Use PCMK_OCF_RUNNING_PROMOTED instead
     PCMK_OCF_RUNNING_MASTER     = PCMK_OCF_RUNNING_PROMOTED,
 
