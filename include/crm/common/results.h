@@ -203,9 +203,6 @@ enum ocf_exitcode {
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use PCMK_OCF_RUNNING_PROMOTED instead
-    PCMK_OCF_RUNNING_MASTER     = PCMK_OCF_RUNNING_PROMOTED,
-
     //! \deprecated Use PCMK_OCF_FAILED_PROMOTED instead
     PCMK_OCF_FAILED_MASTER      = PCMK_OCF_FAILED_PROMOTED,
 
