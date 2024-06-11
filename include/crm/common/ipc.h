@@ -175,7 +175,6 @@ enum crm_ipc_flags
     crm_ipc_proxied_relay_response = 0x00040000, /* all replies to proxied connections are sent as events, this flag preserves whether the event should be treated as an actual event, or a response.*/
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    crm_ipc_server_info     = 0x00100000, //!< \deprecated Unused
     crm_ipc_server_error    = 0x00200000, //!< \deprecated Unused
 #endif
 };
