@@ -39,9 +39,6 @@ enum rsc_role_e {
     pcmk_role_promoted      = 4, //!< Promoted
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_role_stopped instead
-    RSC_ROLE_STOPPED        = pcmk_role_stopped,
-
     //! \deprecated Use pcmk_role_started instead
     RSC_ROLE_STARTED        = pcmk_role_started,
 
