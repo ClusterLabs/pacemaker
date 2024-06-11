@@ -49,9 +49,6 @@ enum pe_find {
     pcmk_rsc_match_basename         = (1 << 5),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_rsc_match_anon_basename instead
-    pe_find_anon        = pcmk_rsc_match_anon_basename,
-
     //! \deprecated Use pcmk_rsc_match_clone_only instead
     pe_find_clone       = pcmk_rsc_match_clone_only,
 
