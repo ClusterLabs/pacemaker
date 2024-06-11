@@ -410,8 +410,6 @@ enum ocf_exitcode services_result2ocf(const char *standard, const char *action,
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
             case PCMK_OCF_OTHER_ERROR:
                 return "other error (DEPRECATED STATUS)";
-            case PCMK_OCF_TIMEOUT:
-                return "timeout (DEPRECATED STATUS)";
 #endif
             default:
                 return "unknown";

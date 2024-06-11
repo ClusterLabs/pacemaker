@@ -204,7 +204,6 @@ enum ocf_exitcode {
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     // Former Pacemaker extensions
-    PCMK_OCF_TIMEOUT              = 198, //!< \deprecated (Unused)
     PCMK_OCF_OTHER_ERROR          = 199, //!< \deprecated (Unused)
 
     //! \deprecated Use PCMK_OCF_RUNNING_PROMOTED instead
