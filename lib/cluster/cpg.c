@@ -995,9 +995,9 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
             memcpy(msg->host.uname, node->uname, msg->host.size);
 
         } else {
-            target = crm_strdup_printf("%u", node->id);
+            target = crm_strdup_printf("%" PRIu32, node->cluster_layer_id);
         }
-        msg->host.id = node->id;
+        msg->host.id = node->cluster_layer_id;
 
     } else {
         target = pcmk__str_copy("all");

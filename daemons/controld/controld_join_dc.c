@@ -9,6 +9,14 @@
 
 #include <crm_internal.h>
 
+#include <inttypes.h>               // PRIu32
+#include <stdbool.h>                // bool, true, false
+#include <stdio.h>                  // NULL
+#include <stdlib.h>                 // free(), etc.
+
+#include <glib.h>                   // gboolean, etc.
+#include <libxml/tree.h>            // xmlNode
+
 #include <crm/crm.h>
 
 #include <crm/common/xml.h>
@@ -132,22 +140,25 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
 
     if(phase == last) {
         crm_trace("Node %s join-%d phase is still %s "
-                  QB_XS " nodeid=%u source=%s",
+                  QB_XS " nodeid=%" PRIu32 " source=%s",
                   node->uname, current_join_id, controld_join_phase_text(last),
-                  node->id, source);
+                  node->cluster_layer_id, source);
 
     } else if ((phase <= crm_join_none) || (phase == (last + 1))) {
         node->join = phase;
         crm_trace("Node %s join-%d phase is now %s (was %s) "
-                  QB_XS " nodeid=%u source=%s",
+                  QB_XS " nodeid=%" PRIu32 " source=%s",
                  node->uname, current_join_id, controld_join_phase_text(phase),
-                 controld_join_phase_text(last), node->id, source);
+                 controld_join_phase_text(last), node->cluster_layer_id,
+                 source);
 
     } else {
         crm_warn("Rejecting join-%d phase update for node %s because "
-                 "can't go from %s to %s " QB_XS " nodeid=%u source=%s",
+                 "can't go from %s to %s " QB_XS " nodeid=%" PRIu32
+                 " source=%s",
                  current_join_id, node->uname, controld_join_phase_text(last),
-                 controld_join_phase_text(phase), node->id, source);
+                 controld_join_phase_text(phase), node->cluster_layer_id,
+                 source);
     }
 }
 

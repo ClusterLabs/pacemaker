@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <arpa/inet.h>
-#include <inttypes.h>                   // PRIu64, PRIx32
+#include <inttypes.h>                   // PRIu64, etc.
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdbool.h>
@@ -55,8 +55,8 @@ pcmk__corosync_uuid(const pcmk__node_status_t *node)
     CRM_ASSERT(pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync);
 
     if (node != NULL) {
-        if (node->id > 0) {
-            return crm_strdup_printf("%u", node->id);
+        if (node->cluster_layer_id > 0) {
+            return crm_strdup_printf("%" PRIu32, node->cluster_layer_id);
         } else {
             crm_info("Node %s is not yet known by Corosync", node->uname);
         }
@@ -630,9 +630,11 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
             g_hash_table_iter_init(&iter, crm_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
                 if(node && node->uname && strcasecmp(node->uname, name) == 0) {
-                    if (node->id && node->id != nodeid) {
-                        crm_crit("Nodes %u and %u share the same name '%s': shutting down", node->id,
-                                 nodeid, name);
+                    if ((node->cluster_layer_id > 0)
+                        && (node->cluster_layer_id != nodeid)) {
+                        crm_crit("Nodes %" PRIu32 " and %" PRIu32 " share the "
+                                 "same name '%s': shutting down",
+                                 node->cluster_layer_id, nodeid, name);
                         crm_exit(CRM_EX_FATAL);
                     }
                 }

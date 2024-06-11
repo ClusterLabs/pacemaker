@@ -554,9 +554,10 @@ write_attribute(attribute_t *a, bool ignore_delay)
             uuid = peer->uuid;
 
             // Remember peer's node ID if we're just now learning it
-            if ((peer->id != 0) && (v->nodeid == 0)) {
-                crm_trace("Learned ID %u for node %s", peer->id, v->nodename);
-                v->nodeid = peer->id;
+            if ((peer->cluster_layer_id != 0) && (v->nodeid == 0)) {
+                crm_trace("Learned ID %" PRIu32 " for node %s",
+                          peer->cluster_layer_id, v->nodename);
+                v->nodeid = peer->cluster_layer_id;
             }
         }
 

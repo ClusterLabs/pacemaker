@@ -648,7 +648,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
             pcmk__get_node(0, cmd->target, NULL,
                            pcmk__node_search_cluster_member);
 
-        cmd->target_nodeid = node->id;
+        cmd->target_nodeid = node->cluster_layer_id;
     }
 
     cmd->device = pcmk__str_copy(device->id);

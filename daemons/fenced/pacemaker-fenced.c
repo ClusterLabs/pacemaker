@@ -482,7 +482,8 @@ st_peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
         crm_xml_add(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(query, PCMK__XA_ST_OP, STONITH_OP_POKE);
 
-        crm_debug("Broadcasting our uname because of node %u", node->id);
+        crm_debug("Broadcasting our uname because of node %" PRIu32,
+                  node->cluster_layer_id);
         pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, query);
 
         pcmk__xml_free(query);
