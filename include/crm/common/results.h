@@ -201,11 +201,6 @@ enum ocf_exitcode {
      */
     PCMK_OCF_CONNECTION_DIED      = 189, //!< \deprecated See PCMK_EXEC_NOT_CONNECTED
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use PCMK_OCF_DEGRADED_PROMOTED instead
-    PCMK_OCF_DEGRADED_MASTER    = PCMK_OCF_DEGRADED_PROMOTED,
-#endif
 };
 
 // NOTE: sbd (as of at least 1.5.2) uses this
