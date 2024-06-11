@@ -693,9 +693,6 @@ const char *stonith_action_str(const char *action);
  */
 
 //! \deprecated Do not use
-#define T_STONITH_NOTIFY_DISCONNECT "st_notify_disconnect"
-
-//! \deprecated Do not use
 #define T_STONITH_NOTIFY_FENCE "st_notify_fence"
 
 //! \deprecated Do not use
