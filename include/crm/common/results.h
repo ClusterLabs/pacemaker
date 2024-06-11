@@ -204,7 +204,6 @@ enum ocf_exitcode {
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     // Former Pacemaker extensions
-    PCMK_OCF_EXEC_ERROR           = 192, //!< \deprecated (Unused)
     PCMK_OCF_SIGNAL               = 194, //!< \deprecated (Unused)
     PCMK_OCF_NOT_SUPPORTED        = 195, //!< \deprecated (Unused)
     PCMK_OCF_PENDING              = 196, //!< \deprecated (Unused)
