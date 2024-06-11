@@ -49,7 +49,6 @@ static int cs_message_timer = 0;
 struct pcmk__cpg_host_s {
     uint32_t id;
     uint32_t pid;
-    gboolean local;
     enum crm_ais_msg_types type;
     uint32_t size;
     char uname[MAX_NAME];
@@ -288,13 +287,7 @@ pcmk_cpg_dispatch(gpointer user_data)
 static inline const char *
 ais_dest(const pcmk__cpg_host_t *host)
 {
-    if (host->local) {
-        return "local";
-    } else if (host->size > 0) {
-        return host->uname;
-    } else {
-        return "<all>";
-    }
+    return (host->size > 0)? host->uname : "<all>";
 }
 
 static inline const char *
@@ -993,7 +986,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     msg->header.error = CS_OK;
 
     msg->host.type = dest;
-    msg->host.local = false;
 
     if (node != NULL) {
         if (node->uname != NULL) {
