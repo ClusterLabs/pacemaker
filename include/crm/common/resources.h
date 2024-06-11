@@ -73,7 +73,7 @@ typedef struct pcmk__resource_private pcmk__resource_private_t;
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
-struct pe_resource_s {
+struct pcmk__resource {
     /* @COMPAT Once all members are moved to pcmk__resource_private_t,
      * We can make that the pcmk_resource_t implementation and drop this
      * struct altogether, leaving pcmk_resource_t as an opaque public type.
