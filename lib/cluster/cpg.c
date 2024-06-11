@@ -950,17 +950,15 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
  * \brief Send string data via Corosync CPG
  *
  * \param[in] data   Data to send
- * \param[in] local  What to set as host "local" value (which is never used)
  * \param[in] node   Cluster node to send message to
  * \param[in] dest   Type of message to send
  *
  * \return \c true on success, or \c false otherwise
  */
 static bool
-send_cpg_text(const char *data, bool local, const pcmk__node_status_t *node,
+send_cpg_text(const char *data, const pcmk__node_status_t *node,
               enum crm_ais_msg_types dest)
 {
-    // @COMPAT Drop local argument when send_cluster_text is dropped
     static int msg_id = 0;
     static int local_pid = 0;
     static int local_name_len = 0;
@@ -995,7 +993,7 @@ send_cpg_text(const char *data, bool local, const pcmk__node_status_t *node,
     msg->header.error = CS_OK;
 
     msg->host.type = dest;
-    msg->host.local = local;
+    msg->host.local = false;
 
     if (node != NULL) {
         if (node->uname != NULL) {
@@ -1097,7 +1095,7 @@ pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
 
     pcmk__xml_string(msg, 0, data, 0);
 
-    rc = send_cpg_text(data->str, false, node, dest);
+    rc = send_cpg_text(data->str, node, dest);
     g_string_free(data, TRUE);
     return rc;
 }
