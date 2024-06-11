@@ -412,8 +412,6 @@ enum ocf_exitcode services_result2ocf(const char *standard, const char *action,
                 return "cancelled (DEPRECATED STATUS)";
             case PCMK_OCF_OTHER_ERROR:
                 return "other error (DEPRECATED STATUS)";
-            case PCMK_OCF_PENDING:
-                return "pending (DEPRECATED STATUS)";
             case PCMK_OCF_TIMEOUT:
                 return "timeout (DEPRECATED STATUS)";
 #endif
