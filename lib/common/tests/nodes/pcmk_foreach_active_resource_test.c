@@ -47,7 +47,7 @@ fn(pcmk_resource_t *rsc, void *user_data)
 static void
 null_args(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .running_rsc = NULL,
     };
     pcmk_node_t node = {
@@ -67,7 +67,7 @@ null_args(void **state)
 static void
 list_of_0(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .running_rsc = NULL,
     };
     pcmk_node_t node = {
@@ -82,7 +82,7 @@ list_of_0(void **state)
 static void
 list_of_1(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .running_rsc = NULL,
     };
     pcmk_node_t node = {
@@ -101,7 +101,7 @@ list_of_1(void **state)
 static void
 list_of_3(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .running_rsc = NULL,
     };
     pcmk_node_t node = {
@@ -122,7 +122,7 @@ list_of_3(void **state)
 static void
 list_of_3_return_false(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .running_rsc = NULL,
     };
     pcmk_node_t node = {

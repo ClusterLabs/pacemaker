@@ -24,7 +24,7 @@ null_is_offline(void **state)
 static void
 node_is_online(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .online = TRUE,
     };
 
@@ -38,7 +38,7 @@ node_is_online(void **state)
 static void
 node_is_offline(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .online = FALSE,
     };
     pcmk_node_t node = {

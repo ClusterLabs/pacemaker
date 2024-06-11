@@ -2702,18 +2702,3 @@ stonith__event_description(const stonith_event_t *event)
                              ((reason == NULL)? "" : ")"),
                              pcmk__s(event->id, "(none)"));
 }
-
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-const char *get_stonith_provider(const char *agent, const char *provider);
-
-const char *
-get_stonith_provider(const char *agent, const char *provider)
-{
-    return stonith_namespace2text(stonith_get_namespace(agent, provider));
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

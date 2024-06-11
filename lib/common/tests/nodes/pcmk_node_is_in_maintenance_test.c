@@ -24,7 +24,7 @@ null_is_not_in_maintenance(void **state)
 static void
 node_is_in_maintenance(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .maintenance = TRUE,
     };
 
@@ -38,7 +38,7 @@ node_is_in_maintenance(void **state)
 static void
 node_is_not_in_maintenance(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .maintenance = FALSE,
     };
     pcmk_node_t node = {

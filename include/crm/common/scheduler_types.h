@@ -24,7 +24,7 @@ extern "C" {
 typedef struct pcmk__scored_node pcmk_node_t;
 
 //! Resource object
-typedef struct pe_resource_s pcmk_resource_t;
+typedef struct pcmk__resource pcmk_resource_t;
 
 //! Action object
 typedef struct pcmk__action pcmk_action_t;

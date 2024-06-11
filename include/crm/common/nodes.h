@@ -39,7 +39,7 @@ typedef struct pcmk__node_private pcmk__node_private_t;
 // @COMPAT Drop this struct once all members are moved to pcmk__node_private_t
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
-struct pe_node_shared_s {
+struct pcmk__node_details {
     /* @COMPAT Convert these gbooleans into new enum pcmk__node_flags values
      * when we no longer support versions of sbd that use them
      */
@@ -78,7 +78,7 @@ struct pcmk__scored_node {
     struct pcmk__node_assignment *assign;
 
     // NOTE: sbd (as of at least 1.5.2) uses this
-    struct pe_node_shared_s *details;   // Basic node information
+    struct pcmk__node_details *details;   // Basic node information
 
     //! \internal Do not use
     pcmk__node_private_t *private;

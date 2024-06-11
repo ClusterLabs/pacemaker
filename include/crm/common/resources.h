@@ -42,28 +42,8 @@ enum pe_find {
     //! If matching by node, compare current node instead of assigned node
     pcmk_rsc_match_current_node     = (1 << 3),
 
-    //! \deprecated Do not use
-    pe_find_inactive                = (1 << 4),
-
     //! Match clone instances (even unique) by base name as well as exact ID
     pcmk_rsc_match_basename         = (1 << 5),
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_rsc_match_history instead
-    pe_find_renamed     = pcmk_rsc_match_history,
-
-    //! \deprecated Use pcmk_rsc_match_anon_basename instead
-    pe_find_anon        = pcmk_rsc_match_anon_basename,
-
-    //! \deprecated Use pcmk_rsc_match_clone_only instead
-    pe_find_clone       = pcmk_rsc_match_clone_only,
-
-    //! \deprecated Use pcmk_rsc_match_current_node instead
-    pe_find_current     = pcmk_rsc_match_current_node,
-
-    //! \deprecated Use pcmk_rsc_match_basename instead
-    pe_find_any         = pcmk_rsc_match_basename,
-#endif
 };
 
 //! \internal Do not use
@@ -73,7 +53,7 @@ typedef struct pcmk__resource_private pcmk__resource_private_t;
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
-struct pe_resource_s {
+struct pcmk__resource {
     /* @COMPAT Once all members are moved to pcmk__resource_private_t,
      * We can make that the pcmk_resource_t implementation and drop this
      * struct altogether, leaving pcmk_resource_t as an opaque public type.

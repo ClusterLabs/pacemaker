@@ -24,7 +24,7 @@ null_is_not_shutting_down(void **state)
 static void
 node_is_shutting_down(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .shutdown = TRUE,
     };
 
@@ -38,7 +38,7 @@ node_is_shutting_down(void **state)
 static void
 node_is_not_shutting_down(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .shutdown = FALSE,
     };
     pcmk_node_t node = {
