@@ -25,6 +25,9 @@
 
 #include <crm/cluster.h>           // crm_node_t
 
+G_GNUC_INTERNAL
+void pcmk__cluster_set_quorum(bool quorate);
+
 #if SUPPORT_COROSYNC
 
 G_GNUC_INTERNAL

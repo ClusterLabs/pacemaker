@@ -14,12 +14,15 @@
 #endif
 
 #include <inttypes.h>                   // PRIu32
+#include <stdbool.h>                    // bool
+#include <stdio.h>
+#include <string.h>
 #include <sys/param.h>
 #include <sys/types.h>
-#include <stdio.h>
 #include <unistd.h>
-#include <string.h>
+
 #include <glib.h>
+
 #include <crm/common/ipc.h>
 #include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
@@ -65,8 +68,8 @@ GHashTable *crm_remote_peer_cache = NULL;
 static GHashTable *cluster_node_cib_cache = NULL;
 
 unsigned long long crm_peer_seq = 0;
-gboolean crm_have_quorum = FALSE;
 static bool autoreap = true;
+static bool has_quorum = false;
 
 // Flag setting and clearing for crm_node_t:flags
 
@@ -87,6 +90,30 @@ static bool autoreap = true;
 
 static void update_peer_uname(crm_node_t *node, const char *uname);
 static crm_node_t *find_cib_cluster_node(const char *id, const char *uname);
+
+/*!
+ * \internal
+ * \brief Check whether the cluster currently has quorum
+ *
+ * \return \c true if the cluster has quorum, or \c false otherwise
+ */
+bool
+pcmk__cluster_has_quorum(void)
+{
+    return has_quorum;
+}
+
+/*!
+ * \internal
+ * \brief Set whether the cluster currently has quorum
+ *
+ * \param[in] quorate  \c true if the cluster has quorum, or \c false otherwise
+ */
+void
+pcmk__cluster_set_quorum(bool quorate)
+{
+    has_quorum = quorate;
+}
 
 /*!
  * \internal

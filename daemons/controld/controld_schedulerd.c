@@ -489,7 +489,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     force_local_option(output, PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));
 
     if (pcmk_is_set(controld_globals.flags, controld_ever_had_quorum)
-        && !crm_have_quorum) {
+        && !pcmk__cluster_has_quorum()) {
+
         crm_xml_add_int(output, PCMK_XA_NO_QUORUM_PANIC, 1);
     }
 

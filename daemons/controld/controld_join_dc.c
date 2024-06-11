@@ -1013,7 +1013,7 @@ do_dc_join_final(long long action,
                  enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     crm_debug("Ensuring DC, quorum and node attributes are up-to-date");
-    crm_update_quorum(crm_have_quorum, TRUE);
+    crm_update_quorum(pcmk__cluster_has_quorum(), TRUE);
 }
 
 int crmd_join_phase_count(enum crm_join_phase phase)

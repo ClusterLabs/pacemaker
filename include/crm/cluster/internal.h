@@ -166,6 +166,8 @@ bool pcmk__cluster_send_message(const crm_node_t *node,
 
 // Membership
 
+bool pcmk__cluster_has_quorum(void);
+
 void pcmk__cluster_init_node_caches(void);
 void pcmk__cluster_destroy_node_caches(void);
 
