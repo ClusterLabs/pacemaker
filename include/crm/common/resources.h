@@ -47,11 +47,6 @@ enum pe_find {
 
     //! Match clone instances (even unique) by base name as well as exact ID
     pcmk_rsc_match_basename         = (1 << 5),
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_rsc_match_basename instead
-    pe_find_any         = pcmk_rsc_match_basename,
-#endif
 };
 
 //! \internal Do not use
