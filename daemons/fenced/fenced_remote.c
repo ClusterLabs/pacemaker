@@ -1008,7 +1008,7 @@ merge_duplicates(remote_fencing_op_t *op)
     g_hash_table_iter_init(&iter, stonith_remote_op_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&other)) {
         const char *other_action = op_requested_action(other);
-        crm_node_t *node = NULL;
+        pcmk__node_status_t *node = NULL;
 
         if (!strcmp(op->id, other->id)) {
             continue; // Don't compare against self
@@ -1084,7 +1084,7 @@ merge_duplicates(remote_fencing_op_t *op)
 static uint32_t fencing_active_peers(void)
 {
     uint32_t count = 0;
-    crm_node_t *entry;
+    pcmk__node_status_t *entry = NULL;
     GHashTableIter gIter;
 
     g_hash_table_iter_init(&gIter, crm_peer_cache);
@@ -1237,7 +1237,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     if (op->call_options & st_opt_cs_nodeid) {
         int nodeid;
-        crm_node_t *node;
+        pcmk__node_status_t *node = NULL;
 
         pcmk__scan_min_int(op->target, &nodeid, 0);
         node = pcmk__search_node_caches(nodeid, NULL,
@@ -1923,7 +1923,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
     if (peer) {
         int timeout_one = 0;
         xmlNode *remote_op = stonith_create_op(op->client_callid, op->id, STONITH_OP_FENCE, NULL, 0);
-        const crm_node_t *peer_node =
+        const pcmk__node_status_t *peer_node =
             pcmk__get_node(0, peer->host, NULL,
                            pcmk__node_search_cluster_member);
 

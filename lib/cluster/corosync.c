@@ -50,7 +50,7 @@ static gboolean (*quorum_app_callback)(unsigned long long seq,
  * \note It is the caller's responsibility to free the result with free().
  */
 char *
-pcmk__corosync_uuid(const crm_node_t *node)
+pcmk__corosync_uuid(const pcmk__node_status_t *node)
 {
     CRM_ASSERT(pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync);
 
@@ -270,23 +270,27 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
 {
     int i;
     GHashTableIter iter;
-    crm_node_t *node = NULL;
+    pcmk__node_status_t *node = NULL;
     static gboolean init_phase = TRUE;
 
-    if (quorate != crm_have_quorum) {
-        if (quorate) {
-            crm_notice("Quorum acquired " QB_XS " membership=%" PRIu64 " members=%lu",
-                       ring_id, (long unsigned int)view_list_entries);
-        } else {
-            crm_warn("Quorum lost " QB_XS " membership=%" PRIu64 " members=%lu",
-                     ring_id, (long unsigned int)view_list_entries);
-        }
-        crm_have_quorum = quorate;
+    bool is_quorate = (quorate != 0);
+    bool was_quorate = pcmk__cluster_has_quorum();
+
+    if (is_quorate && !was_quorate) {
+        crm_notice("Quorum acquired " QB_XS " membership=%" PRIu64
+                   " members=%" PRIu32,
+                   ring_id, view_list_entries);
+        pcmk__cluster_set_quorum(true);
+
+    } else if (!is_quorate && was_quorate) {
+        crm_warn("Quorum lost " QB_XS " membership=%" PRIu64 " members=" PRIu32,
+                 ring_id, view_list_entries);
+        pcmk__cluster_set_quorum(false);
 
     } else {
-        crm_info("Quorum %s " QB_XS " membership=%" PRIu64 " members=%lu",
-                 (quorate? "retained" : "still lost"), ring_id,
-                 (long unsigned int)view_list_entries);
+        crm_info("Quorum %s " QB_XS " membership=%" PRIu64 " members=%" PRIu32,
+                 (is_quorate? "retained" : "still lost"), ring_id,
+                 view_list_entries);
     }
 
     if (view_list_entries == 0 && init_phase) {
@@ -328,7 +332,7 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
     pcmk__reap_unseen_nodes(ring_id);
 
     if (quorum_app_callback) {
-        quorum_app_callback(ring_id, quorate);
+        quorum_app_callback(ring_id, is_quorate);
     }
 }
 
@@ -425,7 +429,7 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
         crm_warn("No quorum");
     }
     quorum_app_callback = dispatch;
-    crm_have_quorum = quorate;
+    pcmk__cluster_set_quorum(quorate != 0);
 
     rc = quorum_trackstart(pcmk_quorum_handle, CS_TRACK_CHANGES | CS_TRACK_CURRENT);
     if (rc != CS_OK) {
@@ -454,7 +458,7 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
 int
 pcmk__corosync_connect(pcmk_cluster_t *cluster)
 {
-    crm_node_t *peer = NULL;
+    pcmk__node_status_t *peer = NULL;
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     int rc = pcmk_rc_ok;
@@ -525,7 +529,7 @@ pcmk__corosync_is_active(void)
  * \return \c true if \p node is an active Corosync peer, or \c false otherwise
  */
 bool
-pcmk__corosync_is_peer_active(const crm_node_t *node)
+pcmk__corosync_is_peer_active(const pcmk__node_status_t *node)
 {
     if (node == NULL) {
         crm_trace("Corosync peer inactive: NULL");
@@ -621,7 +625,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
         name = pcmk__corosync_name(cmap_handle, nodeid);
         if (name != NULL) {
             GHashTableIter iter;
-            crm_node_t *node = NULL;
+            pcmk__node_status_t *node = NULL;
 
             g_hash_table_iter_init(&iter, crm_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {

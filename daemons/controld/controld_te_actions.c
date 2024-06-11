@@ -48,7 +48,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
     /* send to peers as well? */
     if (pcmk__str_eq(task, PCMK_ACTION_MAINTENANCE_NODES, pcmk__str_casei)) {
         GHashTableIter iter;
-        crm_node_t *node = NULL;
+        pcmk__node_status_t *node = NULL;
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
@@ -112,7 +112,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     gboolean rc = TRUE;
     gboolean no_wait = FALSE;
 
-    const crm_node_t *node = NULL;
+    const pcmk__node_status_t *node = NULL;
 
     id = pcmk__xe_id(action->xml);
     CRM_CHECK(!pcmk__str_empty(id), return EPROTO);
@@ -159,8 +159,9 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         return pcmk_rc_ok;
 
     } else if (pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
-        crm_node_t *peer = pcmk__get_node(0, router_node, NULL,
-                                          pcmk__node_search_cluster_member);
+        pcmk__node_status_t *peer =
+            pcmk__get_node(0, router_node, NULL,
+                           pcmk__node_search_cluster_member);
 
         pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
     }
@@ -429,7 +430,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                       I_NULL, &msg);
 
     } else {
-        const crm_node_t *node =
+        const pcmk__node_status_t *node =
             pcmk__get_node(0, router_node, NULL,
                            pcmk__node_search_cluster_member);
 

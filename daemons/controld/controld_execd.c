@@ -574,7 +574,7 @@ controld_query_executor_state(void)
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
-    crm_node_t *peer = NULL;
+    pcmk__node_status_t *peer = NULL;
     lrm_state_t *lrm_state = lrm_state_find(controld_globals.our_nodename);
 
     if (!lrm_state) {
@@ -1717,7 +1717,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 {
     xmlNode *reply = NULL;
     xmlNode *update, *iter;
-    crm_node_t *peer = NULL;
+    pcmk__node_status_t *peer = NULL;
 
     CRM_CHECK(op != NULL, return);
     if (op->rsc_id == NULL) {

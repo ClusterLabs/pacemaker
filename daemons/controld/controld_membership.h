@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,6 +17,7 @@ extern "C" {
 
 void post_cache_update(int instance);
 
+const char *controld_join_phase_text(enum crm_join_phase phase);
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
 void controld_destroy_failed_sync_table(void);

@@ -34,8 +34,9 @@ update_dc_expected(const xmlNode *msg)
 {
     if ((controld_globals.dc_name != NULL)
         && pcmk__xe_attr_is_true(msg, PCMK__XA_DC_LEAVING)) {
-        crm_node_t *dc_node = pcmk__get_node(0, controld_globals.dc_name, NULL,
-                                             pcmk__node_search_cluster_member);
+        pcmk__node_status_t *dc_node =
+            pcmk__get_node(0, controld_globals.dc_name, NULL,
+                           pcmk__node_search_cluster_member);
 
         pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_DOWN);
     }
@@ -166,7 +167,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
     } else {
         xmlNode *reply = NULL;
-        const crm_node_t *dc_node =
+        const pcmk__node_status_t *dc_node =
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);
 
@@ -229,7 +230,8 @@ update_conn_host_cache(xmlNode *node, void *userdata)
     const char *conn_host = crm_element_value(node, PCMK__XA_CONNECTION_HOST);
     const char *state = crm_element_value(node, PCMK__XA_NODE_STATE);
 
-    crm_node_t *remote_peer = pcmk__cluster_lookup_remote_node(remote);
+    pcmk__node_status_t *remote_peer =
+        pcmk__cluster_lookup_remote_node(remote);
 
     if (remote_peer == NULL) {
         return pcmk_rc_ok;
@@ -310,7 +312,7 @@ do_cl_join_finalize_respond(long long action,
         xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1,
                                         controld_globals.dc_name, CRM_SYSTEM_DC,
                                         CRM_SYSTEM_CRMD, NULL);
-        const crm_node_t *dc_node =
+        const pcmk__node_status_t *dc_node =
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);
 

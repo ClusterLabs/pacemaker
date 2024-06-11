@@ -342,7 +342,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     const char *type = NULL;
     const char *task = NULL;
     const char *ref = NULL;
-    crm_node_t *node_to = NULL;
+    pcmk__node_status_t *node_to = NULL;
 
     CRM_CHECK(msg != NULL, return TRUE);
 
@@ -777,7 +777,7 @@ handle_remote_state(const xmlNode *msg)
 {
     const char *conn_host = NULL;
     const char *remote_uname = pcmk__xe_id(msg);
-    crm_node_t *remote_peer;
+    pcmk__node_status_t *remote_peer;
     bool remote_is_up = false;
     int rc = pcmk_rc_ok;
 
@@ -855,7 +855,7 @@ static enum crmd_fsa_input
 handle_node_list(const xmlNode *request)
 {
     GHashTableIter iter;
-    crm_node_t *node = NULL;
+    pcmk__node_status_t *node = NULL;
     xmlNode *reply = NULL;
     xmlNode *reply_data = NULL;
 
@@ -893,7 +893,7 @@ static enum crmd_fsa_input
 handle_node_info_request(const xmlNode *msg)
 {
     const char *value = NULL;
-    crm_node_t *node = NULL;
+    pcmk__node_status_t *node = NULL;
     int node_id = 0;
     xmlNode *reply = NULL;
     xmlNode *reply_data = NULL;
@@ -1045,7 +1045,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
     if (strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
         const char *from = crm_element_value(stored_msg, PCMK__XA_SRC);
-        crm_node_t *node =
+        pcmk__node_status_t *node =
             pcmk__search_node_caches(0, from, pcmk__node_search_cluster_member);
 
         pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);

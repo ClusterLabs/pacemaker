@@ -351,7 +351,8 @@ cib_cs_destroy(gpointer user_data)
 #endif
 
 static void
-cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
+cib_peer_update_callback(enum crm_status_type type,
+                         pcmk__node_status_t *node, const void *data)
 {
     switch (type) {
         case crm_status_uname:

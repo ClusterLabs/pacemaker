@@ -269,7 +269,7 @@ do_dc_release(long long action,
         crm_info("DC role released");
         if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
-            crm_node_t *node =
+            pcmk__node_status_t *node =
                 pcmk__get_node(0, controld_globals.our_nodename,
                                NULL, pcmk__node_search_cluster_member);
 

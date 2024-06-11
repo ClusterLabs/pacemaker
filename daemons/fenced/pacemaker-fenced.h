@@ -272,7 +272,7 @@ void stonith_fence_history(xmlNode *msg, xmlNode **output,
 
 void stonith_fence_history_trim(void);
 
-bool fencing_peer_active(crm_node_t *peer);
+bool fencing_peer_active(pcmk__node_status_t *peer);
 
 void set_fencing_completed(remote_fencing_op_t * op);
 

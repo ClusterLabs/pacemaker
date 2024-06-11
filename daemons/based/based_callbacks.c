@@ -686,7 +686,7 @@ forward_request(xmlNode *request)
     const char *client_name = crm_element_value(request,
                                                 PCMK__XA_CIB_CLIENTNAME);
     const char *call_id = crm_element_value(request, PCMK__XA_CIB_CALLID);
-    crm_node_t *peer = NULL;
+    pcmk__node_status_t *peer = NULL;
 
     int log_level = LOG_INFO;
 
@@ -717,7 +717,7 @@ forward_request(xmlNode *request)
 static void
 send_peer_reply(xmlNode *msg, const char *originator)
 {
-    const crm_node_t *node = NULL;
+    const pcmk__node_status_t *node = NULL;
 
     if ((msg == NULL) || (originator == NULL)) {
         return;

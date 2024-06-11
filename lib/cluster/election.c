@@ -290,7 +290,7 @@ election_vote(election_t *e)
 {
     struct timeval age;
     xmlNode *vote = NULL;
-    crm_node_t *our_node;
+    pcmk__node_status_t *our_node = NULL;
 
     if (e == NULL) {
         crm_trace("Election vote requested, but no election available");
@@ -368,7 +368,7 @@ election_check(election_t *e)
         election_timeout_stop(e);
         if (voted_size > num_members) {
             GHashTableIter gIter;
-            const crm_node_t *node;
+            const pcmk__node_status_t *node = NULL;
             char *key = NULL;
 
             crm_warn("Received too many votes in %s", e->name);
@@ -498,7 +498,7 @@ record_vote(election_t *e, struct vote *vote)
 }
 
 static void
-send_no_vote(crm_node_t *peer, struct vote *vote)
+send_no_vote(pcmk__node_status_t *peer, struct vote *vote)
 {
     // @TODO probably shouldn't hardcode CRM_SYSTEM_CRMD and crm_msg_crmd
 
@@ -535,7 +535,8 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
     gboolean we_lose = FALSE;
     const char *reason = "unknown";
     bool we_are_owner = FALSE;
-    crm_node_t *our_node = NULL, *your_node = NULL;
+    pcmk__node_status_t *our_node = NULL;
+    pcmk__node_status_t *your_node = NULL;
     time_t tm_now = time(NULL);
     struct vote vote;
 

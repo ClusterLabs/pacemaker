@@ -116,7 +116,8 @@ lookup_failed_sync_node(const char *node_name, gint *join_id)
 }
 
 void
-crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase phase)
+crm_update_peer_join(const char *source, pcmk__node_status_t *node,
+                     enum crm_join_phase phase)
 {
     enum crm_join_phase last = 0;
 
@@ -132,21 +133,21 @@ crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase 
     if(phase == last) {
         crm_trace("Node %s join-%d phase is still %s "
                   QB_XS " nodeid=%u source=%s",
-                  node->uname, current_join_id, crm_join_phase_str(last),
+                  node->uname, current_join_id, controld_join_phase_text(last),
                   node->id, source);
 
     } else if ((phase <= crm_join_none) || (phase == (last + 1))) {
         node->join = phase;
         crm_trace("Node %s join-%d phase is now %s (was %s) "
                   QB_XS " nodeid=%u source=%s",
-                 node->uname, current_join_id, crm_join_phase_str(phase),
-                 crm_join_phase_str(last), node->id, source);
+                 node->uname, current_join_id, controld_join_phase_text(phase),
+                 controld_join_phase_text(last), node->id, source);
 
     } else {
         crm_warn("Rejecting join-%d phase update for node %s because "
                  "can't go from %s to %s " QB_XS " nodeid=%u source=%s",
-                 current_join_id, node->uname, crm_join_phase_str(last),
-                 crm_join_phase_str(phase), node->id, source);
+                 current_join_id, node->uname, controld_join_phase_text(last),
+                 controld_join_phase_text(phase), node->id, source);
     }
 }
 
@@ -154,7 +155,7 @@ static void
 start_join_round(void)
 {
     GHashTableIter iter;
-    crm_node_t *peer = NULL;
+    pcmk__node_status_t *peer = NULL;
 
     crm_debug("Starting new join round join-%d", current_join_id);
 
@@ -202,7 +203,7 @@ static void
 join_make_offer(gpointer key, gpointer value, gpointer user_data)
 {
     xmlNode *offer = NULL;
-    crm_node_t *member = (crm_node_t *)value;
+    pcmk__node_status_t *member = (pcmk__node_status_t *) value;
 
     CRM_ASSERT(member != NULL);
     if (!pcmk__cluster_is_node_active(member)) {
@@ -239,11 +240,12 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     if(user_data && member->join > crm_join_none) {
         crm_info("Not making join-%d offer to already known node %s (%s)",
                  current_join_id, member->uname,
-                 crm_join_phase_str(member->join));
+                 controld_join_phase_text(member->join));
         return;
     }
 
-    crm_update_peer_join(__func__, (crm_node_t*)member, crm_join_none);
+    crm_update_peer_join(__func__, (pcmk__node_status_t*) member,
+                         crm_join_none);
 
     offer = create_dc_message(CRM_OP_JOIN_OFFER, member->uname);
 
@@ -293,7 +295,7 @@ do_dc_join_offer_one(long long action,
                      enum crmd_fsa_state cur_state,
                      enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    crm_node_t *member;
+    pcmk__node_status_t *member = NULL;
     ha_msg_input_t *welcome = NULL;
     int count;
     const char *join_to = NULL;
@@ -391,7 +393,7 @@ do_dc_join_filter_offer(long long action,
     const char *ref = crm_element_value(join_ack->msg, PCMK_XA_REFERENCE);
     const char *join_version = crm_element_value(join_ack->msg,
                                                  PCMK_XA_CRM_FEATURE_SET);
-    crm_node_t *join_node = NULL;
+    pcmk__node_status_t *join_node = NULL;
 
     if (join_from == NULL) {
         crm_err("Ignoring invalid join request without node name");
@@ -712,7 +714,7 @@ do_dc_join_ack(long long action,
 
     const char *op = crm_element_value(join_ack->msg, PCMK__XA_CRM_TASK);
     char *join_from = crm_element_value_copy(join_ack->msg, PCMK__XA_SRC);
-    crm_node_t *peer = NULL;
+    pcmk__node_status_t *peer = NULL;
 
     enum controld_section_e section = controld_section_lrm;
     char *xpath = NULL;
@@ -748,8 +750,8 @@ do_dc_join_ack(long long action,
     if (peer->join != crm_join_finalized) {
         crm_info("Ignoring out-of-sequence join-%d confirmation from %s "
                  "(currently %s not %s)",
-                 join_id, join_from, crm_join_phase_str(peer->join),
-                 crm_join_phase_str(crm_join_finalized));
+                 join_id, join_from, controld_join_phase_text(peer->join),
+                 controld_join_phase_text(crm_join_finalized));
         goto done;
     }
 
@@ -841,7 +843,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 {
     xmlNode *acknak = NULL;
     xmlNode *tmp1 = NULL;
-    crm_node_t *join_node = value;
+    pcmk__node_status_t *join_node = value;
     const char *join_to = join_node->uname;
     bool integrated = false;
 
@@ -855,7 +857,8 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         default:
             crm_trace("Not updating non-integrated and non-nacked node %s (%s) "
                       "for join-%d", join_to,
-                      crm_join_phase_str(join_node->join), current_join_id);
+                      controld_join_phase_text(join_node->join),
+                      current_join_id);
             return;
     }
 
@@ -908,7 +911,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
          */
         if (pcmk__cluster_num_remote_nodes() > 0) {
             GHashTableIter iter;
-            crm_node_t *node = NULL;
+            pcmk__node_status_t *node = NULL;
             xmlNode *remotes = pcmk__xe_create(acknak, PCMK_XE_NODES);
 
             g_hash_table_iter_init(&iter, crm_remote_peer_cache);
@@ -1013,13 +1016,13 @@ do_dc_join_final(long long action,
                  enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     crm_debug("Ensuring DC, quorum and node attributes are up-to-date");
-    crm_update_quorum(crm_have_quorum, TRUE);
+    crm_update_quorum(pcmk__cluster_has_quorum(), TRUE);
 }
 
 int crmd_join_phase_count(enum crm_join_phase phase)
 {
     int count = 0;
-    crm_node_t *peer;
+    pcmk__node_status_t *peer;
     GHashTableIter iter;
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
@@ -1033,12 +1036,12 @@ int crmd_join_phase_count(enum crm_join_phase phase)
 
 void crmd_join_phase_log(int level)
 {
-    crm_node_t *peer;
+    pcmk__node_status_t *peer;
     GHashTableIter iter;
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
         do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->uname,
-                   crm_join_phase_str(peer->join));
+                   controld_join_phase_text(peer->join));
     }
 }

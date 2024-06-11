@@ -107,10 +107,11 @@ void attrd_election_init(void);
 void attrd_election_fini(void);
 void attrd_start_election_if_needed(void);
 bool attrd_election_won(void);
-void attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml);
-bool attrd_check_for_new_writer(const crm_node_t *peer, const xmlNode *xml);
+void attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml);
+bool attrd_check_for_new_writer(const pcmk__node_status_t *peer,
+                                const xmlNode *xml);
 void attrd_declare_winner(void);
-void attrd_remove_voter(const crm_node_t *peer);
+void attrd_remove_voter(const pcmk__node_status_t *peer);
 void attrd_xml_add_writer(xmlNode *xml);
 
 enum attrd_attr_flags {
@@ -179,12 +180,12 @@ extern GHashTable *peer_protocol_vers;
 
 int attrd_cluster_connect(void);
 void attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v);
-void attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
-                       bool filter);
-void attrd_peer_sync(crm_node_t *peer);
+void attrd_peer_update(const pcmk__node_status_t *peer, xmlNode *xml,
+                       const char *host, bool filter);
+void attrd_peer_sync(pcmk__node_status_t *peer);
 void attrd_peer_remove(const char *host, bool uncache, const char *source);
 void attrd_peer_clear_failure(pcmk__request_t *request);
-void attrd_peer_sync_response(const crm_node_t *peer, bool peer_won,
+void attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
                               xmlNode *xml);
 
 void attrd_broadcast_protocol(void);
@@ -193,7 +194,8 @@ xmlNode *attrd_client_clear_failure(pcmk__request_t *request);
 xmlNode *attrd_client_update(pcmk__request_t *request);
 xmlNode *attrd_client_refresh(pcmk__request_t *request);
 xmlNode *attrd_client_query(pcmk__request_t *request);
-gboolean attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm);
+gboolean attrd_send_message(pcmk__node_status_t *node, xmlNode *data,
+                            bool confirm);
 
 xmlNode *attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
                              const attribute_value_t *v, bool force_write);
