@@ -692,9 +692,6 @@ const char *stonith_action_str(const char *action);
  * we have to duplicate these declarations where they're implemented.
  */
 
-//! \deprecated Do not use
-#define T_STONITH_NOTIFY_HISTORY_SYNCED "st_notify_history_synced"
-
 //! \deprecated Use stonith_get_namespace() instead
 const char *get_stonith_provider(const char *agent, const char *provider);
 
