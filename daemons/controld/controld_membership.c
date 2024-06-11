@@ -23,6 +23,37 @@ void post_cache_update(int instance);
 
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
+/*!
+ * \internal
+ * \brief Get log-friendly string equivalent of a controller group join phase
+ *
+ * \param[in] phase  Join phase
+ *
+ * \return Log-friendly string equivalent of \p phase
+ */
+const char *
+controld_join_phase_text(enum crm_join_phase phase)
+{
+    switch (phase) {
+        case crm_join_nack_quiet:
+            return "nack_quiet";
+        case crm_join_nack:
+            return "nack";
+        case crm_join_none:
+            return "none";
+        case crm_join_welcomed:
+            return "welcomed";
+        case crm_join_integrated:
+            return "integrated";
+        case crm_join_finalized:
+            return "finalized";
+        case crm_join_confirmed:
+            return "confirmed";
+        default:
+            return "invalid";
+    }
+}
+
 static void
 reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
 {

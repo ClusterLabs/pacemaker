@@ -132,21 +132,21 @@ crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase 
     if(phase == last) {
         crm_trace("Node %s join-%d phase is still %s "
                   QB_XS " nodeid=%u source=%s",
-                  node->uname, current_join_id, crm_join_phase_str(last),
+                  node->uname, current_join_id, controld_join_phase_text(last),
                   node->id, source);
 
     } else if ((phase <= crm_join_none) || (phase == (last + 1))) {
         node->join = phase;
         crm_trace("Node %s join-%d phase is now %s (was %s) "
                   QB_XS " nodeid=%u source=%s",
-                 node->uname, current_join_id, crm_join_phase_str(phase),
-                 crm_join_phase_str(last), node->id, source);
+                 node->uname, current_join_id, controld_join_phase_text(phase),
+                 controld_join_phase_text(last), node->id, source);
 
     } else {
         crm_warn("Rejecting join-%d phase update for node %s because "
                  "can't go from %s to %s " QB_XS " nodeid=%u source=%s",
-                 current_join_id, node->uname, crm_join_phase_str(last),
-                 crm_join_phase_str(phase), node->id, source);
+                 current_join_id, node->uname, controld_join_phase_text(last),
+                 controld_join_phase_text(phase), node->id, source);
     }
 }
 
@@ -239,7 +239,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     if(user_data && member->join > crm_join_none) {
         crm_info("Not making join-%d offer to already known node %s (%s)",
                  current_join_id, member->uname,
-                 crm_join_phase_str(member->join));
+                 controld_join_phase_text(member->join));
         return;
     }
 
@@ -748,8 +748,8 @@ do_dc_join_ack(long long action,
     if (peer->join != crm_join_finalized) {
         crm_info("Ignoring out-of-sequence join-%d confirmation from %s "
                  "(currently %s not %s)",
-                 join_id, join_from, crm_join_phase_str(peer->join),
-                 crm_join_phase_str(crm_join_finalized));
+                 join_id, join_from, controld_join_phase_text(peer->join),
+                 controld_join_phase_text(crm_join_finalized));
         goto done;
     }
 
@@ -855,7 +855,8 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         default:
             crm_trace("Not updating non-integrated and non-nacked node %s (%s) "
                       "for join-%d", join_to,
-                      crm_join_phase_str(join_node->join), current_join_id);
+                      controld_join_phase_text(join_node->join),
+                      current_join_id);
             return;
     }
 
@@ -1039,6 +1040,6 @@ void crmd_join_phase_log(int level)
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
         do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->uname,
-                   crm_join_phase_str(peer->join));
+                   controld_join_phase_text(peer->join));
     }
 }

@@ -227,29 +227,6 @@ enum pcmk_cluster_layer {
 enum pcmk_cluster_layer pcmk_get_cluster_layer(void);
 const char *pcmk_cluster_layer_text(enum pcmk_cluster_layer layer);
 
-/*
- * \brief Get log-friendly string equivalent of a join phase
- *
- * \param[in] phase  Join phase
- *
- * \return Log-friendly string equivalent of \p phase
- */
-//! \deprecated Do not use (public access will be removed in a future release)
-static inline const char *
-crm_join_phase_str(enum crm_join_phase phase)
-{
-    switch (phase) {
-        case crm_join_nack_quiet:   return "nack_quiet";
-        case crm_join_nack:         return "nack";
-        case crm_join_none:         return "none";
-        case crm_join_welcomed:     return "welcomed";
-        case crm_join_integrated:   return "integrated";
-        case crm_join_finalized:    return "finalized";
-        case crm_join_confirmed:    return "confirmed";
-        default:                    return "invalid";
-    }
-}
-
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/cluster/compat.h>
 #endif
