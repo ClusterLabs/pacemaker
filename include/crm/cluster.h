@@ -77,9 +77,6 @@ enum crm_node_flags {
 };
 //!@}
 
-//! \deprecated Do not use (public access will be removed in a future release)
-typedef struct pcmk__node_status crm_node_t;
-
 // Implementation of pcmk_cluster_t
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{
