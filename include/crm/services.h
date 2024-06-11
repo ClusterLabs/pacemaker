@@ -408,8 +408,6 @@ enum ocf_exitcode services_result2ocf(const char *standard, const char *action,
                 return "promoted (degraded)";
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-            case PCMK_OCF_CANCELLED:
-                return "cancelled (DEPRECATED STATUS)";
             case PCMK_OCF_OTHER_ERROR:
                 return "other error (DEPRECATED STATUS)";
             case PCMK_OCF_TIMEOUT:
