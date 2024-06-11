@@ -470,7 +470,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     }
 
     new_node->assign = calloc(1, sizeof(struct pcmk__node_assignment));
-    new_node->details = calloc(1, sizeof(struct pe_node_shared_s));
+    new_node->details = calloc(1, sizeof(struct pcmk__node_details));
     new_node->private = calloc(1, sizeof(pcmk__node_private_t));
     if ((new_node->assign == NULL) || (new_node->details == NULL)
         || (new_node->private == NULL)) {
