@@ -84,6 +84,8 @@ TESTS = [
             "coloc-with-inner-group-member",
             "Consider explicit colocations with inner group members"
         ],
+        [ "banned-group-inner-constraints",
+          "Group banned from current node, inner member constrained" ],
     ],
     [
         [ "rsc_dep1", "Must not" ],

@@ -1,0 +1,12 @@
+ digraph "g" {
+"G-RSC1_stop_0 node2" -> "G_stopped_0" [ style = bold]
+"G-RSC1_stop_0 node2" [ style=bold color="green" fontcolor="black"]
+"G-RSC2_stop_0 node2" -> "G-RSC1_stop_0 node2" [ style = bold]
+"G-RSC2_stop_0 node2" -> "G_stopped_0" [ style = bold]
+"G-RSC2_stop_0 node2" [ style=bold color="green" fontcolor="black"]
+"G_stop_0" -> "G-RSC1_stop_0 node2" [ style = bold]
+"G_stop_0" -> "G-RSC2_stop_0 node2" [ style = bold]
+"G_stop_0" -> "G_stopped_0" [ style = bold]
+"G_stop_0" [ style=bold color="green" fontcolor="orange"]
+"G_stopped_0" [ style=bold color="green" fontcolor="orange"]
+}
