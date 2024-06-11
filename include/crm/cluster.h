@@ -48,8 +48,8 @@ extern unsigned long long crm_peer_seq;
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 enum crm_join_phase {
-    /* @COMPAT: crm_join_nack_quiet can be replaced by crm_node_t:user_data
-     *          at a compatibility break.
+    /* @COMPAT: crm_join_nack_quiet can be replaced by
+     * pcmk__node_status_t:user_data at a compatibility break
      */
     //! Not allowed to join, but don't send a nack message
     crm_join_nack_quiet = -2,
@@ -77,56 +77,8 @@ enum crm_node_flags {
 };
 //!@}
 
-// @COMPAT Make this internal when we can break API backward compatibility
-//!@{
 //! \deprecated Do not use (public access will be removed in a future release)
-typedef struct crm_peer_node_s {
-    char *uname;                // Node name as known to cluster
-
-    /* @COMPAT This is less than ideal since the value is not a valid XML ID
-     * (for Corosync, it's the string equivalent of the node's numeric node ID,
-     * but XML IDs can't start with a number) and the three elements should have
-     * different IDs.
-     *
-     * Ideally, we would use something like node-NODEID, node_state-NODEID, and
-     * transient_attributes-NODEID as the element IDs. Unfortunately changing it
-     * would be impractical due to backward compatibility; older nodes in a
-     * rolling upgrade will always write and expect the value in the old format.
-     *
-     * This is also named poorly, since the value is not a UUID, but at least
-     * that can be changed at an API compatibility break.
-     */
-    /*! Value of the PCMK_XA_ID XML attribute to use with the node's
-     * PCMK_XE_NODE, PCMK_XE_NODE_STATE, and PCMK_XE_TRANSIENT_ATTRIBUTES
-     * XML elements in the CIB
-     */
-    char *uuid;
-
-    char *state;                // @TODO change to enum
-    uint64_t flags;             // Bitmask of crm_node_flags
-    uint64_t last_seen;         // Only needed by cluster nodes
-    uint32_t processes;         // @TODO most not needed, merge into flags
-
-    /* @TODO When we can break public API compatibility, we can make the rest of
-     * these members separate structs and use void *cluster_data and
-     * void *user_data here instead, to abstract the cluster layer further.
-     */
-
-    // Currently only needed by corosync stack
-    uint32_t id;                // Node ID
-    time_t when_lost;           // When CPG membership was last lost
-
-    // Only used by controller
-    enum crm_join_phase join;
-    char *expected;
-
-    time_t peer_lost;
-    char *conn_host;
-
-    time_t when_member;         // Since when node has been a cluster member
-    time_t when_online;         // Since when peer has been online in CPG
-} crm_node_t;
-//!@}
+typedef struct pcmk__node_status crm_node_t;
 
 // Implementation of pcmk_cluster_t
 // @COMPAT Make this internal when we can break API backward compatibility

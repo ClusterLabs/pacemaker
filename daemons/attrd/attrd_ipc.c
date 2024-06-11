@@ -152,7 +152,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
 
         crm_element_value_int(xml, PCMK__XA_ATTR_HOST_ID, &nodeid);
         if (nodeid > 0) {
-            crm_node_t *node = NULL;
+            pcmk__node_status_t *node = NULL;
             char *host_alloc = NULL;
 
             node = pcmk__search_node_caches(nodeid, NULL,

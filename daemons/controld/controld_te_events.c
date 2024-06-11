@@ -120,7 +120,7 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
                                             PCMK__META_ON_NODE_UUID);
             router = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
             if (router) {
-                const crm_node_t *node =
+                const pcmk__node_status_t *node =
                     pcmk__get_node(0, router, NULL,
                                    pcmk__node_search_cluster_member);
 

@@ -37,7 +37,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
         return;
     }
     if (kind == crm_class_cluster) {
-        crm_node_t *peer = NULL;
+        pcmk__node_status_t *peer = NULL;
         xmlNode *xml = pcmk__xml_parse(data);
 
         if (xml == NULL) {
@@ -116,7 +116,7 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
      * use by the peer callback.
      */
     if (controld_globals.dc_name != NULL) {
-        crm_node_t *peer = NULL;
+        pcmk__node_status_t *peer = NULL;
 
         peer = pcmk__search_node_caches(0, controld_globals.dc_name,
                                         pcmk__node_search_cluster_member);

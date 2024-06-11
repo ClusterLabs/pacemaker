@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,10 +8,15 @@
  */
 
 #ifndef CRMD_UTILS__H
-#  define CRMD_UTILS__H
+#define CRMD_UTILS__H
 
-#  include <crm/crm.h>
-#  include <crm/common/xml.h>
+#include <glib.h>                   // gboolean
+#include <libxml/tree.h>            // xmlNode
+
+#include <crm/crm.h>
+#include <crm/cluster.h>            // enum crm_join_phase
+#include <crm/cluster/internal.h>   // pcmk__node_status_t
+#include <crm/common/xml.h>
 
 #  define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
@@ -36,8 +41,9 @@ void fsa_dump_actions(uint64_t action, const char *text);
 void fsa_dump_inputs(int log_level, const char *text, long long input_register);
 
 gboolean update_dc(xmlNode * msg);
-void crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase phase);
-xmlNode *create_node_state_update(crm_node_t *node, int flags,
+void crm_update_peer_join(const char *source, pcmk__node_status_t *node,
+                          enum crm_join_phase phase);
+xmlNode *create_node_state_update(pcmk__node_status_t *node, int flags,
                                   xmlNode *parent, const char *source);
 void populate_cib_nodes(enum node_update_flags flags, const char *source);
 void crm_update_quorum(gboolean quorum, gboolean force_update);
@@ -52,7 +58,7 @@ void update_attrd_clear_failures(const char *host, const char *rsc,
 int crmd_join_phase_count(enum crm_join_phase phase);
 void crmd_join_phase_log(int level);
 
-void crmd_peer_down(crm_node_t *peer, bool full);
+void crmd_peer_down(pcmk__node_status_t *peer, bool full);
 
 bool feature_set_compatible(const char *dc_version, const char *join_version);
 

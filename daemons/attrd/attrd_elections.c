@@ -64,7 +64,7 @@ attrd_election_won(void)
 }
 
 void
-attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
+attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
 {
     enum election_result rc = 0;
     enum election_result previous = election_state(writer);
@@ -113,7 +113,7 @@ attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
 }
 
 bool
-attrd_check_for_new_writer(const crm_node_t *peer, const xmlNode *xml)
+attrd_check_for_new_writer(const pcmk__node_status_t *peer, const xmlNode *xml)
 {
     int peer_state = 0;
 
@@ -143,7 +143,7 @@ attrd_declare_winner(void)
 }
 
 void
-attrd_remove_voter(const crm_node_t *peer)
+attrd_remove_voter(const pcmk__node_status_t *peer)
 {
     election_remove(writer, peer->uname);
     if (peer_writer && pcmk__str_eq(peer->uname, peer_writer, pcmk__str_casei)) {

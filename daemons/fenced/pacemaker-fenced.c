@@ -468,7 +468,8 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
  * \param[in] data  Previous value of what changed
  */
 static void
-st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
+st_peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
+                        const void *data)
 {
     if ((type != crm_status_processes)
         && !pcmk_is_set(node->flags, crm_remote_node)) {

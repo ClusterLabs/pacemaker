@@ -203,7 +203,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
                     const char *uuid)
 {
     int rc = pcmk_ok;
-    crm_node_t *peer = NULL;
+    pcmk__node_status_t *peer = NULL;
 
     /* We (usually) rely on the membership layer to do node_update_cluster,
      * and the peer status callback to do node_update_peer, because the node
@@ -373,7 +373,7 @@ execute_stonith_cleanup(void)
 
     for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
         char *target = iter->data;
-        crm_node_t *target_node =
+        pcmk__node_status_t *target_node =
             pcmk__get_node(0, target, NULL, pcmk__node_search_cluster_member);
         const char *uuid = pcmk__cluster_node_uuid(target_node);
 
@@ -583,7 +583,8 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
         const uint32_t flags = pcmk__node_search_any
                                |pcmk__node_search_cluster_cib;
 
-        crm_node_t *peer = pcmk__search_node_caches(0, event->target, flags);
+        pcmk__node_status_t *peer = pcmk__search_node_caches(0, event->target,
+                                                             flags);
         const char *uuid = NULL;
 
         if (peer == NULL) {

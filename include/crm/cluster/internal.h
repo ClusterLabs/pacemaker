@@ -18,8 +18,8 @@
 #  include <crm/cluster.h>
 
 enum crm_proc_flag {
-    /* @COMPAT When crm_node_t:processes is made internal, we can merge this
-     * into node flags or turn it into a boolean. Until then, in theory
+    /* @COMPAT When pcmk__node_status_t:processes is made internal, we can merge
+     * this into node flags or turn it into a boolean. Until then, in theory
      * something could depend on these particular numeric values.
      */
     crm_proc_none       = 0x00000001,
@@ -46,6 +46,54 @@ enum pcmk__node_search_flags {
     //! Search for cluster nodes from CIB (as of last cache refresh)
     pcmk__node_search_cluster_cib       = (1 << 2),
 };
+
+//! Cluster member node data (may be a cluster node or a Pacemaker Remote node)
+typedef struct pcmk__node_status {
+    char *uname;                // Node name as known to cluster
+
+    /* @COMPAT This is less than ideal since the value is not a valid XML ID
+     * (for Corosync, it's the string equivalent of the node's numeric node ID,
+     * but XML IDs can't start with a number) and the three elements should have
+     * different IDs.
+     *
+     * Ideally, we would use something like node-NODEID, node_state-NODEID, and
+     * transient_attributes-NODEID as the element IDs. Unfortunately changing it
+     * would be impractical due to backward compatibility; older nodes in a
+     * rolling upgrade will always write and expect the value in the old format.
+     *
+     * This is also named poorly, since the value is not a UUID, but at least
+     * that can be changed at an API compatibility break.
+     */
+    /*! Value of the PCMK_XA_ID XML attribute to use with the node's
+     * PCMK_XE_NODE, PCMK_XE_NODE_STATE, and PCMK_XE_TRANSIENT_ATTRIBUTES
+     * XML elements in the CIB
+     */
+    char *uuid;
+
+    char *state;                // @TODO change to enum
+    uint64_t flags;             // Bitmask of crm_node_flags
+    uint64_t last_seen;         // Only needed by cluster nodes
+    uint32_t processes;         // @TODO most not needed, merge into flags
+
+    /* @TODO When we can break public API compatibility, we can make the rest of
+     * these members separate structs and use void *cluster_data and
+     * void *user_data here instead, to abstract the cluster layer further.
+     */
+
+    // Currently only needed by corosync stack
+    uint32_t id;                // Node ID
+    time_t when_lost;           // When CPG membership was last lost
+
+    // Only used by controller
+    enum crm_join_phase join;
+    char *expected;
+
+    time_t peer_lost;
+    char *conn_host;
+
+    time_t when_member;         // Since when node has been a cluster member
+    time_t when_online;         // Since when peer has been online in CPG
+} pcmk__node_status_t;
 
 /*!
  * \internal
@@ -141,17 +189,20 @@ char *pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id,
 
 #  endif
 
-const char *pcmk__cluster_node_uuid(crm_node_t *node);
+const char *pcmk__cluster_node_uuid(pcmk__node_status_t *node);
 char *pcmk__cluster_node_name(uint32_t nodeid);
 const char *pcmk__cluster_local_node_name(void);
 const char *pcmk__node_name_from_uuid(const char *uuid);
 
-crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,
-                                 uint32_t flag, const char *status);
-crm_node_t *pcmk__update_peer_state(const char *source, crm_node_t *node,
-                                    const char *state, uint64_t membership);
+pcmk__node_status_t *crm_update_peer_proc(const char *source,
+                                          pcmk__node_status_t *peer,
+                                          uint32_t flag, const char *status);
+pcmk__node_status_t *pcmk__update_peer_state(const char *source,
+                                             pcmk__node_status_t *node,
+                                             const char *state,
+                                             uint64_t membership);
 
-void pcmk__update_peer_expected(const char *source, crm_node_t *node,
+void pcmk__update_peer_expected(const char *source, pcmk__node_status_t *node,
                                 const char *expected);
 void pcmk__reap_unseen_nodes(uint64_t ring_id);
 
@@ -160,7 +211,7 @@ void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                    void (*destroy) (gpointer));
 
 enum crm_ais_msg_types pcmk__cluster_parse_msg_type(const char *text);
-bool pcmk__cluster_send_message(const crm_node_t *node,
+bool pcmk__cluster_send_message(const pcmk__node_status_t *node,
                                 enum crm_ais_msg_types service,
                                 const xmlNode *data);
 
@@ -173,23 +224,24 @@ void pcmk__cluster_destroy_node_caches(void);
 
 void pcmk__cluster_set_autoreap(bool enable);
 void pcmk__cluster_set_status_callback(void (*dispatch)(enum crm_status_type,
-                                                        crm_node_t *,
+                                                        pcmk__node_status_t *,
                                                         const void *));
 
-bool pcmk__cluster_is_node_active(const crm_node_t *node);
+bool pcmk__cluster_is_node_active(const pcmk__node_status_t *node);
 unsigned int pcmk__cluster_num_active_nodes(void);
 unsigned int pcmk__cluster_num_remote_nodes(void);
 
-crm_node_t *pcmk__cluster_lookup_remote_node(const char *node_name);
+pcmk__node_status_t *pcmk__cluster_lookup_remote_node(const char *node_name);
 void pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name);
 void pcmk__cluster_forget_remote_node(const char *node_name);
-crm_node_t *pcmk__search_node_caches(unsigned int id, const char *uname,
-                                     uint32_t flags);
+pcmk__node_status_t *pcmk__search_node_caches(unsigned int id,
+                                              const char *uname,
+                                              uint32_t flags);
 void pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id);
 
 void pcmk__refresh_node_caches_from_cib(xmlNode *cib);
 
-crm_node_t *pcmk__get_node(unsigned int id, const char *uname,
-                           const char *uuid, uint32_t flags);
+pcmk__node_status_t *pcmk__get_node(unsigned int id, const char *uname,
+                                    const char *uuid, uint32_t flags);
 
 #endif // PCMK__CRM_CLUSTER_INTERNAL__H

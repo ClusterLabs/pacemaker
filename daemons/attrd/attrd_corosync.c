@@ -37,7 +37,7 @@ attrd_confirmation(int callid)
 }
 
 static void
-attrd_peer_message(crm_node_t *peer, xmlNode *xml)
+attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
 {
     const char *election_op = crm_element_value(xml, PCMK__XA_CRM_TASK);
 
@@ -162,7 +162,8 @@ attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v)
 #define state_text(state) pcmk__s((state), "in unknown state")
 
 static void
-attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
+attrd_peer_change_cb(enum crm_status_type kind, pcmk__node_status_t *peer,
+                     const void *data)
 {
     bool gone = false;
     bool is_remote = pcmk_is_set(peer->flags, crm_remote_node);
@@ -213,8 +214,8 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
 static void
 record_peer_nodeid(attribute_value_t *v, const char *host)
 {
-    crm_node_t *known_peer = pcmk__get_node(v->nodeid, host, NULL,
-                                            pcmk__node_search_cluster_member);
+    pcmk__node_status_t *known_peer =
+        pcmk__get_node(v->nodeid, host, NULL, pcmk__node_search_cluster_member);
 
     crm_trace("Learned %s has node id %s", known_peer->uname, known_peer->uuid);
     if (attrd_election_won()) {
@@ -228,9 +229,9 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
     (((p) == NULL)? "all peers" : pcmk__s((p)->uname, "unknown peer"))
 
 static void
-update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
-                    const char *attr, const char *value, const char *host,
-                    bool filter)
+update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
+                    const xmlNode *xml, const char *attr, const char *value,
+                    const char *host, bool filter)
 {
     int is_remote = 0;
     bool changed = false;
@@ -327,7 +328,8 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
 }
 
 static void
-attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
+attrd_peer_update_one(const pcmk__node_status_t *peer, xmlNode *xml,
+                      bool filter)
 {
     attribute_t *a = NULL;
     const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
@@ -441,8 +443,9 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     GHashTableIter iter;
     regex_t regex;
 
-    crm_node_t *peer = pcmk__get_node(0, request->peer, NULL,
-                                      pcmk__node_search_cluster_member);
+    pcmk__node_status_t *peer =
+        pcmk__get_node(0, request->peer, NULL,
+                       pcmk__node_search_cluster_member);
 
     pcmk_parse_interval_spec(interval_spec, &interval_ms);
 
@@ -478,7 +481,8 @@ attrd_peer_clear_failure(pcmk__request_t *request)
  * \param[in,out] xml       Request XML
  */
 void
-attrd_peer_sync_response(const crm_node_t *peer, bool peer_won, xmlNode *xml)
+attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
+                         xmlNode *xml)
 {
     crm_info("Processing " PCMK__ATTRD_CMD_SYNC_RESPONSE " from %s",
              peer->uname);
@@ -544,7 +548,7 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
  * \param[in] peer  Peer to send sync to (if NULL, broadcast to all peers)
  */
 void
-attrd_peer_sync(crm_node_t *peer)
+attrd_peer_sync(pcmk__node_status_t *peer)
 {
     GHashTableIter aIter;
     GHashTableIter vIter;
@@ -572,8 +576,8 @@ attrd_peer_sync(crm_node_t *peer)
 }
 
 void
-attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
-                  bool filter)
+attrd_peer_update(const pcmk__node_status_t *peer, xmlNode *xml,
+                  const char *host, bool filter)
 {
     bool handle_sync_point = false;
 

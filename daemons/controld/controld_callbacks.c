@@ -77,7 +77,7 @@ crmd_ha_msg_filter(xmlNode * msg)
  * \retval  1 if completely alive
  */
 static int
-node_alive(const crm_node_t *node)
+node_alive(const pcmk__node_status_t *node)
 {
     if (pcmk_is_set(node->flags, crm_remote_node)) {
         // Pacemaker Remote nodes can't be partially alive
@@ -100,7 +100,8 @@ node_alive(const crm_node_t *node)
 #define state_text(state) ((state)? (const char *)(state) : "in unknown state")
 
 void
-peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
+peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
+                     const void *data)
 {
     uint32_t old = 0;
     bool appeared = FALSE;

@@ -50,7 +50,7 @@ static gboolean (*quorum_app_callback)(unsigned long long seq,
  * \note It is the caller's responsibility to free the result with free().
  */
 char *
-pcmk__corosync_uuid(const crm_node_t *node)
+pcmk__corosync_uuid(const pcmk__node_status_t *node)
 {
     CRM_ASSERT(pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync);
 
@@ -270,7 +270,7 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
 {
     int i;
     GHashTableIter iter;
-    crm_node_t *node = NULL;
+    pcmk__node_status_t *node = NULL;
     static gboolean init_phase = TRUE;
 
     bool is_quorate = (quorate != 0);
@@ -458,7 +458,7 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
 int
 pcmk__corosync_connect(pcmk_cluster_t *cluster)
 {
-    crm_node_t *peer = NULL;
+    pcmk__node_status_t *peer = NULL;
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     int rc = pcmk_rc_ok;
@@ -529,7 +529,7 @@ pcmk__corosync_is_active(void)
  * \return \c true if \p node is an active Corosync peer, or \c false otherwise
  */
 bool
-pcmk__corosync_is_peer_active(const crm_node_t *node)
+pcmk__corosync_is_peer_active(const pcmk__node_status_t *node)
 {
     if (node == NULL) {
         crm_trace("Corosync peer inactive: NULL");
@@ -625,7 +625,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
         name = pcmk__corosync_name(cmap_handle, nodeid);
         if (name != NULL) {
             GHashTableIter iter;
-            crm_node_t *node = NULL;
+            pcmk__node_status_t *node = NULL;
 
             g_hash_table_iter_init(&iter, crm_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {

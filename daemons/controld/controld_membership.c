@@ -57,7 +57,7 @@ controld_join_phase_text(enum crm_join_phase phase)
 static void
 reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
 {
-    crm_node_t *node = value;
+    pcmk__node_status_t *node = value;
 
     if (!pcmk__cluster_is_node_active(node)) {
         crm_update_peer_join(__func__, node, crm_join_none);
@@ -151,8 +151,8 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
  * \return Pointer to created node state tag
  */
 xmlNode *
-create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
-                         const char *source)
+create_node_state_update(pcmk__node_status_t *node, int flags,
+                         xmlNode *parent, const char *source)
 {
     const char *value = NULL;
     xmlNode *node_state;
@@ -264,7 +264,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         const char *node_uuid = NULL;
         const char *node_uname = NULL;
         GHashTableIter iter;
-        crm_node_t *node = NULL;
+        pcmk__node_status_t *node = NULL;
         gboolean known = FALSE;
 
         node_uuid = crm_element_value(node_xml, PCMK_XA_ID);
@@ -348,7 +348,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
     if (from_hashtable) {
         GHashTableIter iter;
-        crm_node_t *node = NULL;
+        pcmk__node_status_t *node = NULL;
         GString *xpath = NULL;
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
@@ -398,7 +398,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
          * we've not seen valid membership data
          */
         GHashTableIter iter;
-        crm_node_t *node = NULL;
+        pcmk__node_status_t *node = NULL;
 
         pcmk__xml_free(node_list);
         node_list = pcmk__xe_create(NULL, PCMK_XE_STATUS);
