@@ -25,6 +25,8 @@
 
 #include <crm/cluster.h>           // crm_node_t
 
+#if SUPPORT_COROSYNC
+
 G_GNUC_INTERNAL
 bool pcmk__corosync_is_active(void);
 
@@ -59,5 +61,7 @@ uint32_t pcmk__cpg_local_nodeid(cpg_handle_t handle);
 G_GNUC_INTERNAL
 bool pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
                         enum crm_ais_msg_types dest);
+
+#endif  // SUPPORT_COROSYNC
 
 #endif  // PCMK__CRMCLUSTER_PRIVATE__H
