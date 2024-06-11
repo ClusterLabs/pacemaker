@@ -517,7 +517,7 @@ stonith_api_device_metadata(stonith_t *stonith, int call_options,
     enum stonith_namespace ns = stonith_get_namespace(agent, namespace_s);
 
     if (timeout_sec <= 0) {
-        timeout_sec = PCMK_DEFAULT_METADATA_TIMEOUT_MS;
+        timeout_sec = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
 
     crm_trace("Looking up metadata for %s agent %s",
@@ -1781,7 +1781,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     }
 
     if (timeout_sec <= 0) {
-        timeout_sec = PCMK_DEFAULT_METADATA_TIMEOUT_MS; // Questionable
+        timeout_sec = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
 
     switch (stonith_get_namespace(agent, namespace_s)) {
