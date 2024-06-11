@@ -260,10 +260,6 @@ rsc_is_on_node(pcmk_resource_t *rsc, const pcmk_node_t *node, int flags)
             }
         }
 
-    } else if (pcmk_is_set(flags, pe_find_inactive) // @COMPAT deprecated
-               && (rsc->private->active_nodes == NULL)) {
-        return true;
-
     } else if (!pcmk_is_set(flags, pcmk_rsc_match_current_node)
                && (rsc->private->assigned_node != NULL)
                && pcmk__same_node(rsc->private->assigned_node, node)) {

@@ -42,9 +42,6 @@ enum pe_find {
     //! If matching by node, compare current node instead of assigned node
     pcmk_rsc_match_current_node     = (1 << 3),
 
-    //! \deprecated Do not use
-    pe_find_inactive                = (1 << 4),
-
     //! Match clone instances (even unique) by base name as well as exact ID
     pcmk_rsc_match_basename         = (1 << 5),
 };
