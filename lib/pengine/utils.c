@@ -639,7 +639,7 @@ trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
 gboolean
 add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 {
-    pcmk_tag_t *tag = NULL;
+    pcmk__idref_t *tag = NULL;
     GList *gIter = NULL;
     gboolean is_existing = FALSE;
 
@@ -647,7 +647,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 
     tag = g_hash_table_lookup(tags, tag_name);
     if (tag == NULL) {
-        tag = calloc(1, sizeof(pcmk_tag_t));
+        tag = calloc(1, sizeof(pcmk__idref_t));
         if (tag == NULL) {
             pcmk__sched_err("Could not allocate memory for tag %s", tag_name);
             return FALSE;

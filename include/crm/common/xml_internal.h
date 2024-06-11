@@ -21,6 +21,7 @@
 
 #include <crm/crm.h>  /* transitively imports qblog.h */
 #include <crm/common/output_internal.h>
+#include <crm/common/xml_idref_internal.h>
 #include <crm/common/xml_io_internal.h>
 #include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
 #include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE

@@ -144,7 +144,7 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
  */
 static bool
 find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
-                    pcmk_tag_t **tag)
+                    pcmk__idref_t **tag)
 {
     *tag = NULL;
 
@@ -187,7 +187,7 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
  */
 bool
 pcmk__valid_resource_or_tag(const pcmk_scheduler_t *scheduler, const char *id,
-                            pcmk_resource_t **rsc, pcmk_tag_t **tag)
+                            pcmk_resource_t **rsc, pcmk__idref_t **tag)
 {
     if (rsc != NULL) {
         *rsc = pcmk__find_constraint_resource(scheduler->resources, id);
@@ -246,7 +246,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
              xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             pcmk_resource_t *rsc = NULL;
-            pcmk_tag_t *tag = NULL;
+            pcmk__idref_t *tag = NULL;
 
             if (!pcmk__valid_resource_or_tag(scheduler, pcmk__xe_id(xml_rsc),
                                              &rsc, &tag)) {
@@ -351,7 +351,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
     const char *id = NULL;
 
     pcmk_resource_t *rsc = NULL;
-    pcmk_tag_t *tag = NULL;
+    pcmk__idref_t *tag = NULL;
 
     *rsc_set = NULL;
 
