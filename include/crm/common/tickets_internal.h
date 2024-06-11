@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__CRM_COMMON_TICKETS__H
-#define PCMK__CRM_COMMON_TICKETS__H
+#ifndef PCMK__CRM_COMMON_TICKETS_INTERNAL__H
+#define PCMK__CRM_COMMON_TICKETS_INTERNAL__H
 
 #include <sys/types.h>      // time_t
 #include <glib.h>           // gboolean, GHashTable
@@ -24,20 +24,16 @@ extern "C" {
  */
 
 // Ticket constraint object
-// @COMPAT Make internal when we can break API backward compatibility
-//!@{
-//! \deprecated Do not use (public access will be removed in a future release)
-typedef struct pe_ticket_s {
+typedef struct {
     char *id;               // XML ID of ticket constraint or state
     gboolean granted;       // Whether cluster has been granted the ticket
     time_t last_granted;    // When cluster was last granted the ticket
     gboolean standby;       // Whether ticket is temporarily suspended
     GHashTable *state;      // XML attributes from ticket state
-} pcmk_ticket_t;
-//!@}
+} pcmk__ticket_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // PCMK__CRM_COMMON_TICKETS__H
+#endif // PCMK__CRM_COMMON_TICKETS_INTERNAL__H

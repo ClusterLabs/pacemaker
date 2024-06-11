@@ -3204,10 +3204,10 @@ resource_util_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *", "bool", "bool")
+PCMK__OUTPUT_ARGS("ticket", "pcmk__ticket_t *", "bool", "bool")
 static int
 ticket_default(pcmk__output_t *out, va_list args) {
-    pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
+    pcmk__ticket_t *ticket = va_arg(args, pcmk__ticket_t *);
     bool raw = va_arg(args, int);
     bool details = va_arg(args, int);
 
@@ -3294,10 +3294,10 @@ ticket_default(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *", "bool", "bool")
+PCMK__OUTPUT_ARGS("ticket", "pcmk__ticket_t *", "bool", "bool")
 static int
 ticket_xml(pcmk__output_t *out, va_list args) {
-    pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
+    pcmk__ticket_t *ticket = va_arg(args, pcmk__ticket_t *);
     bool raw G_GNUC_UNUSED = va_arg(args, int);
     bool details G_GNUC_UNUSED = va_arg(args, int);
 
@@ -3363,7 +3363,7 @@ ticket_list(pcmk__output_t *out, va_list args) {
     /* Print each ticket */
     g_hash_table_iter_init(&iter, tickets);
     while (g_hash_table_iter_next(&iter, NULL, &value)) {
-        pcmk_ticket_t *ticket = (pcmk_ticket_t *) value;
+        pcmk__ticket_t *ticket = (pcmk__ticket_t *) value;
         out->message(out, "ticket", ticket, raw, details);
     }
 
