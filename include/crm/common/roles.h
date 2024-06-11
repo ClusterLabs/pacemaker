@@ -40,9 +40,6 @@ enum rsc_role_e {
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_role_promoted instead
-    RSC_ROLE_PROMOTED           = pcmk_role_promoted,
-
-    //! \deprecated Use pcmk_role_promoted instead
     RSC_ROLE_MASTER             = pcmk_role_promoted,
 #endif
 };
