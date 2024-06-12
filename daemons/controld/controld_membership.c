@@ -59,31 +59,33 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
 {
     pcmk__node_status_t *node = value;
 
-    if (!pcmk__cluster_is_node_active(node)) {
-        crm_update_peer_join(__func__, node, crm_join_none);
+    if (pcmk__cluster_is_node_active(node)) {
+        return;
+    }
 
-        if(node && node->uname) {
-            if (pcmk__str_eq(controld_globals.our_nodename, node->uname,
-                             pcmk__str_casei)) {
-                crm_err("We're not part of the cluster anymore");
-                register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+    crm_update_peer_join(__func__, node, crm_join_none);
 
-            } else if (!AM_I_DC
-                       && pcmk__str_eq(node->uname, controld_globals.dc_name,
-                                       pcmk__str_casei)) {
-                crm_warn("Our DC node (%s) left the cluster", node->uname);
-                register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
-            }
-        }
+    if ((node != NULL) && (node->name != NULL)) {
+        if (pcmk__str_eq(controld_globals.our_nodename, node->name,
+                         pcmk__str_casei)) {
+            crm_err("We're not part of the cluster anymore");
+            register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 
-        if ((controld_globals.fsa_state == S_INTEGRATION)
-            || (controld_globals.fsa_state == S_FINALIZE_JOIN)) {
-            check_join_state(controld_globals.fsa_state, __func__);
+        } else if (!AM_I_DC
+                   && pcmk__str_eq(node->name, controld_globals.dc_name,
+                                   pcmk__str_casei)) {
+            crm_warn("Our DC node (%s) left the cluster", node->name);
+            register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
         }
-        if ((node != NULL) && (node->uuid != NULL)) {
-            fail_incompletable_actions(controld_globals.transition_graph,
-                                       node->uuid);
-        }
+    }
+
+    if ((controld_globals.fsa_state == S_INTEGRATION)
+        || (controld_globals.fsa_state == S_FINALIZE_JOIN)) {
+        check_join_state(controld_globals.fsa_state, __func__);
+    }
+    if ((node != NULL) && (node->uuid != NULL)) {
+        fail_incompletable_actions(controld_globals.transition_graph,
+                                   node->uuid);
     }
 }
 
@@ -158,7 +160,8 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
     xmlNode *node_state;
 
     if (!node->state) {
-        crm_info("Node update for %s cancelled: no state, not seen yet", node->uname);
+        crm_info("Node update for %s cancelled: no state, not seen yet",
+                 node->name);
        return NULL;
     }
 
@@ -170,12 +173,12 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
 
     if (crm_xml_add(node_state, PCMK_XA_ID,
                     pcmk__cluster_node_uuid(node)) == NULL) {
-        crm_info("Node update for %s cancelled: no ID", node->uname);
+        crm_info("Node update for %s cancelled: no ID", node->name);
         pcmk__xml_free(node_state);
         return NULL;
     }
 
-    crm_xml_add(node_state, PCMK_XA_UNAME, node->uname);
+    crm_xml_add(node_state, PCMK_XA_UNAME, node->name);
 
     if ((flags & node_update_cluster) && node->state) {
         if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
@@ -276,10 +279,9 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if (node->uuid
+            if ((node != NULL)
                 && pcmk__str_eq(node->uuid, node_uuid, pcmk__str_casei)
-                && node->uname
-                && pcmk__str_eq(node->uname, node_uname, pcmk__str_casei)) {
+                && pcmk__str_eq(node->name, node_uname, pcmk__str_casei)) {
 
                 known = TRUE;
                 break;
@@ -355,8 +357,9 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *new_node = NULL;
 
-            if ((node->uuid != NULL) && (node->uname != NULL)) {
-                crm_trace("Creating node entry for %s/%s", node->uname, node->uuid);
+            if ((node->uuid != NULL) && (node->name != NULL)) {
+                crm_trace("Creating node entry for %s/%s",
+                          node->name, node->uuid);
                 if (xpath == NULL) {
                     xpath = g_string_sized_new(512);
                 } else {
@@ -366,13 +369,13 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                 /* We need both to be valid */
                 new_node = pcmk__xe_create(node_list, PCMK_XE_NODE);
                 crm_xml_add(new_node, PCMK_XA_ID, node->uuid);
-                crm_xml_add(new_node, PCMK_XA_UNAME, node->uname);
+                crm_xml_add(new_node, PCMK_XA_UNAME, node->name);
 
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
                 pcmk__g_strcat(xpath,
                                "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
                                "/" PCMK_XE_NODES "/" PCMK_XE_NODE
-                               "[@" PCMK_XA_UNAME "='", node->uname, "']"
+                               "[@" PCMK_XA_UNAME "='", node->name, "']"
                                "[@" PCMK_XA_ID "!='", node->uuid, "']", NULL);
 
                 call_id = cib_conn->cmds->query(cib_conn,

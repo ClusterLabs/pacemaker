@@ -2875,7 +2875,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
                                             pcmk__node_search_any
                                             |pcmk__node_search_cluster_cib);
             if (node != NULL) {
-                host = node->uname;
+                host = node->name;
             }
         }
 
@@ -2983,16 +2983,11 @@ construct_async_reply(const async_command_t *cmd,
     return reply;
 }
 
-bool fencing_peer_active(pcmk__node_status_t *peer)
+bool
+fencing_peer_active(pcmk__node_status_t *peer)
 {
-    if (peer == NULL) {
-        return FALSE;
-    } else if (peer->uname == NULL) {
-        return FALSE;
-    } else if (pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
-        return TRUE;
-    }
-    return FALSE;
+    return (peer != NULL) && (peer->name != NULL)
+           && pcmk_is_set(peer->processes, crm_get_cluster_proc());
 }
 
 void
@@ -3024,10 +3019,10 @@ check_alternate_host(const char *target)
         g_hash_table_iter_init(&gIter, crm_peer_cache);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
             if (fencing_peer_active(entry)
-                && !pcmk__str_eq(entry->uname, target, pcmk__str_casei)) {
+                && !pcmk__str_eq(entry->name, target, pcmk__str_casei)) {
                 crm_notice("Forwarding self-fencing request to %s",
-                           entry->uname);
-                return entry->uname;
+                           entry->name);
+                return entry->name;
             }
         }
         crm_warn("Will handle own fencing because no peer can");

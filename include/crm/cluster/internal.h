@@ -53,7 +53,8 @@ enum pcmk__node_search_flags {
 
 //! Node status data (may be a cluster node or a Pacemaker Remote node)
 typedef struct pcmk__node_status {
-    char *uname;                // Node name as known to cluster
+    //! Node name as known to cluster layer, or Pacemaker Remote node name
+    char *name;
 
     /* @COMPAT This is less than ideal since the value is not a valid XML ID
      * (for Corosync, it's the string equivalent of the node's numeric node ID,

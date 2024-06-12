@@ -58,7 +58,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
             .ipc_client     = NULL,
             .ipc_id         = 0,
             .ipc_flags      = 0,
-            .peer           = peer->uname,
+            .peer           = peer->name,
             .xml            = xml,
             .call_options   = 0,
             .result         = PCMK__UNKNOWN_RESULT,
@@ -89,7 +89,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
              * peer where it will have to do something with a PCMK__XA_CONFIRM type
              * message.
              */
-            crm_debug("Sending %s a confirmation", peer->uname);
+            crm_debug("Sending %s a confirmation", peer->name);
             attrd_send_message(peer, reply, false);
             pcmk__xml_free(reply);
         }
@@ -172,7 +172,7 @@ attrd_peer_change_cb(enum crm_status_type kind, pcmk__node_status_t *peer,
         case crm_status_uname:
             crm_debug("%s node %s is now %s",
                       (is_remote? "Remote" : "Cluster"),
-                      peer->uname, state_text(peer->state));
+                      peer->name, state_text(peer->state));
             break;
 
         case crm_status_processes:
@@ -180,13 +180,13 @@ attrd_peer_change_cb(enum crm_status_type kind, pcmk__node_status_t *peer,
                 gone = true;
             }
             crm_debug("Node %s is %s a peer",
-                      peer->uname, (gone? "no longer" : "now"));
+                      peer->name, (gone? "no longer" : "now"));
             break;
 
         case crm_status_nstate:
             crm_debug("%s node %s is now %s (was %s)",
                       (is_remote? "Remote" : "Cluster"),
-                      peer->uname, state_text(peer->state), state_text(data));
+                      peer->name, state_text(peer->state), state_text(data));
             if (pcmk__str_eq(peer->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
@@ -197,7 +197,7 @@ attrd_peer_change_cb(enum crm_status_type kind, pcmk__node_status_t *peer,
                 }
             } else {
                 // Remove all attribute values associated with lost nodes
-                attrd_peer_remove(peer->uname, false, "loss");
+                attrd_peer_remove(peer->name, false, "loss");
                 gone = true;
             }
             break;
@@ -206,8 +206,8 @@ attrd_peer_change_cb(enum crm_status_type kind, pcmk__node_status_t *peer,
     // Remove votes from cluster nodes that leave, in case election in progress
     if (gone && !is_remote) {
         attrd_remove_voter(peer);
-        attrd_remove_peer_protocol_ver(peer->uname);
-        attrd_do_not_expect_from_peer(peer->uname);
+        attrd_remove_peer_protocol_ver(peer->name);
+        attrd_do_not_expect_from_peer(peer->name);
     }
 }
 
@@ -217,7 +217,7 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
     pcmk__node_status_t *known_peer =
         pcmk__get_node(v->nodeid, host, NULL, pcmk__node_search_cluster_member);
 
-    crm_trace("Learned %s has node id %s", known_peer->uname, known_peer->uuid);
+    crm_trace("Learned %s has node id %s", known_peer->name, known_peer->uuid);
     if (attrd_election_won()) {
         attrd_write_attributes(attrd_write_changed);
     }
@@ -226,7 +226,7 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
 #define readable_value(rv_v) pcmk__s((rv_v)->current, "(unset)")
 
 #define readable_peer(p)    \
-    (((p) == NULL)? "all peers" : pcmk__s((p)->uname, "unknown peer"))
+    (((p) == NULL)? "all peers" : pcmk__s((p)->name, "unknown peer"))
 
 static void
 update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
@@ -265,7 +265,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
          */
         v = g_hash_table_lookup(a->values, attrd_cluster->uname);
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
-                   attr, host, readable_value(v), value, peer->uname);
+                   attr, host, readable_value(v), value, peer->name);
         attrd_broadcast_value(a, v);
 
     } else if (changed) {
@@ -273,7 +273,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
                    QB_XS " from %s with %s write delay",
                    attr, host, a->set_type ? " in " : "",
                    pcmk__s(a->set_type, ""), readable_value(v),
-                   pcmk__s(value, "(unset)"), peer->uname,
+                   pcmk__s(value, "(unset)"), peer->name,
                    (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
         pcmk__str_update(&v->current, value);
         attrd_set_attr_flags(a, attrd_attr_changed);
@@ -308,11 +308,11 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
             /* Save forced writing and set change flag. */
             /* The actual attribute is written by Writer after election. */
             crm_trace("%s[%s] from %s is unchanged (%s), forcing write",
-                      attr, host, peer->uname, pcmk__s(value, "unset"));
+                      attr, host, peer->name, pcmk__s(value, "unset"));
             attrd_set_attr_flags(a, attrd_attr_force_write);
         } else {
             crm_trace("%s[%s] from %s is unchanged (%s)",
-                      attr, host, peer->uname, pcmk__s(value, "unset"));
+                      attr, host, peer->name, pcmk__s(value, "unset"));
         }
     }
 
@@ -367,7 +367,7 @@ attrd_peer_update_one(const pcmk__node_status_t *peer, xmlNode *xml,
      * version, check to see if it's a new minimum version.
      */
     if (pcmk__str_eq(attr, CRM_ATTR_PROTOCOL, pcmk__str_none)) {
-        attrd_update_minimum_protocol_ver(peer->uname, value);
+        attrd_update_minimum_protocol_ver(peer->name, value);
     }
 }
 
@@ -485,7 +485,7 @@ attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
                          xmlNode *xml)
 {
     crm_info("Processing " PCMK__ATTRD_CMD_SYNC_RESPONSE " from %s",
-             peer->uname);
+             peer->name);
 
     if (peer_won) {
         /* Initialize the "seen" flag for all attributes to cleared, so we can

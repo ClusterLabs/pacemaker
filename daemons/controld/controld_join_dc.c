@@ -141,14 +141,14 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
     if(phase == last) {
         crm_trace("Node %s join-%d phase is still %s "
                   QB_XS " nodeid=%" PRIu32 " source=%s",
-                  node->uname, current_join_id, controld_join_phase_text(last),
+                  node->name, current_join_id, controld_join_phase_text(last),
                   node->cluster_layer_id, source);
 
     } else if ((phase <= crm_join_none) || (phase == (last + 1))) {
         node->join = phase;
         crm_trace("Node %s join-%d phase is now %s (was %s) "
                   QB_XS " nodeid=%" PRIu32 " source=%s",
-                 node->uname, current_join_id, controld_join_phase_text(phase),
+                 node->name, current_join_id, controld_join_phase_text(phase),
                  controld_join_phase_text(last), node->cluster_layer_id,
                  source);
 
@@ -156,7 +156,7 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
         crm_warn("Rejecting join-%d phase update for node %s because "
                  "can't go from %s to %s " QB_XS " nodeid=%" PRIu32
                  " source=%s",
-                 current_join_id, node->uname, controld_join_phase_text(last),
+                 current_join_id, node->name, controld_join_phase_text(last),
                  controld_join_phase_text(phase), node->cluster_layer_id,
                  source);
     }
@@ -219,8 +219,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     CRM_ASSERT(member != NULL);
     if (!pcmk__cluster_is_node_active(member)) {
         crm_info("Not making join-%d offer to inactive node %s",
-                 current_join_id,
-                 (member->uname? member->uname : "with unknown name"));
+                 current_join_id, pcmk__s(member->name, "with unknown name"));
         if(member->expected == NULL && pcmk__str_eq(member->state, CRM_NODE_LOST, pcmk__str_casei)) {
             /* You would think this unsafe, but in fact this plus an
              * active resource is what causes it to be fenced.
@@ -236,7 +235,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (member->uname == NULL) {
+    if (member->name == NULL) {
         crm_info("Not making join-%d offer to node uuid %s with unknown name",
                  current_join_id, member->uuid);
         return;
@@ -250,7 +249,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 
     if(user_data && member->join > crm_join_none) {
         crm_info("Not making join-%d offer to already known node %s (%s)",
-                 current_join_id, member->uname,
+                 current_join_id, member->name,
                  controld_join_phase_text(member->join));
         return;
     }
@@ -258,12 +257,12 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     crm_update_peer_join(__func__, (pcmk__node_status_t*) member,
                          crm_join_none);
 
-    offer = create_dc_message(CRM_OP_JOIN_OFFER, member->uname);
+    offer = create_dc_message(CRM_OP_JOIN_OFFER, member->name);
 
     // Advertise our feature set so the joining node can bail if not compatible
     crm_xml_add(offer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
-    crm_info("Sending join-%d offer to %s", current_join_id, member->uname);
+    crm_info("Sending join-%d offer to %s", current_join_id, member->name);
     pcmk__cluster_send_message(member, crm_msg_crmd, offer);
     pcmk__xml_free(offer);
 
@@ -855,7 +854,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     xmlNode *acknak = NULL;
     xmlNode *tmp1 = NULL;
     pcmk__node_status_t *join_node = value;
-    const char *join_to = join_node->uname;
+    const char *join_to = join_node->name;
     bool integrated = false;
 
     switch (join_node->join) {
@@ -935,7 +934,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 
                 remote = pcmk__xe_create(remotes, PCMK_XE_NODE);
                 pcmk__xe_set_props(remote,
-                                   PCMK_XA_ID, node->uname,
+                                   PCMK_XA_ID, node->name,
                                    PCMK__XA_NODE_STATE, node->state,
                                    PCMK__XA_CONNECTION_HOST, node->conn_host,
                                    NULL);
@@ -1052,7 +1051,7 @@ void crmd_join_phase_log(int level)
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
-        do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->uname,
+        do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->name,
                    controld_join_phase_text(peer->join));
     }
 }

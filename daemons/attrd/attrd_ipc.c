@@ -157,9 +157,9 @@ attrd_client_peer_remove(pcmk__request_t *request)
 
             node = pcmk__search_node_caches(nodeid, NULL,
                                             pcmk__node_search_cluster_member);
-            if (node && node->uname) {
+            if ((node != NULL) && (node->name != NULL)) {
                 // Use cached name if available
-                host = node->uname;
+                host = node->name;
             } else {
                 // Otherwise ask cluster layer
                 host_alloc = pcmk__cluster_node_name(nodeid);

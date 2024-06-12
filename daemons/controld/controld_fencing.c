@@ -267,7 +267,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
      *                                             cib_none);
      */
 
-    controld_delete_node_state(peer->uname, controld_section_all, cib_none);
+    controld_delete_node_state(peer->name, controld_section_all, cib_none);
     pcmk__xml_free(node_state);
     return;
 }

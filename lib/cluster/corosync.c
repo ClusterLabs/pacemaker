@@ -58,7 +58,7 @@ pcmk__corosync_uuid(const pcmk__node_status_t *node)
         if (node->cluster_layer_id > 0) {
             return crm_strdup_printf("%" PRIu32, node->cluster_layer_id);
         } else {
-            crm_info("Node %s is not yet known by Corosync", node->uname);
+            crm_info("Node %s is not yet known by Corosync", node->name);
         }
     }
     return NULL;
@@ -315,7 +315,7 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
 
         /* Get this node's peer cache entry (adding one if not already there) */
         node = pcmk__get_node(id, NULL, NULL, pcmk__node_search_cluster_member);
-        if (node->uname == NULL) {
+        if (node->name == NULL) {
             char *name = pcmk__corosync_name(0, id);
 
             crm_info("Obtaining name for new node %u", id);
@@ -537,12 +537,12 @@ pcmk__corosync_is_peer_active(const pcmk__node_status_t *node)
     }
     if (!pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_none)) {
         crm_trace("Corosync peer %s inactive: state=%s",
-                  node->uname, node->state);
+                  node->name, node->state);
         return false;
     }
     if (!pcmk_is_set(node->processes, crm_proc_cpg)) {
         crm_trace("Corosync peer %s inactive " QB_XS " processes=%.16" PRIx32,
-                  node->uname, node->processes);
+                  node->name, node->processes);
         return false;
     }
     return true;
@@ -629,14 +629,15 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
 
             g_hash_table_iter_init(&iter, crm_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-                if(node && node->uname && strcasecmp(node->uname, name) == 0) {
-                    if ((node->cluster_layer_id > 0)
-                        && (node->cluster_layer_id != nodeid)) {
-                        crm_crit("Nodes %" PRIu32 " and %" PRIu32 " share the "
-                                 "same name '%s': shutting down",
-                                 node->cluster_layer_id, nodeid, name);
-                        crm_exit(CRM_EX_FATAL);
-                    }
+                if ((node != NULL)
+                    && (node->cluster_layer_id > 0)
+                    && (node->cluster_layer_id != nodeid)
+                    && pcmk__str_eq(node->name, name, pcmk__str_casei)) {
+
+                    crm_crit("Nodes %" PRIu32 " and %" PRIu32 " share the "
+                             "same name '%s': shutting down",
+                             node->cluster_layer_id, nodeid, name);
+                    crm_exit(CRM_EX_FATAL);
                 }
             }
         }

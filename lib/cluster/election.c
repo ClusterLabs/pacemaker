@@ -375,7 +375,7 @@ election_check(election_t *e)
             g_hash_table_iter_init(&gIter, crm_peer_cache);
             while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) & node)) {
                 if (pcmk__cluster_is_node_active(node)) {
-                    crm_warn("* expected vote: %s", node->uname);
+                    crm_warn("* expected vote: %s", node->name);
                 }
             }
 

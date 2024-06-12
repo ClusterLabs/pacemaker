@@ -216,7 +216,7 @@ should_purge_attributes(pcmk__node_status_t *node)
      * enough, set purge=true.  "Long enough" means it started running earlier
      * than the timestamp when we noticed it went away in the first place.
      */
-    connection_rsc = lrm_state_find(node->uname);
+    connection_rsc = lrm_state_find(node->name);
 
     if (connection_rsc != NULL) {
         lrmd_t *lrm = connection_rsc->conn;
@@ -263,10 +263,10 @@ purge_remote_node_attrs(int call_opt, pcmk__node_status_t *node)
 
     /* Purge node from attrd's memory */
     if (purge) {
-        update_attrd_remote_node_removed(node->uname, NULL);
+        update_attrd_remote_node_removed(node->name, NULL);
     }
 
-    controld_delete_node_state(node->uname, section, call_opt);
+    controld_delete_node_state(node->name, section, call_opt);
 }
 
 /*!
@@ -308,14 +308,14 @@ remote_node_up(const char *node_name)
     /* Apply any start state that we were given from the environment on the
      * remote node.
      */
-    connection_rsc = lrm_state_find(node->uname);
+    connection_rsc = lrm_state_find(node->name);
 
     if (connection_rsc != NULL) {
         lrmd_t *lrm = connection_rsc->conn;
         const char *start_state = lrmd__node_start_state(lrm);
 
         if (start_state) {
-            set_join_state(start_state, node->uname, node->uuid, true);
+            set_join_state(start_state, node->name, node->uuid, true);
         }
     }
 

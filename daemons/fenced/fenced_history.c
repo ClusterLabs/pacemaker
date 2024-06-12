@@ -489,8 +489,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
             node = pcmk__search_node_caches(nodeid, NULL,
                                             pcmk__node_search_any
                                             |pcmk__node_search_cluster_cib);
-            if (node) {
-                target = node->uname;
+            if (node != NULL) {
+                target = node->name;
             }
         }
     }

@@ -172,7 +172,8 @@ handle_sync_response_request(pcmk__request_t *request)
                                pcmk__node_search_cluster_member);
             bool peer_won = attrd_check_for_new_writer(peer, request->xml);
 
-            if (!pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
+            if (!pcmk__str_eq(peer->name, attrd_cluster->uname,
+                              pcmk__str_casei)) {
                 attrd_peer_sync_response(peer, peer_won, request->xml);
             }
         }

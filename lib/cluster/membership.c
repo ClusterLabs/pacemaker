@@ -75,7 +75,7 @@ static bool has_quorum = false;
 
 #define set_peer_flags(peer, flags_to_set) do {                               \
         (peer)->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
-                                           "Peer", (peer)->uname,             \
+                                           "Peer", (peer)->name,              \
                                            (peer)->flags, (flags_to_set),     \
                                            #flags_to_set);                    \
     } while (0)
@@ -83,7 +83,7 @@ static bool has_quorum = false;
 #define clear_peer_flags(peer, flags_to_clear) do {                           \
         (peer)->flags = pcmk__clear_flags_as(__func__, __LINE__,              \
                                              LOG_TRACE,                       \
-                                             "Peer", (peer)->uname,           \
+                                             "Peer", (peer)->name,            \
                                              (peer)->flags, (flags_to_clear), \
                                              #flags_to_clear);                \
     } while (0)
@@ -433,7 +433,7 @@ should_forget_cluster_node(gpointer key, gpointer value, gpointer user_data)
         return FALSE;
     }
     if ((search->cluster_layer_id == 0)
-        && !pcmk__str_eq(node->uname, search->uname, pcmk__str_casei)) {
+        && !pcmk__str_eq(node->name, search->name, pcmk__str_casei)) {
         // @TODO Consider name even if ID is set?
         return FALSE;
     }
@@ -443,7 +443,7 @@ should_forget_cluster_node(gpointer key, gpointer value, gpointer user_data)
 
     crm_info("Removing node with name %s and cluster layer ID " PRIu32
              " from membership cache",
-             pcmk__s(node->uname, "(unknown)"), node->cluster_layer_id);
+             pcmk__s(node->name, "(unknown)"), node->cluster_layer_id);
     return TRUE;
 }
 
@@ -478,7 +478,7 @@ pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
     }
 
     search.cluster_layer_id = id;
-    search.uname = pcmk__str_copy(node_name);   // May log after original freed
+    search.name = pcmk__str_copy(node_name);    // May log after original freed
 
     if (id > 0) {
         criterion = crm_strdup_printf("cluster layer ID %" PRIu32, id);
@@ -506,7 +506,7 @@ pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
                  ((criterion != NULL)? " with " : ""), pcmk__s(criterion, ""));
     }
 
-    free(search.uname);
+    free(search.name);
     free(criterion);
 }
 
@@ -547,9 +547,9 @@ destroy_crm_node(gpointer data)
     pcmk__node_status_t *node = data;
 
     crm_trace("Destroying entry for node %" PRIu32 ": %s",
-              node->cluster_layer_id, node->uname);
+              node->cluster_layer_id, node->name);
 
-    free(node->uname);
+    free(node->name);
     free(node->state);
     free(node->uuid);
     free(node->expected);
@@ -657,7 +657,7 @@ dump_peer_hash(int level, const char *caller)
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, (gpointer *) &id, (gpointer *) &node)) {
         do_crm_log(level, "%s: Node %" PRIu32 "/%s = %p - %s",
-                   caller, node->cluster_layer_id, node->uname, node, id);
+                   caller, node->cluster_layer_id, node->name, node, id);
     }
 }
 
@@ -694,8 +694,8 @@ search_cluster_member_cache(unsigned int id, const char *uname,
     if (uname != NULL) {
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if(node->uname && strcasecmp(node->uname, uname) == 0) {
-                crm_trace("Name match: %s = %p", node->uname, node);
+            if (pcmk__str_eq(node->name, uname, pcmk__str_casei)) {
+                crm_trace("Name match: %s = %p", node->name, node);
                 by_name = node;
                 break;
             }
@@ -744,22 +744,24 @@ search_cluster_member_cache(unsigned int id, const char *uname,
     } else if(by_name == NULL && by_id) {
         crm_trace("Only one: %p for %u/%s", by_id, id, uname);
 
-        if(uname && by_id->uname) {
+        if ((uname != NULL) && (by_id->name != NULL)) {
             dump_peer_hash(LOG_WARNING, __func__);
-            crm_crit("Node '%s' and '%s' share the same cluster nodeid %u: assuming '%s' is correct",
-                     uname, by_id->uname, id, uname);
+            crm_crit("Nodes '%s' and '%s' share the same cluster nodeid %u: "
+                     "assuming '%s' is correct",
+                     uname, by_id->name, id, uname);
         }
 
-    } else if(uname && by_id->uname) {
-        if(pcmk__str_eq(uname, by_id->uname, pcmk__str_casei)) {
+    } else if ((uname != NULL) && (by_id->name != NULL)) {
+        if (pcmk__str_eq(uname, by_id->name, pcmk__str_casei)) {
             crm_notice("Node '%s' has changed its cluster layer ID "
                        "from %" PRIu32 " to %" PRIu32,
-                       by_id->uname, by_name->cluster_layer_id,
+                       by_id->name, by_name->cluster_layer_id,
                        by_id->cluster_layer_id);
             g_hash_table_foreach_remove(crm_peer_cache, hash_find_by_data, by_name);
 
         } else {
-            crm_warn("Node '%s' and '%s' share the same cluster nodeid: %u %s", by_id->uname, by_name->uname, id, uname);
+            crm_warn("Nodes '%s' and '%s' share the same cluster nodeid: %u %s",
+                     by_id->name, by_name->name, id, uname);
             dump_peer_hash(LOG_INFO, __func__);
             crm_abort(__FILE__, __func__, __LINE__, "member weirdness", TRUE,
                       TRUE);
@@ -872,7 +874,7 @@ remove_conflicting_peer(pcmk__node_status_t *node)
     GHashTableIter iter;
     pcmk__node_status_t *existing_node = NULL;
 
-    if ((node->cluster_layer_id == 0) || (node->uname == NULL)) {
+    if ((node->cluster_layer_id == 0) || (node->name == NULL)) {
         return 0;
     }
 
@@ -884,16 +886,15 @@ remove_conflicting_peer(pcmk__node_status_t *node)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &existing_node)) {
         if ((existing_node->cluster_layer_id > 0)
             && (existing_node->cluster_layer_id != node->cluster_layer_id)
-            && existing_node->uname != NULL
-            && strcasecmp(existing_node->uname, node->uname) == 0) {
+            && pcmk__str_eq(existing_node->name, node->name, pcmk__str_casei)) {
 
             if (pcmk__cluster_is_node_active(existing_node)) {
                 continue;
             }
 
             crm_warn("Removing cached offline node %" PRIu32 "/%s which has "
-                     "conflicting uname with %" PRIu32,
-                     existing_node->cluster_layer_id, existing_node->uname,
+                     "conflicting name with %" PRIu32,
+                     existing_node->cluster_layer_id, existing_node->name,
                      node->cluster_layer_id);
 
             g_hash_table_iter_remove(&iter);
@@ -949,7 +950,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
 
     /* if uname wasn't provided, and find_peer did not turn up a uname based on id.
      * we need to do a lookup of the node name using the id in the cluster membership. */
-    if ((node == NULL || node->uname == NULL) && (uname == NULL)) { 
+    if ((uname == NULL) && ((node == NULL) || (node->name == NULL))) {
         uname_lookup = pcmk__cluster_node_name(id);
     }
 
@@ -974,7 +975,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
     }
 
     if ((id > 0) && (uname != NULL)
-        && ((node->cluster_layer_id == 0) || (node->uname == NULL))) {
+        && ((node->cluster_layer_id == 0) || (node->name == NULL))) {
         crm_info("Node %u is now known as %s", id, uname);
     }
 
@@ -982,7 +983,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
         node->cluster_layer_id = id;
     }
 
-    if (uname && (node->uname == NULL)) {
+    if ((uname != NULL) && (node->name == NULL)) {
         update_peer_uname(node, uname);
     }
 
@@ -995,7 +996,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
             crm_info("Node %u has uuid %s", id, uuid);
 
         } else {
-            crm_info("Cannot obtain a UUID for node %u/%s", id, node->uname);
+            crm_info("Cannot obtain a UUID for node %u/%s", id, node->name);
         }
     }
 
@@ -1024,8 +1025,8 @@ update_peer_uname(pcmk__node_status_t *node, const char *uname)
               crm_err("Bug: can't update node name to %s without node", uname);
               return);
 
-    if (pcmk__str_eq(uname, node->uname, pcmk__str_casei)) {
-        crm_debug("Node uname '%s' did not change", uname);
+    if (pcmk__str_eq(uname, node->name, pcmk__str_casei)) {
+        crm_debug("Node name '%s' did not change", uname);
         return;
     }
 
@@ -1037,7 +1038,7 @@ update_peer_uname(pcmk__node_status_t *node, const char *uname)
         }
     }
 
-    pcmk__str_update(&node->uname, uname);
+    pcmk__str_update(&node->name, uname);
 
     if (peer_status_callback != NULL) {
         peer_status_callback(crm_status_uname, node, NULL);
@@ -1119,7 +1120,7 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
         if ((node->processes & flag) != flag) {
             node->processes = pcmk__set_flags_as(__func__, __LINE__,
                                                  LOG_TRACE, "Peer process",
-                                                 node->uname, node->processes,
+                                                 node->name, node->processes,
                                                  flag, "processes");
             changed = TRUE;
         }
@@ -1127,7 +1128,7 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
     } else if (node->processes & flag) {
         node->processes = pcmk__clear_flags_as(__func__, __LINE__,
                                                LOG_TRACE, "Peer process",
-                                               node->uname, node->processes,
+                                               node->name, node->processes,
                                                flag, "processes");
         changed = TRUE;
     }
@@ -1135,10 +1136,10 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
     if (changed) {
         if (status == NULL && flag <= crm_proc_none) {
             crm_info("%s: Node %s[%" PRIu32 "] - all processes are now offline",
-                     source, node->uname, node->cluster_layer_id);
+                     source, node->name, node->cluster_layer_id);
         } else {
             crm_info("%s: Node %s[%" PRIu32 "] - %s is now %s",
-                     source, node->uname, node->cluster_layer_id,
+                     source, node->name, node->cluster_layer_id,
                      proc2text(flag), status);
         }
 
@@ -1175,7 +1176,7 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
         }
     } else {
         crm_trace("%s: Node %s[%" PRIu32 "] - %s is unchanged (%s)",
-                  source, node->uname, node->cluster_layer_id, proc2text(flag),
+                  source, node->name, node->cluster_layer_id, proc2text(flag),
                   status);
     }
     return node;
@@ -1212,11 +1213,11 @@ pcmk__update_peer_expected(const char *source, pcmk__node_status_t *node,
 
     if (changed) {
         crm_info("%s: Node %s[%" PRIu32 "] - expected state is now %s (was %s)",
-                 source, node->uname, node->cluster_layer_id, expected, last);
+                 source, node->name, node->cluster_layer_id, expected, last);
         free(last);
     } else {
         crm_trace("%s: Node %s[%" PRIu32 "] - expected state is unchanged (%s)",
-                  source, node->uname, node->cluster_layer_id, expected);
+                  source, node->name, node->cluster_layer_id, expected);
     }
 }
 
@@ -1269,7 +1270,7 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
         node->state = strdup(state);
         crm_notice("Node %s state is now %s " QB_XS
                    " nodeid=%" PRIu32 " previous=%s source=%s",
-                   node->uname, state, node->cluster_layer_id,
+                   node->name, state, node->cluster_layer_id,
                    pcmk__s(last, "unknown"), source);
         if (peer_status_callback != NULL) {
             peer_status_callback(crm_status_nstate, node, last);
@@ -1285,12 +1286,12 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
             if(iter) {
                 crm_notice("Purged 1 peer with cluster layer ID=" PRIu32
                            "and/or name=%s from the membership cache",
-                           node->cluster_layer_id, node->uname);
+                           node->cluster_layer_id, node->name);
                 g_hash_table_iter_remove(iter);
 
             } else {
                 pcmk__cluster_forget_cluster_node(node->cluster_layer_id,
-                                                  node->uname);
+                                                  node->name);
             }
             node = NULL;
         }
@@ -1298,7 +1299,7 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
     } else {
         crm_trace("Node %s state is unchanged (%s) " QB_XS
                   " nodeid=%" PRIu32 " source=%s",
-                  node->uname, state, node->cluster_layer_id, source);
+                  node->name, state, node->cluster_layer_id, source);
     }
     return node;
 }
@@ -1352,7 +1353,7 @@ pcmk__reap_unseen_nodes(uint64_t membership)
 
             } else {
                 crm_info("State of node %s[%" PRIu32 "] is still unknown",
-                         node->uname, node->cluster_layer_id);
+                         node->name, node->cluster_layer_id);
             }
         }
     }
@@ -1369,8 +1370,8 @@ find_cib_cluster_node(const char *id, const char *uname)
     if (uname) {
         g_hash_table_iter_init(&iter, cluster_node_cib_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if (node->uname && strcasecmp(node->uname, uname) == 0) {
-                crm_trace("Name match: %s = %p", node->uname, node);
+            if (pcmk__str_eq(node->name, uname, pcmk__str_casei)) {
+                crm_trace("Name match: %s = %p", node->name, node);
                 by_name = node;
                 break;
             }
@@ -1410,8 +1411,8 @@ find_cib_cluster_node(const char *id, const char *uname)
             node = NULL;
         }
 
-    } else if (uname && by_id->uname
-               && pcmk__str_eq(uname, by_id->uname, pcmk__str_casei)) {
+    } else if ((uname != NULL) && (by_id->name != NULL)
+               && pcmk__str_eq(uname, by_id->name, pcmk__str_casei)) {
         /* Multiple nodes have the same uname in the CIB.
          * Return by_id. */
 
@@ -1451,13 +1452,13 @@ cluster_node_cib_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 
         node = pcmk__assert_alloc(1, sizeof(pcmk__node_status_t));
 
-        node->uname = pcmk__str_copy(uname);
+        node->name = pcmk__str_copy(uname);
         node->uuid = pcmk__str_copy(id);
 
         g_hash_table_replace(cluster_node_cib_cache, uniqueid, node);
 
     } else if (pcmk_is_set(node->flags, crm_node_dirty)) {
-        pcmk__str_update(&node->uname, uname);
+        pcmk__str_update(&node->name, uname);
 
         /* Node is in cache and hasn't been updated already, so mark it clean */
         clear_peer_flags(node, crm_node_dirty);

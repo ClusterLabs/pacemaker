@@ -253,7 +253,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
             crm_info("Rejecting upgrade request from %s: %s "
                      QB_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
-                     (origin? origin->uname : "lost"));
+                     (origin? origin->name : "lost"));
 
             if (origin) {
                 xmlNode *up = pcmk__xe_create(NULL, __func__);

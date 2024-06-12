@@ -457,14 +457,15 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
                 pcmk__get_node(sender_id, NULL, NULL,
                                pcmk__node_search_cluster_member);
 
-            if (peer->uname == NULL) {
-                crm_err("No uname for peer with nodeid=%u", sender_id);
+            if (peer->name == NULL) {
+                crm_err("No node name for peer with nodeid=%u", sender_id);
 
             } else {
-                crm_notice("Fixing uname for peer with nodeid=%u", sender_id);
-                msg->sender.size = strlen(peer->uname);
+                crm_notice("Fixing node name for peer with nodeid=%u",
+                           sender_id);
+                msg->sender.size = strlen(peer->name);
                 memset(msg->sender.uname, 0, MAX_NAME);
-                memcpy(msg->sender.uname, peer->uname, msg->sender.size);
+                memcpy(msg->sender.uname, peer->name, msg->sender.size);
             }
         }
     }
@@ -591,13 +592,7 @@ cpgreason2str(cpg_reason_t reason)
 static inline const char *
 peer_name(const pcmk__node_status_t *peer)
 {
-    if (peer == NULL) {
-        return "unknown node";
-    } else if (peer->uname == NULL) {
-        return "peer node";
-    } else {
-        return peer->uname;
-    }
+    return (peer != NULL)? pcmk__s(peer->name, "peer node") : "unknown node";
 }
 
 /*!
@@ -988,11 +983,11 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     msg->host.type = dest;
 
     if (node != NULL) {
-        if (node->uname != NULL) {
-            target = pcmk__str_copy(node->uname);
-            msg->host.size = strlen(node->uname);
+        if (node->name != NULL) {
+            target = pcmk__str_copy(node->name);
+            msg->host.size = strlen(node->name);
             memset(msg->host.uname, 0, MAX_NAME);
-            memcpy(msg->host.uname, node->uname, msg->host.size);
+            memcpy(msg->host.uname, node->name, msg->host.size);
 
         } else {
             target = crm_strdup_printf("%" PRIu32, node->cluster_layer_id);

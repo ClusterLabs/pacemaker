@@ -59,7 +59,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
              */
             crm_warn("Receiving messages from a node we think is dead: "
                      "%s[%" PRIu32 "]",
-                     peer->uname, peer->cluster_layer_id);
+                     peer->name, peer->cluster_layer_id);
             crm_update_peer_proc(__func__, peer, crm_proc_cpg,
                                  PCMK_VALUE_ONLINE);
         }

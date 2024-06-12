@@ -867,7 +867,7 @@ handle_node_list(const xmlNode *request)
 
         crm_xml_add_ll(xml, PCMK_XA_ID,
                        (long long) node->cluster_layer_id); // uint32_t
-        crm_xml_add(xml, PCMK_XA_UNAME, node->uname);
+        crm_xml_add(xml, PCMK_XA_UNAME, node->name);
         crm_xml_add(xml, PCMK__XA_IN_CCM, node->state);
     }
 
@@ -924,7 +924,7 @@ handle_node_info_request(const xmlNode *msg)
     node = pcmk__search_node_caches(node_id, value, pcmk__node_search_any);
     if (node) {
         crm_xml_add(reply_data, PCMK_XA_ID, node->uuid);
-        crm_xml_add(reply_data, PCMK_XA_UNAME, node->uname);
+        crm_xml_add(reply_data, PCMK_XA_UNAME, node->name);
         crm_xml_add(reply_data, PCMK_XA_CRMD, node->state);
         pcmk__xe_set_bool_attr(reply_data, PCMK_XA_REMOTE_NODE,
                                pcmk_is_set(node->flags, crm_remote_node));

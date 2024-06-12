@@ -1247,8 +1247,8 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         /* Ensure the conversion only happens once */
         stonith__clear_call_options(op->call_options, op->id, st_opt_cs_nodeid);
 
-        if (node && node->uname) {
-            pcmk__str_update(&(op->target), node->uname);
+        if ((node != NULL) && (node->name != NULL)) {
+            pcmk__str_update(&(op->target), node->name);
 
         } else {
             crm_warn("Could not expand nodeid '%s' into a host name", op->target);

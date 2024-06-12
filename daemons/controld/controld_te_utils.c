@@ -225,7 +225,7 @@ init_node_pending_timer(const pcmk__node_status_t *node, guint timeout)
 
     crm_notice("Waiting for pending %s with " PCMK_XA_ID " '%s' "
                "to join the process group (timeout=%us)",
-               node->uname ? node->uname : "node", node->uuid,
+               pcmk__s(node->name, "node"), node->uuid,
                controld_globals.node_pending_timeout);
 
     key = pcmk__str_copy(node->uuid);
