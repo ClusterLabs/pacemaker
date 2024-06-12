@@ -36,11 +36,11 @@ extern "C" {
 // NOTE: sbd (as of at least 1.5.2) uses this enum
 //! Possible responses to loss of quorum
 enum pe_quorum_policy {
-    pcmk_no_quorum_freeze,  //<! Do not recover resources from outside partition
-    pcmk_no_quorum_stop,    //<! Stop all resources in partition
-    pcmk_no_quorum_ignore,  //<! Act as if partition still holds quorum
-    pcmk_no_quorum_fence,   //<! Fence all nodes in partition
-    pcmk_no_quorum_demote,  //<! Demote promotable resources and stop all others
+    pcmk_no_quorum_freeze,  //!< Do not recover resources from outside partition
+    pcmk_no_quorum_stop,    //!< Stop all resources in partition
+    pcmk_no_quorum_ignore,  //!< Act as if partition still holds quorum
+    pcmk_no_quorum_fence,   //!< Fence all nodes in partition
+    pcmk_no_quorum_demote,  //!< Demote promotable resources and stop all others
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     // NOTE: sbd (as of at least 1.5.2) uses this value

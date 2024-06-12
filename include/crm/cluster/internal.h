@@ -125,8 +125,8 @@ typedef struct pcmk__node_status {
     /* @TODO The following are currently needed only by the Corosync stack.
      * Eventually consider moving them to a cluster-layer-specific data object.
      */
-    uint32_t cluster_layer_id;  //! Cluster-layer numeric node ID
-    time_t when_lost;           //! When CPG membership was last lost
+    uint32_t cluster_layer_id;  //!< Cluster-layer numeric node ID
+    time_t when_lost;           //!< When CPG membership was last lost
 } pcmk__node_status_t;
 
 /*!
