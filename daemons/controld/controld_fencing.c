@@ -244,7 +244,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
     node_state = create_node_state_update(peer, flags, NULL, __func__);
 
     /* we have to mark whether or not remote nodes have already been fenced */
-    if (peer->flags & crm_remote_node) {
+    if (pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
         char *now_s = pcmk__ttoa(time(NULL));
 
         crm_xml_add(node_state, PCMK__XA_NODE_FENCED, now_s);
@@ -617,7 +617,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
 
         } else if (pcmk__str_eq(controld_globals.dc_name, event->target,
                                 pcmk__str_null_matches|pcmk__str_casei)
-                   && !pcmk_is_set(peer->flags, crm_remote_node)) {
+                   && !pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
             // Assume the target was our DC if we don't currently have one
 
             if (controld_globals.dc_name != NULL) {
@@ -643,7 +643,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
          * The connection won't necessarily drop when a remote node is fenced,
          * so the failure might not otherwise be detected until the next poke.
          */
-        if (pcmk_is_set(peer->flags, crm_remote_node)) {
+        if (pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
             remote_ra_fail(event->target);
         }
 

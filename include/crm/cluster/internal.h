@@ -32,6 +32,26 @@ enum crm_proc_flag {
     crm_proc_cpg        = 0x04000000,
 };
 
+/*!
+ * \internal
+ * \enum pcmk__node_status_flags
+ * \brief Boolean flags for a \c pcmk__node_status_t object
+ *
+ * Some flags may not be related to status specifically. However, we keep these
+ * separate from <tt>enum pcmk__node_flags</tt> because they're used with
+ * different object types.
+ */
+enum pcmk__node_status_flags {
+    /*!
+     * Node is a Pacemaker Remote node and should not be considered for cluster
+     * membership
+     */
+    pcmk__node_status_remote = (UINT32_C(1) << 0),
+
+    //! Node's cache entry is dirty
+    pcmk__node_status_dirty  = (UINT32_C(1) << 1),
+};
+
 // Used with node cache search functions
 enum pcmk__node_search_flags {
     //! Does not affect search
@@ -75,7 +95,10 @@ typedef struct pcmk__node_status {
     char *xml_id;
 
     char *state;                // @TODO change to enum
-    uint64_t flags;             // Bitmask of crm_node_flags
+
+    //! Group of <tt>enum pcmk__node_status_flags</tt>
+    uint32_t flags;
+
     uint64_t last_seen;         // Only needed by cluster nodes
     uint32_t processes;         // @TODO most not needed, merge into flags
 

@@ -167,7 +167,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
 
     node_state = pcmk__xe_create(parent, PCMK__XE_NODE_STATE);
 
-    if (pcmk_is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
         pcmk__xe_set_bool_attr(node_state, PCMK_XA_REMOTE_NODE, true);
     }
 
@@ -192,7 +192,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
         }
     }
 
-    if (!pcmk_is_set(node->flags, crm_remote_node)) {
+    if (!pcmk_is_set(node->flags, pcmk__node_status_remote)) {
         if (flags & node_update_peer) {
             if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
                 // A value 0 means the peer is offline in CPG.

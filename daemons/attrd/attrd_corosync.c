@@ -166,7 +166,7 @@ attrd_peer_change_cb(enum crm_status_type kind, pcmk__node_status_t *peer,
                      const void *data)
 {
     bool gone = false;
-    bool is_remote = pcmk_is_set(peer->flags, crm_remote_node);
+    bool is_remote = pcmk_is_set(peer->flags, pcmk__node_status_remote);
 
     switch (kind) {
         case crm_status_uname:
@@ -192,7 +192,7 @@ attrd_peer_change_cb(enum crm_status_type kind, pcmk__node_status_t *peer,
                  * (unless it's a remote node, which doesn't run its own attrd)
                  */
                 if (attrd_election_won()
-                    && !pcmk_is_set(peer->flags, crm_remote_node)) {
+                    && !pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
                     attrd_peer_sync(peer);
                 }
             } else {

@@ -83,7 +83,7 @@ crmd_ha_msg_filter(xmlNode * msg)
 static int
 node_alive(const pcmk__node_status_t *node)
 {
-    if (pcmk_is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
         // Pacemaker Remote nodes can't be partially alive
         return pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei) ? 1: -1;
 
@@ -109,7 +109,7 @@ peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
 {
     uint32_t old = 0;
     bool appeared = FALSE;
-    bool is_remote = pcmk_is_set(node->flags, crm_remote_node);
+    bool is_remote = pcmk_is_set(node->flags, pcmk__node_status_remote);
 
     controld_node_pending_timer(node);
 

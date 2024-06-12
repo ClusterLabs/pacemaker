@@ -63,20 +63,6 @@ enum crm_join_phase {
 };
 //!@}
 
-// @COMPAT Make this internal when we can break API backward compatibility
-//!@{
-//! \deprecated Do not use (public access will be removed in a future release)
-enum crm_node_flags {
-    /* Node is not a cluster node and should not be considered for cluster
-     * membership
-     */
-    crm_remote_node = (1U << 0),
-
-    // Node's cache entry is dirty
-    crm_node_dirty  = (1U << 1),
-};
-//!@}
-
 // Implementation of pcmk_cluster_t
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{

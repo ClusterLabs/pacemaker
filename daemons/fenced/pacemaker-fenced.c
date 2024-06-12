@@ -472,7 +472,7 @@ st_peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
                         const void *data)
 {
     if ((type != crm_status_processes)
-        && !pcmk_is_set(node->flags, crm_remote_node)) {
+        && !pcmk_is_set(node->flags, pcmk__node_status_remote)) {
         /*
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()

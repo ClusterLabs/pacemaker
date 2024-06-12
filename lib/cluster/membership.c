@@ -192,7 +192,7 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
     }
 
     /* Populate the essential information */
-    set_peer_flags(node, crm_remote_node);
+    set_peer_flags(node, pcmk__node_status_remote);
     node->xml_id = strdup(node_name);
     if (node->xml_id == NULL) {
         free(node);
@@ -292,9 +292,9 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
             pcmk__update_peer_state(__func__, node, state, 0);
         }
 
-    } else if (pcmk_is_set(node->flags, crm_node_dirty)) {
+    } else if (pcmk_is_set(node->flags, pcmk__node_status_dirty)) {
         /* Node is in cache and hasn't been updated already, so mark it clean */
-        clear_peer_flags(node, crm_node_dirty);
+        clear_peer_flags(node, pcmk__node_status_dirty);
         if (state) {
             pcmk__update_peer_state(__func__, node, state, 0);
         }
@@ -304,13 +304,15 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
 static void
 mark_dirty(gpointer key, gpointer value, gpointer user_data)
 {
-    set_peer_flags((pcmk__node_status_t *) value, crm_node_dirty);
+    set_peer_flags((pcmk__node_status_t *) value, pcmk__node_status_dirty);
 }
 
 static gboolean
 is_dirty(gpointer key, gpointer value, gpointer user_data)
 {
-    return pcmk_is_set(((pcmk__node_status_t*)value)->flags, crm_node_dirty);
+    const pcmk__node_status_t *node = value;
+
+    return pcmk_is_set(node->flags, pcmk__node_status_dirty);
 }
 
 /*!
@@ -373,7 +375,7 @@ pcmk__cluster_is_node_active(const pcmk__node_status_t *node)
 {
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
 
-    if ((node == NULL) || pcmk_is_set(node->flags, crm_remote_node)) {
+    if ((node == NULL) || pcmk_is_set(node->flags, pcmk__node_status_remote)) {
         return false;
     }
 
@@ -1046,7 +1048,7 @@ update_peer_uname(pcmk__node_status_t *node, const char *uname)
 
 #if SUPPORT_COROSYNC
     if ((pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)
-        && !pcmk_is_set(node->flags, crm_remote_node)) {
+        && !pcmk_is_set(node->flags, pcmk__node_status_remote)) {
 
         remove_conflicting_peer(node);
     }
@@ -1105,7 +1107,7 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
                             return NULL);
 
     /* Pacemaker doesn't spawn processes on remote nodes */
-    if (pcmk_is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
         return node;
     }
 
@@ -1201,7 +1203,7 @@ pcmk__update_peer_expected(const char *source, pcmk__node_status_t *node,
               return);
 
     /* Remote nodes don't participate in joins */
-    if (pcmk_is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
         return;
     }
 
@@ -1278,7 +1280,7 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
         free(last);
 
         if (autoreap && !is_member
-            && !pcmk_is_set(node->flags, crm_remote_node)) {
+            && !pcmk_is_set(node->flags, pcmk__node_status_remote)) {
             /* We only autoreap from the peer cache, not the remote peer cache,
              * because the latter should be managed only by
              * refresh_remote_nodes().
@@ -1457,11 +1459,11 @@ cluster_node_cib_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 
         g_hash_table_replace(cluster_node_cib_cache, uniqueid, node);
 
-    } else if (pcmk_is_set(node->flags, crm_node_dirty)) {
+    } else if (pcmk_is_set(node->flags, pcmk__node_status_dirty)) {
         pcmk__str_update(&node->name, uname);
 
         /* Node is in cache and hasn't been updated already, so mark it clean */
-        clear_peer_flags(node, crm_node_dirty);
+        clear_peer_flags(node, pcmk__node_status_dirty);
     }
 
 }

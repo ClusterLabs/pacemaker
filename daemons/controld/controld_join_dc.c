@@ -132,7 +132,7 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
     CRM_CHECK(node != NULL, return);
 
     /* Remote nodes do not participate in joins */
-    if (pcmk_is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
         return;
     }
 
