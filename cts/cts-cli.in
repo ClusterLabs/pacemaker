@@ -142,11 +142,16 @@ def sanitize_output(s):
         (r'Last change: .*', r'Last change:'),
         (r'Last updated: .*', r'Last updated:'),
         (r' api-version="[^"]*"', r' api-version="X"'),
+        (r'.*\((crm_time_parse_duration)@.*\.c:[0-9][0-9]*\)', r'\1'),
+        (r'.*\((crm_time_parse_period)@.*\.c:[0-9][0-9]*\)', r'\1'),
+        (r'.*\((crm_time_parse_sec)@.*\.c:[0-9][0-9]*\)', r'\1'),
         (r' default="[^"]*"', r' default=""'),
         (r'last_change time=".*"', r'last_change time=""'),
         (r'last_update time=".*"', r'last_update time=""'),
         (r' last-rc-change=[\'"][-+A-Za-z0-9: ]*[\'"],?', r''),
+        (r'.*\((parse_date)@.*\.c:[0-9][0-9]*\)', r'\1'),
         (r'request=".*(crm_[a-zA-Z0-9]*)', r'request="\1'),
+        (r'request=".*iso8601', r'request="iso8601'),
         (r'.*\((unpack_.*)@.*\.c:[0-9][0-9]*\)', r'\1'),
         (r' version="[^"]*"', r' version=""'),
         (r'\(version .*\)', r'(version)')
@@ -731,6 +736,88 @@ class DaemonsRegressionTest(RegressionTest):
         ]
 
 
+class DatesRegressionTest(RegressionTest):
+    """A class for testing handling of ISO8601 dates."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "dates"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        invalid_periods = [
+            "",
+            "2019-01-01 00:00:00Z",             # Start with no end
+            "2019-01-01 00:00:00Z/",            # Start with only a trailing slash
+            "PT2S/P1M",                         # Two durations
+            "2019-13-01 00:00:00Z/P1M",         # Out-of-range month
+            "20191077T15/P1M",                  # Out-of-range day
+            "2019-10-01T25:00:00Z/P1M",         # Out-of-range hour
+            "2019-10-01T24:00:01Z/P1M",         # Hour 24 with anything but :00:00
+            "PT5H/20191001T007000Z",            # Out-of-range minute
+            "2019-10-01 00:00:80Z/P1M",         # Out-of-range second
+            "2019-10-01 00:00:10 +25:00/P1M",   # Out-of-range offset hour
+            "20191001T000010 -00:61/P1M",       # Out-of-range offset minute
+            "P1Y/2019-02-29 00:00:00Z",         # Feb. 29 in non-leap-year
+            "2019-01-01 00:00:00Z/P",           # Duration with no values
+            "P1Z/2019-02-20 00:00:00Z",         # Invalid duration unit
+            "P1YM/2019-02-20 00:00:00Z",        # No number for duration unit
+        ]
+
+        # Ensure invalid period specifications are rejected
+        invalid_period_tests = []
+        for p in invalid_periods:
+            invalid_period_tests.append(Test("Invalid period - [%s]" % p,
+                                             "iso8601 -p '%s'" % p,
+                                             expected_rc=ExitStatus.INVALID_PARAM))
+
+        year_tests = []
+        for y in ["06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "40"]:
+            year_tests.extend([
+                Test("20%s-W01-7" % y,
+                     "iso8601 -d '20%s-W01-7 00Z'" % y),
+                Test("20%s-W01-7 - round-trip" % y,
+                     "iso8601 -d '20%s-W01-7 00Z' -W -E '20%s-W01-7 00:00:00Z'" % (y, y)),
+                Test("20%s-W01-1" % y,
+                     "iso8601 -d '20%s-W01-1 00Z'" % y),
+                Test("20%s-W01-1 - round-trip" % y,
+                     "iso8601 -d '20%s-W01-1 00Z' -W -E '20%s-W01-1 00:00:00Z'" % (y, y))
+            ])
+
+        return invalid_period_tests + [
+            make_test_group("'2005-040/2005-043' period", "iso8601 {fmt} -p '2005-040/2005-043'",
+                            [Test, ValidatingTest]),
+            Test("2014-01-01 00:30:00 - 1 Hour",
+                 "iso8601 -d '2014-01-01 00:30:00Z' -D P-1H -E '2013-12-31 23:30:00Z'"),
+            Test("Valid date - Feb 29 in leap year",
+                 "iso8601 -d '2020-02-29 00:00:00Z' -E '2020-02-29 00:00:00Z'"),
+            Test("Valid date - using 'T' and offset",
+                 "iso8601 -d '20191201T131211 -05:00' -E '2019-12-01 18:12:11Z'"),
+            Test("24:00:00 equivalent to 00:00:00 of next day",
+                 "iso8601 -d '2019-12-31 24:00:00Z' -E '2020-01-01 00:00:00Z'"),
+        ] + year_tests + [
+            make_test_group("2009-W53-07",
+                            "iso8601 {fmt} -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z'",
+                            [Test, ValidatingTest]),
+            Test("epoch + 2 Years 5 Months 6 Minutes",
+                 "iso8601 -d 'epoch' -D P2Y5MT6M -E '1972-06-01 00:06:00Z'"),
+            Test("2009-01-31 + 1 Month",
+                 "iso8601 -d '20090131T000000Z' -D P1M -E '2009-02-28 00:00:00Z'"),
+            Test("2009-01-31 + 2 Months",
+                 "iso8601 -d '2009-01-31 00:00:00Z' -D P2M -E '2009-03-31 00:00:00Z'"),
+            Test("2009-01-31 + 3 Months",
+                 "iso8601 -d '2009-01-31 00:00:00Z' -D P3M -E '2009-04-30 00:00:00Z'"),
+            make_test_group("2009-03-31 - 1 Month",
+                            "iso8601 {fmt} -d '2009-03-31 01:00:00 +01:00' -D P-1M -E '2009-02-28 00:00:00Z'",
+                            [Test, ValidatingTest]),
+            make_test_group("2038-01-01 + 3 Months",
+                            "iso8601 {fmt} -d '2038-01-01 00:00:00Z' -D P3M -E '2038-04-01 00:00:00Z'",
+                            [Test, ValidatingTest]),
+        ]
+
+
 class CrmMonRegressionTest(RegressionTest):
     """A class for testing crm_mon."""
 
@@ -1103,6 +1190,7 @@ def summary(regs, output_differs, verbose):
 
 regression_classes = [
     DaemonsRegressionTest,
+    DatesRegressionTest,
     CrmMonRegressionTest,
 ]
 
