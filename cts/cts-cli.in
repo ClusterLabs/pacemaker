@@ -54,6 +54,7 @@ VALGRIND_ARGS = ["-q", "--gen-suppressions=all", "--show-reachable=no", "--leak-
 def apply_substitutions(s, extra=None):
     """Apply text substitutions to an input string and return it."""
     substitutions = {
+        "cts_cli_data": "%s/cli" % test_home,
         "test_home": test_home,
     }
 
@@ -138,8 +139,17 @@ def sanitize_output(s):
     """
     # A list of tuples of regular expressions and their replacements.
     replacements = [
+        (r'Last change: .*', r'Last change:'),
+        (r'Last updated: .*', r'Last updated:'),
+        (r' api-version="[^"]*"', r' api-version="X"'),
         (r' default="[^"]*"', r' default=""'),
-        (r' version="[^"]*"', r' version=""')
+        (r'last_change time=".*"', r'last_change time=""'),
+        (r'last_update time=".*"', r'last_update time=""'),
+        (r' last-rc-change=[\'"][-+A-Za-z0-9: ]*[\'"],?', r''),
+        (r'request=".*(crm_[a-zA-Z0-9]*)', r'request="\1'),
+        (r'.*\((unpack_.*)@.*\.c:[0-9][0-9]*\)', r'\1'),
+        (r' version="[^"]*"', r' version=""'),
+        (r'\(version .*\)', r'(version)')
     ]
 
     new_output = []
@@ -721,6 +731,202 @@ class DaemonsRegressionTest(RegressionTest):
         ]
 
 
+class CrmMonRegressionTest(RegressionTest):
+    """A class for testing crm_mon."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "crm_mon"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        basic_tests = [
+            make_test_group("Basic output", "crm_mon -1 {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Output without node section",
+                            "crm_mon -1 --exclude=nodes {fmt}",
+                            [Test, ValidatingTest]),
+            # The next test doesn't need to be performed for other output formats.  It's
+            # really just a test to make sure that blank lines are correct.
+            Test("Output with only the node section",
+                 "crm_mon -1 --exclude=all --include=nodes"),
+            # XML includes everything already so there's no need for a complete test
+            Test("Complete text output", "crm_mon -1 --include=all"),
+            # XML includes detailed output already
+            Test("Complete text output with detail", "crm_mon -1R --include=all"),
+            Test("Complete brief text output", "crm_mon -1 --include=all --brief"),
+            Test("Complete text output grouped by node",
+                 "crm_mon -1 --include=all --group-by-node"),
+            # XML does not have a brief output option
+            Test("Complete brief text output grouped by node",
+                 "crm_mon -1 --include=all --group-by-node --brief"),
+            ValidatingTest("Output grouped by node",
+                           "crm_mon --output-as=xml --group-by-node"),
+            make_test_group("Complete output filtered by node",
+                            "crm_mon -1 --include=all --node=cluster01 {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Complete output filtered by tag",
+                            "crm_mon -1 --include=all --node=even-nodes {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Complete output filtered by resource tag",
+                            "crm_mon -1 --include=all --resource=fencing-rscs {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Output filtered by node that doesn't exist",
+                            "crm_mon -1 --node=blah {fmt}",
+                            [Test, ValidatingTest]),
+            Test("Basic text output with inactive resources", "crm_mon -1 -r"),
+            # XML already includes inactive resources
+            Test("Basic text output with inactive resources, filtered by node",
+                 "crm_mon -1 -r --node=cluster02"),
+            make_test_group("Complete output filtered by primitive resource",
+                            "crm_mon -1 --include=all --resource=Fencing {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Complete output filtered by group resource",
+                            "crm_mon -1 --include=all --resource=exim-group {fmt}",
+                            [Test, ValidatingTest]),
+            Test("Complete text output filtered by group resource member",
+                 "crm_mon -1 --include=all --resource=Public-IP"),
+            ValidatingTest("Output filtered by group resource member",
+                           "crm_mon --output-as=xml --resource=Email"),
+            make_test_group("Complete output filtered by clone resource",
+                            "crm_mon -1 --include=all --resource=ping-clone {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Complete output filtered by clone resource instance",
+                            "crm_mon -1 --include=all --resource=ping {fmt}",
+                            [Test, ValidatingTest]),
+            Test("Complete text output filtered by exact clone resource instance",
+                 "crm_mon -1 --include=all --show-detail --resource=ping:0"),
+            ValidatingTest("Output filtered by exact clone resource instance",
+                           "crm_mon --output-as=xml --resource=ping:1"),
+            make_test_group("Output filtered by resource that doesn't exist",
+                            "crm_mon -1 --resource=blah {fmt}",
+                            [Test, ValidatingTest]),
+            Test("Basic text output with inactive resources, filtered by tag",
+                 "crm_mon -1 -r --resource=inactive-rscs"),
+            Test("Basic text output with inactive resources, filtered by bundle resource",
+                 "crm_mon -1 -r --resource=httpd-bundle"),
+            ValidatingTest("Output filtered by inactive bundle resource",
+                           "crm_mon --output-as=xml --resource=httpd-bundle"),
+            Test("Basic text output with inactive resources, filtered by bundled IP address resource",
+                 "crm_mon -1 -r --resource=httpd-bundle-ip-192.168.122.131"),
+            ValidatingTest("Output filtered by bundled IP address resource",
+                           "crm_mon --output-as=xml --resource=httpd-bundle-ip-192.168.122.132"),
+            Test("Basic text output with inactive resources, filtered by bundled container",
+                 "crm_mon -1 -r --resource=httpd-bundle-docker-1"),
+            ValidatingTest("Output filtered by bundled container",
+                           "crm_mon --output-as=xml --resource=httpd-bundle-docker-2"),
+            Test("Basic text output with inactive resources, filtered by bundle connection",
+                 "crm_mon -1 -r --resource=httpd-bundle-0"),
+            ValidatingTest("Output filtered by bundle connection",
+                           "crm_mon --output-as=xml --resource=httpd-bundle-0"),
+            Test("Basic text output with inactive resources, filtered by bundled primitive resource",
+                 "crm_mon -1 -r --resource=httpd"),
+            ValidatingTest("Output filtered by bundled primitive resource",
+                           "crm_mon --output-as=xml --resource=httpd"),
+            Test("Complete text output, filtered by clone name in cloned group",
+                 "crm_mon -1 --include=all --show-detail --resource=mysql-clone-group"),
+            ValidatingTest("Output, filtered by clone name in cloned group",
+                           "crm_mon --output-as=xml --resource=mysql-clone-group"),
+            Test("Complete text output, filtered by group name in cloned group",
+                 "crm_mon -1 --include=all --show-detail --resource=mysql-group"),
+            ValidatingTest("Output, filtered by group name in cloned group",
+                           "crm_mon --output-as=xml --resource=mysql-group"),
+            Test("Complete text output, filtered by exact group instance name in cloned group",
+                 "crm_mon -1 --include=all --show-detail --resource=mysql-group:1"),
+            ValidatingTest("Output, filtered by exact group instance name in cloned group",
+                           "crm_mon --output-as=xml --resource=mysql-group:1"),
+            Test("Complete text output, filtered by primitive name in cloned group",
+                 "crm_mon -1 --include=all --show-detail --resource=mysql-proxy"),
+            ValidatingTest("Output, filtered by primitive name in cloned group",
+                           "crm_mon --output-as=xml --resource=mysql-proxy"),
+            Test("Complete text output, filtered by exact primitive instance name in cloned group",
+                 "crm_mon -1 --include=all --show-detail --resource=mysql-proxy:1"),
+            ValidatingTest("Output, filtered by exact primitive instance name in cloned group",
+                           "crm_mon --output-as=xml --resource=mysql-proxy:1"),
+        ]
+
+        partial_tests = [
+            Test("Output of partially active resources", "crm_mon -1 --show-detail"),
+            ValidatingTest("Output of partially active resources", "crm_mon --output-as=xml"),
+            Test("Output of partially active resources, with inactive resources",
+                 "crm_mon -1 -r --show-detail"),
+            # XML already includes inactive resources
+            Test("Complete brief text output, with inactive resources",
+                 "crm_mon -1 -r --include=all --brief --show-detail"),
+            # XML does not have a brief output option
+            Test("Text output of partially active group", "crm_mon -1 --resource=partially-active-group"),
+            Test("Text output of partially active group, with inactive resources",
+                 "crm_mon -1 --resource=partially-active-group -r"),
+            Test("Text output of active member of partially active group",
+                 "crm_mon -1 --resource=dummy-1"),
+            Test("Text output of inactive member of partially active group",
+                 "crm_mon -1 --resource=dummy-2 --show-detail"),
+            Test("Complete brief text output grouped by node, with inactive resources",
+                 "crm_mon -1 -r --include=all --group-by-node --brief --show-detail"),
+            Test("Text output of partially active resources, with inactive resources, filtered by node",
+                 "crm_mon -1 -r --node=cluster01"),
+            ValidatingTest("Output of partially active resources, filtered by node",
+                           "crm_mon --output-as=xml --node=cluster01"),
+        ]
+
+        unmanaged_tests = [
+            make_test_group("Output of active unmanaged resource on offline node",
+                            "crm_mon -1 {fmt}",
+                            [Test, ValidatingTest]),
+            Test("Brief text output of active unmanaged resource on offline node",
+                 "crm_mon -1 --brief"),
+            Test("Brief text output of active unmanaged resource on offline node, grouped by node",
+                 "crm_mon -1 --brief --group-by-node"),
+        ]
+
+        maint1_tests = [
+            make_test_group("Output of all resources with maintenance-mode enabled",
+                            "crm_mon -1 -r {fmt}",
+                            [Test, ValidatingTest],
+                            setup="crm_attribute -n maintenance-mode -v true",
+                            teardown="crm_attribute -n maintenance-mode -v false"),
+            make_test_group("Output of all resources with maintenance enabled for a node",
+                            "crm_mon -1 -r {fmt}",
+                            [Test, ValidatingTest],
+                            setup="crm_attribute -n maintenance -N cluster02 -v true",
+                            teardown="crm_attribute -n maintenance -N cluster02 -v false"),
+        ]
+
+        maint2_tests = [
+            # The fence resource is excluded, for comparison
+            make_test_group("Output of all resources with maintenance meta attribute true",
+                            "crm_mon -1 -r {fmt}",
+                            [Test, ValidatingTest]),
+        ]
+
+        t180_tests = [
+            Test("Text output of guest node's container on different node from its remote resource",
+                 "crm_mon -1"),
+            Test("Complete text output of guest node's container on different node from its remote resource",
+                 "crm_mon -1 --show-detail"),
+        ]
+
+        return [
+            TestGroup(basic_tests,
+                      env={"CIB_file": "{cts_cli_data}/crm_mon.xml"}),
+            Test("Check that CIB_file=\"-\" works", "crm_mon -1",
+                 env={"CIB_file": "-"},
+                 stdin=pathlib.Path(apply_substitutions("{cts_cli_data}/crm_mon.xml"))),
+            TestGroup(partial_tests,
+                      env={"CIB_file": "{cts_cli_data}/crm_mon-partial.xml"}),
+            TestGroup(unmanaged_tests,
+                      env={"CIB_file": "{cts_cli_data}/crm_mon-unmanaged.xml"}),
+            TestGroup(maint1_tests,
+                      cib_gen=partial(copy_existing_cib, "{cts_cli_data}/crm_mon.xml")),
+            TestGroup(maint2_tests,
+                      env={"CIB_file": "{cts_cli_data}/crm_mon-rsc-maint.xml"}),
+            TestGroup(t180_tests,
+                      env={"CIB_file": "{cts_cli_data}/crm_mon-T180.xml"}),
+        ]
+
+
 def build_options():
     """Handle command line arguments."""
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -897,6 +1103,7 @@ def summary(regs, output_differs, verbose):
 
 regression_classes = [
     DaemonsRegressionTest,
+    CrmMonRegressionTest,
 ]
 
 
