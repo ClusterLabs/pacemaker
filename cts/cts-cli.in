@@ -21,7 +21,7 @@ from shutil import copyfile
 import signal
 import subprocess
 import sys
-from tempfile import mkstemp
+from tempfile import NamedTemporaryFile, mkstemp
 import types
 
 # These imports allow running from a source checkout after running `make`.
@@ -32,6 +32,8 @@ if os.path.exists("@abs_top_srcdir@/python"):
 if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
     sys.path.insert(0, "@abs_top_builddir@/python")
 
+from pacemaker._cts.errors import XmlValidationError
+from pacemaker._cts.validate import validate
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
@@ -257,6 +259,12 @@ class Test:
         """Log a message when a test passes."""
         self._output.append("* Passed: %-21s - %s" % (app, self.desc))
 
+    # pylint: disable=unused-argument
+    def _validate_hook(self, rc, _stdout, _stderr, valgrind=False):
+        """Validate test output."""
+        self._log_end_test(rc)
+        return rc
+
     def _run_setup_teardown(self, cmd, app):
         """
         Run any setup or teardown command required by this test.
@@ -350,7 +358,7 @@ class Test:
             self._output.append("=#=#=#= Current cib after: %s =#=#=#=" % self.desc)
             self._output.extend(current_cib().splitlines())
 
-        self._log_end_test(rc)
+        self._validate_hook(rc, cmd_p.stdout, cmd_p.stderr, valgrind=valgrind)
 
         if rc == self.expected_rc:
             self._log_test_passed(app)
@@ -358,6 +366,30 @@ class Test:
 
         self._log_test_failed(app, rc)
         return False
+
+
+class ValidatingTest(Test):
+    """A Test subclass that additionally runs test results through xmllint."""
+
+    def _validate_hook(self, rc, stdout, stderr, valgrind=False):
+        """Validate test output with xmllint."""
+        # Do not validate if running under valgrind, even if told to do so.  Valgrind
+        # will output a lot more stuff that is not XML, so it wouldn't validate
+        # anyway.
+        if valgrind:
+            return Test._validate_hook(self, rc, stdout, stderr, valgrind=valgrind)
+
+        try:
+            validate(stdout)
+            # We only care about the return code from validation if there was an error,
+            # which will be dealt with below.  Here, we want to log the original return
+            # code from the test itself.
+            self._log_end_test(rc)
+            return 0
+        except XmlValidationError as e:
+            self._output.append("=#=#=#= End test: %s - Failed to validate (%d) =#=#=#=" % (self.desc, e.exit_code))
+            self._output.extend(e.output.splitlines())
+            return e.exit_code
 
 
 class RegressionTest:
