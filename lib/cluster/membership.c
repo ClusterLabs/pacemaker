@@ -1255,7 +1255,7 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
     if (is_member) {
         node->when_lost = 0;
         if (membership) {
-            node->last_seen = membership;
+            node->membership_id = membership;
         }
     }
 
@@ -1343,7 +1343,7 @@ pcmk__reap_unseen_nodes(uint64_t membership)
     crm_trace("Reaping unseen nodes...");
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&node)) {
-        if (node->last_seen != membership) {
+        if (node->membership_id != membership) {
             if (node->state) {
                 /*
                  * Calling update_peer_state_iter() allows us to

@@ -99,7 +99,12 @@ typedef struct pcmk__node_status {
     //! Group of <tt>enum pcmk__node_status_flags</tt>
     uint32_t flags;
 
-    uint64_t last_seen;         // Only needed by cluster nodes
+    /*!
+     * Most recent cluster membership in which node was seen (0 for Pacemaker
+     * Remote nodes)
+     */
+    uint64_t membership_id;
+
     uint32_t processes;         // @TODO most not needed, merge into flags
 
     /* @TODO When we can break public API compatibility, we can make the rest of

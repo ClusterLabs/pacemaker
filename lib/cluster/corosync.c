@@ -300,11 +300,11 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
 
     init_phase = FALSE;
 
-    /* Reset last_seen for all cached nodes so we can tell which ones aren't
+    /* Reset membership_id for all cached nodes so we can tell which ones aren't
      * in the view list */
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        node->last_seen = 0;
+        node->membership_id = 0;
     }
 
     /* Update the peer cache for each node in view list */
@@ -324,7 +324,7 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
             free(name);
         }
 
-        /* Update the node state (including updating last_seen to ring_id) */
+        // Update the node state (including updating membership_id to ring_id)
         pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, ring_id);
     }
 
