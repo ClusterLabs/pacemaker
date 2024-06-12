@@ -492,9 +492,7 @@ main(int argc, char **argv)
     }
 
     if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches) &&
-        !pcmk_is_set(options.flags, pcmk_sim_show_scores) &&
-        !pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
-
+        !(pcmk_is_set(options.flags, pcmk_sim_show_scores) && args->quiet)) {
         pcmk__output_text_set_fancy(out, true);
     }
 
