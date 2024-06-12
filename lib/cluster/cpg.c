@@ -49,7 +49,6 @@ static int cs_message_timer = 0;
 struct pcmk__cpg_host_s {
     uint32_t id;
     uint32_t pid;
-    gboolean local;
     enum crm_ais_msg_types type;
     uint32_t size;
     char uname[MAX_NAME];
@@ -288,13 +287,7 @@ pcmk_cpg_dispatch(gpointer user_data)
 static inline const char *
 ais_dest(const pcmk__cpg_host_t *host)
 {
-    if (host->local) {
-        return "local";
-    } else if (host->size > 0) {
-        return host->uname;
-    } else {
-        return "<all>";
-    }
+    return (host->size > 0)? host->uname : "<all>";
 }
 
 static inline const char *
@@ -950,17 +943,15 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
  * \brief Send string data via Corosync CPG
  *
  * \param[in] data   Data to send
- * \param[in] local  What to set as host "local" value (which is never used)
  * \param[in] node   Cluster node to send message to
  * \param[in] dest   Type of message to send
  *
  * \return \c true on success, or \c false otherwise
  */
 static bool
-send_cpg_text(const char *data, bool local, const pcmk__node_status_t *node,
+send_cpg_text(const char *data, const pcmk__node_status_t *node,
               enum crm_ais_msg_types dest)
 {
-    // @COMPAT Drop local argument when send_cluster_text is dropped
     static int msg_id = 0;
     static int local_pid = 0;
     static int local_name_len = 0;
@@ -995,7 +986,6 @@ send_cpg_text(const char *data, bool local, const pcmk__node_status_t *node,
     msg->header.error = CS_OK;
 
     msg->host.type = dest;
-    msg->host.local = local;
 
     if (node != NULL) {
         if (node->uname != NULL) {
@@ -1005,9 +995,9 @@ send_cpg_text(const char *data, bool local, const pcmk__node_status_t *node,
             memcpy(msg->host.uname, node->uname, msg->host.size);
 
         } else {
-            target = crm_strdup_printf("%u", node->id);
+            target = crm_strdup_printf("%" PRIu32, node->cluster_layer_id);
         }
-        msg->host.id = node->id;
+        msg->host.id = node->cluster_layer_id;
 
     } else {
         target = pcmk__str_copy("all");
@@ -1097,7 +1087,7 @@ pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
 
     pcmk__xml_string(msg, 0, data, 0);
 
-    rc = send_cpg_text(data->str, false, node, dest);
+    rc = send_cpg_text(data->str, node, dest);
     g_string_free(data, TRUE);
     return rc;
 }

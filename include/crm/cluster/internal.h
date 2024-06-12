@@ -47,7 +47,7 @@ enum pcmk__node_search_flags {
     pcmk__node_search_cluster_cib       = (1 << 2),
 };
 
-//! Cluster member node data (may be a cluster node or a Pacemaker Remote node)
+//! Node status data (may be a cluster node or a Pacemaker Remote node)
 typedef struct pcmk__node_status {
     char *uname;                // Node name as known to cluster
 
@@ -80,10 +80,6 @@ typedef struct pcmk__node_status {
      * void *user_data here instead, to abstract the cluster layer further.
      */
 
-    // Currently only needed by corosync stack
-    uint32_t id;                // Node ID
-    time_t when_lost;           // When CPG membership was last lost
-
     // Only used by controller
     enum crm_join_phase join;
     char *expected;
@@ -93,6 +89,12 @@ typedef struct pcmk__node_status {
 
     time_t when_member;         // Since when node has been a cluster member
     time_t when_online;         // Since when peer has been online in CPG
+
+    /* @TODO The following are currently needed only by the Corosync stack.
+     * Eventually consider moving them to a cluster-layer-specific data object.
+     */
+    uint32_t cluster_layer_id;  //! Cluster-layer numeric node ID
+    time_t when_lost;           //! When CPG membership was last lost
 } pcmk__node_status_t;
 
 /*!

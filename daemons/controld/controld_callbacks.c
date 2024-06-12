@@ -9,6 +9,10 @@
 
 #include <crm_internal.h>
 
+#include <inttypes.h>           // PRIu32
+#include <stdbool.h>            // bool
+#include <stdio.h>              // NULL
+
 #include <sys/param.h>
 #include <string.h>
 
@@ -127,7 +131,9 @@ peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
          */
         xmlNode *query = create_request(CRM_OP_HELLO, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-        crm_debug("Sending hello to node %u so that it learns our node name", node->id);
+        crm_debug("Sending hello to node %" PRIu32 " so that it learns our "
+                  "node name",
+                  node->cluster_layer_id);
         pcmk__cluster_send_message(node, crm_msg_crmd, query);
 
         pcmk__xml_free(query);
