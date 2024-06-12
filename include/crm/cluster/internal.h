@@ -65,15 +65,14 @@ typedef struct pcmk__node_status {
      * transient_attributes-NODEID as the element IDs. Unfortunately changing it
      * would be impractical due to backward compatibility; older nodes in a
      * rolling upgrade will always write and expect the value in the old format.
-     *
-     * This is also named poorly, since the value is not a UUID, but at least
-     * that can be changed at an API compatibility break.
      */
-    /*! Value of the PCMK_XA_ID XML attribute to use with the node's
+
+    /*!
+     * Value of the PCMK_XA_ID XML attribute to use with the node's
      * PCMK_XE_NODE, PCMK_XE_NODE_STATE, and PCMK_XE_TRANSIENT_ATTRIBUTES
      * XML elements in the CIB
      */
-    char *uuid;
+    char *xml_id;
 
     char *state;                // @TODO change to enum
     uint64_t flags;             // Bitmask of crm_node_flags

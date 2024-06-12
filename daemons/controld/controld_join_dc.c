@@ -237,7 +237,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 
     if (member->name == NULL) {
         crm_info("Not making join-%d offer to node uuid %s with unknown name",
-                 current_join_id, member->uuid);
+                 current_join_id, member->xml_id);
         return;
     }
 

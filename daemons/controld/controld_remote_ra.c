@@ -315,7 +315,7 @@ remote_node_up(const char *node_name)
         const char *start_state = lrmd__node_start_state(lrm);
 
         if (start_state) {
-            set_join_state(start_state, node->name, node->uuid, true);
+            set_join_state(start_state, node->name, node->xml_id, true);
         }
     }
 

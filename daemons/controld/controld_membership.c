@@ -83,9 +83,9 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
         || (controld_globals.fsa_state == S_FINALIZE_JOIN)) {
         check_join_state(controld_globals.fsa_state, __func__);
     }
-    if ((node != NULL) && (node->uuid != NULL)) {
+    if ((node != NULL) && (node->xml_id != NULL)) {
         fail_incompletable_actions(controld_globals.transition_graph,
-                                   node->uuid);
+                                   node->xml_id);
     }
 }
 
@@ -280,7 +280,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if ((node != NULL)
-                && pcmk__str_eq(node->uuid, node_uuid, pcmk__str_casei)
+                && pcmk__str_eq(node->xml_id, node_uuid, pcmk__str_casei)
                 && pcmk__str_eq(node->name, node_uname, pcmk__str_casei)) {
 
                 known = TRUE;
@@ -357,9 +357,9 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *new_node = NULL;
 
-            if ((node->uuid != NULL) && (node->name != NULL)) {
+            if ((node->xml_id != NULL) && (node->name != NULL)) {
                 crm_trace("Creating node entry for %s/%s",
-                          node->name, node->uuid);
+                          node->name, node->xml_id);
                 if (xpath == NULL) {
                     xpath = g_string_sized_new(512);
                 } else {
@@ -368,7 +368,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
                 /* We need both to be valid */
                 new_node = pcmk__xe_create(node_list, PCMK_XE_NODE);
-                crm_xml_add(new_node, PCMK_XA_ID, node->uuid);
+                crm_xml_add(new_node, PCMK_XA_ID, node->xml_id);
                 crm_xml_add(new_node, PCMK_XA_UNAME, node->name);
 
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
@@ -376,12 +376,12 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                                "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
                                "/" PCMK_XE_NODES "/" PCMK_XE_NODE
                                "[@" PCMK_XA_UNAME "='", node->name, "']"
-                               "[@" PCMK_XA_ID "!='", node->uuid, "']", NULL);
+                               "[@" PCMK_XA_ID "!='", node->xml_id, "']", NULL);
 
                 call_id = cib_conn->cmds->query(cib_conn,
                                                 (const char *) xpath->str, NULL,
                                                 cib_xpath);
-                fsa_register_cib_callback(call_id, pcmk__str_copy(node->uuid),
+                fsa_register_cib_callback(call_id, pcmk__str_copy(node->xml_id),
                                           search_conflicting_node_callback);
             }
         }

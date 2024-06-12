@@ -266,7 +266,7 @@ peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
         xmlNode *update = NULL;
         int flags = node_update_peer;
         int alive = node_alive(node);
-        pcmk__graph_action_t *down = match_down_event(node->uuid);
+        pcmk__graph_action_t *down = match_down_event(node->xml_id);
 
         crm_trace("Alive=%d, appeared=%d, down=%d",
                   alive, appeared, (down? down->id : -1));
@@ -335,7 +335,7 @@ peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
             abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                              "Node failure", NULL);
             fail_incompletable_actions(controld_globals.transition_graph,
-                                       node->uuid);
+                                       node->xml_id);
 
         } else {
             crm_trace("Node %s came up, was not expected to be down",

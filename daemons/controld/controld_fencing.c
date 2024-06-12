@@ -233,9 +233,9 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
         flags |= node_update_cluster;
     }
 
-    if (peer->uuid == NULL) {
-        crm_info("Recording uuid '%s' for node '%s'", uuid, target);
-        peer->uuid = pcmk__str_copy(uuid);
+    if (peer->xml_id == NULL) {
+        crm_info("Recording XML ID '%s' for node '%s'", uuid, target);
+        peer->xml_id = pcmk__str_copy(uuid);
     }
 
     crmd_peer_down(peer, TRUE);

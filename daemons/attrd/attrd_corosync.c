@@ -217,7 +217,8 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
     pcmk__node_status_t *known_peer =
         pcmk__get_node(v->nodeid, host, NULL, pcmk__node_search_cluster_member);
 
-    crm_trace("Learned %s has node id %s", known_peer->name, known_peer->uuid);
+    crm_trace("Learned %s has node id %s",
+              known_peer->name, known_peer->xml_id);
     if (attrd_election_won()) {
         attrd_write_attributes(attrd_write_changed);
     }

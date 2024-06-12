@@ -93,15 +93,15 @@ pcmk__cluster_node_uuid(pcmk__node_status_t *node)
     if (node == NULL) {
         return NULL;
     }
-    if (node->uuid != NULL) {
-        return node->uuid;
+    if (node->xml_id != NULL) {
+        return node->xml_id;
     }
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC
         case pcmk_cluster_layer_corosync:
-            node->uuid = pcmk__corosync_uuid(node);
-            return node->uuid;
+            node->xml_id = pcmk__corosync_uuid(node);
+            return node->xml_id;
 #endif  // SUPPORT_COROSYNC
 
         default:
@@ -367,7 +367,7 @@ pcmk__node_name_from_uuid(const char *uuid)
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
+        if (pcmk__str_eq(node->xml_id, uuid, pcmk__str_casei)) {
             return node->name;
         }
     }

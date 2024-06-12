@@ -164,7 +164,7 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
      */
     node = pcmk__search_node_caches(0, node_name,
                                     pcmk__node_search_cluster_member);
-    if ((node != NULL) && (node->uuid == NULL)) {
+    if ((node != NULL) && (node->xml_id == NULL)) {
         /* node_name could be a pointer into the cache entry being removed, so
          * reassign it to a copy before the original gets freed
          */
@@ -193,8 +193,8 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
 
     /* Populate the essential information */
     set_peer_flags(node, crm_remote_node);
-    node->uuid = strdup(node_name);
-    if (node->uuid == NULL) {
+    node->xml_id = strdup(node_name);
+    if (node->xml_id == NULL) {
         free(node);
         errno = ENOMEM;
         free(node_name_copy);
@@ -202,7 +202,7 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
     }
 
     /* Add the new entry to the cache */
-    g_hash_table_replace(crm_remote_peer_cache, node->uuid, node);
+    g_hash_table_replace(crm_remote_peer_cache, node->xml_id, node);
     crm_trace("added %s to remote cache", node_name);
 
     /* Update the entry's uname, ensuring peer status callbacks are called */
@@ -551,7 +551,7 @@ destroy_crm_node(gpointer data)
 
     free(node->name);
     free(node->state);
-    free(node->uuid);
+    free(node->xml_id);
     free(node->expected);
     free(node->conn_host);
     free(node);
@@ -695,7 +695,7 @@ search_cluster_member_cache(unsigned int id, const char *uname,
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (pcmk__str_eq(node->name, uname, pcmk__str_casei)) {
-                crm_trace("Name match: %s = %p", node->name, node);
+                crm_trace("Name match: %s", node->name);
                 by_name = node;
                 break;
             }
@@ -715,8 +715,8 @@ search_cluster_member_cache(unsigned int id, const char *uname,
     } else if (uuid != NULL) {
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
-                crm_trace("UUID match: %s = %p", node->uuid, node);
+            if (pcmk__str_eq(node->xml_id, uuid, pcmk__str_casei)) {
+                crm_trace("UUID match: %s", node->xml_id);
                 by_id = node;
                 break;
             }
@@ -987,7 +987,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
         update_peer_uname(node, uname);
     }
 
-    if(node->uuid == NULL) {
+    if (node->xml_id == NULL) {
         if (uuid == NULL) {
             uuid = pcmk__cluster_node_uuid(node);
         }
@@ -1381,7 +1381,7 @@ find_cib_cluster_node(const char *id, const char *uname)
     if (id) {
         g_hash_table_iter_init(&iter, cluster_node_cib_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if(strcasecmp(node->uuid, id) == 0) {
+            if (pcmk__str_eq(node->xml_id, id, pcmk__str_casei)) {
                 crm_trace("ID match: %s= %p", id, node);
                 by_id = node;
                 break;
@@ -1416,8 +1416,8 @@ find_cib_cluster_node(const char *id, const char *uname)
         /* Multiple nodes have the same uname in the CIB.
          * Return by_id. */
 
-    } else if (id && by_name->uuid
-               && pcmk__str_eq(id, by_name->uuid, pcmk__str_casei)) {
+    } else if ((id != NULL) && (by_name->xml_id != NULL)
+               && pcmk__str_eq(id, by_name->xml_id, pcmk__str_casei)) {
         /* Multiple nodes have the same id in the CIB.
          * Return by_name. */
         node = by_name;
@@ -1453,7 +1453,7 @@ cluster_node_cib_cache_refresh_helper(xmlNode *xml_node, void *user_data)
         node = pcmk__assert_alloc(1, sizeof(pcmk__node_status_t));
 
         node->name = pcmk__str_copy(uname);
-        node->uuid = pcmk__str_copy(id);
+        node->xml_id = pcmk__str_copy(id);
 
         g_hash_table_replace(cluster_node_cib_cache, uniqueid, node);
 

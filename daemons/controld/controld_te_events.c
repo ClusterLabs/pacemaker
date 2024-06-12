@@ -124,8 +124,8 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
                     pcmk__get_node(0, router, NULL,
                                    pcmk__node_search_cluster_member);
 
-                if (node) {
-                    router_uuid = node->uuid;
+                if (node != NULL) {
+                    router_uuid = node->xml_id;
                 }
             }
 

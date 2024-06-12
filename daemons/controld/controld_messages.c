@@ -923,7 +923,7 @@ handle_node_info_request(const xmlNode *msg)
 
     node = pcmk__search_node_caches(node_id, value, pcmk__node_search_any);
     if (node) {
-        crm_xml_add(reply_data, PCMK_XA_ID, node->uuid);
+        crm_xml_add(reply_data, PCMK_XA_ID, node->xml_id);
         crm_xml_add(reply_data, PCMK_XA_UNAME, node->name);
         crm_xml_add(reply_data, PCMK_XA_CRMD, node->state);
         pcmk__xe_set_bool_attr(reply_data, PCMK_XA_REMOTE_NODE,
