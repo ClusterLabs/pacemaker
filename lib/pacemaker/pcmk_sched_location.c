@@ -691,26 +691,25 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
         return;
     }
 
-    pcmk__rsc_trace(rsc, "Applying %s%s%s to %s", location->id,
-                    (need_role? " for role " : ""),
-                    (need_role? pcmk_role_text(location->role_filter) : ""),
-                    rsc->id);
-
     for (GList *iter = location->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = iter->data;
         pcmk_node_t *allowed_node = g_hash_table_lookup(rsc->allowed_nodes,
                                                         node->details->id);
 
+        pcmk__rsc_trace(rsc, "Applying %s%s%s to %s score on %s: %c %s",
+                        location->id,
+                        (need_role? " for role " : ""),
+                        (need_role? pcmk_role_text(location->role_filter) : ""),
+                        rsc->id, pcmk__node_name(node),
+                        ((allowed_node == NULL)? '=' : '+'),
+                        pcmk_readable_score(node->weight));
+
         if (allowed_node == NULL) {
-            pcmk__rsc_trace(rsc, "* = %d on %s",
-                            node->weight, pcmk__node_name(node));
             allowed_node = pe__copy_node(node);
             g_hash_table_insert(rsc->allowed_nodes,
                                 (gpointer) allowed_node->details->id,
                                 allowed_node);
         } else {
-            pcmk__rsc_trace(rsc, "* + %d on %s",
-                            node->weight, pcmk__node_name(node));
             allowed_node->weight = pcmk__add_scores(allowed_node->weight,
                                                     node->weight);
         }
