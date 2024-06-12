@@ -18,4 +18,6 @@ typedef struct {
     GList *refs;    // XML IDs of elements that reference the primary element
 } pcmk__idref_t;
 
+xmlNode *pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search);
+
 #endif // PCMK__CRM_COMMON_XML_IDREF_INTERNAL__H
