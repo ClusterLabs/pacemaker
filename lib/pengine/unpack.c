@@ -127,7 +127,8 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                            "its guest resource %s is unmanaged",
                            pcmk__node_name(node), reason, rsc->id);
             } else {
-                pcmk__sched_warn("Guest node %s will be fenced "
+                pcmk__sched_warn(scheduler,
+                                 "Guest node %s will be fenced "
                                  "(by recovering its guest resource %s): %s",
                                  pcmk__node_name(node), rsc->id, reason);
 
@@ -158,7 +159,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                        pcmk__node_name(node), reason);
         } else if (!pcmk_is_set(node->private->flags, pcmk__node_remote_reset)) {
             pcmk__set_node_flags(node, pcmk__node_remote_reset);
-            pcmk__sched_warn("Remote node %s %s: %s",
+            pcmk__sched_warn(scheduler, "Remote node %s %s: %s",
                              pcmk__node_name(node),
                              pe_can_fence(scheduler, node)? "will be fenced" : "is unclean",
                              reason);
@@ -174,7 +175,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                   reason);
 
     } else {
-        pcmk__sched_warn("Cluster node %s %s: %s",
+        pcmk__sched_warn(scheduler, "Cluster node %s %s: %s",
                          pcmk__node_name(node),
                          pe_can_fence(scheduler, node)? "will be fenced" : "is unclean",
                          reason);
@@ -465,7 +466,8 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node = calloc(1, sizeof(pcmk_node_t));
     if (new_node == NULL) {
-        pcmk__sched_err("Could not allocate memory for node %s", uname);
+        pcmk__sched_err(scheduler, "Could not allocate memory for node %s",
+                        uname);
         return NULL;
     }
 
@@ -478,7 +480,8 @@ pe_create_node(const char *id, const char *uname, const char *type,
         free(new_node->details);
         free(new_node->private);
         free(new_node);
-        pcmk__sched_err("Could not allocate memory for node %s", uname);
+        pcmk__sched_err(scheduler, "Could not allocate memory for node %s",
+                        uname);
         return NULL;
     }
 
@@ -1860,7 +1863,8 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
         crm_info("%s is not a Pacemaker node", pcmk__node_name(this_node));
 
     } else if (this_node->details->unclean) {
-        pcmk__sched_warn("%s is unclean", pcmk__node_name(this_node));
+        pcmk__sched_warn(scheduler, "%s is unclean",
+                         pcmk__node_name(this_node));
 
     } else if (!this_node->details->online) {
         crm_trace("%s is offline", pcmk__node_name(this_node));
@@ -3628,7 +3632,8 @@ unpack_rsc_op_failure(struct action_history *history,
                   pcmk__node_name(history->node), last_change_s,
                   history->exit_status, history->id);
     } else {
-        pcmk__sched_warn("Unexpected result (%s%s%s) was recorded for %s of "
+        pcmk__sched_warn(scheduler,
+                         "Unexpected result (%s%s%s) was recorded for %s of "
                          "%s on %s at %s " QB_XS " exit-status=%d id=%s",
                          services_ocf_exitcode_str(history->exit_status),
                          (pcmk__str_empty(history->exit_reason)? "" : ": "),
@@ -3744,7 +3749,8 @@ block_if_unrecoverable(struct action_history *history)
     }
 
     last_change_s = last_change_str(history->xml);
-    pcmk__sched_err("No further recovery can be attempted for %s "
+    pcmk__sched_err(history->node->private->scheduler,
+                    "No further recovery can be attempted for %s "
                     "because %s on %s failed (%s%s%s) at %s "
                     QB_XS " rc=%d id=%s",
                     history->rsc->id, history->task,
@@ -4865,7 +4871,8 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                               "hard-error", rsc->private->scheduler);
 
         } else if (history.execution_status == PCMK_EXEC_ERROR_FATAL) {
-            pcmk__sched_err("Preventing %s from restarting anywhere because "
+            pcmk__sched_err(rsc->private->scheduler,
+                            "Preventing %s from restarting anywhere because "
                             "of fatal failure (%s%s%s) " QB_XS " %s",
                             parent->id,
                             services_ocf_exitcode_str(history.exit_status),

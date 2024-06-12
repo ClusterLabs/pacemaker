@@ -498,12 +498,12 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
  * \internal
  * \brief Check whether an action should be added to the transition graph
  *
- * \param[in] action  Action to check
+ * \param[in,out] action  Action to check
  *
  * \return true if action should be added to graph, otherwise false
  */
 static bool
-should_add_action_to_graph(const pcmk_action_t *action)
+should_add_action_to_graph(pcmk_action_t *action)
 {
     if (!pcmk_is_set(action->flags, pcmk__action_runnable)) {
         crm_trace("Ignoring action %s (%d): unrunnable",
@@ -550,7 +550,8 @@ should_add_action_to_graph(const pcmk_action_t *action)
     }
 
     if (action->node == NULL) {
-        pcmk__sched_err("Skipping action %s (%d) "
+        pcmk__sched_err(action->scheduler,
+                        "Skipping action %s (%d) "
                         "because it was not assigned to a node (bug?)",
                         action->uuid, action->id);
         pcmk__log_action("Unassigned", action, false);
@@ -570,14 +571,16 @@ should_add_action_to_graph(const pcmk_action_t *action)
                   action->uuid, action->id, pcmk__node_name(action->node));
 
     } else if (!action->node->details->online) {
-        pcmk__sched_err("Skipping action %s (%d) "
+        pcmk__sched_err(action->scheduler,
+                        "Skipping action %s (%d) "
                         "because it was scheduled for offline node (bug?)",
                         action->uuid, action->id);
         pcmk__log_action("Offline node", action, false);
         return false;
 
     } else if (action->node->details->unclean) {
-        pcmk__sched_err("Skipping action %s (%d) "
+        pcmk__sched_err(action->scheduler,
+                        "Skipping action %s (%d) "
                         "because it was scheduled for unclean node (bug?)",
                         action->uuid, action->id);
         pcmk__log_action("Unclean node", action, false);

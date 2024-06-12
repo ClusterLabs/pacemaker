@@ -81,22 +81,24 @@ extern uint32_t pcmk__warnings;
  * \internal
  * \brief Log an error and remember that current scheduler input has errors
  *
- * \param[in] fmt...  printf(3)-style format and arguments
+ * \param[in,out] scheduler  Scheduler data
+ * \param[in]     fmt...     printf(3)-style format and arguments
  */
-#define pcmk__sched_err(fmt...) do {    \
-        was_processing_error = TRUE;    \
-        crm_err(fmt);                   \
+#define pcmk__sched_err(scheduler, fmt...) do {     \
+        was_processing_error = TRUE;                \
+        crm_err(fmt);                               \
     } while (0)
 
 /*!
  * \internal
  * \brief Log a warning and remember that current scheduler input has warnings
  *
- * \param[in] fmt...  printf(3)-style format and arguments
+ * \param[in,out] scheduler  Scheduler data
+ * \param[in]     fmt...     printf(3)-style format and arguments
  */
-#define pcmk__sched_warn(fmt...) do {   \
-        was_processing_warning = TRUE;  \
-        crm_warn(fmt);                  \
+#define pcmk__sched_warn(scheduler, fmt...) do {    \
+        was_processing_warning = TRUE;              \
+        crm_warn(fmt);                              \
     } while (0)
 
 /*!

@@ -676,13 +676,15 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     *rsc = calloc(1, sizeof(pcmk_resource_t));
     if (*rsc == NULL) {
-        pcmk__sched_err("Unable to allocate memory for resource '%s'", id);
+        pcmk__sched_err(scheduler,
+                        "Unable to allocate memory for resource '%s'", id);
         return ENOMEM;
     }
 
     (*rsc)->private = calloc(1, sizeof(pcmk__resource_private_t));
     if ((*rsc)->private == NULL) {
-        pcmk__sched_err("Unable to allocate memory for resource '%s'", id);
+        pcmk__sched_err(scheduler,
+                        "Unable to allocate memory for resource '%s'", id);
         free(*rsc);
         return ENOMEM;
     }

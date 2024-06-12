@@ -146,7 +146,8 @@ cluster_status(pcmk_scheduler_t * scheduler)
    if (!pcmk_any_flags_set(scheduler->flags,
                            pcmk_sched_location_only|pcmk_sched_quorate)
        && (scheduler->no_quorum_policy != pcmk_no_quorum_ignore)) {
-        pcmk__sched_warn("Fencing and resource management disabled "
+        pcmk__sched_warn(scheduler,
+                         "Fencing and resource management disabled "
                          "due to lack of quorum");
     }
 

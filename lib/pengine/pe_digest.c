@@ -313,7 +313,8 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
 
     data = calloc(1, sizeof(pcmk__op_digest_t));
     if (data == NULL) {
-        pcmk__sched_err("Could not allocate memory for operation digest");
+        pcmk__sched_err(scheduler,
+                        "Could not allocate memory for operation digest");
         return NULL;
     }
 

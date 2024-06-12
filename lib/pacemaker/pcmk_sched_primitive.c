@@ -792,7 +792,8 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
         const char *class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
 
         // Resource was (possibly) incorrectly multiply active
-        pcmk__sched_err("%s resource %s might be active on %u nodes (%s)",
+        pcmk__sched_err(rsc->private->scheduler,
+                        "%s resource %s might be active on %u nodes (%s)",
                         pcmk__s(class, "Untyped"), rsc->id, num_all_active,
                         pcmk__multiply_active_text(rsc));
         crm_notice("For more information, see \"What are multiply active "
@@ -1335,7 +1336,8 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 
             order_actions(stop, unfence, pcmk__ar_then_implies_first);
             if (!pcmk__node_unfenced(current)) {
-                pcmk__sched_err("Stopping %s until %s can be unfenced",
+                pcmk__sched_err(rsc->private->scheduler,
+                                "Stopping %s until %s can be unfenced",
                                 rsc->id, pcmk__node_name(current));
             }
         }

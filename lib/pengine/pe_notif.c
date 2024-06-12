@@ -533,12 +533,12 @@ new_notify_entry(const pcmk_resource_t *rsc, const pcmk_node_t *node)
  * \internal
  * \brief Add notification data for resource state and optionally actions
  *
- * \param[in]     rsc       Clone or clone instance being notified
+ * \param[in,out] rsc       Clone or clone instance being notified
  * \param[in]     activity  Whether to add notification entries for actions
  * \param[in,out] n_data    Notification data for clone
  */
 static void
-collect_resource_data(const pcmk_resource_t *rsc, bool activity,
+collect_resource_data(pcmk_resource_t *rsc, bool activity,
                       notify_data_t *n_data)
 {
     const GList *iter = NULL;
@@ -556,7 +556,7 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
     // If this is a clone, call recursively for each instance
     if (rsc->private->children != NULL) {
         for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
-            const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
+            pcmk_resource_t *child = iter->data;
 
             collect_resource_data(child, activity, n_data);
         }
@@ -593,7 +593,8 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
             break;
 
         default:
-            pcmk__sched_err("Resource %s role on %s (%s) is not supported for "
+            pcmk__sched_err(rsc->private->scheduler,
+                            "Resource %s role on %s (%s) is not supported for "
                             "notifications (bug?)",
                             rsc->id, pcmk__node_name(node),
                             pcmk_role_text(rsc->private->orig_role));
@@ -924,7 +925,8 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             }
         }
         if (rsc->private->assigned_node == NULL) {
-            pcmk__sched_err("Next role '%s' but %s is not allocated",
+            pcmk__sched_err(rsc->private->scheduler,
+                            "Next role '%s' but %s is not allocated",
                             pcmk_role_text(rsc->private->next_role), rsc->id);
             return;
         }
