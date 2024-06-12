@@ -545,9 +545,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
         crm_trace("Creating ticket entry for %s", ticket_id);
 
         ticket->id = strdup(ticket_id);
-        ticket->granted = FALSE;
         ticket->last_granted = -1;
-        ticket->standby = FALSE;
         ticket->state = pcmk__strkey_table(free, free);
 
         g_hash_table_insert(scheduler->tickets, strdup(ticket->id), ticket);

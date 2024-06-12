@@ -61,7 +61,8 @@ add_attribute_xml(pcmk_scheduler_t *scheduler, const char *ticket_id,
         crm_xml_add(*ticket_state_xml, key, value);
 
         if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)
-            && (ticket == NULL || ticket->granted == FALSE)
+            && ((ticket == NULL)
+                || !pcmk_is_set(ticket->flags, pcmk__ticket_granted))
             && crm_is_true(value)) {
 
             char *now = pcmk__ttoa(time(NULL));
@@ -195,7 +196,7 @@ pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler
             return ENXIO;
         }
 
-        if (ticket->granted) {
+        if (pcmk_is_set(ticket->flags, pcmk__ticket_granted)) {
             return EACCES;
         }
     }

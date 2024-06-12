@@ -68,7 +68,8 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
     CRM_CHECK((rsc != NULL) && (rsc_ticket != NULL), return);
 
-    if (rsc_ticket->ticket->granted && !rsc_ticket->ticket->standby) {
+    if (pcmk_is_set(rsc_ticket->ticket->flags, pcmk__ticket_granted)
+        && !pcmk_is_set(rsc_ticket->ticket->flags, pcmk__ticket_standby)) {
         return;
     }
 
@@ -84,7 +85,8 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                     rsc->id, rsc_ticket->ticket->id, rsc_ticket->id,
                     pcmk_role_text(rsc_ticket->role));
 
-    if (!rsc_ticket->ticket->granted && (rsc->private->active_nodes != NULL)) {
+    if (!pcmk_is_set(rsc_ticket->ticket->flags, pcmk__ticket_granted)
+        && (rsc->private->active_nodes != NULL)) {
 
         switch (rsc_ticket->loss_policy) {
             case loss_ticket_stop:
@@ -131,7 +133,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                 break;
         }
 
-    } else if (!rsc_ticket->ticket->granted) {
+    } else if (!pcmk_is_set(rsc_ticket->ticket->flags, pcmk__ticket_granted)) {
 
         if ((rsc_ticket->role != pcmk_role_promoted)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
@@ -139,7 +141,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                               "__no_ticket__", rsc->private->scheduler);
         }
 
-    } else if (rsc_ticket->ticket->standby) {
+    } else if (pcmk_is_set(rsc_ticket->ticket->flags, pcmk__ticket_standby)) {
 
         if ((rsc_ticket->role != pcmk_role_promoted)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
@@ -236,7 +238,8 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk__ticket_t *ticket,
         g_list_append(rsc->private->scheduler->ticket_constraints,
                       new_rsc_ticket);
 
-    if (!(new_rsc_ticket->ticket->granted) || new_rsc_ticket->ticket->standby) {
+    if (!pcmk_is_set(new_rsc_ticket->ticket->flags, pcmk__ticket_granted)
+        || pcmk_is_set(new_rsc_ticket->ticket->flags, pcmk__ticket_standby)) {
         constraints_for_ticket(rsc, new_rsc_ticket);
     }
 }
@@ -536,7 +539,9 @@ pcmk__require_promotion_tickets(pcmk_resource_t *rsc)
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) item->data;
 
         if ((rsc_ticket->role == pcmk_role_promoted)
-            && (!rsc_ticket->ticket->granted || rsc_ticket->ticket->standby)) {
+            && (!pcmk_is_set(rsc_ticket->ticket->flags, pcmk__ticket_granted)
+                || pcmk_is_set(rsc_ticket->ticket->flags,
+                               pcmk__ticket_standby))) {
             resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
                               "__stateful_without_ticket__",
                               rsc->private->scheduler);

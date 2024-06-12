@@ -987,10 +987,10 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
 
     granted = g_hash_table_lookup(ticket->state, PCMK__XA_GRANTED);
     if (granted && crm_is_true(granted)) {
-        ticket->granted = TRUE;
+        pcmk__set_ticket_flags(ticket, pcmk__ticket_granted);
         crm_info("We have ticket '%s'", ticket->id);
     } else {
-        ticket->granted = FALSE;
+        pcmk__clear_ticket_flags(ticket, pcmk__ticket_granted);
         crm_info("We do not have ticket '%s'", ticket->id);
     }
 
@@ -1004,12 +1004,12 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
 
     standby = g_hash_table_lookup(ticket->state, PCMK_XA_STANDBY);
     if (standby && crm_is_true(standby)) {
-        ticket->standby = TRUE;
-        if (ticket->granted) {
+        pcmk__set_ticket_flags(ticket, pcmk__ticket_standby);
+        if (pcmk_is_set(ticket->flags, pcmk__ticket_granted)) {
             crm_info("Granted ticket '%s' is in standby-mode", ticket->id);
         }
     } else {
-        ticket->standby = FALSE;
+        pcmk__clear_ticket_flags(ticket, pcmk__ticket_standby);
     }
 
     crm_trace("Done with ticket state for %s", ticket_id);
