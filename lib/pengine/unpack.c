@@ -952,9 +952,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
                 continue;
             }
 
-            if (add_tag_ref(scheduler->tags, tag_id, obj_ref) == FALSE) {
-                return FALSE;
-            }
+            pcmk__add_idref(scheduler->tags, tag_id, obj_ref);
         }
     }
 

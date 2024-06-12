@@ -19,8 +19,7 @@ typedef struct {
     GList *refs;    // XML IDs of elements that reference the primary element
 } pcmk__idref_t;
 
-gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
-
+void pcmk__add_idref(GHashTable *table, const char *id, const char *referrer);
 xmlNode *pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search);
 
 #endif // PCMK__CRM_COMMON_XML_IDREF_INTERNAL__H

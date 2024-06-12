@@ -10,50 +10,45 @@
 #include <crm_internal.h>
 
 #include <stdio.h>              // NULL
-#include <stdlib.h>             // calloc(), free()
-#include <string.h>             // strdup()
-#include <glib.h>               // gboolean, GList, GHashTable, etc.
+#include <stdlib.h>             // free()
+#include <glib.h>               // GList, GHashTable, g_hash_table_insert()
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>     // get_xpath_object(), PCMK_XA_ID_REF
 
-gboolean
-add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
+/*!
+ * \internal
+ * \brief Add an XML ID reference to a table
+ *
+ * \param[in,out] table      Table of ID references to add to
+ * \param[in]     id         ID of primary element being referred to
+ * \param[in]     referrer   ID of element referring to \p id
+ *
+ * \note This refers to an ID reference in general, not necessarily connected to
+ *       an id-ref attribute.
+ */
+void
+pcmk__add_idref(GHashTable *table, const char *id, const char *referrer)
 {
-    pcmk__idref_t *tag = NULL;
-    GList *gIter = NULL;
-    gboolean is_existing = FALSE;
+    pcmk__idref_t *idref = NULL;
 
-    CRM_CHECK(tags && tag_name && obj_ref, return FALSE);
+    CRM_ASSERT((table != NULL) && (id != NULL) && (referrer != NULL));
 
-    tag = g_hash_table_lookup(tags, tag_name);
-    if (tag == NULL) {
-        tag = calloc(1, sizeof(pcmk__idref_t));
-        if (tag == NULL) {
-            pcmk__sched_err("Could not allocate memory for tag %s", tag_name);
-            return FALSE;
-        }
-        tag->id = strdup(tag_name);
-        tag->refs = NULL;
-        g_hash_table_insert(tags, strdup(tag_name), tag);
+    idref = g_hash_table_lookup(table, id);
+    if (idref == NULL) {
+        idref = pcmk__assert_alloc(1, sizeof(pcmk__idref_t));
+        idref->id = pcmk__str_copy(id);
+        g_hash_table_insert(table, pcmk__str_copy(id), idref);
     }
-
-    for (gIter = tag->refs; gIter != NULL; gIter = gIter->next) {
-        const char *existing_ref = (const char *) gIter->data;
-
-        if (pcmk__str_eq(existing_ref, obj_ref, pcmk__str_none)){
-            is_existing = TRUE;
-            break;
+    for (GList *iter = idref->refs; iter != NULL; iter = iter->next) {
+        if (pcmk__str_eq(referrer, (const char *) iter->data,
+                         pcmk__str_none)) {
+            return; // Already present
         }
     }
-
-    if (is_existing == FALSE) {
-        tag->refs = g_list_append(tag->refs, strdup(obj_ref));
-        crm_trace("Added: tag=%s ref=%s", tag->id, obj_ref);
-    }
-
-    return TRUE;
+    idref->refs = g_list_append(idref->refs, pcmk__str_copy(referrer));
+    crm_trace("Added ID %s referrer %s", id, referrer);
 }
 
 /*!
