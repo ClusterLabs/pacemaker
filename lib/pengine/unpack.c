@@ -824,18 +824,6 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
     }
 }
 
-static void
-destroy_tag(gpointer data)
-{
-    pcmk__idref_t *tag = data;
-
-    if (tag) {
-        free(tag->id);
-        g_list_free_full(tag->refs, free);
-        free(tag);
-    }
-}
-
 /*!
  * \internal
  * \brief Parse configuration XML for resource information
@@ -854,7 +842,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
     xmlNode *xml_obj = NULL;
     GList *gIter = NULL;
 
-    scheduler->template_rsc_sets = pcmk__strkey_table(free, destroy_tag);
+    scheduler->template_rsc_sets = pcmk__strkey_table(free, pcmk__free_idref);
 
     for (xml_obj = pcmk__xe_first_child(xml_resources, NULL, NULL, NULL);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
@@ -919,7 +907,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_tag = NULL;
 
-    scheduler->tags = pcmk__strkey_table(free, destroy_tag);
+    scheduler->tags = pcmk__strkey_table(free, pcmk__free_idref);
 
     for (xml_tag = pcmk__xe_first_child(xml_tags, NULL, NULL, NULL);
          xml_tag != NULL; xml_tag = pcmk__xe_next(xml_tag)) {

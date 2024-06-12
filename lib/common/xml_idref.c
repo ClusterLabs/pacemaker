@@ -11,7 +11,7 @@
 
 #include <stdio.h>              // NULL
 #include <stdlib.h>             // free()
-#include <glib.h>               // GList, GHashTable, g_hash_table_insert()
+#include <glib.h>               // GList, GHashTable, etc.
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/crm.h>
@@ -49,6 +49,24 @@ pcmk__add_idref(GHashTable *table, const char *id, const char *referrer)
     }
     idref->refs = g_list_append(idref->refs, pcmk__str_copy(referrer));
     crm_trace("Added ID %s referrer %s", id, referrer);
+}
+
+/*!
+ * \internal
+ * \brief Free a pcmk__idref_t
+ *
+ * \param[in,out] data  pcmk__idref_t to free
+ */
+void
+pcmk__free_idref(gpointer data)
+{
+    pcmk__idref_t *idref = data;
+
+    if (idref != NULL) {
+        free(idref->id);
+        g_list_free_full(idref->refs, free);
+        free(idref);
+    }
 }
 
 /*!
