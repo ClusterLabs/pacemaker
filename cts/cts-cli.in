@@ -21,6 +21,7 @@ import signal
 import subprocess
 import sys
 from tempfile import mkstemp
+import types
 
 # These imports allow running from a source checkout after running `make`.
 if os.path.exists("@abs_top_srcdir@/python"):
@@ -60,6 +61,31 @@ def current_cib():
     """Return the complete current CIB."""
     with environ({"CIB_user": "root"}):
         return subprocess.check_output(["cibadmin", "-Q"], encoding="utf-8")
+
+
+def run_cmd_list(cmds):
+    """
+    Run one or more shell commands.
+
+    cmds can be:
+    * A string
+    * A Python function
+    * A list of the above
+
+    Raises subprocess.CalledProcessError on error.
+    """
+    if cmds is None:
+        return
+
+    if isinstance(cmds, (str, types.FunctionType)):
+        cmds = [cmds]
+
+    for c in cmds:
+        if isinstance(c, types.FunctionType):
+            c()
+        else:
+            subprocess.run(apply_substitutions(c), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                           shell=True, universal_newlines=True, check=True)
 
 
 def sanitize_output(s):
@@ -134,7 +160,7 @@ class Test:
     """A base class for defining a single command line regression test."""
 
     def __init__(self, desc, cmd, expected_rc=ExitStatus.OK, update_cib=False,
-                 stdin=None, env=None):
+                 setup=None, teardown=None, stdin=None, env=None):
         """
         Create a new Test instance.
 
@@ -147,6 +173,10 @@ class Test:
         expected_rc -- The expected return value of cmd
         update_cib  -- If True, the resulting CIB will be printed after
                        performing the test
+        setup       -- A shell command to be run in the same environment as
+                       cmd, immediately before the test.  Valid types are:
+                       a string, a Python function, or a list of the above
+        teardown    -- Like setup, but runs immediately after the test
         stdin       -- If not None, the text to feed to cmd as its stdin
         env         -- If not None, a dict of values to be added to the test
                        environment.  This will be added when the test is run
@@ -157,6 +187,8 @@ class Test:
         self.expected_rc = expected_rc
         self.update_cib = update_cib
 
+        self._setup = setup
+        self._teardown = teardown
         self._stdin = stdin
 
         if env is None:
@@ -197,6 +229,28 @@ class Test:
         """Log a message when a test passes."""
         self._output.append("* Passed: %-21s - %s" % (app, self.desc))
 
+    def _run_setup_teardown(self, cmd, app):
+        """
+        Run any setup or teardown command required by this test.
+
+        On success (or if no command is present), return True.  On failure,
+        return False and log the stdout/stderr of the command for debugging.
+
+        Arguments:
+        cmd -- The setup/teardown command(s) to run
+        app -- The base name of the test command, for logging purposes
+        """
+        try:
+            run_cmd_list(cmd)
+            return True
+        except subprocess.CalledProcessError as exn:
+            rc = exn.returncode
+
+            self._output.extend(exn.stderr.splitlines())
+            self._output.extend(exn.stdout.splitlines())
+            self._log_test_failed(app, rc)
+            return False
+
     def run(self, group, env=None, valgrind=False):
         """
         Run this test.
@@ -227,6 +281,10 @@ class Test:
             env = env.update(self._env)
 
         with environ(env):
+            # Run the setup hook, if any
+            if not self._run_setup_teardown(self._setup, app):
+                return False
+
             if valgrind:
                 cmd = "valgrind %s %s" % (" ".join(VALGRIND_ARGS), cmd)
 
@@ -238,6 +296,10 @@ class Test:
 
             self._output.extend(cmd_p.stderr.splitlines())
             self._output.extend(cmd_p.stdout.splitlines())
+
+            # Run the teardown hook, if any
+            if not self._run_setup_teardown(self._teardown, app):
+                return False
 
         if self.update_cib:
             self._output.append("=#=#=#= Current cib after: %s =#=#=#=" % self.desc)
