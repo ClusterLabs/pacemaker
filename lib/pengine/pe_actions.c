@@ -173,6 +173,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     action->rsc = rsc;
     action->task = pcmk__str_copy(task);
     action->uuid = key;
+    action->scheduler = scheduler;
 
     if (node) {
         action->node = pe__copy_node(node);
