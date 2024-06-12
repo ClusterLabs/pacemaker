@@ -396,6 +396,89 @@ class ValidatingTest(Test):
             return e.exit_code
 
 
+class TestGroup:
+    """A base class for a group of related tests."""
+
+    def __init__(self, tests, cib_gen=None, env=None):
+        """
+        Create a new TestGroup instance.
+
+        Arguments:
+        tests    -- A list of Test instances
+
+        Keyword arguments:
+        cib_gen  -- If not None, a function that generates a CIB file and returns the
+                    name of that CIB.  This will be added to the test environment as
+                    CIB_file and used for all tests in this group.  The file will then
+                    be deleted after all tests have been run.
+        env      -- If not None, a dict of values to be added to the test environment
+        """
+        self.tests = tests
+        self._cib_gen = cib_gen
+        self._env = env
+
+        self._successes = None
+        self._failures = None
+        self._output = None
+
+    @property
+    def failures(self):
+        """Return the number of member tests that failed."""
+        return self._failures
+
+    @property
+    def output(self):
+        """Return the test's detailed output."""
+        return self._output
+
+    @property
+    def successes(self):
+        """Return the number of member tests that succeeded."""
+        return self._successes
+
+    def run(self, group, valgrind=False):
+        """
+        Run all Test instances that are a part of this regression test.
+
+        Additionally, record their stdout and stderr in the self.output property
+        and the total number of tests that passed and failed.
+
+        Arguments:
+        group -- The name of the group this test is a part of, for logging purposes
+        """
+        self._failures = 0
+        self._successes = 0
+        self._output = []
+
+        cib_file = None
+
+        with environ(self._env):
+            # If we were given a way to generate a CIB, do that now and add it to the
+            # environment.
+            if self._cib_gen is not None:
+                cib_file = self._cib_gen()
+                os.environ.update({"CIB_file": cib_file})
+
+            # Run the tests
+            for t in self.tests:
+                rc = t.run(group, valgrind=valgrind)
+
+                if isinstance(t, TestGroup):
+                    self._successes += t.successes
+                    self._failures += t.failures
+                else:
+                    if rc:
+                        self._successes += 1
+                    else:
+                        self._failures += 1
+
+                self._output.extend(t.output)
+
+            if cib_file is not None:
+                os.environ.pop("CIB_file")
+                os.unlink(cib_file)
+
+
 class RegressionTest:
     """A base class for testing a single command line tool."""
 
@@ -455,7 +538,7 @@ class RegressionTest:
 
     @property
     def tests(self):
-        """A list of Test instances to be run as part of this regression test."""
+        """A list of Test and TestGroup instances to be run as part of this regression test."""
         return []
 
     def cleanup(self):
@@ -499,7 +582,7 @@ class RegressionTest:
 
     def run(self, valgrind=False):
         """
-        Run all Test instances that are a part of this regression test.
+        Run all Test and TestGroup instances that are a part of this regression test.
 
         Additionally, record their stdout and stderr in the self.output property
         and the total number of tests that passed and failed.
@@ -511,10 +594,14 @@ class RegressionTest:
         for t in self.tests:
             rc = t.run(self.name, valgrind=valgrind)
 
-            if rc:
-                self._successes += 1
+            if isinstance(t, TestGroup):
+                self._successes += t.successes
+                self._failures += t.failures
             else:
-                self._failures += 1
+                if rc:
+                    self._successes += 1
+                else:
+                    self._failures += 1
 
             self._output.extend(t.output)
 
