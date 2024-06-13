@@ -28,6 +28,10 @@
 
 #include <libxml/relaxng.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!
  * \brief Base for directing lib{xml2,xslt} log into standard libqb backend
  *
@@ -586,5 +590,9 @@ pcmk__map_element_name(const xmlNode *xml)
         return (const char *) xml->name;
     }
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PCMK__CRM_COMMON_XML_INTERNAL__H

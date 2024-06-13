@@ -16,6 +16,10 @@
 
 #include <crm/common/results.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern const size_t pcmk__n_rc;
 
 int pcmk__result_bounds(enum pcmk_result_type, int *lower, int *upper);
@@ -104,5 +108,9 @@ pcmk__result_ok(const pcmk__action_result_t *result)
     return (result != NULL) && (result->exit_status == CRM_EX_OK)
             && (result->execution_status == PCMK_EXEC_DONE);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PCMK__COMMON_RESULTS_INTERNAL__H

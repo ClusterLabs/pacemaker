@@ -15,6 +15,10 @@
 
 #include <crm/common/xml_internal.h>    // enum xml_private_flags
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* internal ACL-related utilities */
 
 char *pcmk__uid2username(uid_t uid);
@@ -32,4 +36,8 @@ void pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user);
 bool pcmk__check_acl(xmlNode *xml, const char *name,
                      enum xml_private_flags mode);
 
-#endif /* PCMK__CRM_COMMON_INTERNAL__H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__CRM_COMMON_INTERNAL__H

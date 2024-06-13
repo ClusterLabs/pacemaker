@@ -8,14 +8,18 @@
  */
 
 #ifndef PCMK__CRM_CLUSTER_INTERNAL__H
-#  define PCMK__CRM_CLUSTER_INTERNAL__H
+#define PCMK__CRM_CLUSTER_INTERNAL__H
 
-#  include <stdbool.h>
-#  include <stdint.h>       // uint32_t, uint64_t
+#include <stdbool.h>
+#include <stdint.h>         // uint32_t, uint64_t
 
-#  include <glib.h>         // gboolean
+#include <glib.h>           // gboolean
 
-#  include <crm/cluster.h>
+#include <crm/cluster.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum crm_proc_flag {
     /* @COMPAT When pcmk__node_status_t:processes is made internal, we can merge
@@ -245,5 +249,9 @@ void pcmk__refresh_node_caches_from_cib(xmlNode *cib);
 
 pcmk__node_status_t *pcmk__get_node(unsigned int id, const char *uname,
                                     const char *uuid, uint32_t flags);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PCMK__CRM_CLUSTER_INTERNAL__H

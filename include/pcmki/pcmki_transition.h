@@ -179,4 +179,4 @@ lrmd_event_data_t *pcmk__event_from_graph_action(const xmlNode *resource,
 }
 #endif
 
-#endif
+#endif // PCMK__PCMKI_PCMKI_TRANSITION__H

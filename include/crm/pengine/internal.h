@@ -8,18 +8,22 @@
  */
 
 #ifndef PCMK__CRM_PENGINE_INTERNAL__H
-#  define PCMK__CRM_PENGINE_INTERNAL__H
+#define PCMK__CRM_PENGINE_INTERNAL__H
 
-#  include <stdbool.h>
-#  include <stdint.h>
-#  include <string.h>
-#  include <crm/common/xml.h>
-#  include <crm/pengine/status.h>
-#  include <crm/pengine/remote_internal.h>
-#  include <crm/common/internal.h>
-#  include <crm/common/options_internal.h>
-#  include <crm/common/output_internal.h>
-#  include <crm/common/scheduler_internal.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+#include <crm/common/xml.h>
+#include <crm/pengine/status.h>
+#include <crm/pengine/remote_internal.h>
+#include <crm/common/internal.h>
+#include <crm/common/options_internal.h>
+#include <crm/common/output_internal.h>
+#include <crm/common/scheduler_internal.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 const char *pe__resource_description(const pcmk_resource_t *rsc,
                                      uint32_t show_opts);
@@ -414,4 +418,8 @@ pe__health_score(const char *option, pcmk_scheduler_t *scheduler)
     return char2score(value);
 }
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__CRM_PENGINE_INTERNAL__H

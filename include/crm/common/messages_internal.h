@@ -16,6 +16,10 @@
 #include <crm/common/results_internal.h>    // pcmk__action_result_t
 #include <crm/common/xml_internal.h>        // pcmk__xml_copy()
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum pcmk__request_flags {
     pcmk__request_none          = UINT32_C(0),
 
@@ -119,5 +123,9 @@ pcmk__request_origin(const pcmk__request_t *request)
         return "(unspecified)";
     }
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PCMK__CRM_COMMON_MESSAGES_INTERNAL__H

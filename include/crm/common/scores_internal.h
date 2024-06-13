@@ -10,6 +10,14 @@
 #ifndef PCMK__CRM_COMMON_SCORES_INTERNAL__H
 #define PCMK__CRM_COMMON_SCORES_INTERNAL__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int pcmk__add_scores(int score1, int score2);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PCMK__CRM_COMMON_SCORES_INTERNAL__H

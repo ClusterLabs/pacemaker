@@ -18,6 +18,10 @@
 #include <crm/common/options.h> // PCMK_VALUE_TRUE, PCMK_VALUE_FALSE
 #include <crm/common/util.h>    // crm_strdup_printf
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* internal constants for generic string functions (from strings.c) */
 
 #define PCMK__PARSE_INT_DEFAULT -1
@@ -233,4 +237,8 @@ pcmk__btoa(bool condition)
     return condition? PCMK_VALUE_TRUE : PCMK_VALUE_FALSE;
 }
 
-#endif /* PCMK__CRM_COMMON_STRINGS_INTERNAL__H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__CRM_COMMON_STRINGS_INTERNAL__H

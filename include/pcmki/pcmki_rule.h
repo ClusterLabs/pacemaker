@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,11 +8,15 @@
  */
 
 #ifndef PCMK__PCMKI_PCMKI_RULE__H
-#  define PCMK__PCMKI_PCMKI_RULE__H
+#define PCMK__PCMKI_PCMKI_RULE__H
 
 #include <crm/crm.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/output_internal.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input,
                       const crm_time_t *date_time, const char **rule_ids);
@@ -36,5 +40,9 @@ pcmk__check_rule(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
     const char *rule_ids[] = {rule_id, NULL};
     return pcmk__check_rules(out, input, date, rule_ids);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PCMK__PCMKI_PCMKI_RULE__H

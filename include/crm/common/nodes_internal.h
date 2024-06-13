@@ -17,6 +17,10 @@
 #include <glib.h>
 #include <crm/common/nodes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Special node attributes
  */
@@ -190,5 +194,9 @@ pcmk__same_node(const pcmk_node_t *node1, const pcmk_node_t *node2)
     return (node1 != NULL) && (node2 != NULL)
            && (node1->private == node2->private);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // PCMK__CRM_COMMON_NODES_INTERNAL__H

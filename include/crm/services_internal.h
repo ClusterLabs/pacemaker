@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_SERVICES_INTERNAL__H
-#  define PCMK__CRM_SERVICES_INTERNAL__H
+#define PCMK__CRM_SERVICES_INTERNAL__H
 
 #include <crm/services.h>       // svc_action_t
 
@@ -57,8 +57,8 @@ void services__format_result(svc_action_t *action, int agent_status,
                              enum pcmk_exec_status exec_status,
                              const char *format, ...) G_GNUC_PRINTF(4, 5);
 
-#  ifdef __cplusplus
+#ifdef __cplusplus
 }
-#  endif
+#endif
 
-#endif                          /* PCMK__SERVICES_INTERNAL__H */
+#endif // PCMK__CRM_SERVICES_INTERNAL__H

@@ -10,10 +10,6 @@
 #ifndef PCMK__CRM_COMMON_IPC_INTERNAL__H
 #define PCMK__CRM_COMMON_IPC_INTERNAL__H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdbool.h>                // bool
 #include <stdint.h>                 // uint32_t, uint64_t, UINT64_C()
 #include <sys/uio.h>                // struct iovec
@@ -30,6 +26,10 @@ extern "C" {
 #include <crm/common/ipc_controld.h>    // pcmk_controld_api_reply
 #include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_{api_reply,state}
 #include <crm/common/mainloop.h>    // mainloop_io_t
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * XML attribute names used only by internal code
@@ -287,4 +287,4 @@ const char *pcmk__pcmkd_api_reply2str(enum pcmk_pacemakerd_api_reply reply);
 }
 #endif
 
-#endif
+#endif // PCMK__CRM_COMMON_IPC_INTERNAL__H

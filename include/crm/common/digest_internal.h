@@ -18,6 +18,10 @@
 
 #include <libxml/tree.h>    // xmlNode
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Digest comparison results
 enum pcmk__digest_result {
     pcmk__digest_unknown,   // No digest available for comparison
@@ -42,5 +46,9 @@ char *pcmk__digest_operation(xmlNode *input);
 char *pcmk__digest_xml(xmlNode *input, bool filter);
 
 bool pcmk__verify_digest(xmlNode *input, const char *expected);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // PCMK__CRM_COMMON_DIGEST_INTERNAL__H

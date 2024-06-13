@@ -16,6 +16,10 @@
 #include <ctype.h>
 #include <crm/common/iso8601.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct pcmk__time_us pcmk__time_hr_t;
 
 pcmk__time_hr_t *pcmk__time_hr_convert(pcmk__time_hr_t *target,
@@ -40,4 +44,8 @@ struct pcmk__time_us {
     int useconds;
 };
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__CRM_COMMON_ISO8601_INTERNAL__H

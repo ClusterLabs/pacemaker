@@ -21,6 +21,10 @@
 #include <crm/common/util.h>                // pcmk_parse_interval_spec()
 #include <crm/common/output_internal.h>     // pcmk__output_t
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 _Noreturn void pcmk__cli_help(char cmd);
 
 
@@ -247,5 +251,9 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 
 // @COMPAT Drop when daemon metadata commands are dropped
 #define PCMK__VALUE_TIME                    "time"
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PCMK__OPTIONS_INTERNAL__H

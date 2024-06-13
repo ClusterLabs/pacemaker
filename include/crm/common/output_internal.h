@@ -1016,4 +1016,4 @@ GHashTable *pcmk__output_formatters(void);
 }
 #endif
 
-#endif
+#endif // PCMK__CRM_COMMON_OUTPUT_INTERNAL__H
