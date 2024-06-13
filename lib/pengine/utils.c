@@ -400,11 +400,11 @@ time_t
 get_effective_time(pcmk_scheduler_t *scheduler)
 {
     if(scheduler) {
-        if (scheduler->now == NULL) {
+        if (scheduler->priv->now == NULL) {
             crm_trace("Recording a new 'now'");
-            scheduler->now = crm_time_new(NULL);
+            scheduler->priv->now = crm_time_new(NULL);
         }
-        return crm_time_get_seconds_since_epoch(scheduler->now);
+        return crm_time_get_seconds_since_epoch(scheduler->priv->now);
     }
 
     crm_trace("Defaulting to 'now'");

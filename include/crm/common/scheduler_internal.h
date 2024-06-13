@@ -167,6 +167,9 @@ enum pcmk__scheduler_flags {
 
 // Implementation of pcmk__scheduler_private_t
 struct pcmk__scheduler_private {
+    // Be careful about when each piece of information is available and final
+
+    crm_time_t *now;                // Time to use when evaluating rules
     pcmk__output_t *out;            // Output object for displaying messages
 };
 

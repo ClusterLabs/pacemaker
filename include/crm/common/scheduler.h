@@ -81,7 +81,6 @@ struct pcmk__scheduler {
     //! \deprecated Set scheduler input with pcmk_set_scheduler_cib() instead
     xmlNode *input;                 // CIB XML
 
-    crm_time_t *now;                // Current time for evaluation purposes
     char *dc_uuid;                  // Node ID of designated controller
 
     // NOTE: sbd (as of at least 1.5.2) uses this

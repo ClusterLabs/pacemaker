@@ -897,7 +897,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
     // cluster_status() populates with the current time
     if (date != NULL) {
         // pcmk_copy_time() guarantees non-NULL
-        new_scheduler->now = pcmk_copy_time(date);
+        new_scheduler->priv->now = pcmk_copy_time(date);
     }
 
     // Unpack everything

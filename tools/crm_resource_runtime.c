@@ -1320,7 +1320,7 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  *
  * \return Standard Pacemaker return code
  * \note On success, caller is responsible for freeing memory allocated for
- *       scheduler->now.
+ *       scheduler->priv->now.
  */
 int
 update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
@@ -1329,7 +1329,7 @@ update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
 
     if (rc == pcmk_rc_ok) {
         scheduler->input = *xml;
-        scheduler->now = crm_time_new(NULL);
+        scheduler->priv->now = crm_time_new(NULL);
     }
     return pcmk_rc_ok;
 }
@@ -1343,7 +1343,7 @@ update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
  *
  * \return Standard Pacemaker return code
  * \note On success, caller is responsible for freeing memory allocated for
- *       scheduler->input and scheduler->now.
+ *       scheduler->input and scheduler->priv->now.
  */
 static int
 update_scheduler_input_to_cib(pcmk__output_t *out, pcmk_scheduler_t *scheduler,

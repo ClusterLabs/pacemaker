@@ -222,7 +222,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .now = scheduler->now,
+        .now = scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
@@ -4898,7 +4898,7 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .now = scheduler->now,
+        .now = scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL

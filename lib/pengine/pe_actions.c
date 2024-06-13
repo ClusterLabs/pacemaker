@@ -246,7 +246,7 @@ pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_attrs,
-        .now = scheduler->now,
+        .now = scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
@@ -700,7 +700,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
          */
         .node_hash = (node == NULL)? NULL : node->priv->attrs,
 
-        .now = rsc->priv->scheduler->now,
+        .now = rsc->priv->scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
         .op_data = &op_rule_data,
@@ -806,7 +806,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         str = g_hash_table_lookup(meta, PCMK_META_INTERVAL_ORIGIN);
         if (unpack_interval_origin(str, action_config, interval_ms,
-                                   rsc->priv->scheduler->now,
+                                   rsc->priv->scheduler->priv->now,
                                    &start_delay)) {
             g_hash_table_insert(meta, pcmk__str_copy(PCMK_META_START_DELAY),
                                 crm_strdup_printf("%lld", start_delay));

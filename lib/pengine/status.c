@@ -123,8 +123,8 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
     scheduler->failed = pcmk__xe_create(NULL, "failed-ops");
 
-    if (scheduler->now == NULL) {
-        scheduler->now = crm_time_new(NULL);
+    if (scheduler->priv->now == NULL) {
+        scheduler->priv->now = crm_time_new(NULL);
     }
 
     if (scheduler->dc_uuid == NULL) {
@@ -363,7 +363,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     pe__free_param_checks(scheduler);
     g_list_free(scheduler->stop_needed);
     pcmk__xml_free(scheduler->graph);
-    crm_time_free(scheduler->now);
+    crm_time_free(scheduler->priv->now);
     pcmk__xml_free(scheduler->input);
     pcmk__xml_free(scheduler->failed);
 

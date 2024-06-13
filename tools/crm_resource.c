@@ -2021,7 +2021,7 @@ main(int argc, char **argv)
 
             } else {
                 pe_rule_eval_data_t rule_data = {
-                    .now = scheduler->now,
+                    .now = scheduler->priv->now,
                 };
 
                 params = pcmk__strkey_table(free, free);

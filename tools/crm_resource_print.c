@@ -25,7 +25,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
     xmlNode *lifetime = NULL;
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
     pcmk_rule_input_t rule_input = {
-        .now = scheduler->now,
+        .now = scheduler->priv->now,
     };
 
     if (id == NULL) {
