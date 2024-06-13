@@ -58,6 +58,9 @@ enum pcmk__scheduler_flags {
     // Whether cluster is symmetric (via symmetric-cluster property)
     pcmk__sched_symmetric_cluster       = (1ULL << 1),
 
+    // Whether scheduling encountered a non-configuration error
+    pcmk__sched_processing_error        = (1ULL << 2),
+
     // Whether cluster is in maintenance mode (via maintenance-mode property)
     pcmk__sched_in_maintenance          = (1ULL << 3),
 
@@ -199,9 +202,10 @@ extern uint32_t pcmk__warnings;
  * \param[in,out] scheduler  Scheduler data
  * \param[in]     fmt...     printf(3)-style format and arguments
  */
-#define pcmk__sched_err(scheduler, fmt...) do {     \
-        was_processing_error = TRUE;                \
-        crm_err(fmt);                               \
+#define pcmk__sched_err(scheduler, fmt...) do {                     \
+        pcmk__set_scheduler_flags((scheduler),                      \
+                                  pcmk__sched_processing_error);    \
+        crm_err(fmt);                                               \
     } while (0)
 
 /*!

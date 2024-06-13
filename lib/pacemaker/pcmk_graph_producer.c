@@ -954,7 +954,8 @@ void
 pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
                              const char *filename)
 {
-    if (was_processing_error || crm_config_error) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_error)
+        || crm_config_error) {
         crm_err("Calculated transition %d (with errors)%s%s",
                 transition_id,
                 (filename == NULL)? "" : ", saving inputs in ",

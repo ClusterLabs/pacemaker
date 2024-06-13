@@ -28,13 +28,6 @@ init_working_set(void)
     pcmk_scheduler_t *scheduler = pe_new_working_set();
 
     pcmk__mem_assert(scheduler);
-
-    crm_config_error = FALSE;
-    crm_config_warning = FALSE;
-
-    was_processing_error = FALSE;
-    was_processing_warning = FALSE;
-
     scheduler->priv = logger_out;
     return scheduler;
 }
@@ -104,7 +97,8 @@ handle_pecalc_request(pcmk__request_t *request)
     }
 
     // Get appropriate index into series[] array
-    if (was_processing_error || crm_config_error) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_error)
+        || crm_config_error) {
         series_id = 0;
     } else if (was_processing_warning || crm_config_warning) {
         series_id = 1;

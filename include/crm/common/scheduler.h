@@ -156,7 +156,6 @@ struct pe_working_set_s {
  */
 //!@{
 //! \deprecated Do not use
-extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
 //!@}
 
