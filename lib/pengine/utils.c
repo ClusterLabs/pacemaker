@@ -177,7 +177,7 @@ static void
 pe__output_node_weights(const pcmk_resource_t *rsc, const char *comment,
                         GHashTable *nodes, pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
 
     // Sort the nodes so the output is consistent for regression tests
     GList *list = g_list_sort(g_hash_table_get_values(nodes),

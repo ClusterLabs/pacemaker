@@ -46,7 +46,7 @@ fenced_scheduler_init(void)
     pe__register_messages(logger);
     pcmk__register_lib_messages(logger);
     pcmk__output_set_log_level(logger, LOG_TRACE);
-    scheduler->priv = logger;
+    scheduler->priv->out = logger;
 
     return pcmk_rc_ok;
 }
@@ -59,12 +59,12 @@ void
 fenced_scheduler_cleanup(void)
 {
     if (scheduler != NULL) {
-        pcmk__output_t *logger = scheduler->priv;
+        pcmk__output_t *logger = scheduler->priv->out;
 
         if (logger != NULL) {
             logger->finish(logger, CRM_EX_OK, true, NULL);
             pcmk__output_free(logger);
-            scheduler->priv = NULL;
+            scheduler->priv->out = NULL;
         }
         pe_free_working_set(scheduler);
         scheduler = NULL;

@@ -1299,8 +1299,8 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                     optional = FALSE;
                     crm_notice("Unfencing node %s because the definition of "
                                "%s changed", pcmk__node_name(node), match->id);
-                    if (!pcmk__is_daemon && scheduler->priv != NULL) {
-                        pcmk__output_t *out = scheduler->priv;
+                    if (!pcmk__is_daemon && (scheduler->priv->out != NULL)) {
+                        pcmk__output_t *out = scheduler->priv->out;
 
                         out->info(out,
                                   "notice: Unfencing node %s because the "

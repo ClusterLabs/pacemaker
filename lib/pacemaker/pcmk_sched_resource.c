@@ -326,7 +326,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
 
     CRM_ASSERT(rsc != NULL);
 
-    out = rsc->priv->scheduler->priv;
+    out = rsc->priv->scheduler->priv->out;
     if (rsc->priv->children != NULL) {
 
         for (GList *iter = rsc->priv->children;
@@ -517,7 +517,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     pcmk__consume_node_capacity(node->priv->utilization, rsc);
 
     if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
-        pcmk__output_t *out = scheduler->priv;
+        pcmk__output_t *out = scheduler->priv->out;
 
         out->message(out, "resource-util", rsc, node, __func__);
     }

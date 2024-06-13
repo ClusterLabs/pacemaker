@@ -632,7 +632,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     int rc = pcmk_ok;
     const GList *iter = NULL;
     xmlNode *cib_node = NULL;
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
 
     out->message(out, "inject-modify-config", injections->quorum,
                  injections->watchdog);

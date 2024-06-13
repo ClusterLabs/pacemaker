@@ -933,9 +933,10 @@ show_promotion_score(pcmk_resource_t *instance)
     score_s = pcmk_readable_score(instance->priv->promotion_priority);
     if (pcmk_is_set(instance->priv->scheduler->flags,
                     pcmk__sched_output_scores)
-        && !pcmk__is_daemon && (instance->priv->scheduler->priv != NULL)) {
+        && !pcmk__is_daemon
+        && (instance->priv->scheduler->priv->out != NULL)) {
 
-        pcmk__output_t *out = instance->priv->scheduler->priv;
+        pcmk__output_t *out = instance->priv->scheduler->priv->out;
 
         out->message(out, "promotion-score", instance, chosen, score_s);
 

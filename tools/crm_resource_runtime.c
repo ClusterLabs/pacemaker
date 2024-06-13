@@ -368,7 +368,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                  const char *attr_value, gboolean recursive, cib_t *cib,
                  gboolean force, GList **results)
 {
-    pcmk__output_t *out = rsc->priv->scheduler->priv;
+    pcmk__output_t *out = rsc->priv->scheduler->priv->out;
     int rc = pcmk_rc_ok;
 
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
@@ -524,7 +524,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
     int rc = pcmk_rc_ok;
 
     GList *results = NULL;
-    pcmk__output_t *out = rsc->priv->scheduler->priv;
+    pcmk__output_t *out = rsc->priv->scheduler->priv->out;
 
     /* If we were asked to update the attribute in a resource element (for
      * instance, <primitive class="ocf">) there's really not much we need to do.
@@ -564,7 +564,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_id, const char *attr_name,
                               cib_t *cib, int cib_options, gboolean force)
 {
-    pcmk__output_t *out = rsc->priv->scheduler->priv;
+    pcmk__output_t *out = rsc->priv->scheduler->priv->out;
     int rc = pcmk_rc_ok;
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
 
@@ -659,7 +659,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
                 const char *host_uname, const char *rsc_id,
                 pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     const char *router_node = host_uname;
     const char *rsc_api_id = NULL;
     const char *rsc_long_id = NULL;
@@ -890,7 +890,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
                     const char *interval_spec, bool just_failures,
                     pcmk_scheduler_t *scheduler, gboolean force)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     int rc = pcmk_rc_ok;
     pcmk_node_t *node = NULL;
 
@@ -1002,7 +1002,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                 const char *operation, const char *interval_spec,
                 pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
     const char *display_name = node_name? node_name : "all nodes";
@@ -1378,7 +1378,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
     cib_t *shadow_cib = NULL;
     int rc = pcmk_rc_ok;
 
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
 
     pe_reset_working_set(scheduler);
     pcmk__set_scheduler_flags(scheduler,
@@ -1675,7 +1675,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         goto done;
     }
 
-    scheduler->priv = out;
+    scheduler->priv->out = out;
     rc = update_dataset(cib, scheduler, false);
 
     if(rc != pcmk_rc_ok) {
@@ -2249,7 +2249,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                      guint timeout_ms, cib_t *cib, pcmk_scheduler_t *scheduler,
                      int resource_verbose, gboolean force, int check_level)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     crm_exit_t exit_code = CRM_EX_OK;
     const char *rid = requested_name;
     const char *rtype = NULL;
@@ -2316,7 +2316,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                   int cib_options, pcmk_scheduler_t *scheduler,
                   gboolean promoted_role_only, gboolean force)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
     pcmk_node_t *current = NULL;

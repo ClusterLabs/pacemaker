@@ -669,7 +669,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
 static void
 log_resource_details(pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     GList *all = NULL;
 
     /* Due to the `crm_mon --node=` feature, out->message() for all the
@@ -698,7 +698,7 @@ log_all_actions(pcmk_scheduler_t *scheduler)
     /* This only ever outputs to the log, so ignore whatever output object was
      * previously set and just log instead.
      */
-    pcmk__output_t *prev_out = scheduler->priv;
+    pcmk__output_t *prev_out = scheduler->priv->out;
     pcmk__output_t *out = NULL;
 
     if (pcmk__log_output_new(&out) != pcmk_rc_ok) {
@@ -708,7 +708,7 @@ log_all_actions(pcmk_scheduler_t *scheduler)
     pe__register_messages(out);
     pcmk__register_lib_messages(out);
     pcmk__output_set_log_level(out, LOG_NOTICE);
-    scheduler->priv = out;
+    scheduler->priv->out = out;
 
     out->begin_list(out, NULL, NULL, "Actions");
     pcmk__output_actions(scheduler);
@@ -716,7 +716,7 @@ log_all_actions(pcmk_scheduler_t *scheduler)
     out->finish(out, CRM_EX_OK, true, NULL);
     pcmk__output_free(out);
 
-    scheduler->priv = prev_out;
+    scheduler->priv->out = prev_out;
 }
 
 /*!

@@ -35,9 +35,15 @@ pe_new_working_set(void)
 {
     pcmk_scheduler_t *scheduler = calloc(1, sizeof(pcmk_scheduler_t));
 
-    if (scheduler != NULL) {
-        set_working_set_defaults(scheduler);
+    if (scheduler == NULL) {
+        return NULL;
     }
+    scheduler->priv = calloc(1, sizeof(pcmk__scheduler_private_t));
+    if (scheduler->priv == NULL) {
+        free(scheduler);
+        return NULL;
+    }
+    set_working_set_defaults(scheduler);
     return scheduler;
 }
 
@@ -51,7 +57,7 @@ pe_free_working_set(pcmk_scheduler_t *scheduler)
 {
     if (scheduler != NULL) {
         pe_reset_working_set(scheduler);
-        scheduler->priv = NULL;
+        free(scheduler->priv);
         free(scheduler);
     }
 }
@@ -407,17 +413,22 @@ pe_reset_working_set(pcmk_scheduler_t *scheduler)
 void
 set_working_set_defaults(pcmk_scheduler_t *scheduler)
 {
-    void *priv = scheduler->priv;
+    // These members must be preserved
+    pcmk__scheduler_private_t *priv = scheduler->priv;
+    pcmk__output_t *out = priv->out;
 
+    // Wipe the main structs (any other members must have previously been freed)
     memset(scheduler, 0, sizeof(pcmk_scheduler_t));
+    memset(priv, 0, sizeof(pcmk__scheduler_private_t));
 
+    // Restore the members to preserve
     scheduler->priv = priv;
+    scheduler->priv->out = out;
+
+    // Set defaults for everything else
     scheduler->order_id = 1;
     scheduler->action_id = 1;
     scheduler->no_quorum_policy = pcmk_no_quorum_stop;
-
-    scheduler->flags = 0x0ULL;
-
     pcmk__set_scheduler_flags(scheduler,
                               pcmk__sched_symmetric_cluster
                               |pcmk__sched_stop_removed_resources

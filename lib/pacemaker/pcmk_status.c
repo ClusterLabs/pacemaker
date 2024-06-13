@@ -105,7 +105,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_compat);
 
     scheduler->input = cib_copy;
-    scheduler->priv = out;
+    scheduler->priv->out = out;
     cluster_status(scheduler);
 
     if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {

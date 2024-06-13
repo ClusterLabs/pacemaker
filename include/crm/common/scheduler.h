@@ -64,8 +64,14 @@ enum pe_quorum_policy {
 #endif
 };
 
-// Implementation of pcmk_scheduler_t
-// @COMPAT Make contents internal when we can break API backward compatibility
+//! \internal Do not use
+typedef struct pcmk__scheduler_private pcmk__scheduler_private_t;
+
+/* Implementation of pcmk_scheduler_t
+ *
+ * @COMPAT Drop this struct once all members are moved to
+ * pcmk__scheduler_private_t, and repoint pcmk_scheduler_t to that
+ */
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 struct pe_working_set_s {
@@ -140,8 +146,7 @@ struct pe_working_set_s {
     guint shutdown_lock;            // How long to lock resources (seconds)
     int priority_fencing_delay;     // Priority fencing delay
 
-    // pcmk__output_t *
-    void *priv;                     // For Pacemaker use only
+    pcmk__scheduler_private_t *priv;    // For Pacemaker use only
 
     guint node_pending_timeout;     // Pending join times out after this (ms)
 };

@@ -28,7 +28,7 @@ extern "C" {
  *        CIB file in a given directory, printing the profiling timings for
  *        each.
  *
- * \note \p scheduler->priv must have been set to a valid \p pcmk__output_t
+ * \note \p scheduler->priv->out must have been set to a valid \p pcmk__output_t
  *       object before this function is called.
  *
  * \param[in]     dir        A directory full of CIB files to be profiled

@@ -1407,7 +1407,7 @@ pcmk__deduplicate_action_inputs(pcmk_action_t *action)
 void
 pcmk__output_actions(pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
 
     // Output node (non-resource) actions
     for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
@@ -1661,8 +1661,8 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                                         rsc->priv->scheduler);
 
     if (only_sanitized_changed(xml_op, digest_data, rsc->priv->scheduler)) {
-        if (!pcmk__is_daemon && (rsc->priv->scheduler->priv != NULL)) {
-            pcmk__output_t *out = rsc->priv->scheduler->priv;
+        if (!pcmk__is_daemon && (rsc->priv->scheduler->priv->out != NULL)) {
+            pcmk__output_t *out = rsc->priv->scheduler->priv->out;
 
             out->info(out,
                       "Only 'private' parameters to %s-interval %s for %s "

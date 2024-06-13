@@ -21,7 +21,7 @@ static int
 print_constraint(xmlNode *xml_obj, void *userdata)
 {
     pcmk_scheduler_t *scheduler = (pcmk_scheduler_t *) userdata;
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     xmlNode *lifetime = NULL;
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
     pcmk_rule_input_t rule_input = {
@@ -97,7 +97,7 @@ int
 cli_resource_print_operations(const char *rsc_id, const char *host_uname,
                               bool active, pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     int rc = pcmk_rc_no_output;
     GList *ops = find_operations(rsc_id, host_uname, active, scheduler);
 
@@ -122,7 +122,7 @@ int
 cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
                    bool expanded)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     uint32_t show_opts = pcmk_show_pending;
     GList *all = NULL;
 

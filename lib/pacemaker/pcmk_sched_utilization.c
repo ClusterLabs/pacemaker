@@ -470,7 +470,7 @@ pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *scheduler)
     for (const GList *iter = scheduler->nodes;
          iter != NULL; iter = iter->next) {
         const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
-        pcmk__output_t *out = scheduler->priv;
+        pcmk__output_t *out = scheduler->priv->out;
 
         out->message(out, "node-capacity", node, desc);
     }

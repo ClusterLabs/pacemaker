@@ -28,7 +28,7 @@ init_working_set(void)
     pcmk_scheduler_t *scheduler = pe_new_working_set();
 
     pcmk__mem_assert(scheduler);
-    scheduler->priv = logger_out;
+    scheduler->priv->out = logger_out;
     return scheduler;
 }
 

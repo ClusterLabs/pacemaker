@@ -139,7 +139,7 @@ print_cluster_status(pcmk_scheduler_t *scheduler, uint32_t show_opts,
                      uint32_t section_opts, const char *title,
                      bool print_spacer)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     GList *all = NULL;
     crm_exit_t stonith_rc = 0;
     enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
@@ -170,7 +170,7 @@ print_cluster_status(pcmk_scheduler_t *scheduler, uint32_t show_opts,
 static void
 print_transition_summary(pcmk_scheduler_t *scheduler, bool print_spacer)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
 
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "Transition Summary");
@@ -193,7 +193,7 @@ reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
       const char *use_date, unsigned int flags)
 {
     scheduler->input = input;
-    scheduler->priv = out;
+    scheduler->priv->out = out;
     set_effective_date(scheduler, true, use_date);
     if (pcmk_is_set(flags, pcmk_sim_sanitized)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_sanitized);
@@ -318,7 +318,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
  * \brief Profile the configuration updates and scheduler actions in a single
  *        CIB file, printing the profiling timings.
  *
- * \note \p scheduler->priv must have been set to a valid \p pcmk__output_t
+ * \note \p scheduler->priv->out must have been set to a valid \p pcmk__output_t
  *       object before this function is called.
  *
  * \param[in]     xml_file   The CIB file to profile
@@ -330,7 +330,7 @@ static void
 profile_file(const char *xml_file, long long repeat,
              pcmk_scheduler_t *scheduler, const char *use_date)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     xmlNode *cib_object = NULL;
     clock_t start = 0;
     clock_t end;
@@ -382,7 +382,7 @@ void
 pcmk__profile_dir(const char *dir, long long repeat,
                   pcmk_scheduler_t *scheduler, const char *use_date)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     struct dirent **namelist;
 
     int file_num = scandir(dir, &namelist, 0, alphasort);
@@ -422,7 +422,7 @@ pcmk__profile_dir(const char *dir, long long repeat,
  * \brief Set the date of the cluster, either to the value given by
  *        \p use_date, or to the \c PCMK_XA_EXECUTION_DATE value in the CIB.
  *
- * \note \p scheduler->priv must have been set to a valid \p pcmk__output_t
+ * \note \p scheduler->priv->out must have been set to a valid \p pcmk__output_t
  *       object before this function is called.
  *
  * \param[in,out] scheduler       Scheduler data
@@ -435,7 +435,7 @@ static void
 set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
                    const char *use_date)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     time_t original_date = 0;
 
     CRM_ASSERT(out != NULL);
@@ -750,7 +750,7 @@ pcmk__simulate_transition(pcmk_scheduler_t *scheduler, cib_t *cib,
         simulate_fencing_action,
     };
 
-    out = scheduler->priv;
+    out = scheduler->priv->out;
 
     fake_cib = cib;
     fake_op_fail_list = op_fail_list;
@@ -915,7 +915,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             }
             pe__register_messages(logger_out);
             pcmk__register_lib_messages(logger_out);
-            scheduler->priv = logger_out;
+            scheduler->priv->out = logger_out;
         }
 
         pcmk__schedule_actions(input, scheduler_flags, scheduler);
@@ -925,7 +925,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         } else {
             logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
             pcmk__output_free(logger_out);
-            scheduler->priv = out;
+            scheduler->priv->out = out;
         }
 
         input = NULL;           /* Don't try and free it twice */

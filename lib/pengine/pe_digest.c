@@ -576,8 +576,9 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
     if (unfencing_digest_matches(rsc->id, agent, data->digest_secure_calc,
                                  node_summary)) {
         data->rc = pcmk__digest_match;
-        if (!pcmk__is_daemon && scheduler->priv != NULL) {
-            pcmk__output_t *out = scheduler->priv;
+        if (!pcmk__is_daemon && (scheduler->priv->out != NULL)) {
+            pcmk__output_t *out = scheduler->priv->out;
+
             out->info(out, "Only 'private' parameters to %s "
                       "for unfencing %s changed", rsc->id,
                       pcmk__node_name(node));
@@ -590,8 +591,8 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
     if (pcmk_is_set(scheduler->flags, pcmk__sched_sanitized)
         && (data->digest_secure_calc != NULL)) {
 
-        if (scheduler->priv != NULL) {
-            pcmk__output_t *out = scheduler->priv;
+        if (scheduler->priv->out != NULL) {
+            pcmk__output_t *out = scheduler->priv->out;
             char *digest = create_unfencing_summary(rsc->id, agent,
                                                     data->digest_secure_calc);
 

@@ -165,6 +165,11 @@ enum pcmk__scheduler_flags {
     pcmk__sched_validate_only           = (1ULL << 27),
 };
 
+// Implementation of pcmk__scheduler_private_t
+struct pcmk__scheduler_private {
+    pcmk__output_t *out;            // Output object for displaying messages
+};
+
 // Group of enum pcmk__warnings flags for warnings we want to log once
 extern uint32_t pcmk__warnings;
 
