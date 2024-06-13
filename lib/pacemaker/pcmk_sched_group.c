@@ -645,11 +645,6 @@ pcmk__group_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
              * 0 score will not affect these members' allowed node scores, it
              * ensures that affected nodes are in each member's allowed nodes,
              * enabling the member on those nodes in asymmetric clusters.
-             *
-             * This is suboptimal if a group member other than the first is
-             * explicitly colocated with another resource. In that case, when
-             * the colocation primary is assigned, it will not consider the
-             * group's location preferences.
              */
             location->nodes = node_list_copy;
         }
