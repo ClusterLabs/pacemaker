@@ -54,14 +54,15 @@ add_attribute_xml(pcmk_scheduler_t *scheduler, const char *ticket_id,
     char *key = NULL;
     char *value = NULL;
 
-    pcmk_ticket_t *ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
+    pcmk__ticket_t *ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
 
     g_hash_table_iter_init(&hash_iter, attr_set);
     while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
         crm_xml_add(*ticket_state_xml, key, value);
 
         if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)
-            && (ticket == NULL || ticket->granted == FALSE)
+            && ((ticket == NULL)
+                || !pcmk_is_set(ticket->flags, pcmk__ticket_granted))
             && crm_is_true(value)) {
 
             char *now = pcmk__ttoa(time(NULL));
@@ -188,13 +189,14 @@ pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler
     }
 
     if (!force) {
-        pcmk_ticket_t *ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
+        pcmk__ticket_t *ticket = g_hash_table_lookup(scheduler->tickets,
+                                                     ticket_id);
 
         if (ticket == NULL) {
             return ENXIO;
         }
 
-        if (ticket->granted) {
+        if (pcmk_is_set(ticket->flags, pcmk__ticket_granted)) {
             return EACCES;
         }
     }
@@ -260,7 +262,7 @@ pcmk__ticket_get_attr(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
 {
     int rc = pcmk_rc_ok;
     const char *attr_value = NULL;
-    pcmk_ticket_t *ticket = NULL;
+    pcmk__ticket_t *ticket = NULL;
 
     CRM_ASSERT(out != NULL && scheduler != NULL);
 
@@ -316,7 +318,8 @@ pcmk__ticket_info(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
 
     if (ticket_id != NULL) {
         GHashTable *tickets = NULL;
-        pcmk_ticket_t *ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
+        pcmk__ticket_t *ticket = g_hash_table_lookup(scheduler->tickets,
+                                                     ticket_id);
 
         if (ticket == NULL) {
             return ENXIO;

@@ -21,6 +21,7 @@
 
 #include <crm/crm.h>  /* transitively imports qblog.h */
 #include <crm/common/output_internal.h>
+#include <crm/common/xml_idref_internal.h>
 #include <crm/common/xml_io_internal.h>
 #include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
 #include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE
@@ -209,8 +210,6 @@ const char *pcmk__xe_add_last_written(xmlNode *xe);
 xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                               const char *attr_n, const char *attr_v);
 
-
-xmlNode *pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search);
 
 void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 bool pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data);

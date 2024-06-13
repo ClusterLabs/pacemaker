@@ -511,7 +511,7 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
 void
 destroy_ticket(gpointer data)
 {
-    pcmk_ticket_t *ticket = data;
+    pcmk__ticket_t *ticket = data;
 
     if (ticket->state) {
         g_hash_table_destroy(ticket->state);
@@ -520,10 +520,10 @@ destroy_ticket(gpointer data)
     free(ticket);
 }
 
-pcmk_ticket_t *
+pcmk__ticket_t *
 ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 {
-    pcmk_ticket_t *ticket = NULL;
+    pcmk__ticket_t *ticket = NULL;
 
     if (pcmk__str_empty(ticket_id)) {
         return NULL;
@@ -536,7 +536,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
     ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
     if (ticket == NULL) {
 
-        ticket = calloc(1, sizeof(pcmk_ticket_t));
+        ticket = calloc(1, sizeof(pcmk__ticket_t));
         if (ticket == NULL) {
             pcmk__sched_err("Cannot allocate ticket '%s'", ticket_id);
             return NULL;
@@ -545,9 +545,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
         crm_trace("Creating ticket entry for %s", ticket_id);
 
         ticket->id = strdup(ticket_id);
-        ticket->granted = FALSE;
         ticket->last_granted = -1;
-        ticket->standby = FALSE;
         ticket->state = pcmk__strkey_table(free, free);
 
         g_hash_table_insert(scheduler->tickets, strdup(ticket->id), ticket);
@@ -634,44 +632,6 @@ trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
             }
         }
     }
-}
-
-gboolean
-add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
-{
-    pcmk_tag_t *tag = NULL;
-    GList *gIter = NULL;
-    gboolean is_existing = FALSE;
-
-    CRM_CHECK(tags && tag_name && obj_ref, return FALSE);
-
-    tag = g_hash_table_lookup(tags, tag_name);
-    if (tag == NULL) {
-        tag = calloc(1, sizeof(pcmk_tag_t));
-        if (tag == NULL) {
-            pcmk__sched_err("Could not allocate memory for tag %s", tag_name);
-            return FALSE;
-        }
-        tag->id = strdup(tag_name);
-        tag->refs = NULL;
-        g_hash_table_insert(tags, strdup(tag_name), tag);
-    }
-
-    for (gIter = tag->refs; gIter != NULL; gIter = gIter->next) {
-        const char *existing_ref = (const char *) gIter->data;
-
-        if (pcmk__str_eq(existing_ref, obj_ref, pcmk__str_none)){
-            is_existing = TRUE;
-            break;
-        }
-    }
-
-    if (is_existing == FALSE) {
-        tag->refs = g_list_append(tag->refs, strdup(obj_ref));
-        crm_trace("Added: tag=%s ref=%s", tag->id, obj_ref);
-    }
-
-    return TRUE;
 }
 
 /*!

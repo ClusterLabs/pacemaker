@@ -824,18 +824,6 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
     }
 }
 
-static void
-destroy_tag(gpointer data)
-{
-    pcmk_tag_t *tag = data;
-
-    if (tag) {
-        free(tag->id);
-        g_list_free_full(tag->refs, free);
-        free(tag);
-    }
-}
-
 /*!
  * \internal
  * \brief Parse configuration XML for resource information
@@ -854,7 +842,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
     xmlNode *xml_obj = NULL;
     GList *gIter = NULL;
 
-    scheduler->template_rsc_sets = pcmk__strkey_table(free, destroy_tag);
+    scheduler->template_rsc_sets = pcmk__strkey_table(free, pcmk__free_idref);
 
     for (xml_obj = pcmk__xe_first_child(xml_resources, NULL, NULL, NULL);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
@@ -919,7 +907,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_tag = NULL;
 
-    scheduler->tags = pcmk__strkey_table(free, destroy_tag);
+    scheduler->tags = pcmk__strkey_table(free, pcmk__free_idref);
 
     for (xml_tag = pcmk__xe_first_child(xml_tags, NULL, NULL, NULL);
          xml_tag != NULL; xml_tag = pcmk__xe_next(xml_tag)) {
@@ -952,9 +940,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
                 continue;
             }
 
-            if (add_tag_ref(scheduler->tags, tag_id, obj_ref) == FALSE) {
-                return FALSE;
-            }
+            pcmk__add_idref(scheduler->tags, tag_id, obj_ref);
         }
     }
 
@@ -972,7 +958,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
     const char *standby = NULL;
     xmlAttrPtr xIter = NULL;
 
-    pcmk_ticket_t *ticket = NULL;
+    pcmk__ticket_t *ticket = NULL;
 
     ticket_id = pcmk__xe_id(xml_ticket);
     if (pcmk__str_empty(ticket_id)) {
@@ -1001,10 +987,10 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
 
     granted = g_hash_table_lookup(ticket->state, PCMK__XA_GRANTED);
     if (granted && crm_is_true(granted)) {
-        ticket->granted = TRUE;
+        pcmk__set_ticket_flags(ticket, pcmk__ticket_granted);
         crm_info("We have ticket '%s'", ticket->id);
     } else {
-        ticket->granted = FALSE;
+        pcmk__clear_ticket_flags(ticket, pcmk__ticket_granted);
         crm_info("We do not have ticket '%s'", ticket->id);
     }
 
@@ -1018,12 +1004,12 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
 
     standby = g_hash_table_lookup(ticket->state, PCMK_XA_STANDBY);
     if (standby && crm_is_true(standby)) {
-        ticket->standby = TRUE;
-        if (ticket->granted) {
+        pcmk__set_ticket_flags(ticket, pcmk__ticket_standby);
+        if (pcmk_is_set(ticket->flags, pcmk__ticket_granted)) {
             crm_info("Granted ticket '%s' is in standby-mode", ticket->id);
         }
     } else {
-        ticket->standby = FALSE;
+        pcmk__clear_ticket_flags(ticket, pcmk__ticket_standby);
     }
 
     crm_trace("Done with ticket state for %s", ticket_id);

@@ -242,7 +242,7 @@ pcmk_resource_t *find_clone_instance(const pcmk_resource_t *rsc,
                                      const char *sub_id);
 
 extern void destroy_ticket(gpointer data);
-pcmk_ticket_t *ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler);
+pcmk__ticket_t *ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler);
 
 // Resources for manipulating resource names
 const char *pe_base_name_end(const char *id);
@@ -298,8 +298,6 @@ void pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_on_all(pcmk_scheduler_t *scheduler,
                                      uint64_t flag);
-
-gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 
 int pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int options);
 void pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,

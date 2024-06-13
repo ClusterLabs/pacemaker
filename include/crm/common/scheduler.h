@@ -22,8 +22,6 @@
 #include <crm/common/roles.h>
 #include <crm/common/rules.h>
 #include <crm/common/scheduler_types.h>
-#include <crm/common/tags.h>
-#include <crm/common/tickets.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -250,7 +248,7 @@ struct pe_working_set_s {
     // @COMPAT Replace this with a fencer variable (only place it's used)
     const char *localhost;          // \deprecated Do not use
 
-    GHashTable *tags;               // Configuration tags (ID -> pcmk_tag_t *)
+    GHashTable *tags;               // Configuration tags (ID -> pcmk__idref_t*)
     int blocked_resources;          // Number of blocked resources in cluster
     int disabled_resources;         // Number of disabled resources in cluster
     GList *param_check;             // History entries that need to be checked

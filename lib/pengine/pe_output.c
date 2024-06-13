@@ -3204,10 +3204,25 @@ resource_util_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *", "bool", "bool")
+static inline const char *
+ticket_status(pcmk__ticket_t *ticket)
+{
+    if (pcmk_is_set(ticket->flags, pcmk__ticket_granted)) {
+        return PCMK_VALUE_GRANTED;
+    }
+    return PCMK_VALUE_REVOKED;
+}
+
+static inline const char *
+ticket_standby_text(pcmk__ticket_t *ticket)
+{
+    return pcmk_is_set(ticket->flags, pcmk__ticket_standby)? " [standby]" : "";
+}
+
+PCMK__OUTPUT_ARGS("ticket", "pcmk__ticket_t *", "bool", "bool")
 static int
 ticket_default(pcmk__output_t *out, va_list args) {
-    pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
+    pcmk__ticket_t *ticket = va_arg(args, pcmk__ticket_t *);
     bool raw = va_arg(args, int);
     bool details = va_arg(args, int);
 
@@ -3268,22 +3283,18 @@ ticket_default(pcmk__output_t *out, va_list args) {
             char *epoch_str = pcmk__epoch2str(&(ticket->last_granted), 0);
 
             out->list_item(out, NULL, "%s\t%s%s last-granted=\"%s\"",
-                           ticket->id,
-                           (ticket->granted? "granted" : "revoked"),
-                           (ticket->standby? " [standby]" : ""),
-                           pcmk__s(epoch_str, ""));
+                           ticket->id, ticket_status(ticket),
+                           ticket_standby_text(ticket), pcmk__s(epoch_str, ""));
             free(epoch_str);
         } else {
             out->list_item(out, NULL, "%s\t%s%s %s",
-                           ticket->id,
-                           (ticket->granted? "granted" : "revoked"),
-                           (ticket->standby? " [standby]" : ""),
-                           detail_str->str);
+                           ticket->id, ticket_status(ticket),
+                           ticket_standby_text(ticket), detail_str->str);
         }
     } else {
         out->list_item(out, NULL, "%s\t%s%s%s", ticket->id,
-                       ticket->granted ? "granted" : "revoked",
-                       ticket->standby ? " [standby]" : "",
+                       ticket_status(ticket),
+                       ticket_standby_text(ticket),
                        detail_str != NULL ? detail_str->str : "");
     }
 
@@ -3294,26 +3305,23 @@ ticket_default(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *", "bool", "bool")
+PCMK__OUTPUT_ARGS("ticket", "pcmk__ticket_t *", "bool", "bool")
 static int
 ticket_xml(pcmk__output_t *out, va_list args) {
-    pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
+    pcmk__ticket_t *ticket = va_arg(args, pcmk__ticket_t *);
     bool raw G_GNUC_UNUSED = va_arg(args, int);
     bool details G_GNUC_UNUSED = va_arg(args, int);
 
-    const char *status = NULL;
-    const char *standby = pcmk__btoa(ticket->standby);
+    const char *standby = pcmk__flag_text(ticket->flags, pcmk__ticket_standby);
 
     xmlNodePtr node = NULL;
     GHashTableIter iter;
     const char *name = NULL;
     const char *value = NULL;
 
-    status = ticket->granted? PCMK_VALUE_GRANTED : PCMK_VALUE_REVOKED;
-
     node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET,
                                         PCMK_XA_ID, ticket->id,
-                                        PCMK_XA_STATUS, status,
+                                        PCMK_XA_STATUS, ticket_status(ticket),
                                         PCMK_XA_STANDBY, standby,
                                         NULL);
 
@@ -3363,7 +3371,7 @@ ticket_list(pcmk__output_t *out, va_list args) {
     /* Print each ticket */
     g_hash_table_iter_init(&iter, tickets);
     while (g_hash_table_iter_next(&iter, NULL, &value)) {
-        pcmk_ticket_t *ticket = (pcmk_ticket_t *) value;
+        pcmk__ticket_t *ticket = (pcmk__ticket_t *) value;
         out->message(out, "ticket", ticket, raw, details);
     }
 

@@ -26,6 +26,7 @@
 #include <crm/common/resources_internal.h>
 #include <crm/common/roles_internal.h>
 #include <crm/common/rules_internal.h>
+#include <crm/common/tickets_internal.h>
 
 #ifdef __cplusplus
 extern "C" {

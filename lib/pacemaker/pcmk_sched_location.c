@@ -420,7 +420,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     const char *rsc_id = NULL;
     const char *state = NULL;
     pcmk_resource_t *rsc = NULL;
-    pcmk_tag_t *tag = NULL;
+    pcmk__idref_t *tag = NULL;
     xmlNode *rsc_set = NULL;
 
     *expanded_xml = NULL;
