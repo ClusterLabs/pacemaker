@@ -1235,38 +1235,8 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
 
     if (!preview && !pcmk_is_set(dependent->flags, pcmk__rsc_unassigned)) {
         /* The dependent resource has already been through assignment, so the
-         * constraint no longer has any effect. Log an error if a mandatory
-         * colocation constraint has been violated.
+         * constraint no longer matters.
          */
-
-        const pcmk_node_t *primary_node = primary->private->assigned_node;
-        const pcmk_node_t *dependent_node = dependent->private->assigned_node;
-
-        if (dependent_node == NULL) {
-            crm_trace("Skipping colocation '%s': %s will not run anywhere",
-                      colocation->id, dependent->id);
-
-        } else if (colocation->score >= PCMK_SCORE_INFINITY) {
-            // Dependent resource must colocate with primary resource
-
-            if (!pcmk__same_node(primary_node, dependent_node)) {
-                pcmk__sched_err("%s must be colocated with %s but is not "
-                                "(%s vs. %s)",
-                                dependent->id, primary->id,
-                                pcmk__node_name(dependent_node),
-                                pcmk__node_name(primary_node));
-            }
-
-        } else if (colocation->score <= -PCMK_SCORE_INFINITY) {
-            // Dependent resource must anti-colocate with primary resource
-
-            if (pcmk__same_node(dependent_node, primary_node)) {
-                pcmk__sched_err("%s and %s must be anti-colocated but are "
-                                "assigned to the same node (%s)",
-                                dependent->id, primary->id,
-                                pcmk__node_name(primary_node));
-            }
-        }
         return pcmk__coloc_affects_nothing;
     }
 
