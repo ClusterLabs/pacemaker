@@ -149,7 +149,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
     crm_xml_add(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
 
-    pcmk__log_transition_summary(filename);
+    pcmk__log_transition_summary(scheduler, filename);
 
     if (series_wrap == 0) {
         crm_debug("Not saving input to disk (disabled by configuration)");

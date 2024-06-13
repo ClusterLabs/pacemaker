@@ -947,10 +947,12 @@ static int transition_id = -1;
  * \internal
  * \brief Log a message after calculating a transition
  *
- * \param[in] filename  Where transition input is stored
+ * \param[in] scheduler  Scheduler data
+ * \param[in] filename   Where transition input is stored
  */
 void
-pcmk__log_transition_summary(const char *filename)
+pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
+                             const char *filename)
 {
     if (was_processing_error || crm_config_error) {
         crm_err("Calculated transition %d (with errors)%s%s",
