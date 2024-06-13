@@ -214,7 +214,7 @@ apply_stickiness(gpointer data, gpointer user_data)
      * longer explicitly enabled.
      */
     if (!pcmk_is_set(rsc->private->scheduler->flags,
-                     pcmk_sched_symmetric_cluster)
+                     pcmk__sched_symmetric_cluster)
         && (g_hash_table_lookup(rsc->private->allowed_nodes,
                                 node->private->id) == NULL)) {
         pcmk__rsc_debug(rsc,
@@ -239,7 +239,7 @@ apply_stickiness(gpointer data, gpointer user_data)
 static void
 apply_shutdown_locks(pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_shutdown_lock)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_shutdown_lock)) {
         return;
     }
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
@@ -258,7 +258,7 @@ apply_shutdown_locks(pcmk_scheduler_t *scheduler)
 static void
 count_available_nodes(pcmk_scheduler_t *scheduler)
 {
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_no_compat)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_no_compat)) {
         return;
     }
 
@@ -321,7 +321,7 @@ assign_resources(pcmk_scheduler_t *scheduler)
     }
     pcmk__show_node_capacities("Original", scheduler);
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_have_remote_nodes)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
         /* Assign remote connection resources first (which will also assign any
          * colocation dependencies). If the connection is migrating, always
          * prefer the partial migration target.
@@ -410,12 +410,12 @@ schedule_resource_actions(pcmk_scheduler_t *scheduler)
     pe__foreach_param_check(scheduler, check_params);
     pe__free_param_checks(scheduler);
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_probe_resources)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_probe_resources)) {
         crm_trace("Scheduling probes");
         pcmk__schedule_probes(scheduler);
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_stop_removed_resources)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_removed_resources)) {
         g_list_foreach(scheduler->resources, clear_failcounts_if_orphaned,
                        NULL);
     }
@@ -522,7 +522,7 @@ static GList *
 add_nondc_fencing(GList *list, pcmk_action_t *action,
                   const pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_concurrent_fencing)
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_concurrent_fencing)
         && (list != NULL)) {
         /* Concurrent fencing is disabled, so order each non-DC
          * fencing in a chain. If there is any DC fencing or
@@ -620,12 +620,12 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
     }
 
     if (integrity_lost) {
-        if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
+        if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             pcmk__config_warn("Resource functionality and data integrity "
                               "cannot be guaranteed (configure, enable, "
                               "and test fencing to correct this)");
 
-        } else if (!pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
+        } else if (!pcmk_is_set(scheduler->flags, pcmk__sched_quorate)) {
             crm_notice("Unclean nodes will not be fenced until quorum is "
                        "attained or " PCMK_OPT_NO_QUORUM_POLICY " is set to "
                        PCMK_VALUE_IGNORE);
@@ -647,7 +647,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
 
         // Order any non-DC fencing before any DC fencing or shutdown
 
-        if (pcmk_is_set(scheduler->flags, pcmk_sched_concurrent_fencing)) {
+        if (pcmk_is_set(scheduler->flags, pcmk__sched_concurrent_fencing)) {
             /* With concurrent fencing, order each non-DC fencing action
              * separately before any DC fencing or shutdown.
              */
@@ -757,7 +757,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
 {
     const char* localhost_save = NULL;
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_have_status)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
         pcmk__set_scheduler_flags(scheduler, flags);
         return;
@@ -772,7 +772,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
 
     /* This will zero the entire struct without freeing anything first, so
      * callers should never call pcmk__schedule_actions() with a populated data
-     * set unless pcmk_sched_have_status is set (i.e. cluster_status() was
+     * set unless pcmk__sched_have_status is set (i.e. cluster_status() was
      * previously called, whether directly or via pcmk__schedule_actions()).
      */
     set_working_set_defaults(scheduler);
@@ -783,7 +783,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
 
     pcmk__set_scheduler_flags(scheduler, flags);
     scheduler->input = cib;
-    cluster_status(scheduler); // Sets pcmk_sched_have_status
+    cluster_status(scheduler); // Sets pcmk__sched_have_status
 }
 
 /*!
@@ -802,18 +802,18 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
     pcmk__set_assignment_methods(scheduler);
     pcmk__apply_node_health(scheduler);
     pcmk__unpack_constraints(scheduler);
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_validate_only)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_validate_only)) {
         return;
     }
 
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)
         && pcmk__is_daemon) {
         log_resource_details(scheduler);
     }
 
     apply_node_criteria(scheduler);
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
         return;
     }
 
@@ -871,7 +871,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
     }
 
     pcmk__set_scheduler_flags(new_scheduler,
-                              pcmk_sched_no_counts|pcmk_sched_no_compat);
+                              pcmk__sched_no_counts|pcmk__sched_no_compat);
 
     // Populate the scheduler data
 

@@ -180,7 +180,7 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk__ticket_t *ticket,
 
     if (pcmk__str_eq(loss_policy, PCMK_VALUE_FENCE, pcmk__str_casei)) {
         if (pcmk_is_set(rsc->private->scheduler->flags,
-                        pcmk_sched_fencing_enabled)) {
+                        pcmk__sched_fencing_enabled)) {
             new_rsc_ticket->loss_policy = loss_ticket_fence;
         } else {
             pcmk__config_err("Resetting '" PCMK_XA_LOSS_POLICY "' "

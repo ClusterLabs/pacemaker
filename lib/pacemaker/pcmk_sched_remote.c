@@ -393,7 +393,7 @@ apply_launcher_ordering(pcmk_action_t *action)
 void
 pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_have_remote_nodes)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
         return;
     }
 

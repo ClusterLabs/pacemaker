@@ -86,11 +86,11 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out, xmlNode *cib_obje
      * example, action configuration), so we aren't necessarily checking those.
      */
     if (cib_object != NULL) {
-        unsigned long long flags = pcmk_sched_no_counts|pcmk_sched_no_compat;
+        unsigned long long flags = pcmk__sched_no_counts|pcmk__sched_no_compat;
 
         if (status == NULL) {
             // No status available, so do minimal checks
-            flags |= pcmk_sched_validate_only;
+            flags |= pcmk__sched_validate_only;
         }
         cib_object_copy = pcmk__xml_copy(NULL, cib_object);
 

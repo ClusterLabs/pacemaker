@@ -486,7 +486,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                           PCMK_META_TARGET_ROLE, scheduler);
 
     } else if ((rsc->private->next_role > rsc->private->orig_role)
-               && !pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
+               && !pcmk_is_set(scheduler->flags, pcmk__sched_quorate)
                && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Resource %s cannot be elevated from %s to %s due to "
                    PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE,
@@ -497,12 +497,12 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     }
 
     pe__show_node_scores(!pcmk_is_set(scheduler->flags,
-                                      pcmk_sched_output_scores),
+                                      pcmk__sched_output_scores),
                          rsc, __func__, rsc->private->allowed_nodes, scheduler);
 
     // Unmanage resource if fencing is enabled but no device is configured
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)
-        && !pcmk_is_set(scheduler->flags, pcmk_sched_have_fencing)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)
+        && !pcmk_is_set(scheduler->flags, pcmk__sched_have_fencing)) {
         pcmk__clear_rsc_flags(rsc, pcmk__rsc_managed);
     }
 
@@ -527,7 +527,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                        reason);
         pcmk__assign_resource(rsc, assign_to, true, stop_if_fail);
 
-    } else if (pcmk_is_set(scheduler->flags, pcmk_sched_stop_all)) {
+    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_all)) {
         // Must stop at some point, but be consistent with stop_if_fail
         if (stop_if_fail) {
             pcmk__rsc_debug(rsc,
@@ -942,7 +942,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
     // Whether resource requires unfencing
     check_unfencing = !pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)
                       && pcmk_is_set(scheduler->flags,
-                                     pcmk_sched_enable_unfencing)
+                                     pcmk__sched_enable_unfencing)
                       && pcmk_is_set(rsc->flags, pcmk__rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used
@@ -1325,7 +1325,7 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
         }
 
         if (pcmk_is_set(rsc->private->scheduler->flags,
-                        pcmk_sched_remove_after_stop)) {
+                        pcmk__sched_remove_after_stop)) {
             pcmk__schedule_cleanup(rsc, current, optional);
         }
 

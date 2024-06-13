@@ -31,11 +31,11 @@ extern "C" {
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
-#define pe_flag_have_quorum             pcmk_sched_quorate
+#define pe_flag_have_quorum             (1ULL << 0)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
-#define pe_flag_have_stonith_resource   pcmk_sched_have_fencing
+#define pe_flag_have_stonith_resource   (1ULL << 5)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead

@@ -98,9 +98,9 @@ handle_pecalc_request(pcmk__request_t *request)
 
     if (process) {
         pcmk__schedule_actions(converted,
-                               pcmk_sched_no_counts
-                               |pcmk_sched_no_compat
-                               |pcmk_sched_show_utilization, scheduler);
+                               pcmk__sched_no_counts
+                               |pcmk__sched_no_compat
+                               |pcmk__sched_show_utilization, scheduler);
     }
 
     // Get appropriate index into series[] array

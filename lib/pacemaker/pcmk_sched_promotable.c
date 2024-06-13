@@ -935,7 +935,7 @@ show_promotion_score(pcmk_resource_t *instance)
 
     score_s = pcmk_readable_score(instance->private->promotion_priority);
     if (pcmk_is_set(instance->private->scheduler->flags,
-                    pcmk_sched_output_scores)
+                    pcmk__sched_output_scores)
         && !pcmk__is_daemon && (instance->private->scheduler->priv != NULL)) {
 
         pcmk__output_t *out = instance->private->scheduler->priv;
@@ -1085,7 +1085,7 @@ set_instance_role(gpointer data, gpointer user_data)
     }
 
     if ((instance->private->orig_role < pcmk_role_promoted)
-        && !pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
+        && !pcmk_is_set(scheduler->flags, pcmk__sched_quorate)
         && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Clone instance %s cannot be promoted without quorum",
                    instance->id);

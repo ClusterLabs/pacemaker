@@ -1509,7 +1509,7 @@ only_sanitized_changed(const xmlNode *xml_op,
 {
     const char *digest_secure = NULL;
 
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_sanitized)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_sanitized)) {
         // The scheduler is not being run as a simulation
         return false;
     }
@@ -1641,7 +1641,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                             pcmk__readable_interval(interval_ms), task, rsc->id,
                             pcmk__node_name(node));
         } else if (pcmk_is_set(rsc->private->scheduler->flags,
-                               pcmk_sched_cancel_removed_actions)) {
+                               pcmk__sched_cancel_removed_actions)) {
             pcmk__schedule_cancel(rsc,
                                   crm_element_value(xml_op, PCMK__XA_CALL_ID),
                                   task, interval_ms, node, "orphan");

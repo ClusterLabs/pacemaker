@@ -516,7 +516,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     node->assign->count++;
     pcmk__consume_node_capacity(node->private->utilization, rsc);
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
         pcmk__output_t *out = scheduler->priv;
 
         out->message(out, "resource-util", rsc, node, __func__);

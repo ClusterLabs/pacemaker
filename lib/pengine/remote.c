@@ -30,7 +30,7 @@ pe__resource_contains_guest_node(const pcmk_scheduler_t *scheduler,
                                  const pcmk_resource_t *rsc)
 {
     if ((rsc != NULL) && (scheduler != NULL)
-        && pcmk_is_set(scheduler->flags, pcmk_sched_have_remote_nodes)) {
+        && pcmk_is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
 
         for (GList *gIter = rsc->private->launched;
              gIter != NULL; gIter = gIter->next) {
@@ -90,7 +90,7 @@ pe_foreach_guest_node(const pcmk_scheduler_t *scheduler,
     GList *iter;
 
     CRM_CHECK(scheduler && host && host->details && helper, return);
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_have_remote_nodes)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
         return;
     }
     for (iter = host->details->running_rsc; iter != NULL; iter = iter->next) {

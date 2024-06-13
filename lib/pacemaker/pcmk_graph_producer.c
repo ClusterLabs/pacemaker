@@ -1030,7 +1030,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
 
     crm_xml_add(scheduler->graph, "failed-stop-offset", "INFINITY");
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_start_failure_fatal)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_start_failure_fatal)) {
         crm_xml_add(scheduler->graph, "failed-start-offset", "INFINITY");
     } else {
         crm_xml_add(scheduler->graph, "failed-start-offset", "1");
@@ -1086,7 +1086,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
              * it's the best way to detect (in CTS) when CIB resource updates
              * are being lost.
              */
-            if (pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
+            if (pcmk_is_set(scheduler->flags, pcmk__sched_quorate)
                 || (scheduler->no_quorum_policy == pcmk_no_quorum_ignore)) {
                 const bool managed = pcmk_is_set(action->rsc->flags,
                                                  pcmk__rsc_managed);

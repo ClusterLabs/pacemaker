@@ -75,7 +75,7 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     g_list_free(colocations);
 
     pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
-                                      pcmk_sched_output_scores),
+                                      pcmk__sched_output_scores),
                          rsc, __func__, rsc->private->allowed_nodes,
                          rsc->private->scheduler);
 
