@@ -422,8 +422,8 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
 
         rc = pcmk__check_feature_set(new_version);
         if (rc != pcmk_rc_ok) {
-            pcmk__config_err("Discarding update with feature set '%s' greater than our own '%s'",
-                             new_version, CRM_FEATURE_SET);
+            crm_err("Discarding update with feature set '%s' greater than "
+                    "our own '%s'", new_version, CRM_FEATURE_SET);
             rc = pcmk_rc2legacy(rc);
             goto done;
         }
