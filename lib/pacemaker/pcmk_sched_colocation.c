@@ -1450,11 +1450,11 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     dependent->priority = pcmk__add_scores(score_multiplier * colocation->score,
                                            dependent->priority);
     pcmk__rsc_trace(dependent,
-                    "Applied %s to %s promotion priority (now %s after %s %s)",
+                    "Applied %s to %s promotion priority (now %s after %s %d)",
                     colocation->id, dependent->id,
                     pcmk_readable_score(dependent->priority),
                     ((score_multiplier == 1)? "adding" : "subtracting"),
-                    pcmk_readable_score(colocation->score));
+                    colocation->score);
 }
 
 /*!
