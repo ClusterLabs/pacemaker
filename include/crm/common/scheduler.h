@@ -147,18 +147,6 @@ struct pe_working_set_s {
 };
 //!@}
 
-/* Whether the scheduler input currently being processed has warnings or errors
- *
- * @COMPAT When we can break API compatibility, we should make these
- * internal-only. Ideally they would be converted to pcmk__scheduler_flags
- * values, but everywhere they're needed doesn't currently have access to the
- * scheduler data.
- */
-//!@{
-//! \deprecated Do not use
-extern gboolean was_processing_warning;
-//!@}
-
 pcmk_node_t *pcmk_get_dc(const pcmk_scheduler_t *scheduler);
 enum pe_quorum_policy pcmk_get_no_quorum_policy(const pcmk_scheduler_t
                                                 *scheduler);

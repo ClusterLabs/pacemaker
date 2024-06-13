@@ -18,8 +18,6 @@
 
 uint32_t pcmk__warnings = 0;
 
-gboolean was_processing_warning = FALSE;
-
 /*!
  * \internal
  * \brief Get the Designated Controller node from scheduler data

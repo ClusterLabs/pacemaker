@@ -95,6 +95,9 @@ enum pcmk__scheduler_flags {
     // Whether to stop all resources (via stop-all-resources property)
     pcmk__sched_stop_all                = (1ULL << 10),
 
+    // Whether scheduler processing encountered a warning
+    pcmk__sched_processing_warning      = (1ULL << 11),
+
     /*
      * Whether start failure should be treated as if
      * \c PCMK_META_MIGRATION_THRESHOLD is 1 (via
@@ -215,9 +218,10 @@ extern uint32_t pcmk__warnings;
  * \param[in,out] scheduler  Scheduler data
  * \param[in]     fmt...     printf(3)-style format and arguments
  */
-#define pcmk__sched_warn(scheduler, fmt...) do {    \
-        was_processing_warning = TRUE;              \
-        crm_warn(fmt);                              \
+#define pcmk__sched_warn(scheduler, fmt...) do {                    \
+        pcmk__set_scheduler_flags((scheduler),                      \
+                                  pcmk__sched_processing_warning);  \
+        crm_warn(fmt);                                              \
     } while (0)
 
 /*!
