@@ -95,7 +95,7 @@ struct pcmk__node_assignment {
  * copies, so all pcmk_node_t objects for the same node will share the same
  * private data)
  */
-typedef struct pcmk__node_private {
+struct pcmk__node_private {
     /* Node's XML ID in the CIB (the cluster layer ID for cluster nodes,
      * the node name for Pacemaker Remote nodes)
      */
@@ -118,7 +118,7 @@ typedef struct pcmk__node_private {
     GHashTable *digest_cache;           // Cache of calculated resource digests
     pcmk_resource_t *remote;            // Pacemaker Remote connection (if any)
     pcmk_scheduler_t *scheduler;        // Scheduler data that node is part of
-} pcmk__node_private_t;
+};
 
 pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
 
