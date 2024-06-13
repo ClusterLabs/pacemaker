@@ -148,10 +148,6 @@ handle_pecalc_request(pcmk__request_t *request)
     }
 
     crm_xml_add(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
-    crm_xml_add_int(reply, PCMK__XA_GRAPH_ERRORS, was_processing_error);
-    crm_xml_add_int(reply, PCMK__XA_GRAPH_WARNINGS, was_processing_warning);
-    crm_xml_add_int(reply, PCMK__XA_CONFIG_ERRORS, crm_config_error);
-    crm_xml_add_int(reply, PCMK__XA_CONFIG_WARNINGS, crm_config_warning);
 
     pcmk__log_transition_summary(filename);
 
