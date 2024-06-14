@@ -44,127 +44,6 @@ enum pcmk__check_parameters {
     pcmk__check_active,
 };
 
-// Scheduling options and conditions
-enum pcmk__scheduler_flags {
-    // No scheduler flags set (compare with equality rather than bit set)
-    pcmk__sched_none                    = 0ULL,
-
-    /* These flags are dynamically determined conditions */
-
-    // Whether partition has quorum (via \c PCMK_XA_HAVE_QUORUM attribute)
-    //! \deprecated Call pcmk_has_quorum() to check quorum instead
-    pcmk__sched_quorate                 = (1ULL << 0),
-
-    // Whether cluster is symmetric (via symmetric-cluster property)
-    pcmk__sched_symmetric_cluster       = (1ULL << 1),
-
-    // Whether scheduling encountered a non-configuration error
-    pcmk__sched_processing_error        = (1ULL << 2),
-
-    // Whether cluster is in maintenance mode (via maintenance-mode property)
-    pcmk__sched_in_maintenance          = (1ULL << 3),
-
-    // Whether fencing is enabled (via stonith-enabled property)
-    pcmk__sched_fencing_enabled         = (1ULL << 4),
-
-    // Whether cluster has a fencing resource (via CIB resources)
-    /*! \deprecated To indicate the cluster has a fencing resource, add either a
-     * fencing resource configuration or the have-watchdog cluster option to the
-     * input CIB
-     */
-    pcmk__sched_have_fencing            = (1ULL << 5),
-
-    // Whether any resource provides or requires unfencing (via CIB resources)
-    pcmk__sched_enable_unfencing        = (1ULL << 6),
-
-    // Whether concurrent fencing is allowed (via concurrent-fencing property)
-    pcmk__sched_concurrent_fencing      = (1ULL << 7),
-
-    /*
-     * Whether resources removed from the configuration should be stopped (via
-     * stop-orphan-resources property)
-     */
-    pcmk__sched_stop_removed_resources  = (1ULL << 8),
-
-    /*
-     * Whether recurring actions removed from the configuration should be
-     * cancelled (via stop-orphan-actions property)
-     */
-    pcmk__sched_cancel_removed_actions  = (1ULL << 9),
-
-    // Whether to stop all resources (via stop-all-resources property)
-    pcmk__sched_stop_all                = (1ULL << 10),
-
-    // Whether scheduler processing encountered a warning
-    pcmk__sched_processing_warning      = (1ULL << 11),
-
-    /*
-     * Whether start failure should be treated as if
-     * \c PCMK_META_MIGRATION_THRESHOLD is 1 (via
-     * \c PCMK_OPT_START_FAILURE_IS_FATAL property)
-     */
-    pcmk__sched_start_failure_fatal     = (1ULL << 12),
-
-    // Unused
-    pcmk__sched_remove_after_stop       = (1ULL << 13),
-
-    // Whether unseen nodes should be fenced (via startup-fencing property)
-    pcmk__sched_startup_fencing         = (1ULL << 14),
-
-    /*
-     * Whether resources should be left stopped when their node shuts down
-     * cleanly (via shutdown-lock property)
-     */
-    pcmk__sched_shutdown_lock           = (1ULL << 15),
-
-    /*
-     * Whether resources' current state should be probed (when unknown) before
-     * scheduling any other actions (via the enable-startup-probes property)
-     */
-    pcmk__sched_probe_resources         = (1ULL << 16),
-
-    // Whether the CIB status section has been parsed yet
-    pcmk__sched_have_status             = (1ULL << 17),
-
-    // Whether the cluster includes any Pacemaker Remote nodes (via CIB)
-    pcmk__sched_have_remote_nodes       = (1ULL << 18),
-
-
-    /* The remaining flags are scheduling options that must be set explicitly */
-
-    /*
-     * Whether to skip unpacking the CIB status section and stop the scheduling
-     * sequence after applying node-specific location criteria (skipping
-     * assignment, ordering, actions, etc.).
-     */
-    pcmk__sched_location_only           = (1ULL << 20),
-
-    // Whether sensitive resource attributes have been masked
-    pcmk__sched_sanitized               = (1ULL << 21),
-
-    // Skip counting of total, disabled, and blocked resource instances
-    pcmk__sched_no_counts               = (1ULL << 23),
-
-    /*
-     * Skip deprecated code kept solely for backward API compatibility
-     * (internal code should always set this)
-     */
-    pcmk__sched_no_compat               = (1ULL << 24),
-
-    // Whether node scores should be output instead of logged
-    pcmk__sched_output_scores           = (1ULL << 25),
-
-    // Whether to show node and resource utilization (in log or output)
-    pcmk__sched_show_utilization        = (1ULL << 26),
-
-    /*
-     * Whether to stop the scheduling sequence after unpacking the CIB,
-     * calculating cluster status, and applying node health (skipping
-     * applying node-specific location criteria, assignment, etc.)
-     */
-    pcmk__sched_validate_only           = (1ULL << 27),
-};
-
 // Group of enum pcmk__warnings flags for warnings we want to log once
 extern uint32_t pcmk__warnings;
 
@@ -202,26 +81,22 @@ extern uint32_t pcmk__warnings;
  * \internal
  * \brief Log an error and remember that current scheduler input has errors
  *
- * \param[in,out] scheduler  Scheduler data
- * \param[in]     fmt...     printf(3)-style format and arguments
+ * \param[in] fmt...  printf(3)-style format and arguments
  */
-#define pcmk__sched_err(scheduler, fmt...) do {                     \
-        pcmk__set_scheduler_flags((scheduler),                      \
-                                  pcmk__sched_processing_error);    \
-        crm_err(fmt);                                               \
+#define pcmk__sched_err(fmt...) do {    \
+        was_processing_error = TRUE;    \
+        crm_err(fmt);                   \
     } while (0)
 
 /*!
  * \internal
  * \brief Log a warning and remember that current scheduler input has warnings
  *
- * \param[in,out] scheduler  Scheduler data
- * \param[in]     fmt...     printf(3)-style format and arguments
+ * \param[in] fmt...  printf(3)-style format and arguments
  */
-#define pcmk__sched_warn(scheduler, fmt...) do {                    \
-        pcmk__set_scheduler_flags((scheduler),                      \
-                                  pcmk__sched_processing_warning);  \
-        crm_warn(fmt);                                              \
+#define pcmk__sched_warn(fmt...) do {   \
+        was_processing_warning = TRUE;  \
+        crm_warn(fmt);                  \
     } while (0)
 
 /*!
@@ -229,7 +104,7 @@ extern uint32_t pcmk__warnings;
  * \brief Set scheduler flags
  *
  * \param[in,out] scheduler     Scheduler data
- * \param[in]     flags_to_set  Group of enum pcmk__scheduler_flags to set
+ * \param[in]     flags_to_set  Group of enum pcmk_scheduler_flags to set
  */
 #define pcmk__set_scheduler_flags(scheduler, flags_to_set) do {             \
         (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,         \
@@ -242,7 +117,7 @@ extern uint32_t pcmk__warnings;
  * \brief Clear scheduler flags
  *
  * \param[in,out] scheduler       Scheduler data
- * \param[in]     flags_to_clear  Group of enum pcmk__scheduler_flags to clear
+ * \param[in]     flags_to_clear  Group of enum pcmk_scheduler_flags to clear
  */
 #define pcmk__clear_scheduler_flags(scheduler, flags_to_clear) do {         \
         (scheduler)->flags = pcmk__clear_flags_as(__func__, __LINE__,       \

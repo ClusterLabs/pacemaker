@@ -25,12 +25,12 @@ check_defaults(void **state) {
 
     set_working_set_defaults(scheduler);
 
-    flags = pcmk__sched_symmetric_cluster
-            |pcmk__sched_stop_removed_resources
-            |pcmk__sched_cancel_removed_actions;
+    flags = pcmk_sched_symmetric_cluster
+            |pcmk_sched_stop_removed_resources
+            |pcmk_sched_cancel_removed_actions;
 
     if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, PCMK_VALUE_TRUE)) {
-        flags |= pcmk__sched_concurrent_fencing;
+        flags |= pcmk_sched_concurrent_fencing;
     }
 
 

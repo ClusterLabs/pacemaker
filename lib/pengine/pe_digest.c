@@ -313,8 +313,7 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
 
     data = calloc(1, sizeof(pcmk__op_digest_t));
     if (data == NULL) {
-        pcmk__sched_err(scheduler,
-                        "Could not allocate memory for operation digest");
+        pcmk__sched_err("Could not allocate memory for operation digest");
         return NULL;
     }
 
@@ -409,7 +408,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
     crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
     data = rsc_action_digest(rsc, task, interval_ms, node, xml_op,
                              pcmk_is_set(scheduler->flags,
-                                         pcmk__sched_sanitized),
+                                         pcmk_sched_sanitized),
                              scheduler);
 
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
@@ -587,7 +586,7 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
 
     // Parameters don't match
     data->rc = pcmk__digest_mismatch;
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_sanitized)
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_sanitized)
         && (data->digest_secure_calc != NULL)) {
 
         if (scheduler->priv != NULL) {

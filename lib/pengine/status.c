@@ -127,9 +127,9 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
 
     if (pcmk__xe_attr_is_true(scheduler->input, PCMK_XA_HAVE_QUORUM)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk__sched_quorate);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_quorate);
     } else {
-        pcmk__clear_scheduler_flags(scheduler, pcmk__sched_quorate);
+        pcmk__clear_scheduler_flags(scheduler, pcmk_sched_quorate);
     }
 
     scheduler->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
@@ -144,10 +144,9 @@ cluster_status(pcmk_scheduler_t * scheduler)
     unpack_config(section, scheduler);
 
    if (!pcmk_any_flags_set(scheduler->flags,
-                           pcmk__sched_location_only|pcmk__sched_quorate)
+                           pcmk_sched_location_only|pcmk_sched_quorate)
        && (scheduler->no_quorum_policy != pcmk_no_quorum_ignore)) {
-        pcmk__sched_warn(scheduler,
-                         "Fencing and resource management disabled "
+        pcmk__sched_warn("Fencing and resource management disabled "
                          "due to lack of quorum");
     }
 
@@ -156,7 +155,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     section = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
                                LOG_TRACE);
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
         unpack_remote_nodes(section, scheduler);
     }
     unpack_resources(section, scheduler);
@@ -164,13 +163,13 @@ cluster_status(pcmk_scheduler_t * scheduler)
     section = get_xpath_object("//" PCMK_XE_TAGS, scheduler->input, LOG_NEVER);
     unpack_tags(section, scheduler);
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
         section = get_xpath_object("//" PCMK_XE_STATUS, scheduler->input,
                                    LOG_TRACE);
         unpack_status(section, scheduler);
     }
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_no_counts)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_no_counts)) {
         for (GList *item = scheduler->resources; item != NULL;
              item = item->next) {
             pcmk_resource_t *rsc = item->data;
@@ -182,7 +181,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
                   scheduler->blocked_resources);
     }
 
-    pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_status);
+    pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_status);
     return TRUE;
 }
 
@@ -322,7 +321,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         return;
     }
 
-    pcmk__clear_scheduler_flags(scheduler, pcmk__sched_have_status);
+    pcmk__clear_scheduler_flags(scheduler, pcmk_sched_have_status);
     if (scheduler->config_hash != NULL) {
         g_hash_table_destroy(scheduler->config_hash);
     }
@@ -419,11 +418,11 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
     scheduler->flags = 0x0ULL;
 
     pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_symmetric_cluster
-                              |pcmk__sched_stop_removed_resources
-                              |pcmk__sched_cancel_removed_actions);
+                              pcmk_sched_symmetric_cluster
+                              |pcmk_sched_stop_removed_resources
+                              |pcmk_sched_cancel_removed_actions);
     if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, PCMK_VALUE_TRUE)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk__sched_concurrent_fencing);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_concurrent_fencing);
     }
 }
 

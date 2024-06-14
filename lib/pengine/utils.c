@@ -51,13 +51,13 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
         }
         return true;
 
-    } else if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+    } else if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
         return false; /* Turned off */
 
-    } else if (!pcmk_is_set(scheduler->flags, pcmk__sched_have_fencing)) {
+    } else if (!pcmk_is_set(scheduler->flags, pcmk_sched_have_fencing)) {
         return false; /* No devices */
 
-    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_quorate)) {
+    } else if (pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
         return true;
 
     } else if (scheduler->no_quorum_policy == pcmk_no_quorum_ignore) {
@@ -538,8 +538,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 
         ticket = calloc(1, sizeof(pcmk__ticket_t));
         if (ticket == NULL) {
-            pcmk__sched_err(scheduler, "Cannot allocate ticket '%s'",
-                            ticket_id);
+            pcmk__sched_err("Cannot allocate ticket '%s'", ticket_id);
             return NULL;
         }
 
@@ -603,7 +602,7 @@ void
 trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
                   pcmk_action_t *dependency, pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
         /* No resources require it */
         return;
 

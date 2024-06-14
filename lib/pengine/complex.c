@@ -537,7 +537,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_FENCING, pcmk__str_casei)) {
         pcmk__set_rsc_flags(rsc, pcmk__rsc_needs_fencing);
-        if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+        if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
         }
@@ -550,7 +550,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
             unpack_requires(rsc, PCMK_VALUE_QUORUM, true);
             return;
 
-        } else if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+        } else if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK_VALUE_QUORUM "\" because fencing is "
                               "disabled", rsc->id);
@@ -572,10 +572,10 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
                    && xml_contains_remote_node(rsc->private->xml)) {
             value = PCMK_VALUE_QUORUM;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
+        } else if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
             value = PCMK_VALUE_UNFENCING;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+        } else if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             value = PCMK_VALUE_FENCING;
 
         } else if (scheduler->no_quorum_policy == pcmk_no_quorum_ignore) {
@@ -676,15 +676,13 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     *rsc = calloc(1, sizeof(pcmk_resource_t));
     if (*rsc == NULL) {
-        pcmk__sched_err(scheduler,
-                        "Unable to allocate memory for resource '%s'", id);
+        pcmk__sched_err("Unable to allocate memory for resource '%s'", id);
         return ENOMEM;
     }
 
     (*rsc)->private = calloc(1, sizeof(pcmk__resource_private_t));
     if ((*rsc)->private == NULL) {
-        pcmk__sched_err(scheduler,
-                        "Unable to allocate memory for resource '%s'", id);
+        pcmk__sched_err("Unable to allocate memory for resource '%s'", id);
         free(*rsc);
         return ENOMEM;
     }
@@ -743,7 +741,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->flags = 0;
     pcmk__set_rsc_flags(*rsc, pcmk__rsc_unassigned);
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);
     }
 
@@ -808,7 +806,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_maintenance);
     }
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
         pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_maintenance);
     }
@@ -918,7 +916,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     if (pcmk__str_eq(crm_element_value(rsc_private->xml, PCMK_XA_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_fencing);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_fencing);
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_fence_device);
     }
 
@@ -965,7 +963,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         return pcmk_rc_unpack_error;
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_symmetric_cluster)) {
         // This tag must stay exactly the same because it is tested elsewhere
         resource_location(*rsc, NULL, 0, "symmetric_default", scheduler);
     } else if (guest_node) {

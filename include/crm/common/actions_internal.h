@@ -227,7 +227,6 @@ struct pcmk__action {
     enum rsc_role_e fail_role;          // Resource role if action fails
     GHashTable *meta;                   // Meta-attributes relevant to action
     GHashTable *extra;                  // Action-specific instance attributes
-    pcmk_scheduler_t *scheduler;        // Scheduler data this action is part of
 
     /* Current count of runnable instance actions for "first" action in an
      * ordering dependency with pcmk__ar_min_runnable set.

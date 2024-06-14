@@ -1009,11 +1009,11 @@ static int
 cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     unsigned long long flags = va_arg(args, unsigned long long);
 
-    if (pcmk_is_set(flags, pcmk__sched_in_maintenance)) {
+    if (pcmk_is_set(flags, pcmk_sched_in_maintenance)) {
         pcmk__formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
         pcmk__formatted_printf(out, "  The cluster will not attempt to start, stop or recover services\n");
         return pcmk_rc_ok;
-    } else if (pcmk_is_set(flags, pcmk__sched_stop_all)) {
+    } else if (pcmk_is_set(flags, pcmk_sched_stop_all)) {
         pcmk__formatted_printf(out, "\n    *** Resource management is DISABLED ***\n");
         pcmk__formatted_printf(out, "  The cluster will keep all resources stopped\n");
         return pcmk_rc_ok;
@@ -1027,13 +1027,13 @@ static int
 cluster_options_html(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
         out->list_item(out, NULL, "STONITH of failed nodes enabled");
     } else {
         out->list_item(out, NULL, "STONITH of failed nodes disabled");
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_symmetric_cluster)) {
         out->list_item(out, NULL, "Cluster is symmetric");
     } else {
         out->list_item(out, NULL, "Cluster is asymmetric");
@@ -1062,7 +1062,7 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
             break;
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
         xmlNode *child = NULL;
 
@@ -1077,7 +1077,7 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
                              " (the cluster will not attempt to start, stop,"
                              " or recover services)");
 
-    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_all)) {
+    } else if (pcmk_is_set(scheduler->flags, pcmk_sched_stop_all)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
         xmlNode *child = NULL;
 
@@ -1103,9 +1103,9 @@ static int
 cluster_options_log(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
         return out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
-    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_all)) {
+    } else if (pcmk_is_set(scheduler->flags, pcmk_sched_stop_all)) {
         return out->info(out, "Resource management is DISABLED.  The cluster has stopped all resources.");
     } else {
         return pcmk_rc_no_output;
@@ -1117,13 +1117,13 @@ static int
 cluster_options_text(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
         out->list_item(out, NULL, "STONITH of failed nodes enabled");
     } else {
         out->list_item(out, NULL, "STONITH of failed nodes disabled");
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_symmetric_cluster)) {
         out->list_item(out, NULL, "Cluster is symmetric");
     } else {
         out->list_item(out, NULL, "Cluster is asymmetric");
@@ -1193,15 +1193,15 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
     const char *stonith_enabled = pcmk__flag_text(scheduler->flags,
-                                                  pcmk__sched_fencing_enabled);
+                                                  pcmk_sched_fencing_enabled);
     const char *symmetric_cluster =
-        pcmk__flag_text(scheduler->flags, pcmk__sched_symmetric_cluster);
+        pcmk__flag_text(scheduler->flags, pcmk_sched_symmetric_cluster);
     const char *no_quorum_policy =
         no_quorum_policy_text(scheduler->no_quorum_policy);
     const char *maintenance_mode = pcmk__flag_text(scheduler->flags,
-                                                   pcmk__sched_in_maintenance);
+                                                   pcmk_sched_in_maintenance);
     const char *stop_all_resources = pcmk__flag_text(scheduler->flags,
-                                                     pcmk__sched_stop_all);
+                                                     pcmk_sched_stop_all);
     char *stonith_timeout_ms_s = pcmk__itoa(scheduler->stonith_timeout);
     char *priority_fencing_delay_ms_s =
         pcmk__itoa(scheduler->priority_fencing_delay * 1000);

@@ -498,12 +498,12 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
  * \internal
  * \brief Check whether an action should be added to the transition graph
  *
- * \param[in,out] action  Action to check
+ * \param[in] action  Action to check
  *
  * \return true if action should be added to graph, otherwise false
  */
 static bool
-should_add_action_to_graph(pcmk_action_t *action)
+should_add_action_to_graph(const pcmk_action_t *action)
 {
     if (!pcmk_is_set(action->flags, pcmk__action_runnable)) {
         crm_trace("Ignoring action %s (%d): unrunnable",
@@ -550,8 +550,7 @@ should_add_action_to_graph(pcmk_action_t *action)
     }
 
     if (action->node == NULL) {
-        pcmk__sched_err(action->scheduler,
-                        "Skipping action %s (%d) "
+        pcmk__sched_err("Skipping action %s (%d) "
                         "because it was not assigned to a node (bug?)",
                         action->uuid, action->id);
         pcmk__log_action("Unassigned", action, false);
@@ -571,16 +570,14 @@ should_add_action_to_graph(pcmk_action_t *action)
                   action->uuid, action->id, pcmk__node_name(action->node));
 
     } else if (!action->node->details->online) {
-        pcmk__sched_err(action->scheduler,
-                        "Skipping action %s (%d) "
+        pcmk__sched_err("Skipping action %s (%d) "
                         "because it was scheduled for offline node (bug?)",
                         action->uuid, action->id);
         pcmk__log_action("Offline node", action, false);
         return false;
 
     } else if (action->node->details->unclean) {
-        pcmk__sched_err(action->scheduler,
-                        "Skipping action %s (%d) "
+        pcmk__sched_err("Skipping action %s (%d) "
                         "because it was scheduled for unclean node (bug?)",
                         action->uuid, action->id);
         pcmk__log_action("Unclean node", action, false);
@@ -947,22 +944,18 @@ static int transition_id = -1;
  * \internal
  * \brief Log a message after calculating a transition
  *
- * \param[in] scheduler  Scheduler data
- * \param[in] filename   Where transition input is stored
+ * \param[in] filename  Where transition input is stored
  */
 void
-pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
-                             const char *filename)
+pcmk__log_transition_summary(const char *filename)
 {
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_error)
-        || crm_config_error) {
+    if (was_processing_error || crm_config_error) {
         crm_err("Calculated transition %d (with errors)%s%s",
                 transition_id,
                 (filename == NULL)? "" : ", saving inputs in ",
                 (filename == NULL)? "" : filename);
 
-    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_warning)
-               || crm_config_warning) {
+    } else if (was_processing_warning || crm_config_warning) {
         crm_warn("Calculated transition %d (with warnings)%s%s",
                  transition_id,
                  (filename == NULL)? "" : ", saving inputs in ",
@@ -1034,7 +1027,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
 
     crm_xml_add(scheduler->graph, "failed-stop-offset", "INFINITY");
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_start_failure_fatal)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_start_failure_fatal)) {
         crm_xml_add(scheduler->graph, "failed-start-offset", "INFINITY");
     } else {
         crm_xml_add(scheduler->graph, "failed-start-offset", "1");
@@ -1090,7 +1083,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
              * it's the best way to detect (in CTS) when CIB resource updates
              * are being lost.
              */
-            if (pcmk_is_set(scheduler->flags, pcmk__sched_quorate)
+            if (pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
                 || (scheduler->no_quorum_policy == pcmk_no_quorum_ignore)) {
                 const bool managed = pcmk_is_set(action->rsc->flags,
                                                  pcmk__rsc_managed);

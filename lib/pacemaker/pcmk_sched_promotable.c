@@ -223,8 +223,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
          * have a fail-safe.
          */
         if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
-            pcmk__sched_err(node->private->scheduler,
-                            "%s can't be promoted because %s is not allowed "
+            pcmk__sched_err("%s can't be promoted because %s is not allowed "
                             "on %s (scheduler bug?)",
                             rsc->id, parent->id, pcmk__node_name(node));
         } // else the instance is unmanaged and already promoted
@@ -935,7 +934,7 @@ show_promotion_score(pcmk_resource_t *instance)
 
     score_s = pcmk_readable_score(instance->private->promotion_priority);
     if (pcmk_is_set(instance->private->scheduler->flags,
-                    pcmk__sched_output_scores)
+                    pcmk_sched_output_scores)
         && !pcmk__is_daemon && (instance->private->scheduler->priv != NULL)) {
 
         pcmk__output_t *out = instance->private->scheduler->priv;
@@ -1085,7 +1084,7 @@ set_instance_role(gpointer data, gpointer user_data)
     }
 
     if ((instance->private->orig_role < pcmk_role_promoted)
-        && !pcmk_is_set(scheduler->flags, pcmk__sched_quorate)
+        && !pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
         && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Clone instance %s cannot be promoted without quorum",
                    instance->id);
