@@ -89,6 +89,8 @@ TESTS = [
         SchedulerTest("group-stop-ordering", "Ensure blocked group member stop does not force other member stops"),
         SchedulerTest("colocate-unmanaged-group", "Respect mandatory colocations even if earlier group member is unmanaged"),
         SchedulerTest("coloc-with-inner-group-member", "Consider explicit colocations with inner group members"),
+        SchedulerTest("banned-group-inner-constraints",
+                      "Group banned from current node, inner member constrained"),
     ]),
     SchedulerTestGroup([
         SchedulerTest("rsc_dep1", "Must not"),

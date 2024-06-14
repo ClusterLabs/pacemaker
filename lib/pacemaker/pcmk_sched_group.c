@@ -644,15 +644,19 @@ pcmk__group_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 {
     GList *node_list_orig = NULL;
     GList *node_list_copy = NULL;
-    bool reset_scores = true;
 
     CRM_ASSERT(pcmk__is_group(rsc) && (location != NULL));
 
+    // Save the constraint's original node list (with the constraint score)
     node_list_orig = location->nodes;
-    node_list_copy = pcmk__copy_node_list(node_list_orig, true);
-    reset_scores = pe__group_flag_is_set(rsc, pcmk__group_colocated);
 
-    // Apply the constraint for the group itself (updates node scores)
+    // Make a copy of the nodes with all zero scores
+    node_list_copy  = pcmk__copy_node_list(node_list_orig, true);
+
+    /* Apply the constraint to the group itself. This ensures that any nodes
+     * affected by the constraint are in the group's allowed nodes, with the
+     * constraint score added.
+     */
     pcmk__apply_location(rsc, location);
 
     // Apply the constraint for each member
@@ -661,16 +665,24 @@ pcmk__group_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
         pcmk_resource_t *member = (pcmk_resource_t *) iter->data;
 
-        member->private->cmds->apply_location(member, location);
-
-        if (reset_scores) {
-            /* The first member of colocated groups needs to use the original
-             * node scores, but subsequent members should work on a copy, since
-             * the first member's scores already incorporate theirs.
+        if (pe__group_flag_is_set(rsc, pcmk__group_colocated)
+            && (iter != rsc->private->children)) {
+            /* When apply_location() is called below for the first member (iter
+             * == rsc->private->children), the constraint score will be added to
+             * the member's affected allowed nodes.
+             *
+             * For subsequent members, we reset the constraint's node table to
+             * the copy with all 0 scores. Otherwise, when assigning the member,
+             * the constraint score would be counted multiple times (once for
+             * each later member) due to internal group colocations. Though the
+             * 0 score will not affect these members' allowed node scores, it
+             * ensures that affected nodes are in each member's allowed nodes,
+             * enabling the member on those nodes in asymmetric clusters.
              */
-            reset_scores = false;
             location->nodes = node_list_copy;
         }
+
+        member->private->cmds->apply_location(member, location);
     }
 
     location->nodes = node_list_orig;
