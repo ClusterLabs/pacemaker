@@ -322,7 +322,7 @@ pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
      */
     if ((pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)
          && pcmk_is_set(rsc->private->scheduler->flags,
-                        pcmk_sched_enable_unfencing))
+                        pcmk__sched_enable_unfencing))
         || pcmk_is_set(rsc->flags, pcmk__rsc_needs_unfencing)) {
 
         /* Start with an optional ordering. Requiring unfencing would result in

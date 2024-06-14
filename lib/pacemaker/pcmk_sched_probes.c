@@ -173,7 +173,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     CRM_ASSERT((rsc != NULL) && (node != NULL));
 
     if (!pcmk_is_set(rsc->private->scheduler->flags,
-                     pcmk_sched_probe_resources)) {
+                     pcmk__sched_probe_resources)) {
         reason = "start-up probes are disabled";
         goto no_probe;
     }

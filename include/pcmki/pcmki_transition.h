@@ -8,12 +8,16 @@
  */
 
 #ifndef PCMK__PCMKI_PCMKI_TRANSITION__H
-#  define PCMK__PCMKI_PCMKI_TRANSITION__H
+#define PCMK__PCMKI_PCMKI_TRANSITION__H
 
-#  include <glib.h>
-#  include <crm/crm.h>
-#  include <crm/common/xml.h>
-#  include <crm/lrmd_events.h>  // lrmd_event_data_t
+#include <stdbool.h>                    // bool
+#include <stdint.h>                     // uint32_t
+#include <sys/types.h>                  // time_t
+#include <glib.h>                       // guint, GList, GHashTable
+#include <libxml/tree.h>                // xmlNode
+
+#include <crm/common/scheduler_types.h> // pcmk_scheduler_t
+#include <crm/lrmd_events.h>            // lrmd_event_data_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -164,7 +168,8 @@ void pcmk__free_graph(pcmk__graph_t *graph);
 const char *pcmk__graph_status2text(enum pcmk__graph_status state);
 void pcmk__log_graph(unsigned int log_level, pcmk__graph_t *graph);
 void pcmk__log_graph_action(int log_level, pcmk__graph_action_t *action);
-void pcmk__log_transition_summary(const char *filename);
+void pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
+                                  const char *filename);
 lrmd_event_data_t *pcmk__event_from_graph_action(const xmlNode *resource,
                                                  const pcmk__graph_action_t *action,
                                                  int status, int rc,

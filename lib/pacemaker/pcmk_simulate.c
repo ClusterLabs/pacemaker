@@ -186,7 +186,7 @@ print_transition_summary(pcmk_scheduler_t *scheduler, bool print_spacer)
  * \param[in]     input      What to set as cluster input
  * \param[in]     out        What to set as cluster output object
  * \param[in]     use_date   What to set as cluster's current timestamp
- * \param[in]     flags      Group of enum pcmk_scheduler_flags to set
+ * \param[in]     flags      Group of enum pcmk__scheduler_flags to set
  */
 static void
 reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
@@ -196,13 +196,13 @@ reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
     scheduler->priv = out;
     set_effective_date(scheduler, true, use_date);
     if (pcmk_is_set(flags, pcmk_sim_sanitized)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk_sched_sanitized);
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_sanitized);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk_sched_output_scores);
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_output_scores);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk_sched_show_utilization);
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
 }
 
@@ -334,7 +334,7 @@ profile_file(const char *xml_file, long long repeat,
     xmlNode *cib_object = NULL;
     clock_t start = 0;
     clock_t end;
-    unsigned long long scheduler_flags = pcmk_sched_no_compat;
+    unsigned long long scheduler_flags = pcmk__sched_no_compat;
 
     CRM_ASSERT(out != NULL);
 
@@ -355,11 +355,11 @@ profile_file(const char *xml_file, long long repeat,
         return;
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_output_scores)) {
-        scheduler_flags |= pcmk_sched_output_scores;
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
+        scheduler_flags |= pcmk__sched_output_scores;
     }
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
-        scheduler_flags |= pcmk_sched_show_utilization;
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
+        scheduler_flags |= pcmk__sched_show_utilization;
     }
 
     for (int i = 0; i < repeat; ++i) {
@@ -823,7 +823,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     if (!out->is_quiet(out)) {
         const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
 
-        if (pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
+        if (pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
             printed = out->message(out, "maint-mode", scheduler->flags);
         }
 
@@ -881,29 +881,29 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
         pcmk__output_t *logger_out = NULL;
-        unsigned long long scheduler_flags = pcmk_sched_no_compat;
+        unsigned long long scheduler_flags = pcmk__sched_no_compat;
 
-        if (pcmk_is_set(scheduler->flags, pcmk_sched_output_scores)) {
-            scheduler_flags |= pcmk_sched_output_scores;
+        if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
+            scheduler_flags |= pcmk__sched_output_scores;
         }
-        if (pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
-            scheduler_flags |= pcmk_sched_show_utilization;
+        if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
+            scheduler_flags |= pcmk__sched_show_utilization;
         }
 
         if (pcmk_all_flags_set(scheduler->flags,
-                               pcmk_sched_output_scores
-                               |pcmk_sched_show_utilization)) {
+                               pcmk__sched_output_scores
+                               |pcmk__sched_show_utilization)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL,
                             "Assignment Scores and Utilization Information");
             printed = pcmk_rc_ok;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk_sched_output_scores)) {
+        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Assignment Scores");
             printed = pcmk_rc_ok;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
+        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Utilization Information");
             printed = pcmk_rc_ok;
@@ -972,10 +972,10 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     set_effective_date(scheduler, true, use_date);
 
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk_sched_output_scores);
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_output_scores);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk_sched_show_utilization);
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
 
     cluster_status(scheduler);

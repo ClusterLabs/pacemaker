@@ -516,7 +516,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     node->assign->count++;
     pcmk__consume_node_capacity(node->private->utilization, rsc);
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
         pcmk__output_t *out = scheduler->priv;
 
         out->message(out, "resource-util", rsc, node, __func__);
@@ -616,7 +616,8 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     remaining_tries = rsc->private->ban_after_failures - fail_count;
 
     if (remaining_tries <= 0) {
-        pcmk__sched_warn("%s cannot run on %s due to reaching migration "
+        pcmk__sched_warn(rsc->private->scheduler,
+                         "%s cannot run on %s due to reaching migration "
                          "threshold (clean up resource to allow again)"
                          QB_XS " failures=%d "
                          PCMK_META_MIGRATION_THRESHOLD "=%d",

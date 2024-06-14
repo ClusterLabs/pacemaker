@@ -43,7 +43,7 @@ setup(void **state) {
     }
 
     pcmk__set_scheduler_flags(scheduler,
-                              pcmk_sched_no_counts|pcmk_sched_no_compat);
+                              pcmk__sched_no_counts|pcmk__sched_no_compat);
     scheduler->input = input;
 
     cluster_status(scheduler);

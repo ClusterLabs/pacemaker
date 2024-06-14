@@ -173,6 +173,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     action->rsc = rsc;
     action->task = pcmk__str_copy(task);
     action->uuid = key;
+    action->scheduler = scheduler;
 
     if (node) {
         action->node = pe__copy_node(node);
@@ -290,7 +291,7 @@ effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     enum pe_quorum_policy policy = scheduler->no_quorum_policy;
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_quorate)) {
         policy = pcmk_no_quorum_ignore;
 
     } else if (scheduler->no_quorum_policy == pcmk_no_quorum_demote) {
@@ -882,7 +883,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         desc = "block";
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_FENCE, pcmk__str_casei)) {
-        if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
+        if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             on_fail = pcmk__on_fail_fence_node;
             desc = "node fencing";
         } else {
@@ -961,7 +962,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
     } else if (needs_remote_reset) {
         if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
-            if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
+            if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
                 desc = "fence remote node (default)";
             } else {
                 desc = "recover remote node connection (default)";
@@ -973,7 +974,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         }
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)) {
-        if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
+        if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             on_fail = pcmk__on_fail_fence_node;
             desc = "resource fence (default)";
         } else {
@@ -1278,7 +1279,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                           node->private->id);
         pcmk__insert_meta(stonith_op, PCMK__META_STONITH_ACTION, op);
 
-        if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
+        if (pcmk_is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
             /* Extra work to detect device changes
              */
             GString *digests_all = g_string_sized_new(1024);

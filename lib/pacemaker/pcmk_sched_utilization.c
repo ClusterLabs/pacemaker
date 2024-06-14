@@ -464,7 +464,7 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
 void
 pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
         return;
     }
     for (const GList *iter = scheduler->nodes;

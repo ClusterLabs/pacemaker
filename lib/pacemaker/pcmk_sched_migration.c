@@ -160,7 +160,7 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
 
     pcmk_action_t *stop = NULL;
     bool cleanup = pcmk_is_set(rsc->private->scheduler->flags,
-                               pcmk_sched_remove_after_stop);
+                               pcmk__sched_remove_after_stop);
 
     pcmk__rsc_trace(rsc,
                     "Scheduling stop%s for %s on %s due to dangling migration",

@@ -18,9 +18,6 @@
 
 uint32_t pcmk__warnings = 0;
 
-gboolean was_processing_error = FALSE;
-gboolean was_processing_warning = FALSE;
-
 /*!
  * \internal
  * \brief Get the Designated Controller node from scheduler data
@@ -87,7 +84,7 @@ pcmk_has_quorum(const pcmk_scheduler_t *scheduler)
     if (scheduler == NULL) {
         return false;
     }
-    return pcmk_is_set(scheduler->flags, pcmk_sched_quorate);
+    return pcmk_is_set(scheduler->flags, pcmk__sched_quorate);
 }
 
 /*!
