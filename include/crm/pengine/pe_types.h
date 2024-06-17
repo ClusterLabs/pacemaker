@@ -29,12 +29,12 @@ extern "C" {
  * \ingroup pengine
  */
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/pengine/pe_types_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/pengine/pe_types_compat.h>
 #endif
 
 #endif // PCMK__CRM_PENGINE_PE_TYPES__H

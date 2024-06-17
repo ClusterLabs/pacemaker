@@ -144,12 +144,12 @@ extern char *crm_system_name;
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/crm_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/crm_compat.h>
 #endif
 
 #endif

@@ -57,12 +57,12 @@ void calculate_active_ops(const GList *sorted_op_list, int *start_index,
                           int *stop_index);
 int pe_bundle_replicas(const pcmk_resource_t *rsc);
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/pengine/status_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/pengine/status_compat.h>
 #endif
 
 #endif

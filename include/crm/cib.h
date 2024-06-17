@@ -55,12 +55,12 @@ void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
 #  define CIB_LIBRARY "libcib.so.27"
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/cib_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/cib_compat.h>
 #endif
 
 #endif
