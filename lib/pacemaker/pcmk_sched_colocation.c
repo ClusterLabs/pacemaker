@@ -1461,18 +1461,49 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
  * \internal
  * \brief Find score of highest-scored node that matches colocation attribute
  *
- * \param[in] rsc    Resource whose allowed nodes should be searched
- * \param[in] attr   Colocation attribute name (must not be NULL)
- * \param[in] value  Colocation attribute value to require
+ * \param[in]     colocation  Colocation constraint being applied
+ * \param[in,out] rsc         Resource whose allowed nodes should be searched
+ * \param[in]     attr        Colocation attribute name (must not be NULL)
+ * \param[in]     value       Colocation attribute value to require
  */
 static int
-best_node_score_matching_attr(const pcmk_resource_t *rsc, const char *attr,
+best_node_score_matching_attr(const pcmk__colocation_t *colocation,
+                              pcmk_resource_t *rsc, const char *attr,
                               const char *value)
 {
+    GHashTable *allowed_nodes_orig = NULL;
     GHashTableIter iter;
     pcmk_node_t *node = NULL;
     int best_score = -PCMK_SCORE_INFINITY;
     const char *best_node = NULL;
+
+    if ((colocation != NULL) && (rsc == colocation->dependent)
+        && pcmk_is_set(colocation->flags, pcmk__coloc_explicit)
+        && pcmk__is_group(rsc->parent)
+        && (rsc != rsc->parent->children->data)) {
+        /* The resource is a user-configured colocation's explicit dependent,
+         * and a group member other than the first, which means the group's
+         * location constraint scores were not applied to it (see
+         * pcmk__group_apply_location()). Explicitly consider those scores now.
+         *
+         * @TODO This does leave one suboptimal case: if the group itself or
+         * another member other than the first is explicitly colocated with
+         * the same primary, the primary will count the group's location scores
+         * multiple times. This is much less likely than a single member being
+         * explicitly colocated, so it's an acceptable tradeoff for now.
+         */
+        allowed_nodes_orig = rsc->allowed_nodes;
+        rsc->allowed_nodes = pcmk__copy_node_table(allowed_nodes_orig);
+        for (GList *loc_iter = rsc->cluster->placement_constraints;
+             loc_iter != NULL; loc_iter = loc_iter->next) {
+
+            pcmk__location_t *location = loc_iter->data;
+
+            if (location->rsc == rsc->parent) {
+                rsc->cmds->apply_location(rsc, location);
+            }
+        }
+    }
 
     // Find best allowed node with matching attribute
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -1497,6 +1528,11 @@ best_node_score_matching_attr(const pcmk_resource_t *rsc, const char *attr,
                      "of those matching node attribute %s=%s",
                      best_node, rsc->id, best_score, attr, value);
         }
+    }
+
+    if (allowed_nodes_orig != NULL) {
+        g_hash_table_destroy(rsc->allowed_nodes);
+        rsc->allowed_nodes = allowed_nodes_orig;
     }
     return best_score;
 }
@@ -1537,7 +1573,7 @@ allowed_on_one(const pcmk_resource_t *rsc)
  * nodes' scores to the node's score.
  *
  * \param[in,out] nodes          Table of nodes with assignment scores so far
- * \param[in]     source_rsc     Resource whose node scores to add
+ * \param[in,out] source_rsc     Resource whose node scores to add
  * \param[in]     target_rsc     Resource on whose behalf to update \p nodes
  * \param[in]     colocation     Original colocation constraint (used to get
  *                               configured primary resource's stickiness, and
@@ -1548,7 +1584,7 @@ allowed_on_one(const pcmk_resource_t *rsc)
  */
 static void
 add_node_scores_matching_attr(GHashTable *nodes,
-                              const pcmk_resource_t *source_rsc,
+                              pcmk_resource_t *source_rsc,
                               const pcmk_resource_t *target_rsc,
                               const pcmk__colocation_t *colocation,
                               float factor, bool only_positive)
@@ -1566,7 +1602,7 @@ add_node_scores_matching_attr(GHashTable *nodes,
         int new_score = 0;
         const char *value = pcmk__colocation_node_attr(node, attr, target_rsc);
 
-        score = best_node_score_matching_attr(source_rsc, attr, value);
+        score = best_node_score_matching_attr(colocation, source_rsc, attr, value);
 
         if ((factor < 0) && (score < 0)) {
             /* If the dependent is anti-colocated, we generally don't want the
