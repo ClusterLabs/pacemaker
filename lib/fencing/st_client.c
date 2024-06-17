@@ -290,7 +290,7 @@ stonith_connection_destroy(gpointer user_data)
 }
 
 xmlNode *
-create_device_registration_xml(const char *id, enum stonith_namespace namespace,
+create_device_registration_xml(const char *id, enum stonith_namespace standard,
                                const char *agent,
                                const stonith_key_value_t *params,
                                const char *rsc_provides)
@@ -299,10 +299,10 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
     xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
 
 #if HAVE_STONITH_STONITH_H
-    if (namespace == st_namespace_any) {
-        namespace = stonith_get_namespace(agent, NULL);
+    if (standard == st_namespace_any) {
+        standard = stonith_get_namespace(agent, NULL);
     }
-    if (namespace == st_namespace_lha) {
+    if (standard == st_namespace_lha) {
         hash2field((gpointer) "plugin", (gpointer) agent, args);
         agent = "fence_legacy";
     }
@@ -311,9 +311,9 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
     crm_xml_add(data, PCMK_XA_ID, id);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK_XA_AGENT, agent);
-    if ((namespace != st_namespace_any) && (namespace != st_namespace_invalid)) {
+    if ((standard != st_namespace_any) && (standard != st_namespace_invalid)) {
         crm_xml_add(data, PCMK__XA_NAMESPACE,
-                    stonith_namespace2text(namespace));
+                    stonith_namespace2text(standard));
     }
     if (rsc_provides) {
         crm_xml_add(data, PCMK__XA_RSC_PROVIDES, rsc_provides);
