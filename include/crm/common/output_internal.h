@@ -866,7 +866,7 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
                               const char *class_name, const char *text);
 
 xmlNode *pcmk__html_create(xmlNode *parent, const char *name, const char *id,
-                           const char *class);
+                           const char *class_name);
 
 /*!
  * \internal
