@@ -1,6 +1,6 @@
 /*
  * Copyright 2010-2011 Red Hat, Inc.
- * Later changes copyright 2012-2022 the Pacemaker project contributors
+ * Later changes copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,14 +8,21 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef SERVICES_PRIVATE__H
-#  define SERVICES_PRIVATE__H
+#ifndef PCMK__SERVICES_SERVICES_PRIVATE__H
+#define PCMK__SERVICES_SERVICES_PRIVATE__H
 
-#  include <glib.h>
-#  include "crm/services.h"
+#include <unistd.h>                 // uid_t, gid_t
 
+#include <glib.h>                   // G_GNUC_INTERNAL, gboolean, guint, etc.
 #if HAVE_DBUS
-#  include <dbus/dbus.h>
+#include <dbus/dbus.h>              // DBusPendingCall
+#endif
+
+#include <crm/common/mainloop.h>    // mainloop_io_t 
+#include <crm/services.h>           // svc_action_t
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #define MAX_ARGC        255
@@ -98,4 +105,8 @@ G_GNUC_INTERNAL
 void services_set_op_pending(svc_action_t *op, DBusPendingCall *pending);
 #endif
 
-#endif  /* SERVICES_PRIVATE__H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__SERVICES_SERVICES_PRIVATE__H

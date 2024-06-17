@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2022 the Pacemaker project contributors
+ * Copyright 2014-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,14 +7,21 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK_DBUS__H
-#  define PCMK_DBUS__H
+#ifndef PCMK__SERVICES_PCMK_DBUS__H
+#define PCMK__SERVICES_PCMK_DBUS__H
 
-#  include <dbus/dbus.h>
+#include <stdbool.h>    // bool
 
-#  ifndef DBUS_TIMEOUT_USE_DEFAULT
-#    define DBUS_TIMEOUT_USE_DEFAULT -1
-#  endif
+#include <dbus/dbus.h>  // DBUS_TIMEOUT_USE_DEFAULT, DBusConnection, etc.
+#include <glib.h>       // G_GNUC_INTERNAL, gchar
+
+#ifndef DBUS_TIMEOUT_USE_DEFAULT
+#define DBUS_TIMEOUT_USE_DEFAULT -1
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 G_GNUC_INTERNAL
 DBusConnection *pcmk_dbus_connect(void);
@@ -42,4 +49,8 @@ G_GNUC_INTERNAL
 bool pcmk_dbus_find_error(const DBusPendingCall *pending, DBusMessage *reply,
                           DBusError *error);
 
-#endif  /* PCMK_DBUS__H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__SERVICES_PCMK_DBUS__H

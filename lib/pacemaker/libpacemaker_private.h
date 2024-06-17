@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__LIBPACEMAKER_PRIVATE__H
-#  define PCMK__LIBPACEMAKER_PRIVATE__H
+#ifndef PCMK__PACEMAKER_LIBPACEMAKER_PRIVATE__H
+#define PCMK__PACEMAKER_LIBPACEMAKER_PRIVATE__H
 
 /* This header is for the sole use of libpacemaker, so that functions can be
  * declared with G_GNUC_INTERNAL for efficiency.
@@ -27,6 +27,10 @@
 #include <crm/pengine/internal.h>   // pe__const_top_resource(), etc.
 #include <pacemaker.h>              // pcmk_injections_t
 #include <pacemaker-internal.h>     // pcmk__colocation_t
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Colocation flags
 enum pcmk__coloc_flags {
@@ -449,6 +453,7 @@ void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
 
 // Injected scheduler inputs (pcmk_sched_injections.c)
 
+G_GNUC_INTERNAL
 void pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
                                   const pcmk_injections_t *injections);
 
@@ -1162,4 +1167,8 @@ G_GNUC_INTERNAL
 int pcmk__setup_output_cib_sched(pcmk__output_t **out, cib_t **cib,
                                  pcmk_scheduler_t **scheduler, xmlNode **xml);
 
-#endif // PCMK__LIBPACEMAKER_PRIVATE__H
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__PACEMAKER_LIBPACEMAKER_PRIVATE__H
