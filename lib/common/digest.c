@@ -241,7 +241,9 @@ crm_md5sum(const char *buffer)
 
     raw_digest = pcmk__assert_alloc(dlen, sizeof(unsigned char));
 
+    GNUTLS_FIPS140_SET_LAX_MODE();
     rc = gnutls_hash_fast(GNUTLS_DIG_MD5, buffer, strlen(buffer), raw_digest);
+    GNUTLS_FIPS140_SET_STRICT_MODE();
 
     if (rc < 0) {
         free(raw_digest);
