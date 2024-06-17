@@ -423,9 +423,9 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     pe__unpack_node_health_scores(scheduler);
 
-    scheduler->placement_strategy =
+    scheduler->priv->placement_strategy =
         pcmk__cluster_option(config_hash, PCMK_OPT_PLACEMENT_STRATEGY);
-    crm_trace("Placement strategy: %s", scheduler->placement_strategy);
+    crm_trace("Placement strategy: %s", scheduler->priv->placement_strategy);
 
     set_config_flag(scheduler, PCMK_OPT_SHUTDOWN_LOCK,
                     pcmk__sched_shutdown_lock);

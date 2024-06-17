@@ -85,8 +85,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_get_dc() instead
     pcmk_node_t *dc_node;           // Node object for DC
 
-    const char *placement_strategy; // Value of placement-strategy property
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     // @COMPAT Change to uint64_t at a compatibility break
     //! \deprecated Call pcmk_has_quorum() to check quorum
