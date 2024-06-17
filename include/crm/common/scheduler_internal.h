@@ -171,6 +171,7 @@ struct pcmk__scheduler_private {
 
     crm_time_t *now;                // Time to use when evaluating rules
     pcmk__output_t *out;            // Output object for displaying messages
+    const char *fence_action;       // Default fencing action
 };
 
 // Group of enum pcmk__warnings flags for warnings we want to log once

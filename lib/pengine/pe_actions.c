@@ -1263,7 +1263,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
     pcmk_action_t *stonith_op = NULL;
 
     if(op == NULL) {
-        op = scheduler->stonith_action;
+        op = scheduler->priv->fence_action;
     }
 
     op_key = crm_strdup_printf("%s-%s-%s",

@@ -85,7 +85,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_get_dc() instead
     pcmk_node_t *dc_node;           // Node object for DC
 
-    const char *stonith_action;     // Default fencing action
     const char *placement_strategy; // Value of placement-strategy property
 
     // NOTE: sbd (as of at least 1.5.2) uses this
