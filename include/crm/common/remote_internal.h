@@ -67,7 +67,7 @@ pcmk__is_remote_node(const pcmk_node_t *node)
 {
     return pcmk__is_pacemaker_remote_node(node)
            && ((node->private->remote == NULL)
-               || (node->private->remote->private->launcher == NULL));
+               || (node->private->remote->priv->launcher == NULL));
 }
 
 /*!
@@ -83,7 +83,7 @@ pcmk__is_guest_or_bundle_node(const pcmk_node_t *node)
 {
     return pcmk__is_pacemaker_remote_node(node)
            && (node->private->remote != NULL)
-           && (node->private->remote->private->launcher != NULL);
+           && (node->private->remote->priv->launcher != NULL);
 }
 
 gnutls_session_t *pcmk__new_tls_session(int csock, unsigned int conn_type,

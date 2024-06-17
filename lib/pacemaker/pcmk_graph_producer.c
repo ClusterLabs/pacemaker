@@ -211,10 +211,10 @@ clone_op_key(const pcmk_action_t *action, guint interval_ms)
         const char *n_task = g_hash_table_lookup(action->meta,
                                                  "notify_operation");
 
-        return pcmk__notify_key(action->rsc->private->history_id, n_type,
+        return pcmk__notify_key(action->rsc->priv->history_id, n_type,
                                 n_task);
     }
-    return pcmk__op_key(action->rsc->private->history_id,
+    return pcmk__op_key(action->rsc->priv->history_id,
                         pcmk__s(action->cancel_task, action->task),
                         interval_ms);
 }
@@ -261,15 +261,15 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
      */
     if (pcmk__action_locks_rsc_to_node(action)) {
         crm_xml_add_ll(action_xml, PCMK_OPT_SHUTDOWN_LOCK,
-                       (long long) action->rsc->private->lock_time);
+                       (long long) action->rsc->priv->lock_time);
     }
 
     // List affected resource
 
     rsc_xml = pcmk__xe_create(action_xml,
-                              (const char *) action->rsc->private->xml->name);
+                              (const char *) action->rsc->priv->xml->name);
     if (pcmk_is_set(action->rsc->flags, pcmk__rsc_removed)
-        && (action->rsc->private->history_id != NULL)) {
+        && (action->rsc->priv->history_id != NULL)) {
         /* Use the numbered instance name here, because if there is more
          * than one instance on a node, we need to make sure the command
          * goes to the right one.
@@ -279,15 +279,15 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * off.
          */
         crm_debug("Using orphan clone name %s instead of history ID %s",
-                  action->rsc->id, action->rsc->private->history_id);
-        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->private->history_id);
+                  action->rsc->id, action->rsc->priv->history_id);
+        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->priv->history_id);
         crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
 
     } else if (!pcmk_is_set(action->rsc->flags, pcmk__rsc_unique)) {
-        const char *xml_id = pcmk__xe_id(action->rsc->private->xml);
+        const char *xml_id = pcmk__xe_id(action->rsc->priv->xml);
 
         crm_debug("Using anonymous clone name %s for %s (aka %s)",
-                  xml_id, action->rsc->id, action->rsc->private->history_id);
+                  xml_id, action->rsc->id, action->rsc->priv->history_id);
 
         /* ID is what we'd like client to use
          * LONG_ID is what they might know it as instead
@@ -303,23 +303,23 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * and fall into the clause above instead
          */
         crm_xml_add(rsc_xml, PCMK_XA_ID, xml_id);
-        if ((action->rsc->private->history_id != NULL)
-            && !pcmk__str_eq(xml_id, action->rsc->private->history_id,
+        if ((action->rsc->priv->history_id != NULL)
+            && !pcmk__str_eq(xml_id, action->rsc->priv->history_id,
                              pcmk__str_none)) {
             crm_xml_add(rsc_xml, PCMK__XA_LONG_ID,
-                        action->rsc->private->history_id);
+                        action->rsc->priv->history_id);
         } else {
             crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
         }
 
     } else {
-        CRM_ASSERT(action->rsc->private->history_id == NULL);
+        CRM_ASSERT(action->rsc->priv->history_id == NULL);
         crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->id);
     }
 
     for (int lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
         crm_xml_add(rsc_xml, attr_list[lpc],
-                    g_hash_table_lookup(action->rsc->private->meta,
+                    g_hash_table_lookup(action->rsc->priv->meta,
                                         attr_list[lpc]));
     }
 }
@@ -349,15 +349,15 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
     if ((rsc != NULL) && (action->node != NULL)) {
         // Get the resource instance attributes, evaluated properly for node
         GHashTable *params = pe_rsc_params(rsc, action->node,
-                                           rsc->private->scheduler);
+                                           rsc->priv->scheduler);
 
         pcmk__substitute_remote_addr(rsc, params);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
 
     } else if ((rsc != NULL)
-               && (rsc->private->variant <= pcmk__rsc_variant_primitive)) {
-        GHashTable *params = pe_rsc_params(rsc, NULL, rsc->private->scheduler);
+               && (rsc->priv->variant <= pcmk__rsc_variant_primitive)) {
+        GHashTable *params = pe_rsc_params(rsc, NULL, rsc->priv->scheduler);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
     }
@@ -367,8 +367,8 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
         pcmk_resource_t *parent = rsc;
 
         while (parent != NULL) {
-            parent->private->cmds->add_graph_meta(parent, args_xml);
-            parent = parent->private->parent;
+            parent->priv->cmds->add_graph_meta(parent, args_xml);
+            parent = parent->priv->parent;
         }
 
         pcmk__add_guest_meta_to_xml(args_xml, action);
@@ -445,7 +445,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
     crm_xml_add_int(action_xml, PCMK_XA_ID, action->id);
     crm_xml_add(action_xml, PCMK_XA_OPERATION, action->task);
 
-    if ((action->rsc != NULL) && (action->rsc->private->history_id != NULL)) {
+    if ((action->rsc != NULL) && (action->rsc->priv->history_id != NULL)) {
         char *clone_key = NULL;
         guint interval_ms;
 
@@ -680,7 +680,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
             && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO,
                             pcmk__str_none)) {
 
-            pcmk_node_t *assigned = action->rsc->private->assigned_node;
+            pcmk_node_t *assigned = action->rsc->priv->assigned_node;
 
             /* For load_stopped -> migrate_to orderings, we care about where
              * the resource has been assigned, not where migrate_to will be
@@ -866,7 +866,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
     scheduler->num_synapse++;
 
     if (action->rsc != NULL) {
-        synapse_priority = action->rsc->private->priority;
+        synapse_priority = action->rsc->priv->priority;
     }
     if (action->priority > synapse_priority) {
         synapse_priority = action->priority;
@@ -996,14 +996,14 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
     pcmk__rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
 
     // First add the resource's own actions
-    g_list_foreach(rsc->private->actions, add_action_to_graph,
-                   rsc->private->scheduler);
+    g_list_foreach(rsc->priv->actions, add_action_to_graph,
+                   rsc->priv->scheduler);
 
     // Then recursively add its children's actions (appropriate to variant)
-    for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
+    for (iter = rsc->priv->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) iter->data;
 
-        child_rsc->private->cmds->add_actions_to_graph(child_rsc);
+        child_rsc->priv->cmds->add_actions_to_graph(child_rsc);
     }
 }
 
@@ -1069,7 +1069,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pcmk__rsc_trace(rsc, "Processing actions for %s", rsc->id);
-        rsc->private->cmds->add_actions_to_graph(rsc);
+        rsc->priv->cmds->add_actions_to_graph(rsc);
     }
 
     // Add pseudo-action for list of nodes with maintenance state update

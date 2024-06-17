@@ -73,18 +73,18 @@ cmp_colocation_priority(const pcmk__colocation_t *colocation1,
     }
     CRM_ASSERT((rsc1 != NULL) && (rsc2 != NULL));
 
-    if (rsc1->private->priority > rsc2->private->priority) {
+    if (rsc1->priv->priority > rsc2->priv->priority) {
         return -1;
     }
-    if (rsc1->private->priority < rsc2->private->priority) {
+    if (rsc1->priv->priority < rsc2->priv->priority) {
         return 1;
     }
 
     // Process clones before primitives and groups
-    if (rsc1->private->variant > rsc2->private->variant) {
+    if (rsc1->priv->variant > rsc2->priv->variant) {
         return -1;
     }
-    if (rsc1->private->variant < rsc2->private->variant) {
+    if (rsc1->priv->variant < rsc2->priv->variant) {
         return 1;
     }
 
@@ -388,13 +388,13 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     new_con->node_attribute = pcmk__s(node_attr, CRM_ATTR_UNAME);
     new_con->flags = flags;
 
-    pcmk__add_this_with(&(dependent->private->this_with_colocations), new_con,
+    pcmk__add_this_with(&(dependent->priv->this_with_colocations), new_con,
                         dependent);
-    pcmk__add_with_this(&(primary->private->with_this_colocations), new_con,
+    pcmk__add_with_this(&(primary->priv->with_this_colocations), new_con,
                         primary);
 
-    dependent->private->scheduler->colocation_constraints =
-        g_list_prepend(dependent->private->scheduler->colocation_constraints,
+    dependent->priv->scheduler->colocation_constraints =
+        g_list_prepend(dependent->priv->scheduler->colocation_constraints,
                        new_con);
 
     if (score <= -PCMK_SCORE_INFINITY) {
@@ -1042,7 +1042,7 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
     GList *iter = NULL;
     char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
-    for (iter = rsc->private->actions; iter != NULL; iter = iter->next) {
+    for (iter = rsc->priv->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
 
         if (pcmk_is_set(action->flags, pcmk__action_runnable)
@@ -1051,12 +1051,12 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
             pcmk__clear_action_flags(action, pcmk__action_runnable);
             pe_action_set_reason(action, reason_text, false);
             pcmk__block_colocation_dependents(action);
-            pcmk__update_action_for_orderings(action, rsc->private->scheduler);
+            pcmk__update_action_for_orderings(action, rsc->priv->scheduler);
         }
     }
 
     // If parent resource can't perform an action, neither can any children
-    for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
+    for (iter = rsc->priv->children; iter != NULL; iter = iter->next) {
         mark_action_blocked((pcmk_resource_t *) (iter->data), task, reason);
     }
     free(reason_text);
@@ -1097,16 +1097,16 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
      * collective resource.
      */
     rsc = uber_parent(action->rsc);
-    if (rsc->private->parent != NULL) {
-        rsc = rsc->private->parent; // Bundle
+    if (rsc->priv->parent != NULL) {
+        rsc = rsc->priv->parent; // Bundle
     }
 
     // Colocation fails only if entire primary can't reach desired role
-    for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
+    for (iter = rsc->priv->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *child = iter->data;
         pcmk_action_t *child_action = NULL;
 
-        child_action = find_first_action(child->private->actions, NULL,
+        child_action = find_first_action(child->priv->actions, NULL,
                                          action->task, NULL);
         if ((child_action == NULL)
             || pcmk_is_set(child_action->flags, pcmk__action_runnable)) {
@@ -1221,8 +1221,8 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
     primary_role_rsc = get_resource_for_role(primary);
 
     if ((colocation->dependent_role >= pcmk_role_unpromoted)
-        && (dependent_role_rsc->private->parent != NULL)
-        && pcmk_is_set(dependent_role_rsc->private->parent->flags,
+        && (dependent_role_rsc->priv->parent != NULL)
+        && pcmk_is_set(dependent_role_rsc->priv->parent->flags,
                        pcmk__rsc_promotable)
         && !pcmk_is_set(dependent_role_rsc->flags, pcmk__rsc_unassigned)) {
 
@@ -1241,25 +1241,25 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
     }
 
     if ((colocation->dependent_role != pcmk_role_unknown)
-        && (colocation->dependent_role != dependent_role_rsc->private->next_role)) {
+        && (colocation->dependent_role != dependent_role_rsc->priv->next_role)) {
         crm_trace("Skipping %scolocation '%s': dependent limited to %s role "
 
                   "but %s next role is %s",
                   ((colocation->score < 0)? "anti-" : ""),
                   colocation->id, pcmk_role_text(colocation->dependent_role),
                   dependent_role_rsc->id,
-                  pcmk_role_text(dependent_role_rsc->private->next_role));
+                  pcmk_role_text(dependent_role_rsc->priv->next_role));
         return pcmk__coloc_affects_nothing;
     }
 
     if ((colocation->primary_role != pcmk_role_unknown)
-        && (colocation->primary_role != primary_role_rsc->private->next_role)) {
+        && (colocation->primary_role != primary_role_rsc->priv->next_role)) {
         crm_trace("Skipping %scolocation '%s': primary limited to %s role "
                   "but %s next role is %s",
                   ((colocation->score < 0)? "anti-" : ""),
                   colocation->id, pcmk_role_text(colocation->primary_role),
                   primary_role_rsc->id,
-                  pcmk_role_text(primary_role_rsc->private->next_role));
+                  pcmk_role_text(primary_role_rsc->priv->next_role));
         return pcmk__coloc_affects_nothing;
     }
 
@@ -1288,8 +1288,8 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
     GHashTableIter iter;
     pcmk_node_t *node = NULL;
 
-    if (primary->private->assigned_node != NULL) {
-        value = pcmk__colocation_node_attr(primary->private->assigned_node,
+    if (primary->priv->assigned_node != NULL) {
+        value = pcmk__colocation_node_attr(primary->priv->assigned_node,
                                            attr, primary);
 
     } else if (colocation->score < 0) {
@@ -1297,11 +1297,11 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
         return;
     }
 
-    work = pcmk__copy_node_table(dependent->private->allowed_nodes);
+    work = pcmk__copy_node_table(dependent->priv->allowed_nodes);
 
     g_hash_table_iter_init(&iter, work);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        if (primary->private->assigned_node == NULL) {
+        if (primary->priv->assigned_node == NULL) {
             node->assign->score = pcmk__add_scores(-colocation->score,
                                                    node->assign->score);
             pcmk__rsc_trace(dependent,
@@ -1356,8 +1356,8 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
         || (colocation->score >= PCMK_SCORE_INFINITY)
         || pcmk__any_node_available(work)) {
 
-        g_hash_table_destroy(dependent->private->allowed_nodes);
-        dependent->private->allowed_nodes = work;
+        g_hash_table_destroy(dependent->priv->allowed_nodes);
+        dependent->priv->allowed_nodes = work;
         work = NULL;
 
     } else {
@@ -1399,8 +1399,8 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     CRM_ASSERT((dependent != NULL) && (primary != NULL) &&
                (colocation != NULL));
 
-    primary_node = primary->private->assigned_node;
-    dependent_node = dependent->private->assigned_node;
+    primary_node = primary->priv->assigned_node;
+    dependent_node = dependent->priv->assigned_node;
 
     if ((primary_node == NULL) || (dependent_node == NULL)) {
         return;
@@ -1415,13 +1415,13 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     if (!pcmk__str_eq(dependent_value, primary_value, pcmk__str_casei)) {
         if ((colocation->score == PCMK_SCORE_INFINITY)
             && (colocation->dependent_role == pcmk_role_promoted)) {
-            dependent->private->priority = -PCMK_SCORE_INFINITY;
+            dependent->priv->priority = -PCMK_SCORE_INFINITY;
         }
         return;
     }
 
     if ((colocation->primary_role != pcmk_role_unknown)
-        && (colocation->primary_role != primary_role_rsc->private->next_role)) {
+        && (colocation->primary_role != primary_role_rsc->priv->next_role)) {
         return;
     }
 
@@ -1429,13 +1429,13 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
         score_multiplier = -1;
     }
 
-    dependent->private->priority =
+    dependent->priv->priority =
         pcmk__add_scores(score_multiplier * colocation->score,
-                         dependent->private->priority);
+                         dependent->priv->priority);
     pcmk__rsc_trace(dependent,
                     "Applied %s to %s promotion priority (now %s after %s %s)",
                     colocation->id, dependent->id,
-                    pcmk_readable_score(dependent->private->priority),
+                    pcmk_readable_score(dependent->priv->priority),
                     ((score_multiplier == 1)? "adding" : "subtracting"),
                     pcmk_readable_score(colocation->score));
 }
@@ -1462,8 +1462,8 @@ best_node_score_matching_attr(const pcmk__colocation_t *colocation,
 
     if ((colocation != NULL) && (rsc == colocation->dependent)
         && pcmk_is_set(colocation->flags, pcmk__coloc_explicit)
-        && pcmk__is_group(rsc->private->parent)
-        && (rsc != rsc->private->parent->private->children->data)) {
+        && pcmk__is_group(rsc->priv->parent)
+        && (rsc != rsc->priv->parent->priv->children->data)) {
         /* The resource is a user-configured colocation's explicit dependent,
          * and a group member other than the first, which means the group's
          * location constraint scores were not applied to it (see
@@ -1475,21 +1475,21 @@ best_node_score_matching_attr(const pcmk__colocation_t *colocation,
          * multiple times. This is much less likely than a single member being
          * explicitly colocated, so it's an acceptable tradeoff for now.
          */
-        allowed_nodes_orig = rsc->private->allowed_nodes;
-        rsc->private->allowed_nodes = pcmk__copy_node_table(allowed_nodes_orig);
-        for (GList *loc_iter = rsc->private->scheduler->placement_constraints;
+        allowed_nodes_orig = rsc->priv->allowed_nodes;
+        rsc->priv->allowed_nodes = pcmk__copy_node_table(allowed_nodes_orig);
+        for (GList *loc_iter = rsc->priv->scheduler->placement_constraints;
              loc_iter != NULL; loc_iter = loc_iter->next) {
 
             pcmk__location_t *location = loc_iter->data;
 
-            if (location->rsc == rsc->private->parent) {
-                rsc->private->cmds->apply_location(rsc, location);
+            if (location->rsc == rsc->priv->parent) {
+                rsc->priv->cmds->apply_location(rsc, location);
             }
         }
     }
 
     // Find best allowed node with matching attribute
-    g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
+    g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
         if ((node->assign->score > best_score)
@@ -1514,8 +1514,8 @@ best_node_score_matching_attr(const pcmk__colocation_t *colocation,
     }
 
     if (allowed_nodes_orig != NULL) {
-        g_hash_table_destroy(rsc->private->allowed_nodes);
-        rsc->private->allowed_nodes = allowed_nodes_orig;
+        g_hash_table_destroy(rsc->priv->allowed_nodes);
+        rsc->priv->allowed_nodes = allowed_nodes_orig;
     }
     return best_score;
 }
@@ -1535,7 +1535,7 @@ allowed_on_one(const pcmk_resource_t *rsc)
     pcmk_node_t *allowed_node = NULL;
     int allowed_nodes = 0;
 
-    g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
+    g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &allowed_node)) {
         if ((allowed_node->assign->score >= 0) && (++allowed_nodes > 1)) {
             pcmk__rsc_trace(rsc, "%s is allowed on multiple nodes", rsc->id);
@@ -1621,7 +1621,7 @@ add_node_scores_matching_attr(GHashTable *nodes,
              * unless stickiness uses a rule to vary by node, and that seems
              * acceptable to ignore.)
              */
-            if ((colocation->primary->private->stickiness >= -score)
+            if ((colocation->primary->priv->stickiness >= -score)
                 || !pcmk__colocation_has_influence(colocation, NULL)
                 || !allowed_on_one(colocation->dependent)) {
                 crm_trace("%s: Filtering %d + %f * %d "
@@ -1737,7 +1737,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     pcmk__set_rsc_flags(source_rsc, pcmk__rsc_updating_nodes);
 
     if (*nodes == NULL) {
-        work = pcmk__copy_node_table(source_rsc->private->allowed_nodes);
+        work = pcmk__copy_node_table(source_rsc->priv->allowed_nodes);
         target_rsc = source_rsc;
     } else {
         const bool pos = pcmk_is_set(flags, pcmk__coloc_select_nonnegative);
@@ -1792,13 +1792,12 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
                             "(%s with %s)",
                             constraint->id, constraint->dependent->id,
                             constraint->primary->id);
-            other->private->cmds->add_colocated_node_scores(other, target_rsc,
-                                                            log_id, &work,
-                                                            constraint,
-                                                            other_factor,
-                                                            flags);
+            other->priv->cmds->add_colocated_node_scores(other, target_rsc,
+                                                         log_id, &work,
+                                                         constraint,
+                                                         other_factor, flags);
             pe__show_node_scores(true, NULL, log_id, work,
-                                 source_rsc->private->scheduler);
+                                 source_rsc->priv->scheduler);
         }
         g_list_free(colocations);
 
@@ -1858,11 +1857,10 @@ pcmk__add_dependent_scores(gpointer data, gpointer user_data)
                     "%s: Incorporating attenuated %s assignment scores due "
                     "to colocation %s",
                     primary->id, dependent->id, colocation->id);
-    dependent->private->cmds->add_colocated_node_scores(dependent, primary,
-                                                        dependent->id,
-                                                        &(primary->private->allowed_nodes),
-                                                        colocation, factor,
-                                                        flags);
+    dependent->priv->cmds->add_colocated_node_scores(dependent, primary,
+                                                     dependent->id,
+                                                     &(primary->priv->allowed_nodes),
+                                                     colocation, factor, flags);
 }
 
 /*!
@@ -1894,7 +1892,7 @@ pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
     CRM_ASSERT((dependent != NULL) && (primary != NULL)
                && (colocation != NULL));
 
-    g_hash_table_iter_init(&iter, dependent->private->allowed_nodes);
+    g_hash_table_iter_init(&iter, dependent->priv->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &dependent_node)) {
         const pcmk_node_t *primary_node = NULL;
 
@@ -1937,7 +1935,7 @@ pcmk__with_this_colocations(const pcmk_resource_t *rsc)
 {
     GList *list = NULL;
 
-    rsc->private->cmds->with_this_colocations(rsc, rsc, &list);
+    rsc->priv->cmds->with_this_colocations(rsc, rsc, &list);
     return list;
 }
 
@@ -1956,6 +1954,6 @@ pcmk__this_with_colocations(const pcmk_resource_t *rsc)
 {
     GList *list = NULL;
 
-    rsc->private->cmds->this_with_colocations(rsc, rsc, &list);
+    rsc->priv->cmds->this_with_colocations(rsc, rsc, &list);
     return list;
 }

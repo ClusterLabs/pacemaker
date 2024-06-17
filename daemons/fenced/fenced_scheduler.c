@@ -86,7 +86,7 @@ local_node_allowed_for(const pcmk_resource_t *rsc)
         GHashTableIter iter;
         pcmk_node_t *node = NULL;
 
-        g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__str_eq(node->private->name, stonith_our_uname,
                              pcmk__str_casei)) {
@@ -109,7 +109,7 @@ static void
 register_if_fencing_device(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
-    const char *rsc_id = pcmk__s(rsc->private->history_id, rsc->id);
+    const char *rsc_id = pcmk__s(rsc->priv->history_id, rsc->id);
 
     xmlNode *xml = NULL;
     GHashTableIter hash_iter;
@@ -122,9 +122,9 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     stonith_key_value_t *params = NULL;
 
     // If this is a collective resource, check children instead
-    if (rsc->private->children != NULL) {
+    if (rsc->priv->children != NULL) {
 
-        for (GList *iter = rsc->private->children;
+        for (GList *iter = rsc->priv->children;
              iter != NULL; iter = iter->next) {
 
             register_if_fencing_device(iter->data, NULL);
@@ -135,7 +135,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         return;
     }
 
-    rclass = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
+    rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
     if (!pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         return; // Not a fencing device
     }
@@ -167,8 +167,8 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     }
 
     // If device is in a group, check whether local node is allowed for group
-    if (pcmk__is_group(rsc->private->parent)) {
-        pcmk_node_t *group_node = local_node_allowed_for(rsc->private->parent);
+    if (pcmk__is_group(rsc->priv->parent)) {
+        pcmk_node_t *group_node = local_node_allowed_for(rsc->priv->parent);
 
         if ((group_node != NULL) && (group_node->assign->score < 0)) {
             crm_info("Ignoring fencing device %s "
@@ -180,14 +180,14 @@ register_if_fencing_device(gpointer data, gpointer user_data)
 
     crm_debug("Reloading configuration of fencing device %s", rsc->id);
 
-    agent = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
+    agent = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
 
     /* @COMPAT Support for node attribute expressions in rules for resource
      * meta-attributes is deprecated. When we can break behavioral backward
      * compatibility, replace node with NULL here.
      */
-    get_meta_attributes(rsc->private->meta, rsc, node, scheduler);
-    rsc_provides = g_hash_table_lookup(rsc->private->meta,
+    get_meta_attributes(rsc->priv->meta, rsc, node, scheduler);
+    rsc_provides = g_hash_table_lookup(rsc->priv->meta,
                                        PCMK_STONITH_PROVIDES);
 
     g_hash_table_iter_init(&hash_iter, pe_rsc_params(rsc, node, scheduler));

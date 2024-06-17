@@ -25,7 +25,7 @@ pe__resource_description(const pcmk_resource_t *rsc, uint32_t show_opts)
 
     // User-supplied description
     if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)) {
-        desc = crm_element_value(rsc->private->xml, PCMK_XA_DESCRIPTION);
+        desc = crm_element_value(rsc->priv->xml, PCMK_XA_DESCRIPTION);
     }
     return desc;
 }
@@ -69,13 +69,13 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
-        const char *type = g_hash_table_lookup(rsc->private->meta,
+        const char *type = g_hash_table_lookup(rsc->priv->meta,
                                                PCMK_XA_TYPE);
         const char *name = NULL;
         GHashTable *params = NULL;
 
-        if (rsc->private->children != NULL) {
-            if (add_extra_info(node, rsc->private->children, scheduler,
+        if (rsc->priv->children != NULL) {
+            if (add_extra_info(node, rsc->priv->children, scheduler,
                                attrname, expected_score)) {
                 return true;
             }
@@ -333,7 +333,7 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
         }
 
         buf = crm_strdup_printf("%s: " PCMK_META_MIGRATION_THRESHOLD "=%d%s%s",
-                                rsc_id, rsc->private->ban_after_failures,
+                                rsc_id, rsc->priv->ban_after_failures,
                                 failcount_s, pcmk__s(lastfail_s, ""));
         free(failcount_s);
         free(lastfail_s);
@@ -393,11 +393,11 @@ is_mixed_version(pcmk_scheduler_t *scheduler)
 static void
 formatted_xml_buf(const pcmk_resource_t *rsc, GString *xml_buf, bool raw)
 {
-    if (raw && (rsc->private->orig_xml != NULL)) {
-        pcmk__xml_string(rsc->private->orig_xml, pcmk__xml_fmt_pretty, xml_buf,
+    if (raw && (rsc->priv->orig_xml != NULL)) {
+        pcmk__xml_string(rsc->priv->orig_xml, pcmk__xml_fmt_pretty, xml_buf,
                          0);
     } else {
-        pcmk__xml_string(rsc->private->xml, pcmk__xml_fmt_pretty, xml_buf, 0);
+        pcmk__xml_string(rsc->priv->xml, pcmk__xml_fmt_pretty, xml_buf, 0);
     }
 }
 
@@ -573,7 +573,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
         const pcmk_resource_t *launcher = NULL;
         const pcmk_node_t *host_node = NULL;
 
-        launcher = node->private->remote->private->launcher;
+        launcher = node->private->remote->priv->launcher;
         host_node = pcmk__current_node(launcher);
 
         if (host_node && host_node->details) {
@@ -1827,7 +1827,7 @@ node_html(pcmk__output_t *out, va_list args) {
                 PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources");
 
                 show_opts |= pcmk_show_rsc_only;
-                out->message(out, pcmk__map_element_name(rsc->private->xml),
+                out->message(out, pcmk__map_element_name(rsc->priv->xml),
                              show_opts, rsc, only_node, only_rsc);
             }
 
@@ -1967,7 +1967,7 @@ node_text(pcmk__output_t *out, va_list args) {
                     pcmk_resource_t *rsc = (pcmk_resource_t *) gIter2->data;
 
                     show_opts |= pcmk_show_rsc_only;
-                    out->message(out, pcmk__map_element_name(rsc->private->xml),
+                    out->message(out, pcmk__map_element_name(rsc->priv->xml),
                                  show_opts, rsc, only_node, only_rsc);
                 }
 
@@ -2093,7 +2093,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
             crm_xml_add(xml_node, PCMK_XA_ID_AS_RESOURCE,
-                        node->private->remote->private->launcher->id);
+                        node->private->remote->priv->launcher->id);
         }
 
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
@@ -2103,7 +2103,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                 pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
                 show_opts |= pcmk_show_rsc_only;
-                out->message(out, pcmk__map_element_name(rsc->private->xml),
+                out->message(out, pcmk__map_element_name(rsc->priv->xml),
                              show_opts, rsc, only_node, only_rsc);
             }
         }
@@ -2208,12 +2208,12 @@ node_and_op(pcmk__output_t *out, va_list args) {
 
     if (rsc) {
         const pcmk_node_t *node = pcmk__current_node(rsc);
-        const char *target_role = g_hash_table_lookup(rsc->private->meta,
+        const char *target_role = g_hash_table_lookup(rsc->priv->meta,
                                                       PCMK_META_TARGET_ROLE);
         uint32_t show_opts = pcmk_show_rsc_only | pcmk_show_pending;
 
         if (node == NULL) {
-            node = rsc->private->pending_node;
+            node = rsc->priv->pending_node;
         }
 
         node_str = pcmk__native_output_string(rsc, rsc_printable_id(rsc), node,
@@ -2276,10 +2276,10 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     rsc = pe_find_resource(scheduler->resources, op_rsc);
 
     if (rsc) {
-        const char *class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
-        const char *provider = crm_element_value(rsc->private->xml,
+        const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+        const char *provider = crm_element_value(rsc->priv->xml,
                                                  PCMK_XA_PROVIDER);
-        const char *kind = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
+        const char *kind = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
         bool has_provider = pcmk_is_set(pcmk_get_ra_caps(class),
                                         pcmk_ra_cap_provider);
 
@@ -2476,7 +2476,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
                                       pcmk__str_star_matches)) {
                 continue;
             }
-        } else if (rsc->private->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        } else if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
             continue;
         }
 
@@ -2954,7 +2954,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
     if (rsc == NULL) {
         pcmk__xe_set_bool_attr(node, PCMK_XA_ORPHAN, true);
     } else if (all || failcount || last_failure > 0) {
-        char *migration_s = pcmk__itoa(rsc->private->ban_after_failures);
+        char *migration_s = pcmk__itoa(rsc->priv->ban_after_failures);
 
         pcmk__xe_set_props(node,
                            PCMK_XA_ORPHAN, PCMK_VALUE_FALSE,
@@ -3042,8 +3042,8 @@ resource_list(pcmk__output_t *out, va_list args)
         int x;
 
         /* Complex resources may have some sub-resources active and some inactive */
-        gboolean is_active = rsc->private->fns->active(rsc, TRUE);
-        gboolean partially_active = rsc->private->fns->active(rsc, FALSE);
+        gboolean is_active = rsc->priv->fns->active(rsc, TRUE);
+        gboolean partially_active = rsc->priv->fns->active(rsc, FALSE);
 
         /* Skip inactive orphans (deleted but still in CIB) */
         if (pcmk_is_set(rsc->flags, pcmk__rsc_removed) && !is_active) {
@@ -3077,7 +3077,7 @@ resource_list(pcmk__output_t *out, va_list args)
         }
 
         /* Print this resource */
-        x = out->message(out, pcmk__map_element_name(rsc->private->xml),
+        x = out->message(out, pcmk__map_element_name(rsc->priv->xml),
                          show_opts, rsc, only_node, only_rsc);
         if (x == pcmk_rc_ok) {
             rc = pcmk_rc_ok;
@@ -3174,7 +3174,7 @@ resource_util(pcmk__output_t *out, va_list args)
     char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
                                         fn, rsc->id, pcmk__node_name(node));
 
-    g_hash_table_foreach(rsc->private->utilization, append_dump_text,
+    g_hash_table_foreach(rsc->priv->utilization, append_dump_text,
                          &dump_text);
     out->list_item(out, NULL, "%s", dump_text);
     free(dump_text);
@@ -3199,7 +3199,7 @@ resource_util_xml(pcmk__output_t *out, va_list args)
                                             PCMK_XA_NODE, uname,
                                             PCMK_XA_FUNCTION, fn,
                                             NULL);
-    g_hash_table_foreach(rsc->private->utilization, add_dump_node, xml_node);
+    g_hash_table_foreach(rsc->priv->utilization, add_dump_node, xml_node);
 
     return pcmk_rc_ok;
 }

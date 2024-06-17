@@ -143,8 +143,8 @@ get_node_names(const GList *list, GString **all_node_names,
             if (pcmk__is_guest_or_bundle_node(node)) {
                 const pcmk_resource_t *launcher = NULL;
 
-                launcher = node->private->remote->private->launcher;
-                if (launcher->private->active_nodes != NULL) {
+                launcher = node->private->remote->priv->launcher;
+                if (launcher->priv->active_nodes != NULL) {
                     node = pcmk__current_node(launcher);
                     if (node->private->name == NULL) {
                         continue;
@@ -291,7 +291,7 @@ new_notify_pseudo_action(pcmk_resource_t *rsc, const pcmk_action_t *action,
                            pcmk__notify_key(rsc->id, notif_type, action->task),
                            notif_action, NULL,
                            pcmk_is_set(action->flags, pcmk__action_optional),
-                           rsc->private->scheduler);
+                           rsc->priv->scheduler);
     pcmk__set_action_flags(notify, pcmk__action_pseudo);
     pcmk__insert_meta(notify, "notify_key_type", notif_type);
     pcmk__insert_meta(notify, "notify_key_operation", action->task);
@@ -349,7 +349,7 @@ new_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
     key = pcmk__notify_key(rsc->id, value, task);
     notify_action = custom_action(rsc, key, op->task, node,
                                   pcmk_is_set(op->flags, pcmk__action_optional),
-                                  rsc->private->scheduler);
+                                  rsc->priv->scheduler);
 
     // Add meta-data to notify action
     g_hash_table_foreach(op->meta, copy_meta_to_notify, notify_action);
@@ -388,7 +388,7 @@ new_post_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (n_data->post_done == NULL) {
         return;
     }
-    for (GList *iter = rsc->private->actions; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->priv->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *mon = (pcmk_action_t *) iter->data;
         const char *interval_ms_s = NULL;
 
@@ -550,12 +550,12 @@ collect_resource_data(pcmk_resource_t *rsc, bool activity,
     }
 
     if (n_data->allowed_nodes == NULL) {
-        n_data->allowed_nodes = rsc->private->allowed_nodes;
+        n_data->allowed_nodes = rsc->priv->allowed_nodes;
     }
 
     // If this is a clone, call recursively for each instance
-    if (rsc->private->children != NULL) {
-        for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
+    if (rsc->priv->children != NULL) {
+        for (iter = rsc->priv->children; iter != NULL; iter = iter->next) {
             pcmk_resource_t *child = iter->data;
 
             collect_resource_data(child, activity, n_data);
@@ -565,13 +565,13 @@ collect_resource_data(pcmk_resource_t *rsc, bool activity,
 
     // This is a notification for a single clone instance
 
-    if (rsc->private->active_nodes != NULL) {
-        node = rsc->private->active_nodes->data; // First is sufficient
+    if (rsc->priv->active_nodes != NULL) {
+        node = rsc->priv->active_nodes->data; // First is sufficient
     }
     entry = new_notify_entry(rsc, node);
 
     // Add notification indicating the resource state
-    switch (rsc->private->orig_role) {
+    switch (rsc->priv->orig_role) {
         case pcmk_role_stopped:
             n_data->inactive = g_list_prepend(n_data->inactive, entry);
             break;
@@ -593,11 +593,11 @@ collect_resource_data(pcmk_resource_t *rsc, bool activity,
             break;
 
         default:
-            pcmk__sched_err(rsc->private->scheduler,
+            pcmk__sched_err(rsc->priv->scheduler,
                             "Resource %s role on %s (%s) is not supported for "
                             "notifications (bug?)",
                             rsc->id, pcmk__node_name(node),
-                            pcmk_role_text(rsc->private->orig_role));
+                            pcmk_role_text(rsc->priv->orig_role));
             free(entry);
             break;
     }
@@ -607,7 +607,7 @@ collect_resource_data(pcmk_resource_t *rsc, bool activity,
     }
 
     // Add notification entries for each of the resource's actions
-    for (iter = rsc->private->actions; iter != NULL; iter = iter->next) {
+    for (iter = rsc->priv->actions; iter != NULL; iter = iter->next) {
         const pcmk_action_t *op = (const pcmk_action_t *) iter->data;
 
         if (!pcmk_is_set(op->flags, pcmk__action_optional)
@@ -753,13 +753,13 @@ add_notif_keys(const pcmk_resource_t *rsc, notify_data_t *n_data)
     add_notify_env_free_gs(n_data, "notify_available_uname", node_list);
     g_list_free(nodes);
 
-    source = g_hash_table_lookup(rsc->private->meta,
+    source = g_hash_table_lookup(rsc->priv->meta,
                                  PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
     if (pcmk__str_eq(PCMK_VALUE_HOST, source, pcmk__str_none)) {
-        get_node_names(rsc->private->scheduler->nodes, &node_list, &metal_list);
+        get_node_names(rsc->priv->scheduler->nodes, &node_list, &metal_list);
         add_notify_env_free_gs(n_data, "notify_all_hosts", metal_list);
     } else {
-        get_node_names(rsc->private->scheduler->nodes, &node_list, NULL);
+        get_node_names(rsc->priv->scheduler->nodes, &node_list, NULL);
     }
     add_notify_env_free_gs(n_data, "notify_all_uname", node_list);
 
@@ -789,7 +789,7 @@ find_remote_start(pcmk_action_t *action)
         pcmk_resource_t *remote_rsc = action->node->private->remote;
 
         if (remote_rsc != NULL) {
-            return find_first_action(remote_rsc->private->actions, NULL,
+            return find_first_action(remote_rsc->priv->actions, NULL,
                                      PCMK_ACTION_START,
                                      NULL);
         }
@@ -813,14 +813,14 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     enum pcmk__action_type task = pcmk__parse_action(n_data->action);
 
     // If this is a clone, call recursively for each instance
-    if (rsc->private->children != NULL) {
-        g_list_foreach(rsc->private->children, (GFunc) create_notify_actions,
+    if (rsc->priv->children != NULL) {
+        g_list_foreach(rsc->priv->children, (GFunc) create_notify_actions,
                        n_data);
         return;
     }
 
     // Add notification meta-attributes to original actions
-    for (iter = rsc->private->actions; iter != NULL; iter = iter->next) {
+    for (iter = rsc->priv->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *op = (pcmk_action_t *) iter->data;
 
         if (!pcmk_is_set(op->flags, pcmk__action_optional)
@@ -873,13 +873,13 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
                     rsc->id, n_data->action);
 
     // Create notify actions for stop or demote
-    if ((rsc->private->orig_role != pcmk_role_stopped)
+    if ((rsc->priv->orig_role != pcmk_role_stopped)
         && ((task == pcmk__action_stop) || (task == pcmk__action_demote))) {
 
-        stop = find_first_action(rsc->private->actions, NULL, PCMK_ACTION_STOP,
+        stop = find_first_action(rsc->priv->actions, NULL, PCMK_ACTION_STOP,
                                  NULL);
 
-        for (iter = rsc->private->active_nodes;
+        for (iter = rsc->priv->active_nodes;
              iter != NULL; iter = iter->next) {
 
             pcmk_node_t *current_node = (pcmk_node_t *) iter->data;
@@ -906,10 +906,10 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     }
 
     // Create notify actions for start or promote
-    if ((rsc->private->next_role != pcmk_role_stopped)
+    if ((rsc->priv->next_role != pcmk_role_stopped)
         && ((task == pcmk__action_start) || (task == pcmk__action_promote))) {
 
-        start = find_first_action(rsc->private->actions, NULL,
+        start = find_first_action(rsc->priv->actions, NULL,
                                   PCMK_ACTION_START, NULL);
         if (start != NULL) {
             pcmk_action_t *remote_start = find_remote_start(start);
@@ -924,19 +924,19 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
                 return;
             }
         }
-        if (rsc->private->assigned_node == NULL) {
-            pcmk__sched_err(rsc->private->scheduler,
+        if (rsc->priv->assigned_node == NULL) {
+            pcmk__sched_err(rsc->priv->scheduler,
                             "Next role '%s' but %s is not allocated",
-                            pcmk_role_text(rsc->private->next_role), rsc->id);
+                            pcmk_role_text(rsc->priv->next_role), rsc->id);
             return;
         }
         if ((task != pcmk__action_start) || (start == NULL)
             || pcmk_is_set(start->flags, pcmk__action_optional)) {
 
-            new_notify_action(rsc, rsc->private->assigned_node, n_data->pre,
+            new_notify_action(rsc, rsc->priv->assigned_node, n_data->pre,
                               n_data->pre_done, n_data);
         }
-        new_post_notify_action(rsc, rsc->private->assigned_node, n_data);
+        new_post_notify_action(rsc, rsc->priv->assigned_node, n_data);
     }
 }
 

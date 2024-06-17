@@ -136,7 +136,7 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
                              GHashTable *meta_hash, pcmk_scheduler_t *scheduler)
 {
     GHashTable *parent_orig_meta = pcmk__strkey_table(free, free);
-    pcmk_resource_t *p = rsc->private->parent;
+    pcmk_resource_t *p = rsc->priv->parent;
 
     if (p == NULL) {
         return ;
@@ -149,10 +149,10 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
      */
     while(p != NULL) {
         /* A hash table for comparison is generated, including the id-ref. */
-        pe__unpack_dataset_nvpairs(p->private->xml, PCMK_XE_META_ATTRIBUTES,
+        pe__unpack_dataset_nvpairs(p->priv->xml, PCMK_XE_META_ATTRIBUTES,
                                    rule_data, parent_orig_meta, NULL, FALSE,
                                    scheduler);
-        p = p->private->parent;
+        p = p->priv->parent;
     }
 
     if (parent_orig_meta != NULL) {
@@ -172,9 +172,9 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
                     pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pe_rsc_eval_data_t rsc_rule_data = {
-        .standard = crm_element_value(rsc->private->xml, PCMK_XA_CLASS),
-        .provider = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER),
-        .agent = crm_element_value(rsc->private->xml, PCMK_XA_TYPE)
+        .standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS),
+        .provider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER),
+        .agent = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE)
     };
 
     pe_rule_eval_data_t rule_data = {
@@ -193,7 +193,7 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
         rule_data.node_hash = node->private->attrs;
     }
 
-    for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->private->xml);
+    for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->priv->xml);
          a != NULL; a = a->next) {
 
         if (a->children != NULL) {
@@ -202,14 +202,14 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
         }
     }
 
-    pe__unpack_dataset_nvpairs(rsc->private->xml, PCMK_XE_META_ATTRIBUTES,
+    pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_META_ATTRIBUTES,
                                &rule_data, meta_hash, NULL, FALSE, scheduler);
 
     /* Set the PCMK_XE_META_ATTRIBUTES explicitly set in the parent resource to
      * the hash table of the child resource. If it is already explicitly set as
      * a child, it will not be overwritten.
      */
-    if (rsc->private->parent != NULL) {
+    if (rsc->priv->parent != NULL) {
         expand_parents_fixed_nvpairs(rsc, &rule_data, meta_hash, scheduler);
     }
 
@@ -221,8 +221,8 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
      * explicitly set, set a value that is not set from PCMK_XE_RSC_DEFAULTS
      * either. The values already set up to this point will not be overwritten.
      */
-    if (rsc->private->parent != NULL) {
-        g_hash_table_foreach(rsc->private->parent->private->meta, dup_attr,
+    if (rsc->priv->parent != NULL) {
+        g_hash_table_foreach(rsc->priv->parent->priv->meta, dup_attr,
                              meta_hash);
     }
 }
@@ -243,12 +243,12 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
         rule_data.node_hash = node->private->attrs;
     }
 
-    pe__unpack_dataset_nvpairs(rsc->private->xml, PCMK_XE_INSTANCE_ATTRIBUTES,
+    pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_INSTANCE_ATTRIBUTES,
                                &rule_data, meta_hash, NULL, FALSE, scheduler);
 
     /* set anything else based on the parent */
-    if (rsc->private->parent != NULL) {
-        get_rsc_attributes(meta_hash, rsc->private->parent, node, scheduler);
+    if (rsc->priv->parent != NULL) {
+        get_rsc_attributes(meta_hash, rsc->priv->parent, node, scheduler);
 
     } else {
         if (pcmk__xe_first_child(scheduler->rsc_defaults,
@@ -438,7 +438,7 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 static bool
 detect_promotable(pcmk_resource_t *rsc)
 {
-    const char *promotable = g_hash_table_lookup(rsc->private->meta,
+    const char *promotable = g_hash_table_lookup(rsc->priv->meta,
                                                  PCMK_META_PROMOTABLE);
 
     if (crm_is_true(promotable)) {
@@ -446,14 +446,14 @@ detect_promotable(pcmk_resource_t *rsc)
     }
 
     // @COMPAT deprecated since 2.0.0
-    if (pcmk__xe_is(rsc->private->xml, PCMK__XE_PROMOTABLE_LEGACY)) {
+    if (pcmk__xe_is(rsc->priv->xml, PCMK__XE_PROMOTABLE_LEGACY)) {
         pcmk__warn_once(pcmk__wo_master_element,
                         "Support for <" PCMK__XE_PROMOTABLE_LEGACY "> (such "
                         "as in %s) is deprecated and will be removed in a "
                         "future release. Use <" PCMK_XE_CLONE "> with a "
                         PCMK_META_PROMOTABLE " meta-attribute instead.",
                         rsc->id);
-        pcmk__insert_dup(rsc->private->meta, PCMK_META_PROMOTABLE,
+        pcmk__insert_dup(rsc->priv->meta, PCMK_META_PROMOTABLE,
                          PCMK_VALUE_TRUE);
         return TRUE;
     }
@@ -499,11 +499,11 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     // Find the parameter table for given node
-    if (rsc->private->parameter_cache == NULL) {
-        rsc->private->parameter_cache = pcmk__strikey_table(free,
-                                                            free_params_table);
+    if (rsc->priv->parameter_cache == NULL) {
+        rsc->priv->parameter_cache = pcmk__strikey_table(free,
+                                                         free_params_table);
     } else {
-        params_on_node = g_hash_table_lookup(rsc->private->parameter_cache,
+        params_on_node = g_hash_table_lookup(rsc->priv->parameter_cache,
                                              node_name);
     }
 
@@ -511,7 +511,7 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (params_on_node == NULL) {
         params_on_node = pcmk__strkey_table(free, free);
         get_rsc_attributes(params_on_node, rsc, node, scheduler);
-        g_hash_table_insert(rsc->private->parameter_cache, strdup(node_name),
+        g_hash_table_insert(rsc->priv->parameter_cache, strdup(node_name),
                             params_on_node);
     }
     return params_on_node;
@@ -528,7 +528,7 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
 static void
 unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 {
-    const pcmk_scheduler_t *scheduler = rsc->private->scheduler;
+    const pcmk_scheduler_t *scheduler = rsc->priv->scheduler;
 
     if (pcmk__str_eq(value, PCMK_VALUE_NOTHING, pcmk__str_casei)) {
 
@@ -569,7 +569,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
             value = PCMK_VALUE_QUORUM;
 
         } else if (pcmk__is_primitive(rsc)
-                   && xml_contains_remote_node(rsc->private->xml)) {
+                   && xml_contains_remote_node(rsc->priv->xml)) {
             value = PCMK_VALUE_QUORUM;
 
         } else if (pcmk_is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
@@ -601,7 +601,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 static void
 warn_about_deprecated_classes(pcmk_resource_t *rsc)
 {
-    const char *std = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
+    const char *std = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
 
     if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_none)) {
         pcmk__warn_once(pcmk__wo_upstart,
@@ -681,14 +681,14 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         return ENOMEM;
     }
 
-    (*rsc)->private = calloc(1, sizeof(pcmk__resource_private_t));
-    if ((*rsc)->private == NULL) {
+    (*rsc)->priv = calloc(1, sizeof(pcmk__resource_private_t));
+    if ((*rsc)->priv == NULL) {
         pcmk__sched_err(scheduler,
                         "Unable to allocate memory for resource '%s'", id);
         free(*rsc);
         return ENOMEM;
     }
-    rsc_private = (*rsc)->private;
+    rsc_private = (*rsc)->priv;
 
     rsc_private->scheduler = scheduler;
 
@@ -1001,11 +1001,11 @@ is_parent(pcmk_resource_t *child, pcmk_resource_t *rsc)
     if (parent == NULL || rsc == NULL) {
         return FALSE;
     }
-    while (parent->private->parent != NULL) {
-        if (parent->private->parent == rsc) {
+    while (parent->priv->parent != NULL) {
+        if (parent->priv->parent == rsc) {
             return TRUE;
         }
-        parent = parent->private->parent;
+        parent = parent->priv->parent;
     }
     return FALSE;
 }
@@ -1018,9 +1018,9 @@ uber_parent(pcmk_resource_t *rsc)
     if (parent == NULL) {
         return NULL;
     }
-    while ((parent->private->parent != NULL)
-           && !pcmk__is_bundle(parent->private->parent)) {
-        parent = parent->private->parent;
+    while ((parent->priv->parent != NULL)
+           && !pcmk__is_bundle(parent->priv->parent)) {
+        parent = parent->priv->parent;
     }
     return parent;
 }
@@ -1044,11 +1044,11 @@ pe__const_top_resource(const pcmk_resource_t *rsc, bool include_bundle)
     if (parent == NULL) {
         return NULL;
     }
-    while (parent->private->parent != NULL) {
-        if (!include_bundle && pcmk__is_bundle(parent->private->parent)) {
+    while (parent->priv->parent != NULL) {
+        if (!include_bundle && pcmk__is_bundle(parent->priv->parent)) {
             break;
         }
-        parent = parent->private->parent;
+        parent = parent->priv->parent;
     }
     return parent;
 }
@@ -1062,53 +1062,53 @@ common_free(pcmk_resource_t * rsc)
 
     pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
 
-    if (rsc->private->parameter_cache != NULL) {
-        g_hash_table_destroy(rsc->private->parameter_cache);
+    if (rsc->priv->parameter_cache != NULL) {
+        g_hash_table_destroy(rsc->priv->parameter_cache);
     }
 
-    if ((rsc->private->parent == NULL)
+    if ((rsc->priv->parent == NULL)
         && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
 
-        pcmk__xml_free(rsc->private->xml);
-        rsc->private->xml = NULL;
-        pcmk__xml_free(rsc->private->orig_xml);
-        rsc->private->orig_xml = NULL;
+        pcmk__xml_free(rsc->priv->xml);
+        rsc->priv->xml = NULL;
+        pcmk__xml_free(rsc->priv->orig_xml);
+        rsc->priv->orig_xml = NULL;
 
-    } else if (rsc->private->orig_xml != NULL) {
+    } else if (rsc->priv->orig_xml != NULL) {
         // rsc->private->xml was expanded from a template
-        pcmk__xml_free(rsc->private->xml);
-        rsc->private->xml = NULL;
+        pcmk__xml_free(rsc->priv->xml);
+        rsc->priv->xml = NULL;
     }
     free(rsc->id);
 
-    free(rsc->private->variant_opaque);
-    free(rsc->private->history_id);
-    free(rsc->private->pending_action);
-    free(rsc->private->assigned_node);
+    free(rsc->priv->variant_opaque);
+    free(rsc->priv->history_id);
+    free(rsc->priv->pending_action);
+    free(rsc->priv->assigned_node);
 
-    g_list_free(rsc->private->actions);
-    g_list_free(rsc->private->active_nodes);
-    g_list_free(rsc->private->launched);
-    g_list_free(rsc->private->dangling_migration_sources);
-    g_list_free(rsc->private->with_this_colocations);
-    g_list_free(rsc->private->this_with_colocations);
-    g_list_free(rsc->private->location_constraints);
-    g_list_free(rsc->private->ticket_constraints);
+    g_list_free(rsc->priv->actions);
+    g_list_free(rsc->priv->active_nodes);
+    g_list_free(rsc->priv->launched);
+    g_list_free(rsc->priv->dangling_migration_sources);
+    g_list_free(rsc->priv->with_this_colocations);
+    g_list_free(rsc->priv->this_with_colocations);
+    g_list_free(rsc->priv->location_constraints);
+    g_list_free(rsc->priv->ticket_constraints);
 
-    if (rsc->private->meta != NULL) {
-        g_hash_table_destroy(rsc->private->meta);
+    if (rsc->priv->meta != NULL) {
+        g_hash_table_destroy(rsc->priv->meta);
     }
-    if (rsc->private->utilization != NULL) {
-        g_hash_table_destroy(rsc->private->utilization);
+    if (rsc->priv->utilization != NULL) {
+        g_hash_table_destroy(rsc->priv->utilization);
     }
-    if (rsc->private->probed_nodes != NULL) {
-        g_hash_table_destroy(rsc->private->probed_nodes);
+    if (rsc->priv->probed_nodes != NULL) {
+        g_hash_table_destroy(rsc->priv->probed_nodes);
     }
-    if (rsc->private->allowed_nodes != NULL) {
-        g_hash_table_destroy(rsc->private->allowed_nodes);
+    if (rsc->priv->allowed_nodes != NULL) {
+        g_hash_table_destroy(rsc->priv->allowed_nodes);
     }
 
-    free(rsc->private);
+    free(rsc->priv);
 
     free(rsc);
 }
@@ -1150,8 +1150,8 @@ pe__count_active_node(const pcmk_resource_t *rsc, pcmk_node_t *node,
         keep_looking = true; // We're counting, so go through entire list
     }
 
-    if (rsc->private->partial_migration_source != NULL) {
-        if (pcmk__same_node(node, rsc->private->partial_migration_source)) {
+    if (rsc->priv->partial_migration_source != NULL) {
+        if (pcmk__same_node(node, rsc->priv->partial_migration_source)) {
             *active = node; // This is the migration source
         } else {
             keep_looking = true;
@@ -1186,7 +1186,7 @@ active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
     if (rsc == NULL) {
         return NULL;
     }
-    for (GList *iter = rsc->private->active_nodes;
+    for (GList *iter = rsc->priv->active_nodes;
          iter != NULL; iter = iter->next) {
 
         if (!pe__count_active_node(rsc, (pcmk_node_t *) iter->data, &active,
@@ -1221,31 +1221,31 @@ pe__find_active_requires(const pcmk_resource_t *rsc, unsigned int *count)
     }
 
     if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
-        return rsc->private->fns->active_node(rsc, count, NULL);
+        return rsc->priv->fns->active_node(rsc, count, NULL);
     } else {
-        return rsc->private->fns->active_node(rsc, NULL, count);
+        return rsc->priv->fns->active_node(rsc, NULL, count);
     }
 }
 
 void
 pe__count_common(pcmk_resource_t *rsc)
 {
-    if (rsc->private->children != NULL) {
-        for (GList *item = rsc->private->children;
+    if (rsc->priv->children != NULL) {
+        for (GList *item = rsc->priv->children;
              item != NULL; item = item->next) {
             pcmk_resource_t *child = item->data;
 
-            child->private->fns->count(item->data);
+            child->priv->fns->count(item->data);
         }
 
     } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)
-               || (rsc->private->orig_role > pcmk_role_stopped)) {
-        rsc->private->scheduler->ninstances++;
+               || (rsc->priv->orig_role > pcmk_role_stopped)) {
+        rsc->priv->scheduler->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
-            rsc->private->scheduler->disabled_resources++;
+            rsc->priv->scheduler->disabled_resources++;
         }
         if (pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
-            rsc->private->scheduler->blocked_resources++;
+            rsc->priv->scheduler->blocked_resources++;
         }
     }
 }
@@ -1262,10 +1262,10 @@ void
 pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role, const char *why)
 {
     CRM_ASSERT((rsc != NULL) && (why != NULL));
-    if (rsc->private->next_role != role) {
+    if (rsc->priv->next_role != role) {
         pcmk__rsc_trace(rsc, "Resetting next role for %s from %s to %s (%s)",
-                        rsc->id, pcmk_role_text(rsc->private->next_role),
+                        rsc->id, pcmk_role_text(rsc->priv->next_role),
                         pcmk_role_text(role), why);
-        rsc->private->next_role = role;
+        rsc->priv->next_role = role;
     }
 }

@@ -46,7 +46,7 @@ enum pcmk__clone_flags {
 static inline bool
 pcmk__is_clone(const pcmk_resource_t *rsc)
 {
-    return (rsc != NULL) && (rsc->private->variant == pcmk__rsc_variant_clone);
+    return (rsc != NULL) && (rsc->priv->variant == pcmk__rsc_variant_clone);
 }
 
 /*!

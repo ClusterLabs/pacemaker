@@ -68,7 +68,7 @@ order_start_then_action(pcmk_resource_t *first_rsc, pcmk_action_t *then_action,
                            pcmk__ar_guest_allowed
                            |pcmk__ar_unrunnable_first_blocks
                            |extra,
-                           first_rsc->private->scheduler);
+                           first_rsc->priv->scheduler);
     }
 }
 
@@ -80,7 +80,7 @@ order_action_then_stop(pcmk_action_t *first_action, pcmk_resource_t *then_rsc,
         pcmk__new_ordering(first_action->rsc, NULL, first_action,
                            then_rsc, stop_key(then_rsc), NULL,
                            pcmk__ar_guest_allowed|extra,
-                           then_rsc->private->scheduler);
+                           then_rsc->priv->scheduler);
     }
 }
 
@@ -101,8 +101,8 @@ get_remote_node_state(const pcmk_node_t *node)
      * is unclean or went offline, we can't process any operations
      * on that remote node until after it starts elsewhere.
      */
-    if ((remote_rsc->private->next_role == pcmk_role_stopped)
-        || (remote_rsc->private->assigned_node == NULL)) {
+    if ((remote_rsc->priv->next_role == pcmk_role_stopped)
+        || (remote_rsc->priv->assigned_node == NULL)) {
 
         // The connection resource is not going to run anywhere
 
@@ -120,8 +120,8 @@ get_remote_node_state(const pcmk_node_t *node)
 
         /* Connection resource is failed */
 
-        if ((remote_rsc->private->next_role == pcmk_role_stopped)
-            && (remote_rsc->private->remote_reconnect_ms > 0U)
+        if ((remote_rsc->priv->next_role == pcmk_role_stopped)
+            && (remote_rsc->priv->remote_reconnect_ms > 0U)
             && pcmk_is_set(node->private->flags, pcmk__node_remote_fenced)
             && !pe__shutdown_requested(node)) {
 
@@ -148,9 +148,9 @@ get_remote_node_state(const pcmk_node_t *node)
         // Connection is running on a dead node, see if we can recover it first
         return remote_state_resting;
 
-    } else if (pcmk__list_of_multiple(remote_rsc->private->active_nodes)
-               && (remote_rsc->private->partial_migration_source != NULL)
-               && (remote_rsc->private->partial_migration_target != NULL)) {
+    } else if (pcmk__list_of_multiple(remote_rsc->priv->active_nodes)
+               && (remote_rsc->priv->partial_migration_source != NULL)
+               && (remote_rsc->priv->partial_migration_target != NULL)) {
         /* We're in the middle of migrating a connection resource, so wait until
          * after the migration completes before performing any actions.
          */
@@ -224,12 +224,12 @@ apply_remote_ordering(pcmk_action_t *action)
                  * to the remote connection, since the stop will become implied
                  * by the fencing.
                  */
-                pe_fence_node(remote_rsc->private->scheduler, action->node,
+                pe_fence_node(remote_rsc->priv->scheduler, action->node,
                               "resources are active but "
                               "connection is unrecoverable",
                               FALSE);
 
-            } else if (remote_rsc->private->next_role == pcmk_role_stopped) {
+            } else if (remote_rsc->priv->next_role == pcmk_role_stopped) {
                 /* State must be remote_state_unknown or remote_state_stopped.
                  * Since the connection is not coming back up in this
                  * transition, stop this resource first.
@@ -276,7 +276,7 @@ apply_remote_ordering(pcmk_action_t *action)
                      * resource on the remote node. Since we have no way to find
                      * out, it is necessary to fence the node.
                      */
-                    pe_fence_node(remote_rsc->private->scheduler, action->node,
+                    pe_fence_node(remote_rsc->priv->scheduler, action->node,
                                   "resources are in unknown state "
                                   "and connection is unrecoverable", FALSE);
                 }
@@ -310,11 +310,11 @@ apply_launcher_ordering(pcmk_action_t *action)
     remote_rsc = action->node->private->remote;
     CRM_ASSERT(remote_rsc != NULL);
 
-    launcher = remote_rsc->private->launcher;
+    launcher = remote_rsc->priv->launcher;
     CRM_ASSERT(launcher != NULL);
 
     if (pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
-        pe_fence_node(action->rsc->private->scheduler, action->node,
+        pe_fence_node(action->rsc->priv->scheduler, action->node,
                       "container failed", FALSE);
     }
 
@@ -455,7 +455,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * start, we leave the resource running on the original node.
          */
         if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_none)) {
-            for (GList *item = action->rsc->private->actions; item != NULL;
+            for (GList *item = action->rsc->priv->actions; item != NULL;
                  item = item->next) {
                 pcmk_action_t *rsc_action = item->data;
 
@@ -478,7 +478,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * It would probably be better to add PCMK__XA_ROUTER_NODE as part of
          * this logic rather than create_graph_action().
          */
-        if (remote->private->launcher != NULL) {
+        if (remote->priv->launcher != NULL) {
             crm_trace("Container ordering for %s", action->uuid);
             apply_launcher_ordering(action);
 
@@ -518,9 +518,9 @@ bool
 pcmk__rsc_corresponds_to_guest(const pcmk_resource_t *rsc,
                                const pcmk_node_t *node)
 {
-    return (rsc != NULL) && (rsc->private->launched != NULL) && (node != NULL)
+    return (rsc != NULL) && (rsc->priv->launched != NULL) && (node != NULL)
             && (node->private->remote != NULL)
-            && (node->private->remote->private->launcher == rsc);
+            && (node->private->remote->priv->launcher == rsc);
 }
 
 /*!
@@ -555,9 +555,9 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
     CRM_ASSERT(remote != NULL);
 
     began_on = pcmk__current_node(remote);
-    ended_on = remote->private->assigned_node;
-    if ((remote->private->launcher == NULL)
-        && (remote->private->partial_migration_target != NULL)) {
+    ended_on = remote->priv->assigned_node;
+    if ((remote->priv->launcher == NULL)
+        && (remote->priv->partial_migration_target != NULL)) {
         partial_migration = true;
     }
 
@@ -653,7 +653,7 @@ pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params)
     const char *remote_addr = g_hash_table_lookup(params, PCMK_REMOTE_RA_ADDR);
 
     if (pcmk__str_eq(remote_addr, "#uname", pcmk__str_none)) {
-        GHashTable *base = pe_rsc_params(rsc, NULL, rsc->private->scheduler);
+        GHashTable *base = pe_rsc_params(rsc, NULL, rsc->priv->scheduler);
 
         remote_addr = g_hash_table_lookup(base, PCMK_REMOTE_RA_ADDR);
         if (remote_addr != NULL) {
@@ -688,7 +688,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
     if (!pcmk__is_guest_or_bundle_node(guest)) {
         return;
     }
-    launcher = guest->private->remote->private->launcher;
+    launcher = guest->private->remote->priv->launcher;
 
     task = pcmk__parse_action(action->task);
     if ((task == pcmk__action_notify) || (task == pcmk__action_notified)) {
@@ -711,7 +711,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
         case pcmk__action_promote:
         case pcmk__action_promoted:
             // "Up" actions take place on guest's next host
-            host = launcher->private->assigned_node;
+            host = launcher->priv->assigned_node;
             break;
 
         default:
@@ -720,7 +720,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
 
     if (host != NULL) {
         gpointer target =
-            g_hash_table_lookup(action->rsc->private->meta,
+            g_hash_table_lookup(action->rsc->priv->meta,
                                 PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
 
         hash2metafield((gpointer) PCMK_META_CONTAINER_ATTRIBUTE_TARGET,

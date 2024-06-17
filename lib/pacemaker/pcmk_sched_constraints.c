@@ -116,8 +116,8 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
         pcmk_resource_t *parent = iter->data;
         pcmk_resource_t *match = NULL;
 
-        match = parent->private->fns->find_rsc(parent, id, NULL,
-                                               pcmk_rsc_match_history);
+        match = parent->priv->fns->find_rsc(parent, id, NULL,
+                                            pcmk_rsc_match_history);
         if (match != NULL) {
             if (!pcmk__str_eq(match->id, id, pcmk__str_none)) {
                 /* We found an instance of a clone instead */
@@ -431,6 +431,6 @@ pcmk__create_internal_constraints(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->private->cmds->internal_constraints(rsc);
+        rsc->priv->cmds->internal_constraints(rsc);
     }
 }

@@ -61,7 +61,7 @@ create_action_name(const pcmk_action_t *action, bool verbose)
     }
 
     if (action->rsc != NULL) {
-        history_id = action->rsc->private->history_id;
+        history_id = action->rsc->priv->history_id;
     }
 
     if (history_id != NULL) {

@@ -142,11 +142,11 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
      * for the container itself (useful when the container uses the host's
      * storage).
      */
-    container = node->private->remote->private->launcher;
+    container = node->private->remote->priv->launcher;
 
     switch (node_type) {
         case pcmk__rsc_node_assigned:
-            host = container->private->assigned_node;
+            host = container->priv->assigned_node;
             if (host == NULL) {
                 crm_trace("Skipping %s lookup for %s because "
                           "its container %s is unassigned",
@@ -157,8 +157,8 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
             break;
 
         case pcmk__rsc_node_current:
-            if (container->private->active_nodes != NULL) {
-                host = container->private->active_nodes->data;
+            if (container->priv->active_nodes != NULL) {
+                host = container->priv->active_nodes->data;
             }
             if (host == NULL) {
                 crm_trace("Skipping %s lookup for %s because "

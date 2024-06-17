@@ -96,7 +96,7 @@ is_dangling_guest_node(pcmk_node_t *node)
 {
     return pcmk__is_pacemaker_remote_node(node)
            && (node->private->remote != NULL)
-           && (node->private->remote->private->launcher == NULL)
+           && (node->private->remote->priv->launcher == NULL)
            && pcmk_is_set(node->private->remote->flags,
                           pcmk__rsc_removed_launched);
 }
@@ -118,7 +118,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 
     if (pcmk__is_guest_or_bundle_node(node)) {
         // Fence a guest or bundle node by marking its launcher as failed
-        pcmk_resource_t *rsc = node->private->remote->private->launcher;
+        pcmk_resource_t *rsc = node->private->remote->priv->launcher;
 
         if (!pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
             if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
@@ -683,22 +683,22 @@ unpack_launcher(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     const char *launcher_id = NULL;
 
-    if (rsc->private->children != NULL) {
-        g_list_foreach(rsc->private->children, (GFunc) unpack_launcher,
+    if (rsc->priv->children != NULL) {
+        g_list_foreach(rsc->priv->children, (GFunc) unpack_launcher,
                        scheduler);
         return;
     }
 
-    launcher_id = g_hash_table_lookup(rsc->private->meta, PCMK__META_CONTAINER);
+    launcher_id = g_hash_table_lookup(rsc->priv->meta, PCMK__META_CONTAINER);
     if ((launcher_id != NULL)
         && !pcmk__str_eq(launcher_id, rsc->id, pcmk__str_none)) {
         pcmk_resource_t *launcher = pe_find_resource(scheduler->resources,
                                                      launcher_id);
 
         if (launcher != NULL) {
-            rsc->private->launcher = launcher;
-            launcher->private->launched =
-                g_list_append(launcher->private->launched, rsc);
+            rsc->priv->launcher = launcher;
+            launcher->priv->launched =
+                g_list_append(launcher->priv->launched, rsc);
             pcmk__rsc_trace(rsc, "Resource %s's launcher is %s",
                             rsc->id, launcher_id);
         } else {
@@ -813,7 +813,7 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
                     new_rsc->id, pcmk__node_name(remote_node));
     remote_node->private->remote = new_rsc;
 
-    if (new_rsc->private->launcher == NULL) {
+    if (new_rsc->priv->launcher == NULL) {
         /* Handle start-up fencing for remote nodes (as opposed to guest nodes)
          * the same as is done for cluster nodes.
          */
@@ -1317,10 +1317,10 @@ unpack_node_history(const xmlNode *status, bool fence,
              * connection and containing resource are both up.
              */
             const pcmk_resource_t *remote = this_node->private->remote;
-            const pcmk_resource_t *launcher = remote->private->launcher;
+            const pcmk_resource_t *launcher = remote->priv->launcher;
 
-            if ((remote->private->orig_role != pcmk_role_started)
-                || (launcher->private->orig_role != pcmk_role_started)) {
+            if ((remote->priv->orig_role != pcmk_role_started)
+                || (launcher->priv->orig_role != pcmk_role_started)) {
                 crm_trace("Not unpacking resource history for guest node %s "
                           "because launcher and connection are not known to "
                           "be up", id);
@@ -1337,7 +1337,7 @@ unpack_node_history(const xmlNode *status, bool fence,
 
             if ((rsc == NULL)
                 || (!pcmk_is_set(scheduler->flags, pcmk__sched_shutdown_lock)
-                    && (rsc->private->orig_role != pcmk_role_started))) {
+                    && (rsc->priv->orig_role != pcmk_role_started))) {
                 crm_trace("Not unpacking resource history for remote node %s "
                           "because connection is not known to be up", id);
                 continue;
@@ -1756,22 +1756,22 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
         return;
     }
 
-    launcher = rsc->private->launcher;
+    launcher = rsc->priv->launcher;
     if (launcher != NULL) {
         node_type = "Guest";
-        if (pcmk__list_of_1(rsc->private->active_nodes)) {
-            host = rsc->private->active_nodes->data;
+        if (pcmk__list_of_1(rsc->priv->active_nodes)) {
+            host = rsc->priv->active_nodes->data;
         }
     }
 
     /* If the resource is currently started, mark it online. */
-    if (rsc->private->orig_role == pcmk_role_started) {
+    if (rsc->priv->orig_role == pcmk_role_started) {
         this_node->details->online = TRUE;
     }
 
     /* consider this node shutting down if transitioning start->stop */
-    if ((rsc->private->orig_role == pcmk_role_started)
-        && (rsc->private->next_role == pcmk_role_stopped)) {
+    if ((rsc->priv->orig_role == pcmk_role_started)
+        && (rsc->priv->next_role == pcmk_role_stopped)) {
 
         crm_trace("%s node %s shutting down because connection resource is stopping",
                   node_type, this_node->private->id);
@@ -1790,9 +1790,9 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
                   node_type, this_node->private->id);
         this_node->details->online = FALSE;
 
-    } else if ((rsc->private->orig_role == pcmk_role_stopped)
+    } else if ((rsc->priv->orig_role == pcmk_role_stopped)
                || ((launcher != NULL)
-                   && (launcher->private->orig_role == pcmk_role_stopped))) {
+                   && (launcher->priv->orig_role == pcmk_role_stopped))) {
 
         crm_trace("%s node %s OFFLINE because its resource is stopped",
                   node_type, this_node->private->id);
@@ -2034,8 +2034,8 @@ create_anonymous_orphan(pcmk_resource_t *parent, const char *rsc_id,
     pcmk_resource_t *orphan = NULL;
 
     // find_rsc() because we might be a cloned group
-    orphan = top->private->fns->find_rsc(top, rsc_id, NULL,
-                                         pcmk_rsc_match_clone_only);
+    orphan = top->priv->fns->find_rsc(top, rsc_id, NULL,
+                                      pcmk_rsc_match_clone_only);
 
     pcmk__rsc_debug(parent, "Created orphan %s for %s: %s on %s",
                     top->id, parent->id, rsc_id, pcmk__node_name(node));
@@ -2072,7 +2072,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     pcmk__rsc_trace(parent, "Looking for %s on %s in %s",
                     rsc_id, pcmk__node_name(node), parent->id);
 
-    for (rIter = parent->private->children;
+    for (rIter = parent->priv->children;
          (rIter != NULL) && (rsc == NULL); rIter = rIter->next) {
 
         GList *locations = NULL;
@@ -2093,7 +2093,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
          * (3) when we re-run calculations on the same scheduler data as part of
          *     a simulation.
          */
-        child->private->fns->location(child, &locations, 2);
+        child->priv->fns->location(child, &locations, 2);
         if (locations) {
             /* We should never associate the same numbered anonymous clone
              * instance with multiple nodes, and clone instances can't migrate,
@@ -2109,8 +2109,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                  *
                  * If the history entry is orphaned, rsc will be NULL.
                  */
-                rsc = parent->private->fns->find_rsc(child, rsc_id, NULL,
-                                                     pcmk_rsc_match_clone_only);
+                rsc = parent->priv->fns->find_rsc(child, rsc_id, NULL,
+                                                  pcmk_rsc_match_clone_only);
                 if (rsc) {
                     /* If there are multiple instance history entries for an
                      * anonymous clone in a single node's history (which can
@@ -2119,7 +2119,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                      * first as orphans, even if there are inactive instance
                      * numbers available.
                      */
-                    if (rsc->private->active_nodes != NULL) {
+                    if (rsc->priv->active_nodes != NULL) {
                         crm_notice("Active (now-)anonymous clone %s has "
                                    "multiple (orphan) instance histories on %s",
                                    parent->id, pcmk__node_name(node));
@@ -2138,8 +2138,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                 && !pcmk_is_set(child->flags, pcmk__rsc_blocked)) {
                 // Remember one inactive instance in case we don't find active
                 inactive_instance =
-                    parent->private->fns->find_rsc(child, rsc_id, NULL,
-                                                   pcmk_rsc_match_clone_only);
+                    parent->priv->fns->find_rsc(child, rsc_id, NULL,
+                                                pcmk_rsc_match_clone_only);
 
                 /* ... but don't use it if it was already associated with a
                  * pending action on another node
@@ -2147,7 +2147,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                 if (inactive_instance != NULL) {
                     const pcmk_node_t *pending_node = NULL;
 
-                    pending_node = inactive_instance->private->pending_node;
+                    pending_node = inactive_instance->priv->pending_node;
                     if ((pending_node != NULL)
                         && !pcmk__same_node(pending_node, node)) {
                         inactive_instance = NULL;
@@ -2220,7 +2220,7 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         }
         free(clone0_id);
 
-    } else if (rsc->private->variant > pcmk__rsc_variant_primitive) {
+    } else if (rsc->priv->variant > pcmk__rsc_variant_primitive) {
         crm_trace("Resource history for %s is orphaned "
                   "because it is no longer primitive", rsc_id);
         return NULL;
@@ -2232,7 +2232,7 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     if (pcmk__is_anonymous_clone(parent)) {
 
         if (pcmk__is_bundled(parent)) {
-            rsc = pe__find_bundle_replica(parent->private->parent, node);
+            rsc = pe__find_bundle_replica(parent->priv->parent, node);
         } else {
             char *base = clone_strip(rsc_id);
 
@@ -2243,9 +2243,9 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     }
 
     if (rsc && !pcmk__str_eq(rsc_id, rsc->id, pcmk__str_none)
-        && !pcmk__str_eq(rsc_id, rsc->private->history_id, pcmk__str_none)) {
+        && !pcmk__str_eq(rsc_id, rsc->priv->history_id, pcmk__str_none)) {
 
-        pcmk__str_update(&(rsc->private->history_id), rsc_id);
+        pcmk__str_update(&(rsc->priv->history_id), rsc_id);
         pcmk__rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
                         rsc_id, pcmk__node_name(node), rsc->id,
                         pcmk_is_set(rsc->flags, pcmk__rsc_removed)? " (ORPHAN)" : "");
@@ -2290,32 +2290,32 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
     bool known_active = false;
 
     CRM_ASSERT(rsc);
-    scheduler = rsc->private->scheduler;
-    known_active = (rsc->private->orig_role > pcmk_role_stopped);
+    scheduler = rsc->priv->scheduler;
+    known_active = (rsc->priv->orig_role > pcmk_role_stopped);
     pcmk__rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
-                    rsc->id, pcmk_role_text(rsc->private->orig_role),
+                    rsc->id, pcmk_role_text(rsc->priv->orig_role),
                     pcmk__node_name(node), pcmk__on_fail_text(on_fail));
 
     /* process current state */
-    if (rsc->private->orig_role != pcmk_role_unknown) {
+    if (rsc->priv->orig_role != pcmk_role_unknown) {
         pcmk_resource_t *iter = rsc;
 
         while (iter) {
-            if (g_hash_table_lookup(iter->private->probed_nodes,
+            if (g_hash_table_lookup(iter->priv->probed_nodes,
                                     node->private->id) == NULL) {
                 pcmk_node_t *n = pe__copy_node(node);
 
                 pcmk__rsc_trace(rsc, "%s (%s in history) known on %s",
                                 rsc->id,
-                                pcmk__s(rsc->private->history_id, "the same"),
+                                pcmk__s(rsc->priv->history_id, "the same"),
                                 pcmk__node_name(n));
-                g_hash_table_insert(iter->private->probed_nodes,
+                g_hash_table_insert(iter->priv->probed_nodes,
                                     (gpointer) n->private->id, n);
             }
             if (pcmk_is_set(iter->flags, pcmk__rsc_unique)) {
                 break;
             }
-            iter = iter->private->parent;
+            iter = iter->priv->parent;
         }
     }
 
@@ -2431,16 +2431,16 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         case pcmk__on_fail_restart_container:
             pcmk__set_rsc_flags(rsc, pcmk__rsc_failed|pcmk__rsc_stop_if_failed);
-            if ((rsc->private->launcher != NULL) && pcmk__is_bundled(rsc)) {
+            if ((rsc->priv->launcher != NULL) && pcmk__is_bundled(rsc)) {
                 /* A bundle's remote connection can run on a different node than
                  * the bundle's container. We don't necessarily know where the
                  * container is running yet, so remember it and add a stop
                  * action for it later.
                  */
                 scheduler->stop_needed = g_list_prepend(scheduler->stop_needed,
-                                                        rsc->private->launcher);
-            } else if (rsc->private->launcher != NULL) {
-                stop_action(rsc->private->launcher, node, FALSE);
+                                                        rsc->priv->launcher);
+            } else if (rsc->priv->launcher != NULL) {
+                stop_action(rsc->priv->launcher, node, FALSE);
             } else if (known_active) {
                 stop_action(rsc, node, FALSE);
             }
@@ -2471,7 +2471,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
             /* if reconnect delay is in use, prevent the connection from exiting the
              * "STOPPED" role until the failure is cleared by the delay timeout. */
-            if (rsc->private->remote_reconnect_ms > 0U) {
+            if (rsc->priv->remote_reconnect_ms > 0U) {
                 pe__set_next_role(rsc, pcmk_role_stopped, "remote reset");
             }
             break;
@@ -2518,15 +2518,15 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                 break;
         }
 
-    } else if ((rsc->private->history_id != NULL)
-               && (strchr(rsc->private->history_id, ':') != NULL)) {
+    } else if ((rsc->priv->history_id != NULL)
+               && (strchr(rsc->priv->history_id, ':') != NULL)) {
         /* Only do this for older status sections that included instance numbers
          * Otherwise stopped instances will appear as orphans
          */
         pcmk__rsc_trace(rsc, "Clearing history ID %s for %s (stopped)",
-                        rsc->private->history_id, rsc->id);
-        free(rsc->private->history_id);
-        rsc->private->history_id = NULL;
+                        rsc->priv->history_id, rsc->id);
+        free(rsc->priv->history_id);
+        rsc->priv->history_id = NULL;
 
     } else {
         GList *possible_matches = pe__resource_actions(rsc, node,
@@ -2545,12 +2545,12 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
     /* A successful stop after migrate_to on the migration source doesn't make
      * the partially migrated resource stopped on the migration target.
      */
-    if ((rsc->private->orig_role == pcmk_role_stopped)
-        && (rsc->private->active_nodes != NULL)
-        && (rsc->private->partial_migration_target != NULL)
-        && pcmk__same_node(rsc->private->partial_migration_source, node)) {
+    if ((rsc->priv->orig_role == pcmk_role_stopped)
+        && (rsc->priv->active_nodes != NULL)
+        && (rsc->priv->partial_migration_target != NULL)
+        && pcmk__same_node(rsc->priv->partial_migration_source, node)) {
 
-        rsc->private->orig_role = pcmk_role_started;
+        rsc->priv->orig_role = pcmk_role_started;
     }
 }
 
@@ -2685,8 +2685,8 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                            rsc->id, pcmk__node_name(node));
             pe__clear_resource_history(rsc, node);
         } else {
-            rsc->private->lock_node = node;
-            rsc->private->lock_time = lock_time;
+            rsc->priv->lock_node = node;
+            rsc->priv->lock_time = lock_time;
         }
     }
 }
@@ -2766,8 +2766,8 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     }
 
     /* process operations */
-    saved_role = rsc->private->orig_role;
-    rsc->private->orig_role = pcmk_role_unknown;
+    saved_role = rsc->priv->orig_role;
+    rsc->priv->orig_role = pcmk_role_unknown;
     sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
 
     for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
@@ -2787,22 +2787,22 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     process_rsc_state(rsc, node, on_fail);
 
     if (get_target_role(rsc, &req_role)) {
-        if ((rsc->private->next_role == pcmk_role_unknown)
-            || (req_role < rsc->private->next_role)) {
+        if ((rsc->priv->next_role == pcmk_role_unknown)
+            || (req_role < rsc->priv->next_role)) {
 
             pe__set_next_role(rsc, req_role, PCMK_META_TARGET_ROLE);
 
-        } else if (req_role > rsc->private->next_role) {
+        } else if (req_role > rsc->priv->next_role) {
             pcmk__rsc_info(rsc,
                            "%s: Not overwriting calculated next role %s"
                            " with requested next role %s",
-                           rsc->id, pcmk_role_text(rsc->private->next_role),
+                           rsc->id, pcmk_role_text(rsc->priv->next_role),
                            pcmk_role_text(req_role));
         }
     }
 
-    if (saved_role > rsc->private->orig_role) {
-        rsc->private->orig_role = saved_role;
+    if (saved_role > rsc->priv->orig_role) {
+        rsc->priv->orig_role = saved_role;
     }
 
     return rsc;
@@ -2837,15 +2837,15 @@ handle_removed_launched_resources(const xmlNode *lrm_rsc_list,
         }
 
         rsc = pe_find_resource(scheduler->resources, rsc_id);
-        if ((rsc == NULL) || (rsc->private->launcher != NULL)
+        if ((rsc == NULL) || (rsc->priv->launcher != NULL)
             || !pcmk_is_set(rsc->flags, pcmk__rsc_removed_launched)) {
             continue;
         }
 
         pcmk__rsc_trace(rsc, "Mapped launcher of removed resource %s to %s",
                         rsc->id, launcher_id);
-        rsc->private->launcher = launcher;
-        launcher->private->launched = g_list_append(launcher->private->launched,
+        rsc->priv->launcher = launcher;
+        launcher->priv->launched = g_list_append(launcher->priv->launched,
                                                     rsc);
     }
 }
@@ -2902,9 +2902,9 @@ set_active(pcmk_resource_t *rsc)
     const pcmk_resource_t *top = pe__const_top_resource(rsc, false);
 
     if (top && pcmk_is_set(top->flags, pcmk__rsc_promotable)) {
-        rsc->private->orig_role = pcmk_role_unpromoted;
+        rsc->priv->orig_role = pcmk_role_unpromoted;
     } else {
-        rsc->private->orig_role = pcmk_role_started;
+        rsc->priv->orig_role = pcmk_role_started;
     }
 }
 
@@ -3017,7 +3017,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
                               "[@" PCMK__XA_RC_CODE "!='%d']",
                               node_name, rsc->id, PCMK_OCF_UNKNOWN);
 
-    search = xpath_search(rsc->private->scheduler->input, xpath);
+    search = xpath_search(rsc->priv->scheduler->input, xpath);
     result = (numXpathResults(search) == 0);
     freeXpathObject(search);
     free(xpath);
@@ -3200,9 +3200,9 @@ add_dangling_migration(pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     pcmk__rsc_trace(rsc, "Dangling migration of %s requires stop on %s",
                     rsc->id, pcmk__node_name(node));
-    rsc->private->orig_role = pcmk_role_stopped;
-    rsc->private->dangling_migration_sources =
-        g_list_prepend(rsc->private->dangling_migration_sources,
+    rsc->priv->orig_role = pcmk_role_stopped;
+    rsc->priv->dangling_migration_sources =
+        g_list_prepend(rsc->priv->dangling_migration_sources,
                        (gpointer) node);
 }
 
@@ -3255,7 +3255,7 @@ unpack_migrate_to_success(struct action_history *history)
     bool source_newer_op = false;
     bool target_newer_state = false;
     bool active_on_target = false;
-    pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
+    pcmk_scheduler_t *scheduler = history->rsc->priv->scheduler;
 
     // Get source and target node names from XML
     if (get_migration_node_names(history->xml, history->node, NULL, &source,
@@ -3304,7 +3304,7 @@ unpack_migrate_to_success(struct action_history *history)
     /* Without newer state, this migrate_to implies the resource is active.
      * (Clones are not allowed to migrate, so role can't be promoted.)
      */
-    history->rsc->private->orig_role = pcmk_role_started;
+    history->rsc->priv->orig_role = pcmk_role_started;
 
     target_node = pcmk_find_node(scheduler, target);
     active_on_target = !target_newer_state && (target_node != NULL)
@@ -3344,8 +3344,8 @@ unpack_migrate_to_success(struct action_history *history)
              * chosen target remains the same when we schedule actions
              * later, we may continue with the migration.
              */
-            history->rsc->private->partial_migration_target = target_node;
-            history->rsc->private->partial_migration_source = source_node;
+            history->rsc->priv->partial_migration_target = target_node;
+            history->rsc->priv->partial_migration_source = source_node;
         }
 
     } else if (!source_newer_op) {
@@ -3368,7 +3368,7 @@ unpack_migrate_to_failure(struct action_history *history)
     xmlNode *target_migrate_from = NULL;
     const char *source = NULL;
     const char *target = NULL;
-    pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
+    pcmk_scheduler_t *scheduler = history->rsc->priv->scheduler;
 
     // Get source and target node names from XML
     if (get_migration_node_names(history->xml, history->node, NULL, &source,
@@ -3379,7 +3379,7 @@ unpack_migrate_to_failure(struct action_history *history)
     /* If a migration failed, we have to assume the resource is active. Clones
      * are not allowed to migrate, so role can't be promoted.
      */
-    history->rsc->private->orig_role = pcmk_role_started;
+    history->rsc->priv->orig_role = pcmk_role_started;
 
     // Check for migrate_from on the target
     target_migrate_from = find_lrm_op(history->rsc->id,
@@ -3415,8 +3415,8 @@ unpack_migrate_to_failure(struct action_history *history)
          */
 
         // Mark node as having dangling migration so we can force a stop later
-        history->rsc->private->dangling_migration_sources =
-            g_list_prepend(history->rsc->private->dangling_migration_sources,
+        history->rsc->priv->dangling_migration_sources =
+            g_list_prepend(history->rsc->priv->dangling_migration_sources,
                            (gpointer) history->node);
     }
 }
@@ -3433,7 +3433,7 @@ unpack_migrate_from_failure(struct action_history *history)
     xmlNode *source_migrate_to = NULL;
     const char *source = NULL;
     const char *target = NULL;
-    pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
+    pcmk_scheduler_t *scheduler = history->rsc->priv->scheduler;
 
     // Get source and target node names from XML
     if (get_migration_node_names(history->xml, NULL, history->node, &source,
@@ -3444,7 +3444,7 @@ unpack_migrate_from_failure(struct action_history *history)
     /* If a migration failed, we have to assume the resource is active. Clones
      * are not allowed to migrate, so role can't be promoted.
      */
-    history->rsc->private->orig_role = pcmk_role_started;
+    history->rsc->priv->orig_role = pcmk_role_started;
 
     // Check for a migrate_to on the source
     source_migrate_to = find_lrm_op(history->rsc->id, PCMK_ACTION_MIGRATE_TO,
@@ -3482,7 +3482,7 @@ unpack_migrate_from_failure(struct action_history *history)
 static void
 record_failed_op(struct action_history *history)
 {
-    const pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
+    const pcmk_scheduler_t *scheduler = history->rsc->priv->scheduler;
 
     if (!(history->node->details->online)) {
         return;
@@ -3545,9 +3545,9 @@ static void
 ban_from_all_nodes(pcmk_resource_t *rsc)
 {
     int score = -PCMK_SCORE_INFINITY;
-    const pcmk_scheduler_t *scheduler = rsc->private->scheduler;
+    const pcmk_scheduler_t *scheduler = rsc->priv->scheduler;
 
-    if (rsc->private->parent != NULL) {
+    if (rsc->priv->parent != NULL) {
         pcmk_resource_t *parent = uber_parent(rsc);
 
         if (pcmk__is_anonymous_clone(parent)) {
@@ -3561,11 +3561,11 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
 
     // Ban the resource from all nodes
     crm_notice("%s will not be started under current conditions", rsc->id);
-    if (rsc->private->allowed_nodes != NULL) {
-        g_hash_table_destroy(rsc->private->allowed_nodes);
+    if (rsc->priv->allowed_nodes != NULL) {
+        g_hash_table_destroy(rsc->priv->allowed_nodes);
     }
-    rsc->private->allowed_nodes = pe__node_list2table(scheduler->nodes);
-    g_hash_table_foreach(rsc->private->allowed_nodes, set_node_score, &score);
+    rsc->priv->allowed_nodes = pe__node_list2table(scheduler->nodes);
+    g_hash_table_foreach(rsc->priv->allowed_nodes, set_node_score, &score);
 }
 
 /*!
@@ -3615,7 +3615,7 @@ unpack_rsc_op_failure(struct action_history *history,
 {
     bool is_probe = false;
     char *last_change_s = NULL;
-    pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
+    pcmk_scheduler_t *scheduler = history->rsc->priv->scheduler;
 
     *last_failure = history->xml;
 
@@ -3679,16 +3679,16 @@ unpack_rsc_op_failure(struct action_history *history,
         unpack_migrate_from_failure(history);
 
     } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {
-        history->rsc->private->orig_role = pcmk_role_promoted;
+        history->rsc->priv->orig_role = pcmk_role_promoted;
 
     } else if (strcmp(history->task, PCMK_ACTION_DEMOTE) == 0) {
         if (config_on_fail == pcmk__on_fail_block) {
-            history->rsc->private->orig_role = pcmk_role_promoted;
+            history->rsc->priv->orig_role = pcmk_role_promoted;
             pe__set_next_role(history->rsc, pcmk_role_stopped,
                               "demote with " PCMK_META_ON_FAIL "=block");
 
         } else if (history->exit_status == PCMK_OCF_NOT_RUNNING) {
-            history->rsc->private->orig_role = pcmk_role_stopped;
+            history->rsc->priv->orig_role = pcmk_role_stopped;
 
         } else {
             /* Staying in the promoted role would put the scheduler and
@@ -3696,16 +3696,16 @@ unpack_rsc_op_failure(struct action_history *history,
              * dangerous because the resource will be stopped as part of
              * recovery, and any promotion will be ordered after that stop.
              */
-            history->rsc->private->orig_role = pcmk_role_unpromoted;
+            history->rsc->priv->orig_role = pcmk_role_unpromoted;
         }
     }
 
     if (is_probe && (history->exit_status == PCMK_OCF_NOT_INSTALLED)) {
         /* leave stopped */
         pcmk__rsc_trace(history->rsc, "Leaving %s stopped", history->rsc->id);
-        history->rsc->private->orig_role = pcmk_role_stopped;
+        history->rsc->priv->orig_role = pcmk_role_stopped;
 
-    } else if (history->rsc->private->orig_role < pcmk_role_started) {
+    } else if (history->rsc->priv->orig_role < pcmk_role_started) {
         pcmk__rsc_trace(history->rsc, "Setting %s active", history->rsc->id);
         set_active(history->rsc);
     }
@@ -3713,13 +3713,13 @@ unpack_rsc_op_failure(struct action_history *history,
     pcmk__rsc_trace(history->rsc,
                     "Resource %s: role=%s unclean=%s on_fail=%s fail_role=%s",
                     history->rsc->id,
-                    pcmk_role_text(history->rsc->private->orig_role),
+                    pcmk_role_text(history->rsc->priv->orig_role),
                     pcmk__btoa(history->node->details->unclean),
                     pcmk__on_fail_text(config_on_fail),
                     pcmk_role_text(fail_role));
 
     if ((fail_role != pcmk_role_started)
-        && (history->rsc->private->next_role < fail_role)) {
+        && (history->rsc->priv->next_role < fail_role)) {
         pe__set_next_role(history->rsc, fail_role, "failure");
     }
 
@@ -3919,7 +3919,7 @@ remap_operation(struct action_history *history,
                  * failure.
                  */
                 remap_because(history, &why, PCMK_EXEC_DONE, "exit status");
-                history->rsc->private->orig_role = pcmk_role_stopped;
+                history->rsc->priv->orig_role = pcmk_role_stopped;
                 *on_fail = pcmk__on_fail_ignore;
                 pe__set_next_role(history->rsc, pcmk_role_unknown,
                                   "not running");
@@ -3940,13 +3940,13 @@ remap_operation(struct action_history *history,
             }
             if (!expired
                 || (history->exit_status == history->expected_exit_status)) {
-                history->rsc->private->orig_role = pcmk_role_promoted;
+                history->rsc->priv->orig_role = pcmk_role_promoted;
             }
             break;
 
         case PCMK_OCF_FAILED_PROMOTED:
             if (!expired) {
-                history->rsc->private->orig_role = pcmk_role_promoted;
+                history->rsc->priv->orig_role = pcmk_role_promoted;
             }
             remap_because(history, &why, PCMK_EXEC_ERROR, "exit status");
             break;
@@ -4022,13 +4022,13 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
              * When that's needed, defer the check until later.
              */
             pe__add_param_check(xml_op, rsc, node, pcmk__check_last_failure,
-                                rsc->private->scheduler);
+                                rsc->priv->scheduler);
 
         } else {
             pcmk__op_digest_t *digest_data = NULL;
 
             digest_data = rsc_action_digest_cmp(rsc, xml_op, node,
-                                                rsc->private->scheduler);
+                                                rsc->priv->scheduler);
             switch (digest_data->rc) {
                 case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s"
@@ -4085,13 +4085,13 @@ should_ignore_failure_timeout(const pcmk_resource_t *rsc, const char *task,
      * reconnect interval, so in that case, we skip clearing failures
      * if the remote node hasn't been fenced.
      */
-    if ((rsc->private->remote_reconnect_ms > 0U)
-        && pcmk_is_set(rsc->private->scheduler->flags,
+    if ((rsc->priv->remote_reconnect_ms > 0U)
+        && pcmk_is_set(rsc->priv->scheduler->flags,
                        pcmk__sched_fencing_enabled)
         && (interval_ms != 0)
         && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
 
-        pcmk_node_t *remote_node = pcmk_find_node(rsc->private->scheduler,
+        pcmk_node_t *remote_node = pcmk_find_node(rsc->priv->scheduler,
                                                   rsc->id);
 
         if (remote_node && !pcmk_is_set(remote_node->private->flags,
@@ -4133,8 +4133,8 @@ check_operation_expiry(struct action_history *history)
     int unexpired_fail_count = 0;
     const char *clear_reason = NULL;
     const guint expiration_sec =
-        history->rsc->private->failure_expiration_ms / 1000;
-    pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
+        history->rsc->priv->failure_expiration_ms / 1000;
+    pcmk_scheduler_t *scheduler = history->rsc->priv->scheduler;
 
     if (history->execution_status == PCMK_EXEC_NOT_INSTALLED) {
         pcmk__rsc_trace(history->rsc,
@@ -4207,7 +4207,7 @@ check_operation_expiry(struct action_history *history)
             }
 
         } else if (is_last_failure
-                   && (history->rsc->private->remote_reconnect_ms > 0U)) {
+                   && (history->rsc->priv->remote_reconnect_ms > 0U)) {
             /* Clear any expired last failure when reconnect interval is set,
              * even if there is no fail count.
              */
@@ -4229,7 +4229,7 @@ check_operation_expiry(struct action_history *history)
                                        clear_reason, scheduler);
 
         if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)
-            && (history->rsc->private->remote_reconnect_ms > 0)) {
+            && (history->rsc->priv->remote_reconnect_ms > 0)) {
             /* If we're clearing a remote connection due to a reconnect
              * interval, we want to wait until any scheduled fencing
              * completes.
@@ -4298,7 +4298,7 @@ update_resource_state(struct action_history *history, int exit_status,
     if ((exit_status == PCMK_OCF_NOT_INSTALLED)
         || (!pcmk__is_bundled(history->rsc)
             && pcmk_xe_mask_probe_failure(history->xml))) {
-        history->rsc->private->orig_role = pcmk_role_stopped;
+        history->rsc->priv->orig_role = pcmk_role_stopped;
 
     } else if (exit_status == PCMK_OCF_NOT_RUNNING) {
         clear_past_failure = true;
@@ -4310,21 +4310,21 @@ update_resource_state(struct action_history *history, int exit_status,
                             pcmk__str_none)) {
             clear_past_failure = true;
         }
-        if (history->rsc->private->orig_role < pcmk_role_started) {
+        if (history->rsc->priv->orig_role < pcmk_role_started) {
             set_active(history->rsc);
         }
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_START, pcmk__str_none)) {
-        history->rsc->private->orig_role = pcmk_role_started;
+        history->rsc->priv->orig_role = pcmk_role_started;
         clear_past_failure = true;
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_STOP, pcmk__str_none)) {
-        history->rsc->private->orig_role = pcmk_role_stopped;
+        history->rsc->priv->orig_role = pcmk_role_stopped;
         clear_past_failure = true;
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_PROMOTE,
                             pcmk__str_none)) {
-        history->rsc->private->orig_role = pcmk_role_promoted;
+        history->rsc->priv->orig_role = pcmk_role_promoted;
         clear_past_failure = true;
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_DEMOTE,
@@ -4335,18 +4335,18 @@ update_resource_state(struct action_history *history, int exit_status,
              */
             clear_past_failure = true;
         }
-        history->rsc->private->orig_role = pcmk_role_unpromoted;
+        history->rsc->priv->orig_role = pcmk_role_unpromoted;
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_MIGRATE_FROM,
                             pcmk__str_none)) {
-        history->rsc->private->orig_role = pcmk_role_started;
+        history->rsc->priv->orig_role = pcmk_role_started;
         clear_past_failure = true;
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_MIGRATE_TO,
                             pcmk__str_none)) {
         unpack_migrate_to_success(history);
 
-    } else if (history->rsc->private->orig_role < pcmk_role_started) {
+    } else if (history->rsc->priv->orig_role < pcmk_role_started) {
         pcmk__rsc_trace(history->rsc, "%s active on %s",
                         history->rsc->id, pcmk__node_name(history->node));
         set_active(history->rsc);
@@ -4378,7 +4378,7 @@ update_resource_state(struct action_history *history, int exit_status,
             break;
 
         case pcmk__on_fail_reset_remote:
-            if (history->rsc->private->remote_reconnect_ms == 0U) {
+            if (history->rsc->priv->remote_reconnect_ms == 0U) {
                 /* With no reconnect interval, the connection is allowed to
                  * start again after the remote node is fenced and
                  * completely stopped. (With a reconnect interval, we wait
@@ -4488,8 +4488,8 @@ process_expired_result(struct action_history *history, int orig_exit_status)
         && pcmk_xe_mask_probe_failure(history->xml)
         && (orig_exit_status != history->expected_exit_status)) {
 
-        if (history->rsc->private->orig_role <= pcmk_role_stopped) {
-            history->rsc->private->orig_role = pcmk_role_unknown;
+        if (history->rsc->priv->orig_role <= pcmk_role_stopped) {
+            history->rsc->priv->orig_role = pcmk_role_unknown;
         }
         crm_trace("Ignoring resource history entry %s for probe of %s on %s: "
                   "Masked failure expired",
@@ -4562,7 +4562,7 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
 
     record_failed_op(history);
     resource_location(ban_rsc, history->node, -PCMK_SCORE_INFINITY,
-                      "masked-probe-failure", ban_rsc->private->scheduler);
+                      "masked-probe-failure", ban_rsc->priv->scheduler);
 }
 
 /*!
@@ -4642,7 +4642,7 @@ process_pending_action(struct action_history *history,
         set_active(history->rsc);
 
     } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {
-        history->rsc->private->orig_role = pcmk_role_promoted;
+        history->rsc->priv->orig_role = pcmk_role_promoted;
 
     } else if ((strcmp(history->task, PCMK_ACTION_MIGRATE_TO) == 0)
                && history->node->details->unclean) {
@@ -4654,14 +4654,14 @@ process_pending_action(struct action_history *history,
 
         migrate_target = crm_element_value(history->xml,
                                            PCMK__META_MIGRATE_TARGET);
-        target = pcmk_find_node(history->rsc->private->scheduler,
+        target = pcmk_find_node(history->rsc->priv->scheduler,
                                 migrate_target);
         if (target != NULL) {
             stop_action(history->rsc, target, FALSE);
         }
     }
 
-    if (history->rsc->private->pending_action != NULL) {
+    if (history->rsc->priv->pending_action != NULL) {
         /* There should never be multiple pending actions, but as a failsafe,
          * just remember the first one processed for display purposes.
          */
@@ -4679,8 +4679,8 @@ process_pending_action(struct action_history *history,
         history->rsc->private->pending_node = history->node;
 #endif
     } else {
-        history->rsc->private->pending_action = strdup(history->task);
-        history->rsc->private->pending_node = history->node;
+        history->rsc->priv->pending_action = strdup(history->task);
+        history->rsc->priv->pending_node = history->node;
     }
 }
 
@@ -4792,7 +4792,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                 *on_fail = pcmk__on_fail_ban;
             }
             resource_location(parent, node, -PCMK_SCORE_INFINITY,
-                              "hard-error", rsc->private->scheduler);
+                              "hard-error", rsc->priv->scheduler);
             unpack_rsc_op_failure(&history, failure_strategy, fail_role,
                                   last_failure, on_fail);
             goto done;
@@ -4869,10 +4869,10 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                        (pcmk__str_empty(history.exit_reason)? "" : ": "),
                        pcmk__s(history.exit_reason, ""), history.id);
             resource_location(parent, node, -PCMK_SCORE_INFINITY,
-                              "hard-error", rsc->private->scheduler);
+                              "hard-error", rsc->priv->scheduler);
 
         } else if (history.execution_status == PCMK_EXEC_ERROR_FATAL) {
-            pcmk__sched_err(rsc->private->scheduler,
+            pcmk__sched_err(rsc->priv->scheduler,
                             "Preventing %s from restarting anywhere because "
                             "of fatal failure (%s%s%s) " QB_XS " %s",
                             parent->id,
@@ -4880,15 +4880,15 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                             (pcmk__str_empty(history.exit_reason)? "" : ": "),
                             pcmk__s(history.exit_reason, ""), history.id);
             resource_location(parent, NULL, -PCMK_SCORE_INFINITY,
-                              "fatal-error", rsc->private->scheduler);
+                              "fatal-error", rsc->priv->scheduler);
         }
     }
 
 done:
     pcmk__rsc_trace(rsc, "%s role on %s after %s is %s (next %s)",
                     rsc->id, pcmk__node_name(node), history.id,
-                    pcmk_role_text(rsc->private->orig_role),
-                    pcmk_role_text(rsc->private->next_role));
+                    pcmk_role_text(rsc->priv->orig_role),
+                    pcmk_role_text(rsc->priv->next_role));
 }
 
 static void

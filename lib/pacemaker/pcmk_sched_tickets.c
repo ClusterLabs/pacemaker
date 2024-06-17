@@ -47,7 +47,7 @@ static bool
 ticket_role_matches(const pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
     if ((rsc_ticket->role == pcmk_role_unknown)
-        || (rsc_ticket->role == rsc->private->orig_role)) {
+        || (rsc_ticket->role == rsc->priv->orig_role)) {
         return true;
     }
     pcmk__rsc_trace(rsc, "Skipping constraint: \"%s\" state filter",
@@ -73,9 +73,9 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
         return;
     }
 
-    if (rsc->private->children != NULL) {
+    if (rsc->priv->children != NULL) {
         pcmk__rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
-        for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
+        for (iter = rsc->priv->children; iter != NULL; iter = iter->next) {
             constraints_for_ticket((pcmk_resource_t *) iter->data, rsc_ticket);
         }
         return;
@@ -86,13 +86,13 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                     pcmk_role_text(rsc_ticket->role));
 
     if (!pcmk_is_set(rsc_ticket->ticket->flags, pcmk__ticket_granted)
-        && (rsc->private->active_nodes != NULL)) {
+        && (rsc->priv->active_nodes != NULL)) {
 
         switch (rsc_ticket->loss_policy) {
             case loss_ticket_stop:
                 resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
                                   "__loss_of_ticket__",
-                                  rsc->private->scheduler);
+                                  rsc->priv->scheduler);
                 break;
 
             case loss_ticket_demote:
@@ -100,7 +100,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                 if (rsc_ticket->role != pcmk_role_promoted) {
                     resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
                                       "__loss_of_ticket__",
-                                      rsc->private->scheduler);
+                                      rsc->priv->scheduler);
                 }
                 break;
 
@@ -111,12 +111,12 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
                 resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
                                   "__loss_of_ticket__",
-                                  rsc->private->scheduler);
+                                  rsc->priv->scheduler);
 
-                for (iter = rsc->private->active_nodes;
+                for (iter = rsc->priv->active_nodes;
                      iter != NULL; iter = iter->next) {
 
-                    pe_fence_node(rsc->private->scheduler,
+                    pe_fence_node(rsc->priv->scheduler,
                                   (pcmk_node_t *) iter->data,
                                   "deadman ticket was lost", FALSE);
                 }
@@ -126,7 +126,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                 if (!ticket_role_matches(rsc, rsc_ticket)) {
                     return;
                 }
-                if (rsc->private->active_nodes != NULL) {
+                if (rsc->priv->active_nodes != NULL) {
                     pcmk__clear_rsc_flags(rsc, pcmk__rsc_managed);
                     pcmk__set_rsc_flags(rsc, pcmk__rsc_blocked);
                 }
@@ -138,7 +138,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
         if ((rsc_ticket->role != pcmk_role_promoted)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
             resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
-                              "__no_ticket__", rsc->private->scheduler);
+                              "__no_ticket__", rsc->priv->scheduler);
         }
 
     } else if (pcmk_is_set(rsc_ticket->ticket->flags, pcmk__ticket_standby)) {
@@ -146,7 +146,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
         if ((rsc_ticket->role != pcmk_role_promoted)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
             resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
-                              "__ticket_standby__", rsc->private->scheduler);
+                              "__ticket_standby__", rsc->priv->scheduler);
         }
     }
 }
@@ -179,7 +179,7 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk__ticket_t *ticket,
     new_rsc_ticket->role = pcmk_parse_role(state);
 
     if (pcmk__str_eq(loss_policy, PCMK_VALUE_FENCE, pcmk__str_casei)) {
-        if (pcmk_is_set(rsc->private->scheduler->flags,
+        if (pcmk_is_set(rsc->priv->scheduler->flags,
                         pcmk__sched_fencing_enabled)) {
             new_rsc_ticket->loss_policy = loss_ticket_fence;
         } else {
@@ -231,11 +231,11 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk__ticket_t *ticket,
     pcmk__rsc_trace(rsc, "%s (%s) ==> %s",
                     rsc->id, pcmk_role_text(new_rsc_ticket->role), ticket->id);
 
-    rsc->private->ticket_constraints =
-        g_list_append(rsc->private->ticket_constraints, new_rsc_ticket);
+    rsc->priv->ticket_constraints =
+        g_list_append(rsc->priv->ticket_constraints, new_rsc_ticket);
 
-    rsc->private->scheduler->ticket_constraints =
-        g_list_append(rsc->private->scheduler->ticket_constraints,
+    rsc->priv->scheduler->ticket_constraints =
+        g_list_append(rsc->priv->scheduler->ticket_constraints,
                       new_rsc_ticket);
 
     if (!pcmk_is_set(new_rsc_ticket->ticket->flags, pcmk__ticket_granted)
@@ -533,7 +533,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 void
 pcmk__require_promotion_tickets(pcmk_resource_t *rsc)
 {
-    for (GList *item = rsc->private->ticket_constraints;
+    for (GList *item = rsc->priv->ticket_constraints;
          item != NULL; item = item->next) {
 
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) item->data;
@@ -544,7 +544,7 @@ pcmk__require_promotion_tickets(pcmk_resource_t *rsc)
                                pcmk__ticket_standby))) {
             resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
                               "__stateful_without_ticket__",
-                              rsc->private->scheduler);
+                              rsc->priv->scheduler);
         }
     }
 }

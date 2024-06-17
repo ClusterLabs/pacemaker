@@ -36,7 +36,7 @@ get_node_score(const char *rule, const char *score, bool raw,
         const char *target = NULL;
         const char *attr_score = NULL;
 
-        target = g_hash_table_lookup(rsc->private->meta,
+        target = g_hash_table_lookup(rsc->priv->meta,
                                      PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
 
         attr_score = pcmk__node_attr(node, score, target,
@@ -126,7 +126,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     enum rsc_role_e role = pcmk_role_unknown;
     enum pcmk__combine combine = pcmk__combine_unknown;
 
-    rule_xml = pcmk__xe_resolve_idref(rule_xml, rsc->private->scheduler->input);
+    rule_xml = pcmk__xe_resolve_idref(rule_xml, rsc->priv->scheduler->input);
     if (rule_xml == NULL) {
         return false; // Error already logged
     }
@@ -195,14 +195,14 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         }
     }
 
-    for (iter = rsc->private->scheduler->nodes;
+    for (iter = rsc->priv->scheduler->nodes;
          iter != NULL; iter = iter->next) {
 
         pcmk_node_t *node = iter->data;
 
         rule_input->node_attrs = node->private->attrs;
         rule_input->rsc_params = pe_rsc_params(rsc, node,
-                                               rsc->private->scheduler);
+                                               rsc->priv->scheduler);
 
         if (pcmk_evaluate_rule(rule_xml, rule_input,
                                next_change) == pcmk_rc_ok) {
@@ -253,7 +253,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
 
     if ((node != NULL) && (score != NULL)) {
         int score_i = char2score(score);
-        pcmk_node_t *match = pcmk_find_node(rsc->private->scheduler, node);
+        pcmk_node_t *match = pcmk_find_node(rsc->priv->scheduler, node);
         enum rsc_role_e role = pcmk_role_unknown;
         pcmk__location_t *location = NULL;
 
@@ -289,8 +289,8 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         bool empty = true;
         crm_time_t *next_change = crm_time_new_undefined();
         pcmk_rule_input_t rule_input = {
-            .now = rsc->private->scheduler->now,
-            .rsc_meta = rsc->private->meta,
+            .now = rsc->priv->scheduler->now,
+            .rsc_meta = rsc->priv->meta,
             .rsc_id = rsc_id_match,
             .rsc_id_submatches = rsc_id_submatches,
             .rsc_id_nmatches = rsc_id_nmatches,
@@ -336,7 +336,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         if (crm_time_is_defined(next_change)) {
             time_t t = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
-            pe__update_recheck_time(t, rsc->private->scheduler,
+            pe__update_recheck_time(t, rsc->priv->scheduler,
                                     "location rule evaluation");
         }
         crm_time_free(next_change);
@@ -636,10 +636,10 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
         new_con->nodes = g_list_prepend(NULL, copy);
     }
 
-    rsc->private->scheduler->placement_constraints =
-        g_list_prepend(rsc->private->scheduler->placement_constraints, new_con);
-    rsc->private->location_constraints =
-        g_list_prepend(rsc->private->location_constraints, new_con);
+    rsc->priv->scheduler->placement_constraints =
+        g_list_prepend(rsc->priv->scheduler->placement_constraints, new_con);
+    rsc->priv->location_constraints =
+        g_list_prepend(rsc->priv->location_constraints, new_con);
 
     return new_con;
 }
@@ -657,7 +657,7 @@ pcmk__apply_locations(pcmk_scheduler_t *scheduler)
          iter != NULL; iter = iter->next) {
         pcmk__location_t *location = iter->data;
 
-        location->rsc->private->cmds->apply_location(location->rsc, location);
+        location->rsc->priv->cmds->apply_location(location->rsc, location);
     }
 }
 
@@ -680,11 +680,11 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
     // If a role was specified, ensure constraint is applicable
     need_role = (location->role_filter > pcmk_role_unknown);
-    if (need_role && (location->role_filter != rsc->private->next_role)) {
+    if (need_role && (location->role_filter != rsc->priv->next_role)) {
         pcmk__rsc_trace(rsc,
                         "Not applying %s to %s because role will be %s not %s",
                         location->id, rsc->id,
-                        pcmk_role_text(rsc->private->next_role),
+                        pcmk_role_text(rsc->priv->next_role),
                         pcmk_role_text(location->role_filter));
         return;
     }
@@ -699,7 +699,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
         pcmk_node_t *node = iter->data;
         pcmk_node_t *allowed_node = NULL;
 
-        allowed_node = g_hash_table_lookup(rsc->private->allowed_nodes,
+        allowed_node = g_hash_table_lookup(rsc->priv->allowed_nodes,
                                            node->private->id);
 
         pcmk__rsc_trace(rsc, "Applying %s%s%s to %s score on %s: %c %s",
@@ -712,7 +712,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
         if (allowed_node == NULL) {
             allowed_node = pe__copy_node(node);
-            g_hash_table_insert(rsc->private->allowed_nodes,
+            g_hash_table_insert(rsc->priv->allowed_nodes,
                                 (gpointer) allowed_node->private->id,
                                 allowed_node);
         } else {

@@ -527,7 +527,7 @@ pcmk__colocation_node_attr(const pcmk_node_t *node, const char *attr,
         target = PCMK_VALUE_HOST;
 
     } else if (rsc != NULL) {
-        target = g_hash_table_lookup(rsc->private->meta,
+        target = g_hash_table_lookup(rsc->priv->meta,
                                      PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
     }
 
@@ -639,7 +639,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
     if (pcmk_is_set(colocation->dependent->flags,
                     pcmk__rsc_remote_nesting_allowed)
         && !pcmk_is_set(rsc->flags, pcmk__rsc_failed)
-        && pcmk__list_of_1(rsc->private->active_nodes)) {
+        && pcmk__list_of_1(rsc->priv->active_nodes)) {
         return false;
     }
 
@@ -647,7 +647,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
      * if the PCMK_XA_INFLUENCE option is true or the primary is not yet active.
      */
     return pcmk_is_set(colocation->flags, pcmk__coloc_influence)
-           || (rsc->private->active_nodes == NULL);
+           || (rsc->priv->active_nodes == NULL);
 }
 
 
@@ -693,7 +693,7 @@ void pcmk__order_after_each(pcmk_action_t *after, GList *list);
                        NULL,                                                \
                        (then_rsc),                                          \
                        pcmk__op_key((then_rsc)->id, (then_task), 0),        \
-                       NULL, (flags), (first_rsc)->private->scheduler)
+                       NULL, (flags), (first_rsc)->priv->scheduler)
 
 #define pcmk__order_starts(rsc1, rsc2, flags)                \
     pcmk__order_resource_actions((rsc1), PCMK_ACTION_START,  \

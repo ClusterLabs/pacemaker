@@ -175,7 +175,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
              item = item->next) {
             pcmk_resource_t *rsc = item->data;
 
-            rsc->private->fns->count(item->data);
+            rsc->priv->fns->count(item->data);
         }
         crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
                   scheduler->ninstances, scheduler->disabled_resources,
@@ -206,7 +206,7 @@ pe_free_resources(GList *resources)
     while (iterator != NULL) {
         rsc = (pcmk_resource_t *) iterator->data;
         iterator = iterator->next;
-        rsc->private->fns->free(rsc);
+        rsc->priv->fns->free(rsc);
     }
     if (resources != NULL) {
         g_list_free(resources);
@@ -440,8 +440,8 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         pcmk_resource_t *parent = rIter->data;
-        pcmk_resource_t *match = parent->private->fns->find_rsc(parent, id,
-                                                                NULL, flags);
+        pcmk_resource_t *match = parent->priv->fns->find_rsc(parent, id, NULL,
+                                                             flags);
 
         if (match != NULL) {
             return match;

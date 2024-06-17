@@ -96,7 +96,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                         "='" PCMK_VALUE_BLOCK "']",
                                     xml_name);
 
-    xmlXPathObject *xpathObj = xpath_search(rsc->private->xml, xpath);
+    xmlXPathObject *xpathObj = xpath_search(rsc->priv->xml, xpath);
     gboolean should_block = FALSE;
 
     free(xpath);
@@ -137,7 +137,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                                  node->private->name, xml_name,
                                                  conf_op_name,
                                                  conf_op_interval_ms);
-                lrm_op_xpathObj = xpath_search(rsc->private->scheduler->input,
+                lrm_op_xpathObj = xpath_search(rsc->priv->scheduler->input,
                                                lrm_op_xpath);
 
                 free(lrm_op_xpath);
@@ -184,7 +184,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
 static inline char *
 rsc_fail_name(const pcmk_resource_t *rsc)
 {
-    const char *name = pcmk__s(rsc->private->history_id, rsc->id);
+    const char *name = pcmk__s(rsc->priv->history_id, rsc->id);
 
     return pcmk_is_set(rsc->flags, pcmk__rsc_unique)? strdup(name) : clone_strip(name);
 }
@@ -330,7 +330,7 @@ update_launched_failcount(gpointer data, gpointer user_data)
 }
 
 #define readable_expiration(rsc)    \
-    pcmk__readable_interval((rsc)->private->failure_expiration_ms)
+    pcmk__readable_interval((rsc)->priv->failure_expiration_ms)
 
 /*!
  * \internal
@@ -371,23 +371,23 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
     regfree(&(fc_data.lastfailure_re));
 
     // If failure blocks the resource, disregard any failure timeout
-    if ((fc_data.failcount > 0) && (rsc->private->failure_expiration_ms > 0)
+    if ((fc_data.failcount > 0) && (rsc->priv->failure_expiration_ms > 0)
         && block_failure(node, rsc, xml_op)) {
 
         pcmk__config_warn("Ignoring failure timeout (%s) for %s "
                           "because it conflicts with "
                           PCMK_META_ON_FAIL "=" PCMK_VALUE_BLOCK,
                           readable_expiration(rsc), rsc->id);
-        rsc->private->failure_expiration_ms = 0;
+        rsc->priv->failure_expiration_ms = 0;
     }
 
     // If all failures have expired, ignore fail count
     if (pcmk_is_set(flags, pcmk__fc_effective) && (fc_data.failcount > 0)
         && (fc_data.last_failure > 0)
-        && (rsc->private->failure_expiration_ms > 0)) {
+        && (rsc->priv->failure_expiration_ms > 0)) {
 
-        time_t now = get_effective_time(rsc->private->scheduler);
-        const guint expiration = rsc->private->failure_expiration_ms / 1000;
+        time_t now = get_effective_time(rsc->priv->scheduler);
+        const guint expiration = rsc->priv->failure_expiration_ms / 1000;
 
         if (now > (fc_data.last_failure + expiration)) {
             pcmk__rsc_debug(rsc, "Failcount for %s on %s expired after %s",
@@ -408,9 +408,9 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * container on the wrong node.
      */
     if (pcmk_is_set(flags, pcmk__fc_launched)
-        && (rsc->private->launched != NULL) && !pcmk__is_bundled(rsc)) {
+        && (rsc->priv->launched != NULL) && !pcmk__is_bundled(rsc)) {
 
-        g_list_foreach(rsc->private->launched, update_launched_failcount,
+        g_list_foreach(rsc->priv->launched, update_launched_failcount,
                        &fc_data);
         if (fc_data.failcount > 0) {
             pcmk__rsc_info(rsc,

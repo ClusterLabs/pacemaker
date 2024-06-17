@@ -449,7 +449,7 @@ pcmk__current_node(const pcmk_resource_t *rsc)
     if (rsc == NULL) {
         return NULL;
     }
-    return rsc->private->fns->active_node(rsc, NULL, NULL);
+    return rsc->priv->fns->active_node(rsc, NULL, NULL);
 }
 
 #ifdef __cplusplus

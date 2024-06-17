@@ -866,10 +866,9 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
         GList *iter = NULL;
 
         current = NULL;
-        for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
+        for (iter = rsc->priv->children; iter != NULL; iter = iter->next) {
             pcmk_resource_t *child = (pcmk_resource_t *)iter->data;
-            enum rsc_role_e child_role = child->private->fns->state(child,
-                                                                    TRUE);
+            enum rsc_role_e child_role = child->priv->fns->state(child, TRUE);
 
             if (child_role == pcmk_role_promoted) {
                 count++;
@@ -1737,7 +1736,7 @@ main(int argc, char **argv)
         /* The --ban, --clear, --move, and --restart commands do not work with
          * instances of clone resourcs.
          */
-        if (pcmk__is_clone(rsc->private->parent)
+        if (pcmk__is_clone(rsc->priv->parent)
             && (strchr(options.rsc_id, ':') != NULL)
             && !accept_clone_instance()) {
 
@@ -1987,8 +1986,8 @@ main(int argc, char **argv)
         case cmd_get_param: {
             unsigned int count = 0;
             GHashTable *params = NULL;
-            pcmk_node_t *current = rsc->private->fns->active_node(rsc, &count,
-                                                                  NULL);
+            pcmk_node_t *current = rsc->priv->fns->active_node(rsc, &count,
+                                                               NULL);
             bool free_params = true;
             const char* value = NULL;
 
@@ -2017,7 +2016,7 @@ main(int argc, char **argv)
 
             } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
 
-                value = crm_element_value(rsc->private->xml, options.prop_name);
+                value = crm_element_value(rsc->priv->xml, options.prop_name);
                 free_params = false;
 
             } else {
@@ -2026,7 +2025,7 @@ main(int argc, char **argv)
                 };
 
                 params = pcmk__strkey_table(free, free);
-                pe__unpack_dataset_nvpairs(rsc->private->xml,
+                pe__unpack_dataset_nvpairs(rsc->priv->xml,
                                            PCMK_XE_UTILIZATION, &rule_data,
                                            params, NULL, FALSE, scheduler);
 
