@@ -368,8 +368,8 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
 static inline void
 add_assigned_resource(pcmk_node_t *node, pcmk_resource_t *rsc)
 {
-    node->private->assigned_resources =
-        g_list_prepend(node->private->assigned_resources, rsc);
+    node->priv->assigned_resources =
+        g_list_prepend(node->priv->assigned_resources, rsc);
 }
 
 /*!
@@ -512,9 +512,9 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     rsc->priv->assigned_node = pe__copy_node(node);
 
     add_assigned_resource(node, rsc);
-    node->private->num_resources++;
+    node->priv->num_resources++;
     node->assign->count++;
-    pcmk__consume_node_capacity(node->private->utilization, rsc);
+    pcmk__consume_node_capacity(node->priv->utilization, rsc);
 
     if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
         pcmk__output_t *out = scheduler->priv;
@@ -557,10 +557,10 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
         /* We're going to free the pcmk_node_t, but its details member is shared
          * and will remain, so update that appropriately first.
          */
-        old->private->assigned_resources =
-            g_list_remove(old->private->assigned_resources, rsc);
-        old->private->num_resources--;
-        pcmk__release_node_capacity(old->private->utilization, rsc);
+        old->priv->assigned_resources =
+            g_list_remove(old->priv->assigned_resources, rsc);
+        old->priv->num_resources--;
+        pcmk__release_node_capacity(old->priv->utilization, rsc);
         free(old);
         return;
     }
@@ -651,7 +651,7 @@ get_node_score(const pcmk_node_t *node, GHashTable *nodes)
     pcmk_node_t *found_node = NULL;
 
     if ((node != NULL) && (nodes != NULL)) {
-        found_node = g_hash_table_lookup(nodes, node->private->id);
+        found_node = g_hash_table_lookup(nodes, node->priv->id);
     }
     if (found_node == NULL) {
         return -PCMK_SCORE_INFINITY;
@@ -763,11 +763,11 @@ done:
     crm_trace("%s (%d)%s%s %c %s (%d)%s%s: %s",
               resource1->id, r1_score,
               ((r1_node == NULL)? "" : " on "),
-              ((r1_node == NULL)? "" : r1_node->private->id),
+              ((r1_node == NULL)? "" : r1_node->priv->id),
               ((rc < 0)? '>' : ((rc > 0)? '<' : '=')),
               resource2->id, r2_score,
               ((r2_node == NULL)? "" : " on "),
-              ((r2_node == NULL)? "" : r2_node->private->id),
+              ((r2_node == NULL)? "" : r2_node->priv->id),
               reason);
     if (r1_nodes != NULL) {
         g_hash_table_destroy(r1_nodes);

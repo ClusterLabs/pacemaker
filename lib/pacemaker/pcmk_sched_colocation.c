@@ -1498,7 +1498,7 @@ best_node_score_matching_attr(const pcmk__colocation_t *colocation,
                             pcmk__str_casei)) {
 
             best_score = node->assign->score;
-            best_node = node->private->name;
+            best_node = node->priv->name;
         }
     }
 
@@ -1897,7 +1897,7 @@ pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
         const pcmk_node_t *primary_node = NULL;
 
         primary_node = pe_find_node_id(primary_nodes,
-                                       dependent_node->private->id);
+                                       dependent_node->priv->id);
         if (primary_node == NULL) {
             dependent_node->assign->score = -PCMK_SCORE_INFINITY;
             pcmk__rsc_trace(dependent,

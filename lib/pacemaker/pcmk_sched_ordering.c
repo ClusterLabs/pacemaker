@@ -1162,7 +1162,7 @@ pcmk__disable_invalid_orderings(pcmk_scheduler_t *scheduler)
 void
 pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
 {
-    for (GList *iter = node->private->scheduler->actions;
+    for (GList *iter = node->priv->scheduler->actions;
          iter != NULL; iter = iter->next) {
 
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
@@ -1209,7 +1209,7 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
                            strdup(PCMK_ACTION_DO_SHUTDOWN), shutdown_op,
                            pcmk__ar_ordered|pcmk__ar_unrunnable_first_blocks,
-                           node->private->scheduler);
+                           node->priv->scheduler);
     }
 }
 

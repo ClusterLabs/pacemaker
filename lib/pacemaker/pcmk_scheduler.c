@@ -62,7 +62,7 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
                 case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s has "
                               "no digest to compare",
-                              rsc->id, pcmk__xe_id(rsc_op), node->private->id);
+                              rsc->id, pcmk__xe_id(rsc_op), node->priv->id);
                     break;
                 case pcmk__digest_match:
                     break;
@@ -170,7 +170,7 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
                        user_data);
 
         match = g_hash_table_lookup(rsc->priv->allowed_nodes,
-                                    node->private->id);
+                                    node->priv->id);
         if ((match != NULL)
             && (match->assign->probe_mode != pcmk__probe_exclusive)) {
             match->assign->score = -PCMK_SCORE_INFINITY;
@@ -216,7 +216,7 @@ apply_stickiness(gpointer data, gpointer user_data)
     if (!pcmk_is_set(rsc->priv->scheduler->flags,
                      pcmk__sched_symmetric_cluster)
         && (g_hash_table_lookup(rsc->priv->allowed_nodes,
-                                node->private->id) == NULL)) {
+                                node->priv->id) == NULL)) {
         pcmk__rsc_debug(rsc,
                         "Ignoring %s stickiness because the cluster is "
                         "asymmetric and %s is not explicitly allowed",
@@ -268,7 +268,7 @@ count_available_nodes(pcmk_scheduler_t *scheduler)
 
         if ((node != NULL) && (node->assign->score >= 0)
             && node->details->online
-            && (node->private->variant != pcmk__node_variant_ping)) {
+            && (node->priv->variant != pcmk__node_variant_ping)) {
             scheduler->max_valid_nodes++;
         }
     }
@@ -485,7 +485,7 @@ static bool
 needs_fencing(const pcmk_node_t *node, bool have_managed)
 {
     return have_managed && node->details->unclean
-           && pe_can_fence(node->private->scheduler, node);
+           && pe_can_fence(node->priv->scheduler, node);
 }
 
 /*!
@@ -544,11 +544,11 @@ static pcmk_action_t *
 schedule_fencing(pcmk_node_t *node)
 {
     pcmk_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
-                                       FALSE, node->private->scheduler);
+                                         FALSE, node->priv->scheduler);
 
-    pcmk__sched_warn(node->private->scheduler, "Scheduling node %s for fencing",
+    pcmk__sched_warn(node->priv->scheduler, "Scheduling node %s for fencing",
                      pcmk__node_name(node));
-    pcmk__order_vs_fence(fencing, node->private->scheduler);
+    pcmk__order_vs_fence(fencing, node->priv->scheduler);
     return fencing;
 }
 
@@ -583,7 +583,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
          * so handle them separately.
          */
         if (pcmk__is_guest_or_bundle_node(node)) {
-            if (pcmk_is_set(node->private->flags, pcmk__node_remote_reset)
+            if (pcmk_is_set(node->priv->flags, pcmk__node_remote_reset)
                 && have_managed && pe_can_fence(scheduler, node)) {
                 pcmk__fence_guest(node);
             }

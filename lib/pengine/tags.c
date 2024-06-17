@@ -79,7 +79,7 @@ pe__unames_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
         }
 
         /* Get the uname for the node and add it to the return list. */
-        retval = g_list_append(retval, strdup(node->private->name));
+        retval = g_list_append(retval, strdup(node->priv->name));
     }
 
     return retval;

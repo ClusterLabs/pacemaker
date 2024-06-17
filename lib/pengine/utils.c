@@ -39,7 +39,7 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
         /* A guest or bundle node is fenced by stopping its launcher, which is
          * possible if the launcher's host is either online or fenceable.
          */
-        pcmk_resource_t *rsc = node->private->remote->priv->launcher;
+        pcmk_resource_t *rsc = node->priv->remote->priv->launcher;
 
         for (GList *n = rsc->priv->active_nodes; n != NULL; n = n->next) {
             pcmk_node_t *launcher_node = n->data;
@@ -100,7 +100,7 @@ pe__copy_node(const pcmk_node_t *this_node)
     new_node->assign->score = this_node->assign->score;
     new_node->assign->count = this_node->assign->count;
     new_node->details = this_node->details;
-    new_node->private = this_node->private;
+    new_node->priv = this_node->priv;
 
     return new_node;
 }
@@ -123,7 +123,7 @@ pe__node_list2table(const GList *list)
         pcmk_node_t *new_node = NULL;
 
         new_node = pe__copy_node((const pcmk_node_t *) gIter->data);
-        g_hash_table_insert(result, (gpointer) new_node->private->id, new_node);
+        g_hash_table_insert(result, (gpointer) new_node->priv->id, new_node);
     }
     return result;
 }
@@ -161,7 +161,7 @@ pe__cmp_node_name(gconstpointer a, gconstpointer b)
         return 1;
     }
 
-    return pcmk__numeric_strcasecmp(node1->private->name, node2->private->name);
+    return pcmk__numeric_strcasecmp(node1->priv->name, node2->priv->name);
 }
 
 /*!
@@ -186,7 +186,7 @@ pe__output_node_weights(const pcmk_resource_t *rsc, const char *comment,
     for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         const pcmk_node_t *node = (const pcmk_node_t *) gIter->data;
 
-        out->message(out, "node-weight", rsc, comment, node->private->name,
+        out->message(out, "node-weight", rsc, comment, node->priv->name,
                      pcmk_readable_score(node->assign->score));
     }
     g_list_free(list);
@@ -345,11 +345,11 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         }
     }
 
-    match = g_hash_table_lookup(rsc->priv->allowed_nodes, node->private->id);
+    match = g_hash_table_lookup(rsc->priv->allowed_nodes, node->priv->id);
     if (match == NULL) {
         match = pe__copy_node(node);
         g_hash_table_insert(rsc->priv->allowed_nodes,
-                            (gpointer) match->private->id, match);
+                            (gpointer) match->priv->id, match);
     }
     match->assign->score = pcmk__add_scores(match->assign->score, score);
     pcmk__rsc_trace(rsc,
@@ -752,7 +752,7 @@ pe__rsc_running_on_any(pcmk_resource_t *rsc, GList *node_list)
     if (rsc != NULL) {
         for (GList *ele = rsc->priv->active_nodes; ele; ele = ele->next) {
             pcmk_node_t *node = (pcmk_node_t *) ele->data;
-            if (pcmk__str_in_list(node->private->name, node_list,
+            if (pcmk__str_in_list(node->priv->name, node_list,
                                   pcmk__str_star_matches|pcmk__str_casei)) {
                 return true;
             }

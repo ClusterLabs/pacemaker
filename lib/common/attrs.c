@@ -132,7 +132,7 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
      */
     if (!pcmk__is_guest_or_bundle_node(node)
         || !pcmk__str_eq(target, PCMK_VALUE_HOST, pcmk__str_casei)) {
-        value = g_hash_table_lookup(node->private->attrs, name);
+        value = g_hash_table_lookup(node->priv->attrs, name);
         crm_trace("%s='%s' on %s",
                   name, pcmk__s(value, ""), pcmk__node_name(node));
         return value;
@@ -142,7 +142,7 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
      * for the container itself (useful when the container uses the host's
      * storage).
      */
-    container = node->private->remote->priv->launcher;
+    container = node->priv->remote->priv->launcher;
 
     switch (node_type) {
         case pcmk__rsc_node_assigned:
@@ -175,7 +175,7 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
             break;
     }
 
-    value = g_hash_table_lookup(host->private->attrs, name);
+    value = g_hash_table_lookup(host->priv->attrs, name);
     crm_trace("%s='%s' for %s on %s container host %s",
               name, pcmk__s(value, ""), pcmk__node_name(node), node_type_s,
               pcmk__node_name(host));

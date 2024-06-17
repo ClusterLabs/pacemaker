@@ -30,7 +30,7 @@ add_expected_result(pcmk_action_t *probe, const pcmk_resource_t *rsc,
 {
     // Check whether resource is currently active on node
     pcmk_node_t *running = pe_find_node_id(rsc->priv->active_nodes,
-                                           node->private->id);
+                                           node->priv->id);
 
     // The expected result is what we think the resource's current state is
     if (running == NULL) {
@@ -79,7 +79,7 @@ probe_then_start(pcmk_resource_t *rsc1, pcmk_resource_t *rsc2)
 
     if ((rsc1_node != NULL)
         && (g_hash_table_lookup(rsc1->priv->probed_nodes,
-                                rsc1_node->private->id) == NULL)) {
+                                rsc1_node->priv->id) == NULL)) {
 
         pcmk__new_ordering(rsc1,
                            pcmk__op_key(rsc1->id, PCMK_ACTION_MONITOR, 0),
@@ -104,13 +104,13 @@ guest_resource_will_stop(const pcmk_node_t *node)
     const pcmk_resource_t *guest_rsc = NULL;
     const pcmk_node_t *guest_node = NULL;
 
-    guest_rsc = node->private->remote->priv->launcher;
+    guest_rsc = node->priv->remote->priv->launcher;
     guest_node = guest_rsc->priv->assigned_node;
 
     /* Ideally, we'd check whether the guest has a required stop, but that
      * information doesn't exist yet, so approximate it ...
      */
-    return pcmk_is_set(node->private->flags, pcmk__node_remote_reset)
+    return pcmk_is_set(node->priv->flags, pcmk__node_remote_reset)
            || node->details->unclean
            || pcmk_is_set(guest_rsc->flags, pcmk__rsc_failed)
            || (guest_rsc->priv->next_role == pcmk_role_stopped)
@@ -119,7 +119,7 @@ guest_resource_will_stop(const pcmk_node_t *node)
            || ((guest_rsc->priv->orig_role > pcmk_role_stopped)
                && (guest_node != NULL)
                && pcmk__find_node_in_list(guest_rsc->priv->active_nodes,
-                                          guest_node->private->name) == NULL);
+                                          guest_node->priv->name) == NULL);
 }
 
 /*!
@@ -212,13 +212,13 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         goto no_probe;
 
     } else if (g_hash_table_lookup(rsc->priv->probed_nodes,
-                                   node->private->id) != NULL) {
+                                   node->priv->id) != NULL) {
         reason = "resource state is already known";
         goto no_probe;
     }
 
     allowed = g_hash_table_lookup(rsc->priv->allowed_nodes,
-                                  node->private->id);
+                                  node->priv->id);
 
     if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
         || pcmk_is_set(top->flags, pcmk__rsc_exclusive_probes)) {
@@ -247,7 +247,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     if (pcmk__is_guest_or_bundle_node(node)) {
-        pcmk_resource_t *guest = node->private->remote->priv->launcher;
+        pcmk_resource_t *guest = node->priv->remote->priv->launcher;
 
         if (guest->priv->orig_role == pcmk_role_stopped) {
             // The guest is stopped, so we know no resource is active there
@@ -300,7 +300,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
 no_probe:
     pcmk__rsc_trace(rsc,
                     "Skipping probe for %s on %s because %s",
-                    rsc->id, node->private->id, reason);
+                    rsc->id, node->priv->id, reason);
     return false;
 }
 
@@ -894,7 +894,7 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        if (!pcmk_is_set(node->private->flags, pcmk__node_probes_allowed)) {
+        if (!pcmk_is_set(node->priv->flags, pcmk__node_probes_allowed)) {
             // The user requested that probes not be done on this node
             continue;
         }

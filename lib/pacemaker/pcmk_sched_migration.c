@@ -29,10 +29,10 @@ add_migration_meta(pcmk_action_t *action, const pcmk_node_t *source,
                    const pcmk_node_t *target)
 {
     pcmk__insert_meta(action, PCMK__META_MIGRATE_SOURCE,
-                      source->private->name);
+                      source->priv->name);
 
     pcmk__insert_meta(action, PCMK__META_MIGRATE_TARGET,
-                      target->private->name);
+                      target->priv->name);
 }
 
 /*!

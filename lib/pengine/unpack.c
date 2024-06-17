@@ -95,9 +95,9 @@ static bool
 is_dangling_guest_node(pcmk_node_t *node)
 {
     return pcmk__is_pacemaker_remote_node(node)
-           && (node->private->remote != NULL)
-           && (node->private->remote->priv->launcher == NULL)
-           && pcmk_is_set(node->private->remote->flags,
+           && (node->priv->remote != NULL)
+           && (node->priv->remote->priv->launcher == NULL)
+           && pcmk_is_set(node->priv->remote->flags,
                           pcmk__rsc_removed_launched);
 }
 
@@ -118,7 +118,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 
     if (pcmk__is_guest_or_bundle_node(node)) {
         // Fence a guest or bundle node by marking its launcher as failed
-        pcmk_resource_t *rsc = node->private->remote->priv->launcher;
+        pcmk_resource_t *rsc = node->priv->remote->priv->launcher;
 
         if (!pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
             if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
@@ -147,17 +147,17 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                  "fencing was already done because %s, "
                  "and guest resource no longer exists",
                  pcmk__node_name(node), reason);
-        pcmk__set_rsc_flags(node->private->remote,
+        pcmk__set_rsc_flags(node->priv->remote,
                             pcmk__rsc_failed|pcmk__rsc_stop_if_failed);
 
     } else if (pcmk__is_remote_node(node)) {
-        pcmk_resource_t *rsc = node->private->remote;
+        pcmk_resource_t *rsc = node->priv->remote;
 
         if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
             crm_notice("Not fencing remote node %s "
                        "(otherwise would because %s): connection is unmanaged",
                        pcmk__node_name(node), reason);
-        } else if (!pcmk_is_set(node->private->flags, pcmk__node_remote_reset)) {
+        } else if (!pcmk_is_set(node->priv->flags, pcmk__node_remote_reset)) {
             pcmk__set_node_flags(node, pcmk__node_remote_reset);
             pcmk__sched_warn(scheduler, "Remote node %s %s: %s",
                              pcmk__node_name(node),
@@ -474,12 +474,12 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node->assign = calloc(1, sizeof(struct pcmk__node_assignment));
     new_node->details = calloc(1, sizeof(struct pcmk__node_details));
-    new_node->private = calloc(1, sizeof(pcmk__node_private_t));
+    new_node->priv = calloc(1, sizeof(pcmk__node_private_t));
     if ((new_node->assign == NULL) || (new_node->details == NULL)
-        || (new_node->private == NULL)) {
+        || (new_node->priv == NULL)) {
         free(new_node->assign);
         free(new_node->details);
-        free(new_node->private);
+        free(new_node->priv);
         free(new_node);
         pcmk__sched_err(scheduler, "Could not allocate memory for node %s",
                         uname);
@@ -488,20 +488,20 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     crm_trace("Creating node for entry %s/%s", uname, id);
     new_node->assign->score = char2score(score);
-    new_node->private->id = id;
-    new_node->private->name = uname;
-    new_node->private->flags = pcmk__node_probes_allowed;
+    new_node->priv->id = id;
+    new_node->priv->name = uname;
+    new_node->priv->flags = pcmk__node_probes_allowed;
     new_node->details->online = FALSE;
     new_node->details->shutdown = FALSE;
     new_node->details->running_rsc = NULL;
-    new_node->private->scheduler = scheduler;
+    new_node->priv->scheduler = scheduler;
 
     if (pcmk__str_eq(type, PCMK_VALUE_MEMBER,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        new_node->private->variant = pcmk__node_variant_cluster;
+        new_node->priv->variant = pcmk__node_variant_cluster;
 
     } else if (pcmk__str_eq(type, PCMK_VALUE_REMOTE, pcmk__str_casei)) {
-        new_node->private->variant = pcmk__node_variant_remote;
+        new_node->priv->variant = pcmk__node_variant_remote;
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_remote_nodes);
 
     } else {
@@ -518,20 +518,19 @@ pe_create_node(const char *id, const char *uname, const char *type,
                         "(such as %s) is deprecated and will be removed in a "
                         "future release",
                         pcmk__s(uname, "unnamed node"));
-        new_node->private->variant = pcmk__node_variant_ping;
+        new_node->priv->variant = pcmk__node_variant_ping;
     }
 
-    new_node->private->attrs = pcmk__strkey_table(free, free);
+    new_node->priv->attrs = pcmk__strkey_table(free, free);
 
     if (pcmk__is_pacemaker_remote_node(new_node)) {
-        pcmk__insert_dup(new_node->private->attrs, CRM_ATTR_KIND, "remote");
+        pcmk__insert_dup(new_node->priv->attrs, CRM_ATTR_KIND, "remote");
     } else {
-        pcmk__insert_dup(new_node->private->attrs, CRM_ATTR_KIND, "cluster");
+        pcmk__insert_dup(new_node->priv->attrs, CRM_ATTR_KIND, "cluster");
     }
 
-    new_node->private->utilization = pcmk__strkey_table(free, free);
-    new_node->private->digest_cache = pcmk__strkey_table(free,
-                                                         pe__free_digests);
+    new_node->priv->utilization = pcmk__strkey_table(free, free);
+    new_node->priv->digest_cache = pcmk__strkey_table(free, pe__free_digests);
 
     scheduler->nodes = g_list_insert_sorted(scheduler->nodes, new_node,
                                             pe__cmp_node_name);
@@ -607,8 +606,8 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
 static void
 handle_startup_fencing(pcmk_scheduler_t *scheduler, pcmk_node_t *new_node)
 {
-    if ((new_node->private->variant == pcmk__node_variant_remote)
-        && (new_node->private->remote == NULL)) {
+    if ((new_node->priv->variant == pcmk__node_variant_remote)
+        && (new_node->priv->remote == NULL)) {
         /* Ignore fencing for remote nodes that don't have a connection resource
          * associated with them. This happens when remote node entries get left
          * in the nodes section after the connection resource is removed.
@@ -811,7 +810,7 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
 
     pcmk__rsc_trace(new_rsc, "Linking remote connection resource %s to %s",
                     new_rsc->id, pcmk__node_name(remote_node));
-    remote_node->private->remote = new_rsc;
+    remote_node->priv->remote = new_rsc;
 
     if (new_rsc->priv->launcher == NULL) {
         /* Handle start-up fencing for remote nodes (as opposed to guest nodes)
@@ -823,7 +822,7 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
         /* pe_create_node() marks the new node as "remote" or "cluster"; now
          * that we know the node is a guest node, update it correctly.
          */
-        pcmk__insert_dup(remote_node->private->attrs,
+        pcmk__insert_dup(remote_node->priv->attrs,
                          CRM_ATTR_KIND, "container");
     }
 }
@@ -1065,8 +1064,8 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         pcmk__clear_node_flags(this_node, pcmk__node_remote_maint);
     }
 
-    rsc = this_node->private->remote;
-    if (!pcmk_is_set(this_node->private->flags, pcmk__node_remote_reset)) {
+    rsc = this_node->priv->remote;
+    if (!pcmk_is_set(this_node->priv->flags, pcmk__node_remote_reset)) {
         this_node->details->unclean = FALSE;
         pcmk__set_node_flags(this_node, pcmk__node_seen);
     }
@@ -1302,7 +1301,7 @@ unpack_node_history(const xmlNode *status, bool fence,
             continue;
         }
 
-        if (pcmk_is_set(this_node->private->flags, pcmk__node_unpacked)) {
+        if (pcmk_is_set(this_node->priv->flags, pcmk__node_unpacked)) {
             crm_trace("Not unpacking resource history for node %s because "
                       "already unpacked", id);
             continue;
@@ -1316,7 +1315,7 @@ unpack_node_history(const xmlNode *status, bool fence,
              * other resource history to the point that we know that the node's
              * connection and containing resource are both up.
              */
-            const pcmk_resource_t *remote = this_node->private->remote;
+            const pcmk_resource_t *remote = this_node->priv->remote;
             const pcmk_resource_t *launcher = remote->priv->launcher;
 
             if ((remote->priv->orig_role != pcmk_role_started)
@@ -1333,7 +1332,7 @@ unpack_node_history(const xmlNode *status, bool fence,
              * connection is up, with the exception of when shutdown locks are
              * in use.
              */
-            pcmk_resource_t *rsc = this_node->private->remote;
+            pcmk_resource_t *rsc = this_node->priv->remote;
 
             if ((rsc == NULL)
                 || (!pcmk_is_set(scheduler->flags, pcmk__sched_shutdown_lock)
@@ -1435,11 +1434,11 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
             continue;
         }
         if (this_node->details->shutdown
-            && (this_node->private->remote != NULL)) {
-            pe__set_next_role(this_node->private->remote, pcmk_role_stopped,
+            && (this_node->priv->remote != NULL)) {
+            pe__set_next_role(this_node->priv->remote, pcmk_role_stopped,
                               "remote shutdown");
         }
-        if (!pcmk_is_set(this_node->private->flags, pcmk__node_unpacked)) {
+        if (!pcmk_is_set(this_node->priv->flags, pcmk__node_unpacked)) {
             determine_remote_online_status(scheduler, this_node);
         }
     }
@@ -1579,7 +1578,7 @@ determine_online_status_no_fencing(pcmk_scheduler_t *scheduler,
                       pcmk__node_name(this_node), join);
         }
 
-    } else if (!pcmk_is_set(this_node->private->flags,
+    } else if (!pcmk_is_set(this_node->priv->flags,
                             pcmk__node_expected_up)) {
         crm_trace("Node %s controller is down: "
                   "member@%lld online@%lld join=%s expected=%s",
@@ -1619,7 +1618,7 @@ pending_too_long(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
 
         time_t timeout = when_member + scheduler->node_pending_timeout;
 
-        if (get_effective_time(node->private->scheduler) >= timeout) {
+        if (get_effective_time(node->priv->scheduler) >= timeout) {
             return true; // Node has timed out
         }
 
@@ -1740,7 +1739,7 @@ static void
 determine_remote_online_status(pcmk_scheduler_t *scheduler,
                                pcmk_node_t *this_node)
 {
-    pcmk_resource_t *rsc = this_node->private->remote;
+    pcmk_resource_t *rsc = this_node->priv->remote;
     pcmk_resource_t *launcher = NULL;
     pcmk_node_t *host = NULL;
     const char *node_type = "Remote";
@@ -1751,7 +1750,7 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
          */
         crm_trace("Pacemaker Remote node %s is considered OFFLINE because "
                   "its connection resource has been removed from the CIB",
-                  this_node->private->id);
+                  this_node->priv->id);
         this_node->details->online = FALSE;
         return;
     }
@@ -1774,20 +1773,20 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
         && (rsc->priv->next_role == pcmk_role_stopped)) {
 
         crm_trace("%s node %s shutting down because connection resource is stopping",
-                  node_type, this_node->private->id);
+                  node_type, this_node->priv->id);
         this_node->details->shutdown = TRUE;
     }
 
     /* Now check all the failure conditions. */
     if ((launcher != NULL) && pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
         crm_trace("Guest node %s UNCLEAN because guest resource failed",
-                  this_node->private->id);
+                  this_node->priv->id);
         this_node->details->online = FALSE;
         pcmk__set_node_flags(this_node, pcmk__node_remote_reset);
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         crm_trace("%s node %s OFFLINE because connection resource failed",
-                  node_type, this_node->private->id);
+                  node_type, this_node->priv->id);
         this_node->details->online = FALSE;
 
     } else if ((rsc->priv->orig_role == pcmk_role_stopped)
@@ -1795,20 +1794,20 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
                    && (launcher->priv->orig_role == pcmk_role_stopped))) {
 
         crm_trace("%s node %s OFFLINE because its resource is stopped",
-                  node_type, this_node->private->id);
+                  node_type, this_node->priv->id);
         this_node->details->online = FALSE;
         pcmk__clear_node_flags(this_node, pcmk__node_remote_reset);
 
     } else if (host && (host->details->online == FALSE)
                && host->details->unclean) {
         crm_trace("Guest node %s UNCLEAN because host is unclean",
-                  this_node->private->id);
+                  this_node->priv->id);
         this_node->details->online = FALSE;
         pcmk__set_node_flags(this_node, pcmk__node_remote_reset);
 
     } else {
         crm_trace("%s node %s is %s",
-                  node_type, this_node->private->id,
+                  node_type, this_node->priv->id,
                   this_node->details->online? "ONLINE" : "OFFLINE");
     }
 }
@@ -1831,7 +1830,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
         pcmk__set_node_flags(this_node, pcmk__node_expected_up);
     }
 
-    if (this_node->private->variant == pcmk__node_variant_ping) {
+    if (this_node->priv->variant == pcmk__node_variant_ping) {
         this_node->details->unclean = FALSE;
         online = FALSE;         /* As far as resource management is concerned,
                                  * the node is safely offline.
@@ -1860,7 +1859,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
         this_node->assign->score = -PCMK_SCORE_INFINITY;
     }
 
-    if (this_node->private->variant == pcmk__node_variant_ping) {
+    if (this_node->priv->variant == pcmk__node_variant_ping) {
         crm_info("%s is not a Pacemaker node", pcmk__node_name(this_node));
 
     } else if (this_node->details->unclean) {
@@ -1876,7 +1875,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
     } else if (this_node->details->pending) {
         crm_info("%s is pending", pcmk__node_name(this_node));
 
-    } else if (pcmk_is_set(this_node->private->flags, pcmk__node_standby)) {
+    } else if (pcmk_is_set(this_node->priv->flags, pcmk__node_standby)) {
         crm_info("%s is in standby", pcmk__node_name(this_node));
 
     } else if (this_node->details->maintenance) {
@@ -2302,7 +2301,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         while (iter) {
             if (g_hash_table_lookup(iter->priv->probed_nodes,
-                                    node->private->id) == NULL) {
+                                    node->priv->id) == NULL) {
                 pcmk_node_t *n = pe__copy_node(node);
 
                 pcmk__rsc_trace(rsc, "%s (%s in history) known on %s",
@@ -2310,7 +2309,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                                 pcmk__s(rsc->priv->history_id, "the same"),
                                 pcmk__node_name(n));
                 g_hash_table_insert(iter->priv->probed_nodes,
-                                    (gpointer) n->private->id, n);
+                                    (gpointer) n->priv->id, n);
             }
             if (pcmk_is_set(iter->flags, pcmk__rsc_unique)) {
                 break;
@@ -2338,8 +2337,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         } else if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             if (pcmk__is_remote_node(node)
-                && (node->private->remote != NULL)
-                && !pcmk_is_set(node->private->remote->flags,
+                && (node->priv->remote != NULL)
+                && !pcmk_is_set(node->priv->remote->flags,
                                 pcmk__rsc_failed)) {
 
                 /* Setting unseen means that fencing of the remote node will
@@ -2454,7 +2453,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                     tmpnode = pcmk_find_node(scheduler, rsc->id);
                 }
                 if (pcmk__is_remote_node(tmpnode)
-                    && !pcmk_is_set(tmpnode->private->flags,
+                    && !pcmk_is_set(tmpnode->priv->flags,
                                     pcmk__node_remote_fenced)) {
                     /* The remote connection resource failed in a way that
                      * should result in fencing the remote node.
@@ -3161,7 +3160,7 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
     }
 
     if ((source_node != NULL)
-        && !pcmk__str_eq(*source_name, source_node->private->name,
+        && !pcmk__str_eq(*source_name, source_node->priv->name,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__config_err("Ignoring resource history entry %s because "
                          PCMK__META_MIGRATE_SOURCE "='%s' does not match %s",
@@ -3171,7 +3170,7 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
     }
 
     if ((target_node != NULL)
-        && !pcmk__str_eq(*target_name, target_node->private->name,
+        && !pcmk__str_eq(*target_name, target_node->priv->name,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__config_err("Ignoring resource history entry %s because "
                          PCMK__META_MIGRATE_TARGET "='%s' does not match %s",
@@ -3495,7 +3494,7 @@ record_failed_op(struct action_history *history)
         const char *uname = crm_element_value(xIter, PCMK_XA_UNAME);
 
         if (pcmk__str_eq(history->key, key, pcmk__str_none)
-            && pcmk__str_eq(uname, history->node->private->name,
+            && pcmk__str_eq(uname, history->node->priv->name,
                             pcmk__str_casei)) {
             crm_trace("Skipping duplicate entry %s on %s",
                       history->key, pcmk__node_name(history->node));
@@ -3505,7 +3504,7 @@ record_failed_op(struct action_history *history)
 
     crm_trace("Adding entry for %s on %s to failed action list",
               history->key, pcmk__node_name(history->node));
-    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->private->name);
+    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->priv->name);
     crm_xml_add(history->xml, PCMK__XA_RSC_ID, history->rsc->id);
     pcmk__xml_copy(scheduler->failed, history->xml);
 }
@@ -3745,12 +3744,12 @@ block_if_unrecoverable(struct action_history *history)
     if (strcmp(history->task, PCMK_ACTION_STOP) != 0) {
         return; // All actions besides stop are always recoverable
     }
-    if (pe_can_fence(history->node->private->scheduler, history->node)) {
+    if (pe_can_fence(history->node->priv->scheduler, history->node)) {
         return; // Failed stops are recoverable via fencing
     }
 
     last_change_s = last_change_str(history->xml);
-    pcmk__sched_err(history->node->private->scheduler,
+    pcmk__sched_err(history->node->priv->scheduler,
                     "No further recovery can be attempted for %s "
                     "because %s on %s failed (%s%s%s) at %s "
                     QB_XS " rc=%d id=%s",
@@ -4034,7 +4033,7 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
                     crm_trace("Resource %s history entry %s on %s"
                               " has no digest to compare",
                               rsc->id, pcmk__xe_history_key(xml_op),
-                              node->private->id);
+                              node->priv->id);
                     break;
                 case pcmk__digest_match:
                     break;
@@ -4094,7 +4093,7 @@ should_ignore_failure_timeout(const pcmk_resource_t *rsc, const char *task,
         pcmk_node_t *remote_node = pcmk_find_node(rsc->priv->scheduler,
                                                   rsc->id);
 
-        if (remote_node && !pcmk_is_set(remote_node->private->flags,
+        if (remote_node && !pcmk_is_set(remote_node->priv->flags,
                                         pcmk__node_remote_fenced)) {
             if (is_last_failure) {
                 crm_info("Waiting to clear monitor failure for remote node %s"
@@ -4558,7 +4557,7 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
                pcmk__node_name(history->node));
     update_resource_state(history, history->expected_exit_status, last_failure,
                           on_fail);
-    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->private->name);
+    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->priv->name);
 
     record_failed_op(history);
     resource_location(ban_rsc, history->node, -PCMK_SCORE_INFINITY,
@@ -4799,7 +4798,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
         case PCMK_EXEC_NOT_CONNECTED:
             if (pcmk__is_pacemaker_remote_node(node)
-                && pcmk_is_set(node->private->remote->flags,
+                && pcmk_is_set(node->priv->remote->flags,
                                pcmk__rsc_managed)) {
                 /* We should never get into a situation where a managed remote
                  * connection resource is considered OK but a resource action
@@ -4807,7 +4806,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                  * fail-safe in case a bug or unusual circumstances do lead to
                  * that, ensure the remote connection is considered failed.
                  */
-                pcmk__set_rsc_flags(node->private->remote,
+                pcmk__set_rsc_flags(node->priv->remote,
                                     pcmk__rsc_failed|pcmk__rsc_stop_if_failed);
             }
             break; // Not done, do error handling
@@ -4841,7 +4840,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
         update_resource_state(&history, history.expected_exit_status,
                               *last_failure, on_fail);
-        crm_xml_add(xml_op, PCMK_XA_UNAME, node->private->name);
+        crm_xml_add(xml_op, PCMK_XA_UNAME, node->priv->name);
         pcmk__set_rsc_flags(rsc, pcmk__rsc_ignore_failure);
 
         record_failed_op(&history);
@@ -4905,32 +4904,32 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
         .op_data = NULL
     };
 
-    pcmk__insert_dup(node->private->attrs,
-                     CRM_ATTR_UNAME, node->private->name);
+    pcmk__insert_dup(node->priv->attrs,
+                     CRM_ATTR_UNAME, node->priv->name);
 
-    pcmk__insert_dup(node->private->attrs, CRM_ATTR_ID, node->private->id);
-    if (pcmk__str_eq(node->private->id, scheduler->dc_uuid, pcmk__str_casei)) {
+    pcmk__insert_dup(node->priv->attrs, CRM_ATTR_ID, node->priv->id);
+    if (pcmk__str_eq(node->priv->id, scheduler->dc_uuid, pcmk__str_casei)) {
         scheduler->dc_node = node;
-        pcmk__insert_dup(node->private->attrs,
+        pcmk__insert_dup(node->priv->attrs,
                          CRM_ATTR_IS_DC, PCMK_VALUE_TRUE);
     } else {
-        pcmk__insert_dup(node->private->attrs,
+        pcmk__insert_dup(node->priv->attrs,
                          CRM_ATTR_IS_DC, PCMK_VALUE_FALSE);
     }
 
     cluster_name = g_hash_table_lookup(scheduler->config_hash,
                                        PCMK_OPT_CLUSTER_NAME);
     if (cluster_name) {
-        pcmk__insert_dup(node->private->attrs, CRM_ATTR_CLUSTER_NAME,
+        pcmk__insert_dup(node->priv->attrs, CRM_ATTR_CLUSTER_NAME,
                          cluster_name);
     }
 
     pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
-                               node->private->attrs, NULL, overwrite,
+                               node->priv->attrs, NULL, overwrite,
                                scheduler);
 
     pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_UTILIZATION, &rule_data,
-                               node->private->utilization, NULL,
+                               node->priv->utilization, NULL,
                                FALSE, scheduler);
 
     if (pcmk__node_attr(node, CRM_ATTR_SITE_NAME, NULL,
@@ -4939,12 +4938,12 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                                                 pcmk__rsc_node_current);
 
         if (site_name) {
-            pcmk__insert_dup(node->private->attrs,
+            pcmk__insert_dup(node->priv->attrs,
                              CRM_ATTR_SITE_NAME, site_name);
 
         } else if (cluster_name) {
             /* Default to cluster-name if unset */
-            pcmk__insert_dup(node->private->attrs,
+            pcmk__insert_dup(node->priv->attrs,
                              CRM_ATTR_SITE_NAME, cluster_name);
         }
     }

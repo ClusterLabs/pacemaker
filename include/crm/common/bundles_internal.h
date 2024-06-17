@@ -81,7 +81,7 @@ static inline bool
 pcmk__is_bundle_node(const pcmk_node_t *node)
 {
     return pcmk__is_guest_or_bundle_node(node)
-           && pcmk__is_bundled(node->private->remote);
+           && pcmk__is_bundled(node->priv->remote);
 }
 
 #ifdef __cplusplus

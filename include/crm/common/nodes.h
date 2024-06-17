@@ -81,7 +81,7 @@ struct pcmk__scored_node {
     struct pcmk__node_details *details;   // Basic node information
 
     //! \internal Do not use
-    pcmk__node_private_t *private;
+    pcmk__node_private_t *priv;
 };
 //!@}
 

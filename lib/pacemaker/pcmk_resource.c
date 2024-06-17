@@ -41,7 +41,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     const char *best_digest = NULL;
 
     // Find node's resource history
-    xpath = crm_strdup_printf(XPATH_OP_HISTORY, node->private->name, rsc->id);
+    xpath = crm_strdup_printf(XPATH_OP_HISTORY, node->priv->name, rsc->id);
     history = get_xpath_object(xpath, rsc->priv->scheduler->input, LOG_NEVER);
     free(xpath);
 

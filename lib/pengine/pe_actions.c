@@ -338,7 +338,7 @@ update_resource_action_runnable(pcmk_action_t *action,
     } else if (!pcmk_is_set(action->flags, pcmk__action_on_dc)
                && !(action->node->details->online)
                && (!pcmk__is_guest_or_bundle_node(action->node)
-                   || pcmk_is_set(action->node->private->flags,
+                   || pcmk_is_set(action->node->priv->flags,
                                   pcmk__node_remote_reset))) {
         pcmk__clear_action_flags(action, pcmk__action_runnable);
         do_crm_log(LOG_WARNING, "%s on %s is unrunnable (node is offline)",
@@ -698,7 +698,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
          * defaults) is deprecated. When we can break behavioral backward
          * compatibility, drop this line.
          */
-        .node_hash = (node == NULL)? NULL : node->private->attrs,
+        .node_hash = (node == NULL)? NULL : node->priv->attrs,
 
         .now = rsc->priv->scheduler->now,
         .match_data = NULL,
@@ -1129,7 +1129,7 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
         if ((action->node != NULL) && (action->op_entry != NULL)
             && !pcmk_is_set(action->flags, pcmk__action_attrs_evaluated)) {
 
-            GHashTable *attrs = action->node->private->attrs;
+            GHashTable *attrs = action->node->priv->attrs;
 
             if (action->extra != NULL) {
                 g_hash_table_destroy(action->extra);
@@ -1203,7 +1203,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
 
     /* No need to request a delay if the fencing target is not a normal cluster
      * member, for example if it's a remote node or a guest node. */
-    if (node->private->variant != pcmk__node_variant_cluster) {
+    if (node->priv->variant != pcmk__node_variant_cluster) {
         return 0;
     }
 
@@ -1215,7 +1215,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
     for (gIter = scheduler->nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *n = gIter->data;
 
-        if (n->private->variant != pcmk__node_variant_cluster) {
+        if (n->priv->variant != pcmk__node_variant_cluster) {
             continue;
         }
 
@@ -1226,13 +1226,13 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         }
 
         if (member_count == 1
-            || n->private->priority > top_priority) {
-            top_priority = n->private->priority;
+            || n->priv->priority > top_priority) {
+            top_priority = n->priv->priority;
         }
 
         if (member_count == 1
-            || n->private->priority < lowest_priority) {
-            lowest_priority = n->private->priority;
+            || n->priv->priority < lowest_priority) {
+            lowest_priority = n->priv->priority;
         }
     }
 
@@ -1247,7 +1247,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         return 0;
     }
 
-    if (node->private->priority < top_priority) {
+    if (node->priv->priority < top_priority) {
         return 0;
     }
 
@@ -1267,16 +1267,16 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
     }
 
     op_key = crm_strdup_printf("%s-%s-%s",
-                               PCMK_ACTION_STONITH, node->private->name, op);
+                               PCMK_ACTION_STONITH, node->priv->name, op);
 
     stonith_op = lookup_singleton(scheduler, op_key);
     if(stonith_op == NULL) {
         stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
                                    TRUE, scheduler);
 
-        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE, node->private->name);
+        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE, node->priv->name);
         pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE_UUID,
-                          node->private->id);
+                          node->priv->id);
         pcmk__insert_meta(stonith_op, PCMK__META_STONITH_ACTION, op);
 
         if (pcmk_is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {

@@ -527,7 +527,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         // Cancel action on node where resource will be active
         if ((node != NULL)
-            && pcmk__str_eq(stop_node->private->name, node->private->name,
+            && pcmk__str_eq(stop_node->priv->name, node->priv->name,
                             pcmk__str_casei)) {
             cancel_if_running(rsc, node, op->key, op->name, op->interval_ms);
             continue;

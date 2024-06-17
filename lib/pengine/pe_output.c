@@ -358,10 +358,10 @@ static const char *
 get_node_feature_set(const pcmk_node_t *node)
 {
     if (node->details->online
-        && pcmk_is_set(node->private->flags, pcmk__node_expected_up)
+        && pcmk_is_set(node->priv->flags, pcmk__node_expected_up)
         && !pcmk__is_pacemaker_remote_node(node)) {
 
-        const char *feature_set = g_hash_table_lookup(node->private->attrs,
+        const char *feature_set = g_hash_table_lookup(node->priv->attrs,
                                                       CRM_ATTR_FEATURE_SET);
 
         /* The feature set attribute is present since 3.15.1. If it is missing,
@@ -566,18 +566,18 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     const char *node_id = NULL;
     int name_len;
 
-    CRM_ASSERT((node != NULL) && (node->private->name != NULL));
+    CRM_ASSERT((node != NULL) && (node->priv->name != NULL));
 
     /* Host is displayed only if this is a guest node and detail is requested */
     if (print_detail && pcmk__is_guest_or_bundle_node(node)) {
         const pcmk_resource_t *launcher = NULL;
         const pcmk_node_t *host_node = NULL;
 
-        launcher = node->private->remote->priv->launcher;
+        launcher = node->priv->remote->priv->launcher;
         host_node = pcmk__current_node(launcher);
 
         if (host_node && host_node->details) {
-            node_host = host_node->private->name;
+            node_host = host_node->priv->name;
         }
         if (node_host == NULL) {
             node_host = ""; /* so we at least get "uname@" to indicate guest */
@@ -586,13 +586,13 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
 
     /* Node ID is displayed if different from uname and detail is requested */
     if (print_detail
-        && !pcmk__str_eq(node->private->name, node->private->id,
+        && !pcmk__str_eq(node->priv->name, node->priv->id,
                          pcmk__str_casei)) {
-        node_id = node->private->id;
+        node_id = node->priv->id;
     }
 
     /* Determine name length */
-    name_len = strlen(node->private->name) + 1;
+    name_len = strlen(node->priv->name) + 1;
     if (node_host) {
         name_len += strlen(node_host) + 1; /* "@node_host" */
     }
@@ -602,7 +602,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
 
     /* Allocate and populate display name */
     node_name = pcmk__assert_alloc(name_len, sizeof(char));
-    strcpy(node_name, node->private->name);
+    strcpy(node_name, node->priv->name);
     if (node_host) {
         strcat(node_name, "@");
         strcat(node_name, node_host);
@@ -697,7 +697,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
     pcmk__output_create_xml_node(out, PCMK_XE_BAN,
                                  PCMK_XA_ID, location->id,
                                  PCMK_XA_RESOURCE, location->rsc->id,
-                                 PCMK_XA_NODE, pe_node->private->name,
+                                 PCMK_XA_NODE, pe_node->priv->name,
                                  PCMK_XA_WEIGHT, weight_s,
                                  PCMK_XA_PROMOTED_ONLY, promoted_only,
                                  /* This is a deprecated alias for
@@ -990,8 +990,8 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
         pcmk__output_create_xml_node(out, PCMK_XE_CURRENT_DC,
                                      PCMK_XA_PRESENT, PCMK_VALUE_TRUE,
                                      PCMK_XA_VERSION, pcmk__s(dc_version_s, ""),
-                                     PCMK_XA_NAME, dc->private->name,
-                                     PCMK_XA_ID, dc->private->id,
+                                     PCMK_XA_NAME, dc->priv->name,
+                                     PCMK_XA_ID, dc->priv->id,
                                      PCMK_XA_WITH_QUORUM, with_quorum,
                                      PCMK_XA_MIXED_VERSION, mixed_version_s,
                                      NULL);
@@ -1725,7 +1725,7 @@ status_node(pcmk_node_t *node, xmlNodePtr parent, uint32_t show_opts)
     }
 
     // Standby mode
-    if (pcmk_is_set(node->private->flags, pcmk__node_fail_standby)) {
+    if (pcmk_is_set(node->priv->flags, pcmk__node_fail_standby)) {
         child = pcmk__html_create(parent, PCMK__XE_SPAN, NULL,
                                   PCMK_VALUE_STANDBY);
         if (node->details->running_rsc == NULL) {
@@ -1737,7 +1737,7 @@ status_node(pcmk_node_t *node, xmlNodePtr parent, uint32_t show_opts)
                                  " with active resources)");
         }
 
-    } else if (pcmk_is_set(node->private->flags, pcmk__node_standby)) {
+    } else if (pcmk_is_set(node->priv->flags, pcmk__node_standby)) {
         child = pcmk__html_create(parent, PCMK__XE_SPAN, NULL,
                                   PCMK_VALUE_STANDBY);
         if (node->details->running_rsc == NULL) {
@@ -1875,11 +1875,11 @@ node_text_status(const pcmk_node_t *node)
     } else if (node->details->pending) {
         return "pending";
 
-    } else if (pcmk_is_set(node->private->flags, pcmk__node_fail_standby)
+    } else if (pcmk_is_set(node->priv->flags, pcmk__node_fail_standby)
                && node->details->online) {
         return "standby (" PCMK_META_ON_FAIL ")";
 
-    } else if (pcmk_is_set(node->private->flags, pcmk__node_standby)) {
+    } else if (pcmk_is_set(node->priv->flags, pcmk__node_standby)) {
         if (!node->details->online) {
             return "OFFLINE (standby)";
         } else if (node->details->running_rsc == NULL) {
@@ -2049,9 +2049,9 @@ node_xml(pcmk__output_t *out, va_list args) {
 
     if (full) {
         const char *online = pcmk__btoa(node->details->online);
-        const char *standby = pcmk__flag_text(node->private->flags,
+        const char *standby = pcmk__flag_text(node->priv->flags,
                                               pcmk__node_standby);
-        const char *standby_onfail = pcmk__flag_text(node->private->flags,
+        const char *standby_onfail = pcmk__flag_text(node->priv->flags,
                                                      pcmk__node_fail_standby);
         const char *maintenance = pcmk__btoa(node->details->maintenance);
         const char *pending = pcmk__btoa(node->details->pending);
@@ -2059,19 +2059,19 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *health = health_text(pe__node_health(node));
         const char *feature_set = get_node_feature_set(node);
         const char *shutdown = pcmk__btoa(node->details->shutdown);
-        const char *expected_up = pcmk__flag_text(node->private->flags,
+        const char *expected_up = pcmk__flag_text(node->priv->flags,
                                                   pcmk__node_expected_up);
         const bool is_dc = pcmk__same_node(node,
-                                           node->private->scheduler->dc_node);
+                                           node->priv->scheduler->dc_node);
         int length = g_list_length(node->details->running_rsc);
         char *resources_running = pcmk__itoa(length);
-        const char *node_type = node_variant_text(node->private->variant);
+        const char *node_type = node_variant_text(node->priv->variant);
 
         int rc = pcmk_rc_ok;
 
         rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE,
-                                      PCMK_XA_NAME, node->private->name,
-                                      PCMK_XA_ID, node->private->id,
+                                      PCMK_XA_NAME, node->priv->name,
+                                      PCMK_XA_ID, node->priv->id,
                                       PCMK_XA_ONLINE, online,
                                       PCMK_XA_STANDBY, standby,
                                       PCMK_XA_STANDBY_ONFAIL, standby_onfail,
@@ -2093,7 +2093,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
             crm_xml_add(xml_node, PCMK_XA_ID_AS_RESOURCE,
-                        node->private->remote->priv->launcher->id);
+                        node->priv->remote->priv->launcher->id);
         }
 
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
@@ -2111,7 +2111,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         out->end_list(out);
     } else {
         pcmk__output_xml_create_parent(out, PCMK_XE_NODE,
-                                       PCMK_XA_NAME, node->private->name,
+                                       PCMK_XA_NAME, node->priv->name,
                                        NULL);
     }
 
@@ -2355,7 +2355,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        g_hash_table_iter_init(&iter, node->private->attrs);
+        g_hash_table_iter_init(&iter, node->priv->attrs);
         while (g_hash_table_iter_next (&iter, &key, NULL)) {
             attr_list = filter_attr_list(attr_list, key);
         }
@@ -2364,7 +2364,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(node->private->name, only_node,
+        if (!pcmk__str_in_list(node->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             g_list_free(attr_list);
             continue;
@@ -2408,7 +2408,7 @@ node_capacity(pcmk__output_t *out, va_list args)
     char *dump_text = crm_strdup_printf("%s: %s capacity:",
                                         comment, pcmk__node_name(node));
 
-    g_hash_table_foreach(node->private->utilization, append_dump_text,
+    g_hash_table_foreach(node->priv->utilization, append_dump_text,
                          &dump_text);
     out->list_item(out, NULL, "%s", dump_text);
     free(dump_text);
@@ -2421,14 +2421,14 @@ static int
 node_capacity_xml(pcmk__output_t *out, va_list args)
 {
     const pcmk_node_t *node = va_arg(args, pcmk_node_t *);
-    const char *uname = node->private->name;
+    const char *uname = node->priv->name;
     const char *comment = va_arg(args, const char *);
 
     xmlNodePtr xml_node = pcmk__output_create_xml_node(out, PCMK_XE_CAPACITY,
                                                        PCMK_XA_NODE, uname,
                                                        PCMK_XA_COMMENT, comment,
                                                        NULL);
-    g_hash_table_foreach(node->private->utilization, add_dump_node, xml_node);
+    g_hash_table_foreach(node->priv->utilization, add_dump_node, xml_node);
 
     return pcmk_rc_ok;
 }
@@ -2537,7 +2537,7 @@ node_list_html(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(node->private->name, only_node,
+        if (!pcmk__str_in_list(node->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
@@ -2573,7 +2573,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
 
-        if (!pcmk__str_in_list(node->private->name, only_node,
+        if (!pcmk__str_in_list(node->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             free(node_name);
             continue;
@@ -2583,9 +2583,9 @@ node_list_text(pcmk__output_t *out, va_list args) {
 
         // Determine whether to display node individually or in a list
         if (node->details->unclean || node->details->pending
-            || (pcmk_is_set(node->private->flags, pcmk__node_fail_standby)
+            || (pcmk_is_set(node->priv->flags, pcmk__node_fail_standby)
                 && node->details->online)
-            || pcmk_is_set(node->private->flags, pcmk__node_standby)
+            || pcmk_is_set(node->priv->flags, pcmk__node_standby)
             || node->details->maintenance
             || pcmk_is_set(show_opts, pcmk_show_rscs_by_node)
             || pcmk_is_set(show_opts, pcmk_show_feature_set)
@@ -2674,7 +2674,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(node->private->name, only_node,
+        if (!pcmk__str_in_list(node->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
@@ -2717,7 +2717,7 @@ node_summary(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(node->private->name, only_node,
+        if (!pcmk__str_in_list(node->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
@@ -2884,7 +2884,7 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
                                                    NULL);
 
     if (chosen) {
-        crm_xml_add(node, PCMK_XA_NODE, chosen->private->name);
+        crm_xml_add(node, PCMK_XA_NODE, chosen->priv->name);
     }
 
     return pcmk_rc_ok;
@@ -3189,7 +3189,7 @@ resource_util_xml(pcmk__output_t *out, va_list args)
 {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
-    const char *uname = node->private->name;
+    const char *uname = node->priv->name;
     const char *fn = va_arg(args, const char *);
 
     xmlNodePtr xml_node = NULL;

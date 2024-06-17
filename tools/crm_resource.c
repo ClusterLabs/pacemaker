@@ -857,7 +857,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
     current = pe__find_active_requires(rsc, &nactive);
 
     if (nactive == 1) {
-        rc = cli_resource_ban(out, options.rsc_id, current->private->name,
+        rc = cli_resource_ban(out, options.rsc_id, current->priv->name,
                               move_lifetime, cib_conn, cib_sync_call,
                               options.promoted_role_only, PCMK_ROLE_PROMOTED);
 
@@ -877,7 +877,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
         }
 
         if(count == 1 && current) {
-            rc = cli_resource_ban(out, options.rsc_id, current->private->name,
+            rc = cli_resource_ban(out, options.rsc_id, current->priv->name,
                                   move_lifetime, cib_conn, cib_sync_call,
                                   options.promoted_role_only,
                                   PCMK_ROLE_PROMOTED);
@@ -959,7 +959,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
             }
             return rc;
         }
-        rc = cli_resource_clear(options.rsc_id, dest->private->name, NULL,
+        rc = cli_resource_clear(options.rsc_id, dest->priv->name, NULL,
                                 cib_conn, cib_sync_call, true, options.force);
 
     } else {
@@ -1067,7 +1067,7 @@ refresh(pcmk__output_t *out)
         pcmk_node_t *node = pcmk_find_node(scheduler, options.host_uname);
 
         if (pcmk__is_pacemaker_remote_node(node)) {
-            node = pcmk__current_node(node->private->remote);
+            node = pcmk__current_node(node->priv->remote);
             if (node == NULL) {
                 rc = ENXIO;
                 g_set_error(&error, PCMK__RC_ERROR, rc,
@@ -1075,7 +1075,7 @@ refresh(pcmk__output_t *out)
                             options.host_uname);
                 return rc;
             }
-            router_node = node->private->name;
+            router_node = node->priv->name;
             attr_options |= pcmk__node_attr_remote;
         }
     }
@@ -1958,7 +1958,7 @@ main(int argc, char **argv)
             } else if (node == NULL) {
                 rc = pcmk_rc_node_unknown;
             } else {
-                rc = cli_resource_ban(out, options.rsc_id, node->private->name,
+                rc = cli_resource_ban(out, options.rsc_id, node->priv->name,
                                       options.move_lifetime, cib_conn,
                                       cib_sync_call, options.promoted_role_only,
                                       PCMK_ROLE_PROMOTED);

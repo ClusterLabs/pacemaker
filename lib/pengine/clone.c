@@ -770,12 +770,12 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pcmk_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(host->private->name, only_node,
+        if (!pcmk__str_in_list(host->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 
-        pcmk__add_word(&list_text, 1024, host->private->name);
+        pcmk__add_word(&list_text, 1024, host->priv->name);
         active_instances++;
     }
     g_list_free(promoted_list);
@@ -793,12 +793,12 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pcmk_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(host->private->name, only_node,
+        if (!pcmk__str_in_list(host->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 
-        pcmk__add_word(&list_text, 1024, host->private->name);
+        pcmk__add_word(&list_text, 1024, host->priv->name);
         active_instances++;
     }
     g_list_free(started_list);
@@ -855,8 +855,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 pcmk_node_t *node = (pcmk_node_t *) nIter->data;
 
                 if ((pcmk__find_node_in_list(rsc->priv->active_nodes,
-                                             node->private->name) == NULL)
-                    && pcmk__str_in_list(node->private->name, only_node,
+                                             node->priv->name) == NULL)
+                    && pcmk__str_in_list(node->priv->name, only_node,
                                          pcmk__str_star_matches|pcmk__str_casei)) {
 
                     xmlNode *probe_op = NULL;
@@ -871,17 +871,17 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                     }
 
                     probe_op = pe__failed_probe_for_rsc(rsc,
-                                                        node->private->name);
+                                                        node->priv->name);
                     if (probe_op != NULL) {
                         int rc;
 
                         pcmk__scan_min_int(crm_element_value(probe_op,
                                                              PCMK__XA_RC_CODE),
                                            &rc, 0);
-                        g_hash_table_insert(stopped, strdup(node->private->name),
+                        g_hash_table_insert(stopped, strdup(node->priv->name),
                                             crm_strdup_printf("Stopped (%s)", services_ocf_exitcode_str(rc)));
                     } else {
-                        pcmk__insert_dup(stopped, node->private->name, state);
+                        pcmk__insert_dup(stopped, node->priv->name, state);
                     }
                 }
             }

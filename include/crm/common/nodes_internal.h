@@ -134,9 +134,9 @@ pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
  * \param[in]     flags_to_set  Group of enum pcmk_node_flags to set
  */
 #define pcmk__set_node_flags(node, flags_to_set) do {                   \
-        (node)->private->flags = pcmk__set_flags_as(__func__, __LINE__, \
+        (node)->priv->flags = pcmk__set_flags_as(__func__, __LINE__,    \
             LOG_TRACE, "Node", pcmk__node_name(node),                   \
-            (node)->private->flags, (flags_to_set), #flags_to_set);     \
+            (node)->priv->flags, (flags_to_set), #flags_to_set);        \
     } while (0)
 
 /*!
@@ -147,9 +147,9 @@ pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
  * \param[in]     flags_to_clear  Group of enum pcmk_node_flags to clear
  */
 #define pcmk__clear_node_flags(node, flags_to_clear) do {                   \
-        (node)->private->flags = pcmk__clear_flags_as(__func__, __LINE__,   \
+        (node)->priv->flags = pcmk__clear_flags_as(__func__, __LINE__,      \
             LOG_TRACE, "Node", pcmk__node_name(node),                       \
-            (node)->private->flags, (flags_to_clear), #flags_to_clear);     \
+            (node)->priv->flags, (flags_to_clear), #flags_to_clear);        \
     } while (0)
 
 /*!
@@ -168,11 +168,11 @@ pcmk__node_name(const pcmk_node_t *node)
     if (node == NULL) {
         return "unspecified node";
 
-    } else if (node->private->name != NULL) {
-        return node->private->name;
+    } else if (node->priv->name != NULL) {
+        return node->priv->name;
 
-    } else if (node->private->id != NULL) {
-        return node->private->id;
+    } else if (node->priv->id != NULL) {
+        return node->priv->id;
 
     } else {
         return "unidentified node";
@@ -192,7 +192,7 @@ static inline bool
 pcmk__same_node(const pcmk_node_t *node1, const pcmk_node_t *node2)
 {
     return (node1 != NULL) && (node2 != NULL)
-           && (node1->private == node2->private);
+           && (node1->priv == node2->priv);
 }
 
 #ifdef __cplusplus

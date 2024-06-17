@@ -248,18 +248,18 @@ pe_free_nodes(GList *nodes)
         crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
                   "(guest or remote)" : pcmk__node_name(node)));
 
-        if (node->private->attrs != NULL) {
-            g_hash_table_destroy(node->private->attrs);
+        if (node->priv->attrs != NULL) {
+            g_hash_table_destroy(node->priv->attrs);
         }
-        if (node->private->utilization != NULL) {
-            g_hash_table_destroy(node->private->utilization);
+        if (node->priv->utilization != NULL) {
+            g_hash_table_destroy(node->priv->utilization);
         }
-        if (node->private->digest_cache != NULL) {
-            g_hash_table_destroy(node->private->digest_cache);
+        if (node->priv->digest_cache != NULL) {
+            g_hash_table_destroy(node->priv->digest_cache);
         }
         g_list_free(node->details->running_rsc);
-        g_list_free(node->private->assigned_resources);
-        free(node->private);
+        g_list_free(node->priv->assigned_resources);
+        free(node->priv);
         free(node->details);
         free(node->assign);
         free(node);
@@ -494,7 +494,7 @@ pe_find_node_id(const GList *nodes, const char *id)
          * probably depend on the node type, so functionizing the comparison
          * would be worthwhile
          */
-        if (pcmk__str_eq(node->private->id, id, pcmk__str_casei)) {
+        if (pcmk__str_eq(node->priv->id, id, pcmk__str_casei)) {
             return node;
         }
     }

@@ -32,7 +32,7 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
 {
     if ((node == NULL) || (node->details == NULL) || !node->details->online
             || node->details->shutdown || node->details->unclean
-            || pcmk_is_set(node->private->flags, pcmk__node_standby)
+            || pcmk_is_set(node->priv->flags, pcmk__node_standby)
             || node->details->maintenance) {
         return false;
     }
@@ -43,7 +43,7 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
 
     // @TODO Go through all callers to see which should set consider_guest
     if (consider_guest && pcmk__is_guest_or_bundle_node(node)) {
-        pcmk_resource_t *guest = node->private->remote->priv->launcher;
+        pcmk_resource_t *guest = node->priv->remote->priv->launcher;
 
         if (guest->priv->fns->location(guest, NULL, FALSE) == NULL) {
             return false;
@@ -76,7 +76,7 @@ pcmk__copy_node_table(GHashTable *nodes)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         pcmk_node_t *new_node = pe__copy_node(node);
 
-        g_hash_table_insert(new_table, (gpointer) new_node->private->id,
+        g_hash_table_insert(new_table, (gpointer) new_node->priv->id,
                             new_node);
     }
     return new_table;
@@ -247,12 +247,12 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // If appropriate, compare node utilization
 
-    if (pcmk__str_eq(node1->private->scheduler->placement_strategy,
+    if (pcmk__str_eq(node1->priv->scheduler->placement_strategy,
                      PCMK_VALUE_MINIMAL, pcmk__str_casei)) {
         goto equal;
     }
 
-    if (pcmk__str_eq(node1->private->scheduler->placement_strategy,
+    if (pcmk__str_eq(node1->priv->scheduler->placement_strategy,
                      PCMK_VALUE_BALANCED, pcmk__str_casei)) {
 
         result = pcmk__compare_node_capacities(node1, node2);
@@ -270,16 +270,16 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // Compare number of resources already assigned to node
 
-    if (node1->private->num_resources < node2->private->num_resources) {
+    if (node1->priv->num_resources < node2->priv->num_resources) {
         crm_trace("%s before %s (%d resources < %d)",
                   pcmk__node_name(node1), pcmk__node_name(node2),
-                  node1->private->num_resources, node2->private->num_resources);
+                  node1->priv->num_resources, node2->priv->num_resources);
         return -1;
 
-    } else if (node1->private->num_resources > node2->private->num_resources) {
+    } else if (node1->priv->num_resources > node2->priv->num_resources) {
         crm_trace("%s after %s (%d resources > %d)",
                   pcmk__node_name(node1), pcmk__node_name(node2),
-                  node1->private->num_resources, node2->private->num_resources);
+                  node1->priv->num_resources, node2->priv->num_resources);
         return 1;
     }
 
@@ -299,7 +299,7 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // If all else is equal, prefer node with lowest-sorting name
 equal:
-    result = strcmp(node1->private->name, node2->private->name);
+    result = strcmp(node1->priv->name, node2->priv->name);
     if (result < 0) {
         crm_trace("%s before %s (name)",
                   pcmk__node_name(node1), pcmk__node_name(node2));
@@ -440,5 +440,5 @@ pcmk__top_allowed_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     } else {
         allowed_nodes = rsc->priv->parent->priv->allowed_nodes;
     }
-    return g_hash_table_lookup(allowed_nodes, node->private->id);
+    return g_hash_table_lookup(allowed_nodes, node->priv->id);
 }

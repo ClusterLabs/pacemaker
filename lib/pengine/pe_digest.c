@@ -145,7 +145,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
      * result to RSC_DIGEST_RESTART for the case where the main digest doesn't
      * match.
      */
-    params = pcmk__unpack_action_rsc_params(action_config, node->private->attrs,
+    params = pcmk__unpack_action_rsc_params(action_config, node->priv->attrs,
                                             scheduler);
     if ((*interval_ms == 0) && (g_hash_table_size(params) > 0)) {
         data->rc = pcmk__digest_restart;
@@ -366,12 +366,12 @@ rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
     pcmk__op_digest_t *data = NULL;
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
 
-    data = g_hash_table_lookup(node->private->digest_cache, key);
+    data = g_hash_table_lookup(node->priv->digest_cache, key);
     if (data == NULL) {
         data = pe__calculate_digests(rsc, task, &interval_ms, node, xml_op,
                                      NULL, calc_secure, scheduler);
         CRM_ASSERT(data != NULL);
-        g_hash_table_insert(node->private->digest_cache, strdup(key), data);
+        g_hash_table_insert(node->priv->digest_cache, strdup(key), data);
     }
     free(key);
     return data;

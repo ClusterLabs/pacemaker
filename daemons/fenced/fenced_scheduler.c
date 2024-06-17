@@ -88,7 +88,7 @@ local_node_allowed_for(const pcmk_resource_t *rsc)
 
         g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-            if (pcmk__str_eq(node->private->name, stonith_our_uname,
+            if (pcmk__str_eq(node->priv->name, stonith_our_uname,
                              pcmk__str_casei)) {
                 return node;
             }

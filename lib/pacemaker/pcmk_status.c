@@ -321,7 +321,7 @@ pcmk__output_simple_status(pcmk__output_t *out,
     for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
-        if (pcmk_is_set(node->private->flags, pcmk__node_standby)
+        if (pcmk_is_set(node->priv->flags, pcmk__node_standby)
             && node->details->online) {
             nodes_standby++;
         } else if (node->details->maintenance && node->details->online) {

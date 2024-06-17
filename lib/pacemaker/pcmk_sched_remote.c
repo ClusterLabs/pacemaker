@@ -92,7 +92,7 @@ get_remote_node_state(const pcmk_node_t *node)
 
     CRM_ASSERT(node != NULL);
 
-    remote_rsc = node->private->remote;
+    remote_rsc = node->priv->remote;
     CRM_ASSERT(remote_rsc != NULL);
 
     cluster_node = pcmk__current_node(remote_rsc);
@@ -122,7 +122,7 @@ get_remote_node_state(const pcmk_node_t *node)
 
         if ((remote_rsc->priv->next_role == pcmk_role_stopped)
             && (remote_rsc->priv->remote_reconnect_ms > 0U)
-            && pcmk_is_set(node->private->flags, pcmk__node_remote_fenced)
+            && pcmk_is_set(node->priv->flags, pcmk__node_remote_fenced)
             && !pe__shutdown_requested(node)) {
 
             /* We won't know whether the connection is recoverable until the
@@ -181,7 +181,7 @@ apply_remote_ordering(pcmk_action_t *action)
 
     CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
 
-    remote_rsc = action->node->private->remote;
+    remote_rsc = action->node->priv->remote;
     CRM_ASSERT(remote_rsc != NULL);
 
     crm_trace("Order %s action %s relative to %s%s (state: %s)",
@@ -307,7 +307,7 @@ apply_launcher_ordering(pcmk_action_t *action)
     CRM_ASSERT(action->rsc != NULL);
     CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
 
-    remote_rsc = action->node->private->remote;
+    remote_rsc = action->node->priv->remote;
     CRM_ASSERT(remote_rsc != NULL);
 
     launcher = remote_rsc->priv->launcher;
@@ -443,7 +443,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        remote = action->node->private->remote;
+        remote = action->node->priv->remote;
         if (remote == NULL) {
             // Orphaned
             continue;
@@ -500,7 +500,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 bool
 pcmk__is_failed_remote_node(const pcmk_node_t *node)
 {
-    return pcmk__is_remote_node(node) && (node->private->remote != NULL)
+    return pcmk__is_remote_node(node) && (node->priv->remote != NULL)
            && (get_remote_node_state(node) == remote_state_failed);
 }
 
@@ -519,8 +519,8 @@ pcmk__rsc_corresponds_to_guest(const pcmk_resource_t *rsc,
                                const pcmk_node_t *node)
 {
     return (rsc != NULL) && (rsc->priv->launched != NULL) && (node != NULL)
-            && (node->private->remote != NULL)
-            && (node->private->remote->priv->launcher == rsc);
+            && (node->priv->remote != NULL)
+            && (node->priv->remote->priv->launcher == rsc);
 }
 
 /*!
@@ -551,7 +551,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         return NULL;
     }
 
-    remote = action->node->private->remote;
+    remote = action->node->priv->remote;
     CRM_ASSERT(remote != NULL);
 
     began_on = pcmk__current_node(remote);
@@ -565,7 +565,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "next node %s (starting)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (ended_on? ended_on->private->name : "none"),
+                  (ended_on? ended_on->priv->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return ended_on;
     }
@@ -574,7 +574,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (stopping)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->private->name : "none"),
+                  (began_on? began_on->priv->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return began_on;
     }
@@ -583,7 +583,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (not moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->private->name : "none"),
+                  (began_on? began_on->priv->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return began_on;
     }
@@ -618,7 +618,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->private->name : "none"),
+                  (began_on? began_on->priv->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return began_on;
     }
@@ -630,7 +630,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
     crm_trace("Routing %s for %s through remote connection's "
               "next node %s (moving)%s",
               action->task, (action->rsc? action->rsc->id : "no resource"),
-              (ended_on? ended_on->private->name : "none"),
+              (ended_on? ended_on->priv->name : "none"),
               partial_migration? " (partial migration)" : "");
     return ended_on;
 }
@@ -688,7 +688,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
     if (!pcmk__is_guest_or_bundle_node(guest)) {
         return;
     }
-    launcher = guest->private->remote->priv->launcher;
+    launcher = guest->priv->remote->priv->launcher;
 
     task = pcmk__parse_action(action->task);
     if ((task == pcmk__action_notify) || (task == pcmk__action_notified)) {
@@ -727,7 +727,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
                        target,
                        (gpointer) args_xml);
         hash2metafield((gpointer) PCMK__META_PHYSICAL_HOST,
-                       (gpointer) host->private->name,
+                       (gpointer) host->priv->name,
                        (gpointer) args_xml);
     }
 }

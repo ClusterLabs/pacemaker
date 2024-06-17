@@ -200,7 +200,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
         pcmk_node_t *node = iter->data;
 
-        rule_input->node_attrs = node->private->attrs;
+        rule_input->node_attrs = node->priv->attrs;
         rule_input->rsc_params = pe_rsc_params(rsc, node,
                                                rsc->priv->scheduler);
 
@@ -700,7 +700,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
         pcmk_node_t *allowed_node = NULL;
 
         allowed_node = g_hash_table_lookup(rsc->priv->allowed_nodes,
-                                           node->private->id);
+                                           node->priv->id);
 
         pcmk__rsc_trace(rsc, "Applying %s%s%s to %s score on %s: %c %s",
                         location->id,
@@ -713,7 +713,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
         if (allowed_node == NULL) {
             allowed_node = pe__copy_node(node);
             g_hash_table_insert(rsc->priv->allowed_nodes,
-                                (gpointer) allowed_node->private->id,
+                                (gpointer) allowed_node->priv->id,
                                 allowed_node);
         } else {
             allowed_node->assign->score =
