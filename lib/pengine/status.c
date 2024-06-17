@@ -127,11 +127,6 @@ cluster_status(pcmk_scheduler_t * scheduler)
         scheduler->priv->now = crm_time_new(NULL);
     }
 
-    if (scheduler->dc_uuid == NULL) {
-        scheduler->dc_uuid = crm_element_value_copy(scheduler->input,
-                                                    PCMK_XA_DC_UUID);
-    }
-
     if (pcmk__xe_attr_is_true(scheduler->input, PCMK_XA_HAVE_QUORUM)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_quorate);
     } else {
@@ -348,8 +343,6 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     if (scheduler->tags) {
         g_hash_table_destroy(scheduler->tags);
     }
-
-    free(scheduler->dc_uuid);
 
     crm_trace("deleting resources");
     pe_free_resources(scheduler->resources);

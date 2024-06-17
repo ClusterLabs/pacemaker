@@ -4895,6 +4895,7 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                pcmk_scheduler_t *scheduler)
 {
     const char *cluster_name = NULL;
+    const char *dc_id = crm_element_value(scheduler->input, PCMK_XA_DC_UUID);
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
@@ -4908,11 +4909,15 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                      CRM_ATTR_UNAME, node->priv->name);
 
     pcmk__insert_dup(node->priv->attrs, CRM_ATTR_ID, node->priv->id);
-    if (pcmk__str_eq(node->priv->id, scheduler->dc_uuid, pcmk__str_casei)) {
+
+    if ((scheduler->dc_node == NULL)
+        && pcmk__str_eq(node->priv->id, dc_id, pcmk__str_casei)) {
+
         scheduler->dc_node = node;
         pcmk__insert_dup(node->priv->attrs,
                          CRM_ATTR_IS_DC, PCMK_VALUE_TRUE);
-    } else {
+
+    } else if (!pcmk__same_node(node, scheduler->dc_node)) {
         pcmk__insert_dup(node->priv->attrs,
                          CRM_ATTR_IS_DC, PCMK_VALUE_FALSE);
     }

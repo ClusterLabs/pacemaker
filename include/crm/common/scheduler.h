@@ -81,8 +81,6 @@ struct pcmk__scheduler {
     //! \deprecated Set scheduler input with pcmk_set_scheduler_cib() instead
     xmlNode *input;                 // CIB XML
 
-    char *dc_uuid;                  // Node ID of designated controller
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_get_dc() instead
     pcmk_node_t *dc_node;           // Node object for DC
