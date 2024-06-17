@@ -32,7 +32,7 @@ EOF
         rm -f "$TESTFILE"
         exit 1
     fi
-    if [ "$CXX" ] && [ command -v "$CXX" >/dev/null 2>&1 ]
+    if [ -n "$CXX" ]
     then
         ${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LIBS} -I "${SRCDIR}/include" "$TESTFILE" -o /dev/null
         if [ $? -ne 0 ]
