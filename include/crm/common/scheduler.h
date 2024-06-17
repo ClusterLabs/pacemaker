@@ -74,7 +74,7 @@ typedef struct pcmk__scheduler_private pcmk__scheduler_private_t;
  */
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
-struct pe_working_set_s {
+struct pcmk__scheduler {
     // Be careful about when each piece of information is available and final
 
     // NOTE: sbd (as of at least 1.5.2) uses this
