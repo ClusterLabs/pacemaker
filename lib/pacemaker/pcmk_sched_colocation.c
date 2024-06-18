@@ -1420,12 +1420,16 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     CRM_ASSERT((dependent != NULL) && (primary != NULL)
                && (colocation != NULL));
 
-    if ((primary->allocated_to == NULL) || (dependent->allocated_to == NULL)) {
+    if (dependent->allocated_to == NULL) {
         return 0;
     }
 
-    if (colocation->primary_role != pcmk_role_unknown) {
-        /* Colocation applies only if the primary's next role matches
+    if ((primary->allocated_to != NULL)
+        && (colocation->primary_role != pcmk_role_unknown)) {
+        /* Colocation applies only if the primary's next role matches.
+         *
+         * If primary->allocated_to == NULL, we want to proceed past this block,
+         * so that dependent->allocated_to is marked ineligible for promotion.
          *
          * @TODO Why ignore a mandatory colocation in this case when we apply
          * its negation in the mismatched value case?
