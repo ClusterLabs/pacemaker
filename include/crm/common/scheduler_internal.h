@@ -175,6 +175,7 @@ struct pcmk__scheduler_private {
     const char *fence_action;       // Default fencing action
     int fence_timeout_ms;           // Value of stonith-timeout property in ms
     const char *placement_strategy; // Value of placement-strategy property
+    GHashTable *ticket_constraints; // Key = ticket ID, value = pcmk__ticket_t
 };
 
 // Group of enum pcmk__warnings flags for warnings we want to log once

@@ -970,7 +970,8 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
 
     crm_trace("Processing ticket state for %s", ticket_id);
 
-    ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
+    ticket = g_hash_table_lookup(scheduler->priv->ticket_constraints,
+                                 ticket_id);
     if (ticket == NULL) {
         ticket = ticket_new(ticket_id, scheduler);
         if (ticket == NULL) {
@@ -1382,8 +1383,9 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
 
     crm_trace("Beginning unpack");
 
-    if (scheduler->tickets == NULL) {
-        scheduler->tickets = pcmk__strkey_table(free, destroy_ticket);
+    if (scheduler->priv->ticket_constraints == NULL) {
+        scheduler->priv->ticket_constraints =
+            pcmk__strkey_table(free, destroy_ticket);
     }
 
     for (state = pcmk__xe_first_child(status, NULL, NULL, NULL); state != NULL;

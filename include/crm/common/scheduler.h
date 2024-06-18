@@ -94,9 +94,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_get_no_quorum_policy() to get no-quorum policy
     enum pe_quorum_policy no_quorum_policy; // Response to loss of quorum
 
-    // Ticket constraints unpacked from ticket state
-    GHashTable *tickets;
-
     // Actions for which there can be only one (such as "fence node X")
     GHashTable *singletons;
 
