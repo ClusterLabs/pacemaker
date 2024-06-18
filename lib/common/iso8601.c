@@ -2019,6 +2019,10 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
             }
         }
 
+        if (date_len >= sizeof(date_s)) {
+            return NULL; // No room for remaining string
+        }
+
         tmp_fmt_s = strndup(&format[printed_pos], fmt_pos - printed_pos);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push
@@ -2036,8 +2040,13 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
         date_len += nbytes;
         printed_pos = scanned_pos;
         if (nano_digits != 0) {
-            int nc = snprintf(&date_s[date_len], sizeof(date_s) - date_len,
-                              "%.*s", nano_digits, nano_s);
+            int nc = 0;
+
+            if (date_len >= sizeof(date_s)) {
+                return NULL; // No room to add nanoseconds
+            }
+            nc = snprintf(&date_s[date_len], sizeof(date_s) - date_len,
+                          "%.*s", nano_digits, nano_s);
 
             if ((nc < 0) || (nc == (sizeof(date_s) - date_len))) {
                 return NULL; // Error or would overflow buffer
