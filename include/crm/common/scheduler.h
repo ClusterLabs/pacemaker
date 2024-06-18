@@ -94,9 +94,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_get_no_quorum_policy() to get no-quorum policy
     enum pe_quorum_policy no_quorum_policy; // Response to loss of quorum
 
-    // Actions for which there can be only one (such as "fence node X")
-    GHashTable *singletons;
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster

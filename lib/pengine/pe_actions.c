@@ -25,19 +25,24 @@ static void unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
 static void
 add_singleton(pcmk_scheduler_t *scheduler, pcmk_action_t *action)
 {
-    if (scheduler->singletons == NULL) {
-        scheduler->singletons = pcmk__strkey_table(NULL, NULL);
+    if (scheduler->priv->singletons == NULL) {
+        scheduler->priv->singletons = pcmk__strkey_table(NULL, NULL);
     }
-    g_hash_table_insert(scheduler->singletons, action->uuid, action);
+    g_hash_table_insert(scheduler->priv->singletons, action->uuid, action);
 }
 
 static pcmk_action_t *
 lookup_singleton(pcmk_scheduler_t *scheduler, const char *action_uuid)
 {
-    if (scheduler->singletons == NULL) {
+    /* @TODO This is the only use of the pcmk_scheduler_t:singletons hash table.
+     * Compare the performance of this approach to keeping the
+     * pcmk_scheduler_t:actions list sorted by action key and just searching
+     * that instead.
+     */
+    if (scheduler->priv->singletons == NULL) {
         return NULL;
     }
-    return g_hash_table_lookup(scheduler->singletons, action_uuid);
+    return g_hash_table_lookup(scheduler->priv->singletons, action_uuid);
 }
 
 /*!
@@ -55,8 +60,9 @@ static pcmk_action_t *
 find_existing_action(const char *key, const pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const pcmk_scheduler_t *scheduler)
 {
-    /* When rsc is NULL, it would be quicker to check scheduler->singletons,
-     * but checking all scheduler->priv->actions takes the node into account.
+    /* When rsc is NULL, it would be quicker to check
+     * scheduler->priv->singletons, but checking all scheduler->priv->actions
+     * takes the node into account.
      */
     GList *actions = (rsc == NULL)? scheduler->priv->actions : rsc->priv->actions;
     GList *matches = find_actions(actions, key, node);

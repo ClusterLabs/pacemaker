@@ -328,8 +328,8 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         g_hash_table_destroy(scheduler->priv->options);
     }
 
-    if (scheduler->singletons != NULL) {
-        g_hash_table_destroy(scheduler->singletons);
+    if (scheduler->priv->singletons != NULL) {
+        g_hash_table_destroy(scheduler->priv->singletons);
     }
 
     if (scheduler->priv->ticket_constraints != NULL) {

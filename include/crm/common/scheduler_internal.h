@@ -176,6 +176,7 @@ struct pcmk__scheduler_private {
     int fence_timeout_ms;           // Value of stonith-timeout property in ms
     const char *placement_strategy; // Value of placement-strategy property
     GList *actions;                 // All scheduled actions
+    GHashTable *singletons;         // Scheduled non-resource actions
     GHashTable *ticket_constraints; // Key = ticket ID, value = pcmk__ticket_t
 };
 
