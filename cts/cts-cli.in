@@ -12,6 +12,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import argparse
 from contextlib import contextmanager
+import fileinput
 from functools import partial
 from multiprocessing import Pool, cpu_count
 import os
@@ -21,7 +22,7 @@ from shutil import copyfile
 import signal
 import subprocess
 import sys
-from tempfile import NamedTemporaryFile, mkstemp
+from tempfile import NamedTemporaryFile, TemporaryDirectory, mkstemp
 import types
 
 # These imports allow running from a source checkout after running `make`.
@@ -45,6 +46,9 @@ other_tests = ["agents"]
 # The directory containing this program
 test_home = os.path.dirname(os.path.realpath(__file__))
 
+# The name of the shadow CIB
+SHADOW_NAME = "cts-cli"
+
 # Arguments to pass to valgrind
 VALGRIND_ARGS = ["-q", "--gen-suppressions=all", "--show-reachable=no", "--leak-check=full",
                  "--trace-children=no", "--time-stamp=yes", "--num-callers=20",
@@ -55,6 +59,7 @@ def apply_substitutions(s, extra=None):
     """Apply text substitutions to an input string and return it."""
     substitutions = {
         "cts_cli_data": "%s/cli" % test_home,
+        "shadow": SHADOW_NAME,
         "test_home": test_home,
     }
 
@@ -62,6 +67,13 @@ def apply_substitutions(s, extra=None):
         substitutions.update(extra)
 
     return s.format(**substitutions)
+
+
+def cleanup_shadow_dir():
+    """Remove any previously created shadow CIB directory."""
+    subprocess.run(["crm_shadow", "--force", "--delete", SHADOW_NAME],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                   check=True)
 
 
 def copy_existing_cib(existing):
@@ -105,6 +117,65 @@ def make_test_group(desc, cmd, classes, **kwargs):
     return TestGroup(tests)
 
 
+def create_shadow_cib(shadow_dir, create_empty=True, validate_with=None,
+                      valgrind=False):
+    """
+    Create a shadow CIB file.
+
+    Keyword arguments:
+    create_empty    -- If True, the shadow CIB will be empty.  Otherwise, the
+                       shadow CIB will be a copy of the currently active
+                       cluster configuration.
+    validate_with   -- If not None, the schema version to validate the CIB
+                       against
+    valgrind        -- If True, run the create operation under valgrind
+    """
+    args = ["crm_shadow", "--batch", "--force"]
+
+    if create_empty:
+        args += ["--create-empty", SHADOW_NAME]
+    else:
+        args += ["--create", SHADOW_NAME]
+
+    if validate_with is not None:
+        args += ["--validate-with", validate_with]
+
+    if valgrind:
+        args = ["valgrind"] + VALGRIND_ARGS + args
+
+    os.environ["CIB_shadow_dir"] = shadow_dir
+    os.environ["CIB_shadow"] = SHADOW_NAME
+
+    subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                   check=True)
+    delete_shadow_resource_defaults()
+
+
+def delete_shadow_resource_defaults():
+    """Clear out the rsc_defaults section from a shadow CIB file."""
+    # A newly created empty CIB might or might not have a rsc_defaults section
+    # depending on whether the --with-resource-stickiness-default configure
+    # option was used. To ensure regression tests behave the same either way,
+    # delete any rsc_defaults after creating or erasing a CIB.
+    subprocess.run(["cibadmin", "--delete", "--xml-text", "<rsc_defaults/>"],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                   check=True)
+
+    # The above command might or might not bump the CIB version, so reset it
+    # to ensure future changes result in the same version for comparison.
+    reset_shadow_cib_version()
+
+
+def reset_shadow_cib_version():
+    """Set various version numbers in a shadow CIB file back to 0."""
+    with fileinput.input(files=[shadow_path()], inplace=True) as f:
+        for line in f:
+            line = re.sub('epoch="[0-9]*"', 'epoch="1"', line)
+            line = re.sub('num_updates="[0-9]*"', 'num_updates="0"', line)
+            line = re.sub('admin_epoch="[0-9]*"', 'admin_epoch="0"', line)
+            print(line, end='')
+
+
 def run_cmd_list(cmds):
     """
     Run one or more shell commands.
@@ -142,6 +213,7 @@ def sanitize_output(s):
         (r'Last change: .*', r'Last change:'),
         (r'Last updated: .*', r'Last updated:'),
         (r' api-version="[^"]*"', r' api-version="X"'),
+        (r'crm_feature_set="[^"]*" ', r''),
         (r'.*\((crm_time_parse_duration)@.*\.c:[0-9][0-9]*\)', r'\1'),
         (r'.*\((crm_time_parse_period)@.*\.c:[0-9][0-9]*\)', r'\1'),
         (r'.*\((crm_time_parse_sec)@.*\.c:[0-9][0-9]*\)', r'\1'),
@@ -153,6 +225,7 @@ def sanitize_output(s):
         (r'request=".*(crm_[a-zA-Z0-9]*)', r'request="\1'),
         (r'request=".*iso8601', r'request="iso8601'),
         (r'.*\((unpack_.*)@.*\.c:[0-9][0-9]*\)', r'\1'),
+        (r'validate-with="[^"]*" ', r''),
         (r' version="[^"]*"', r' version=""'),
         (r'\(version .*\)', r'(version)')
     ]
@@ -166,6 +239,12 @@ def sanitize_output(s):
         new_output.append(line)
 
     return new_output
+
+
+def shadow_path():
+    """Return the current shadow CIB path."""
+    p = subprocess.check_output(["crm_shadow", "--file"], encoding="utf-8")
+    return p.strip()
 
 
 @contextmanager
@@ -568,6 +647,59 @@ class TestGroup:
                 return False
 
         return True
+
+
+class ShadowTestGroup(TestGroup):
+    """A group of related tests that require a shadow CIB."""
+
+    def __init__(self, tests, **kwargs):
+        """
+        Create a new ShadowTestGroup instance.
+
+        Arguments:
+        tests           -- A list of Test instances
+
+        Keyword arguments:
+        create          -- If True, create a shadow CIB file (see create_empty).
+                           Otherwise, just create a temp directory and set environment
+                           variables.
+        create_empty    -- If True, the shadow CIB will be empty.  Otherwise, the
+                           shadow CIB will be a copy of the currently active
+                           cluster configuration.
+        validate_with   -- If not None, the schema version to validate the CIB
+                           against
+        """
+        self._create = kwargs.pop("create", True)
+        self._create_empty = kwargs.pop("create_empty", True)
+        self._validate_with = kwargs.pop("validate_with", None)
+        TestGroup.__init__(self, tests, **kwargs)
+
+    def run(self, group, valgrind=False):
+        """
+        Run all Test instances that are a part of this regression test.
+
+        Additionally, record their stdout and stderr in the self.output property
+        and the total number of tests that passed and failed.
+
+        Arguments:
+        group -- The name of the group this test is a part of, for logging purposes
+        """
+        with TemporaryDirectory(prefix="cts-cli.shadow.") as shadow_dir:
+            if self._create:
+                create_shadow_cib(shadow_dir, create_empty=self._create_empty,
+                                  validate_with=self._validate_with, valgrind=valgrind)
+            else:
+                os.environ["CIB_shadow_dir"] = shadow_dir
+                os.environ["CIB_shadow"] = SHADOW_NAME
+
+            rc = TestGroup.run(self, group, valgrind=valgrind)
+
+            if self._create:
+                cleanup_shadow_dir()
+
+            os.environ.pop("CIB_shadow_dir")
+            os.environ.pop("CIB_shadow")
+            return rc
 
 
 class RegressionTest:
@@ -1014,6 +1146,39 @@ class CrmMonRegressionTest(RegressionTest):
         ]
 
 
+class FeatureSetRegressionTest(RegressionTest):
+    """A class for testing support for version-specific features."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "feature_set"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        basic_tests = [
+            # Import the test CIB
+            Test("Import the test CIB",
+                 "cibadmin --replace --xml-file {cts_cli_data}/crm_mon-feature_set.xml",
+                 update_cib=True),
+            Test("Complete text output, no mixed status",
+                 "crm_mon -1 --show-detail"),
+            ValidatingTest("Output, no mixed status", "crm_mon --output-as=xml"),
+            # Modify the CIB to fake that the cluster has mixed versions
+            Test("Fake inconsistent feature set",
+                 "crm_attribute --node=cluster02 --name=#feature-set --update=3.15.0 --lifetime=reboot",
+                 update_cib=True),
+            Test("Complete text output, mixed status",
+                 "crm_mon -1 --show-detail"),
+            ValidatingTest("Output, mixed status", "crm_mon --output-as=xml"),
+        ]
+
+        return [
+            ShadowTestGroup(basic_tests),
+        ]
+
+
 def build_options():
     """Handle command line arguments."""
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1192,6 +1357,7 @@ regression_classes = [
     DaemonsRegressionTest,
     DatesRegressionTest,
     CrmMonRegressionTest,
+    FeatureSetRegressionTest,
 ]
 
 
