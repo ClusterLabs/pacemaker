@@ -233,6 +233,11 @@ def sanitize_output(s):
     new_output = []
 
     for line in s:
+        # @TODO Add a way to suppress this message within cibadmin, and then drop
+        # the handling here.
+        if line.startswith("The supplied command can provide skewed result"):
+            continue
+
         for (pattern, repl) in replacements:
             line = re.sub(pattern, repl, line)
 
@@ -849,6 +854,51 @@ class RegressionTest:
         os.close(fp)
 
 
+class AccessRenderRegressionTest(RegressionTest):
+    """A class for testing rendering of ACLs."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "access_render"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        acl_cib = """
+<acls>
+  <acl_role id="role-deny-acls-write-resources">
+    <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+    <acl_permission id="write-resources" kind="write"
+                    xpath="/cib/configuration/resources"/>
+    <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+  </acl_role>
+  <acl_target id="tony">
+    <role id="role-deny-acls-write-resources"/>
+  </acl_target>
+</acls>
+"""
+
+        # Create a test CIB that has ACL roles
+        basic_tests = [
+            Test("Configure some ACLs", "cibadmin -M -o acls -p", update_cib=True,
+                 stdin=acl_cib),
+            Test("Enable ACLs", "crm_attribute -n enable-acl -v true",
+                 update_cib=True),
+            # Run cibadmin --show-access on the test CIB as an ACL-restricted user
+            Test("An instance of ACLs render (into color)",
+                 "cibadmin --force --show-access=color -Q --user tony"),
+            Test("An instance of ACLs render (into namespacing)",
+                 "cibadmin --force --show-access=namespace -Q --user tony"),
+            Test("An instance of ACLs render (into text)",
+                 "cibadmin --force --show-access=text -Q --user tony"),
+        ]
+
+        return [
+            ShadowTestGroup(basic_tests),
+        ]
+
+
 class DaemonsRegressionTest(RegressionTest):
     """A class for testing command line options of pacemaker daemons."""
 
@@ -1354,6 +1404,7 @@ def summary(regs, output_differs, verbose):
 
 
 regression_classes = [
+    AccessRenderRegressionTest,
     DaemonsRegressionTest,
     DatesRegressionTest,
     CrmMonRegressionTest,
