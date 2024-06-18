@@ -1484,6 +1484,25 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
                     pcmk_readable_score(dependent->priv->priority),
                     ((score_multiplier == 1)? "adding" : "subtracting"),
                     colocation->score);
+
+    if (pcmk__is_group(dependent->priv->parent)) {
+        /* For cloned group instances, we called this function for the first
+         * group member. Update the priority of the group itself for the purpose
+         * of sorting instances for promotion.
+         */
+        pcmk_resource_t *group = dependent->priv->parent;
+
+        group->priv->priority =
+            pcmk__add_scores(score_multiplier * colocation->score,
+                             group->priv->priority);
+        pcmk__rsc_trace(group,
+                        "Applied %s to %s promotion priority (now %s after %s "
+                        "%d)",
+                        colocation->id, group->id,
+                        pcmk_readable_score(group->priv->priority),
+                        ((score_multiplier == 1)? "adding" : "subtracting"),
+                        colocation->score);
+    }
 }
 
 /*!
