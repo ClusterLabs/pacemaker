@@ -27,6 +27,39 @@
 
 /*!
  * \internal
+ * \brief Get the value of a colocation's node attribute
+ *
+ * \param[in] node  Node on which to look up the attribute
+ * \param[in] attr  Name of attribute to look up
+ * \param[in] rsc   Resource on whose behalf to look up the attribute
+ *
+ * \return Value of \p attr on \p node or on the host of \p node, as appropriate
+ */
+const char *
+pcmk__colocation_node_attr(const pcmk_node_t *node, const char *attr,
+                           const pcmk_resource_t *rsc)
+{
+    const char *target = NULL;
+
+    /* A resource colocated with a bundle or its primitive can't run on the
+     * bundle node itself (where only the primitive, if any, can run). Instead,
+     * we treat it as a colocation with the bundle's containers, so always look
+     * up colocation node attributes on the container host.
+     */
+    if (pcmk__is_bundle_node(node) && pcmk__is_bundled(rsc)
+        && (pe__const_top_resource(rsc, false) == pe__bundled_resource(rsc))) {
+        target = PCMK_VALUE_HOST;
+
+    } else if (rsc != NULL) {
+        target = g_hash_table_lookup(rsc->priv->meta,
+                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
+    }
+
+    return pcmk__node_attr(node, attr, target, pcmk__rsc_node_assigned);
+}
+
+/*!
+ * \internal
  * \brief Compare two colocations according to priority
  *
  * Compare two colocations according to the order in which they should be
