@@ -689,7 +689,8 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
 static void
 clear_actions_tracking_flag(pcmk_scheduler_t *scheduler)
 {
-    for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->actions;
+         iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
 
         pcmk__clear_action_flags(action, pcmk__action_detect_loop);

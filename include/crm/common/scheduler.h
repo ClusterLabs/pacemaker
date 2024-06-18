@@ -109,7 +109,6 @@ struct pcmk__scheduler {
     // Ticket constraints unpacked by libpacemaker
     GList *ticket_constraints;
 
-    GList *actions;                 // Scheduled actions
     xmlNode *failed;                // History entries of failed actions
     xmlNode *op_defaults;           // Configured operation defaults
     xmlNode *rsc_defaults;          // Configured resource defaults

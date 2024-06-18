@@ -231,7 +231,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
     }
 
     fprintf(dot_strm, " digraph \"g\" {\n");
-    for (iter = scheduler->actions; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->priv->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
         const char *style = "dashed";
         const char *font = "black";
@@ -272,7 +272,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         free(action_name);
     }
 
-    for (iter = scheduler->actions; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->priv->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
 
         for (GList *before_iter = action->actions_before;

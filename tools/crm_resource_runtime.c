@@ -2018,7 +2018,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         /* Abort if timeout is reached */
         time_diff = expire_time - time(NULL);
         if (time_diff <= 0) {
-            print_pending_actions(out, scheduler->actions);
+            print_pending_actions(out, scheduler->priv->actions);
             rc = ETIME;
             break;
         }
@@ -2063,7 +2063,8 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         search = xpath_search(scheduler->input, xpath);
         pending_unknown_state_resources = (numXpathResults(search) > 0);
         freeXpathObject(search);
-    } while (actions_are_pending(scheduler->actions) || pending_unknown_state_resources);
+    } while (actions_are_pending(scheduler->priv->actions)
+             || pending_unknown_state_resources);
 
     pe_free_working_set(scheduler);
     free(xpath);

@@ -56,9 +56,9 @@ find_existing_action(const char *key, const pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const pcmk_scheduler_t *scheduler)
 {
     /* When rsc is NULL, it would be quicker to check scheduler->singletons,
-     * but checking all scheduler->actions takes the node into account.
+     * but checking all scheduler->priv->actions takes the node into account.
      */
-    GList *actions = (rsc == NULL)? scheduler->actions : rsc->priv->actions;
+    GList *actions = (rsc == NULL)? scheduler->priv->actions : rsc->priv->actions;
     GList *matches = find_actions(actions, key, node);
     pcmk_action_t *action = NULL;
 
@@ -218,7 +218,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
                     pcmk__node_name(node));
     action->id = scheduler->action_id++;
 
-    scheduler->actions = g_list_prepend(scheduler->actions, action);
+    scheduler->priv->actions = g_list_prepend(scheduler->priv->actions, action);
     if (rsc == NULL) {
         add_singleton(scheduler, action);
     } else {

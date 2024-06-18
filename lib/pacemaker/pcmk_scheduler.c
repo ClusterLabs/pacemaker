@@ -733,7 +733,7 @@ log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
                            |pcmk__action_pseudo;
 
     crm_trace("Required but unrunnable actions:");
-    for (const GList *iter = scheduler->actions;
+    for (const GList *iter = scheduler->priv->actions;
          iter != NULL; iter = iter->next) {
 
         const pcmk_action_t *action = (const pcmk_action_t *) iter->data;

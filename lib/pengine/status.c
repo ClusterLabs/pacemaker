@@ -348,7 +348,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     pe_free_resources(scheduler->resources);
 
     crm_trace("deleting actions");
-    pe_free_actions(scheduler->actions);
+    pe_free_actions(scheduler->priv->actions);
 
     crm_trace("deleting nodes");
     pe_free_nodes(scheduler->nodes);

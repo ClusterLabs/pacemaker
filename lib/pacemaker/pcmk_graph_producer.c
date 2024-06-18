@@ -1076,7 +1076,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     add_maintenance_update(scheduler);
 
     // Add non-resource (node) actions
-    for (iter = scheduler->actions; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->priv->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
 
         if ((action->rsc != NULL)
