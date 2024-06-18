@@ -90,8 +90,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_has_quorum() to check quorum
     unsigned long long flags;       // Group of enum pcmk__scheduler_flags
 
-    int stonith_timeout;            // Value of stonith-timeout property
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_get_no_quorum_policy() to get no-quorum policy
     enum pe_quorum_policy no_quorum_policy; // Response to loss of quorum

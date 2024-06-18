@@ -260,11 +260,11 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     pcmk_parse_interval_spec(value, &interval_ms);
 
     if (interval_ms >= INT_MAX) {
-        scheduler->stonith_timeout = INT_MAX;
+        scheduler->priv->fence_timeout_ms = INT_MAX;
     } else {
-        scheduler->stonith_timeout = (int) interval_ms;
+        scheduler->priv->fence_timeout_ms = (int) interval_ms;
     }
-    crm_debug("STONITH timeout: %d", scheduler->stonith_timeout);
+    crm_debug("STONITH timeout: %d", scheduler->priv->fence_timeout_ms);
 
     set_config_flag(scheduler, PCMK_OPT_STONITH_ENABLED,
                     pcmk__sched_fencing_enabled);
