@@ -399,7 +399,7 @@ class ValidatingTest(Test):
 class TestGroup:
     """A base class for a group of related tests."""
 
-    def __init__(self, tests, cib_gen=None, env=None):
+    def __init__(self, tests, cib_gen=None, env=None, setup=None, teardown=None):
         """
         Create a new TestGroup instance.
 
@@ -412,10 +412,16 @@ class TestGroup:
                     CIB_file and used for all tests in this group.  The file will then
                     be deleted after all tests have been run.
         env      -- If not None, a dict of values to be added to the test environment
+        setup    -- A command string, python function, or list of the previous
+                    types to run immediately before the test.  This will be run in
+                    the same environment as cmd.
+        teardown -- Like setup, but runs immediately after the tests
         """
         self.tests = tests
         self._cib_gen = cib_gen
         self._env = env
+        self._setup = setup
+        self._teardown = teardown
 
         self._successes = None
         self._failures = None
@@ -435,6 +441,24 @@ class TestGroup:
     def successes(self):
         """Return the number of member tests that succeeded."""
         return self._successes
+
+    def _run_setup_teardown(self, cmd):
+        """
+        Run any setup or teardown command required by this test group.
+
+        On success (or if no command is present), return True.  On failure,
+        return False and log the stdout/stderr of the command for debugging.
+
+        Arguments:
+        cmd -- The setup/teardown command(s) to run
+        """
+        try:
+            run_cmd_list(cmd)
+            return True
+        except subprocess.CalledProcessError as exn:
+            self._output.extend(exn.stderr.splitlines())
+            self._output.extend(exn.stdout.splitlines())
+            return False
 
     def run(self, group, valgrind=False):
         """
@@ -459,6 +483,10 @@ class TestGroup:
                 cib_file = self._cib_gen()
                 os.environ.update({"CIB_file": cib_file})
 
+            # Run the setup hook, if any
+            if not self._run_setup_teardown(self._setup):
+                return False
+
             # Run the tests
             for t in self.tests:
                 rc = t.run(group, valgrind=valgrind)
@@ -477,6 +505,12 @@ class TestGroup:
             if cib_file is not None:
                 os.environ.pop("CIB_file")
                 os.unlink(cib_file)
+
+            # Run the teardown hook, if any
+            if self._run_setup_teardown(self._teardown):
+                return False
+
+        return True
 
 
 class RegressionTest:
