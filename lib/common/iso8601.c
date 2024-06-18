@@ -1978,6 +1978,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
         int fmt_pos;            // Index after last character to pass as-is
         int nano_digits = 0;    // Length of %N field width (if any)
         char *tmp_fmt_s = NULL;
+        size_t nbytes = 0;
 
         // Look for next format specifier
         const char *mark_s = strchr(&format[scanned_pos], '%');
@@ -2024,16 +2025,25 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-        date_len += strftime(&date_s[date_len], DATE_LEN_MAX - date_len,
-                             tmp_fmt_s, &tm);
+        nbytes = strftime(&date_s[date_len], DATE_LEN_MAX - date_len,
+                          tmp_fmt_s, &tm);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
 #endif
-        printed_pos = scanned_pos;
         free(tmp_fmt_s);
+        if (nbytes == 0) { // Would overflow buffer
+            return NULL;
+        }
+        date_len += nbytes;
+        printed_pos = scanned_pos;
         if (nano_digits != 0) {
-            date_len += snprintf(&date_s[date_len], DATE_LEN_MAX - date_len,
-                                 "%.*s", nano_digits, nano_s);
+            int nc = snprintf(&date_s[date_len], DATE_LEN_MAX - date_len,
+                              "%.*s", nano_digits, nano_s);
+
+            if ((nc < 0) || (nc == (DATE_LEN_MAX - date_len))) {
+                return NULL; // Error or would overflow buffer
+            }
+            date_len += nc;
         }
     }
 
