@@ -2049,9 +2049,10 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
              * wait as a new controller operation that would be forwarded to the
              * DC. However, that would have potential problems of its own.
              */
-            const char *dc_version = g_hash_table_lookup(scheduler->config_hash,
-                                                         PCMK_OPT_DC_VERSION);
+            const char *dc_version = NULL;
 
+            dc_version = g_hash_table_lookup(scheduler->priv->options,
+                                             PCMK_OPT_DC_VERSION);
             if (!pcmk__str_eq(dc_version, PACEMAKER_VERSION "-" BUILD_VERSION, pcmk__str_casei)) {
                 out->info(out, "warning: wait option may not work properly in "
                           "mixed-version cluster");

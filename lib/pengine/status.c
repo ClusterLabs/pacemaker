@@ -324,8 +324,8 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     }
 
     pcmk__clear_scheduler_flags(scheduler, pcmk__sched_have_status);
-    if (scheduler->config_hash != NULL) {
-        g_hash_table_destroy(scheduler->config_hash);
+    if (scheduler->priv->options != NULL) {
+        g_hash_table_destroy(scheduler->priv->options);
     }
 
     if (scheduler->singletons != NULL) {

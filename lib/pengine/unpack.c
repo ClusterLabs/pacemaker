@@ -49,7 +49,7 @@ struct action_history {
  * flag is stringified more readably in log messages.
  */
 #define set_config_flag(scheduler, option, flag) do {                         \
-        GHashTable *config_hash = (scheduler)->config_hash;                   \
+        GHashTable *config_hash = (scheduler)->priv->options;                 \
         const char *scf_value = pcmk__cluster_option(config_hash, (option));  \
                                                                               \
         if (scf_value != NULL) {                                              \
@@ -228,7 +228,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         .op_data = NULL
     };
 
-    scheduler->config_hash = config_hash;
+    scheduler->priv->options = config_hash;
 
     pe__unpack_dataset_nvpairs(config, PCMK_XE_CLUSTER_PROPERTY_SET, &rule_data,
                                config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS,
@@ -4922,7 +4922,7 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                          CRM_ATTR_IS_DC, PCMK_VALUE_FALSE);
     }
 
-    cluster_name = g_hash_table_lookup(scheduler->config_hash,
+    cluster_name = g_hash_table_lookup(scheduler->priv->options,
                                        PCMK_OPT_CLUSTER_NAME);
     if (cluster_name) {
         pcmk__insert_dup(node->priv->attrs, CRM_ATTR_CLUSTER_NAME,

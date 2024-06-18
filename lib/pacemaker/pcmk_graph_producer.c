@@ -1019,7 +1019,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     GList *iter = NULL;
     const char *value = NULL;
     long long limit = 0LL;
-    GHashTable *config_hash = scheduler->config_hash;
+    GHashTable *config_hash = scheduler->priv->options;
 
     transition_id++;
     crm_trace("Creating transition graph %d", transition_id);

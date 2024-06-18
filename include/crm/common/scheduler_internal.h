@@ -171,6 +171,7 @@ struct pcmk__scheduler_private {
 
     crm_time_t *now;                // Time to use when evaluating rules
     pcmk__output_t *out;            // Output object for displaying messages
+    GHashTable *options;            // Cluster options
     const char *fence_action;       // Default fencing action
     int fence_timeout_ms;           // Value of stonith-timeout property in ms
     const char *placement_strategy; // Value of placement-strategy property
