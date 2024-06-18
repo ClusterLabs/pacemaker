@@ -300,6 +300,22 @@ TESTS = [
           "coloc-cloned-group-promoted-dependent2",
           "Cloned group promoted role with primitive (optional)"
         ],
+        [
+          "coloc-optional-promoted-dependent-moves-1",
+          "Colocation score less than promotion score difference: move"
+        ],
+        [
+          "coloc-optional-promoted-dependent-moves-2",
+          "Colocation score greater than promotion score difference: move"
+        ],
+        [
+          "coloc-optional-promoted-dependent-stays-1",
+          "Colocation score greater than promotion score difference: stay"
+        ],
+        [
+          "coloc-optional-promoted-dependent-stays-2",
+          "Colocation score less than promotion score difference: stay"
+        ],
     ],
     [
         [ "rsc-sets-seq-true", "Resource Sets - sequential=false" ],
