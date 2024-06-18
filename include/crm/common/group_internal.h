@@ -38,7 +38,7 @@ enum pcmk__group_flags {
 static inline bool
 pcmk__is_group(const pcmk_resource_t *rsc)
 {
-    return (rsc != NULL) && (rsc->private->variant == pcmk__rsc_variant_group);
+    return (rsc != NULL) && (rsc->priv->variant == pcmk__rsc_variant_group);
 }
 
 #ifdef __cplusplus

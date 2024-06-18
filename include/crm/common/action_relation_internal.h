@@ -14,6 +14,10 @@
 #include <stdint.h>                         // uint32_t
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t, pcmk_action_t
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Flags to indicate the relationship between two actions
 enum pcmk__action_relation_flags {
     //! No relation (compare with equality rather than bit set)
@@ -176,5 +180,9 @@ typedef struct pcmk__related_action {
                                         ar_flags, (flags_to_clear),         \
                                         #flags_to_clear);                   \
     } while (0)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

@@ -23,6 +23,7 @@ check_defaults(void **state) {
     pcmk_scheduler_t *scheduler = pcmk__assert_alloc(1,
                                                      sizeof(pcmk_scheduler_t));
 
+    scheduler->priv = pcmk__assert_alloc(1, sizeof(pcmk__scheduler_private_t));
     set_working_set_defaults(scheduler);
 
     flags = pcmk__sched_symmetric_cluster
@@ -34,7 +35,7 @@ check_defaults(void **state) {
     }
 
 
-    assert_null(scheduler->priv);
+    assert_null(scheduler->priv->out);
     assert_int_equal(scheduler->order_id, 1);
     assert_int_equal(scheduler->action_id, 1);
     assert_int_equal(scheduler->no_quorum_policy, pcmk_no_quorum_stop);
@@ -43,6 +44,7 @@ check_defaults(void **state) {
     /* Avoid calling pe_free_working_set here so we don't artificially
      * inflate the coverage numbers.
      */
+    free(scheduler->priv);
     free(scheduler);
 }
 

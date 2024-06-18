@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__CRMCLUSTER_PRIVATE__H
-#  define PCMK__CRMCLUSTER_PRIVATE__H
+#ifndef PCMK__CLUSTER_CRMCLUSTER_PRIVATE__H
+#define PCMK__CLUSTER_CRMCLUSTER_PRIVATE__H
 
 /* This header is for the sole use of libcrmcluster, so that functions can be
  * declared with G_GNUC_INTERNAL for efficiency.
@@ -26,6 +26,10 @@
 
 #include <crm/cluster.h>            // pcmk_cluster_t
 #include <crm/cluster/internal.h>   // pcmk__node_status_t
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 G_GNUC_INTERNAL
 void pcmk__cluster_set_quorum(bool quorate);
@@ -69,4 +73,8 @@ bool pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
 
 #endif  // SUPPORT_COROSYNC
 
-#endif  // PCMK__CRMCLUSTER_PRIVATE__H
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__CLUSTER_CRMCLUSTER_PRIVATE__H

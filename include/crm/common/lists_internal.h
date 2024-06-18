@@ -10,11 +10,11 @@
 #ifndef PCMK__CRM_COMMON_LISTS_INTERNAL__H
 #define PCMK__CRM_COMMON_LISTS_INTERNAL__H
 
+#include <glib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <glib.h>
 
 /*!
  * \internal
@@ -33,4 +33,4 @@ GList *pcmk__subtract_lists(GList *from, const GList *items,
 }
 #endif
 
-#endif
+#endif // PCMK__CRM_COMMON_LISTS_INTERNAL__H

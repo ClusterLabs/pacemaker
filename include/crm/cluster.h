@@ -176,12 +176,12 @@ enum pcmk_cluster_layer {
 enum pcmk_cluster_layer pcmk_get_cluster_layer(void);
 const char *pcmk_cluster_layer_text(enum pcmk_cluster_layer layer);
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/cluster/compat.h>
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/cluster/compat.h>
 #endif
 
 #endif

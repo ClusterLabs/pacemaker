@@ -145,7 +145,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
      * result to RSC_DIGEST_RESTART for the case where the main digest doesn't
      * match.
      */
-    params = pcmk__unpack_action_rsc_params(action_config, node->private->attrs,
+    params = pcmk__unpack_action_rsc_params(action_config, node->priv->attrs,
                                             scheduler);
     if ((*interval_ms == 0) && (g_hash_table_size(params) > 0)) {
         data->rc = pcmk__digest_restart;
@@ -187,7 +187,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                         GHashTable *params, const xmlNode *xml_op,
                         const char *op_version, GHashTable *overrides)
 {
-    const char *class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
+    const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
     const char *secure_list = NULL;
     bool old_version = (compare_version(op_version, "3.16.0") < 0);
 
@@ -366,12 +366,12 @@ rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
     pcmk__op_digest_t *data = NULL;
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
 
-    data = g_hash_table_lookup(node->private->digest_cache, key);
+    data = g_hash_table_lookup(node->priv->digest_cache, key);
     if (data == NULL) {
         data = pe__calculate_digests(rsc, task, &interval_ms, node, xml_op,
                                      NULL, calc_secure, scheduler);
         CRM_ASSERT(data != NULL);
-        g_hash_table_insert(node->private->digest_cache, strdup(key), data);
+        g_hash_table_insert(node->priv->digest_cache, strdup(key), data);
     }
     free(key);
     return data;
@@ -576,8 +576,9 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
     if (unfencing_digest_matches(rsc->id, agent, data->digest_secure_calc,
                                  node_summary)) {
         data->rc = pcmk__digest_match;
-        if (!pcmk__is_daemon && scheduler->priv != NULL) {
-            pcmk__output_t *out = scheduler->priv;
+        if (!pcmk__is_daemon && (scheduler->priv->out != NULL)) {
+            pcmk__output_t *out = scheduler->priv->out;
+
             out->info(out, "Only 'private' parameters to %s "
                       "for unfencing %s changed", rsc->id,
                       pcmk__node_name(node));
@@ -590,8 +591,8 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
     if (pcmk_is_set(scheduler->flags, pcmk__sched_sanitized)
         && (data->digest_secure_calc != NULL)) {
 
-        if (scheduler->priv != NULL) {
-            pcmk__output_t *out = scheduler->priv;
+        if (scheduler->priv->out != NULL) {
+            pcmk__output_t *out = scheduler->priv->out;
             char *digest = create_unfencing_summary(rsc->id, agent,
                                                     data->digest_secure_calc);
 

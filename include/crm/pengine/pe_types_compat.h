@@ -47,7 +47,7 @@ typedef struct pcmk__resource resource_t;
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_scheduler_t instead
-typedef struct pe_working_set_s pe_working_set_t;
+typedef struct pcmk__scheduler pe_working_set_t;
 
 #ifdef __cplusplus
 }

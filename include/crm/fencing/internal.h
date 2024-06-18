@@ -8,14 +8,18 @@
  */
 
 #ifndef PCMK__CRM_FENCING_INTERNAL__H
-#  define PCMK__CRM_FENCING_INTERNAL__H
+#define PCMK__CRM_FENCING_INTERNAL__H
 
-#  include <glib.h>
-#  include <crm/common/ipc.h>
-#  include <crm/common/xml.h>
-#  include <crm/common/output_internal.h>
-#  include <crm/common/results_internal.h>
-#  include <crm/stonith-ng.h>
+#include <glib.h>
+#include <crm/common/ipc.h>
+#include <crm/common/xml.h>
+#include <crm/common/output_internal.h>
+#include <crm/common/results_internal.h>
+#include <crm/stonith-ng.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum st_device_flags {
     st_device_supports_none             = (0 << 0),
@@ -84,7 +88,7 @@ xmlNode *create_level_registration_xml(const char *node, const char *pattern,
                                        const stonith_key_value_t *device_list);
 
 xmlNode *create_device_registration_xml(const char *id,
-                                        enum stonith_namespace namespace,
+                                        enum stonith_namespace standard,
                                         const char *agent,
                                         const stonith_key_value_t *params,
                                         const char *rsc_provides);
@@ -163,4 +167,8 @@ stonith__op_state_pending(enum op_state state)
 gboolean stonith__watchdog_fencing_enabled_for_node(const char *node);
 gboolean stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__CRM_FENCING_INTERNAL__H

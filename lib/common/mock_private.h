@@ -7,18 +7,27 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef MOCK_PRIVATE__H
-#  define MOCK_PRIVATE__H
+#ifndef PCMK__COMMON_MOCK_PRIVATE__H
+#define PCMK__COMMON_MOCK_PRIVATE__H
 
-#include <pwd.h>
-#include <stdbool.h>
-#include <stdio.h>
+#include <pwd.h>                    // struct passwd
+#include <stdbool.h>                // bool
+#include <stdio.h>                  // FILE
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
+#include <sys/types.h>              // pid_t, size_t
 #include <sys/utsname.h>
 #include <unistd.h>
-#include <grp.h>
+#include <grp.h>                    // struct group
+
+#include <crm/common/results.h>     // _Noreturn
+
+#ifdef __cplusplus
+extern "C" {
+
+// C++ doesn't support the restrict keyword
+#define restrict
+#endif
 
 /* This header is for the sole use of libcrmcommon_test and unit tests */
 
@@ -81,4 +90,8 @@ extern bool pcmk__mock_strdup;
 char *__real_strdup(const char *s);
 char *__wrap_strdup(const char *s);
 
-#endif  // MOCK_PRIVATE__H
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // PCMK__COMMON_MOCK_PRIVATE__H

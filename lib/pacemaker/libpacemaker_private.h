@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__LIBPACEMAKER_PRIVATE__H
-#  define PCMK__LIBPACEMAKER_PRIVATE__H
+#ifndef PCMK__PACEMAKER_LIBPACEMAKER_PRIVATE__H
+#define PCMK__PACEMAKER_LIBPACEMAKER_PRIVATE__H
 
 /* This header is for the sole use of libpacemaker, so that functions can be
  * declared with G_GNUC_INTERNAL for efficiency.
@@ -27,6 +27,10 @@
 #include <crm/pengine/internal.h>   // pe__const_top_resource(), etc.
 #include <pacemaker.h>              // pcmk_injections_t
 #include <pacemaker-internal.h>     // pcmk__colocation_t
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Colocation flags
 enum pcmk__coloc_flags {
@@ -449,6 +453,7 @@ void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
 
 // Injected scheduler inputs (pcmk_sched_injections.c)
 
+G_GNUC_INTERNAL
 void pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
                                   const pcmk_injections_t *injections);
 
@@ -501,38 +506,10 @@ enum pcmk__coloc_affects {
     pcmk__coloc_affects_role,
 };
 
-/*!
- * \internal
- * \brief Get the value of a colocation's node attribute
- *
- * \param[in] node  Node on which to look up the attribute
- * \param[in] attr  Name of attribute to look up
- * \param[in] rsc   Resource on whose behalf to look up the attribute
- *
- * \return Value of \p attr on \p node or on the host of \p node, as appropriate
- */
-static inline const char *
-pcmk__colocation_node_attr(const pcmk_node_t *node, const char *attr,
-                           const pcmk_resource_t *rsc)
-{
-    const char *target = NULL;
-
-    /* A resource colocated with a bundle or its primitive can't run on the
-     * bundle node itself (where only the primitive, if any, can run). Instead,
-     * we treat it as a colocation with the bundle's containers, so always look
-     * up colocation node attributes on the container host.
-     */
-    if (pcmk__is_bundle_node(node) && pcmk__is_bundled(rsc)
-        && (pe__const_top_resource(rsc, false) == pe__bundled_resource(rsc))) {
-        target = PCMK_VALUE_HOST;
-
-    } else if (rsc != NULL) {
-        target = g_hash_table_lookup(rsc->private->meta,
-                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
-    }
-
-    return pcmk__node_attr(node, attr, target, pcmk__rsc_node_assigned);
-}
+G_GNUC_INTERNAL
+const char *pcmk__colocation_node_attr(const pcmk_node_t *node,
+                                       const char *attr,
+                                       const pcmk_resource_t *rsc);
 
 G_GNUC_INTERNAL
 enum pcmk__coloc_affects pcmk__colocation_affects(const pcmk_resource_t
@@ -639,7 +616,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
     if (pcmk_is_set(colocation->dependent->flags,
                     pcmk__rsc_remote_nesting_allowed)
         && !pcmk_is_set(rsc->flags, pcmk__rsc_failed)
-        && pcmk__list_of_1(rsc->private->active_nodes)) {
+        && pcmk__list_of_1(rsc->priv->active_nodes)) {
         return false;
     }
 
@@ -647,7 +624,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
      * if the PCMK_XA_INFLUENCE option is true or the primary is not yet active.
      */
     return pcmk_is_set(colocation->flags, pcmk__coloc_influence)
-           || (rsc->private->active_nodes == NULL);
+           || (rsc->priv->active_nodes == NULL);
 }
 
 
@@ -693,7 +670,7 @@ void pcmk__order_after_each(pcmk_action_t *after, GList *list);
                        NULL,                                                \
                        (then_rsc),                                          \
                        pcmk__op_key((then_rsc)->id, (then_task), 0),        \
-                       NULL, (flags), (first_rsc)->private->scheduler)
+                       NULL, (flags), (first_rsc)->priv->scheduler)
 
 #define pcmk__order_starts(rsc1, rsc2, flags)                \
     pcmk__order_resource_actions((rsc1), PCMK_ACTION_START,  \
@@ -1190,4 +1167,8 @@ G_GNUC_INTERNAL
 int pcmk__setup_output_cib_sched(pcmk__output_t **out, cib_t **cib,
                                  pcmk_scheduler_t **scheduler, xmlNode **xml);
 
-#endif // PCMK__LIBPACEMAKER_PRIVATE__H
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__PACEMAKER_LIBPACEMAKER_PRIVATE__H

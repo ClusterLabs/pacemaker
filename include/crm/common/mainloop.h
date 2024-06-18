@@ -10,9 +10,15 @@
 #ifndef PCMK__CRM_COMMON_MAINLOOP__H
 #define PCMK__CRM_COMMON_MAINLOOP__H
 
-#include <signal.h> // sighandler_t
-#include <glib.h>
-#include <stdbool.h>
+#include <stdbool.h>    // bool
+#include <signal.h>     // sighandler_t
+#include <sys/types.h>  // pid_t, ssize_t
+
+#include <glib.h>       // gpointer, gboolean, guint, GSourceFunc, GMainLoop
+#include <qb/qbipcs.h>  // qb_ipcs_service_t, etc.
+
+#include <crm/common/ipc.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,10 +82,6 @@ guint mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms);
 mainloop_timer_t *mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc cb, void *userdata);
 
 void mainloop_timer_del(mainloop_timer_t *t);
-
-
-#include <crm/common/ipc.h>
-#include <qb/qbipcs.h>
 
 struct ipc_client_callbacks {
     /*!

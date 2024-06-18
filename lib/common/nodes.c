@@ -153,7 +153,7 @@ pcmk__find_node_in_list(const GList *nodes, const char *node_name)
         for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
             pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
-            if (pcmk__str_eq(node->private->name, node_name, pcmk__str_casei)) {
+            if (pcmk__str_eq(node->priv->name, node_name, pcmk__str_casei)) {
                 return node;
             }
         }

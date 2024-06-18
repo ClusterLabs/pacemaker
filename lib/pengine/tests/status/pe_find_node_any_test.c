@@ -27,14 +27,14 @@ non_null_list(void **state) {
     pcmk_node_t *a = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
     pcmk_node_t *b = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
 
-    a->private = pcmk__assert_alloc(1, sizeof(struct pcmk__node_private));
-    b->private = pcmk__assert_alloc(1, sizeof(struct pcmk__node_private));
+    a->priv = pcmk__assert_alloc(1, sizeof(struct pcmk__node_private));
+    b->priv = pcmk__assert_alloc(1, sizeof(struct pcmk__node_private));
 
-    a->private->name = "cluster1";
-    a->private->id = "id1";
+    a->priv->name = "cluster1";
+    a->priv->id = "id1";
 
-    b->private->name = "cluster2";
-    b->private->id = "id2";
+    b->priv->name = "cluster2";
+    b->priv->id = "id2";
 
     nodes = g_list_append(nodes, a);
     nodes = g_list_append(nodes, b);
@@ -52,9 +52,9 @@ non_null_list(void **state) {
     assert_null(pe_find_node_any(nodes, "id3", "cluster3"));
     assert_null(pe_find_node_any(nodes, NULL, NULL));
 
-    free(a->private);
+    free(a->priv);
     free(a);
-    free(b->private);
+    free(b->priv);
     free(b);
     g_list_free(nodes);
 }

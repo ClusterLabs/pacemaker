@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,11 +7,15 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef SYSTEMD__H
-#  define SYSTEMD__H
+#ifndef PCMK__SERVICES_SYSTEMD__H
+#define PCMK__SERVICES_SYSTEMD__H
 
-#  include <glib.h>
-#  include "crm/services.h"
+#include <glib.h>
+#include "crm/services.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 G_GNUC_INTERNAL GList *systemd_unit_listall(void);
 
@@ -27,4 +31,8 @@ int services__execute_systemd(svc_action_t *op);
 G_GNUC_INTERNAL gboolean systemd_unit_exists(const gchar * name);
 G_GNUC_INTERNAL void systemd_cleanup(void);
 
-#endif  /* SYSTEMD__H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__SERVICES_SYSTEMD__H

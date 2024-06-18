@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,10 +7,10 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 #ifndef PCMK__PCMKI_PCMKI_OUTPUT__H
-#  define PCMK__PCMKI_PCMKI_OUTPUT__H
+#define PCMK__PCMKI_PCMKI_OUTPUT__H
 
-#  include <libxml/tree.h>
-#  include <crm/common/output_internal.h>
+#include <libxml/tree.h>
+#include <crm/common/output_internal.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,4 +29,4 @@ int pcmk__cluster_status_text(pcmk__output_t *out, va_list args);
 }
 #endif
 
-#endif
+#endif // PCMK__PCMKI_PCMKI_OUTPUT__H

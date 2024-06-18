@@ -62,7 +62,7 @@ setup(void **state) {
             httpd_bundle = rsc;
 
         } else if (strcmp(rsc->id, "mysql-clone-group") == 0) {
-            for (GList *iter = rsc->private->children;
+            for (GList *iter = rsc->priv->children;
                  iter != NULL; iter = iter->next) {
 
                 pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
@@ -75,7 +75,7 @@ setup(void **state) {
             }
 
         } else if (strcmp(rsc->id, "promotable-clone") == 0) {
-            for (GList *iter = rsc->private->children;
+            for (GList *iter = rsc->priv->children;
                  iter != NULL; iter = iter->next) {
 
                 pcmk_resource_t *child = (pcmk_resource_t *) iter->data;

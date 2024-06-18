@@ -35,9 +35,15 @@ pe_new_working_set(void)
 {
     pcmk_scheduler_t *scheduler = calloc(1, sizeof(pcmk_scheduler_t));
 
-    if (scheduler != NULL) {
-        set_working_set_defaults(scheduler);
+    if (scheduler == NULL) {
+        return NULL;
     }
+    scheduler->priv = calloc(1, sizeof(pcmk__scheduler_private_t));
+    if (scheduler->priv == NULL) {
+        free(scheduler);
+        return NULL;
+    }
+    set_working_set_defaults(scheduler);
     return scheduler;
 }
 
@@ -51,7 +57,7 @@ pe_free_working_set(pcmk_scheduler_t *scheduler)
 {
     if (scheduler != NULL) {
         pe_reset_working_set(scheduler);
-        scheduler->priv = NULL;
+        free(scheduler->priv);
         free(scheduler);
     }
 }
@@ -175,7 +181,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
              item = item->next) {
             pcmk_resource_t *rsc = item->data;
 
-            rsc->private->fns->count(item->data);
+            rsc->priv->fns->count(item->data);
         }
         crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
                   scheduler->ninstances, scheduler->disabled_resources,
@@ -206,7 +212,7 @@ pe_free_resources(GList *resources)
     while (iterator != NULL) {
         rsc = (pcmk_resource_t *) iterator->data;
         iterator = iterator->next;
-        rsc->private->fns->free(rsc);
+        rsc->priv->fns->free(rsc);
     }
     if (resources != NULL) {
         g_list_free(resources);
@@ -248,18 +254,18 @@ pe_free_nodes(GList *nodes)
         crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
                   "(guest or remote)" : pcmk__node_name(node)));
 
-        if (node->private->attrs != NULL) {
-            g_hash_table_destroy(node->private->attrs);
+        if (node->priv->attrs != NULL) {
+            g_hash_table_destroy(node->priv->attrs);
         }
-        if (node->private->utilization != NULL) {
-            g_hash_table_destroy(node->private->utilization);
+        if (node->priv->utilization != NULL) {
+            g_hash_table_destroy(node->priv->utilization);
         }
-        if (node->private->digest_cache != NULL) {
-            g_hash_table_destroy(node->private->digest_cache);
+        if (node->priv->digest_cache != NULL) {
+            g_hash_table_destroy(node->priv->digest_cache);
         }
         g_list_free(node->details->running_rsc);
-        g_list_free(node->private->assigned_resources);
-        free(node->private);
+        g_list_free(node->priv->assigned_resources);
+        free(node->priv);
         free(node->details);
         free(node->assign);
         free(node);
@@ -407,17 +413,22 @@ pe_reset_working_set(pcmk_scheduler_t *scheduler)
 void
 set_working_set_defaults(pcmk_scheduler_t *scheduler)
 {
-    void *priv = scheduler->priv;
+    // These members must be preserved
+    pcmk__scheduler_private_t *priv = scheduler->priv;
+    pcmk__output_t *out = priv->out;
 
+    // Wipe the main structs (any other members must have previously been freed)
     memset(scheduler, 0, sizeof(pcmk_scheduler_t));
+    memset(priv, 0, sizeof(pcmk__scheduler_private_t));
 
+    // Restore the members to preserve
     scheduler->priv = priv;
+    scheduler->priv->out = out;
+
+    // Set defaults for everything else
     scheduler->order_id = 1;
     scheduler->action_id = 1;
     scheduler->no_quorum_policy = pcmk_no_quorum_stop;
-
-    scheduler->flags = 0x0ULL;
-
     pcmk__set_scheduler_flags(scheduler,
                               pcmk__sched_symmetric_cluster
                               |pcmk__sched_stop_removed_resources
@@ -440,8 +451,8 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         pcmk_resource_t *parent = rIter->data;
-        pcmk_resource_t *match = parent->private->fns->find_rsc(parent, id,
-                                                                NULL, flags);
+        pcmk_resource_t *match = parent->priv->fns->find_rsc(parent, id, NULL,
+                                                             flags);
 
         if (match != NULL) {
             return match;
@@ -494,7 +505,7 @@ pe_find_node_id(const GList *nodes, const char *id)
          * probably depend on the node type, so functionizing the comparison
          * would be worthwhile
          */
-        if (pcmk__str_eq(node->private->id, id, pcmk__str_casei)) {
+        if (pcmk__str_eq(node->priv->id, id, pcmk__str_casei)) {
             return node;
         }
     }

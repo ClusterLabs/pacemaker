@@ -20,6 +20,10 @@
 #include <crm/common/results_internal.h> // pcmk__action_result_t
 #include <crm/lrmd.h>           // lrmd_t, lrmd_event_data_t, lrmd_rsc_info_t
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port);
 
 int lrmd_send_attribute_alert(lrmd_t *lrmd, const GList *alert_list,
@@ -88,4 +92,8 @@ void lrmd__register_messages(pcmk__output_t *out);
 
 int lrmd__init_remote_key(gnutls_datum_t *key);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__CRM_LRMD_INTERNAL__H

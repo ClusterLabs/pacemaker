@@ -6,6 +6,7 @@
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef PCMK__CRM_PENGINE_RULES_INTERNAL__H
 #define PCMK__CRM_PENGINE_RULES_INTERNAL__H
 
@@ -16,7 +17,15 @@
 #include <crm/pengine/common.h>
 #include <crm/pengine/rules.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 GList *pe_unpack_alerts(const xmlNode *alerts);
 void pe_free_alert_list(GList *alert_list);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__CRM_PENGINE_RULES_INTERNAL__H

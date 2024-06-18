@@ -271,38 +271,38 @@ generally one of "GNU General Public License version 2 or later (GPLv2+)"
 or "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)".
 
 Header files should additionally protect against multiple inclusion by defining
-a unique symbol of the form ``PCMK__<capitalized_header_name>__H``. For
-example:
+a unique symbol of the form ``PCMK__<capitalized_header_name>__H``, and declare
+C compatibility for inclusion by C++. For example:
 
 .. code-block:: c
 
    #ifndef PCMK__MY_HEADER__H
-   #  define PCMK__MY_HEADER__H
+   #define PCMK__MY_HEADER__H
 
-   // header code here
-
-   #endif // PCMK__MY_HEADER__H
-
-Public API header files should additionally declare "C" compatibility for
-inclusion by C++, and give a Doxygen file description. For example:
-
-.. code-block:: c
+   // put #include directives here
 
    #ifdef __cplusplus
    extern "C" {
    #endif
+
+   // put header code here
+
+   #ifdef __cplusplus
+   }
+   #endif
+
+   #endif // PCMK__MY_HEADER__H
+
+Public API header files should give a Doxygen file description at the top of
+the header code. For example:
+
+.. code-block:: c
 
    /*!
     * \file
     * \brief My brief description here
     * \ingroup core
     */
-
-   // header code here
-
-   #ifdef __cplusplus
-   }
-   #endif
 
 
 .. index::

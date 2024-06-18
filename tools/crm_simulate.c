@@ -527,7 +527,7 @@ main(int argc, char **argv)
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_compat);
 
     if (options.test_dir != NULL) {
-        scheduler->priv = out;
+        scheduler->priv->out = out;
         pcmk__profile_dir(options.test_dir, options.repeat, scheduler,
                           options.use_date);
         rc = pcmk_rc_ok;

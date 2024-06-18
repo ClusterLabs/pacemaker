@@ -46,7 +46,7 @@ typedef struct {
 static inline bool
 pcmk__is_bundle(const pcmk_resource_t *rsc)
 {
-    return (rsc != NULL) && (rsc->private->variant == pcmk__rsc_variant_bundle);
+    return (rsc != NULL) && (rsc->priv->variant == pcmk__rsc_variant_bundle);
 }
 
 /*!
@@ -63,10 +63,10 @@ pcmk__is_bundled(const pcmk_resource_t *rsc)
     if (rsc == NULL) {
         return false;
     }
-    while (rsc->private->parent != NULL) {
-        rsc = rsc->private->parent;
+    while (rsc->priv->parent != NULL) {
+        rsc = rsc->priv->parent;
     }
-    return rsc->private->variant == pcmk__rsc_variant_bundle;
+    return rsc->priv->variant == pcmk__rsc_variant_bundle;
 }
 
 /*!
@@ -81,7 +81,7 @@ static inline bool
 pcmk__is_bundle_node(const pcmk_node_t *node)
 {
     return pcmk__is_guest_or_bundle_node(node)
-           && pcmk__is_bundled(node->private->remote);
+           && pcmk__is_bundled(node->priv->remote);
 }
 
 #ifdef __cplusplus

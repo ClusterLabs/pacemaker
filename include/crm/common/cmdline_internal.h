@@ -10,11 +10,11 @@
 #ifndef PCMK__CRM_COMMON_CMDLINE_INTERNAL__H
 #define PCMK__CRM_COMMON_CMDLINE_INTERNAL__H
 
+#include <glib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <glib.h>
 
 typedef struct {
     char *summary;
@@ -183,4 +183,4 @@ pcmk__force_args(GOptionContext *context, GError **error, const char *format, ..
 }
 #endif
 
-#endif
+#endif // PCMK__CRM_COMMON_CMDLINE_INTERNAL__H

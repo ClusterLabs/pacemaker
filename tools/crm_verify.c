@@ -229,7 +229,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    scheduler->priv = out;
+    scheduler->priv->out = out;
 
     rc = pcmk__verify(scheduler, out, cib_object);
 

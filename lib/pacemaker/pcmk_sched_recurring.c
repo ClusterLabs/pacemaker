@@ -63,7 +63,7 @@ is_op_dup(const pcmk_resource_t *rsc, const char *name, guint interval_ms)
 {
     const char *id = NULL;
 
-    for (xmlNode *op = pcmk__xe_first_child(rsc->private->ops_xml, PCMK_XE_OP,
+    for (xmlNode *op = pcmk__xe_first_child(rsc->priv->ops_xml, PCMK_XE_OP,
                                             NULL, NULL);
          op != NULL; op = pcmk__xe_next_same(op)) {
 
@@ -208,14 +208,14 @@ active_recurring_should_be_optional(const pcmk_resource_t *rsc,
         return false;
     }
 
-    if (!pcmk_is_set(rsc->private->cmds->action_flags(start, NULL),
+    if (!pcmk_is_set(rsc->priv->cmds->action_flags(start, NULL),
                      pcmk__action_optional)) {
         pcmk__rsc_trace(rsc, "%s will be mandatory because %s is",
                         key, start->uuid);
         return false;
     }
 
-    possible_matches = find_actions_exact(rsc->private->actions, key, node);
+    possible_matches = find_actions_exact(rsc->priv->actions, key, node);
     if (possible_matches == NULL) {
         pcmk__rsc_trace(rsc,
                         "%s will be mandatory because it is not active on %s",
@@ -270,9 +270,9 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
     // Check whether monitor's role matches role resource will have
     if (monitor_role == pcmk_role_unknown) {
         monitor_role = pcmk_role_unpromoted;
-        role_match = (rsc->private->next_role != pcmk_role_promoted);
+        role_match = (rsc->priv->next_role != pcmk_role_promoted);
     } else {
-        role_match = (rsc->private->next_role == monitor_role);
+        role_match = (rsc->priv->next_role == monitor_role);
     }
 
     if (!role_match) {
@@ -282,13 +282,13 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                                                                op->interval_ms,
                                                                node);
 
-            switch (rsc->private->orig_role) {
+            switch (rsc->priv->orig_role) {
                 case pcmk_role_unpromoted:
                 case pcmk_role_started:
-                    if (rsc->private->next_role == pcmk_role_promoted) {
+                    if (rsc->priv->next_role == pcmk_role_promoted) {
                         after_key = promote_key(rsc);
 
-                    } else if (rsc->private->next_role == pcmk_role_stopped) {
+                    } else if (rsc->priv->next_role == pcmk_role_stopped) {
                         after_key = stop_key(rsc);
                     }
 
@@ -303,7 +303,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
             if (after_key) {
                 pcmk__new_ordering(rsc, NULL, cancel_op, rsc, after_key, NULL,
                                    pcmk__ar_unrunnable_first_blocks,
-                                   rsc->private->scheduler);
+                                   rsc->priv->scheduler);
             }
         }
 
@@ -312,18 +312,18 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                    "(not %s)",
                    (is_optional? "Cancelling" : "Ignoring"), op->key, op->id,
                    pcmk_role_text(monitor_role),
-                   pcmk_role_text(rsc->private->next_role));
+                   pcmk_role_text(rsc->priv->next_role));
         return;
     }
 
     pcmk__rsc_trace(rsc,
                     "Creating %s recurring action %s for %s (%s %s on %s)",
                     (is_optional? "optional" : "mandatory"), op->key,
-                    op->id, rsc->id, pcmk_role_text(rsc->private->next_role),
+                    op->id, rsc->id, pcmk_role_text(rsc->priv->next_role),
                     pcmk__node_name(node));
 
     mon = custom_action(rsc, strdup(op->key), op->name, node, is_optional,
-                        rsc->private->scheduler);
+                        rsc->priv->scheduler);
 
     if (!pcmk_is_set(start->flags, pcmk__action_runnable)) {
         pcmk__rsc_trace(rsc, "%s is unrunnable because start is", mon->uuid);
@@ -341,7 +341,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                        rsc->id, pcmk__node_name(node));
     }
 
-    if (rsc->private->next_role == pcmk_role_promoted) {
+    if (rsc->priv->next_role == pcmk_role_promoted) {
         pe__add_action_expected_result(mon, CRM_EX_PROMOTED);
     }
 
@@ -351,27 +351,27 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                            NULL, strdup(mon->uuid), mon,
                            pcmk__ar_first_implies_then
                            |pcmk__ar_unrunnable_first_blocks,
-                           rsc->private->scheduler);
+                           rsc->priv->scheduler);
 
         pcmk__new_ordering(rsc, reload_key(rsc), NULL,
                            NULL, strdup(mon->uuid), mon,
                            pcmk__ar_first_implies_then
                            |pcmk__ar_unrunnable_first_blocks,
-                           rsc->private->scheduler);
+                           rsc->priv->scheduler);
 
-        if (rsc->private->next_role == pcmk_role_promoted) {
+        if (rsc->priv->next_role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, promote_key(rsc), NULL,
                                rsc, NULL, mon,
                                pcmk__ar_ordered
                                |pcmk__ar_unrunnable_first_blocks,
-                               rsc->private->scheduler);
+                               rsc->priv->scheduler);
 
-        } else if (rsc->private->orig_role == pcmk_role_promoted) {
+        } else if (rsc->priv->orig_role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, demote_key(rsc), NULL,
                                rsc, NULL, mon,
                                pcmk__ar_ordered
                                |pcmk__ar_unrunnable_first_blocks,
-                               rsc->private->scheduler);
+                               rsc->priv->scheduler);
         }
     }
 }
@@ -390,7 +390,7 @@ static void
 cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
                   const char *key, const char *name, guint interval_ms)
 {
-    GList *possible_matches = find_actions_exact(rsc->private->actions, key,
+    GList *possible_matches = find_actions_exact(rsc->priv->actions, key,
                                                  node);
     pcmk_action_t *cancel_op = NULL;
 
@@ -401,7 +401,7 @@ cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     cancel_op = pcmk__new_cancel_action(rsc, name, interval_ms, node);
 
-    switch (rsc->private->next_role) {
+    switch (rsc->priv->next_role) {
         case pcmk_role_started:
         case pcmk_role_unpromoted:
             /* Order starts after cancel. If the current role is
@@ -412,7 +412,7 @@ cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
             pcmk__new_ordering(rsc, NULL, cancel_op,
                                rsc, start_key(rsc), NULL,
                                pcmk__ar_unrunnable_first_blocks,
-                               rsc->private->scheduler);
+                               rsc->priv->scheduler);
             break;
         default:
             break;
@@ -422,7 +422,7 @@ cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
                    "configured for " PCMK_ROLE_STOPPED " role (not %s)",
                    pcmk__readable_interval(interval_ms), name, rsc->id,
                    pcmk__node_name(node),
-                   pcmk_role_text(rsc->private->next_role));
+                   pcmk_role_text(rsc->priv->next_role));
 }
 
 /*!
@@ -482,7 +482,7 @@ order_after_stops(pcmk_resource_t *rsc, const pcmk_node_t *node,
                                NULL, NULL, action,
                                pcmk__ar_first_implies_then
                                |pcmk__ar_unrunnable_first_blocks,
-                               rsc->private->scheduler);
+                               rsc->priv->scheduler);
         }
     }
     g_list_free(stop_ops);
@@ -517,7 +517,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
                     "Creating recurring action %s for %s on nodes "
                     "where it should not be running", op->id, rsc->id);
 
-    for (GList *iter = rsc->private->scheduler->nodes;
+    for (GList *iter = rsc->priv->scheduler->nodes;
          iter != NULL; iter = iter->next) {
 
         pcmk_node_t *stop_node = (pcmk_node_t *) iter->data;
@@ -527,14 +527,14 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         // Cancel action on node where resource will be active
         if ((node != NULL)
-            && pcmk__str_eq(stop_node->private->name, node->private->name,
+            && pcmk__str_eq(stop_node->priv->name, node->priv->name,
                             pcmk__str_casei)) {
             cancel_if_running(rsc, node, op->key, op->name, op->interval_ms);
             continue;
         }
 
         // Recurring action on this node is optional if it's already active here
-        possible_matches = find_actions_exact(rsc->private->actions, op->key,
+        possible_matches = find_actions_exact(rsc->priv->actions, op->key,
                                               stop_node);
         is_optional = (possible_matches != NULL);
         g_list_free(possible_matches);
@@ -546,7 +546,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
                         op->key, op->id, rsc->id, pcmk__node_name(stop_node));
 
         stopped_mon = custom_action(rsc, strdup(op->key), op->name, stop_node,
-                                    is_optional, rsc->private->scheduler);
+                                    is_optional, rsc->priv->scheduler);
 
         pe__add_action_expected_result(stopped_mon, CRM_EX_NOT_RUNNING);
 
@@ -600,25 +600,25 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
         return;
     }
 
-    if (rsc->private->assigned_node == NULL) {
+    if (rsc->priv->assigned_node == NULL) {
         // Recurring actions for active roles not needed
 
-    } else if (rsc->private->assigned_node->details->maintenance) {
+    } else if (rsc->priv->assigned_node->details->maintenance) {
         pcmk__rsc_trace(rsc,
                         "Skipping recurring actions for %s on %s "
                         "in maintenance mode",
-                        rsc->id, pcmk__node_name(rsc->private->assigned_node));
+                        rsc->id, pcmk__node_name(rsc->priv->assigned_node));
 
-    } else if ((rsc->private->next_role != pcmk_role_stopped)
+    } else if ((rsc->priv->next_role != pcmk_role_stopped)
                || !pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         // Recurring actions for active roles needed
-        start = start_action(rsc, rsc->private->assigned_node, TRUE);
+        start = start_action(rsc, rsc->priv->assigned_node, TRUE);
     }
 
     pcmk__rsc_trace(rsc, "Creating any recurring actions needed for %s",
                     rsc->id);
 
-    for (xmlNode *op = pcmk__xe_first_child(rsc->private->ops_xml, PCMK_XE_OP,
+    for (xmlNode *op = pcmk__xe_first_child(rsc->priv->ops_xml, PCMK_XE_OP,
                                             NULL, NULL);
          op != NULL; op = pcmk__xe_next_same(op)) {
 
@@ -629,10 +629,10 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
         }
 
         if (start != NULL) {
-            recurring_op_for_active(rsc, start, rsc->private->assigned_node,
+            recurring_op_for_active(rsc, start, rsc->priv->assigned_node,
                                     &op_history);
         }
-        recurring_op_for_inactive(rsc, rsc->private->assigned_node,
+        recurring_op_for_inactive(rsc, rsc->priv->assigned_node,
                                   &op_history);
 
         free(op_history.key);
@@ -666,7 +666,7 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
      * cancel_op->task.
      */
     cancel_op = custom_action(rsc, key, PCMK_ACTION_CANCEL, node, FALSE,
-                              rsc->private->scheduler);
+                              rsc->priv->scheduler);
 
     pcmk__str_update(&(cancel_op->task), PCMK_ACTION_CANCEL);
     pcmk__str_update(&(cancel_op->cancel_task), task);
@@ -709,7 +709,7 @@ pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
 
     // Cancellations happen after stops
     pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
-                       pcmk__ar_ordered, rsc->private->scheduler);
+                       pcmk__ar_ordered, rsc->priv->scheduler);
 }
 
 /*!
@@ -728,9 +728,9 @@ pcmk__reschedule_recurring(pcmk_resource_t *rsc, const char *task,
     pcmk_action_t *op = NULL;
 
     trigger_unfencing(rsc, node, "Device parameters changed (reschedule)",
-                      NULL, rsc->private->scheduler);
+                      NULL, rsc->priv->scheduler);
     op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
-                       task, node, TRUE, rsc->private->scheduler);
+                       task, node, TRUE, rsc->priv->scheduler);
     pcmk__set_action_flags(op, pcmk__action_reschedule);
 }
 

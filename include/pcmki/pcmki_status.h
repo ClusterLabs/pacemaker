@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -60,4 +60,4 @@ int pcmk__status(pcmk__output_t *out, cib_t *cib,
 }
 #endif
 
-#endif
+#endif // PCMK__PCMKI_PCMKI_STATUS__H

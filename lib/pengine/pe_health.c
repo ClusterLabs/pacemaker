@@ -97,7 +97,7 @@ int
 pe__sum_node_health_scores(const pcmk_node_t *node, int base_health)
 {
     CRM_ASSERT(node != NULL);
-    g_hash_table_foreach(node->private->attrs, add_node_health_value,
+    g_hash_table_foreach(node->priv->attrs, add_node_health_value,
                          &base_health);
     return base_health;
 }
@@ -123,12 +123,12 @@ pe__node_health(pcmk_node_t *node)
 
     CRM_ASSERT(node != NULL);
 
-    strategy = pe__health_strategy(node->private->scheduler);
+    strategy = pe__health_strategy(node->priv->scheduler);
     if (strategy == pcmk__health_strategy_none) {
         return rc;
     }
 
-    g_hash_table_iter_init(&iter, node->private->attrs);
+    g_hash_table_iter_init(&iter, node->priv->attrs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &name,
                                   (gpointer *) &value)) {
         if (pcmk__starts_with(name, "#health")) {

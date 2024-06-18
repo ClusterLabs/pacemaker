@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,9 +11,17 @@
 
 #include <crm/common/output_internal.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int pcmk__list_alternatives(pcmk__output_t *out, const char *agent_spec);
 int pcmk__list_agents(pcmk__output_t *out, char *agent_spec);
 int pcmk__list_providers(pcmk__output_t *out, const char *agent_spec);
 int pcmk__list_standards(pcmk__output_t *out);
 
-#endif /* PCMK__PCMKI_PCMKI_AGENTS__H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__PCMKI_PCMKI_AGENTS__H

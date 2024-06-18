@@ -30,7 +30,7 @@ typedef struct pcmk__resource pcmk_resource_t;
 typedef struct pcmk__action pcmk_action_t;
 
 //! Scheduler object
-typedef struct pe_working_set_s pcmk_scheduler_t;
+typedef struct pcmk__scheduler pcmk_scheduler_t;
 
 #ifdef __cplusplus
 }

@@ -43,7 +43,7 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
      * return the flags as determined by the resource method without a node
      * specified.
      */
-    flags = action->rsc->private->cmds->action_flags(action, NULL);
+    flags = action->rsc->priv->cmds->action_flags(action, NULL);
     if ((node == NULL) || !pcmk__is_clone(action->rsc)) {
         return flags;
     }
@@ -54,7 +54,7 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
     runnable = pcmk_is_set(flags, pcmk__action_runnable);
 
     // Then recheck the resource method with the node
-    flags = action->rsc->private->cmds->action_flags(action, node);
+    flags = action->rsc->priv->cmds->action_flags(action, node);
 
     /* For clones in ordering constraints, the node-specific "runnable" doesn't
      * matter, just the non-node-specific setting (i.e., is the action runnable
@@ -102,7 +102,7 @@ action_uuid_for_ordering(const char *first_uuid,
 
     // Only non-notify actions for collective resources need remapping
     if ((strstr(first_uuid, PCMK_ACTION_NOTIFY) != NULL)
-        || (first_rsc->private->variant < pcmk__rsc_variant_group)) {
+        || (first_rsc->priv->variant < pcmk__rsc_variant_group)) {
         goto done;
     }
 
@@ -185,11 +185,11 @@ action_for_ordering(pcmk_action_t *action)
         return result;
     }
 
-    if ((rsc->private->variant >= pcmk__rsc_variant_group)
+    if ((rsc->priv->variant >= pcmk__rsc_variant_group)
         && (action->uuid != NULL)) {
         char *uuid = action_uuid_for_ordering(action->uuid, rsc);
 
-        result = find_first_action(rsc->private->actions, uuid, NULL, NULL);
+        result = find_first_action(rsc->priv->actions, uuid, NULL, NULL);
         if (result == NULL) {
             crm_warn("Not remapping %s to %s because %s does not have "
                      "remapped action", action->uuid, uuid, rsc->id);
@@ -224,8 +224,8 @@ update(pcmk_resource_t *rsc, pcmk_action_t *first, pcmk_action_t *then,
        const pcmk_node_t *node, uint32_t flags, uint32_t filter, uint32_t type,
        pcmk_scheduler_t *scheduler)
 {
-    return rsc->private->cmds->update_ordered_actions(first, then, node, flags,
-                                                      filter, type, scheduler);
+    return rsc->priv->cmds->update_ordered_actions(first, then, node, flags,
+                                                   filter, type, scheduler);
 }
 
 /*!
@@ -363,7 +363,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
 
         if (!pcmk_is_set(first_flags, pcmk__action_runnable)
             && (first->rsc != NULL)
-            && (first->rsc->private->active_nodes != NULL)) {
+            && (first->rsc->priv->active_nodes != NULL)) {
 
             pcmk__rsc_trace(then->rsc,
                             "%s then %s: ignoring because first is stopping",
@@ -499,7 +499,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
     (pcmk_is_set((flags), pcmk__action_runnable)? "runnable" : "unrunnable")
 
 #define action_node_str(a) \
-    (((a)->node == NULL)? "no node" : (a)->node->private->name)
+    (((a)->node == NULL)? "no node" : (a)->node->priv->name)
 
 /*!
  * \internal
@@ -555,8 +555,8 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             && pcmk__is_group(first->rsc)
             && pcmk__str_eq(first->task, PCMK_ACTION_START, pcmk__str_none)) {
 
-            first_node = first->rsc->private->fns->location(first->rsc, NULL,
-                                                            FALSE);
+            first_node = first->rsc->priv->fns->location(first->rsc, NULL,
+                                                         FALSE);
             if (first_node != NULL) {
                 pcmk__rsc_trace(first->rsc, "Found %s for 'first' %s",
                                 pcmk__node_name(first_node), first->uuid);
@@ -566,8 +566,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         if (pcmk__is_group(then->rsc)
             && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)) {
 
-            then_node = then->rsc->private->fns->location(then->rsc, NULL,
-                                                          FALSE);
+            then_node = then->rsc->priv->fns->location(then->rsc, NULL, FALSE);
             if (then_node != NULL) {
                 pcmk__rsc_trace(then->rsc, "Found %s for 'then' %s",
                                 pcmk__node_name(then_node), then->uuid);
@@ -735,7 +734,7 @@ handle_asymmetric_ordering(const pcmk_action_t *first, pcmk_action_t *then)
     if (pcmk_is_set(then->flags, pcmk__action_optional)) {
         enum rsc_role_e then_rsc_role;
 
-        then_rsc_role = then->rsc->private->fns->state(then->rsc, TRUE);
+        then_rsc_role = then->rsc->priv->fns->state(then->rsc, TRUE);
 
         if ((then_rsc_role == pcmk_role_stopped)
             && pcmk__str_eq(then->task, PCMK_ACTION_STOP, pcmk__str_none)) {
@@ -883,7 +882,7 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
 
     if (pcmk_is_set(type, pcmk__ar_promoted_then_implies_first)
         && (then->rsc != NULL)
-        && (then->rsc->private->orig_role == pcmk_role_promoted)
+        && (then->rsc->priv->orig_role == pcmk_role_promoted)
         && pcmk_is_set(filter, pcmk__action_optional)
         && !pcmk_is_set(then->flags, pcmk__action_optional)) {
 
@@ -946,7 +945,7 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                         then->uuid, pcmk__node_name(then->node),
                         then->flags, then_flags, first->uuid, first->flags);
 
-        if ((then->rsc != NULL) && (then->rsc->private->parent != NULL)) {
+        if ((then->rsc != NULL) && (then->rsc->priv->parent != NULL)) {
             // Required to handle "X_stop then X_start" for cloned groups
             pcmk__update_action_for_orderings(then, scheduler);
         }
@@ -984,8 +983,8 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
 
     if (!pcmk_is_set(action->flags, pcmk__action_pseudo)) {
         if (action->node != NULL) {
-            node_uname = action->node->private->name;
-            node_uuid = action->node->private->id;
+            node_uname = action->node->priv->name;
+            node_uuid = action->node->priv->id;
         } else {
             node_uname = "<none>";
         }
@@ -1072,10 +1071,10 @@ pcmk__new_shutdown_action(pcmk_node_t *node)
     CRM_ASSERT(node != NULL);
 
     shutdown_id = crm_strdup_printf("%s-%s", PCMK_ACTION_DO_SHUTDOWN,
-                                    node->private->name);
+                                    node->priv->name);
 
     shutdown_op = custom_action(NULL, shutdown_id, PCMK_ACTION_DO_SHUTDOWN,
-                                node, FALSE, node->private->scheduler);
+                                node, FALSE, node->priv->scheduler);
 
     pcmk__order_stops_before_shutdown(node, shutdown_op);
     pcmk__insert_meta(shutdown_op, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
@@ -1318,7 +1317,7 @@ pcmk__action_locks_rsc_to_node(const pcmk_action_t *action)
 {
     // Only resource actions taking place on resource's lock node are locked
     if ((action == NULL) || (action->rsc == NULL)
-        || !pcmk__same_node(action->node, action->rsc->private->lock_node)) {
+        || !pcmk__same_node(action->node, action->rsc->priv->lock_node)) {
         return false;
     }
 
@@ -1408,7 +1407,7 @@ pcmk__deduplicate_action_inputs(pcmk_action_t *action)
 void
 pcmk__output_actions(pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
 
     // Output node (non-resource) actions
     for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
@@ -1439,11 +1438,11 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
         }
 
         if (pcmk__is_guest_or_bundle_node(action->node)) {
-            const pcmk_resource_t *remote = action->node->private->remote;
+            const pcmk_resource_t *remote = action->node->priv->remote;
 
             node_name = crm_strdup_printf("%s (resource: %s)",
                                           pcmk__node_name(action->node),
-                                          remote->private->launcher->id);
+                                          remote->priv->launcher->id);
         } else if (action->node != NULL) {
             node_name = crm_strdup_printf("%s", pcmk__node_name(action->node));
         }
@@ -1458,7 +1457,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->private->cmds->output_actions(rsc);
+        rsc->priv->cmds->output_actions(rsc);
     }
 }
 
@@ -1536,11 +1535,11 @@ force_restart(pcmk_resource_t *rsc, const char *task, guint interval_ms,
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
     pcmk_action_t *required = custom_action(rsc, key, task, NULL, FALSE,
-                                            rsc->private->scheduler);
+                                            rsc->priv->scheduler);
 
     pe_action_set_reason(required, "resource definition change", true);
     trigger_unfencing(rsc, node, "Device parameters changed", NULL,
-                      rsc->private->scheduler);
+                      rsc->priv->scheduler);
 }
 
 /*!
@@ -1559,8 +1558,8 @@ schedule_reload(gpointer data, gpointer user_data)
     pcmk_action_t *reload = NULL;
 
     // For collective resources, just call recursively for children
-    if (rsc->private->variant > pcmk__rsc_variant_primitive) {
-        g_list_foreach(rsc->private->children, schedule_reload, user_data);
+    if (rsc->priv->variant > pcmk__rsc_variant_primitive) {
+        g_list_foreach(rsc->priv->children, schedule_reload, user_data);
         return;
     }
 
@@ -1572,7 +1571,7 @@ schedule_reload(gpointer data, gpointer user_data)
                         rsc->id,
                         pcmk_is_set(rsc->flags, pcmk__rsc_managed)? "" : " unmanaged",
                         pcmk_is_set(rsc->flags, pcmk__rsc_failed)? " failed" : "",
-                        (node == NULL)? "inactive" : node->private->name);
+                        (node == NULL)? "inactive" : node->priv->name);
         return;
     }
 
@@ -1584,23 +1583,23 @@ schedule_reload(gpointer data, gpointer user_data)
                         "%s: preventing agent reload because start pending",
                         rsc->id);
         custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE,
-                      rsc->private->scheduler);
+                      rsc->priv->scheduler);
         return;
     }
 
     // Schedule the reload
     pcmk__set_rsc_flags(rsc, pcmk__rsc_reload);
     reload = custom_action(rsc, reload_key(rsc), PCMK_ACTION_RELOAD_AGENT, node,
-                           FALSE, rsc->private->scheduler);
+                           FALSE, rsc->priv->scheduler);
     pe_action_set_reason(reload, "resource definition change", FALSE);
 
     // Set orderings so that a required stop or demote cancels the reload
     pcmk__new_ordering(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
                        pcmk__ar_ordered|pcmk__ar_then_cancels_first,
-                       rsc->private->scheduler);
+                       rsc->priv->scheduler);
     pcmk__new_ordering(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
                        pcmk__ar_ordered|pcmk__ar_then_cancels_first,
-                       rsc->private->scheduler);
+                       rsc->priv->scheduler);
 }
 
 /*!
@@ -1640,7 +1639,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                             "%s-interval %s for %s on %s is in configuration",
                             pcmk__readable_interval(interval_ms), task, rsc->id,
                             pcmk__node_name(node));
-        } else if (pcmk_is_set(rsc->private->scheduler->flags,
+        } else if (pcmk_is_set(rsc->priv->scheduler->flags,
                                pcmk__sched_cancel_removed_actions)) {
             pcmk__schedule_cancel(rsc,
                                   crm_element_value(xml_op, PCMK__XA_CALL_ID),
@@ -1659,11 +1658,11 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
               pcmk__node_name(node));
     task = task_for_digest(task, interval_ms);
     digest_data = rsc_action_digest_cmp(rsc, xml_op, node,
-                                        rsc->private->scheduler);
+                                        rsc->priv->scheduler);
 
-    if (only_sanitized_changed(xml_op, digest_data, rsc->private->scheduler)) {
-        if (!pcmk__is_daemon && (rsc->private->scheduler->priv != NULL)) {
-            pcmk__output_t *out = rsc->private->scheduler->priv;
+    if (only_sanitized_changed(xml_op, digest_data, rsc->priv->scheduler)) {
+        if (!pcmk__is_daemon && (rsc->priv->scheduler->priv->out != NULL)) {
+            pcmk__output_t *out = rsc->priv->scheduler->priv->out;
 
             out->info(out,
                       "Only 'private' parameters to %s-interval %s for %s "
@@ -1698,7 +1697,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                 // Agent supports reload, so use it
                 trigger_unfencing(rsc, node,
                                   "Device parameters changed (reload)", NULL,
-                                  rsc->private->scheduler);
+                                  rsc->priv->scheduler);
                 crm_log_xml_debug(digest_data->params_all, "params:reload");
                 schedule_reload((gpointer) rsc, (gpointer) node);
 
@@ -1781,8 +1780,8 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
         return;
     }
 
-    if (pe_find_node_id(rsc->private->active_nodes,
-                        node->private->id) == NULL) {
+    if (pe_find_node_id(rsc->priv->active_nodes,
+                        node->priv->id) == NULL) {
         if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, false)) {
             pcmk__schedule_cleanup(rsc, node, false);
         }
@@ -1844,13 +1843,13 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                  * later in this case.
                  */
                 pe__add_param_check(rsc_op, rsc, node, pcmk__check_active,
-                                    rsc->private->scheduler);
+                                    rsc->priv->scheduler);
 
             } else if (pcmk__check_action_config(rsc, node, rsc_op)
                        && (pe_get_failcount(node, rsc, NULL, pcmk__fc_effective,
                                             NULL) != 0)) {
                 pe__clear_failcount(rsc, node, "action definition changed",
-                                    rsc->private->scheduler);
+                                    rsc->priv->scheduler);
             }
         }
     }
@@ -1881,7 +1880,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 
         if (rsc_entry->children != NULL) {
             GList *result = pcmk__rscs_matching_id(pcmk__xe_id(rsc_entry),
-                                                   node->private->scheduler);
+                                                   node->priv->scheduler);
 
             for (GList *iter = result; iter != NULL; iter = iter->next) {
                 pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
@@ -1935,7 +1934,7 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
             char *xpath = NULL;
             xmlNode *history = NULL;
 
-            xpath = crm_strdup_printf(XPATH_NODE_HISTORY, node->private->name);
+            xpath = crm_strdup_printf(XPATH_NODE_HISTORY, node->priv->name);
             history = get_xpath_object(xpath, scheduler->input, LOG_NEVER);
             free(xpath);
 

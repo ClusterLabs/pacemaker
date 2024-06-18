@@ -21,7 +21,7 @@ static int
 print_constraint(xmlNode *xml_obj, void *userdata)
 {
     pcmk_scheduler_t *scheduler = (pcmk_scheduler_t *) userdata;
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     xmlNode *lifetime = NULL;
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
     pcmk_rule_input_t rule_input = {
@@ -67,9 +67,9 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
 {
     const char *host = NULL;
     bool needs_quorum = TRUE;
-    const char *rtype = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
-    const char *rprov = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER);
-    const char *rclass = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
+    const char *rtype = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
+    const char *rprov = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
+    const char *rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
     pcmk_node_t *node = pcmk__current_node(rsc);
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
@@ -79,17 +79,17 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
     }
 
     if (node != NULL) {
-        host = node->private->name;
+        host = node->priv->name;
     }
 
     out->info(out, "Resource: %s %s %s %s %s %s %s %s %d %lld %#.16llx",
-              rsc->private->xml->name, rsc->id,
-              pcmk__s(rsc->private->history_id, rsc->id),
-              ((rsc->private->parent == NULL)? "NA" : rsc->private->parent->id),
+              rsc->priv->xml->name, rsc->id,
+              pcmk__s(rsc->priv->history_id, rsc->id),
+              ((rsc->priv->parent == NULL)? "NA" : rsc->priv->parent->id),
               rprov ? rprov : "NA", rclass, rtype, host ? host : "NA", needs_quorum, rsc->flags,
               rsc->flags);
 
-    g_list_foreach(rsc->private->children, (GFunc) cli_resource_print_cts, out);
+    g_list_foreach(rsc->priv->children, (GFunc) cli_resource_print_cts, out);
 }
 
 // \return Standard Pacemaker return code
@@ -97,7 +97,7 @@ int
 cli_resource_print_operations(const char *rsc_id, const char *host_uname,
                               bool active, pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     int rc = pcmk_rc_no_output;
     GList *ops = find_operations(rsc_id, host_uname, active, scheduler);
 
@@ -122,14 +122,14 @@ int
 cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
                    bool expanded)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
     uint32_t show_opts = pcmk_show_pending;
     GList *all = NULL;
 
     all = g_list_prepend(all, (gpointer) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
-    out->message(out, pcmk__map_element_name(rsc->private->xml), show_opts, rsc,
+    out->message(out, pcmk__map_element_name(rsc->priv->xml), show_opts, rsc,
                  all, all);
     out->message(out, "resource-config", rsc, !expanded);
     out->end_list(out);
@@ -162,7 +162,7 @@ attribute_changed_xml(pcmk__output_t *out, va_list args)
     attr_update_data_t *ud = va_arg(args, attr_update_data_t *);
 
     pcmk__output_xml_create_parent(out,
-                                   (const char *) ud->rsc->private->xml->name,
+                                   (const char *) ud->rsc->priv->xml->name,
                                    PCMK_XA_ID, ud->rsc->id,
                                    NULL);
 
@@ -376,7 +376,7 @@ property_list_default(pcmk__output_t *out, va_list args) {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     const char *attr = va_arg(args, char *);
 
-    const char *value = crm_element_value(rsc->private->xml, attr);
+    const char *value = crm_element_value(rsc->priv->xml, attr);
 
     if (value != NULL) {
         out->begin_list(out, NULL, NULL, "Properties");
@@ -393,7 +393,7 @@ property_list_text(pcmk__output_t *out, va_list args) {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     const char *attr = va_arg(args, const char *);
 
-    const char *value = crm_element_value(rsc->private->xml, attr);
+    const char *value = crm_element_value(rsc->priv->xml, attr);
 
     if (value != NULL) {
         pcmk__formatted_printf(out, "%s\n", value);
@@ -537,7 +537,7 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
     const pcmk_resource_t *parent = pe__const_top_resource(checks->rsc, false);
-    const pcmk_scheduler_t *scheduler = checks->rsc->private->scheduler;
+    const pcmk_scheduler_t *scheduler = checks->rsc->priv->scheduler;
 
     if (checks->flags == 0) {
         return pcmk_rc_no_output;
@@ -691,7 +691,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
 
-    const char *host_uname = (node == NULL)? NULL : node->private->name;
+    const char *host_uname = (node == NULL)? NULL : node->priv->name;
 
     out->begin_list(out, NULL, NULL, "Resource Reasons");
 
@@ -702,7 +702,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
         for (lpc = resources; lpc != NULL; lpc = lpc->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
-            rsc->private->fns->location(rsc, &hosts, TRUE);
+            rsc->priv->fns->location(rsc, &hosts, TRUE);
 
             if (hosts == NULL) {
                 out->list_item(out, "reason", "Resource %s is not running", rsc->id);
@@ -727,8 +727,8 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
         cli_resource_check(out, rsc, node);
 
     } else if ((rsc == NULL) && (host_uname != NULL)) {
-        const char* host_uname =  node->private->name;
-        GList *allResources = node->private->assigned_resources;
+        const char* host_uname =  node->priv->name;
+        GList *allResources = node->priv->assigned_resources;
         GList *activeResources = node->details->running_rsc;
         GList *unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
         GList *lpc = NULL;
@@ -754,7 +754,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
     } else if ((rsc != NULL) && (host_uname == NULL)) {
         GList *hosts = NULL;
 
-        rsc->private->fns->location(rsc, &hosts, TRUE);
+        rsc->priv->fns->location(rsc, &hosts, TRUE);
         out->list_item(out, "reason", "Resource %s is %srunning",
                        rsc->id, (hosts? "" : "not "));
         cli_resource_check(out, rsc, NULL);
@@ -774,7 +774,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
 
-    const char *host_uname = (node == NULL)? NULL : node->private->name;
+    const char *host_uname = (node == NULL)? NULL : node->priv->name;
 
     xmlNodePtr xml_node = pcmk__output_xml_create_parent(out, PCMK_XE_REASON,
                                                          NULL);
@@ -789,7 +789,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
             const char *running = NULL;
 
-            rsc->private->fns->location(rsc, &hosts, TRUE);
+            rsc->priv->fns->location(rsc, &hosts, TRUE);
             running = pcmk__btoa(hosts != NULL);
 
             pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE,
@@ -813,8 +813,8 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         cli_resource_check(out, rsc, node);
 
     } else if ((rsc == NULL) && (host_uname != NULL)) {
-        const char* host_uname =  node->private->name;
-        GList *allResources = node->private->assigned_resources;
+        const char* host_uname =  node->priv->name;
+        GList *allResources = node->priv->assigned_resources;
         GList *activeResources = node->details->running_rsc;
         GList *unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
         GList *lpc = NULL;
@@ -855,7 +855,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
     } else if ((rsc != NULL) && (host_uname == NULL)) {
         GList *hosts = NULL;
 
-        rsc->private->fns->location(rsc, &hosts, TRUE);
+        rsc->priv->fns->location(rsc, &hosts, TRUE);
         crm_xml_add(xml_node, PCMK_XA_RUNNING, pcmk__btoa(hosts != NULL));
         cli_resource_check(out, rsc, NULL);
         g_list_free(hosts);
@@ -868,14 +868,14 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 static void
 add_resource_name(pcmk_resource_t *rsc, pcmk__output_t *out)
 {
-    if (rsc->private->children == NULL) {
+    if (rsc->priv->children == NULL) {
         /* Sometimes PCMK_XE_RESOURCE might act as a PCMK_XA_NAME instead of an
          * XML element name, depending on whether pcmk__output_enable_list_element
          * was called.
          */
         out->list_item(out, PCMK_XE_RESOURCE, "%s", rsc->id);
     } else {
-        g_list_foreach(rsc->private->children, (GFunc) add_resource_name, out);
+        g_list_foreach(rsc->priv->children, (GFunc) add_resource_name, out);
     }
 }
 

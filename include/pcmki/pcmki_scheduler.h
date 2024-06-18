@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the Pacemaker project contributors
+ * Copyright 2014-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,10 @@
 
 #include <crm/lrmd_events.h>    // lrmd_event_data_t
 #include <crm/pengine/status.h> // pcmk_resource_t, pcmk_scheduler_t
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct {
     const char *id;
@@ -41,4 +45,8 @@ xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
                                   const char *caller_version, int target_rc,
                                   const char *node, const char *origin);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__PCMKI_PCMKI_SCHEDULER__H

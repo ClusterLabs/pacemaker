@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,10 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 #ifndef PCMK__PCMKI_PCMKI_FENCE__H
-#  define PCMK__PCMKI_PCMKI_FENCE__H
+#define PCMK__PCMKI_PCMKI_FENCE__H
 
-#  include <crm/stonith-ng.h>
-#  include <crm/common/output_internal.h>
+#include <crm/stonith-ng.h>
+#include <crm/common/output_internal.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!
  * \brief Control how much of the fencing history is output.
@@ -247,4 +251,9 @@ int pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
 int
 pcmk__get_fencing_history(stonith_t *st, stonith_history_t **stonith_history,
                           enum pcmk__fence_history fence_history);
+
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__PCMKI_PCMKI_FENCE__H

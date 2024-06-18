@@ -586,9 +586,9 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
         goto done;
     }
 
-    rclass = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
-    rtype = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
-    rprovider = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER);
+    rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+    rtype = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
+    rprovider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
 
     cib_node = pcmk__inject_node(cib, node, NULL);
     CRM_ASSERT(cib_node != NULL);
@@ -632,7 +632,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     int rc = pcmk_ok;
     const GList *iter = NULL;
     xmlNode *cib_node = NULL;
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
 
     out->message(out, "inject-modify-config", injections->quorum,
                  injections->watchdog);

@@ -10,11 +10,11 @@
 #ifndef PCMK__CRM_COMMON_CIB__H
 #define PCMK__CRM_COMMON_CIB__H
 
+#include <libxml/tree.h>    // xmlNode
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <libxml/tree.h>    // xmlNode
 
 const char *pcmk_cib_xpath_for(const char *element_name);
 const char *pcmk_cib_parent_name_for(const char *element_name);

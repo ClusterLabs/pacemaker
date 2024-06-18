@@ -58,7 +58,7 @@ struct pcmk__resource {
      * We can make that the pcmk_resource_t implementation and drop this
      * struct altogether, leaving pcmk_resource_t as an opaque public type.
      */
-    pcmk__resource_private_t *private;
+    pcmk__resource_private_t *priv;
 
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_resource_id() instead

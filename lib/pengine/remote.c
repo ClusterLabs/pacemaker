@@ -32,7 +32,7 @@ pe__resource_contains_guest_node(const pcmk_scheduler_t *scheduler,
     if ((rsc != NULL) && (scheduler != NULL)
         && pcmk_is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
 
-        for (GList *gIter = rsc->private->launched;
+        for (GList *gIter = rsc->priv->launched;
              gIter != NULL; gIter = gIter->next) {
 
             pcmk_resource_t *launched = gIter->data;
@@ -97,7 +97,7 @@ pe_foreach_guest_node(const pcmk_scheduler_t *scheduler,
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)
-            && (rsc->private->launcher != NULL)) {
+            && (rsc->priv->launcher != NULL)) {
             pcmk_node_t *guest_node = pcmk_find_node(scheduler, rsc->id);
 
             if (guest_node) {

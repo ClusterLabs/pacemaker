@@ -857,7 +857,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
     current = pe__find_active_requires(rsc, &nactive);
 
     if (nactive == 1) {
-        rc = cli_resource_ban(out, options.rsc_id, current->private->name,
+        rc = cli_resource_ban(out, options.rsc_id, current->priv->name,
                               move_lifetime, cib_conn, cib_sync_call,
                               options.promoted_role_only, PCMK_ROLE_PROMOTED);
 
@@ -866,10 +866,9 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
         GList *iter = NULL;
 
         current = NULL;
-        for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
+        for (iter = rsc->priv->children; iter != NULL; iter = iter->next) {
             pcmk_resource_t *child = (pcmk_resource_t *)iter->data;
-            enum rsc_role_e child_role = child->private->fns->state(child,
-                                                                    TRUE);
+            enum rsc_role_e child_role = child->priv->fns->state(child, TRUE);
 
             if (child_role == pcmk_role_promoted) {
                 count++;
@@ -878,7 +877,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
         }
 
         if(count == 1 && current) {
-            rc = cli_resource_ban(out, options.rsc_id, current->private->name,
+            rc = cli_resource_ban(out, options.rsc_id, current->priv->name,
                                   move_lifetime, cib_conn, cib_sync_call,
                                   options.promoted_role_only,
                                   PCMK_ROLE_PROMOTED);
@@ -960,7 +959,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
             }
             return rc;
         }
-        rc = cli_resource_clear(options.rsc_id, dest->private->name, NULL,
+        rc = cli_resource_clear(options.rsc_id, dest->priv->name, NULL,
                                 cib_conn, cib_sync_call, true, options.force);
 
     } else {
@@ -1022,7 +1021,7 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
             pcmk__set_scheduler_flags(scheduler,
                                       pcmk__sched_no_counts
                                       |pcmk__sched_no_compat);
-            scheduler->priv = out;
+            scheduler->priv->out = out;
             rc = update_scheduler_input(scheduler, cib_xml_copy);
         }
     }
@@ -1068,7 +1067,7 @@ refresh(pcmk__output_t *out)
         pcmk_node_t *node = pcmk_find_node(scheduler, options.host_uname);
 
         if (pcmk__is_pacemaker_remote_node(node)) {
-            node = pcmk__current_node(node->private->remote);
+            node = pcmk__current_node(node->priv->remote);
             if (node == NULL) {
                 rc = ENXIO;
                 g_set_error(&error, PCMK__RC_ERROR, rc,
@@ -1076,7 +1075,7 @@ refresh(pcmk__output_t *out)
                             options.host_uname);
                 return rc;
             }
-            router_node = node->private->name;
+            router_node = node->priv->name;
             attr_options |= pcmk__node_attr_remote;
         }
     }
@@ -1737,7 +1736,7 @@ main(int argc, char **argv)
         /* The --ban, --clear, --move, and --restart commands do not work with
          * instances of clone resourcs.
          */
-        if (pcmk__is_clone(rsc->private->parent)
+        if (pcmk__is_clone(rsc->priv->parent)
             && (strchr(options.rsc_id, ':') != NULL)
             && !accept_clone_instance()) {
 
@@ -1959,7 +1958,7 @@ main(int argc, char **argv)
             } else if (node == NULL) {
                 rc = pcmk_rc_node_unknown;
             } else {
-                rc = cli_resource_ban(out, options.rsc_id, node->private->name,
+                rc = cli_resource_ban(out, options.rsc_id, node->priv->name,
                                       options.move_lifetime, cib_conn,
                                       cib_sync_call, options.promoted_role_only,
                                       PCMK_ROLE_PROMOTED);
@@ -1987,8 +1986,8 @@ main(int argc, char **argv)
         case cmd_get_param: {
             unsigned int count = 0;
             GHashTable *params = NULL;
-            pcmk_node_t *current = rsc->private->fns->active_node(rsc, &count,
-                                                                  NULL);
+            pcmk_node_t *current = rsc->priv->fns->active_node(rsc, &count,
+                                                               NULL);
             bool free_params = true;
             const char* value = NULL;
 
@@ -2017,7 +2016,7 @@ main(int argc, char **argv)
 
             } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
 
-                value = crm_element_value(rsc->private->xml, options.prop_name);
+                value = crm_element_value(rsc->priv->xml, options.prop_name);
                 free_params = false;
 
             } else {
@@ -2026,7 +2025,7 @@ main(int argc, char **argv)
                 };
 
                 params = pcmk__strkey_table(free, free);
-                pe__unpack_dataset_nvpairs(rsc->private->xml,
+                pe__unpack_dataset_nvpairs(rsc->priv->xml,
                                            PCMK_XE_UTILIZATION, &rule_data,
                                            params, NULL, FALSE, scheduler);
 

@@ -7,6 +7,9 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__CRM_COMMON_UNITTEST_INTERNAL__H
+#define PCMK__CRM_COMMON_UNITTEST_INTERNAL__H
+
 #include <signal.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -21,8 +24,9 @@
 
 #include <crm/common/xml.h>
 
-#ifndef PCMK__CRM_COMMON_UNITTEST_INTERNAL__H
-#define PCMK__CRM_COMMON_UNITTEST_INTERNAL__H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* internal unit testing related utilities */
 
@@ -206,4 +210,8 @@ main(int argc, char **argv) \
     return cmocka_run_group_tests(t, group_setup, group_teardown); \
 }
 
-#endif /* PCMK__CRM_COMMON_UNITTEST_INTERNAL__H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__CRM_COMMON_UNITTEST_INTERNAL__H

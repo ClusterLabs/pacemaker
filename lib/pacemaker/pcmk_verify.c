@@ -142,7 +142,7 @@ pcmk_verify(xmlNodePtr *xml, const char *cib_source)
         goto done;
     }
 
-    scheduler->priv = out;
+    scheduler->priv->out = out;
     rc = pcmk__verify(scheduler, out, cib_object);
 
 done:

@@ -39,9 +39,9 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
         /* A guest or bundle node is fenced by stopping its launcher, which is
          * possible if the launcher's host is either online or fenceable.
          */
-        pcmk_resource_t *rsc = node->private->remote->private->launcher;
+        pcmk_resource_t *rsc = node->priv->remote->priv->launcher;
 
-        for (GList *n = rsc->private->active_nodes; n != NULL; n = n->next) {
+        for (GList *n = rsc->priv->active_nodes; n != NULL; n = n->next) {
             pcmk_node_t *launcher_node = n->data;
 
             if (!launcher_node->details->online
@@ -100,7 +100,7 @@ pe__copy_node(const pcmk_node_t *this_node)
     new_node->assign->score = this_node->assign->score;
     new_node->assign->count = this_node->assign->count;
     new_node->details = this_node->details;
-    new_node->private = this_node->private;
+    new_node->priv = this_node->priv;
 
     return new_node;
 }
@@ -123,7 +123,7 @@ pe__node_list2table(const GList *list)
         pcmk_node_t *new_node = NULL;
 
         new_node = pe__copy_node((const pcmk_node_t *) gIter->data);
-        g_hash_table_insert(result, (gpointer) new_node->private->id, new_node);
+        g_hash_table_insert(result, (gpointer) new_node->priv->id, new_node);
     }
     return result;
 }
@@ -161,7 +161,7 @@ pe__cmp_node_name(gconstpointer a, gconstpointer b)
         return 1;
     }
 
-    return pcmk__numeric_strcasecmp(node1->private->name, node2->private->name);
+    return pcmk__numeric_strcasecmp(node1->priv->name, node2->priv->name);
 }
 
 /*!
@@ -177,7 +177,7 @@ static void
 pe__output_node_weights(const pcmk_resource_t *rsc, const char *comment,
                         GHashTable *nodes, pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = scheduler->priv->out;
 
     // Sort the nodes so the output is consistent for regression tests
     GList *list = g_list_sort(g_hash_table_get_values(nodes),
@@ -186,7 +186,7 @@ pe__output_node_weights(const pcmk_resource_t *rsc, const char *comment,
     for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         const pcmk_node_t *node = (const pcmk_node_t *) gIter->data;
 
-        out->message(out, "node-weight", rsc, comment, node->private->name,
+        out->message(out, "node-weight", rsc, comment, node->priv->name,
                      pcmk_readable_score(node->assign->score));
     }
     g_list_free(list);
@@ -272,13 +272,13 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
     }
 
     // If this resource has children, repeat recursively for each
-    for (GList *gIter = rsc->private->children;
+    for (GList *gIter = rsc->priv->children;
          gIter != NULL; gIter = gIter->next) {
 
         pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
 
         pe__show_node_scores_as(file, function, line, to_log, child, comment,
-                                child->private->allowed_nodes, scheduler);
+                                child->priv->allowed_nodes, scheduler);
     }
 }
 
@@ -309,11 +309,11 @@ pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    if (resource1->private->priority > resource2->private->priority) {
+    if (resource1->priv->priority > resource2->priv->priority) {
         return -1;
     }
 
-    if (resource1->private->priority < resource2->private->priority) {
+    if (resource1->priv->priority < resource2->priv->priority) {
         return 1;
     }
 
@@ -336,7 +336,7 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         return;
 
     } else {
-        for (GList *gIter = rsc->private->children;
+        for (GList *gIter = rsc->priv->children;
              gIter != NULL; gIter = gIter->next) {
 
             pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
@@ -345,11 +345,11 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         }
     }
 
-    match = g_hash_table_lookup(rsc->private->allowed_nodes, node->private->id);
+    match = g_hash_table_lookup(rsc->priv->allowed_nodes, node->priv->id);
     if (match == NULL) {
         match = pe__copy_node(node);
-        g_hash_table_insert(rsc->private->allowed_nodes,
-                            (gpointer) match->private->id, match);
+        g_hash_table_insert(rsc->priv->allowed_nodes,
+                            (gpointer) match->priv->id, match);
     }
     match->assign->score = pcmk__add_scores(match->assign->score, score);
     pcmk__rsc_trace(rsc,
@@ -379,20 +379,20 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         GHashTableIter iter;
         pcmk_node_t *node_iter = NULL;
 
-        g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node_iter)) {
             resource_node_score(rsc, node_iter, score, tag);
         }
     }
 
     if ((node == NULL) && (score == -PCMK_SCORE_INFINITY)
-        && (rsc->private->assigned_node != NULL)) {
+        && (rsc->priv->assigned_node != NULL)) {
 
         // @TODO Should this be more like pcmk__unassign_resource()?
         crm_info("Unassigning %s from %s",
-                 rsc->id, pcmk__node_name(rsc->private->assigned_node));
-        free(rsc->private->assigned_node);
-        rsc->private->assigned_node = NULL;
+                 rsc->id, pcmk__node_name(rsc->priv->assigned_node));
+        free(rsc->priv->assigned_node);
+        rsc->priv->assigned_node = NULL;
     }
 }
 
@@ -415,7 +415,7 @@ gboolean
 get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 {
     enum rsc_role_e local_role = pcmk_role_unknown;
-    const char *value = g_hash_table_lookup(rsc->private->meta,
+    const char *value = g_hash_table_lookup(rsc->priv->meta,
                                             PCMK_META_TARGET_ROLE);
 
     CRM_CHECK(role != NULL, return FALSE);
@@ -561,7 +561,7 @@ rsc_printable_id(const pcmk_resource_t *rsc)
     if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
         return rsc->id;
     }
-    return pcmk__xe_id(rsc->private->xml);
+    return pcmk__xe_id(rsc->priv->xml);
 }
 
 void
@@ -569,7 +569,7 @@ pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
     pcmk__clear_rsc_flags(rsc, flags);
 
-    for (GList *gIter = rsc->private->children;
+    for (GList *gIter = rsc->priv->children;
          gIter != NULL; gIter = gIter->next) {
 
         pe__clear_resource_flags_recursive((pcmk_resource_t *) gIter->data,
@@ -591,7 +591,7 @@ pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
     pcmk__set_rsc_flags(rsc, flags);
 
-    for (GList *gIter = rsc->private->children;
+    for (GList *gIter = rsc->priv->children;
          gIter != NULL; gIter = gIter->next) {
 
         pe__set_resource_flags_recursive((pcmk_resource_t *) gIter->data,
@@ -626,7 +626,7 @@ trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
     } else if(rsc) {
         GHashTableIter iter;
 
-        g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
             if(node->details->online && node->details->unclean == FALSE && node->details->shutdown == FALSE) {
                 trigger_unfencing(rsc, node, reason, dependency, scheduler);
@@ -713,7 +713,7 @@ pe__resource_is_disabled(const pcmk_resource_t *rsc)
     const char *target_role = NULL;
 
     CRM_CHECK(rsc != NULL, return false);
-    target_role = g_hash_table_lookup(rsc->private->meta,
+    target_role = g_hash_table_lookup(rsc->priv->meta,
                                       PCMK_META_TARGET_ROLE);
     if (target_role) {
         // If invalid, we've already logged an error when unpacking
@@ -741,18 +741,18 @@ pe__resource_is_disabled(const pcmk_resource_t *rsc)
 bool
 pe__rsc_running_on_only(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
-    return (rsc != NULL) && pcmk__list_of_1(rsc->private->active_nodes)
+    return (rsc != NULL) && pcmk__list_of_1(rsc->priv->active_nodes)
            && pcmk__same_node((const pcmk_node_t *)
-                              rsc->private->active_nodes->data, node);
+                              rsc->priv->active_nodes->data, node);
 }
 
 bool
 pe__rsc_running_on_any(pcmk_resource_t *rsc, GList *node_list)
 {
     if (rsc != NULL) {
-        for (GList *ele = rsc->private->active_nodes; ele; ele = ele->next) {
+        for (GList *ele = rsc->priv->active_nodes; ele; ele = ele->next) {
             pcmk_node_t *node = (pcmk_node_t *) ele->data;
-            if (pcmk__str_in_list(node->private->name, node_list,
+            if (pcmk__str_in_list(node->priv->name, node_list,
                                   pcmk__str_star_matches|pcmk__str_casei)) {
                 return true;
             }
@@ -764,7 +764,7 @@ pe__rsc_running_on_any(pcmk_resource_t *rsc, GList *node_list)
 bool
 pcmk__rsc_filtered_by_node(pcmk_resource_t *rsc, GList *only_node)
 {
-    return rsc->private->fns->active(rsc, FALSE)
+    return rsc->priv->fns->active(rsc, FALSE)
            && !pe__rsc_running_on_any(rsc, only_node);
 }
 
@@ -780,8 +780,8 @@ pe__filter_rsc_list(GList *rscs, GList *filter)
          * function.  If not, it needs to move into pe__node_text.
          */
         if (pcmk__str_in_list(rsc_printable_id(rsc), filter, pcmk__str_star_matches) ||
-            ((rsc->private->parent != NULL)
-             && pcmk__str_in_list(rsc_printable_id(rsc->private->parent),
+            ((rsc->priv->parent != NULL)
+             && pcmk__str_in_list(rsc_printable_id(rsc->priv->parent),
                                   filter, pcmk__str_star_matches))) {
             retval = g_list_prepend(retval, rsc);
         }
@@ -868,7 +868,7 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
         rsc_id = pe__clone_child_id(parent);
     }
 
-    for (xmlNode *xml_op = pcmk__xe_first_child(rsc->private->scheduler->failed,
+    for (xmlNode *xml_op = pcmk__xe_first_child(rsc->priv->scheduler->failed,
                                                 NULL, NULL, NULL);
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
 
