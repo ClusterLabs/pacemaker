@@ -1956,13 +1956,12 @@ pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
 char *
 pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 {
-#define DATE_LEN_MAX 128
     int scanned_pos = 0; // How many characters of format have been parsed
     int printed_pos = 0; // How many characters of format have been processed
     size_t date_len = 0;
 
     char nano_s[10] = { '\0', };
-    char date_s[DATE_LEN_MAX] = { '\0', };
+    char date_s[128] = { '\0', };
 
     struct tm tm = { 0, };
     crm_time_t dt = { 0, };
@@ -2025,7 +2024,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-        nbytes = strftime(&date_s[date_len], DATE_LEN_MAX - date_len,
+        nbytes = strftime(&date_s[date_len], sizeof(date_s) - date_len,
                           tmp_fmt_s, &tm);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
@@ -2037,10 +2036,10 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
         date_len += nbytes;
         printed_pos = scanned_pos;
         if (nano_digits != 0) {
-            int nc = snprintf(&date_s[date_len], DATE_LEN_MAX - date_len,
+            int nc = snprintf(&date_s[date_len], sizeof(date_s) - date_len,
                               "%.*s", nano_digits, nano_s);
 
-            if ((nc < 0) || (nc == (DATE_LEN_MAX - date_len))) {
+            if ((nc < 0) || (nc == (sizeof(date_s) - date_len))) {
                 return NULL; // Error or would overflow buffer
             }
             date_len += nc;
@@ -2048,7 +2047,6 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
     }
 
     return (date_len == 0)? NULL : pcmk__str_copy(date_s);
-#undef DATE_LEN_MAX
 }
 
 /*!
