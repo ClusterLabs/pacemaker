@@ -351,12 +351,12 @@ cib_cs_destroy(gpointer user_data)
 #endif
 
 static void
-cib_peer_update_callback(enum crm_status_type type,
+cib_peer_update_callback(enum pcmk__node_update type,
                          pcmk__node_status_t *node, const void *data)
 {
     switch (type) {
-        case crm_status_uname:
-        case crm_status_nstate:
+        case pcmk__node_update_name:
+        case pcmk__node_update_state:
             if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
                 && (pcmk__ipc_client_count() == 0)) {
 

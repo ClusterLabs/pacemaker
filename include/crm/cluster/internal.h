@@ -71,6 +71,17 @@ enum pcmk__node_search_flags {
     pcmk__node_search_cluster_cib       = (1 << 2),
 };
 
+/*!
+ * \internal
+ * \enum pcmk__node_update
+ * \brief Type of update to a \c pcmk__node_status_t object
+ */
+enum pcmk__node_update {
+    pcmk__node_update_name,         //!< Node name updated
+    pcmk__node_update_state,        //!< Node connection state updated
+    pcmk__node_update_processes,    //!< Node process group membership updated
+};
+
 //! Node status data (may be a cluster node or a Pacemaker Remote node)
 typedef struct pcmk__node_status {
     //! Node name as known to cluster layer, or Pacemaker Remote node name
@@ -257,7 +268,7 @@ void pcmk__cluster_init_node_caches(void);
 void pcmk__cluster_destroy_node_caches(void);
 
 void pcmk__cluster_set_autoreap(bool enable);
-void pcmk__cluster_set_status_callback(void (*dispatch)(enum crm_status_type,
+void pcmk__cluster_set_status_callback(void (*dispatch)(enum pcmk__node_update,
                                                         pcmk__node_status_t *,
                                                         const void *));
 

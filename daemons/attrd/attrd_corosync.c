@@ -162,20 +162,20 @@ attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v)
 #define state_text(state) pcmk__s((state), "in unknown state")
 
 static void
-attrd_peer_change_cb(enum crm_status_type kind, pcmk__node_status_t *peer,
+attrd_peer_change_cb(enum pcmk__node_update kind, pcmk__node_status_t *peer,
                      const void *data)
 {
     bool gone = false;
     bool is_remote = pcmk_is_set(peer->flags, pcmk__node_status_remote);
 
     switch (kind) {
-        case crm_status_uname:
+        case pcmk__node_update_name:
             crm_debug("%s node %s is now %s",
                       (is_remote? "Remote" : "Cluster"),
                       peer->name, state_text(peer->state));
             break;
 
-        case crm_status_processes:
+        case pcmk__node_update_processes:
             if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
                 gone = true;
             }
@@ -183,7 +183,7 @@ attrd_peer_change_cb(enum crm_status_type kind, pcmk__node_status_t *peer,
                       peer->name, (gone? "no longer" : "now"));
             break;
 
-        case crm_status_nstate:
+        case pcmk__node_update_state:
             crm_debug("%s node %s is now %s (was %s)",
                       (is_remote? "Remote" : "Cluster"),
                       peer->name, state_text(peer->state), state_text(data));

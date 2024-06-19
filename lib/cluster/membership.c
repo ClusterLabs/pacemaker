@@ -608,7 +608,8 @@ pcmk__cluster_destroy_node_caches(void)
     }
 }
 
-static void (*peer_status_callback)(enum crm_status_type, pcmk__node_status_t *,
+static void (*peer_status_callback)(enum pcmk__node_update,
+                                    pcmk__node_status_t *,
                                     const void *) = NULL;
 
 /*!
@@ -621,7 +622,7 @@ static void (*peer_status_callback)(enum crm_status_type, pcmk__node_status_t *,
  *       must not add or remove entries in the peer caches.
  */
 void
-pcmk__cluster_set_status_callback(void (*dispatch)(enum crm_status_type,
+pcmk__cluster_set_status_callback(void (*dispatch)(enum pcmk__node_update,
                                                    pcmk__node_status_t *,
                                                    const void *))
 {
@@ -1043,7 +1044,7 @@ update_peer_uname(pcmk__node_status_t *node, const char *uname)
     pcmk__str_update(&node->name, uname);
 
     if (peer_status_callback != NULL) {
-        peer_status_callback(crm_status_uname, node, NULL);
+        peer_status_callback(pcmk__node_update_name, node, NULL);
     }
 
 #if SUPPORT_COROSYNC
@@ -1156,7 +1157,7 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
          * in case the node will be reaped
          */
         if (peer_status_callback != NULL) {
-            peer_status_callback(crm_status_processes, node, &last);
+            peer_status_callback(pcmk__node_update_processes, node, &last);
         }
 
         /* The client callback shouldn't touch the peer caches,
@@ -1275,7 +1276,7 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
                    node->name, state, node->cluster_layer_id,
                    pcmk__s(last, "unknown"), source);
         if (peer_status_callback != NULL) {
-            peer_status_callback(crm_status_nstate, node, last);
+            peer_status_callback(pcmk__node_update_state, node, last);
         }
         free(last);
 

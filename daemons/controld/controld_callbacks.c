@@ -104,7 +104,7 @@ node_alive(const pcmk__node_status_t *node)
 #define state_text(state) ((state)? (const char *)(state) : "in unknown state")
 
 void
-peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
+peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                      const void *data)
 {
     uint32_t old = 0;
@@ -121,7 +121,7 @@ peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
         controld_set_fsa_input_flags(R_PEER_DATA);
     }
 
-    if (type == crm_status_processes
+    if ((type == pcmk__node_update_processes)
         && pcmk_is_set(node->processes, crm_get_cluster_proc())
         && !AM_I_DC
         && !is_remote) {
@@ -144,14 +144,14 @@ peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
     }
 
     switch (type) {
-        case crm_status_uname:
+        case pcmk__node_update_name:
             /* If we've never seen the node, then it also won't be in the status section */
             crm_info("%s node %s is now %s",
                      (is_remote? "Remote" : "Cluster"),
                      node->name, state_text(node->state));
             return;
 
-        case crm_status_nstate:
+        case pcmk__node_update_state:
             /* This callback should not be called unless the state actually
              * changed, but here's a failsafe just in case.
              */
@@ -175,7 +175,7 @@ peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
             crmd_alert_node_event(node);
             break;
 
-        case crm_status_processes:
+        case pcmk__node_update_processes:
             CRM_CHECK(data != NULL, return);
             old = *(const uint32_t *)data;
             appeared = pcmk_is_set(node->processes, crm_get_cluster_proc());
@@ -355,7 +355,7 @@ peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
             }
         }
 
-        if (!appeared && (type == crm_status_processes)
+        if (!appeared && (type == pcmk__node_update_processes)
             && (node->when_member > 1)) {
             /* The node left CPG but is still a cluster member. Set its
              * membership time to 1 to record it in the cluster state as a

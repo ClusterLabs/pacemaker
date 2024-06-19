@@ -139,16 +139,6 @@ enum crm_ais_msg_types {
 };
 //!@}
 
-// @COMPAT Make this internal when we can break API backward compatibility
-//!@{
-//! \deprecated Do not use (public access will be removed in a future release)
-enum crm_status_type {
-    crm_status_uname,
-    crm_status_nstate,
-    crm_status_processes,
-};
-//!@}
-
 /*!
  * \enum pcmk_cluster_layer
  * \brief Types of cluster layer
