@@ -10262,9 +10262,9 @@ Errors found during check: config not valid
 * Passed: crm_verify     - Verify a file-specified invalid configuration (text output)
 =#=#=#= Begin test: Verify a file-specified invalid configuration (verbose text output) =#=#=#=
 unpack_config 	warning: Blind faith: not fencing unseen nodes
-Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource
-Ignoring <clone> resource 'test2-clone' because configuration is invalid
-CIB did not pass schema validation
+error: Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource
+error: Ignoring <clone> resource 'test2-clone' because configuration is invalid
+error: CIB did not pass schema validation
 Errors found during check: config not valid
 =#=#=#= End test: Verify a file-specified invalid configuration (verbose text output) - Invalid configuration (78) =#=#=#=
 * Passed: crm_verify     - Verify a file-specified invalid configuration (verbose text output)
@@ -10275,9 +10275,9 @@ Errors found during check: config not valid
 <pacemaker-result api-version="X" request="crm_verify_invalid_bz.xml --output-as=xml">
   <status code="78" message="Invalid configuration">
     <errors>
-      <error>Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
-      <error>Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
-      <error>CIB did not pass schema validation</error>
+      <error>error: Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
+      <error>error: Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
+      <error>error: CIB did not pass schema validation</error>
       <error>Errors found during check: config not valid</error>
     </errors>
   </status>
@@ -10289,9 +10289,9 @@ unpack_config 	warning: Blind faith: not fencing unseen nodes
 <pacemaker-result api-version="X" request="crm_verify_invalid_bz.xml --output-as=xml --verbose">
   <status code="78" message="Invalid configuration">
     <errors>
-      <error>Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
-      <error>Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
-      <error>CIB did not pass schema validation</error>
+      <error>error: Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
+      <error>error: Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
+      <error>error: CIB did not pass schema validation</error>
       <error>Errors found during check: config not valid</error>
     </errors>
   </status>
@@ -10302,9 +10302,9 @@ unpack_config 	warning: Blind faith: not fencing unseen nodes
 <pacemaker-result api-version="X" request="crm_verify_invalid_bz.xml --output-as=xml --quiet">
   <status code="78" message="Invalid configuration">
     <errors>
-      <error>Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
-      <error>Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
-      <error>CIB did not pass schema validation</error>
+      <error>error: Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
+      <error>error: Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
+      <error>error: CIB did not pass schema validation</error>
     </errors>
   </status>
 </pacemaker-result>
@@ -10314,12 +10314,12 @@ unpack_config 	warning: Blind faith: not fencing unseen nodes
 <pacemaker-result api-version="X" request="crm_verify_invalid_no_stonith.xml --output-as=xml">
   <status code="78" message="Invalid configuration">
     <errors>
-      <error>Resource start-up disabled since no STONITH resources have been defined</error>
-      <error>Either configure some or disable STONITH with the stonith-enabled option</error>
-      <error>NOTE: Clusters with shared data need STONITH to ensure data integrity</error>
-      <error>Node pcmk-1 is unclean but cannot be fenced</error>
-      <error>Node pcmk-2 is unclean but cannot be fenced</error>
-      <error>CIB did not pass schema validation</error>
+      <error>error: Resource start-up disabled since no STONITH resources have been defined</error>
+      <error>error: Either configure some or disable STONITH with the stonith-enabled option</error>
+      <error>error: NOTE: Clusters with shared data need STONITH to ensure data integrity</error>
+      <error>warning: Node pcmk-1 is unclean but cannot be fenced</error>
+      <error>warning: Node pcmk-2 is unclean but cannot be fenced</error>
+      <error>error: CIB did not pass schema validation</error>
       <error>Errors found during check: config not valid</error>
     </errors>
   </status>
