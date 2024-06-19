@@ -122,23 +122,6 @@ enum crm_ais_msg_class {
 };
 //!@}
 
-// @COMPAT Make this internal when we can break API backward compatibility
-//!@{
-//! \deprecated Do not use (public access will be removed in a future release)
-enum crm_ais_msg_types {
-    crm_msg_none     = 0,
-    crm_msg_ais      = 1,   // Unused
-    crm_msg_lrmd     = 2,
-    crm_msg_cib      = 3,
-    crm_msg_crmd     = 4,
-    crm_msg_attrd    = 5,
-    crm_msg_stonithd = 6,   // Unused
-    crm_msg_te       = 7,   // Unused
-    crm_msg_pe       = 8,   // Unused
-    crm_msg_stonith_ng = 9,
-};
-//!@}
-
 /*!
  * \enum pcmk_cluster_layer
  * \brief Types of cluster layer

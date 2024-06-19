@@ -21,6 +21,20 @@
 extern "C" {
 #endif
 
+/*!
+ * \internal
+ * \enum pcmk__cluster_msg
+ * \brief Types of message sent via the cluster layer
+ */
+enum pcmk__cluster_msg {
+    pcmk__cluster_msg_unknown,
+    pcmk__cluster_msg_attrd,
+    pcmk__cluster_msg_based,
+    pcmk__cluster_msg_controld,
+    pcmk__cluster_msg_execd,
+    pcmk__cluster_msg_fenced,
+};
+
 enum crm_proc_flag {
     /* @COMPAT When pcmk__node_status_t:processes is made internal, we can merge
      * this into node flags or turn it into a boolean. Until then, in theory
@@ -255,9 +269,9 @@ void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
 
-enum crm_ais_msg_types pcmk__cluster_parse_msg_type(const char *text);
+enum pcmk__cluster_msg pcmk__cluster_parse_msg_type(const char *text);
 bool pcmk__cluster_send_message(const pcmk__node_status_t *node,
-                                enum crm_ais_msg_types service,
+                                enum pcmk__cluster_msg service,
                                 const xmlNode *data);
 
 // Membership

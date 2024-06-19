@@ -263,7 +263,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     crm_xml_add(offer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     crm_info("Sending join-%d offer to %s", current_join_id, member->name);
-    pcmk__cluster_send_message(member, crm_msg_crmd, offer);
+    pcmk__cluster_send_message(member, pcmk__cluster_msg_controld, offer);
     pcmk__xml_free(offer);
 
     crm_update_peer_join(__func__, member, crm_join_welcomed);
@@ -941,7 +941,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
             }
         }
     }
-    pcmk__cluster_send_message(join_node, crm_msg_crmd, acknak);
+    pcmk__cluster_send_message(join_node, pcmk__cluster_msg_controld, acknak);
     pcmk__xml_free(acknak);
     return;
 }

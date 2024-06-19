@@ -49,7 +49,7 @@ static int cs_message_timer = 0;
 struct pcmk__cpg_host_s {
     uint32_t id;
     uint32_t pid;
-    enum crm_ais_msg_types type;
+    enum pcmk__cluster_msg type;
     uint32_t size;
     char uname[MAX_NAME];
 } __attribute__ ((packed));
@@ -291,43 +291,22 @@ ais_dest(const pcmk__cpg_host_t *host)
 }
 
 static inline const char *
-msg_type2text(enum crm_ais_msg_types type)
+msg_type2text(enum pcmk__cluster_msg type)
 {
-    const char *text = "unknown";
-
     switch (type) {
-        case crm_msg_none:
-            text = "unknown";
-            break;
-        case crm_msg_ais:
-            text = "ais";
-            break;
-        case crm_msg_cib:
-            text = "cib";
-            break;
-        case crm_msg_crmd:
-            text = "crmd";
-            break;
-        case crm_msg_pe:
-            text = "pengine";
-            break;
-        case crm_msg_te:
-            text = "tengine";
-            break;
-        case crm_msg_lrmd:
-            text = "lrmd";
-            break;
-        case crm_msg_attrd:
-            text = "attrd";
-            break;
-        case crm_msg_stonithd:
-            text = "stonithd";
-            break;
-        case crm_msg_stonith_ng:
-            text = "stonith-ng";
-            break;
+        case pcmk__cluster_msg_attrd:
+            return "attrd";
+        case pcmk__cluster_msg_based:
+            return "cib";
+        case pcmk__cluster_msg_controld:
+            return "crmd";
+        case pcmk__cluster_msg_execd:
+            return "lrmd";
+        case pcmk__cluster_msg_fenced:
+            return "stonith-ng";
+        default:
+            return "unknown";
     }
-    return text;
 }
 
 /*!
@@ -945,7 +924,7 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
  */
 static bool
 send_cpg_text(const char *data, const pcmk__node_status_t *node,
-              enum crm_ais_msg_types dest)
+              enum pcmk__cluster_msg dest)
 {
     static int msg_id = 0;
     static int local_pid = 0;
@@ -955,8 +934,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     char *target = NULL;
     struct iovec *iov;
     pcmk__cpg_msg_t *msg = NULL;
-
-    CRM_CHECK(dest != crm_msg_ais, return false);
 
     if (local_name == NULL) {
         local_name = pcmk__cluster_local_node_name();
@@ -1075,7 +1052,7 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
  */
 bool
 pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
-                   enum crm_ais_msg_types dest)
+                   enum pcmk__cluster_msg dest)
 {
     bool rc = true;
     GString *data = g_string_sized_new(1024);

@@ -117,7 +117,7 @@ post_cache_update(int instance)
      */
     no_op = create_request(CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
                            AM_I_DC ? CRM_SYSTEM_DC : CRM_SYSTEM_CRMD, NULL);
-    pcmk__cluster_send_message(NULL, crm_msg_crmd, no_op);
+    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld, no_op);
     pcmk__xml_free(no_op);
 }
 

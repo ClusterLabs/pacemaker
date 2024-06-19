@@ -114,7 +114,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
         crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, stonith_our_uname);
 
-        pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, request);
+        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, request);
         pcmk__xml_free(request);
         return 0;
     }
@@ -484,7 +484,7 @@ st_peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
         crm_debug("Broadcasting our uname because of node %" PRIu32,
                   node->cluster_layer_id);
-        pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, query);
+        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, query);
 
         pcmk__xml_free(query);
     }

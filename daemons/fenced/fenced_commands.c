@@ -2351,7 +2351,7 @@ stonith_send_reply(const xmlNode *reply, int call_options,
             pcmk__get_node(0, remote_peer, NULL,
                            pcmk__node_search_cluster_member);
 
-        pcmk__cluster_send_message(node, crm_msg_stonith_ng, reply);
+        pcmk__cluster_send_message(node, pcmk__cluster_msg_fenced, reply);
     }
 }
 
@@ -2597,7 +2597,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
                   cmd->action, cmd->target);
         crm_xml_add(reply, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
         crm_xml_add(reply, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
-        pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, reply);
+        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, reply);
     } else {
         // Reply only to the originator
         stonith_send_reply(reply, cmd->options, cmd->origin, client);
@@ -3331,7 +3331,8 @@ handle_fence_request(pcmk__request_t *request)
             crm_xml_add(request->xml, PCMK__XA_ST_CLIENTID,
                         request->ipc_client->id);
             crm_xml_add(request->xml, PCMK__XA_ST_REMOTE_OP, op->id);
-            pcmk__cluster_send_message(node, crm_msg_stonith_ng, request->xml);
+            pcmk__cluster_send_message(node, pcmk__cluster_msg_fenced,
+                                       request->xml);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
                              NULL);
 
