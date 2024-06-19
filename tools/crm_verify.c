@@ -114,7 +114,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 
 /*!
  * \internal
- * \brief Output a configuration issue
+ * \brief Output a configuration error
  *
  * \param[in] ctx  Output object
  * \param[in] msg  printf(3)-style format string
@@ -122,7 +122,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
  */
 G_GNUC_PRINTF(2, 3)
 static void
-output_config_issue(void *ctx, const char *msg, ...)
+output_config_error(void *ctx, const char *msg, ...)
 {
     va_list ap;
     char *buf = NULL;
@@ -131,7 +131,31 @@ output_config_issue(void *ctx, const char *msg, ...)
     va_start(ap, msg);
     CRM_ASSERT(vasprintf(&buf, msg, ap) > 0);
     if (options.verbosity > 0) {
-        out->err(out, "%s", buf);
+        out->err(out, "error: %s", buf);
+    }
+    va_end(ap);
+}
+
+/*!
+ * \internal
+ * \brief Output a configuration warning
+ *
+ * \param[in] ctx  Output object
+ * \param[in] msg  printf(3)-style format string
+ * \param[in] ...  Format string arguments
+ */
+G_GNUC_PRINTF(2, 3)
+static void
+output_config_warning(void *ctx, const char *msg, ...)
+{
+    va_list ap;
+    char *buf = NULL;
+    pcmk__output_t *out = ctx;
+
+    va_start(ap, msg);
+    CRM_ASSERT(vasprintf(&buf, msg, ap) > 0);
+    if (options.verbosity > 0) {
+        out->err(out, "warning: %s", buf);
     }
     va_end(ap);
 }
@@ -187,8 +211,8 @@ main(int argc, char **argv)
 
     pcmk__register_lib_messages(out);
 
-    pcmk__set_config_error_handler(output_config_issue, out);
-    pcmk__set_config_warning_handler(output_config_issue, out);
+    pcmk__set_config_error_handler(output_config_error, out);
+    pcmk__set_config_warning_handler(output_config_warning, out);
 
     if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
         args->verbosity = 1;
