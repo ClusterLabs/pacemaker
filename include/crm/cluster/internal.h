@@ -96,6 +96,10 @@ enum pcmk__node_update {
     pcmk__node_update_processes,    //!< Node process group membership updated
 };
 
+//! Implementation of pcmk__cluster_private_t
+struct pcmk__cluster_private {
+};
+
 //! Node status data (may be a cluster node or a Pacemaker Remote node)
 typedef struct pcmk__node_status {
     //! Node name as known to cluster layer, or Pacemaker Remote node name

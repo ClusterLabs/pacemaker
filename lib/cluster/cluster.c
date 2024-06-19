@@ -175,7 +175,10 @@ pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
 pcmk_cluster_t *
 pcmk_cluster_new(void)
 {
-    return (pcmk_cluster_t *) pcmk__assert_alloc(1, sizeof(pcmk_cluster_t));
+    pcmk_cluster_t *cluster = pcmk__assert_alloc(1, sizeof(pcmk_cluster_t));
+
+    cluster->priv = pcmk__assert_alloc(1, sizeof(pcmk__cluster_private_t));
+    return cluster;
 }
 
 /*!
@@ -191,6 +194,7 @@ pcmk_cluster_free(pcmk_cluster_t *cluster)
     }
     free(cluster->uuid);
     free(cluster->uname);
+    free(cluster->priv);
     free(cluster);
 }
 

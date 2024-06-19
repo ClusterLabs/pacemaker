@@ -63,11 +63,21 @@ enum crm_join_phase {
 };
 //!@}
 
+//! \internal Do not use
+typedef struct pcmk__cluster_private pcmk__cluster_private_t;
+
 // Implementation of pcmk_cluster_t
 // @COMPAT Make contents internal when we can break API backward compatibility
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 struct pcmk__cluster {
+    /* @COMPAT Once all members are moved to pcmk__cluster_private_t, we can
+     * make that the pcmk_cluster_t implementation and drop this struct
+     * altogether, leaving pcmk_cluster_t as an opaque public type.
+     */
+    //! \internal Do not use
+    pcmk__cluster_private_t *priv;
+
     char *uuid;
     char *uname;
     uint32_t nodeid;
@@ -92,7 +102,6 @@ struct pcmk__cluster {
 
     cpg_handle_t cpg_handle;
 #  endif
-
 };
 //!@}
 
