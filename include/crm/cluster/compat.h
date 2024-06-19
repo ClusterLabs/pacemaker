@@ -27,7 +27,7 @@ extern "C" {
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c pcmk_cluster_t instead
-typedef struct crm_cluster_s crm_cluster_t;
+typedef struct pcmk__cluster crm_cluster_t;
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c pcmk_cluster_connect() instead

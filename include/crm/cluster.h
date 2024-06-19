@@ -64,10 +64,10 @@ enum crm_join_phase {
 //!@}
 
 // Implementation of pcmk_cluster_t
-// @COMPAT Make this internal when we can break API backward compatibility
+// @COMPAT Make contents internal when we can break API backward compatibility
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
-struct crm_cluster_s {
+struct pcmk__cluster {
     char *uuid;
     char *uname;
     uint32_t nodeid;
@@ -97,7 +97,7 @@ struct crm_cluster_s {
 //!@}
 
 //! Connection to a cluster layer
-typedef struct crm_cluster_s pcmk_cluster_t;
+typedef struct pcmk__cluster pcmk_cluster_t;
 
 int pcmk_cluster_connect(pcmk_cluster_t *cluster);
 int pcmk_cluster_disconnect(pcmk_cluster_t *cluster);
