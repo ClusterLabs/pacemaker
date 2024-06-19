@@ -390,9 +390,6 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
  * \param[in]     sender_id  Corosync ID of node that sent message
  * \param[in]     pid        Process ID of message sender (for logging only)
  * \param[in,out] content    CPG message
- * \param[out]    kind       If not \c NULL, will be set to CPG header ID
- *                           (which should be an <tt>enum crm_ais_msg_class</tt>
- *                           value, currently always \c crm_class_cluster)
  * \param[out]    from       If not \c NULL, will be set to sender uname
  *                           (valid for the lifetime of \p content)
  *
@@ -402,7 +399,7 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
  */
 char *
 pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
-                       void *content, uint32_t *kind, const char **from)
+                       void *content, const char **from)
 {
     char *data = NULL;
     pcmk__cpg_msg_t *msg = content;
@@ -453,9 +450,6 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
               msg->is_compressed ? " compressed" : "",
               msg_data_len(msg), msg->size, msg->compressed_size);
 
-    if (kind != NULL) {
-        *kind = msg->header.id;
-    }
     if (from != NULL) {
         *from = msg->sender.uname;
     }
@@ -954,7 +948,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
 
     msg_id++;
     msg->id = msg_id;
-    msg->header.id = crm_class_cluster;
     msg->header.error = CS_OK;
 
     msg->host.type = dest;

@@ -103,21 +103,19 @@ attrd_cpg_dispatch(cpg_handle_t handle,
                  const struct cpg_name *groupName,
                  uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
-    uint32_t kind = 0;
     xmlNode *xml = NULL;
     const char *from = NULL;
-    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &kind, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
 
     if(data == NULL) {
         return;
     }
 
-    if (kind == crm_class_cluster) {
-        xml = pcmk__xml_parse(data);
-    }
+    xml = pcmk__xml_parse(data);
 
     if (xml == NULL) {
-        crm_err("Bad message of class %d received from %s[%u]: '%.120s'", kind, from, nodeid, data);
+        crm_err("Bad message received from %s[%u]: '%.120s'",
+                from, nodeid, data);
     } else {
         attrd_peer_message(pcmk__get_node(nodeid, from, NULL,
                                           pcmk__node_search_cluster_member),
