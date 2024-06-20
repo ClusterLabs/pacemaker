@@ -255,14 +255,15 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     // Check whether the value changed
     changed = !pcmk__str_eq(v->current, value, pcmk__str_casei);
 
-    if (changed && filter && pcmk__str_eq(host, attrd_cluster->uname,
-                                          pcmk__str_casei)) {
+    if (changed && filter
+        && pcmk__str_eq(host, attrd_cluster->priv->node_name,
+                        pcmk__str_casei)) {
         /* Broadcast the local value for an attribute that differs from the
          * value provided in a peer's attribute synchronization response. This
          * ensures a node's values for itself take precedence and all peers are
          * kept in sync.
          */
-        v = g_hash_table_lookup(a->values, attrd_cluster->uname);
+        v = g_hash_table_lookup(a->values, attrd_cluster->priv->node_name);
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
                    attr, host, readable_value(v), value, peer->name);
         attrd_broadcast_value(a, v);
@@ -277,7 +278,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
         pcmk__str_update(&v->current, value);
         attrd_set_attr_flags(a, attrd_attr_changed);
 
-        if (pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)
+        if (pcmk__str_eq(host, attrd_cluster->priv->node_name, pcmk__str_casei)
             && pcmk__str_eq(attr, PCMK__NODE_ATTR_SHUTDOWN, pcmk__str_none)) {
 
             if (!pcmk__str_eq(value, "0", pcmk__str_null_matches)) {
@@ -386,7 +387,7 @@ broadcast_unseen_local_values(void)
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
 
             if (!pcmk_is_set(v->flags, attrd_value_from_peer)
-                && pcmk__str_eq(v->nodename, attrd_cluster->uname,
+                && pcmk__str_eq(v->nodename, attrd_cluster->priv->node_name,
                                 pcmk__str_casei)) {
                 crm_trace("* %s[%s]='%s' is local-only",
                           a->id, v->nodename, readable_value(v));

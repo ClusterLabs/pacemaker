@@ -98,6 +98,8 @@ enum pcmk__node_update {
 
 //! Implementation of pcmk__cluster_private_t
 struct pcmk__cluster_private {
+    // @TODO Drop and replace with per-daemon node name global variables?
+    char *node_name;                //!< Local node name at cluster layer
 };
 
 //! Node status data (may be a cluster node or a Pacemaker Remote node)

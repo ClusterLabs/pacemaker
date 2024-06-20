@@ -35,8 +35,8 @@ attrd_election_cb(gpointer user_data)
 void
 attrd_election_init(void)
 {
-    writer = election_init(PCMK__VALUE_ATTRD, attrd_cluster->uname, 120000,
-                           attrd_election_cb);
+    writer = election_init(PCMK__VALUE_ATTRD, attrd_cluster->priv->node_name,
+                           120000, attrd_election_cb);
 }
 
 void
@@ -120,7 +120,7 @@ attrd_check_for_new_writer(const pcmk__node_status_t *peer, const xmlNode *xml)
     crm_element_value_int(xml, PCMK__XA_ATTR_WRITER, &peer_state);
     if (peer_state == election_won) {
         if ((election_state(writer) == election_won)
-            && !pcmk__str_eq(peer->name, attrd_cluster->uname,
+            && !pcmk__str_eq(peer->name, attrd_cluster->priv->node_name,
                              pcmk__str_casei)) {
             crm_notice("Detected another attribute writer (%s), starting new "
                        "election",
@@ -141,7 +141,7 @@ attrd_declare_winner(void)
 {
     crm_notice("Recorded local node as attribute writer (was %s)",
                (peer_writer? peer_writer : "unset"));
-    pcmk__str_update(&peer_writer, attrd_cluster->uname);
+    pcmk__str_update(&peer_writer, attrd_cluster->priv->node_name);
 }
 
 void

@@ -78,7 +78,6 @@ struct pcmk__cluster {
     //! \internal Do not use
     pcmk__cluster_private_t *priv;
 
-    char *uname;
     uint32_t nodeid;
 
     // NOTE: sbd (as of at least 1.5.2) uses this

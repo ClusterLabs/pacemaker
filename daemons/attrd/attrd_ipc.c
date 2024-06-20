@@ -57,7 +57,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
 
         /* Allow caller to use "localhost" to refer to local node */
         if (pcmk__str_eq(host, "localhost", pcmk__str_casei)) {
-            host = attrd_cluster->uname;
+            host = attrd_cluster->priv->node_name;
             crm_trace("Mapped localhost to %s", host);
         }
 
@@ -236,7 +236,8 @@ handle_missing_host(xmlNode *xml)
 
     if (host == NULL) {
         crm_trace("Inferring host");
-        pcmk__xe_add_node(xml, attrd_cluster->uname, attrd_cluster->nodeid);
+        pcmk__xe_add_node(xml, attrd_cluster->priv->node_name,
+                          attrd_cluster->nodeid);
     }
 }
 

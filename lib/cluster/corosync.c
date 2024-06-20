@@ -483,14 +483,14 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
         return ENXIO;
     }
 
-    cluster->uname = pcmk__cluster_node_name(0);
-    if (cluster->uname == NULL) {
+    cluster->priv->node_name = pcmk__cluster_node_name(0);
+    if (cluster->priv->node_name == NULL) {
         crm_err("Could not determine local node name");
         return ENXIO;
     }
 
     // Ensure local node always exists in peer cache
-    pcmk__get_node(cluster->nodeid, cluster->uname, NULL,
+    pcmk__get_node(cluster->nodeid, cluster->priv->node_name, NULL,
                    pcmk__node_search_cluster_member);
 
     return pcmk_rc_ok;

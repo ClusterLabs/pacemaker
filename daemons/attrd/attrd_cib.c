@@ -220,7 +220,7 @@ attrd_cib_init(void)
      *       However, currently we reject any values for us that the writer has, in
      *       attrd_peer_update().
      */
-    attrd_cib_erase_transient_attrs(attrd_cluster->uname);
+    attrd_cib_erase_transient_attrs(attrd_cluster->priv->node_name);
 
     // Set a trigger for reading the CIB (for the alerts section)
     attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);

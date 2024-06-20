@@ -172,7 +172,7 @@ handle_sync_response_request(pcmk__request_t *request)
                                pcmk__node_search_cluster_member);
             bool peer_won = attrd_check_for_new_writer(peer, request->xml);
 
-            if (!pcmk__str_eq(peer->name, attrd_cluster->uname,
+            if (!pcmk__str_eq(peer->name, attrd_cluster->priv->node_name,
                               pcmk__str_casei)) {
                 attrd_peer_sync_response(peer, peer_won, request->xml);
             }
@@ -314,10 +314,11 @@ attrd_broadcast_protocol(void)
     crm_xml_add(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
     crm_xml_add_int(attrd_op, PCMK__XA_ATTR_IS_PRIVATE, 1);
-    pcmk__xe_add_node(attrd_op, attrd_cluster->uname, attrd_cluster->nodeid);
+    pcmk__xe_add_node(attrd_op, attrd_cluster->priv->node_name,
+                      attrd_cluster->nodeid);
 
     crm_debug("Broadcasting attrd protocol version %s for node %s",
-              ATTRD_PROTOCOL_VERSION, attrd_cluster->uname);
+              ATTRD_PROTOCOL_VERSION, attrd_cluster->priv->node_name);
 
     attrd_send_message(NULL, attrd_op, false); /* ends up at attrd_peer_message() */
 

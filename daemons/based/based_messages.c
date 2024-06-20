@@ -124,8 +124,7 @@ send_sync_request(const char *host)
 
     crm_xml_add(sync_me, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(sync_me, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SYNC_TO_ONE);
-    crm_xml_add(sync_me, PCMK__XA_CIB_DELEGATED_FROM,
-                stand_alone? "localhost" : crm_cluster->uname);
+    crm_xml_add(sync_me, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
 
     if (host != NULL) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);

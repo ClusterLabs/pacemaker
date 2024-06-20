@@ -634,7 +634,7 @@ main(int argc, char **argv)
             crm_crit("Cannot sign in to the cluster... terminating");
             goto done;
         }
-        pcmk__str_update(&stonith_our_uname, cluster->uname);
+        pcmk__str_update(&stonith_our_uname, cluster->priv->node_name);
 
         if (!options.no_cib_connect) {
             setup_cib();
