@@ -17,7 +17,6 @@ extern "C" {
 
 void post_cache_update(int instance);
 
-const char *controld_join_phase_text(enum crm_join_phase phase);
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
 void controld_destroy_failed_sync_table(void);

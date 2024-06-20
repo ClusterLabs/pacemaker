@@ -50,6 +50,35 @@ static int current_join_id = 0;
 
 /*!
  * \internal
+ * \brief Get log-friendly string equivalent of a controller group join phase
+ *
+ * \param[in] phase  Join phase
+ *
+ * \return Log-friendly string equivalent of \p phase
+ */
+static const char *
+join_phase_text(enum crm_join_phase phase)
+{
+    switch (phase) {
+        case crm_join_nack:
+            return "nack";
+        case crm_join_none:
+            return "none";
+        case crm_join_welcomed:
+            return "welcomed";
+        case crm_join_integrated:
+            return "integrated";
+        case crm_join_finalized:
+            return "finalized";
+        case crm_join_confirmed:
+            return "confirmed";
+        default:
+            return "invalid";
+    }
+}
+
+/*!
+ * \internal
  * \brief Destroy the hash table containing failed sync nodes
  */
 void
@@ -141,23 +170,23 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
     if(phase == last) {
         crm_trace("Node %s join-%d phase is still %s "
                   QB_XS " nodeid=%" PRIu32 " source=%s",
-                  node->name, current_join_id, controld_join_phase_text(last),
+                  node->name, current_join_id, join_phase_text(last),
                   node->cluster_layer_id, source);
 
     } else if ((phase <= crm_join_none) || (phase == (last + 1))) {
         node->join = phase;
         crm_trace("Node %s join-%d phase is now %s (was %s) "
                   QB_XS " nodeid=%" PRIu32 " source=%s",
-                 node->name, current_join_id, controld_join_phase_text(phase),
-                 controld_join_phase_text(last), node->cluster_layer_id,
+                 node->name, current_join_id, join_phase_text(phase),
+                 join_phase_text(last), node->cluster_layer_id,
                  source);
 
     } else {
         crm_warn("Rejecting join-%d phase update for node %s because "
                  "can't go from %s to %s " QB_XS " nodeid=%" PRIu32
                  " source=%s",
-                 current_join_id, node->name, controld_join_phase_text(last),
-                 controld_join_phase_text(phase), node->cluster_layer_id,
+                 current_join_id, node->name, join_phase_text(last),
+                 join_phase_text(phase), node->cluster_layer_id,
                  source);
     }
 }
@@ -249,8 +278,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 
     if(user_data && member->join > crm_join_none) {
         crm_info("Not making join-%d offer to already known node %s (%s)",
-                 current_join_id, member->name,
-                 controld_join_phase_text(member->join));
+                 current_join_id, member->name, join_phase_text(member->join));
         return;
     }
 
@@ -749,8 +777,8 @@ do_dc_join_ack(long long action,
     if (peer->join != crm_join_finalized) {
         crm_info("Ignoring out-of-sequence join-%d confirmation from %s "
                  "(currently %s not %s)",
-                 join_id, join_from, controld_join_phase_text(peer->join),
-                 controld_join_phase_text(crm_join_finalized));
+                 join_id, join_from, join_phase_text(peer->join),
+                 join_phase_text(crm_join_finalized));
         goto done;
     }
 
@@ -854,8 +882,8 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
             break;
         default:
             crm_trace("Not updating non-integrated and non-nacked node %s (%s) "
-                      "for join-%d", join_to,
-                      controld_join_phase_text(join_node->join),
+                      "for join-%d",
+                      join_to, join_phase_text(join_node->join),
                       current_join_id);
             return;
     }
@@ -1034,6 +1062,6 @@ void crmd_join_phase_log(int level)
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
         do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->name,
-                   controld_join_phase_text(peer->join));
+                   join_phase_text(peer->join));
     }
 }
