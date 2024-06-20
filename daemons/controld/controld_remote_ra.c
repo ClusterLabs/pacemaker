@@ -384,7 +384,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     /* Ensure node is in the remote peer cache with lost state */
     node = pcmk__cluster_lookup_remote_node(node_name);
     CRM_CHECK(node != NULL, return);
-    pcmk__update_peer_state(__func__, node, CRM_NODE_LOST, 0);
+    pcmk__update_peer_state(__func__, node, PCMK__VALUE_LOST, 0);
 
     /* Notify DC */
     broadcast_remote_state_message(node_name, false);

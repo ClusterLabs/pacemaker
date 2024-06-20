@@ -255,7 +255,8 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     if (!pcmk__cluster_is_node_active(member)) {
         crm_info("Not making join-%d offer to inactive node %s",
                  current_join_id, pcmk__s(member->name, "with unknown name"));
-        if(member->expected == NULL && pcmk__str_eq(member->state, CRM_NODE_LOST, pcmk__str_casei)) {
+        if ((member->expected == NULL)
+            && pcmk__str_eq(member->state, PCMK__VALUE_LOST, pcmk__str_none)) {
             /* You would think this unsafe, but in fact this plus an
              * active resource is what causes it to be fenced.
              *

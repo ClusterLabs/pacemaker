@@ -239,7 +239,7 @@ pcmk__cluster_forget_remote_node(const char *node_name)
  * \param[in] node_state  XML of node state
  *
  * \return \c PCMK_VALUE_MEMBER if \c PCMK__XA_IN_CCM is true in
- *         \c PCMK__XE_NODE_STATE, or \c CRM_NODE_LOST otherwise
+ *         \c PCMK__XE_NODE_STATE, or \c PCMK__VALUE_LOST otherwise
  */
 static const char *
 remote_state_from_cib(const xmlNode *node_state)
@@ -250,7 +250,7 @@ remote_state_from_cib(const xmlNode *node_state)
                                 &in_ccm) == pcmk_rc_ok) && in_ccm) {
         return PCMK_VALUE_MEMBER;
     }
-    return CRM_NODE_LOST;
+    return PCMK__VALUE_LOST;
 }
 
 /* user data for looping through remote node xpath searches */
@@ -636,8 +636,8 @@ pcmk__cluster_set_status_callback(void (*dispatch)(enum pcmk__node_update,
  * \brief Tell the library whether to automatically reap lost nodes
  *
  * If \c true (the default), calling \c crm_update_peer_proc() will also update
- * the peer state to \c PCMK_VALUE_MEMBER or \c CRM_NODE_LOST, and updating the
- * peer state will reap peers whose state changes to anything other than
+ * the peer state to \c PCMK_VALUE_MEMBER or \c PCMK__VALUE_LOST, and updating
+ * the peer state will reap peers whose state changes to anything other than
  * \c PCMK_VALUE_MEMBER.
  *
  * Callers should leave this enabled unless they plan to manage the cache
@@ -1174,7 +1174,7 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
             if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
                 peer_state = PCMK_VALUE_MEMBER;
             } else {
-                peer_state = CRM_NODE_LOST;
+                peer_state = PCMK__VALUE_LOST;
             }
             node = pcmk__update_peer_state(__func__, node, peer_state, 0);
         }
@@ -1352,8 +1352,8 @@ pcmk__reap_unseen_nodes(uint64_t membership)
                  * remove the node from crm_peer_cache without
                  * invalidating our iterator
                  */
-                update_peer_state_iter(__func__, node, CRM_NODE_LOST,
-                                           membership, &iter);
+                update_peer_state_iter(__func__, node, PCMK__VALUE_LOST,
+                                       membership, &iter);
 
             } else {
                 crm_info("State of node %s[%" PRIu32 "] is still unknown",
