@@ -78,8 +78,6 @@ struct pcmk__cluster {
     //! \internal Do not use
     pcmk__cluster_private_t *priv;
 
-    uint32_t nodeid;
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_cluster_set_destroy_fn() to set this
     void (*destroy) (gpointer);

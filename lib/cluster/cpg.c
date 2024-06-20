@@ -860,7 +860,7 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
         goto bail;
 
     }
-    cluster->nodeid = id;
+    cluster->priv->node_id = id;
 
     retries = 0;
     cs_repeat(rc, retries, 30, cpg_join(handle, &cluster->group));

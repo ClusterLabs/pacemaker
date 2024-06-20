@@ -237,7 +237,7 @@ handle_missing_host(xmlNode *xml)
     if (host == NULL) {
         crm_trace("Inferring host");
         pcmk__xe_add_node(xml, attrd_cluster->priv->node_name,
-                          attrd_cluster->nodeid);
+                          attrd_cluster->priv->node_id);
     }
 }
 

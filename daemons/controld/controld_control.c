@@ -66,8 +66,8 @@ do_ha_control(long long action,
 
         if (registered) {
             pcmk__node_status_t *node =
-                pcmk__get_node(cluster->nodeid, cluster->priv->node_name, NULL,
-                               pcmk__node_search_cluster_member);
+                pcmk__get_node(cluster->priv->node_id, cluster->priv->node_name,
+                               NULL, pcmk__node_search_cluster_member);
 
             controld_election_init(cluster->priv->node_name);
             controld_globals.our_nodename = cluster->priv->node_name;

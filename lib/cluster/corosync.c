@@ -477,8 +477,8 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
     }
     crm_info("Connection to %s established", cluster_layer_s);
 
-    cluster->nodeid = pcmk__cpg_local_nodeid(0);
-    if (cluster->nodeid == 0) {
+    cluster->priv->node_id = pcmk__cpg_local_nodeid(0);
+    if (cluster->priv->node_id == 0) {
         crm_err("Could not determine local node ID");
         return ENXIO;
     }
@@ -490,7 +490,7 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
     }
 
     // Ensure local node always exists in peer cache
-    pcmk__get_node(cluster->nodeid, cluster->priv->node_name, NULL,
+    pcmk__get_node(cluster->priv->node_id, cluster->priv->node_name, NULL,
                    pcmk__node_search_cluster_member);
 
     return pcmk_rc_ok;
