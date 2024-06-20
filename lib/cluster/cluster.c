@@ -192,7 +192,6 @@ pcmk_cluster_free(pcmk_cluster_t *cluster)
     if (cluster == NULL) {
         return;
     }
-    free(cluster->uuid);
     free(cluster->uname);
     free(cluster->priv);
     free(cluster);

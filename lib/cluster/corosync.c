@@ -458,7 +458,6 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
 int
 pcmk__corosync_connect(pcmk_cluster_t *cluster)
 {
-    pcmk__node_status_t *peer = NULL;
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     int rc = pcmk_rc_ok;
@@ -491,9 +490,8 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
     }
 
     // Ensure local node always exists in peer cache
-    peer = pcmk__get_node(cluster->nodeid, cluster->uname, NULL,
-                          pcmk__node_search_cluster_member);
-    cluster->uuid = pcmk__corosync_uuid(peer);
+    pcmk__get_node(cluster->nodeid, cluster->uname, NULL,
+                   pcmk__node_search_cluster_member);
 
     return pcmk_rc_ok;
 }

@@ -78,7 +78,6 @@ struct pcmk__cluster {
     //! \internal Do not use
     pcmk__cluster_private_t *priv;
 
-    char *uuid;
     char *uname;
     uint32_t nodeid;
 
