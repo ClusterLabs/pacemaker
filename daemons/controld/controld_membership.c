@@ -35,8 +35,6 @@ const char *
 controld_join_phase_text(enum crm_join_phase phase)
 {
     switch (phase) {
-        case crm_join_nack_quiet:
-            return "nack_quiet";
         case crm_join_nack:
             return "nack";
         case crm_join_none:

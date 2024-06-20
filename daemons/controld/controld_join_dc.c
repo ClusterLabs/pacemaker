@@ -536,14 +536,7 @@ do_dc_join_filter_offer(long long action,
     }
 
     if (!ack_nack_bool) {
-        if (compare_version(join_version, "3.17.0") < 0) {
-            /* Clients with CRM_FEATURE_SET < 3.17.0 may respawn infinitely
-             * after a nack message, don't send one
-             */
-            crm_update_peer_join(__func__, join_node, crm_join_nack_quiet);
-        } else {
-            crm_update_peer_join(__func__, join_node, crm_join_nack);
-        }
+        crm_update_peer_join(__func__, join_node, crm_join_nack);
         pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_NACK);
 
     } else {
@@ -574,8 +567,7 @@ do_dc_join_finalize(long long action,
     int rc = pcmk_ok;
     int count_welcomed = crmd_join_phase_count(crm_join_welcomed);
     int count_finalizable = crmd_join_phase_count(crm_join_integrated)
-                            + crmd_join_phase_count(crm_join_nack)
-                            + crmd_join_phase_count(crm_join_nack_quiet);
+                            + crmd_join_phase_count(crm_join_nack);
 
     /* This we can do straight away and avoid clients timing us out
      *  while we compute the latest CIB
@@ -676,11 +668,8 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
 
         /* make sure dc_uuid is re-set to us */
         if (!check_join_state(controld_globals.fsa_state, __func__)) {
-            int count_finalizable = 0;
-
-            count_finalizable = crmd_join_phase_count(crm_join_integrated)
-                                + crmd_join_phase_count(crm_join_nack)
-                                + crmd_join_phase_count(crm_join_nack_quiet);
+            int count_finalizable = crmd_join_phase_count(crm_join_integrated)
+                                    + crmd_join_phase_count(crm_join_nack);
 
             crm_debug("Notifying %d node%s of join-%d results",
                       count_finalizable, pcmk__plural_s(count_finalizable),
@@ -862,7 +851,6 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
             integrated = true;
             break;
         case crm_join_nack:
-        case crm_join_nack_quiet:
             break;
         default:
             crm_trace("Not updating non-integrated and non-nacked node %s (%s) "
@@ -881,12 +869,6 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     crm_xml_add(tmp1, PCMK_XA_UNAME, join_to);
     fsa_cib_anon_update(PCMK_XE_NODES, tmp1);
     pcmk__xml_free(tmp1);
-
-    if (join_node->join == crm_join_nack_quiet) {
-        crm_trace("Not sending nack message to node %s with feature set older "
-                  "than 3.17.0", join_to);
-        return;
-    }
 
     join_node = pcmk__get_node(0, join_to, NULL,
                                pcmk__node_search_cluster_member);

@@ -48,12 +48,6 @@ extern unsigned long long crm_peer_seq;
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 enum crm_join_phase {
-    /* @COMPAT: crm_join_nack_quiet can be replaced by
-     * pcmk__node_status_t:user_data at a compatibility break
-     */
-    //! Not allowed to join, but don't send a nack message
-    crm_join_nack_quiet = -2,
-
     crm_join_nack       = -1,
     crm_join_none       = 0,
     crm_join_welcomed   = 1,
