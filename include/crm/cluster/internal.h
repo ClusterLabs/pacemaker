@@ -17,6 +17,10 @@
 
 #include <crm/cluster.h>
 
+#if SUPPORT_COROSYNC
+#include <corosync/cpg.h>   // cpg_name
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -103,6 +107,13 @@ struct pcmk__cluster_private {
 
     // @TODO Drop and replace with per-daemon node name global variables?
     char *node_name;                //!< Local node name at cluster layer
+
+#if SUPPORT_COROSYNC
+    /* @TODO Make these members a separate struct and use void *cluster_data
+     * here instead, to abstract the cluster layer further.
+     */
+    struct cpg_name group;          //!< Corosync CPG name
+#endif  // SUPPORT_COROSYNC
 };
 
 //! Node status data (may be a cluster node or a Pacemaker Remote node)

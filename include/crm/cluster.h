@@ -82,13 +82,7 @@ struct pcmk__cluster {
     //! \deprecated Call pcmk_cluster_set_destroy_fn() to set this
     void (*destroy) (gpointer);
 
-#  if SUPPORT_COROSYNC
-    /* @TODO When we can break public API compatibility, make these members a
-     * separate struct and use void *cluster_data here instead, to abstract the
-     * cluster layer further.
-     */
-    struct cpg_name group;
-
+#if SUPPORT_COROSYNC
     // NOTE: sbd (as of at least 1.5.2) uses this
     /*!
      * \deprecated Call pcmk_cpg_set_deliver_fn() and pcmk_cpg_set_confchg_fn()
@@ -97,7 +91,7 @@ struct pcmk__cluster {
     cpg_callbacks_t cpg;
 
     cpg_handle_t cpg_handle;
-#  endif
+#endif  // SUPPORT_COROSYNC
 };
 //!@}
 

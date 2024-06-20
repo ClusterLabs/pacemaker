@@ -816,13 +816,15 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     };
 
     cpg_evicted = false;
-    cluster->group.length = 0;
-    cluster->group.value[0] = 0;
+    cluster->priv->group.length = 0;
+    cluster->priv->group.value[0] = 0;
 
     /* group.value is char[128] */
-    strncpy(cluster->group.value, message_name, 127);
-    cluster->group.value[127] = 0;
-    cluster->group.length = 1 + QB_MIN(127, strlen(cluster->group.value));
+    strncpy(cluster->priv->group.value, message_name, 127);
+    cluster->priv->group.value[127] = 0;
+    cluster->priv->group.length = QB_MIN(127,
+                                         strlen(cluster->priv->group.value));
+    cluster->priv->group.length++;
 
     cs_repeat(rc, retries, 30, cpg_model_initialize(&handle, CPG_MODEL_V1, (cpg_model_data_t *)&cpg_model_info, NULL));
     if (rc != CS_OK) {
@@ -863,7 +865,7 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     cluster->priv->node_id = id;
 
     retries = 0;
-    cs_repeat(rc, retries, 30, cpg_join(handle, &cluster->group));
+    cs_repeat(rc, retries, 30, cpg_join(handle, &cluster->priv->group));
     if (rc != CS_OK) {
         crm_err("Could not join the CPG group '%s': %d", message_name, rc);
         goto bail;
@@ -897,7 +899,7 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
     pcmk_cpg_handle = 0;
     if (cluster->cpg_handle != 0) {
         crm_trace("Disconnecting CPG");
-        cpg_leave(cluster->cpg_handle, &cluster->group);
+        cpg_leave(cluster->cpg_handle, &cluster->priv->group);
         cpg_finalize(cluster->cpg_handle);
         cluster->cpg_handle = 0;
 
