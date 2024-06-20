@@ -159,8 +159,9 @@ typedef struct pcmk__node_status {
      * void *user_data here instead, to abstract the cluster layer further.
      */
 
-    // Only used by controller
-    enum crm_join_phase join;
+    //! Arbitrary data (must be freeable by \c free())
+    void *user_data;
+
     char *expected;
 
     time_t peer_lost;

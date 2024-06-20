@@ -44,19 +44,6 @@ extern unsigned long long crm_peer_seq;
 //! \deprecated Do not use (public access will be removed in a future release)
 #define CRM_NODE_MEMBER    "member"
 
-// @COMPAT Make this internal when we can break API backward compatibility
-//!@{
-//! \deprecated Do not use (public access will be removed in a future release)
-enum crm_join_phase {
-    crm_join_nack       = -1,
-    crm_join_none       = 0,
-    crm_join_welcomed   = 1,
-    crm_join_integrated = 2,
-    crm_join_finalized  = 3,
-    crm_join_confirmed  = 4,
-};
-//!@}
-
 //! \internal Do not use
 typedef struct pcmk__cluster_private pcmk__cluster_private_t;
 

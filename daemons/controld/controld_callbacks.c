@@ -329,7 +329,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                          node->name);
             }
             if (!is_remote) {
-                crm_update_peer_join(__func__, node, crm_join_none);
+                crm_update_peer_join(__func__, node, controld_join_none);
                 check_join_state(controld_globals.fsa_state, __func__);
             }
             abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,

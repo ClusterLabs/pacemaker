@@ -554,6 +554,7 @@ destroy_crm_node(gpointer data)
     free(node->name);
     free(node->state);
     free(node->xml_id);
+    free(node->user_data);
     free(node->expected);
     free(node->conn_host);
     free(node);

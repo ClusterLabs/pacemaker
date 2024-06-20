@@ -756,7 +756,7 @@ void crmd_peer_down(pcmk__node_status_t *peer, bool full)
         pcmk__update_peer_state(__func__, peer, CRM_NODE_LOST, 0);
         crm_update_peer_proc(__func__, peer, crm_proc_none, NULL);
     }
-    crm_update_peer_join(__func__, peer, crm_join_none);
+    crm_update_peer_join(__func__, peer, controld_join_none);
     pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
 }
 
