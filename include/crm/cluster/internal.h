@@ -18,7 +18,7 @@
 #include <crm/cluster.h>
 
 #if SUPPORT_COROSYNC
-#include <corosync/cpg.h>   // cpg_name
+#include <corosync/cpg.h>   // cpg_name, cpg_handle_t
 #endif
 
 #ifdef __cplusplus
@@ -113,6 +113,8 @@ struct pcmk__cluster_private {
      * here instead, to abstract the cluster layer further.
      */
     struct cpg_name group;          //!< Corosync CPG name
+
+    cpg_handle_t cpg_handle;        //!< Corosync CPG handle
 #endif  // SUPPORT_COROSYNC
 };
 

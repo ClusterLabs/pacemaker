@@ -20,9 +20,9 @@
 extern "C" {
 #endif
 
-#  if SUPPORT_COROSYNC
-#    include <corosync/cpg.h>
-#  endif
+#if SUPPORT_COROSYNC
+#include <corosync/cpg.h>       // cpg_callbacks_t
+#endif
 
 // @COMPAT Make this internal when we can break API backward compatibility
 //! \deprecated Do not use (public access will be removed in a future release)
@@ -89,8 +89,6 @@ struct pcmk__cluster {
      *             to set these
      */
     cpg_callbacks_t cpg;
-
-    cpg_handle_t cpg_handle;
 #endif  // SUPPORT_COROSYNC
 };
 //!@}

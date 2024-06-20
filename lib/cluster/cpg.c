@@ -269,12 +269,12 @@ pcmk_cpg_dispatch(gpointer user_data)
     cs_error_t rc = CS_OK;
     pcmk_cluster_t *cluster = (pcmk_cluster_t *) user_data;
 
-    rc = cpg_dispatch(cluster->cpg_handle, CS_DISPATCH_ONE);
+    rc = cpg_dispatch(cluster->priv->cpg_handle, CS_DISPATCH_ONE);
     if (rc != CS_OK) {
         crm_err("Connection to the CPG API failed: %s (%d)",
                 pcmk__cs_err_str(rc), rc);
-        cpg_finalize(cluster->cpg_handle);
-        cluster->cpg_handle = 0;
+        cpg_finalize(cluster->priv->cpg_handle);
+        cluster->priv->cpg_handle = 0;
         return -1;
 
     } else if (cpg_evicted) {
@@ -872,7 +872,7 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     }
 
     pcmk_cpg_handle = handle;
-    cluster->cpg_handle = handle;
+    cluster->priv->cpg_handle = handle;
     mainloop_add_fd("corosync-cpg", G_PRIORITY_MEDIUM, fd, cluster, &cpg_fd_callbacks);
 
   bail:
@@ -897,11 +897,11 @@ void
 pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
 {
     pcmk_cpg_handle = 0;
-    if (cluster->cpg_handle != 0) {
+    if (cluster->priv->cpg_handle != 0) {
         crm_trace("Disconnecting CPG");
-        cpg_leave(cluster->cpg_handle, &cluster->priv->group);
-        cpg_finalize(cluster->cpg_handle);
-        cluster->cpg_handle = 0;
+        cpg_leave(cluster->priv->cpg_handle, &cluster->priv->group);
+        cpg_finalize(cluster->priv->cpg_handle);
+        cluster->priv->cpg_handle = 0;
 
     } else {
         crm_info("No CPG connection");
