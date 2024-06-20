@@ -185,7 +185,7 @@ attrd_peer_change_cb(enum pcmk__node_update kind, pcmk__node_status_t *peer,
             crm_debug("%s node %s is now %s (was %s)",
                       (is_remote? "Remote" : "Cluster"),
                       peer->name, state_text(peer->state), state_text(data));
-            if (pcmk__str_eq(peer->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
+            if (pcmk__str_eq(peer->state, PCMK_VALUE_MEMBER, pcmk__str_none)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
                  */

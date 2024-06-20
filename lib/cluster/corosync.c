@@ -325,7 +325,7 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
         }
 
         // Update the node state (including updating membership_id to ring_id)
-        pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, ring_id);
+        pcmk__update_peer_state(__func__, node, PCMK_VALUE_MEMBER, ring_id);
     }
 
     /* Remove any peer cache entries we didn't update */
@@ -533,7 +533,7 @@ pcmk__corosync_is_peer_active(const pcmk__node_status_t *node)
         crm_trace("Corosync peer inactive: NULL");
         return false;
     }
-    if (!pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_none)) {
+    if (!pcmk__str_eq(node->state, PCMK_VALUE_MEMBER, pcmk__str_none)) {
         crm_trace("Corosync peer %s inactive: state=%s",
                   node->name, node->state);
         return false;

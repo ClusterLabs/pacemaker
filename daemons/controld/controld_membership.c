@@ -156,8 +156,8 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
 
         } else {
             pcmk__xe_set_bool_attr(node_state, PCMK__XA_IN_CCM,
-                                   pcmk__str_eq(node->state, CRM_NODE_MEMBER,
-                                                pcmk__str_casei));
+                                   pcmk__str_eq(node->state, PCMK_VALUE_MEMBER,
+                                                pcmk__str_none));
         }
     }
 

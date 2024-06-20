@@ -85,14 +85,18 @@ node_alive(const pcmk__node_status_t *node)
 {
     if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
         // Pacemaker Remote nodes can't be partially alive
-        return pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei) ? 1: -1;
+        if (pcmk__str_eq(node->state, PCMK_VALUE_MEMBER, pcmk__str_none)) {
+            return 1;
+        }
+        return -1;
 
     } else if (pcmk__cluster_is_node_active(node)) {
         // Completely up cluster node: both cluster member and peer
         return 1;
 
     } else if (!pcmk_is_set(node->processes, crm_get_cluster_proc())
-               && !pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
+               && !pcmk__str_eq(node->state, PCMK_VALUE_MEMBER,
+                                pcmk__str_none)) {
         // Completely down cluster node: neither cluster member nor peer
         return -1;
     }
@@ -162,7 +166,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                      (is_remote? "Remote" : "Cluster"),
                      node->name, state_text(node->state), state_text(data));
 
-            if (pcmk__str_eq(CRM_NODE_MEMBER, node->state, pcmk__str_casei)) {
+            if (pcmk__str_eq(PCMK_VALUE_MEMBER, node->state, pcmk__str_none)) {
                 appeared = TRUE;
                 if (!is_remote) {
                     remove_stonith_cleanup(node->name);

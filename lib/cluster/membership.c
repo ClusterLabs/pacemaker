@@ -238,7 +238,7 @@ pcmk__cluster_forget_remote_node(const char *node_name)
  *
  * \param[in] node_state  XML of node state
  *
- * \return \c CRM_NODE_MEMBER if \c PCMK__XA_IN_CCM is true in
+ * \return \c PCMK_VALUE_MEMBER if \c PCMK__XA_IN_CCM is true in
  *         \c PCMK__XE_NODE_STATE, or \c CRM_NODE_LOST otherwise
  */
 static const char *
@@ -248,7 +248,7 @@ remote_state_from_cib(const xmlNode *node_state)
 
     if ((pcmk__xe_get_bool_attr(node_state, PCMK__XA_IN_CCM,
                                 &in_ccm) == pcmk_rc_ok) && in_ccm) {
-        return CRM_NODE_MEMBER;
+        return PCMK_VALUE_MEMBER;
     }
     return CRM_NODE_LOST;
 }
@@ -636,9 +636,9 @@ pcmk__cluster_set_status_callback(void (*dispatch)(enum pcmk__node_update,
  * \brief Tell the library whether to automatically reap lost nodes
  *
  * If \c true (the default), calling \c crm_update_peer_proc() will also update
- * the peer state to \c CRM_NODE_MEMBER or \c CRM_NODE_LOST, and updating the
+ * the peer state to \c PCMK_VALUE_MEMBER or \c CRM_NODE_LOST, and updating the
  * peer state will reap peers whose state changes to anything other than
- * \c CRM_NODE_MEMBER.
+ * \c PCMK_VALUE_MEMBER.
  *
  * Callers should leave this enabled unless they plan to manage the cache
  * separately on their own.
@@ -1172,7 +1172,7 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
             const char *peer_state = NULL;
 
             if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
-                peer_state = CRM_NODE_MEMBER;
+                peer_state = PCMK_VALUE_MEMBER;
             } else {
                 peer_state = CRM_NODE_LOST;
             }
@@ -1253,7 +1253,7 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
                       QB_XS " source=%s", state, source);
               return NULL);
 
-    is_member = pcmk__str_eq(state, CRM_NODE_MEMBER, pcmk__str_casei);
+    is_member = pcmk__str_eq(state, PCMK_VALUE_MEMBER, pcmk__str_none);
     if (is_member) {
         node->when_lost = 0;
         if (membership) {

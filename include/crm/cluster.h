@@ -40,10 +40,6 @@ extern unsigned long long crm_peer_seq;
 //! \deprecated Do not use (public access will be removed in a future release)
 #define CRM_NODE_LOST      "lost"
 
-// @COMPAT Make this internal when we can break API backward compatibility
-//! \deprecated Do not use (public access will be removed in a future release)
-#define CRM_NODE_MEMBER    "member"
-
 //! \internal Do not use
 typedef struct pcmk__cluster_private pcmk__cluster_private_t;
 

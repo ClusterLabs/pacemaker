@@ -789,7 +789,7 @@ handle_remote_state(const xmlNode *msg)
     CRM_CHECK(remote_peer, return I_NULL);
 
     pcmk__update_peer_state(__func__, remote_peer,
-                            remote_is_up ? CRM_NODE_MEMBER : CRM_NODE_LOST,
+                            remote_is_up ? PCMK_VALUE_MEMBER : CRM_NODE_LOST,
                             0);
 
     conn_host = crm_element_value(msg, PCMK__XA_CONNECTION_HOST);

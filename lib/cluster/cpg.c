@@ -708,7 +708,7 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
         peer = crm_update_peer_proc(__func__, peer, crm_proc_cpg,
                                     PCMK_VALUE_ONLINE);
 
-        if (peer && peer->state && strcmp(peer->state, CRM_NODE_MEMBER)) {
+        if (peer && peer->state && strcmp(peer->state, PCMK_VALUE_MEMBER)) {
             /* The node is a CPG member, but we currently think it's not a
              * cluster member. This is possible only if auto-reaping was
              * disabled. The node may be joining, and we happened to get the CPG
@@ -727,7 +727,7 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
                 crm_warn("Node %u is member of group %s but was believed "
                          "offline",
                          member_list[i].nodeid, group_name->value);
-                pcmk__update_peer_state(__func__, peer, CRM_NODE_MEMBER, 0);
+                pcmk__update_peer_state(__func__, peer, PCMK_VALUE_MEMBER, 0);
             }
         }
 

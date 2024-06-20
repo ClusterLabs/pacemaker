@@ -303,7 +303,7 @@ remote_node_up(const char *node_name)
     CRM_CHECK(node != NULL, return);
 
     purge_remote_node_attrs(call_opt, node);
-    pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
+    pcmk__update_peer_state(__func__, node, PCMK_VALUE_MEMBER, 0);
 
     /* Apply any start state that we were given from the environment on the
      * remote node.
@@ -426,7 +426,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
             pcmk__cluster_lookup_remote_node(cmd->rsc_id);
 
         CRM_CHECK(node != NULL, return);
-        pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
+        pcmk__update_peer_state(__func__, node, PCMK_VALUE_MEMBER, 0);
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
         lrm_state_t *lrm_state = lrm_state_find(cmd->rsc_id);
