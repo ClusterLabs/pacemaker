@@ -1017,6 +1017,92 @@ class DatesRegressionTest(RegressionTest):
         ]
 
 
+class ErrorCodeRegressionTest(RegressionTest):
+    """A class for testing error code reporting."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "error_codes"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        # Legacy return codes
+        #
+        # Don't test unknown legacy code. FreeBSD includes a colon in strerror(),
+        # while other distros do not.
+        legacy_tests = [
+            make_test_group("Get legacy return code", "crm_error {fmt} 201",
+                            [Test, ValidatingTest]),
+            make_test_group("Get legacy return code (with name)", "crm_error -n {fmt} 201",
+                            [Test, ValidatingTest]),
+            make_test_group("Get multiple legacy return codes", "crm_error {fmt} 201 202",
+                            [Test, ValidatingTest]),
+            make_test_group("Get multiple legacy return codes (with names)",
+                            "crm_error -n {fmt} 201 202",
+                            [Test, ValidatingTest]),
+            # We can only rely on our custom codes, so we'll spot-check codes 201-209
+            Test("List legacy return codes (spot check)",
+                 "crm_error -l | grep 20[1-9]"),
+            ValidatingTest("List legacy return codes (spot check)",
+                           "crm_error -l --output-as=xml | grep -Ev '<result-code.*code=\"([^2]|2[^0]|20[^1-9])'"),
+            Test("List legacy return codes (spot check) (with names)",
+                 "crm_error -n -l | grep 20[1-9]"),
+            ValidatingTest("List legacy return codes (spot check) (with names)",
+                           "crm_error -n -l --output-as=xml | grep -Ev '<result-code.*code=\"([^2]|2[^0]|20[^1-9])'"),
+        ]
+
+        # Standard Pacemaker return codes
+        #
+        # Don't test positive (system) error codes, which may vary by OS
+        standard_tests = [
+            make_test_group("Get unknown Pacemaker return code", "crm_error -r {fmt} -- -10000",
+                            [Test, ValidatingTest]),
+            make_test_group("Get unknown Pacemaker return code (with name)",
+                            "crm_error -n -r {fmt} -- -10000",
+                            [Test, ValidatingTest]),
+            # Negative return codes require parsing out the "--" explicitly, so we need
+            # to test them as a separate case
+            make_test_group("Get negative Pacemaker return code", "crm_error -r {fmt} -- -1005",
+                            [Test, ValidatingTest]),
+            # Testing name lookups for negative return codes only is sufficient
+            make_test_group("Get negative Pacemaker return code (with name)",
+                            "crm_error -n -r {fmt} -- -1005",
+                            [Test, ValidatingTest]),
+            # We can only rely on our custom codes (negative and zero)
+            Test("List Pacemaker return codes (non-positive)",
+                 "crm_error -l -r | grep -E '^[[:blank:]]*(-[[:digit:]]+|0):'"),
+            ValidatingTest("List Pacemaker return codes (non-positive)",
+                           "crm_error -l -r --output-as=xml | grep -E -v '<result-code.*code=\"[[:digit:]]'"),
+            Test("List Pacemaker return codes (non-positive) (with names)",
+                 "crm_error -n -l -r | grep -E '^[[:blank:]]*(-[[:digit:]]+|0):'"),
+            ValidatingTest("List Pacemaker return codes (non-positive) (with names)",
+                           "crm_error -n -l -r --output-as=xml | grep -E -v '<result-code.*code=\"[[:digit:]]'"),
+        ]
+
+        # crm_exit_t exit codes
+        crm_exit_t_tests = [
+            make_test_group("Get unknown crm_exit_t exit code", "crm_error -X {fmt} -- -10000",
+                            [Test, ValidatingTest]),
+            make_test_group("Get unknown crm_exit_t exit code (with name)",
+                            "crm_error -n -X {fmt} -- -10000",
+                            [Test, ValidatingTest]),
+            make_test_group("Get crm_exit_t exit code", "crm_error -X {fmt} 1",
+                            [Test, ValidatingTest]),
+            make_test_group("Get crm_exit_t exit code (with name)",
+                            "crm_error -n -X {fmt} 1",
+                            [Test, ValidatingTest]),
+            make_test_group("Get all crm_exit_t exit codes", "crm_error -l -X {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Get all crm_exit_t exit codes (with name)",
+                            "crm_error -l -n -X {fmt}",
+                            [Test, ValidatingTest]),
+        ]
+
+        return legacy_tests + standard_tests + crm_exit_t_tests
+
+
 class CrmMonRegressionTest(RegressionTest):
     """A class for testing crm_mon."""
 
@@ -1614,6 +1700,7 @@ regression_classes = [
     AccessRenderRegressionTest,
     DaemonsRegressionTest,
     DatesRegressionTest,
+    ErrorCodeRegressionTest,
     CrmMonRegressionTest,
     UpgradeRegressionTest,
     RulesRegressionTest,
