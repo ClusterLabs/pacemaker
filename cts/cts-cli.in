@@ -32,6 +32,15 @@ other_tests = ["agents"]
 test_home = os.path.dirname(os.path.realpath(__file__))
 
 
+def apply_substitutions(s):
+    """Apply text substitutions to an input string and return it."""
+    substitutions = {
+        "test_home": test_home,
+    }
+
+    return s.format(**substitutions)
+
+
 def build_options():
     """Handle command line arguments."""
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
