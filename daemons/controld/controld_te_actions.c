@@ -50,7 +50,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
         GHashTableIter iter;
         pcmk__node_status_t *node = NULL;
 
-        g_hash_table_iter_init(&iter, crm_peer_cache);
+        g_hash_table_iter_init(&iter, pcmk__peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *cmd = NULL;
 

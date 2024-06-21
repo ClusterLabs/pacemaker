@@ -302,7 +302,7 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
 
     /* Reset membership_id for all cached nodes so we can tell which ones aren't
      * in the view list */
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         node->membership_id = 0;
     }
@@ -625,7 +625,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
             GHashTableIter iter;
             pcmk__node_status_t *node = NULL;
 
-            g_hash_table_iter_init(&iter, crm_peer_cache);
+            g_hash_table_iter_init(&iter, pcmk__peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
                 if ((node != NULL)
                     && (node->cluster_layer_id > 0)

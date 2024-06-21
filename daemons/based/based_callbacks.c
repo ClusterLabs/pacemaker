@@ -1196,7 +1196,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     const char *reason = NULL;
     const char *originator = crm_element_value(msg, PCMK__XA_SRC);
 
-    if (crm_peer_cache == NULL) {
+    if (pcmk__peer_cache == NULL) {
         reason = "membership not established";
         goto bail;
     }

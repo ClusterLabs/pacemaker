@@ -861,7 +861,7 @@ handle_node_list(const xmlNode *request)
 
     // Create message data for reply
     reply_data = pcmk__xe_create(NULL, PCMK_XE_NODES);
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
         xmlNode *xml = pcmk__xe_create(reply_data, PCMK_XE_NODE);
 

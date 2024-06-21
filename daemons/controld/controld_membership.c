@@ -66,7 +66,7 @@ post_cache_update(int instance)
     controld_globals.peer_seq = instance;
     crm_debug("Updated cache after membership event %d.", instance);
 
-    g_hash_table_foreach(crm_peer_cache, reap_dead_nodes, NULL);
+    g_hash_table_foreach(pcmk__peer_cache, reap_dead_nodes, NULL);
     controld_set_fsa_input_flags(R_MEMBERSHIP);
 
     if (AM_I_DC) {
@@ -246,7 +246,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             continue;
         }
 
-        g_hash_table_iter_init(&iter, crm_peer_cache);
+        g_hash_table_iter_init(&iter, pcmk__peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if ((node != NULL)
                 && pcmk__str_eq(node->xml_id, node_uuid, pcmk__str_casei)
@@ -322,7 +322,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         pcmk__node_status_t *node = NULL;
         GString *xpath = NULL;
 
-        g_hash_table_iter_init(&iter, crm_peer_cache);
+        g_hash_table_iter_init(&iter, pcmk__peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *new_node = NULL;
 
@@ -364,7 +364,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
     if ((controld_update_cib(PCMK_XE_NODES, node_list, cib_none,
                              node_list_update_callback) == pcmk_rc_ok)
-         && (crm_peer_cache != NULL) && AM_I_DC) {
+         && (pcmk__peer_cache != NULL) && AM_I_DC) {
         /*
          * There is no need to update the local CIB with our values if
          * we've not seen valid membership data
@@ -375,7 +375,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         pcmk__xml_free(node_list);
         node_list = pcmk__xe_create(NULL, PCMK_XE_STATUS);
 
-        g_hash_table_iter_init(&iter, crm_peer_cache);
+        g_hash_table_iter_init(&iter, pcmk__peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             create_node_state_update(node, flags, node_list, source);
         }

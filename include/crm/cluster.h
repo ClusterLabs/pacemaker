@@ -24,10 +24,6 @@ extern "C" {
 #include <corosync/cpg.h>       // cpg_callbacks_t
 #endif
 
-// @COMPAT Make this internal when we can break API backward compatibility
-//! \deprecated Do not use (public access will be removed in a future release)
-extern GHashTable *crm_peer_cache;
-
 //! \internal Do not use
 typedef struct pcmk__cluster_private pcmk__cluster_private_t;
 

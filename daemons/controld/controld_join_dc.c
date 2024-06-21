@@ -202,7 +202,7 @@ start_join_round(void)
 
     crm_debug("Starting new join round join-%d", current_join_id);
 
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
         crm_update_peer_join(__func__, peer, controld_join_none);
     }
@@ -328,7 +328,7 @@ do_dc_join_offer_all(long long action,
     if (cause == C_HA_MESSAGE && current_input == I_NODE_JOIN) {
         crm_info("A new node joined the cluster");
     }
-    g_hash_table_foreach(crm_peer_cache, join_make_offer, NULL);
+    g_hash_table_foreach(pcmk__peer_cache, join_make_offer, NULL);
 
     count = crmd_join_phase_count(controld_join_welcomed);
     crm_info("Waiting on join-%d requests from %d outstanding node%s",
@@ -352,7 +352,7 @@ do_dc_join_offer_one(long long action,
     if (msg_data->data == NULL) {
         crm_info("Making join-%d offers to any unconfirmed nodes "
                  "because an unknown node joined", current_join_id);
-        g_hash_table_foreach(crm_peer_cache, join_make_offer, &member);
+        g_hash_table_foreach(pcmk__peer_cache, join_make_offer, &member);
         check_join_state(cur_state, __func__);
         return;
     }
@@ -715,7 +715,7 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
             crm_debug("Notifying %d node%s of join-%d results",
                       count_finalizable, pcmk__plural_s(count_finalizable),
                       current_join_id);
-            g_hash_table_foreach(crm_peer_cache, finalize_join_for, NULL);
+            g_hash_table_foreach(pcmk__peer_cache, finalize_join_for, NULL);
         }
     }
 }
@@ -1061,7 +1061,7 @@ int crmd_join_phase_count(enum controld_join_phase phase)
     pcmk__node_status_t *peer;
     GHashTableIter iter;
 
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
         if (controld_get_join_phase(peer) == phase) {
             count++;
@@ -1075,7 +1075,7 @@ void crmd_join_phase_log(int level)
     pcmk__node_status_t *peer;
     GHashTableIter iter;
 
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
         do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->name,
                    join_phase_text(controld_get_join_phase(peer)));

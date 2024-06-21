@@ -358,7 +358,7 @@ pcmk__node_name_from_uuid(const char *uuid)
         return uuid;
     }
 
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         if (pcmk__str_eq(node->xml_id, uuid, pcmk__str_casei)) {
             return node->name;

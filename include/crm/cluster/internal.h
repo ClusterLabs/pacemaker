@@ -298,6 +298,7 @@ bool pcmk__cluster_send_message(const pcmk__node_status_t *node,
 
 // Membership
 
+extern GHashTable *pcmk__peer_cache;
 extern GHashTable *pcmk__remote_peer_cache;
 
 bool pcmk__cluster_has_quorum(void);

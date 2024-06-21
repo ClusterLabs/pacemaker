@@ -3016,7 +3016,7 @@ check_alternate_host(const char *target)
         GHashTableIter gIter;
         pcmk__node_status_t *entry = NULL;
 
-        g_hash_table_iter_init(&gIter, crm_peer_cache);
+        g_hash_table_iter_init(&gIter, pcmk__peer_cache);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
             if (fencing_peer_active(entry)
                 && !pcmk__str_eq(entry->name, target, pcmk__str_casei)) {

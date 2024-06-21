@@ -30,17 +30,15 @@
 #include <crm/stonith-ng.h>
 #include "crmcluster_private.h"
 
-/* The peer cache remembers cluster nodes that have been seen.
- * This is managed mostly automatically by libcluster, based on
- * cluster membership events.
+/* The peer cache remembers cluster nodes that have been seen. This is managed
+ * mostly automatically by libcrmcluster, based on cluster membership events.
  *
- * Because cluster nodes can have conflicting names or UUIDs,
- * the hash table key is a uniquely generated ID.
+ * Because cluster nodes can have conflicting names or UUIDs, the hash table key
+ * is a uniquely generated ID.
  *
- * @COMPAT When this is internal, rename to cluster_node_member_cache and make
- * static.
+ * @TODO Move caches to pcmk_cluster_t
  */
-GHashTable *crm_peer_cache = NULL;
+GHashTable *pcmk__peer_cache = NULL;
 
 /* The remote peer cache tracks pacemaker_remote nodes. While the
  * value has the same type as the peer cache's, it is tracked separately for
@@ -418,7 +416,7 @@ pcmk__cluster_is_node_active(const pcmk__node_status_t *node)
  * \param[in] user_data  \c pcmk__node_status_t object to match against (search
  *                       object)
  *
- * \return \c TRUE if the node entry should be removed from \c crm_peer_cache,
+ * \return \c TRUE if the node entry should be removed from \c pcmk__peer_cache,
  *         or \c FALSE otherwise
  */
 static gboolean
@@ -474,7 +472,7 @@ pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
     char *criterion = NULL; // For logging
     guint matches = 0;
 
-    if (crm_peer_cache == NULL) {
+    if (pcmk__peer_cache == NULL) {
         crm_trace("Membership cache not initialized, ignoring removal request");
         return;
     }
@@ -489,7 +487,7 @@ pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
         criterion = crm_strdup_printf("name %s", node_name);
     }
 
-    matches = g_hash_table_foreach_remove(crm_peer_cache,
+    matches = g_hash_table_foreach_remove(pcmk__peer_cache,
                                           should_forget_cluster_node, &search);
     if (matches > 0) {
         if (criterion != NULL) {
@@ -537,8 +535,8 @@ pcmk__cluster_num_active_nodes(void)
 {
     unsigned int count = 0;
 
-    if (crm_peer_cache != NULL) {
-        g_hash_table_foreach(crm_peer_cache, count_peer, &count);
+    if (pcmk__peer_cache != NULL) {
+        g_hash_table_foreach(pcmk__peer_cache, count_peer, &count);
     }
     return count;
 }
@@ -567,8 +565,8 @@ destroy_crm_node(gpointer data)
 void
 pcmk__cluster_init_node_caches(void)
 {
-    if (crm_peer_cache == NULL) {
-        crm_peer_cache = pcmk__strikey_table(free, destroy_crm_node);
+    if (pcmk__peer_cache == NULL) {
+        pcmk__peer_cache = pcmk__strikey_table(free, destroy_crm_node);
     }
 
     if (pcmk__remote_peer_cache == NULL) {
@@ -587,11 +585,11 @@ pcmk__cluster_init_node_caches(void)
 void
 pcmk__cluster_destroy_node_caches(void)
 {
-    if (crm_peer_cache != NULL) {
+    if (pcmk__peer_cache != NULL) {
         crm_trace("Destroying peer cache with %d members",
-                  g_hash_table_size(crm_peer_cache));
-        g_hash_table_destroy(crm_peer_cache);
-        crm_peer_cache = NULL;
+                  g_hash_table_size(pcmk__peer_cache));
+        g_hash_table_destroy(pcmk__peer_cache);
+        pcmk__peer_cache = NULL;
     }
 
     if (pcmk__remote_peer_cache != NULL) {
@@ -658,7 +656,7 @@ dump_peer_hash(int level, const char *caller)
     const char *id = NULL;
     pcmk__node_status_t *node = NULL;
 
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, (gpointer *) &id, (gpointer *) &node)) {
         do_crm_log(level, "%s: Node %" PRIu32 "/%s = %p - %s",
                    caller, node->cluster_layer_id, node->name, node, id);
@@ -696,7 +694,7 @@ search_cluster_member_cache(unsigned int id, const char *uname,
     pcmk__cluster_init_node_caches();
 
     if (uname != NULL) {
-        g_hash_table_iter_init(&iter, crm_peer_cache);
+        g_hash_table_iter_init(&iter, pcmk__peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (pcmk__str_eq(node->name, uname, pcmk__str_casei)) {
                 crm_trace("Name match: %s", node->name);
@@ -707,7 +705,7 @@ search_cluster_member_cache(unsigned int id, const char *uname,
     }
 
     if (id > 0) {
-        g_hash_table_iter_init(&iter, crm_peer_cache);
+        g_hash_table_iter_init(&iter, pcmk__peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (node->cluster_layer_id == id) {
                 crm_trace("ID match: %" PRIu32, node->cluster_layer_id);
@@ -717,7 +715,7 @@ search_cluster_member_cache(unsigned int id, const char *uname,
         }
 
     } else if (uuid != NULL) {
-        g_hash_table_iter_init(&iter, crm_peer_cache);
+        g_hash_table_iter_init(&iter, pcmk__peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (pcmk__str_eq(node->xml_id, uuid, pcmk__str_casei)) {
                 crm_trace("UUID match: %s", node->xml_id);
@@ -761,7 +759,8 @@ search_cluster_member_cache(unsigned int id, const char *uname,
                        "from %" PRIu32 " to %" PRIu32,
                        by_id->name, by_name->cluster_layer_id,
                        by_id->cluster_layer_id);
-            g_hash_table_foreach_remove(crm_peer_cache, hash_find_by_data, by_name);
+            g_hash_table_foreach_remove(pcmk__peer_cache, hash_find_by_data,
+                                        by_name);
 
         } else {
             crm_warn("Nodes '%s' and '%s' share the same cluster nodeid: %u %s",
@@ -785,7 +784,8 @@ search_cluster_member_cache(unsigned int id, const char *uname,
         dump_peer_hash(LOG_DEBUG, __func__);
 
         crm_info("Merging %p into %p", by_name, by_id);
-        g_hash_table_foreach_remove(crm_peer_cache, hash_find_by_data, by_name);
+        g_hash_table_foreach_remove(pcmk__peer_cache, hash_find_by_data,
+                                    by_name);
     }
 
     return node;
@@ -886,7 +886,7 @@ remove_conflicting_peer(pcmk__node_status_t *node)
         return 0;
     }
 
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &existing_node)) {
         if ((existing_node->cluster_layer_id > 0)
             && (existing_node->cluster_layer_id != node->cluster_layer_id)
@@ -974,8 +974,9 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
         node = pcmk__assert_alloc(1, sizeof(pcmk__node_status_t));
 
         crm_info("Created entry %s/%p for node %s/%u (%d total)",
-                 uniqueid, node, uname, id, 1 + g_hash_table_size(crm_peer_cache));
-        g_hash_table_replace(crm_peer_cache, uniqueid, node);
+                 uniqueid, node, uname, id,
+                 1 + g_hash_table_size(pcmk__peer_cache));
+        g_hash_table_replace(pcmk__peer_cache, uniqueid, node);
     }
 
     if ((id > 0) && (uname != NULL)
@@ -1164,7 +1165,7 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
         /* The client callback shouldn't touch the peer caches,
          * but as a safety net, bail if the peer cache was destroyed.
          */
-        if (crm_peer_cache == NULL) {
+        if (pcmk__peer_cache == NULL) {
             return NULL;
         }
 
@@ -1343,14 +1344,12 @@ pcmk__reap_unseen_nodes(uint64_t membership)
     pcmk__node_status_t *node = NULL;
 
     crm_trace("Reaping unseen nodes...");
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&node)) {
         if (node->membership_id != membership) {
             if (node->state) {
-                /*
-                 * Calling update_peer_state_iter() allows us to
-                 * remove the node from crm_peer_cache without
-                 * invalidating our iterator
+                /* Calling update_peer_state_iter() allows us to remove the node
+                 * from pcmk__peer_cache without invalidating our iterator
                  */
                 update_peer_state_iter(__func__, node, PCMK__VALUE_LOST,
                                        membership, &iter);
