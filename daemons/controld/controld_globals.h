@@ -87,6 +87,14 @@ typedef struct {
     //! Last saved cluster communication layer membership ID
     unsigned long long membership_id;
 
+    /* @TODO Figure out, document, and clean up the code involving
+     * controld_peer_seq, controld_globals.membership_id, and highest_seq. It's
+     * convoluted with no comments. It has something to do with corosync quorum
+     * notifications and the current ring ID, but it's unclear why we need three
+     * separate variables for it.
+     */
+    unsigned long long peer_seq;
+
     //! Max lifetime (in seconds) of a resource's shutdown lock to a node
     guint shutdown_lock_limit;
 

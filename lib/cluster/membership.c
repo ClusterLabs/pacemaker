@@ -67,7 +67,6 @@ GHashTable *crm_remote_peer_cache = NULL;
  */
 static GHashTable *cluster_node_cib_cache = NULL;
 
-unsigned long long crm_peer_seq = 0;
 static bool autoreap = true;
 static bool has_quorum = false;
 

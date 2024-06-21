@@ -277,10 +277,10 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (controld_globals.membership_id != crm_peer_seq) {
-        controld_globals.membership_id = crm_peer_seq;
+    if (controld_globals.membership_id != controld_globals.peer_seq) {
+        controld_globals.membership_id = controld_globals.peer_seq;
         crm_info("Making join-%d offers based on membership event %llu",
-                 current_join_id, crm_peer_seq);
+                 current_join_id, controld_globals.peer_seq);
     }
 
     if (user_data != NULL) {
@@ -976,14 +976,15 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 {
     static unsigned long long highest_seq = 0;
 
-    if (controld_globals.membership_id != crm_peer_seq) {
+    if (controld_globals.membership_id != controld_globals.peer_seq) {
         crm_debug("join-%d: Membership changed from %llu to %llu "
                   QB_XS " highest=%llu state=%s for=%s",
-                  current_join_id, controld_globals.membership_id, crm_peer_seq,
-                  highest_seq, fsa_state2string(cur_state), source);
-        if(highest_seq < crm_peer_seq) {
+                  current_join_id, controld_globals.membership_id,
+                  controld_globals.peer_seq, highest_seq,
+                  fsa_state2string(cur_state), source);
+        if (highest_seq < controld_globals.peer_seq) {
             /* Don't spam the FSA with duplicates */
-            highest_seq = crm_peer_seq;
+            highest_seq = controld_globals.peer_seq;
             register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
         }
 
