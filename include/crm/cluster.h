@@ -8,20 +8,16 @@
  */
 
 #ifndef PCMK__CRM_CLUSTER__H
-#  define PCMK__CRM_CLUSTER__H
+#define PCMK__CRM_CLUSTER__H
 
-#  include <stdint.h>           // uint32_t, uint64_t
-#  include <glib.h>             // gboolean, GHashTable
-#  include <libxml/tree.h>      // xmlNode
-#  include <crm/common/xml.h>
-#  include <crm/common/util.h>
+#include <glib.h>               // gpointer
+
+#if SUPPORT_COROSYNC
+#include <corosync/cpg.h>       // cpg_callbacks_t, etc.
+#endif
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#if SUPPORT_COROSYNC
-#include <corosync/cpg.h>       // cpg_callbacks_t
 #endif
 
 //! \internal Do not use
@@ -90,4 +86,4 @@ const char *pcmk_cluster_layer_text(enum pcmk_cluster_layer layer);
 #include <crm/cluster/compat.h>
 #endif
 
-#endif
+#endif  // PCMK__CRM_CLUSTER__H

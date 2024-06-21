@@ -14,6 +14,7 @@
 #include <stdint.h>         // uint32_t, uint64_t
 
 #include <glib.h>           // gboolean
+#include <libxml/tree.h>    // xmlNode
 
 #include <crm/cluster.h>
 
