@@ -40,7 +40,7 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
 # Individual tool tests are split out, but can also be accessed as a group with "tools"
-tools_tests = ["crm_verify"]
+tools_tests = ["crmadmin", "crm_verify"]
 # The default list of tests to run, in the order they should be run
 default_tests = ["access_render", "daemons", "dates", "error_codes"] + tools_tests + \
                 ["crm_mon", "acls", "validity", "upgrade", "rules", "feature_set"]
@@ -228,7 +228,7 @@ def sanitize_output(s):
         (r' last-rc-change=[\'"][-+A-Za-z0-9: ]*[\'"],?', r''),
         (r'.*\((parse_date)@.*\.c:[0-9][0-9]*\)', r'\1'),
         (r'.*\((pcmk__.*)@.*\.c:[0-9][0-9]*\)', r'\1'),
-        (r'request=".*(crm_[a-zA-Z0-9]*)', r'request="\1'),
+        (r'request=".*(crm_?[a-zA-Z0-9]*)', r'request="\1'),
         (r'request=".*iso8601', r'request="iso8601'),
         (r' start="[0-9][-+: 0-9]*Z*"', r' start=""'),
         (r'.*\((unpack_.*)@.*\.c:[0-9][0-9]*\)', r'\1'),
@@ -1105,6 +1105,49 @@ class ErrorCodeRegressionTest(RegressionTest):
         return legacy_tests + standard_tests + crm_exit_t_tests
 
 
+class CrmadminRegressionTest(RegressionTest):
+    """A class for testing crmadmin."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "crmadmin"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        basic_tests = [
+            make_test_group("List all nodes", "crmadmin -N {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Minimally list all nodes", "crmadmin -N -q {fmt}",
+                            [Test, ValidatingTest]),
+            Test("List all nodes as bash exports", "crmadmin -N -B"),
+            make_test_group("List cluster nodes",
+                            "crmadmin -N cluster {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("List guest nodes",
+                            "crmadmin -N guest {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("List remote nodes",
+                            "crmadmin -N remote {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("List cluster,remote nodes",
+                            "crmadmin -N cluster,remote {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("List guest,remote nodes",
+                            "crmadmin -N guest,remote {fmt}",
+                            [Test, ValidatingTest]),
+        ]
+
+        return [
+            TestGroup(basic_tests,
+                      env={"CIB_file": "{cts_cli_data}/crmadmin-cluster-remote-guest-nodes.xml"}),
+            Test("Check that CIB_file=\"-\" works", "crmadmin -N",
+                 env={"CIB_file": "-"},
+                 stdin=pathlib.Path(apply_substitutions("{cts_cli_data}/crmadmin-cluster-remote-guest-nodes.xml"))),
+        ]
+
+
 class CrmVerifyRegressionTest(RegressionTest):
     """A class for testing crm_verify."""
 
@@ -1783,6 +1826,7 @@ regression_classes = [
     DaemonsRegressionTest,
     DatesRegressionTest,
     ErrorCodeRegressionTest,
+    CrmadminRegressionTest,
     CrmVerifyRegressionTest,
     CrmMonRegressionTest,
     UpgradeRegressionTest,
