@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from functools import partial
 from multiprocessing import Pool, cpu_count
 import os
+import re
 from shutil import copyfile
 import signal
 import subprocess
@@ -59,6 +60,30 @@ def current_cib():
     """Return the complete current CIB."""
     with environ({"CIB_user": "root"}):
         return subprocess.check_output(["cibadmin", "-Q"], encoding="utf-8")
+
+
+def sanitize_output(s):
+    """
+    Replace content in the output expected to change between test runs.
+
+    This is stuff like version numbers, timestamps, source line numbers,
+    build options, system names and messages, etc.
+    """
+    # A list of tuples of regular expressions and their replacements.
+    replacements = [
+        (r' default="[^"]*"', r' default=""'),
+        (r' version="[^"]*"', r' version=""')
+    ]
+
+    new_output = []
+
+    for line in s:
+        for (pattern, repl) in replacements:
+            line = re.sub(pattern, repl, line)
+
+        new_output.append(line)
+
+    return new_output
 
 
 @contextmanager
@@ -349,6 +374,8 @@ class RegressionTest:
                 self._failures += 1
 
             self._output.extend(t.output)
+
+        self._output = sanitize_output(self._output)
 
     def write(self):
         """
