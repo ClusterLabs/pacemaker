@@ -11,6 +11,7 @@ __copyright__ = "Copyright 2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
+from contextlib import contextmanager
 import os
 
 # These imports allow running from a source checkout after running `make`.
@@ -39,6 +40,50 @@ def apply_substitutions(s):
     }
 
     return s.format(**substitutions)
+
+
+@contextmanager
+def environ(env):
+    """
+    Run code in an environment modified with the provided dict.
+
+    This context manager augments the current process environment with the provided
+    dict, allowing code to be constructed like so:
+
+        e = {"CIB_user": "xyx"}
+        with environ(e):
+            ...
+
+    When the context manager exits, the previous environment will be restored.
+
+    It is possible to remove an environment key (whether it was in the environment by
+    default, or given with a nested call to this context) by passing None for the
+    value.  Additionally, this context manager accepts None for the env parameter,
+    in which case nothing will be done.
+
+    Finally, note that values in env will be passed to apply_substitutions before
+    being set in the environment.
+    """
+    if env is None:
+        env = {}
+        original_env = {}
+    else:
+        original_env = os.environ.copy()
+
+    for k, v in env.items():
+        if v is None:
+            os.environ.pop(k)
+        else:
+            os.environ[k] = apply_substitutions(v)
+
+    try:
+        yield
+    finally:
+        for k, v in original_env.items():
+            if v is None:
+                os.environ.pop(k)
+            else:
+                os.environ[k] = v
 
 
 def build_options():
