@@ -214,6 +214,7 @@ def sanitize_output(s):
         (r'Last change: .*', r'Last change:'),
         (r'Last updated: .*', r'Last updated:'),
         (r' api-version="[^"]*"', r' api-version="X"'),
+        (r'.*\((apply_upgrade)@.*\.c:[0-9][0-9]*\)', r'\1'),
         (r'crm_feature_set="[^"]*" ', r''),
         (r'.*\((crm_time_parse_duration)@.*\.c:[0-9][0-9]*\)', r'\1'),
         (r'.*\((crm_time_parse_period)@.*\.c:[0-9][0-9]*\)', r'\1'),
@@ -1212,6 +1213,61 @@ class CrmMonRegressionTest(RegressionTest):
         ]
 
 
+class UpgradeRegressionTest(RegressionTest):
+    """A class for testing upgrading the CIB."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "upgrade"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        resource_cib = """
+<resources>
+  <primitive id="mySmartFuse" class="ocf" provider="experiment" type="SmartFuse">
+    <operations>
+      <op id="mySmartFuse-start" name="start" interval="0" timeout="40s"/>
+      <op id="mySmartFuse-monitor-inputpower" name="monitor" interval="30s">
+        <instance_attributes id="mySmartFuse-inputpower-instanceparams">
+          <nvpair id="mySmartFuse-inputpower-requires" name="requires" value="inputpower"/>
+        </instance_attributes>
+      </op>
+      <op id="mySmartFuse-monitor-outputpower" name="monitor" interval="2s">
+        <instance_attributes id="mySmartFuse-outputpower-instanceparams">
+          <nvpair id="mySmartFuse-outputpower-requires" name="requires" value="outputpower"/>
+        </instance_attributes>
+      </op>
+    </operations>
+    <instance_attributes id="mySmartFuse-params">
+      <nvpair id="mySmartFuse-params-ip" name="ip" value="192.0.2.10"/>
+    </instance_attributes>
+<!-- a bit hairy but valid -->
+    <instance_attributes id-ref="mySmartFuse-outputpower-instanceparams"/>
+  </primitive>
+</resources>
+"""
+
+        basic_tests = [
+            Test("Set stonith-enabled=false", "crm_attribute -n stonith-enabled -v false",
+                 update_cib=True),
+            Test("Configure the initial resource", "cibadmin -M -o resources -p",
+                 update_cib=True, stdin=resource_cib),
+            Test("Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping)",
+                 "cibadmin --upgrade --force -V -V",
+                 update_cib=True),
+            Test("Query a resource instance attribute (shall survive)",
+                 "crm_resource -r mySmartFuse -g requires",
+                 update_cib=True),
+        ]
+
+        return [
+            ShadowTestGroup(basic_tests, validate_with="pacemaker-2.10",
+                            env={"PCMK_trace_functions": "apply_upgrade,pcmk__update_schema"})
+        ]
+
+
 class RulesRegressionTest(RegressionTest):
     """A class for testing support for CIB rules."""
 
@@ -1559,6 +1615,7 @@ regression_classes = [
     DaemonsRegressionTest,
     DatesRegressionTest,
     CrmMonRegressionTest,
+    UpgradeRegressionTest,
     RulesRegressionTest,
     FeatureSetRegressionTest,
 ]
