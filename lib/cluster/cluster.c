@@ -354,7 +354,7 @@ pcmk__node_name_from_uuid(const char *uuid)
     CRM_CHECK(uuid != NULL, return NULL);
 
     // Remote nodes have the same uname and uuid
-    if (g_hash_table_lookup(crm_remote_peer_cache, uuid)) {
+    if (g_hash_table_lookup(pcmk__remote_peer_cache, uuid)) {
         return uuid;
     }
 

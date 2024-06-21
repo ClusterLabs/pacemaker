@@ -862,7 +862,8 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                  * This allows it to learn more quickly if this node does have
                  * the information.
                  */
-                if (g_hash_table_lookup(crm_remote_peer_cache, uuid) != NULL) {
+                if (g_hash_table_lookup(pcmk__remote_peer_cache,
+                                        uuid) != NULL) {
                     is_remote_node = TRUE;
                 }
 

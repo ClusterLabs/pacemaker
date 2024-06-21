@@ -236,7 +236,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
             value = PCMK_XA_VALUE "++";
         }
 
-        if (g_hash_table_lookup(crm_remote_peer_cache, event_node_uuid)) {
+        if (g_hash_table_lookup(pcmk__remote_peer_cache, event_node_uuid)) {
             opts |= pcmk__node_attr_remote;
         }
 

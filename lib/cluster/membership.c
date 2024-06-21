@@ -42,22 +42,23 @@
  */
 GHashTable *crm_peer_cache = NULL;
 
-/*
- * The remote peer cache tracks pacemaker_remote nodes. While the
+/* The remote peer cache tracks pacemaker_remote nodes. While the
  * value has the same type as the peer cache's, it is tracked separately for
  * three reasons: pacemaker_remote nodes can't have conflicting names or UUIDs,
  * so the name (which is also the UUID) is used as the hash table key; there
  * is no equivalent of membership events, so management is not automatic; and
  * most users of the peer cache need to exclude pacemaker_remote nodes.
  *
- * That said, using a single cache would be more logical and less error-prone,
- * so it would be a good idea to merge them one day.
+ * @TODO That said, using a single cache would be more logical and less
+ * error-prone, so it would be a good idea to merge them one day.
  *
- * libcluster provides two avenues for populating the cache:
+ * libcrmcluster provides two avenues for populating the cache:
  * pcmk__cluster_lookup_remote_node() and pcmk__cluster_forget_remote_node()
  * directly manage it, while refresh_remote_nodes() populates it via the CIB.
+ *
+ * @TODO Move caches to pcmk_cluster_t
  */
-GHashTable *crm_remote_peer_cache = NULL;
+GHashTable *pcmk__remote_peer_cache = NULL;
 
 /*
  * The CIB cluster node cache tracks cluster nodes that have been seen in
@@ -124,10 +125,10 @@ pcmk__cluster_set_quorum(bool quorate)
 unsigned int
 pcmk__cluster_num_remote_nodes(void)
 {
-    if (crm_remote_peer_cache == NULL) {
+    if (pcmk__remote_peer_cache == NULL) {
         return 0U;
     }
-    return g_hash_table_size(crm_remote_peer_cache);
+    return g_hash_table_size(pcmk__remote_peer_cache);
 }
 
 /*!
@@ -177,7 +178,7 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
     }
 
     /* Return existing cache entry if one exists */
-    node = g_hash_table_lookup(crm_remote_peer_cache, node_name);
+    node = g_hash_table_lookup(pcmk__remote_peer_cache, node_name);
     if (node) {
         free(node_name_copy);
         return node;
@@ -201,7 +202,7 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
     }
 
     /* Add the new entry to the cache */
-    g_hash_table_replace(crm_remote_peer_cache, node->xml_id, node);
+    g_hash_table_replace(pcmk__remote_peer_cache, node->xml_id, node);
     crm_trace("added %s to remote cache", node_name);
 
     /* Update the entry's uname, ensuring peer status callbacks are called */
@@ -225,9 +226,9 @@ pcmk__cluster_forget_remote_node(const char *node_name)
     /* Do a lookup first, because node_name could be a pointer within the entry
      * being removed -- we can't log it *after* removing it.
      */
-    if (g_hash_table_lookup(crm_remote_peer_cache, node_name) != NULL) {
+    if (g_hash_table_lookup(pcmk__remote_peer_cache, node_name) != NULL) {
         crm_trace("Removing %s from Pacemaker Remote node cache", node_name);
-        g_hash_table_remove(crm_remote_peer_cache, node_name);
+        g_hash_table_remove(pcmk__remote_peer_cache, node_name);
     }
 }
 
@@ -281,7 +282,7 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
     }
 
     /* Check whether cache already has entry for node */
-    node = g_hash_table_lookup(crm_remote_peer_cache, remote);
+    node = g_hash_table_lookup(pcmk__remote_peer_cache, remote);
 
     if (node == NULL) {
         /* Node is not in cache, so add a new entry for it */
@@ -331,7 +332,7 @@ refresh_remote_nodes(xmlNode *cib)
      * so that later we can remove any that weren't in the CIB.
      * We don't empty the cache, because we need to detect changes in state.
      */
-    g_hash_table_foreach(crm_remote_peer_cache, mark_dirty, NULL);
+    g_hash_table_foreach(pcmk__remote_peer_cache, mark_dirty, NULL);
 
     /* Look for guest nodes and remote nodes in the status section */
     data.field = PCMK_XA_ID;
@@ -355,7 +356,7 @@ refresh_remote_nodes(xmlNode *cib)
                              remote_cache_refresh_helper, &data);
 
     /* Remove all old cache entries that weren't seen in the CIB */
-    g_hash_table_foreach_remove(crm_remote_peer_cache, is_dirty, NULL);
+    g_hash_table_foreach_remove(pcmk__remote_peer_cache, is_dirty, NULL);
 }
 
 /*!
@@ -570,8 +571,8 @@ pcmk__cluster_init_node_caches(void)
         crm_peer_cache = pcmk__strikey_table(free, destroy_crm_node);
     }
 
-    if (crm_remote_peer_cache == NULL) {
-        crm_remote_peer_cache = pcmk__strikey_table(NULL, destroy_crm_node);
+    if (pcmk__remote_peer_cache == NULL) {
+        pcmk__remote_peer_cache = pcmk__strikey_table(NULL, destroy_crm_node);
     }
 
     if (cluster_node_cib_cache == NULL) {
@@ -593,11 +594,11 @@ pcmk__cluster_destroy_node_caches(void)
         crm_peer_cache = NULL;
     }
 
-    if (crm_remote_peer_cache != NULL) {
+    if (pcmk__remote_peer_cache != NULL) {
         crm_trace("Destroying remote peer cache with %d members",
                   pcmk__cluster_num_remote_nodes());
-        g_hash_table_destroy(crm_remote_peer_cache);
-        crm_remote_peer_cache = NULL;
+        g_hash_table_destroy(pcmk__remote_peer_cache);
+        pcmk__remote_peer_cache = NULL;
     }
 
     if (cluster_node_cib_cache != NULL) {
@@ -810,7 +811,7 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
     pcmk__cluster_init_node_caches();
 
     if ((uname != NULL) && pcmk_is_set(flags, pcmk__node_search_remote)) {
-        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
+        node = g_hash_table_lookup(pcmk__remote_peer_cache, uname);
     }
 
     if ((node == NULL)
@@ -854,7 +855,7 @@ pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
 
     // Purge from Pacemaker Remote node cache
     if ((node_name != NULL)
-        && (g_hash_table_lookup(crm_remote_peer_cache, node_name) != NULL)) {
+        && (g_hash_table_lookup(pcmk__remote_peer_cache, node_name) != NULL)) {
         /* node_name could be a pointer into the cache entry being purged,
          * so reassign it to a copy before the original gets freed
          */
@@ -862,7 +863,7 @@ pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
         node_name = node_name_copy;
 
         crm_trace("Purging %s from Pacemaker Remote node cache", node_name);
-        g_hash_table_remove(crm_remote_peer_cache, node_name);
+        g_hash_table_remove(pcmk__remote_peer_cache, node_name);
     }
 
     pcmk__cluster_forget_cluster_node(node_id, node_name);
@@ -939,7 +940,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
 
     // Check the Pacemaker Remote node cache first
     if (pcmk_is_set(flags, pcmk__node_search_remote)) {
-        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
+        node = g_hash_table_lookup(pcmk__remote_peer_cache, uname);
         if (node != NULL) {
             return node;
         }

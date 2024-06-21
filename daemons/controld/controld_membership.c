@@ -380,8 +380,8 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
             create_node_state_update(node, flags, node_list, source);
         }
 
-        if (crm_remote_peer_cache) {
-            g_hash_table_iter_init(&iter, crm_remote_peer_cache);
+        if (pcmk__remote_peer_cache != NULL) {
+            g_hash_table_iter_init(&iter, pcmk__remote_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
                 create_node_state_update(node, flags, node_list, source);
             }

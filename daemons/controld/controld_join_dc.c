@@ -949,7 +949,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
             pcmk__node_status_t *node = NULL;
             xmlNode *remotes = pcmk__xe_create(acknak, PCMK_XE_NODES);
 
-            g_hash_table_iter_init(&iter, crm_remote_peer_cache);
+            g_hash_table_iter_init(&iter, pcmk__remote_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
                 xmlNode *remote = NULL;
 
