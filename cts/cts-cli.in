@@ -39,9 +39,11 @@ from pacemaker._cts.validate import validate
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
+# Individual tool tests are split out, but can also be accessed as a group with "tools"
+tools_tests = ["crm_verify"]
 # The default list of tests to run, in the order they should be run
-default_tests = ["access_render", "daemons", "dates", "error_codes", "tools",
-                 "crm_mon", "acls", "validity", "upgrade", "rules", "feature_set"]
+default_tests = ["access_render", "daemons", "dates", "error_codes"] + tools_tests + \
+                ["crm_mon", "acls", "validity", "upgrade", "rules", "feature_set"]
 other_tests = ["agents"]
 
 # The directory containing this program
@@ -1103,6 +1105,61 @@ class ErrorCodeRegressionTest(RegressionTest):
         return legacy_tests + standard_tests + crm_exit_t_tests
 
 
+class CrmVerifyRegressionTest(RegressionTest):
+    """A class for testing crm_verify."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "crm_verify"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        invalid_tests = [
+            Test("Verbosely verify a file-specified configuration with an unallowed fencing level ID",
+                 "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_fencing_topology.xml --verbose",
+                 expected_rc=ExitStatus.CONFIG),
+            make_test_group("Verify a file-specified invalid configuration",
+                            "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml {fmt}",
+                            [Test, ValidatingTest],
+                            expected_rc=ExitStatus.CONFIG),
+            make_test_group("Verify a file-specified invalid configuration (verbose)",
+                            "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --verbose {fmt}",
+                            [Test, ValidatingTest],
+                            expected_rc=ExitStatus.CONFIG),
+            make_test_group("Verify a file-specified invalid configuration (quiet)",
+                            "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --quiet {fmt}",
+                            [Test, ValidatingTest],
+                            expected_rc=ExitStatus.CONFIG),
+            ValidatingTest("Verify another file-specified invalid configuration",
+                           "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_no_stonith.xml --output-as=xml",
+                           expected_rc=ExitStatus.CONFIG),
+        ]
+
+        with open("%s/cli/crm_mon.xml" % test_home, encoding="utf-8") as f:
+            cib_contents = f.read()
+
+        valid_tests = [
+            ValidatingTest("Verify a file-specified valid configuration",
+                           "crm_verify --xml-file {cts_cli_data}/crm_mon.xml --output-as=xml"),
+            ValidatingTest("Verify a piped-in valid configuration",
+                           "crm_verify -p --output-as=xml",
+                           stdin=pathlib.Path(apply_substitutions("{cts_cli_data}/crm_mon.xml"))),
+            ValidatingTest("Verbosely verify a file-specified valid configuration",
+                           "crm_verify --xml-file {cts_cli_data}/crm_mon.xml --output-as=xml --verbose"),
+            ValidatingTest("Verbosely verify a piped-in valid configuration",
+                           "crm_verify -p --output-as=xml --verbose",
+                           stdin=pathlib.Path(apply_substitutions("{cts_cli_data}/crm_mon.xml"))),
+            ValidatingTest("Verify a string-supplied valid configuration",
+                           "crm_verify -X '%s' --output-as=xml" % cib_contents),
+            ValidatingTest("Verbosely verify a string-supplied valid configuration",
+                           "crm_verify -X '%s' --output-as=xml --verbose" % cib_contents),
+        ]
+
+        return invalid_tests + valid_tests
+
+
 class CrmMonRegressionTest(RegressionTest):
     """A class for testing crm_mon."""
 
@@ -1558,7 +1615,7 @@ def build_options():
                         help="The number of tests to run simultaneously")
     parser.add_argument("-p", "--path", metavar="DIR", action="append",
                         help="Look for executables in DIR (may be specified multiple times)")
-    parser.add_argument("-r", "--run-only", metavar="TEST", choices=default_tests + other_tests,
+    parser.add_argument("-r", "--run-only", metavar="TEST", choices=default_tests + ["tools"] + other_tests,
                         action="append",
                         help="Run only specified tests (may be specified multiple times)")
     parser.add_argument("-s", "--save", action="store_true",
@@ -1726,6 +1783,7 @@ regression_classes = [
     DaemonsRegressionTest,
     DatesRegressionTest,
     ErrorCodeRegressionTest,
+    CrmVerifyRegressionTest,
     CrmMonRegressionTest,
     UpgradeRegressionTest,
     RulesRegressionTest,
@@ -1745,6 +1803,9 @@ def main():
     # were requested on the command line.  If empty, this defaults to default_tests.
     if not opts.run_only:
         opts.run_only = default_tests
+
+    if opts.run_only == ["tools"]:
+        opts.run_only = tools_tests
 
     regs = []
     for cls in regression_classes:
