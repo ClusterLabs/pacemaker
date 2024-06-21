@@ -1522,6 +1522,31 @@ class FeatureSetRegressionTest(RegressionTest):
         ]
 
 
+# Tests that depend on resource agents and must be run in an installed
+# environment
+class AgentRegressionTest(RegressionTest):
+    """A class for testing resource agents."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "agents"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        return [
+            make_test_group("Validate a valid resource configuration",
+                            "crm_resource --validate --class ocf --provider pacemaker --agent Dummy {fmt}",
+                            [Test, ValidatingTest]),
+            # Make the Dummy configuration invalid (op_sleep can't be a generic string)
+            make_test_group("Validate an invalid resource configuration",
+                            "crm_resource --validate --class ocf --provider pacemaker --agent Dummy {fmt}",
+                            [Test, ValidatingTest],
+                            env={"OCF_RESKEY_op_sleep": "asdf"}),
+        ]
+
+
 def build_options():
     """Handle command line arguments."""
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1705,6 +1730,7 @@ regression_classes = [
     UpgradeRegressionTest,
     RulesRegressionTest,
     FeatureSetRegressionTest,
+    AgentRegressionTest,
 ]
 
 
