@@ -40,7 +40,7 @@ RNG_VALIDATOR="xmllint --noout --relaxng"
 XSLT_PROCESSOR="xsltproc --nonet"
 
 # Available test suites
-tests="test2to3"
+tests="test2to3 test3to4"
 
 #
 # commons
@@ -247,7 +247,7 @@ test_runner_upgrade() {
     local rc=0
 
     local transforms=$(ls "$PCMK_schema_directory"/upgrade-$template-*.xsl  \
-                        | sort -n)
+                        | grep -v "upgrade-$template-common" | sort -n)
     local input=$(mktemp)
 
     cp "$source" "$input"
@@ -372,6 +372,36 @@ test2to3() {
                 *\ -C\ *) test_cleaner;;
                 *\ -X\ *) test_explanation -o=2.10;;
                 *) test_runner -o=2.10 -t=3.0 "$@" || return $?;;
+            esac; }
+}
+
+#
+# -C
+# -X
+# stdin: granular test specification(s) if any
+#
+
+test3to4() {
+    local spec=""
+    local pattern=""
+
+    while read spec; do
+        spec=${spec%.xml}
+        spec=${spec%\*}
+        pattern="$pattern -name ${spec}*.xml -o"
+    done
+
+    if [ -n "$pattern" ]; then
+        pattern="( ${pattern%-o} )"
+    fi
+
+    find "$suites_dir/test-3/xml" -name xml -o -type d -prune    \
+            -o -name '*.xml' $pattern -print \
+        | env LC_ALL=C sort \
+        | { case " $* " in
+                *\ -C\ *) test_cleaner;;
+                *\ -X\ *) test_explanation -o=3.10;;
+                *) test_runner -o=3.10 -t=4.0 "$@" || return $?;;
             esac; }
 }
 
