@@ -33,7 +33,7 @@
 
 #include <gnutls/gnutls.h>
 
-#define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->uname)
+#define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->priv->node_name)
 
 // CIB-specific client flags
 enum cib_client_flags {

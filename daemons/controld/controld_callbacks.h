@@ -16,7 +16,7 @@ extern void crmd_ha_msg_filter(xmlNode * msg);
 
 extern gboolean crm_fsa_trigger(gpointer user_data);
 
-extern void peer_update_callback(enum crm_status_type type,
-                                 pcmk__node_status_t *node, const void *data);
+void peer_update_callback(enum pcmk__node_update type,
+                          pcmk__node_status_t *node, const void *data);
 
 #endif

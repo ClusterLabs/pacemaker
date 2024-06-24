@@ -55,7 +55,7 @@ stonith_send_broadcast_history(xmlNode *history,
         crm_xml_add(call_data, PCMK__XA_ST_TARGET, target);
     }
 
-    pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, bcast);
+    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, bcast);
 
     pcmk__xml_free(bcast);
 }
@@ -489,8 +489,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
             node = pcmk__search_node_caches(nodeid, NULL,
                                             pcmk__node_search_any
                                             |pcmk__node_search_cluster_cib);
-            if (node) {
-                target = node->uname;
+            if (node != NULL) {
+                target = node->name;
             }
         }
     }

@@ -383,7 +383,7 @@ cib_digester_cb(gpointer data)
         crm_xml_add(ping, PCMK__XA_CIB_PING_ID, buffer);
 
         crm_xml_add(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-        pcmk__cluster_send_message(NULL, crm_msg_cib, ping);
+        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_based, ping);
 
         pcmk__xml_free(ping);
     }
@@ -708,7 +708,7 @@ forward_request(xmlNode *request)
     if (host != NULL) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    pcmk__cluster_send_message(peer, crm_msg_cib, request);
+    pcmk__cluster_send_message(peer, pcmk__cluster_msg_based, request);
 
     // Return the request to its original state
     pcmk__xe_remove_attr(request, PCMK__XA_CIB_DELEGATED_FROM);
@@ -729,7 +729,7 @@ send_peer_reply(xmlNode *msg, const char *originator)
 
     crm_trace("Sending request result to %s only", originator);
     crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
-    pcmk__cluster_send_message(node, crm_msg_cib, msg);
+    pcmk__cluster_send_message(node, pcmk__cluster_msg_based, msg);
 }
 
 /*!
@@ -1196,7 +1196,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     const char *reason = NULL;
     const char *originator = crm_element_value(msg, PCMK__XA_SRC);
 
-    if (crm_peer_cache == NULL) {
+    if (pcmk__peer_cache == NULL) {
         reason = "membership not established";
         goto bail;
     }
@@ -1252,7 +1252,7 @@ initiate_exit(void)
     crm_xml_add(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
 
-    pcmk__cluster_send_message(NULL, crm_msg_cib, leaving);
+    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_based, leaving);
     pcmk__xml_free(leaving);
 
     g_timeout_add(EXIT_ESCALATION_MS, cib_force_exit, NULL);

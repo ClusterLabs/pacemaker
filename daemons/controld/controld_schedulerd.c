@@ -505,7 +505,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         controld_expect_sched_reply(ref);
         crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, "
                   "quorate=%s",
-                  fsa_pe_query, controld_globals.fsa_pe_ref, crm_peer_seq,
+                  fsa_pe_query, controld_globals.fsa_pe_ref,
+                  controld_globals.peer_seq,
                   pcmk__flag_text(controld_globals.flags, controld_has_quorum));
     }
 }

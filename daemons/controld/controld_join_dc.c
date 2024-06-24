@@ -50,6 +50,35 @@ static int current_join_id = 0;
 
 /*!
  * \internal
+ * \brief Get log-friendly string equivalent of a controller group join phase
+ *
+ * \param[in] phase  Join phase
+ *
+ * \return Log-friendly string equivalent of \p phase
+ */
+static const char *
+join_phase_text(enum controld_join_phase phase)
+{
+    switch (phase) {
+        case controld_join_nack:
+            return "nack";
+        case controld_join_none:
+            return "none";
+        case controld_join_welcomed:
+            return "welcomed";
+        case controld_join_integrated:
+            return "integrated";
+        case controld_join_finalized:
+            return "finalized";
+        case controld_join_confirmed:
+            return "confirmed";
+        default:
+            return "invalid";
+    }
+}
+
+/*!
+ * \internal
  * \brief Destroy the hash table containing failed sync nodes
  */
 void
@@ -125,41 +154,44 @@ lookup_failed_sync_node(const char *node_name, gint *join_id)
 
 void
 crm_update_peer_join(const char *source, pcmk__node_status_t *node,
-                     enum crm_join_phase phase)
+                     enum controld_join_phase phase)
 {
-    enum crm_join_phase last = 0;
+    enum controld_join_phase last = controld_get_join_phase(node);
 
     CRM_CHECK(node != NULL, return);
 
     /* Remote nodes do not participate in joins */
-    if (pcmk_is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
         return;
     }
 
-    last = node->join;
-
-    if(phase == last) {
+    if (phase == last) {
         crm_trace("Node %s join-%d phase is still %s "
                   QB_XS " nodeid=%" PRIu32 " source=%s",
-                  node->uname, current_join_id, controld_join_phase_text(last),
+                  node->name, current_join_id, join_phase_text(last),
                   node->cluster_layer_id, source);
+        return;
+    }
 
-    } else if ((phase <= crm_join_none) || (phase == (last + 1))) {
-        node->join = phase;
+    if ((phase <= controld_join_none) || (phase == (last + 1))) {
+        struct controld_node_status_data *data =
+            pcmk__assert_alloc(1, sizeof(struct controld_node_status_data));
+
+        data->join_phase = phase;
+        node->user_data = data;
+
         crm_trace("Node %s join-%d phase is now %s (was %s) "
                   QB_XS " nodeid=%" PRIu32 " source=%s",
-                 node->uname, current_join_id, controld_join_phase_text(phase),
-                 controld_join_phase_text(last), node->cluster_layer_id,
-                 source);
-
-    } else {
-        crm_warn("Rejecting join-%d phase update for node %s because "
-                 "can't go from %s to %s " QB_XS " nodeid=%" PRIu32
-                 " source=%s",
-                 current_join_id, node->uname, controld_join_phase_text(last),
-                 controld_join_phase_text(phase), node->cluster_layer_id,
-                 source);
+                  node->name, current_join_id, join_phase_text(phase),
+                  join_phase_text(last), node->cluster_layer_id,
+                  source);
+        return;
     }
+
+    crm_warn("Rejecting join-%d phase update for node %s because can't go from "
+             "%s to %s " QB_XS " nodeid=%" PRIu32 " source=%s",
+             current_join_id, node->name, join_phase_text(last),
+             join_phase_text(phase), node->cluster_layer_id, source);
 }
 
 static void
@@ -170,9 +202,9 @@ start_join_round(void)
 
     crm_debug("Starting new join round join-%d", current_join_id);
 
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
-        crm_update_peer_join(__func__, peer, crm_join_none);
+        crm_update_peer_join(__func__, peer, controld_join_none);
     }
     if (max_generation_from != NULL) {
         free(max_generation_from);
@@ -213,15 +245,18 @@ create_dc_message(const char *join_op, const char *host_to)
 static void
 join_make_offer(gpointer key, gpointer value, gpointer user_data)
 {
+    /* @TODO We don't use user_data except to distinguish one particular call
+     * from others. Make this clearer.
+     */
     xmlNode *offer = NULL;
     pcmk__node_status_t *member = (pcmk__node_status_t *) value;
 
     CRM_ASSERT(member != NULL);
     if (!pcmk__cluster_is_node_active(member)) {
         crm_info("Not making join-%d offer to inactive node %s",
-                 current_join_id,
-                 (member->uname? member->uname : "with unknown name"));
-        if(member->expected == NULL && pcmk__str_eq(member->state, CRM_NODE_LOST, pcmk__str_casei)) {
+                 current_join_id, pcmk__s(member->name, "with unknown name"));
+        if ((member->expected == NULL)
+            && pcmk__str_eq(member->state, PCMK__VALUE_LOST, pcmk__str_none)) {
             /* You would think this unsafe, but in fact this plus an
              * active resource is what causes it to be fenced.
              *
@@ -236,38 +271,41 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (member->uname == NULL) {
+    if (member->name == NULL) {
         crm_info("Not making join-%d offer to node uuid %s with unknown name",
-                 current_join_id, member->uuid);
+                 current_join_id, member->xml_id);
         return;
     }
 
-    if (controld_globals.membership_id != crm_peer_seq) {
-        controld_globals.membership_id = crm_peer_seq;
+    if (controld_globals.membership_id != controld_globals.peer_seq) {
+        controld_globals.membership_id = controld_globals.peer_seq;
         crm_info("Making join-%d offers based on membership event %llu",
-                 current_join_id, crm_peer_seq);
+                 current_join_id, controld_globals.peer_seq);
     }
 
-    if(user_data && member->join > crm_join_none) {
-        crm_info("Not making join-%d offer to already known node %s (%s)",
-                 current_join_id, member->uname,
-                 controld_join_phase_text(member->join));
-        return;
+    if (user_data != NULL) {
+        enum controld_join_phase phase = controld_get_join_phase(member);
+
+        if (phase > controld_join_none) {
+            crm_info("Not making join-%d offer to already known node %s (%s)",
+                     current_join_id, member->name, join_phase_text(phase));
+            return;
+        }
     }
 
     crm_update_peer_join(__func__, (pcmk__node_status_t*) member,
-                         crm_join_none);
+                         controld_join_none);
 
-    offer = create_dc_message(CRM_OP_JOIN_OFFER, member->uname);
+    offer = create_dc_message(CRM_OP_JOIN_OFFER, member->name);
 
     // Advertise our feature set so the joining node can bail if not compatible
     crm_xml_add(offer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
-    crm_info("Sending join-%d offer to %s", current_join_id, member->uname);
-    pcmk__cluster_send_message(member, crm_msg_crmd, offer);
+    crm_info("Sending join-%d offer to %s", current_join_id, member->name);
+    pcmk__cluster_send_message(member, pcmk__cluster_msg_controld, offer);
     pcmk__xml_free(offer);
 
-    crm_update_peer_join(__func__, member, crm_join_welcomed);
+    crm_update_peer_join(__func__, member, controld_join_welcomed);
 }
 
 /*	 A_DC_JOIN_OFFER_ALL	*/
@@ -290,9 +328,9 @@ do_dc_join_offer_all(long long action,
     if (cause == C_HA_MESSAGE && current_input == I_NODE_JOIN) {
         crm_info("A new node joined the cluster");
     }
-    g_hash_table_foreach(crm_peer_cache, join_make_offer, NULL);
+    g_hash_table_foreach(pcmk__peer_cache, join_make_offer, NULL);
 
-    count = crmd_join_phase_count(crm_join_welcomed);
+    count = crmd_join_phase_count(controld_join_welcomed);
     crm_info("Waiting on join-%d requests from %d outstanding node%s",
              current_join_id, count, pcmk__plural_s(count));
 
@@ -314,7 +352,7 @@ do_dc_join_offer_one(long long action,
     if (msg_data->data == NULL) {
         crm_info("Making join-%d offers to any unconfirmed nodes "
                  "because an unknown node joined", current_join_id);
-        g_hash_table_foreach(crm_peer_cache, join_make_offer, &member);
+        g_hash_table_foreach(pcmk__peer_cache, join_make_offer, &member);
         check_join_state(cur_state, __func__);
         return;
     }
@@ -337,7 +375,7 @@ do_dc_join_offer_one(long long action,
      * due course, or we can re-store the original offer on the client.
      */
 
-    crm_update_peer_join(__func__, member, crm_join_none);
+    crm_update_peer_join(__func__, member, controld_join_none);
     join_make_offer(NULL, member, NULL);
 
     /* If the offer isn't to the local node, make an offer to the local node as
@@ -355,7 +393,7 @@ do_dc_join_offer_one(long long action,
     abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart, "Node join",
                      NULL);
 
-    count = crmd_join_phase_count(crm_join_welcomed);
+    count = crmd_join_phase_count(controld_join_welcomed);
     crm_info("Waiting on join-%d requests from %d outstanding node%s",
              current_join_id, count, pcmk__plural_s(count));
 
@@ -537,28 +575,21 @@ do_dc_join_filter_offer(long long action,
     }
 
     if (!ack_nack_bool) {
-        if (compare_version(join_version, "3.17.0") < 0) {
-            /* Clients with CRM_FEATURE_SET < 3.17.0 may respawn infinitely
-             * after a nack message, don't send one
-             */
-            crm_update_peer_join(__func__, join_node, crm_join_nack_quiet);
-        } else {
-            crm_update_peer_join(__func__, join_node, crm_join_nack);
-        }
+        crm_update_peer_join(__func__, join_node, controld_join_nack);
         pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_NACK);
 
     } else {
-        crm_update_peer_join(__func__, join_node, crm_join_integrated);
+        crm_update_peer_join(__func__, join_node, controld_join_integrated);
         pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
     }
 
-    count = crmd_join_phase_count(crm_join_integrated);
+    count = crmd_join_phase_count(controld_join_integrated);
     crm_debug("%d node%s currently integrated in join-%d",
               count, pcmk__plural_s(count), join_id);
 
     if (check_join_state(cur_state, __func__) == FALSE) {
         // Don't waste time by invoking the scheduler yet
-        count = crmd_join_phase_count(crm_join_welcomed);
+        count = crmd_join_phase_count(controld_join_welcomed);
         crm_debug("Waiting on join-%d requests from %d outstanding node%s",
                   join_id, count, pcmk__plural_s(count));
     }
@@ -573,10 +604,9 @@ do_dc_join_finalize(long long action,
 {
     char *sync_from = NULL;
     int rc = pcmk_ok;
-    int count_welcomed = crmd_join_phase_count(crm_join_welcomed);
-    int count_finalizable = crmd_join_phase_count(crm_join_integrated)
-                            + crmd_join_phase_count(crm_join_nack)
-                            + crmd_join_phase_count(crm_join_nack_quiet);
+    int count_welcomed = crmd_join_phase_count(controld_join_welcomed);
+    int count_finalizable = crmd_join_phase_count(controld_join_integrated)
+                            + crmd_join_phase_count(controld_join_nack);
 
     /* This we can do straight away and avoid clients timing us out
      *  while we compute the latest CIB
@@ -679,14 +709,13 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
         if (!check_join_state(controld_globals.fsa_state, __func__)) {
             int count_finalizable = 0;
 
-            count_finalizable = crmd_join_phase_count(crm_join_integrated)
-                                + crmd_join_phase_count(crm_join_nack)
-                                + crmd_join_phase_count(crm_join_nack_quiet);
+            count_finalizable = crmd_join_phase_count(controld_join_integrated)
+                                + crmd_join_phase_count(controld_join_nack);
 
             crm_debug("Notifying %d node%s of join-%d results",
                       count_finalizable, pcmk__plural_s(count_finalizable),
                       current_join_id);
-            g_hash_table_foreach(crm_peer_cache, finalize_join_for, NULL);
+            g_hash_table_foreach(pcmk__peer_cache, finalize_join_for, NULL);
         }
     }
 }
@@ -726,6 +755,7 @@ do_dc_join_ack(long long action,
     const char *op = crm_element_value(join_ack->msg, PCMK__XA_CRM_TASK);
     char *join_from = crm_element_value_copy(join_ack->msg, PCMK__XA_SRC);
     pcmk__node_status_t *peer = NULL;
+    enum controld_join_phase phase = controld_join_none;
 
     enum controld_section_e section = controld_section_lrm;
     char *xpath = NULL;
@@ -758,11 +788,12 @@ do_dc_join_ack(long long action,
     }
 
     peer = pcmk__get_node(0, join_from, NULL, pcmk__node_search_cluster_member);
-    if (peer->join != crm_join_finalized) {
+    phase = controld_get_join_phase(peer);
+    if (phase != controld_join_finalized) {
         crm_info("Ignoring out-of-sequence join-%d confirmation from %s "
                  "(currently %s not %s)",
-                 join_id, join_from, controld_join_phase_text(peer->join),
-                 controld_join_phase_text(crm_join_finalized));
+                 join_id, join_from, join_phase_text(phase),
+                 join_phase_text(controld_join_finalized));
         goto done;
     }
 
@@ -770,11 +801,11 @@ do_dc_join_ack(long long action,
         crm_err("Rejecting join-%d confirmation from %s "
                 "because currently on join-%d",
                 join_id, join_from, current_join_id);
-        crm_update_peer_join(__func__, peer, crm_join_nack);
+        crm_update_peer_join(__func__, peer, controld_join_nack);
         goto done;
     }
 
-    crm_update_peer_join(__func__, peer, crm_join_confirmed);
+    crm_update_peer_join(__func__, peer, controld_join_confirmed);
 
     /* Update CIB with node's current executor state. A new transition will be
      * triggered later, when the CIB manager notifies us of the change.
@@ -855,21 +886,20 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     xmlNode *acknak = NULL;
     xmlNode *tmp1 = NULL;
     pcmk__node_status_t *join_node = value;
-    const char *join_to = join_node->uname;
+    const char *join_to = join_node->name;
+    enum controld_join_phase phase = controld_get_join_phase(join_node);
     bool integrated = false;
 
-    switch (join_node->join) {
-        case crm_join_integrated:
+    switch (phase) {
+        case controld_join_integrated:
             integrated = true;
             break;
-        case crm_join_nack:
-        case crm_join_nack_quiet:
+        case controld_join_nack:
             break;
         default:
             crm_trace("Not updating non-integrated and non-nacked node %s (%s) "
-                      "for join-%d", join_to,
-                      controld_join_phase_text(join_node->join),
-                      current_join_id);
+                      "for join-%d",
+                      join_to, join_phase_text(phase), current_join_id);
             return;
     }
 
@@ -882,12 +912,6 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     crm_xml_add(tmp1, PCMK_XA_UNAME, join_to);
     fsa_cib_anon_update(PCMK_XE_NODES, tmp1);
     pcmk__xml_free(tmp1);
-
-    if (join_node->join == crm_join_nack_quiet) {
-        crm_trace("Not sending nack message to node %s with feature set older "
-                  "than 3.17.0", join_to);
-        return;
-    }
 
     join_node = pcmk__get_node(0, join_to, NULL,
                                pcmk__node_search_cluster_member);
@@ -913,7 +937,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 
     if (integrated) {
         // No change needed for a nacked node
-        crm_update_peer_join(__func__, join_node, crm_join_finalized);
+        crm_update_peer_join(__func__, join_node, controld_join_finalized);
         pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
 
         /* Iterate through the remote peer cache and add information on which
@@ -925,7 +949,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
             pcmk__node_status_t *node = NULL;
             xmlNode *remotes = pcmk__xe_create(acknak, PCMK_XE_NODES);
 
-            g_hash_table_iter_init(&iter, crm_remote_peer_cache);
+            g_hash_table_iter_init(&iter, pcmk__remote_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
                 xmlNode *remote = NULL;
 
@@ -935,14 +959,14 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 
                 remote = pcmk__xe_create(remotes, PCMK_XE_NODE);
                 pcmk__xe_set_props(remote,
-                                   PCMK_XA_ID, node->uname,
+                                   PCMK_XA_ID, node->name,
                                    PCMK__XA_NODE_STATE, node->state,
                                    PCMK__XA_CONNECTION_HOST, node->conn_host,
                                    NULL);
             }
         }
     }
-    pcmk__cluster_send_message(join_node, crm_msg_crmd, acknak);
+    pcmk__cluster_send_message(join_node, pcmk__cluster_msg_controld, acknak);
     pcmk__xml_free(acknak);
     return;
 }
@@ -952,20 +976,21 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 {
     static unsigned long long highest_seq = 0;
 
-    if (controld_globals.membership_id != crm_peer_seq) {
+    if (controld_globals.membership_id != controld_globals.peer_seq) {
         crm_debug("join-%d: Membership changed from %llu to %llu "
                   QB_XS " highest=%llu state=%s for=%s",
-                  current_join_id, controld_globals.membership_id, crm_peer_seq,
-                  highest_seq, fsa_state2string(cur_state), source);
-        if(highest_seq < crm_peer_seq) {
+                  current_join_id, controld_globals.membership_id,
+                  controld_globals.peer_seq, highest_seq,
+                  fsa_state2string(cur_state), source);
+        if (highest_seq < controld_globals.peer_seq) {
             /* Don't spam the FSA with duplicates */
-            highest_seq = crm_peer_seq;
+            highest_seq = controld_globals.peer_seq;
             register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
         }
 
     } else if (cur_state == S_INTEGRATION) {
-        if (crmd_join_phase_count(crm_join_welcomed) == 0) {
-            int count = crmd_join_phase_count(crm_join_integrated);
+        if (crmd_join_phase_count(controld_join_welcomed) == 0) {
+            int count = crmd_join_phase_count(controld_join_integrated);
 
             crm_debug("join-%d: Integration of %d peer%s complete "
                       QB_XS " state=%s for=%s",
@@ -982,8 +1007,8 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
                       current_join_id, fsa_state2string(cur_state), source);
             return TRUE;
 
-        } else if (crmd_join_phase_count(crm_join_welcomed) != 0) {
-            int count = crmd_join_phase_count(crm_join_welcomed);
+        } else if (crmd_join_phase_count(controld_join_welcomed) != 0) {
+            int count = crmd_join_phase_count(controld_join_welcomed);
 
             crm_debug("join-%d: Still waiting on %d welcomed node%s "
                       QB_XS " state=%s for=%s",
@@ -991,8 +1016,8 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
                       fsa_state2string(cur_state), source);
             crmd_join_phase_log(LOG_DEBUG);
 
-        } else if (crmd_join_phase_count(crm_join_integrated) != 0) {
-            int count = crmd_join_phase_count(crm_join_integrated);
+        } else if (crmd_join_phase_count(controld_join_integrated) != 0) {
+            int count = crmd_join_phase_count(controld_join_integrated);
 
             crm_debug("join-%d: Still waiting on %d integrated node%s "
                       QB_XS " state=%s for=%s",
@@ -1000,8 +1025,8 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
                       fsa_state2string(cur_state), source);
             crmd_join_phase_log(LOG_DEBUG);
 
-        } else if (crmd_join_phase_count(crm_join_finalized) != 0) {
-            int count = crmd_join_phase_count(crm_join_finalized);
+        } else if (crmd_join_phase_count(controld_join_finalized) != 0) {
+            int count = crmd_join_phase_count(controld_join_finalized);
 
             crm_debug("join-%d: Still waiting on %d finalized node%s "
                       QB_XS " state=%s for=%s",
@@ -1030,15 +1055,15 @@ do_dc_join_final(long long action,
     crm_update_quorum(pcmk__cluster_has_quorum(), TRUE);
 }
 
-int crmd_join_phase_count(enum crm_join_phase phase)
+int crmd_join_phase_count(enum controld_join_phase phase)
 {
     int count = 0;
     pcmk__node_status_t *peer;
     GHashTableIter iter;
 
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
-        if(peer->join == phase) {
+        if (controld_get_join_phase(peer) == phase) {
             count++;
         }
     }
@@ -1050,9 +1075,9 @@ void crmd_join_phase_log(int level)
     pcmk__node_status_t *peer;
     GHashTableIter iter;
 
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
-        do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->uname,
-                   controld_join_phase_text(peer->join));
+        do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->name,
+                   join_phase_text(controld_get_join_phase(peer)));
     }
 }

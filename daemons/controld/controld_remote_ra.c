@@ -216,7 +216,7 @@ should_purge_attributes(pcmk__node_status_t *node)
      * enough, set purge=true.  "Long enough" means it started running earlier
      * than the timestamp when we noticed it went away in the first place.
      */
-    connection_rsc = lrm_state_find(node->uname);
+    connection_rsc = lrm_state_find(node->name);
 
     if (connection_rsc != NULL) {
         lrmd_t *lrm = connection_rsc->conn;
@@ -263,10 +263,10 @@ purge_remote_node_attrs(int call_opt, pcmk__node_status_t *node)
 
     /* Purge node from attrd's memory */
     if (purge) {
-        update_attrd_remote_node_removed(node->uname, NULL);
+        update_attrd_remote_node_removed(node->name, NULL);
     }
 
-    controld_delete_node_state(node->uname, section, call_opt);
+    controld_delete_node_state(node->name, section, call_opt);
 }
 
 /*!
@@ -303,19 +303,19 @@ remote_node_up(const char *node_name)
     CRM_CHECK(node != NULL, return);
 
     purge_remote_node_attrs(call_opt, node);
-    pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
+    pcmk__update_peer_state(__func__, node, PCMK_VALUE_MEMBER, 0);
 
     /* Apply any start state that we were given from the environment on the
      * remote node.
      */
-    connection_rsc = lrm_state_find(node->uname);
+    connection_rsc = lrm_state_find(node->name);
 
     if (connection_rsc != NULL) {
         lrmd_t *lrm = connection_rsc->conn;
         const char *start_state = lrmd__node_start_state(lrm);
 
         if (start_state) {
-            set_join_state(start_state, node->uname, node->uuid, true);
+            set_join_state(start_state, node->name, node->xml_id, true);
         }
     }
 
@@ -384,7 +384,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     /* Ensure node is in the remote peer cache with lost state */
     node = pcmk__cluster_lookup_remote_node(node_name);
     CRM_CHECK(node != NULL, return);
-    pcmk__update_peer_state(__func__, node, CRM_NODE_LOST, 0);
+    pcmk__update_peer_state(__func__, node, PCMK__VALUE_LOST, 0);
 
     /* Notify DC */
     broadcast_remote_state_message(node_name, false);
@@ -426,7 +426,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
             pcmk__cluster_lookup_remote_node(cmd->rsc_id);
 
         CRM_CHECK(node != NULL, return);
-        pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
+        pcmk__update_peer_state(__func__, node, PCMK_VALUE_MEMBER, 0);
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
         lrm_state_t *lrm_state = lrm_state_find(cmd->rsc_id);

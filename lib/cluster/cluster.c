@@ -40,41 +40,31 @@ CRM_TRACE_INIT_DATA(cluster);
  *
  * \return Message type equivalent of \p text
  */
-enum crm_ais_msg_types
+enum pcmk__cluster_msg
 pcmk__cluster_parse_msg_type(const char *text)
 {
-    CRM_CHECK(text != NULL, return crm_msg_none);
+    CRM_CHECK(text != NULL, return pcmk__cluster_msg_unknown);
 
     text = pcmk__message_name(text);
 
-    if (pcmk__str_eq(text, "ais", pcmk__str_none)) {
-        return crm_msg_ais;
-    }
-    if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_none)) {
-        return crm_msg_cib;
-    }
-    if (pcmk__str_any_of(text, CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL)) {
-        return crm_msg_crmd;
-    }
-    if (pcmk__str_eq(text, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
-        return crm_msg_te;
-    }
-    if (pcmk__str_eq(text, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
-        return crm_msg_pe;
-    }
-    if (pcmk__str_eq(text, CRM_SYSTEM_LRMD, pcmk__str_none)) {
-        return crm_msg_lrmd;
-    }
-    if (pcmk__str_eq(text, CRM_SYSTEM_STONITHD, pcmk__str_none)) {
-        return crm_msg_stonithd;
-    }
-    if (pcmk__str_eq(text, "stonith-ng", pcmk__str_none)) {
-        return crm_msg_stonith_ng;
-    }
     if (pcmk__str_eq(text, "attrd", pcmk__str_none)) {
-        return crm_msg_attrd;
+        return pcmk__cluster_msg_attrd;
+
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_none)) {
+        return pcmk__cluster_msg_based;
+
+    } else if (pcmk__str_any_of(text, CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL)) {
+        return pcmk__cluster_msg_controld;
+
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_LRMD, pcmk__str_none)) {
+        return pcmk__cluster_msg_execd;
+
+    } else if (pcmk__str_eq(text, "stonith-ng", pcmk__str_none)) {
+        return pcmk__cluster_msg_fenced;
+
+    } else {
+        return pcmk__cluster_msg_unknown;
     }
-    return crm_msg_none;
 }
 
 /*!
@@ -93,15 +83,15 @@ pcmk__cluster_node_uuid(pcmk__node_status_t *node)
     if (node == NULL) {
         return NULL;
     }
-    if (node->uuid != NULL) {
-        return node->uuid;
+    if (node->xml_id != NULL) {
+        return node->xml_id;
     }
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC
         case pcmk_cluster_layer_corosync:
-            node->uuid = pcmk__corosync_uuid(node);
-            return node->uuid;
+            node->xml_id = pcmk__corosync_uuid(node);
+            return node->xml_id;
 #endif  // SUPPORT_COROSYNC
 
         default:
@@ -185,7 +175,10 @@ pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
 pcmk_cluster_t *
 pcmk_cluster_new(void)
 {
-    return (pcmk_cluster_t *) pcmk__assert_alloc(1, sizeof(pcmk_cluster_t));
+    pcmk_cluster_t *cluster = pcmk__assert_alloc(1, sizeof(pcmk_cluster_t));
+
+    cluster->priv = pcmk__assert_alloc(1, sizeof(pcmk__cluster_private_t));
+    return cluster;
 }
 
 /*!
@@ -199,8 +192,8 @@ pcmk_cluster_free(pcmk_cluster_t *cluster)
     if (cluster == NULL) {
         return;
     }
-    free(cluster->uuid);
-    free(cluster->uname);
+    free(cluster->priv->node_name);
+    free(cluster->priv);
     free(cluster);
 }
 
@@ -234,7 +227,7 @@ pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(gpointer))
  */
 bool
 pcmk__cluster_send_message(const pcmk__node_status_t *node,
-                           enum crm_ais_msg_types service, const xmlNode *data)
+                           enum pcmk__cluster_msg service, const xmlNode *data)
 {
     // @TODO Return standard Pacemaker return code
     switch (pcmk_get_cluster_layer()) {
@@ -361,14 +354,14 @@ pcmk__node_name_from_uuid(const char *uuid)
     CRM_CHECK(uuid != NULL, return NULL);
 
     // Remote nodes have the same uname and uuid
-    if (g_hash_table_lookup(crm_remote_peer_cache, uuid)) {
+    if (g_hash_table_lookup(pcmk__remote_peer_cache, uuid)) {
         return uuid;
     }
 
-    g_hash_table_iter_init(&iter, crm_peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
-            return node->uname;
+        if (pcmk__str_eq(node->xml_id, uuid, pcmk__str_casei)) {
+            return node->name;
         }
     }
     return NULL;
