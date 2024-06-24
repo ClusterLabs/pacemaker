@@ -42,7 +42,7 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
 # Individual tool tests are split out, but can also be accessed as a group with "tools"
-tools_tests = ["crm_attribute", "crm_standby", "crmadmin", "crm_verify"]
+tools_tests = ["crm_attribute", "crm_standby", "crm_resource", "crmadmin", "crm_verify"]
 # The default list of tests to run, in the order they should be run
 default_tests = ["access_render", "daemons", "dates", "error_codes"] + tools_tests + \
                 ["crm_mon", "acls", "validity", "upgrade", "rules", "feature_set"]
@@ -1294,6 +1294,137 @@ class CrmStandbyRegressionTest(RegressionTest):
         ]
 
 
+class CrmResourceRegressionTest(RegressionTest):
+    """A class for testing crm_resource."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "crm_resource"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        options_tests = [
+            Test("crm_resource run with extra arguments", "crm_resource foo bar",
+                 expected_rc=ExitStatus.USAGE),
+            make_test_group("List all available resource options (invalid type)",
+                            "crm_resource --list-options=asdf {fmt}",
+                            [Test, ValidatingTest], expected_rc=ExitStatus.USAGE),
+            make_test_group("List non-advanced primitive meta-attributes",
+                            "crm_resource --list-options=primitive {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("List all available primitive meta-attributes",
+                            "crm_resource --list-options=primitive --all {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("List non-advanced fencing parameters",
+                            "crm_resource --list-options=fencing {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("List all available fencing parameters",
+                            "crm_resource --list-options=fencing --all {fmt}",
+                            [Test, ValidatingTest]),
+        ]
+
+        basic_tests = [
+            Test("Create a resource",
+                 """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
+                 update_cib=True),
+            Test("crm_resource given both -r and resource config",
+                 "crm_resource -r xyz --class ocf --provider pacemaker --agent Dummy",
+                 expected_rc=ExitStatus.USAGE),
+            Test("crm_resource given resource config with invalid action",
+                 "crm_resource --class ocf --provider pacemaker --agent Dummy -D",
+                 expected_rc=ExitStatus.USAGE),
+            Test("Create a resource meta attribute",
+                 "crm_resource -r dummy --meta -p is-managed -v false",
+                 update_cib=True),
+            Test("Query a resource meta attribute",
+                 "crm_resource -r dummy --meta -g is-managed",
+                 update_cib=True),
+            Test("Remove a resource meta attribute",
+                 "crm_resource -r dummy --meta -d is-managed",
+                 update_cib=True),
+            ValidatingTest("Create another resource meta attribute",
+                           "crm_resource -r dummy --meta -p target-role -v Stopped --output-as=xml"),
+            ValidatingTest("Show why a resource is not running",
+                           "crm_resource -Y -r dummy --output-as=xml"),
+            ValidatingTest("Remove another resource meta attribute",
+                           "crm_resource -r dummy --meta -d target-role --output-as=xml"),
+            ValidatingTest("Get a non-existent attribute from a resource element",
+                           "crm_resource -r dummy --get-parameter nonexistent --element --output-as=xml"),
+            make_test_group("Get a non-existent attribute from a resource element",
+                            "crm_resource -r dummy --get-parameter nonexistent --element {fmt}",
+                            [Test, ValidatingTest], update_cib=True),
+            Test("Get an existent attribute from a resource element",
+                 "crm_resource -r dummy --get-parameter class --element",
+                 update_cib=True),
+            ValidatingTest("Set a non-existent attribute for a resource element",
+                           "crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml",
+                           update_cib=True),
+            ValidatingTest("Set an existent attribute for a resource element",
+                           "crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml",
+                           update_cib=True),
+            ValidatingTest("Delete an existent attribute for a resource element",
+                           "crm_resource -r dummy -d description --element --output-as=xml",
+                           update_cib=True),
+            ValidatingTest("Delete a non-existent attribute for a resource element",
+                           "crm_resource -r dummy -d description --element --output-as=xml",
+                           update_cib=True),
+            Test("Set a non-existent attribute for a resource element",
+                 "crm_resource -r dummy --set-parameter=description -v test_description --element",
+                 update_cib=True),
+            Test("Set an existent attribute for a resource element",
+                 "crm_resource -r dummy --set-parameter=description -v test_description --element",
+                 update_cib=True),
+            Test("Delete an existent attribute for a resource element",
+                 "crm_resource -r dummy -d description --element",
+                 update_cib=True),
+            Test("Delete a non-existent attribute for a resource element",
+                 "crm_resource -r dummy -d description --element",
+                 update_cib=True),
+            Test("Create a resource attribute", "crm_resource -r dummy -p delay -v 10s",
+                 update_cib=True),
+            make_test_group("List the configured resources", "crm_resource -L {fmt}",
+                            [Test, ValidatingTest], update_cib=True),
+            Test("Implicitly list the configured resources", "crm_resource"),
+            Test("List IDs of instantiated resources", "crm_resource -l"),
+            make_test_group("Show XML configuration of resource", "crm_resource -q -r dummy {fmt}",
+                            [Test, ValidatingTest]),
+            Test("Require a destination when migrating a resource that is stopped",
+                 "crm_resource -r dummy -M",
+                 update_cib=True, expected_rc=ExitStatus.USAGE),
+            Test("Don't support migration to non-existent locations",
+                 "crm_resource -r dummy -M -N i.do.not.exist",
+                 update_cib=True, expected_rc=ExitStatus.NOSUCH),
+            Test("Create a fencing resource",
+                 """cibadmin -C -o resources --xml-text '<primitive id="Fence" class="stonith" type="fence_true"/>'""",
+                 update_cib=True),
+            Test("Bring resources online", "crm_simulate --live-check --in-place",
+                 update_cib=True),
+            Test("Try to move a resource to its existing location",
+                 "crm_resource -r dummy --move --node node1",
+                 update_cib=True, expected_rc=ExitStatus.EXISTS),
+            Test("Try to move a resource that doesn't exist",
+                 "crm_resource -r xyz --move --node node1",
+                 expected_rc=ExitStatus.NOSUCH),
+            Test("Move a resource from its existing location",
+                 "crm_resource -r dummy --move",
+                 update_cib=True),
+            Test("Clear out constraints generated by --move",
+                 "crm_resource -r dummy --clear",
+                 update_cib=True),
+        ]
+
+        basic_tests_setup = [
+            "crm_attribute -n no-quorum-policy -v ignore",
+            "crm_simulate --live-check --in-place --node-up=node1"
+        ]
+
+        return options_tests + [
+            ShadowTestGroup(basic_tests, setup=basic_tests_setup),
+        ]
+
+
 class CrmadminRegressionTest(RegressionTest):
     """A class for testing crmadmin."""
 
@@ -2017,6 +2148,7 @@ regression_classes = [
     ErrorCodeRegressionTest,
     CrmAttributeRegressionTest,
     CrmStandbyRegressionTest,
+    CrmResourceRegressionTest,
     CrmadminRegressionTest,
     CrmVerifyRegressionTest,
     CrmMonRegressionTest,
