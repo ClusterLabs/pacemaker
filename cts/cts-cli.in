@@ -42,7 +42,7 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
 # Individual tool tests are split out, but can also be accessed as a group with "tools"
-tools_tests = ["crm_attribute", "crmadmin", "crm_verify"]
+tools_tests = ["crm_attribute", "crm_standby", "crmadmin", "crm_verify"]
 # The default list of tests to run, in the order they should be run
 default_tests = ["access_render", "daemons", "dates", "error_codes"] + tools_tests + \
                 ["crm_mon", "acls", "validity", "upgrade", "rules", "feature_set"]
@@ -1269,6 +1269,31 @@ class CrmAttributeRegressionTest(RegressionTest):
         ]
 
 
+class CrmStandbyRegressionTest(RegressionTest):
+    """A class for testing crm_standby."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "crm_standby"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        basic_tests = [
+            Test("Default standby value", "crm_standby -N node1 -G"),
+            Test("Set standby status", "crm_standby -N node1 -v true",
+                 update_cib=True),
+            Test("Query standby value", "crm_standby -N node1 -G"),
+            Test("Delete standby value", "crm_standby -N node1 -D",
+                 update_cib=True),
+        ]
+
+        return [
+            ShadowTestGroup(basic_tests, setup="""cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1">'"""),
+        ]
+
+
 class CrmadminRegressionTest(RegressionTest):
     """A class for testing crmadmin."""
 
@@ -1991,6 +2016,7 @@ regression_classes = [
     DatesRegressionTest,
     ErrorCodeRegressionTest,
     CrmAttributeRegressionTest,
+    CrmStandbyRegressionTest,
     CrmadminRegressionTest,
     CrmVerifyRegressionTest,
     CrmMonRegressionTest,
