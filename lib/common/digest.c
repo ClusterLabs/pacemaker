@@ -226,37 +226,22 @@ pcmk__xa_filterable(const char *name)
 char *
 crm_md5sum(const char *buffer)
 {
-    unsigned int dlen = gnutls_hash_get_len(GNUTLS_DIG_MD5);
-    unsigned char *raw_digest = NULL;
     char *digest = NULL;
-    int rc = 0;
-
-    if (dlen == 0) {
-        return NULL;
-    }
+    gchar *raw_digest = NULL;
 
     if (buffer == NULL) {
         return NULL;
     }
 
-    raw_digest = pcmk__assert_alloc(dlen, sizeof(unsigned char));
+    raw_digest = g_compute_checksum_for_string(G_CHECKSUM_MD5, buffer, -1);
 
-    rc = gnutls_hash_fast(GNUTLS_DIG_MD5, buffer, strlen(buffer), raw_digest);
-
-    if (rc < 0) {
-        free(raw_digest);
-        crm_err("Failed to calculate hash: %s", gnutls_strerror(rc));
+    if (raw_digest == NULL) {
+        crm_err("Failed to calculate hash");
         return NULL;
     }
 
-    digest = pcmk__assert_alloc(1 + (2 * dlen), sizeof(char));
-
-    for (int i = 0; i < dlen; i++) {
-        sprintf(digest + (2 * i), "%02x", raw_digest[i]);
-    }
-
-    digest[(2 * dlen)] = 0;
-    free(raw_digest);
+    digest = pcmk__str_copy(raw_digest);
+    g_free(raw_digest);
 
     crm_trace("Digest %s.", digest);
     return digest;
