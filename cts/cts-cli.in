@@ -6,6 +6,8 @@
 # pylint: disable=invalid-name
 # pacemaker imports need to come after we modify sys.path, which pylint will complain about.
 # pylint: disable=wrong-import-position
+# We know this is a very long file.
+# pylint: disable=too-many-lines
 
 __copyright__ = "Copyright 2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
@@ -40,7 +42,7 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
 # Individual tool tests are split out, but can also be accessed as a group with "tools"
-tools_tests = ["crmadmin", "crm_verify"]
+tools_tests = ["crm_attribute", "crmadmin", "crm_verify"]
 # The default list of tests to run, in the order they should be run
 default_tests = ["access_render", "daemons", "dates", "error_codes"] + tools_tests + \
                 ["crm_mon", "acls", "validity", "upgrade", "rules", "feature_set"]
@@ -213,8 +215,10 @@ def sanitize_output(s):
     """
     # A list of tuples of regular expressions and their replacements.
     replacements = [
+        (r'Device not configured', r'No such device or address'),
         (r'Last change: .*', r'Last change:'),
         (r'Last updated: .*', r'Last updated:'),
+        (r'(\* Possible values.*: .*)\(default: [^)]*\)', r'\1(default: )'),
         (r' api-version="[^"]*"', r' api-version="X"'),
         (r'.*\((apply_upgrade)@.*\.c:[0-9][0-9]*\)', r'\1'),
         (r'crm_feature_set="[^"]*" ', r''),
@@ -1105,6 +1109,166 @@ class ErrorCodeRegressionTest(RegressionTest):
         return legacy_tests + standard_tests + crm_exit_t_tests
 
 
+class CrmAttributeRegressionTest(RegressionTest):
+    """A class for testing crm_attribute."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "crm_attribute"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        options_tests = [
+            make_test_group("List all available options (invalid type)",
+                            "crm_attribute --list-options=asdf {fmt}",
+                            [Test, ValidatingTest],
+                            expected_rc=ExitStatus.USAGE),
+            make_test_group("List non-advanced cluster options",
+                            "crm_attribute --list-options=cluster {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("List all available cluster options",
+                            "crm_attribute --list-options=cluster --all {fmt}",
+                            [Test, ValidatingTest]),
+        ]
+
+        value_update_tests = [
+            # This isn't a test of updating values, but it's gotta go somewhere
+            # and this is as good a place as any
+            Test("Validate CIB", "cibadmin -Q", update_cib=True),
+            Test("Query the value of an attribute that does not exist",
+                 "crm_attribute -n ABCD --query --quiet",
+                 expected_rc=ExitStatus.NOSUCH),
+            Test("Configure something before erasing",
+                 "crm_attribute -n test_attr -v 5", update_cib=True),
+            Test("Test '++' XML attribute update syntax",
+                 """cibadmin -M --score --xml-text='<cib admin_epoch="admin_epoch++">'""",
+                 update_cib=True),
+            Test("Test '+=' XML attribute update syntax",
+                 """cibadmin -M --score --xml-text='<cib admin_epoch="admin_epoch+=2">'""",
+                 update_cib=True),
+            make_test_group("Test '++' nvpair value update syntax",
+                            "crm_attribute -n test_attr -v 'value++' --score {fmt}",
+                            [Test, ValidatingTest], update_cib=True),
+            make_test_group("Test '+=' nvpair value update syntax",
+                            "crm_attribute -n test_attr -v 'value+=2' --score {fmt}",
+                            [Test, ValidatingTest], update_cib=True),
+            Test("Test '++' XML attribute update syntax (--score not set)",
+                 """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch++">'""",
+                 update_cib=True),
+            Test("Test '+=' XML attribute update syntax (--score not set)",
+                 """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch+=2">'""",
+                 update_cib=True),
+            make_test_group("Test '++' nvpair value update syntax (--score not set)",
+                            "crm_attribute -n test_attr -v 'value++' {fmt}",
+                            [Test, ValidatingTest], update_cib=True),
+            make_test_group("Test '+=' nvpair value update syntax (--score not set)",
+                            "crm_attribute -n test_attr -v 'value+=2' {fmt}",
+                            [Test, ValidatingTest], update_cib=True),
+            # These last two aren't a test of updating values, but they've gotta
+            # go somewhere and this is as good a place as any
+            Test("Require --force for CIB erasure", "cibadmin -E",
+                 expected_rc=ExitStatus.UNSAFE, update_cib=True),
+            Test("Allow CIB erasure with --force", "cibadmin -E --force"),
+            # Verify the output after erasure
+            Test("Query CIB", "cibadmin -Q",
+                 setup=delete_shadow_resource_defaults,
+                 update_cib=True),
+        ]
+
+        query_set_tests = [
+            Test("Set cluster option", "crm_attribute -n cluster-delay -v 60s",
+                 update_cib=True),
+            Test("Query new cluster option",
+                 "cibadmin -Q -o crm_config | grep cib-bootstrap-options-cluster-delay"),
+            Test("Set no-quorum policy",
+                 "crm_attribute -n no-quorum-policy -v ignore", update_cib=True),
+            Test("Delete nvpair",
+                 """cibadmin -D -o crm_config --xml-text '<nvpair id="cib-bootstrap-options-cluster-delay"/>'""",
+                 update_cib=True),
+            Test("Create operation should fail",
+                 """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/></cluster_property_set>'""",
+                 expected_rc=ExitStatus.EXISTS, update_cib=True),
+            Test("Modify cluster options section",
+                 """cibadmin -M -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/></cluster_property_set>'""",
+                 update_cib=True),
+            Test("Query updated cluster option",
+                 "cibadmin -Q -o crm_config | grep cib-bootstrap-options-cluster-delay",
+                 update_cib=True),
+            Test("Set duplicate cluster option",
+                 "crm_attribute -n cluster-delay -v 40s -s duplicate",
+                 update_cib=True),
+            Test("Setting multiply defined cluster option should fail",
+                 "crm_attribute -n cluster-delay -v 30s",
+                 expected_rc=ExitStatus.MULTIPLE, update_cib=True),
+            Test("Set cluster option with -s",
+                 "crm_attribute -n cluster-delay -v 30s -s duplicate",
+                 update_cib=True),
+            Test("Delete cluster option with -i",
+                 "crm_attribute -n cluster-delay -D -i cib-bootstrap-options-cluster-delay",
+                 update_cib=True),
+            Test("Create node1 and bring it online",
+                 "crm_simulate --live-check --in-place --node-up=node1",
+                 update_cib=True),
+            Test("Create node attribute",
+                 "crm_attribute -n ram -v 1024M -N node1 -t nodes",
+                 update_cib=True),
+            Test("Query new node attribute",
+                 "cibadmin -Q -o nodes | grep node1-ram",
+                 update_cib=True),
+            Test("Create second node attribute",
+                 "crm_attribute -n rattr -v XYZ -N node1 -t nodes",
+                 update_cib=True),
+            Test("Query node attributes by pattern",
+                 "crm_attribute -t nodes -P 'ra.*' -N node1 --query"),
+            Test("Update node attributes by pattern",
+                 "crm_attribute -t nodes -P 'rat.*' -N node1 -v 10",
+                 update_cib=True),
+            Test("Delete node attributes by pattern",
+                 "crm_attribute -t nodes -P 'rat.*' -N node1 -D",
+                 update_cib=True),
+            Test("Set a transient (fail-count) node attribute",
+                 "crm_attribute -n fail-count-foo -v 3 -N node1 -t status",
+                 update_cib=True),
+            Test("Query a fail count", "crm_failcount --query -r foo -N node1",
+                 update_cib=True),
+            Test("Show node attributes with crm_simulate",
+                 "crm_simulate --live-check --show-attrs"),
+            Test("Set a second transient node attribute",
+                 "crm_attribute -n fail-count-bar -v 5 -N node1 -t status",
+                 update_cib=True),
+            Test("Query transient node attributes by pattern",
+                 "crm_attribute -t status -P fail-count -N node1 --query"),
+            Test("Update transient node attributes by pattern",
+                 "crm_attribute -t status -P fail-count -N node1 -v 10",
+                 update_cib=True),
+            Test("Delete transient node attributes by pattern",
+                 "crm_attribute -t status -P fail-count -N node1 -D",
+                 update_cib=True),
+            Test("crm_attribute given invalid delete usage",
+                 "crm_attribute -t nodes -N node1 -D",
+                 expected_rc=ExitStatus.USAGE),
+            Test("Set a utilization node attribute",
+                 "crm_attribute -n cpu -v 1 -N node1 -z",
+                 update_cib=True),
+            Test("Query utilization node attribute",
+                 "crm_attribute --query -n cpu -N node1 -z"),
+            # These last two aren't a test of updating values, but they've gotta
+            # go somewhere and this is as good a place as any
+            Test("Digest calculation", "cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null"),
+            # This update will fail because it has version numbers
+            Test("Replace operation should fail",
+                 """cibadmin -Q | sed -e 's/epoch="[^"]*"/epoch="1"/' | cibadmin -R -p""",
+                 expected_rc=ExitStatus.OLD),
+        ]
+
+        return options_tests + [
+            ShadowTestGroup(value_update_tests),
+            ShadowTestGroup(query_set_tests),
+        ]
+
+
 class CrmadminRegressionTest(RegressionTest):
     """A class for testing crmadmin."""
 
@@ -1826,6 +1990,7 @@ regression_classes = [
     DaemonsRegressionTest,
     DatesRegressionTest,
     ErrorCodeRegressionTest,
+    CrmAttributeRegressionTest,
     CrmadminRegressionTest,
     CrmVerifyRegressionTest,
     CrmMonRegressionTest,
