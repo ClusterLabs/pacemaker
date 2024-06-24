@@ -1956,13 +1956,12 @@ pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
 char *
 pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 {
-#define DATE_LEN_MAX 128
     int scanned_pos = 0; // How many characters of format have been parsed
     int printed_pos = 0; // How many characters of format have been processed
     size_t date_len = 0;
 
     char nano_s[10] = { '\0', };
-    char date_s[DATE_LEN_MAX] = { '\0', };
+    char date_s[128] = { '\0', };
 
     struct tm tm = { 0, };
     crm_time_t dt = { 0, };
@@ -1978,6 +1977,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
         int fmt_pos;            // Index after last character to pass as-is
         int nano_digits = 0;    // Length of %N field width (if any)
         char *tmp_fmt_s = NULL;
+        size_t nbytes = 0;
 
         // Look for next format specifier
         const char *mark_s = strchr(&format[scanned_pos], '%');
@@ -2019,26 +2019,43 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
             }
         }
 
+        if (date_len >= sizeof(date_s)) {
+            return NULL; // No room for remaining string
+        }
+
         tmp_fmt_s = strndup(&format[printed_pos], fmt_pos - printed_pos);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-        date_len += strftime(&date_s[date_len], DATE_LEN_MAX - date_len,
-                             tmp_fmt_s, &tm);
+        nbytes = strftime(&date_s[date_len], sizeof(date_s) - date_len,
+                          tmp_fmt_s, &tm);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
 #endif
-        printed_pos = scanned_pos;
         free(tmp_fmt_s);
+        if (nbytes == 0) { // Would overflow buffer
+            return NULL;
+        }
+        date_len += nbytes;
+        printed_pos = scanned_pos;
         if (nano_digits != 0) {
-            date_len += snprintf(&date_s[date_len], DATE_LEN_MAX - date_len,
-                                 "%.*s", nano_digits, nano_s);
+            int nc = 0;
+
+            if (date_len >= sizeof(date_s)) {
+                return NULL; // No room to add nanoseconds
+            }
+            nc = snprintf(&date_s[date_len], sizeof(date_s) - date_len,
+                          "%.*s", nano_digits, nano_s);
+
+            if ((nc < 0) || (nc == (sizeof(date_s) - date_len))) {
+                return NULL; // Error or would overflow buffer
+            }
+            date_len += nc;
         }
     }
 
     return (date_len == 0)? NULL : pcmk__str_copy(date_s);
-#undef DATE_LEN_MAX
 }
 
 /*!
