@@ -23,6 +23,6 @@ pcmk__primitive_assign: rsc_drbd_7788:0 allocation score on arc-dknightlx: -INFI
 pcmk__primitive_assign: rsc_drbd_7788:0 allocation score on arc-tkincaidlx.wsicorp.com: -INFINITY
 pcmk__primitive_assign: rsc_drbd_7788:1 allocation score on arc-dknightlx: -INFINITY
 pcmk__primitive_assign: rsc_drbd_7788:1 allocation score on arc-tkincaidlx.wsicorp.com: 1
-rsc_drbd_7788:0 promotion score on none: 0
+rsc_drbd_7788:0 promotion score (inactive): -INFINITY
 rsc_drbd_7788:1 promotion score on arc-tkincaidlx.wsicorp.com: -1
-rsc_drbd_7788:2 promotion score on none: 0
+rsc_drbd_7788:2 promotion score (inactive): -INFINITY

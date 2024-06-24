@@ -49,5 +49,5 @@ pcmk__primitive_assign: res_tgtd:0 allocation score on alice: -INFINITY
 pcmk__primitive_assign: res_tgtd:0 allocation score on bob: -INFINITY
 pcmk__primitive_assign: res_tgtd:1 allocation score on alice: 1700
 pcmk__primitive_assign: res_tgtd:1 allocation score on bob: -INFINITY
-res_drbd_iscsivg01:0 promotion score on none: 0
+res_drbd_iscsivg01:0 promotion score (inactive): -INFINITY
 res_drbd_iscsivg01:1 promotion score on alice: 3100

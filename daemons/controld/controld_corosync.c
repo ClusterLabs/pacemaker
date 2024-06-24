@@ -9,6 +9,10 @@
 
 #include <crm_internal.h>
 
+#include <inttypes.h>               // PRIu32
+#include <stdio.h>                  // NULL
+#include <stdlib.h>                 // free(), etc.
+
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -37,7 +41,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
         return;
     }
     if (kind == crm_class_cluster) {
-        crm_node_t *peer = NULL;
+        pcmk__node_status_t *peer = NULL;
         xmlNode *xml = pcmk__xml_parse(data);
 
         if (xml == NULL) {
@@ -53,8 +57,9 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
             /* If we can still talk to our peer process on that node,
              * then it must be part of the corosync membership
              */
-            crm_warn("Receiving messages from a node we think is dead: %s[%d]",
-                     peer->uname, peer->id);
+            crm_warn("Receiving messages from a node we think is dead: "
+                     "%s[%" PRIu32 "]",
+                     peer->uname, peer->cluster_layer_id);
             crm_update_peer_proc(__func__, peer, crm_proc_cpg,
                                  PCMK_VALUE_ONLINE);
         }
@@ -116,13 +121,13 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
      * use by the peer callback.
      */
     if (controld_globals.dc_name != NULL) {
-        crm_node_t *peer = NULL;
+        pcmk__node_status_t *peer = NULL;
 
         peer = pcmk__search_node_caches(0, controld_globals.dc_name,
                                         pcmk__node_search_cluster_member);
         if (peer != NULL) {
             for (int i = 0; i < left_list_entries; ++i) {
-                if (left_list[i].nodeid == peer->id) {
+                if (left_list[i].nodeid == peer->cluster_layer_id) {
                     controld_set_global_flags(controld_dc_left);
                     break;
                 }

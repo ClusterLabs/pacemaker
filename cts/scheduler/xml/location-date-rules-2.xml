@@ -88,8 +88,7 @@
         <rule id="rule-2-1" score="INFINITY" boolean-op="and">
           <expression id="expression-2-1" attribute="#uname" operation="eq" value="rhel7-3"/>
           <rule id="rule-2-2" score="INFINITY">
-            <date_expression id="expression-2-2" operation="in_range"
-              start="2019-09-20 15:00:00 +00:00" end="2019-09-20 15:30:00 +00:00"/>
+            <date_expression id="expression-2-2" operation="in_range" start="2019-09-20 15:00:00 +00:00" end="2019-09-20 15:30:00 +00:00"/>
           </rule>
         </rule>
       </rsc_location>

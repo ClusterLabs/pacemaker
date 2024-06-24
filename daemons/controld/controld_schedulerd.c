@@ -64,7 +64,7 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
     if (rc == pcmk_ok) {
         char *filename = crm_strdup_printf(PE_STATE_DIR "/pe-core-%s.bz2", id);
 
-        if (pcmk__xml_write_file(output, filename, true, NULL) != pcmk_rc_ok) {
+        if (pcmk__xml_write_file(output, filename, true) != pcmk_rc_ok) {
             crm_err("Could not save Cluster Information Base to %s after scheduler crash",
                     filename);
         } else {
@@ -104,8 +104,7 @@ handle_disconnect(void)
          *
          */
         rc = controld_globals.cib_conn->cmds->query(controld_globals.cib_conn,
-                                                    NULL, NULL,
-                                                    cib_scope_local);
+                                                    NULL, NULL, cib_none);
         fsa_register_cib_callback(rc, uuid_str, save_cib_contents);
     }
 
@@ -360,7 +359,7 @@ do_pe_invoke(long long action,
         return;
     }
 
-    fsa_pe_query = cib_conn->cmds->query(cib_conn, NULL, NULL, cib_scope_local);
+    fsa_pe_query = cib_conn->cmds->query(cib_conn, NULL, NULL, cib_none);
 
     crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query,
               fsa_state2string(controld_globals.fsa_state));
@@ -490,7 +489,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     force_local_option(output, PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));
 
     if (pcmk_is_set(controld_globals.flags, controld_ever_had_quorum)
-        && !crm_have_quorum) {
+        && !pcmk__cluster_has_quorum()) {
+
         crm_xml_add_int(output, PCMK_XA_NO_QUORUM_PANIC, 1);
     }
 

@@ -8,11 +8,15 @@
  */
 
 #ifndef PCMK__PCMKI_PCMKI_VERIFY__H
-#  define PCMK__PCMKI_PCMKI_VERIFY__H
+#define PCMK__PCMKI_PCMKI_VERIFY__H
 
 #include <crm/common/output_internal.h>
 #include <crm/common/scheduler.h>
 #include <libxml/tree.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!
  * \internal
@@ -46,4 +50,8 @@ int pcmk__parse_cib(pcmk__output_t *out, const char *cib_source, xmlNodePtr *cib
  */
 int pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out, xmlNode *cib_object);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__PCMKI_PCMKI_VERIFY__H

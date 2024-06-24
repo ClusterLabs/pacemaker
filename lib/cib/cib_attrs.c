@@ -132,7 +132,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
 
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, NULL,
                          (const char *) xpath->str, NULL, &xml_search,
-                         cib_sync_call|cib_scope_local|cib_xpath, user_name);
+                         cib_sync_call|cib_xpath, user_name);
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {
@@ -645,8 +645,7 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
 
     xpath_string = crm_strdup_printf(XPATH_NODE, host_lowercase, host_lowercase, host_lowercase, host_lowercase);
     if (cib_internal_op(the_cib, PCMK__CIB_REQUEST_QUERY, NULL, xpath_string,
-                        NULL, &xml_search,
-                        cib_sync_call|cib_scope_local|cib_xpath,
+                        NULL, &xml_search, cib_sync_call|cib_xpath,
                         NULL) == pcmk_ok) {
         rc = get_uuid_from_result(xml_search, uuid, is_remote_node);
     } else {

@@ -21,11 +21,16 @@
 
 #include <crm/crm.h>  /* transitively imports qblog.h */
 #include <crm/common/output_internal.h>
+#include <crm/common/xml_idref_internal.h>
 #include <crm/common/xml_io_internal.h>
 #include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
 #include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE
 
 #include <libxml/relaxng.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!
  * \brief Base for directing lib{xml2,xslt} log into standard libqb backend
@@ -152,18 +157,6 @@ enum pcmk__xml_fmt_options {
     // @COMPAT Can we start including text nodes unconditionally?
     //! Include XML text nodes
     pcmk__xml_fmt_text       = (1 << 6),
-
-    // @COMPAT Remove when v1 patchsets are removed
-    //! Log a created XML subtree
-    pcmk__xml_fmt_diff_plus  = (1 << 7),
-
-    // @COMPAT Remove when v1 patchsets are removed
-    //! Log a removed XML subtree
-    pcmk__xml_fmt_diff_minus = (1 << 8),
-
-    // @COMPAT Remove when v1 patchsets are removed
-    //! Log a minimal version of an XML diff (only showing the changes)
-    pcmk__xml_fmt_diff_short = (1 << 9),
 };
 
 void pcmk__xml_init(void);
@@ -221,8 +214,6 @@ const char *pcmk__xe_add_last_written(xmlNode *xe);
 xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                               const char *attr_n, const char *attr_v);
 
-
-xmlNode *pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search);
 
 void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 bool pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data);
@@ -587,9 +578,6 @@ pcmk__xml_attr_value(const xmlAttr *attr)
            : (const char *) attr->children->content;
 }
 
-// @COMPAT Remove when v1 patchsets are removed
-xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
-
 // @COMPAT Drop when PCMK__XE_PROMOTABLE_LEGACY is removed
 static inline const char *
 pcmk__map_element_name(const xmlNode *xml)
@@ -602,5 +590,9 @@ pcmk__map_element_name(const xmlNode *xml)
         return (const char *) xml->name;
     }
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PCMK__CRM_COMMON_XML_INTERNAL__H

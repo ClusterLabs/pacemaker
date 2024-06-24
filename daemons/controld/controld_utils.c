@@ -733,8 +733,9 @@ update_dc(xmlNode * msg)
         /* do nothing */
 
     } else if (controld_globals.dc_name != NULL) {
-        crm_node_t *dc_node = pcmk__get_node(0, controld_globals.dc_name, NULL,
-                                             pcmk__node_search_cluster_member);
+        pcmk__node_status_t *dc_node =
+            pcmk__get_node(0, controld_globals.dc_name, NULL,
+                           pcmk__node_search_cluster_member);
 
         crm_info("Set DC to %s (%s)",
                  controld_globals.dc_name,
@@ -749,7 +750,7 @@ update_dc(xmlNode * msg)
     return TRUE;
 }
 
-void crmd_peer_down(crm_node_t *peer, bool full) 
+void crmd_peer_down(pcmk__node_status_t *peer, bool full) 
 {
     if(full && peer->state == NULL) {
         pcmk__update_peer_state(__func__, peer, CRM_NODE_LOST, 0);

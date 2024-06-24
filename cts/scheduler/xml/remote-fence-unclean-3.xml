@@ -474,7 +474,7 @@
             <lrm_rsc_op id="openstack-cinder-backup-docker-0_last_0" operation_key="openstack-cinder-backup-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="43:70:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;43:70:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-2" call-id="108" rc-code="7" op-status="0" interval="0" last-run="1498669534" last-rc-change="1498669534" exec-time="24" queue-time="1" op-digest="eedee9a7b2c178272325eaaf87df0b05"/>
           </lrm_resource>
           <lrm_resource id="overcloud-novacompute-0" class="ocf" provider="pacemaker" type="remote">
-            <lrm_rsc_op id="overcloud-novacompute-0_last_0" operation_key="overcloud-novacompute-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1499057293" last-rc-change="1499057293" exec-time="0" queue-time="0" op-digest="be548bf9f751c937c78eb61c44187ad2"/>
+            <lrm_rsc_op id="overcloud-novacompute-0_last_0" operation_key="overcloud-novacompute-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1499057293" last-rc-change="1499057293" exec-time="0" queue-time="0" op-digest="be548bf9f751c937c78eb61c44187ad2" on_node="overcloud-controller-2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -567,7 +567,7 @@
             <lrm_rsc_op id="openstack-cinder-backup-docker-0_monitor_60000" operation_key="openstack-cinder-backup-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="147:70:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:0;147:70:0:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-1" call-id="110" rc-code="0" op-status="0" interval="60000" last-rc-change="1498669534" exec-time="63" queue-time="0" op-digest="c56e6576dd6da1f19e625e9f6019ce5d"/>
           </lrm_resource>
           <lrm_resource id="overcloud-novacompute-0" class="ocf" provider="pacemaker" type="remote">
-            <lrm_rsc_op id="overcloud-novacompute-0_last_0" operation_key="overcloud-novacompute-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1499057293" last-rc-change="1499057293" exec-time="0" queue-time="0" op-digest="be548bf9f751c937c78eb61c44187ad2"/>
+            <lrm_rsc_op id="overcloud-novacompute-0_last_0" operation_key="overcloud-novacompute-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1499057293" last-rc-change="1499057293" exec-time="0" queue-time="0" op-digest="be548bf9f751c937c78eb61c44187ad2" on_node="overcloud-controller-1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -660,14 +660,14 @@
             <lrm_rsc_op id="openstack-cinder-backup-docker-0_last_0" operation_key="openstack-cinder-backup-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="41:70:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" transition-magic="0:7;41:70:7:9a3ef4a7-7b29-42c0-b0b3-e6b23c00a3a0" on_node="overcloud-controller-0" call-id="110" rc-code="7" op-status="0" interval="0" last-run="1498669534" last-rc-change="1498669534" exec-time="33" queue-time="0" op-digest="eedee9a7b2c178272325eaaf87df0b05"/>
           </lrm_resource>
           <lrm_resource id="overcloud-novacompute-0" class="ocf" provider="pacemaker" type="remote">
-            <lrm_rsc_op id="overcloud-novacompute-0_last_0" operation_key="overcloud-novacompute-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:1;2:-1:1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="1" op-status="0" interval="0" last-run="1499057293" last-rc-change="1499057293" exec-time="0" queue-time="0" op-digest="be548bf9f751c937c78eb61c44187ad2"/>
+            <lrm_rsc_op id="overcloud-novacompute-0_last_0" operation_key="overcloud-novacompute-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:1;2:-1:1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="1" op-status="0" interval="0" last-run="1499057293" last-rc-change="1499057293" exec-time="0" queue-time="0" op-digest="be548bf9f751c937c78eb61c44187ad2" on_node="overcloud-controller-0"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
       <transient_attributes id="1">
         <instance_attributes id="status-1">
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-rabbitmq-foo" name="fail-count-overcloud-novacompute-0" value="INFINITY"/>
+          <nvpair id="status-rabbitmq-foo" name="fail-count-overcloud-novacompute-0#start_0" value="INFINITY"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

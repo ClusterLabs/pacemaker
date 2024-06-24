@@ -32,19 +32,20 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
 {
     if ((node == NULL) || (node->details == NULL) || !node->details->online
             || node->details->shutdown || node->details->unclean
-            || node->details->standby || node->details->maintenance) {
+            || pcmk_is_set(node->priv->flags, pcmk__node_standby)
+            || node->details->maintenance) {
         return false;
     }
 
-    if (consider_score && (node->weight < 0)) {
+    if (consider_score && (node->assign->score < 0)) {
         return false;
     }
 
     // @TODO Go through all callers to see which should set consider_guest
     if (consider_guest && pcmk__is_guest_or_bundle_node(node)) {
-        pcmk_resource_t *guest = node->details->remote_rsc->container;
+        pcmk_resource_t *guest = node->priv->remote->priv->launcher;
 
-        if (guest->private->fns->location(guest, NULL, FALSE) == NULL) {
+        if (guest->priv->fns->location(guest, NULL, FALSE) == NULL) {
             return false;
         }
     }
@@ -75,7 +76,7 @@ pcmk__copy_node_table(GHashTable *nodes)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         pcmk_node_t *new_node = pe__copy_node(node);
 
-        g_hash_table_insert(new_table, (gpointer) new_node->details->id,
+        g_hash_table_insert(new_table, (gpointer) new_node->priv->id,
                             new_node);
     }
     return new_table;
@@ -120,9 +121,11 @@ pcmk__copy_node_tables(const pcmk_resource_t *rsc, GHashTable **copy)
     }
 
     g_hash_table_insert(*copy, rsc->id,
-                        pcmk__copy_node_table(rsc->allowed_nodes));
+                        pcmk__copy_node_table(rsc->priv->allowed_nodes));
 
-    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (const GList *iter = rsc->priv->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk__copy_node_tables((const pcmk_resource_t *) iter->data, copy);
     }
 }
@@ -146,13 +149,15 @@ pcmk__restore_node_tables(pcmk_resource_t *rsc, GHashTable *backup)
 {
     CRM_ASSERT((rsc != NULL) && (backup != NULL));
 
-    g_hash_table_destroy(rsc->allowed_nodes);
+    g_hash_table_destroy(rsc->priv->allowed_nodes);
 
     // Copy to avoid danger with multiple restores
-    rsc->allowed_nodes = g_hash_table_lookup(backup, rsc->id);
-    rsc->allowed_nodes = pcmk__copy_node_table(rsc->allowed_nodes);
+    rsc->priv->allowed_nodes =
+        pcmk__copy_node_table(g_hash_table_lookup(backup, rsc->id));
 
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->priv->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk__restore_node_tables((pcmk_resource_t *) iter->data, backup);
     }
 }
@@ -177,7 +182,7 @@ pcmk__copy_node_list(const GList *list, bool reset)
 
         new_node = pe__copy_node(this_node);
         if (reset) {
-            new_node->weight = 0;
+            new_node->assign->score = 0;
         }
         result = g_list_prepend(result, new_node);
     }
@@ -220,10 +225,10 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     // Compare node scores
 
     if (pcmk__node_available(node1, false, false)) {
-        node1_score = node1->weight;
+        node1_score = node1->assign->score;
     }
     if (pcmk__node_available(node2, false, false)) {
-        node2_score = node2->weight;
+        node2_score = node2->assign->score;
     }
 
     if (node1_score > node2_score) {
@@ -242,12 +247,12 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // If appropriate, compare node utilization
 
-    if (pcmk__str_eq(node1->details->data_set->placement_strategy,
+    if (pcmk__str_eq(node1->priv->scheduler->placement_strategy,
                      PCMK_VALUE_MINIMAL, pcmk__str_casei)) {
         goto equal;
     }
 
-    if (pcmk__str_eq(node1->details->data_set->placement_strategy,
+    if (pcmk__str_eq(node1->priv->scheduler->placement_strategy,
                      PCMK_VALUE_BALANCED, pcmk__str_casei)) {
 
         result = pcmk__compare_node_capacities(node1, node2);
@@ -265,16 +270,16 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // Compare number of resources already assigned to node
 
-    if (node1->details->num_resources < node2->details->num_resources) {
+    if (node1->priv->num_resources < node2->priv->num_resources) {
         crm_trace("%s before %s (%d resources < %d)",
                   pcmk__node_name(node1), pcmk__node_name(node2),
-                  node1->details->num_resources, node2->details->num_resources);
+                  node1->priv->num_resources, node2->priv->num_resources);
         return -1;
 
-    } else if (node1->details->num_resources > node2->details->num_resources) {
+    } else if (node1->priv->num_resources > node2->priv->num_resources) {
         crm_trace("%s after %s (%d resources > %d)",
                   pcmk__node_name(node1), pcmk__node_name(node2),
-                  node1->details->num_resources, node2->details->num_resources);
+                  node1->priv->num_resources, node2->priv->num_resources);
         return 1;
     }
 
@@ -294,7 +299,7 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // If all else is equal, prefer node with lowest-sorting name
 equal:
-    result = strcmp(node1->details->uname, node2->details->uname);
+    result = strcmp(node1->priv->name, node2->priv->name);
     if (result < 0) {
         crm_trace("%s before %s (name)",
                   pcmk__node_name(node1), pcmk__node_name(node2));
@@ -398,8 +403,8 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
                 /* Negative health scores do not apply to resources with
                  * PCMK_META_ALLOW_UNHEALTHY_NODES=true.
                  */
-                constrain = !crm_is_true(g_hash_table_lookup(rsc->meta,
-                                         PCMK_META_ALLOW_UNHEALTHY_NODES));
+                constrain = !crm_is_true(g_hash_table_lookup(rsc->priv->meta,
+                                                             PCMK_META_ALLOW_UNHEALTHY_NODES));
             }
             if (constrain) {
                 pcmk__new_location(strategy_str, rsc, health, NULL, node);
@@ -430,10 +435,10 @@ pcmk__top_allowed_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
         return NULL;
     }
 
-    if (rsc->private->parent == NULL) {
-        allowed_nodes = rsc->allowed_nodes;
+    if (rsc->priv->parent == NULL) {
+        allowed_nodes = rsc->priv->allowed_nodes;
     } else {
-        allowed_nodes = rsc->private->parent->allowed_nodes;
+        allowed_nodes = rsc->priv->parent->priv->allowed_nodes;
     }
-    return g_hash_table_lookup(allowed_nodes, node->details->id);
+    return g_hash_table_lookup(allowed_nodes, node->priv->id);
 }

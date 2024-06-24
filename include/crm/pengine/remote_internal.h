@@ -8,15 +8,15 @@
  */
 
 #ifndef PCMK__CRM_PENGINE_REMOTE_INTERNAL__H
-#  define PCMK__CRM_PENGINE_REMOTE_INTERNAL__H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define PCMK__CRM_PENGINE_REMOTE_INTERNAL__H
 
 #include <glib.h>                   // gboolean
 #include <libxml/tree.h>            // xmlNode
 #include <crm/pengine/status.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 bool xml_contains_remote_node(xmlNode *xml);
 pcmk_resource_t *pe__resource_contains_guest_node(const pcmk_scheduler_t *scheduler,
@@ -34,4 +34,4 @@ xmlNode *pe_create_remote_xml(xmlNode *parent, const char *uname,
 }
 #endif
 
-#endif
+#endif // PCMK__CRM_PENGINE_REMOTE_INTERNAL__H

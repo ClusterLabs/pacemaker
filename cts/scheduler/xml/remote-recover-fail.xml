@@ -78,7 +78,6 @@
         <instance_attributes id="status-3">
           <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-3-last-failure-rhel7-auto4" name="last-failure-rhel7-auto4" value="1418237396"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3">
@@ -119,7 +118,6 @@
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-2-last-failure-rhel7-auto4" name="last-failure-rhel7-auto4" value="1418237340"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="2">
@@ -149,7 +147,7 @@
           </lrm_resource>
           <lrm_resource id="rhel7-auto4" type="remote" class="ocf" provider="pacemaker">
             <lrm_rsc_op id="rhel7-auto4_last_0" operation_key="rhel7-auto4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="17:0:0:694ed93a-eab4-462e-a68d-84b5e397634d" transition-magic="2:1;17:0:0:694ed93a-eab4-462e-a68d-84b5e397634d" call-id="5" rc-code="1" op-status="2" interval="0" last-run="1418240447" last-rc-change="1418240447" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
-            <lrm_rsc_op id="rhel7-auto4_last_failure_0" operation_key="rhel7-auto4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="17:0:0:694ed93a-eab4-462e-a68d-84b5e397634d" transition-magic="2:1;17:0:0:694ed93a-eab4-462e-a68d-84b5e397634d" call-id="5" rc-code="1" op-status="2" interval="0" last-run="1418240447" last-rc-change="1418240447" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rhel7-auto4_last_failure_0" operation_key="rhel7-auto4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="17:0:0:694ed93a-eab4-462e-a68d-84b5e397634d" transition-magic="2:1;17:0:0:694ed93a-eab4-462e-a68d-84b5e397634d" call-id="5" rc-code="1" op-status="2" interval="0" last-run="1418240447" last-rc-change="1418240447" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="rhel7-auto2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

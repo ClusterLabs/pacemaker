@@ -3,7 +3,7 @@ child_rsc1:0 promotion score on node1: -1
 child_rsc1:1 promotion score on node2: 198
 child_rsc1:2 promotion score on node1: -1
 child_rsc1:3 promotion score on node2: 198
-child_rsc1:4 promotion score on none: 0
+child_rsc1:4 promotion score (inactive): -INFINITY
 pcmk__clone_assign: child_rsc1:0 allocation score on node1: 0
 pcmk__clone_assign: child_rsc1:0 allocation score on node2: 0
 pcmk__clone_assign: child_rsc1:1 allocation score on node1: 0

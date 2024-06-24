@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__PCMKI_PCMKI_CLUSTER_QUERIES__H
-#  define PCMK__PCMKI_PCMKI_CLUSTER_QUERIES__H
+#define PCMK__PCMKI_PCMKI_CLUSTER_QUERIES__H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -17,6 +17,10 @@
 #include <crm/common/output_internal.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/ipc_pacemakerd.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // CIB queries
 int pcmk__list_nodes(pcmk__output_t *out, const char *node_types,
@@ -67,4 +71,8 @@ int pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
                             unsigned int message_timeout_ms, bool show_output,
                             enum pcmk_pacemakerd_state *state);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__PCMKI_PCMKI_CLUSTER_QUERIES__H

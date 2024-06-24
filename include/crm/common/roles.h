@@ -37,29 +37,6 @@ enum rsc_role_e {
     pcmk_role_started       = 2, //!< Started
     pcmk_role_unpromoted    = 3, //!< Unpromoted
     pcmk_role_promoted      = 4, //!< Promoted
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_role_unknown instead
-    RSC_ROLE_UNKNOWN        = pcmk_role_unknown,
-
-    //! \deprecated Use pcmk_role_stopped instead
-    RSC_ROLE_STOPPED        = pcmk_role_stopped,
-
-    //! \deprecated Use pcmk_role_started instead
-    RSC_ROLE_STARTED        = pcmk_role_started,
-
-    //! \deprecated Use pcmk_role_unpromoted instead
-    RSC_ROLE_UNPROMOTED         = pcmk_role_unpromoted,
-
-    //! \deprecated Use pcmk_role_unpromoted instead
-    RSC_ROLE_SLAVE              = pcmk_role_unpromoted,
-
-    //! \deprecated Use pcmk_role_promoted instead
-    RSC_ROLE_PROMOTED           = pcmk_role_promoted,
-
-    //! \deprecated Use pcmk_role_promoted instead
-    RSC_ROLE_MASTER             = pcmk_role_promoted,
-#endif
 };
 
 const char *pcmk_role_text(enum rsc_role_e role);

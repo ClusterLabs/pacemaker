@@ -131,30 +131,6 @@ scheduler, then asking the executors (either directly on the local node, or via
 requests to controller peers on other nodes) and the fencer to execute any
 necessary actions.
 
-.. note:: **Old daemon names**
-
-    The Pacemaker daemons were renamed in version 2.0. You may still find
-    references to the old names, especially in documentation targeted to
-    version 1.1.
-
-    .. table::
-
-       +-----------------------+------------------------+
-       | Old name              | New name               |
-       +=======================+========================+
-       | ``attrd``             | ``pacemaker-attrd``    |
-       +-----------------------+------------------------+
-       | ``cib``               | ``pacemaker-based``    |
-       +-----------------------+------------------------+
-       | ``crmd``              | ``pacemaker-controld`` |
-       +-----------------------+------------------------+
-       | ``lrmd``              | ``pacemaker-execd``    |
-       +-----------------------+------------------------+
-       | ``stonithd``          | ``pacemaker-fenced``   |
-       +-----------------------+------------------------+
-       | ``pacemaker_remoted`` | ``pacemaker-remoted``  |
-       +-----------------------+------------------------+
-
 Node Redundancy Designs
 _______________________
 

@@ -1,0 +1,41 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 node4 node5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node1
+    * dummy	(ocf:pacemaker:Dummy):	 Started node2
+    * Resource Group: G:
+      * G-RSC1	(ocf:pacemaker:Dummy):	 Started node2
+      * G-RSC2	(ocf:pacemaker:Dummy):	 Started node2
+
+Transition Summary:
+  * Move       dummy      ( node2 -> node3 )
+  * Move       G-RSC1     ( node2 -> node3 )
+  * Move       G-RSC2     ( node2 -> node3 )
+
+Executing Cluster Transition:
+  * Pseudo action:   G_stop_0
+  * Resource action: G-RSC2          stop on node2
+  * Resource action: dummy           stop on node2
+  * Resource action: G-RSC1          stop on node2
+  * Resource action: dummy           start on node3
+  * Pseudo action:   G_stopped_0
+  * Pseudo action:   G_start_0
+  * Resource action: G-RSC1          start on node3
+  * Resource action: G-RSC2          start on node3
+  * Resource action: dummy           monitor=20000 on node3
+  * Pseudo action:   G_running_0
+  * Resource action: G-RSC1          monitor=30000 on node3
+  * Resource action: G-RSC2          monitor=30000 on node3
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 node4 node5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node1
+    * dummy	(ocf:pacemaker:Dummy):	 Started node3
+    * Resource Group: G:
+      * G-RSC1	(ocf:pacemaker:Dummy):	 Started node3
+      * G-RSC2	(ocf:pacemaker:Dummy):	 Started node3

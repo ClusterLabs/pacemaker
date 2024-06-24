@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_CLUSTER_ELECTION_INTERNAL__H
-#  define PCMK__CRM_CLUSTER_ELECTION_INTERNAL__H
+#define PCMK__CRM_CLUSTER_ELECTION_INTERNAL__H
 
 #include <stdbool.h>
 
@@ -88,4 +88,4 @@ void election_clear_dampening(election_t *e);
 }
 #endif
 
-#endif
+#endif // PCMK__CRM_CLUSTER_ELECTION_INTERNAL__H

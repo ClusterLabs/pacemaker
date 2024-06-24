@@ -13,4 +13,4 @@ pcmk__primitive_assign: shared_filesystem allocation score on redun1: -INFINITY
 pcmk__primitive_assign: shared_filesystem allocation score on redun2: 875
 prim_shared_storage:0 promotion score on redun2: 75
 prim_shared_storage:1 promotion score on redun1: 75
-prim_shared_storage:2 promotion score on none: 0
+prim_shared_storage:2 promotion score (inactive): -INFINITY

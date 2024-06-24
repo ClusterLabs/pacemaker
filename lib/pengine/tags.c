@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,7 +32,9 @@ pe__rscs_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
         return retval;
     }
 
-    for (GList *refs = ((pcmk_tag_t *) value)->refs; refs; refs = refs->next) {
+    for (GList *refs = ((pcmk__idref_t *) value)->refs;
+         refs != NULL; refs = refs->next) {
+
         const char *id = (const char *) refs->data;
         const uint32_t flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
         pcmk_resource_t *rsc = pe_find_resource_with_flags(scheduler->resources,
@@ -65,7 +67,9 @@ pe__unames_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
     }
 
     /* Iterate over the list of node IDs. */
-    for (GList *refs = ((pcmk_tag_t *) value)->refs; refs; refs = refs->next) {
+    for (GList *refs = ((pcmk__idref_t *) value)->refs;
+         refs != NULL; refs = refs->next) {
+
         /* Find the node that has this ID. */
         const char *id = (const char *) refs->data;
         pcmk_node_t *node = pe_find_node_id(scheduler->nodes, id);
@@ -75,7 +79,7 @@ pe__unames_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
         }
 
         /* Get the uname for the node and add it to the return list. */
-        retval = g_list_append(retval, strdup(node->details->uname));
+        retval = g_list_append(retval, strdup(node->priv->name));
     }
 
     return retval;

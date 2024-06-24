@@ -33,7 +33,7 @@ pcmk__is_primitive(const pcmk_resource_t *rsc)
     if (rsc == NULL) {
         return false;
     }
-    return rsc->private->variant == pcmk__rsc_variant_primitive;
+    return rsc->priv->variant == pcmk__rsc_variant_primitive;
 }
 
 #ifdef __cplusplus

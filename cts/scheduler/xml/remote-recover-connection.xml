@@ -554,7 +554,6 @@
     <node_state id="galera-1" remote_node="true" uname="galera-1" in_ccm="true" crm-debug-origin="post_cache_update">
       <transient_attributes id="galera-1">
         <instance_attributes id="status-galera-1">
-          <nvpair id="status-galera-1-last-failure-galera" name="last-failure-galera" value="1493336863"/>
           <nvpair id="status-galera-1-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>
       </transient_attributes>
@@ -571,7 +570,6 @@
     <node_state id="galera-2" remote_node="true" uname="galera-2" crm-debug-origin="post_cache_update" in_ccm="true">
       <transient_attributes id="galera-2">
         <instance_attributes id="status-galera-2">
-          <nvpair id="status-galera-2-last-failure-galera" name="last-failure-galera" value="1493172798"/>
           <nvpair id="status-galera-2-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>
       </transient_attributes>
@@ -588,7 +586,6 @@
     <node_state id="galera-0" remote_node="true" uname="galera-0" crm-debug-origin="post_cache_update" in_ccm="true">
       <transient_attributes id="galera-0">
         <instance_attributes id="status-galera-0">
-          <nvpair id="status-galera-0-last-failure-galera" name="last-failure-galera" value="1493172797"/>
           <nvpair id="status-galera-0-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>
       </transient_attributes>
@@ -675,7 +672,6 @@
       <transient_attributes id="messaging-2">
         <instance_attributes id="status-messaging-2">
           <nvpair id="status-messaging-2-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@messaging-2"/>
-          <nvpair id="status-messaging-2-last-failure-rabbitmq" name="last-failure-rabbitmq" value="1493172992"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="messaging-2">
@@ -692,7 +688,6 @@
       <transient_attributes id="messaging-0">
         <instance_attributes id="status-messaging-0">
           <nvpair id="status-messaging-0-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@messaging-0"/>
-          <nvpair id="status-messaging-0-last-failure-rabbitmq" name="last-failure-rabbitmq" value="1493330172"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="messaging-0">
@@ -709,7 +704,6 @@
       <transient_attributes id="messaging-1">
         <instance_attributes id="status-messaging-1">
           <nvpair id="status-messaging-1-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@messaging-1"/>
-          <nvpair id="status-messaging-1-last-failure-rabbitmq" name="last-failure-rabbitmq" value="1493336946"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="messaging-1">

@@ -102,10 +102,10 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
 
     scheduler = pe_new_working_set();
     pcmk__mem_assert(scheduler);
-    pcmk__set_scheduler_flags(scheduler, pcmk_sched_no_compat);
+    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_compat);
 
     scheduler->input = cib_copy;
-    scheduler->priv = out;
+    scheduler->priv->out = out;
     cluster_status(scheduler);
 
     if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
@@ -321,7 +321,8 @@ pcmk__output_simple_status(pcmk__output_t *out,
     for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
-        if (node->details->standby && node->details->online) {
+        if (pcmk_is_set(node->priv->flags, pcmk__node_standby)
+            && node->details->online) {
             nodes_standby++;
         } else if (node->details->maintenance && node->details->online) {
             nodes_maint++;

@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/common/scheduler.h>
+#include <crm/common/scheduler_internal.h>
 #include <crm/common/unittest_internal.h>
 
 static void
@@ -22,12 +23,12 @@ static void
 valid_scheduler(void **state)
 {
     pcmk_scheduler_t scheduler = {
-        .flags = pcmk_sched_quorate,
+        .flags = pcmk__sched_quorate,
     };
 
     assert_true(pcmk_has_quorum(&scheduler));
 
-    scheduler.flags = pcmk_sched_none;
+    scheduler.flags = pcmk__sched_none;
     assert_false(pcmk_has_quorum(&scheduler));
 }
 

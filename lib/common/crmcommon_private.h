@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRMCOMMON_PRIVATE__H
-#  define CRMCOMMON_PRIVATE__H
+#ifndef PCMK__COMMON_CRMCOMMON_PRIVATE__H
+#define PCMK__COMMON_CRMCOMMON_PRIVATE__H
 
 /* This header is for the sole use of libcrmcommon, so that functions can be
  * declared with G_GNUC_INTERNAL for efficiency.
@@ -17,9 +17,24 @@
 #include <stdint.h>         // uint8_t, uint32_t
 #include <stdbool.h>        // bool
 #include <sys/types.h>      // size_t
-#include <glib.h>           // gchar, GList
+
+#include <glib.h>           // G_GNUC_INTERNAL, G_GNUC_PRINTF, gchar, etc.
 #include <libxml/tree.h>    // xmlNode, xmlAttr
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
+
+#include <crm/common/ipc.h>             // pcmk_ipc_api_t, crm_ipc_t, etc.
+#include <crm/common/iso8601.h>         // crm_time_t
+#include <crm/common/logging.h>         // LOG_NEVER
+#include <crm/common/mainloop.h>        // mainloop_io_t
+#include <crm/common/output_internal.h> // pcmk__output_t
+#include <crm/common/results.h>         // crm_exit_t
+#include <crm/common/rules.h>           // pcmk_rule_input_t
+#include <crm/common/xml.h>             // pcmkXmlStr
+#include <crm/common/xml_internal.h>    // enum xml_private_flags
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Decent chunk size for processing large amounts of data
 #define PCMK__BUFFER_SIZE 4096
@@ -424,5 +439,8 @@ typedef struct {
 G_GNUC_INTERNAL
 GList *pcmk__find_x_0_schema(void);
 
+#ifdef __cplusplus
+}
+#endif
 
-#endif  // CRMCOMMON_PRIVATE__H
+#endif  // PCMK__COMMON_CRMCOMMON_PRIVATE__H

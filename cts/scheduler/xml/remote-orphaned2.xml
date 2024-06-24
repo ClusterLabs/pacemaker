@@ -51,37 +51,37 @@
       </lrm>
       <transient_attributes id="2">
         <instance_attributes id="status-2">
-          <nvpair id="status-2-fail-count-qpidd" name="fail-count-qpidd" value="INFINITY"/>
+          <nvpair id="status-2-fail-count-qpidd.start_0" name="fail-count-qpidd#start_0" value="INFINITY"/>
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-2-fail-count-node1-fence" name="fail-count-node1-fence" value="INFINITY"/>
-          <nvpair id="status-2-fail-count-lb-haproxy" name="fail-count-lb-haproxy" value="INFINITY"/>
+          <nvpair id="status-2-fail-count-node1-fence.start_0" name="fail-count-node1-fence#start_0" value="INFINITY"/>
+          <nvpair id="status-2-fail-count-lb-haproxy.start_0" name="fail-count-lb-haproxy#start_0" value="INFINITY"/>
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-2-last-failure-lb-haproxy" name="last-failure-lb-haproxy" value="1421318629"/>
-          <nvpair id="status-2-fail-count-node2-fence" name="fail-count-node2-fence" value="INFINITY"/>
-          <nvpair id="status-2-last-failure-node1-fence" name="last-failure-node1-fence" value="1421318696"/>
-          <nvpair id="status-2-fail-count-node3-fence" name="fail-count-node3-fence" value="INFINITY"/>
-          <nvpair id="status-2-fail-count-galera" name="fail-count-galera" value="INFINITY"/>
-          <nvpair id="status-2-last-failure-node3-fence" name="last-failure-node3-fence" value="1421318719"/>
+          <nvpair id="status-2-last-failure-lb-haproxy.start_0" name="last-failure-lb-haproxy#start_0" value="1421318629"/>
+          <nvpair id="status-2-fail-count-node2-fence.start_0" name="fail-count-node2-fence#start_0" value="INFINITY"/>
+          <nvpair id="status-2-last-failure-node1-fence.start_0" name="last-failure-node1-fence#start_0" value="1421318696"/>
+          <nvpair id="status-2-fail-count-node3-fence.start_0" name="fail-count-node3-fence#start_0" value="INFINITY"/>
+          <nvpair id="status-2-fail-count-galera.start_0" name="fail-count-galera#start_0" value="INFINITY"/>
+          <nvpair id="status-2-last-failure-node3-fence.start_0" name="last-failure-node3-fence#start_0" value="1421318719"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
     <node_state id="3" uname="host-028" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
       <transient_attributes id="3">
         <instance_attributes id="status-3">
-          <nvpair id="status-3-last-failure-node3-fence" name="last-failure-node3-fence" value="1421318650"/>
-          <nvpair id="status-3-last-failure-rabbitmq-server" name="last-failure-rabbitmq-server" value="1421318676"/>
-          <nvpair id="status-3-last-failure-node1-fence" name="last-failure-node1-fence" value="1421318742"/>
-          <nvpair id="status-3-fail-count-node3-fence" name="fail-count-node3-fence" value="INFINITY"/>
-          <nvpair id="status-3-fail-count-galera" name="fail-count-galera" value="INFINITY"/>
+          <nvpair id="status-3-last-failure-node3-fence.start_0" name="last-failure-node3-fence#start_0" value="1421318650"/>
+          <nvpair id="status-3-last-failure-rabbitmq-server.start_0" name="last-failure-rabbitmq-server#start_0" value="1421318676"/>
+          <nvpair id="status-3-last-failure-node1-fence.start_0" name="last-failure-node1-fence#start_0" value="1421318742"/>
+          <nvpair id="status-3-fail-count-node3-fence.start_0" name="fail-count-node3-fence#start_0" value="INFINITY"/>
+          <nvpair id="status-3-fail-count-galera.start_0" name="fail-count-galera#start_0" value="INFINITY"/>
           <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-3-fail-count-node1-fence" name="fail-count-node1-fence" value="INFINITY"/>
-          <nvpair id="status-3-fail-count-rabbitmq-server" name="fail-count-rabbitmq-server" value="INFINITY"/>
-          <nvpair id="status-3-fail-count-lb-haproxy" name="fail-count-lb-haproxy" value="INFINITY"/>
+          <nvpair id="status-3-fail-count-node1-fence.start_0" name="fail-count-node1-fence#start_0" value="INFINITY"/>
+          <nvpair id="status-3-fail-count-rabbitmq-server.start_0" name="fail-count-rabbitmq-server#start_0" value="INFINITY"/>
+          <nvpair id="status-3-fail-count-lb-haproxy.start_0" name="fail-count-lb-haproxy#start_0" value="INFINITY"/>
           <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-3-last-failure-lb-haproxy" name="last-failure-lb-haproxy" value="1421318698"/>
-          <nvpair id="status-3-fail-count-node2-fence" name="fail-count-node2-fence" value="INFINITY"/>
-          <nvpair id="status-3-last-failure-galera" name="last-failure-galera" value="1421318698"/>
-          <nvpair id="status-3-last-failure-node2-fence" name="last-failure-node2-fence" value="1421318764"/>
+          <nvpair id="status-3-last-failure-lb-haproxy.start_0" name="last-failure-lb-haproxy#start_0" value="1421318698"/>
+          <nvpair id="status-3-fail-count-node2-fence.start_0" name="fail-count-node2-fence#start_0" value="INFINITY"/>
+          <nvpair id="status-3-last-failure-galera.start_0" name="last-failure-galera#start_0" value="1421318698"/>
+          <nvpair id="status-3-last-failure-node2-fence.start_0" name="last-failure-node2-fence#start_0" value="1421318764"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3">
@@ -91,20 +91,20 @@
     <node_state id="1" uname="host-026" crmd="online" crm-debug-origin="do_state_transition" in_ccm="true" join="member" expected="member">
       <transient_attributes id="1">
         <instance_attributes id="status-1">
-          <nvpair id="status-1-last-failure-node3-fence" name="last-failure-node3-fence" value="1421318673"/>
-          <nvpair id="status-1-last-failure-node1-fence" name="last-failure-node1-fence" value="1421318650"/>
-          <nvpair id="status-1-fail-count-node3-fence" name="fail-count-node3-fence" value="INFINITY"/>
-          <nvpair id="status-1-fail-count-galera" name="fail-count-galera" value="INFINITY"/>
-          <nvpair id="status-1-last-failure-memcached" name="last-failure-memcached" value="1421318744"/>
+          <nvpair id="status-1-last-failure-node3-fence.start_0" name="last-failure-node3-fence#start_0" value="1421318673"/>
+          <nvpair id="status-1-last-failure-node1-fence.start_0" name="last-failure-node1-fence#start_0" value="1421318650"/>
+          <nvpair id="status-1-fail-count-node3-fence.start_0" name="fail-count-node3-fence#start_0" value="INFINITY"/>
+          <nvpair id="status-1-fail-count-galera.start_0" name="fail-count-galera#start_0" value="INFINITY"/>
+          <nvpair id="status-1-last-failure-memcached.start_0" name="last-failure-memcached#start_0" value="1421318744"/>
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-1-fail-count-node1-fence" name="fail-count-node1-fence" value="INFINITY"/>
-          <nvpair id="status-1-fail-count-lb-haproxy" name="fail-count-lb-haproxy" value="INFINITY"/>
+          <nvpair id="status-1-fail-count-node1-fence.start_0" name="fail-count-node1-fence#start_0" value="INFINITY"/>
+          <nvpair id="status-1-fail-count-lb-haproxy.start_0" name="fail-count-lb-haproxy#start_0" value="INFINITY"/>
           <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-1-last-failure-lb-haproxy" name="last-failure-lb-haproxy" value="1421318629"/>
-          <nvpair id="status-1-fail-count-node2-fence" name="fail-count-node2-fence" value="INFINITY"/>
-          <nvpair id="status-1-fail-count-memcached" name="fail-count-memcached" value="INFINITY"/>
-          <nvpair id="status-1-last-failure-galera" name="last-failure-galera" value="1421318721"/>
-          <nvpair id="status-1-last-failure-node2-fence" name="last-failure-node2-fence" value="1421318696"/>
+          <nvpair id="status-1-last-failure-lb-haproxy.start_0" name="last-failure-lb-haproxy#start_0" value="1421318629"/>
+          <nvpair id="status-1-fail-count-node2-fence.start_0" name="fail-count-node2-fence#start_0" value="INFINITY"/>
+          <nvpair id="status-1-fail-count-memcached.start_0" name="fail-count-memcached#start_0" value="INFINITY"/>
+          <nvpair id="status-1-last-failure-galera.start_0" name="last-failure-galera#start_0" value="1421318721"/>
+          <nvpair id="status-1-last-failure-node2-fence.start_0" name="last-failure-node2-fence#start_0" value="1421318696"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="1">

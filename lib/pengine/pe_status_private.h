@@ -7,22 +7,27 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PE_STATUS_PRIVATE__H
-#  define PE_STATUS_PRIVATE__H
+#ifndef PCMK__PENGINE_PE_STATUS_PRIVATE__H
+#define PCMK__PENGINE_PE_STATUS_PRIVATE__H
 
 /* This header is for the sole use of libpe_status, so that functions can be
  * declared with G_GNUC_INTERNAL for efficiency.
  */
 
+#include <glib.h>                 // G_GNUC_INTERNAL, GSList, GList, etc.
+#include <libxml/tree.h>          // xmlNode
+
+#include <crm/common/digest_internal.h>     // pcmk__op_digest_t
+#include <crm/common/scheduler_types.h>     // pcmk_action_t, etc.
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(PCMK__UNIT_TESTING)
 #undef G_GNUC_INTERNAL
 #define G_GNUC_INTERNAL
 #endif
-
-#include <glib.h>                 // GSList, GList, GHashTable
-#include <libxml/tree.h>          // xmlNode
-
-#include <crm/pengine/status.h>   // pcmk_action_t, pcmk_resource_t, etc.
 
 typedef struct notify_data_s {
     GSList *keys;               // Environment variable name/value pairs
@@ -47,7 +52,7 @@ typedef struct notify_data_s {
 
 G_GNUC_INTERNAL
 pcmk_resource_t *pe__create_clone_child(pcmk_resource_t *rsc,
-                                      pcmk_scheduler_t *scheduler);
+                                        pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 void pe__create_action_notifications(pcmk_resource_t *rsc,
@@ -128,4 +133,8 @@ pcmk_node_t *pe__bundle_active_node(const pcmk_resource_t *rsc,
 G_GNUC_INTERNAL
 unsigned int pe__bundle_max_per_node(const pcmk_resource_t *rsc);
 
-#endif  // PE_STATUS_PRIVATE__H
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // PCMK__PENGINE_PE_STATUS_PRIVATE__H

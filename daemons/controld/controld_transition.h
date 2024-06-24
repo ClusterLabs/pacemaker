@@ -1,17 +1,21 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #ifndef TENGINE__H
-#  define TENGINE__H
+#define TENGINE__H
 
-#  include <crm/common/mainloop.h>
-#  include <crm/stonith-ng.h>
-#  include <crm/services.h>
-#  include <pacemaker-internal.h>
+#include <glib.h>                   // gboolean
+#include <libxml/tree.h>            // xmlNode
+
+#include <crm/cluster/internal.h>   // pcmk__node_status_t
+#include <crm/common/mainloop.h>
+#include <crm/stonith-ng.h>
+#include <crm/services.h>
+#include <pacemaker-internal.h>
 
 /* tengine */
 pcmk__graph_action_t *match_down_event(const char *target);
@@ -48,7 +52,7 @@ void controld_destroy_transition_trigger(void);
 void controld_trigger_graph_as(const char *fn, int line);
 void abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
                        const char *abort_text, guint delay_ms);
-void controld_node_pending_timer(const crm_node_t *node);
+void controld_node_pending_timer(const pcmk__node_status_t *node);
 void controld_free_node_pending_timers(void);
 void abort_transition_graph(int abort_priority,
                             enum pcmk__graph_next abort_action,

@@ -87,8 +87,8 @@ enum pcmk__rsc_flags {
     // Whether resource is blocked from further action
     pcmk__rsc_blocked                = (1ULL << 2),
 
-    // Whether resource has been removed but has a container
-    pcmk__rsc_removed_filler         = (1ULL << 3),
+    // Whether resource has been removed but was launched
+    pcmk__rsc_removed_launched       = (1ULL << 3),
 
     // Whether resource has clone notifications enabled
     pcmk__rsc_notify                 = (1ULL << 4),
@@ -317,13 +317,22 @@ struct pcmk__resource_private {
     enum pcmk__rsc_variant variant; // Resource variant
     void *variant_opaque;           // Variant-specific data
     char *history_id;               // Resource instance ID in history
+    GHashTable *meta;               // Resource meta-attributes
+    GHashTable *utilization;        // Resource utilization attributes
     int priority;                   // Priority relative other resources
     int promotion_priority;         // Promotion priority on assigned node
+    enum rsc_role_e orig_role;      // Resource's role at start of transition
+    enum rsc_role_e next_role;      // Resource's role at end of transition
     int stickiness;                 // Extra preference for current node
     guint failure_expiration_ms;    // Failures expire after this much time
     int ban_after_failures;         // Ban from node after this many failures
     guint remote_reconnect_ms;      // Retry interval for remote connections
     char *pending_action;           // Pending action in history, if any
+    const pcmk_node_t *pending_node;// Node on which pending_action is happening
+    time_t lock_time;               // When shutdown lock started
+    const pcmk_node_t *lock_node;   // Node that resource is shutdown-locked to
+    GList *actions;                 // Actions scheduled for resource
+    GList *children;                // Resource's child resources, if any
     pcmk_resource_t *parent;        // Resource's parent resource, if any
     pcmk_scheduler_t *scheduler;    // Scheduler data containing resource
     enum pcmk__restart restart_type;    // Deprecated
@@ -337,8 +346,88 @@ struct pcmk__resource_private {
     // Configuration of resource operations (possibly expanded from template)
     xmlNode *ops_xml;
 
+    /*
+     * Resource parameters may have node-attribute-based rules, which means the
+     * values can vary by node. This table has node names as keys and parameter
+     * name/value tables as values. Use pe_rsc_params() to get the table for a
+     * given node rather than use this directly.
+     */
+    GHashTable *parameter_cache;
+
+    /* A "launcher" is defined in one of these ways:
+     *
+     * - A Pacemaker Remote connection for a guest node or bundle node has its
+     *   launcher set to the resource that starts the guest or the bundle
+     *   replica's container.
+     *
+     * - If the user configures the PCMK__META_CONTAINER meta-attribute for this
+     *   resource, the launcher is set to that.
+     *
+     *   If the launcher is a Pacemaker Remote connection resource, this
+     *   resource may run only on the node created by that connection.
+     *
+     *   Otherwise, this resource will be colocated with and ordered after the
+     *   launcher, and failures of this resource will cause the launcher to be
+     *   recovered instead of this one. This is appropriate for monitoring-only
+     *   resources that represent a service launched by the other resource.
+     */
+    pcmk_resource_t *launcher;
+
+    // Resources launched by this one, if any (pcmk_resource_t *)
+    GList *launched;
+
     // What to do if the resource is incorrectly active on multiple nodes
     enum pcmk__multiply_active multiply_active_policy;
+
+    /* The assigned node (if not NULL) is the one where the resource *should*
+     * be active by the end of the current scheduler transition. Only primitive
+     * resources have an assigned node.
+     *
+     * @TODO This should probably be part of the primitive variant data.
+     */
+    pcmk_node_t *assigned_node;
+
+    /* The active nodes are ones where the resource is (or might be, if
+     * insufficient information is available to be sure) already active at the
+     * start of the current scheduler transition.
+     *
+     * For primitive resources, there should be at most one, but could be more
+     * if it is (incorrectly) multiply active. For collective resources, this
+     * combines active nodes of all descendants.
+     */
+    GList *active_nodes;
+
+    // Nodes where resource has been probed (key is node ID, not name)
+    GHashTable *probed_nodes;
+
+    // Nodes where resource is allowed to run (key is node ID, not name)
+    GHashTable *allowed_nodes;
+
+    // The source node, if migrate_to completed but migrate_from has not
+    pcmk_node_t *partial_migration_source;
+
+    // The destination node, if migrate_to completed but migrate_from has not
+    pcmk_node_t *partial_migration_target;
+
+    // Source nodes where stop is needed after migrate_from and migrate_to
+    GList *dangling_migration_sources;
+
+    /* Pay special attention to whether you want to use with_this_colocations
+     * and this_with_colocations directly, which include only colocations
+     * explicitly involving this resource, or call libpacemaker's
+     * pcmk__with_this_colocations() and pcmk__this_with_colocations()
+     * functions, which may return relevant colocations involving the resource's
+     * ancestors as well.
+     */
+
+    // Colocations of other resources with this one
+    GList *with_this_colocations;
+
+    // Colocations of this resource with others
+    GList *this_with_colocations;
+
+    GList *location_constraints;        // Location constraints for resource
+    GList *ticket_constraints;          // Ticket constraints for resource
 
     const pcmk__rsc_methods_t *fns;         // Resource object methods
     const pcmk__assignment_methods_t *cmds; // Resource assignment methods
@@ -360,7 +449,7 @@ pcmk__current_node(const pcmk_resource_t *rsc)
     if (rsc == NULL) {
         return NULL;
     }
-    return rsc->private->fns->active_node(rsc, NULL, NULL);
+    return rsc->priv->fns->active_node(rsc, NULL, NULL);
 }
 
 #ifdef __cplusplus

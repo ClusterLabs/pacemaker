@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,10 +15,18 @@
 #include <crm/common/scheduler.h>
 #include <crm/common/output_internal.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
                           const char *rsc_type);
 
 int pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
                            const pcmk_node_t *node, GHashTable *overrides);
 
-#endif /* PCMK__PCMKI_PCMKI_RESOURCE__H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__PCMKI_PCMKI_RESOURCE__H

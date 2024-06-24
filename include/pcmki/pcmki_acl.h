@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,10 @@
 #define PCMK__PCMKI_PCMKI_ACL__H
 
 #include <crm/common/xml.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // How ACLs can be displayed (for cibadmin --show-access)
 enum pcmk__acl_render_how {
@@ -56,4 +60,8 @@ int pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
 int pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how,
                             xmlChar **doc_txt_ptr);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__PCMKI_PCMKI_ACL__H

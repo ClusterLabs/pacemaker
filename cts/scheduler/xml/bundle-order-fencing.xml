@@ -65,8 +65,7 @@
       <bundle id="rabbitmq-bundle">
         <meta_attributes id="rabbitmq-bundle-meta_attributes">
           <nvpair id="rabbitmq-bundle-meta_attributes-notify" name="notify" value="true"/>
-          <nvpair id="rabbitmq-bundle-meta_attributes-container-attribute-target"
-                  name="container-attribute-target" value="host"/>
+          <nvpair id="rabbitmq-bundle-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
         </meta_attributes>
         <docker image="192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3122"/>
@@ -97,8 +96,7 @@
         <meta_attributes id="galera-meta_attributes">
           <nvpair id="galera-meta_attributes-promoted-max" name="promoted-max" value="3"/>
           <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
-	  <nvpair id="galera-meta_attributes-container-attribute-target"
-                  name="container-attribute-target" value="host"/>
+	  <nvpair id="galera-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
         </meta_attributes>
         <docker image="192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest" promoted-max="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3123"/>
@@ -134,8 +132,7 @@
           <nvpair id="redis-meta_attributes-interleave" name="interleave" value="true"/>
           <nvpair id="redis-meta_attributes-notify" name="notify" value="true"/>
           <nvpair id="redis-meta_attributes-ordered" name="ordered" value="true"/>
-	  <nvpair id="redis-meta_attributes-container-attribute-target"
-                  name="container-attribute-target" value="host"/>
+	  <nvpair id="redis-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
         </meta_attributes>
         <docker image="192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest" promoted-max="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3124"/>
@@ -776,8 +773,8 @@
       </lrm>
       <transient_attributes id="redis-bundle-2">
         <instance_attributes id="status-redis-bundle-2">
-          <nvpair id="status-redis-bundle-2-fail-count-redis" name="fail-count-redis" value="1"/>
-          <nvpair id="status-redis-bundle-2-last-failure-redis" name="last-failure-redis" value="1505143894"/>
+          <nvpair id="status-redis-bundle-2-fail-count-redis.monitor_60000" name="fail-count-redis#monitor_60000" value="1"/>
+          <nvpair id="status-redis-bundle-2-last-failure-redis.monitor_60000" name="last-failure-redis#monitor_60000" value="1505143894"/>
           <nvpair id="status-redis-bundle-2-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>

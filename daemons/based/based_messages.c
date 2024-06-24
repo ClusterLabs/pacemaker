@@ -117,7 +117,7 @@ void
 send_sync_request(const char *host)
 {
     xmlNode *sync_me = pcmk__xe_create(NULL, "sync-me");
-    crm_node_t *peer = NULL;
+    pcmk__node_status_t *peer = NULL;
 
     crm_info("Requesting re-sync from %s", (host? host : "all peers"));
     sync_in_progress = 1;
@@ -140,7 +140,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 {
     const char *host = crm_element_value(req, PCMK__XA_SRC);
     const char *seq = crm_element_value(req, PCMK__XA_CIB_PING_ID);
-    char *digest = pcmk__digest_xml(the_cib, true, CRM_FEATURE_SET);
+    char *digest = pcmk__digest_xml(the_cib, true);
 
     xmlNode *wrapper = NULL;
 
@@ -236,13 +236,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
             crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
 
-            if (cib_legacy_mode() && based_is_primary) {
-                rc = cib_process_upgrade(
-                    op, options, section, up, input, existing_cib, result_cib, answer);
-
-            } else {
-                pcmk__cluster_send_message(NULL, crm_msg_cib, up);
-            }
+            pcmk__cluster_send_message(NULL, crm_msg_cib, up);
 
             pcmk__xml_free(up);
 
@@ -252,7 +246,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
         if (rc != pcmk_ok) {
             // Notify originating peer so it can notify its local clients
-            crm_node_t *origin = NULL;
+            pcmk__node_status_t *origin = NULL;
 
             origin = pcmk__search_node_caches(0, host,
                                               pcmk__node_search_cluster_member);
@@ -340,15 +334,6 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
         if (options & cib_force_diff) {
             crm_warn("Not requesting full refresh in R/W mode");
         }
-
-    } else if ((rc != pcmk_ok) && !based_is_primary && cib_legacy_mode()) {
-        crm_warn("Requesting full CIB refresh because update failed: %s"
-                 QB_XS " rc=%d", pcmk_strerror(rc), rc);
-
-        pcmk__log_xml_patchset(LOG_INFO, input);
-        pcmk__xml_free(*result_cib);
-        *result_cib = NULL;
-        send_sync_request(NULL);
     }
 
     return rc;
@@ -391,8 +376,6 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_CIB_HOST,
         PCMK__XA_CIB_RC,
         PCMK__XA_CIB_DELEGATED_FROM,
-        PCMK__XA_CIB_OBJECT,
-        PCMK__XA_CIB_OBJECT_TYPE,
         PCMK__XA_CIB_UPDATE,
         PCMK__XA_CIB_CLIENTNAME,
         PCMK__XA_CIB_USER,
@@ -421,7 +404,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     char *digest = NULL;
     const char *host = crm_element_value(request, PCMK__XA_SRC);
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-    crm_node_t *peer = NULL;
+    pcmk__node_status_t *peer = NULL;
     xmlNode *replace_request = NULL;
     xmlNode *wrapper = NULL;
 
@@ -447,7 +430,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     pcmk__xe_set_bool_attr(replace_request, PCMK__XA_CIB_UPDATE, true);
 
     crm_xml_add(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-    digest = pcmk__digest_xml(the_cib, true, CRM_FEATURE_SET);
+    digest = pcmk__digest_xml(the_cib, true);
     crm_xml_add(replace_request, PCMK__XA_DIGEST, digest);
 
     wrapper = pcmk__xe_create(replace_request, PCMK__XE_CIB_CALLDATA);

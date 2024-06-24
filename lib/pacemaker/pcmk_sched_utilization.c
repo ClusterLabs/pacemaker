@@ -71,14 +71,14 @@ compare_utilization_value(gpointer key, gpointer value, gpointer user_data)
     const char *node2_value = NULL;
 
     if (data->node2_only) {
-        if (g_hash_table_lookup(data->node1->details->utilization, key)) {
+        if (g_hash_table_lookup(data->node1->priv->utilization, key)) {
             return; // We've already compared this attribute
         }
     } else {
         node1_capacity = utilization_value((const char *) value);
     }
 
-    node2_value = g_hash_table_lookup(data->node2->details->utilization, key);
+    node2_value = g_hash_table_lookup(data->node2->priv->utilization, key);
     node2_capacity = utilization_value(node2_value);
 
     if (node1_capacity > node2_capacity) {
@@ -111,12 +111,12 @@ pcmk__compare_node_capacities(const pcmk_node_t *node1,
     };
 
     // Compare utilization values that node1 and maybe node2 have
-    g_hash_table_foreach(node1->details->utilization, compare_utilization_value,
+    g_hash_table_foreach(node1->priv->utilization, compare_utilization_value,
                          &data);
 
     // Compare utilization values that only node2 has
     data.node2_only = true;
-    g_hash_table_foreach(node2->details->utilization, compare_utilization_value,
+    g_hash_table_foreach(node2->priv->utilization, compare_utilization_value,
                          &data);
 
     return data.result;
@@ -173,7 +173,8 @@ pcmk__consume_node_capacity(GHashTable *current_utilization,
         .plus = false,
     };
 
-    g_hash_table_foreach(rsc->utilization, update_utilization_value, &data);
+    g_hash_table_foreach(rsc->priv->utilization, update_utilization_value,
+                         &data);
 }
 
 /*!
@@ -192,7 +193,8 @@ pcmk__release_node_capacity(GHashTable *current_utilization,
         .plus = true,
     };
 
-    g_hash_table_foreach(rsc->utilization, update_utilization_value, &data);
+    g_hash_table_foreach(rsc->priv->utilization, update_utilization_value,
+                         &data);
 }
 
 
@@ -222,7 +224,7 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
     const char *node_value_s = NULL;
     struct capacity_data *data = user_data;
 
-    node_value_s = g_hash_table_lookup(data->node->details->utilization, key);
+    node_value_s = g_hash_table_lookup(data->node->priv->utilization, key);
 
     required = utilization_value(value);
     remaining = utilization_value(node_value_s);
@@ -279,7 +281,7 @@ sum_resource_utilization(const pcmk_resource_t *orig_rsc, GList *rscs)
     for (GList *iter = rscs; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->private->cmds->add_utilization(rsc, orig_rsc, rscs, utilization);
+        rsc->priv->cmds->add_utilization(rsc, orig_rsc, rscs, utilization);
     }
     return utilization;
 }
@@ -307,13 +309,13 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     CRM_CHECK(rsc != NULL, return NULL);
 
     // The default placement strategy ignores utilization
-    if (pcmk__str_eq(rsc->private->scheduler->placement_strategy,
+    if (pcmk__str_eq(rsc->priv->scheduler->placement_strategy,
                      PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
         return NULL;
     }
 
     // Check whether any resources are colocated with this one
-    colocated_rscs = rsc->private->cmds->colocated_resources(rsc, NULL, NULL);
+    colocated_rscs = rsc->priv->cmds->colocated_resources(rsc, NULL, NULL);
     if (colocated_rscs == NULL) {
         return NULL;
     }
@@ -329,7 +331,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     unassigned_utilization = sum_resource_utilization(rsc, colocated_rscs);
 
     // Check whether any node has enough capacity for all the resources
-    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         if (!pcmk__node_available(node, true, false)) {
             continue;
@@ -348,7 +350,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
 
     if (any_capable) {
         // If so, ban resource from any node with insufficient capacity
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rscs_id,
@@ -357,22 +359,23 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
                                 pcmk__node_name(node), rscs_id);
                 resource_location(rsc, node, -PCMK_SCORE_INFINITY,
                                   "__limit_utilization__",
-                                  rsc->private->scheduler);
+                                  rsc->priv->scheduler);
             }
         }
         most_capable_node = NULL;
 
     } else {
         // Otherwise, ban from nodes with insufficient capacity for rsc alone
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
-                && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
+                && !have_enough_capacity(node, rsc->id,
+                                         rsc->priv->utilization)) {
                 pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
                                 pcmk__node_name(node), rsc->id);
                 resource_location(rsc, node, -PCMK_SCORE_INFINITY,
                                   "__limit_utilization__",
-                                  rsc->private->scheduler);
+                                  rsc->priv->scheduler);
             }
         }
     }
@@ -381,8 +384,8 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     g_list_free(colocated_rscs);
     free(rscs_id);
 
-    pe__show_node_scores(true, rsc, "Post-utilization", rsc->allowed_nodes,
-                         rsc->private->scheduler);
+    pe__show_node_scores(true, rsc, "Post-utilization",
+                         rsc->priv->allowed_nodes, rsc->priv->scheduler);
     return most_capable_node;
 }
 
@@ -398,13 +401,13 @@ static pcmk_action_t *
 new_load_stopped_op(pcmk_node_t *node)
 {
     char *load_stopped_task = crm_strdup_printf(PCMK_ACTION_LOAD_STOPPED "_%s",
-                                                node->details->uname);
+                                                node->priv->name);
     pcmk_action_t *load_stopped = get_pseudo_op(load_stopped_task,
-                                              node->details->data_set);
+                                                node->priv->scheduler);
 
     if (load_stopped->node == NULL) {
         load_stopped->node = pe__copy_node(node);
-        pcmk__clear_action_flags(load_stopped, pcmk_action_optional);
+        pcmk__clear_action_flags(load_stopped, pcmk__action_optional);
     }
     free(load_stopped_task);
     return load_stopped;
@@ -426,14 +429,14 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
 
     pcmk__rsc_trace(rsc,
                     "Creating utilization constraints for %s - strategy: %s",
-                    rsc->id, rsc->private->scheduler->placement_strategy);
+                    rsc->id, rsc->priv->scheduler->placement_strategy);
 
     // "stop rsc then load_stopped" constraints for current nodes
-    for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
+    for (iter = rsc->priv->active_nodes; iter != NULL; iter = iter->next) {
         load_stopped = new_load_stopped_op(iter->data);
         pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL, NULL, load_stopped,
                            pcmk__ar_if_on_same_node_or_target,
-                           rsc->private->scheduler);
+                           rsc->priv->scheduler);
     }
 
     // "load_stopped then start/migrate_to rsc" constraints for allowed nodes
@@ -441,13 +444,13 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
         load_stopped = new_load_stopped_op(iter->data);
         pcmk__new_ordering(NULL, NULL, load_stopped, rsc, start_key(rsc), NULL,
                            pcmk__ar_if_on_same_node_or_target,
-                           rsc->private->scheduler);
+                           rsc->priv->scheduler);
         pcmk__new_ordering(NULL, NULL, load_stopped,
                            rsc,
                            pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
                            NULL,
                            pcmk__ar_if_on_same_node_or_target,
-                           rsc->private->scheduler);
+                           rsc->priv->scheduler);
     }
 }
 
@@ -461,13 +464,13 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
 void
 pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
         return;
     }
     for (const GList *iter = scheduler->nodes;
          iter != NULL; iter = iter->next) {
         const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
-        pcmk__output_t *out = scheduler->priv;
+        pcmk__output_t *out = scheduler->priv->out;
 
         out->message(out, "node-capacity", node, desc);
     }

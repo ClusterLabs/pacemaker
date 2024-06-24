@@ -838,12 +838,9 @@ timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     long long timeout_ms = crm_get_msec(optarg);
 
     if (timeout_ms < 0) {
-        // @COMPAT When we can break backward compatibilty, return FALSE
-        crm_warn("Ignoring invalid timeout '%s'", optarg);
-        options.timeout_ms = 0U;
-    } else {
-        options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
+        return FALSE;
     }
+    options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
     return TRUE;
 }
 
@@ -860,8 +857,8 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
     current = pe__find_active_requires(rsc, &nactive);
 
     if (nactive == 1) {
-        rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
-                              cib_conn, cib_sync_call,
+        rc = cli_resource_ban(out, options.rsc_id, current->priv->name,
+                              move_lifetime, cib_conn, cib_sync_call,
                               options.promoted_role_only, PCMK_ROLE_PROMOTED);
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
@@ -869,10 +866,9 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
         GList *iter = NULL;
 
         current = NULL;
-        for(iter = rsc->children; iter; iter = iter->next) {
+        for (iter = rsc->priv->children; iter != NULL; iter = iter->next) {
             pcmk_resource_t *child = (pcmk_resource_t *)iter->data;
-            enum rsc_role_e child_role = child->private->fns->state(child,
-                                                                    TRUE);
+            enum rsc_role_e child_role = child->priv->fns->state(child, TRUE);
 
             if (child_role == pcmk_role_promoted) {
                 count++;
@@ -881,8 +877,8 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
         }
 
         if(count == 1 && current) {
-            rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
-                                  cib_conn, cib_sync_call,
+            rc = cli_resource_ban(out, options.rsc_id, current->priv->name,
+                                  move_lifetime, cib_conn, cib_sync_call,
                                   options.promoted_role_only,
                                   PCMK_ROLE_PROMOTED);
 
@@ -963,7 +959,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
             }
             return rc;
         }
-        rc = cli_resource_clear(options.rsc_id, dest->details->uname, NULL,
+        rc = cli_resource_clear(options.rsc_id, dest->priv->name, NULL,
                                 cib_conn, cib_sync_call, true, options.force);
 
     } else {
@@ -972,7 +968,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
     }
 
     if (!out->is_quiet(out)) {
-        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_scope_local | cib_sync_call);
+        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
 
         if (rc != pcmk_rc_ok) {
@@ -1013,7 +1009,7 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
             rc = pcmk_rc_cib_corrupt;
         }
     } else {
-        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_scope_local | cib_sync_call);
+        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
     }
 
@@ -1023,9 +1019,9 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
             rc = ENOMEM;
         } else {
             pcmk__set_scheduler_flags(scheduler,
-                                      pcmk_sched_no_counts
-                                      |pcmk_sched_no_compat);
-            scheduler->priv = out;
+                                      pcmk__sched_no_counts
+                                      |pcmk__sched_no_compat);
+            scheduler->priv->out = out;
             rc = update_scheduler_input(scheduler, cib_xml_copy);
         }
     }
@@ -1071,7 +1067,7 @@ refresh(pcmk__output_t *out)
         pcmk_node_t *node = pcmk_find_node(scheduler, options.host_uname);
 
         if (pcmk__is_pacemaker_remote_node(node)) {
-            node = pcmk__current_node(node->details->remote_rsc);
+            node = pcmk__current_node(node->priv->remote);
             if (node == NULL) {
                 rc = ENXIO;
                 g_set_error(&error, PCMK__RC_ERROR, rc,
@@ -1079,7 +1075,7 @@ refresh(pcmk__output_t *out)
                             options.host_uname);
                 return rc;
             }
-            router_node = node->details->uname;
+            router_node = node->priv->name;
             attr_options |= pcmk__node_attr_remote;
         }
     }
@@ -1275,8 +1271,6 @@ get_find_flags(void)
         case cmd_why:
             return pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
 
-        // @COMPAT See note in is_scheduler_required()
-        case cmd_delete:
         case cmd_delete_param:
         case cmd_get_param:
         case cmd_get_property:
@@ -1410,13 +1404,8 @@ is_scheduler_required(void)
         return false;
     }
 
-    /* @COMPAT cmd_delete does not actually need the scheduler and should not
-     * set find_flags. However, crm_resource --delete currently throws a
-     * "resource not found" error if the resource doesn't exist. This is
-     * incorrect behavior (deleting a nonexistent resource should be considered
-     * success); however, we shouldn't change it until 3.0.0.
-     */
     switch (options.rsc_cmd) {
+        case cmd_delete:
         case cmd_list_agents:
         case cmd_list_alternatives:
         case cmd_list_options:
@@ -1440,10 +1429,10 @@ is_scheduler_required(void)
 static bool
 accept_clone_instance(void)
 {
-    // @COMPAT At 3.0.0, add cmd_delete; for now, don't throw error
     switch (options.rsc_cmd) {
         case cmd_ban:
         case cmd_clear:
+        case cmd_delete:
         case cmd_move:
         case cmd_restart:
             return false;
@@ -1678,9 +1667,12 @@ main(int argc, char **argv)
         }
 
     } else if (options.cmdline_params != NULL) {
-        // @COMPAT @TODO error out here when we can break backward compatibility
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    _("--option must be used with --validate and without -r"));
         g_hash_table_destroy(options.cmdline_params);
         options.cmdline_params = NULL;
+        goto done;
     }
 
     if (is_resource_required() && (options.rsc_id == NULL)) {
@@ -1744,7 +1736,7 @@ main(int argc, char **argv)
         /* The --ban, --clear, --move, and --restart commands do not work with
          * instances of clone resourcs.
          */
-        if (pcmk__is_clone(rsc->private->parent)
+        if (pcmk__is_clone(rsc->priv->parent)
             && (strchr(options.rsc_id, ':') != NULL)
             && !accept_clone_instance()) {
 
@@ -1966,7 +1958,7 @@ main(int argc, char **argv)
             } else if (node == NULL) {
                 rc = pcmk_rc_node_unknown;
             } else {
-                rc = cli_resource_ban(out, options.rsc_id, node->details->uname,
+                rc = cli_resource_ban(out, options.rsc_id, node->priv->name,
                                       options.move_lifetime, cib_conn,
                                       cib_sync_call, options.promoted_role_only,
                                       PCMK_ROLE_PROMOTED);
@@ -1994,8 +1986,8 @@ main(int argc, char **argv)
         case cmd_get_param: {
             unsigned int count = 0;
             GHashTable *params = NULL;
-            pcmk_node_t *current = rsc->private->fns->active_node(rsc, &count,
-                                                                  NULL);
+            pcmk_node_t *current = rsc->priv->fns->active_node(rsc, &count,
+                                                               NULL);
             bool free_params = true;
             const char* value = NULL;
 
@@ -2024,7 +2016,7 @@ main(int argc, char **argv)
 
             } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
 
-                value = crm_element_value(rsc->private->xml, options.prop_name);
+                value = crm_element_value(rsc->priv->xml, options.prop_name);
                 free_params = false;
 
             } else {
@@ -2033,7 +2025,7 @@ main(int argc, char **argv)
                 };
 
                 params = pcmk__strkey_table(free, free);
-                pe__unpack_dataset_nvpairs(rsc->private->xml,
+                pe__unpack_dataset_nvpairs(rsc->priv->xml,
                                            PCMK_XE_UTILIZATION, &rule_data,
                                            params, NULL, FALSE, scheduler);
 
@@ -2103,9 +2095,8 @@ main(int argc, char **argv)
              * command line arguments.
              */
             if (options.rsc_type == NULL) {
-                // @COMPAT @TODO change this to exit_code = CRM_EX_USAGE
-                rc = ENXIO;
-                g_set_error(&error, PCMK__RC_ERROR, rc,
+                exit_code = CRM_EX_USAGE;
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                             _("You need to specify a resource type with -t"));
             } else {
                 rc = pcmk__resource_delete(cib_conn, cib_sync_call,

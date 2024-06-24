@@ -8,11 +8,15 @@
  */
 
 #ifndef PCMK__PCMKI_PCMKI_TICKET__H
-#  define PCMK__PCMKI_PCMKI_TICKET__H
+#define PCMK__PCMKI_PCMKI_TICKET__H
 
 #include <crm/common/output_internal.h>
 
 #include <crm/cib/cib_types.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!
  * \internal
@@ -151,4 +155,8 @@ int pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *sch
  */
 int pcmk__ticket_state(pcmk__output_t *out, cib_t *cib, const char *ticket_id);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__PCMKI_PCMKI_TICKET__H

@@ -25,8 +25,7 @@ fsa_cib_anon_update(const char *section, xmlNode *data) {
         crm_err("No CIB connection available");
     } else {
         controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
-                                                section, data,
-                                                cib_scope_local|cib_can_create);
+                                                section, data, cib_can_create);
     }
 }
 
@@ -37,8 +36,7 @@ fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
     } else {
         controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
                                                 section, data,
-                                                cib_scope_local
-                                                |cib_can_create
+                                                cib_can_create
                                                 |cib_discard_reply);
     }
 }

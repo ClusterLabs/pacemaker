@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,16 +8,24 @@
  */
 
 #ifndef PCMK__PCMKI_PCMKI_RESULT_CODE__H
-#  define PCMK__PCMKI_PCMKI_RESULT_CODE__H
+#define PCMK__PCMKI_PCMKI_RESULT_CODE__H
 
 #include <stdint.h>
 
 #include <crm/crm.h>
 #include <crm/common/output_internal.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int pcmk__show_result_code(pcmk__output_t *out, int code,
                            enum pcmk_result_type type, uint32_t flags);
 int pcmk__list_result_codes(pcmk__output_t *out, enum pcmk_result_type type,
                             uint32_t flags);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PCMK__PCMKI_PCMKI_RESULT_CODE__H

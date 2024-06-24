@@ -53,8 +53,8 @@
       <lrm id="lrm.auto-1">
         <lrm_resources id="lrm_resources.id22074">
           <lrm_resource id="the-future-of-vaj" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="the-future-of-vaj_monitor_0" operation="monitor" transition-key="5:68:7:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="0:0;5:68:7:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="166" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-            <lrm_rsc_op id="the-future-of-vaj_stop_0" operation="stop" transition-key="17:69:0:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="0:0;17:69:0:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="167" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+            <lrm_rsc_op id="the-future-of-vaj_monitor_0" operation="monitor" transition-key="5:68:7:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="0:0;5:68:7:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="166" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" on_node="hb1"/>
+            <lrm_rsc_op id="the-future-of-vaj_stop_0" operation="stop" transition-key="17:69:0:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="0:0;17:69:0:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="167" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" on_node="hb1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -68,8 +68,8 @@
       <lrm id="lrm.auto-2">
         <lrm_resources id="lrm_resources.id22197">
           <lrm_resource id="the-future-of-vaj" type="Dummy" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="the-future-of-vaj_monitor_0" operation="monitor" transition-key="3:68:7:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="4:7;3:68:7:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="70" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-            <lrm_rsc_op id="the-future-of-vaj_start_0" operation="start" transition-key="18:93:0:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="4:1;18:93:0:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="117" crm_feature_set="1.0.8" rc-code="1" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" op-force-restart=" state " op-restart-digest="b025b674e32442902ac3b62b70a62365"/>
+            <lrm_rsc_op id="the-future-of-vaj_monitor_0" operation="monitor" transition-key="3:68:7:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="4:7;3:68:7:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="70" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" on_node="hb2"/>
+            <lrm_rsc_op id="the-future-of-vaj_start_0" operation="start" transition-key="18:93:0:c0a34b18-a8ea-4299-84f3-6747c105f26e" transition-magic="4:1;18:93:0:c0a34b18-a8ea-4299-84f3-6747c105f26e" call-id="117" crm_feature_set="1.0.8" rc-code="1" op-status="4" interval="0" op-digest="08b7001b97ccdaa1ca23a9f165256bc1" op-force-restart=" state " op-restart-digest="b025b674e32442902ac3b62b70a62365" on_node="hb2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

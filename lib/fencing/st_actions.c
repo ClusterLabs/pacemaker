@@ -88,10 +88,11 @@ log_action(stonith_action_t *action, pid_t pid)
 static void
 append_config_arg(gpointer key, gpointer value, gpointer user_data)
 {
-    /* The fencer will filter "action" out when it registers the device,
-     * but ignore it here in case any external API users don't.
+    /* Filter out parameters handled directly by Pacemaker.
      *
-     * Also filter out parameters handled directly by Pacemaker.
+     * STONITH_ATTR_ACTION_OP is added elsewhere and should never be part of the
+     * fencing resource's parameter list. We should ignore its value if it is
+     * configured there.
      */
     if (!pcmk__str_eq(key, STONITH_ATTR_ACTION_OP, pcmk__str_casei)
         && !pcmk_stonith_param(key)
@@ -142,6 +143,8 @@ make_args(const char *agent, const char *action, const char *target,
             action = value;
         }
     }
+
+    // Tell the fence agent what action to perform
     pcmk__insert_dup(arg_list, STONITH_ATTR_ACTION_OP, action);
 
     /* If this is a fencing operation against another node, add more standard

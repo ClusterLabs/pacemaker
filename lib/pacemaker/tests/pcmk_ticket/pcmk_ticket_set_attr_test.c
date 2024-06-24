@@ -79,7 +79,7 @@ unknown_ticket_no_attrs(void **state)
     xml = NULL;
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
     assert_null(xml_search);
 
     /* Another way of specifying no attributes */
@@ -88,7 +88,7 @@ unknown_ticket_no_attrs(void **state)
     pcmk__xml_free(xml);
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
     assert_null(xml_search);
 
     g_hash_table_destroy(attrs);
@@ -116,7 +116,7 @@ unknown_ticket_with_attrs(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
 
     assert_string_equal("123", crm_element_value(xml_search, "attrA"));
     assert_string_equal("456", crm_element_value(xml_search, "attrB"));
@@ -143,7 +143,7 @@ overwrite_existing_attr(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
 
     assert_string_equal("2", crm_element_value(xml_search, "owner"));
 
@@ -169,7 +169,7 @@ not_granted_to_granted_without_force(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
 
     assert_string_equal("false", crm_element_value(xml_search, PCMK__XA_GRANTED));
     assert_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
@@ -196,7 +196,7 @@ not_granted_to_granted_with_force(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
 
     assert_string_equal("true", crm_element_value(xml_search, PCMK__XA_GRANTED));
     assert_non_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
@@ -223,7 +223,7 @@ granted_to_not_granted_without_force(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketB\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
 
     assert_string_equal("true", crm_element_value(xml_search, PCMK__XA_GRANTED));
     assert_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
@@ -250,7 +250,7 @@ granted_to_not_granted_with_force(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketB\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
 
     assert_string_equal("false", crm_element_value(xml_search, PCMK__XA_GRANTED));
     assert_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));

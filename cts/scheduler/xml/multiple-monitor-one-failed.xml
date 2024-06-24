@@ -42,17 +42,17 @@
         <instance_attributes id="status-dhcp180">
           <nvpair id="status-dhcp180-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-dhcp180-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-dhcp180-fail-count-Dummy-test2" name="fail-count-Dummy-test2" value="1"/>
-          <nvpair id="status-dhcp180-last-failure-Dummy-test2" name="last-failure-Dummy-test2" value="1459345561"/>
+          <nvpair id="status-dhcp180-fail-count-Dummy-test2.monitor_10000" name="fail-count-Dummy-test2#monitor_10000" value="1"/>
+          <nvpair id="status-dhcp180-last-failure-Dummy-test2.monitor_10000" name="last-failure-Dummy-test2#monitor_10000" value="1459345561"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="dhcp180">
         <lrm_resources>
           <lrm_resource id="Dummy-test2" type="Dummy" class="ocf" provider="test">
-            <lrm_rsc_op id="Dummy-test2_last_0" operation_key="Dummy-test2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="8:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:0;8:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1459345561" last-rc-change="1459345561" exec-time="15" queue-time="0" op-digest="709111243f64c1b2998dbf906b898d8d" op-force-restart=" state  state2 " op-restart-digest="709111243f64c1b2998dbf906b898d8d"/>
-            <lrm_rsc_op id="Dummy-test2_monitor_30000" operation_key="Dummy-test2_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="1:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:0;1:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="17" rc-code="0" op-status="0" interval="30000" last-rc-change="1459345561" exec-time="17" queue-time="52" op-digest="88cbe5ebda13278368b81f63edbb6b03"/>
-            <lrm_rsc_op id="Dummy-test2_monitor_10000" operation_key="Dummy-test2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:0;2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="16" rc-code="0" op-status="0" interval="10000" last-rc-change="1459345561" exec-time="53" queue-time="0" op-digest="88f69460c4f7a70e57779a95eaf1799c"/>
-            <lrm_rsc_op id="Dummy-test2_last_failure_0" operation_key="Dummy-test2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:7;2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="16" rc-code="7" op-status="0" interval="10000" last-rc-change="1459345571" exec-time="0" queue-time="0" op-digest="88f69460c4f7a70e57779a95eaf1799c"/>
+            <lrm_rsc_op id="Dummy-test2_last_0" operation_key="Dummy-test2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="8:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:0;8:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1459345561" last-rc-change="1459345561" exec-time="15" queue-time="0" op-digest="709111243f64c1b2998dbf906b898d8d" op-force-restart=" state  state2 " op-restart-digest="709111243f64c1b2998dbf906b898d8d" on_node="dhcp180"/>
+            <lrm_rsc_op id="Dummy-test2_monitor_30000" operation_key="Dummy-test2_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="1:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:0;1:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="17" rc-code="0" op-status="0" interval="30000" last-rc-change="1459345561" exec-time="17" queue-time="52" op-digest="88cbe5ebda13278368b81f63edbb6b03" on_node="dhcp180"/>
+            <lrm_rsc_op id="Dummy-test2_monitor_10000" operation_key="Dummy-test2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:0;2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="16" rc-code="0" op-status="0" interval="10000" last-rc-change="1459345561" exec-time="53" queue-time="0" op-digest="88f69460c4f7a70e57779a95eaf1799c" on_node="dhcp180"/>
+            <lrm_rsc_op id="Dummy-test2_last_failure_0" operation_key="Dummy-test2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:7;2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="16" rc-code="7" op-status="0" interval="10000" last-rc-change="1459345571" exec-time="0" queue-time="0" op-digest="88f69460c4f7a70e57779a95eaf1799c" on_node="dhcp180"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -67,7 +67,7 @@
       <lrm id="dhcp69">
         <lrm_resources>
           <lrm_resource id="Dummy-test2" type="Dummy" class="ocf" provider="test">
-            <lrm_rsc_op id="Dummy-test2_last_0" operation_key="Dummy-test2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="6:5:7:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:7;6:5:7:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1459345459" last-rc-change="1459345459" exec-time="154" queue-time="1" op-digest="709111243f64c1b2998dbf906b898d8d"/>
+            <lrm_rsc_op id="Dummy-test2_last_0" operation_key="Dummy-test2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="6:5:7:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:7;6:5:7:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1459345459" last-rc-change="1459345459" exec-time="154" queue-time="1" op-digest="709111243f64c1b2998dbf906b898d8d" on_node="dhcp69"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

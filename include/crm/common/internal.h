@@ -32,6 +32,10 @@
 #include <crm/common/strings_internal.h>
 #include <crm/common/acl_internal.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This says whether the current application is a Pacemaker daemon or not,
  * and is used to change default logging settings such as whether to log to
  * stderr, etc., as well as a few other details such as whether blackbox signal
@@ -392,4 +396,8 @@ pcmk__lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
 // internal resource agent functions (from agents.c)
 int pcmk__effective_rc(int rc);
 
-#endif /* PCMK__CRM_COMMON_INTERNAL__H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__CRM_COMMON_INTERNAL__H

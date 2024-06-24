@@ -8,22 +8,22 @@
  */
 
 #ifndef PCMK__PACEMAKER_INTERNAL__H
-#  define PCMK__PACEMAKER_INTERNAL__H
+#define PCMK__PACEMAKER_INTERNAL__H
 
-#  include <pcmki/pcmki_acl.h>
-#  include <pcmki/pcmki_agents.h>
-#  include <pcmki/pcmki_cluster_queries.h>
-#  include <pcmki/pcmki_fence.h>
-#  include <pcmki/pcmki_options.h>
-#  include <pcmki/pcmki_output.h>
-#  include <pcmki/pcmki_resource.h>
-#  include <pcmki/pcmki_result_code.h>
-#  include <pcmki/pcmki_rule.h>
-#  include <pcmki/pcmki_scheduler.h>
-#  include <pcmki/pcmki_simulate.h>
-#  include <pcmki/pcmki_status.h>
-#  include <pcmki/pcmki_ticket.h>
-#  include <pcmki/pcmki_transition.h>
-#  include <pcmki/pcmki_verify.h>
+#include <pcmki/pcmki_acl.h>
+#include <pcmki/pcmki_agents.h>
+#include <pcmki/pcmki_cluster_queries.h>
+#include <pcmki/pcmki_fence.h>
+#include <pcmki/pcmki_options.h>
+#include <pcmki/pcmki_output.h>
+#include <pcmki/pcmki_resource.h>
+#include <pcmki/pcmki_result_code.h>
+#include <pcmki/pcmki_rule.h>
+#include <pcmki/pcmki_scheduler.h>
+#include <pcmki/pcmki_simulate.h>
+#include <pcmki/pcmki_status.h>
+#include <pcmki/pcmki_ticket.h>
+#include <pcmki/pcmki_transition.h>
+#include <pcmki/pcmki_verify.h>
 
-#endif
+#endif // PCMK__PACEMAKER_INTERNAL__H

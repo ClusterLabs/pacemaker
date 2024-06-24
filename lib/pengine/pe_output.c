@@ -25,7 +25,7 @@ pe__resource_description(const pcmk_resource_t *rsc, uint32_t show_opts)
 
     // User-supplied description
     if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)) {
-        desc = crm_element_value(rsc->private->xml, PCMK_XA_DESCRIPTION);
+        desc = crm_element_value(rsc->priv->xml, PCMK_XA_DESCRIPTION);
     }
     return desc;
 }
@@ -69,13 +69,14 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
-        const char *type = g_hash_table_lookup(rsc->meta, PCMK_XA_TYPE);
+        const char *type = g_hash_table_lookup(rsc->priv->meta,
+                                               PCMK_XA_TYPE);
         const char *name = NULL;
         GHashTable *params = NULL;
 
-        if (rsc->children != NULL) {
-            if (add_extra_info(node, rsc->children, scheduler, attrname,
-                               expected_score)) {
+        if (rsc->priv->children != NULL) {
+            if (add_extra_info(node, rsc->priv->children, scheduler,
+                               attrname, expected_score)) {
                 return true;
             }
         }
@@ -332,7 +333,7 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
         }
 
         buf = crm_strdup_printf("%s: " PCMK_META_MIGRATION_THRESHOLD "=%d%s%s",
-                                rsc_id, rsc->private->ban_after_failures,
+                                rsc_id, rsc->priv->ban_after_failures,
                                 failcount_s, pcmk__s(lastfail_s, ""));
         free(failcount_s);
         free(lastfail_s);
@@ -356,10 +357,11 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
 static const char *
 get_node_feature_set(const pcmk_node_t *node)
 {
-    if (node->details->online && node->details->expected_up
+    if (node->details->online
+        && pcmk_is_set(node->priv->flags, pcmk__node_expected_up)
         && !pcmk__is_pacemaker_remote_node(node)) {
 
-        const char *feature_set = g_hash_table_lookup(node->details->attrs,
+        const char *feature_set = g_hash_table_lookup(node->priv->attrs,
                                                       CRM_ATTR_FEATURE_SET);
 
         /* The feature set attribute is present since 3.15.1. If it is missing,
@@ -391,11 +393,11 @@ is_mixed_version(pcmk_scheduler_t *scheduler)
 static void
 formatted_xml_buf(const pcmk_resource_t *rsc, GString *xml_buf, bool raw)
 {
-    if (raw && (rsc->private->orig_xml != NULL)) {
-        pcmk__xml_string(rsc->private->orig_xml, pcmk__xml_fmt_pretty, xml_buf,
+    if (raw && (rsc->priv->orig_xml != NULL)) {
+        pcmk__xml_string(rsc->priv->orig_xml, pcmk__xml_fmt_pretty, xml_buf,
                          0);
     } else {
-        pcmk__xml_string(rsc->private->xml, pcmk__xml_fmt_pretty, xml_buf, 0);
+        pcmk__xml_string(rsc->priv->xml, pcmk__xml_fmt_pretty, xml_buf, 0);
     }
 }
 
@@ -564,15 +566,18 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     const char *node_id = NULL;
     int name_len;
 
-    CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
+    CRM_ASSERT((node != NULL) && (node->priv->name != NULL));
 
     /* Host is displayed only if this is a guest node and detail is requested */
     if (print_detail && pcmk__is_guest_or_bundle_node(node)) {
-        const pcmk_resource_t *container = node->details->remote_rsc->container;
-        const pcmk_node_t *host_node = pcmk__current_node(container);
+        const pcmk_resource_t *launcher = NULL;
+        const pcmk_node_t *host_node = NULL;
+
+        launcher = node->priv->remote->priv->launcher;
+        host_node = pcmk__current_node(launcher);
 
         if (host_node && host_node->details) {
-            node_host = host_node->details->uname;
+            node_host = host_node->priv->name;
         }
         if (node_host == NULL) {
             node_host = ""; /* so we at least get "uname@" to indicate guest */
@@ -580,12 +585,14 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     }
 
     /* Node ID is displayed if different from uname and detail is requested */
-    if (print_detail && !pcmk__str_eq(node->details->uname, node->details->id, pcmk__str_casei)) {
-        node_id = node->details->id;
+    if (print_detail
+        && !pcmk__str_eq(node->priv->name, node->priv->id,
+                         pcmk__str_casei)) {
+        node_id = node->priv->id;
     }
 
     /* Determine name length */
-    name_len = strlen(node->details->uname) + 1;
+    name_len = strlen(node->priv->name) + 1;
     if (node_host) {
         name_len += strlen(node_host) + 1; /* "@node_host" */
     }
@@ -595,7 +602,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
 
     /* Allocate and populate display name */
     node_name = pcmk__assert_alloc(name_len, sizeof(char));
-    strcpy(node_name, node->details->uname);
+    strcpy(node_name, node->priv->name);
     if (node_host) {
         strcat(node_name, "@");
         strcat(node_name, node_host);
@@ -685,12 +692,12 @@ ban_xml(pcmk__output_t *out, va_list args) {
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
     const char *promoted_only = pcmk__btoa(location->role_filter == pcmk_role_promoted);
-    char *weight_s = pcmk__itoa(pe_node->weight);
+    char *weight_s = pcmk__itoa(pe_node->assign->score);
 
     pcmk__output_create_xml_node(out, PCMK_XE_BAN,
                                  PCMK_XA_ID, location->id,
                                  PCMK_XA_RESOURCE, location->rsc->id,
-                                 PCMK_XA_NODE, pe_node->details->uname,
+                                 PCMK_XA_NODE, pe_node->priv->name,
                                  PCMK_XA_WEIGHT, weight_s,
                                  PCMK_XA_PROMOTED_ONLY, promoted_only,
                                  /* This is a deprecated alias for
@@ -739,7 +746,7 @@ ban_list(pcmk__output_t *out, va_list args) {
         for (gIter2 = location->nodes; gIter2 != NULL; gIter2 = gIter2->next) {
             pcmk_node_t *node = (pcmk_node_t *) gIter2->data;
 
-            if (node->weight < 0) {
+            if (node->assign->score < 0) {
                 PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Negative Location Constraints");
                 out->message(out, "ban", node, location, show_opts);
             }
@@ -983,8 +990,8 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
         pcmk__output_create_xml_node(out, PCMK_XE_CURRENT_DC,
                                      PCMK_XA_PRESENT, PCMK_VALUE_TRUE,
                                      PCMK_XA_VERSION, pcmk__s(dc_version_s, ""),
-                                     PCMK_XA_NAME, dc->details->uname,
-                                     PCMK_XA_ID, dc->details->id,
+                                     PCMK_XA_NAME, dc->priv->name,
+                                     PCMK_XA_ID, dc->priv->id,
                                      PCMK_XA_WITH_QUORUM, with_quorum,
                                      PCMK_XA_MIXED_VERSION, mixed_version_s,
                                      NULL);
@@ -1002,11 +1009,11 @@ static int
 cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     unsigned long long flags = va_arg(args, unsigned long long);
 
-    if (pcmk_is_set(flags, pcmk_sched_in_maintenance)) {
+    if (pcmk_is_set(flags, pcmk__sched_in_maintenance)) {
         pcmk__formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
         pcmk__formatted_printf(out, "  The cluster will not attempt to start, stop or recover services\n");
         return pcmk_rc_ok;
-    } else if (pcmk_is_set(flags, pcmk_sched_stop_all)) {
+    } else if (pcmk_is_set(flags, pcmk__sched_stop_all)) {
         pcmk__formatted_printf(out, "\n    *** Resource management is DISABLED ***\n");
         pcmk__formatted_printf(out, "  The cluster will keep all resources stopped\n");
         return pcmk_rc_ok;
@@ -1020,13 +1027,13 @@ static int
 cluster_options_html(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
         out->list_item(out, NULL, "STONITH of failed nodes enabled");
     } else {
         out->list_item(out, NULL, "STONITH of failed nodes disabled");
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_symmetric_cluster)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
         out->list_item(out, NULL, "Cluster is symmetric");
     } else {
         out->list_item(out, NULL, "Cluster is asymmetric");
@@ -1055,7 +1062,7 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
             break;
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
         xmlNode *child = NULL;
 
@@ -1070,7 +1077,7 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
                              " (the cluster will not attempt to start, stop,"
                              " or recover services)");
 
-    } else if (pcmk_is_set(scheduler->flags, pcmk_sched_stop_all)) {
+    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_all)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
         xmlNode *child = NULL;
 
@@ -1096,9 +1103,9 @@ static int
 cluster_options_log(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
         return out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
-    } else if (pcmk_is_set(scheduler->flags, pcmk_sched_stop_all)) {
+    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_all)) {
         return out->info(out, "Resource management is DISABLED.  The cluster has stopped all resources.");
     } else {
         return pcmk_rc_no_output;
@@ -1110,13 +1117,13 @@ static int
 cluster_options_text(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
         out->list_item(out, NULL, "STONITH of failed nodes enabled");
     } else {
         out->list_item(out, NULL, "STONITH of failed nodes disabled");
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_symmetric_cluster)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
         out->list_item(out, NULL, "Cluster is symmetric");
     } else {
         out->list_item(out, NULL, "Cluster is asymmetric");
@@ -1186,15 +1193,15 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
     const char *stonith_enabled = pcmk__flag_text(scheduler->flags,
-                                                  pcmk_sched_fencing_enabled);
+                                                  pcmk__sched_fencing_enabled);
     const char *symmetric_cluster =
-        pcmk__flag_text(scheduler->flags, pcmk_sched_symmetric_cluster);
+        pcmk__flag_text(scheduler->flags, pcmk__sched_symmetric_cluster);
     const char *no_quorum_policy =
         no_quorum_policy_text(scheduler->no_quorum_policy);
     const char *maintenance_mode = pcmk__flag_text(scheduler->flags,
-                                                   pcmk_sched_in_maintenance);
+                                                   pcmk__sched_in_maintenance);
     const char *stop_all_resources = pcmk__flag_text(scheduler->flags,
-                                                     pcmk_sched_stop_all);
+                                                     pcmk__sched_stop_all);
     char *stonith_timeout_ms_s = pcmk__itoa(scheduler->stonith_timeout);
     char *priority_fencing_delay_ms_s =
         pcmk__itoa(scheduler->priority_fencing_delay * 1000);
@@ -1718,29 +1725,26 @@ status_node(pcmk_node_t *node, xmlNodePtr parent, uint32_t show_opts)
     }
 
     // Standby mode
-    if (node->details->standby_onfail && (node->details->running_rsc != NULL)) {
+    if (pcmk_is_set(node->priv->flags, pcmk__node_fail_standby)) {
         child = pcmk__html_create(parent, PCMK__XE_SPAN, NULL,
                                   PCMK_VALUE_STANDBY);
-        pcmk__xe_set_content(child,
-                             " (in standby due to " PCMK_META_ON_FAIL ","
-                             " with active resources)");
+        if (node->details->running_rsc == NULL) {
+            pcmk__xe_set_content(child,
+                                 " (in standby due to " PCMK_META_ON_FAIL ")");
+        } else {
+            pcmk__xe_set_content(child,
+                                 " (in standby due to " PCMK_META_ON_FAIL ","
+                                 " with active resources)");
+        }
 
-    } else if (node->details->standby_onfail) {
+    } else if (pcmk_is_set(node->priv->flags, pcmk__node_standby)) {
         child = pcmk__html_create(parent, PCMK__XE_SPAN, NULL,
                                   PCMK_VALUE_STANDBY);
-        pcmk__xe_set_content(child,
-                             " (in standby due to " PCMK_META_ON_FAIL ")");
-
-    } else if (node->details->standby && (node->details->running_rsc != NULL)) {
-        child = pcmk__html_create(parent, PCMK__XE_SPAN, NULL,
-                                  PCMK_VALUE_STANDBY);
-        pcmk__xe_set_content(child,
-                             " (in standby, with active resources)");
-
-    } else if (node->details->standby) {
-        child = pcmk__html_create(parent, PCMK__XE_SPAN, NULL,
-                                  PCMK_VALUE_STANDBY);
-        pcmk__xe_set_content(child, " (in standby)");
+        if (node->details->running_rsc == NULL) {
+            pcmk__xe_set_content(child, " (in standby)");
+        } else {
+            pcmk__xe_set_content(child, " (in standby, with active resources)");
+        }
     }
 
     // Maintenance mode
@@ -1823,7 +1827,7 @@ node_html(pcmk__output_t *out, va_list args) {
                 PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources");
 
                 show_opts |= pcmk_show_rsc_only;
-                out->message(out, pcmk__map_element_name(rsc->private->xml),
+                out->message(out, pcmk__map_element_name(rsc->priv->xml),
                              show_opts, rsc, only_node, only_rsc);
             }
 
@@ -1871,18 +1875,17 @@ node_text_status(const pcmk_node_t *node)
     } else if (node->details->pending) {
         return "pending";
 
-    } else if (node->details->standby_onfail && node->details->online) {
+    } else if (pcmk_is_set(node->priv->flags, pcmk__node_fail_standby)
+               && node->details->online) {
         return "standby (" PCMK_META_ON_FAIL ")";
 
-    } else if (node->details->standby) {
-        if (node->details->online) {
-            if (node->details->running_rsc) {
-                return "standby (with active resources)";
-            } else {
-                return "standby";
-            }
-        } else {
+    } else if (pcmk_is_set(node->priv->flags, pcmk__node_standby)) {
+        if (!node->details->online) {
             return "OFFLINE (standby)";
+        } else if (node->details->running_rsc == NULL) {
+            return "standby";
+        } else {
+            return "standby (with active resources)";
         }
 
     } else if (node->details->maintenance) {
@@ -1964,7 +1967,7 @@ node_text(pcmk__output_t *out, va_list args) {
                     pcmk_resource_t *rsc = (pcmk_resource_t *) gIter2->data;
 
                     show_opts |= pcmk_show_rsc_only;
-                    out->message(out, pcmk__map_element_name(rsc->private->xml),
+                    out->message(out, pcmk__map_element_name(rsc->priv->xml),
                                  show_opts, rsc, only_node, only_rsc);
                 }
 
@@ -2010,24 +2013,24 @@ health_text(int health)
 
 /*!
  * \internal
- * \brief Convert a node type to a string representation
+ * \brief Convert a node variant to a string representation
  *
- * \param[in] type  Node type
+ * \param[in] variant  Node variant
  *
- * \retval \c PCMK_VALUE_MEMBER if \p node_type is \c pcmk_node_variant_cluster
- * \retval \c PCMK_VALUE_REMOTE if \p node_type is \c pcmk_node_variant_remote
- * \retval \c PCMK__VALUE_PING if \p node_type is \c node_ping
+ * \retval \c PCMK_VALUE_MEMBER if \p node_type is \c pcmk__node_variant_cluster
+ * \retval \c PCMK_VALUE_REMOTE if \p node_type is \c pcmk__node_variant_remote
+ * \retval \c PCMK__VALUE_PING if \p node_type is \c pcmk__node_variant_ping
  * \retval \c PCMK_VALUE_UNKNOWN otherwise
  */
 static const char *
-node_type_str(enum node_type type)
+node_variant_text(enum pcmk__node_variant variant)
 {
-    switch (type) {
-        case pcmk_node_variant_cluster:
+    switch (variant) {
+        case pcmk__node_variant_cluster:
             return PCMK_VALUE_MEMBER;
-        case pcmk_node_variant_remote:
+        case pcmk__node_variant_remote:
             return PCMK_VALUE_REMOTE;
-        case node_ping:
+        case pcmk__node_variant_ping:
             return PCMK__VALUE_PING;
         default:
             return PCMK_VALUE_UNKNOWN;
@@ -2046,25 +2049,29 @@ node_xml(pcmk__output_t *out, va_list args) {
 
     if (full) {
         const char *online = pcmk__btoa(node->details->online);
-        const char *standby = pcmk__btoa(node->details->standby);
-        const char *standby_onfail = pcmk__btoa(node->details->standby_onfail);
+        const char *standby = pcmk__flag_text(node->priv->flags,
+                                              pcmk__node_standby);
+        const char *standby_onfail = pcmk__flag_text(node->priv->flags,
+                                                     pcmk__node_fail_standby);
         const char *maintenance = pcmk__btoa(node->details->maintenance);
         const char *pending = pcmk__btoa(node->details->pending);
         const char *unclean = pcmk__btoa(node->details->unclean);
         const char *health = health_text(pe__node_health(node));
         const char *feature_set = get_node_feature_set(node);
         const char *shutdown = pcmk__btoa(node->details->shutdown);
-        const char *expected_up = pcmk__btoa(node->details->expected_up);
-        const char *is_dc = pcmk__btoa(node->details->is_dc);
+        const char *expected_up = pcmk__flag_text(node->priv->flags,
+                                                  pcmk__node_expected_up);
+        const bool is_dc = pcmk__same_node(node,
+                                           node->priv->scheduler->dc_node);
         int length = g_list_length(node->details->running_rsc);
         char *resources_running = pcmk__itoa(length);
-        const char *node_type = node_type_str(node->details->type);
+        const char *node_type = node_variant_text(node->priv->variant);
 
         int rc = pcmk_rc_ok;
 
         rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE,
-                                      PCMK_XA_NAME, node->details->uname,
-                                      PCMK_XA_ID, node->details->id,
+                                      PCMK_XA_NAME, node->priv->name,
+                                      PCMK_XA_ID, node->priv->id,
                                       PCMK_XA_ONLINE, online,
                                       PCMK_XA_STANDBY, standby,
                                       PCMK_XA_STANDBY_ONFAIL, standby_onfail,
@@ -2075,7 +2082,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                       PCMK_XA_FEATURE_SET, feature_set,
                                       PCMK_XA_SHUTDOWN, shutdown,
                                       PCMK_XA_EXPECTED_UP, expected_up,
-                                      PCMK_XA_IS_DC, is_dc,
+                                      PCMK_XA_IS_DC, pcmk__btoa(is_dc),
                                       PCMK_XA_RESOURCES_RUNNING, resources_running,
                                       PCMK_XA_TYPE, node_type,
                                       NULL);
@@ -2086,7 +2093,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
             crm_xml_add(xml_node, PCMK_XA_ID_AS_RESOURCE,
-                        node->details->remote_rsc->container->id);
+                        node->priv->remote->priv->launcher->id);
         }
 
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
@@ -2096,7 +2103,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                 pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
                 show_opts |= pcmk_show_rsc_only;
-                out->message(out, pcmk__map_element_name(rsc->private->xml),
+                out->message(out, pcmk__map_element_name(rsc->priv->xml),
                              show_opts, rsc, only_node, only_rsc);
             }
         }
@@ -2104,7 +2111,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         out->end_list(out);
     } else {
         pcmk__output_xml_create_parent(out, PCMK_XE_NODE,
-                                       PCMK_XA_NAME, node->details->uname,
+                                       PCMK_XA_NAME, node->priv->name,
                                        NULL);
     }
 
@@ -2201,12 +2208,12 @@ node_and_op(pcmk__output_t *out, va_list args) {
 
     if (rsc) {
         const pcmk_node_t *node = pcmk__current_node(rsc);
-        const char *target_role = g_hash_table_lookup(rsc->meta,
+        const char *target_role = g_hash_table_lookup(rsc->priv->meta,
                                                       PCMK_META_TARGET_ROLE);
         uint32_t show_opts = pcmk_show_rsc_only | pcmk_show_pending;
 
         if (node == NULL) {
-            node = rsc->pending_node;
+            node = rsc->priv->pending_node;
         }
 
         node_str = pcmk__native_output_string(rsc, rsc_printable_id(rsc), node,
@@ -2269,10 +2276,10 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     rsc = pe_find_resource(scheduler->resources, op_rsc);
 
     if (rsc) {
-        const char *class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
-        const char *provider = crm_element_value(rsc->private->xml,
+        const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+        const char *provider = crm_element_value(rsc->priv->xml,
                                                  PCMK_XA_PROVIDER);
-        const char *kind = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
+        const char *kind = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
         bool has_provider = pcmk_is_set(pcmk_get_ra_caps(class),
                                         pcmk_ra_cap_provider);
 
@@ -2348,7 +2355,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        g_hash_table_iter_init(&iter, node->details->attrs);
+        g_hash_table_iter_init(&iter, node->priv->attrs);
         while (g_hash_table_iter_next (&iter, &key, NULL)) {
             attr_list = filter_attr_list(attr_list, key);
         }
@@ -2357,7 +2364,8 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(node->details->uname, only_node, pcmk__str_star_matches|pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->priv->name, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             g_list_free(attr_list);
             continue;
         }
@@ -2400,7 +2408,8 @@ node_capacity(pcmk__output_t *out, va_list args)
     char *dump_text = crm_strdup_printf("%s: %s capacity:",
                                         comment, pcmk__node_name(node));
 
-    g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
+    g_hash_table_foreach(node->priv->utilization, append_dump_text,
+                         &dump_text);
     out->list_item(out, NULL, "%s", dump_text);
     free(dump_text);
 
@@ -2412,14 +2421,14 @@ static int
 node_capacity_xml(pcmk__output_t *out, va_list args)
 {
     const pcmk_node_t *node = va_arg(args, pcmk_node_t *);
-    const char *uname = node->details->uname;
+    const char *uname = node->priv->name;
     const char *comment = va_arg(args, const char *);
 
     xmlNodePtr xml_node = pcmk__output_create_xml_node(out, PCMK_XE_CAPACITY,
                                                        PCMK_XA_NODE, uname,
                                                        PCMK_XA_COMMENT, comment,
                                                        NULL);
-    g_hash_table_foreach(node->details->utilization, add_dump_node, xml_node);
+    g_hash_table_foreach(node->priv->utilization, add_dump_node, xml_node);
 
     return pcmk_rc_ok;
 }
@@ -2467,7 +2476,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
                                       pcmk__str_star_matches)) {
                 continue;
             }
-        } else if (rsc->private->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        } else if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
             continue;
         }
 
@@ -2528,7 +2537,7 @@ node_list_html(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(node->details->uname, only_node,
+        if (!pcmk__str_in_list(node->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
@@ -2564,7 +2573,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
 
-        if (!pcmk__str_in_list(node->details->uname, only_node,
+        if (!pcmk__str_in_list(node->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             free(node_name);
             continue;
@@ -2574,8 +2583,10 @@ node_list_text(pcmk__output_t *out, va_list args) {
 
         // Determine whether to display node individually or in a list
         if (node->details->unclean || node->details->pending
-            || (node->details->standby_onfail && node->details->online)
-            || node->details->standby || node->details->maintenance
+            || (pcmk_is_set(node->priv->flags, pcmk__node_fail_standby)
+                && node->details->online)
+            || pcmk_is_set(node->priv->flags, pcmk__node_standby)
+            || node->details->maintenance
             || pcmk_is_set(show_opts, pcmk_show_rscs_by_node)
             || pcmk_is_set(show_opts, pcmk_show_feature_set)
             || (pe__node_health(node) <= 0)) {
@@ -2663,7 +2674,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(node->details->uname, only_node,
+        if (!pcmk__str_in_list(node->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
@@ -2706,7 +2717,7 @@ node_summary(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(node->details->uname, only_node,
+        if (!pcmk__str_in_list(node->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
@@ -2848,10 +2859,13 @@ promotion_score(pcmk__output_t *out, va_list args)
     pcmk_node_t *chosen = va_arg(args, pcmk_node_t *);
     const char *score = va_arg(args, const char *);
 
-    out->list_item(out, NULL, "%s promotion score on %s: %s",
-                   child_rsc->id,
-                   chosen? chosen->details->uname : "none",
-                   score);
+    if (chosen == NULL) {
+        out->list_item(out, NULL, "%s promotion score (inactive): %s",
+                       child_rsc->id, score);
+    } else {
+        out->list_item(out, NULL, "%s promotion score on %s: %s",
+                       child_rsc->id, pcmk__node_name(chosen), score);
+    }
     return pcmk_rc_ok;
 }
 
@@ -2870,7 +2884,7 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
                                                    NULL);
 
     if (chosen) {
-        crm_xml_add(node, PCMK_XA_NODE, chosen->details->uname);
+        crm_xml_add(node, PCMK_XA_NODE, chosen->priv->name);
     }
 
     return pcmk_rc_ok;
@@ -2940,7 +2954,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
     if (rsc == NULL) {
         pcmk__xe_set_bool_attr(node, PCMK_XA_ORPHAN, true);
     } else if (all || failcount || last_failure > 0) {
-        char *migration_s = pcmk__itoa(rsc->private->ban_after_failures);
+        char *migration_s = pcmk__itoa(rsc->priv->ban_after_failures);
 
         pcmk__xe_set_props(node,
                            PCMK_XA_ORPHAN, PCMK_VALUE_FALSE,
@@ -3028,8 +3042,8 @@ resource_list(pcmk__output_t *out, va_list args)
         int x;
 
         /* Complex resources may have some sub-resources active and some inactive */
-        gboolean is_active = rsc->private->fns->active(rsc, TRUE);
-        gboolean partially_active = rsc->private->fns->active(rsc, FALSE);
+        gboolean is_active = rsc->priv->fns->active(rsc, TRUE);
+        gboolean partially_active = rsc->priv->fns->active(rsc, FALSE);
 
         /* Skip inactive orphans (deleted but still in CIB) */
         if (pcmk_is_set(rsc->flags, pcmk__rsc_removed) && !is_active) {
@@ -3063,7 +3077,7 @@ resource_list(pcmk__output_t *out, va_list args)
         }
 
         /* Print this resource */
-        x = out->message(out, pcmk__map_element_name(rsc->private->xml),
+        x = out->message(out, pcmk__map_element_name(rsc->priv->xml),
                          show_opts, rsc, only_node, only_rsc);
         if (x == pcmk_rc_ok) {
             rc = pcmk_rc_ok;
@@ -3160,7 +3174,8 @@ resource_util(pcmk__output_t *out, va_list args)
     char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
                                         fn, rsc->id, pcmk__node_name(node));
 
-    g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
+    g_hash_table_foreach(rsc->priv->utilization, append_dump_text,
+                         &dump_text);
     out->list_item(out, NULL, "%s", dump_text);
     free(dump_text);
 
@@ -3174,7 +3189,7 @@ resource_util_xml(pcmk__output_t *out, va_list args)
 {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
-    const char *uname = node->details->uname;
+    const char *uname = node->priv->name;
     const char *fn = va_arg(args, const char *);
 
     xmlNodePtr xml_node = NULL;
@@ -3184,15 +3199,30 @@ resource_util_xml(pcmk__output_t *out, va_list args)
                                             PCMK_XA_NODE, uname,
                                             PCMK_XA_FUNCTION, fn,
                                             NULL);
-    g_hash_table_foreach(rsc->utilization, add_dump_node, xml_node);
+    g_hash_table_foreach(rsc->priv->utilization, add_dump_node, xml_node);
 
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *", "bool", "bool")
+static inline const char *
+ticket_status(pcmk__ticket_t *ticket)
+{
+    if (pcmk_is_set(ticket->flags, pcmk__ticket_granted)) {
+        return PCMK_VALUE_GRANTED;
+    }
+    return PCMK_VALUE_REVOKED;
+}
+
+static inline const char *
+ticket_standby_text(pcmk__ticket_t *ticket)
+{
+    return pcmk_is_set(ticket->flags, pcmk__ticket_standby)? " [standby]" : "";
+}
+
+PCMK__OUTPUT_ARGS("ticket", "pcmk__ticket_t *", "bool", "bool")
 static int
 ticket_default(pcmk__output_t *out, va_list args) {
-    pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
+    pcmk__ticket_t *ticket = va_arg(args, pcmk__ticket_t *);
     bool raw = va_arg(args, int);
     bool details = va_arg(args, int);
 
@@ -3253,22 +3283,18 @@ ticket_default(pcmk__output_t *out, va_list args) {
             char *epoch_str = pcmk__epoch2str(&(ticket->last_granted), 0);
 
             out->list_item(out, NULL, "%s\t%s%s last-granted=\"%s\"",
-                           ticket->id,
-                           (ticket->granted? "granted" : "revoked"),
-                           (ticket->standby? " [standby]" : ""),
-                           pcmk__s(epoch_str, ""));
+                           ticket->id, ticket_status(ticket),
+                           ticket_standby_text(ticket), pcmk__s(epoch_str, ""));
             free(epoch_str);
         } else {
             out->list_item(out, NULL, "%s\t%s%s %s",
-                           ticket->id,
-                           (ticket->granted? "granted" : "revoked"),
-                           (ticket->standby? " [standby]" : ""),
-                           detail_str->str);
+                           ticket->id, ticket_status(ticket),
+                           ticket_standby_text(ticket), detail_str->str);
         }
     } else {
         out->list_item(out, NULL, "%s\t%s%s%s", ticket->id,
-                       ticket->granted ? "granted" : "revoked",
-                       ticket->standby ? " [standby]" : "",
+                       ticket_status(ticket),
+                       ticket_standby_text(ticket),
                        detail_str != NULL ? detail_str->str : "");
     }
 
@@ -3279,26 +3305,23 @@ ticket_default(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *", "bool", "bool")
+PCMK__OUTPUT_ARGS("ticket", "pcmk__ticket_t *", "bool", "bool")
 static int
 ticket_xml(pcmk__output_t *out, va_list args) {
-    pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
+    pcmk__ticket_t *ticket = va_arg(args, pcmk__ticket_t *);
     bool raw G_GNUC_UNUSED = va_arg(args, int);
     bool details G_GNUC_UNUSED = va_arg(args, int);
 
-    const char *status = NULL;
-    const char *standby = pcmk__btoa(ticket->standby);
+    const char *standby = pcmk__flag_text(ticket->flags, pcmk__ticket_standby);
 
     xmlNodePtr node = NULL;
     GHashTableIter iter;
     const char *name = NULL;
     const char *value = NULL;
 
-    status = ticket->granted? PCMK_VALUE_GRANTED : PCMK_VALUE_REVOKED;
-
     node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET,
                                         PCMK_XA_ID, ticket->id,
-                                        PCMK_XA_STATUS, status,
+                                        PCMK_XA_STATUS, ticket_status(ticket),
                                         PCMK_XA_STANDBY, standby,
                                         NULL);
 
@@ -3348,7 +3371,7 @@ ticket_list(pcmk__output_t *out, va_list args) {
     /* Print each ticket */
     g_hash_table_iter_init(&iter, tickets);
     while (g_hash_table_iter_next(&iter, NULL, &value)) {
-        pcmk_ticket_t *ticket = (pcmk_ticket_t *) value;
+        pcmk__ticket_t *ticket = (pcmk__ticket_t *) value;
         out->message(out, "ticket", ticket, raw, details);
     }
 

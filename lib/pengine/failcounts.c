@@ -96,7 +96,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                         "='" PCMK_VALUE_BLOCK "']",
                                     xml_name);
 
-    xmlXPathObject *xpathObj = xpath_search(rsc->private->xml, xpath);
+    xmlXPathObject *xpathObj = xpath_search(rsc->priv->xml, xpath);
     gboolean should_block = FALSE;
 
     free(xpath);
@@ -134,10 +134,10 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                   "[@" PCMK_META_INTERVAL "='%u']"
 
                 lrm_op_xpath = crm_strdup_printf(XPATH_FMT,
-                                                 node->details->uname, xml_name,
+                                                 node->priv->name, xml_name,
                                                  conf_op_name,
                                                  conf_op_interval_ms);
-                lrm_op_xpathObj = xpath_search(rsc->private->scheduler->input,
+                lrm_op_xpathObj = xpath_search(rsc->priv->scheduler->input,
                                                lrm_op_xpath);
 
                 free(lrm_op_xpath);
@@ -184,7 +184,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
 static inline char *
 rsc_fail_name(const pcmk_resource_t *rsc)
 {
-    const char *name = pcmk__s(rsc->private->history_id, rsc->id);
+    const char *name = pcmk__s(rsc->priv->history_id, rsc->id);
 
     return pcmk_is_set(rsc->flags, pcmk__rsc_unique)? strdup(name) : clone_strip(name);
 }
@@ -195,7 +195,6 @@ rsc_fail_name(const pcmk_resource_t *rsc)
  *
  * \param[in]  prefix    Attribute prefix to match
  * \param[in]  rsc_name  Resource name to match as used in failure attributes
- * \param[in]  is_legacy Whether DC uses per-resource fail counts
  * \param[in]  is_unique Whether the resource is a globally unique clone
  * \param[out] re        Where to store resulting regular expression
  *
@@ -204,21 +203,15 @@ rsc_fail_name(const pcmk_resource_t *rsc)
  *       The caller is responsible for freeing re with regfree().
  */
 static int
-generate_fail_regex(const char *prefix, const char *rsc_name,
-                    gboolean is_legacy, gboolean is_unique, regex_t *re)
+generate_fail_regex(const char *prefix, const char *rsc_name, bool is_unique,
+                    regex_t *re)
 {
-    char *pattern;
-
-    /* @COMPAT DC < 1.1.17: Fail counts used to be per-resource rather than
-     * per-operation.
-     */
-    const char *op_pattern = (is_legacy? "" : "#.+_[0-9]+");
+    char *pattern = NULL;
+    const char *op_pattern = "#.+_[0-9]+";
 
     /* Ignore instance numbers for anything other than globally unique clones.
      * Anonymous clone fail counts could contain an instance number if the
      * clone was initially unique, failed, then was converted to anonymous.
-     * @COMPAT Also, before 1.1.8, anonymous clone fail counts always contained
-     * clone instance numbers.
      */
     const char *instance_pattern = (is_unique? "" : "(:[0-9]+)?");
 
@@ -246,24 +239,18 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  *       regfree().
  */
 static int
-generate_fail_regexes(const pcmk_resource_t *rsc,
-                      regex_t *failcount_re, regex_t *lastfailure_re)
+generate_fail_regexes(const pcmk_resource_t *rsc, regex_t *failcount_re,
+                      regex_t *lastfailure_re)
 {
     int rc = pcmk_rc_ok;
     char *rsc_name = rsc_fail_name(rsc);
-    const char *version = crm_element_value(rsc->private->scheduler->input,
-                                            PCMK_XA_CRM_FEATURE_SET);
 
-    // @COMPAT Pacemaker <= 1.1.16 used a single fail count per resource
-    gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
-
-    if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
+    if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name,
                             pcmk_is_set(rsc->flags, pcmk__rsc_unique),
                             failcount_re) != pcmk_rc_ok) {
         rc = EINVAL;
 
     } else if (generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name,
-                                   is_legacy,
                                    pcmk_is_set(rsc->flags, pcmk__rsc_unique),
                                    lastfailure_re) != pcmk_rc_ok) {
         rc = EINVAL;
@@ -324,26 +311,26 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
 
 /*!
  * \internal
- * \brief Update fail count and last failure appropriately for a filler resource
+ * \brief Update fail count and last failure appropriately for launched resource
  *
- * \param[in] data       Filler resource
+ * \param[in] data       Launched resource
  * \param[in] user_data  Fail count data to update
  */
 static void
-update_failcount_for_filler(gpointer data, gpointer user_data)
+update_launched_failcount(gpointer data, gpointer user_data)
 {
-    pcmk_resource_t *filler = data;
+    pcmk_resource_t *launched = data;
     struct failcount_data *fc_data = user_data;
-    time_t filler_last_failure = 0;
+    time_t launched_last_failure = 0;
 
-    fc_data->failcount += pe_get_failcount(fc_data->node, filler,
-                                           &filler_last_failure, fc_data->flags,
-                                           fc_data->xml_op);
-    fc_data->last_failure = QB_MAX(fc_data->last_failure, filler_last_failure);
+    fc_data->failcount += pe_get_failcount(fc_data->node, launched,
+                                           &launched_last_failure,
+                                           fc_data->flags, fc_data->xml_op);
+    fc_data->last_failure = QB_MAX(fc_data->last_failure, launched_last_failure);
 }
 
 #define readable_expiration(rsc)    \
-    pcmk__readable_interval((rsc)->private->failure_expiration_ms)
+    pcmk__readable_interval((rsc)->priv->failure_expiration_ms)
 
 /*!
  * \internal
@@ -378,29 +365,29 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
     CRM_CHECK(generate_fail_regexes(rsc, &fc_data.failcount_re,
                                     &fc_data.lastfailure_re) == pcmk_rc_ok,
               return 0);
-    g_hash_table_foreach(node->details->attrs, update_failcount_for_attr,
+    g_hash_table_foreach(node->priv->attrs, update_failcount_for_attr,
                          &fc_data);
     regfree(&(fc_data.failcount_re));
     regfree(&(fc_data.lastfailure_re));
 
     // If failure blocks the resource, disregard any failure timeout
-    if ((fc_data.failcount > 0) && (rsc->private->failure_expiration_ms > 0)
+    if ((fc_data.failcount > 0) && (rsc->priv->failure_expiration_ms > 0)
         && block_failure(node, rsc, xml_op)) {
 
         pcmk__config_warn("Ignoring failure timeout (%s) for %s "
                           "because it conflicts with "
                           PCMK_META_ON_FAIL "=" PCMK_VALUE_BLOCK,
                           readable_expiration(rsc), rsc->id);
-        rsc->private->failure_expiration_ms = 0;
+        rsc->priv->failure_expiration_ms = 0;
     }
 
     // If all failures have expired, ignore fail count
     if (pcmk_is_set(flags, pcmk__fc_effective) && (fc_data.failcount > 0)
         && (fc_data.last_failure > 0)
-        && (rsc->private->failure_expiration_ms > 0)) {
+        && (rsc->priv->failure_expiration_ms > 0)) {
 
-        time_t now = get_effective_time(rsc->private->scheduler);
-        const guint expiration = rsc->private->failure_expiration_ms / 1000;
+        time_t now = get_effective_time(rsc->priv->scheduler);
+        const guint expiration = rsc->priv->failure_expiration_ms / 1000;
 
         if (now > (fc_data.last_failure + expiration)) {
             pcmk__rsc_debug(rsc, "Failcount for %s on %s expired after %s",
@@ -410,20 +397,21 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
         }
     }
 
-    /* Add the fail count of any filler resources, except that we never want the
-     * fail counts of a bundle container's fillers to count towards the
-     * container's fail count.
+    /* Add the fail count of any launched resources, except that we never want
+     * the fail counts of a bundle container's launched resources to count
+     * towards the container's fail count.
      *
      * Most importantly, a Pacemaker Remote connection to a bundle container
-     * is a filler of the container, but can reside on a different node than the
+     * is launched by the container, but can reside on a different node than the
      * container itself. Counting its fail count on its node towards the
      * container's fail count on that node could lead to attempting to stop the
      * container on the wrong node.
      */
-    if (pcmk_is_set(flags, pcmk__fc_fillers) && (rsc->fillers != NULL)
-        && !pcmk__is_bundled(rsc)) {
+    if (pcmk_is_set(flags, pcmk__fc_launched)
+        && (rsc->priv->launched != NULL) && !pcmk__is_bundled(rsc)) {
 
-        g_list_foreach(rsc->fillers, update_failcount_for_filler, &fc_data);
+        g_list_foreach(rsc->priv->launched, update_launched_failcount,
+                       &fc_data);
         if (fc_data.failcount > 0) {
             pcmk__rsc_info(rsc,
                            "Container %s and the resources within it "

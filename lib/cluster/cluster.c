@@ -86,7 +86,7 @@ pcmk__cluster_parse_msg_type(const char *text)
  * \return Cluster-layer node UUID of \p node, or \c NULL if unknown
  */
 const char *
-pcmk__cluster_node_uuid(crm_node_t *node)
+pcmk__cluster_node_uuid(pcmk__node_status_t *node)
 {
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
 
@@ -233,7 +233,7 @@ pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(gpointer))
  * \return \c true on success, or \c false otherwise
  */
 bool
-pcmk__cluster_send_message(const crm_node_t *node,
+pcmk__cluster_send_message(const pcmk__node_status_t *node,
                            enum crm_ais_msg_types service, const xmlNode *data)
 {
     // @TODO Return standard Pacemaker return code
@@ -356,7 +356,7 @@ pcmk__node_name_from_uuid(const char *uuid)
      * the extent possible, likely with new helper functions.
      */
     GHashTableIter iter;
-    crm_node_t *node = NULL;
+    pcmk__node_status_t *node = NULL;
 
     CRM_CHECK(uuid != NULL, return NULL);
 

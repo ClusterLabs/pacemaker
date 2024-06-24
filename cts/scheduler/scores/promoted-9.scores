@@ -1,12 +1,12 @@
 
 ocf_msdummy:0 promotion score on va1: 1000
 ocf_msdummy:1 promotion score on va1: -1
-ocf_msdummy:2 promotion score on none: 0
-ocf_msdummy:3 promotion score on none: 0
-ocf_msdummy:4 promotion score on none: 0
-ocf_msdummy:5 promotion score on none: 0
-ocf_msdummy:6 promotion score on none: 0
-ocf_msdummy:7 promotion score on none: 0
+ocf_msdummy:2 promotion score (inactive): -INFINITY
+ocf_msdummy:3 promotion score (inactive): -INFINITY
+ocf_msdummy:4 promotion score (inactive): -INFINITY
+ocf_msdummy:5 promotion score (inactive): -INFINITY
+ocf_msdummy:6 promotion score (inactive): -INFINITY
+ocf_msdummy:7 promotion score (inactive): -INFINITY
 pcmk__clone_assign: DoFencing allocation score on ibm1: 0
 pcmk__clone_assign: DoFencing allocation score on sgi2: 0
 pcmk__clone_assign: DoFencing allocation score on test02: 0

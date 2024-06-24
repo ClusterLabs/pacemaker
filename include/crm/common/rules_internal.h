@@ -16,6 +16,10 @@
 #include <crm/common/rules.h>           // enum expression_type, etc.
 #include <crm/common/iso8601.h>         // crm_time_t
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum pcmk__combine {
     pcmk__combine_unknown,
     pcmk__combine_and,
@@ -34,5 +38,9 @@ int pcmk__evaluate_condition(xmlNode *expr, const pcmk_rule_input_t *rule_input,
                              crm_time_t *next_change);
 int pcmk__evaluate_rules(xmlNode *xml, const pcmk_rule_input_t *rule_input,
                          crm_time_t *next_change);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PCMK__CRM_COMMON_RULES_INTERNAL__H

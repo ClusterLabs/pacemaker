@@ -167,7 +167,7 @@ do_election_count_vote(long long action,
                 cib_t *cib_conn = controld_globals.cib_conn;
 
                 register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
-                cib_conn->cmds->set_secondary(cib_conn, cib_scope_local);
+                cib_conn->cmds->set_secondary(cib_conn, cib_none);
 
             } else if (cur_state != S_STARTING) {
                 register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
@@ -225,7 +225,7 @@ do_dc_takeover(long long action,
     controld_set_fsa_input_flags(R_JOIN_OK|R_INVOKE_PE);
 
     controld_globals.cib_conn->cmds->set_primary(controld_globals.cib_conn,
-                                                 cib_scope_local);
+                                                 cib_none);
 
     cib = pcmk__xe_create(NULL, PCMK_XE_CIB);
     crm_xml_add(cib, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
@@ -269,7 +269,7 @@ do_dc_release(long long action,
         crm_info("DC role released");
         if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
-            crm_node_t *node =
+            pcmk__node_status_t *node =
                 pcmk__get_node(0, controld_globals.our_nodename,
                                NULL, pcmk__node_search_cluster_member);
 

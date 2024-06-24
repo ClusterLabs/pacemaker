@@ -38,7 +38,8 @@ typedef struct unpack_data_s {
  * \internal
  * \brief Insert a meta-attribute into a hash table
  *
- * \param[in] obj    Resource (pe_resource_t) or action (pe_action_t) to add to
+ * \param[in] obj    Resource (pcmk__resource_private_t)
+ *                   or action (pcmk_action_t) to add to
  * \param[in] name   Meta-attribute name
  * \param[in] value  Value to add
  */

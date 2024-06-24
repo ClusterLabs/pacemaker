@@ -468,7 +468,8 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
  * \param[in] data  Previous value of what changed
  */
 static void
-st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
+st_peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
+                        const void *data)
 {
     if ((type != crm_status_processes)
         && !pcmk_is_set(node->flags, crm_remote_node)) {
@@ -481,7 +482,8 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
         crm_xml_add(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(query, PCMK__XA_ST_OP, STONITH_OP_POKE);
 
-        crm_debug("Broadcasting our uname because of node %u", node->id);
+        crm_debug("Broadcasting our uname because of node %" PRIu32,
+                  node->cluster_layer_id);
         pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, query);
 
         pcmk__xml_free(query);
@@ -499,8 +501,7 @@ fencer_metadata(void)
                                 "\"stonith\"-class resources");
     const char *desc_long = N_("Instance attributes available for all "
                                "\"stonith\"-class resources and used by "
-                               "Pacemaker's fence daemon, formerly known as "
-                               "stonithd");
+                               "Pacemaker's fence daemon");
 
     return pcmk__daemon_metadata(out, name, desc_short, desc_long,
                                  pcmk__opt_fencing);

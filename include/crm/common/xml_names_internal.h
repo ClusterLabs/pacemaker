@@ -76,28 +76,10 @@ extern "C" {
 #define PCMK__XE_XPATH_QUERY            "xpath-query"
 #define PCMK__XE_XPATH_QUERY_PATH       "xpath-query-path"
 
-// @COMPAT Deprecated since 1.1.12
-#define PCMK__XE_ACL_USER               "acl_user"
-
 /* @COMPAT Deprecate somehow. It's undocumented and behaves the same as
  * PCMK__XE_CIB in places where it's recognized.
  */
 #define PCMK__XE_ALL                    "all"
-
-// @COMPAT Deprecated since 2.1.8
-#define PCMK__XE_CIB_GENERATION         "cib_generation"
-
-// @COMPAT Deprecated since 2.1.8
-#define PCMK__XE_CIB_UPDATE             "cib_update"
-
-// @COMPAT Deprecated since 1.1.12; used with legacy CIB updates
-#define PCMK__XE_CIB_UPDATE_DIFF        "cib_update_diff"
-
-// @COMPAT Deprecated since 2.1.7
-#define PCMK__XE_DIFF_ADDED             "diff-added"
-
-// @COMPAT Deprecated since 2.1.7
-#define PCMK__XE_DIFF_REMOVED           "diff-removed"
 
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XE_FAILED                 "failed"
@@ -113,14 +95,12 @@ extern "C" {
 // @COMPAT Support for rkt is deprecated since 2.1.8
 #define PCMK__XE_RKT                    "rkt"
 
-// @COMPAT Deprecated since 1.1.12
-#define PCMK__XE_ROLE_REF               "role_ref"
-
 
 /*
  * XML attribute names used only by internal code
  */
 
+#define PCMK__XA_ACL_TARGET             "acl_target"
 #define PCMK__XA_ATTR_CLEAR_INTERVAL    "attr_clear_interval"
 #define PCMK__XA_ATTR_CLEAR_OPERATION   "attr_clear_operation"
 #define PCMK__XA_ATTR_DAMPENING         "attr_dampening"
@@ -160,8 +140,6 @@ extern "C" {
 #define PCMK__XA_CIB_USER               "cib_user"
 #define PCMK__XA_CLIENT_NAME            "client_name"
 #define PCMK__XA_CLIENT_UUID            "client_uuid"
-#define PCMK__XA_CONFIG_ERRORS          "config-errors"
-#define PCMK__XA_CONFIG_WARNINGS        "config-warnings"
 #define PCMK__XA_CONFIRM                "confirm"
 #define PCMK__XA_CONNECTION_HOST        "connection_host"
 #define PCMK__XA_CONTENT                "content"
@@ -182,8 +160,6 @@ extern "C" {
 #define PCMK__XA_ELECTION_ID            "election-id"
 #define PCMK__XA_ELECTION_OWNER         "election-owner"
 #define PCMK__XA_GRANTED                "granted"
-#define PCMK__XA_GRAPH_ERRORS           "graph-errors"
-#define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"
 #define PCMK__XA_HIDDEN                 "hidden"
 #define PCMK__XA_HTTP_EQUIV             "http-equiv"
 #define PCMK__XA_IN_CCM                 "in_ccm"
@@ -304,18 +280,6 @@ extern "C" {
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"
 
-// @COMPAT Deprecated since 2.1.8
-#define PCMK__XA_CIB_OBJECT             "cib_object"
-
-// @COMPAT Deprecated since 2.1.8
-#define PCMK__XA_CIB_OBJECT_TYPE        "cib_object_type"
-
-// @COMPAT Deprecated since 1.1.12; used with legacy CIB updates
-#define PCMK__XA_CIB_LOCAL_NOTIFY_ID    "cib_local_notify_id"
-
-// @COMPAT Used only with v1 patchsets
-#define PCMK__XA_CRM_DIFF_MARKER        "__crm_diff_marker__"
-
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_FIRST_INSTANCE         "first-instance"
 
@@ -327,9 +291,6 @@ extern "C" {
 
 // @COMPAT Deprecated alias for PCMK_XA_PROMOTED_ONLY since 2.0.0
 #define PCMK__XA_PROMOTED_ONLY_LEGACY   "master_only"
-
-// @COMPAT Deprecated since 1.1.12
-#define PCMK__XA_REF                    "ref"
 
 // @COMPAT Deprecated since 2.1.6
 #define PCMK__XA_REPLACE                "replace"

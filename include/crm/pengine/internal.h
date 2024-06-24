@@ -8,18 +8,22 @@
  */
 
 #ifndef PCMK__CRM_PENGINE_INTERNAL__H
-#  define PCMK__CRM_PENGINE_INTERNAL__H
+#define PCMK__CRM_PENGINE_INTERNAL__H
 
-#  include <stdbool.h>
-#  include <stdint.h>
-#  include <string.h>
-#  include <crm/common/xml.h>
-#  include <crm/pengine/status.h>
-#  include <crm/pengine/remote_internal.h>
-#  include <crm/common/internal.h>
-#  include <crm/common/options_internal.h>
-#  include <crm/common/output_internal.h>
-#  include <crm/common/scheduler_internal.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+#include <crm/common/xml.h>
+#include <crm/pengine/status.h>
+#include <crm/pengine/remote_internal.h>
+#include <crm/common/internal.h>
+#include <crm/common/options_internal.h>
+#include <crm/common/output_internal.h>
+#include <crm/common/scheduler_internal.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 const char *pe__resource_description(const pcmk_resource_t *rsc,
                                      uint32_t show_opts);
@@ -172,17 +176,16 @@ xmlNode *pcmk__find_action_config(const pcmk_resource_t *rsc,
                                   const char *action_name, guint interval_ms,
                                   bool include_disabled);
 
-enum rsc_start_requirement pcmk__action_requires(const pcmk_resource_t *rsc,
-                                                 const char *action_name);
+enum pcmk__requires pcmk__action_requires(const pcmk_resource_t *rsc,
+                                          const char *action_name);
 
-enum action_fail_response pcmk__parse_on_fail(const pcmk_resource_t *rsc,
-                                              const char *action_name,
-                                              guint interval_ms,
-                                              const char *value);
+enum pcmk__on_fail pcmk__parse_on_fail(const pcmk_resource_t *rsc,
+                                       const char *action_name,
+                                       guint interval_ms, const char *value);
 
 enum rsc_role_e pcmk__role_after_failure(const pcmk_resource_t *rsc,
                                          const char *action_name,
-                                         enum action_fail_response on_fail,
+                                         enum pcmk__on_fail on_fail,
                                          GHashTable *meta);
 
 pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
@@ -198,29 +201,29 @@ pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 
 #define delete_action(rsc, node, optional)                          \
     custom_action((rsc), delete_key(rsc), PCMK_ACTION_DELETE,       \
-                  (node), (optional), (rsc)->private->scheduler)
+                  (node), (optional), (rsc)->priv->scheduler)
 
 #define stop_action(rsc, node, optional)                            \
     custom_action((rsc), stop_key(rsc), PCMK_ACTION_STOP,           \
-                  (node), (optional), (rsc)->private->scheduler)
+                  (node), (optional), (rsc)->priv->scheduler)
 
 #define start_action(rsc, node, optional)                           \
     custom_action((rsc), start_key(rsc), PCMK_ACTION_START,         \
-                  (node), (optional), (rsc)->private->scheduler)
+                  (node), (optional), (rsc)->priv->scheduler)
 
 #define promote_action(rsc, node, optional)                         \
     custom_action((rsc), promote_key(rsc), PCMK_ACTION_PROMOTE,     \
-                  (node), (optional), (rsc)->private->scheduler)
+                  (node), (optional), (rsc)->priv->scheduler)
 
 #define demote_action(rsc, node, optional)                          \
     custom_action((rsc), demote_key(rsc), PCMK_ACTION_DEMOTE,       \
-                  (node), (optional), (rsc)->private->scheduler)
+                  (node), (optional), (rsc)->priv->scheduler)
 
 pcmk_action_t *find_first_action(const GList *input, const char *uuid,
                                  const char *task, const pcmk_node_t *on_node);
 
-enum action_tasks get_complex_task(const pcmk_resource_t *rsc,
-                                   const char *name);
+enum pcmk__action_type get_complex_task(const pcmk_resource_t *rsc,
+                                        const char *name);
 
 GList *find_actions(GList *input, const char *key, const pcmk_node_t *on_node);
 GList *find_actions_exact(GList *input, const char *key,
@@ -233,8 +236,7 @@ extern void pe_free_action(pcmk_action_t *action);
 void resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
                        const char *tag, pcmk_scheduler_t *scheduler);
 
-extern int pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
-                           bool same_node_default);
+int pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b);
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 gboolean get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role);
 void pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role,
@@ -244,7 +246,7 @@ pcmk_resource_t *find_clone_instance(const pcmk_resource_t *rsc,
                                      const char *sub_id);
 
 extern void destroy_ticket(gpointer data);
-pcmk_ticket_t *ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler);
+pcmk__ticket_t *ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler);
 
 // Resources for manipulating resource names
 const char *pe_base_name_end(const char *id);
@@ -290,7 +292,8 @@ void trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node,
                        const char *reason, pcmk_action_t *dependency,
                        pcmk_scheduler_t *scheduler);
 
-char *pe__action2reason(const pcmk_action_t *action, enum pe_action_flags flag);
+char *pe__action2reason(const pcmk_action_t *action,
+                        enum pcmk__action_flags flag);
 void pe_action_set_reason(pcmk_action_t *action, const char *reason,
                           bool overwrite);
 void pe__add_action_expected_result(pcmk_action_t *action, int expected_result);
@@ -299,8 +302,6 @@ void pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_on_all(pcmk_scheduler_t *scheduler,
                                      uint64_t flag);
-
-gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 
 int pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int options);
 void pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
@@ -417,4 +418,8 @@ pe__health_score(const char *option, pcmk_scheduler_t *scheduler)
     return char2score(value);
 }
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__CRM_PENGINE_INTERNAL__H

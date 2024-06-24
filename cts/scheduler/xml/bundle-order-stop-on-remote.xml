@@ -133,8 +133,7 @@
       </primitive>
       <bundle id="rabbitmq-bundle">
         <meta_attributes id="rabbitmq-bundle-meta_attributes">
-          <nvpair id="rabbitmq-bundle-meta_attributes-container-attribute-target"
-                  name="container-attribute-target" value="host"/>
+          <nvpair id="rabbitmq-bundle-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
           <nvpair id="rabbitmq-bundle-meta_attributes-notify" name="notify" value="true"/>
         </meta_attributes>
         <docker image="192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
@@ -164,8 +163,7 @@
       </bundle>
       <bundle id="galera-bundle">
         <meta_attributes id="galera-bundle-meta_attributes">
-          <nvpair id="galera-bundle-meta_attributes-container-attribute-target"
-                  name="container-attribute-target" value="host"/>
+          <nvpair id="galera-bundle-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
           <nvpair id="galera-bundle-meta_attributes-promoted-max" name="promoted-max" value="3"/>
           <nvpair id="galera-bundle-meta_attributes-ordered" name="ordered" value="true"/>
         </meta_attributes>
@@ -200,8 +198,7 @@
       </bundle>
       <bundle id="redis-bundle">
         <meta_attributes id="redis-meta_attributes">
-          <nvpair id="redis-meta_attributes-container-attribute-target"
-                  name="container-attribute-target" value="host"/>
+          <nvpair id="redis-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
           <nvpair id="redis-meta_attributes-interleave" name="interleave" value="true"/>
           <nvpair id="redis-meta_attributes-notify" name="notify" value="true"/>
           <nvpair id="redis-meta_attributes-ordered" name="ordered" value="true"/>
@@ -780,10 +777,9 @@
       <transient_attributes id="3">
         <instance_attributes id="status-3">
           <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-3-last-failure-stonith-fence_ipmilan-525400a7f9e0" name="last-failure-stonith-fence_ipmilan-525400a7f9e0" value="1512340455"/>
           <nvpair id="status-3-promoted-redis" name="master-redis" value="1"/>
-          <nvpair id="status-3-fail-count-stonith-fence_ipmilan-525400498d34" name="fail-count-stonith-fence_ipmilan-525400498d34" value="1"/>
-          <nvpair id="status-3-last-failure-stonith-fence_ipmilan-525400498d34" name="last-failure-stonith-fence_ipmilan-525400498d34" value="1512409184"/>
+          <nvpair id="status-3-fail-count-stonith-fence_ipmilan-525400498d34.monitor_60000" name="fail-count-stonith-fence_ipmilan-525400498d34#monitor_60000" value="1"/>
+          <nvpair id="status-3-last-failure-stonith-fence_ipmilan-525400498d34.monitor_60000" name="last-failure-stonith-fence_ipmilan-525400498d34#monitor_60000" value="1512409184"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3">

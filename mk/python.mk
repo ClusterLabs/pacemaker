@@ -16,12 +16,16 @@ pylint: $(PYCHECKFILES)
 # W503 - Line break occurred before a binary operator
 #        (newer versions of pyflake and PEP8 want line breaks after binary
 #        operators, but older versions still suggest before)
+# E402 - Module level import not at top of file
+# 	 (pylint already warns about this, and we shouldn't need to add
+# 	 ignore pragmas for two tools)
 # E501 - Line too long
+# F401 - Imported but not used
+# 	 (pylint already warns about this, and we shouldn't need to add
+# 	 ignore pragmas for two tools)
 #
-# Disable unused imports on __init__.py files (we likely just have them
-# there for re-exporting).
 # Disable docstrings warnings on unit tests.
 .PHONY: pyflake
 pyflake: $(PYCHECKFILES)
 	PYTHONPATH=$(abs_top_builddir)/python \
-	flake8 --ignore=W503,E501 --per-file-ignores="__init__.py:F401 tests/*:D100,D101,D102,D104" $(PYCHECKFILES)
+	flake8 --ignore=W503,E402,E501,F401 --per-file-ignores="tests/*:D100,D101,D102,D104" $(PYCHECKFILES)

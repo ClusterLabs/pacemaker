@@ -55,14 +55,13 @@ static pcmk_action_t *
 find_existing_action(const char *key, const pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const pcmk_scheduler_t *scheduler)
 {
-    GList *matches = NULL;
-    pcmk_action_t *action = NULL;
-
     /* When rsc is NULL, it would be quicker to check scheduler->singletons,
      * but checking all scheduler->actions takes the node into account.
      */
-    matches = find_actions(((rsc == NULL)? scheduler->actions : rsc->actions),
-                           key, node);
+    GList *actions = (rsc == NULL)? scheduler->actions : rsc->priv->actions;
+    GList *matches = find_actions(actions, key, node);
+    pcmk_action_t *action = NULL;
+
     if (matches == NULL) {
         return NULL;
     }
@@ -87,7 +86,7 @@ static xmlNode *
 find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
                          guint interval_ms, bool include_disabled)
 {
-    for (xmlNode *operation = pcmk__xe_first_child(rsc->private->ops_xml,
+    for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
                                                    PCMK_XE_OP, NULL, NULL);
          operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
@@ -174,6 +173,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     action->rsc = rsc;
     action->task = pcmk__str_copy(task);
     action->uuid = key;
+    action->scheduler = scheduler;
 
     if (node) {
         action->node = pe__copy_node(node);
@@ -181,14 +181,14 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
 
     if (pcmk__str_eq(task, PCMK_ACTION_LRM_DELETE, pcmk__str_casei)) {
         // Resource history deletion for a node can be done on the DC
-        pcmk__set_action_flags(action, pcmk_action_on_dc);
+        pcmk__set_action_flags(action, pcmk__action_on_dc);
     }
 
-    pcmk__set_action_flags(action, pcmk_action_runnable);
+    pcmk__set_action_flags(action, pcmk__action_runnable);
     if (optional) {
-        pcmk__set_action_flags(action, pcmk_action_optional);
+        pcmk__set_action_flags(action, pcmk__action_optional);
     } else {
-        pcmk__clear_action_flags(action, pcmk_action_optional);
+        pcmk__clear_action_flags(action, pcmk__action_optional);
     }
 
     if (rsc == NULL) {
@@ -222,7 +222,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     if (rsc == NULL) {
         add_singleton(scheduler, action);
     } else {
-        rsc->actions = g_list_prepend(rsc->actions, action);
+        rsc->priv->actions = g_list_prepend(rsc->priv->actions, action);
     }
     return action;
 }
@@ -270,19 +270,19 @@ update_action_optional(pcmk_action_t *action, gboolean optional)
 {
     // Force a non-recurring action to be optional if its resource is unmanaged
     if ((action->rsc != NULL) && (action->node != NULL)
-        && !pcmk_is_set(action->flags, pcmk_action_pseudo)
+        && !pcmk_is_set(action->flags, pcmk__action_pseudo)
         && !pcmk_is_set(action->rsc->flags, pcmk__rsc_managed)
         && (g_hash_table_lookup(action->meta, PCMK_META_INTERVAL) == NULL)) {
             pcmk__rsc_debug(action->rsc,
                             "%s on %s is optional (%s is unmanaged)",
                             action->uuid, pcmk__node_name(action->node),
                             action->rsc->id);
-            pcmk__set_action_flags(action, pcmk_action_optional);
+            pcmk__set_action_flags(action, pcmk__action_optional);
             // We shouldn't clear runnable here because ... something
 
     // Otherwise require the action if requested
     } else if (!optional) {
-        pcmk__clear_action_flags(action, pcmk_action_optional);
+        pcmk__clear_action_flags(action, pcmk__action_optional);
     }
 }
 
@@ -291,14 +291,14 @@ effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     enum pe_quorum_policy policy = scheduler->no_quorum_policy;
 
-    if (pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_quorate)) {
         policy = pcmk_no_quorum_ignore;
 
     } else if (scheduler->no_quorum_policy == pcmk_no_quorum_demote) {
-        switch (rsc->role) {
+        switch (rsc->priv->orig_role) {
             case pcmk_role_promoted:
             case pcmk_role_unpromoted:
-                if (rsc->next_role > pcmk_role_unpromoted) {
+                if (rsc->priv->next_role > pcmk_role_unpromoted) {
                     pe__set_next_role(rsc, pcmk_role_unpromoted,
                                       PCMK_OPT_NO_QUORUM_POLICY "=demote");
                 }
@@ -327,19 +327,20 @@ update_resource_action_runnable(pcmk_action_t *action,
 {
     pcmk_resource_t *rsc = action->rsc;
 
-    if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
+    if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
         return;
     }
 
     if (action->node == NULL) {
         pcmk__rsc_trace(rsc, "%s is unrunnable (unallocated)", action->uuid);
-        pcmk__clear_action_flags(action, pcmk_action_runnable);
+        pcmk__clear_action_flags(action, pcmk__action_runnable);
 
-    } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
+    } else if (!pcmk_is_set(action->flags, pcmk__action_on_dc)
                && !(action->node->details->online)
                && (!pcmk__is_guest_or_bundle_node(action->node)
-                   || action->node->details->remote_requires_reset)) {
-        pcmk__clear_action_flags(action, pcmk_action_runnable);
+                   || pcmk_is_set(action->node->priv->flags,
+                                  pcmk__node_remote_reset))) {
+        pcmk__clear_action_flags(action, pcmk__action_runnable);
         do_crm_log(LOG_WARNING, "%s on %s is unrunnable (node is offline)",
                    action->uuid, pcmk__node_name(action->node));
         if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)
@@ -348,14 +349,14 @@ update_resource_action_runnable(pcmk_action_t *action,
             pe_fence_node(scheduler, action->node, "stop is unrunnable", false);
         }
 
-    } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
+    } else if (!pcmk_is_set(action->flags, pcmk__action_on_dc)
                && action->node->details->pending) {
-        pcmk__clear_action_flags(action, pcmk_action_runnable);
+        pcmk__clear_action_flags(action, pcmk__action_runnable);
         do_crm_log(LOG_WARNING,
                    "Action %s on %s is unrunnable (node is pending)",
                    action->uuid, pcmk__node_name(action->node));
 
-    } else if (action->needs == pcmk_requires_nothing) {
+    } else if (action->needs == pcmk__requires_nothing) {
         pe_action_set_reason(action, NULL, TRUE);
         if (pcmk__is_guest_or_bundle_node(action->node)
             && !pe_can_fence(scheduler, action->node)) {
@@ -368,12 +369,12 @@ update_resource_action_runnable(pcmk_action_t *action,
                             "%s on %s is unrunnable "
                             "(node's host cannot be fenced)",
                             action->uuid, pcmk__node_name(action->node));
-            pcmk__clear_action_flags(action, pcmk_action_runnable);
+            pcmk__clear_action_flags(action, pcmk__action_runnable);
         } else {
             pcmk__rsc_trace(rsc,
                             "%s on %s does not require fencing or quorum",
                             action->uuid, pcmk__node_name(action->node));
-            pcmk__set_action_flags(action, pcmk_action_runnable);
+            pcmk__set_action_flags(action, pcmk__action_runnable);
         }
 
     } else {
@@ -381,24 +382,24 @@ update_resource_action_runnable(pcmk_action_t *action,
             case pcmk_no_quorum_stop:
                 pcmk__rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
                                 action->uuid, pcmk__node_name(action->node));
-                pcmk__clear_action_flags(action, pcmk_action_runnable);
+                pcmk__clear_action_flags(action, pcmk__action_runnable);
                 pe_action_set_reason(action, "no quorum", true);
                 break;
 
             case pcmk_no_quorum_freeze:
-                if (!rsc->private->fns->active(rsc, TRUE)
-                    || (rsc->next_role > rsc->role)) {
+                if (!rsc->priv->fns->active(rsc, TRUE)
+                    || (rsc->priv->next_role > rsc->priv->orig_role)) {
                     pcmk__rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
                                     action->uuid,
                                     pcmk__node_name(action->node));
-                    pcmk__clear_action_flags(action, pcmk_action_runnable);
+                    pcmk__clear_action_flags(action, pcmk__action_runnable);
                     pe_action_set_reason(action, "quorum freeze", true);
                 }
                 break;
 
             default:
                 //pe_action_set_reason(action, NULL, TRUE);
-                pcmk__set_action_flags(action, pcmk_action_runnable);
+                pcmk__set_action_flags(action, pcmk__action_runnable);
                 break;
         }
     }
@@ -452,7 +453,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
          * block (which may have rules that need to be evaluated) rather than
          * XML properties.
          */
-        for (xmlNode *operation = pcmk__xe_first_child(rsc->private->ops_xml,
+        for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
                                                        PCMK_XE_OP, NULL, NULL);
              operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
@@ -621,7 +622,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
     guint min_interval_ms = G_MAXUINT;
     xmlNode *op = NULL;
 
-    for (xmlNode *operation = pcmk__xe_first_child(rsc->private->ops_xml,
+    for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
                                                    PCMK_XE_OP, NULL, NULL);
          operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
@@ -681,9 +682,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     const char *str = NULL;
 
     pe_rsc_eval_data_t rsc_rule_data = {
-        .standard = crm_element_value(rsc->private->xml, PCMK_XA_CLASS),
-        .provider = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER),
-        .agent = crm_element_value(rsc->private->xml, PCMK_XA_TYPE),
+        .standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS),
+        .provider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER),
+        .agent = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE),
     };
 
     pe_op_eval_data_t op_rule_data = {
@@ -697,9 +698,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
          * defaults) is deprecated. When we can break behavioral backward
          * compatibility, drop this line.
          */
-        .node_hash = (node == NULL)? NULL : node->details->attrs,
+        .node_hash = (node == NULL)? NULL : node->priv->attrs,
 
-        .now = rsc->private->scheduler->now,
+        .now = rsc->priv->scheduler->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
         .op_data = &op_rule_data,
@@ -708,9 +709,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     meta = pcmk__strkey_table(free, free);
 
     // Cluster-wide <op_defaults> <meta_attributes>
-    pe__unpack_dataset_nvpairs(rsc->private->scheduler->op_defaults,
+    pe__unpack_dataset_nvpairs(rsc->priv->scheduler->op_defaults,
                                PCMK_XE_META_ATTRIBUTES, &rule_data, meta, NULL,
-                               FALSE, rsc->private->scheduler);
+                               FALSE, rsc->priv->scheduler);
 
     // Derive default timeout for probes from recurring monitor timeouts
     if (pcmk_is_probe(action_name, interval_ms)) {
@@ -737,7 +738,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
         // <op> <meta_attributes> take precedence over defaults
         pe__unpack_dataset_nvpairs(action_config, PCMK_XE_META_ATTRIBUTES,
                                    &rule_data, meta, NULL, TRUE,
-                                   rsc->private->scheduler);
+                                   rsc->priv->scheduler);
 
         /* Anything set as an <op> XML property has highest precedence.
          * This ensures we use the name and interval from the <op> tag.
@@ -776,7 +777,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
         && (pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)
             || pcmk_is_probe(action_name, interval_ms))) {
 
-        GHashTable *params = pe_rsc_params(rsc, node, rsc->private->scheduler);
+        GHashTable *params = pe_rsc_params(rsc, node, rsc->priv->scheduler);
 
         timeout_spec = g_hash_table_lookup(params, "pcmk_monitor_timeout");
         if (timeout_spec != NULL) {
@@ -805,7 +806,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         str = g_hash_table_lookup(meta, PCMK_META_INTERVAL_ORIGIN);
         if (unpack_interval_origin(str, action_config, interval_ms,
-                                   rsc->private->scheduler->now,
+                                   rsc->priv->scheduler->now,
                                    &start_delay)) {
             g_hash_table_insert(meta, pcmk__str_copy(PCMK_META_START_DELAY),
                                 crm_strdup_printf("%lld", start_delay));
@@ -823,11 +824,11 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
  *
  * \return Quorum and fencing dependency appropriate to action
  */
-enum rsc_start_requirement
+enum pcmk__requires
 pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
 {
     const char *value = NULL;
-    enum rsc_start_requirement requires = pcmk_requires_nothing;
+    enum pcmk__requires requires = pcmk__requires_nothing;
 
     CRM_CHECK((rsc != NULL) && (action_name != NULL), return requires);
 
@@ -836,11 +837,11 @@ pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
         value = "nothing (not start or promote)";
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
-        requires = pcmk_requires_fencing;
+        requires = pcmk__requires_fencing;
         value = "fencing";
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_quorum)) {
-        requires = pcmk_requires_quorum;
+        requires = pcmk__requires_quorum;
         value = "quorum";
 
     } else {
@@ -861,41 +862,41 @@ pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
  *
  * \return Action failure response parsed from \p text
  */
-enum action_fail_response
+enum pcmk__on_fail
 pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                     guint interval_ms, const char *value)
 {
     const char *desc = NULL;
     bool needs_remote_reset = false;
-    enum action_fail_response on_fail = pcmk_on_fail_ignore;
+    enum pcmk__on_fail on_fail = pcmk__on_fail_ignore;
     const pcmk_scheduler_t *scheduler = NULL;
 
     // There's no enum value for unknown or invalid, so assert
     CRM_ASSERT((rsc != NULL) && (action_name != NULL));
-    scheduler = rsc->private->scheduler;
+    scheduler = rsc->priv->scheduler;
 
     if (value == NULL) {
         // Use default
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_BLOCK, pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_block;
+        on_fail = pcmk__on_fail_block;
         desc = "block";
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_FENCE, pcmk__str_casei)) {
-        if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-            on_fail = pcmk_on_fail_fence_node;
+        if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+            on_fail = pcmk__on_fail_fence_node;
             desc = "node fencing";
         } else {
             pcmk__config_err("Resetting '" PCMK_META_ON_FAIL "' for "
                              "%s of %s to 'stop' because 'fence' is not "
                              "valid when fencing is disabled",
                              action_name, rsc->id);
-            on_fail = pcmk_on_fail_stop;
+            on_fail = pcmk__on_fail_stop;
             desc = "stop resource";
         }
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_STANDBY, pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_standby_node;
+        on_fail = pcmk__on_fail_standby_node;
         desc = "node standby";
 
     } else if (pcmk__strcase_any_of(value,
@@ -904,31 +905,31 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         desc = "ignore";
 
     } else if (pcmk__str_eq(value, "migrate", pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_ban;
+        on_fail = pcmk__on_fail_ban;
         desc = "force migration";
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_STOP, pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_stop;
+        on_fail = pcmk__on_fail_stop;
         desc = "stop resource";
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_RESTART, pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_restart;
+        on_fail = pcmk__on_fail_restart;
         desc = "restart (and possibly migrate)";
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_RESTART_CONTAINER,
                             pcmk__str_casei)) {
-        if (rsc->container == NULL) {
+        if (rsc->priv->launcher == NULL) {
             pcmk__rsc_debug(rsc,
                             "Using default " PCMK_META_ON_FAIL " for %s "
-                            "of %s because it does not have a container",
+                            "of %s because it does not have a launcher",
                             action_name, rsc->id);
         } else {
-            on_fail = pcmk_on_fail_restart_container;
+            on_fail = pcmk__on_fail_restart_container;
             desc = "restart container (and possibly migrate)";
         }
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
-        on_fail = pcmk_on_fail_demote;
+        on_fail = pcmk__on_fail_demote;
         desc = "demote instance";
 
     } else {
@@ -955,34 +956,34 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     if (desc != NULL) {
         // Explicit value used, default not needed
 
-    } else if (rsc->container != NULL) {
-        on_fail = pcmk_on_fail_restart_container;
+    } else if (rsc->priv->launcher != NULL) {
+        on_fail = pcmk__on_fail_restart_container;
         desc = "restart container (and possibly migrate) (default)";
 
     } else if (needs_remote_reset) {
         if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
-            if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
+            if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
                 desc = "fence remote node (default)";
             } else {
                 desc = "recover remote node connection (default)";
             }
-            on_fail = pcmk_on_fail_reset_remote;
+            on_fail = pcmk__on_fail_reset_remote;
         } else {
-            on_fail = pcmk_on_fail_stop;
+            on_fail = pcmk__on_fail_stop;
             desc = "stop unmanaged remote node (enforcing default)";
         }
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)) {
-        if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-            on_fail = pcmk_on_fail_fence_node;
+        if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+            on_fail = pcmk__on_fail_fence_node;
             desc = "resource fence (default)";
         } else {
-            on_fail = pcmk_on_fail_block;
+            on_fail = pcmk__on_fail_block;
             desc = "resource block (default)";
         }
 
     } else {
-        on_fail = pcmk_on_fail_restart;
+        on_fail = pcmk__on_fail_restart;
         desc = "restart (and possibly migrate) (default)";
     }
 
@@ -1005,19 +1006,19 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
  */
 enum rsc_role_e
 pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
-                         enum action_fail_response on_fail, GHashTable *meta)
+                         enum pcmk__on_fail on_fail, GHashTable *meta)
 {
     const char *value = NULL;
     enum rsc_role_e role = pcmk_role_unknown;
 
     // Set default for role after failure specially in certain circumstances
     switch (on_fail) {
-        case pcmk_on_fail_stop:
+        case pcmk__on_fail_stop:
             role = pcmk_role_stopped;
             break;
 
-        case pcmk_on_fail_reset_remote:
-            if (rsc->private->remote_reconnect_ms != 0U) {
+        case pcmk__on_fail_reset_remote:
+            if (rsc->priv->remote_reconnect_ms != 0U) {
                 role = pcmk_role_stopped;
             }
             break;
@@ -1126,16 +1127,16 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
          * new_action().
          */
         if ((action->node != NULL) && (action->op_entry != NULL)
-            && !pcmk_is_set(action->flags, pcmk_action_attrs_evaluated)) {
+            && !pcmk_is_set(action->flags, pcmk__action_attrs_evaluated)) {
 
-            GHashTable *attrs = action->node->details->attrs;
+            GHashTable *attrs = action->node->priv->attrs;
 
             if (action->extra != NULL) {
                 g_hash_table_destroy(action->extra);
             }
             action->extra = pcmk__unpack_action_rsc_params(action->op_entry,
                                                            attrs, scheduler);
-            pcmk__set_action_flags(action, pcmk_action_attrs_evaluated);
+            pcmk__set_action_flags(action, pcmk__action_attrs_evaluated);
         }
 
         update_resource_action_runnable(action, scheduler);
@@ -1155,7 +1156,7 @@ get_pseudo_op(const char *name, pcmk_scheduler_t *scheduler)
 
     if (op == NULL) {
         op = custom_action(NULL, strdup(name), name, NULL, TRUE, scheduler);
-        pcmk__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
+        pcmk__set_action_flags(op, pcmk__action_pseudo|pcmk__action_runnable);
     }
     return op;
 }
@@ -1166,8 +1167,9 @@ find_unfencing_devices(GList *candidates, GList *matches)
     for (GList *gIter = candidates; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *candidate = gIter->data;
 
-        if (candidate->children != NULL) {
-            matches = find_unfencing_devices(candidate->children, matches);
+        if (candidate->priv->children != NULL) {
+            matches = find_unfencing_devices(candidate->priv->children,
+                                             matches);
 
         } else if (!pcmk_is_set(candidate->flags, pcmk__rsc_fence_device)) {
             continue;
@@ -1175,7 +1177,7 @@ find_unfencing_devices(GList *candidates, GList *matches)
         } else if (pcmk_is_set(candidate->flags, pcmk__rsc_needs_unfencing)) {
             matches = g_list_prepend(matches, candidate);
 
-        } else if (pcmk__str_eq(g_hash_table_lookup(candidate->meta,
+        } else if (pcmk__str_eq(g_hash_table_lookup(candidate->priv->meta,
                                                     PCMK_STONITH_PROVIDES),
                                 PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
             matches = g_list_prepend(matches, candidate);
@@ -1201,7 +1203,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
 
     /* No need to request a delay if the fencing target is not a normal cluster
      * member, for example if it's a remote node or a guest node. */
-    if (node->details->type != pcmk_node_variant_cluster) {
+    if (node->priv->variant != pcmk__node_variant_cluster) {
         return 0;
     }
 
@@ -1213,7 +1215,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
     for (gIter = scheduler->nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *n = gIter->data;
 
-        if (n->details->type != pcmk_node_variant_cluster) {
+        if (n->priv->variant != pcmk__node_variant_cluster) {
             continue;
         }
 
@@ -1224,13 +1226,13 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         }
 
         if (member_count == 1
-            || n->details->priority > top_priority) {
-            top_priority = n->details->priority;
+            || n->priv->priority > top_priority) {
+            top_priority = n->priv->priority;
         }
 
         if (member_count == 1
-            || n->details->priority < lowest_priority) {
-            lowest_priority = n->details->priority;
+            || n->priv->priority < lowest_priority) {
+            lowest_priority = n->priv->priority;
         }
     }
 
@@ -1245,7 +1247,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         return 0;
     }
 
-    if (node->details->priority < top_priority) {
+    if (node->priv->priority < top_priority) {
         return 0;
     }
 
@@ -1265,19 +1267,19 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
     }
 
     op_key = crm_strdup_printf("%s-%s-%s",
-                               PCMK_ACTION_STONITH, node->details->uname, op);
+                               PCMK_ACTION_STONITH, node->priv->name, op);
 
     stonith_op = lookup_singleton(scheduler, op_key);
     if(stonith_op == NULL) {
         stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
                                    TRUE, scheduler);
 
-        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE, node->details->uname);
+        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE, node->priv->name);
         pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE_UUID,
-                          node->details->id);
+                          node->priv->id);
         pcmk__insert_meta(stonith_op, PCMK__META_STONITH_ACTION, op);
 
-        if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
+        if (pcmk_is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
             /* Extra work to detect device changes
              */
             GString *digests_all = g_string_sized_new(1024);
@@ -1287,7 +1289,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
 
             for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
                 pcmk_resource_t *match = gIter->data;
-                const char *agent = g_hash_table_lookup(match->meta,
+                const char *agent = g_hash_table_lookup(match->priv->meta,
                                                         PCMK_XA_TYPE);
                 pcmk__op_digest_t *data = NULL;
 
@@ -1297,8 +1299,8 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                     optional = FALSE;
                     crm_notice("Unfencing node %s because the definition of "
                                "%s changed", pcmk__node_name(node), match->id);
-                    if (!pcmk__is_daemon && scheduler->priv != NULL) {
-                        pcmk__output_t *out = scheduler->priv;
+                    if (!pcmk__is_daemon && (scheduler->priv->out != NULL)) {
+                        pcmk__output_t *out = scheduler->priv->out;
 
                         out->info(out,
                                   "notice: Unfencing node %s because the "
@@ -1355,7 +1357,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
     }
 
     if(optional == FALSE && pe_can_fence(scheduler, node)) {
-        pcmk__clear_action_flags(stonith_op, pcmk_action_optional);
+        pcmk__clear_action_flags(stonith_op, pcmk__action_optional);
         pe_action_set_reason(stonith_op, reason, false);
 
     } else if(reason && stonith_op->reason == NULL) {
@@ -1387,17 +1389,17 @@ pe_free_action(pcmk_action_t *action)
     free(action);
 }
 
-enum action_tasks
+enum pcmk__action_type
 get_complex_task(const pcmk_resource_t *rsc, const char *name)
 {
-    enum action_tasks task = pcmk_parse_action(name);
+    enum pcmk__action_type task = pcmk__parse_action(name);
 
     if (pcmk__is_primitive(rsc)) {
         switch (task) {
-            case pcmk_action_stopped:
-            case pcmk_action_started:
-            case pcmk_action_demoted:
-            case pcmk_action_promoted:
+            case pcmk__action_stopped:
+            case pcmk__action_started:
+            case pcmk__action_demoted:
+            case pcmk__action_promoted:
                 crm_trace("Folding %s back into its atomic counterpart for %s",
                           name, rsc->id);
                 --task;
@@ -1499,8 +1501,7 @@ find_actions_exact(GList *input, const char *key, const pcmk_node_t *on_node)
 
         if ((action->node != NULL)
             && pcmk__str_eq(key, action->uuid, pcmk__str_casei)
-            && pcmk__str_eq(on_node->details->id, action->node->details->id,
-                            pcmk__str_casei)) {
+            && pcmk__same_node(on_node, action->node)) {
 
             crm_trace("Action %s on %s matches", key, pcmk__node_name(on_node));
             result = g_list_prepend(result, action);
@@ -1530,9 +1531,9 @@ pe__resource_actions(const pcmk_resource_t *rsc, const pcmk_node_t *node,
     char *key = pcmk__op_key(rsc->id, task, 0);
 
     if (require_node) {
-        result = find_actions_exact(rsc->actions, key, node);
+        result = find_actions_exact(rsc->priv->actions, key, node);
     } else {
-        result = find_actions(rsc->actions, key, node);
+        result = find_actions(rsc->priv->actions, key, node);
     }
     free(key);
     return result;
@@ -1549,18 +1550,18 @@ pe__resource_actions(const pcmk_resource_t *rsc, const pcmk_node_t *node,
  * \note It is the caller's responsibility to free() the result.
  */
 char *
-pe__action2reason(const pcmk_action_t *action, enum pe_action_flags flag)
+pe__action2reason(const pcmk_action_t *action, enum pcmk__action_flags flag)
 {
     const char *change = NULL;
 
     switch (flag) {
-        case pcmk_action_runnable:
+        case pcmk__action_runnable:
             change = "unrunnable";
             break;
-        case pcmk_action_migratable:
+        case pcmk__action_migratable:
             change = "unmigrateable";
             break;
-        case pcmk_action_optional:
+        case pcmk__action_optional:
             change = "required";
             break;
         default:
@@ -1605,7 +1606,7 @@ pe__clear_resource_history(pcmk_resource_t *rsc, const pcmk_node_t *node)
     CRM_ASSERT((rsc != NULL) && (node != NULL));
 
     custom_action(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_LRM_DELETE, 0),
-                  PCMK_ACTION_LRM_DELETE, node, FALSE, rsc->private->scheduler);
+                  PCMK_ACTION_LRM_DELETE, node, FALSE, rsc->priv->scheduler);
 }
 
 #define sort_return(an_int, why) do {					\
@@ -1618,8 +1619,7 @@ pe__clear_resource_history(pcmk_resource_t *rsc, const pcmk_node_t *node)
     } while(0)
 
 int
-pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
-                bool same_node_default)
+pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
 {
     int a_call_id = -1;
     int b_call_id = -1;
@@ -1632,21 +1632,7 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
 
     const char *a_node = crm_element_value(xml_a, PCMK__META_ON_NODE);
     const char *b_node = crm_element_value(xml_b, PCMK__META_ON_NODE);
-    bool same_node = true;
-
-    /* @COMPAT The on_node attribute was added to last_failure as of 1.1.13 (via
-     * 8b3ca1c) and the other entries as of 1.1.12 (via 0b07b5c).
-     *
-     * In case that any of the PCMK__XE_LRM_RSC_OP entries doesn't have on_node
-     * attribute, we need to explicitly tell whether the two operations are on
-     * the same node.
-     */
-    if (a_node == NULL || b_node == NULL) {
-        same_node = same_node_default;
-
-    } else {
-        same_node = pcmk__str_eq(a_node, b_node, pcmk__str_casei);
-    }
+    bool same_node = pcmk__str_eq(a_node, b_node, pcmk__str_casei);
 
     if (same_node && pcmk__str_eq(a_xml_id, b_xml_id, pcmk__str_none)) {
         /* We have duplicate PCMK__XE_LRM_RSC_OP entries in the status
@@ -1756,10 +1742,7 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
 gint
 sort_op_by_callid(gconstpointer a, gconstpointer b)
 {
-    const xmlNode *xml_a = a;
-    const xmlNode *xml_b = b;
-
-    return pe__is_newer_op(xml_a, xml_b, true);
+    return pe__is_newer_op((const xmlNode *) a, (const xmlNode *) b);
 }
 
 /*!
@@ -1782,10 +1765,10 @@ pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
     CRM_ASSERT((rsc != NULL) && (task != NULL));
 
     action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0), task, NULL,
-                           optional, rsc->private->scheduler);
-    pcmk__set_action_flags(action, pcmk_action_pseudo);
+                           optional, rsc->priv->scheduler);
+    pcmk__set_action_flags(action, pcmk__action_pseudo);
     if (runnable) {
-        pcmk__set_action_flags(action, pcmk_action_runnable);
+        pcmk__set_action_flags(action, pcmk__action_runnable);
     }
     return action;
 }

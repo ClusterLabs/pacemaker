@@ -20,6 +20,10 @@
 #include <glib.h>           // GString
 #include <libxml/tree.h>    // xmlNode
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 xmlNode *pcmk__xml_read(const char *filename);
 xmlNode *pcmk__xml_parse(const char *input);
 
@@ -27,9 +31,12 @@ void pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
                       int depth);
 
 int pcmk__xml2fd(int fd, xmlNode *cur);
-int pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
-                       bool compress, unsigned int *nbytes);
+int pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd);
 int pcmk__xml_write_file(const xmlNode *xml, const char *filename,
-                         bool compress, unsigned int *nbytes);
+                         bool compress);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // PCMK__XML_IO_INTERNAL__H

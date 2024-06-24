@@ -206,54 +206,6 @@ class Test:
             self._result_txt = msg % (self.name, n_failed_matches, len(self._patterns), n_negative_matches)
             self.exitcode = ExitStatus.ERROR
 
-    def _new_cmd(self, cmd, args, exitcode, **kwargs):
-        """
-        Add a command to be executed as part of this test.
-
-        Arguments:
-        cmd         -- The program to run.
-        args        -- Commands line arguments to pass to cmd, as a string.
-        exitcode    -- The expected exit code of cmd.  This can be used to
-                       run a command that is expected to fail.
-
-        Keyword arguments:
-        stdout_match          -- If not None, a string that is expected to be
-                                 present in the stdout of cmd.  This can be a
-                                 regular expression.
-        no_wait               -- Do not wait for cmd to complete.
-        stdout_negative_match -- If not None, a string that is expected to be
-                                 missing in the stdout of cmd.  This can be a
-                                 regualr expression.
-        kill                  -- A command to be run after cmd, typically in
-                                 order to kill a failed process.  This should be
-                                 the entire command line including arguments as
-                                 a single string.
-        validate              -- If True, the output of cmd will be passed to
-                                 xmllint for validation.  If validation fails,
-                                 XmlValidationError will be raised.
-        check_rng             -- If True and validate is True, command output
-                                 will additionally be checked against the
-                                 api-result.rng file.
-        check_stderr          -- If True, the stderr of cmd will be included in
-                                 output.
-        env                   -- If not None, variables to set in the environment
-        """
-        self._cmds.append(
-            {
-                "args": args,
-                "check_rng": kwargs.get("check_rng", True),
-                "check_stderr": kwargs.get("check_stderr", True),
-                "cmd": cmd,
-                "expected_exitcode": exitcode,
-                "kill": kwargs.get("kill", None),
-                "no_wait": kwargs.get("no_wait", False),
-                "stdout_match": kwargs.get("stdout_match", None),
-                "stdout_negative_match": kwargs.get("stdout_negative_match", None),
-                "validate": kwargs.get("validate", True),
-                "env": kwargs.get("env", None),
-            }
-        )
-
     def _start_daemons(self):
         """Start any necessary daemons in preparation for executing the test."""
         raise NotImplementedError("_start_daemons not provided by subclass")
@@ -262,28 +214,53 @@ class Test:
     # PUBLIC METHODS
     #
 
-    def add_cmd(self, cmd, args, validate=True, check_rng=True, check_stderr=True,
-                env=None):
-        """Add a simple command to be executed as part of this test."""
-        self._new_cmd(cmd, args, ExitStatus.OK, validate=validate, check_rng=check_rng,
-                      check_stderr=check_stderr, env=env)
+    def add_cmd(self, cmd=None, **kwargs):
+        """
+        Add a command to be executed as part of this test.
 
-    def add_cmd_and_kill(self, cmd, args, kill_proc):
-        """Add a command and system command to be executed as part of this test."""
-        self._new_cmd(cmd, args, ExitStatus.OK, kill=kill_proc)
+        Arguments:
+        cmd         -- The program to run.
 
-    def add_cmd_check_stdout(self, cmd, args, match, no_match=None, env=None):
-        """Add a simple command with expected output to be executed as part of this test."""
-        self._new_cmd(cmd, args, ExitStatus.OK, stdout_match=match,
-                      stdout_negative_match=no_match, env=env)
+        Keyword arguments:
+        args                -- Commands line arguments to pass to cmd, as a string.
+        check_rng           -- If True and validate is True, command output will
+                               additionally be checked against the api-result.rng file.
+        check_stderr        -- If True, the stderr of cmd will be included in output.
+        env                 -- If not None, variables to set in the environment
+        expected_exitcode   -- The expected exit code of cmd.  This can be used to run
+                               a command that is expected to fail.
+        kill                -- A command to be run after cmd, typically in order to
+                               kill a failed process.  This should be the entire
+                               command line including arguments as a single string.
+        no_wait             -- Do not wait for cmd to complete.
+        stdout_match        -- If not None, a string that is expected to be present
+                               in the stdout of cmd.  This can be a regular
+                               expression.
+        stdout_no_match     -- If not None, a string that is expected to be missing
+                               in the stdout of cmd.  This can be a regular
+                               expression.
+        validate            -- If True, the output of cmd will be passed to xmllint
+                               for validation.  If validation fails,
+                               XmlValidationError will be raised.
+        """
+        if cmd is None:
+            raise ValueError("cmd cannot be None")
 
-    def add_cmd_expected_fail(self, cmd, args, exitcode=ExitStatus.ERROR):
-        """Add a command that is expected to fail to be executed as part of this test."""
-        self._new_cmd(cmd, args, exitcode)
-
-    def add_cmd_no_wait(self, cmd, args):
-        """Add a simple command to be executed (without waiting) as part of this test."""
-        self._new_cmd(cmd, args, ExitStatus.OK, no_wait=True)
+        self._cmds.append(
+            {
+                "args": kwargs.get("args", ""),
+                "check_rng": kwargs.get("check_rng", True),
+                "check_stderr": kwargs.get("check_stderr", True),
+                "cmd": cmd,
+                "expected_exitcode": kwargs.get("expected_exitcode", ExitStatus.OK),
+                "kill": kwargs.get("kill"),
+                "no_wait": kwargs.get("no_wait", False),
+                "stdout_match": kwargs.get("stdout_match"),
+                "stdout_no_match": kwargs.get("stdout_no_match"),
+                "validate": kwargs.get("validate", True),
+                "env": kwargs.get("env"),
+            }
+        )
 
     def add_log_pattern(self, pattern, negative=False, regex=False):
         """Add a pattern that should appear in the test's logs."""
@@ -357,7 +334,7 @@ class Test:
                 self.set_error(i, cmd)
                 break
             except OutputFoundError as e:
-                print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_negative_match'], e))
+                print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_no_match'], e))
                 self.set_error(i, cmd)
                 break
             except XmlValidationError as e:
@@ -427,8 +404,8 @@ class Test:
            re.search(args['stdout_match'], output) is None:
             raise OutputNotFoundError(output)
 
-        if args['stdout_negative_match'] is not None and \
-           re.search(args['stdout_negative_match'], output) is not None:
+        if args['stdout_no_match'] is not None and \
+           re.search(args['stdout_no_match'], output) is not None:
             raise OutputFoundError(output)
 
         if args['validate']:

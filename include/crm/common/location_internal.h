@@ -12,7 +12,7 @@
 
 #include <glib.h>                       // GList
 
-#include <crm/common/nodes.h>           // enum pe_discover_e
+#include <crm/common/nodes_internal.h>  // enum pcmk__probe_mode
 #include <crm/common/resources.h>       // enum rsc_role_e
 #include <crm/common/scheduler_types.h> // pcmk_resource_t
 
@@ -25,7 +25,7 @@ typedef struct {
     char *id;                           // XML ID of location constraint
     pcmk_resource_t *rsc;               // Resource with location preference
     enum rsc_role_e role_filter;        // Limit to instances with this role
-    enum pe_discover_e discover_mode;   // How to probe resource on node
+    enum pcmk__probe_mode probe_mode;   // How to probe resource on node
     GList *nodes;                       // Affected nodes, with preference score
 } pcmk__location_t;
 

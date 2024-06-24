@@ -71,11 +71,11 @@
       <lrm id="fc16-builder">
         <lrm_resources>
           <lrm_resource id="NATIVE_RSC_A:0" type="Stateful" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="NATIVE_RSC_A:0_last_0" operation_key="NATIVE_RSC_A:0_promote_0" operation="promote" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="7:5:0:b27a137e-f18a-40ab-ae90-fc916930f1d1" transition-magic="0:0;7:5:0:b27a137e-f18a-40ab-ae90-fc916930f1d1" call-id="12" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="NATIVE_RSC_A:0_monitor_20000" operation_key="NATIVE_RSC_A:0_monitor_20000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="9:6:8:b27a137e-f18a-40ab-ae90-fc916930f1d1" transition-magic="0:8;9:6:8:b27a137e-f18a-40ab-ae90-fc916930f1d1" call-id="14" rc-code="8" op-status="0" interval="20000" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+            <lrm_rsc_op id="NATIVE_RSC_A:0_last_0" operation_key="NATIVE_RSC_A:0_promote_0" operation="promote" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="7:5:0:b27a137e-f18a-40ab-ae90-fc916930f1d1" transition-magic="0:0;7:5:0:b27a137e-f18a-40ab-ae90-fc916930f1d1" call-id="12" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="fc16-builder"/>
+            <lrm_rsc_op id="NATIVE_RSC_A:0_monitor_20000" operation_key="NATIVE_RSC_A:0_monitor_20000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="9:6:8:b27a137e-f18a-40ab-ae90-fc916930f1d1" transition-magic="0:8;9:6:8:b27a137e-f18a-40ab-ae90-fc916930f1d1" call-id="14" rc-code="8" op-status="0" interval="20000" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="fc16-builder"/>
           </lrm_resource>
           <lrm_resource id="NATIVE_RSC_B" type="Dummy" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="NATIVE_RSC_B_last_0" operation_key="NATIVE_RSC_B_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="5:17:7:b27a137e-f18a-40ab-ae90-fc916930f1d1" transition-magic="0:7;5:17:7:b27a137e-f18a-40ab-ae90-fc916930f1d1" call-id="15" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="NATIVE_RSC_B_last_0" operation_key="NATIVE_RSC_B_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="5:17:7:b27a137e-f18a-40ab-ae90-fc916930f1d1" transition-magic="0:7;5:17:7:b27a137e-f18a-40ab-ae90-fc916930f1d1" call-id="15" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="fc16-builder"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -89,10 +89,10 @@
       <lrm id="fc16-builder2">
         <lrm_resources>
           <lrm_resource id="NATIVE_RSC_A:0" type="Dummy" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="NATIVE_RSC_A:0_last_0" operation_key="NATIVE_RSC_A:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="6:0:7:b27a137e-f18a-40ab-ae90-fc916930f1d1" transition-magic="0:7;6:0:7:b27a137e-f18a-40ab-ae90-fc916930f1d1" call-id="2" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="NATIVE_RSC_A:0_last_0" operation_key="NATIVE_RSC_A:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="6:0:7:b27a137e-f18a-40ab-ae90-fc916930f1d1" transition-magic="0:7;6:0:7:b27a137e-f18a-40ab-ae90-fc916930f1d1" call-id="2" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="fc16-builder2"/>
           </lrm_resource>
           <lrm_resource id="NATIVE_RSC_B" type="Dummy" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="NATIVE_RSC_B_last_0" operation_key="NATIVE_RSC_B_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="36:17:0:b27a137e-f18a-40ab-ae90-fc916930f1d1" transition-magic="0:0;36:17:0:b27a137e-f18a-40ab-ae90-fc916930f1d1" call-id="4" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="NATIVE_RSC_B_last_0" operation_key="NATIVE_RSC_B_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.6" transition-key="36:17:0:b27a137e-f18a-40ab-ae90-fc916930f1d1" transition-magic="0:0;36:17:0:b27a137e-f18a-40ab-ae90-fc916930f1d1" call-id="4" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="fc16-builder2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

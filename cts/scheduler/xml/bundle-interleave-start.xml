@@ -72,8 +72,7 @@
     </resources>
     <constraints>
       <rsc_colocation id="app-with-base" rsc="app-bundle" with-rsc="base-bundle" score="INFINITY"/>
-      <rsc_colocation id="promoted-app-with-promoted-base" rsc-role="Promoted" rsc="app-bundle"
-                      with-rsc-role="Promoted" with-rsc="base-bundle" score="INFINITY"/>
+      <rsc_colocation id="promoted-app-with-promoted-base" rsc-role="Promoted" rsc="app-bundle" with-rsc-role="Promoted" with-rsc="base-bundle" score="INFINITY"/>
       <rsc_order id="base-then-app" first-action="start" first="base-bundle" then-action="start" then="app-bundle"/>
       <rsc_order id="promote-base-then-app" first-action="promote" first="base-bundle" then-action="promote" then="app-bundle"/>
     </constraints>

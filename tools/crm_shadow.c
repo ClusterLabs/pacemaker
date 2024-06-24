@@ -535,7 +535,7 @@ static int
 write_shadow_file(const xmlNode *xml, const char *filename, bool reset,
                   GError **error)
 {
-    int rc = pcmk__xml_write_file(xml, filename, false, NULL);
+    int rc = pcmk__xml_write_file(xml, filename, false);
 
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);

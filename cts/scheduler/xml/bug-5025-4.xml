@@ -32,15 +32,15 @@
       <transient_attributes id="4">
         <instance_attributes id="status-4">
           <nvpair id="status-4-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-4-fail-count-remote-node" name="fail-count-remote-node" value="INFINITY"/>
-          <nvpair id="status-4-last-failure-remote-node" name="last-failure-remote-node" value="1359767396"/>
+          <nvpair id="status-4-fail-count-remote-node.start_0" name="fail-count-remote-node#start_0" value="INFINITY"/>
+          <nvpair id="status-4-last-failure-remote-node.start_0" name="last-failure-remote-node#start_0" value="1359767396"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="4">
         <lrm_resources>
           <lrm_resource id="remote-node" type="remote" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="remote-node_last_0" operation_key="remote-node_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="1:4:0:842eec7a-61d1-425b-941c-05bec4e81d48" transition-magic="0:0;1:4:0:842eec7a-61d1-425b-941c-05bec4e81d48" call-id="3" rc-code="0" op-status="0" interval="0" op-digest="b4340b9fb47a71598a3ecbba3170adf1"/>
-            <lrm_rsc_op id="remote-node_last_failure_0" operation_key="remote-node_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="5:3:0:842eec7a-61d1-425b-941c-05bec4e81d48" transition-magic="4:1;5:3:0:842eec7a-61d1-425b-941c-05bec4e81d48" call-id="2" rc-code="1" op-status="4" interval="0" op-digest="b4340b9fb47a71598a3ecbba3170adf1"/>
+            <lrm_rsc_op id="remote-node_last_0" operation_key="remote-node_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="1:4:0:842eec7a-61d1-425b-941c-05bec4e81d48" transition-magic="0:0;1:4:0:842eec7a-61d1-425b-941c-05bec4e81d48" call-id="3" rc-code="0" op-status="0" interval="0" op-digest="b4340b9fb47a71598a3ecbba3170adf1" on_node="18builder"/>
+            <lrm_rsc_op id="remote-node_last_failure_0" operation_key="remote-node_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="5:3:0:842eec7a-61d1-425b-941c-05bec4e81d48" transition-magic="4:1;5:3:0:842eec7a-61d1-425b-941c-05bec4e81d48" call-id="2" rc-code="1" op-status="4" interval="0" op-digest="b4340b9fb47a71598a3ecbba3170adf1" on_node="18builder"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

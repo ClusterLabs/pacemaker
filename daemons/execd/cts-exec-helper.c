@@ -473,7 +473,7 @@ generate_params(void)
         return ENOMEM;
     }
     pcmk__set_scheduler_flags(scheduler,
-                              pcmk_sched_no_counts|pcmk_sched_no_compat);
+                              pcmk__sched_no_counts|pcmk__sched_no_compat);
     scheduler->input = cib_xml_copy;
     scheduler->now = crm_time_new(NULL);
     cluster_status(scheduler);

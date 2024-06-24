@@ -7,16 +7,30 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__LIBPACEMAKER_PRIVATE__H
-#  define PCMK__LIBPACEMAKER_PRIVATE__H
+#ifndef PCMK__PACEMAKER_LIBPACEMAKER_PRIVATE__H
+#define PCMK__PACEMAKER_LIBPACEMAKER_PRIVATE__H
 
 /* This header is for the sole use of libpacemaker, so that functions can be
  * declared with G_GNUC_INTERNAL for efficiency.
  */
 
-#include <crm/lrmd_events.h>      // lrmd_event_data_t
-#include <crm/common/scheduler.h> // pcmk_action_t, pcmk_node_t, etc.
-#include <crm/pengine/internal.h> // pcmk__location_t
+#include <stdio.h>                  // NULL
+#include <stdint.h>                 // uint32_t
+#include <stdbool.h>                // bool, false
+#include <glib.h>                   // guint, gpointer, GList, GHashTable
+#include <libxml/tree.h>            // xmlNode
+
+#include <crm/common/scheduler.h>   // pcmk_action_t, pcmk_node_t, etc.
+#include <crm/common/scheduler_internal.h>  // pcmk__location_t, etc.
+#include <crm/cib.h>                // cib_t
+#include <crm/lrmd_events.h>        // lrmd_event_data_t
+#include <crm/pengine/internal.h>   // pe__const_top_resource(), etc.
+#include <pacemaker.h>              // pcmk_injections_t
+#include <pacemaker-internal.h>     // pcmk__colocation_t
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Colocation flags
 enum pcmk__coloc_flags {
@@ -272,9 +286,10 @@ struct pcmk__assignment_methods {
      *                           node (only used when interleaving instances)
      * \param[in]     flags      Action flags for \p first for ordering purposes
      * \param[in]     filter     Action flags to limit scope of certain updates
-     *                           (may include pcmk_action_optional to affect
-     *                           only mandatory actions and pcmk_action_runnable
-     *                           to affect only runnable actions)
+     *                           (may include pcmk__action_optional to affect
+     *                           only mandatory actions and
+     *                           pcmk__action_runnable to affect only runnable
+     *                           actions)
      * \param[in]     type       Group of enum pcmk__action_relation_flags
      * \param[in,out] scheduler  Scheduler data
      *
@@ -438,6 +453,7 @@ void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
 
 // Injected scheduler inputs (pcmk_sched_injections.c)
 
+G_GNUC_INTERNAL
 void pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
                                   const pcmk_injections_t *injections);
 
@@ -455,7 +471,7 @@ xmlNode *pcmk__expand_tags_in_sets(xmlNode *xml_obj,
 G_GNUC_INTERNAL
 bool pcmk__valid_resource_or_tag(const pcmk_scheduler_t *scheduler,
                                  const char *id, pcmk_resource_t **rsc,
-                                 pcmk_tag_t **tag);
+                                 pcmk__idref_t **tag);
 
 G_GNUC_INTERNAL
 bool pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
@@ -490,38 +506,10 @@ enum pcmk__coloc_affects {
     pcmk__coloc_affects_role,
 };
 
-/*!
- * \internal
- * \brief Get the value of a colocation's node attribute
- *
- * \param[in] node  Node on which to look up the attribute
- * \param[in] attr  Name of attribute to look up
- * \param[in] rsc   Resource on whose behalf to look up the attribute
- *
- * \return Value of \p attr on \p node or on the host of \p node, as appropriate
- */
-static inline const char *
-pcmk__colocation_node_attr(const pcmk_node_t *node, const char *attr,
-                           const pcmk_resource_t *rsc)
-{
-    const char *target = NULL;
-
-    /* A resource colocated with a bundle or its primitive can't run on the
-     * bundle node itself (where only the primitive, if any, can run). Instead,
-     * we treat it as a colocation with the bundle's containers, so always look
-     * up colocation node attributes on the container host.
-     */
-    if (pcmk__is_bundle_node(node) && pcmk__is_bundled(rsc)
-        && (pe__const_top_resource(rsc, false) == pe__bundled_resource(rsc))) {
-        target = PCMK_VALUE_HOST;
-
-    } else if (rsc != NULL) {
-        target = g_hash_table_lookup(rsc->meta,
-                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
-    }
-
-    return pcmk__node_attr(node, attr, target, pcmk__rsc_node_assigned);
-}
+G_GNUC_INTERNAL
+const char *pcmk__colocation_node_attr(const pcmk_node_t *node,
+                                       const char *attr,
+                                       const pcmk_resource_t *rsc);
 
 G_GNUC_INTERNAL
 enum pcmk__coloc_affects pcmk__colocation_affects(const pcmk_resource_t
@@ -628,7 +616,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
     if (pcmk_is_set(colocation->dependent->flags,
                     pcmk__rsc_remote_nesting_allowed)
         && !pcmk_is_set(rsc->flags, pcmk__rsc_failed)
-        && pcmk__list_of_1(rsc->running_on)) {
+        && pcmk__list_of_1(rsc->priv->active_nodes)) {
         return false;
     }
 
@@ -636,7 +624,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
      * if the PCMK_XA_INFLUENCE option is true or the primary is not yet active.
      */
     return pcmk_is_set(colocation->flags, pcmk__coloc_influence)
-           || (rsc->running_on == NULL);
+           || (rsc->priv->active_nodes == NULL);
 }
 
 
@@ -682,7 +670,7 @@ void pcmk__order_after_each(pcmk_action_t *after, GList *list);
                        NULL,                                                \
                        (then_rsc),                                          \
                        pcmk__op_key((then_rsc)->id, (then_task), 0),        \
-                       NULL, (flags), (first_rsc)->private->scheduler)
+                       NULL, (flags), (first_rsc)->priv->scheduler)
 
 #define pcmk__order_starts(rsc1, rsc2, flags)                \
     pcmk__order_resource_actions((rsc1), PCMK_ACTION_START,  \
@@ -1035,7 +1023,8 @@ void pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn,
 
 G_GNUC_INTERNAL
 xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
-                                    lrmd_event_data_t *op, int target_rc);
+                                    lrmd_event_data_t *op, const char *node,
+                                    int target_rc);
 
 
 // Nodes (pcmk_sched_nodes.c)
@@ -1178,4 +1167,8 @@ G_GNUC_INTERNAL
 int pcmk__setup_output_cib_sched(pcmk__output_t **out, cib_t **cib,
                                  pcmk_scheduler_t **scheduler, xmlNode **xml);
 
-#endif // PCMK__LIBPACEMAKER_PRIVATE__H
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__PACEMAKER_LIBPACEMAKER_PRIVATE__H

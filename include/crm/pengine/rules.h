@@ -31,12 +31,12 @@ void pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj,
                        gboolean overwrite, crm_time_t *now,
                        crm_time_t *next_change);
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/pengine/rules_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/pengine/rules_compat.h>
 #endif
 
 #endif

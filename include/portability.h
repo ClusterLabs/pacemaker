@@ -71,4 +71,32 @@
 #    define EKEYREJECTED 200
 #  endif
 
+// Replacements for libgnutls FIPS macros
+
+#  include <gnutls/gnutls.h>
+
+#  ifndef GNUTLS_FIPS140_SET_LAX_MODE
+#    ifdef HAVE_GNUTLS_FIPS140_SET_MODE
+#      define GNUTLS_FIPS140_SET_LAX_MODE() \
+        do { \
+            if (gnutls_fips140_mode_enabled()) \
+                gnutls_fips140_set_mode(GNUTLS_FIPS140_LAX, GNUTLS_FIPS140_SET_MODE_THREAD); \
+        } while(0)
+#    else
+#      define GNUTLS_FIPS140_SET_LAX_MODE()
+#    endif
+#  endif
+
+#  ifndef GNUTLS_FIPS140_SET_STRICT_MODE
+#    ifdef HAVE_GNUTLS_FIPS140_SET_MODE
+#      define GNUTLS_FIPS140_SET_STRICT_MODE() \
+        do { \
+            if (gnutls_fips140_mode_enabled()) \
+                gnutls_fips140_set_mode(GNUTLS_FIPS140_STRICT, GNUTLS_FIPS140_SET_MODE_THREAD); \
+        } while(0)
+#    else
+#      define GNUTLS_FIPS140_SET_STRICT_MODE()
+#    endif
+#  endif
+
 #endif // PCMK__PORTABILITY__H

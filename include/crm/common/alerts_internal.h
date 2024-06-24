@@ -14,6 +14,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Default-Timeout to use before killing a alerts script (in milliseconds) */
 #define PCMK__ALERT_DEFAULT_TIMEOUT_MS (30000)
 
@@ -89,4 +93,9 @@ pcmk__alert_flag2text(enum pcmk__alert_flags flag)
         default:                    return "unknown";
     }
 }
+
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__CRM_COMMON_ALERTS_INTERNAL__H

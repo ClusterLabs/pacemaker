@@ -9,6 +9,10 @@
 
 #include <crm_internal.h>
 
+#include <inttypes.h>           // PRIu32
+#include <stdbool.h>            // bool
+#include <stdio.h>              // NULL
+
 #include <sys/param.h>
 #include <string.h>
 
@@ -77,7 +81,7 @@ crmd_ha_msg_filter(xmlNode * msg)
  * \retval  1 if completely alive
  */
 static int
-node_alive(const crm_node_t *node)
+node_alive(const pcmk__node_status_t *node)
 {
     if (pcmk_is_set(node->flags, crm_remote_node)) {
         // Pacemaker Remote nodes can't be partially alive
@@ -100,7 +104,8 @@ node_alive(const crm_node_t *node)
 #define state_text(state) ((state)? (const char *)(state) : "in unknown state")
 
 void
-peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
+peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
+                     const void *data)
 {
     uint32_t old = 0;
     bool appeared = FALSE;
@@ -126,7 +131,9 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
          */
         xmlNode *query = create_request(CRM_OP_HELLO, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-        crm_debug("Sending hello to node %u so that it learns our node name", node->id);
+        crm_debug("Sending hello to node %" PRIu32 " so that it learns our "
+                  "node name",
+                  node->cluster_layer_id);
         pcmk__cluster_send_message(node, crm_msg_crmd, query);
 
         pcmk__xml_free(query);
@@ -222,24 +229,20 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             } else if (pcmk__str_eq(node->uname, controld_globals.dc_name,
                                     pcmk__str_casei)
                        && !pcmk__cluster_is_node_active(node)) {
-                /* Did the DC leave us? */
+
+                /* The DC has left, so delete its transient attributes and
+                 * trigger a new election.
+                 *
+                 * A DC sends its shutdown request to all peers, who update the
+                 * DC's expected state to down. This avoids fencing upon
+                 * deletion of its transient attributes.
+                 */
                 crm_notice("Our peer on the DC (%s) is dead",
                            controld_globals.dc_name);
-                register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 
-                /* @COMPAT DC < 1.1.13: If a DC shuts down normally, we don't
-                 * want to fence it. Newer DCs will send their shutdown request
-                 * to all peers, who will update the DC's expected state to
-                 * down, thus avoiding fencing. We can safely erase the DC's
-                 * transient attributes when it leaves in that case. However,
-                 * the only way to avoid fencing older DCs is to leave the
-                 * transient attributes intact until it rejoins.
-                 */
-                if (compare_version(controld_globals.dc_version, "3.0.9") > 0) {
-                    controld_delete_node_state(node->uname,
-                                               controld_section_attrs,
-                                               cib_scope_local);
-                }
+                register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
+                controld_delete_node_state(node->uname, controld_section_attrs,
+                                           cib_none);
 
             } else if (AM_I_DC
                        || pcmk_is_set(controld_globals.flags, controld_dc_left)
@@ -253,7 +256,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 } else {
                     controld_delete_node_state(node->uname,
                                                controld_section_attrs,
-                                               cib_scope_local);
+                                               cib_none);
                 }
             }
             break;

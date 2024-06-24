@@ -31,23 +31,23 @@ extern "C" {
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
-#define pe_flag_have_quorum             pcmk_sched_quorate
+#define pe_flag_have_quorum             (1ULL << 0)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
-#define pe_flag_have_stonith_resource   pcmk_sched_have_fencing
+#define pe_flag_have_stonith_resource   (1ULL << 5)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
-typedef struct pe_node_s node_t;
+typedef struct pcmk__scored_node node_t;
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated use pcmk_resource_t instead
-typedef struct pe_resource_s resource_t;
+typedef struct pcmk__resource resource_t;
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_scheduler_t instead
-typedef struct pe_working_set_s pe_working_set_t;
+typedef struct pcmk__scheduler pe_working_set_t;
 
 #ifdef __cplusplus
 }

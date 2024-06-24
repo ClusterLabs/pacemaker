@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,9 @@
  */
 
 #ifndef PCMK__CRM_LRMD_EVENTS__H
-#  define PCMK__CRM_LRMD_EVENTS__H
+#define PCMK__CRM_LRMD_EVENTS__H
+
+#include <sys/types.h>          // time_t
 
 #include <glib.h>               // guint
 #include <crm/common/results.h> // enum ocf_exitcode
@@ -69,10 +71,10 @@ typedef struct lrmd_event_data_s {
     const char *output;
 
     /*! Timestamp of when op ran */
-    unsigned int t_run;
+    time_t t_run;
 
     /*! Timestamp of last rc change */
-    unsigned int t_rcchange;
+    time_t t_rcchange;
 
     /*! Time in length op took to execute */
     unsigned int exec_time;

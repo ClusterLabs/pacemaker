@@ -31,7 +31,7 @@
  * --------  ---------  -------------------
  *     1       1.1.11   PCMK__ATTRD_CMD_UPDATE (PCMK__XA_ATTR_NAME only),
  *                      PCMK__ATTRD_CMD_PEER_REMOVE, PCMK__ATTRD_CMD_REFRESH,
- *                      PCMK__ATTRD_CMD_FLUSH, PCMK__ATTRD_CMD_SYNC_RESPONSE
+ *                      "flush", PCMK__ATTRD_CMD_SYNC_RESPONSE
  *     1       1.1.13   PCMK__ATTRD_CMD_UPDATE (with PCMK__XA_ATTR_REGEX),
  *                      PCMK__ATTRD_CMD_QUERY
  *     1       1.1.15   PCMK__ATTRD_CMD_UPDATE_BOTH,
@@ -42,8 +42,9 @@
  *                      message
  *     5       2.1.5    Peers can request confirmation of a sent message
  *     6       2.1.7    PCMK__ATTRD_CMD_PEER_REMOVE supports PCMK__XA_REAP
+ *     7       3.0.0    "flush" support dropped
  */
-#define ATTRD_PROTOCOL_VERSION "6"
+#define ATTRD_PROTOCOL_VERSION "7"
 
 #define ATTRD_SUPPORTS_MULTI_MESSAGE(x) ((x) >= 4)
 #define ATTRD_SUPPORTS_CONFIRMATION(x)  ((x) >= 5)
@@ -77,19 +78,13 @@ int attrd_expand_value(const char *value, const char *old_value);
 
 /* regular expression to clear failure of all operations for one resource
  * (format takes resource name)
- *
- * @COMPAT attributes set < 1.1.17:
- * also match older attributes that do not have the operation part
  */
-#define ATTRD_RE_CLEAR_ONE ATTRD_RE_CLEAR_ALL "%s(#.+_[0-9]+)?$"
+#define ATTRD_RE_CLEAR_ONE ATTRD_RE_CLEAR_ALL "%s#.+_[0-9]+$"
 
 /* regular expression to clear failure of one operation for one resource
  * (format takes resource name, operation name, and interval)
- *
- * @COMPAT attributes set < 1.1.17:
- * also match older attributes that do not have the operation part
  */
-#define ATTRD_RE_CLEAR_OP ATTRD_RE_CLEAR_ALL "%s(#%s_%u)?$"
+#define ATTRD_RE_CLEAR_OP ATTRD_RE_CLEAR_ALL "%s#%s_%u$"
 
 int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
                         guint interval_ms);
@@ -112,10 +107,11 @@ void attrd_election_init(void);
 void attrd_election_fini(void);
 void attrd_start_election_if_needed(void);
 bool attrd_election_won(void);
-void attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml);
-bool attrd_check_for_new_writer(const crm_node_t *peer, const xmlNode *xml);
+void attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml);
+bool attrd_check_for_new_writer(const pcmk__node_status_t *peer,
+                                const xmlNode *xml);
 void attrd_declare_winner(void);
-void attrd_remove_voter(const crm_node_t *peer);
+void attrd_remove_voter(const pcmk__node_status_t *peer);
 void attrd_xml_add_writer(xmlNode *xml);
 
 enum attrd_attr_flags {
@@ -184,12 +180,12 @@ extern GHashTable *peer_protocol_vers;
 
 int attrd_cluster_connect(void);
 void attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v);
-void attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
-                       bool filter);
-void attrd_peer_sync(crm_node_t *peer);
+void attrd_peer_update(const pcmk__node_status_t *peer, xmlNode *xml,
+                       const char *host, bool filter);
+void attrd_peer_sync(pcmk__node_status_t *peer);
 void attrd_peer_remove(const char *host, bool uncache, const char *source);
 void attrd_peer_clear_failure(pcmk__request_t *request);
-void attrd_peer_sync_response(const crm_node_t *peer, bool peer_won,
+void attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
                               xmlNode *xml);
 
 void attrd_broadcast_protocol(void);
@@ -198,7 +194,8 @@ xmlNode *attrd_client_clear_failure(pcmk__request_t *request);
 xmlNode *attrd_client_update(pcmk__request_t *request);
 xmlNode *attrd_client_refresh(pcmk__request_t *request);
 xmlNode *attrd_client_query(pcmk__request_t *request);
-gboolean attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm);
+gboolean attrd_send_message(pcmk__node_status_t *node, xmlNode *data,
+                            bool confirm);
 
 xmlNode *attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
                              const attribute_value_t *v, bool force_write);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,7 +31,7 @@ crmd_unpack_alerts(xmlNode *alerts)
 }
 
 void
-crmd_alert_node_event(crm_node_t *node)
+crmd_alert_node_event(pcmk__node_status_t *node)
 {
     lrm_state_t *lrm_state;
 
@@ -45,7 +45,7 @@ crmd_alert_node_event(crm_node_t *node)
     }
 
     lrmd_send_node_alert((lrmd_t *) lrm_state->conn, crmd_alert_list,
-                         node->uname, node->id, node->state);
+                         node->uname, node->cluster_layer_id, node->state);
 }
 
 void

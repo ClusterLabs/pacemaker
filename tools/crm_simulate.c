@@ -396,7 +396,7 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         free(pid);
     }
 
-    rc = pcmk__xml_write_file(cib_object, output, false, NULL);
+    rc = pcmk__xml_write_file(cib_object, output, false);
     if (rc != pcmk_rc_ok) {
         g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT,
                     "Could not create '%s': %s", output, pcmk_rc_str(rc));
@@ -492,9 +492,7 @@ main(int argc, char **argv)
     }
 
     if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches) &&
-        !pcmk_is_set(options.flags, pcmk_sim_show_scores) &&
-        !pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
-
+        !(pcmk_is_set(options.flags, pcmk_sim_show_scores) && args->quiet)) {
         pcmk__output_text_set_fancy(out, true);
     }
 
@@ -521,15 +519,15 @@ main(int argc, char **argv)
     }
 
     if (pcmk_is_set(options.flags, pcmk_sim_show_scores)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk_sched_output_scores);
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_output_scores);
     }
     if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk_sched_show_utilization);
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
-    pcmk__set_scheduler_flags(scheduler, pcmk_sched_no_compat);
+    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_compat);
 
     if (options.test_dir != NULL) {
-        scheduler->priv = out;
+        scheduler->priv->out = out;
         pcmk__profile_dir(options.test_dir, options.repeat, scheduler,
                           options.use_date);
         rc = pcmk_rc_ok;

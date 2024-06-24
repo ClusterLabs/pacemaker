@@ -68,7 +68,7 @@ order_start_then_action(pcmk_resource_t *first_rsc, pcmk_action_t *then_action,
                            pcmk__ar_guest_allowed
                            |pcmk__ar_unrunnable_first_blocks
                            |extra,
-                           first_rsc->private->scheduler);
+                           first_rsc->priv->scheduler);
     }
 }
 
@@ -80,7 +80,7 @@ order_action_then_stop(pcmk_action_t *first_action, pcmk_resource_t *then_rsc,
         pcmk__new_ordering(first_action->rsc, NULL, first_action,
                            then_rsc, stop_key(then_rsc), NULL,
                            pcmk__ar_guest_allowed|extra,
-                           then_rsc->private->scheduler);
+                           then_rsc->priv->scheduler);
     }
 }
 
@@ -92,7 +92,7 @@ get_remote_node_state(const pcmk_node_t *node)
 
     CRM_ASSERT(node != NULL);
 
-    remote_rsc = node->details->remote_rsc;
+    remote_rsc = node->priv->remote;
     CRM_ASSERT(remote_rsc != NULL);
 
     cluster_node = pcmk__current_node(remote_rsc);
@@ -101,8 +101,8 @@ get_remote_node_state(const pcmk_node_t *node)
      * is unclean or went offline, we can't process any operations
      * on that remote node until after it starts elsewhere.
      */
-    if ((remote_rsc->next_role == pcmk_role_stopped)
-        || (remote_rsc->allocated_to == NULL)) {
+    if ((remote_rsc->priv->next_role == pcmk_role_stopped)
+        || (remote_rsc->priv->assigned_node == NULL)) {
 
         // The connection resource is not going to run anywhere
 
@@ -120,9 +120,9 @@ get_remote_node_state(const pcmk_node_t *node)
 
         /* Connection resource is failed */
 
-        if ((remote_rsc->next_role == pcmk_role_stopped)
-            && (remote_rsc->private->remote_reconnect_ms > 0U)
-            && node->details->remote_was_fenced
+        if ((remote_rsc->priv->next_role == pcmk_role_stopped)
+            && (remote_rsc->priv->remote_reconnect_ms > 0U)
+            && pcmk_is_set(node->priv->flags, pcmk__node_remote_fenced)
             && !pe__shutdown_requested(node)) {
 
             /* We won't know whether the connection is recoverable until the
@@ -148,9 +148,9 @@ get_remote_node_state(const pcmk_node_t *node)
         // Connection is running on a dead node, see if we can recover it first
         return remote_state_resting;
 
-    } else if (pcmk__list_of_multiple(remote_rsc->running_on)
-               && (remote_rsc->partial_migration_source != NULL)
-               && (remote_rsc->partial_migration_target != NULL)) {
+    } else if (pcmk__list_of_multiple(remote_rsc->priv->active_nodes)
+               && (remote_rsc->priv->partial_migration_source != NULL)
+               && (remote_rsc->priv->partial_migration_target != NULL)) {
         /* We're in the middle of migrating a connection resource, so wait until
          * after the migration completes before performing any actions.
          */
@@ -170,7 +170,7 @@ static void
 apply_remote_ordering(pcmk_action_t *action)
 {
     pcmk_resource_t *remote_rsc = NULL;
-    enum action_tasks task = pcmk_parse_action(action->task);
+    enum pcmk__action_type task = pcmk__parse_action(action->task);
     enum remote_connection_state state = get_remote_node_state(action->node);
 
     uint32_t order_opts = pcmk__ar_none;
@@ -181,7 +181,7 @@ apply_remote_ordering(pcmk_action_t *action)
 
     CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
 
-    remote_rsc = action->node->details->remote_rsc;
+    remote_rsc = action->node->priv->remote;
     CRM_ASSERT(remote_rsc != NULL);
 
     crm_trace("Order %s action %s relative to %s%s (state: %s)",
@@ -191,15 +191,15 @@ apply_remote_ordering(pcmk_action_t *action)
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
-        /* Migration ops map to pcmk_action_unspecified, but we need to apply
+        /* Migration ops map to pcmk__action_unspecified, but we need to apply
          * the same ordering as for stop or demote (see get_router_node()).
          */
-        task = pcmk_action_stop;
+        task = pcmk__action_stop;
     }
 
     switch (task) {
-        case pcmk_action_start:
-        case pcmk_action_promote:
+        case pcmk__action_start:
+        case pcmk__action_promote:
             order_opts = pcmk__ar_none;
 
             if (state == remote_state_failed) {
@@ -212,7 +212,7 @@ apply_remote_ordering(pcmk_action_t *action)
             order_start_then_action(remote_rsc, action, order_opts);
             break;
 
-        case pcmk_action_stop:
+        case pcmk__action_stop:
             if (state == remote_state_alive) {
                 order_action_then_stop(action, remote_rsc,
                                        pcmk__ar_then_implies_first);
@@ -224,12 +224,12 @@ apply_remote_ordering(pcmk_action_t *action)
                  * to the remote connection, since the stop will become implied
                  * by the fencing.
                  */
-                pe_fence_node(remote_rsc->private->scheduler, action->node,
+                pe_fence_node(remote_rsc->priv->scheduler, action->node,
                               "resources are active but "
                               "connection is unrecoverable",
                               FALSE);
 
-            } else if (remote_rsc->next_role == pcmk_role_stopped) {
+            } else if (remote_rsc->priv->next_role == pcmk_role_stopped) {
                 /* State must be remote_state_unknown or remote_state_stopped.
                  * Since the connection is not coming back up in this
                  * transition, stop this resource first.
@@ -245,7 +245,7 @@ apply_remote_ordering(pcmk_action_t *action)
             }
             break;
 
-        case pcmk_action_demote:
+        case pcmk__action_demote:
             /* Only order this demote relative to the connection start if the
              * connection isn't being torn down. Otherwise, the demote would be
              * blocked because the connection start would not be allowed.
@@ -270,12 +270,13 @@ apply_remote_ordering(pcmk_action_t *action)
             } else {
                 pcmk_node_t *cluster_node = pcmk__current_node(remote_rsc);
 
-                if ((task == pcmk_action_monitor) && (state == remote_state_failed)) {
+                if ((task == pcmk__action_monitor)
+                    && (state == remote_state_failed)) {
                     /* We would only be here if we do not know the state of the
                      * resource on the remote node. Since we have no way to find
                      * out, it is necessary to fence the node.
                      */
-                    pe_fence_node(remote_rsc->private->scheduler, action->node,
+                    pe_fence_node(remote_rsc->priv->scheduler, action->node,
                                   "resources are in unknown state "
                                   "and connection is unrecoverable", FALSE);
                 }
@@ -297,30 +298,23 @@ apply_remote_ordering(pcmk_action_t *action)
 }
 
 static void
-apply_container_ordering(pcmk_action_t *action)
+apply_launcher_ordering(pcmk_action_t *action)
 {
-    /* VMs are also classified as containers for these purposes... in
-     * that they both involve a 'thing' running on a real or remote
-     * cluster node.
-     *
-     * This allows us to be smarter about the type and extent of
-     * recovery actions required in various scenarios
-     */
     pcmk_resource_t *remote_rsc = NULL;
-    pcmk_resource_t *container = NULL;
-    enum action_tasks task = pcmk_parse_action(action->task);
+    pcmk_resource_t *launcher = NULL;
+    enum pcmk__action_type task = pcmk__parse_action(action->task);
 
     CRM_ASSERT(action->rsc != NULL);
     CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
 
-    remote_rsc = action->node->details->remote_rsc;
+    remote_rsc = action->node->priv->remote;
     CRM_ASSERT(remote_rsc != NULL);
 
-    container = remote_rsc->container;
-    CRM_ASSERT(container != NULL);
+    launcher = remote_rsc->priv->launcher;
+    CRM_ASSERT(launcher != NULL);
 
-    if (pcmk_is_set(container->flags, pcmk__rsc_failed)) {
-        pe_fence_node(action->rsc->private->scheduler, action->node,
+    if (pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
+        pe_fence_node(action->rsc->priv->scheduler, action->node,
                       "container failed", FALSE);
     }
 
@@ -328,34 +322,34 @@ apply_container_ordering(pcmk_action_t *action)
               action->task, action->uuid,
               pcmk_is_set(remote_rsc->flags, pcmk__rsc_failed)? "failed " : "",
               remote_rsc->id,
-              pcmk_is_set(container->flags, pcmk__rsc_failed)? "failed " : "",
-              container->id);
+              pcmk_is_set(launcher->flags, pcmk__rsc_failed)? "failed " : "",
+              launcher->id);
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
-        /* Migration ops map to pcmk_action_unspecified, but we need to apply
+        /* Migration ops map to pcmk__action_unspecified, but we need to apply
          * the same ordering as for stop or demote (see get_router_node()).
          */
-        task = pcmk_action_stop;
+        task = pcmk__action_stop;
     }
 
     switch (task) {
-        case pcmk_action_start:
-        case pcmk_action_promote:
-            // Force resource recovery if the container is recovered
-            order_start_then_action(container, action,
+        case pcmk__action_start:
+        case pcmk__action_promote:
+            // Force resource recovery if the launcher is recovered
+            order_start_then_action(launcher, action,
                                     pcmk__ar_first_implies_then);
 
             // Wait for the connection resource to be up, too
             order_start_then_action(remote_rsc, action, pcmk__ar_none);
             break;
 
-        case pcmk_action_stop:
-        case pcmk_action_demote:
-            if (pcmk_is_set(container->flags, pcmk__rsc_failed)) {
-                /* When the container representing a guest node fails, any stop
+        case pcmk__action_stop:
+        case pcmk__action_demote:
+            if (pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
+                /* When the launcher representing a guest node fails, any stop
                  * or demote actions for resources running on the guest node
-                 * are implied by the container stopping. This is similar to
+                 * are implied by the launcher stopping. This is similar to
                  * how fencing operations work for cluster nodes and remote
                  * nodes.
                  */
@@ -364,7 +358,7 @@ apply_container_ordering(pcmk_action_t *action)
                  * down.
                  *
                  * If we really wanted to, we could order these after the
-                 * connection start, IFF the container's current role was
+                 * connection start, IFF the launcher's current role was
                  * stopped (otherwise we re-introduce an ordering loop when the
                  * connection is restarting).
                  */
@@ -379,7 +373,7 @@ apply_container_ordering(pcmk_action_t *action)
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established
                  */
-                if (task != pcmk_action_unspecified) {
+                if (task != pcmk__action_unspecified) {
                     order_start_then_action(remote_rsc, action,
                                             pcmk__ar_first_implies_then);
                 }
@@ -399,7 +393,7 @@ apply_container_ordering(pcmk_action_t *action)
 void
 pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_have_remote_nodes)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
         return;
     }
 
@@ -445,11 +439,11 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * real actions and vice versa later in update_actions() at the end of
          * pcmk__apply_orderings().
          */
-        if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
             continue;
         }
 
-        remote = action->node->details->remote_rsc;
+        remote = action->node->priv->remote;
         if (remote == NULL) {
             // Orphaned
             continue;
@@ -461,7 +455,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * start, we leave the resource running on the original node.
          */
         if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_none)) {
-            for (GList *item = action->rsc->actions; item != NULL;
+            for (GList *item = action->rsc->priv->actions; item != NULL;
                  item = item->next) {
                 pcmk_action_t *rsc_action = item->data;
 
@@ -484,9 +478,9 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * It would probably be better to add PCMK__XA_ROUTER_NODE as part of
          * this logic rather than create_graph_action().
          */
-        if (remote->container) {
+        if (remote->priv->launcher != NULL) {
             crm_trace("Container ordering for %s", action->uuid);
-            apply_container_ordering(action);
+            apply_launcher_ordering(action);
 
         } else {
             crm_trace("Remote ordering for %s", action->uuid);
@@ -506,7 +500,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 bool
 pcmk__is_failed_remote_node(const pcmk_node_t *node)
 {
-    return pcmk__is_remote_node(node) && (node->details->remote_rsc != NULL)
+    return pcmk__is_remote_node(node) && (node->priv->remote != NULL)
            && (get_remote_node_state(node) == remote_state_failed);
 }
 
@@ -524,9 +518,9 @@ bool
 pcmk__rsc_corresponds_to_guest(const pcmk_resource_t *rsc,
                                const pcmk_node_t *node)
 {
-    return (rsc != NULL) && (rsc->fillers != NULL) && (node != NULL)
-            && (node->details->remote_rsc != NULL)
-            && (node->details->remote_rsc->container == rsc);
+    return (rsc != NULL) && (rsc->priv->launched != NULL) && (node != NULL)
+            && (node->priv->remote != NULL)
+            && (node->priv->remote->priv->launcher == rsc);
 }
 
 /*!
@@ -550,19 +544,20 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
     pcmk_node_t *ended_on = NULL;
     bool partial_migration = false;
     const char *task = action->task;
+    pcmk_resource_t *remote = NULL;
 
     if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_none)
         || !pcmk__is_pacemaker_remote_node(action->node)) {
         return NULL;
     }
 
-    CRM_ASSERT(action->node->details->remote_rsc != NULL);
+    remote = action->node->priv->remote;
+    CRM_ASSERT(remote != NULL);
 
-    began_on = pcmk__current_node(action->node->details->remote_rsc);
-    ended_on = action->node->details->remote_rsc->allocated_to;
-    if (action->node->details->remote_rsc
-        && (action->node->details->remote_rsc->container == NULL)
-        && action->node->details->remote_rsc->partial_migration_target) {
+    began_on = pcmk__current_node(remote);
+    ended_on = remote->priv->assigned_node;
+    if ((remote->priv->launcher == NULL)
+        && (remote->priv->partial_migration_target != NULL)) {
         partial_migration = true;
     }
 
@@ -570,7 +565,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "next node %s (starting)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (ended_on? ended_on->details->uname : "none"),
+                  (ended_on? ended_on->priv->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return ended_on;
     }
@@ -579,7 +574,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (stopping)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->details->uname : "none"),
+                  (began_on? began_on->priv->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return began_on;
     }
@@ -588,7 +583,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (not moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->details->uname : "none"),
+                  (began_on? began_on->priv->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return began_on;
     }
@@ -623,7 +618,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->details->uname : "none"),
+                  (began_on? began_on->priv->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return began_on;
     }
@@ -635,7 +630,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
     crm_trace("Routing %s for %s through remote connection's "
               "next node %s (moving)%s",
               action->task, (action->rsc? action->rsc->id : "no resource"),
-              (ended_on? ended_on->details->uname : "none"),
+              (ended_on? ended_on->priv->name : "none"),
               partial_migration? " (partial migration)" : "");
     return ended_on;
 }
@@ -658,7 +653,7 @@ pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params)
     const char *remote_addr = g_hash_table_lookup(params, PCMK_REMOTE_RA_ADDR);
 
     if (pcmk__str_eq(remote_addr, "#uname", pcmk__str_none)) {
-        GHashTable *base = pe_rsc_params(rsc, NULL, rsc->private->scheduler);
+        GHashTable *base = pe_rsc_params(rsc, NULL, rsc->priv->scheduler);
 
         remote_addr = g_hash_table_lookup(base, PCMK_REMOTE_RA_ADDR);
         if (remote_addr != NULL) {
@@ -687,34 +682,36 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
 {
     const pcmk_node_t *guest = action->node;
     const pcmk_node_t *host = NULL;
-    enum action_tasks task;
+    const pcmk_resource_t *launcher = NULL;
+    enum pcmk__action_type task;
 
     if (!pcmk__is_guest_or_bundle_node(guest)) {
         return;
     }
+    launcher = guest->priv->remote->priv->launcher;
 
-    task = pcmk_parse_action(action->task);
-    if ((task == pcmk_action_notify) || (task == pcmk_action_notified)) {
-        task = pcmk_parse_action(g_hash_table_lookup(action->meta,
-                                                     "notify_operation"));
+    task = pcmk__parse_action(action->task);
+    if ((task == pcmk__action_notify) || (task == pcmk__action_notified)) {
+        task = pcmk__parse_action(g_hash_table_lookup(action->meta,
+                                                      "notify_operation"));
     }
 
     switch (task) {
-        case pcmk_action_stop:
-        case pcmk_action_stopped:
-        case pcmk_action_demote:
-        case pcmk_action_demoted:
+        case pcmk__action_stop:
+        case pcmk__action_stopped:
+        case pcmk__action_demote:
+        case pcmk__action_demoted:
             // "Down" actions take place on guest's current host
-            host = pcmk__current_node(guest->details->remote_rsc->container);
+            host = pcmk__current_node(launcher);
             break;
 
-        case pcmk_action_start:
-        case pcmk_action_started:
-        case pcmk_action_monitor:
-        case pcmk_action_promote:
-        case pcmk_action_promoted:
+        case pcmk__action_start:
+        case pcmk__action_started:
+        case pcmk__action_monitor:
+        case pcmk__action_promote:
+        case pcmk__action_promoted:
             // "Up" actions take place on guest's next host
-            host = guest->details->remote_rsc->container->allocated_to;
+            host = launcher->priv->assigned_node;
             break;
 
         default:
@@ -723,14 +720,14 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
 
     if (host != NULL) {
         gpointer target =
-            g_hash_table_lookup(action->rsc->meta,
+            g_hash_table_lookup(action->rsc->priv->meta,
                                 PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
 
         hash2metafield((gpointer) PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
                        target,
                        (gpointer) args_xml);
         hash2metafield((gpointer) PCMK__META_PHYSICAL_HOST,
-                       (gpointer) host->details->uname,
+                       (gpointer) host->priv->name,
                        (gpointer) args_xml);
     }
 }

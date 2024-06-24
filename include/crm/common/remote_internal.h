@@ -10,11 +10,20 @@
 #ifndef PCMK__CRM_COMMON_REMOTE_INTERNAL__H
 #define PCMK__CRM_COMMON_REMOTE_INTERNAL__H
 
-#include <stdbool.h>                    // bool
+#include <stdio.h>          // NULL
+#include <stdbool.h>        // bool
+#include <gnutls/gnutls.h>  // gnutls_session_t, etc.
+#include <libxml/tree.h>    // xmlNode
+#include <gnutls/gnutls.h>  // gnutls_session_t, gnutls_dh_params_t, etc.
 
-#include <crm/common/ipc_internal.h>    // pcmk__client_t
-#include <crm/common/nodes.h>           // pcmk_node_variant_remote
-#include <crm/common/scheduler_types.h> // pcmk_node_t
+#include <crm/common/ipc_internal.h>        // pcmk__client_t
+#include <crm/common/nodes_internal.h>      // pcmk__node_variant_remote, etc.
+#include <crm/common/resources_internal.h>  // struct pcmk__remote_private
+#include <crm/common/scheduler_types.h>     // pcmk_node_t
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // internal functions from remote.c
 
@@ -41,7 +50,8 @@ void pcmk__sockaddr2str(const void *sa, char *s);
 static inline bool
 pcmk__is_pacemaker_remote_node(const pcmk_node_t *node)
 {
-    return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
+    return (node != NULL)
+            && (node->priv->variant == pcmk__node_variant_remote);
 }
 
 /*!
@@ -56,8 +66,8 @@ static inline bool
 pcmk__is_remote_node(const pcmk_node_t *node)
 {
     return pcmk__is_pacemaker_remote_node(node)
-           && ((node->details->remote_rsc == NULL)
-               || (node->details->remote_rsc->container == NULL));
+           && ((node->priv->remote == NULL)
+               || (node->priv->remote->priv->launcher == NULL));
 }
 
 /*!
@@ -72,11 +82,9 @@ static inline bool
 pcmk__is_guest_or_bundle_node(const pcmk_node_t *node)
 {
     return pcmk__is_pacemaker_remote_node(node)
-           && (node->details->remote_rsc != NULL)
-           && (node->details->remote_rsc->container != NULL);
+           && (node->priv->remote != NULL)
+           && (node->priv->remote->priv->launcher != NULL);
 }
-
-#include <gnutls/gnutls.h>
 
 gnutls_session_t *pcmk__new_tls_session(int csock, unsigned int conn_type,
                                         gnutls_credentials_type_t cred_type,
@@ -98,5 +106,9 @@ int pcmk__read_handshake_data(const pcmk__client_t *client);
  */
 int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
                                int *gnutls_rc);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif      // PCMK__CRM_COMMON_REMOTE_INTERNAL__H

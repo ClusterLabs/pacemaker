@@ -24,7 +24,7 @@ null_is_unclean(void **state)
 static void
 node_is_clean(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .unclean = FALSE,
     };
 
@@ -38,7 +38,7 @@ node_is_clean(void **state)
 static void
 node_is_unclean(void **state)
 {
-    struct pe_node_shared_s shared = {
+    struct pcmk__node_details shared = {
         .unclean = TRUE,
     };
     pcmk_node_t node = {

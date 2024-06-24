@@ -23,4 +23,4 @@ pcmk__primitive_assign: s0:1 allocation score on hex-13: 6
 pcmk__primitive_assign: s0:1 allocation score on hex-14: -INFINITY
 s0:0 promotion score on hex-14: -INFINITY
 s0:1 promotion score on hex-13: -INFINITY
-s0:2 promotion score on none: 0
+s0:2 promotion score (inactive): -INFINITY

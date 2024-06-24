@@ -76,43 +76,6 @@ calculate_xml_digest_v1(xmlNode *input)
 
 /*!
  * \internal
- * \brief Calculate and return v2 digest of XML tree
- *
- * \param[in] source  Root of XML to digest
- * \param[in] filter  Whether to filter certain XML attributes
- *
- * \return Newly allocated string containing digest
- */
-static char *
-calculate_xml_digest_v2(const xmlNode *source, bool filter)
-{
-    char *digest = NULL;
-    GString *buf = g_string_sized_new(1024);
-
-    pcmk__xml_string(source, (filter? pcmk__xml_fmt_filtered : 0), buf, 0);
-    digest = crm_md5sum(buf->str);
-
-    pcmk__if_tracing(
-        {
-            char *trace_file = crm_strdup_printf("%s/digest-%s",
-                                                 pcmk__get_tmpdir(), digest);
-
-            crm_trace("Saving %s.%s.%s to %s",
-                      crm_element_value(source, PCMK_XA_ADMIN_EPOCH),
-                      crm_element_value(source, PCMK_XA_EPOCH),
-                      crm_element_value(source, PCMK_XA_NUM_UPDATES),
-                      trace_file);
-            save_xml_to_file(source, "digest input", trace_file);
-            free(trace_file);
-        },
-        {}
-    );
-    g_string_free(buf, TRUE);
-    return digest;
-}
-
-/*!
- * \internal
  * \brief Calculate and return the digest of a CIB, suitable for storing on disk
  *
  * \param[in] input  Root of XML to digest
@@ -123,7 +86,8 @@ char *
 pcmk__digest_on_disk_cib(xmlNode *input)
 {
     /* Always use the v1 format for on-disk digests.
-     * * Switching to v2 is a compatibility nightmare.
+     * * Switching to v2 affects even full-restart upgrades, so it would be a
+     *   compatibility nightmare.
      * * We only use this once at startup. All other invocations are in a
      *   separate child process.
      */
@@ -144,6 +108,11 @@ pcmk__digest_on_disk_cib(xmlNode *input)
 char *
 pcmk__digest_operation(xmlNode *input)
 {
+    /* Switching to v2 digests would likely cause restarts during rolling
+     * upgrades.
+     *
+     * @TODO Confirm this. Switch to v2 if safe, or drop this TODO otherwise.
+     */
     xmlNode *sorted = pcmk__xml_copy(NULL, input);
     char *digest = NULL;
 
@@ -158,33 +127,40 @@ pcmk__digest_operation(xmlNode *input)
  * \internal
  * \brief Calculate and return the digest of an XML tree
  *
- * \param[in] input    Root of XML to digest
- * \param[in] filter   Whether to filter certain XML attributes (ignored if
- *                     version is less than or equal to "3.0.5")
- * \param[in] version  CRM feature set version (used to select v1/v2 digest)
+ * \param[in] xml     XML tree to digest
+ * \param[in] filter  Whether to filter certain XML attributes
  *
  * \return Newly allocated string containing digest
  */
 char *
-pcmk__digest_xml(xmlNode *input, bool filter, const char *version)
+pcmk__digest_xml(xmlNode *xml, bool filter)
 {
-    /* @COMPAT Digests (on-disk or in diffs/patchsets) created <1.1.4 (commit
-     * 3032878) were always v1. Removing this affects even full-restart upgrades
-     * from old versions.
-     *
-     * The sorting associated with v1 digest creation accounted for 23% of
-     * the CIB manager's CPU usage on the server. v2 drops this.
-     *
-     * The filtering accounts for an additional 2.5% and we may want to
-     * remove it in future.
+    /* @TODO Filtering accounts for significant CPU usage. Consider removing if
+     * possible.
      */
-    if ((version == NULL) || (compare_version("3.0.5", version) > 0)) {
-        crm_trace("Using v1 digest algorithm for %s",
-                  pcmk__s(version, "unknown feature set"));
-        return calculate_xml_digest_v1(input);
-    }
-    crm_trace("Using v2 digest algorithm for %s", version);
-    return calculate_xml_digest_v2(input, filter);
+    char *digest = NULL;
+    GString *buf = g_string_sized_new(1024);
+
+    pcmk__xml_string(xml, (filter? pcmk__xml_fmt_filtered : 0), buf, 0);
+    digest = crm_md5sum(buf->str);
+
+    pcmk__if_tracing(
+        {
+            char *trace_file = crm_strdup_printf("%s/digest-%s",
+                                                 pcmk__get_tmpdir(), digest);
+
+            crm_trace("Saving %s.%s.%s to %s",
+                      crm_element_value(xml, PCMK_XA_ADMIN_EPOCH),
+                      crm_element_value(xml, PCMK_XA_EPOCH),
+                      crm_element_value(xml, PCMK_XA_NUM_UPDATES),
+                      trace_file);
+            save_xml_to_file(xml, "digest input", trace_file);
+            free(trace_file);
+        },
+        {}
+    );
+    g_string_free(buf, TRUE);
+    return digest;
 }
 
 /*!
@@ -265,7 +241,9 @@ crm_md5sum(const char *buffer)
 
     raw_digest = pcmk__assert_alloc(dlen, sizeof(unsigned char));
 
+    GNUTLS_FIPS140_SET_LAX_MODE();
     rc = gnutls_hash_fast(GNUTLS_DIG_MD5, buffer, strlen(buffer), raw_digest);
+    GNUTLS_FIPS140_SET_STRICT_MODE();
 
     if (rc < 0) {
         free(raw_digest);
@@ -390,7 +368,7 @@ calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
         return digest;
     }
     crm_trace("Using v2 digest algorithm for %s", version);
-    return calculate_xml_digest_v2(input, do_filter);
+    return pcmk__digest_xml(input, do_filter);
 }
 
 // LCOV_EXCL_STOP

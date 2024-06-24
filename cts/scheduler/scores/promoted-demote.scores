@@ -3,7 +3,7 @@ cyrus_drbd_node:0 promotion score on cxa1: 285
 cyrus_drbd_node:1 promotion score on cxb1: 275
 named_drbd_node:0 promotion score on cxa1: 275
 named_drbd_node:1 promotion score on cxb1: 285
-named_drbd_node:2 promotion score on none: 0
+named_drbd_node:2 promotion score (inactive): -INFINITY
 pcmk__clone_assign: cyrus_drbd allocation score on cxa1: 210
 pcmk__clone_assign: cyrus_drbd allocation score on cxb1: 200
 pcmk__clone_assign: cyrus_drbd_node:0 allocation score on cxa1: 76

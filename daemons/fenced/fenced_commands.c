@@ -644,10 +644,11 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 
     if (device->include_nodeid && (cmd->target != NULL)) {
-        crm_node_t *node = pcmk__get_node(0, cmd->target, NULL,
-                                          pcmk__node_search_cluster_member);
+        pcmk__node_status_t *node =
+            pcmk__get_node(0, cmd->target, NULL,
+                           pcmk__node_search_cluster_member);
 
-        cmd->target_nodeid = node->id;
+        cmd->target_nodeid = node->cluster_layer_id;
     }
 
     cmd->device = pcmk__str_copy(device->id);
@@ -981,74 +982,6 @@ read_action_metadata(stonith_device_t *device)
     freeXpathObject(xpath);
 }
 
-/*!
- * \internal
- * \brief Set a pcmk_*_action parameter if not already set
- *
- * \param[in,out] params  Device parameters
- * \param[in]     action  Name of action
- * \param[in]     value   Value to use if action is not already set
- */
-static void
-map_action(GHashTable *params, const char *action, const char *value)
-{
-    char *key = crm_strdup_printf("pcmk_%s_action", action);
-
-    if (g_hash_table_lookup(params, key)) {
-        crm_warn("Ignoring %s='%s', see %s instead",
-                 STONITH_ATTR_ACTION_OP, value, key);
-        free(key);
-    } else {
-        crm_warn("Mapping %s='%s' to %s='%s'",
-                 STONITH_ATTR_ACTION_OP, value, key, value);
-        g_hash_table_insert(params, key, pcmk__str_copy(value));
-    }
-}
-
-/*!
- * \internal
- * \brief Create device parameter table from XML
- *
- * \param[in]  name    Device name (used for logging only)
- * \param[in]  dev     XML containing device parameters
- */
-static GHashTable *
-xml2device_params(const char *name, const xmlNode *dev)
-{
-    GHashTable *params = xml2list(dev);
-    const char *value;
-
-    /* Action should never be specified in the device configuration,
-     * but we support it for users who are familiar with other software
-     * that worked that way.
-     */
-    value = g_hash_table_lookup(params, STONITH_ATTR_ACTION_OP);
-    if (value != NULL) {
-        crm_warn("%s has '%s' parameter, which should never be specified in configuration",
-                 name, STONITH_ATTR_ACTION_OP);
-
-        if (*value == '\0') {
-            crm_warn("Ignoring empty '%s' parameter", STONITH_ATTR_ACTION_OP);
-
-        } else if (strcmp(value, PCMK_ACTION_REBOOT) == 0) {
-            crm_warn("Ignoring %s='reboot' (see " PCMK_OPT_STONITH_ACTION
-                     " cluster property instead)",
-                     STONITH_ATTR_ACTION_OP);
-
-        } else if (strcmp(value, PCMK_ACTION_OFF) == 0) {
-            map_action(params, PCMK_ACTION_REBOOT, value);
-
-        } else {
-            map_action(params, PCMK_ACTION_OFF, value);
-            map_action(params, PCMK_ACTION_REBOOT, value);
-        }
-
-        g_hash_table_remove(params, STONITH_ATTR_ACTION_OP);
-    }
-
-    return params;
-}
-
 static const char *
 target_list_type(stonith_device_t * dev)
 {
@@ -1088,7 +1021,7 @@ build_device_from_xml(xmlNode *dev)
     device->id = crm_element_value_copy(dev, PCMK_XA_ID);
     device->agent = agent;
     device->namespace = crm_element_value_copy(dev, PCMK__XA_NAMESPACE);
-    device->params = xml2device_params(device->id, dev);
+    device->params = xml2list(dev);
 
     value = g_hash_table_lookup(device->params, PCMK_STONITH_HOST_LIST);
     if (value) {
@@ -2414,7 +2347,7 @@ stonith_send_reply(const xmlNode *reply, int call_options,
     if (remote_peer == NULL) {
         do_local_reply(reply, client, call_options);
     } else {
-        const crm_node_t *node =
+        const pcmk__node_status_t *node =
             pcmk__get_node(0, remote_peer, NULL,
                            pcmk__node_search_cluster_member);
 
@@ -2935,7 +2868,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
 
         if (pcmk_is_set(cmd->options, st_opt_cs_nodeid)) {
             int nodeid = 0;
-            crm_node_t *node = NULL;
+            pcmk__node_status_t *node = NULL;
 
             pcmk__scan_min_int(host, &nodeid, 0);
             node = pcmk__search_node_caches(nodeid, NULL,
@@ -3050,7 +2983,7 @@ construct_async_reply(const async_command_t *cmd,
     return reply;
 }
 
-bool fencing_peer_active(crm_node_t *peer)
+bool fencing_peer_active(pcmk__node_status_t *peer)
 {
     if (peer == NULL) {
         return FALSE;
@@ -3086,7 +3019,7 @@ check_alternate_host(const char *target)
 {
     if (pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
         GHashTableIter gIter;
-        crm_node_t *entry = NULL;
+        pcmk__node_status_t *entry = NULL;
 
         g_hash_table_iter_init(&gIter, crm_peer_cache);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
@@ -3382,8 +3315,9 @@ handle_fence_request(pcmk__request_t *request)
         if (alternate_host != NULL) {
             const char *client_id = NULL;
             remote_fencing_op_t *op = NULL;
-            crm_node_t *node = pcmk__get_node(0, alternate_host, NULL,
-                                              pcmk__node_search_cluster_member);
+            pcmk__node_status_t *node =
+                pcmk__get_node(0, alternate_host, NULL,
+                               pcmk__node_search_cluster_member);
 
             if (request->ipc_client->id == 0) {
                 client_id = crm_element_value(request->xml,

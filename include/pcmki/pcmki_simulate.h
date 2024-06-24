@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__PCMKI_PCMKI_SIMULATE__H
-#  define PCMK__PCMKI_PCMKI_SIMULATE__H
+#define PCMK__PCMKI_PCMKI_SIMULATE__H
 
 #include <crm/common/output_internal.h>
 #include <crm/common/scheduler.h>
@@ -18,13 +18,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!
  * \internal
  * \brief Profile the configuration updates and scheduler actions in every
  *        CIB file in a given directory, printing the profiling timings for
  *        each.
  *
- * \note \p scheduler->priv must have been set to a valid \p pcmk__output_t
+ * \note \p scheduler->priv->out must have been set to a valid \p pcmk__output_t
  *       object before this function is called.
  *
  * \param[in]     dir        A directory full of CIB files to be profiled
@@ -94,4 +98,8 @@ int pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
  */
 extern bool pcmk__simulate_node_config;
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__PCMKI_PCMKI_SIMULATE__H

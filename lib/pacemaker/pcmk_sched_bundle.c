@@ -45,10 +45,10 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
     if (replica->ip != NULL) {
         pcmk__rsc_trace(bundle, "Assigning bundle %s IP %s",
                         bundle->id, replica->ip->id);
-        replica->ip->private->cmds->assign(replica->ip, prefer, stop_if_fail);
+        replica->ip->priv->cmds->assign(replica->ip, prefer, stop_if_fail);
     }
 
-    container_host = replica->container->allocated_to;
+    container_host = replica->container->priv->assigned_node;
     if (replica->remote != NULL) {
         if (pcmk__is_pacemaker_remote_node(container_host)) {
             /* REMOTE_CONTAINER_HACK: "Nested" connection resources must be on
@@ -57,35 +57,35 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
              */
             pcmk__new_colocation("#replica-remote-with-host-remote", NULL,
                                  PCMK_SCORE_INFINITY, replica->remote,
-                                 container_host->details->remote_rsc, NULL,
+                                 container_host->priv->remote, NULL,
                                  NULL, pcmk__coloc_influence);
         }
         pcmk__rsc_trace(bundle, "Assigning bundle %s connection %s",
                         bundle->id, replica->remote->id);
-        replica->remote->private->cmds->assign(replica->remote, prefer,
-                                               stop_if_fail);
+        replica->remote->priv->cmds->assign(replica->remote, prefer,
+                                            stop_if_fail);
     }
 
     if (replica->child != NULL) {
         pcmk_node_t *node = NULL;
         GHashTableIter iter;
 
-        g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
+        g_hash_table_iter_init(&iter, replica->child->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (!pcmk__same_node(node, replica->node)) {
-                node->weight = -PCMK_SCORE_INFINITY;
+                node->assign->score = -PCMK_SCORE_INFINITY;
             } else if (!pcmk__threshold_reached(replica->child, node, NULL)) {
-                node->weight = PCMK_SCORE_INFINITY;
+                node->assign->score = PCMK_SCORE_INFINITY;
             }
         }
 
-        pcmk__set_rsc_flags(replica->child->private->parent,
+        pcmk__set_rsc_flags(replica->child->priv->parent,
                             pcmk__rsc_assigning);
         pcmk__rsc_trace(bundle, "Assigning bundle %s replica child %s",
                         bundle->id, replica->child->id);
-        replica->child->private->cmds->assign(replica->child, replica->node,
-                                              stop_if_fail);
-        pcmk__clear_rsc_flags(replica->child->private->parent,
+        replica->child->priv->cmds->assign(replica->child, replica->node,
+                                           stop_if_fail);
+        pcmk__clear_rsc_flags(replica->child->priv->parent,
                               pcmk__rsc_assigning);
     }
     return true;
@@ -123,15 +123,15 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     pcmk__rsc_trace(rsc, "Assigning bundle %s", rsc->id);
     pcmk__set_rsc_flags(rsc, pcmk__rsc_assigning);
 
-    pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
-                                      pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes,
-                         rsc->private->scheduler);
+    pe__show_node_scores(!pcmk_is_set(rsc->priv->scheduler->flags,
+                                      pcmk__sched_output_scores),
+                         rsc, __func__, rsc->priv->allowed_nodes,
+                         rsc->priv->scheduler);
 
     // Assign all containers first, so we know what nodes the bundle will be on
     containers = g_list_sort(pe__bundle_containers(rsc), pcmk__cmp_instance);
     pcmk__assign_instances(rsc, containers, pe__bundle_max(rsc),
-                           rsc->private->fns->max_per_node(rsc));
+                           rsc->priv->fns->max_per_node(rsc));
     g_list_free(containers);
 
     // Then assign remaining replica resources
@@ -143,15 +143,15 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         pcmk_node_t *node = NULL;
         GHashTableIter iter;
 
-        g_hash_table_iter_init(&iter, bundled_resource->allowed_nodes);
+        g_hash_table_iter_init(&iter, bundled_resource->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
             if (pe__node_is_bundle_instance(rsc, node)) {
-                node->weight = 0;
+                node->assign->score = 0;
             } else {
-                node->weight = -PCMK_SCORE_INFINITY;
+                node->assign->score = -PCMK_SCORE_INFINITY;
             }
         }
-        bundled_resource->private->cmds->assign(bundled_resource, prefer,
+        bundled_resource->priv->cmds->assign(bundled_resource, prefer,
                                                 stop_if_fail);
     }
 
@@ -172,13 +172,13 @@ static bool
 create_replica_actions(pcmk__bundle_replica_t *replica, void *user_data)
 {
     if (replica->ip != NULL) {
-        replica->ip->private->cmds->create_actions(replica->ip);
+        replica->ip->priv->cmds->create_actions(replica->ip);
     }
     if (replica->container != NULL) {
-        replica->container->private->cmds->create_actions(replica->container);
+        replica->container->priv->cmds->create_actions(replica->container);
     }
     if (replica->remote != NULL) {
-        replica->remote->private->cmds->create_actions(replica->remote);
+        replica->remote->priv->cmds->create_actions(replica->remote);
     }
     return true;
 }
@@ -206,7 +206,7 @@ pcmk__bundle_create_actions(pcmk_resource_t *rsc)
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
-        bundled_resource->private->cmds->create_actions(bundled_resource);
+        bundled_resource->priv->cmds->create_actions(bundled_resource);
 
         if (pcmk_is_set(bundled_resource->flags, pcmk__rsc_promotable)) {
             pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTE, true, true);
@@ -236,7 +236,7 @@ replica_internal_constraints(pcmk__bundle_replica_t *replica, void *user_data)
 {
     pcmk_resource_t *bundle = user_data;
 
-    replica->container->private->cmds->internal_constraints(replica->container);
+    replica->container->priv->cmds->internal_constraints(replica->container);
 
     // Start bundle -> start replica container
     pcmk__order_starts(bundle, replica->container,
@@ -262,7 +262,7 @@ replica_internal_constraints(pcmk__bundle_replica_t *replica, void *user_data)
                                  pcmk__ar_first_implies_then_graphed);
 
     if (replica->ip != NULL) {
-        replica->ip->private->cmds->internal_constraints(replica->ip);
+        replica->ip->priv->cmds->internal_constraints(replica->ip);
 
         // Replica IP address -> replica container (symmetric)
         pcmk__order_starts(replica->ip, replica->container,
@@ -282,7 +282,7 @@ replica_internal_constraints(pcmk__bundle_replica_t *replica, void *user_data)
          * colocated relative to the container, we don't need to do anything
          * explicit here with IP.
          */
-        replica->remote->private->cmds->internal_constraints(replica->remote);
+        replica->remote->priv->cmds->internal_constraints(replica->remote);
     }
 
     if (replica->child != NULL) {
@@ -332,7 +332,7 @@ pcmk__bundle_internal_constraints(pcmk_resource_t *rsc)
                                  rsc, PCMK_ACTION_STOPPED,
                                  pcmk__ar_first_implies_then_graphed);
 
-    bundled_resource->private->cmds->internal_constraints(bundled_resource);
+    bundled_resource->priv->cmds->internal_constraints(bundled_resource);
 
     if (!pcmk_is_set(bundled_resource->flags, pcmk__rsc_promotable)) {
         return;
@@ -401,9 +401,10 @@ static const pcmk_node_t *
 get_bundle_node_host(const pcmk_node_t *node)
 {
     if (pcmk__is_bundle_node(node)) {
-        const pcmk_resource_t *container = node->details->remote_rsc->container;
+        const pcmk_resource_t *container = NULL;
 
-        return container->private->fns->location(container, NULL, 0);
+        container = node->priv->remote->priv->launcher;
+        return container->priv->fns->location(container, NULL, 0);
     }
     return node;
 }
@@ -427,7 +428,7 @@ compatible_container(const pcmk_resource_t *dependent,
     struct match_data match_data = { NULL, NULL };
 
     // If dependent is assigned, only check there
-    match_data.node = dependent->private->fns->location(dependent, NULL, 0);
+    match_data.node = dependent->priv->fns->location(dependent, NULL, 0);
     match_data.node = get_bundle_node_host(match_data.node);
     if (match_data.node != NULL) {
         pe__foreach_const_bundle_replica(bundle, match_replica_container,
@@ -436,7 +437,7 @@ compatible_container(const pcmk_resource_t *dependent,
     }
 
     // Otherwise, check for any of the dependent's allowed nodes
-    scratch = g_hash_table_get_values(dependent->allowed_nodes);
+    scratch = g_hash_table_get_values(dependent->priv->allowed_nodes);
     scratch = pcmk__sort_nodes(scratch, NULL);
     for (const GList *iter = scratch; iter != NULL; iter = iter->next) {
         match_data.node = iter->data;
@@ -479,14 +480,13 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
     pcmk_resource_t *container = replica->container;
 
     if (coloc_data->colocation->score < PCMK_SCORE_INFINITY) {
-        container->private->cmds->apply_coloc_score(coloc_data->dependent,
-                                                    container,
-                                                    coloc_data->colocation,
-                                                    false);
+        container->priv->cmds->apply_coloc_score(coloc_data->dependent,
+                                                 container,
+                                                 coloc_data->colocation, false);
         return true;
     }
 
-    chosen = container->private->fns->location(container, NULL, 0);
+    chosen = container->priv->fns->location(container, NULL, 0);
     if ((chosen == NULL)
         || is_set_recursive(container, pcmk__rsc_blocked, true)) {
         return true;
@@ -494,14 +494,14 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
 
     if ((coloc_data->colocation->primary_role >= pcmk_role_promoted)
         && ((replica->child == NULL)
-            || (replica->child->next_role < pcmk_role_promoted))) {
+            || (replica->child->priv->next_role < pcmk_role_promoted))) {
         return true;
     }
 
     pcmk__rsc_trace(pe__const_top_resource(container, true),
                     "Allowing mandatory colocation %s using %s @%d",
                     coloc_data->colocation->id, pcmk__node_name(chosen),
-                    chosen->weight);
+                    chosen->assign->score);
     coloc_data->container_hosts = g_list_prepend(coloc_data->container_hosts,
                                                  chosen);
     return true;
@@ -549,16 +549,16 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
     /* If the constraint dependent is a clone or bundle, "dependent" here is one
      * of its instances. Look for a compatible instance of this bundle.
      */
-    if (colocation->dependent->private->variant > pcmk__rsc_variant_group) {
+    if (colocation->dependent->priv->variant > pcmk__rsc_variant_group) {
         const pcmk_resource_t *primary_container = NULL;
 
         primary_container = compatible_container(dependent, primary);
         if (primary_container != NULL) { // Success, we found one
             pcmk__rsc_debug(primary, "Pairing %s with %s",
                             dependent->id, primary_container->id);
-            dependent->private->cmds->apply_coloc_score(dependent,
-                                                        primary_container,
-                                                        colocation, true);
+            dependent->priv->cmds->apply_coloc_score(dependent,
+                                                     primary_container,
+                                                     colocation, true);
 
         } else if (colocation->score >= PCMK_SCORE_INFINITY) {
             // Failure, and it's fatal
@@ -598,7 +598,8 @@ pcmk__with_bundle_colocations(const pcmk_resource_t *rsc,
     if ((orig_rsc == rsc)
         || pcmk_is_set(orig_rsc->flags, pcmk__rsc_replica_container)) {
 
-        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+        pcmk__add_with_this_list(list, rsc->priv->with_this_colocations,
+                                 orig_rsc);
         return;
     }
 
@@ -618,14 +619,16 @@ pcmk__with_bundle_colocations(const pcmk_resource_t *rsc,
             /* orig_rsc is the clone and we're setting roles (or have already
              * done so)
              */
-            pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+            pcmk__add_with_this_list(list, rsc->priv->with_this_colocations,
+                                     orig_rsc);
         }
 
     } else if (!pcmk_is_set(orig_rsc->flags, pcmk__rsc_unassigned)) {
         /* orig_rsc is an instance and is already assigned. If something
          * requests colocations for orig_rsc now, it's for setting roles.
          */
-        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+        pcmk__add_with_this_list(list, rsc->priv->with_this_colocations,
+                                 orig_rsc);
     }
 }
 
@@ -642,7 +645,8 @@ pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
     if ((orig_rsc == rsc)
         || pcmk_is_set(orig_rsc->flags, pcmk__rsc_replica_container)) {
 
-        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+        pcmk__add_this_with_list(list, rsc->priv->this_with_colocations,
+                                 orig_rsc);
         return;
     }
 
@@ -662,14 +666,16 @@ pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
             /* orig_rsc is the clone and we're setting roles (or have already
              * done so)
              */
-            pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+            pcmk__add_this_with_list(list, rsc->priv->this_with_colocations,
+                                     orig_rsc);
         }
 
     } else if (!pcmk_is_set(orig_rsc->flags, pcmk__rsc_unassigned)) {
         /* orig_rsc is an instance and is already assigned. If something
          * requests colocations for orig_rsc now, it's for setting roles.
          */
-        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+        pcmk__add_this_with_list(list, rsc->priv->this_with_colocations,
+                                 orig_rsc);
     }
 }
 
@@ -693,18 +699,18 @@ pcmk__bundle_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 
     bundled_resource = pe__bundled_resource(action->rsc);
     if (bundled_resource != NULL) {
+        GList *children = bundled_resource->priv->children;
+
         // Clone actions are done on the bundled clone resource, not container
         switch (get_complex_task(bundled_resource, action->task)) {
-            case pcmk_action_unspecified:
-            case pcmk_action_notify:
-            case pcmk_action_notified:
-            case pcmk_action_promote:
-            case pcmk_action_promoted:
-            case pcmk_action_demote:
-            case pcmk_action_demoted:
-                return pcmk__collective_action_flags(action,
-                                                     bundled_resource->children,
-                                                     node);
+            case pcmk__action_unspecified:
+            case pcmk__action_notify:
+            case pcmk__action_notified:
+            case pcmk__action_promote:
+            case pcmk__action_promoted:
+            case pcmk__action_demote:
+            case pcmk__action_demoted:
+                return pcmk__collective_action_flags(action, children, node);
             default:
                 break;
         }
@@ -730,10 +736,10 @@ apply_location_to_replica(pcmk__bundle_replica_t *replica, void *user_data)
 {
     pcmk__location_t *location = user_data;
 
-    replica->container->private->cmds->apply_location(replica->container,
-                                                      location);
+    replica->container->priv->cmds->apply_location(replica->container,
+                                                   location);
     if (replica->ip != NULL) {
-        replica->ip->private->cmds->apply_location(replica->ip, location);
+        replica->ip->priv->cmds->apply_location(replica->ip, location);
     }
     return true;
 }
@@ -760,10 +766,11 @@ pcmk__bundle_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
         && ((location->role_filter == pcmk_role_unpromoted)
             || (location->role_filter == pcmk_role_promoted))) {
 
-        bundled_resource->private->cmds->apply_location(bundled_resource,
-                                                        location);
-        bundled_resource->rsc_location = g_list_prepend(
-            bundled_resource->rsc_location, location);
+        bundled_resource->priv->cmds->apply_location(bundled_resource,
+                                                     location);
+        bundled_resource->priv->location_constraints =
+            g_list_prepend(bundled_resource->priv->location_constraints,
+                           location);
     }
 }
 
@@ -791,8 +798,7 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
          * replacing it with the underlying host when needed.
          */
         xmlNode *nvpair = get_xpath_object(XPATH_REMOTE,
-                                           replica->remote->private->xml,
-                                           LOG_ERR);
+                                           replica->remote->priv->xml, LOG_ERR);
         const char *calculated_addr = NULL;
 
         // Replace the value in replica->remote->xml (if appropriate)
@@ -808,7 +814,7 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
             GHashTable *params = NULL;
 
             params = pe_rsc_params(replica->remote, NULL,
-                                   replica->remote->private->scheduler);
+                                   replica->remote->priv->scheduler);
             pcmk__insert_dup(params, PCMK_REMOTE_RA_ADDR, calculated_addr);
         } else {
             pcmk_resource_t *bundle = user_data;
@@ -826,11 +832,11 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
         }
     }
     if (replica->ip != NULL) {
-        replica->ip->private->cmds->add_actions_to_graph(replica->ip);
+        replica->ip->priv->cmds->add_actions_to_graph(replica->ip);
     }
-    replica->container->private->cmds->add_actions_to_graph(replica->container);
+    replica->container->priv->cmds->add_actions_to_graph(replica->container);
     if (replica->remote != NULL) {
-        replica->remote->private->cmds->add_actions_to_graph(replica->remote);
+        replica->remote->priv->cmds->add_actions_to_graph(replica->remote);
     }
     return true;
 }
@@ -850,7 +856,7 @@ pcmk__bundle_add_actions_to_graph(pcmk_resource_t *rsc)
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
-        bundled_resource->private->cmds->add_actions_to_graph(bundled_resource);
+        bundled_resource->priv->cmds->add_actions_to_graph(bundled_resource);
     }
     pe__foreach_bundle_replica(rsc, add_replica_actions_to_graph, rsc);
 }
@@ -885,7 +891,7 @@ order_replica_start_after(pcmk__bundle_replica_t *replica, void *user_data)
                        pcmk__op_key(replica->container->id, PCMK_ACTION_START,
                                     0),
                        NULL, pcmk__ar_ordered|pcmk__ar_if_on_same_node,
-                       replica->container->private->scheduler);
+                       replica->container->priv->scheduler);
     return true;
 }
 
@@ -905,18 +911,18 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
     pcmk_resource_t *bundle = probe_data->bundle;
 
     if ((replica->ip != NULL)
-        && replica->ip->private->cmds->create_probe(replica->ip,
-                                                    probe_data->node)) {
+        && replica->ip->priv->cmds->create_probe(replica->ip,
+                                                 probe_data->node)) {
         probe_data->any_created = true;
     }
     if ((replica->child != NULL)
         && pcmk__same_node(probe_data->node, replica->node)
-        && replica->child->private->cmds->create_probe(replica->child,
-                                                       probe_data->node)) {
+        && replica->child->priv->cmds->create_probe(replica->child,
+                                                    probe_data->node)) {
         probe_data->any_created = true;
     }
-    if (replica->container->private->cmds->create_probe(replica->container,
-                                                        probe_data->node)) {
+    if (replica->container->priv->cmds->create_probe(replica->container,
+                                                     probe_data->node)) {
         probe_data->any_created = true;
 
         /* If we're limited to one replica per host (due to
@@ -931,24 +937,24 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
          * mappings (which won't include an IP for uniqueness)
          * are already taken
          */
-        if (bundle->private->fns->max_per_node(bundle) == 1) {
+        if (bundle->priv->fns->max_per_node(bundle) == 1) {
             pe__foreach_bundle_replica(bundle, order_replica_start_after,
                                        replica);
         }
     }
     if ((replica->remote != NULL)
-        && replica->remote->private->cmds->create_probe(replica->remote,
-                                                        probe_data->node)) {
+        && replica->remote->priv->cmds->create_probe(replica->remote,
+                                                     probe_data->node)) {
         /* Do not probe the remote resource until we know where the container is
          * running. This is required for REMOTE_CONTAINER_HACK to correctly
          * probe remote resources.
          */
         char *probe_uuid = pcmk__op_key(replica->remote->id,
                                         PCMK_ACTION_MONITOR, 0);
-        pcmk_action_t *probe = find_first_action(replica->remote->actions,
-                                                 probe_uuid, NULL,
-                                                 probe_data->node);
+        pcmk_action_t *probe = NULL;
 
+        probe = find_first_action(replica->remote->priv->actions, probe_uuid,
+                                  NULL, probe_data->node);
         free(probe_uuid);
         if (probe != NULL) {
             probe_data->any_created = true;
@@ -960,7 +966,7 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
                                             PCMK_ACTION_START, 0),
                                NULL, replica->remote, NULL, probe,
                                pcmk__ar_nested_remote_probe,
-                               bundle->private->scheduler);
+                               bundle->priv->scheduler);
         }
     }
     return true;
@@ -999,14 +1005,14 @@ static bool
 output_replica_actions(pcmk__bundle_replica_t *replica, void *user_data)
 {
     if (replica->ip != NULL) {
-        replica->ip->private->cmds->output_actions(replica->ip);
+        replica->ip->priv->cmds->output_actions(replica->ip);
     }
-    replica->container->private->cmds->output_actions(replica->container);
+    replica->container->priv->cmds->output_actions(replica->container);
     if (replica->remote != NULL) {
-        replica->remote->private->cmds->output_actions(replica->remote);
+        replica->remote->priv->cmds->output_actions(replica->remote);
     }
     if (replica->child != NULL) {
-        replica->child->private->cmds->output_actions(replica->child);
+        replica->child->priv->cmds->output_actions(replica->child);
     }
     return true;
 }
@@ -1044,8 +1050,8 @@ pcmk__bundle_add_utilization(const pcmk_resource_t *rsc,
      */
     container = pe__first_container(rsc);
     if (container != NULL) {
-        container->private->cmds->add_utilization(container, orig_rsc, all_rscs,
-                                                  utilization);
+        container->priv->cmds->add_utilization(container, orig_rsc, all_rscs,
+                                               utilization);
     }
 }
 

@@ -200,7 +200,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
     freeXpathObject(xpathObj);
 
     // Fudge metadata so parameters are not required in config (pacemaker adds them)
-    stonith_rhcs_parameter_not_required(xml, "action");
+    stonith_rhcs_parameter_not_required(xml, STONITH_ATTR_ACTION_OP);
     stonith_rhcs_parameter_not_required(xml, "plug");
     stonith_rhcs_parameter_not_required(xml, "port");
 

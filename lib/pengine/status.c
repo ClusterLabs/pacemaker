@@ -35,9 +35,15 @@ pe_new_working_set(void)
 {
     pcmk_scheduler_t *scheduler = calloc(1, sizeof(pcmk_scheduler_t));
 
-    if (scheduler != NULL) {
-        set_working_set_defaults(scheduler);
+    if (scheduler == NULL) {
+        return NULL;
     }
+    scheduler->priv = calloc(1, sizeof(pcmk__scheduler_private_t));
+    if (scheduler->priv == NULL) {
+        free(scheduler);
+        return NULL;
+    }
+    set_working_set_defaults(scheduler);
     return scheduler;
 }
 
@@ -51,7 +57,7 @@ pe_free_working_set(pcmk_scheduler_t *scheduler)
 {
     if (scheduler != NULL) {
         pe_reset_working_set(scheduler);
-        scheduler->priv = NULL;
+        free(scheduler->priv);
         free(scheduler);
     }
 }
@@ -127,9 +133,9 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
 
     if (pcmk__xe_attr_is_true(scheduler->input, PCMK_XA_HAVE_QUORUM)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk_sched_quorate);
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_quorate);
     } else {
-        pcmk__clear_scheduler_flags(scheduler, pcmk_sched_quorate);
+        pcmk__clear_scheduler_flags(scheduler, pcmk__sched_quorate);
     }
 
     scheduler->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
@@ -144,9 +150,10 @@ cluster_status(pcmk_scheduler_t * scheduler)
     unpack_config(section, scheduler);
 
    if (!pcmk_any_flags_set(scheduler->flags,
-                           pcmk_sched_location_only|pcmk_sched_quorate)
+                           pcmk__sched_location_only|pcmk__sched_quorate)
        && (scheduler->no_quorum_policy != pcmk_no_quorum_ignore)) {
-        pcmk__sched_warn("Fencing and resource management disabled "
+        pcmk__sched_warn(scheduler,
+                         "Fencing and resource management disabled "
                          "due to lack of quorum");
     }
 
@@ -155,7 +162,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     section = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
                                LOG_TRACE);
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
         unpack_remote_nodes(section, scheduler);
     }
     unpack_resources(section, scheduler);
@@ -163,25 +170,25 @@ cluster_status(pcmk_scheduler_t * scheduler)
     section = get_xpath_object("//" PCMK_XE_TAGS, scheduler->input, LOG_NEVER);
     unpack_tags(section, scheduler);
 
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
         section = get_xpath_object("//" PCMK_XE_STATUS, scheduler->input,
                                    LOG_TRACE);
         unpack_status(section, scheduler);
     }
 
-    if (!pcmk_is_set(scheduler->flags, pcmk_sched_no_counts)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_no_counts)) {
         for (GList *item = scheduler->resources; item != NULL;
              item = item->next) {
             pcmk_resource_t *rsc = item->data;
 
-            rsc->private->fns->count(item->data);
+            rsc->priv->fns->count(item->data);
         }
         crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
                   scheduler->ninstances, scheduler->disabled_resources,
                   scheduler->blocked_resources);
     }
 
-    pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_status);
+    pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_status);
     return TRUE;
 }
 
@@ -205,7 +212,7 @@ pe_free_resources(GList *resources)
     while (iterator != NULL) {
         rsc = (pcmk_resource_t *) iterator->data;
         iterator = iterator->next;
-        rsc->private->fns->free(rsc);
+        rsc->priv->fns->free(rsc);
     }
     if (resources != NULL) {
         g_list_free(resources);
@@ -242,23 +249,25 @@ pe_free_nodes(GList *nodes)
         }
 
         /* This is called after pe_free_resources(), which means that we can't
-         * use node->details->uname for Pacemaker Remote nodes.
+         * use node->private->name for Pacemaker Remote nodes.
          */
         crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
                   "(guest or remote)" : pcmk__node_name(node)));
 
-        if (node->details->attrs != NULL) {
-            g_hash_table_destroy(node->details->attrs);
+        if (node->priv->attrs != NULL) {
+            g_hash_table_destroy(node->priv->attrs);
         }
-        if (node->details->utilization != NULL) {
-            g_hash_table_destroy(node->details->utilization);
+        if (node->priv->utilization != NULL) {
+            g_hash_table_destroy(node->priv->utilization);
         }
-        if (node->details->digest_cache != NULL) {
-            g_hash_table_destroy(node->details->digest_cache);
+        if (node->priv->digest_cache != NULL) {
+            g_hash_table_destroy(node->priv->digest_cache);
         }
         g_list_free(node->details->running_rsc);
-        g_list_free(node->details->allocated_rsc);
+        g_list_free(node->priv->assigned_resources);
+        free(node->priv);
         free(node->details);
+        free(node->assign);
         free(node);
     }
     if (nodes != NULL) {
@@ -319,7 +328,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         return;
     }
 
-    pcmk__clear_scheduler_flags(scheduler, pcmk_sched_have_status);
+    pcmk__clear_scheduler_flags(scheduler, pcmk__sched_have_status);
     if (scheduler->config_hash != NULL) {
         g_hash_table_destroy(scheduler->config_hash);
     }
@@ -404,23 +413,28 @@ pe_reset_working_set(pcmk_scheduler_t *scheduler)
 void
 set_working_set_defaults(pcmk_scheduler_t *scheduler)
 {
-    void *priv = scheduler->priv;
+    // These members must be preserved
+    pcmk__scheduler_private_t *priv = scheduler->priv;
+    pcmk__output_t *out = priv->out;
 
+    // Wipe the main structs (any other members must have previously been freed)
     memset(scheduler, 0, sizeof(pcmk_scheduler_t));
+    memset(priv, 0, sizeof(pcmk__scheduler_private_t));
 
+    // Restore the members to preserve
     scheduler->priv = priv;
+    scheduler->priv->out = out;
+
+    // Set defaults for everything else
     scheduler->order_id = 1;
     scheduler->action_id = 1;
     scheduler->no_quorum_policy = pcmk_no_quorum_stop;
-
-    scheduler->flags = 0x0ULL;
-
     pcmk__set_scheduler_flags(scheduler,
-                              pcmk_sched_symmetric_cluster
-                              |pcmk_sched_stop_removed_resources
-                              |pcmk_sched_cancel_removed_actions);
+                              pcmk__sched_symmetric_cluster
+                              |pcmk__sched_stop_removed_resources
+                              |pcmk__sched_cancel_removed_actions);
     if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, PCMK_VALUE_TRUE)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk_sched_concurrent_fencing);
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_concurrent_fencing);
     }
 }
 
@@ -437,8 +451,8 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         pcmk_resource_t *parent = rIter->data;
-        pcmk_resource_t *match = parent->private->fns->find_rsc(parent, id,
-                                                                NULL, flags);
+        pcmk_resource_t *match = parent->priv->fns->find_rsc(parent, id, NULL,
+                                                             flags);
 
         if (match != NULL) {
             return match;
@@ -491,7 +505,7 @@ pe_find_node_id(const GList *nodes, const char *id)
          * probably depend on the node type, so functionizing the comparison
          * would be worthwhile
          */
-        if (pcmk__str_eq(node->details->id, id, pcmk__str_casei)) {
+        if (pcmk__str_eq(node->priv->id, id, pcmk__str_casei)) {
             return node;
         }
     }

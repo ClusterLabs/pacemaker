@@ -50,7 +50,6 @@ static struct {
     gboolean allow_create;
     gboolean force;
     gboolean get_node_path;
-    gboolean local;
     gboolean no_children;
     gboolean score_update;
     gboolean sync_call;
@@ -60,8 +59,8 @@ static struct {
      */
     gboolean extended_version;
 
-    //! \deprecated
-    gboolean no_bcast;
+    // @COMPAT Deprecated since 3.0.0
+    gboolean local;
 } options;
 
 int do_init(void);
@@ -121,7 +120,7 @@ report_schema_unchanged(void)
 static inline bool
 cib_action_is_dangerous(void)
 {
-    return options.no_bcast || options.delete_all
+    return options.delete_all
            || pcmk__str_any_of(options.cib_action,
                                PCMK__CIB_REQUEST_UPGRADE,
                                PCMK__CIB_REQUEST_ERASE,
@@ -348,9 +347,6 @@ static GOptionEntry addl_entries[] = {
     { "sync-call", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
       &options.sync_call, "Wait for call to complete before returning", NULL },
 
-    { "local", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.local,
-      "Command takes effect locally (should be used only for queries)", NULL },
-
     { "scope", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
       "Limit scope of operation to specific section of CIB\n"
       INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
@@ -430,13 +426,9 @@ static GOptionEntry addl_entries[] = {
     { "node", 'N', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.dest_node,
       "(Advanced) Send command to the specified host", "value" },
 
-    // @COMPAT: Deprecated
-    { "no-bcast", 'b', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,
-      &options.no_bcast, "deprecated", NULL },
-
-    // @COMPAT: Deprecated
-    { "host", 'h', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING,
-      &options.dest_node, "deprecated", NULL },
+    // @COMPAT Deprecated since 3.0.0
+    { "local", 'l', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.local,
+      "(deprecated)", NULL },
 
     { NULL }
 };
@@ -456,8 +448,8 @@ build_arg_context(pcmk__common_args_t *args)
     };
 
     desc = "Examples:\n\n"
-           "Query the configuration from the local node:\n\n"
-           "\t# cibadmin --query --local\n\n"
+           "Query the configuration:\n\n"
+           "\t# cibadmin --query\n\n"
            "Query just the cluster options configuration:\n\n"
            "\t# cibadmin --query --scope " PCMK_XE_CRM_CONFIG "\n\n"
            "Query all '" PCMK_META_TARGET_ROLE "' settings:\n\n"
@@ -654,19 +646,6 @@ main(int argc, char **argv)
                               cib_xpath_address);
     }
 
-    if (options.local) {
-        // Configure command to take effect only locally
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_scope_local);
-    }
-
-    // @COMPAT: Deprecated option
-    if (options.no_bcast) {
-        // Configure command to take effect only locally and not to broadcast
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_inhibit_bcast|cib_scope_local);
-    }
-
     if (options.no_children) {
         // When querying an object, don't include its children in the result
         cib__set_call_options(options.cmd_options, crm_system_name,
@@ -771,7 +750,6 @@ main(int argc, char **argv)
 
     } else if (strcmp(options.cib_action, "md5-sum-versioned") == 0) {
         char *digest = NULL;
-        const char *version = NULL;
 
         if (input == NULL) {
             exit_code = CRM_EX_USAGE;
@@ -780,9 +758,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        version = crm_element_value(input, PCMK_XA_CRM_FEATURE_SET);
-        digest = pcmk__digest_xml(input, true, version);
-        fprintf(stderr, "Versioned (%s) digest: ", version);
+        digest = pcmk__digest_xml(input, true);
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
         goto done;

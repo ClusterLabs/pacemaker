@@ -68,6 +68,6 @@ pcmk__primitive_assign: prmStonith2-1 allocation score on srv03: 0
 pcmk__primitive_assign: prmStonith3-1 allocation score on srv01: INFINITY
 pcmk__primitive_assign: prmStonith3-1 allocation score on srv02: 0
 pcmk__primitive_assign: prmStonith3-1 allocation score on srv03: -INFINITY
-pgsql:0 promotion score on none: 0
-pgsql:1 promotion score on none: 0
+pgsql:0 promotion score (inactive): -INFINITY
+pgsql:1 promotion score (inactive): -INFINITY
 pgsql:2 promotion score on srv03: 105

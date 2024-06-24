@@ -37,10 +37,10 @@
       <lrm id="pcw2709.see.ed.ac.uk">
         <lrm_resources>
           <lrm_resource id="cups_lsb:0" class="lsb" type="cups">
-            <lrm_rsc_op id="cups_lsb:0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="cups_lsb:0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcw2709.see.ed.ac.uk"/>
           </lrm_resource>
           <lrm_resource id="smb_lsb" class="lsb" type="smb">
-            <lrm_rsc_op id="smb_lsb_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="smb_lsb_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcw2709.see.ed.ac.uk"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -49,10 +49,10 @@
       <lrm id="pcw2058.see.ed.ac.uk">
         <lrm_resources>
           <lrm_resource id="cups_lsb:1" class="lsb" type="cups">
-            <lrm_rsc_op id="cups_lsb:1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="cups_lsb:1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcw2058.see.ed.ac.uk"/>
           </lrm_resource>
           <lrm_resource id="smb_lsb" class="lsb" type="smb">
-            <lrm_rsc_op id="smb_lsb_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="smb_lsb_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcw2058.see.ed.ac.uk"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -61,10 +61,10 @@
       <lrm id="pcw2059.see.ed.ac.uk">
         <lrm_resources>
           <lrm_resource id="cups_lsb:0" class="lsb" type="cups">
-            <lrm_rsc_op id="cups_lsb:0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="cups_lsb:0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcw2059.see.ed.ac.uk"/>
           </lrm_resource>
           <lrm_resource id="smb_lsb" class="lsb" type="smb">
-            <lrm_rsc_op id="smb_lsb_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="smb_lsb_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcw2059.see.ed.ac.uk"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -73,10 +73,10 @@
       <lrm id="pcw2688.see.ed.ac.uk">
         <lrm_resources>
           <lrm_resource id="cups_lsb:0" class="lsb" type="cups">
-            <lrm_rsc_op id="cups_lsb:0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="cups_lsb:0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcw2688.see.ed.ac.uk"/>
           </lrm_resource>
           <lrm_resource id="smb_lsb" class="lsb" type="smb">
-            <lrm_rsc_op id="smb_lsb_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="smb_lsb_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcw2688.see.ed.ac.uk"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

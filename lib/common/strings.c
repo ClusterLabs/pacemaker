@@ -651,9 +651,9 @@ pcmk__ends_with_ext(const char *s, const char *match)
  * a correct implementation of DJB's hash), but we need to preserve existing
  * behaviour, because the hash key ultimately determines the "sort" order
  * when iterating through GHashTables, which affects allocation of scores to
- * clone instances when iterating through rsc->allowed_nodes.  It (somehow)
- * also appears to have some minor impact on the ordering of a few
- * pseudo_event IDs in the transition graph.
+ * clone instances when iterating through allowed nodes. It (somehow) also
+ * appears to have some minor impact on the ordering of a few pseudo_event IDs
+ * in the transition graph.
  */
 static guint
 pcmk__str_hash(gconstpointer v)

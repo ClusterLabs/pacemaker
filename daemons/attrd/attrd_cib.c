@@ -154,6 +154,7 @@ attrd_cib_disconnect(void)
     the_cib->cmds->del_notify_callback(the_cib, PCMK__VALUE_CIB_DIFF_NOTIFY,
                                        attrd_cib_updated_cb);
     cib__clean_up_connection(&the_cib);
+    mainloop_destroy_trigger(attrd_config_read);
 }
 
 static void
@@ -546,15 +547,17 @@ write_attribute(attribute_t *a, bool ignore_delay)
 
         } else {
             // This will create a cluster node cache entry if none exists
-            crm_node_t *peer = pcmk__get_node(v->nodeid, v->nodename, NULL,
-                                              pcmk__node_search_any);
+            pcmk__node_status_t *peer = pcmk__get_node(v->nodeid, v->nodename,
+                                                       NULL,
+                                                       pcmk__node_search_any);
 
             uuid = peer->uuid;
 
             // Remember peer's node ID if we're just now learning it
-            if ((peer->id != 0) && (v->nodeid == 0)) {
-                crm_trace("Learned ID %u for node %s", peer->id, v->nodename);
-                v->nodeid = peer->id;
+            if ((peer->cluster_layer_id != 0) && (v->nodeid == 0)) {
+                crm_trace("Learned ID %" PRIu32 " for node %s",
+                          peer->cluster_layer_id, v->nodename);
+                v->nodeid = peer->cluster_layer_id;
             }
         }
 

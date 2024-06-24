@@ -162,31 +162,6 @@ fencing_topology_init(void)
     freeXpathObject(xpathObj);
 }
 
-static void
-remove_cib_device(xmlXPathObjectPtr xpathObj)
-{
-    int max = numXpathResults(xpathObj), lpc = 0;
-
-    for (lpc = 0; lpc < max; lpc++) {
-        const char *rsc_id = NULL;
-        const char *standard = NULL;
-        xmlNode *match = getXpathResult(xpathObj, lpc);
-
-        CRM_LOG_ASSERT(match != NULL);
-        if(match != NULL) {
-            standard = crm_element_value(match, PCMK_XA_CLASS);
-        }
-
-        if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-            continue;
-        }
-
-        rsc_id = crm_element_value(match, PCMK_XA_ID);
-
-        stonith_device_remove(rsc_id, true);
-    }
-}
-
 #define XPATH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \
                                "[@" PCMK_XA_NAME "='"   \
                                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
@@ -253,84 +228,23 @@ cib_devices_update(void)
 }
 
 static void
-update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
+update_cib_stonith_devices(const char *event, xmlNode * msg)
 {
-    const char *reason = "none";
-    gboolean needs_update = FALSE;
-    xmlXPathObjectPtr xpath_obj = NULL;
-
-    /* process new constraints */
-    xpath_obj = xpath_search(msg,
-                             "//" PCMK__XE_CIB_UPDATE_RESULT
-                             "//" PCMK_XE_RSC_LOCATION);
-    if (numXpathResults(xpath_obj) > 0) {
-        int max = numXpathResults(xpath_obj), lpc = 0;
-
-        /* Safest and simplest to always recompute */
-        needs_update = TRUE;
-        reason = "new location constraint";
-
-        for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpath_obj, lpc);
-
-            crm_log_xml_trace(match, "new constraint");
-        }
-    }
-    freeXpathObject(xpath_obj);
-
-    /* process deletions */
-    xpath_obj = xpath_search(msg,
-                             "//" PCMK__XE_CIB_UPDATE_RESULT
-                             "//" PCMK__XE_DIFF_REMOVED
-                             "//" PCMK_XE_PRIMITIVE);
-    if (numXpathResults(xpath_obj) > 0) {
-        remove_cib_device(xpath_obj);
-    }
-    freeXpathObject(xpath_obj);
-
-    /* process additions */
-    xpath_obj = xpath_search(msg,
-                             "//" PCMK__XE_CIB_UPDATE_RESULT
-                             "//" PCMK__XE_DIFF_ADDED
-                             "//" PCMK_XE_PRIMITIVE);
-    if (numXpathResults(xpath_obj) > 0) {
-        int max = numXpathResults(xpath_obj), lpc = 0;
-
-        for (lpc = 0; lpc < max; lpc++) {
-            const char *rsc_id = NULL;
-            const char *standard = NULL;
-            xmlNode *match = getXpathResult(xpath_obj, lpc);
-
-            rsc_id = crm_element_value(match, PCMK_XA_ID);
-            standard = crm_element_value(match, PCMK_XA_CLASS);
-
-            if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-                continue;
-            }
-
-            crm_trace("Fencing resource %s was added or modified", rsc_id);
-            reason = "new resource";
-            needs_update = TRUE;
-        }
-    }
-    freeXpathObject(xpath_obj);
-
-    if(needs_update) {
-        crm_info("Updating device list from CIB: %s", reason);
-        cib_devices_update();
-    }
-}
-
-static void
-update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
-{
-    xmlNode *change = NULL;
-    char *reason = NULL;
+    int format = 1;
     xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
                                             NULL, NULL);
     xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+    char *reason = NULL;
 
-    for (change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
+    CRM_CHECK(patchset != NULL, return);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+
+    if (format != 2) {
+        crm_warn("Unknown patch format: %d", format);
+        return;
+    }
+
+    for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
          change != NULL; change = pcmk__xe_next(change)) {
 
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);
@@ -390,28 +304,6 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
 }
 
 static void
-update_cib_stonith_devices(const char *event, xmlNode * msg)
-{
-    int format = 1;
-    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
-                                            NULL, NULL);
-    xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-    CRM_ASSERT(patchset);
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
-    switch(format) {
-        case 1:
-            update_cib_stonith_devices_v1(event, msg);
-            break;
-        case 2:
-            update_cib_stonith_devices_v2(event, msg);
-            break;
-        default:
-            crm_warn("Unknown patch format: %d", format);
-    }
-}
-
-static void
 watchdog_device_update(void)
 {
     if (stonith_watchdog_timeout_ms > 0) {
@@ -461,8 +353,7 @@ fenced_query_cib(void)
     int rc = pcmk_ok;
 
     crm_trace("Re-requesting full CIB");
-    rc = cib_api->cmds->query(cib_api, NULL, &local_cib,
-                              cib_scope_local|cib_sync_call);
+    rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     if (rc == pcmk_rc_ok) {
         CRM_ASSERT(local_cib != NULL);
@@ -474,143 +365,94 @@ fenced_query_cib(void)
 }
 
 static void
-remove_fencing_topology(xmlXPathObjectPtr xpathObj)
+update_fencing_topology(const char *event, xmlNode *msg)
 {
-    int max = numXpathResults(xpathObj), lpc = 0;
-
-    for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *match = getXpathResult(xpathObj, lpc);
-
-        CRM_LOG_ASSERT(match != NULL);
-        if (match && crm_element_value(match, PCMK__XA_CRM_DIFF_MARKER)) {
-            /* Deletion */
-            int index = 0;
-            char *target = stonith_level_key(match, fenced_target_by_unknown);
-
-            crm_element_value_int(match, PCMK_XA_INDEX, &index);
-            if (target == NULL) {
-                crm_err("Invalid fencing target in element %s",
-                        pcmk__xe_id(match));
-
-            } else if (index <= 0) {
-                crm_err("Invalid level for %s in element %s",
-                        target, pcmk__xe_id(match));
-
-            } else {
-                topology_remove_helper(target, index);
-            }
-            /* } else { Deal with modifications during the 'addition' stage */
-        }
-    }
-}
-
-static void
-update_fencing_topology(const char *event, xmlNode * msg)
-{
-    int format = 1;
-    const char *xpath;
-    xmlXPathObjectPtr xpathObj = NULL;
     xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
                                             NULL, NULL);
     xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    CRM_ASSERT(patchset);
+    int format = 1;
+
+    int add[] = { 0, 0, 0 };
+    int del[] = { 0, 0, 0 };
+
+    CRM_CHECK(patchset != NULL, return);
+
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    if (format != 2) {
+        crm_warn("Unknown patch format: %d", format);
+        return;
+    }
 
-    if(format == 1) {
-        /* Process deletions (only) */
-        xpath = "//" PCMK__XE_CIB_UPDATE_RESULT
-                "//" PCMK__XE_DIFF_REMOVED
-                "//" PCMK_XE_FENCING_LEVEL;
-        xpathObj = xpath_search(msg, xpath);
+    xml_patch_versions(patchset, add, del);
 
-        remove_fencing_topology(xpathObj);
-        freeXpathObject(xpathObj);
+    for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
+         change != NULL; change = pcmk__xe_next(change)) {
 
-        /* Process additions and changes */
-        xpath = "//" PCMK__XE_CIB_UPDATE_RESULT
-                "//" PCMK__XE_DIFF_ADDED
-                "//" PCMK_XE_FENCING_LEVEL;
-        xpathObj = xpath_search(msg, xpath);
+        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
+        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
 
-        register_fencing_topology(xpathObj);
-        freeXpathObject(xpathObj);
+        if (op == NULL) {
+            continue;
+        }
 
-    } else if(format == 2) {
-        xmlNode *change = NULL;
-        int add[] = { 0, 0, 0 };
-        int del[] = { 0, 0, 0 };
+        if (strstr(xpath, "/" PCMK_XE_FENCING_LEVEL) != NULL) {
+            // Change to a specific entry
+            crm_trace("Handling %s operation %d.%d.%d for %s",
+                      op, add[0], add[1], add[2], xpath);
 
-        xml_patch_versions(patchset, add, del);
-
-        for (change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
-             change != NULL; change = pcmk__xe_next(change)) {
-
-            const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-            const char *xpath = crm_element_value(change, PCMK_XA_PATH);
-
-            if(op == NULL) {
-                continue;
-
-            } else if(strstr(xpath, "/" PCMK_XE_FENCING_LEVEL) != NULL) {
-                /* Change to a specific entry */
-
-                crm_trace("Handling %s operation %d.%d.%d for %s", op, add[0], add[1], add[2], xpath);
-                if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
-                    continue;
-
-                } else if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
-                    add_topology_level(change->children);
-
-                } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-                    xmlNode *match = pcmk__xe_first_child(change,
-                                                          PCMK_XE_CHANGE_RESULT,
-                                                          NULL, NULL);
-
-                    if(match) {
-                        remove_topology_level(match->children);
-                        add_topology_level(match->children);
-                    }
-
-                } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
-                    /* Nuclear option, all we have is the path and an id... not enough to remove a specific entry */
-                    crm_info("Re-initializing fencing topology after %s operation %d.%d.%d for %s",
-                             op, add[0], add[1], add[2], xpath);
-                    fencing_topology_init();
-                    return;
-                }
-
-            } else if (strstr(xpath, "/" PCMK_XE_FENCING_TOPOLOGY) != NULL) {
-                /* Change to the topology in general */
-                crm_info("Re-initializing fencing topology after top-level %s operation  %d.%d.%d for %s",
+            if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
+                /* We have only path and ID, which is not enough info to remove
+                 * a specific entry. Re-initialize the whole topology.
+                 */
+                crm_info("Re-initializing fencing topology after %s operation "
+                         "%d.%d.%d for %s",
                          op, add[0], add[1], add[2], xpath);
                 fencing_topology_init();
                 return;
-
-            } else if (strstr(xpath, "/" PCMK_XE_CONFIGURATION)) {
-                /* Changes to the whole config section, possibly including the topology as a whild */
-                if (pcmk__xe_first_child(change, PCMK_XE_FENCING_TOPOLOGY, NULL,
-                                         NULL) == NULL) {
-                    crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",
-                              op, add[0], add[1], add[2], xpath);
-
-                } else if (pcmk__str_any_of(op,
-                                            PCMK_VALUE_DELETE,
-                                            PCMK_VALUE_CREATE, NULL)) {
-                    crm_info("Re-initializing fencing topology after top-level %s operation %d.%d.%d for %s.",
-                             op, add[0], add[1], add[2], xpath);
-                    fencing_topology_init();
-                    return;
-                }
-
-            } else {
-                crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
-                          op, add[0], add[1], add[2], xpath);
             }
+
+            if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
+                add_topology_level(change->children);
+
+            } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
+                xmlNode *match = pcmk__xe_first_child(change,
+                                                      PCMK_XE_CHANGE_RESULT,
+                                                      NULL, NULL);
+
+                if (match != NULL) {
+                    remove_topology_level(match->children);
+                    add_topology_level(match->children);
+                }
+            }
+            continue;
         }
 
-    } else {
-        crm_warn("Unknown patch format: %d", format);
+        if (strstr(xpath, "/" PCMK_XE_FENCING_TOPOLOGY) != NULL) {
+            // Change to the topology in general
+            crm_info("Re-initializing fencing topology after top-level "
+                     "%s operation %d.%d.%d for %s",
+                     op, add[0], add[1], add[2], xpath);
+            fencing_topology_init();
+            return;
+        }
+
+        if ((strstr(xpath, "/" PCMK_XE_CONFIGURATION) != NULL)
+            && (pcmk__xe_first_child(change, PCMK_XE_FENCING_TOPOLOGY, NULL,
+                                     NULL) != NULL)
+            && pcmk__str_any_of(op, PCMK_VALUE_CREATE, PCMK_VALUE_DELETE,
+                                NULL)) {
+
+            // Topology was created or entire configuration section was deleted
+            crm_info("Re-initializing fencing topology after top-level "
+                     "%s operation %d.%d.%d for %s",
+                     op, add[0], add[1], add[2], xpath);
+            fencing_topology_init();
+            return;
+        }
+
+        crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
+                  op, add[0], add[1], add[2], xpath);
     }
 }
 
@@ -765,7 +607,7 @@ setup_cib(void)
         return;
     }
 
-    rc = cib_api->cmds->query(cib_api, NULL, NULL, cib_scope_local);
+    rc = cib_api->cmds->query(cib_api, NULL, NULL, cib_none);
     cib_api->cmds->register_callback(cib_api, rc, 120, FALSE, NULL,
                                      "init_cib_cache_cb", init_cib_cache_cb);
     cib_api->cmds->set_connection_dnotify(cib_api, cib_connection_destroy);

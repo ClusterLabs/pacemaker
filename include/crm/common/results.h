@@ -201,26 +201,6 @@ enum ocf_exitcode {
      */
     PCMK_OCF_CONNECTION_DIED      = 189, //!< \deprecated See PCMK_EXEC_NOT_CONNECTED
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    // Former Pacemaker extensions
-    PCMK_OCF_EXEC_ERROR           = 192, //!< \deprecated (Unused)
-    PCMK_OCF_SIGNAL               = 194, //!< \deprecated (Unused)
-    PCMK_OCF_NOT_SUPPORTED        = 195, //!< \deprecated (Unused)
-    PCMK_OCF_PENDING              = 196, //!< \deprecated (Unused)
-    PCMK_OCF_CANCELLED            = 197, //!< \deprecated (Unused)
-    PCMK_OCF_TIMEOUT              = 198, //!< \deprecated (Unused)
-    PCMK_OCF_OTHER_ERROR          = 199, //!< \deprecated (Unused)
-
-    //! \deprecated Use PCMK_OCF_RUNNING_PROMOTED instead
-    PCMK_OCF_RUNNING_MASTER     = PCMK_OCF_RUNNING_PROMOTED,
-
-    //! \deprecated Use PCMK_OCF_FAILED_PROMOTED instead
-    PCMK_OCF_FAILED_MASTER      = PCMK_OCF_FAILED_PROMOTED,
-
-    //! \deprecated Use PCMK_OCF_DEGRADED_PROMOTED instead
-    PCMK_OCF_DEGRADED_MASTER    = PCMK_OCF_DEGRADED_PROMOTED,
-#endif
 };
 
 // NOTE: sbd (as of at least 1.5.2) uses this

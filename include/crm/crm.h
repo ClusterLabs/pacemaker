@@ -60,16 +60,10 @@ extern "C" {
  *
  * Particular feature points currently tested by Pacemaker code:
  *
- * >2.1:     Operation updates include timing data
- * >=3.0.5:  XML v2 digests are created
- * >=3.0.8:  Peers do not need acks for cancellations
- * >=3.0.9:  DC will send its own shutdown request to all peers
- *           XML v2 patchsets are created by default
- * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
  * >=3.19.0: DC supports PCMK__CIB_REQUEST_COMMIT_TRANSACT
  */
-#  define CRM_FEATURE_SET		"3.19.6"
+#  define CRM_FEATURE_SET		"3.19.7"
 
 /* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
  * recipient of a CPG message. This imposes an arbitrary limit on cluster node
@@ -150,12 +144,12 @@ extern char *crm_system_name;
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/crm_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/crm_compat.h>
 #endif
 
 #endif

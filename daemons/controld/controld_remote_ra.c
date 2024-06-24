@@ -193,10 +193,10 @@ start_delay_helper(gpointer data)
 }
 
 static bool
-should_purge_attributes(crm_node_t *node)
+should_purge_attributes(pcmk__node_status_t *node)
 {
     bool purge = true;
-    crm_node_t *conn_node = NULL;
+    pcmk__node_status_t *conn_node = NULL;
     lrm_state_t *connection_rsc = NULL;
 
     if (!node->conn_host) {
@@ -256,7 +256,7 @@ section_to_delete(bool purge)
 }
 
 static void
-purge_remote_node_attrs(int call_opt, crm_node_t *node)
+purge_remote_node_attrs(int call_opt, pcmk__node_status_t *node)
 {
     bool purge = should_purge_attributes(node);
     enum controld_section_e section = section_to_delete(purge);
@@ -280,7 +280,7 @@ remote_node_up(const char *node_name)
 {
     int call_opt;
     xmlNode *update, *state;
-    crm_node_t *node;
+    pcmk__node_status_t *node = NULL;
     lrm_state_t *connection_rsc = NULL;
 
     CRM_CHECK(node_name != NULL, return);
@@ -288,11 +288,13 @@ remote_node_up(const char *node_name)
 
     call_opt = crmd_cib_smart_opt();
 
-    /* Delete node's probe_complete attribute. This serves two purposes:
+    /* Delete node's CRM_OP_PROBED attribute. Deleting any attribute ensures
+     * that the attribute manager learns the node is remote. Deletion of this
+     * specfic attribute is a holdover from when it had special meaning.
      *
-     * - @COMPAT DCs < 1.1.14 in a rolling upgrade might use it
-     * - deleting it (or any attribute for that matter) here ensures the
-     *   attribute manager learns the node is remote
+     * @COMPAT Find another way to tell attrd that the node is remote, without
+     * risking deletion or overwrite of an arbitrary attribute. Then work on
+     * deprecating CRM_OP_PROBED.
      */
     update_attrd(node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
 
@@ -363,7 +365,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
 {
     xmlNode *update;
     int call_opt = crmd_cib_smart_opt();
-    crm_node_t *node;
+    pcmk__node_status_t *node = NULL;
 
     /* Purge node from attrd's memory */
     update_attrd_remote_node_removed(node_name, NULL);
@@ -420,7 +422,8 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
          * it hasn't been tracking the remote node, and other code relies on
          * the cache to distinguish remote nodes from unseen cluster nodes.
          */
-        crm_node_t *node = pcmk__cluster_lookup_remote_node(cmd->rsc_id);
+        pcmk__node_status_t *node =
+            pcmk__cluster_lookup_remote_node(cmd->rsc_id);
 
         CRM_CHECK(node != NULL, return);
         pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
@@ -467,14 +470,14 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     op.user_data = cmd->userdata;
     op.timeout = cmd->timeout;
     op.interval_ms = cmd->interval_ms;
-    op.t_run = (unsigned int) cmd->start_time;
-    op.t_rcchange = (unsigned int) cmd->start_time;
+    op.t_run = cmd->start_time;
+    op.t_rcchange = cmd->start_time;
 
     lrmd__set_result(&op, cmd->result.exit_status, cmd->result.execution_status,
                      cmd->result.exit_reason);
 
     if (pcmk_is_set(cmd->status, cmd_reported_success) && !pcmk__result_ok(&(cmd->result))) {
-        op.t_rcchange = (unsigned int) time(NULL);
+        op.t_rcchange = time(NULL);
         /* This edge case will likely never ever occur, but if it does the
          * result is that a failure will not be processed correctly. This is only
          * remotely possible because we are able to detect a connection resource's tcp
@@ -622,7 +625,7 @@ synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *
     op.type = lrmd_event_exec_complete;
     op.rsc_id = rsc_id;
     op.op_type = op_type;
-    op.t_run = (unsigned int) time(NULL);
+    op.t_run = time(NULL);
     op.t_rcchange = op.t_run;
     op.call_id = generate_callid();
     lrmd__set_result(&op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
@@ -1389,7 +1392,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 {
     xmlNode *update, *state;
     int call_opt;
-    crm_node_t *node;
+    pcmk__node_status_t *node = NULL;
 
     call_opt = crmd_cib_smart_opt();
     node = pcmk__cluster_lookup_remote_node(lrm_state->node_name);

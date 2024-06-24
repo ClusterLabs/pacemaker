@@ -4,8 +4,8 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <!-- test: move attribute "value" before "name" -->
-        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster" />
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1" />
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
       </cluster_property_set>
     </crm_config>
     <!-- test: delete this comment -->
@@ -30,7 +30,7 @@
         </instance_attributes>
         <operations>
           <!-- test: add attribute timeout="120s" -->
-          <op id="Fencing-monitor-120s" interval="120s" name="monitor" />
+          <op id="Fencing-monitor-120s" interval="120s" name="monitor"/>
           <op id="Fencing-stop-0" interval="0" name="stop" timeout="60s"/>
           <!-- test: delete element Fencing-start-0 -->
           <op id="Fencing-start-0" interval="0" name="start" timeout="60s"/>

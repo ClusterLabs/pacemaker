@@ -7,10 +7,6 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef PCMK__CRM_COMMON_LOGGING_INTERNAL__H
 #define PCMK__CRM_COMMON_LOGGING_INTERNAL__H
 
@@ -18,6 +14,10 @@ extern "C" {
 
 #include <crm/common/logging.h>
 #include <crm/common/output_internal.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Some warnings are too noisy when logged every time a given function is called
  * (for example, using a deprecated feature). As an alternative, we allow
@@ -238,4 +238,4 @@ void pcmk__free_common_logger(void);
 }
 #endif
 
-#endif
+#endif // PCMK__CRM_COMMON_LOGGING_INTERNAL__H

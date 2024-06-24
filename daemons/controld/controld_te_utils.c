@@ -205,7 +205,7 @@ node_pending_timer_popped(gpointer key)
 }
 
 static void
-init_node_pending_timer(const crm_node_t *node, guint timeout)
+init_node_pending_timer(const pcmk__node_status_t *node, guint timeout)
 {
     struct abort_timer_s *node_pending_timer = NULL;
     char *key = NULL;
@@ -255,7 +255,7 @@ remove_node_pending_timer(const char *node_uuid)
 }
 
 void
-controld_node_pending_timer(const crm_node_t *node)
+controld_node_pending_timer(const pcmk__node_status_t *node)
 {
     long long remaining_timeout = 0;
 

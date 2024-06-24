@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the Pacemaker project contributors
+ * Copyright 2018-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,19 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__FENCING_PRIVATE__H
-#  define PCMK__FENCING_PRIVATE__H
+#ifndef PCMK__FENCING_FENCING_PRIVATE__H
+#define PCMK__FENCING_FENCING_PRIVATE__H
+
+#include <stdbool.h>                // bool
+
+#include <glib.h>                   // G_GNUC_INTERNAL, GHashTable
+
+#include <crm/stonith-ng.h>         // stonith_t, stonith_key_value_t
+#include <crm/fencing/internal.h>   // stonith_action_t
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 G_GNUC_INTERNAL
 int stonith__execute(stonith_action_t *action);
@@ -48,4 +59,8 @@ int stonith__lha_validate(stonith_t *st, int call_options, const char *target,
                           int timeout, char **output, char **error_output);
 #endif
 
-#endif  // PCMK__FENCING_PRIVATE__H
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__FENCING_FENCING_PRIVATE__H

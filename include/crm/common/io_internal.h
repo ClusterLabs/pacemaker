@@ -14,6 +14,10 @@
 #include <stdbool.h>            // bool
 #include <unistd.h>             // uid_t, gid_t
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int pcmk__real_path(const char *path, char **resolved_path);
 
 char *pcmk__series_filename(const char *directory, const char *series,
@@ -53,5 +57,9 @@ pcmk__open_devnull(int flags)
     // cppcheck-suppress leakReturnValNotUsed
     (void) open("/dev/null", flags);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PCMK__CRM_COMMON_IO_INTERNAL__H

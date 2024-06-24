@@ -32,11 +32,11 @@
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="rsc_stonith" class="stonith" type="null">
-            <lrm_rsc_op id="rsc_stonith_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="rsc_stonith_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc_stonith_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="node1"/>
+            <lrm_rsc_op id="rsc_stonith_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="node1"/>
           </lrm_resource>
           <lrm_resource id="rsc1:0" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="rsc1:0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1:0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="node1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -45,10 +45,10 @@
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="rsc_stonith" class="stonith" type="null">
-            <lrm_rsc_op id="rsc_stonith_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc_stonith_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="node2"/>
           </lrm_resource>
           <lrm_resource id="rsc1:0" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="rsc1:0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1:0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="node2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

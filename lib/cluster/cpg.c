@@ -49,7 +49,6 @@ static int cs_message_timer = 0;
 struct pcmk__cpg_host_s {
     uint32_t id;
     uint32_t pid;
-    gboolean local;
     enum crm_ais_msg_types type;
     uint32_t size;
     char uname[MAX_NAME];
@@ -288,13 +287,7 @@ pcmk_cpg_dispatch(gpointer user_data)
 static inline const char *
 ais_dest(const pcmk__cpg_host_t *host)
 {
-    if (host->local) {
-        return "local";
-    } else if (host->size > 0) {
-        return host->uname;
-    } else {
-        return "<all>";
-    }
+    return (host->size > 0)? host->uname : "<all>";
 }
 
 static inline const char *
@@ -460,7 +453,7 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
 
         msg->sender.id = sender_id;
         if (msg->sender.size == 0) {
-            const crm_node_t *peer =
+            const pcmk__node_status_t *peer =
                 pcmk__get_node(sender_id, NULL, NULL,
                                pcmk__node_search_cluster_member);
 
@@ -596,7 +589,7 @@ cpgreason2str(cpg_reason_t reason)
  * \return Node's uname, or readable string if not known
  */
 static inline const char *
-peer_name(const crm_node_t *peer)
+peer_name(const pcmk__node_status_t *peer)
 {
     if (peer == NULL) {
         return "unknown node";
@@ -624,7 +617,7 @@ node_left(const char *cpg_group_name, int event_counter,
           const struct cpg_address **sorted_member_list,
           size_t member_list_entries)
 {
-    crm_node_t *peer =
+    pcmk__node_status_t *peer =
         pcmk__search_node_caches(cpg_peer->nodeid, NULL,
                                  pcmk__node_search_cluster_member);
     const struct cpg_address **rival = NULL;
@@ -726,8 +719,9 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
     }
 
     for (int i = 0; i < member_list_entries; i++) {
-        crm_node_t *peer = pcmk__get_node(member_list[i].nodeid, NULL, NULL,
-                                          pcmk__node_search_cluster_member);
+        pcmk__node_status_t *peer =
+            pcmk__get_node(member_list[i].nodeid, NULL, NULL,
+                           pcmk__node_search_cluster_member);
 
         if (member_list[i].nodeid == local_nodeid
                 && member_list[i].pid != getpid()) {
@@ -832,7 +826,7 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     int fd = -1;
     int retries = 0;
     uint32_t id = 0;
-    crm_node_t *peer = NULL;
+    pcmk__node_status_t *peer = NULL;
     cpg_handle_t handle = 0;
     const char *message_name = pcmk__message_name(crm_system_name);
     uid_t found_uid = 0;
@@ -949,17 +943,15 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
  * \brief Send string data via Corosync CPG
  *
  * \param[in] data   Data to send
- * \param[in] local  What to set as host "local" value (which is never used)
  * \param[in] node   Cluster node to send message to
  * \param[in] dest   Type of message to send
  *
  * \return \c true on success, or \c false otherwise
  */
 static bool
-send_cpg_text(const char *data, bool local, const crm_node_t *node,
+send_cpg_text(const char *data, const pcmk__node_status_t *node,
               enum crm_ais_msg_types dest)
 {
-    // @COMPAT Drop local argument when send_cluster_text is dropped
     static int msg_id = 0;
     static int local_pid = 0;
     static int local_name_len = 0;
@@ -994,7 +986,6 @@ send_cpg_text(const char *data, bool local, const crm_node_t *node,
     msg->header.error = CS_OK;
 
     msg->host.type = dest;
-    msg->host.local = local;
 
     if (node != NULL) {
         if (node->uname != NULL) {
@@ -1004,9 +995,9 @@ send_cpg_text(const char *data, bool local, const crm_node_t *node,
             memcpy(msg->host.uname, node->uname, msg->host.size);
 
         } else {
-            target = crm_strdup_printf("%u", node->id);
+            target = crm_strdup_printf("%" PRIu32, node->cluster_layer_id);
         }
-        msg->host.id = node->id;
+        msg->host.id = node->cluster_layer_id;
 
     } else {
         target = pcmk__str_copy("all");
@@ -1088,7 +1079,7 @@ send_cpg_text(const char *data, bool local, const crm_node_t *node,
  * \return TRUE on success, otherwise FALSE
  */
 bool
-pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
+pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
                    enum crm_ais_msg_types dest)
 {
     bool rc = true;
@@ -1096,7 +1087,7 @@ pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
 
     pcmk__xml_string(msg, 0, data, 0);
 
-    rc = send_cpg_text(data->str, false, node, dest);
+    rc = send_cpg_text(data->str, node, dest);
     g_string_free(data, TRUE);
     return rc;
 }

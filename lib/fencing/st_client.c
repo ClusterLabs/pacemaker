@@ -290,7 +290,7 @@ stonith_connection_destroy(gpointer user_data)
 }
 
 xmlNode *
-create_device_registration_xml(const char *id, enum stonith_namespace namespace,
+create_device_registration_xml(const char *id, enum stonith_namespace standard,
                                const char *agent,
                                const stonith_key_value_t *params,
                                const char *rsc_provides)
@@ -299,10 +299,10 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
     xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
 
 #if HAVE_STONITH_STONITH_H
-    if (namespace == st_namespace_any) {
-        namespace = stonith_get_namespace(agent, NULL);
+    if (standard == st_namespace_any) {
+        standard = stonith_get_namespace(agent, NULL);
     }
-    if (namespace == st_namespace_lha) {
+    if (standard == st_namespace_lha) {
         hash2field((gpointer) "plugin", (gpointer) agent, args);
         agent = "fence_legacy";
     }
@@ -311,9 +311,9 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
     crm_xml_add(data, PCMK_XA_ID, id);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK_XA_AGENT, agent);
-    if ((namespace != st_namespace_any) && (namespace != st_namespace_invalid)) {
+    if ((standard != st_namespace_any) && (standard != st_namespace_invalid)) {
         crm_xml_add(data, PCMK__XA_NAMESPACE,
-                    stonith_namespace2text(namespace));
+                    stonith_namespace2text(standard));
     }
     if (rsc_provides) {
         crm_xml_add(data, PCMK__XA_RSC_PROVIDES, rsc_provides);
@@ -517,7 +517,7 @@ stonith_api_device_metadata(stonith_t *stonith, int call_options,
     enum stonith_namespace ns = stonith_get_namespace(agent, namespace_s);
 
     if (timeout_sec <= 0) {
-        timeout_sec = PCMK_DEFAULT_METADATA_TIMEOUT_MS;
+        timeout_sec = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
 
     crm_trace("Looking up metadata for %s agent %s",
@@ -1639,12 +1639,14 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         crm_err("Received bad reply: No id set");
         crm_log_xml_err(op_reply, "Bad reply");
         pcmk__xml_free(op_reply);
+        op_reply = NULL;
         rc = -ENOMSG;
 
     } else {
         crm_err("Received bad reply: %d (wanted %d)", reply_id, stonith->call_id);
         crm_log_xml_err(op_reply, "Old reply");
         pcmk__xml_free(op_reply);
+        op_reply = NULL;
         rc = -ENOMSG;
     }
 
@@ -1779,7 +1781,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     }
 
     if (timeout_sec <= 0) {
-        timeout_sec = PCMK_DEFAULT_METADATA_TIMEOUT_MS; // Questionable
+        timeout_sec = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
 
     switch (stonith_get_namespace(agent, namespace_s)) {
@@ -2700,18 +2702,3 @@ stonith__event_description(const stonith_event_t *event)
                              ((reason == NULL)? "" : ")"),
                              pcmk__s(event->id, "(none)"));
 }
-
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-const char *get_stonith_provider(const char *agent, const char *provider);
-
-const char *
-get_stonith_provider(const char *agent, const char *provider)
-{
-    return stonith_namespace2text(stonith_get_namespace(agent, provider));
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

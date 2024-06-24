@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,17 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef SERVICES_NAGIOS__H
-#  define SERVICES_NAGIOS__H
+#ifndef PCMK__SERVICES_SERVICES_NAGIOS__H
+#define PCMK__SERVICES_SERVICES_NAGIOS__H
+
+#include <glib.h>   // G_GNUC_INTERNAL, GList, gboolean
+
+#include <crm/common/results.h> // enum ocf_exitcode
+#include <crm/services.h>       // svc_action_t
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 G_GNUC_INTERNAL
 int services__nagios_prepare(svc_action_t *op);
@@ -25,4 +34,8 @@ gboolean services__nagios_agent_exists(const char *agent);
 G_GNUC_INTERNAL
 int services__get_nagios_metadata(const char *type, char **output);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__SERVICES_SERVICES_NAGIOS__H

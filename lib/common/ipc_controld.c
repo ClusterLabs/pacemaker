@@ -129,8 +129,8 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
 
     /* Integer node_info.id is currently valid only for Corosync nodes.
      *
-     * @TODO: Improve handling after crm_node_t is refactored to handle layer-
-     * specific data better.
+     * @TODO: Improve handling after pcmk__node_status_t is refactored to handle
+     * layer-specific data better.
      */
     crm_element_value_int(msg_data, PCMK_XA_ID, &(data->data.node_info.id));
 

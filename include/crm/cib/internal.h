@@ -8,11 +8,16 @@
  */
 
 #ifndef PCMK__CRM_CIB_INTERNAL__H
-#  define PCMK__CRM_CIB_INTERNAL__H
-#  include <crm/cib.h>
-#  include <crm/common/ipc_internal.h>
-#  include <crm/common/output_internal.h>
-#  include <crm/common/strings_internal.h>
+#define PCMK__CRM_CIB_INTERNAL__H
+
+#include <crm/cib.h>
+#include <crm/common/ipc_internal.h>
+#include <crm/common/output_internal.h>
+#include <crm/common/strings_internal.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Request types for CIB manager IPC/CPG
 #define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"
@@ -250,8 +255,6 @@ int cib_process_xpath(const char *op, int options, const char *section,
                       const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                       xmlNode **result_cib, xmlNode ** answer);
 
-bool cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff);
-
 int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     const char *section, xmlNode * data,
                     xmlNode ** output_data, int call_options, const char *user_name);
@@ -307,4 +310,8 @@ int cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options,
                           const char *set_name, const char *attr_id, const char *attr_name,
                           const char *attr_value, const char *user_name);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // PCMK__CRM_CIB_INTERNAL__H

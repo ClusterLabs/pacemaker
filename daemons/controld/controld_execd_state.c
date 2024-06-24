@@ -78,8 +78,8 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     event.interval_ms = op->interval_ms;
     lrmd__set_result(&event, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_NOT_CONNECTED,
                      "Action was pending when executor connection was dropped");
-    event.t_run = (unsigned int) op->start_time;
-    event.t_rcchange = (unsigned int) op->start_time;
+    event.t_run = op->start_time;
+    event.t_rcchange = op->start_time;
 
     event.call_id = op->call_id;
     event.remote_nodename = lrm_state->node_name;
@@ -506,7 +506,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
                  * remote peer for validation
                  */
                 int rc = cib_conn->cmds->query(cib_conn, PCMK_XE_CRM_CONFIG,
-                                               NULL, cib_scope_local);
+                                               NULL, cib_none);
                 cib_conn->cmds->register_callback_full(cib_conn, rc, 10, FALSE,
                                                        lrmd,
                                                        "remote_config_check",

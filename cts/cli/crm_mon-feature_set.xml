@@ -37,6 +37,6 @@
       </transient_attributes>
     </node_state>
     <node_state id="3" uname="cluster03" in_ccm="true" crmd="offline" join="down" expected="down"/>
-    <node_state id="4" uname="remote01" in_ccm="true" remote_node="true">
+    <node_state id="4" uname="remote01" in_ccm="true" remote_node="true"/>
   </status>
 </cib>

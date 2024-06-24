@@ -13,6 +13,7 @@
 #include <stdio.h>                          // NULL
 #include <stdbool.h>                        // bool, false
 
+#include <crm/common/nodes_internal.h>      // struct pcmk__node_private
 #include <crm/common/remote_internal.h>     // pcmk__is_guest_or_bundle_node()
 #include <crm/common/resources_internal.h>  // pcmk__rsc_variant_bundle etc.
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t, pcmk_node_t
@@ -45,7 +46,7 @@ typedef struct {
 static inline bool
 pcmk__is_bundle(const pcmk_resource_t *rsc)
 {
-    return (rsc != NULL) && (rsc->private->variant == pcmk__rsc_variant_bundle);
+    return (rsc != NULL) && (rsc->priv->variant == pcmk__rsc_variant_bundle);
 }
 
 /*!
@@ -62,10 +63,10 @@ pcmk__is_bundled(const pcmk_resource_t *rsc)
     if (rsc == NULL) {
         return false;
     }
-    while (rsc->private->parent != NULL) {
-        rsc = rsc->private->parent;
+    while (rsc->priv->parent != NULL) {
+        rsc = rsc->priv->parent;
     }
-    return rsc->private->variant == pcmk__rsc_variant_bundle;
+    return rsc->priv->variant == pcmk__rsc_variant_bundle;
 }
 
 /*!
@@ -80,7 +81,7 @@ static inline bool
 pcmk__is_bundle_node(const pcmk_node_t *node)
 {
     return pcmk__is_guest_or_bundle_node(node)
-           && pcmk__is_bundled(node->details->remote_rsc);
+           && pcmk__is_bundled(node->priv->remote);
 }
 
 #ifdef __cplusplus

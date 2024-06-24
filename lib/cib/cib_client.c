@@ -283,7 +283,7 @@ is_primary(cib_t *cib)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_IS_PRIMARY, NULL, NULL, NULL,
-                           NULL, cib_scope_local|cib_sync_call, cib->user);
+                           NULL, cib_sync_call, cib->user);
 }
 
 static int
@@ -304,9 +304,8 @@ static int
 set_primary(cib_t *cib, int call_options)
 {
     op_common(cib);
-    crm_trace("Adding cib_scope_local to options");
     return cib_internal_op(cib, PCMK__CIB_REQUEST_PRIMARY, NULL, NULL, NULL,
-                           NULL, call_options|cib_scope_local, cib->user);
+                           NULL, call_options, cib->user);
 }
 
 static int

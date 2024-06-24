@@ -12,19 +12,19 @@
 #include <crm/common/unittest_internal.h>
 #include <crm/pengine/internal.h>
 
-struct pe_node_shared_s node1_details;
-struct pe_node_shared_s node2_details;
+struct pcmk__node_private node1_private;
+struct pcmk__node_private node2_private;
 
-pcmk_node_t node1 = { .details = &node1_details };
-pcmk_node_t node2 = { .details = &node2_details };
+pcmk_node_t node1 = { .priv = &node1_private };
+pcmk_node_t node2 = { .priv = &node2_private };
 
 static void
 nodes_equal(void **state)
 {
     assert_int_equal(pe__cmp_node_name(NULL, NULL), 0);
 
-    node1.details->uname = "node10";
-    node2.details->uname = "node10";
+    node1.priv->name = "node10";
+    node2.priv->name = "node10";
     assert_int_equal(pe__cmp_node_name(&node1, &node2), 0);
 }
 
@@ -34,8 +34,8 @@ node1_first(void **state)
     assert_int_equal(pe__cmp_node_name(NULL, &node2), -1);
 
     // The heavy testing is done in pcmk__numeric_strcasecmp()'s unit tests
-    node1.details->uname = "node9";
-    node2.details->uname = "node10";
+    node1.priv->name = "node9";
+    node2.priv->name = "node10";
     assert_int_equal(pe__cmp_node_name(&node1, &node2), -1);
 }
 
@@ -44,8 +44,8 @@ node2_first(void **state)
 {
     assert_int_equal(pe__cmp_node_name(&node1, NULL), 1);
 
-    node1.details->uname = "node10";
-    node2.details->uname = "node9";
+    node1.priv->name = "node10";
+    node2.priv->name = "node9";
     assert_int_equal(pe__cmp_node_name(&node1, &node2), 1);
 }
 

@@ -301,7 +301,7 @@ get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
         return 0;
     }
 
-    clone_min = g_hash_table_lookup(rsc->meta, PCMK_META_CLONE_MIN);
+    clone_min = g_hash_table_lookup(rsc->priv->meta, PCMK_META_CLONE_MIN);
     if (clone_min != NULL) {
         int clone_min_int = 0;
 
@@ -349,7 +349,7 @@ clone_min_ordering(const char *id,
     // Create a pseudo-action for when the minimum instances are active
     char *task = crm_strdup_printf(PCMK_ACTION_CLONE_ONE_OR_MORE ":%s", id);
     pcmk_action_t *clone_min_met = get_pseudo_op(task,
-                                                 rsc_first->private->scheduler);
+                                                 rsc_first->priv->scheduler);
 
     free(task);
 
@@ -357,24 +357,26 @@ clone_min_ordering(const char *id,
      * considered runnable before allowing the pseudo-action to be runnable.
      */
     clone_min_met->required_runnable_before = clone_min;
-    pcmk__set_action_flags(clone_min_met, pcmk_action_min_runnable);
+    pcmk__set_action_flags(clone_min_met, pcmk__action_min_runnable);
 
     // Order the actions for each clone instance before the pseudo-action
-    for (GList *iter = rsc_first->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc_first->priv->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *child = iter->data;
 
         pcmk__new_ordering(child, pcmk__op_key(child->id, action_first, 0),
                            NULL, NULL, NULL, clone_min_met,
                            pcmk__ar_min_runnable
                            |pcmk__ar_first_implies_then_graphed,
-                           rsc_first->private->scheduler);
+                           rsc_first->priv->scheduler);
     }
 
     // Order "then" action after the pseudo-action (if runnable)
     pcmk__new_ordering(NULL, NULL, clone_min_met, rsc_then,
                        pcmk__op_key(rsc_then->id, action_then, 0),
                        NULL, flags|pcmk__ar_unrunnable_first_blocks,
-                       rsc_first->private->scheduler);
+                       rsc_first->priv->scheduler);
 }
 
 /*!
@@ -392,7 +394,7 @@ clone_min_ordering(const char *id,
  */
 #define handle_restart_type(rsc, kind, flag, flags) do {                    \
         if (((kind) == pe_order_kind_optional)                              \
-            && ((rsc)->private->restart_type == pcmk__restart_restart)) {   \
+            && ((rsc)->priv->restart_type == pcmk__restart_restart)) {      \
             pcmk__set_relation_flags((flags), (flag));                      \
         }                                                                   \
     } while (0)
@@ -772,7 +774,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         pcmk_action_t *unordered_action = get_pseudo_op(task, scheduler);
 
         free(task);
-        pcmk__set_action_flags(unordered_action, pcmk_action_min_runnable);
+        pcmk__set_action_flags(unordered_action, pcmk__action_min_runnable);
 
         for (xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF, NULL,
                                             NULL);
@@ -922,8 +924,8 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     pcmk_resource_t *rsc_first = NULL;
     pcmk_resource_t *rsc_then = NULL;
-    pcmk_tag_t *tag_first = NULL;
-    pcmk_tag_t *tag_then = NULL;
+    pcmk__idref_t *tag_first = NULL;
+    pcmk__idref_t *tag_then = NULL;
 
     xmlNode *rsc_set_first = NULL;
     xmlNode *rsc_set_then = NULL;
@@ -1106,7 +1108,7 @@ ordering_is_invalid(pcmk_action_t *action, pcmk__related_action_t *input)
     /* Prevent user-defined ordering constraints between resources
      * running in a guest node and the resource that defines that node.
      */
-    if (!pcmk_is_set(input->type, pcmk__ar_guest_allowed)
+    if (!pcmk_is_set(input->flags, pcmk__ar_guest_allowed)
         && (input->action->rsc != NULL)
         && pcmk__rsc_corresponds_to_guest(action->rsc, input->action->node)) {
 
@@ -1122,7 +1124,7 @@ ordering_is_invalid(pcmk_action_t *action, pcmk__related_action_t *input)
      * migrated from node2 to node1. If there would be a graph loop,
      * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
      */
-    if (((uint32_t) input->type == pcmk__ar_if_on_same_node_or_target)
+    if ((input->flags == pcmk__ar_if_on_same_node_or_target)
         && (action->rsc != NULL)
         && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO, pcmk__str_none)
         && pcmk__graph_has_loop(action, action, input)) {
@@ -1144,7 +1146,7 @@ pcmk__disable_invalid_orderings(pcmk_scheduler_t *scheduler)
 
             input = input_iter->data;
             if (ordering_is_invalid(action, input)) {
-                input->type = (enum pe_ordering) pcmk__ar_none;
+                input->flags = pcmk__ar_none;
             }
         }
     }
@@ -1160,7 +1162,7 @@ pcmk__disable_invalid_orderings(pcmk_scheduler_t *scheduler)
 void
 pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
 {
-    for (GList *iter = node->details->data_set->actions;
+    for (GList *iter = node->priv->scheduler->actions;
          iter != NULL; iter = iter->next) {
 
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
@@ -1203,11 +1205,11 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
 
         pcmk__rsc_trace(action->rsc, "Ordering %s before shutdown of %s",
                         action->uuid, pcmk__node_name(node));
-        pcmk__clear_action_flags(action, pcmk_action_optional);
+        pcmk__clear_action_flags(action, pcmk__action_optional);
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
                            strdup(PCMK_ACTION_DO_SHUTDOWN), shutdown_op,
                            pcmk__ar_ordered|pcmk__ar_unrunnable_first_blocks,
-                           node->details->data_set);
+                           node->priv->scheduler);
     }
 }
 
@@ -1225,7 +1227,7 @@ static GList *
 find_actions_by_task(const pcmk_resource_t *rsc, const char *original_key)
 {
     // Search under given task key directly
-    GList *list = find_actions(rsc->actions, original_key, NULL);
+    GList *list = find_actions(rsc->priv->actions, original_key, NULL);
 
     if (list == NULL) {
         // Search again using this resource's ID
@@ -1236,7 +1238,7 @@ find_actions_by_task(const pcmk_resource_t *rsc, const char *original_key)
         CRM_CHECK(parse_op_key(original_key, NULL, &task, &interval_ms),
                   return NULL);
         key = pcmk__op_key(rsc->id, task, interval_ms);
-        list = find_actions(rsc->actions, key, NULL);
+        list = find_actions(rsc->priv->actions, key, NULL);
         free(key);
         free(task);
     }
@@ -1279,7 +1281,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
     }
 
     if ((first_action != NULL) && (first_action->rsc == rsc)
-        && pcmk_is_set(first_action->flags, pcmk_action_migration_abort)) {
+        && pcmk_is_set(first_action->flags, pcmk__action_migration_abort)) {
 
         pcmk__rsc_trace(rsc,
                         "Detected dangling migration ordering (%s then %s %s)",
@@ -1303,7 +1305,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
         if (first_action != NULL) {
             order_actions(first_action, then_action_iter, flags);
         } else {
-            pcmk__clear_action_flags(then_action_iter, pcmk_action_runnable);
+            pcmk__clear_action_flags(then_action_iter, pcmk__action_runnable);
             crm_warn("%s of %s is unrunnable because there is no %s of %s "
                      "to order it after", then_action_iter->task, rsc->id,
                      order->task1, order->rsc1->id);
@@ -1345,7 +1347,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
         parse_op_key(order->task1, NULL, &op_type, &interval_ms);
         key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
-        first_role = first_rsc->private->fns->state(first_rsc, TRUE);
+        first_role = first_rsc->priv->fns->state(first_rsc, TRUE);
         if ((first_role == pcmk_role_stopped)
             && pcmk__str_eq(op_type, PCMK_ACTION_STOP, pcmk__str_none)) {
             free(key);
@@ -1368,7 +1370,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
                             "Creating first (%s for %s) for constraint %d ",
                             order->task1, first_rsc->id, order->id);
             first_action = custom_action(first_rsc, key, op_type, NULL, TRUE,
-                                         first_rsc->private->scheduler);
+                                         first_rsc->priv->scheduler);
             first_actions = g_list_prepend(NULL, first_action);
         }
 

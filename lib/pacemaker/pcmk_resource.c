@@ -41,9 +41,8 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     const char *best_digest = NULL;
 
     // Find node's resource history
-    xpath = crm_strdup_printf(XPATH_OP_HISTORY, node->details->uname, rsc->id);
-    history = get_xpath_object(xpath, rsc->private->scheduler->input,
-                               LOG_NEVER);
+    xpath = crm_strdup_printf(XPATH_OP_HISTORY, node->priv->name, rsc->id);
+    history = get_xpath_object(xpath, rsc->priv->scheduler->input, LOG_NEVER);
     free(xpath);
 
     // Examine each history entry
@@ -95,7 +94,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
         }
 
         // Do not use an older op if there's a newer one.
-        if (pe__is_newer_op(best, lrm_rsc_op, true) > 0) {
+        if (pe__is_newer_op(best, lrm_rsc_op) > 0) {
             continue;
         }
 
@@ -227,7 +226,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     // Calculate and show digests
     digests = pe__calculate_digests(rsc, task, &interval_ms, node, xml_op,
-                                    overrides, true, rsc->private->scheduler);
+                                    overrides, true, rsc->priv->scheduler);
     rc = out->message(out, "digests", rsc, node, task, interval_ms, digests);
 
     pe__free_digests(digests);

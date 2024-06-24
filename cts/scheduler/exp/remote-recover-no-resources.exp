@@ -672,7 +672,7 @@
   <synapse id="47">
     <action_set>
       <crm_event id="129" operation="stonith" operation_key="stonith-messaging-1-reboot" on_node="messaging-1" on_node_uuid="messaging-1">
-        <attributes CRM_meta_last_failure_rabbitmq="1493336946" CRM_meta_on_node="messaging-1" CRM_meta_on_node_uuid="messaging-1" CRM_meta_rabbitmq_role="true" CRM_meta_rmq_node_attr_last_known_rabbitmq="rabbit@messaging-1" CRM_meta_rmq_node_attr_rabbitmq="rabbit@messaging-1" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="messaging-1" CRM_meta_on_node_uuid="messaging-1" CRM_meta_rabbitmq_role="true" CRM_meta_rmq_node_attr_last_known_rabbitmq="rabbit@messaging-1" CRM_meta_rmq_node_attr_rabbitmq="rabbit@messaging-1" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="messaging-1"/>
         </downed>

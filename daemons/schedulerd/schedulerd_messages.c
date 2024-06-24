@@ -28,14 +28,7 @@ init_working_set(void)
     pcmk_scheduler_t *scheduler = pe_new_working_set();
 
     pcmk__mem_assert(scheduler);
-
-    crm_config_error = FALSE;
-    crm_config_warning = FALSE;
-
-    was_processing_error = FALSE;
-    was_processing_warning = FALSE;
-
-    scheduler->priv = logger_out;
+    scheduler->priv->out = logger_out;
     return scheduler;
 }
 
@@ -78,7 +71,7 @@ handle_pecalc_request(pcmk__request_t *request)
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
-    digest = pcmk__digest_xml(xml_data, false, CRM_FEATURE_SET);
+    digest = pcmk__digest_xml(xml_data, false);
     converted = pcmk__xml_copy(NULL, xml_data);
     if (pcmk_update_configured_schema(&converted, true) != pcmk_rc_ok) {
         scheduler->graph = pcmk__xe_create(NULL, PCMK__XE_TRANSITION_GRAPH);
@@ -98,15 +91,17 @@ handle_pecalc_request(pcmk__request_t *request)
 
     if (process) {
         pcmk__schedule_actions(converted,
-                               pcmk_sched_no_counts
-                               |pcmk_sched_no_compat
-                               |pcmk_sched_show_utilization, scheduler);
+                               pcmk__sched_no_counts
+                               |pcmk__sched_no_compat
+                               |pcmk__sched_show_utilization, scheduler);
     }
 
     // Get appropriate index into series[] array
-    if (was_processing_error || crm_config_error) {
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_error)
+        || crm_config_error) {
         series_id = 0;
-    } else if (was_processing_warning || crm_config_warning) {
+    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_warning)
+               || crm_config_warning) {
         series_id = 1;
     } else {
         series_id = 2;
@@ -148,12 +143,8 @@ handle_pecalc_request(pcmk__request_t *request)
     }
 
     crm_xml_add(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
-    crm_xml_add_int(reply, PCMK__XA_GRAPH_ERRORS, was_processing_error);
-    crm_xml_add_int(reply, PCMK__XA_GRAPH_WARNINGS, was_processing_warning);
-    crm_xml_add_int(reply, PCMK__XA_CONFIG_ERRORS, crm_config_error);
-    crm_xml_add_int(reply, PCMK__XA_CONFIG_WARNINGS, crm_config_warning);
 
-    pcmk__log_transition_summary(filename);
+    pcmk__log_transition_summary(scheduler, filename);
 
     if (series_wrap == 0) {
         crm_debug("Not saving input to disk (disabled by configuration)");
@@ -165,7 +156,7 @@ handle_pecalc_request(pcmk__request_t *request)
         unlink(filename);
         crm_xml_add_ll(xml_data, PCMK_XA_EXECUTION_DATE,
                        (long long) execution_date);
-        pcmk__xml_write_file(xml_data, filename, true, NULL);
+        pcmk__xml_write_file(xml_data, filename, true);
         pcmk__write_series_sequence(PE_STATE_DIR, series[series_id].name,
                                     ++seq, series_wrap);
     }

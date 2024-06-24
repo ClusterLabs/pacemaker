@@ -122,20 +122,6 @@ handle_confirm_request(pcmk__request_t *request)
 }
 
 static xmlNode *
-handle_flush_request(pcmk__request_t *request)
-{
-    if (request->peer != NULL) {
-        /* Ignore. The flush command was removed in 2.0.0 but may be
-         * received from peers running older versions.
-         */
-        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-        return NULL;
-    } else {
-        return handle_unknown_request(request);
-    }
-}
-
-static xmlNode *
 handle_query_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
@@ -181,8 +167,9 @@ handle_sync_response_request(pcmk__request_t *request)
         return handle_unknown_request(request);
     } else {
         if (request->peer != NULL) {
-            crm_node_t *peer = pcmk__get_node(0, request->peer, NULL,
-                                              pcmk__node_search_cluster_member);
+            pcmk__node_status_t *peer =
+                pcmk__get_node(0, request->peer, NULL,
+                               pcmk__node_search_cluster_member);
             bool peer_won = attrd_check_for_new_writer(peer, request->xml);
 
             if (!pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
@@ -200,8 +187,9 @@ handle_update_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
         const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_HOST);
-        crm_node_t *peer = pcmk__get_node(0, request->peer, NULL,
-                                          pcmk__node_search_cluster_member);
+        pcmk__node_status_t *peer =
+            pcmk__get_node(0, request->peer, NULL,
+                           pcmk__node_search_cluster_member);
 
         attrd_peer_update(peer, request->xml, host, false);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -243,7 +231,6 @@ attrd_register_handlers(void)
     pcmk__server_command_t handlers[] = {
         { PCMK__ATTRD_CMD_CLEAR_FAILURE, handle_clear_failure_request },
         { PCMK__ATTRD_CMD_CONFIRM, handle_confirm_request },
-        { PCMK__ATTRD_CMD_FLUSH, handle_flush_request },
         { PCMK__ATTRD_CMD_PEER_REMOVE, handle_remove_request },
         { PCMK__ATTRD_CMD_QUERY, handle_query_request },
         { PCMK__ATTRD_CMD_REFRESH, handle_refresh_request },
@@ -337,7 +324,7 @@ attrd_broadcast_protocol(void)
 }
 
 gboolean
-attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
+attrd_send_message(pcmk__node_status_t *node, xmlNode *data, bool confirm)
 {
     const char *op = crm_element_value(data, PCMK_XA_TASK);
 

@@ -25,13 +25,13 @@
       <lrm id="node1">
         <lrm_resources id="lrm_resources.id21894">
           <lrm_resource id="rsc1" class="ocf" provider="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op-status="4" rc-code="1" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+            <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op-status="4" rc-code="1" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" on_node="node1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
       <transient_attributes id="node1">
         <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-rsc1" name="fail-count-rsc1" value="1"/>
+          <nvpair id="status-node1-fail-count-rsc1.monitor_60000" name="fail-count-rsc1#monitor_60000" value="1"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

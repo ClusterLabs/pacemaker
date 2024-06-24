@@ -27,17 +27,17 @@
       <lrm id="fc16-builder2">
         <lrm_resources>
           <lrm_resource id="A" type="Dummy" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="A_last_0" operation_key="A_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="5:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" transition-magic="0:0;5:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1338998532" last-rc-change="1338998532" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="A_monitor_10000" operation_key="A_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="6:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" transition-magic="0:0;6:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" call-id="4" rc-code="0" op-status="0" interval="10000" last-rc-change="1338998532" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
-            <lrm_rsc_op id="A_last_failure_0" operation_key="A_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="6:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" transition-magic="0:7;6:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" call-id="4" rc-code="7" op-status="0" interval="10000" last-rc-change="1338998622" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+            <lrm_rsc_op id="A_last_0" operation_key="A_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="5:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" transition-magic="0:0;5:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1338998532" last-rc-change="1338998532" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="fc16-builder2"/>
+            <lrm_rsc_op id="A_monitor_10000" operation_key="A_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="6:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" transition-magic="0:0;6:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" call-id="4" rc-code="0" op-status="0" interval="10000" last-rc-change="1338998532" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="fc16-builder2"/>
+            <lrm_rsc_op id="A_last_failure_0" operation_key="A_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="6:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" transition-magic="0:7;6:0:0:cb59cfd8-fd70-404e-88f1-8eff815be9bf" call-id="4" rc-code="7" op-status="0" interval="10000" last-rc-change="1338998622" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" on_node="fc16-builder2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
       <transient_attributes id="fc16-builder2">
         <instance_attributes id="status-fc16-builder2">
           <nvpair id="status-fc16-builder2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-fc16-builder2-fail-count-A" name="fail-count-A" value="1"/>
-          <nvpair id="status-fc16-builder2-last-failure-A" name="last-failure-A" value="1338998623"/>
+          <nvpair id="status-fc16-builder2-fail-count-A.monitor_10000" name="fail-count-A#monitor_10000" value="1"/>
+          <nvpair id="status-fc16-builder2-last-failure-A.monitor_10000" name="last-failure-A#monitor_10000" value="1338998623"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
