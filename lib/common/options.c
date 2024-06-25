@@ -457,6 +457,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
+        // @COMPAT Disallowed by schema
         PCMK__OPT_REMOVE_AFTER_STOP, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_deprecated,

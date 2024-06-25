@@ -381,6 +381,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     value = pcmk__cluster_option(config_hash, PCMK__OPT_REMOVE_AFTER_STOP);
     if (value != NULL) {
+        // @COMPAT Not possible with schema validation enabled
         if (crm_is_true(value)) {
             pcmk__set_scheduler_flags(scheduler, pcmk__sched_remove_after_stop);
             pcmk__warn_once(pcmk__wo_remove_after,
