@@ -79,6 +79,17 @@ typedef struct {
 } pcmk_injections_t;
 
 /*!
+ * \brief Initialize the Pacemaker API
+ *
+ * This function should be called before any of the other functions in this
+ * public API.  It calls internal functions that set up the data structures
+ * needed for the public API to function properly.
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_api_init(void);
+
+/*!
  * \brief Get and output controller status
  *
  * \param[in,out] xml                 Destination for the result, as an XML tree

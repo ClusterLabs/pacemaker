@@ -76,3 +76,11 @@ pcmk__setup_output_cib_sched(pcmk__output_t **out, cib_t **cib,
     pcmk__register_lib_messages(*out);
     return rc;
 }
+
+// Documented in pacemaker.h
+int
+pcmk_api_init(void)
+{
+    pcmk__xml_init();
+    return pcmk_rc_ok;
+}
