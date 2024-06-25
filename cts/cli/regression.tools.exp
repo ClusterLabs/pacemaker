@@ -398,12 +398,6 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">Whether to cancel recurring actions removed from the configuration</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
-      <parameter name="remove-after-stop" advanced="0" generated="0">
-        <deprecated/>
-        <longdesc lang="en">Values other than default are poorly tested and potentially dangerous.</longdesc>
-        <shortdesc lang="en">Whether to remove stopped resources from the executor</shortdesc>
-        <content type="boolean" default=""/>
-      </parameter>
       <parameter name="pe-error-series-max" advanced="0" generated="0">
         <longdesc lang="en">Zero to disable, -1 to store unlimited.</longdesc>
         <shortdesc lang="en">The number of scheduler inputs resulting in errors to save</shortdesc>
@@ -641,12 +635,6 @@ Also known as properties, these are options that affect behavior across the enti
     * startup-fencing: Whether to fence unseen nodes at start-up
       * Setting this to false may lead to a "split-brain" situation, potentially leading to data loss and/or service unavailability.
       * Possible values: boolean (default: )
-
-  * DEPRECATED OPTIONS (will be removed in a future release):
-
-    * remove-after-stop: Whether to remove stopped resources from the executor
-      * Values other than default are poorly tested and potentially dangerous.
-      * Possible values: boolean (default: )
 =#=#=#= End test: List all available cluster options - OK (0) =#=#=#=
 * Passed: crm_attribute  - List all available cluster options
 =#=#=#= Begin test: List all available cluster options (XML) =#=#=#=
@@ -857,12 +845,6 @@ Also known as properties, these are options that affect behavior across the enti
       <parameter name="stop-orphan-actions" advanced="0" generated="0">
         <longdesc lang="en">Whether to cancel recurring actions removed from the configuration</longdesc>
         <shortdesc lang="en">Whether to cancel recurring actions removed from the configuration</shortdesc>
-        <content type="boolean" default=""/>
-      </parameter>
-      <parameter name="remove-after-stop" advanced="0" generated="0">
-        <deprecated/>
-        <longdesc lang="en">Values other than default are poorly tested and potentially dangerous.</longdesc>
-        <shortdesc lang="en">Whether to remove stopped resources from the executor</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
       <parameter name="pe-error-series-max" advanced="0" generated="0">

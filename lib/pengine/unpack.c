@@ -378,20 +378,6 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_trace("Orphan resource actions are ignored");
     }
 
-    value = pcmk__cluster_option(config_hash, PCMK__OPT_REMOVE_AFTER_STOP);
-    if (value != NULL) {
-        if (crm_is_true(value)) {
-            pcmk__set_scheduler_flags(scheduler, pcmk__sched_remove_after_stop);
-            pcmk__warn_once(pcmk__wo_remove_after,
-                            "Support for the " PCMK__OPT_REMOVE_AFTER_STOP
-                            " cluster property is deprecated and will be "
-                            "removed in a future release");
-        } else {
-            pcmk__clear_scheduler_flags(scheduler,
-                                        pcmk__sched_remove_after_stop);
-        }
-    }
-
     set_config_flag(scheduler, PCMK_OPT_MAINTENANCE_MODE,
                     pcmk__sched_in_maintenance);
     crm_trace("Maintenance mode: %s",

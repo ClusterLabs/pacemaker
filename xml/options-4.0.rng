@@ -15,11 +15,23 @@
     </start>
   </include>
 
+  <!--
+   Disallow cluster property name-value pairs for which support was recently
+   dropped. The idea is to prevent a user from adding the option under the
+   belief that it will still affect behavior. Sometime in the future, re-allow
+   these as custom properties or values.
+   -->
   <define name="cluster_property_set.nvpair.unsupported">
     <choice>
       <group>
         <attribute name="name">
-          <data type="string"/>
+          <data type="string">
+            <except>
+              <choice>
+                <value>remove-after-stop</value>
+              </choice>
+            </except>
+          </data>
         </attribute>
         <optional>
           <grammar>

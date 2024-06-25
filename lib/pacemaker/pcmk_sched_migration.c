@@ -147,7 +147,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
 
 /*!
  * \internal
- * \brief Abort a dangling migration by scheduling a stop (and possibly cleanup)
+ * \brief Abort a dangling migration by scheduling a stop
  *
  * \param[in]     data       Source node of dangling migration
  * \param[in,out] user_data  Resource involved in dangling migration
@@ -159,18 +159,12 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
     pcmk_resource_t *rsc = (pcmk_resource_t *) user_data;
 
     pcmk_action_t *stop = NULL;
-    bool cleanup = pcmk_is_set(rsc->priv->scheduler->flags,
-                               pcmk__sched_remove_after_stop);
 
     pcmk__rsc_trace(rsc,
-                    "Scheduling stop%s for %s on %s due to dangling migration",
-                    (cleanup? " and cleanup" : ""), rsc->id,
-                    pcmk__node_name(dangling_source));
+                    "Scheduling stop for %s on %s due to dangling migration",
+                    rsc->id, pcmk__node_name(dangling_source));
     stop = stop_action(rsc, dangling_source, FALSE);
     pcmk__set_action_flags(stop, pcmk__action_migration_abort);
-    if (cleanup) {
-        pcmk__schedule_cleanup(rsc, dangling_source, false);
-    }
 }
 
 /*!

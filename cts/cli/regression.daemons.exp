@@ -643,15 +643,6 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
-    <parameter name="remove-after-stop">
-      <longdesc lang="en">
-        Values other than default are poorly tested and potentially dangerous.
-      </longdesc>
-      <shortdesc lang="en">
-        *** Deprecated *** Whether to remove stopped resources from the executor
-      </shortdesc>
-      <content type="boolean" default=""/>
-    </parameter>
     <parameter name="pe-error-series-max">
       <longdesc lang="en">
         Zero to disable, -1 to store unlimited.

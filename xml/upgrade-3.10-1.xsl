@@ -15,6 +15,7 @@
    "cib-bootstrap-options" always sorts first relative to its siblings.
  * Each nvpair has a value attribute. If an nvpair did not have a value
    attribute prior to this transformation, it is dropped.
+ * The remove-after-stop cluster property is not present.
 
  nvset elements include the following:
  * cluster_property_set
@@ -118,5 +119,11 @@
 
 <!-- Drop any nvpair that does not have a value attribute -->
 <xsl:template match="nvpair[not(@value)]"/>
+
+
+<!-- Cluster properties -->
+
+<!-- Drop remove-after-stop property -->
+<xsl:template match="cluster_property_set/nvpair[@name = 'remove-after-stop']"/>
 
 </xsl:stylesheet>
