@@ -18,4 +18,7 @@
     </xsl:copy>
 </xsl:template>
 
+<!-- Drop remove-after-stop property -->
+<xsl:template match="cluster_property_set/nvpair[@name = 'remove-after-stop']"/>
+
 </xsl:stylesheet>
