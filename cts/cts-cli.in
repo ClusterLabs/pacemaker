@@ -42,7 +42,8 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
 # Individual tool tests are split out, but can also be accessed as a group with "tools"
-tools_tests = ["crm_attribute", "crm_standby", "crm_resource", "crmadmin", "crm_verify"]
+tools_tests = ["crm_attribute", "crm_standby", "crm_resource", "crm_ticket", "crmadmin",
+               "crm_verify"]
 # The default list of tests to run, in the order they should be run
 default_tests = ["access_render", "daemons", "dates", "error_codes"] + tools_tests + \
                 ["crm_mon", "acls", "validity", "upgrade", "rules", "feature_set"]
@@ -1425,6 +1426,71 @@ class CrmResourceRegressionTest(RegressionTest):
         ]
 
 
+class CrmTicketRegressionTest(RegressionTest):
+    """A class for testing crm_ticket."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "crm_ticket"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        basic_tests = [
+            Test("Default ticket granted state",
+                 "crm_ticket -t ticketA -G granted -d false"),
+            Test("Set ticket granted state", "crm_ticket -t ticketA -r --force",
+                 update_cib=True),
+            make_test_group("List ticket IDs", "crm_ticket -w {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Query ticket state", "crm_ticket -t ticketA -q {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Query ticket granted state",
+                            "crm_ticket -t ticketA -G granted {fmt}",
+                            [Test, ValidatingTest]),
+            Test("Delete ticket granted state",
+                 "crm_ticket -t ticketA -D granted --force",
+                 update_cib=True),
+            Test("Make a ticket standby", "crm_ticket -t ticketA -s",
+                 update_cib=True),
+            Test("Query ticket standby state", "crm_ticket -t ticketA -G standby"),
+            Test("Activate a ticket", "crm_ticket -t ticketA -a",
+                 update_cib=True),
+            make_test_group("List ticket details", "crm_ticket -L -t ticketA {fmt}",
+                            [Test, ValidatingTest]),
+            Test("Add a second ticket", "crm_ticket -t ticketB -G granted -d false",
+                 update_cib=True),
+            Test("Set second ticket granted state",
+                 "crm_ticket -t ticketB -r --force",
+                 update_cib=True),
+            make_test_group("List tickets", "crm_ticket -l {fmt}",
+                            [Test, ValidatingTest]),
+            Test("Delete second ticket",
+                 """cibadmin --delete --xml-text '<ticket_state id="ticketB"/>'""",
+                 update_cib=True),
+            Test("Delete ticket standby state", "crm_ticket -t ticketA -D standby",
+                 update_cib=True),
+            Test("Add a constraint to a ticket",
+                 """cibadmin -C -o constraints --xml-text '<rsc_ticket id="dummy-dep-ticketA" rsc="dummy" rsc-role="Started" ticket="ticketA" loss-policy="freeze"/>'""",
+                 update_cib=True),
+            make_test_group("Query ticket constraints", "crm_ticket -t ticketA -c {fmt}",
+                            [Test, ValidatingTest]),
+            Test("Delete ticket constraint",
+                 """cibadmin --delete --xml-text '<rsc_ticket id="dummy-dep-ticketA"/>'""",
+                 update_cib=True),
+        ]
+
+        basic_tests_setup = [
+            """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/></cluster_property_set>'""",
+            """cibadmin -C -o resources --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'"""
+        ]
+
+        return [
+            ShadowTestGroup(basic_tests, setup=basic_tests_setup),
+        ]
+
+
 class CrmadminRegressionTest(RegressionTest):
     """A class for testing crmadmin."""
 
@@ -2149,6 +2215,7 @@ regression_classes = [
     CrmAttributeRegressionTest,
     CrmStandbyRegressionTest,
     CrmResourceRegressionTest,
+    CrmTicketRegressionTest,
     CrmadminRegressionTest,
     CrmVerifyRegressionTest,
     CrmMonRegressionTest,
