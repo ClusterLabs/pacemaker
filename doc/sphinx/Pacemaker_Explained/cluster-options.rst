@@ -853,18 +853,6 @@ values, by running the ``man pacemaker-schedulerd`` and
        has passed since the node shutdown was initiated, even if the node has
        not rejoined. (This works with remote nodes only if their connection
        resource's ``target-role`` is set to ``Stopped``.) *(since 2.0.4)*
-   * - .. _remove_after_stop:
-      
-       .. index::
-          pair: cluster option; remove-after-stop
-      
-       remove-after-stop
-     - :ref:`boolean <boolean>`
-     - false
-     - *Deprecated* Whether the cluster should remove resources from
-       Pacemaker's executor after they are stopped. Values other than the
-       default are, at best, poorly tested and potentially dangerous.  This
-       option is deprecated and will be removed in a future release.
    * - .. _startup_fencing:
       
        .. index::
