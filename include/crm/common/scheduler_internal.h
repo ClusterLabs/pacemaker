@@ -105,9 +105,6 @@ enum pcmk__scheduler_flags {
      */
     pcmk__sched_start_failure_fatal     = (1ULL << 12),
 
-    // Unused
-    pcmk__sched_remove_after_stop       = (1ULL << 13),
-
     // Whether unseen nodes should be fenced (via startup-fencing property)
     pcmk__sched_startup_fencing         = (1ULL << 14),
 

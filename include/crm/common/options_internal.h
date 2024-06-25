@@ -158,9 +158,6 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__ENV_TRACE_TAGS                "trace_tags"
 #define PCMK__ENV_VALGRIND_ENABLED          "valgrind_enabled"
 
-// @COMPAT Deprecated since 2.1.0
-#define PCMK__OPT_REMOVE_AFTER_STOP         "remove-after-stop"
-
 // Constants for meta-attribute names
 #define PCMK__META_CLONE                    "clone"
 #define PCMK__META_CONTAINER                "container"
