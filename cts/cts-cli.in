@@ -371,6 +371,10 @@ class Test:
 class ValidatingTest(Test):
     """A Test subclass that additionally runs test results through xmllint."""
 
+    def __init__(self, desc, cmd, **kwargs):
+        """Create a new ValidatingTest instance."""
+        Test.__init__(self, desc + " (XML)", cmd, **kwargs)
+
     def _validate_hook(self, rc, stdout, stderr, valgrind=False):
         """Validate test output with xmllint."""
         # Do not validate if running under valgrind, even if told to do so.  Valgrind
