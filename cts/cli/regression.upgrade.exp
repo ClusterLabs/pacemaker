@@ -75,7 +75,8 @@ pcmk__update_schema 	debug: Schema pacemaker-3.7 validates
 pcmk__update_schema 	debug: Schema pacemaker-3.8 validates
 pcmk__update_schema 	debug: Schema pacemaker-3.9 validates
 pcmk__update_schema 	debug: Schema pacemaker-3.10 validates
-pcmk__update_schema 	info: Transformed the configuration schema to pacemaker-3.10
+pcmk__update_schema 	debug: Schema pacemaker-4.0 validates
+pcmk__update_schema 	info: Transformed the configuration schema to pacemaker-4.0
 =#=#=#= Current cib after: Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping) =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="1">
   <configuration>
