@@ -231,7 +231,7 @@ main(int argc, char **argv)
 
     scheduler->priv = out;
 
-    rc = pcmk__verify(scheduler, out, cib_object);
+    rc = pcmk__verify(scheduler, out, &cib_object);
 
     if (rc == pcmk_rc_schema_validation) {
         if (crm_config_error) {
