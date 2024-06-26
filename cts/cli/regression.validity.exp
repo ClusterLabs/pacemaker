@@ -93,7 +93,10 @@ pcmk__update_schema 	debug: Schema pacemaker-3.9 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.10 does not validate
-Cannot upgrade configuration (claiming pacemaker-1.2 schema) to at least pacemaker-3.0 because it does not validate with any schema from pacemaker-1.2 to the latest
+element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+pcmk__update_schema 	debug: Schema pacemaker-4.0 does not validate
+Cannot upgrade configuration (claiming pacemaker-1.2 schema) to at least pacemaker-4.0 because it does not validate with any schema from pacemaker-1.2 to the latest
 =#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (enum violation)
 =#=#=#= Begin test: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
@@ -166,7 +169,9 @@ element cib: Relax-NG validity error : Invalid attribute validate-with for eleme
 pcmk__update_schema 	debug: Schema pacemaker-3.9 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.10 does not validate
-Cannot upgrade configuration (claiming pacemaker-9999.0 schema) to at least pacemaker-3.0 because it does not validate with any schema from the first to the latest
+element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+pcmk__update_schema 	debug: Schema pacemaker-4.0 does not validate
+Cannot upgrade configuration (claiming pacemaker-9999.0 schema) to at least pacemaker-4.0 because it does not validate with any schema from the first to the latest
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
@@ -214,7 +219,8 @@ pcmk__update_schema 	debug: Schema pacemaker-3.7 validates
 pcmk__update_schema 	debug: Schema pacemaker-3.8 validates
 pcmk__update_schema 	debug: Schema pacemaker-3.9 validates
 pcmk__update_schema 	debug: Schema pacemaker-3.10 validates
-pcmk__update_schema 	info: Transformed the configuration schema to pacemaker-3.10
+pcmk__update_schema 	debug: Schema pacemaker-4.0 validates
+pcmk__update_schema 	info: Transformed the configuration schema to pacemaker-4.0
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
@@ -330,6 +336,8 @@ element rsc_order: Relax-NG validity error : Invalid attribute first-action for 
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 =#=#=#= Current cib after: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
 <cib epoch="41" num_updates="0" admin_epoch="0" validate-with="none">
   <configuration>
@@ -349,6 +357,8 @@ element rsc_order: Relax-NG validity error : Element constraints has extra conte
 * Passed: cibadmin       - Make resulting CIB invalid, and without validate-with attribute
 =#=#=#= Begin test: Run crm_simulate with invalid CIB, also without validate-with attribute =#=#=#=
 Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
+validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
