@@ -2024,7 +2024,6 @@ health_text(int health)
  *
  * \retval \c PCMK_VALUE_MEMBER if \p node_type is \c pcmk__node_variant_cluster
  * \retval \c PCMK_VALUE_REMOTE if \p node_type is \c pcmk__node_variant_remote
- * \retval \c PCMK__VALUE_PING if \p node_type is \c pcmk__node_variant_ping
  * \retval \c PCMK_VALUE_UNKNOWN otherwise
  */
 static const char *
@@ -2035,8 +2034,6 @@ node_variant_text(enum pcmk__node_variant variant)
             return PCMK_VALUE_MEMBER;
         case pcmk__node_variant_remote:
             return PCMK_VALUE_REMOTE;
-        case pcmk__node_variant_ping:
-            return PCMK__VALUE_PING;
         default:
             return PCMK_VALUE_UNKNOWN;
     }

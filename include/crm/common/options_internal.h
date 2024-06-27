@@ -216,7 +216,6 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_MAINT                   "maint"
 #define PCMK__VALUE_OUTPUT                  "output"
 #define PCMK__VALUE_PASSWORD                "password"
-#define PCMK__VALUE_PING                    "ping"
 #define PCMK__VALUE_PRIMITIVE               "primitive"
 #define PCMK__VALUE_REFRESH                 "refresh"
 #define PCMK__VALUE_REQUEST                 "request"

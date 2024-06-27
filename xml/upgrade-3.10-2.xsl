@@ -10,6 +10,9 @@
  Guarantees after this transformation:
  * Within a given nvset, there is at most one nvpair with a given name. If there
    were duplicates prior to this transformation, only the first one is kept.
+ * There are no ping nodes. If a node was a ping node prior to this
+   transformation, it is now a member (cluster) node with all resources banned
+   and probes disabled.
  * There is at most one top-level rule within a location constraint. If a
    location constraint had N top-level rules (N > 1) prior to this
    transformation, it is now converted to N location constraints, each with a
@@ -109,7 +112,48 @@
 </xsl:template>
 
 
+<!-- Nodes -->
+
+<!--
+ Transform ping nodes to cluster (member) nodes. The constraints template bans
+ all resources from the newly transformed nodes.
+-->
+<xsl:template match="node[@type = 'ping']">
+    <xsl:copy>
+        <xsl:apply-templates select="@*"/>
+        <xsl:attribute name="type">member</xsl:attribute>
+        <xsl:apply-templates select="node()"/>
+    </xsl:copy>
+</xsl:template>
+
+
 <!-- Constraints -->
+
+<xsl:template match="constraints">
+    <xsl:copy>
+        <!-- Existing contents -->
+        <xsl:apply-templates select="@*|node()"/>
+
+        <!--
+         Ban all resources from each ping node (converted to a cluster node via
+         another template)
+         -->
+        <xsl:for-each select="//node[@type = 'ping']">
+            <xsl:element name="rsc_location">
+                <xsl:attribute name="id">
+                    <xsl:value-of select="concat($upgrade_prefix,
+                                                 'ping-node-ban-', @uname)"/>
+                </xsl:attribute>
+                <xsl:attribute name="rsc-pattern">.*</xsl:attribute>
+                <xsl:attribute name="node">
+                    <xsl:value-of select="@uname"/>
+                </xsl:attribute>
+                <xsl:attribute name="score">-INFINITY</xsl:attribute>
+                <xsl:attribute name="resource-discovery">never</xsl:attribute>
+            </xsl:element>
+        </xsl:for-each>
+    </xsl:copy>
+</xsl:template>
 
 <!--
  If a location constraint contains multiple top-level rules, replace it with
