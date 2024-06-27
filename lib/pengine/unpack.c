@@ -480,14 +480,6 @@ pe_create_node(const char *id, const char *uname, const char *type,
     } else if (pcmk__str_eq(type, PCMK_VALUE_REMOTE, pcmk__str_casei)) {
         variant = pcmk__node_variant_remote;
 
-    } else if (pcmk__str_eq(type, PCMK__VALUE_PING, pcmk__str_casei)) {
-        pcmk__warn_once(pcmk__wo_ping_node,
-                        "Support for nodes of type '" PCMK__VALUE_PING "' "
-                        "(such as %s) is deprecated and will be removed in a "
-                        "future release",
-                        pcmk__s(uname, "unnamed node"));
-        variant = pcmk__node_variant_ping;
-
     } else {
         pcmk__config_err("Ignoring node %s with unrecognized type '%s'",
                          pcmk__s(uname, "without name"), type);
@@ -1889,15 +1881,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
         pcmk__set_node_flags(this_node, pcmk__node_expected_up);
     }
 
-    if (this_node->priv->variant == pcmk__node_variant_ping) {
-        // @COMPAT Not possible with schema validation enabled
-        this_node->details->unclean = FALSE;
-        online = FALSE;         /* As far as resource management is concerned,
-                                 * the node is safely offline.
-                                 * Anyone caught abusing this logic will be shot
-                                 */
-
-    } else if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
         online = determine_online_status_no_fencing(scheduler, node_state,
                                                     this_node);
 
@@ -1919,11 +1903,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
         this_node->assign->score = -PCMK_SCORE_INFINITY;
     }
 
-    if (this_node->priv->variant == pcmk__node_variant_ping) {
-        // @COMPAT Not possible with schema validation enabled
-        crm_info("%s is not a Pacemaker node", pcmk__node_name(this_node));
-
-    } else if (this_node->details->unclean) {
+    if (this_node->details->unclean) {
         pcmk__sched_warn(scheduler, "%s is unclean",
                          pcmk__node_name(this_node));
 
