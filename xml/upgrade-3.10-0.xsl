@@ -21,4 +21,10 @@
 <!-- Drop remove-after-stop property -->
 <xsl:template match="cluster_property_set/nvpair[@name = 'remove-after-stop']"/>
 
+<!-- Replace stonith-action="poweroff" with stonith-action="off" -->
+<xsl:template match="cluster_property_set/nvpair[@name = 'stonith-action']
+                     /@value[. = 'poweroff']">
+    <xsl:attribute name="value">off</xsl:attribute>
+</xsl:template>
+
 </xsl:stylesheet>

@@ -243,7 +243,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
     },
     {
         PCMK_OPT_STONITH_ACTION, NULL, PCMK_VALUE_SELECT,
-            PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF ", " PCMK__ACTION_POWEROFF,
+            PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF,
         PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         pcmk__opt_schedulerd,
         N_("Action to send to fence device when a node needs to be fenced "
