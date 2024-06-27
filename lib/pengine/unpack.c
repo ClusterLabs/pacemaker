@@ -1890,6 +1890,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
     }
 
     if (this_node->priv->variant == pcmk__node_variant_ping) {
+        // @COMPAT Not possible with schema validation enabled
         this_node->details->unclean = FALSE;
         online = FALSE;         /* As far as resource management is concerned,
                                  * the node is safely offline.
@@ -1919,6 +1920,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
     }
 
     if (this_node->priv->variant == pcmk__node_variant_ping) {
+        // @COMPAT Not possible with schema validation enabled
         crm_info("%s is not a Pacemaker node", pcmk__node_name(this_node));
 
     } else if (this_node->details->unclean) {

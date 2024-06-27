@@ -14,11 +14,13 @@
     <crm_config/>
     <nodes>
       <node id="node1-id" uname="node1" type="member"/>
-      <node id="node2-id" uname="node2" type="ping"/>
+      <node id="node2-id" uname="node2" type="member"/>
       <node id="node3-id" uname="node3" type="remote"/>
     </nodes>
     <resources/>
-    <constraints/>
+    <constraints>
+      <rsc_location id="pcmk__3_10_upgrade-ping-node-ban-node2" rsc-pattern=".*" node="node2" score="-INFINITY" resource-discovery="never"/>
+    </constraints>
   </configuration>
   <status/>
 </cib>
