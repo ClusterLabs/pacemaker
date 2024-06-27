@@ -581,6 +581,7 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
 bool
 pcmk__is_fencing_action(const char *action)
 {
+    // @COMPAT PCMK__ACTION_POWEROFF is disallowed by schema
     return pcmk__str_any_of(action, PCMK_ACTION_OFF, PCMK_ACTION_REBOOT,
                             PCMK__ACTION_POWEROFF, NULL);
 }

@@ -21,7 +21,7 @@
         <nvpair id="cib-bootstrap-options-other-prop" name="other-prop" value="poweroff"/>
       </cluster_property_set>
       <cluster_property_set id="other-options">
-        <nvpair id="other-options-stonith-action" name="stonith-action" value="poweroff"/>
+        <nvpair id="other-options-stonith-action" name="stonith-action" value="off"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
