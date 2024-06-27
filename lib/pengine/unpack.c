@@ -474,21 +474,19 @@ pe_create_node(const char *id, const char *uname, const char *type,
         new_node->priv->variant = pcmk__node_variant_remote;
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_remote_nodes);
 
-    } else {
-        /* @COMPAT 'ping' is the default for backward compatibility, but it
-         * should be changed to 'member' at a compatibility break
-         */
-        if (!pcmk__str_eq(type, PCMK__VALUE_PING, pcmk__str_casei)) {
-            pcmk__config_warn("Node %s has unrecognized type '%s', "
-                              "assuming '" PCMK__VALUE_PING "'",
-                              pcmk__s(uname, "without name"), type);
-        }
+    } else if (pcmk__str_eq(type, PCMK__VALUE_PING, pcmk__str_casei)) {
         pcmk__warn_once(pcmk__wo_ping_node,
                         "Support for nodes of type '" PCMK__VALUE_PING "' "
                         "(such as %s) is deprecated and will be removed in a "
                         "future release",
                         pcmk__s(uname, "unnamed node"));
         new_node->priv->variant = pcmk__node_variant_ping;
+
+    } else {
+        pcmk__config_warn("Node %s has unrecognized type '%s', "
+                          "assuming '" PCMK_VALUE_MEMBER "'",
+                          pcmk__s(uname, "without name"), type);
+        new_node->priv->variant = pcmk__node_variant_cluster;
     }
 
     new_node->priv->attrs = pcmk__strkey_table(free, free);
