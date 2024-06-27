@@ -29,6 +29,7 @@
             <except>
               <choice>
                 <value>remove-after-stop</value>
+                <value>stonith-action</value>
               </choice>
             </except>
           </data>
@@ -41,6 +42,25 @@
               </start>
             </include>
           </grammar>
+        </optional>
+      </group>
+
+      <!-- stonith-action is allowed with value other than "poweroff" -->
+      <group>
+        <attribute name="name">
+          <value type="string">stonith-action</value>
+        </attribute>
+        <optional>
+          <attribute name="value">
+            <data type="string">
+              <except>
+                <choice>
+                  <value>poweroff</value>
+                  <value>#default</value>
+                </choice>
+              </except>
+            </data>
+          </attribute>
         </optional>
       </group>
     </choice>

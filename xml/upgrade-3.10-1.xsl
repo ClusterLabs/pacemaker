@@ -16,6 +16,8 @@
  * Each nvpair has a value attribute. If an nvpair did not have a value
    attribute prior to this transformation, it is dropped.
  * The remove-after-stop cluster property is not present.
+ * The stonith-action cluster property is set to "off" if it was previously set
+   to "poweroff".
 
  nvset elements include the following:
  * cluster_property_set
@@ -125,5 +127,11 @@
 
 <!-- Drop remove-after-stop property -->
 <xsl:template match="cluster_property_set/nvpair[@name = 'remove-after-stop']"/>
+
+<!-- Replace stonith-action="poweroff" with stonith-action="off" -->
+<xsl:template match="cluster_property_set/nvpair[@name = 'stonith-action']
+                     /@value[. = 'poweroff']">
+    <xsl:attribute name="value">off</xsl:attribute>
+</xsl:template>
 
 </xsl:stylesheet>

@@ -271,14 +271,6 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     scheduler->priv->fence_action =
         pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_ACTION);
-    if (!strcmp(scheduler->priv->fence_action, PCMK__ACTION_POWEROFF)) {
-        pcmk__warn_once(pcmk__wo_poweroff,
-                        "Support for " PCMK_OPT_STONITH_ACTION " of "
-                        "'" PCMK__ACTION_POWEROFF "' is deprecated and will be "
-                        "removed in a future release "
-                        "(use '" PCMK_ACTION_OFF "' instead)");
-        scheduler->priv->fence_action = PCMK_ACTION_OFF;
-    }
     crm_trace("STONITH will %s nodes", scheduler->priv->fence_action);
 
     set_config_flag(scheduler, PCMK_OPT_CONCURRENT_FENCING,
