@@ -50,11 +50,10 @@ pcmk_get_ra_caps(const char *standard)
 
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD)
                || !strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE)
-               || !strcasecmp(standard, PCMK_RESOURCE_CLASS_LSB)
-               || !strcasecmp(standard, PCMK_RESOURCE_CLASS_UPSTART)) {
+               || !strcasecmp(standard, PCMK_RESOURCE_CLASS_LSB)) {
 
-        /* Since service can map to LSB, systemd, or upstart, these should
-         * have identical capabilities
+        /* Since service can map to LSB or systemd, these should have identical
+         * capabilities
          */
         return pcmk_ra_cap_status;
 
