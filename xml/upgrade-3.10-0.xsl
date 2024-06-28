@@ -11,12 +11,19 @@
 <xsl:strip-space elements="*"/>
 <xsl:output encoding="UTF-8" indent="yes" omit-xml-declaration="yes"/>
 
+<!-- XSLT 1.0 lacks upper-case() and lower-case() functions -->
+<xsl:variable name="lowercase" select="'abcdefghijklmnopqrstuvwxyz'"/>
+<xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"/>
+
 <!-- Copy everything unaltered by default -->
-<xsl:template match="/|@*|node()">
+<xsl:template match="/|@*|node()" name="identity">
     <xsl:copy>
         <xsl:apply-templates select="@*|node()"/>
     </xsl:copy>
 </xsl:template>
+
+
+<!-- Cluster properties -->
 
 <!-- Drop remove-after-stop property -->
 <xsl:template match="cluster_property_set/nvpair[@name = 'remove-after-stop']"/>
@@ -26,6 +33,9 @@
                      /@value[. = 'poweroff']">
     <xsl:attribute name="value">off</xsl:attribute>
 </xsl:template>
+
+
+<!-- Nodes -->
 
 <!--
  Transform ping nodes to cluster (member) nodes. The constraints template bans
@@ -38,6 +48,38 @@
         <xsl:apply-templates select="node()"/>
     </xsl:copy>
 </xsl:template>
+
+
+<!-- Resources -->
+
+<!-- Index all resource templates by ID -->
+<xsl:key name="template_id" match="template" use="@id"/>
+
+<xsl:template match="template">
+    <xsl:variable name="class_lower"
+                  select="translate(@class, $uppercase, $lowercase)"/>
+
+    <!-- Drop upstart-class resource templates -->
+    <xsl:if test="$class_lower != 'upstart'">
+        <xsl:call-template name="identity"/>
+    </xsl:if>
+</xsl:template>
+
+<xsl:template match="primitive">
+    <!-- Get class from primitive or from template that it references -->
+    <xsl:variable name="template" select="key('template_id', @template)"/>
+    <xsl:variable name="class" select="(.|$template)/@class"/>
+    <xsl:variable name="class_lower"
+                  select="translate($class, $uppercase, $lowercase)"/>
+
+    <!-- Drop upstart-class primitive resources -->
+    <xsl:if test="$class_lower != 'upstart'">
+        <xsl:call-template name="identity"/>
+    </xsl:if>
+</xsl:template>
+
+
+<!-- Constraints -->
 
 <xsl:template match="constraints">
     <xsl:copy>
