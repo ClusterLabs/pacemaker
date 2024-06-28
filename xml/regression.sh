@@ -15,10 +15,7 @@ test -d assets && test -d test-2 \
 DIFF=${DIFF:-diff}
 DIFFOPTS=${DIFFOPTS--u}
 DIFFPAGER=${DIFFPAGER:-less -LRX}
-# $1=schema, $2=validated
-# alt.: jing -i
-RNGVALIDATOR=${RNGVALIDATOR:-xmllint --noout --relaxng}
-
+RNG_VALIDATOR="xmllint --noout --relaxng"
 XSLT_PROCESSOR="xsltproc --nonet"
 HTTPPORT=${HTTPPORT:-8000}  # Python's default
 WEBBROWSER=${WEBBROWSER:-firefox}
@@ -165,41 +162,34 @@ test_selfcheck() {
 	# alt. https://github.com/ndw/xslt-relax-ng/blob/master/1.0/xslt10.rnc
 	_tsc_rng_xslt=https://raw.githubusercontent.com/relaxng/jing-trang/master/eg/xslt.rng
 
-	case "${RNGVALIDATOR}" in
-	*xmllint*)
-		test -f "assets/$(basename "${_tsc_rng_relaxng}")" \
-		  || curl -SsLo "assets/$(basename "${_tsc_rng_relaxng}")" \
-		    "${_tsc_rng_relaxng}"
-		test -f "assets/$(basename "${_tsc_rng_xslt}")" \
-		  || curl -SsLo "assets/$(basename "${_tsc_rng_xslt}")" \
-		    "${_tsc_rng_xslt}"
-		test -f assets/xmlcatalog || >assets/xmlcatalog cat <<-EOF
-	<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
-	<rewriteURI uriStartString="$(dirname "${_tsc_rng_relaxng}")"
-	            rewritePrefix="file://$(pwd)/assets"/>
-	<rewriteURI uriStartString="$(dirname "${_tsc_rng_xslt}")"
-	            rewritePrefix="file://$(pwd)/assets"/>
-	</catalog>
+    test -f "assets/$(basename "${_tsc_rng_relaxng}")"              \
+        || curl -SsLo "assets/$(basename "${_tsc_rng_relaxng}")"    \
+            "${_tsc_rng_relaxng}"
+    test -f "assets/$(basename "${_tsc_rng_xslt}")"                 \
+        || curl -SsLo "assets/$(basename "${_tsc_rng_xslt}")"       \
+            "${_tsc_rng_xslt}"
+    test -f assets/xmlcatalog || >assets/xmlcatalog cat <<EOF
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+<rewriteURI uriStartString="$(dirname "${_tsc_rng_relaxng}")"
+            rewritePrefix="file://$(pwd)/assets"/>
+<rewriteURI uriStartString="$(dirname "${_tsc_rng_xslt}")"
+            rewritePrefix="file://$(pwd)/assets"/>
+</catalog>
 EOF
-		RNGVALIDATOR=\
+    RNG_VALIDATOR=\
 "eval env \"XML_CATALOG_FILES=/etc/xml/catalog $(pwd)/assets/xmlcatalog\"
-${RNGVALIDATOR}"
-		# not needed
-		#_tsc_rng_relaxng="assets/$(basename "${_tsc_rng_relaxng}")"
-		#_tsc_rng_xslt="assets/$(basename "${_tsc_rng_xslt}")"
-	;;
-	esac
+${RNG_VALIDATOR}"
 
 	# check schema (sub-grammar) for custom transformation mapping alone;
 	if test -z "${_tsc_action}" \
-	  && ! ${RNGVALIDATOR} "${_tsc_rng_relaxng}" "${_tsc_validator}"; then
+	  && ! ${RNG_VALIDATOR} "${_tsc_rng_relaxng}" "${_tsc_validator}"; then
 		_tsc_ret=$((_tsc_ret + 1))
 	fi
 
 	# check the overall XSLT per the main grammar + said sub-grammar;
 	test -f "${_tsc_validator}" && _tsc_validator="xslt_${_tsc_validator}" \
 	  || _tsc_validator="${_tsc_rng_xslt}"
-	if ! ${RNGVALIDATOR} "${_tsc_validator}" "${_tsc_template}"; then
+	if ! ${RNG_VALIDATOR} "${_tsc_validator}" "${_tsc_template}"; then
 		_tsc_ret=$((_tsc_ret + 1))
 	fi
 
@@ -335,9 +325,9 @@ test_runner_validate() {
 	_trv_schema=${1:?}
 	_trv_target=${2:?}  # filename
 
-	if ! ${RNGVALIDATOR} "${_trv_schema}" "${_trv_target}" \
+	if ! ${RNG_VALIDATOR} "${_trv_schema}" "${_trv_target}" \
 	    2>/dev/null; then
-		${RNGVALIDATOR} "${_trv_schema}" "${_trv_target}"
+		${RNG_VALIDATOR} "${_trv_schema}" "${_trv_target}"
 	fi
 }
 
@@ -717,12 +707,11 @@ usage() {
 	  "- some modes (e.g. -{S,W}) take also '-r' for cleanup afterwards" \
 	  "- test specification can be granular, e.g. 'test2to3/022'"
 	printf \
-	  '\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	  '\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
 	  'environment variables affecting the run + default/current values:' \
 	  "- DIFF (${DIFF}): tool to compute and show differences of 2 files" \
 	  "- DIFFOPTS (${DIFFOPTS}): options to the above tool" \
 	  "- DIFFPAGER (${DIFFPAGER}): possibly accompanying the above tool" \
-	  "- RNGVALIDATOR (${RNGVALIDATOR}): RelaxNG validator" \
 	  "- HTTPPORT (${HTTPPORT}): port used by test drive HTTP server run" \
 	  "- WEBBROWSER (${WEBBROWSER}): used for in-browser test drive"
 }
