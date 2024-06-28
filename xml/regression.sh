@@ -8,15 +8,13 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 
 set -eu
-test -d assets && test -d test-2 \
+test -d test-2 \
   || { echo 'Run me from source-tree-like location'; exit 1; }
 
 DIFF="diff -u"
 DIFF_PAGER="less -LRX"
 RNG_VALIDATOR="xmllint --noout --relaxng"
 XSLT_PROCESSOR="xsltproc --nonet"
-HTTPPORT=${HTTPPORT:-8000}  # Python's default
-WEBBROWSER=${WEBBROWSER:-firefox}
 
 tests=  # test* names (should go first) here will become preselected default
 
@@ -77,40 +75,6 @@ log2_or_0_add() {
 #
 # test phases
 #
-
-# stdin: input file per line
-test_browser() {
-	_tb_cleanref=0
-	_tb_serverpid=
-
-	while test $# -gt 0; do
-		case "$1" in
-		-r) _tb_cleanref=1;;
-		esac
-		shift
-	done
-
-	if ! read _tb_first; then
-		return 1
-	fi
-	cat >/dev/null 2>/dev/null  # read out the rest
-
-	test -f assets/diffview.js \
-	  || curl -SsLo assets/diffview.js \
-	     'https://raw.githubusercontent.com/prettydiff/prettydiff/2.2.8/lib/diffview.js'
-
-	{ which python3 >/dev/null 2>/dev/null \
-	  && { python3 -m http.server "${HTTPPORT}" -b 127.0.0.1 \
-	       || emit_error "Python3 HTTP server fail"; return; } \
-	       || emit_error 'Cannot run Python-based HTTP server' ; } &
-	_tb_serverpid=$!
-	${WEBBROWSER} "http://localhost:${HTTPPORT}/${_tb_first}" &
-	printf "When finished, just press Ctrl+C or kill %d, please\n" \
-	       "${_tb_serverpid}"
-	wait
-
-	test "${_tb_cleanref}" -eq 0 || rm -f assets/diffview.js
-}
 
 # -r ... whether to remove referential files as well
 # stdin: input file per line
@@ -334,12 +298,10 @@ test_runner() {
 # particular test variations
 # -C
 # -X
-# -W ... see usage
 # stdin: granular test specification(s) if any
 #
 
 test2to3() {
-	_t23_cleanopt=
 	_t23_pattern=
 
 	while read _t23_spec; do
@@ -348,14 +310,12 @@ test2to3() {
 		_t23_pattern="${_t23_pattern} -name ${_t23_spec}*.xml -o"
 	done
 	test -z "${_t23_pattern}" || _t23_pattern="( ${_t23_pattern%-o} )"
-	case " $* " in *\ -r\ *) _t23_cleanopt=-r; esac
 
 	find test-2 -name test-2 -o -type d -prune \
 	  -o -name '*.xml' ${_t23_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
 	      *\ -X\ *) test_explanation -o=2.10;;
-	      *\ -W\ *) test_browser ${_t23_cleanopt};;
 	      *) test_runner -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
 }
@@ -375,7 +335,6 @@ test2to3enter() {
 	  -o -name '*.xml' ${_t23e_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
-	      *\ -W\ *) emit_result "not implemented" "option -W";;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *) test_runner -a=2.10-enter -o=2.10 -t=2.10 "$@" || return $?;;
 	      esac; }
@@ -396,7 +355,6 @@ test2to3leave() {
 	  -o -name '*.xml' ${_t23l_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
-	      *\ -W\ *) emit_result "not implemented" "option -W";;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *) test_runner -a=2.10-leave -o=3.0 -t=3.0 "$@" || return $?;;
 	      esac; }
@@ -404,7 +362,6 @@ test2to3leave() {
 tests="${tests} test2to3leave"
 
 test2to3roundtrip() {
-	_t23rt_cleanopt=
 	_t23rt_pattern=
 
 	while read _t23tr_spec; do
@@ -413,13 +370,11 @@ test2to3roundtrip() {
 		_t23rt_pattern="${_t23rt_pattern} -name ${_t23rt_spec}*.xml -o"
 	done
 	test -z "${_t23rt_pattern}" || _t23rt_pattern="( ${_t23rt_pattern%-o} )"
-    case " $* " in *\ -r\ *) _t23rt_cleanopt=-r; esac
 
 	find test-2-roundtrip -name test-2-roundtrip -o -type d -prune \
 	  -o -name '*.xml' ${_t23rt_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
-	      *\ -W\ *) test_browser ${_t23rt_cleanopt};;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *) test_runner -a=2.10-roundtrip -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
@@ -441,7 +396,6 @@ cts_scheduler() {
 	  -o -name '*.xml' -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner -r;;
-	      *\ -W\ *) emit_result "not implemented" "option -W";;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *)
 		while test $# -gt 0; do
@@ -616,7 +570,7 @@ test_suite() {
 #       small ones for generic/global behaviour
 usage() {
 	printf \
-'%s\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+'%s\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
 	  "usage: $0 [-{B,C,D,G,X}]* \\" \
           "       [-|{${tests## }}*]" \
 	  "- when no suites (arguments) provided, \"test*\" ones get used" \
@@ -625,15 +579,8 @@ usage() {
 	  "- use '-C' to only cleanup ephemeral byproducts" \
 	  "- use '-D' to review originals vs. \"referential\" outcomes" \
 	  "- use '-G' to generate \"referential\" outcomes" \
-	  "- use '-W' to run browser-based, on-the-fly diff'ing test drive" \
 	  "- use '-X' to show explanatory details about the upgrade" \
-	  "- some modes (e.g. -W) take also '-r' for cleanup afterwards" \
 	  "- test specification can be granular, e.g. 'test2to3/022'"
-	printf \
-	  '\n%s\n  %s\n  %s\n' \
-	  'environment variables affecting the run + default/current values:' \
-	  "- HTTPPORT (${HTTPPORT}): port used by test drive HTTP server run" \
-	  "- WEBBROWSER (${WEBBROWSER}): used for in-browser test drive"
 }
 
 main() {

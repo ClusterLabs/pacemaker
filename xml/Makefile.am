@@ -175,7 +175,6 @@ EXTRA_DIST		= README.md			\
 			  upgrade-2.10-roundtrip.xsl	\
 			  upgrade-detail.xsl		\
 			  xslt_cibtr-2.rng		\
-			  assets			\
 			  test-2			\
 			  test-2-enter			\
 			  test-2-leave			\
