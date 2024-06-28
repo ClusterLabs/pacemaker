@@ -16,7 +16,8 @@ DIFF_PAGER="less -LRX"
 RNG_VALIDATOR="xmllint --noout --relaxng"
 XSLT_PROCESSOR="xsltproc --nonet"
 
-tests=  # test* names (should go first) here will become preselected default
+# Default tests
+tests="test2to3 test2to3enter test2to3leave test2to3roundtrip cts_scheduler"
 
 #
 # commons
@@ -319,7 +320,6 @@ test2to3() {
 	      *) test_runner -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
 }
-tests="${tests} test2to3"
 
 test2to3enter() {
 	_t23e_pattern=
@@ -339,7 +339,6 @@ test2to3enter() {
 	      *) test_runner -a=2.10-enter -o=2.10 -t=2.10 "$@" || return $?;;
 	      esac; }
 }
-tests="${tests} test2to3enter"
 
 test2to3leave() {
 	_t23l_pattern=
@@ -359,7 +358,6 @@ test2to3leave() {
 	      *) test_runner -a=2.10-leave -o=3.0 -t=3.0 "$@" || return $?;;
 	      esac; }
 }
-tests="${tests} test2to3leave"
 
 test2to3roundtrip() {
 	_t23rt_pattern=
@@ -379,7 +377,6 @@ test2to3roundtrip() {
 	      *) test_runner -a=2.10-roundtrip -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
 }
-tests="${tests} test2to3roundtrip"
 
 # -B
 # -D
@@ -480,7 +477,6 @@ EOF
 		done; log2_or_0_return ${_tcp_ret};;
 	      esac; }
 }
-tests="${tests} cts_scheduler"
 
 #
 # "framework"
