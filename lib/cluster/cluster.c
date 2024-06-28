@@ -261,14 +261,17 @@ pcmk__cluster_send_message(const pcmk__node_status_t *node,
 char *
 pcmk__cluster_node_name(uint32_t nodeid)
 {
+    char *name = NULL;
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC
         case pcmk_cluster_layer_corosync:
-            return pcmk__corosync_name(0, nodeid);
-#else
+            name = pcmk__corosync_name(0, nodeid);
+            if (name != NULL) {
+                return name;
+            }
             break;
 #endif // SUPPORT_COROSYNC
 
