@@ -389,8 +389,7 @@ cts_scheduler() {
 	_tcp_schema_t=
 	_tcp_template=
 
-	find ../cts/scheduler -name scheduler -o -type d -prune \
-	  -o -name '*.xml' -print | env LC_ALL=C sort \
+    find ../cts/scheduler/xml -name '*.xml' | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner -r;;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
