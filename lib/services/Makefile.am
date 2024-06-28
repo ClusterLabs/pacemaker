@@ -31,9 +31,6 @@ libcrmservice_la_SOURCES	+= services_ocf.c
 if BUILD_DBUS
 libcrmservice_la_SOURCES	+= dbus.c
 endif
-if BUILD_UPSTART
-libcrmservice_la_SOURCES	+= upstart.c
-endif
 if BUILD_SYSTEMD
 libcrmservice_la_SOURCES	+= systemd.c
 endif

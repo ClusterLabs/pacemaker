@@ -238,13 +238,6 @@ AC_ARG_ENABLE([systemd],
 yes_no_try "$enable_systemd" "try"
 enable_systemd=$?
 
-AC_ARG_ENABLE([upstart],
-    [AS_HELP_STRING([--enable-upstart],
-        [enable support for managing resources via Upstart (deprecated) @<:@try@:>@])]
-)
-yes_no_try "$enable_upstart" "try"
-enable_upstart=$?
-
 dnl --enable-* options: features inherent to Pacemaker
 
 # AM_GNU_GETTEXT calls AM_NLS which defines the nls option, but it defaults
@@ -1416,7 +1409,7 @@ AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test x"$ac_cv_header_stonith_stonith_h" = x
 
 
 dnl ===============================================
-dnl Detect DBus, systemd, and Upstart support
+dnl Detect DBus and systemd support
 dnl ===============================================
 
 HAVE_dbus=0
@@ -1489,44 +1482,6 @@ AC_DEFINE_UNQUOTED([SUPPORT_SYSTEMD], [$enable_systemd],
                    [Support systemd resources])
 AM_CONDITIONAL([BUILD_SYSTEMD], [test $enable_systemd = $REQUIRED])
 AC_SUBST(SUPPORT_SYSTEMD)
-
-AS_CASE([$enable_upstart],
-        [$REQUIRED], [
-            AS_IF([test $HAVE_dbus = 0],
-                  [AC_MSG_FAILURE([Cannot support Upstart resources without DBus])])
-        ],
-        [$OPTIONAL], [
-            AS_IF([test $HAVE_dbus = 0], [enable_upstart=$DISABLED],
-                  [
-                      AC_MSG_CHECKING([for Upstart version (using dbus-send)])
-                      ret=$({ dbus-send --system --print-reply \
-                                  --dest=com.ubuntu.Upstart \
-                                  /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
-                                  string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
-                              || echo "version unavailable"; } | tail -n1)
-                      # sanitize output a bit (interested just in value, not type),
-                      # ret is intentionally unenquoted so as to normalize whitespace
-                      ret=$(echo ${ret} | cut -d' ' -f2-)
-                      AC_MSG_RESULT([${ret}])
-                      AS_IF([test x"$ret" != x"unavailable" \
-                             || initctl --version 2>/dev/null | grep -q upstart],
-                            [enable_upstart=$REQUIRED],
-                            [enable_upstart=$DISABLED]
-                      )
-                  ])
-        ],
-)
-AC_MSG_CHECKING([whether to enable support for managing resources via Upstart])
-AS_IF([test $enable_upstart -eq $DISABLED], [AC_MSG_RESULT([no])],
-      [
-          AC_MSG_RESULT([yes])
-          PCMK_FEATURES="$PCMK_FEATURES upstart"
-      ]
-)
-AC_DEFINE_UNQUOTED([SUPPORT_UPSTART], [$enable_upstart],
-                   [Support Upstart resources])
-AM_CONDITIONAL([BUILD_UPSTART], [test $enable_upstart -eq $REQUIRED])
-AC_SUBST(SUPPORT_UPSTART)
 
 
 dnl ========================================================================
@@ -2054,9 +2009,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/execd/pacemaker_remote.service              \
                 daemons/fenced/Makefile                             \
                 daemons/pacemakerd/Makefile                         \
-                daemons/pacemakerd/pacemaker.combined.upstart       \
                 daemons/pacemakerd/pacemaker.service                \
-                daemons/pacemakerd/pacemaker.upstart                \
                 daemons/schedulerd/Makefile                         \
                 devel/Makefile                                      \
                 doc/Doxyfile                                        \
@@ -2143,7 +2096,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 tests/Makefile                                      \
                 tools/Makefile                                      \
                 tools/crm_mon.service                               \
-                tools/crm_mon.upstart                               \
                 tools/report.collector                              \
                 tools/report.common                                 \
                 xml/Makefile                                        \
