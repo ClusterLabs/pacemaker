@@ -527,8 +527,7 @@ values, by running the ``man pacemaker-schedulerd`` and
      - :ref:`enumeration <enumeration>`
      - reboot
      - Action the cluster should send to the fence agent when a node must be
-       fenced. Allowed values are ``reboot``, ``off``, and (for legacy agents
-       only) ``poweroff``.
+       fenced. Allowed values are ``reboot`` and ``off``.
    * - .. _stonith_timeout:
       
        .. index::
