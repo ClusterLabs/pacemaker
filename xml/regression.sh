@@ -10,11 +10,9 @@
 set -eu
 test -d assets && test -d test-2 \
   || { echo 'Run me from source-tree-like location'; exit 1; }
-# $1=reference (can be '-' for stdin), $2=investigated
-# alt.: wdiff, colordiff, ...
-DIFF=${DIFF:-diff}
-DIFFOPTS=${DIFFOPTS--u}
-DIFFPAGER=${DIFFPAGER:-less -LRX}
+
+DIFF="diff -u"
+DIFF_PAGER="less -LRX"
 RNG_VALIDATOR="xmllint --noout --relaxng"
 XSLT_PROCESSOR="xsltproc --nonet"
 HTTPPORT=${HTTPPORT:-8000}  # Python's default
@@ -272,8 +270,8 @@ EOF
 			cp -a "${_tru_target_err}" "${_tru_ref_err}"
 		fi
 		if test $((_tru_mode & (1 << 1))) -ne 0; then
-			{ "${DIFF}" ${DIFFOPTS} "${_tru_source}" "${_tru_ref}" \
-			  && printf '\n(files match)\n'; } | ${DIFFPAGER} >&2
+			{ ${DIFF} "${_tru_source}" "${_tru_ref}" \
+			  && printf '\n(files match)\n'; } | ${DIFF_PAGER} >&2
 			if test $? -ne 0; then
 				printf "\npager failure\n" >&2
 				return 1
@@ -304,8 +302,8 @@ EOF
 	</xsl:stylesheet>
 EOF
 		} \
-		  | "${DIFF}" ${DIFFOPTS} - "${_tru_target}" >&2 \
-		  && "${DIFF}" ${DIFFOPTS} "${_tru_ref_err}" \
+		  | ${DIFF} - "${_tru_target}" >&2 \
+		  && ${DIFF} "${_tru_ref_err}" \
 		       "${_tru_target_err}" >&2
 		if test $? -ne 0; then
 			emit_error "Outputs differ from referential ones"
@@ -707,11 +705,8 @@ usage() {
 	  "- some modes (e.g. -{S,W}) take also '-r' for cleanup afterwards" \
 	  "- test specification can be granular, e.g. 'test2to3/022'"
 	printf \
-	  '\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	  '\n%s\n  %s\n  %s\n' \
 	  'environment variables affecting the run + default/current values:' \
-	  "- DIFF (${DIFF}): tool to compute and show differences of 2 files" \
-	  "- DIFFOPTS (${DIFFOPTS}): options to the above tool" \
-	  "- DIFFPAGER (${DIFFPAGER}): possibly accompanying the above tool" \
 	  "- HTTPPORT (${HTTPPORT}): port used by test drive HTTP server run" \
 	  "- WEBBROWSER (${WEBBROWSER}): used for in-browser test drive"
 }
