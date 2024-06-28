@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2018-2020 the Pacemaker project contributors
+# Copyright 2018-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -18,36 +18,8 @@ DIFFPAGER=${DIFFPAGER:-less -LRX}
 # $1=schema, $2=validated
 # alt.: jing -i
 RNGVALIDATOR=${RNGVALIDATOR:-xmllint --noout --relaxng}
-# $1=stylesheet, $2=source
-# alt.: Xalan, saxon, sabcmd/Sablotron (note: only validates reliably with -B)
-_xalan_wrapper() {
-	{ ${_XSLTPROCESSOR} "$2" "$1" 2>&1 >&3 \
-	  | sed -e '/^Source tree node.*$/d' \
-	        -e 's|^XSLT message: \(.*\) (Occurred.*)|\1|'; } 3>&- 3>&1 >&2
-}
-# Sablotron doesn't translate '-' file specification to stdin
-# and limits the length of the output message
-_sabcmd_wrapper() {
-	_sabw_sheet=${1:?}
-	_sabw_source=${2:?}
-	test "${_sabw_sheet}" != - || _sabw_sheet=/dev/stdin
-	test "${_sabw_source}" != - || _sabw_source=/dev/stdin
-	{ ${_XSLTPROCESSOR} "${_sabw_sheet}" "${_sabw_source}" 2>&1 >&3 \
-	  | sed -e '/^Warning \[code:89\]/d' \
-	        -e 's|^  xsl:message (\(.*\))$|\1|'; } 3>&- 3>&1 >&2
-}
-# filtered out message: https://bugzilla.redhat.com/show_bug.cgi?id=1577367
-_saxon_wrapper() {
-	{ ${_XSLTPROCESSOR} "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 >&3 \
-	  | sed -e '/^Cannot find CatalogManager.properties$/d'; } 3>&- 3>&1 >&2
-}
-XSLTPROCESSOR=${XSLTPROCESSOR:-xsltproc --nonet}
-_XSLTPROCESSOR=${XSLTPROCESSOR}
-case "${XSLTPROCESSOR}" in
-[Xx]alan*|*/[Xx]alan*) XSLTPROCESSOR=_xalan_wrapper;;
-sabcmd*|*/sabcmd*)     XSLTPROCESSOR=_sabcmd_wrapper;;
-saxon*|*/saxon*)       XSLTPROCESSOR=_saxon_wrapper;;
-esac
+
+XSLT_PROCESSOR="xsltproc --nonet"
 HTTPPORT=${HTTPPORT:-8000}  # Python's default
 WEBBROWSER=${WEBBROWSER:-firefox}
 
@@ -247,7 +219,7 @@ test_explanation() {
 		shift
 	done
 
-	${XSLTPROCESSOR} upgrade-detail.xsl "${_tsc_template}"
+	${XSLT_PROCESSOR} upgrade-detail.xsl "${_tsc_template}"
 }
 
 # stdout: filename of the transformed file
@@ -264,7 +236,7 @@ test_runner_upgrade() {
 	_tru_target_err="${_tru_target}.err"
 
 	if test $((_tru_mode & (1 << 2))) -eq 0; then
-		${XSLTPROCESSOR} "${_tru_template}" "${_tru_source}" \
+		${XSLT_PROCESSOR} "${_tru_template}" "${_tru_source}"   \
 		  > "${_tru_target}" 2> "${_tru_target_err}" \
 		  || { _tru_ref=$?; echo "${_tru_target_err}"
 		       return ${_tru_ref}; }
@@ -278,7 +250,7 @@ test_runner_upgrade() {
 		#   (extraneous inter-element whitespace like blank
 		#   lines will not get removed otherwise, see lower)
 		xmllint --noblanks "${_tru_source}" \
-		  | ${XSLTPROCESSOR} "${_tru_template}" - \
+		  | ${XSLT_PROCESSOR} "${_tru_template}" -  \
 		  > "${_tru_target}" 2> "${_tru_target_err}" \
 		  || { _tru_ref=$?; echo "${_tru_target_err}"
 		       return ${_tru_ref}; }
@@ -286,7 +258,7 @@ test_runner_upgrade() {
 		_tru_template="$(dirname "${_tru_target}")"
 		_tru_template="${_tru_template}/.$(basename "${_tru_target}")"
 		mv "${_tru_target}" "${_tru_template}"
-		${XSLTPROCESSOR} - "${_tru_template}" > "${_tru_target}" <<-EOF
+		${XSLT_PROCESSOR} - "${_tru_template}" > "${_tru_target}" <<-EOF
 	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
 	<xsl:template match="@*|*|comment()|processing-instruction()">
@@ -328,7 +300,7 @@ EOF
 		fi
 	elif test -f "${_tru_ref}" && test -e "${_tru_ref_err}"; then
 		{ test "$((_tru_mode & (1 << 2)))" -eq 0 && cat "${_tru_ref}" \
-		    || ${XSLTPROCESSOR} - "${_tru_ref}" <<-EOF
+		    || ${XSLT_PROCESSOR} - "${_tru_ref}" <<-EOF
 	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
 	<xsl:template match="@*|*|comment()|processing-instruction()">
@@ -567,7 +539,7 @@ cts_scheduler() {
 			shift
 		done
 		while read _tcp_origin; do
-			_tcp_validatewith=$(${XSLTPROCESSOR} - "${_tcp_origin}" <<-EOF
+			_tcp_validatewith=$(${XSLT_PROCESSOR} - "${_tcp_origin}" <<-EOF
 	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:output method="text" encoding="UTF-8"/>
 	<xsl:template match="/">
@@ -745,13 +717,12 @@ usage() {
 	  "- some modes (e.g. -{S,W}) take also '-r' for cleanup afterwards" \
 	  "- test specification can be granular, e.g. 'test2to3/022'"
 	printf \
-	  '\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	  '\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
 	  'environment variables affecting the run + default/current values:' \
 	  "- DIFF (${DIFF}): tool to compute and show differences of 2 files" \
 	  "- DIFFOPTS (${DIFFOPTS}): options to the above tool" \
 	  "- DIFFPAGER (${DIFFPAGER}): possibly accompanying the above tool" \
 	  "- RNGVALIDATOR (${RNGVALIDATOR}): RelaxNG validator" \
-	  "- XSLTPROCESSOR (${_XSLTPROCESSOR}): XSLT 1.0 capable processor" \
 	  "- HTTPPORT (${HTTPPORT}): port used by test drive HTTP server run" \
 	  "- WEBBROWSER (${WEBBROWSER}): used for in-browser test drive"
 }
