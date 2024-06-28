@@ -115,6 +115,10 @@ pcmk_cluster_connect(pcmk_cluster_t *cluster)
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
+    if (cluster == NULL) {
+        return EINVAL;
+    }
+
     // cts-lab looks for this message
     crm_notice("Connecting to %s cluster layer", cluster_layer_s);
 
@@ -460,6 +464,15 @@ pcmk_get_cluster_layer(void)
 gboolean
 crm_cluster_connect(pcmk_cluster_t *cluster)
 {
+    if (cluster == NULL) {
+        return FALSE;
+    }
+    if (cluster->priv == NULL) {
+        /* sbd (as of at least 1.5.2) doesn't call pcmk_cluster_new() to
+         * allocate the pcmk_cluster_t
+         */
+        cluster->priv = pcmk__assert_alloc(1, sizeof(pcmk__cluster_private_t));
+    }
     return pcmk_cluster_connect(cluster) == pcmk_rc_ok;
 }
 
