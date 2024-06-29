@@ -8,8 +8,11 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 
 set -eu
-test -d test-2 \
-  || { echo 'Run me from source-tree-like location'; exit 1; }
+
+if [ ! -d "test-2" ]; then
+    echo "$0 must be run from the xml subdirectory of a source tree"
+    exit 1
+fi
 
 DIFF="diff -u"
 DIFF_PAGER="less -LRX"
@@ -28,9 +31,11 @@ emit_result() {
 	_er_subject=${2:?}
 	_er_prefix=${3-}
 
-	test -z "${_er_prefix}" || _er_prefix="${_er_prefix}: "
+    if [ -n "$_er_prefix" ]; then
+        _er_prefix="${_er_prefix}: "
+    fi
 
-	if test "${_er_howmany}" = 0; then
+    if [ "$_er_howmany" = "0" ]; then
 		printf "%s%s finished OK\n" "${_er_prefix}" "${_er_subject}"
 	else
 		printf "%s%s encountered ${_er_howmany} errors\n" \
@@ -62,11 +67,11 @@ log2_or_0_add() {
 	_lo0a_op1=${1:?}
 	_lo0a_op2=${2:?}
 
-	if test ${_lo0a_op1} -gt ${_lo0a_op2}; then
+	if [ "$_lo0a_op1" -gt "$_lo0a_op2" ]; then
 		return ${_lo0a_op1}
-	elif test ${_lo0a_op2} -gt ${_lo0a_op1}; then
+	elif [ "$_lo0a_op2" -gt "$_lo0a_op1" ]; then
 		return ${_lo0a_op2}
-	elif test ${_lo0a_op1} -gt 0; then
+	elif [ "$_lo0a_op1" -gt 0 ]; then
 		return $((_lo0a_op1 + 1))
 	else
 		return ${_lo0a_op1}
@@ -82,7 +87,7 @@ log2_or_0_add() {
 test_cleaner() {
 	_tc_cleanref=0
 
-	while test $# -gt 0; do
+    while [ $# -gt 0 ]; do
 		case "$1" in
 		-r) _tc_cleanref=1;;
 		esac
@@ -93,15 +98,17 @@ test_cleaner() {
 		_tc_origin=${_tc_origin%.*}
 		rm -f "${_tc_origin}.up" "${_tc_origin}.up.err"
 		rm -f "$(dirname "${_tc_origin}")/.$(basename "${_tc_origin}").up"
-		test ${_tc_cleanref} -eq 0 \
-		  || rm -f "${_tc_origin}.ref" "${_tc_origin}.ref.err"
+
+        if [ "$_tc_cleanref" -eq 1 ]; then
+            rm -f "${_tc_origin}.ref" "${_tc_origin}.ref.err"
+        fi
 	done
 }
 
 test_explanation() {
 	_tsc_template=
 
-	while test $# -gt 0; do
+    while [ $# -gt 0 ]; do
 		case "$1" in
 		-o=*) _tsc_template="upgrade-${1#-o=}.xsl";;
 		esac
@@ -118,13 +125,18 @@ test_runner_upgrade() {
 	_tru_mode=${3:?}  # extra modes wrt. "referential" outcome, see below
 
 	_tru_ref="${_tru_source%.*}.ref"
-        { test "$((_tru_mode & (1 << 0)))" -ne 0 \
-	  || test -f "${_tru_ref}.err"; } \
-	  && _tru_ref_err="${_tru_ref}.err" || _tru_ref_err=/dev/null
+
+    if [ "$((_tru_mode & (1 << 0)))" -ne 0 ] || [ -f "${_tru_ref}.err" ]; then
+        _tru_ref_err="${_tru_ref}.err"
+    else
+        _tru_ref_err=/dev/null
+    fi
+
+    _tru_diff_rc=0
 	_tru_target="${_tru_source%.*}.up"
 	_tru_target_err="${_tru_target}.err"
 
-	if test $((_tru_mode & (1 << 2))) -eq 0; then
+    if [ "$((_tru_mode & (1 << 2)))" -eq 0 ]; then
 		${XSLT_PROCESSOR} "${_tru_template}" "${_tru_source}"   \
 		  > "${_tru_target}" 2> "${_tru_target_err}" \
 		  || { _tru_ref=$?; echo "${_tru_target_err}"
@@ -165,15 +177,15 @@ EOF
 	# only respond with the flags except for "-B", i.e., when both:
 	# - _tru_mode non-zero
 	# - "-B" in _tru_mode is zero (hence non-zero when flipped with XOR)
-	if test "$((_tru_mode * ((_tru_mode ^ (1 << 2)) & (1 << 2))))" -ne 0; then
-		if test $((_tru_mode & (1 << 0))) -ne 0; then
+    if [ "$((_tru_mode * ((_tru_mode ^ (1 << 2)) & (1 << 2))))" -ne 0 ]; then
+        if [ "$((_tru_mode & (1 << 0)))" -ne 0 ]; then
 			cp -a "${_tru_target}" "${_tru_ref}"
 			cp -a "${_tru_target_err}" "${_tru_ref_err}"
 		fi
-		if test $((_tru_mode & (1 << 1))) -ne 0; then
+        if [ "$((_tru_mode & (1 << 1)))" -ne 0 ]; then
 			{ ${DIFF} "${_tru_source}" "${_tru_ref}" \
 			  && printf '\n(files match)\n'; } | ${DIFF_PAGER} >&2
-			if test $? -ne 0; then
+            if [ $? -ne 0 ]; then
 				printf "\npager failure\n" >&2
 				return 1
 			fi
@@ -187,26 +199,32 @@ EOF
 				return 1
 			fi
 		fi
-	elif test -f "${_tru_ref}" && test -e "${_tru_ref_err}"; then
-		{ test "$((_tru_mode & (1 << 2)))" -eq 0 && cat "${_tru_ref}" \
-		    || ${XSLT_PROCESSOR} - "${_tru_ref}" <<-EOF
-	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-	<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
-	<xsl:template match="@*|*|comment()|processing-instruction()">
-	  <xsl:copy>
-	    <xsl:apply-templates select="@*|node()"/>
-	  </xsl:copy>
-	</xsl:template>
-	<xsl:template match="text()">
-	  <xsl:value-of select="normalize-space(.)"/>
-	</xsl:template>
-	</xsl:stylesheet>
+
+    elif [ -f "$_tru_ref" ] && [ -e "$_tru_ref_err" ]; then
+        if [ "$((_tru_mode & (1 << 2)))" -eq 0 ]; then
+            _output=$(cat "$_tru_ref")
+        else
+            _output=$($XSLT_PROCESSOR - "$_tru_ref" <<EOF
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
+<xsl:template match="@*|*|comment()|processing-instruction()">
+  <xsl:copy>
+    <xsl:apply-templates select="@*|node()"/>
+  </xsl:copy>
+</xsl:template>
+<xsl:template match="text()">
+  <xsl:value-of select="normalize-space(.)"/>
+</xsl:template>
+</xsl:stylesheet>
 EOF
-		} \
-		  | ${DIFF} - "${_tru_target}" >&2 \
-		  && ${DIFF} "${_tru_ref_err}" \
-		       "${_tru_target_err}" >&2
-		if test $? -ne 0; then
+)
+        fi
+
+        echo "$_output" | $DIFF - "$_tru_target" >&2 || _tru_diff_rc=$?
+        if [ "$_tru_diff_rc" -eq 0 ]; then
+            $DIFF "$_tru_ref_err" "$_tru_target_err" >&2 || _tru_diff_rc=$?
+        fi
+        if [ "$_tru_diff_rc" -ne 0 ]; then
 			emit_error "Outputs differ from referential ones"
 			echo "/dev/null"
 			return 1
@@ -246,7 +264,7 @@ test_runner() {
 	_tr_target=
 	_tr_template=
 
-	while test $# -gt 0; do
+    while [ $# -gt 0 ]; do
 		case "$1" in
 		-a=*) _tr_action="${1#-a=}";;
 		-o=*) _tr_template="${1#-o=}"
@@ -260,7 +278,7 @@ test_runner() {
 	done
 	_tr_template="upgrade-${_tr_action:-${_tr_template:?}}.xsl"
 
-	if ! test -f "${_tr_schema_o:?}" || ! test -f "${_tr_schema_t:?}"; then
+    if [ ! -f "${_tr_schema_o:?}" ] || [ ! -f "${_tr_schema_t:?}" ]; then
 		emit_error "Origin and/or target schema missing, rerun make"
 		return 1
 	fi
@@ -277,10 +295,16 @@ test_runner() {
 		if ! _tr_target=$(test_runner_upgrade "${_tr_template}" \
 		                 "${_tr_origin}" "${_tr_mode}"); then
 			_tr_ret=$((_tr_ret + 1));
-			test -n "${_tr_target}" || break
+            if [ -z "$_tr_target" ]; then
+                break
+            fi
+
 			echo "E:upgrade"
-			test -s "${_tr_target}" \
-			  && { echo ---; cat "${_tr_target}" || :; echo ---; }
+            if [ -s "$_tr_target" ]; then
+                echo ---
+                cat "$_tr_target" || :
+                echo ---
+            fi
 			continue
 		fi
 
@@ -310,7 +334,10 @@ test2to3() {
 		_t23_spec=${_t23_spec%\*}
 		_t23_pattern="${_t23_pattern} -name ${_t23_spec}*.xml -o"
 	done
-	test -z "${_t23_pattern}" || _t23_pattern="( ${_t23_pattern%-o} )"
+
+    if [ -n "$_t23_pattern" ]; then
+        _t23_pattern="( ${_t23_pattern%-o} )"
+    fi
 
 	find test-2 -name test-2 -o -type d -prune \
 	  -o -name '*.xml' ${_t23_pattern} -print | env LC_ALL=C sort \
@@ -329,7 +356,10 @@ test2to3enter() {
 		_t23e_spec=${_t23e_spec%\*}
 		_t23e_pattern="${_t23e_pattern} -name ${_t23e_spec}*.xml -o"
 	done
-	test -z "${_t23e_pattern}" || _t23e_pattern="( ${_t23e_pattern%-o} )"
+
+    if [ -n "$_t23e_pattern" ]; then
+        _t23e_pattern="( ${_t23e_pattern%-o} )"
+    fi
 
 	find test-2-enter -name test-2-enter -o -type d -prune \
 	  -o -name '*.xml' ${_t23e_pattern} -print | env LC_ALL=C sort \
@@ -348,7 +378,10 @@ test2to3leave() {
 		_t23l_spec=${_t23l_spec%\*}
 		_t23l_pattern="${_t23l_pattern} -name ${_t23l_spec}*.xml -o"
 	done
-	test -z "${_t23l_pattern}" || _t23l_pattern="( ${_t23l_pattern%-o} )"
+
+    if [ -n "$_t23l_pattern" ]; then
+        _t23l_pattern="( ${_t23l_pattern%-o} )"
+    fi
 
 	find test-2-leave -name test-2-leave -o -type d -prune \
 	  -o -name '*.xml' ${_t23l_pattern} -print | env LC_ALL=C sort \
@@ -367,7 +400,10 @@ test2to3roundtrip() {
 		_t23rt_spec=${_t23rt_spec%\*}
 		_t23rt_pattern="${_t23rt_pattern} -name ${_t23rt_spec}*.xml -o"
 	done
-	test -z "${_t23rt_pattern}" || _t23rt_pattern="( ${_t23rt_pattern%-o} )"
+
+    if [ -n "$_t23rt_pattern" ]; then
+        _t23rt_pattern="( ${_t23rt_pattern%-o} )"
+    fi
 
 	find test-2-roundtrip -name test-2-roundtrip -o -type d -prune \
 	  -o -name '*.xml' ${_t23rt_pattern} -print | env LC_ALL=C sort \
@@ -394,7 +430,7 @@ cts_scheduler() {
 	      *\ -C\ *) test_cleaner -r;;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *)
-		while test $# -gt 0; do
+        while [ $# -gt 0 ]; do
 			case "$1" in
 			-G) _tcp_mode=$((_tcp_mode | (1 << 0)));;
 			-D) _tcp_mode=$((_tcp_mode | (1 << 1)));;
@@ -441,38 +477,57 @@ EOF
 			esac
 			_tcp_template="upgrade-${_tcp_schema_o}.xsl"
 			_tcp_schema_t="pacemaker-$((_tcp_schema_t + 1)).0.rng"
-			test "${_tcp_schema_o%%.*}" = "${_tcp_validatewith}" \
-			  && _tcp_schema_o="pacemaker-${_tcp_schema_o}.rng" \
-			  || _tcp_schema_o="${_tcp_schema_t}"
+
+            if [ "${_tcp_schema_o%%.*}" = "${_tcp_validatewith}" ]; then
+                _tcp_schema_o="pacemaker-${_tcp_schema_o}.rng"
+            else
+                _tcp_schema_o="${_tcp_schema_t}"
+            fi
 
 			# pre-validate
-			if test "${_tcp_schema_o}" != "${_tcp_schema_t}" \
-			  && ! test_runner_validate "${_tcp_schema_o}" "${_tcp_origin}"; then
-				_tcp_ret=$((_tcp_ret + 1)); echo "E:pre-validate"; continue
+            if [ "$_tcp_schema_o" != "$_tcp_schema_t" ] \
+                && ! test_runner_validate "$_tcp_schema_o" "$_tcp_origin"; then
+
+                _tcp_ret=$((_tcp_ret + 1))
+                echo "E:pre-validate"
+                continue
 			fi
 
 			# upgrade
-			test "$((_tcp_mode & (1 << 0)))" -ne 0 \
-			  || ln -fs "$(pwd)/${_tcp_origin}" "${_tcp_origin%.*}.ref"
+            if [ "$((_tcp_mode & (1 << 0)))" -eq 0 ]; then
+                ln -fs "$(pwd)/$_tcp_origin" "${_tcp_origin%.*}.ref"
+            fi
+
 			if ! _tcp_target=$(test_runner_upgrade "${_tcp_template}" \
 			                   "${_tcp_origin}" "${_tcp_mode}"); then
 				_tcp_ret=$((_tcp_ret + 1));
-				test -n "${_tcp_target}" || break
+
+                if [ -z "$_tcp_target" ]; then
+                    break
+                fi
+
 				echo "E:upgrade"
-				test -s "${_tcp_target}" \
-				  && { echo ---; cat "${_tcp_target}" || :; echo ---; }
+                if [ -s "$_tcp_target" ]; then
+                    echo ---
+                    cat "$_tcp_target" || :
+                    echo ---
+                fi
 				continue
 			fi
-			test "$((_tcp_mode & (1 << 0)))" -ne 0 \
-			  || rm -f "${_tcp_origin%.*}.ref"
+
+            if [ "$((_tcp_mode & (1 << 0)))" -eq 0 ]; then
+                rm -f "${_tcp_origin%.*}.ref"
+            fi
 
 			# post-validate
 			if ! test_runner_validate "${_tcp_schema_t}" "${_tcp_target}"; then
 				_tcp_ret=$((_tcp_ret + 1)); echo "E:post-validate"; continue
 			fi
 
-			test "$((_tcp_mode & (1 << 0)))" -eq 0 \
-			  || mv "${_tcp_target}" "${_tcp_origin}"
+            if [ "$((_tcp_mode & (1 << 0)))" -ne 0 ]; then
+                mv "$_tcp_target" "$_tcp_origin"
+            fi
+
 		done; log2_or_0_return ${_tcp_ret};;
 	      esac; }
 }
@@ -491,7 +546,7 @@ test_suite() {
 	_ts_global_ret=0
 	_ts_ret=0
 
-	while test $# -gt 0; do
+	while [ $# -gt 0 ]; do
 		case "$1" in
 		-) printf '%s\n' 'waiting for tests specified at stdin...';
 		   while read _ts_spec; do _ts_select="${_ts_spec}@$1"; done;;
@@ -512,7 +567,7 @@ test_suite() {
 			*@${_ts_test}@*)
 			_ts_test_specs="${_ts_select%%@${_ts_test}@*}"\
 "@${_ts_select#*@${_ts_test}@}"
-			if test "${_ts_test_specs}" = @; then
+			if [ "$_ts_test_specs" = "@" ]; then
 				_ts_select=  # nothing left
 			else
 				_ts_select="${_ts_test_specs}"
@@ -522,7 +577,9 @@ test_suite() {
 			@) case "${_ts_test}" in test*) break;; esac  # filter
 			;;
 			esac
-			test -z "${_ts_test_specs}" || break
+            if [ -n "$_ts_test_specs" ]; then
+                break
+            fi
 			continue 2  # move on to matching with next local test
 		done
 
@@ -546,13 +603,16 @@ test_suite() {
 			printf '%s\n' "${_ts_test_spec}"
 		done | "${_ts_test}" ${_ts_pass} || _ts_ret=$?
 
-		test ${_ts_ret} = 0 \
-		  && emit_result ${_ts_ret} "${_ts_test}" \
-		  || emit_result "at least 2^$((_ts_ret - 1))" "${_ts_test}"
+        if [ "$_ts_ret" = 0 ]; then
+            emit_result "$_ts_ret" "$_ts_test"
+        else
+            emit_result "at least 2^$((_ts_ret - 1))" "$_ts_test"
+        fi
+
 		log2_or_0_add ${_ts_global_ret} ${_ts_ret}
 		_ts_global_ret=$?
 	done
-	if test -n "${_ts_select#@}"; then
+    if [ -n "${_ts_select#@}" ]; then
 		emit_error "Non-existing test(s):$(echo "${_ts_select}" \
 		                                   | tr '@' ' ')"
 		log2_or_0_add ${_ts_global_ret} 1 || _ts_global_ret=$?
@@ -583,7 +643,7 @@ main() {
 	_main_bailout=0
 	_main_ret=0
 
-	while test $# -gt 0; do
+	while [ $# -gt 0 ]; do
 		case "$1" in
 		-h) usage; exit;;
 		-C|-G|-X) _main_bailout=1;;
@@ -593,10 +653,16 @@ main() {
 	done
 
 	test_suite ${_main_pass} || _main_ret=$?
-	test ${_main_bailout} -ne 0 \
-	  || test_suite -C ${_main_pass} >/dev/null || true
-	test ${_main_ret} = 0 && emit_result ${_main_ret} "Overall suite" \
-	  || emit_result "at least 2^$((_main_ret - 1))" "Overall suite"
+
+    if [ "$_main_bailout" -eq 0 ]; then
+        test_suite -C $_main_pass >/dev/null || true
+    fi
+
+    if [ "$_main_ret" = 0 ]; then
+        emit_result "$_main_ret" "Overall suite"
+    else
+        emit_result "at least 2^$((_main_ret - 1))" "Overall suite"
+    fi
 
 	return ${_main_ret}
 }
