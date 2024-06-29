@@ -118,6 +118,18 @@ test_explanation() {
     ${XSLT_PROCESSOR} upgrade-detail.xsl "${_tsc_template}"
 }
 
+cleanup_module_error() {
+    # Work around a libxml2 bug. At least as of libxslt-1.1.41 and
+    # libxml2-2.10.4, if the stylesheet contains a user-defined top-level
+    # element (that is, one with a namespace other than the XSL namespace),
+    # libxslt tries to load the namespace URI as an XML module. If this fails,
+    # libxml2 logs a "module error: failed to open ..." message.
+    #
+    # This appears to be fixed in libxml2 v2.13 with commit ecb4c9fb.
+    sed "/module error/d" "$1" > "$1.new"
+    mv -- "$1.new" "$1"
+}
+
 # stdout: filename of the transformed file
 test_runner_upgrade() {
     _tru_template=${1:?}
@@ -132,6 +144,7 @@ test_runner_upgrade() {
         _tru_ref_err=/dev/null
     fi
 
+    _tru_proc_rc=0
     _tru_diff_rc=0
     _tru_target="${_tru_source%.*}.up"
     _tru_target_err="${_tru_target}.err"
@@ -139,8 +152,14 @@ test_runner_upgrade() {
     if [ "$((_tru_mode & (1 << 2)))" -eq 0 ]; then
         ${XSLT_PROCESSOR} "${_tru_template}" "${_tru_source}"   \
             > "${_tru_target}" 2> "${_tru_target_err}" \
-        || { _tru_ref=$?; echo "${_tru_target_err}"
-            return ${_tru_ref}; }
+        || _tru_proc_rc=$?
+
+        cleanup_module_error "$_tru_target_err"
+
+        if [ "$_tru_proc_rc" -ne 0 ]; then
+            echo "$_tru_target_err"
+            return "$_tru_proc_rc"
+        fi
     else
         # when -B (deblanked outcomes handling) requested, we:
         # - drop blanks from the source XML
@@ -153,8 +172,15 @@ test_runner_upgrade() {
         xmllint --noblanks "${_tru_source}" \
             | ${XSLT_PROCESSOR} "${_tru_template}" -  \
             > "${_tru_target}" 2> "${_tru_target_err}" \
-        || { _tru_ref=$?; echo "${_tru_target_err}"
-            return ${_tru_ref}; }
+        || _tru_proc_rc=$?
+
+        cleanup_module_error "$_tru_target_err"
+
+        if [ "$_tru_proc_rc" -ne 0 ]; then
+            echo "$_tru_target_err"
+            return "$_tru_proc_rc"
+        fi
+
         # reusing variable no longer needed
         _tru_template="$(dirname "${_tru_target}")"
         _tru_template="${_tru_template}/.$(basename "${_tru_target}")"
