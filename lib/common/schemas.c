@@ -270,8 +270,7 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
  *   . may only accompany "upgrade" occurrence, but doesn't need to
  *     be present anytime such one is, i.e., it MAY not be set when
  *     "upgrade" is
- *   . name convention:  upgrade-X.Y-enter.xsl,
- *     when not present: upgrade-enter.xsl
+ *   . name convention:  upgrade-X.Y-enter.xsl
  * - "upgrade-leave":
  *   . like "upgrade-enter", but SHOULD be present whenever
  *     "upgrade-enter" is (and vice versa, but that's only
@@ -301,37 +300,20 @@ add_schema_with_transforms(const pcmk__schema_version_t *version)
         path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
                                        transform_enter);
 
-        if (stat(path, &sb) != 0) {
-            // No "upgrade-enter" found with matching version; try generic one
-            crm_debug("Upgrade-enter transform %s not found", path);
-
-            free(transform_enter);
-            free(path);
-            transform_enter = pcmk__str_copy("upgrade-enter");
-            path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
-                                           transform_enter);
-
-            if (stat(path, &sb) != 0) {
-                crm_debug("Upgrade-enter transform %s not found", path);
-                free(path);
-                path = NULL;
-            }
-        }
-
-        // path should contain the full path to the "upgrade-enter" stylesheet
-        if (path == NULL) {
-            // No "upgrade-enter", no "upgrade-leave"
-            add_schema(pcmk__schema_validator_rng, version, NULL,
-                       transform_upgrade, NULL, false);
-
-        } else {
-            // "upgrade-enter" exists, so "upgrade-leave" should as well
+        if (stat(path, &sb) == 0) {
+            // "upgrade-enter" exists, so "upgrade-leave" might as well
             bool transform_onleave = false;
 
             memcpy(strrchr(path, '-') + 1, "leave", sizeof("leave") - 1);
             transform_onleave = (stat(path, &sb) == 0);
             add_schema(pcmk__schema_validator_rng, version, NULL,
                        transform_upgrade, transform_enter, transform_onleave);
+
+        } else {
+            // No "upgrade-enter" so no "upgrade-leave" either
+            crm_debug("Upgrade-enter transform %s not found", path);
+            add_schema(pcmk__schema_validator_rng, version, NULL,
+                       transform_upgrade, NULL, false);
         }
 
         free(transform_enter);
