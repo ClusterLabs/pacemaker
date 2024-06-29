@@ -280,71 +280,72 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
  *   . name convention:  (see "upgrade-enter")
  */
 static int
-add_schema_by_version(const pcmk__schema_version_t *version, bool transform_expected)
+add_schema_with_transforms(const pcmk__schema_version_t *version)
 {
-    bool transform_onleave = FALSE;
     int rc = pcmk_rc_ok;
-    struct stat s;
-    char *xslt = NULL,
-         *transform_upgrade = NULL,
-         *transform_enter = NULL;
+    struct stat sb;
+    char *path = NULL;
+    char *transform_upgrade = NULL;
 
-    /* prologue for further transform_expected handling */
-    if (transform_expected) {
-        /* check if there's suitable "upgrade" stylesheet */
-        transform_upgrade = schema_strdup_printf("upgrade-", *version, );
-        xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
-                                       transform_upgrade);
-    }
+    // Look for a required "upgrade" stylesheet
+    transform_upgrade = schema_strdup_printf("upgrade-", *version, "");
+    path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
+                                   transform_upgrade);
 
-    if (!transform_expected) {
-        /* jump directly to the end */
+    if (stat(path, &sb) == 0) {
+        // Look for an optional "upgrade-enter" stylesheet
+        char *transform_enter = schema_strdup_printf("upgrade-", *version,
+                                                     "-enter");
 
-    } else if (stat(xslt, &s) == 0) {
-        /* perhaps there's also a targeted "upgrade-enter" stylesheet */
-        transform_enter = schema_strdup_printf("upgrade-", *version, "-enter");
-        free(xslt);
-        xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
+        free(path);
+        path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
                                        transform_enter);
-        if (stat(xslt, &s) != 0) {
-            /* or initially, at least a generic one */
-            crm_debug("Upgrade-enter transform %s.xsl not found", xslt);
-            free(xslt);
+
+        if (stat(path, &sb) != 0) {
+            // No "upgrade-enter" found with matching version; try generic one
+            crm_debug("Upgrade-enter transform %s not found", path);
+
             free(transform_enter);
-            transform_enter = strdup("upgrade-enter");
-            xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
+            free(path);
+            transform_enter = pcmk__str_copy("upgrade-enter");
+            path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
                                            transform_enter);
-            if (stat(xslt, &s) != 0) {
-                crm_debug("Upgrade-enter transform %s.xsl not found, either", xslt);
-                free(xslt);
-                xslt = NULL;
+
+            if (stat(path, &sb) != 0) {
+                crm_debug("Upgrade-enter transform %s not found", path);
+                free(path);
+                path = NULL;
             }
         }
-        /* xslt contains full path to "upgrade-enter" stylesheet */
-        if (xslt != NULL) {
-            /* then there should be "upgrade-leave" counterpart (enter->leave) */
-            memcpy(strrchr(xslt, '-') + 1, "leave", sizeof("leave") - 1);
-            transform_onleave = (stat(xslt, &s) == 0);
-            free(xslt);
+
+        // path should contain the full path to the "upgrade-enter" stylesheet
+        if (path == NULL) {
+            // No "upgrade-enter", no "upgrade-leave"
+            add_schema(pcmk__schema_validator_rng, version, NULL,
+                       transform_upgrade, NULL, false);
+
         } else {
-            free(transform_enter);
-            transform_enter = NULL;
+            // "upgrade-enter" exists, so "upgrade-leave" should as well
+            bool transform_onleave = false;
+
+            memcpy(strrchr(path, '-') + 1, "leave", sizeof("leave") - 1);
+            transform_onleave = (stat(path, &sb) == 0);
+            add_schema(pcmk__schema_validator_rng, version, NULL,
+                       transform_upgrade, transform_enter, transform_onleave);
         }
 
+        free(transform_enter);
+
     } else {
-        crm_err("Upgrade transform %s not found", xslt);
-        free(xslt);
-        free(transform_upgrade);
-        transform_upgrade = NULL;
+        crm_err("Upgrade transform %s not found", path);
         rc = ENOENT;
+
+        add_schema(pcmk__schema_validator_rng, version, NULL, NULL, NULL,
+                   false);
     }
 
-    add_schema(pcmk__schema_validator_rng, version, NULL,
-               transform_upgrade, transform_enter, transform_onleave);
-
+    free(path);
     free(transform_upgrade);
-    free(transform_enter);
-
     return rc;
 }
 
@@ -393,7 +394,6 @@ pcmk__load_schemas_from_dir(const char *dir)
     }
 
     for (lpc = 0; lpc < max; lpc++) {
-        bool transform_expected = false;
         pcmk__schema_version_t version = SCHEMA_ZERO;
 
         if (!version_from_filename(namelist[lpc]->d_name, &version)) {
@@ -406,14 +406,18 @@ pcmk__load_schemas_from_dir(const char *dir)
             pcmk__schema_version_t next_version = SCHEMA_ZERO;
 
             if (version_from_filename(namelist[lpc+1]->d_name, &next_version)
-                    && (version.v[0] < next_version.v[0])) {
-                transform_expected = true;
+                && (version.v[0] < next_version.v[0])) {
+
+                // Major schema version bump: transforms are expected
+                if (add_schema_with_transforms(&version) != pcmk_rc_ok) {
+                    break;
+                }
+                continue;
             }
         }
 
-        if (add_schema_by_version(&version, transform_expected) != pcmk_rc_ok) {
-            break;
-        }
+        add_schema(pcmk__schema_validator_rng, &version, NULL, NULL, NULL,
+                   false);
     }
 
     for (lpc = 0; lpc < max; lpc++) {
