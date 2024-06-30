@@ -996,7 +996,7 @@ apply_transformation(const xmlNode *xml, const char *transform,
  * transform, the main upgrade transform, and a "leave" transform. Perform
  * all needed transforms to upgrade given XML to the next schema.
  *
- * \param[in] original_xml  XML to transform
+ * \param[in] input_xml     XML to transform
  * \param[in] schema_index  Index of schema that successfully validates
  *                          \p original_xml
  * \param[in] to_logs       If false, certain validation errors will be sent to
@@ -1005,16 +1005,14 @@ apply_transformation(const xmlNode *xml, const char *transform,
  * \return XML result of schema transforms if successful, otherwise NULL
  */
 static xmlNode *
-apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
+apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
 {
     pcmk__schema_t *schema = g_list_nth_data(known_schemas, schema_index);
     pcmk__schema_t *upgraded_schema = g_list_nth_data(known_schemas,
                                                       schema_index + 1);
-    bool transform_onleave = false;
-    char *transform_leave;
-    const xmlNode *xml = original_xml;
-    xmlNode *upgrade = NULL;
-    xmlNode *final = NULL;
+
+    xmlNode *old_xml = NULL;
+    xmlNode *new_xml = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = NULL;
 
     CRM_ASSERT((schema != NULL) && (upgraded_schema != NULL));
@@ -1023,71 +1021,78 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
         error_handler = (xmlRelaxNGValidityErrorFunc) xml_log;
     }
 
-    transform_onleave = schema->transform_onleave;
     if (schema->transform_enter != NULL) {
         crm_debug("Upgrading schema from %s to %s: "
                   "applying pre-upgrade XSL transform %s",
                   schema->name, upgraded_schema->name, schema->transform_enter);
-        upgrade = apply_transformation(xml, schema->transform_enter, to_logs);
-        if (upgrade == NULL) {
-            crm_warn("Pre-upgrade XSL transform %s failed, "
-                     "will skip post-upgrade transform",
-                     schema->transform_enter);
-            transform_onleave = FALSE;
-        } else {
-            xml = upgrade;
-        }
-    }
 
+        new_xml = apply_transformation(input_xml, schema->transform_enter,
+                                       to_logs);
+
+        if (new_xml == NULL) {
+            crm_err("Pre-upgrade XSL transform %s failed, aborting transform",
+                    schema->transform_enter);
+            return NULL;
+        }
+        input_xml = new_xml;
+        old_xml = new_xml;
+    }
 
     crm_debug("Upgrading schema from %s to %s: "
               "applying upgrade XSL transform %s",
               schema->name, upgraded_schema->name, schema->transform);
-    final = apply_transformation(xml, schema->transform, to_logs);
-    if (upgrade != xml) {
-        pcmk__xml_free(upgrade);
-        upgrade = NULL;
-    }
 
-    if ((final != NULL) && transform_onleave) {
-        upgrade = final;
-        /* following condition ensured in add_schema_by_version */
+    new_xml = apply_transformation(input_xml, schema->transform, to_logs);
+    pcmk__xml_free(old_xml);
+
+    if (new_xml == NULL) {
+        crm_err("Upgrade XSL transform %s failed, aborting transform",
+                schema->transform_enter);
+        return NULL;
+    }
+    input_xml = new_xml;
+    old_xml = new_xml;
+
+    if (schema->transform_onleave) {
+        char *transform_leave = NULL;
+
+        // Ensured in add_schema_by_version()
         CRM_ASSERT(schema->transform_enter != NULL);
-        transform_leave = strdup(schema->transform_enter);
-        /* enter -> leave */
+        transform_leave = pcmk__str_copy(schema->transform_enter);
+
+        // Replace "enter" with "leave"
         memcpy(strrchr(transform_leave, '-') + 1, "leave", sizeof("leave") - 1);
+
         crm_debug("Upgrading schema from %s to %s: "
                   "applying post-upgrade XSL transform %s",
                   schema->name, upgraded_schema->name, transform_leave);
-        final = apply_transformation(upgrade, transform_leave, to_logs);
-        if (final == NULL) {
-            crm_warn("Ignoring failure of post-upgrade XSL transform %s",
+
+        new_xml = apply_transformation(input_xml, transform_leave, to_logs);
+        pcmk__xml_free(old_xml);
+
+        if (new_xml == NULL) {
+            crm_err("Post-upgrade XSL transform %s failed, aborting transform",
                      transform_leave);
-            final = upgrade;
-        } else {
-            pcmk__xml_free(upgrade);
+            return NULL;
         }
+
         free(transform_leave);
     }
 
-    if (final == NULL) {
-        return NULL;
-    }
-
     // Ensure result validates with its new schema
-    if (!validate_with(final, upgraded_schema, error_handler,
+    if (!validate_with(new_xml, upgraded_schema, error_handler,
                        GUINT_TO_POINTER(LOG_ERR))) {
         crm_err("Schema upgrade from %s to %s failed: "
                 "XSL transform %s produced an invalid configuration",
                 schema->name, upgraded_schema->name, schema->transform);
-        crm_log_xml_debug(final, "bad-transform-result");
-        pcmk__xml_free(final);
+        crm_log_xml_debug(new_xml, "bad-transform-result");
+        pcmk__xml_free(new_xml);
         return NULL;
     }
 
     crm_info("Schema upgrade from %s to %s succeeded",
              schema->name, upgraded_schema->name);
-    return final;
+    return new_xml;
 }
 
 /*!
