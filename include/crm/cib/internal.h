@@ -288,6 +288,9 @@ cib_callback_client_t* cib__lookup_id (int call_id);
  */
 int cib__signon_query(pcmk__output_t *out, cib_t **cib, xmlNode **cib_object);
 
+int cib__signon_attempts(cib_t *cib, const char *name, enum cib_conn_type type,
+                         int attempts);
+
 int cib__clean_up_connection(cib_t **cib);
 
 int cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options,

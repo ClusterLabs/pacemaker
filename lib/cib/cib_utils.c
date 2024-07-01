@@ -1016,6 +1016,33 @@ done:
 }
 
 int
+cib__signon_attempts(cib_t *cib, const char *name, enum cib_conn_type type,
+                     int attempts)
+{
+    int rc = pcmk_rc_ok;
+
+    crm_trace("Attempting connection to CIB manager (up to %d time%s)",
+              attempts, pcmk__plural_s(attempts));
+
+    for (int remaining = attempts - 1; remaining >= 0; --remaining) {
+        rc = cib->cmds->signon(cib, name, type);
+
+        if ((rc == pcmk_rc_ok)
+            || (remaining == 0)
+            || ((errno != EAGAIN) && (errno != EALREADY))) {
+            break;
+        }
+
+        // Retry after soft error (interrupted by signal, etc.)
+        pcmk__sleep_ms((attempts - remaining) * 500);
+        crm_debug("Re-attempting connection to CIB manager (%d attempt%s remaining)",
+                  remaining, pcmk__plural_s(remaining));
+    }
+
+    return rc;
+}
+
+int
 cib__clean_up_connection(cib_t **cib)
 {
     int rc;
