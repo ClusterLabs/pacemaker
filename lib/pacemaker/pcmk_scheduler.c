@@ -251,32 +251,6 @@ apply_shutdown_locks(pcmk_scheduler_t *scheduler)
     }
 }
 
-/*!
- * \internal
- * \brief Calculate the number of available nodes in the cluster
- *
- * \param[in,out] scheduler  Scheduler data
- */
-static void
-count_available_nodes(pcmk_scheduler_t *scheduler)
-{
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_no_compat)) {
-        return;
-    }
-
-    // @COMPAT for API backward compatibility only (cluster does not use value)
-    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
-        pcmk_node_t *node = (pcmk_node_t *) iter->data;
-
-        if ((node != NULL) && (node->assign->score >= 0)
-            && node->details->online
-            && (node->priv->variant != pcmk__node_variant_ping)) {
-            scheduler->max_valid_nodes++;
-        }
-    }
-    crm_trace("Online node count: %d", scheduler->max_valid_nodes);
-}
-
 /*
  * \internal
  * \brief Apply node-specific scheduling criteria
@@ -290,7 +264,6 @@ apply_node_criteria(pcmk_scheduler_t *scheduler)
 {
     crm_trace("Applying node-specific scheduling criteria");
     apply_shutdown_locks(scheduler);
-    count_available_nodes(scheduler);
     pcmk__apply_locations(scheduler);
     g_list_foreach(scheduler->priv->resources, apply_stickiness, NULL);
 
