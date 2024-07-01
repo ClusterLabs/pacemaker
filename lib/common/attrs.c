@@ -7,10 +7,6 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
 #include <crm_internal.h>
 
 #include <stdio.h>

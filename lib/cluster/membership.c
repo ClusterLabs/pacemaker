@@ -9,10 +9,6 @@
 
 #include <crm_internal.h>
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
 #include <inttypes.h>                   // PRIu32
 #include <stdbool.h>                    // bool
 #include <stdio.h>
