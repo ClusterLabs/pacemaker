@@ -3492,7 +3492,7 @@ record_failed_op(struct action_history *history)
         return;
     }
 
-    for (const xmlNode *xIter = scheduler->failed->children;
+    for (const xmlNode *xIter = scheduler->priv->failed->children;
          xIter != NULL; xIter = xIter->next) {
 
         const char *key = pcmk__xe_history_key(xIter);
@@ -3511,7 +3511,7 @@ record_failed_op(struct action_history *history)
               history->key, pcmk__node_name(history->node));
     crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->priv->name);
     crm_xml_add(history->xml, PCMK__XA_RSC_ID, history->rsc->id);
-    pcmk__xml_copy(scheduler->failed, history->xml);
+    pcmk__xml_copy(scheduler->priv->failed, history->xml);
 }
 
 static char *

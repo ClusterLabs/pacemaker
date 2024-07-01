@@ -869,12 +869,13 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
 {
     const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
     const char *rsc_id = rsc->id;
+    const pcmk_scheduler_t *scheduler = rsc->priv->scheduler;
 
     if (pcmk__is_clone(parent)) {
         rsc_id = pe__clone_child_id(parent);
     }
 
-    for (xmlNode *xml_op = pcmk__xe_first_child(rsc->priv->scheduler->failed,
+    for (xmlNode *xml_op = pcmk__xe_first_child(scheduler->priv->failed,
                                                 NULL, NULL, NULL);
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
 

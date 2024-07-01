@@ -1668,11 +1668,12 @@ failed_action_list(pcmk__output_t *out, va_list args) {
     xmlNode *xml_op = NULL;
     int rc = pcmk_rc_no_output;
 
-    if (xmlChildElementCount(scheduler->failed) == 0) {
+    if (xmlChildElementCount(scheduler->priv->failed) == 0) {
         return rc;
     }
 
-    for (xml_op = pcmk__xe_first_child(scheduler->failed, NULL, NULL, NULL);
+    for (xml_op = pcmk__xe_first_child(scheduler->priv->failed, NULL, NULL,
+                                       NULL);
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
 
         char *rsc = NULL;

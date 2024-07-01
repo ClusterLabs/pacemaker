@@ -1862,8 +1862,8 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 
     /* If there were any failed actions, print them */
     if (pcmk_is_set(section_opts, pcmk_section_failures)
-        && (scheduler->failed != NULL)
-        && (scheduler->failed->children != NULL)) {
+        && (scheduler->priv->failed != NULL)
+        && (scheduler->priv->failed->children != NULL)) {
 
         CHECK_RC(rc, out->message(out, "failed-action-list", scheduler, unames,
                                   resources, show_opts, rc == pcmk_rc_ok));
@@ -2000,8 +2000,8 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
 
     /* If there were any failed actions, print them */
     if (pcmk_is_set(section_opts, pcmk_section_failures)
-        && (scheduler->failed != NULL)
-        && (scheduler->failed->children != NULL)) {
+        && (scheduler->priv->failed != NULL)
+        && (scheduler->priv->failed->children != NULL)) {
 
         out->message(out, "failed-action-list", scheduler, unames, resources,
                      show_opts, false);
@@ -2081,8 +2081,8 @@ cluster_status_html(pcmk__output_t *out, va_list args)
 
     /* If there were any failed actions, print them */
     if (pcmk_is_set(section_opts, pcmk_section_failures)
-        && (scheduler->failed != NULL)
-        && (scheduler->failed->children != NULL)) {
+        && (scheduler->priv->failed != NULL)
+        && (scheduler->priv->failed->children != NULL)) {
 
         out->message(out, "failed-action-list", scheduler, unames, resources,
                      show_opts, false);

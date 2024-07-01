@@ -98,7 +98,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    xmlNode *failed;                // History entries of failed actions
     xmlNode *op_defaults;           // Configured operation defaults
     xmlNode *rsc_defaults;          // Configured resource defaults
     int num_synapse;                // Number of transition graph synapses
