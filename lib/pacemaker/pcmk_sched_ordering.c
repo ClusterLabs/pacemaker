@@ -582,8 +582,8 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
                     pcmk__s(order->task1, "an underspecified action"),
                     pcmk__s(order->task2, "an underspecified action"));
 
-    sched->ordering_constraints = g_list_prepend(sched->ordering_constraints,
-                                                 order);
+    sched->priv->ordering_constraints =
+        g_list_prepend(sched->priv->ordering_constraints, order);
     pcmk__order_migration_equivalents(order);
 }
 
@@ -1439,9 +1439,10 @@ pcmk__apply_orderings(pcmk_scheduler_t *sched)
      * @TODO This is brittle and should be carefully redesigned so that the
      * order of creation doesn't matter, and the reverse becomes unneeded.
      */
-    sched->ordering_constraints = g_list_reverse(sched->ordering_constraints);
+    sched->priv->ordering_constraints =
+        g_list_reverse(sched->priv->ordering_constraints);
 
-    for (GList *iter = sched->ordering_constraints;
+    for (GList *iter = sched->priv->ordering_constraints;
          iter != NULL; iter = iter->next) {
 
         pcmk__action_relation_t *order = iter->data;

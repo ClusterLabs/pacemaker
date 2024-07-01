@@ -355,8 +355,8 @@ probe_needed_before_action(const pcmk_action_t *probe,
 static void
 add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
 {
-    for (GList *iter = scheduler->ordering_constraints; iter != NULL;
-         iter = iter->next) {
+    for (GList *iter = scheduler->priv->ordering_constraints;
+         iter != NULL; iter = iter->next) {
 
         pcmk__action_relation_t *order = iter->data;
         uint32_t order_flags = pcmk__ar_ordered;
