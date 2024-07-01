@@ -248,9 +248,7 @@ pacemaker_*.info
 /lib/common/tests/schemas/schemas
 /xml/test-*/*.up
 /xml/test-*/*.up.err
-/xml/assets/*.rng
 /xml/assets/diffview.js
-/xml/assets/xmlcatalog
 /test/_test_file.c
 
 # Packaging artifacts
