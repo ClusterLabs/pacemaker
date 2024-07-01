@@ -178,6 +178,7 @@ struct pcmk__scheduler_private {
     GList *resources;               // Resources in cluster
     GList *actions;                 // All scheduled actions
     GHashTable *singletons;         // Scheduled non-resource actions
+    GList *location_constraints;    // Location constraints
     GHashTable *ticket_constraints; // Key = ticket ID, value = pcmk__ticket_t
 };
 

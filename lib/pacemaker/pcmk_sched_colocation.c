@@ -1515,7 +1515,7 @@ best_node_score_matching_attr(const pcmk__colocation_t *colocation,
          */
         allowed_nodes_orig = rsc->priv->allowed_nodes;
         rsc->priv->allowed_nodes = pcmk__copy_node_table(allowed_nodes_orig);
-        for (GList *loc_iter = rsc->priv->scheduler->placement_constraints;
+        for (GList *loc_iter = rsc->priv->scheduler->priv->location_constraints;
              loc_iter != NULL; loc_iter = loc_iter->next) {
 
             pcmk__location_t *location = loc_iter->data;

@@ -727,7 +727,7 @@ ban_list(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
 
     /* Print each ban */
-    for (gIter = scheduler->placement_constraints;
+    for (gIter = scheduler->priv->location_constraints;
          gIter != NULL; gIter = gIter->next) {
         pcmk__location_t *location = gIter->data;
         const pcmk_resource_t *rsc = location->rsc;

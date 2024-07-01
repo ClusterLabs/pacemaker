@@ -365,8 +365,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
 
     CRM_CHECK(scheduler->ordering_constraints == NULL,;
         );
-    CRM_CHECK(scheduler->placement_constraints == NULL,;
-        );
+    CRM_LOG_ASSERT(scheduler->priv->location_constraints == NULL);
 }
 
 /*!
@@ -387,9 +386,9 @@ pe_reset_working_set(pcmk_scheduler_t *scheduler)
     scheduler->ordering_constraints = NULL;
 
     crm_trace("Deleting %d location constraints",
-              g_list_length(scheduler->placement_constraints));
-    pe__free_location(scheduler->placement_constraints);
-    scheduler->placement_constraints = NULL;
+              g_list_length(scheduler->priv->location_constraints));
+    pe__free_location(scheduler->priv->location_constraints);
+    scheduler->priv->location_constraints = NULL;
 
     crm_trace("Deleting %d colocation constraints",
               g_list_length(scheduler->colocation_constraints));
