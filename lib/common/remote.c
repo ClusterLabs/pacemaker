@@ -183,6 +183,9 @@ set_minimum_dh_bits(const gnutls_session_t *session)
     if (dh_min_bits > 0) {
         crm_info("Requiring server use a Diffie-Hellman prime of at least %d bits",
                  dh_min_bits);
+        crm_warn("Support for the " PCMK__ENV_DH_MIN_BITS " "
+                 "environment variable is deprecated and will be removed "
+                 "in a future release");
         gnutls_dh_set_prime_bits(*session, dh_min_bits);
     }
 }
