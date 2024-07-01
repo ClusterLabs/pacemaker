@@ -258,28 +258,6 @@
 # Default: PCMK_tls_priorities="@PCMK_GNUTLS_PRIORITIES@"
 # Example: PCMK_tls_priorities="SECURE128:+SECURE192:-VERS-ALL:+VERS-TLS1.2"
 
-# PCMK_dh_min_bits (DEPRECATED; Advanced Use Only)
-#
-# Set a lower bound on the bit length of the prime number generated for
-# Diffie-Hellman parameters needed by TLS connections. The default is no
-# minimum.
-#
-# The server (Pacemaker Remote daemon, or CIB manager configured to accept
-# remote clients) will use this value to provide a floor for the value
-# recommended by the GnuTLS library. The library will only accept a limited
-# number of specific values, which vary by library version, so setting these is
-# recommended only when required for compatibility with specific client
-# versions.
-#
-# Clients (connecting cluster nodes or remote CIB commands) will require that
-# the server use a prime of at least this size. This is recommended only when
-# the value must be lowered in order for the client's GnuTLS library to accept
-# a connection to an older server.
-# 
-# This variable is deprecated and will be ignored by Pacemaker 3.0.0 and later.
-#
-# Default: PCMK_dh_min_bits="0" (no minimum)
-
 # PCMK_dh_max_bits (Advanced Use Only)
 #
 # Set an upper bound on the bit length of the prime number generated for
