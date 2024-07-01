@@ -98,7 +98,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    int num_synapse;                // Number of transition graph synapses
     int max_valid_nodes;            // \deprecated Do not use
     int order_id;                   // ID to use for next created ordering
     int action_id;                  // ID to use for next created action

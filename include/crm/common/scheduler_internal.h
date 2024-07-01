@@ -185,6 +185,7 @@ struct pcmk__scheduler_private {
     GList *colocation_constraints;  // Colocation constraints
     GList *ordering_constraints;    // Ordering constraints
     GHashTable *ticket_constraints; // Key = ticket ID, value = pcmk__ticket_t
+    int synapse_count;              // Number of transition graph synapses
 };
 
 // Group of enum pcmk__warnings flags for warnings we want to log once
