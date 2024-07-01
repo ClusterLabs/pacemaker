@@ -138,8 +138,9 @@ cluster_status(pcmk_scheduler_t * scheduler)
                                                     LOG_NEVER);
     check_for_deprecated_rules(scheduler);
 
-    scheduler->rsc_defaults = get_xpath_object("//" PCMK_XE_RSC_DEFAULTS,
-                                               scheduler->input, LOG_NEVER);
+    scheduler->priv->rsc_defaults = get_xpath_object("//" PCMK_XE_RSC_DEFAULTS,
+                                                     scheduler->input,
+                                                     LOG_NEVER);
 
     section = get_xpath_object("//" PCMK_XE_CRM_CONFIG, scheduler->input,
                                LOG_TRACE);
