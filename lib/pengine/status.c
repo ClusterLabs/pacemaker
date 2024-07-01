@@ -390,9 +390,9 @@ pe_reset_working_set(pcmk_scheduler_t *scheduler)
     scheduler->priv->location_constraints = NULL;
 
     crm_trace("Deleting %d colocation constraints",
-              g_list_length(scheduler->colocation_constraints));
-    g_list_free_full(scheduler->colocation_constraints, free);
-    scheduler->colocation_constraints = NULL;
+              g_list_length(scheduler->priv->colocation_constraints));
+    g_list_free_full(scheduler->priv->colocation_constraints, free);
+    scheduler->priv->colocation_constraints = NULL;
 
     crm_trace("Deleting %d ticket constraints",
               g_list_length(scheduler->ticket_constraints));

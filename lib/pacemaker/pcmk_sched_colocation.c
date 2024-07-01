@@ -426,8 +426,8 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pcmk__add_with_this(&(primary->priv->with_this_colocations), new_con,
                         primary);
 
-    dependent->priv->scheduler->colocation_constraints =
-        g_list_prepend(dependent->priv->scheduler->colocation_constraints,
+    dependent->priv->scheduler->priv->colocation_constraints =
+        g_list_prepend(dependent->priv->scheduler->priv->colocation_constraints,
                        new_con);
 
     if (score <= -PCMK_SCORE_INFINITY) {
