@@ -309,7 +309,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     CRM_CHECK(rsc != NULL, return NULL);
 
     // The default placement strategy ignores utilization
-    if (pcmk__str_eq(rsc->priv->scheduler->placement_strategy,
+    if (pcmk__str_eq(rsc->priv->scheduler->priv->placement_strategy,
                      PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
         return NULL;
     }
@@ -429,7 +429,7 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
 
     pcmk__rsc_trace(rsc,
                     "Creating utilization constraints for %s - strategy: %s",
-                    rsc->id, rsc->priv->scheduler->placement_strategy);
+                    rsc->id, rsc->priv->scheduler->priv->placement_strategy);
 
     // "stop rsc then load_stopped" constraints for current nodes
     for (iter = rsc->priv->active_nodes; iter != NULL; iter = iter->next) {

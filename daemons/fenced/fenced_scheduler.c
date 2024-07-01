@@ -217,9 +217,9 @@ fenced_scheduler_run(xmlNode *cib)
 {
     CRM_CHECK((cib != NULL) && (scheduler != NULL), return);
 
-    if (scheduler->now != NULL) {
-        crm_time_free(scheduler->now);
-        scheduler->now = NULL;
+    if (scheduler->priv->now != NULL) {
+        crm_time_free(scheduler->priv->now);
+        scheduler->priv->now = NULL;
     }
     scheduler->localhost = stonith_our_uname;
     pcmk__schedule_actions(cib, pcmk__sched_location_only

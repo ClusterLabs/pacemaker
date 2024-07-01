@@ -1896,7 +1896,8 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 
     /* Print tickets if requested */
     if (pcmk_is_set(section_opts, pcmk_section_tickets)) {
-        CHECK_RC(rc, out->message(out, "ticket-list", scheduler->tickets,
+        CHECK_RC(rc, out->message(out, "ticket-list",
+                                  scheduler->priv->ticket_constraints,
                                   (rc == pcmk_rc_ok), false, false));
     }
 
@@ -2015,7 +2016,8 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
 
     /* Print tickets if requested */
     if (pcmk_is_set(section_opts, pcmk_section_tickets)) {
-        out->message(out, "ticket-list", scheduler->tickets, false, false, false);
+        out->message(out, "ticket-list", scheduler->priv->ticket_constraints,
+                     false, false, false);
     }
 
     /* Print negative location constraints if requested */
@@ -2142,7 +2144,8 @@ cluster_status_html(pcmk__output_t *out, va_list args)
 
     /* Print tickets if requested */
     if (pcmk_is_set(section_opts, pcmk_section_tickets)) {
-        out->message(out, "ticket-list", scheduler->tickets, false, false, false);
+        out->message(out, "ticket-list", scheduler->priv->ticket_constraints,
+                     false, false, false);
     }
 
     /* Print negative location constraints if requested */

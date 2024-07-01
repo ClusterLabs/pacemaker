@@ -123,13 +123,8 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
     scheduler->failed = pcmk__xe_create(NULL, "failed-ops");
 
-    if (scheduler->now == NULL) {
-        scheduler->now = crm_time_new(NULL);
-    }
-
-    if (scheduler->dc_uuid == NULL) {
-        scheduler->dc_uuid = crm_element_value_copy(scheduler->input,
-                                                    PCMK_XA_DC_UUID);
+    if (scheduler->priv->now == NULL) {
+        scheduler->priv->now = crm_time_new(NULL);
     }
 
     if (pcmk__xe_attr_is_true(scheduler->input, PCMK_XA_HAVE_QUORUM)) {
@@ -329,16 +324,16 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     }
 
     pcmk__clear_scheduler_flags(scheduler, pcmk__sched_have_status);
-    if (scheduler->config_hash != NULL) {
-        g_hash_table_destroy(scheduler->config_hash);
+    if (scheduler->priv->options != NULL) {
+        g_hash_table_destroy(scheduler->priv->options);
     }
 
-    if (scheduler->singletons != NULL) {
-        g_hash_table_destroy(scheduler->singletons);
+    if (scheduler->priv->singletons != NULL) {
+        g_hash_table_destroy(scheduler->priv->singletons);
     }
 
-    if (scheduler->tickets) {
-        g_hash_table_destroy(scheduler->tickets);
+    if (scheduler->priv->ticket_constraints != NULL) {
+        g_hash_table_destroy(scheduler->priv->ticket_constraints);
     }
 
     if (scheduler->template_rsc_sets) {
@@ -349,13 +344,11 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         g_hash_table_destroy(scheduler->tags);
     }
 
-    free(scheduler->dc_uuid);
-
     crm_trace("deleting resources");
     pe_free_resources(scheduler->resources);
 
     crm_trace("deleting actions");
-    pe_free_actions(scheduler->actions);
+    pe_free_actions(scheduler->priv->actions);
 
     crm_trace("deleting nodes");
     pe_free_nodes(scheduler->nodes);
@@ -363,7 +356,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     pe__free_param_checks(scheduler);
     g_list_free(scheduler->stop_needed);
     pcmk__xml_free(scheduler->graph);
-    crm_time_free(scheduler->now);
+    crm_time_free(scheduler->priv->now);
     pcmk__xml_free(scheduler->input);
     pcmk__xml_free(scheduler->failed);
 

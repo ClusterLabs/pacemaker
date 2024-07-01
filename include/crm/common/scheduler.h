@@ -81,34 +81,18 @@ struct pcmk__scheduler {
     //! \deprecated Set scheduler input with pcmk_set_scheduler_cib() instead
     xmlNode *input;                 // CIB XML
 
-    crm_time_t *now;                // Current time for evaluation purposes
-    char *dc_uuid;                  // Node ID of designated controller
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_get_dc() instead
     pcmk_node_t *dc_node;           // Node object for DC
-
-    const char *stonith_action;     // Default fencing action
-    const char *placement_strategy; // Value of placement-strategy property
 
     // NOTE: sbd (as of at least 1.5.2) uses this
     // @COMPAT Change to uint64_t at a compatibility break
     //! \deprecated Call pcmk_has_quorum() to check quorum
     unsigned long long flags;       // Group of enum pcmk__scheduler_flags
 
-    int stonith_timeout;            // Value of stonith-timeout property
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_get_no_quorum_policy() to get no-quorum policy
     enum pe_quorum_policy no_quorum_policy; // Response to loss of quorum
-
-    GHashTable *config_hash;        // Cluster properties
-
-    // Ticket constraints unpacked from ticket state
-    GHashTable *tickets;
-
-    // Actions for which there can be only one (such as "fence node X")
-    GHashTable *singletons;
 
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_find_node() to find a node instead
@@ -122,7 +106,6 @@ struct pcmk__scheduler {
     // Ticket constraints unpacked by libpacemaker
     GList *ticket_constraints;
 
-    GList *actions;                 // Scheduled actions
     xmlNode *failed;                // History entries of failed actions
     xmlNode *op_defaults;           // Configured operation defaults
     xmlNode *rsc_defaults;          // Configured resource defaults

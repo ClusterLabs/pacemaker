@@ -289,7 +289,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         bool empty = true;
         crm_time_t *next_change = crm_time_new_undefined();
         pcmk_rule_input_t rule_input = {
-            .now = rsc->priv->scheduler->now,
+            .now = rsc->priv->scheduler->priv->now,
             .rsc_meta = rsc->priv->meta,
             .rsc_id = rsc_id_match,
             .rsc_id_submatches = rsc_id_submatches,

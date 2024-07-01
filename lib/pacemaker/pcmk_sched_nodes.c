@@ -247,12 +247,12 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // If appropriate, compare node utilization
 
-    if (pcmk__str_eq(node1->priv->scheduler->placement_strategy,
+    if (pcmk__str_eq(node1->priv->scheduler->priv->placement_strategy,
                      PCMK_VALUE_MINIMAL, pcmk__str_casei)) {
         goto equal;
     }
 
-    if (pcmk__str_eq(node1->priv->scheduler->placement_strategy,
+    if (pcmk__str_eq(node1->priv->scheduler->priv->placement_strategy,
                      PCMK_VALUE_BALANCED, pcmk__str_casei)) {
 
         result = pcmk__compare_node_capacities(node1, node2);
@@ -368,7 +368,7 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
     int base_health = 0;
     enum pcmk__health_strategy strategy;
     const char *strategy_str =
-        pcmk__cluster_option(scheduler->config_hash,
+        pcmk__cluster_option(scheduler->priv->options,
                              PCMK_OPT_NODE_HEALTH_STRATEGY);
 
     strategy = pcmk__parse_health_strategy(strategy_str);

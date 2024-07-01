@@ -1410,7 +1410,9 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
     pcmk__output_t *out = scheduler->priv->out;
 
     // Output node (non-resource) actions
-    for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->actions;
+         iter != NULL; iter = iter->next) {
+
         char *node_name = NULL;
         char *task = NULL;
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
