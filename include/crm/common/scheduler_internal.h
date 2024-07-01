@@ -175,6 +175,7 @@ struct pcmk__scheduler_private {
     const char *fence_action;       // Default fencing action
     int fence_timeout_ms;           // Value of stonith-timeout property in ms
     const char *placement_strategy; // Value of placement-strategy property
+    xmlNode *op_defaults;           // Configured operation defaults
     GList *resources;               // Resources in cluster
     GList *actions;                 // All scheduled actions
     GHashTable *singletons;         // Scheduled non-resource actions

@@ -133,8 +133,9 @@ cluster_status(pcmk_scheduler_t * scheduler)
         pcmk__clear_scheduler_flags(scheduler, pcmk__sched_quorate);
     }
 
-    scheduler->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
-                                              scheduler->input, LOG_NEVER);
+    scheduler->priv->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
+                                                    scheduler->input,
+                                                    LOG_NEVER);
     check_for_deprecated_rules(scheduler);
 
     scheduler->rsc_defaults = get_xpath_object("//" PCMK_XE_RSC_DEFAULTS,

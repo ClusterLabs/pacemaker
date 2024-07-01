@@ -715,7 +715,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     meta = pcmk__strkey_table(free, free);
 
     // Cluster-wide <op_defaults> <meta_attributes>
-    pe__unpack_dataset_nvpairs(rsc->priv->scheduler->op_defaults,
+    pe__unpack_dataset_nvpairs(rsc->priv->scheduler->priv->op_defaults,
                                PCMK_XE_META_ATTRIBUTES, &rule_data, meta, NULL,
                                FALSE, rsc->priv->scheduler);
 
