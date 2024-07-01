@@ -234,10 +234,6 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk__ticket_t *ticket,
     rsc->priv->ticket_constraints =
         g_list_append(rsc->priv->ticket_constraints, new_rsc_ticket);
 
-    rsc->priv->scheduler->ticket_constraints =
-        g_list_append(rsc->priv->scheduler->ticket_constraints,
-                      new_rsc_ticket);
-
     if (!pcmk_is_set(new_rsc_ticket->ticket->flags, pcmk__ticket_granted)
         || pcmk_is_set(new_rsc_ticket->ticket->flags, pcmk__ticket_standby)) {
         constraints_for_ticket(rsc, new_rsc_ticket);

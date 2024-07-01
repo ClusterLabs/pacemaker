@@ -98,9 +98,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    // Ticket constraints unpacked by libpacemaker
-    GList *ticket_constraints;
-
     xmlNode *failed;                // History entries of failed actions
     xmlNode *op_defaults;           // Configured operation defaults
     xmlNode *rsc_defaults;          // Configured resource defaults
