@@ -1065,7 +1065,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
      */
 
     // Add resource actions to graph
-    for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->priv->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pcmk__rsc_trace(rsc, "Processing actions for %s", rsc->id);

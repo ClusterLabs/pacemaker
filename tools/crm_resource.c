@@ -1724,8 +1724,8 @@ main(int argc, char **argv)
 
     // If command requires that resource exist if specified, find it
     if ((find_flags != 0) && (options.rsc_id != NULL)) {
-        rsc = pe_find_resource_with_flags(scheduler->resources, options.rsc_id,
-                                          find_flags);
+        rsc = pe_find_resource_with_flags(scheduler->priv->resources,
+                                          options.rsc_id, find_flags);
         if (rsc == NULL) {
             exit_code = CRM_EX_NOSUCH;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
@@ -1801,7 +1801,8 @@ main(int argc, char **argv)
         }
 
         case cmd_list_instances:
-            rc = out->message(out, "resource-names-list", scheduler->resources);
+            rc = out->message(out, "resource-names-list",
+                              scheduler->priv->resources);
 
             if (rc != pcmk_rc_ok) {
                 rc = ENXIO;
@@ -1881,8 +1882,8 @@ main(int argc, char **argv)
 
         case cmd_cts:
             rc = pcmk_rc_ok;
-            g_list_foreach(scheduler->resources, (GFunc) cli_resource_print_cts,
-                           out);
+            g_list_foreach(scheduler->priv->resources,
+                           (GFunc) cli_resource_print_cts, out);
             cli_resource_print_cts_constraints(scheduler);
             break;
 
@@ -1926,7 +1927,7 @@ main(int argc, char **argv)
                 rc = pcmk_rc_node_unknown;
             } else {
                 rc = out->message(out, "resource-reasons-list",
-                                  scheduler->resources, rsc, node);
+                                  scheduler->priv->resources, rsc, node);
             }
             break;
 

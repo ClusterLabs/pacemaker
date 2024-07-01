@@ -30,7 +30,7 @@ enum ordering_symmetry {
 };
 
 #define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                  \
-        __rsc = pcmk__find_constraint_resource(scheduler->resources,        \
+        __rsc = pcmk__find_constraint_resource(scheduler->priv->resources,  \
                                                __name);                     \
         if (__rsc == NULL) {                                                \
             pcmk__config_err("%s: No resource found for %s", __set, __name);\
@@ -252,7 +252,7 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
         return NULL;
     }
 
-    rsc = pcmk__find_constraint_resource(scheduler->resources, rsc_id);
+    rsc = pcmk__find_constraint_resource(scheduler->priv->resources, rsc_id);
     if (rsc == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", pcmk__xe_id(xml), rsc_id);

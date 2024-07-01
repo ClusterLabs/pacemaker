@@ -583,8 +583,11 @@ pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 void
 pe__clear_resource_flags_on_all(pcmk_scheduler_t *scheduler, uint64_t flag)
 {
-    for (GList *lpc = scheduler->resources; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = scheduler->priv->resources;
+         lpc != NULL; lpc = lpc->next) {
+
         pcmk_resource_t *r = (pcmk_resource_t *) lpc->data;
+
         pe__clear_resource_flags_recursive(r, flag);
     }
 }
@@ -835,8 +838,8 @@ pe__build_rsc_list(pcmk_scheduler_t *scheduler, const char *s)
         resources = g_list_prepend(resources, strdup("*"));
     } else {
         const uint32_t flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
-        pcmk_resource_t *rsc = pe_find_resource_with_flags(scheduler->resources,
-                                                           s, flags);
+        pcmk_resource_t *rsc =
+            pe_find_resource_with_flags(scheduler->priv->resources, s, flags);
 
         if (rsc) {
             /* A colon in the name we were given means we're being asked to filter

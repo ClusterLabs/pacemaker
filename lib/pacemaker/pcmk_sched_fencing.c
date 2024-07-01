@@ -294,7 +294,7 @@ void
 pcmk__order_vs_fence(pcmk_action_t *stonith_op, pcmk_scheduler_t *scheduler)
 {
     CRM_CHECK(stonith_op && scheduler, return);
-    for (GList *r = scheduler->resources; r != NULL; r = r->next) {
+    for (GList *r = scheduler->priv->resources; r != NULL; r = r->next) {
         rsc_stonith_ordering((pcmk_resource_t *) r->data, stonith_op);
     }
 }

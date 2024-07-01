@@ -479,7 +479,8 @@ generate_params(void)
     cluster_status(scheduler);
 
     // Find resource in CIB
-    rsc = pe_find_resource_with_flags(scheduler->resources, options.rsc_id,
+    rsc = pe_find_resource_with_flags(scheduler->priv->resources,
+                                      options.rsc_id,
                                       pcmk_rsc_match_history
                                       |pcmk_rsc_match_basename);
     if (rsc == NULL) {

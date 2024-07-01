@@ -37,8 +37,8 @@ pe__rscs_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
 
         const char *id = (const char *) refs->data;
         const uint32_t flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
-        pcmk_resource_t *rsc = pe_find_resource_with_flags(scheduler->resources,
-                                                           id, flags);
+        pcmk_resource_t *rsc =
+            pe_find_resource_with_flags(scheduler->priv->resources, id, flags);
 
         if (!rsc) {
             continue;

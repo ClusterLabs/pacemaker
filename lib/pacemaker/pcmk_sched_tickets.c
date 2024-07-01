@@ -270,7 +270,7 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk__ticket_t *ticket,
 
         pcmk_resource_t *resource = NULL;
 
-        resource = pcmk__find_constraint_resource(scheduler->resources,
+        resource = pcmk__find_constraint_resource(scheduler->priv->resources,
                                                   pcmk__xe_id(xml_rsc));
         if (resource == NULL) {
             pcmk__config_err("%s: No resource found for %s",
@@ -336,7 +336,8 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         pcmk__config_err("Ignoring constraint '%s' without resource", id);
         return;
     } else {
-        rsc = pcmk__find_constraint_resource(scheduler->resources, rsc_id);
+        rsc = pcmk__find_constraint_resource(scheduler->priv->resources,
+                                             rsc_id);
     }
 
     if (rsc == NULL) {

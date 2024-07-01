@@ -667,7 +667,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     const char *rsc_provider = NULL;
     const char *rsc_type = NULL;
     bool cib_only = false;
-    pcmk_resource_t *rsc = pe_find_resource(scheduler->resources, rsc_id);
+    pcmk_resource_t *rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
 
     if (rsc == NULL) {
         out->err(out, "Resource %s not found", rsc_id);
@@ -817,7 +817,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         if (rsc_id) {
             pcmk_resource_t *fail_rsc = NULL;
 
-            fail_rsc = pe_find_resource_with_flags(scheduler->resources,
+            fail_rsc = pe_find_resource_with_flags(scheduler->priv->resources,
                                                    failed_id,
                                                    pcmk_rsc_match_history
                                                    |pcmk_rsc_match_anon_basename);
@@ -1524,7 +1524,7 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
 
     // Find maximum stop timeout in milliseconds
     for (const GList *item = resources; item != NULL; item = item->next) {
-        pcmk_resource_t *rsc = pe_find_resource(scheduler->resources,
+        pcmk_resource_t *rsc = pe_find_resource(scheduler->priv->resources,
                                                 (const char *) item->data);
         guint delay = max_rsc_stop_timeout(rsc);
 
@@ -1683,8 +1683,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         goto done;
     }
 
-    restart_target_active = get_active_resources(host, scheduler->resources);
-    current_active = get_active_resources(host, scheduler->resources);
+    restart_target_active = get_active_resources(host,
+                                                 scheduler->priv->resources);
+    current_active = get_active_resources(host, scheduler->priv->resources);
 
     dump_list(current_active, "Origin");
 
@@ -1737,7 +1738,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         goto failure;
     }
 
-    target_active = get_active_resources(host, scheduler->resources);
+    target_active = get_active_resources(host, scheduler->priv->resources);
     dump_list(target_active, "Target");
 
     list_delta = pcmk__subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
@@ -1768,7 +1769,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             if (current_active != NULL) {
                 g_list_free_full(current_active, free);
             }
-            current_active = get_active_resources(host, scheduler->resources);
+            current_active = get_active_resources(host,
+                                                  scheduler->priv->resources);
 
             g_list_free(list_delta);
             list_delta = pcmk__subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
@@ -1850,7 +1852,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             if (current_active != NULL) {
                 g_list_free_full(current_active, free);
             }
-            current_active = get_active_resources(NULL, scheduler->resources);
+            current_active = get_active_resources(NULL,
+                                                  scheduler->priv->resources);
 
             g_list_free(list_delta);
             list_delta = pcmk__subtract_lists(target_active, current_active, (GCompareFunc) strcmp);

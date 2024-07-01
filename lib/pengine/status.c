@@ -172,8 +172,9 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
 
     if (!pcmk_is_set(scheduler->flags, pcmk__sched_no_counts)) {
-        for (GList *item = scheduler->resources; item != NULL;
-             item = item->next) {
+        for (GList *item = scheduler->priv->resources;
+             item != NULL; item = item->next) {
+
             pcmk_resource_t *rsc = item->data;
 
             rsc->priv->fns->count(item->data);
@@ -345,7 +346,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     }
 
     crm_trace("deleting resources");
-    pe_free_resources(scheduler->resources);
+    pe_free_resources(scheduler->priv->resources);
 
     crm_trace("deleting actions");
     pe_free_actions(scheduler->priv->actions);

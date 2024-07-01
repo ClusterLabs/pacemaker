@@ -1291,7 +1291,8 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
             GString *digests_all = g_string_sized_new(1024);
             GString *digests_secure = g_string_sized_new(1024);
 
-            GList *matches = find_unfencing_devices(scheduler->resources, NULL);
+            GList *matches = find_unfencing_devices(scheduler->priv->resources,
+                                                    NULL);
 
             for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
                 pcmk_resource_t *match = gIter->data;

@@ -98,7 +98,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    GList *resources;               // Resources in cluster
     GList *placement_constraints;   // Location constraints
     GList *ordering_constraints;    // Ordering constraints
     GList *colocation_constraints;  // Colocation constraints

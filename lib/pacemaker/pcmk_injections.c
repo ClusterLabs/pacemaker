@@ -580,7 +580,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
 
     parse_op_key(key, &resource, &task, &interval_ms);
 
-    rsc = pe_find_resource(scheduler->resources, resource);
+    rsc = pe_find_resource(scheduler->priv->resources, resource);
     if (rsc == NULL) {
         out->err(out, "Invalid resource name: %s", resource);
         goto done;

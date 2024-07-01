@@ -225,7 +225,8 @@ fenced_scheduler_run(xmlNode *cib)
     pcmk__schedule_actions(cib, pcmk__sched_location_only
                                 |pcmk__sched_no_compat
                                 |pcmk__sched_no_counts, scheduler);
-    g_list_foreach(scheduler->resources, register_if_fencing_device, NULL);
+    g_list_foreach(scheduler->priv->resources, register_if_fencing_device,
+                   NULL);
 
     scheduler->input = NULL; // Wasn't a copy, so don't let API free it
     pe_reset_working_set(scheduler);

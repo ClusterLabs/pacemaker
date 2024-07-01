@@ -779,7 +779,8 @@ order_then_probes(pcmk_scheduler_t *scheduler)
      * narrowing use case suggests that this code should remain disabled until
      * someone gets smarter.
      */
-    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->resources;
+         iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pcmk_action_t *start = NULL;
@@ -861,8 +862,8 @@ void
 pcmk__order_probes(pcmk_scheduler_t *scheduler)
 {
     // Add orderings for "probe then X"
-    g_list_foreach(scheduler->resources, add_start_restart_orderings_for_rsc,
-                   NULL);
+    g_list_foreach(scheduler->priv->resources,
+                   add_start_restart_orderings_for_rsc, NULL);
     add_probe_orderings_for_stops(scheduler);
 
     order_then_probes(scheduler);
@@ -901,6 +902,6 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
         }
 
         // Probe each resource in the cluster on this node, as needed
-        pcmk__probe_resource_list(scheduler->resources, node);
+        pcmk__probe_resource_list(scheduler->priv->resources, node);
     }
 }
