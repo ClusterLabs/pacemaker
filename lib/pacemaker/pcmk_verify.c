@@ -47,31 +47,34 @@ pcmk__parse_cib(pcmk__output_t *out, const char *cib_source, xmlNodePtr *cib_obj
 }
 
 int
-pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out, xmlNode *cib_object)
+pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
+             xmlNode **cib_object)
 {
     int rc = pcmk_rc_ok;
     xmlNode *status = NULL;
     xmlNode *cib_object_copy = NULL;
 
-    if (!pcmk__xe_is(cib_object, PCMK_XE_CIB)) {
+    CRM_ASSERT(cib_object != NULL);
+
+    if (!pcmk__xe_is(*cib_object, PCMK_XE_CIB)) {
         rc = EBADMSG;
         out->err(out, "This tool can only check complete configurations (i.e. those starting with <cib>).");
         goto verify_done;
     }
 
-    status = pcmk_find_cib_element(cib_object, PCMK_XE_STATUS);
+    status = pcmk_find_cib_element(*cib_object, PCMK_XE_STATUS);
     if (status == NULL) {
-        pcmk__xe_create(cib_object, PCMK_XE_STATUS);
+        pcmk__xe_create(*cib_object, PCMK_XE_STATUS);
     }
 
-    if (!pcmk__validate_xml(cib_object, NULL,
+    if (!pcmk__validate_xml(*cib_object, NULL,
                             (xmlRelaxNGValidityErrorFunc) out->err, out)) {
         crm_config_error = TRUE;
         rc = pcmk_rc_schema_validation;
         goto verify_done;
     }
 
-    rc = pcmk_update_configured_schema(&cib_object, false);
+    rc = pcmk_update_configured_schema(cib_object, false);
     if (rc != pcmk_rc_ok) {
         crm_config_error = TRUE;
         out->err(out, "The cluster will NOT be able to use this configuration.\n"
@@ -85,14 +88,14 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out, xmlNode *cib_obje
      * @TODO Some parts of the configuration are unpacked only when needed (for
      * example, action configuration), so we aren't necessarily checking those.
      */
-    if (cib_object != NULL) {
+    if (*cib_object != NULL) {
         unsigned long long flags = pcmk__sched_no_counts|pcmk__sched_no_compat;
 
         if (status == NULL) {
             // No status available, so do minimal checks
             flags |= pcmk__sched_validate_only;
         }
-        cib_object_copy = pcmk__xml_copy(NULL, cib_object);
+        cib_object_copy = pcmk__xml_copy(NULL, *cib_object);
 
         /* The scheduler takes ownership of the XML object and potentially
          * frees it later. We want the caller of pcmk__verify to retain
@@ -143,7 +146,7 @@ pcmk_verify(xmlNodePtr *xml, const char *cib_source)
     }
 
     scheduler->priv->out = out;
-    rc = pcmk__verify(scheduler, out, cib_object);
+    rc = pcmk__verify(scheduler, out, &cib_object);
 
 done:
     pe_free_working_set(scheduler);

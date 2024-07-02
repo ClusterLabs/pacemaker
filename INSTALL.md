@@ -24,9 +24,6 @@ Also:
 * make must be GNU (or compatible) (setting MAKE=gmake might also work but is
   untested)
 * GNU (or compatible) getopt must be somewhere on the PATH
-* If built with gnutls >= 3.3.0 and <= 3.6.1, Pacemaker will not be usable in
-  FIPS mode.  Before 3.3.0, gnutls did not support FIPS and after 3.6.1, gnutls
-  includes a function to temporarily disable FIPS.
 
 ### Cluster Stack Dependencies
 

@@ -1647,8 +1647,6 @@ PKG_CHECK_MODULES(GNUTLS, [gnutls >= 2.12.0],
                   [CPPFLAGS="${CPPFLAGS} ${GNUTLS_CFLAGS}"
                    LIBS="${LIBS} ${GNUTLS_LIBS}"])
 
-AC_CHECK_FUNCS([gnutls_fips140_set_mode])
-
 # --- ASAN/UBSAN/TSAN (see man gcc) ---
 # when using SANitizers, we need to pass the -fsanitize..
 # to both CFLAGS and LDFLAGS. The CFLAGS/LDFLAGS must be

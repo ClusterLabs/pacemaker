@@ -231,7 +231,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
     }
 
     fprintf(dot_strm, " digraph \"g\" {\n");
-    for (iter = scheduler->actions; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->priv->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
         const char *style = "dashed";
         const char *font = "black";
@@ -272,7 +272,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         free(action_name);
     }
 
-    for (iter = scheduler->actions; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->priv->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
 
         for (GList *before_iter = action->actions_before;
@@ -444,17 +444,18 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
                             &original_date);
 
     if (use_date) {
-        scheduler->now = crm_time_new(use_date);
+        scheduler->priv->now = crm_time_new(use_date);
         out->info(out, "Setting effective cluster time: %s", use_date);
-        crm_time_log(LOG_NOTICE, "Pretending 'now' is", scheduler->now,
+        crm_time_log(LOG_NOTICE, "Pretending 'now' is", scheduler->priv->now,
                      crm_time_log_date | crm_time_log_timeofday);
 
     } else if (original_date != 0) {
-        scheduler->now = pcmk__copy_timet(original_date);
+        scheduler->priv->now = pcmk__copy_timet(original_date);
 
         if (print_original) {
-            char *when = crm_time_as_string(scheduler->now,
-                            crm_time_log_date|crm_time_log_timeofday);
+            char *when = crm_time_as_string(scheduler->priv->now,
+                                            crm_time_log_date
+                                            |crm_time_log_timeofday);
 
             out->info(out, "Using the original execution date of: %s", when);
             free(when);

@@ -32,7 +32,7 @@ evaluate_lifetime(xmlNode *lifetime, pcmk_scheduler_t *scheduler)
     bool result = false;
     crm_time_t *next_change = crm_time_new_undefined();
     pcmk_rule_input_t rule_input = {
-        .now = scheduler->now,
+        .now = scheduler->priv->now,
     };
 
     result = (pcmk__evaluate_rules(lifetime, &rule_input,

@@ -315,24 +315,22 @@ cib_cs_dispatch(cpg_handle_t handle,
                  const struct cpg_name *groupName,
                  uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
-    uint32_t kind = 0;
     xmlNode *xml = NULL;
     const char *from = NULL;
-    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &kind, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
 
     if(data == NULL) {
         return;
     }
-    if (kind == crm_class_cluster) {
-        xml = pcmk__xml_parse(data);
-        if (xml == NULL) {
-            crm_err("Invalid XML: '%.120s'", data);
-            free(data);
-            return;
-        }
-        crm_xml_add(xml, PCMK__XA_SRC, from);
-        cib_peer_callback(xml, NULL);
+
+    xml = pcmk__xml_parse(data);
+    if (xml == NULL) {
+        crm_err("Invalid XML: '%.120s'", data);
+        free(data);
+        return;
     }
+    crm_xml_add(xml, PCMK__XA_SRC, from);
+    cib_peer_callback(xml, NULL);
 
     pcmk__xml_free(xml);
     free(data);
@@ -351,12 +349,12 @@ cib_cs_destroy(gpointer user_data)
 #endif
 
 static void
-cib_peer_update_callback(enum crm_status_type type,
+cib_peer_update_callback(enum pcmk__node_update type,
                          pcmk__node_status_t *node, const void *data)
 {
     switch (type) {
-        case crm_status_uname:
-        case crm_status_nstate:
+        case pcmk__node_update_name:
+        case pcmk__node_update_state:
             if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
                 && (pcmk__ipc_client_count() == 0)) {
 

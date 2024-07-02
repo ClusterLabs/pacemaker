@@ -248,9 +248,6 @@ pacemaker_*.info
 /lib/common/tests/schemas/schemas
 /xml/test-*/*.up
 /xml/test-*/*.up.err
-/xml/assets/*.rng
-/xml/assets/diffview.js
-/xml/assets/xmlcatalog
 /test/_test_file.c
 
 # Packaging artifacts
@@ -351,6 +348,7 @@ pacemaker_*.info
 /scratch
 /tools/cluster-init
 /test-driver
+/xml/assets
 /xml/crm.dtd
 /xml/version-diff.sh
 ylwrap

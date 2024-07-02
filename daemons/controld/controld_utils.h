@@ -14,7 +14,7 @@
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/crm.h>
-#include <crm/cluster.h>            // enum crm_join_phase
+#include <crm/cluster.h>            // enum controld_join_phase
 #include <crm/cluster/internal.h>   // pcmk__node_status_t
 #include <crm/common/xml.h>
 
@@ -42,7 +42,7 @@ void fsa_dump_inputs(int log_level, const char *text, long long input_register);
 
 gboolean update_dc(xmlNode * msg);
 void crm_update_peer_join(const char *source, pcmk__node_status_t *node,
-                          enum crm_join_phase phase);
+                          enum controld_join_phase phase);
 xmlNode *create_node_state_update(pcmk__node_status_t *node, int flags,
                                   xmlNode *parent, const char *source);
 void populate_cib_nodes(enum node_update_flags flags, const char *source);
@@ -55,7 +55,7 @@ void update_attrd_clear_failures(const char *host, const char *rsc,
                                  const char *op, const char *interval_spec,
                                  gboolean is_remote_node);
 
-int crmd_join_phase_count(enum crm_join_phase phase);
+int crmd_join_phase_count(enum controld_join_phase phase);
 void crmd_join_phase_log(int level);
 
 void crmd_peer_down(pcmk__node_status_t *peer, bool full);

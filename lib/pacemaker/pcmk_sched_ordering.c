@@ -1137,7 +1137,9 @@ ordering_is_invalid(pcmk_action_t *action, pcmk__related_action_t *input)
 void
 pcmk__disable_invalid_orderings(pcmk_scheduler_t *scheduler)
 {
-    for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->actions;
+         iter != NULL; iter = iter->next) {
+
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
         pcmk__related_action_t *input = NULL;
 
@@ -1162,7 +1164,7 @@ pcmk__disable_invalid_orderings(pcmk_scheduler_t *scheduler)
 void
 pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
 {
-    for (GList *iter = node->priv->scheduler->actions;
+    for (GList *iter = node->priv->scheduler->priv->actions;
          iter != NULL; iter = iter->next) {
 
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
@@ -1461,13 +1463,13 @@ pcmk__apply_orderings(pcmk_scheduler_t *sched)
         }
     }
 
-    g_list_foreach(sched->actions, block_colocation_dependents, NULL);
+    g_list_foreach(sched->priv->actions, block_colocation_dependents, NULL);
 
     crm_trace("Ordering probes");
     pcmk__order_probes(sched);
 
-    crm_trace("Updating %d actions", g_list_length(sched->actions));
-    g_list_foreach(sched->actions, update_action_for_orderings, sched);
+    crm_trace("Updating %d actions", g_list_length(sched->priv->actions));
+    g_list_foreach(sched->priv->actions, update_action_for_orderings, sched);
 
     pcmk__disable_invalid_orderings(sched);
 }

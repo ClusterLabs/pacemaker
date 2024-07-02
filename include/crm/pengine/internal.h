@@ -404,7 +404,7 @@ int pe__node_health(pcmk_node_t *node);
 static inline enum pcmk__health_strategy
 pe__health_strategy(pcmk_scheduler_t *scheduler)
 {
-    const char *strategy = pcmk__cluster_option(scheduler->config_hash,
+    const char *strategy = pcmk__cluster_option(scheduler->priv->options,
                                                 PCMK_OPT_NODE_HEALTH_STRATEGY);
 
     return pcmk__parse_health_strategy(strategy);
@@ -413,7 +413,7 @@ pe__health_strategy(pcmk_scheduler_t *scheduler)
 static inline int
 pe__health_score(const char *option, pcmk_scheduler_t *scheduler)
 {
-    const char *value = pcmk__cluster_option(scheduler->config_hash, option);
+    const char *value = pcmk__cluster_option(scheduler->priv->options, option);
 
     return char2score(value);
 }

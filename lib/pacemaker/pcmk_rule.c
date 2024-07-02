@@ -137,7 +137,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     CRM_ASSERT(match != NULL);
     CRM_ASSERT(pcmk__condition_type(match) == pcmk__condition_datetime);
 
-    rc = pcmk__evaluate_date_expression(match, scheduler->now, NULL);
+    rc = pcmk__evaluate_date_expression(match, scheduler->priv->now, NULL);
     if (rc == pcmk_rc_undetermined) { // Malformed or missing
         *error = "Error parsing rule";
     }

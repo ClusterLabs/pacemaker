@@ -25,19 +25,24 @@ static void unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
 static void
 add_singleton(pcmk_scheduler_t *scheduler, pcmk_action_t *action)
 {
-    if (scheduler->singletons == NULL) {
-        scheduler->singletons = pcmk__strkey_table(NULL, NULL);
+    if (scheduler->priv->singletons == NULL) {
+        scheduler->priv->singletons = pcmk__strkey_table(NULL, NULL);
     }
-    g_hash_table_insert(scheduler->singletons, action->uuid, action);
+    g_hash_table_insert(scheduler->priv->singletons, action->uuid, action);
 }
 
 static pcmk_action_t *
 lookup_singleton(pcmk_scheduler_t *scheduler, const char *action_uuid)
 {
-    if (scheduler->singletons == NULL) {
+    /* @TODO This is the only use of the pcmk_scheduler_t:singletons hash table.
+     * Compare the performance of this approach to keeping the
+     * pcmk_scheduler_t:actions list sorted by action key and just searching
+     * that instead.
+     */
+    if (scheduler->priv->singletons == NULL) {
         return NULL;
     }
-    return g_hash_table_lookup(scheduler->singletons, action_uuid);
+    return g_hash_table_lookup(scheduler->priv->singletons, action_uuid);
 }
 
 /*!
@@ -55,10 +60,11 @@ static pcmk_action_t *
 find_existing_action(const char *key, const pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const pcmk_scheduler_t *scheduler)
 {
-    /* When rsc is NULL, it would be quicker to check scheduler->singletons,
-     * but checking all scheduler->actions takes the node into account.
+    /* When rsc is NULL, it would be quicker to check
+     * scheduler->priv->singletons, but checking all scheduler->priv->actions
+     * takes the node into account.
      */
-    GList *actions = (rsc == NULL)? scheduler->actions : rsc->priv->actions;
+    GList *actions = (rsc == NULL)? scheduler->priv->actions : rsc->priv->actions;
     GList *matches = find_actions(actions, key, node);
     pcmk_action_t *action = NULL;
 
@@ -218,7 +224,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
                     pcmk__node_name(node));
     action->id = scheduler->action_id++;
 
-    scheduler->actions = g_list_prepend(scheduler->actions, action);
+    scheduler->priv->actions = g_list_prepend(scheduler->priv->actions, action);
     if (rsc == NULL) {
         add_singleton(scheduler, action);
     } else {
@@ -246,7 +252,7 @@ pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_attrs,
-        .now = scheduler->now,
+        .now = scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
@@ -700,7 +706,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
          */
         .node_hash = (node == NULL)? NULL : node->priv->attrs,
 
-        .now = rsc->priv->scheduler->now,
+        .now = rsc->priv->scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
         .op_data = &op_rule_data,
@@ -806,7 +812,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         str = g_hash_table_lookup(meta, PCMK_META_INTERVAL_ORIGIN);
         if (unpack_interval_origin(str, action_config, interval_ms,
-                                   rsc->priv->scheduler->now,
+                                   rsc->priv->scheduler->priv->now,
                                    &start_delay)) {
             g_hash_table_insert(meta, pcmk__str_copy(PCMK_META_START_DELAY),
                                 crm_strdup_printf("%lld", start_delay));
@@ -1263,7 +1269,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
     pcmk_action_t *stonith_op = NULL;
 
     if(op == NULL) {
-        op = scheduler->stonith_action;
+        op = scheduler->priv->fence_action;
     }
 
     op_key = crm_strdup_printf("%s-%s-%s",

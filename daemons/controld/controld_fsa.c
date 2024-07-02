@@ -540,7 +540,7 @@ check_join_counts(fsa_data_t *msg_data)
     int count;
     guint npeers;
 
-    count = crmd_join_phase_count(crm_join_finalized);
+    count = crmd_join_phase_count(controld_join_finalized);
     if (count > 0) {
         crm_err("%d cluster node%s failed to confirm join",
                 count, pcmk__plural_s(count));
@@ -549,7 +549,7 @@ check_join_counts(fsa_data_t *msg_data)
     }
 
     npeers = pcmk__cluster_num_active_nodes();
-    count = crmd_join_phase_count(crm_join_confirmed);
+    count = crmd_join_phase_count(controld_join_confirmed);
     if (count == npeers) {
         if (npeers == 1) {
             crm_debug("Sole active cluster node is fully joined");
@@ -562,15 +562,15 @@ check_join_counts(fsa_data_t *msg_data)
                 "than are in membership (%d > %u)", count, npeers);
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 
-    } else if (controld_globals.membership_id != crm_peer_seq) {
+    } else if (controld_globals.membership_id != controld_globals.peer_seq) {
         crm_info("New join needed because membership changed (%llu -> %llu)",
-                 controld_globals.membership_id, crm_peer_seq);
+                 controld_globals.membership_id, controld_globals.peer_seq);
         register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
     } else {
         crm_warn("Only %d of %u active cluster nodes fully joined "
                  "(%d did not respond to offer)",
-                 count, npeers, crmd_join_phase_count(crm_join_welcomed));
+                 count, npeers, crmd_join_phase_count(controld_join_welcomed));
     }
 }
 
@@ -677,7 +677,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
                 crm_warn("Progressed to state %s after %s",
                          fsa_state2string(next_state), fsa_cause2string(cause));
             }
-            count = crmd_join_phase_count(crm_join_welcomed);
+            count = crmd_join_phase_count(controld_join_welcomed);
             if (count > 0) {
                 crm_warn("%d cluster node%s failed to respond to join offer",
                          count, pcmk__plural_s(count));
@@ -685,7 +685,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
 
             } else {
                 crm_debug("All cluster nodes (%d) responded to join offer",
-                          crmd_join_phase_count(crm_join_integrated));
+                          crmd_join_phase_count(controld_join_integrated));
             }
             break;
 

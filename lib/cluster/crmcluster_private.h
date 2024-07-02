@@ -69,7 +69,7 @@ uint32_t pcmk__cpg_local_nodeid(cpg_handle_t handle);
 
 G_GNUC_INTERNAL
 bool pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
-                        enum crm_ais_msg_types dest);
+                        enum pcmk__cluster_msg dest);
 
 #endif  // SUPPORT_COROSYNC
 

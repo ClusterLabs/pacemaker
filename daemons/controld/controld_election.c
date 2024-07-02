@@ -146,7 +146,7 @@ do_election_count_vote(long long action,
     enum election_result rc = 0;
     ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
-    if(crm_peer_cache == NULL) {
+    if (pcmk__peer_cache == NULL) {
         if (!pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_err("Internal error, no peer cache");
         }

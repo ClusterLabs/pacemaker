@@ -400,11 +400,11 @@ time_t
 get_effective_time(pcmk_scheduler_t *scheduler)
 {
     if(scheduler) {
-        if (scheduler->now == NULL) {
+        if (scheduler->priv->now == NULL) {
             crm_trace("Recording a new 'now'");
-            scheduler->now = crm_time_new(NULL);
+            scheduler->priv->now = crm_time_new(NULL);
         }
-        return crm_time_get_seconds_since_epoch(scheduler->now);
+        return crm_time_get_seconds_since_epoch(scheduler->priv->now);
     }
 
     crm_trace("Defaulting to 'now'");
@@ -529,11 +529,13 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
         return NULL;
     }
 
-    if (scheduler->tickets == NULL) {
-        scheduler->tickets = pcmk__strkey_table(free, destroy_ticket);
+    if (scheduler->priv->ticket_constraints == NULL) {
+        scheduler->priv->ticket_constraints =
+            pcmk__strkey_table(free, destroy_ticket);
     }
 
-    ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
+    ticket = g_hash_table_lookup(scheduler->priv->ticket_constraints,
+                                 ticket_id);
     if (ticket == NULL) {
 
         ticket = calloc(1, sizeof(pcmk__ticket_t));
@@ -549,7 +551,8 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
         ticket->last_granted = -1;
         ticket->state = pcmk__strkey_table(free, free);
 
-        g_hash_table_insert(scheduler->tickets, strdup(ticket->id), ticket);
+        g_hash_table_insert(scheduler->priv->ticket_constraints,
+                            pcmk__str_copy(ticket->id), ticket);
     }
 
     return ticket;

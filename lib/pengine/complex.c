@@ -179,7 +179,7 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .now = scheduler->now,
+        .now = scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
         .op_data = NULL
@@ -233,7 +233,7 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .now = scheduler->now,
+        .now = scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
@@ -659,7 +659,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
               *rsc = NULL;
               return EINVAL);
 
-    rule_data.now = scheduler->now;
+    rule_data.now = scheduler->priv->now;
 
     crm_log_xml_trace(xml_obj, "[raw XML]");
 

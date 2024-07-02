@@ -124,13 +124,12 @@ send_sync_request(const char *host)
 
     crm_xml_add(sync_me, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(sync_me, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SYNC_TO_ONE);
-    crm_xml_add(sync_me, PCMK__XA_CIB_DELEGATED_FROM,
-                stand_alone? "localhost" : crm_cluster->uname);
+    crm_xml_add(sync_me, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
 
     if (host != NULL) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    pcmk__cluster_send_message(peer, crm_msg_cib, sync_me);
+    pcmk__cluster_send_message(peer, pcmk__cluster_msg_based, sync_me);
     pcmk__xml_free(sync_me);
 }
 
@@ -236,7 +235,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
             crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
 
-            pcmk__cluster_send_message(NULL, crm_msg_cib, up);
+            pcmk__cluster_send_message(NULL, pcmk__cluster_msg_based, up);
 
             pcmk__xml_free(up);
 
@@ -253,7 +252,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
             crm_info("Rejecting upgrade request from %s: %s "
                      QB_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
-                     (origin? origin->uname : "lost"));
+                     (origin? origin->name : "lost"));
 
             if (origin) {
                 xmlNode *up = pcmk__xe_create(NULL, __func__);
@@ -266,7 +265,8 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
                 crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
                 crm_xml_add_int(up, PCMK__XA_CIB_UPGRADE_RC, rc);
-                if (!pcmk__cluster_send_message(origin, crm_msg_cib, up)) {
+                if (!pcmk__cluster_send_message(origin, pcmk__cluster_msg_based,
+                                                up)) {
                     crm_warn("Could not send CIB upgrade result to %s", host);
                 }
                 pcmk__xml_free(up);
@@ -439,7 +439,8 @@ sync_our_cib(xmlNode * request, gboolean all)
     if (!all) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    if (!pcmk__cluster_send_message(peer, crm_msg_cib, replace_request)) {
+    if (!pcmk__cluster_send_message(peer, pcmk__cluster_msg_based,
+                                    replace_request)) {
         result = -ENOTCONN;
     }
     pcmk__xml_free(replace_request);

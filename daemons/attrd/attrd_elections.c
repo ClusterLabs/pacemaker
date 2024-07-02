@@ -35,8 +35,8 @@ attrd_election_cb(gpointer user_data)
 void
 attrd_election_init(void)
 {
-    writer = election_init(PCMK__VALUE_ATTRD, attrd_cluster->uname, 120000,
-                           attrd_election_cb);
+    writer = election_init(PCMK__VALUE_ATTRD, attrd_cluster->priv->node_name,
+                           120000, attrd_election_cb);
 }
 
 void
@@ -69,7 +69,7 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
     enum election_result rc = 0;
     enum election_result previous = election_state(writer);
 
-    crm_xml_add(xml, PCMK__XA_SRC, peer->uname);
+    crm_xml_add(xml, PCMK__XA_SRC, peer->name);
 
     // Don't become writer if we're shutting down
     rc = election_count_vote(writer, xml, !attrd_shutting_down(false));
@@ -96,7 +96,7 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
              * Approximate a test for that case as best as possible.
              */
             if ((peer_writer == NULL) || (previous != election_lost)) {
-                pcmk__str_update(&peer_writer, peer->uname);
+                pcmk__str_update(&peer_writer, peer->name);
                 crm_debug("Election lost, presuming %s is writer for now",
                           peer_writer);
             }
@@ -107,7 +107,7 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
             break;
 
         default:
-            crm_info("Ignoring election op from %s due to error", peer->uname);
+            crm_info("Ignoring election op from %s due to error", peer->name);
             break;
     }
 }
@@ -120,15 +120,17 @@ attrd_check_for_new_writer(const pcmk__node_status_t *peer, const xmlNode *xml)
     crm_element_value_int(xml, PCMK__XA_ATTR_WRITER, &peer_state);
     if (peer_state == election_won) {
         if ((election_state(writer) == election_won)
-           && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
-            crm_notice("Detected another attribute writer (%s), starting new election",
-                       peer->uname);
+            && !pcmk__str_eq(peer->name, attrd_cluster->priv->node_name,
+                             pcmk__str_casei)) {
+            crm_notice("Detected another attribute writer (%s), starting new "
+                       "election",
+                       peer->name);
             election_vote(writer);
 
-        } else if (!pcmk__str_eq(peer->uname, peer_writer, pcmk__str_casei)) {
+        } else if (!pcmk__str_eq(peer->name, peer_writer, pcmk__str_casei)) {
             crm_notice("Recorded new attribute writer: %s (was %s)",
-                       peer->uname, (peer_writer? peer_writer : "unset"));
-            pcmk__str_update(&peer_writer, peer->uname);
+                       peer->name, pcmk__s(peer_writer, "unset"));
+            pcmk__str_update(&peer_writer, peer->name);
         }
     }
     return (peer_state == election_won);
@@ -139,17 +141,19 @@ attrd_declare_winner(void)
 {
     crm_notice("Recorded local node as attribute writer (was %s)",
                (peer_writer? peer_writer : "unset"));
-    pcmk__str_update(&peer_writer, attrd_cluster->uname);
+    pcmk__str_update(&peer_writer, attrd_cluster->priv->node_name);
 }
 
 void
 attrd_remove_voter(const pcmk__node_status_t *peer)
 {
-    election_remove(writer, peer->uname);
-    if (peer_writer && pcmk__str_eq(peer->uname, peer_writer, pcmk__str_casei)) {
+    election_remove(writer, peer->name);
+    if ((peer_writer != NULL)
+        && pcmk__str_eq(peer->name, peer_writer, pcmk__str_casei)) {
+
         free(peer_writer);
         peer_writer = NULL;
-        crm_notice("Lost attribute writer %s", peer->uname);
+        crm_notice("Lost attribute writer %s", peer->name);
 
         /* Clear any election dampening in effect. Otherwise, if the lost writer
          * had just won, the election could fizzle out with no new writer.
@@ -169,7 +173,7 @@ attrd_remove_voter(const pcmk__node_status_t *peer)
      * would be pending until it's timed out.
      */
     } else if (election_state(writer) == election_in_progress) {
-       crm_debug("Checking election status upon loss of voter %s", peer->uname);
+       crm_debug("Checking election status upon loss of voter %s", peer->name);
        election_check(writer);
     }
 }

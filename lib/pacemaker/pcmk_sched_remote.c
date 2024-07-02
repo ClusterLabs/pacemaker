@@ -399,7 +399,8 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 
     crm_trace("Creating remote connection orderings");
 
-    for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->actions;
+         iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
         pcmk_resource_t *remote = NULL;
 

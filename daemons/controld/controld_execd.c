@@ -594,7 +594,7 @@ controld_query_executor_state(void)
     }
 
     xml_data = pcmk__xe_create(xml_state, PCMK__XE_LRM);
-    crm_xml_add(xml_data, PCMK_XA_ID, peer->uuid);
+    crm_xml_add(xml_data, PCMK_XA_ID, peer->xml_id);
     rsc_list = pcmk__xe_create(xml_data, PCMK__XE_LRM_RESOURCES);
 
     /* Build a list of active (not always running) resources */

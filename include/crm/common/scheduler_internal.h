@@ -167,7 +167,17 @@ enum pcmk__scheduler_flags {
 
 // Implementation of pcmk__scheduler_private_t
 struct pcmk__scheduler_private {
+    // Be careful about when each piece of information is available and final
+
+    crm_time_t *now;                // Time to use when evaluating rules
     pcmk__output_t *out;            // Output object for displaying messages
+    GHashTable *options;            // Cluster options
+    const char *fence_action;       // Default fencing action
+    int fence_timeout_ms;           // Value of stonith-timeout property in ms
+    const char *placement_strategy; // Value of placement-strategy property
+    GList *actions;                 // All scheduled actions
+    GHashTable *singletons;         // Scheduled non-resource actions
+    GHashTable *ticket_constraints; // Key = ticket ID, value = pcmk__ticket_t
 };
 
 // Group of enum pcmk__warnings flags for warnings we want to log once

@@ -45,7 +45,7 @@ crmd_alert_node_event(pcmk__node_status_t *node)
     }
 
     lrmd_send_node_alert((lrmd_t *) lrm_state->conn, crmd_alert_list,
-                         node->uname, node->cluster_layer_id, node->state);
+                         node->name, node->cluster_layer_id, node->state);
 }
 
 void

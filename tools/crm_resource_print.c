@@ -25,7 +25,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
     xmlNode *lifetime = NULL;
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
     pcmk_rule_input_t rule_input = {
-        .now = scheduler->now,
+        .now = scheduler->priv->now,
     };
 
     if (id == NULL) {
@@ -570,7 +570,7 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
                        "'%s' cannot run on unhealthy nodes due to "
                        PCMK_OPT_NODE_HEALTH_STRATEGY "='%s'",
                        parent->id,
-                       pcmk__cluster_option(scheduler->config_hash,
+                       pcmk__cluster_option(scheduler->priv->options,
                                             PCMK_OPT_NODE_HEALTH_STRATEGY));
     }
 

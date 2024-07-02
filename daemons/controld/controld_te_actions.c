@@ -50,18 +50,18 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
         GHashTableIter iter;
         pcmk__node_status_t *node = NULL;
 
-        g_hash_table_iter_init(&iter, crm_peer_cache);
+        g_hash_table_iter_init(&iter, pcmk__peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *cmd = NULL;
 
-            if (pcmk__str_eq(controld_globals.our_nodename, node->uname,
+            if (pcmk__str_eq(controld_globals.our_nodename, node->name,
                              pcmk__str_casei)) {
                 continue;
             }
 
-            cmd = create_request(task, pseudo->xml, node->uname,
+            cmd = create_request(task, pseudo->xml, node->name,
                                  CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
-            pcmk__cluster_send_message(node, crm_msg_crmd, cmd);
+            pcmk__cluster_send_message(node, pcmk__cluster_msg_controld, cmd);
             pcmk__xml_free(cmd);
         }
 
@@ -175,7 +175,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     node = pcmk__get_node(0, router_node, NULL,
                           pcmk__node_search_cluster_member);
-    rc = pcmk__cluster_send_message(node, crm_msg_crmd, cmd);
+    rc = pcmk__cluster_send_message(node, pcmk__cluster_msg_controld, cmd);
     free(counter);
     pcmk__xml_free(cmd);
 
@@ -434,7 +434,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             pcmk__get_node(0, router_node, NULL,
                            pcmk__node_search_cluster_member);
 
-        rc = pcmk__cluster_send_message(node, crm_msg_lrmd, cmd);
+        rc = pcmk__cluster_send_message(node, pcmk__cluster_msg_execd, cmd);
     }
 
     free(counter);

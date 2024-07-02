@@ -233,9 +233,9 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
         flags |= node_update_cluster;
     }
 
-    if (peer->uuid == NULL) {
-        crm_info("Recording uuid '%s' for node '%s'", uuid, target);
-        peer->uuid = pcmk__str_copy(uuid);
+    if (peer->xml_id == NULL) {
+        crm_info("Recording XML ID '%s' for node '%s'", uuid, target);
+        peer->xml_id = pcmk__str_copy(uuid);
     }
 
     crmd_peer_down(peer, TRUE);
@@ -244,7 +244,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
     node_state = create_node_state_update(peer, flags, NULL, __func__);
 
     /* we have to mark whether or not remote nodes have already been fenced */
-    if (peer->flags & crm_remote_node) {
+    if (pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
         char *now_s = pcmk__ttoa(time(NULL));
 
         crm_xml_add(node_state, PCMK__XA_NODE_FENCED, now_s);
@@ -267,7 +267,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
      *                                             cib_none);
      */
 
-    controld_delete_node_state(peer->uname, controld_section_all, cib_none);
+    controld_delete_node_state(peer->name, controld_section_all, cib_none);
     pcmk__xml_free(node_state);
     return;
 }
@@ -617,7 +617,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
 
         } else if (pcmk__str_eq(controld_globals.dc_name, event->target,
                                 pcmk__str_null_matches|pcmk__str_casei)
-                   && !pcmk_is_set(peer->flags, crm_remote_node)) {
+                   && !pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
             // Assume the target was our DC if we don't currently have one
 
             if (controld_globals.dc_name != NULL) {
@@ -643,7 +643,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
          * The connection won't necessarily drop when a remote node is fenced,
          * so the failure might not otherwise be detected until the next poke.
          */
-        if (pcmk_is_set(peer->flags, crm_remote_node)) {
+        if (pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
             remote_ra_fail(event->target);
         }
 
@@ -862,7 +862,8 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                  * This allows it to learn more quickly if this node does have
                  * the information.
                  */
-                if (g_hash_table_lookup(crm_remote_peer_cache, uuid) != NULL) {
+                if (g_hash_table_lookup(pcmk__remote_peer_cache,
+                                        uuid) != NULL) {
                     is_remote_node = TRUE;
                 }
 
@@ -938,7 +939,7 @@ fence_with_delay(const char *target, const char *type, int delay)
     int timeout_sec = (int) (controld_globals.transition_graph->stonith_timeout
                              / 1000);
 
-    if (crmd_join_phase_count(crm_join_confirmed) == 1) {
+    if (crmd_join_phase_count(controld_join_confirmed) == 1) {
         stonith__set_call_options(options, target, st_opt_allow_suicide);
     }
     return stonith_api->cmds->fence_with_delay(stonith_api, options, target,

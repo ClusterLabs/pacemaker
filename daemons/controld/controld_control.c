@@ -65,10 +65,18 @@ do_ha_control(long long action,
 #endif // SUPPORT_COROSYNC
 
         if (registered) {
-            controld_election_init(cluster->uname);
-            controld_globals.our_nodename = cluster->uname;
-            controld_globals.our_uuid = cluster->uuid;
-            if(cluster->uuid == NULL) {
+            pcmk__node_status_t *node =
+                pcmk__get_node(cluster->priv->node_id, cluster->priv->node_name,
+                               NULL, pcmk__node_search_cluster_member);
+
+            controld_election_init(cluster->priv->node_name);
+            controld_globals.our_nodename = cluster->priv->node_name;
+
+            free(controld_globals.our_uuid);
+            controld_globals.our_uuid =
+                pcmk__str_copy(pcmk__cluster_node_uuid(node));
+
+            if (controld_globals.our_uuid == NULL) {
                 crm_err("Could not obtain local uuid");
                 registered = FALSE;
             }
@@ -117,7 +125,7 @@ do_shutdown_req(long long action,
              pcmk__s(controld_globals.dc_name, "not set"));
     msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-    if (!pcmk__cluster_send_message(NULL, crm_msg_crmd, msg)) {
+    if (!pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld, msg)) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
     pcmk__xml_free(msg);

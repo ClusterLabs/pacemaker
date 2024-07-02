@@ -315,7 +315,7 @@ assign_resources(pcmk_scheduler_t *scheduler)
 
     crm_trace("Assigning resources to nodes");
 
-    if (!pcmk__str_eq(scheduler->placement_strategy, PCMK_VALUE_DEFAULT,
+    if (!pcmk__str_eq(scheduler->priv->placement_strategy, PCMK_VALUE_DEFAULT,
                       pcmk__str_casei)) {
         pcmk__sort_resources(scheduler);
     }
@@ -733,7 +733,7 @@ log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
                            |pcmk__action_pseudo;
 
     crm_trace("Required but unrunnable actions:");
-    for (const GList *iter = scheduler->actions;
+    for (const GList *iter = scheduler->priv->actions;
          iter != NULL; iter = iter->next) {
 
         const pcmk_action_t *action = (const pcmk_action_t *) iter->data;
@@ -897,7 +897,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
     // cluster_status() populates with the current time
     if (date != NULL) {
         // pcmk_copy_time() guarantees non-NULL
-        new_scheduler->now = pcmk_copy_time(date);
+        new_scheduler->priv->now = pcmk_copy_time(date);
     }
 
     // Unpack everything

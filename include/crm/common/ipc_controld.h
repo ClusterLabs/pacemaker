@@ -73,7 +73,7 @@ typedef struct {
 
         // pcmk_controld_reply_resource
         struct {
-            xmlNode *node_state;    //<! Resource operation history XML
+            xmlNode *node_state;    //!< Resource operation history XML
         } resource;
 
         // pcmk_controld_reply_ping

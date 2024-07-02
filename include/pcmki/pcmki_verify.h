@@ -44,11 +44,12 @@ int pcmk__parse_cib(pcmk__output_t *out, const char *cib_source, xmlNodePtr *cib
  *
  * \param[in,out] scheduler    Scheduler data
  * \param[in]     out          Output to use for logging and printing results
- * \param[in]     cib_object   The parsed CIB object
+ * \param[in,out] cib_object   The parsed CIB object
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out, xmlNode *cib_object);
+int pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
+                 xmlNode **cib_object);
 
 #ifdef __cplusplus
 }
