@@ -23,6 +23,12 @@
 </xsl:template>
 
 
+<!-- Name/value pairs -->
+
+<!-- Drop "#default" as value for all nvpairs -->
+<xsl:template match="nvpair[@value = '#default']"/>
+
+
 <!-- Cluster properties -->
 
 <!-- Drop remove-after-stop property -->

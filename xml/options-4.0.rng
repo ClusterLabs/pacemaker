@@ -45,7 +45,7 @@
           </data>
         </attribute>
         <optional>
-          <attribute name="value"><text/></attribute>
+          <ref name="element-nvset.value"/>
         </optional>
       </group>
 
@@ -60,6 +60,7 @@
               <except>
                 <choice>
                   <value>poweroff</value>
+                  <value>#default</value>
                 </choice>
               </except>
             </data>
