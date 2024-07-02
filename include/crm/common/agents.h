@@ -30,8 +30,6 @@ extern "C" {
 #define PCMK_RESOURCE_CLASS_SYSTEMD "systemd"
 #define PCMK_RESOURCE_CLASS_STONITH "stonith"
 #define PCMK_RESOURCE_CLASS_ALERT   "alert"
-//! \deprecated Do not use
-#define PCMK_RESOURCE_CLASS_NAGIOS  "nagios"
 
 /* Special stonith-class agent parameters interpreted directly by Pacemaker
  * (not including the pcmk_ACTION_{action,retries,timeout} parameters)
