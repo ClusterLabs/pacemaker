@@ -174,11 +174,7 @@ EXTRA_DIST		= README.md			\
 			  upgrade-2.10-leave.xsl	\
 			  upgrade-2.10-roundtrip.xsl	\
 			  upgrade-detail.xsl		\
-			  xslt_cibtr-2.rng		\
-			  test-2			\
-			  test-2-enter			\
-			  test-2-leave			\
-			  test-2-roundtrip
+			  xslt_cibtr-2.rng
 
 .PHONY: cib-versions
 cib-versions:
