@@ -1135,6 +1135,9 @@ class CrmAttributeRegressionTest(RegressionTest):
             make_test_group("List all available cluster options",
                             "crm_attribute --list-options=cluster --all {fmt}",
                             [Test, ValidatingTest]),
+            Test("Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings",
+                 "crm_attribute -N cluster01 -p '' -G",
+                 expected_rc=ExitStatus.USAGE),
         ]
 
         value_update_tests = [
@@ -1267,9 +1270,58 @@ class CrmAttributeRegressionTest(RegressionTest):
                  expected_rc=ExitStatus.OLD),
         ]
 
+        promotable_tests = [
+            make_test_group("Query a nonexistent promotable score attribute",
+                            "crm_attribute -N cluster01 -p promotable-rsc -G {fmt}",
+                            [Test, ValidatingTest], expected_rc=ExitStatus.NOSUCH),
+            make_test_group("Delete a nonexistent promotable score attribute",
+                            "crm_attribute -N cluster01 -p promotable-rsc -D {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Query after deleting a nonexistent promotable score attribute",
+                            "crm_attribute -N cluster01 -p promotable-rsc -G {fmt}",
+                            [Test, ValidatingTest], expected_rc=ExitStatus.NOSUCH),
+            make_test_group("Update a nonexistent promotable score attribute",
+                            "crm_attribute -N cluster01 -p promotable-rsc -v 1 {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Query after updating a nonexistent promotable score attribute",
+                            "crm_attribute -N cluster01 -p promotable-rsc -G {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Update an existing promotable score attribute",
+                            "crm_attribute -N cluster01 -p promotable-rsc -v 5 {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Query after updating an existing promotable score attribute",
+                            "crm_attribute -N cluster01 -p promotable-rsc -G {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Delete an existing promotable score attribute",
+                            "crm_attribute -N cluster01 -p promotable-rsc -D {fmt}",
+                            [Test, ValidatingTest]),
+            make_test_group("Query after deleting an existing promotable score attribute",
+                            "crm_attribute -N cluster01 -p promotable-rsc -G {fmt}",
+                            [Test, ValidatingTest], expected_rc=ExitStatus.NOSUCH),
+        ]
+
+        # Test for an issue with legacy command line parsing when the resource is
+        # specified in the environment (CLBZ#5509)
+        ocf_rsc_instance_tests = [
+            make_test_group("Update a promotable score attribute to -INFINITY",
+                            "crm_attribute -N cluster01 -p -v -INFINITY {fmt}",
+                            [Test, ValidatingTest],
+                            env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"}),
+            make_test_group("Query after updating a promotable score attribute to -INFINITY",
+                            "crm_attribute -N cluster01 -p -G {fmt}",
+                            [Test, ValidatingTest],
+                            env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"}),
+            Test("Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string",
+                 "crm_attribute -N cluster01 -p '' -G",
+                 env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"}),
+        ]
+
         return options_tests + [
             ShadowTestGroup(value_update_tests),
             ShadowTestGroup(query_set_tests),
+            TestGroup(promotable_tests + ocf_rsc_instance_tests,
+                      env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"},
+                      cib_gen=partial(copy_existing_cib, "{cts_cli_data}/crm_mon.xml")),
         ]
 
 

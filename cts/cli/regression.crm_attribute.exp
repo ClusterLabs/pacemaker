@@ -902,6 +902,10 @@ Also known as properties, these are options that affect behavior across the enti
 </pacemaker-result>
 =#=#=#= End test: List all available cluster options (XML) - OK (0) =#=#=#=
 * Passed: crm_attribute         - List all available cluster options (XML)
+=#=#=#= Begin test: Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings =#=#=#=
+crm_attribute: -p/--promotion must be called from an OCF resource agent or with a resource ID specified
+=#=#=#= End test: Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings - Incorrect usage (64) =#=#=#=
+* Passed: crm_attribute         - Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings
 =#=#=#= Begin test: Validate CIB =#=#=#=
 <cib epoch="1" num_updates="0" admin_epoch="0">
   <configuration>
@@ -1854,3 +1858,128 @@ Digest:
 Call failed: Update was older than existing configuration
 =#=#=#= End test: Replace operation should fail - Update was older than existing configuration (103) =#=#=#=
 * Passed: cibadmin              - Replace operation should fail
+=#=#=#= Begin test: Query a nonexistent promotable score attribute =#=#=#=
+crm_attribute: Error performing operation: No such device or address
+=#=#=#= End test: Query a nonexistent promotable score attribute - No such object (105) =#=#=#=
+* Passed: crm_attribute         - Query a nonexistent promotable score attribute
+=#=#=#= Begin test: Query a nonexistent promotable score attribute (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml">
+  <status code="105" message="No such object">
+    <errors>
+      <error>crm_attribute: Error performing operation: No such device or address</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Query a nonexistent promotable score attribute (XML) - No such object (105) =#=#=#=
+* Passed: crm_attribute         - Query a nonexistent promotable score attribute (XML)
+=#=#=#= Begin test: Delete a nonexistent promotable score attribute =#=#=#=
+=#=#=#= End test: Delete a nonexistent promotable score attribute - OK (0) =#=#=#=
+* Passed: crm_attribute         - Delete a nonexistent promotable score attribute
+=#=#=#= Begin test: Delete a nonexistent promotable score attribute (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -D --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Delete a nonexistent promotable score attribute (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute         - Delete a nonexistent promotable score attribute (XML)
+=#=#=#= Begin test: Query after deleting a nonexistent promotable score attribute =#=#=#=
+crm_attribute: Error performing operation: No such device or address
+=#=#=#= End test: Query after deleting a nonexistent promotable score attribute - No such object (105) =#=#=#=
+* Passed: crm_attribute         - Query after deleting a nonexistent promotable score attribute
+=#=#=#= Begin test: Query after deleting a nonexistent promotable score attribute (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml">
+  <status code="105" message="No such object">
+    <errors>
+      <error>crm_attribute: Error performing operation: No such device or address</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Query after deleting a nonexistent promotable score attribute (XML) - No such object (105) =#=#=#=
+* Passed: crm_attribute         - Query after deleting a nonexistent promotable score attribute (XML)
+=#=#=#= Begin test: Update a nonexistent promotable score attribute =#=#=#=
+=#=#=#= End test: Update a nonexistent promotable score attribute - OK (0) =#=#=#=
+* Passed: crm_attribute         - Update a nonexistent promotable score attribute
+=#=#=#= Begin test: Update a nonexistent promotable score attribute (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -v 1 --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Update a nonexistent promotable score attribute (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute         - Update a nonexistent promotable score attribute (XML)
+=#=#=#= Begin test: Query after updating a nonexistent promotable score attribute =#=#=#=
+scope=status name=master-promotable-rsc value=1
+=#=#=#= End test: Query after updating a nonexistent promotable score attribute - OK (0) =#=#=#=
+* Passed: crm_attribute         - Query after updating a nonexistent promotable score attribute
+=#=#=#= Begin test: Query after updating a nonexistent promotable score attribute (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml">
+  <attribute name="master-promotable-rsc" value="1" scope="status"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Query after updating a nonexistent promotable score attribute (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute         - Query after updating a nonexistent promotable score attribute (XML)
+=#=#=#= Begin test: Update an existing promotable score attribute =#=#=#=
+=#=#=#= End test: Update an existing promotable score attribute - OK (0) =#=#=#=
+* Passed: crm_attribute         - Update an existing promotable score attribute
+=#=#=#= Begin test: Update an existing promotable score attribute (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -v 5 --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Update an existing promotable score attribute (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute         - Update an existing promotable score attribute (XML)
+=#=#=#= Begin test: Query after updating an existing promotable score attribute =#=#=#=
+scope=status name=master-promotable-rsc value=5
+=#=#=#= End test: Query after updating an existing promotable score attribute - OK (0) =#=#=#=
+* Passed: crm_attribute         - Query after updating an existing promotable score attribute
+=#=#=#= Begin test: Query after updating an existing promotable score attribute (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml">
+  <attribute name="master-promotable-rsc" value="5" scope="status"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Query after updating an existing promotable score attribute (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute         - Query after updating an existing promotable score attribute (XML)
+=#=#=#= Begin test: Delete an existing promotable score attribute =#=#=#=
+Deleted status attribute: id=status-1-master-promotable-rsc name=master-promotable-rsc
+=#=#=#= End test: Delete an existing promotable score attribute - OK (0) =#=#=#=
+* Passed: crm_attribute         - Delete an existing promotable score attribute
+=#=#=#= Begin test: Delete an existing promotable score attribute (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -D --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Delete an existing promotable score attribute (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute         - Delete an existing promotable score attribute (XML)
+=#=#=#= Begin test: Query after deleting an existing promotable score attribute =#=#=#=
+crm_attribute: Error performing operation: No such device or address
+=#=#=#= End test: Query after deleting an existing promotable score attribute - No such object (105) =#=#=#=
+* Passed: crm_attribute         - Query after deleting an existing promotable score attribute
+=#=#=#= Begin test: Query after deleting an existing promotable score attribute (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml">
+  <status code="105" message="No such object">
+    <errors>
+      <error>crm_attribute: Error performing operation: No such device or address</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Query after deleting an existing promotable score attribute (XML) - No such object (105) =#=#=#=
+* Passed: crm_attribute         - Query after deleting an existing promotable score attribute (XML)
+=#=#=#= Begin test: Update a promotable score attribute to -INFINITY =#=#=#=
+=#=#=#= End test: Update a promotable score attribute to -INFINITY - OK (0) =#=#=#=
+* Passed: crm_attribute         - Update a promotable score attribute to -INFINITY
+=#=#=#= Begin test: Update a promotable score attribute to -INFINITY (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p -v -INFINITY --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Update a promotable score attribute to -INFINITY (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute         - Update a promotable score attribute to -INFINITY (XML)
+=#=#=#= Begin test: Query after updating a promotable score attribute to -INFINITY =#=#=#=
+scope=status name=master-promotable-rsc value=-INFINITY
+=#=#=#= End test: Query after updating a promotable score attribute to -INFINITY - OK (0) =#=#=#=
+* Passed: crm_attribute         - Query after updating a promotable score attribute to -INFINITY
+=#=#=#= Begin test: Query after updating a promotable score attribute to -INFINITY (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p -G --output-as=xml">
+  <attribute name="master-promotable-rsc" value="-INFINITY" scope="status"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Query after updating a promotable score attribute to -INFINITY (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute         - Query after updating a promotable score attribute to -INFINITY (XML)
+=#=#=#= Begin test: Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string =#=#=#=
+scope=status name=master-promotable-rsc value=-INFINITY
+=#=#=#= End test: Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string - OK (0) =#=#=#=
+* Passed: crm_attribute         - Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string
