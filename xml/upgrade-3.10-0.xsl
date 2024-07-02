@@ -59,8 +59,8 @@
     <xsl:variable name="class_lower"
                   select="translate(@class, $uppercase, $lowercase)"/>
 
-    <!-- Drop upstart-class resource templates -->
-    <xsl:if test="$class_lower != 'upstart'">
+    <!-- Drop nagios- and upstart-class resource templates -->
+    <xsl:if test="$class_lower != 'nagios' and $class_lower != 'upstart'">
         <xsl:call-template name="identity"/>
     </xsl:if>
 </xsl:template>
@@ -72,8 +72,8 @@
     <xsl:variable name="class_lower"
                   select="translate($class, $uppercase, $lowercase)"/>
 
-    <!-- Drop upstart-class primitive resources -->
-    <xsl:if test="$class_lower != 'upstart'">
+    <!-- Drop nagios- and upstart-class resource templates -->
+    <xsl:if test="$class_lower != 'nagios' and $class_lower != 'upstart'">
         <xsl:call-template name="identity"/>
     </xsl:if>
 </xsl:template>
