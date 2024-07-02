@@ -15,6 +15,16 @@
     </start>
   </include>
 
+  <!--
+   Include nvset definitions to override element-nvset.name-value using
+   rsc_meta_attributes.nvpair.unsupported"
+   -->
+  <include href="nvset-4.0.rng">
+    <start combine="choice">
+      <notAllowed/>
+    </start>
+  </include>
+
   <define name="element-resources">
     <element name="resources">
       <zeroOrMore>
@@ -237,7 +247,13 @@
       <choice>
         <ref name="element-instance_attributes"/>
         <element name="meta_attributes">
-          <externalRef href="nvset-4.0.rng"/>
+          <grammar>
+            <include href="nvset-4.0.rng">
+              <define name="element-nvset.name-value">
+                <parentRef name="rsc_meta_attributes.nvpair.unsupported"/>
+              </define>
+            </include>
+          </grammar>
         </element>
       </choice>
     </zeroOrMore>
