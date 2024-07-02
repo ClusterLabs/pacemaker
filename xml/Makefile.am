@@ -114,17 +114,13 @@ CIB_base		= cib 			\
 # substitution back and forth, and relative paths for distributed files.
 API_abs_files		= $(foreach base,$(API_base),$(wildcard $(abs_srcdir)/api/$(base)-*.rng))
 CIB_abs_files		= $(foreach base,$(CIB_base),$(wildcard $(abs_srcdir)/$(base).rng $(abs_srcdir)/$(base)-*.rng))
-CIB_abs_xsl		= $(abs_srcdir)/upgrade-1.3.xsl			\
-			  $(abs_srcdir)/upgrade-2.10.xsl		\
-			  $(wildcard $(abs_srcdir)/upgrade-*enter.xsl)	\
-			  $(wildcard $(abs_srcdir)/upgrade-*leave.xsl)
+CIB_abs_xsl		= $(abs_srcdir)/upgrade-1.3-0.xsl		\
+			  $(wildcard $(abs_srcdir)/upgrade-2.10-[0-2].xsl)
 MON_abs_files 		= $(abs_srcdir)/crm_mon.rng
 API_files		= $(foreach base,$(API_base),$(wildcard $(srcdir)/api/$(base)-*.rng))
 CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(srcdir)/$(base).rng $(srcdir)/$(base)-*.rng))
-CIB_xsl			= $(srcdir)/upgrade-1.3.xsl			\
-			  $(srcdir)/upgrade-2.10.xsl			\
-			  $(wildcard $(srcdir)/upgrade-*enter.xsl)	\
-			  $(wildcard $(srcdir)/upgrade-*leave.xsl)
+CIB_xsl			= $(srcdir)/upgrade-1.3-0.xsl			\
+			  $(wildcard $(srcdir)/upgrade-2.10-[0-2].xsl)
 MON_files 		= $(srcdir)/crm_mon.rng
 
 # Sorted lists of all numeric schema versions
@@ -172,6 +168,10 @@ EXTRA_DIST		= README.md			\
 			  rng-helper			\
 			  ocf-meta2man.xsl		\
 			  regression.sh			\
+			  upgrade-1.3.xsl		\
+			  upgrade-2.10.xsl		\
+			  upgrade-2.10-enter.xsl	\
+			  upgrade-2.10-leave.xsl	\
 			  upgrade-2.10-roundtrip.xsl	\
 			  upgrade-detail.xsl		\
 			  xslt_cibtr-2.rng		\

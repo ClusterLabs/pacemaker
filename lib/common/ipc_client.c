@@ -10,14 +10,9 @@
 #include <crm_internal.h>
 
 #if defined(HAVE_UCRED) || defined(HAVE_SOCKPEERCRED)
-#  ifdef HAVE_UCRED
-#    ifndef _GNU_SOURCE
-#      define _GNU_SOURCE
-#    endif
-#  endif
-#  include <sys/socket.h>
+#include <sys/socket.h>
 #elif defined(HAVE_GETPEERUCRED)
-#  include <ucred.h>
+#include <ucred.h>
 #endif
 
 #include <stdio.h>

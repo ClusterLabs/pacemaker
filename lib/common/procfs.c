@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,10 +8,6 @@
  */
 
 #include <crm_internal.h>
-
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
