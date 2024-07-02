@@ -354,37 +354,6 @@ add_promotion_priority_to_node_score(gpointer data, gpointer user_data)
 
 /*!
  * \internal
- * \brief Apply colocation to dependent's node scores if for promoted role
- *
- * \param[in,out] data       Colocation constraint to apply
- * \param[in,out] user_data  Promotable clone that is constraint's dependent
- */
-static void
-apply_coloc_to_dependent(gpointer data, gpointer user_data)
-{
-    pcmk__colocation_t *colocation = data;
-    pcmk_resource_t *clone = user_data;
-    pcmk_resource_t *primary = colocation->primary;
-    uint32_t flags = pcmk__coloc_select_default;
-    float factor = colocation->score / (float) PCMK_SCORE_INFINITY;
-
-    if (colocation->dependent_role != pcmk_role_promoted) {
-        return;
-    }
-    if (colocation->score < PCMK_SCORE_INFINITY) {
-        flags = pcmk__coloc_select_active;
-    }
-    pcmk__rsc_trace(clone, "Applying colocation %s (promoted %s with %s) @%s",
-                    colocation->id, colocation->dependent->id,
-                    colocation->primary->id,
-                    pcmk_readable_score(colocation->score));
-    primary->priv->cmds->add_colocated_node_scores(primary, clone, clone->id,
-                                                   &(clone->priv->allowed_nodes),
-                                                   colocation, factor, flags);
-}
-
-/*!
- * \internal
  * \brief Apply colocation to primary's node scores if for promoted role
  *
  * \param[in,out] data       Colocation constraint to apply
@@ -502,10 +471,7 @@ sort_promotable_instances(pcmk_resource_t *clone)
     g_list_foreach(clone->priv->children,
                    add_promotion_priority_to_node_score, clone);
 
-    colocations = pcmk__this_with_colocations(clone);
-    g_list_foreach(colocations, apply_coloc_to_dependent, clone);
-    g_list_free(colocations);
-
+    // "this with" colocations were already applied via set_instance_priority()
     colocations = pcmk__with_this_colocations(clone);
     g_list_foreach(colocations, apply_coloc_to_primary, clone);
     g_list_free(colocations);

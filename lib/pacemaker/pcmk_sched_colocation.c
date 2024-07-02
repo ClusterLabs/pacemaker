@@ -1427,38 +1427,55 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     const pcmk_node_t *primary_node = NULL;
     const pcmk_node_t *dependent_node = NULL;
 
-    const pcmk_resource_t *primary_role_rsc = NULL;
-
-    CRM_ASSERT((dependent != NULL) && (primary != NULL) &&
-               (colocation != NULL));
+    CRM_ASSERT((dependent != NULL) && (primary != NULL)
+               && (colocation != NULL));
 
     primary_node = primary->priv->assigned_node;
     dependent_node = dependent->priv->assigned_node;
 
-    if ((primary_node == NULL) || (dependent_node == NULL)) {
+    if (dependent_node == NULL) {
         return;
+    }
+
+    if ((primary_node != NULL)
+        && (colocation->primary_role != pcmk_role_unknown)) {
+        /* Colocation applies only if the primary's next role matches.
+         *
+         * If primary_node == NULL, we want to proceed past this block, so that
+         * dependent_node is marked ineligible for promotion.
+         *
+         * @TODO Why ignore a mandatory colocation in this case when we apply
+         * its negation in the mismatched value case?
+         */
+        const pcmk_resource_t *role_rsc = get_resource_for_role(primary);
+
+        if (colocation->primary_role != role_rsc->priv->next_role) {
+            return;
+        }
     }
 
     dependent_value = pcmk__colocation_node_attr(dependent_node, attr,
                                                  dependent);
     primary_value = pcmk__colocation_node_attr(primary_node, attr, primary);
 
-    primary_role_rsc = get_resource_for_role(primary);
-
     if (!pcmk__str_eq(dependent_value, primary_value, pcmk__str_casei)) {
         if ((colocation->score == PCMK_SCORE_INFINITY)
             && (colocation->dependent_role == pcmk_role_promoted)) {
-            dependent->priv->priority = -PCMK_SCORE_INFINITY;
+            /* For a mandatory promoted-role colocation, mark the dependent node
+             * ineligible to promote the dependent if its attribute value
+             * doesn't match the primary node's
+             */
+            score_multiplier = -1;
+
+        } else {
+            // Otherwise, ignore the colocation if attribute values don't match
+            return;
         }
-        return;
-    }
 
-    if ((colocation->primary_role != pcmk_role_unknown)
-        && (colocation->primary_role != primary_role_rsc->priv->next_role)) {
-        return;
-    }
-
-    if (colocation->dependent_role == pcmk_role_unpromoted) {
+    } else if (colocation->dependent_role == pcmk_role_unpromoted) {
+        /* Node attribute values matched, so we want to avoid promoting the
+         * dependent on this node
+         */
         score_multiplier = -1;
     }
 
@@ -1466,11 +1483,30 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
         pcmk__add_scores(score_multiplier * colocation->score,
                          dependent->priv->priority);
     pcmk__rsc_trace(dependent,
-                    "Applied %s to %s promotion priority (now %s after %s %s)",
+                    "Applied %s to %s promotion priority (now %s after %s %d)",
                     colocation->id, dependent->id,
                     pcmk_readable_score(dependent->priv->priority),
                     ((score_multiplier == 1)? "adding" : "subtracting"),
-                    pcmk_readable_score(colocation->score));
+                    colocation->score);
+
+    if (pcmk__is_group(dependent->priv->parent)) {
+        /* For cloned group instances, we called this function for the first
+         * group member. Update the priority of the group itself for the purpose
+         * of sorting instances for promotion.
+         */
+        pcmk_resource_t *group = dependent->priv->parent;
+
+        group->priv->priority =
+            pcmk__add_scores(score_multiplier * colocation->score,
+                             group->priv->priority);
+        pcmk__rsc_trace(group,
+                        "Applied %s to %s promotion priority (now %s after %s "
+                        "%d)",
+                        colocation->id, group->id,
+                        pcmk_readable_score(group->priv->priority),
+                        ((score_multiplier == 1)? "adding" : "subtracting"),
+                        colocation->score);
+    }
 }
 
 /*!
