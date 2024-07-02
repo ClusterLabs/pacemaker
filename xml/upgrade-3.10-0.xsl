@@ -78,6 +78,9 @@
     </xsl:if>
 </xsl:template>
 
+<!-- Drop rkt bundles -->
+<xsl:template match="bundle[rkt]"/>
+
 
 <!-- Constraints -->
 
