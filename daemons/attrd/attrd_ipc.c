@@ -57,7 +57,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
 
         /* Allow caller to use "localhost" to refer to local node */
         if (pcmk__str_eq(host, "localhost", pcmk__str_casei)) {
-            host = attrd_cluster->uname;
+            host = attrd_cluster->priv->node_name;
             crm_trace("Mapped localhost to %s", host);
         }
 
@@ -157,9 +157,9 @@ attrd_client_peer_remove(pcmk__request_t *request)
 
             node = pcmk__search_node_caches(nodeid, NULL,
                                             pcmk__node_search_cluster_member);
-            if (node && node->uname) {
+            if ((node != NULL) && (node->name != NULL)) {
                 // Use cached name if available
-                host = node->uname;
+                host = node->name;
             } else {
                 // Otherwise ask cluster layer
                 host_alloc = pcmk__cluster_node_name(nodeid);
@@ -236,7 +236,8 @@ handle_missing_host(xmlNode *xml)
 
     if (host == NULL) {
         crm_trace("Inferring host");
-        pcmk__xe_add_node(xml, attrd_cluster->uname, attrd_cluster->nodeid);
+        pcmk__xe_add_node(xml, attrd_cluster->priv->node_name,
+                          attrd_cluster->priv->node_id);
     }
 }
 

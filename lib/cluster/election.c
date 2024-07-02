@@ -310,7 +310,7 @@ election_vote(election_t *e)
     vote = create_request(CRM_OP_VOTE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
     e->count++;
-    crm_xml_add(vote, PCMK__XA_ELECTION_OWNER, our_node->uuid);
+    crm_xml_add(vote, PCMK__XA_ELECTION_OWNER, our_node->xml_id);
     crm_xml_add_int(vote, PCMK__XA_ELECTION_ID, e->count);
 
     // Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is actually microseconds
@@ -318,7 +318,7 @@ election_vote(election_t *e)
     crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
                         PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
 
-    pcmk__cluster_send_message(NULL, crm_msg_crmd, vote);
+    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld, vote);
     pcmk__xml_free(vote);
 
     crm_debug("Started %s round %d", e->name, e->count);
@@ -372,10 +372,10 @@ election_check(election_t *e)
             char *key = NULL;
 
             crm_warn("Received too many votes in %s", e->name);
-            g_hash_table_iter_init(&gIter, crm_peer_cache);
+            g_hash_table_iter_init(&gIter, pcmk__peer_cache);
             while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) & node)) {
                 if (pcmk__cluster_is_node_active(node)) {
-                    crm_warn("* expected vote: %s", node->uname);
+                    crm_warn("* expected vote: %s", node->name);
                 }
             }
 
@@ -478,7 +478,7 @@ parse_election_message(const election_t *e, const xmlNode *message,
     /* If the membership cache is NULL, we REALLY shouldn't be voting --
      * the question is how we managed to get here.
      */
-    if (crm_peer_cache == NULL) {
+    if (pcmk__peer_cache == NULL) {
         crm_info("Cannot count %s %s from %s because no peer information available",
                  e->name, vote->op, vote->from);
         return FALSE;
@@ -500,7 +500,9 @@ record_vote(election_t *e, struct vote *vote)
 static void
 send_no_vote(pcmk__node_status_t *peer, struct vote *vote)
 {
-    // @TODO probably shouldn't hardcode CRM_SYSTEM_CRMD and crm_msg_crmd
+    /* @TODO probably shouldn't hardcode CRM_SYSTEM_CRMD and
+     * pcmk__cluster_msg_controld
+     */
 
     xmlNode *novote = create_request(CRM_OP_NOVOTE, NULL, vote->from,
                                      CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
@@ -508,7 +510,7 @@ send_no_vote(pcmk__node_status_t *peer, struct vote *vote)
     crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
     crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
 
-    pcmk__cluster_send_message(peer, crm_msg_crmd, novote);
+    pcmk__cluster_send_message(peer, pcmk__cluster_msg_controld, novote);
     pcmk__xml_free(novote);
 }
 
@@ -550,7 +552,7 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
     our_node = pcmk__get_node(0, e->uname, NULL,
                               pcmk__node_search_cluster_member);
     we_are_owner = (our_node != NULL)
-                   && pcmk__str_eq(our_node->uuid, vote.election_owner,
+                   && pcmk__str_eq(our_node->xml_id, vote.election_owner,
                                    pcmk__str_none);
 
     if (!can_win) {
@@ -627,7 +629,7 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         e->expires = tm_now + STORM_INTERVAL;
 
     } else if (done == FALSE && we_lose == FALSE) {
-        int peers = 1 + g_hash_table_size(crm_peer_cache);
+        int peers = 1 + g_hash_table_size(pcmk__peer_cache);
 
         /* If every node has to vote down every other node, thats N*(N-1) total elections
          * Allow some leeway before _really_ complaining

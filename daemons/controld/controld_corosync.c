@@ -33,41 +33,37 @@ static void
 crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
                  uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
-    uint32_t kind = 0;
     const char *from = NULL;
-    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &kind, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
+    pcmk__node_status_t *peer = NULL;
+    xmlNode *xml = NULL;
 
     if(data == NULL) {
         return;
     }
-    if (kind == crm_class_cluster) {
-        pcmk__node_status_t *peer = NULL;
-        xmlNode *xml = pcmk__xml_parse(data);
 
-        if (xml == NULL) {
-            crm_err("Could not parse message content (%d): %.100s", kind, data);
-            free(data);
-            return;
-        }
-
-        crm_xml_add(xml, PCMK__XA_SRC, from);
-
-        peer = pcmk__get_node(0, from, NULL, pcmk__node_search_cluster_member);
-        if (!pcmk_is_set(peer->processes, crm_proc_cpg)) {
-            /* If we can still talk to our peer process on that node,
-             * then it must be part of the corosync membership
-             */
-            crm_warn("Receiving messages from a node we think is dead: "
-                     "%s[%" PRIu32 "]",
-                     peer->uname, peer->cluster_layer_id);
-            crm_update_peer_proc(__func__, peer, crm_proc_cpg,
-                                 PCMK_VALUE_ONLINE);
-        }
-        crmd_ha_msg_filter(xml);
-        pcmk__xml_free(xml);
-    } else {
-        crm_err("Invalid message class (%d): %.100s", kind, data);
+    xml = pcmk__xml_parse(data);
+    if (xml == NULL) {
+        crm_err("Could not parse message content: %.100s", data);
+        free(data);
+        return;
     }
+
+    crm_xml_add(xml, PCMK__XA_SRC, from);
+
+    peer = pcmk__get_node(0, from, NULL, pcmk__node_search_cluster_member);
+    if (!pcmk_is_set(peer->processes, crm_proc_cpg)) {
+        /* If we can still talk to our peer process on that node, then it must
+         * be part of the corosync membership
+         */
+        crm_warn("Receiving messages from a node we think is dead: "
+                 "%s[%" PRIu32 "]",
+                 peer->name, peer->cluster_layer_id);
+        crm_update_peer_proc(__func__, peer, crm_proc_cpg, PCMK_VALUE_ONLINE);
+    }
+
+    crmd_ha_msg_filter(xml);
+    pcmk__xml_free(xml);
     free(data);
 }
 

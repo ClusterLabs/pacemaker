@@ -194,9 +194,9 @@ crm_timer_popped(gpointer data)
 
     if (timer->fsa_input == I_INTEGRATED) {
         crm_info("Welcomed: %d, Integrated: %d",
-                 crmd_join_phase_count(crm_join_welcomed),
-                 crmd_join_phase_count(crm_join_integrated));
-        if (crmd_join_phase_count(crm_join_welcomed) == 0) {
+                 crmd_join_phase_count(controld_join_welcomed),
+                 crmd_join_phase_count(controld_join_integrated));
+        if (crmd_join_phase_count(controld_join_welcomed) == 0) {
             // If we don't even have ourselves, start again
             register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL, NULL,
                                    __func__);

@@ -210,7 +210,7 @@ init_node_pending_timer(const pcmk__node_status_t *node, guint timeout)
     struct abort_timer_s *node_pending_timer = NULL;
     char *key = NULL;
 
-    if (node->uuid == NULL) {
+    if (node->xml_id == NULL) {
         return;
     }
 
@@ -219,16 +219,16 @@ init_node_pending_timer(const pcmk__node_status_t *node, guint timeout)
                                                   free_node_pending_timer);
 
     // The timer is somehow already existing
-    } else if (g_hash_table_lookup(node_pending_timers, node->uuid) != NULL) {
+    } else if (g_hash_table_lookup(node_pending_timers, node->xml_id) != NULL) {
         return;
     }
 
     crm_notice("Waiting for pending %s with " PCMK_XA_ID " '%s' "
                "to join the process group (timeout=%us)",
-               node->uname ? node->uname : "node", node->uuid,
+               pcmk__s(node->name, "node"), node->xml_id,
                controld_globals.node_pending_timeout);
 
-    key = pcmk__str_copy(node->uuid);
+    key = pcmk__str_copy(node->xml_id);
     node_pending_timer = pcmk__assert_alloc(1, sizeof(struct abort_timer_s));
 
     node_pending_timer->aborted = FALSE;
@@ -263,10 +263,11 @@ controld_node_pending_timer(const pcmk__node_status_t *node)
      * already part of CPG, or PCMK_OPT_NODE_PENDING_TIMEOUT is disabled, free
      * any node pending timer for it.
      */
-    if (pcmk_is_set(node->flags, crm_remote_node)
+    if (pcmk_is_set(node->flags, pcmk__node_status_remote)
         || (node->when_member <= 1) || (node->when_online > 0)
         || (controld_globals.node_pending_timeout == 0)) {
-        remove_node_pending_timer(node->uuid);
+
+        remove_node_pending_timer(node->xml_id);
         return;
     }
 
@@ -279,7 +280,7 @@ controld_node_pending_timer(const pcmk__node_status_t *node)
      * Free any node pending timer of it.
      */
     if (remaining_timeout <= 0) {
-        remove_node_pending_timer(node->uuid);
+        remove_node_pending_timer(node->xml_id);
         return;
     }
 

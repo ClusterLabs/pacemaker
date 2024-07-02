@@ -14,12 +14,31 @@
 #include <stdint.h>         // uint32_t, uint64_t
 
 #include <glib.h>           // gboolean
+#include <libxml/tree.h>    // xmlNode
 
 #include <crm/cluster.h>
+
+#if SUPPORT_COROSYNC
+#include <corosync/cpg.h>   // cpg_name, cpg_handle_t
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * \internal
+ * \enum pcmk__cluster_msg
+ * \brief Types of message sent via the cluster layer
+ */
+enum pcmk__cluster_msg {
+    pcmk__cluster_msg_unknown,
+    pcmk__cluster_msg_attrd,
+    pcmk__cluster_msg_based,
+    pcmk__cluster_msg_controld,
+    pcmk__cluster_msg_execd,
+    pcmk__cluster_msg_fenced,
+};
 
 enum crm_proc_flag {
     /* @COMPAT When pcmk__node_status_t:processes is made internal, we can merge
@@ -30,6 +49,26 @@ enum crm_proc_flag {
 
     // Cluster layers
     crm_proc_cpg        = 0x04000000,
+};
+
+/*!
+ * \internal
+ * \enum pcmk__node_status_flags
+ * \brief Boolean flags for a \c pcmk__node_status_t object
+ *
+ * Some flags may not be related to status specifically. However, we keep these
+ * separate from <tt>enum pcmk__node_flags</tt> because they're used with
+ * different object types.
+ */
+enum pcmk__node_status_flags {
+    /*!
+     * Node is a Pacemaker Remote node and should not be considered for cluster
+     * membership
+     */
+    pcmk__node_status_remote = (UINT32_C(1) << 0),
+
+    //! Node's cache entry is dirty
+    pcmk__node_status_dirty  = (UINT32_C(1) << 1),
 };
 
 // Used with node cache search functions
@@ -51,9 +90,39 @@ enum pcmk__node_search_flags {
     pcmk__node_search_cluster_cib       = (1 << 2),
 };
 
+/*!
+ * \internal
+ * \enum pcmk__node_update
+ * \brief Type of update to a \c pcmk__node_status_t object
+ */
+enum pcmk__node_update {
+    pcmk__node_update_name,         //!< Node name updated
+    pcmk__node_update_state,        //!< Node connection state updated
+    pcmk__node_update_processes,    //!< Node process group membership updated
+};
+
+//! Implementation of pcmk__cluster_private_t
+struct pcmk__cluster_private {
+    // @TODO Drop and replace with per-daemon cluster-layer ID global variables?
+    uint32_t node_id;               //!< Local node ID at cluster layer
+
+    // @TODO Drop and replace with per-daemon node name global variables?
+    char *node_name;                //!< Local node name at cluster layer
+
+#if SUPPORT_COROSYNC
+    /* @TODO Make these members a separate struct and use void *cluster_data
+     * here instead, to abstract the cluster layer further.
+     */
+    struct cpg_name group;          //!< Corosync CPG name
+
+    cpg_handle_t cpg_handle;        //!< Corosync CPG handle
+#endif  // SUPPORT_COROSYNC
+};
+
 //! Node status data (may be a cluster node or a Pacemaker Remote node)
 typedef struct pcmk__node_status {
-    char *uname;                // Node name as known to cluster
+    //! Node name as known to cluster layer, or Pacemaker Remote node name
+    char *name;
 
     /* @COMPAT This is less than ideal since the value is not a valid XML ID
      * (for Corosync, it's the string equivalent of the node's numeric node ID,
@@ -64,19 +133,26 @@ typedef struct pcmk__node_status {
      * transient_attributes-NODEID as the element IDs. Unfortunately changing it
      * would be impractical due to backward compatibility; older nodes in a
      * rolling upgrade will always write and expect the value in the old format.
-     *
-     * This is also named poorly, since the value is not a UUID, but at least
-     * that can be changed at an API compatibility break.
      */
-    /*! Value of the PCMK_XA_ID XML attribute to use with the node's
+
+    /*!
+     * Value of the PCMK_XA_ID XML attribute to use with the node's
      * PCMK_XE_NODE, PCMK_XE_NODE_STATE, and PCMK_XE_TRANSIENT_ATTRIBUTES
      * XML elements in the CIB
      */
-    char *uuid;
+    char *xml_id;
 
     char *state;                // @TODO change to enum
-    uint64_t flags;             // Bitmask of crm_node_flags
-    uint64_t last_seen;         // Only needed by cluster nodes
+
+    //! Group of <tt>enum pcmk__node_status_flags</tt>
+    uint32_t flags;
+
+    /*!
+     * Most recent cluster membership in which node was seen (0 for Pacemaker
+     * Remote nodes)
+     */
+    uint64_t membership_id;
+
     uint32_t processes;         // @TODO most not needed, merge into flags
 
     /* @TODO When we can break public API compatibility, we can make the rest of
@@ -84,8 +160,9 @@ typedef struct pcmk__node_status {
      * void *user_data here instead, to abstract the cluster layer further.
      */
 
-    // Only used by controller
-    enum crm_join_phase join;
+    //! Arbitrary data (must be freeable by \c free())
+    void *user_data;
+
     char *expected;
 
     time_t peer_lost;
@@ -97,8 +174,8 @@ typedef struct pcmk__node_status {
     /* @TODO The following are currently needed only by the Corosync stack.
      * Eventually consider moving them to a cluster-layer-specific data object.
      */
-    uint32_t cluster_layer_id;  //! Cluster-layer numeric node ID
-    time_t when_lost;           //! When CPG membership was last lost
+    uint32_t cluster_layer_id;  //!< Cluster-layer numeric node ID
+    time_t when_lost;           //!< When CPG membership was last lost
 } pcmk__node_status_t;
 
 /*!
@@ -190,8 +267,7 @@ void pcmk__cpg_confchg_cb(cpg_handle_t handle,
                           size_t joined_list_entries);
 
 char *pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id,
-                             uint32_t pid, void *content, uint32_t *kind,
-                             const char **from);
+                             uint32_t pid, void *content, const char **from);
 
 #  endif
 
@@ -216,12 +292,15 @@ void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
 
-enum crm_ais_msg_types pcmk__cluster_parse_msg_type(const char *text);
+enum pcmk__cluster_msg pcmk__cluster_parse_msg_type(const char *text);
 bool pcmk__cluster_send_message(const pcmk__node_status_t *node,
-                                enum crm_ais_msg_types service,
+                                enum pcmk__cluster_msg service,
                                 const xmlNode *data);
 
 // Membership
+
+extern GHashTable *pcmk__peer_cache;
+extern GHashTable *pcmk__remote_peer_cache;
 
 bool pcmk__cluster_has_quorum(void);
 
@@ -229,7 +308,7 @@ void pcmk__cluster_init_node_caches(void);
 void pcmk__cluster_destroy_node_caches(void);
 
 void pcmk__cluster_set_autoreap(bool enable);
-void pcmk__cluster_set_status_callback(void (*dispatch)(enum crm_status_type,
+void pcmk__cluster_set_status_callback(void (*dispatch)(enum pcmk__node_update,
                                                         pcmk__node_status_t *,
                                                         const void *));
 

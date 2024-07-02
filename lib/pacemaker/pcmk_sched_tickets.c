@@ -322,7 +322,8 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
                          id);
         return;
     } else {
-        ticket = g_hash_table_lookup(scheduler->tickets, ticket_str);
+        ticket = g_hash_table_lookup(scheduler->priv->ticket_constraints,
+                                     ticket_str);
     }
 
     if (ticket == NULL) {
@@ -464,8 +465,9 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    if (scheduler->tickets == NULL) {
-        scheduler->tickets = pcmk__strkey_table(free, destroy_ticket);
+    if (scheduler->priv->ticket_constraints == NULL) {
+        scheduler->priv->ticket_constraints =
+            pcmk__strkey_table(free, destroy_ticket);
     }
 
     ticket_str = crm_element_value(xml_obj, PCMK_XA_TICKET);
@@ -473,7 +475,8 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         pcmk__config_err("Ignoring constraint '%s' without ticket", id);
         return;
     } else {
-        ticket = g_hash_table_lookup(scheduler->tickets, ticket_str);
+        ticket = g_hash_table_lookup(scheduler->priv->ticket_constraints,
+                                     ticket_str);
     }
 
     if (ticket == NULL) {

@@ -49,7 +49,7 @@ static int cs_message_timer = 0;
 struct pcmk__cpg_host_s {
     uint32_t id;
     uint32_t pid;
-    enum crm_ais_msg_types type;
+    enum pcmk__cluster_msg type;
     uint32_t size;
     char uname[MAX_NAME];
 } __attribute__ ((packed));
@@ -269,12 +269,12 @@ pcmk_cpg_dispatch(gpointer user_data)
     cs_error_t rc = CS_OK;
     pcmk_cluster_t *cluster = (pcmk_cluster_t *) user_data;
 
-    rc = cpg_dispatch(cluster->cpg_handle, CS_DISPATCH_ONE);
+    rc = cpg_dispatch(cluster->priv->cpg_handle, CS_DISPATCH_ONE);
     if (rc != CS_OK) {
         crm_err("Connection to the CPG API failed: %s (%d)",
                 pcmk__cs_err_str(rc), rc);
-        cpg_finalize(cluster->cpg_handle);
-        cluster->cpg_handle = 0;
+        cpg_finalize(cluster->priv->cpg_handle);
+        cluster->priv->cpg_handle = 0;
         return -1;
 
     } else if (cpg_evicted) {
@@ -291,43 +291,22 @@ ais_dest(const pcmk__cpg_host_t *host)
 }
 
 static inline const char *
-msg_type2text(enum crm_ais_msg_types type)
+msg_type2text(enum pcmk__cluster_msg type)
 {
-    const char *text = "unknown";
-
     switch (type) {
-        case crm_msg_none:
-            text = "unknown";
-            break;
-        case crm_msg_ais:
-            text = "ais";
-            break;
-        case crm_msg_cib:
-            text = "cib";
-            break;
-        case crm_msg_crmd:
-            text = "crmd";
-            break;
-        case crm_msg_pe:
-            text = "pengine";
-            break;
-        case crm_msg_te:
-            text = "tengine";
-            break;
-        case crm_msg_lrmd:
-            text = "lrmd";
-            break;
-        case crm_msg_attrd:
-            text = "attrd";
-            break;
-        case crm_msg_stonithd:
-            text = "stonithd";
-            break;
-        case crm_msg_stonith_ng:
-            text = "stonith-ng";
-            break;
+        case pcmk__cluster_msg_attrd:
+            return "attrd";
+        case pcmk__cluster_msg_based:
+            return "cib";
+        case pcmk__cluster_msg_controld:
+            return "crmd";
+        case pcmk__cluster_msg_execd:
+            return "lrmd";
+        case pcmk__cluster_msg_fenced:
+            return "stonith-ng";
+        default:
+            return "unknown";
     }
-    return text;
 }
 
 /*!
@@ -411,9 +390,6 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
  * \param[in]     sender_id  Corosync ID of node that sent message
  * \param[in]     pid        Process ID of message sender (for logging only)
  * \param[in,out] content    CPG message
- * \param[out]    kind       If not \c NULL, will be set to CPG header ID
- *                           (which should be an <tt>enum crm_ais_msg_class</tt>
- *                           value, currently always \c crm_class_cluster)
  * \param[out]    from       If not \c NULL, will be set to sender uname
  *                           (valid for the lifetime of \p content)
  *
@@ -423,7 +399,7 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
  */
 char *
 pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
-                       void *content, uint32_t *kind, const char **from)
+                       void *content, const char **from)
 {
     char *data = NULL;
     pcmk__cpg_msg_t *msg = content;
@@ -457,14 +433,15 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
                 pcmk__get_node(sender_id, NULL, NULL,
                                pcmk__node_search_cluster_member);
 
-            if (peer->uname == NULL) {
-                crm_err("No uname for peer with nodeid=%u", sender_id);
+            if (peer->name == NULL) {
+                crm_err("No node name for peer with nodeid=%u", sender_id);
 
             } else {
-                crm_notice("Fixing uname for peer with nodeid=%u", sender_id);
-                msg->sender.size = strlen(peer->uname);
+                crm_notice("Fixing node name for peer with nodeid=%u",
+                           sender_id);
+                msg->sender.size = strlen(peer->name);
                 memset(msg->sender.uname, 0, MAX_NAME);
-                memcpy(msg->sender.uname, peer->uname, msg->sender.size);
+                memcpy(msg->sender.uname, peer->name, msg->sender.size);
             }
         }
     }
@@ -473,9 +450,6 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
               msg->is_compressed ? " compressed" : "",
               msg_data_len(msg), msg->size, msg->compressed_size);
 
-    if (kind != NULL) {
-        *kind = msg->header.id;
-    }
     if (from != NULL) {
         *from = msg->sender.uname;
     }
@@ -591,13 +565,7 @@ cpgreason2str(cpg_reason_t reason)
 static inline const char *
 peer_name(const pcmk__node_status_t *peer)
 {
-    if (peer == NULL) {
-        return "unknown node";
-    } else if (peer->uname == NULL) {
-        return "peer node";
-    } else {
-        return peer->uname;
-    }
+    return (peer != NULL)? pcmk__s(peer->name, "peer node") : "unknown node";
 }
 
 /*!
@@ -740,7 +708,7 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
         peer = crm_update_peer_proc(__func__, peer, crm_proc_cpg,
                                     PCMK_VALUE_ONLINE);
 
-        if (peer && peer->state && strcmp(peer->state, CRM_NODE_MEMBER)) {
+        if (peer && peer->state && strcmp(peer->state, PCMK_VALUE_MEMBER)) {
             /* The node is a CPG member, but we currently think it's not a
              * cluster member. This is possible only if auto-reaping was
              * disabled. The node may be joining, and we happened to get the CPG
@@ -759,7 +727,7 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
                 crm_warn("Node %u is member of group %s but was believed "
                          "offline",
                          member_list[i].nodeid, group_name->value);
-                pcmk__update_peer_state(__func__, peer, CRM_NODE_MEMBER, 0);
+                pcmk__update_peer_state(__func__, peer, PCMK_VALUE_MEMBER, 0);
             }
         }
 
@@ -848,13 +816,15 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     };
 
     cpg_evicted = false;
-    cluster->group.length = 0;
-    cluster->group.value[0] = 0;
+    cluster->priv->group.length = 0;
+    cluster->priv->group.value[0] = 0;
 
     /* group.value is char[128] */
-    strncpy(cluster->group.value, message_name, 127);
-    cluster->group.value[127] = 0;
-    cluster->group.length = 1 + QB_MIN(127, strlen(cluster->group.value));
+    strncpy(cluster->priv->group.value, message_name, 127);
+    cluster->priv->group.value[127] = 0;
+    cluster->priv->group.length = QB_MIN(127,
+                                         strlen(cluster->priv->group.value));
+    cluster->priv->group.length++;
 
     cs_repeat(rc, retries, 30, cpg_model_initialize(&handle, CPG_MODEL_V1, (cpg_model_data_t *)&cpg_model_info, NULL));
     if (rc != CS_OK) {
@@ -892,17 +862,17 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
         goto bail;
 
     }
-    cluster->nodeid = id;
+    cluster->priv->node_id = id;
 
     retries = 0;
-    cs_repeat(rc, retries, 30, cpg_join(handle, &cluster->group));
+    cs_repeat(rc, retries, 30, cpg_join(handle, &cluster->priv->group));
     if (rc != CS_OK) {
         crm_err("Could not join the CPG group '%s': %d", message_name, rc);
         goto bail;
     }
 
     pcmk_cpg_handle = handle;
-    cluster->cpg_handle = handle;
+    cluster->priv->cpg_handle = handle;
     mainloop_add_fd("corosync-cpg", G_PRIORITY_MEDIUM, fd, cluster, &cpg_fd_callbacks);
 
   bail:
@@ -927,11 +897,11 @@ void
 pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
 {
     pcmk_cpg_handle = 0;
-    if (cluster->cpg_handle != 0) {
+    if (cluster->priv->cpg_handle != 0) {
         crm_trace("Disconnecting CPG");
-        cpg_leave(cluster->cpg_handle, &cluster->group);
-        cpg_finalize(cluster->cpg_handle);
-        cluster->cpg_handle = 0;
+        cpg_leave(cluster->priv->cpg_handle, &cluster->priv->group);
+        cpg_finalize(cluster->priv->cpg_handle);
+        cluster->priv->cpg_handle = 0;
 
     } else {
         crm_info("No CPG connection");
@@ -950,7 +920,7 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
  */
 static bool
 send_cpg_text(const char *data, const pcmk__node_status_t *node,
-              enum crm_ais_msg_types dest)
+              enum pcmk__cluster_msg dest)
 {
     static int msg_id = 0;
     static int local_pid = 0;
@@ -960,8 +930,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     char *target = NULL;
     struct iovec *iov;
     pcmk__cpg_msg_t *msg = NULL;
-
-    CRM_CHECK(dest != crm_msg_ais, return false);
 
     if (local_name == NULL) {
         local_name = pcmk__cluster_local_node_name();
@@ -982,17 +950,16 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
 
     msg_id++;
     msg->id = msg_id;
-    msg->header.id = crm_class_cluster;
     msg->header.error = CS_OK;
 
     msg->host.type = dest;
 
     if (node != NULL) {
-        if (node->uname != NULL) {
-            target = pcmk__str_copy(node->uname);
-            msg->host.size = strlen(node->uname);
+        if (node->name != NULL) {
+            target = pcmk__str_copy(node->name);
+            msg->host.size = strlen(node->name);
             memset(msg->host.uname, 0, MAX_NAME);
-            memcpy(msg->host.uname, node->uname, msg->host.size);
+            memcpy(msg->host.uname, node->name, msg->host.size);
 
         } else {
             target = crm_strdup_printf("%" PRIu32, node->cluster_layer_id);
@@ -1080,7 +1047,7 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
  */
 bool
 pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
-                   enum crm_ais_msg_types dest)
+                   enum pcmk__cluster_msg dest)
 {
     bool rc = true;
     GString *data = g_string_sized_new(1024);

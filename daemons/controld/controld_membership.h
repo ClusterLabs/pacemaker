@@ -15,9 +15,46 @@ extern "C" {
 
 #include <crm/cluster/internal.h>
 
+/*!
+ * \internal
+ * \enum controld_join_phase
+ * \brief Phases that a node may pass through while joining controller group
+ */
+enum controld_join_phase {
+    controld_join_nack,
+    controld_join_none,
+    controld_join_welcomed,
+    controld_join_integrated,
+    controld_join_finalized,
+    controld_join_confirmed,
+};
+
+//! User data for \c pcmk__node_status_t object
+struct controld_node_status_data {
+    enum controld_join_phase join_phase;
+};
+
+/*!
+ * \internal
+ * \brief Get the controller group join phase from a node status object
+ *
+ * \param[in] node  Node status object
+ *
+ * \return Controller group join phase
+ */
+static inline enum controld_join_phase
+controld_get_join_phase(const pcmk__node_status_t *node)
+{
+    if ((node != NULL) && (node->user_data != NULL)) {
+        struct controld_node_status_data *data = node->user_data;
+
+        return data->join_phase;
+    }
+    return controld_join_none;
+}
+
 void post_cache_update(int instance);
 
-const char *controld_join_phase_text(enum crm_join_phase phase);
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
 void controld_destroy_failed_sync_table(void);

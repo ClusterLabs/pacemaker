@@ -53,9 +53,10 @@ add_attribute_xml(pcmk_scheduler_t *scheduler, const char *ticket_id,
     GHashTableIter hash_iter;
     char *key = NULL;
     char *value = NULL;
+    pcmk__ticket_t *ticket = NULL;
 
-    pcmk__ticket_t *ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
-
+    ticket = g_hash_table_lookup(scheduler->priv->ticket_constraints,
+                                 ticket_id);
     g_hash_table_iter_init(&hash_iter, attr_set);
     while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
         crm_xml_add(*ticket_state_xml, key, value);
@@ -189,9 +190,10 @@ pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler
     }
 
     if (!force) {
-        pcmk__ticket_t *ticket = g_hash_table_lookup(scheduler->tickets,
-                                                     ticket_id);
+        pcmk__ticket_t *ticket = NULL;
 
+        ticket = g_hash_table_lookup(scheduler->priv->ticket_constraints,
+                                     ticket_id);
         if (ticket == NULL) {
             return ENXIO;
         }
@@ -270,7 +272,8 @@ pcmk__ticket_get_attr(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
         return EINVAL;
     }
 
-    ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
+    ticket = g_hash_table_lookup(scheduler->priv->ticket_constraints,
+                                 ticket_id);
 
     if (ticket != NULL) {
         attr_value = g_hash_table_lookup(ticket->state, attr_name);
@@ -318,9 +321,10 @@ pcmk__ticket_info(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
 
     if (ticket_id != NULL) {
         GHashTable *tickets = NULL;
-        pcmk__ticket_t *ticket = g_hash_table_lookup(scheduler->tickets,
-                                                     ticket_id);
+        pcmk__ticket_t *ticket = NULL;
 
+        ticket = g_hash_table_lookup(scheduler->priv->ticket_constraints,
+                                     ticket_id);
         if (ticket == NULL) {
             return ENXIO;
         }
@@ -334,7 +338,8 @@ pcmk__ticket_info(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
         g_hash_table_destroy(tickets);
 
     } else {
-        out->message(out, "ticket-list", scheduler->tickets, false, raw, details);
+        out->message(out, "ticket-list", scheduler->priv->ticket_constraints,
+                     false, raw, details);
     }
 
     return rc;

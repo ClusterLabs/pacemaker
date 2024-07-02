@@ -64,8 +64,8 @@ typedef struct pcmk_rule_input {
     const char *rsc_agent;      //!< Resource agent that rule applies to
 
     // Used to evaluate operation type expressions
-    const char *op_name;    //! Operation name that rule applies to
-    guint op_interval_ms;   //! Operation interval that rule applies to
+    const char *op_name;        //!< Operation name that rule applies to
+    guint op_interval_ms;       //!< Operation interval that rule applies to
 
     // Remaining members are used to evaluate node attribute expressions
 

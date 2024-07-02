@@ -114,7 +114,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
         crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, stonith_our_uname);
 
-        pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, request);
+        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, request);
         pcmk__xml_free(request);
         return 0;
     }
@@ -190,28 +190,25 @@ stonith_peer_ais_callback(cpg_handle_t handle,
                           const struct cpg_name *groupName,
                           uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
-    uint32_t kind = 0;
     xmlNode *xml = NULL;
     const char *from = NULL;
-    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &kind, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
 
     if(data == NULL) {
         return;
     }
-    if (kind == crm_class_cluster) {
-        xml = pcmk__xml_parse(data);
-        if (xml == NULL) {
-            crm_err("Invalid XML: '%.120s'", data);
-            free(data);
-            return;
-        }
-        crm_xml_add(xml, PCMK__XA_SRC, from);
-        stonith_peer_callback(xml, NULL);
+
+    xml = pcmk__xml_parse(data);
+    if (xml == NULL) {
+        crm_err("Invalid XML: '%.120s'", data);
+        free(data);
+        return;
     }
+    crm_xml_add(xml, PCMK__XA_SRC, from);
+    stonith_peer_callback(xml, NULL);
 
     pcmk__xml_free(xml);
     free(data);
-    return;
 }
 
 static void
@@ -468,11 +465,11 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
  * \param[in] data  Previous value of what changed
  */
 static void
-st_peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
+st_peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                         const void *data)
 {
-    if ((type != crm_status_processes)
-        && !pcmk_is_set(node->flags, crm_remote_node)) {
+    if ((type != pcmk__node_update_processes)
+        && !pcmk_is_set(node->flags, pcmk__node_status_remote)) {
         /*
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()
@@ -484,7 +481,7 @@ st_peer_update_callback(enum crm_status_type type, pcmk__node_status_t *node,
 
         crm_debug("Broadcasting our uname because of node %" PRIu32,
                   node->cluster_layer_id);
-        pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, query);
+        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, query);
 
         pcmk__xml_free(query);
     }
@@ -637,7 +634,7 @@ main(int argc, char **argv)
             crm_crit("Cannot sign in to the cluster... terminating");
             goto done;
         }
-        pcmk__str_update(&stonith_our_uname, cluster->uname);
+        pcmk__str_update(&stonith_our_uname, cluster->priv->node_name);
 
         if (!options.no_cib_connect) {
             setup_cib();

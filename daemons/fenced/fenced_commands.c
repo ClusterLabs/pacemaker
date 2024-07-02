@@ -2351,7 +2351,7 @@ stonith_send_reply(const xmlNode *reply, int call_options,
             pcmk__get_node(0, remote_peer, NULL,
                            pcmk__node_search_cluster_member);
 
-        pcmk__cluster_send_message(node, crm_msg_stonith_ng, reply);
+        pcmk__cluster_send_message(node, pcmk__cluster_msg_fenced, reply);
     }
 }
 
@@ -2597,7 +2597,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
                   cmd->action, cmd->target);
         crm_xml_add(reply, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
         crm_xml_add(reply, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
-        pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, reply);
+        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, reply);
     } else {
         // Reply only to the originator
         stonith_send_reply(reply, cmd->options, cmd->origin, client);
@@ -2875,7 +2875,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
                                             pcmk__node_search_any
                                             |pcmk__node_search_cluster_cib);
             if (node != NULL) {
-                host = node->uname;
+                host = node->name;
             }
         }
 
@@ -2983,16 +2983,11 @@ construct_async_reply(const async_command_t *cmd,
     return reply;
 }
 
-bool fencing_peer_active(pcmk__node_status_t *peer)
+bool
+fencing_peer_active(pcmk__node_status_t *peer)
 {
-    if (peer == NULL) {
-        return FALSE;
-    } else if (peer->uname == NULL) {
-        return FALSE;
-    } else if (pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
-        return TRUE;
-    }
-    return FALSE;
+    return (peer != NULL) && (peer->name != NULL)
+           && pcmk_is_set(peer->processes, crm_get_cluster_proc());
 }
 
 void
@@ -3021,13 +3016,13 @@ check_alternate_host(const char *target)
         GHashTableIter gIter;
         pcmk__node_status_t *entry = NULL;
 
-        g_hash_table_iter_init(&gIter, crm_peer_cache);
+        g_hash_table_iter_init(&gIter, pcmk__peer_cache);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
             if (fencing_peer_active(entry)
-                && !pcmk__str_eq(entry->uname, target, pcmk__str_casei)) {
+                && !pcmk__str_eq(entry->name, target, pcmk__str_casei)) {
                 crm_notice("Forwarding self-fencing request to %s",
-                           entry->uname);
-                return entry->uname;
+                           entry->name);
+                return entry->name;
             }
         }
         crm_warn("Will handle own fencing because no peer can");
@@ -3336,7 +3331,8 @@ handle_fence_request(pcmk__request_t *request)
             crm_xml_add(request->xml, PCMK__XA_ST_CLIENTID,
                         request->ipc_client->id);
             crm_xml_add(request->xml, PCMK__XA_ST_REMOTE_OP, op->id);
-            pcmk__cluster_send_message(node, crm_msg_stonith_ng, request->xml);
+            pcmk__cluster_send_message(node, pcmk__cluster_msg_fenced,
+                                       request->xml);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
                              NULL);
 

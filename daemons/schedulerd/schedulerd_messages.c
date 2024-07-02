@@ -107,7 +107,7 @@ handle_pecalc_request(pcmk__request_t *request)
         series_id = 2;
     }
 
-    value = pcmk__cluster_option(scheduler->config_hash,
+    value = pcmk__cluster_option(scheduler->priv->options,
                                  series[series_id].param);
     if ((value == NULL)
         || (pcmk__scan_min_int(value, &series_wrap, -1) != pcmk_rc_ok)) {

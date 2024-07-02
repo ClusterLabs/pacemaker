@@ -440,7 +440,7 @@ main(int argc, char **argv)
     }
 
     scheduler->input = cib_xml_copy;
-    scheduler->now = crm_time_new(NULL);
+    scheduler->priv->now = crm_time_new(NULL);
 
     cluster_status(scheduler);
 

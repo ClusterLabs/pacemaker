@@ -49,7 +49,7 @@ struct action_history {
  * flag is stringified more readably in log messages.
  */
 #define set_config_flag(scheduler, option, flag) do {                         \
-        GHashTable *config_hash = (scheduler)->config_hash;                   \
+        GHashTable *config_hash = (scheduler)->priv->options;                 \
         const char *scf_value = pcmk__cluster_option(config_hash, (option));  \
                                                                               \
         if (scf_value != NULL) {                                              \
@@ -222,13 +222,13 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .now = scheduler->now,
+        .now = scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
     };
 
-    scheduler->config_hash = config_hash;
+    scheduler->priv->options = config_hash;
 
     pe__unpack_dataset_nvpairs(config, PCMK_XE_CLUSTER_PROPERTY_SET, &rule_data,
                                config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS,
@@ -260,11 +260,11 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     pcmk_parse_interval_spec(value, &interval_ms);
 
     if (interval_ms >= INT_MAX) {
-        scheduler->stonith_timeout = INT_MAX;
+        scheduler->priv->fence_timeout_ms = INT_MAX;
     } else {
-        scheduler->stonith_timeout = (int) interval_ms;
+        scheduler->priv->fence_timeout_ms = (int) interval_ms;
     }
-    crm_debug("STONITH timeout: %d", scheduler->stonith_timeout);
+    crm_debug("STONITH timeout: %d", scheduler->priv->fence_timeout_ms);
 
     set_config_flag(scheduler, PCMK_OPT_STONITH_ENABLED,
                     pcmk__sched_fencing_enabled);
@@ -274,17 +274,17 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_debug("STONITH of failed nodes is disabled");
     }
 
-    scheduler->stonith_action = pcmk__cluster_option(config_hash,
-                                                     PCMK_OPT_STONITH_ACTION);
-    if (!strcmp(scheduler->stonith_action, PCMK__ACTION_POWEROFF)) {
+    scheduler->priv->fence_action =
+        pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_ACTION);
+    if (!strcmp(scheduler->priv->fence_action, PCMK__ACTION_POWEROFF)) {
         pcmk__warn_once(pcmk__wo_poweroff,
                         "Support for " PCMK_OPT_STONITH_ACTION " of "
                         "'" PCMK__ACTION_POWEROFF "' is deprecated and will be "
                         "removed in a future release "
                         "(use '" PCMK_ACTION_OFF "' instead)");
-        scheduler->stonith_action = PCMK_ACTION_OFF;
+        scheduler->priv->fence_action = PCMK_ACTION_OFF;
     }
-    crm_trace("STONITH will %s nodes", scheduler->stonith_action);
+    crm_trace("STONITH will %s nodes", scheduler->priv->fence_action);
 
     set_config_flag(scheduler, PCMK_OPT_CONCURRENT_FENCING,
                     pcmk__sched_concurrent_fencing);
@@ -423,9 +423,9 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     pe__unpack_node_health_scores(scheduler);
 
-    scheduler->placement_strategy =
+    scheduler->priv->placement_strategy =
         pcmk__cluster_option(config_hash, PCMK_OPT_PLACEMENT_STRATEGY);
-    crm_trace("Placement strategy: %s", scheduler->placement_strategy);
+    crm_trace("Placement strategy: %s", scheduler->priv->placement_strategy);
 
     set_config_flag(scheduler, PCMK_OPT_SHUTDOWN_LOCK,
                     pcmk__sched_shutdown_lock);
@@ -970,7 +970,8 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
 
     crm_trace("Processing ticket state for %s", ticket_id);
 
-    ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
+    ticket = g_hash_table_lookup(scheduler->priv->ticket_constraints,
+                                 ticket_id);
     if (ticket == NULL) {
         ticket = ticket_new(ticket_id, scheduler);
         if (ticket == NULL) {
@@ -1382,8 +1383,9 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
 
     crm_trace("Beginning unpack");
 
-    if (scheduler->tickets == NULL) {
-        scheduler->tickets = pcmk__strkey_table(free, destroy_ticket);
+    if (scheduler->priv->ticket_constraints == NULL) {
+        scheduler->priv->ticket_constraints =
+            pcmk__strkey_table(free, destroy_ticket);
     }
 
     for (state = pcmk__xe_first_child(status, NULL, NULL, NULL); state != NULL;
@@ -4895,10 +4897,11 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                pcmk_scheduler_t *scheduler)
 {
     const char *cluster_name = NULL;
+    const char *dc_id = crm_element_value(scheduler->input, PCMK_XA_DC_UUID);
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .now = scheduler->now,
+        .now = scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
@@ -4908,16 +4911,20 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                      CRM_ATTR_UNAME, node->priv->name);
 
     pcmk__insert_dup(node->priv->attrs, CRM_ATTR_ID, node->priv->id);
-    if (pcmk__str_eq(node->priv->id, scheduler->dc_uuid, pcmk__str_casei)) {
+
+    if ((scheduler->dc_node == NULL)
+        && pcmk__str_eq(node->priv->id, dc_id, pcmk__str_casei)) {
+
         scheduler->dc_node = node;
         pcmk__insert_dup(node->priv->attrs,
                          CRM_ATTR_IS_DC, PCMK_VALUE_TRUE);
-    } else {
+
+    } else if (!pcmk__same_node(node, scheduler->dc_node)) {
         pcmk__insert_dup(node->priv->attrs,
                          CRM_ATTR_IS_DC, PCMK_VALUE_FALSE);
     }
 
-    cluster_name = g_hash_table_lookup(scheduler->config_hash,
+    cluster_name = g_hash_table_lookup(scheduler->priv->options,
                                        PCMK_OPT_CLUSTER_NAME);
     if (cluster_name) {
         pcmk__insert_dup(node->priv->attrs, CRM_ATTR_CLUSTER_NAME,
