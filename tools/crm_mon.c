@@ -489,13 +489,6 @@ inactive_resources_cb(const gchar *option_name, const gchar *optarg, gpointer da
 }
 
 static gboolean
-no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    pcmk__str_update(&args->output_ty, "text");
-    output_format = mon_output_plain;
-    return TRUE;
-}
-
-static gboolean
 print_brief_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     show_opts |= pcmk_show_brief;
     return TRUE;
@@ -740,11 +733,6 @@ static GOptionEntry deprecated_entries[] = {
     { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
       "Write cluster status as XML to stdout. This will enable one-shot mode.\n"
       INDENT "Use --output-as=xml instead.",
-      NULL },
-
-    { "disable-ncurses", 'N', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, no_curses_cb,
-      "Disable the use of ncurses.\n"
-      INDENT "Use --output-as=text instead.",
       NULL },
 
     { "web-cgi", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_cgi_cb,
