@@ -415,7 +415,7 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
     scheduler->priv->out = out;
 
     // Set defaults for everything else
-    scheduler->order_id = 1;
+    scheduler->priv->next_ordering_id = 1;
     scheduler->action_id = 1;
     scheduler->no_quorum_policy = pcmk_no_quorum_stop;
     pcmk__set_scheduler_flags(scheduler,

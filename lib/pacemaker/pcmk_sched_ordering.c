@@ -552,7 +552,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
 
     order = pcmk__assert_alloc(1, sizeof(pcmk__action_relation_t));
 
-    order->id = sched->order_id++;
+    order->id = sched->priv->next_ordering_id++;
     order->flags = flags;
     order->rsc1 = first_rsc;
     order->rsc2 = then_rsc;
@@ -578,7 +578,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
     }
 
     pcmk__rsc_trace(first_rsc, "Created ordering %d for %s then %s",
-                    (sched->order_id - 1),
+                    (sched->priv->next_ordering_id - 1),
                     pcmk__s(order->task1, "an underspecified action"),
                     pcmk__s(order->task2, "an underspecified action"));
 
