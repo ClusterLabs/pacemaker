@@ -98,20 +98,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    GList *resources;               // Resources in cluster
-    GList *placement_constraints;   // Location constraints
-    GList *ordering_constraints;    // Ordering constraints
-    GList *colocation_constraints;  // Colocation constraints
-
-    // Ticket constraints unpacked by libpacemaker
-    GList *ticket_constraints;
-
-    xmlNode *failed;                // History entries of failed actions
-    xmlNode *op_defaults;           // Configured operation defaults
-    xmlNode *rsc_defaults;          // Configured resource defaults
-    int num_synapse;                // Number of transition graph synapses
-    int max_valid_nodes;            // \deprecated Do not use
-    int order_id;                   // ID to use for next created ordering
     int action_id;                  // ID to use for next created action
     xmlNode *graph;                 // Transition graph
     GHashTable *template_rsc_sets;  // Mappings of template ID to resource ID

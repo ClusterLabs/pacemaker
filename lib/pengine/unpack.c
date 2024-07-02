@@ -593,7 +593,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
         return NULL;
     }
 
-    if (pe_find_resource(data->resources, remote_name) != NULL) {
+    if (pe_find_resource(data->priv->resources, remote_name) != NULL) {
         return NULL;
     }
 
@@ -691,7 +691,7 @@ unpack_launcher(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     launcher_id = g_hash_table_lookup(rsc->priv->meta, PCMK__META_CONTAINER);
     if ((launcher_id != NULL)
         && !pcmk__str_eq(launcher_id, rsc->id, pcmk__str_none)) {
-        pcmk_resource_t *launcher = pe_find_resource(scheduler->resources,
+        pcmk_resource_t *launcher = pe_find_resource(scheduler->priv->resources,
                                                      launcher_id);
 
         if (launcher != NULL) {
@@ -871,7 +871,8 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         crm_trace("Unpacking <%s " PCMK_XA_ID "='%s'>", xml_obj->name, id);
         if (pe__unpack_resource(xml_obj, &new_rsc, NULL,
                                 scheduler) == pcmk_rc_ok) {
-            scheduler->resources = g_list_append(scheduler->resources, new_rsc);
+            scheduler->priv->resources =
+                g_list_append(scheduler->priv->resources, new_rsc);
             pcmk__rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
 
         } else {
@@ -881,15 +882,17 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         }
     }
 
-    for (gIter = scheduler->resources; gIter != NULL; gIter = gIter->next) {
+    for (gIter = scheduler->priv->resources;
+         gIter != NULL; gIter = gIter->next) {
+
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
 
         unpack_launcher(rsc, scheduler);
         link_rsc2remotenode(scheduler, rsc);
     }
 
-    scheduler->resources = g_list_sort(scheduler->resources,
-                                      pe__cmp_rsc_priority);
+    scheduler->priv->resources = g_list_sort(scheduler->priv->resources,
+                                             pe__cmp_rsc_priority);
     if (pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
         /* Ignore */
 
@@ -2012,7 +2015,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         pcmk__set_rsc_flags(rsc, pcmk__rsc_removed_launched);
     }
     pcmk__set_rsc_flags(rsc, pcmk__rsc_removed);
-    scheduler->resources = g_list_append(scheduler->resources, rsc);
+    scheduler->priv->resources = g_list_append(scheduler->priv->resources, rsc);
     return rsc;
 }
 
@@ -2200,7 +2203,7 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     pcmk_resource_t *parent = NULL;
 
     crm_trace("looking for %s", rsc_id);
-    rsc = pe_find_resource(scheduler->resources, rsc_id);
+    rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
 
     if (rsc == NULL) {
         /* If we didn't find the resource by its name in the operation history,
@@ -2208,7 +2211,7 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
          * we create a single :0 orphan to match against here.
          */
         char *clone0_id = clone_zero(rsc_id);
-        pcmk_resource_t *clone0 = pe_find_resource(scheduler->resources,
+        pcmk_resource_t *clone0 = pe_find_resource(scheduler->priv->resources,
                                                    clone0_id);
 
         if (clone0 && !pcmk_is_set(clone0->flags, pcmk__rsc_unique)) {
@@ -2832,12 +2835,12 @@ handle_removed_launched_resources(const xmlNode *lrm_rsc_list,
             continue;
         }
 
-        launcher = pe_find_resource(scheduler->resources, launcher_id);
+        launcher = pe_find_resource(scheduler->priv->resources, launcher_id);
         if (launcher == NULL) {
             continue;
         }
 
-        rsc = pe_find_resource(scheduler->resources, rsc_id);
+        rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
         if ((rsc == NULL) || (rsc->priv->launcher != NULL)
             || !pcmk_is_set(rsc->flags, pcmk__rsc_removed_launched)) {
             continue;
@@ -3489,7 +3492,7 @@ record_failed_op(struct action_history *history)
         return;
     }
 
-    for (const xmlNode *xIter = scheduler->failed->children;
+    for (const xmlNode *xIter = scheduler->priv->failed->children;
          xIter != NULL; xIter = xIter->next) {
 
         const char *key = pcmk__xe_history_key(xIter);
@@ -3508,7 +3511,7 @@ record_failed_op(struct action_history *history)
               history->key, pcmk__node_name(history->node));
     crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->priv->name);
     crm_xml_add(history->xml, PCMK__XA_RSC_ID, history->rsc->id);
-    pcmk__xml_copy(scheduler->failed, history->xml);
+    pcmk__xml_copy(scheduler->priv->failed, history->xml);
 }
 
 static char *

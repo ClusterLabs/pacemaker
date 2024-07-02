@@ -30,7 +30,7 @@ enum ordering_symmetry {
 };
 
 #define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                  \
-        __rsc = pcmk__find_constraint_resource(scheduler->resources,        \
+        __rsc = pcmk__find_constraint_resource(scheduler->priv->resources,  \
                                                __name);                     \
         if (__rsc == NULL) {                                                \
             pcmk__config_err("%s: No resource found for %s", __set, __name);\
@@ -252,7 +252,7 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
         return NULL;
     }
 
-    rsc = pcmk__find_constraint_resource(scheduler->resources, rsc_id);
+    rsc = pcmk__find_constraint_resource(scheduler->priv->resources, rsc_id);
     if (rsc == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", pcmk__xe_id(xml), rsc_id);
@@ -552,7 +552,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
 
     order = pcmk__assert_alloc(1, sizeof(pcmk__action_relation_t));
 
-    order->id = sched->order_id++;
+    order->id = sched->priv->next_ordering_id++;
     order->flags = flags;
     order->rsc1 = first_rsc;
     order->rsc2 = then_rsc;
@@ -578,12 +578,12 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
     }
 
     pcmk__rsc_trace(first_rsc, "Created ordering %d for %s then %s",
-                    (sched->order_id - 1),
+                    (sched->priv->next_ordering_id - 1),
                     pcmk__s(order->task1, "an underspecified action"),
                     pcmk__s(order->task2, "an underspecified action"));
 
-    sched->ordering_constraints = g_list_prepend(sched->ordering_constraints,
-                                                 order);
+    sched->priv->ordering_constraints =
+        g_list_prepend(sched->priv->ordering_constraints, order);
     pcmk__order_migration_equivalents(order);
 }
 
@@ -1439,9 +1439,10 @@ pcmk__apply_orderings(pcmk_scheduler_t *sched)
      * @TODO This is brittle and should be carefully redesigned so that the
      * order of creation doesn't matter, and the reverse becomes unneeded.
      */
-    sched->ordering_constraints = g_list_reverse(sched->ordering_constraints);
+    sched->priv->ordering_constraints =
+        g_list_reverse(sched->priv->ordering_constraints);
 
-    for (GList *iter = sched->ordering_constraints;
+    for (GList *iter = sched->priv->ordering_constraints;
          iter != NULL; iter = iter->next) {
 
         pcmk__action_relation_t *order = iter->data;

@@ -394,7 +394,7 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
                  pcmk__node_name(node), health);
 
         // Use node health as a location score for each resource on the node
-        for (GList *r = scheduler->resources; r != NULL; r = r->next) {
+        for (GList *r = scheduler->priv->resources; r != NULL; r = r->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) r->data;
 
             bool constrain = true;

@@ -862,8 +862,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
     int synapse_priority = 0;
     xmlNode *syn = pcmk__xe_create(scheduler->graph, "synapse");
 
-    crm_xml_add_int(syn, PCMK_XA_ID, scheduler->num_synapse);
-    scheduler->num_synapse++;
+    crm_xml_add_int(syn, PCMK_XA_ID, scheduler->priv->synapse_count++);
 
     if (action->rsc != NULL) {
         synapse_priority = action->rsc->priv->priority;
@@ -1065,7 +1064,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
      */
 
     // Add resource actions to graph
-    for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->priv->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pcmk__rsc_trace(rsc, "Processing actions for %s", rsc->id);

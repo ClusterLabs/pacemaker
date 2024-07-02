@@ -175,9 +175,18 @@ struct pcmk__scheduler_private {
     const char *fence_action;       // Default fencing action
     int fence_timeout_ms;           // Value of stonith-timeout property in ms
     const char *placement_strategy; // Value of placement-strategy property
+    xmlNode *rsc_defaults;          // Configured resource defaults
+    xmlNode *op_defaults;           // Configured operation defaults
+    GList *resources;               // Resources in cluster
     GList *actions;                 // All scheduled actions
     GHashTable *singletons;         // Scheduled non-resource actions
+    xmlNode *failed;                // History entries of failed actions
+    GList *location_constraints;    // Location constraints
+    GList *colocation_constraints;  // Colocation constraints
+    GList *ordering_constraints;    // Ordering constraints
     GHashTable *ticket_constraints; // Key = ticket ID, value = pcmk__ticket_t
+    int next_ordering_id;           // Counter used as ID for orderings
+    int synapse_count;              // Number of transition graph synapses
 };
 
 // Group of enum pcmk__warnings flags for warnings we want to log once

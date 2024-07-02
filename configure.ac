@@ -1643,7 +1643,7 @@ dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
-PKG_CHECK_MODULES(GNUTLS, [gnutls >= 2.12.0],
+PKG_CHECK_MODULES(GNUTLS, [gnutls >= 3.1.7],
                   [CPPFLAGS="${CPPFLAGS} ${GNUTLS_CFLAGS}"
                    LIBS="${LIBS} ${GNUTLS_LIBS}"])
 

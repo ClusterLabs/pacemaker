@@ -352,7 +352,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     if (value) {
         pcmk_resource_t *rsc;
 
-        rsc = pcmk__find_constraint_resource(scheduler->resources, value);
+        rsc = pcmk__find_constraint_resource(scheduler->priv->resources, value);
         unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL, 0, NULL);
     }
 
@@ -373,8 +373,8 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             return;
         }
 
-        for (GList *iter = scheduler->resources; iter != NULL;
-             iter = iter->next) {
+        for (GList *iter = scheduler->priv->resources;
+             iter != NULL; iter = iter->next) {
 
             pcmk_resource_t *r = iter->data;
             int nregs = 0;
@@ -516,7 +516,7 @@ unpack_location_set(xmlNode *location, xmlNode *set,
     for (xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF, NULL, NULL);
          xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
-        resource = pcmk__find_constraint_resource(scheduler->resources,
+        resource = pcmk__find_constraint_resource(scheduler->priv->resources,
                                                   pcmk__xe_id(xml_rsc));
         if (resource == NULL) {
             pcmk__config_err("%s: No resource found for %s",
@@ -636,8 +636,9 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
         new_con->nodes = g_list_prepend(NULL, copy);
     }
 
-    rsc->priv->scheduler->placement_constraints =
-        g_list_prepend(rsc->priv->scheduler->placement_constraints, new_con);
+    rsc->priv->scheduler->priv->location_constraints =
+        g_list_prepend(rsc->priv->scheduler->priv->location_constraints,
+                       new_con);
     rsc->priv->location_constraints =
         g_list_prepend(rsc->priv->location_constraints, new_con);
 
@@ -653,7 +654,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
 void
 pcmk__apply_locations(pcmk_scheduler_t *scheduler)
 {
-    for (GList *iter = scheduler->placement_constraints;
+    for (GList *iter = scheduler->priv->location_constraints;
          iter != NULL; iter = iter->next) {
         pcmk__location_t *location = iter->data;
 

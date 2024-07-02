@@ -764,7 +764,7 @@ pcmk__simulate_transition(pcmk_scheduler_t *scheduler, cib_t *cib,
     transition = pcmk__unpack_graph(scheduler->graph, crm_system_name);
     pcmk__log_graph(LOG_DEBUG, transition);
 
-    fake_resource_list = scheduler->resources;
+    fake_resource_list = scheduler->priv->resources;
     do {
         graph_rc = pcmk__execute_graph(transition);
     } while (graph_rc == pcmk__graph_active);

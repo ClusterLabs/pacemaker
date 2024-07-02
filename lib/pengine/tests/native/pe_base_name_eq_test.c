@@ -49,7 +49,9 @@ setup(void **state) {
     cluster_status(scheduler);
 
     /* Get references to several resources we use frequently. */
-    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->resources;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "dummy") == 0) {

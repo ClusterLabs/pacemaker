@@ -190,7 +190,7 @@ pcmk__valid_resource_or_tag(const pcmk_scheduler_t *scheduler, const char *id,
                             pcmk_resource_t **rsc, pcmk__idref_t **tag)
 {
     if (rsc != NULL) {
-        *rsc = pcmk__find_constraint_resource(scheduler->resources, id);
+        *rsc = pcmk__find_constraint_resource(scheduler->priv->resources, id);
         if (*rsc != NULL) {
             return true;
         }
@@ -428,7 +428,9 @@ void
 pcmk__create_internal_constraints(pcmk_scheduler_t *scheduler)
 {
     crm_trace("Create internal constraints");
-    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->resources;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->priv->cmds->internal_constraints(rsc);

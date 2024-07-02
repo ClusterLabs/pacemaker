@@ -214,8 +214,9 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
     }
 
     /* check the defaults */
-    pe__unpack_dataset_nvpairs(scheduler->rsc_defaults, PCMK_XE_META_ATTRIBUTES,
-                               &rule_data, meta_hash, NULL, FALSE, scheduler);
+    pe__unpack_dataset_nvpairs(scheduler->priv->rsc_defaults,
+                               PCMK_XE_META_ATTRIBUTES, &rule_data, meta_hash,
+                               NULL, FALSE, scheduler);
 
     /* If there is PCMK_XE_META_ATTRIBUTES that the parent resource has not
      * explicitly set, set a value that is not set from PCMK_XE_RSC_DEFAULTS
@@ -251,7 +252,7 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
         get_rsc_attributes(meta_hash, rsc->priv->parent, node, scheduler);
 
     } else {
-        if (pcmk__xe_first_child(scheduler->rsc_defaults,
+        if (pcmk__xe_first_child(scheduler->priv->rsc_defaults,
                                  PCMK_XE_INSTANCE_ATTRIBUTES, NULL,
                                  NULL) != NULL) {
             /* Not possible with schema validation enabled
@@ -266,7 +267,7 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
         }
 
         /* and finally check the defaults */
-        pe__unpack_dataset_nvpairs(scheduler->rsc_defaults,
+        pe__unpack_dataset_nvpairs(scheduler->priv->rsc_defaults,
                                    PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
                                    meta_hash, NULL, FALSE, scheduler);
     }
