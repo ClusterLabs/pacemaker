@@ -40,7 +40,6 @@ Pacemaker supports several classes, or standards, of resource agents:
 * Service
 * Fencing
 * Nagios *(deprecated since 2.1.6)*
-* Upstart *(deprecated since 2.1.0)*
 
 
 .. index::
@@ -135,18 +134,17 @@ as it relates to init scripts.
 System Services
 _______________
 
-Since there are various types of system services (``systemd``,
-``upstart``, and ``lsb``), Pacemaker supports a special ``service`` alias which
-intelligently figures out which one applies to a given cluster node.
+Since there are two types of system services (``systemd`` and ``lsb``),
+Pacemaker supports a special ``service`` alias that intelligently figures out
+which one applies to a given cluster node.
 
-This is particularly useful when the cluster contains a mix of
-``systemd``, ``upstart``, and ``lsb``.
+This is particularly useful when the cluster contains a mix of ``systemd`` and
+``lsb``.
 
 In order, Pacemaker will try to find the named service as:
 
 * an LSB init script
 * a Systemd unit file
-* an Upstart job
 
 
 .. index::
@@ -213,34 +211,6 @@ virtual machine or container if the service fails.
    (which may even call the Nagios plugin as part of its status action).
 
 
-.. index::
-   single: Resource; Upstart
-   single: Upstart; resources
-
-Upstart
-_______
-
-Some Linux distributions previously used `Upstart
-<https://upstart.ubuntu.com/>`_ for system initialization and service
-management. Pacemaker is able to manage services using Upstart if the local
-system supports them and support was enabled when your Pacemaker software was
-built.
-
-The *jobs* that specify how services are managed are usually provided by the
-operating system distribution.
-
-.. important::
-
-   Make sure the host is *not* configured to start any Upstart services at boot
-   that will be controlled by the cluster.
-
-.. warning::
-
-   Upstart support is deprecated in Pacemaker. Upstart is no longer actively
-   maintained, and test platforms for it are no longer readily usable. Support
-   will be dropped entirely at the next major release of Pacemaker.
-
-
 .. _primitive-resource:
 
 Resource Properties
@@ -266,9 +236,8 @@ where to find that resource agent and what standards it conforms to.
    |             |    single: resource; property, class                             |
    |             |                                                                  |
    |             | The standard the resource agent conforms to. Allowed values:     |
-   |             | ``lsb``, ``ocf``, ``service``, ``stonith``, ``systemd``,         |
-   |             | ``nagios`` *(deprecated since 2.1.6)*, and ``upstart``           |
-   |             | *(deprecated since 2.1.0)*                                       |
+   |             | ``lsb``, ``ocf``, ``service``, ``stonith``, ``systemd``, and     |
+   |             | ``nagios`` *(deprecated since 2.1.6)*.                           |
    +-------------+------------------------------------------------------------------+
    | description | .. index::                                                       |
    |             |    single: description; resource                                 |
@@ -310,8 +279,8 @@ might produce:
 
 .. note::
 
-   One of the main drawbacks to system services (LSB, systemd or
-   Upstart) resources is that they do not allow any parameters!
+   One of the main drawbacks to system services (LSB or systemd) resources is
+   that they do not allow any parameters!
 
 .. topic:: An OCF resource definition
 
@@ -674,9 +643,9 @@ resources were specifically enabled by having their ``is-managed`` set to
 Resource Instance Attributes
 ____________________________
 
-The resource agents of some resource classes (lsb, systemd and upstart *not* among them)
-can be given parameters which determine how they behave and which instance
-of a service they control.
+The resource agents of some resource classes (``lsb`` and ``systemd`` *not*
+among them) can be given parameters which determine how they behave and which
+instance of a service they control.
 
 If your resource agent supports parameters, you can add them with the
 ``crm_resource`` command. For example,
