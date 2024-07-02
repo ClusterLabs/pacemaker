@@ -444,13 +444,6 @@ as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 }
 
 static gboolean
-as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    pcmk__str_update(&args->output_ty, "xml");
-    output_format = mon_output_legacy_xml;
-    return TRUE;
-}
-
-static gboolean
 fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (optarg == NULL) {
         interactive_fence_level = 2;
@@ -754,11 +747,6 @@ static GOptionEntry display_entries[] = {
 };
 
 static GOptionEntry deprecated_entries[] = {
-    { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
-      "Write cluster status as XML to stdout. This will enable one-shot mode.\n"
-      INDENT "Use --output-as=xml instead.",
-      NULL },
-
     { "simple-status", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
       as_simple_cb,
       "Display the cluster status once as a simple one line output\n"
@@ -1334,11 +1322,11 @@ add_output_args(void) {
  * \internal
  * \brief Set output format based on \c --output-as arguments and mode arguments
  *
- * When the deprecated output format arguments (\c --as-cgi, \c --simple-status,
- * \c --as-xml) are parsed, callback functions set \c output_format (and the
- * umask if appropriate). If none of the deprecated arguments were specified,
- * this function does the same based on the current \c --output-as arguments and
- * the \c --one-shot and \c --daemonize arguments.
+ * When the deprecated output format arguments (\c --as-cgi, \c --simple-status)
+ * are parsed, callback functions set \c output_format (and the umask if
+ * appropriate). If none of the deprecated arguments were specified, this
+ * function does the same based on the current \c --output-as arguments and the
+ * \c --one-shot and \c --daemonize arguments.
  *
  * \param[in,out] args  Command line arguments
  */
@@ -1580,11 +1568,6 @@ main(int argc, char **argv)
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         return clean_up(CRM_EX_ERROR);
-    }
-
-    if (output_format == mon_output_legacy_xml) {
-        output_format = mon_output_xml;
-        pcmk__output_set_legacy_xml(out);
     }
 
     /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
