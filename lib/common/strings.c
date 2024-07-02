@@ -10,10 +10,6 @@
 #include "crm/common/results.h"
 #include <crm_internal.h>
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
 #include <regex.h>
 #include <stdio.h>
 #include <string.h>

@@ -9,10 +9,6 @@
 
 #include <crm_internal.h>
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
