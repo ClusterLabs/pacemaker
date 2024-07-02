@@ -818,7 +818,7 @@ main(int argc, char **argv)
     }
 
     the_cib = cib_new();
-    rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+    rc = cib__signon_attempts(the_cib, crm_system_name, cib_command, 5);
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {
