@@ -99,7 +99,6 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
 
     scheduler = pe_new_working_set();
     pcmk__mem_assert(scheduler);
-    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_compat);
 
     scheduler->input = cib_copy;
     scheduler->priv->out = out;

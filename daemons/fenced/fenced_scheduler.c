@@ -223,7 +223,6 @@ fenced_scheduler_run(xmlNode *cib)
     }
     scheduler->localhost = stonith_our_uname;
     pcmk__schedule_actions(cib, pcmk__sched_location_only
-                                |pcmk__sched_no_compat
                                 |pcmk__sched_no_counts, scheduler);
     g_list_foreach(scheduler->priv->resources, register_if_fencing_device,
                    NULL);

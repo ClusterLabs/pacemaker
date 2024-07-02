@@ -853,8 +853,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
         return ENOMEM;
     }
 
-    pcmk__set_scheduler_flags(new_scheduler,
-                              pcmk__sched_no_counts|pcmk__sched_no_compat);
+    pcmk__set_scheduler_flags(new_scheduler, pcmk__sched_no_counts);
 
     // Populate the scheduler data
 

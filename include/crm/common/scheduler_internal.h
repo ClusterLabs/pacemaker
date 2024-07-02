@@ -145,12 +145,6 @@ enum pcmk__scheduler_flags {
     // Skip counting of total, disabled, and blocked resource instances
     pcmk__sched_no_counts               = (1ULL << 23),
 
-    /*
-     * Skip deprecated code kept solely for backward API compatibility
-     * (internal code should always set this)
-     */
-    pcmk__sched_no_compat               = (1ULL << 24),
-
     // Whether node scores should be output instead of logged
     pcmk__sched_output_scores           = (1ULL << 25),
 

@@ -334,7 +334,7 @@ profile_file(const char *xml_file, long long repeat,
     xmlNode *cib_object = NULL;
     clock_t start = 0;
     clock_t end;
-    unsigned long long scheduler_flags = pcmk__sched_no_compat;
+    unsigned long long scheduler_flags = pcmk__sched_none;
 
     CRM_ASSERT(out != NULL);
 
@@ -882,7 +882,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
         pcmk__output_t *logger_out = NULL;
-        unsigned long long scheduler_flags = pcmk__sched_no_compat;
+        unsigned long long scheduler_flags = pcmk__sched_none;
 
         if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
             scheduler_flags |= pcmk__sched_output_scores;

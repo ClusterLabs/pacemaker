@@ -92,7 +92,6 @@ handle_pecalc_request(pcmk__request_t *request)
     if (process) {
         pcmk__schedule_actions(converted,
                                pcmk__sched_no_counts
-                               |pcmk__sched_no_compat
                                |pcmk__sched_show_utilization, scheduler);
     }
 

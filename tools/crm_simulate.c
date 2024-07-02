@@ -524,7 +524,6 @@ main(int argc, char **argv)
     if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
-    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_compat);
 
     if (options.test_dir != NULL) {
         scheduler->priv->out = out;
