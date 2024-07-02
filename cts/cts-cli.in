@@ -51,11 +51,14 @@ VALGRIND_ARGS = ["-q", "--gen-suppressions=all", "--show-reachable=no", "--leak-
                  "--suppressions=%s/valgrind-pcmk.suppressions" % test_home]
 
 
-def apply_substitutions(s):
+def apply_substitutions(s, extra=None):
     """Apply text substitutions to an input string and return it."""
     substitutions = {
         "test_home": test_home,
     }
+
+    if extra is not None:
+        substitutions.update(extra)
 
     return s.format(**substitutions)
 
@@ -76,6 +79,29 @@ def current_cib():
     """Return the complete current CIB."""
     with environ({"CIB_user": "root"}):
         return subprocess.check_output(["cibadmin", "-Q"], encoding="utf-8")
+
+
+def make_test_group(desc, cmd, classes, **kwargs):
+    """
+    Create a TestGroup that replicates the same test for multiple classes.
+
+    The given description, cmd, and kwargs will be passed as arguments to each
+    Test subclass in the classes parameter.  The resulting objects will then be
+    added to a TestGroup and returned.
+
+    The main purpose of this function is to be able to run the same test for
+    both text and XML formats without having to duplicate everything.  Thus, the
+    cmd string may contain "{fmt}", which will have any --output-as= class
+    variable substituted in.
+    """
+    tests = []
+
+    for c in classes:
+        obj = c(desc, apply_substitutions(cmd, extra={"fmt": c.format_args}),
+                **kwargs)
+        tests.append(obj)
+
+    return TestGroup(tests)
 
 
 def run_cmd_list(cmds):
@@ -200,6 +226,8 @@ class StdinCmd:
 
 class Test:
     """A base class for defining a single command line regression test."""
+
+    format_args = ""
 
     def __init__(self, desc, cmd, expected_rc=ExitStatus.OK, update_cib=False,
                  setup=None, teardown=None, stdin=None, env=None):
@@ -382,6 +410,8 @@ class Test:
 
 class ValidatingTest(Test):
     """A Test subclass that additionally runs test results through xmllint."""
+
+    format_args = "--output-as=xml"
 
     def __init__(self, desc, cmd, **kwargs):
         """Create a new ValidatingTest instance."""
