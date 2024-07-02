@@ -598,25 +598,6 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
                     (is_default? " (default)" : ""));
 }
 
-static void
-warn_about_deprecated_classes(pcmk_resource_t *rsc)
-{
-    const char *std = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-
-    if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_none)) {
-        pcmk__warn_once(pcmk__wo_upstart,
-                        "Support for Upstart resources (such as %s) is "
-                        "deprecated and will be removed in a future release",
-                        rsc->id);
-
-    } else if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_none)) {
-        pcmk__warn_once(pcmk__wo_nagios,
-                        "Support for Nagios resources (such as %s) is "
-                        "deprecated and will be removed in a future release",
-                        rsc->id);
-    }
-}
-
 /*!
  * \internal
  * \brief Unpack configuration XML for a given resource
@@ -734,8 +715,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         (*rsc)->id = strdup(id);
     }
 
-    warn_about_deprecated_classes(*rsc);
-
     rsc_private->fns = &resource_class_functions[rsc_private->variant];
 
     get_meta_attributes(rsc_private->meta, *rsc, NULL, scheduler);
@@ -790,13 +769,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_IS_MANAGED);
     if (value != NULL) {
-        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-            // @COMPAT Deprecated since 2.1.8
-            pcmk__config_warn("Support for setting " PCMK_META_IS_MANAGED
-                              " to the explicit value '" PCMK_VALUE_DEFAULT
-                              "' is deprecated and will be removed in a "
-                              "future release (just leave it unset)");
-        } else if (crm_is_true(value)) {
+        if (crm_is_true(value)) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);
         } else {
             pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
@@ -879,40 +852,22 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     value = g_hash_table_lookup(rsc_private->meta,
                                 PCMK_META_RESOURCE_STICKINESS);
     if (value != NULL) {
-        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-            // @COMPAT Deprecated since 2.1.8
-            pcmk__config_warn("Support for setting "
-                              PCMK_META_RESOURCE_STICKINESS
-                              " to the explicit value '" PCMK_VALUE_DEFAULT
-                              "' is deprecated and will be removed in a "
-                              "future release (just leave it unset)");
-        } else {
-            rsc_private->stickiness = char2score(value);
-        }
+        rsc_private->stickiness = char2score(value);
     }
 
     value = g_hash_table_lookup(rsc_private->meta,
                                 PCMK_META_MIGRATION_THRESHOLD);
     if (value != NULL) {
-        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-            // @COMPAT Deprecated since 2.1.8
-            pcmk__config_warn("Support for setting "
-                              PCMK_META_MIGRATION_THRESHOLD
-                              " to the explicit value '" PCMK_VALUE_DEFAULT
-                              "' is deprecated and will be removed in a "
-                              "future release (just leave it unset)");
-        } else {
-            rsc_private->ban_after_failures = char2score(value);
-            if (rsc_private->ban_after_failures < 0) {
-                /* @COMPAT We use 1 here to preserve previous behavior, but this
-                 * should probably use the default (INFINITY) or 0 (to disable)
-                 * instead.
-                 */
-                pcmk__warn_once(pcmk__wo_neg_threshold,
-                                PCMK_META_MIGRATION_THRESHOLD
-                                " must be non-negative, using 1 instead");
-                rsc_private->ban_after_failures = 1;
-            }
+        rsc_private->ban_after_failures = char2score(value);
+        if (rsc_private->ban_after_failures < 0) {
+            /* @COMPAT We use 1 here to preserve previous behavior, but this
+             * should probably use the default (INFINITY) or 0 (to disable)
+             * instead.
+             */
+            pcmk__warn_once(pcmk__wo_neg_threshold,
+                            PCMK_META_MIGRATION_THRESHOLD
+                            " must be non-negative, using 1 instead");
+            rsc_private->ban_after_failures = 1;
         }
     }
 

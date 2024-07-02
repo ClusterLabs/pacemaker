@@ -428,12 +428,16 @@ enum pcmk__schema_validator {
 typedef struct {
     int schema_index;
     char *name;
-    char *transform;
+
+    /*!
+     * List of XSLT stylesheets for upgrading from this schema version to the
+     * next one. Sorted by the order in which they should be applied to the CIB.
+     */
+    GList *transforms;
+
     void *cache;
     enum pcmk__schema_validator validator;
     pcmk__schema_version_t version;
-    char *transform_enter;
-    bool transform_onleave;
 } pcmk__schema_t;
 
 G_GNUC_INTERNAL

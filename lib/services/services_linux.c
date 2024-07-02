@@ -9,10 +9,6 @@
 
 #include <crm_internal.h>
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -760,12 +756,6 @@ services__generic_error(const svc_action_t *op)
         return PCMK_LSB_STATUS_UNKNOWN;
     }
 
-#if SUPPORT_NAGIOS
-    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return NAGIOS_STATE_UNKNOWN;
-    }
-#endif
-
     return PCMK_OCF_UNKNOWN_ERROR;
 }
 
@@ -794,12 +784,6 @@ services__not_installed_error(const svc_action_t *op)
 
         return PCMK_LSB_STATUS_NOT_INSTALLED;
     }
-
-#if SUPPORT_NAGIOS
-    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return NAGIOS_STATE_UNKNOWN;
-    }
-#endif
 
     return PCMK_OCF_NOT_INSTALLED;
 }
@@ -830,12 +814,6 @@ services__authorization_error(const svc_action_t *op)
         return PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
     }
 
-#if SUPPORT_NAGIOS
-    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return NAGIOS_INSUFFICIENT_PRIV;
-    }
-#endif
-
     return PCMK_OCF_INSUFFICIENT_PRIV;
 }
 
@@ -865,12 +843,6 @@ services__configuration_error(const svc_action_t *op, bool is_fatal)
 
         return PCMK_LSB_NOT_CONFIGURED;
     }
-
-#if SUPPORT_NAGIOS
-    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return NAGIOS_STATE_UNKNOWN;
-    }
-#endif
 
     return is_fatal? PCMK_OCF_NOT_CONFIGURED : PCMK_OCF_INVALID_PARAM;
 }

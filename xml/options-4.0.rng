@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <ref name="options"/>
+  </start>
+
+  <!--
+   Include rule definitions so that we can override element-nvset.rule based on
+   context
+   -->
+  <include href="rule-3.10.rng">
+    <start combine="choice">
+      <notAllowed/>
+    </start>
+  </include>
+
+  <!--
+   Include nvset definitions to override element-nvset.name-value using
+   rsc_meta_attributes.nvpair.unsupported"
+   -->
+  <include href="nvset-4.0.rng">
+    <start combine="choice">
+      <notAllowed/>
+    </start>
+  </include>
+
+  <!--
+   Disallow cluster property name-value pairs for which support was recently
+   dropped. The idea is to prevent a user from adding the option under the
+   belief that it will still affect behavior. Sometime in the future, re-allow
+   these as custom properties or values.
+   -->
+  <define name="cluster_property_set.nvpair.unsupported">
+    <choice>
+      <group>
+        <attribute name="name">
+          <data type="string">
+            <except>
+              <choice>
+                <value>remove-after-stop</value>
+                <value>stonith-action</value>
+              </choice>
+            </except>
+          </data>
+        </attribute>
+        <optional>
+          <attribute name="value"><text/></attribute>
+        </optional>
+      </group>
+
+      <!-- stonith-action is allowed with value other than "poweroff" -->
+      <group>
+        <attribute name="name">
+          <value type="string">stonith-action</value>
+        </attribute>
+        <optional>
+          <attribute name="value">
+            <data type="string">
+              <except>
+                <choice>
+                  <value>poweroff</value>
+                </choice>
+              </except>
+            </data>
+          </attribute>
+        </optional>
+      </group>
+    </choice>
+  </define>
+
+  <define name="options">
+    <interleave>
+      <element name="crm_config">
+        <zeroOrMore>
+          <element name="cluster_property_set">
+            <grammar>
+              <include href="nvset-4.0.rng">
+                <define name="element-nvset.name-value">
+                  <parentRef name="cluster_property_set.nvpair.unsupported"/>
+                </define>
+              </include>
+            </grammar>
+          </element>
+        </zeroOrMore>
+      </element>
+      <optional>
+        <element name="rsc_defaults">
+          <zeroOrMore>
+            <element name="meta_attributes">
+              <grammar>
+                <include href="nvset-4.0.rng">
+                  <define name="element-nvset.name-value">
+                    <parentRef name="rsc_meta_attributes.nvpair.unsupported"/>
+                  </define>
+                  <define name="element-nvset.rule">
+                    <parentRef name="element-rule-rsc_defaults"/>
+                  </define>
+                </include>
+              </grammar>
+            </element>
+          </zeroOrMore>
+        </element>
+      </optional>
+      <optional>
+        <element name="op_defaults">
+          <zeroOrMore>
+            <element name="meta_attributes">
+              <grammar>
+                <include href="nvset-4.0.rng">
+                  <define name="element-nvset.rule">
+                    <parentRef name="element-rule-op_defaults"/>
+                  </define>
+                </include>
+              </grammar>
+            </element>
+          </zeroOrMore>
+        </element>
+      </optional>
+    </interleave>
+  </define>
+
+</grammar>

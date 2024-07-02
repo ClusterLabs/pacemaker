@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- just as nvset-2.9.rng, but allows for instantiated @name restrictions -->
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <ref name="element-nvset"/>
+  </start>
+
+  <!-- nvpair/@name:
+       * generic string by default, parent grammar may want to prohibit
+         enumerated names -->
+  <define name="element-nvset.name">
+    <attribute name="name">
+      <text/>
+    </attribute>
+  </define>
+
+  <!-- nvpair/@name:
+       * defer element-nvset.name grammar item
+       nvpair/@value:
+       generic string by default, parent grammar may want to restrict
+       enumerated pairs (i.e. related to @name) at once -->
+  <define name="element-nvset.name-value">
+    <ref name="element-nvset.name"/>
+    <optional>
+      <attribute name="value"><text/></attribute>
+    </optional>
+  </define>
+
+  <!-- Allow easy redefinition in parent grammars -->
+  <define name="element-nvset.rule">
+    <externalRef href="rule-3.10.rng"/>
+  </define>
+
+  <!--
+   Disallow resource meta-attribute name-value pairs for which support was
+   recently dropped. The idea is to prevent a user from adding the option under
+   the belief that it will still affect behavior. Sometime in the future,
+   re-allow these as custom meta-attributes or values.
+   -->
+  <define name="rsc_meta_attributes.nvpair.unsupported">
+    <choice>
+      <group>
+        <attribute name="name">
+          <data type="string">
+            <except>
+              <choice>
+                <value>is-managed</value>
+                <value>migration-threshold</value>
+                <value>resource-stickiness</value>
+                <value>target-role</value>
+              </choice>
+            </except>
+          </data>
+        </attribute>
+        <optional>
+          <attribute name="value"><text/></attribute>
+        </optional>
+      </group>
+
+      <!-- These meta-attributes are allowed with value other than "default" -->
+      <group>
+        <attribute name="name">
+          <choice>
+            <value type="string">is-managed</value>
+            <value type="string">migration-threshold</value>
+            <value type="string">resource-stickiness</value>
+            <value type="string">target-role</value>
+          </choice>
+        </attribute>
+        <optional>
+          <attribute name="value">
+            <data type="string">
+              <except>
+                <choice>
+                  <value>default</value>
+                </choice>
+              </except>
+            </data>
+          </attribute>
+        </optional>
+      </group>
+    </choice>
+  </define>
+
+  <define name="element-nvset">
+   <choice>
+   <attribute name="id-ref"><data type="IDREF"/></attribute>
+   <group>
+    <attribute name="id"><data type="ID"/></attribute>
+    <interleave>
+      <optional>
+        <ref name="element-nvset.rule"/>
+      </optional>
+      <zeroOrMore>
+        <element name="nvpair">
+          <choice>
+            <group>
+              <attribute name="id-ref"><data type="IDREF"/></attribute>
+              <optional>
+                <attribute name="name"><text/></attribute>
+              </optional>
+            </group>
+            <group>
+              <attribute name="id"><data type="ID"/></attribute>
+              <ref name="element-nvset.name-value"/>
+            </group>
+          </choice>
+        </element>
+      </zeroOrMore>
+      <optional>
+        <externalRef href="score.rng"/>
+      </optional>
+    </interleave>
+   </group>
+   </choice>
+  </define>
+
+</grammar>

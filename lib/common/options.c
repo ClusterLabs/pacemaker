@@ -7,10 +7,6 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
 #include <crm_internal.h>
 
 #include <stdio.h>
@@ -247,7 +243,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
     },
     {
         PCMK_OPT_STONITH_ACTION, NULL, PCMK_VALUE_SELECT,
-            PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF ", " PCMK__ACTION_POWEROFF,
+            PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF,
         PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         pcmk__opt_schedulerd,
         N_("Action to send to fence device when a node needs to be fenced "
@@ -453,14 +449,6 @@ static const pcmk__cluster_option_t cluster_options[] = {
         N_("Whether to cancel recurring actions removed from the "
             "configuration"),
         NULL,
-    },
-    {
-        PCMK__OPT_REMOVE_AFTER_STOP, NULL, PCMK_VALUE_BOOLEAN, NULL,
-        PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd|pcmk__opt_deprecated,
-        N_("Whether to remove stopped resources from the executor"),
-        N_("Values other than default are poorly tested and potentially "
-            "dangerous."),
     },
 
     // Storing inputs
