@@ -436,15 +436,6 @@ as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 }
 
 static gboolean
-as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    pcmk__str_update(&args->output_dest, optarg);
-    pcmk__str_update(&args->output_ty, "html");
-    output_format = mon_output_html;
-    umask(S_IWGRP | S_IWOTH);   // World-readable HTML
-    return TRUE;
-}
-
-static gboolean
 as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     pcmk__str_update(&args->output_ty, "text");
     output_format = mon_output_monitor;
@@ -763,11 +754,6 @@ static GOptionEntry display_entries[] = {
 };
 
 static GOptionEntry deprecated_entries[] = {
-    { "as-html", 'h', G_OPTION_FLAG_FILENAME, G_OPTION_ARG_CALLBACK, as_html_cb,
-      "Write cluster status to the named HTML file.\n"
-      INDENT "Use --output-as=html --output-to=FILE instead.",
-      "FILE" },
-
     { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
       "Write cluster status as XML to stdout. This will enable one-shot mode.\n"
       INDENT "Use --output-as=xml instead.",
@@ -1346,13 +1332,13 @@ add_output_args(void) {
 
 /*!
  * \internal
- * \brief Set output format based on \p --output-as arguments and mode arguments
+ * \brief Set output format based on \c --output-as arguments and mode arguments
  *
- * When the deprecated output format arguments (\p --as-cgi, \p --as-html,
- * \p --simple-status, \p --as-xml) are parsed, callback functions set
- * \p output_format (and the umask if appropriate). If none of the deprecated
- * arguments were specified, this function does the same based on the current
- * \p --output-as arguments and the \p --one-shot and \p --daemonize arguments.
+ * When the deprecated output format arguments (\c --as-cgi, \c --simple-status,
+ * \c --as-xml) are parsed, callback functions set \c output_format (and the
+ * umask if appropriate). If none of the deprecated arguments were specified,
+ * this function does the same based on the current \c --output-as arguments and
+ * the \c --one-shot and \c --daemonize arguments.
  *
  * \param[in,out] args  Command line arguments
  */
@@ -1508,7 +1494,7 @@ main(int argc, char **argv)
         options.exec_mode = mon_exec_one_shot;
     }
 
-    processed_args = pcmk__cmdline_preproc(argv, "ehimpxEILU");
+    processed_args = pcmk__cmdline_preproc(argv, "eimpxEILU");
 
     fence_history_cb("--fence-history", "1", NULL, NULL);
 
