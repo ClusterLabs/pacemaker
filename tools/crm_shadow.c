@@ -455,7 +455,7 @@ connect_real_cib(cib_t **real_cib, GError **error)
         return rc;
     }
 
-    rc = (*real_cib)->cmds->signon(*real_cib, crm_system_name, cib_command);
+    rc = cib__signon_attempts(*real_cib, crm_system_name, cib_command, 5);
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
