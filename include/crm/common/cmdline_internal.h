@@ -153,6 +153,10 @@ gchar *pcmk__quote_cmdline(gchar **argv);
  * \param[in] argv    The command line arguments.
  * \param[in] special Single-letter command line arguments that take a value.
  *                    These letters will all have pre-processing applied.
+ *
+ * \note @COMPAT We should drop this at a new major or minor release series
+ *       after we no longer support building with Booth <1.2, which invokes
+ *       Pacemaker CLI tools using the getopt syntax.
  */
 gchar **
 pcmk__cmdline_preproc(char *const *argv, const char *special);

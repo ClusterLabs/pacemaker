@@ -1,3 +1,21 @@
+* Tue Jun 11 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8-rc2
+- 38 commits with 23 files changed, 600 insertions(+), 283 deletions(-)
+
+- Features added since Pacemaker-2.1.8-rc1
+  + libcrmcommon: support PCMK_panic_action="off" or "sync-off"
+
+- Fixes since Pacemaker-2.1.8-rc1
+  + libcrmcommon: avoid possible buffer overflows when parsing date/times
+  + libpacemaker: correctly retrieve any existing fail-count for increment
+                  (regression introduced in 2.1.8-rc1)
+  + libstonithd: avoid double free when invalid replies are received
+  + libstonithd: avoid use-after-free when retrieving metadata of Linux-HA fence agents
+                 (regression introduced in 2.1.8-rc1)
+  + libstonithd: free escaped metadata descriptions with g_free()
+                 (regression introduced in 2.1.8-rc1)
+  + tools: restore whitespace to attrd_updater query output
+           (regression introduced in 2.1.8-rc1)
+
 * Wed May 15 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8-rc1
 - 2480 commits with 507 files changed, 45891 insertions(+), 22991 deletions(-)
 
