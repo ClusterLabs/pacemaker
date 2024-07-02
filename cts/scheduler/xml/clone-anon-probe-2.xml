@@ -33,7 +33,6 @@
           <nvpair id="nvpair.id21960" name="promoted-max" value="1"/>
           <nvpair id="nvpair.id21969" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id21977" name="globally-unique" value="false"/>
-          <nvpair id="nvpair.id21985" name="target-role" value="#default"/>
         </meta_attributes>
         <primitive id="drbd0" class="ocf" provider="heartbeat" type="drbd">
           <instance_attributes id="instance_attributes.id22007">

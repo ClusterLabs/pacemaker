@@ -143,20 +143,7 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
 
             old_value = g_hash_table_lookup(hash, name);
 
-            if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
-                // @COMPAT Deprecated since 2.1.8
-                pcmk__config_warn("Support for setting meta-attributes (such "
-                                  "as %s) to the explicit value '#default' is "
-                                  "deprecated and will be removed in a future "
-                                  "release", name);
-                if (old_value) {
-                    crm_trace("Letting %s default (removing explicit value \"%s\")",
-                              name, value);
-                    g_hash_table_remove(hash, name);
-                }
-                continue;
-
-            } else if (old_value == NULL) {
+            if (old_value == NULL) {
                 crm_trace("Setting %s=\"%s\"", name, value);
                 pcmk__insert_dup(hash, name, value);
 
@@ -172,22 +159,23 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
 static void
 unpack_attr_set(gpointer data, gpointer user_data)
 {
-    xmlNode *pair = data;
+    xmlNode *nvpair_list = data;
     pcmk__nvpair_unpack_t *unpack_data = user_data;
 
-    if (pcmk__evaluate_rules(pair, &(unpack_data->rule_input),
+    if (pcmk__evaluate_rules(nvpair_list, &(unpack_data->rule_input),
                              unpack_data->next_change) != pcmk_rc_ok) {
         return;
     }
 
     crm_trace("Adding name/value pairs from %s %s overwrite",
-              pcmk__xe_id(pair), (unpack_data->overwrite? "with" : "without"));
-    populate_hash(pair, unpack_data->values, unpack_data->overwrite);
+              pcmk__xe_id(nvpair_list),
+              (unpack_data->overwrite? "with" : "without"));
+    populate_hash(nvpair_list, unpack_data->values, unpack_data->overwrite);
 }
 
 /*!
  * \internal
- * \brief Create a sorted list of nvpair blocks
+ * \brief Create an unsorted list of nvpair blocks
  *
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      If not NULL, only get blocks of this element

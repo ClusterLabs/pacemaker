@@ -38,14 +38,6 @@ service_standard(void **state) {
     assert_int_equal(pcmk_get_ra_caps("SeRvIcE"), pcmk_ra_cap_status);
     assert_int_equal(pcmk_get_ra_caps("lsb"), pcmk_ra_cap_status);
     assert_int_equal(pcmk_get_ra_caps("LSB"), pcmk_ra_cap_status);
-    assert_int_equal(pcmk_get_ra_caps("upstart"), pcmk_ra_cap_status);
-    assert_int_equal(pcmk_get_ra_caps("uPsTaRt"), pcmk_ra_cap_status);
-}
-
-static void
-nagios_standard(void **state) {
-    assert_int_equal(pcmk_get_ra_caps("nagios"), pcmk_ra_cap_params);
-    assert_int_equal(pcmk_get_ra_caps("NAGios"), pcmk_ra_cap_params);
 }
 
 static void
@@ -59,5 +51,4 @@ PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(ocf_standard),
                 cmocka_unit_test(stonith_standard),
                 cmocka_unit_test(service_standard),
-                cmocka_unit_test(nagios_standard),
                 cmocka_unit_test(unknown_standard))
