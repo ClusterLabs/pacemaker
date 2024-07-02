@@ -22,7 +22,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     // Have at least some data
     if (size < 5) {
-        return 0;
+        return -1; // Do not add input to testing corpus
     }
 
     filename = crm_strdup_printf("%s/libfuzzer.XXXXXX", pcmk__get_tmpdir());
