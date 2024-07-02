@@ -86,7 +86,8 @@
                      [(@value = 'default')
                       and ((@name = 'is-managed')
                            or (@name = 'migration-threshold')
-                           or (@name = 'resource-stickiness'))]">
+                           or (@name = 'resource-stickiness')
+                           or (@name = 'target-role'))]">
     <xsl:choose>
         <xsl:when test="../../self::template"/>
         <xsl:when test="../../self::primitive"/>
