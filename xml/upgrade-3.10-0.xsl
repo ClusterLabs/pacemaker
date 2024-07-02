@@ -81,6 +81,24 @@
 <!-- Drop rkt bundles -->
 <xsl:template match="bundle[rkt]"/>
 
+<!-- Drop "default" as value for certain resource meta-attributes -->
+<xsl:template match="//meta_attributes/nvpair
+                     [(@value = 'default')
+                      and (@name = 'migration-threshold')]">
+    <xsl:choose>
+        <xsl:when test="../../self::template"/>
+        <xsl:when test="../../self::primitive"/>
+        <xsl:when test="../../self::group"/>
+        <xsl:when test="../../self::clone"/>
+        <xsl:when test="../../self::master"/>
+        <xsl:when test="../../self::bundle"/>
+        <xsl:when test="../../self::rsc_defaults"/>
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
+</xsl:template>
+
 
 <!-- Constraints -->
 

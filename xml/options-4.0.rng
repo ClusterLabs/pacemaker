@@ -16,6 +16,16 @@
   </include>
 
   <!--
+   Include nvset definitions to override element-nvset.name-value using
+   rsc_meta_attributes.nvpair.unsupported"
+   -->
+  <include href="nvset-4.0.rng">
+    <start combine="choice">
+      <notAllowed/>
+    </start>
+  </include>
+
+  <!--
    Disallow cluster property name-value pairs for which support was recently
    dropped. The idea is to prevent a user from adding the option under the
    belief that it will still affect behavior. Sometime in the future, re-allow
@@ -80,6 +90,9 @@
             <element name="meta_attributes">
               <grammar>
                 <include href="nvset-4.0.rng">
+                  <define name="element-nvset.name-value">
+                    <parentRef name="rsc_meta_attributes.nvpair.unsupported"/>
+                  </define>
                   <define name="element-nvset.rule">
                     <parentRef name="element-rule-rsc_defaults"/>
                   </define>
