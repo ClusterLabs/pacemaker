@@ -12,23 +12,23 @@
 #include <stdio.h>
 
 #include <crm/common/util.h>
-#include <crm/common/util_compat.h>
+#include <crm/common/internal.h>
 
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-  char *ns;
-  guint result;
+    char *ns = NULL;
+    guint result = 0U;
 
-  if (size < 10) {
+    if (size < 10) {
+        return -1; // Do not add input to testing corpus
+    }
+    ns = pcmk__assert_alloc(1, size + 1);
+    memcpy(ns, data, size);
+    ns[size] = '\0';
+
+    pcmk_parse_interval_spec(ns, &result);
+
+    free(ns);
     return 0;
-  }
-  ns = malloc(size+1);
-  memcpy(ns, data, size);
-  ns[size] = '\0';
-
-  pcmk_parse_interval_spec(ns, &result);
-
-  free(ns);  
-  return 0;
 }
