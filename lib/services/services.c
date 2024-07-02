@@ -31,10 +31,6 @@
 #  include <systemd.h>
 #endif
 
-#if SUPPORT_NAGIOS
-#  include <services_nagios.h>
-#endif
-
 /* TODO: Develop a rollover strategy */
 
 static int operations = 0;
@@ -297,10 +293,6 @@ services__create_resource_action(const char *name, const char *standard,
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         rc = services__systemd_prepare(op);
 #endif
-#if SUPPORT_NAGIOS
-    } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
-        rc = services__nagios_prepare(op);
-#endif
     } else {
         crm_info("Unknown resource standard: %s", op->standard);
         rc = ENOENT;
@@ -537,12 +529,6 @@ services_result2ocf(const char *standard, const char *action, int exit_status)
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD,
                             pcmk__str_casei)) {
         return services__systemd2ocf(exit_status);
-#endif
-
-#if SUPPORT_NAGIOS
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS,
-                            pcmk__str_casei)) {
-        return services__nagios2ocf(exit_status);
 #endif
 
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_LSB,
@@ -970,13 +956,6 @@ execute_metadata_action(svc_action_t *op)
                                                          &op->stdout_data));
     }
 
-#if SUPPORT_NAGIOS
-    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return pcmk_legacy2rc(services__get_nagios_metadata(op->agent,
-                                                            &op->stdout_data));
-    }
-#endif
-
     return execute_action(op);
 }
 
@@ -1042,18 +1021,6 @@ resources_list_standards(void)
     }
 #endif
 
-#if SUPPORT_NAGIOS
-    {
-        GList *agents = services__list_nagios_agents();
-
-        if (agents != NULL) {
-            standards = g_list_append(standards,
-                                      strdup(PCMK_RESOURCE_CLASS_NAGIOS));
-            g_list_free_full(agents, free);
-        }
-    }
-#endif
-
     return standards;
 }
 
@@ -1100,10 +1067,6 @@ resources_list_agents(const char *standard, const char *provider)
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         return systemd_unit_listall();
-#endif
-#if SUPPORT_NAGIOS
-    } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
-        return services__list_nagios_agents();
 #endif
     }
 
@@ -1170,11 +1133,6 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 #if SUPPORT_SYSTEMD
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
         rc = systemd_unit_exists(agent);
-#endif
-
-#if SUPPORT_NAGIOS
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        rc = services__nagios_agent_exists(agent);
 #endif
 
     } else {

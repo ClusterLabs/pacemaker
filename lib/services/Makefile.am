@@ -34,6 +34,3 @@ endif
 if BUILD_SYSTEMD
 libcrmservice_la_SOURCES	+= systemd.c
 endif
-if BUILD_NAGIOS
-libcrmservice_la_SOURCES	+= services_nagios.c
-endif
