@@ -37,7 +37,6 @@ enum pcmk__warnings {
     pcmk__wo_group_coloc    = (1 << 12),
     pcmk__wo_set_ordering   = (1 << 15),
     pcmk__wo_rdisc_enabled  = (1 << 16),
-    pcmk__wo_rkt            = (1 << 17),
     pcmk__wo_location_rules = (1 << 18),
     pcmk__wo_op_attr_expr   = (1 << 19),
     pcmk__wo_instance_defaults  = (1 << 20),
