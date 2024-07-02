@@ -251,7 +251,6 @@ default_includes(mon_output_format_t fmt) {
         case mon_output_plain:
         case mon_output_console:
         case mon_output_html:
-        case mon_output_cgi:
             return pcmk_section_summary
                    |pcmk_section_nodes
                    |pcmk_section_resources
@@ -415,14 +414,6 @@ include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     char *s = crm_strdup_printf("%s=%s", option_name, optarg);
 
     options.includes_excludes = g_slist_append(options.includes_excludes, s);
-    return TRUE;
-}
-
-static gboolean
-as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    pcmk__str_update(&args->output_ty, "html");
-    output_format = mon_output_cgi;
-    options.exec_mode = mon_exec_one_shot;
     return TRUE;
 }
 
@@ -730,18 +721,25 @@ static GOptionEntry display_entries[] = {
 };
 
 static GOptionEntry deprecated_entries[] = {
+    /* @COMPAT At least the following resource agents use --as-xml at time of
+     * writing:
+     * * galera
+     * * pgsql
+     * * rabbitmq-cluster
+     * * redis
+     *
+     * Removing this option must wait until those are updated and we no longer
+     * support building on any platforms that ship the older agents in stock
+     * packages.
+     */
     { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
       "Write cluster status as XML to stdout. This will enable one-shot mode.\n"
       INDENT "Use --output-as=xml instead.",
       NULL },
 
-    { "web-cgi", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_cgi_cb,
-      "Web mode with output suitable for CGI (preselected when run as *.cgi).\n"
-      INDENT "Use --output-as=html --html-cgi instead.",
-      NULL },
-
     { NULL }
 };
+
 /* *INDENT-ON* */
 
 /* Reconnect to the CIB and fencing agent after reconnect_ms has passed.  This sounds
@@ -1210,9 +1208,6 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     const char *desc = NULL;
 
     desc = "Notes:\n\n"
-           "If this program is called as crm_mon.cgi, --output-as=html and\n"
-           "--html-cgi are automatically added to the command line\n"
-           "arguments.\n\n"
 
            "Time Specification:\n\n"
            "The TIMESPEC in any command line option can be specified in many\n"
@@ -1279,31 +1274,13 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
-/* If certain format options were specified, we want to set some extra
- * options.  We can just process these like they were given on the
- * command line.
- */
-static void
-add_output_args(void) {
-    GError *err = NULL;
-
-    if (output_format == mon_output_cgi) {
-        if (!pcmk__force_args(context, &err, "%s --html-cgi", g_get_prgname())) {
-            g_propagate_error(&error, err);
-            clean_up(CRM_EX_USAGE);
-        }
-    }
-}
-
 /*!
  * \internal
  * \brief Set output format based on \c --output-as arguments and mode arguments
  *
- * When the deprecated output format arguments (\c --as-cgi, \c --as-xml)
- * are parsed, callback functions set \c output_format. If none of the
- * deprecated arguments were specified, this function does the same based on the
- * current \c --output-as arguments and the \c --one-shot and \c --daemonize
- * arguments.
+ * When the deprecated \c --as-xml argument is parsed, a callback function sets
+ * \c output_format. Otherwise, this function does the same based on the current
+ * \c --output-as arguments and the \c --one-shot and \c --daemonize arguments.
  *
  * \param[in,out] args  Command line arguments
  */
@@ -1311,8 +1288,8 @@ static void
 reconcile_output_format(pcmk__common_args_t *args)
 {
     if (output_format != mon_output_unset) {
-        /* One of the deprecated arguments was used, and we're finished. Note
-         * that this means the deprecated arguments take precedence.
+        /* The deprecated --as-xml argument was used, and we're finished. Note
+         * that this means the deprecated argument takes precedence.
          */
         return;
     }
@@ -1449,20 +1426,13 @@ main(int argc, char **argv)
     // Avoid needing to wait for subprocesses forked for -E/--external-agent
     avoid_zombies();
 
-    if (pcmk__ends_with_ext(argv[0], ".cgi")) {
-        output_format = mon_output_cgi;
-        options.exec_mode = mon_exec_one_shot;
-    }
-
     processed_args = pcmk__cmdline_preproc(argv, "eimpxEILU");
 
     fence_history_cb("--fence-history", "1", NULL, NULL);
 
-    /* Set an HTML title regardless of what format we will eventually use.  This can't
-     * be done in add_output_args.  That function is called after command line
-     * arguments are processed in the next block, which means it'll override whatever
-     * title the user provides.  Doing this here means the user can give their own
-     * title on the command line.
+    /* Set an HTML title regardless of what format we will eventually use.
+     * Doing this here means the user can give their own title on the command
+     * line.
      */
     if (!pcmk__force_args(context, &error, "%s --html-title \"Cluster Status\"",
                           g_get_prgname())) {
@@ -1533,7 +1503,6 @@ main(int argc, char **argv)
 
     reconcile_output_format(args);
     set_default_exec_mode(args);
-    add_output_args();
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
@@ -1614,27 +1583,11 @@ main(int argc, char **argv)
         return clean_up(CRM_EX_OK);
     }
 
-    /* Extra sanity checks when in CGI mode */
-    if (output_format == mon_output_cgi) {
-        if (cib->variant == cib_file) {
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode used with CIB file");
-            return clean_up(CRM_EX_USAGE);
-        } else if (options.external_agent != NULL) {
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with --external-agent");
-            return clean_up(CRM_EX_USAGE);
-        } else if (options.exec_mode == mon_exec_daemonized) {
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with -d");
-            return clean_up(CRM_EX_USAGE);
-        }
-    }
-
     if (output_format == mon_output_xml) {
         show_opts |= pcmk_show_inactive_rscs | pcmk_show_timing;
     }
 
-    if ((output_format == mon_output_html || output_format == mon_output_cgi)
-        && (out->dest != stdout)) {
-
+    if ((output_format == mon_output_html) && (out->dest != stdout)) {
         char *content = pcmk__itoa(options.reconnect_ms / 1000);
 
         pcmk__html_add_header(PCMK__XE_META,
