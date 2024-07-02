@@ -20,7 +20,8 @@ test_SCRIPTS		= cts-attrd 		\
 			  cts-fencing		\
 			  cts-lab 		\
 			  cts-regression	\
-			  cts-scheduler
+			  cts-scheduler		\
+			  cts-schemas
 dist_test_DATA		= README.md			\
 			  valgrind-pcmk.suppressions
 
@@ -29,6 +30,11 @@ dist_cli_DATA	= $(wildcard cli/*.xml cli/*.exp)
 
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
 cts_SCRIPTS		= cts
+
+schemasdir			= $(testdir)/schemas
+dist_schemas_DATA	= $(wildcard schemas/*/*.ref)		\
+			  $(wildcard schemas/*/*.ref.err)	\
+			  $(wildcard schemas/*/*.xml)
 
 noinst_SCRIPTS		= cluster_test
 
@@ -43,6 +49,7 @@ CLEANFILES	= $(builddir)/.regression.failed.diff
 .PHONY: clean-local
 clean-local:
 	rm -f scheduler/*/*.pe
+	rm -f schemas/*/*.up{,.err}
 
 SUBDIRS	= benchmark 	\
 	  scheduler 	\

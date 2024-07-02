@@ -167,18 +167,13 @@ EXTRA_DIST		= README.md			\
 			  context-of.xsl		\
 			  rng-helper			\
 			  ocf-meta2man.xsl		\
-			  regression.sh			\
 			  upgrade-1.3.xsl		\
 			  upgrade-2.10.xsl		\
 			  upgrade-2.10-enter.xsl	\
 			  upgrade-2.10-leave.xsl	\
 			  upgrade-2.10-roundtrip.xsl	\
 			  upgrade-detail.xsl		\
-			  xslt_cibtr-2.rng		\
-			  test-2			\
-			  test-2-enter			\
-			  test-2-leave			\
-			  test-2-roundtrip
+			  xslt_cibtr-2.rng
 
 .PHONY: cib-versions
 cib-versions:
