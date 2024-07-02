@@ -75,29 +75,6 @@ enum lsb_status_exitcode {
     PCMK_LSB_STATUS_INSUFFICIENT_PRIV  = 151,
 };
 
-//!@{
-//! \deprecated Do not use
-
-enum nagios_exitcode {
-    NAGIOS_STATE_OK        = 0,
-    NAGIOS_STATE_WARNING   = 1,
-    NAGIOS_STATE_CRITICAL  = 2,
-    NAGIOS_STATE_UNKNOWN   = 3,
-
-    /* This is a custom Pacemaker value (not a nagios convention), used as an
-     * intermediate value between the services library and the executor, so the
-     * executor can map it to the corresponding OCF code.
-     */
-    NAGIOS_INSUFFICIENT_PRIV = 100,
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    NAGIOS_STATE_DEPENDENT   = 4,
-    NAGIOS_NOT_INSTALLED     = 101,
-#endif
-};
-
-//!@}
-
 enum svc_action_flags {
     /* On timeout, only kill pid, do not kill entire pid group */
     SVC_ACTION_LEAVE_GROUP = 0x01,
