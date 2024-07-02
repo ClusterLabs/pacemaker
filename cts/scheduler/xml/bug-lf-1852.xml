@@ -35,20 +35,16 @@
           <nvpair id="nvpair.id21968" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id21977" name="notify" value="yes"/>
           <nvpair id="nvpair.id21985" name="globally-unique" value="false"/>
-          <nvpair id="nvpair.id21994" name="target-role" value="#default"/>
         </meta_attributes>
         <primitive id="drbd0" class="ocf" provider="heartbeat" type="drbd">
           <instance_attributes id="instance_attributes.id22015">
             <nvpair id="nvpair.id22022" name="drbd_resource" value="r0"/>
           </instance_attributes>
         </primitive>
-        <meta_attributes id="clone-ms-drbd0.meta"/>
       </clone>
       <group id="fs_mysql_ip">
         <primitive id="fs0" class="ocf" provider="heartbeat" type="Filesystem">
-          <meta_attributes id="meta_attributes.id22049">
-            <nvpair id="nvpair.id22055" name="target-role" value="#default"/>
-          </meta_attributes>
+          <meta_attributes id="meta_attributes.id22049"/>
           <instance_attributes id="instance_attributes.id22066">
             <nvpair id="nvpair.id22072" name="fstype" value="ext3"/>
             <nvpair id="nvpair.id22081" name="directory" value="/drbd"/>
