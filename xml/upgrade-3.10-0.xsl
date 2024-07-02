@@ -84,7 +84,8 @@
 <!-- Drop "default" as value for certain resource meta-attributes -->
 <xsl:template match="//meta_attributes/nvpair
                      [(@value = 'default')
-                      and (@name = 'migration-threshold')]">
+                      and ((@name = 'migration-threshold')
+                           or (@name = 'resource-stickiness'))]">
     <xsl:choose>
         <xsl:when test="../../self::template"/>
         <xsl:when test="../../self::primitive"/>

@@ -46,6 +46,7 @@
             <except>
               <choice>
                 <value>migration-threshold</value>
+                <value>resource-stickiness</value>
               </choice>
             </except>
           </data>
@@ -60,6 +61,7 @@
         <attribute name="name">
           <choice>
             <value type="string">migration-threshold</value>
+            <value type="string">resource-stickiness</value>
           </choice>
         </attribute>
         <optional>
