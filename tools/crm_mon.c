@@ -202,14 +202,6 @@ static pcmk__message_entry_t fmt_functions[] = {
     { NULL, NULL, NULL },
 };
 
-/* Define exit codes for monitoring-compatible output
- * For nagios plugins, the possibilities are
- * OK=0, WARN=1, CRIT=2, and UNKNOWN=3
- */
-#define MON_STATUS_WARN    CRM_EX_ERROR
-#define MON_STATUS_CRIT    CRM_EX_INVALID_PARAM
-#define MON_STATUS_UNKNOWN CRM_EX_UNIMPLEMENT_FEATURE
-
 #define RECONNECT_MSECS 5000
 
 struct {
@@ -246,7 +238,7 @@ static void refresh_after_event(gboolean data_updated, gboolean enforce);
 
 static uint32_t
 all_includes(mon_output_format_t fmt) {
-    if (fmt == mon_output_monitor || fmt == mon_output_plain || fmt == mon_output_console) {
+    if ((fmt == mon_output_plain) || (fmt == mon_output_console)) {
         return ~pcmk_section_options;
     } else {
         return pcmk_section_all;
@@ -256,7 +248,6 @@ all_includes(mon_output_format_t fmt) {
 static uint32_t
 default_includes(mon_output_format_t fmt) {
     switch (fmt) {
-        case mon_output_monitor:
         case mon_output_plain:
         case mon_output_console:
         case mon_output_html:
@@ -431,14 +422,6 @@ static gboolean
 as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     pcmk__str_update(&args->output_ty, "html");
     output_format = mon_output_cgi;
-    options.exec_mode = mon_exec_one_shot;
-    return TRUE;
-}
-
-static gboolean
-as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    pcmk__str_update(&args->output_ty, "text");
-    output_format = mon_output_monitor;
     options.exec_mode = mon_exec_one_shot;
     return TRUE;
 }
@@ -757,12 +740,6 @@ static GOptionEntry deprecated_entries[] = {
     { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
       "Write cluster status as XML to stdout. This will enable one-shot mode.\n"
       INDENT "Use --output-as=xml instead.",
-      NULL },
-
-    { "simple-status", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-      as_simple_cb,
-      "Display the cluster status once as a simple one line output\n"
-      INDENT "(suitable for nagios)",
       NULL },
 
     { "disable-ncurses", 'N', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, no_curses_cb,
@@ -1334,11 +1311,11 @@ add_output_args(void) {
  * \internal
  * \brief Set output format based on \c --output-as arguments and mode arguments
  *
- * When the deprecated output format arguments (\c --as-cgi, \c --simple-status,
- * \c --as-xml) are parsed, callback functions set \c output_format (and the
- * umask if appropriate). If none of the deprecated arguments were specified,
- * this function does the same based on the current \c --output-as arguments and
- * the \c --one-shot and \c --daemonize arguments.
+ * When the deprecated output format arguments (\c --as-cgi, \c --as-xml)
+ * are parsed, callback functions set \c output_format. If none of the
+ * deprecated arguments were specified, this function does the same based on the
+ * current \c --output-as arguments and the \c --one-shot and \c --daemonize
+ * arguments.
  *
  * \param[in,out] args  Command line arguments
  */
@@ -1429,11 +1406,7 @@ set_default_exec_mode(const pcmk__common_args_t *args)
 static void
 clean_up_on_connection_failure(int rc)
 {
-    if (output_format == mon_output_monitor) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
-                    pcmk_rc_str(rc));
-        clean_up(MON_STATUS_CRIT);
-    } else if (rc == ENOTCONN) {
+    if (rc == ENOTCONN) {
         if (pcmkd_state == pcmk_pacemakerd_state_remote) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: remote-node not connected to cluster");
         } else {
@@ -1451,8 +1424,7 @@ one_shot(void)
 {
     int rc = pcmk__status(out, cib, fence_history, show, show_opts,
                           options.only_node, options.only_rsc,
-                          options.neg_location_prefix,
-                          output_format == mon_output_monitor, 0);
+                          options.neg_location_prefix, 0);
 
     if (rc == pcmk_rc_ok) {
         clean_up(pcmk_rc2exitc(rc));
@@ -2089,13 +2061,9 @@ mon_refresh_display(gpointer user_data)
     rc = pcmk__output_cluster_status(out, st, cib, current_cib, pcmkd_state,
                                      fence_history, show, show_opts,
                                      options.only_node,options.only_rsc,
-                                     options.neg_location_prefix,
-                                     output_format == mon_output_monitor);
+                                     options.neg_location_prefix);
 
-    if (output_format == mon_output_monitor && rc != pcmk_rc_ok) {
-        clean_up(MON_STATUS_WARN);
-        return G_SOURCE_REMOVE;
-    } else if (rc == pcmk_rc_schema_validation) {
+    if (rc == pcmk_rc_schema_validation) {
         clean_up(CRM_EX_CONFIG);
         return G_SOURCE_REMOVE;
     }
