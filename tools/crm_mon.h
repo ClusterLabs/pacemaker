@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,13 +46,11 @@
 typedef enum mon_output_format_e {
     mon_output_unset,
     mon_output_none,
-    mon_output_monitor,
     mon_output_plain,
     mon_output_console,
     mon_output_xml,
     mon_output_legacy_xml,
     mon_output_html,
-    mon_output_cgi
 } mon_output_format_t;
 
 enum mon_exec_mode {

@@ -22,39 +22,19 @@
 extern "C" {
 #endif
 
-/*!
- * \internal
- * \brief Print one-line status suitable for use with monitoring software
- *
- * \param[in,out] out        Output object
- * \param[in]     scheduler  Scheduler data
- *
- * \return Standard Pacemaker return code
- *
- * \note This function's output should conform to
- *       https://www.monitoring-plugins.org/doc/guidelines.html
- *
- * \note This function is planned to be deprecated and then removed in the
- *       future.  It should only be called from crm_mon, and no additional
- *       callers should be added.
- */
-int pcmk__output_simple_status(pcmk__output_t *out,
-                               const pcmk_scheduler_t *scheduler);
-
 int pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith,
                                 cib_t *cib, xmlNode *current_cib,
                                 enum pcmk_pacemakerd_state pcmkd_state,
                                 enum pcmk__fence_history fence_history,
                                 uint32_t show, uint32_t show_opts,
                                 const char *only_node, const char *only_rsc,
-                                const char *neg_location_prefix,
-                                bool simple_output);
+                                const char *neg_location_prefix);
 
 int pcmk__status(pcmk__output_t *out, cib_t *cib,
                  enum pcmk__fence_history fence_history, uint32_t show,
                  uint32_t show_opts, const char *only_node,
                  const char *only_rsc, const char *neg_location_prefix,
-                 bool simple_output, unsigned int timeout_ms);
+                 unsigned int timeout_ms);
 
 #ifdef __cplusplus
 }

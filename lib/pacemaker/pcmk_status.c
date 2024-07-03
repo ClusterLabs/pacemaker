@@ -62,9 +62,6 @@ fencing_connect(void)
  *                                     output. If \p "*" or \p NULL, include all
  *                                     resources in the output.
  * \param[in]     neg_location_prefix  Prefix denoting a ban in a constraint ID
- * \param[in]     simple_output        Whether to use a simple output format.
- *                                     Note: This is for use by \p crm_mon only
- *                                     and is planned to be deprecated.
  *
  * \return Standard Pacemaker return code
  */
@@ -75,7 +72,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
                             enum pcmk__fence_history fence_history,
                             uint32_t show, uint32_t show_opts,
                             const char *only_node, const char *only_rsc,
-                            const char *neg_location_prefix, bool simple_output)
+                            const char *neg_location_prefix)
 {
     xmlNode *cib_copy = pcmk__xml_copy(NULL, current_cib);
     stonith_history_t *stonith_history = NULL;
@@ -132,14 +129,10 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
         show |= pcmk_section_dc;
     }
 
-    if (simple_output) {
-        rc = pcmk__output_simple_status(out, scheduler);
-    } else {
-        out->message(out, "cluster-status",
-                     scheduler, pcmkd_state, pcmk_rc2exitc(history_rc),
-                     stonith_history, fence_history, show, show_opts,
-                     neg_location_prefix, unames, resources);
-    }
+    out->message(out, "cluster-status",
+                 scheduler, pcmkd_state, pcmk_rc2exitc(history_rc),
+                 stonith_history, fence_history, show, show_opts,
+                 neg_location_prefix, unames, resources);
 
     g_list_free_full(unames, free);
     g_list_free_full(resources, free);
@@ -178,7 +171,7 @@ pcmk_status(xmlNodePtr *xml)
     stonith__register_messages(out);
 
     rc = pcmk__status(out, cib, pcmk__fence_history_full, pcmk_section_all,
-                      show_opts, NULL, NULL, NULL, false, 0);
+                      show_opts, NULL, NULL, NULL, 0);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     cib_delete(cib);
@@ -207,9 +200,6 @@ pcmk_status(xmlNodePtr *xml)
  *                                     output. If \p "*" or \p NULL, include all
  *                                     resources in the output.
  * \param[in]     neg_location_prefix  Prefix denoting a ban in a constraint ID
- * \param[in]     simple_output        Whether to use a simple output format.
- *                                     Note: This is for use by \p crm_mon only
- *                                     and is planned to be deprecated.
  * \param[in]     timeout_ms           How long to wait for a reply from the
  *                                     \p pacemakerd API. If 0,
  *                                     \p pcmk_ipc_dispatch_sync will be used.
@@ -224,8 +214,7 @@ int
 pcmk__status(pcmk__output_t *out, cib_t *cib,
              enum pcmk__fence_history fence_history, uint32_t show,
              uint32_t show_opts, const char *only_node, const char *only_rsc,
-             const char *neg_location_prefix, bool simple_output,
-             unsigned int timeout_ms)
+             const char *neg_location_prefix, unsigned int timeout_ms)
 {
     xmlNode *current_cib = NULL;
     int rc = pcmk_rc_ok;
@@ -279,7 +268,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     rc = pcmk__output_cluster_status(out, stonith, cib, current_cib,
                                      pcmkd_state, fence_history, show,
                                      show_opts, only_node, only_rsc,
-                                     neg_location_prefix, simple_output);
+                                     neg_location_prefix);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Error outputting status info from the fencer or CIB");
     }
@@ -288,95 +277,4 @@ done:
     stonith_api_delete(stonith);
     pcmk__xml_free(current_cib);
     return pcmk_rc_ok;
-}
-
-/*!
- * \internal
- * \brief Output cluster status in Nagios Plugin format
- *
- * \param[in,out] out        Output object
- * \param[in]     scheduler  Scheduler data
- *
- * \return Standard Pacemaker return code
- * \note This is for a deprecated crm_mon option and should be called only for
- *       that.
- */
-int
-pcmk__output_simple_status(pcmk__output_t *out,
-                           const pcmk_scheduler_t *scheduler)
-{
-    int nodes_online = 0;
-    int nodes_standby = 0;
-    int nodes_maint = 0;
-    GString *offline_nodes = NULL;
-    bool no_dc = false;
-    bool offline = false;
-    bool has_warnings = false;
-
-    if (scheduler->dc_node == NULL) {
-        has_warnings = true;
-        no_dc = true;
-    }
-
-    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
-        pcmk_node_t *node = (pcmk_node_t *) iter->data;
-
-        if (pcmk_is_set(node->priv->flags, pcmk__node_standby)
-            && node->details->online) {
-            nodes_standby++;
-        } else if (node->details->maintenance && node->details->online) {
-            nodes_maint++;
-        } else if (node->details->online) {
-            nodes_online++;
-        } else {
-            pcmk__add_word(&offline_nodes, 1024, "offline node:");
-            pcmk__add_word(&offline_nodes, 0, pcmk__node_name(node));
-            has_warnings = true;
-            offline = true;
-        }
-    }
-
-    if (has_warnings) {
-        out->info(out, "CLUSTER WARN: %s%s%s",
-                  no_dc ? "No DC" : "",
-                  no_dc && offline ? ", " : "",
-                  (offline? (const char *) offline_nodes->str : ""));
-
-        if (offline_nodes != NULL) {
-            g_string_free(offline_nodes, TRUE);
-        }
-
-    } else {
-        char *nodes_standby_s = NULL;
-        char *nodes_maint_s = NULL;
-
-        if (nodes_standby > 0) {
-            nodes_standby_s = crm_strdup_printf(", %d standby node%s",
-                                                nodes_standby,
-                                                pcmk__plural_s(nodes_standby));
-        }
-
-        if (nodes_maint > 0) {
-            nodes_maint_s = crm_strdup_printf(", %d maintenance node%s",
-                                              nodes_maint,
-                                              pcmk__plural_s(nodes_maint));
-        }
-
-        out->info(out, "CLUSTER OK: %d node%s online%s%s, "
-                       "%d resource instance%s configured",
-                  nodes_online, pcmk__plural_s(nodes_online),
-                  nodes_standby_s != NULL ? nodes_standby_s : "",
-                  nodes_maint_s != NULL ? nodes_maint_s : "",
-                  scheduler->ninstances, pcmk__plural_s(scheduler->ninstances));
-
-        free(nodes_standby_s);
-        free(nodes_maint_s);
-    }
-
-    if (has_warnings) {
-        return pcmk_rc_error;
-    } else {
-        return pcmk_rc_ok;
-    }
-    /* coverity[leaked_storage] False positive */
 }
