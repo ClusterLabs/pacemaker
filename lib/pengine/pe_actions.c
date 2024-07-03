@@ -219,10 +219,10 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
 
     pcmk__rsc_trace(rsc, "Created %s action %d (%s): %s for %s on %s",
                     (optional? "optional" : "required"),
-                    scheduler->action_id, key, task,
+                    scheduler->priv->next_action_id, key, task,
                     ((rsc == NULL)? "no resource" : rsc->id),
                     pcmk__node_name(node));
-    action->id = scheduler->action_id++;
+    action->id = scheduler->priv->next_action_id++;
 
     scheduler->priv->actions = g_list_prepend(scheduler->priv->actions, action);
     if (rsc == NULL) {

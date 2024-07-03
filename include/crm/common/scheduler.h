@@ -98,7 +98,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    int action_id;                  // ID to use for next created action
     xmlNode *graph;                 // Transition graph
     GHashTable *template_rsc_sets;  // Mappings of template ID to resource ID
 

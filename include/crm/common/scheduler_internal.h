@@ -174,6 +174,7 @@ struct pcmk__scheduler_private {
     GList *resources;               // Resources in cluster
     GList *actions;                 // All scheduled actions
     GHashTable *singletons;         // Scheduled non-resource actions
+    int next_action_id;             // Counter used as ID for actions
     xmlNode *failed;                // History entries of failed actions
     GList *location_constraints;    // Location constraints
     GList *colocation_constraints;  // Colocation constraints
