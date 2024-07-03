@@ -1,4 +1,4 @@
-<cib validate-with="pacemaker-2.0" admin_epoch="0" epoch="0" num_updates="0">
+<cib validate-with="pacemaker-3.0" admin_epoch="0" epoch="0" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes>
@@ -13,16 +13,8 @@
       <primitive id="mySmartFuse" class="ocf" provider="experiment" type="SmartFuse">
         <operations>
           <op id="mySmartFuse-start" name="start" interval="0" timeout="40s"/>
-          <op id="mySmartFuse-monitor-inputpower" name="monitor" interval="30s">
-            <instance_attributes id="mySmartFuse-inputpower-instanceparams">
-              <nvpair id="mySmartFuse-inputpower-requires" name="requires" value="inputpower"/>
-            </instance_attributes>
-          </op>
-          <op id="mySmartFuse-monitor-outputpower" name="monitor" interval="2s">
-            <instance_attributes id="mySmartFuse-outputpower-instanceparams">
-              <nvpair id="mySmartFuse-outputpower-requires" name="requires" value="outputpower"/>
-            </instance_attributes>
-          </op>
+          <op id="mySmartFuse-monitor-inputpower" name="monitor" interval="30s"/>
+          <op id="mySmartFuse-monitor-outputpower" name="monitor" interval="2s"/>
         </operations>
         <instance_attributes id="mySmartFuse-params">
           <nvpair id="mySmartFuse-params-ip" name="ip" value="192.0.2.10"/>

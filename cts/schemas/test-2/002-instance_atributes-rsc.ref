@@ -1,4 +1,4 @@
-<cib validate-with="pacemaker-2.0" admin_epoch="0" epoch="0" num_updates="0">
+<cib validate-with="pacemaker-3.0" admin_epoch="0" epoch="0" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes>
@@ -29,9 +29,7 @@
         <instance_attributes id="myAddr2-params">
           <nvpair id="myAddr2-ip" name="ip" value="192.0.2.42"/>
         </instance_attributes>
-        <instance_attributes id="_cibtr-2_myAddr-common-params">
-          <nvpair id="__cibtr-2_myAddr-common-params__myAddr-common-cidr_netmask" name="cidr_netmask" value="23"/>
-        </instance_attributes>
+        <instance_attributes id-ref="myAddr-common-params"/>
       </primitive>
 
     </resources>

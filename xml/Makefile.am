@@ -167,11 +167,6 @@ EXTRA_DIST		= README.md			\
 			  context-of.xsl		\
 			  rng-helper			\
 			  ocf-meta2man.xsl		\
-			  upgrade-1.3.xsl		\
-			  upgrade-2.10.xsl		\
-			  upgrade-2.10-enter.xsl	\
-			  upgrade-2.10-leave.xsl	\
-			  upgrade-2.10-roundtrip.xsl	\
 			  upgrade-detail.xsl		\
 			  xslt_cibtr-2.rng
 
