@@ -10,10 +10,18 @@
  Guarantees after this transformation:
  * Within a given nvset, there is at most one nvpair with a given name. If there
    were duplicates prior to this transformation, only the first one is kept.
+ * There are no legacy promotable clone resources. If a resource was a legacy
+   promotable clone prior to this transformation, it is now a standard
+   promotable clone (that is, a clone with the meta-attribute "promotable" set
+   to "true").
  * There is at most one top-level rule within a location constraint. If a
    location constraint had N top-level rules (N > 1) prior to this
    transformation, it is now converted to N location constraints, each with a
    single top-level rule.
+
+ Anything that matches all resource types should be placed in a later
+ transformation, so that it can ignore the possibility of legacy promotable
+ clone resources.
  -->
 
 <xsl:stylesheet version="1.0"
@@ -106,6 +114,46 @@
             <xsl:call-template name="identity"/>
         </xsl:otherwise>
     </xsl:choose>
+</xsl:template>
+
+
+<!-- Resources -->
+
+<!--
+ Convert master resources to clones with promotable meta-attribute set to "true"
+ -->
+<xsl:template match="master">
+    <xsl:element name="clone">
+        <xsl:apply-templates select="@*"/>
+
+        <!--
+         Prepend new meta_attributes element that takes precedence over all
+         others, with promotable="true"
+        -->
+        <xsl:element name="meta_attributes">
+            <xsl:variable name="meta_id"
+                          select="concat($upgrade_prefix, 'promotable-legacy-',
+                                         @id, '-meta_attributes')"/>
+
+            <xsl:attribute name="id">
+                <xsl:value-of select="$meta_id"/>
+            </xsl:attribute>
+
+            <!-- Override any manually configured meta-attributes -->
+            <xsl:attribute name="score">INFINITY</xsl:attribute>
+
+            <xsl:element name="nvpair">
+                <xsl:attribute name="id">
+                    <xsl:value-of select="concat($meta_id, '-promotable')"/>
+                </xsl:attribute>
+                <xsl:attribute name="name">promotable</xsl:attribute>
+                <xsl:attribute name="value">true</xsl:attribute>
+            </xsl:element>
+        </xsl:element>
+
+        <!-- Keep all existing children -->
+        <xsl:apply-templates select="node()"/>
+    </xsl:element>
 </xsl:template>
 
 

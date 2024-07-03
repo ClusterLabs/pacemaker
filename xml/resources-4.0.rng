@@ -23,7 +23,6 @@
           <ref name="element-template"/>
           <ref name="element-group"/>
           <ref name="element-clone"/>
-          <ref name="element-master"/>
           <ref name="element-bundle"/>
         </choice>
       </zeroOrMore>
@@ -227,22 +226,6 @@
 
   <define name="element-clone">
     <element name="clone">
-      <attribute name="id"><data type="ID"/></attribute>
-      <optional>
-        <attribute name="description"><text/></attribute>
-      </optional>
-      <interleave>
-        <ref name="element-resource-extra"/>
-        <choice>
-          <ref name="element-primitive"/>
-          <ref name="element-group"/>
-        </choice>
-      </interleave>
-    </element>
-  </define>
-
-  <define name="element-master">
-    <element name="master">
       <attribute name="id"><data type="ID"/></attribute>
       <optional>
         <attribute name="description"><text/></attribute>

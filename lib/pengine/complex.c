@@ -92,7 +92,7 @@ get_resource_type(const char *name)
 
     } else if (pcmk__str_eq(name, PCMK__XE_PROMOTABLE_LEGACY,
                             pcmk__str_casei)) {
-        // @COMPAT deprecated since 2.0.0
+        // @COMPAT deprecated since 2.0.0; disallowed by schema
         return pcmk__rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, PCMK_XE_BUNDLE, pcmk__str_casei)) {
@@ -437,7 +437,7 @@ detect_promotable(pcmk_resource_t *rsc)
         return TRUE;
     }
 
-    // @COMPAT deprecated since 2.0.0
+    // @COMPAT deprecated since 2.0.0; disallowed by schema
     if (pcmk__xe_is(rsc->priv->xml, PCMK__XE_PROMOTABLE_LEGACY)) {
         pcmk__warn_once(pcmk__wo_master_element,
                         "Support for <" PCMK__XE_PROMOTABLE_LEGACY "> (such "

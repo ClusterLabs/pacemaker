@@ -587,6 +587,7 @@ pcmk__map_element_name(const xmlNode *xml)
     if (xml == NULL) {
         return NULL;
     } else if (pcmk__xe_is(xml, PCMK__XE_PROMOTABLE_LEGACY)) {
+        // @COMPAT Not possible with schema validation enabled
         return PCMK_XE_CLONE;
     } else {
         return (const char *) xml->name;
