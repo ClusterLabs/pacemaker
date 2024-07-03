@@ -761,7 +761,7 @@ pcmk__simulate_transition(pcmk_scheduler_t *scheduler, cib_t *cib,
     }
 
     pcmk__set_graph_functions(&simulation_fns);
-    transition = pcmk__unpack_graph(scheduler->graph, crm_system_name);
+    transition = pcmk__unpack_graph(scheduler->priv->graph, crm_system_name);
     pcmk__log_graph(LOG_DEBUG, transition);
 
     fake_resource_list = scheduler->priv->resources;
@@ -932,7 +932,8 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         input = NULL;           /* Don't try and free it twice */
 
         if (graph_file != NULL) {
-            rc = pcmk__xml_write_file(scheduler->graph, graph_file, false);
+            rc = pcmk__xml_write_file(scheduler->priv->graph, graph_file,
+                                      false);
             if (rc != pcmk_rc_ok) {
                 rc = pcmk_rc_graph_error;
                 goto simulate_done;

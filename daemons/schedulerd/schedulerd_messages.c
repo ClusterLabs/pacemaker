@@ -74,9 +74,10 @@ handle_pecalc_request(pcmk__request_t *request)
     digest = pcmk__digest_xml(xml_data, false);
     converted = pcmk__xml_copy(NULL, xml_data);
     if (pcmk_update_configured_schema(&converted, true) != pcmk_rc_ok) {
-        scheduler->graph = pcmk__xe_create(NULL, PCMK__XE_TRANSITION_GRAPH);
-        crm_xml_add_int(scheduler->graph, "transition_id", 0);
-        crm_xml_add_int(scheduler->graph, PCMK_OPT_CLUSTER_DELAY, 0);
+        scheduler->priv->graph = pcmk__xe_create(NULL,
+                                                 PCMK__XE_TRANSITION_GRAPH);
+        crm_xml_add_int(scheduler->priv->graph, "transition_id", 0);
+        crm_xml_add_int(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, 0);
         process = false;
         free(digest);
 
@@ -122,7 +123,7 @@ handle_pecalc_request(pcmk__request_t *request)
               series[series_id].name, series_wrap, seq, value);
 
     scheduler->input = NULL;
-    reply = create_reply(msg, scheduler->graph);
+    reply = create_reply(msg, scheduler->priv->graph);
 
     if (reply == NULL) {
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
