@@ -43,7 +43,6 @@ enum pcmk__warnings {
     pcmk__wo_op_attr_expr   = (1 << 19),
     pcmk__wo_instance_defaults  = (1 << 20),
     pcmk__wo_multiple_rules     = (1 << 21),
-    pcmk__wo_master_element = (1 << 22),
     pcmk__wo_clone_master_max       = (1 << 23),
     pcmk__wo_clone_master_node_max  = (1 << 24),
     pcmk__wo_bundle_master  = (1 << 25),
