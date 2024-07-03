@@ -239,10 +239,6 @@ pacemaker_*.info
 /cts/scheduler/bug-rh-1097457.log
 /cts/scheduler/bug-rh-1097457.trs
 /cts/scheduler/shadow.*
-/cts/scheduler/xml/*.ref
-/cts/scheduler/xml/*.ref.err
-/cts/scheduler/xml/*.up
-/cts/scheduler/xml/*.up.err
 /cts/schemas/test-*/*.up
 /cts/schemas/test-*/*.up.err
 /cts/test-suite.log
