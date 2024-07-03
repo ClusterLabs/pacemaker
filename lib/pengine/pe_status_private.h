@@ -88,6 +88,10 @@ gboolean unpack_resources(const xmlNode *xml_resources,
                           pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
+void pcmk__unpack_fencing_topology(const xmlNode *xml_fencing_topology,
+                                 pcmk_scheduler_t *scheduler);
+
+G_GNUC_INTERNAL
 gboolean unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
