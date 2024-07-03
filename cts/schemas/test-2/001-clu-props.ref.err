@@ -1,0 +1,2 @@
+DEBUG: Cluster properties: cluster-opts-stonith_enabled: renaming stonith_enabled as stonith-enabled
+DEBUG: Cluster properties: __cibtr-2_cluster-opts__cluster-opts-stonith_enabled: renaming stonith_enabled as stonith-enabled
