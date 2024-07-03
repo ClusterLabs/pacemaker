@@ -60,6 +60,18 @@ def apply_substitutions(s):
     return s.format(**substitutions)
 
 
+def copy_existing_cib(existing):
+    """
+    Generate a CIB by copying an existing one to a temporary location.
+
+    This is suitable for use with the cib_gen= parameter to the TestGroup class.
+    """
+    (fp, new) = mkstemp(prefix="cts-cli.cib.xml.")
+    os.close(fp)
+    copyfile(apply_substitutions(existing), new)
+    return new
+
+
 def current_cib():
     """Return the complete current CIB."""
     with environ({"CIB_user": "root"}):
