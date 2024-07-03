@@ -10267,6 +10267,11 @@ crm_shadow: Could not access shadow instance 'cts-cli': No such file or director
 </pacemaker-result>
 =#=#=#= End test: Switch to nonexistent shadow instance (force) (XML) - No such object (105) =#=#=#=
 * Passed: crm_shadow     - Switch to nonexistent shadow instance (force) (XML)
+=#=#=#= Begin test: Verbosely verify a file-specified configuration with an unallowed fencing level ID =#=#=#=
+warning: Ignoring topology registration with invalid level 10
+Warnings found during check: config not valid
+=#=#=#= End test: Verbosely verify a file-specified configuration with an unallowed fencing level ID - Invalid configuration (78) =#=#=#=
+* Passed: crm_verify     - Verbosely verify a file-specified configuration with an unallowed fencing level ID
 =#=#=#= Begin test: Verify a file-specified invalid configuration (text output) =#=#=#=
 Errors found during check: config not valid
 -V may provide more details
