@@ -90,11 +90,6 @@ get_resource_type(const char *name)
     } else if (pcmk__str_eq(name, PCMK_XE_CLONE, pcmk__str_casei)) {
         return pcmk__rsc_variant_clone;
 
-    } else if (pcmk__str_eq(name, PCMK__XE_PROMOTABLE_LEGACY,
-                            pcmk__str_casei)) {
-        // @COMPAT deprecated since 2.0.0
-        return pcmk__rsc_variant_clone;
-
     } else if (pcmk__str_eq(name, PCMK_XE_BUNDLE, pcmk__str_casei)) {
         return pcmk__rsc_variant_bundle;
     }
@@ -429,31 +424,6 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     pcmk__add_idref(scheduler->priv->templates, template_ref, id);
     return TRUE;
-}
-
-static bool
-detect_promotable(pcmk_resource_t *rsc)
-{
-    const char *promotable = g_hash_table_lookup(rsc->priv->meta,
-                                                 PCMK_META_PROMOTABLE);
-
-    if (crm_is_true(promotable)) {
-        return TRUE;
-    }
-
-    // @COMPAT deprecated since 2.0.0
-    if (pcmk__xe_is(rsc->priv->xml, PCMK__XE_PROMOTABLE_LEGACY)) {
-        pcmk__warn_once(pcmk__wo_master_element,
-                        "Support for <" PCMK__XE_PROMOTABLE_LEGACY "> (such "
-                        "as in %s) is deprecated and will be removed in a "
-                        "future release. Use <" PCMK_XE_CLONE "> with a "
-                        PCMK_META_PROMOTABLE " meta-attribute instead.",
-                        rsc->id);
-        pcmk__insert_dup(rsc->priv->meta, PCMK_META_PROMOTABLE,
-                         PCMK_VALUE_TRUE);
-        return TRUE;
-    }
-    return FALSE;
 }
 
 static void
@@ -809,7 +779,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         if (crm_is_true(value)) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_unique);
         }
-        if (detect_promotable(*rsc)) {
+        if (crm_is_true(g_hash_table_lookup((*rsc)->priv->meta,
+                                            PCMK_META_PROMOTABLE))) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_promotable);
         }
     } else {

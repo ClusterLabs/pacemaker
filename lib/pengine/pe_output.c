@@ -1832,7 +1832,7 @@ node_html(pcmk__output_t *out, va_list args) {
                 PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources");
 
                 show_opts |= pcmk_show_rsc_only;
-                out->message(out, pcmk__map_element_name(rsc->priv->xml),
+                out->message(out, (const char *) rsc->priv->xml->name,
                              show_opts, rsc, only_node, only_rsc);
             }
 
@@ -1972,7 +1972,7 @@ node_text(pcmk__output_t *out, va_list args) {
                     pcmk_resource_t *rsc = (pcmk_resource_t *) gIter2->data;
 
                     show_opts |= pcmk_show_rsc_only;
-                    out->message(out, pcmk__map_element_name(rsc->priv->xml),
+                    out->message(out, (const char *) rsc->priv->xml->name,
                                  show_opts, rsc, only_node, only_rsc);
                 }
 
@@ -2105,7 +2105,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                 pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
                 show_opts |= pcmk_show_rsc_only;
-                out->message(out, pcmk__map_element_name(rsc->priv->xml),
+                out->message(out, (const char *) rsc->priv->xml->name,
                              show_opts, rsc, only_node, only_rsc);
             }
         }
@@ -3082,7 +3082,7 @@ resource_list(pcmk__output_t *out, va_list args)
         }
 
         /* Print this resource */
-        x = out->message(out, pcmk__map_element_name(rsc->priv->xml),
+        x = out->message(out, (const char *) rsc->priv->xml->name,
                          show_opts, rsc, only_node, only_rsc);
         if (x == pcmk_rc_ok) {
             rc = pcmk_rc_ok;

@@ -18,7 +18,10 @@
     <crm_config original="1"/>
     <nodes original="1"/>
     <resources original="1">
-      <master id="rsc1-master" original="1">
+      <clone id="rsc1-master" original="1">
+        <meta_attributes id="pcmk__3_10_upgrade-promotable-legacy-rsc1-master-meta_attributes" score="INFINITY">
+          <nvpair id="pcmk__3_10_upgrade-promotable-legacy-rsc1-master-meta_attributes-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive id="rsc1" class="ocf" type="Dummy" provider="pacemaker" original="1">
           <operations original="1">
             <op name="monitor" interval="10s" timeout="20s" id="rsc1-monitor-interval-10s" original="1"/>
@@ -29,8 +32,11 @@
         <meta_attributes id="rsc1-master-meta_attributes" original="1">
           <nvpair id="rsc1-master-meta_attributes-some-attr" name="some-attr" value="some_value" original="1"/>
         </meta_attributes>
-      </master>
-      <master id="grp1-master" original="1">
+      </clone>
+      <clone id="grp1-master" original="1">
+        <meta_attributes id="pcmk__3_10_upgrade-promotable-legacy-grp1-master-meta_attributes" score="INFINITY">
+          <nvpair id="pcmk__3_10_upgrade-promotable-legacy-grp1-master-meta_attributes-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <group id="grp1" original="1">
           <primitive id="rsc3" class="ocf" type="Dummy" provider="pacemaker" original="1">
             <operations original="1">
@@ -50,7 +56,7 @@
         <meta_attributes id="grp1-master-meta_attributes" original="1">
           <nvpair id="grp1-master-meta_attributes-some-attr" name="some-attr" value="some_value" original="1"/>
         </meta_attributes>
-      </master>
+      </clone>
     </resources>
     <constraints original="1"/>
   </configuration>
