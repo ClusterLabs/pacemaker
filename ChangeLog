@@ -1,3 +1,20 @@
+* Tue Jul 02 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8-rc3
+- 16 commits with 11 files changed, 157 insertions(+), 57 deletions(-)
+
+- Features added since Pacemaker-2.1.8-rc2
+  + sysconfig: deprecate PCMK_dh_min_bits environment variable
+
+- Fixes since Pacemaker-2.1.8-rc2
+  + libcrmcluster: use local hostname for node name if not configured in
+    Corosync (regression introduced in 2.1.8-rc1)
+  + tools: crm_verify distinguishes configuration warnings and errors
+    (regression introduced in 2.1.7)
+  + tools: avoid double-free XML in crm_verify after schema update
+    (regression introduced in 2.1.8-rc1)
+  + libcrmcommon: avoid potential buffer overflows when formatting date/times
+  + scheduler: consider group's location constraints when a member is an
+    explicit dependent in a colocation constraint
+
 * Tue Jun 11 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8-rc2
 - 38 commits with 23 files changed, 600 insertions(+), 283 deletions(-)
 
