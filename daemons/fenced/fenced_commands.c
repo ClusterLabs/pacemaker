@@ -1534,7 +1534,7 @@ count_active_levels(const stonith_topology_t *tp)
     int lpc = 0;
     int count = 0;
 
-    for (lpc = 0; lpc < ST_LEVEL_MAX; lpc++) {
+    for (lpc = 0; lpc < ST__LEVEL_COUNT; lpc++) {
         if (tp->levels[lpc] != NULL) {
             count++;
         }
@@ -1549,7 +1549,7 @@ free_topology_entry(gpointer data)
 
     int lpc = 0;
 
-    for (lpc = 0; lpc < ST_LEVEL_MAX; lpc++) {
+    for (lpc = 0; lpc < ST__LEVEL_COUNT; lpc++) {
         if (tp->levels[lpc] != NULL) {
             g_list_free_full(tp->levels[lpc], free);
         }
@@ -1767,7 +1767,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     }
 
     // Ensure level ID is in allowed range
-    if ((id <= 0) || (id >= ST_LEVEL_MAX)) {
+    if ((id < ST__LEVEL_MIN) || (id > ST__LEVEL_MAX)) {
         crm_warn("Ignoring topology registration for %s with invalid level %d",
                   target, id);
         free(target);
@@ -1854,7 +1854,7 @@ fenced_unregister_level(xmlNode *msg, char **desc,
     }
 
     // Ensure level ID is in allowed range
-    if ((id < 0) || (id >= ST_LEVEL_MAX)) {
+    if ((id < 0) || (id >= ST__LEVEL_COUNT)) {
         crm_warn("Ignoring topology unregistration for %s with invalid level %d",
                   target, id);
         free(target);

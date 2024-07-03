@@ -160,6 +160,10 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
     unpack_resources(section, scheduler);
 
+    section = get_xpath_object("//" PCMK_XE_FENCING_TOPOLOGY, scheduler->input,
+                               LOG_TRACE);
+    pcmk__unpack_fencing_topology(section, scheduler);
+
     section = get_xpath_object("//" PCMK_XE_TAGS, scheduler->input, LOG_NEVER);
     unpack_tags(section, scheduler);
 

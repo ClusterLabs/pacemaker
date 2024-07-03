@@ -781,7 +781,7 @@ topology_is_empty(stonith_topology_t *tp)
         return TRUE;
     }
 
-    for (i = 0; i < ST_LEVEL_MAX; i++) {
+    for (i = 0; i < ST__LEVEL_COUNT; i++) {
         if (tp->levels[i] != NULL) {
             return FALSE;
         }
@@ -958,9 +958,9 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
     do {
         op->level++;
 
-    } while (op->level < ST_LEVEL_MAX && tp->levels[op->level] == NULL);
+    } while (op->level < ST__LEVEL_COUNT && tp->levels[op->level] == NULL);
 
-    if (op->level < ST_LEVEL_MAX) {
+    if (op->level < ST__LEVEL_COUNT) {
         crm_trace("Attempting fencing level %d targeting %s (%d devices) "
                   "for client %s@%s (id=%.8s)",
                   op->level, op->target, g_list_length(tp->levels[op->level]),
@@ -1621,7 +1621,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
          * Loop3: For each device in a fencing level, see what peer owns it
          *        and what that peer has reported the timeout is for the device.
          */
-        for (i = 0; i < ST_LEVEL_MAX; i++) {
+        for (i = 0; i < ST__LEVEL_COUNT; i++) {
             if (!tp->levels[i]) {
                 continue;
             }
@@ -2122,7 +2122,7 @@ all_topology_devices_found(const remote_fencing_op_t *op)
         skip_target = TRUE;
     }
 
-    for (i = 0; i < ST_LEVEL_MAX; i++) {
+    for (i = 0; i < ST__LEVEL_COUNT; i++) {
         for (device = tp->levels[i]; device; device = device->next) {
             match = NULL;
             for (iter = op->query_results; iter && !match; iter = iter->next) {
