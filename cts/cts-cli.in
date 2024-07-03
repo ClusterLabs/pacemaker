@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from functools import partial
 from multiprocessing import Pool, cpu_count
 import os
+import pathlib
 import re
 from shutil import copyfile
 import signal
@@ -156,6 +157,33 @@ def environ(env):
                 os.environ[k] = v
 
 
+class StdinCmd:
+    """
+    A class for defining a command that should be run later.
+
+    subprocess.Popen (and its various helper functions) start running the command
+    immediately, which doesn't work if we want to provide the command when a Test
+    is created, but delay its execution until the environment is defined when the
+    Test is run.
+
+    This class allows us to do that.
+    """
+
+    def __init__(self, cmd):
+        """Create a new StdinCmd instance.
+
+        Arguments:
+        cmd -- The command string to run later.  This string will be passed
+               to apply_substitutions before being executed.
+        """
+        self._cmd = cmd
+
+    def run(self):
+        """Run this command, returning a subprocess.Popen object."""
+        return subprocess.Popen(apply_substitutions(self._cmd), shell=True,
+                                encoding="utf-8", stdout=subprocess.PIPE)
+
+
 class Test:
     """A base class for defining a single command line regression test."""
 
@@ -285,14 +313,31 @@ class Test:
             if not self._run_setup_teardown(self._setup, app):
                 return False
 
+            # Define basic arguments for all forms of running this test.
+            kwargs = {"stdout": subprocess.PIPE, "stderr": subprocess.PIPE,
+                      "shell": True, "universal_newlines": True, "check": False}
+            stdin_p = None
+
+            # Handle the stdin= parameter.
+            if isinstance(self._stdin, StdinCmd):
+                stdin_p = self._stdin.run()
+                kwargs["stdin"] = stdin_p.stdout
+            elif isinstance(self._stdin, pathlib.Path):
+                kwargs["input"] = self._stdin.read_text()
+            else:
+                kwargs["input"] = self._stdin
+
             if valgrind:
                 cmd = "valgrind %s %s" % (" ".join(VALGRIND_ARGS), cmd)
 
             # Run the test command
-            cmd_p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   shell=True, universal_newlines=True, check=False,
-                                   input=self._stdin)
+            # We handle the "check" argument above in the kwargs dict.
+            # pylint: disable-msg=subprocess-run-check
+            cmd_p = subprocess.run(cmd, **kwargs)
             rc = cmd_p.returncode
+
+            if stdin_p is not None:
+                stdin_p.stdout.close()
 
             self._output.extend(cmd_p.stderr.splitlines())
             self._output.extend(cmd_p.stdout.splitlines())
