@@ -86,9 +86,8 @@ struct pcmk__scheduler {
     pcmk_node_t *dc_node;           // Node object for DC
 
     // NOTE: sbd (as of at least 1.5.2) uses this
-    // @COMPAT Change to uint64_t at a compatibility break
     //! \deprecated Call pcmk_has_quorum() to check quorum
-    unsigned long long flags;       // Group of enum pcmk__scheduler_flags
+    uint64_t flags;                 // Group of enum pcmk__scheduler_flags
 
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_get_no_quorum_policy() to get no-quorum policy
