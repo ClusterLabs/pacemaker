@@ -432,7 +432,7 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         return FALSE;
     }
 
-    pcmk__add_idref(scheduler->template_rsc_sets, template_ref, id);
+    pcmk__add_idref(scheduler->priv->templates, template_ref, id);
     return TRUE;
 }
 

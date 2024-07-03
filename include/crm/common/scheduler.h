@@ -97,8 +97,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    GHashTable *template_rsc_sets;  // Mappings of template ID to resource ID
-
     // @COMPAT Replace this with a fencer variable (only place it's used)
     const char *localhost;          // \deprecated Do not use
 

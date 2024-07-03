@@ -343,8 +343,8 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         g_hash_table_destroy(scheduler->priv->ticket_constraints);
     }
 
-    if (scheduler->template_rsc_sets) {
-        g_hash_table_destroy(scheduler->template_rsc_sets);
+    if (scheduler->priv->templates != NULL) {
+        g_hash_table_destroy(scheduler->priv->templates);
     }
 
     if (scheduler->tags) {

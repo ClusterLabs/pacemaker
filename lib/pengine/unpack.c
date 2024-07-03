@@ -845,7 +845,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
     xmlNode *xml_obj = NULL;
     GList *gIter = NULL;
 
-    scheduler->template_rsc_sets = pcmk__strkey_table(free, pcmk__free_idref);
+    scheduler->priv->templates = pcmk__strkey_table(free, pcmk__free_idref);
 
     for (xml_obj = pcmk__xe_first_child(xml_resources, NULL, NULL, NULL);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
@@ -860,10 +860,10 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         }
 
         if (pcmk__xe_is(xml_obj, PCMK_XE_TEMPLATE)) {
-            if (g_hash_table_lookup_extended(scheduler->template_rsc_sets, id,
+            if (g_hash_table_lookup_extended(scheduler->priv->templates, id,
                                              NULL, NULL) == FALSE) {
                 /* Record the template's ID for the knowledge of its existence anyway. */
-                pcmk__insert_dup(scheduler->template_rsc_sets, id, NULL);
+                pcmk__insert_dup(scheduler->priv->templates, id, NULL);
             }
             continue;
         }
