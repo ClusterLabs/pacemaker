@@ -1,0 +1,32 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-3.10" epoch="2" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * The stonith-action cluster property is set to "reboot" in one
+           cluster_property_set.
+         * The stonith-action cluster property is set to "poweroff" in another
+           cluster_property_set.
+         * A different cluster property ("other-prop") is set to "poweroff".
+
+         In this situation, the stonith-action value "poweroff" should be
+         replaced by "off". The stonith-action value "reboot" and the
+         other-prop value "poweroff" should be unchanged.
+
+         In practice it doesn't make sense to have stonith-action configured
+         twice unless rules decide which one to apply. This is contrived for
+         testing purposes.
+      -->
+    <crm_config original="1">
+      <cluster_property_set id="cib-bootstrap-options" original="1">
+        <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot" original="1"/>
+        <nvpair id="cib-bootstrap-options-other-prop" name="other-prop" value="poweroff" original="1"/>
+      </cluster_property_set>
+      <cluster_property_set id="other-options" original="1">
+        <nvpair id="other-options-stonith-action" name="stonith-action" value="poweroff" original="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes original="1"/>
+    <resources original="1"/>
+    <constraints original="1"/>
+  </configuration>
+  <status original="1"/>
+</cib>
