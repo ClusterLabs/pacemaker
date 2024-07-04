@@ -147,6 +147,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
+        // @COMPAT crmd-transition-delay is disallowed by the schema
         PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", PCMK_VALUE_DURATION,
             NULL,
         "0s", pcmk__valid_interval_spec,
