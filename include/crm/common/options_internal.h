@@ -79,7 +79,6 @@ enum pcmk__opt_flags {
 
 typedef struct pcmk__cluster_option_s {
     const char *name;
-    const char *alt_name;
     const char *type;
     const char *values;
     const char *default_value;

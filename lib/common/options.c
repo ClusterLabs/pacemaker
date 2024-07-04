@@ -40,14 +40,14 @@ pcmk__cli_help(char cmd)
  */
 
 static const pcmk__cluster_option_t cluster_options[] = {
-    /* name, old name, type, allowed values,
+    /* name, type, allowed values,
      * default value, validator,
      * flags,
      * short description,
      * long description
      */
     {
-        PCMK_OPT_DC_VERSION, NULL, PCMK_VALUE_VERSION, NULL,
+        PCMK_OPT_DC_VERSION, PCMK_VALUE_VERSION, NULL,
         NULL, NULL,
         pcmk__opt_controld|pcmk__opt_generated,
         N_("Pacemaker version on cluster node elected Designated Controller "
@@ -56,14 +56,14 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "built from. Used for diagnostic purposes."),
     },
     {
-        PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_OPT_CLUSTER_INFRASTRUCTURE, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_controld|pcmk__opt_generated,
         N_("The messaging layer on which Pacemaker is currently running"),
         N_("Used for informational and diagnostic purposes."),
     },
     {
-        PCMK_OPT_CLUSTER_NAME, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_OPT_CLUSTER_NAME, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_controld,
         N_("An arbitrary name for the cluster"),
@@ -73,7 +73,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "by higher-level tools and resource agents."),
     },
     {
-        PCMK_OPT_DC_DEADTIME, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_DC_DEADTIME, PCMK_VALUE_DURATION, NULL,
         "20s", pcmk__valid_interval_spec,
         pcmk__opt_controld,
         N_("How long to wait for a response from other nodes during start-up"),
@@ -81,7 +81,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "network and the type of switches used."),
     },
     {
-        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, PCMK_VALUE_DURATION, NULL,
         "15min", pcmk__valid_interval_spec,
         pcmk__opt_controld,
         N_("Polling interval to recheck cluster state and evaluate rules "
@@ -96,7 +96,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "(for example, \"5min\")."),
     },
     {
-        PCMK_OPT_FENCE_REACTION, NULL, PCMK_VALUE_SELECT,
+        PCMK_OPT_FENCE_REACTION, PCMK_VALUE_SELECT,
             PCMK_VALUE_STOP ", " PCMK_VALUE_PANIC,
         PCMK_VALUE_STOP, NULL,
         pcmk__opt_controld,
@@ -109,7 +109,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "node, falling back to stop on failure."),
     },
     {
-        PCMK_OPT_ELECTION_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_ELECTION_TIMEOUT, PCMK_VALUE_DURATION, NULL,
         "2min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("Declare an election failed if it is not decided within this much "
@@ -118,7 +118,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_SHUTDOWN_ESCALATION, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_SHUTDOWN_ESCALATION, PCMK_VALUE_DURATION, NULL,
         "20min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("Exit immediately if shutdown does not complete within this much "
@@ -127,7 +127,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, PCMK_VALUE_DURATION, NULL,
         "3min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
@@ -135,7 +135,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, PCMK_VALUE_DURATION, NULL,
         "30min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
@@ -143,7 +143,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_TRANSITION_DELAY, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_TRANSITION_DELAY, PCMK_VALUE_DURATION, NULL,
         "0s", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("Enabling this option will slow down cluster recovery under all "
@@ -153,7 +153,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "the order in which ping updates arrive."),
     },
     {
-        PCMK_OPT_NO_QUORUM_POLICY, NULL, PCMK_VALUE_SELECT,
+        PCMK_OPT_NO_QUORUM_POLICY, PCMK_VALUE_SELECT,
             PCMK_VALUE_STOP ", " PCMK_VALUE_FREEZE ", " PCMK_VALUE_IGNORE
                 ", " PCMK_VALUE_DEMOTE ", " PCMK_VALUE_FENCE_LEGACY,
         PCMK_VALUE_STOP, pcmk__valid_no_quorum_policy,
@@ -162,7 +162,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_SHUTDOWN_LOCK, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_SHUTDOWN_LOCK, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to lock resources to a cleanly shut down node"),
@@ -176,7 +176,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "release."),
     },
     {
-        PCMK_OPT_SHUTDOWN_LOCK_LIMIT, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_SHUTDOWN_LOCK_LIMIT, PCMK_VALUE_DURATION, NULL,
         "0", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("Do not lock resources to a cleanly shut down node longer than "
@@ -187,21 +187,21 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "rejoined."),
     },
     {
-        PCMK_OPT_ENABLE_ACL, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_ENABLE_ACL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_based,
         N_("Enable Access Control Lists (ACLs) for the CIB"),
         NULL,
     },
     {
-        PCMK_OPT_SYMMETRIC_CLUSTER, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_SYMMETRIC_CLUSTER, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether resources can run on any node by default"),
         NULL,
     },
     {
-        PCMK_OPT_MAINTENANCE_MODE, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_MAINTENANCE_MODE, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether the cluster should refrain from monitoring, starting, and "
@@ -209,7 +209,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_START_FAILURE_IS_FATAL, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_START_FAILURE_IS_FATAL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether a start failure should prevent a resource from being "
@@ -219,7 +219,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "check the resource's fail count against its migration-threshold.")
     },
     {
-        PCMK_OPT_ENABLE_STARTUP_PROBES, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_ENABLE_STARTUP_PROBES, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether the cluster should check for active resources during "
@@ -229,7 +229,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Fencing-related options
     {
-        PCMK_OPT_STONITH_ENABLED, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_STONITH_ENABLED, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_advanced,
         N_("Whether nodes may be fenced as part of recovery"),
@@ -239,7 +239,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "potentially leading to data loss and/or service unavailability."),
     },
     {
-        PCMK_OPT_STONITH_ACTION, NULL, PCMK_VALUE_SELECT,
+        PCMK_OPT_STONITH_ACTION, PCMK_VALUE_SELECT,
             PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF,
         PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         pcmk__opt_schedulerd,
@@ -247,7 +247,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STONITH_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_STONITH_TIMEOUT, PCMK_VALUE_DURATION, NULL,
         "60s", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("How long to wait for on, off, and reboot fence actions to complete "
@@ -255,7 +255,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_HAVE_WATCHDOG, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_HAVE_WATCHDOG, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_generated,
         N_("Whether watchdog integration is enabled"),
@@ -277,7 +277,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
          * calculate, and use 0 as the single default for when the option either
          * is unset or fails to validate.
          */
-        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, PCMK_VALUE_TIMEOUT, NULL,
+        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, PCMK_VALUE_TIMEOUT, NULL,
         "0", NULL,
         pcmk__opt_controld,
         N_("How long before nodes can be assumed to be safely down when "
@@ -299,7 +299,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "that use SBD, otherwise data corruption or loss could occur."),
     },
     {
-        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_OPT_STONITH_MAX_ATTEMPTS, PCMK_VALUE_SCORE, NULL,
         "10", pcmk__valid_positive_int,
         pcmk__opt_controld,
         N_("How many times fencing can fail before it will no longer be "
@@ -307,14 +307,14 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_CONCURRENT_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_CONCURRENT_FENCING, PCMK_VALUE_BOOLEAN, NULL,
         PCMK__CONCURRENT_FENCING_DEFAULT, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Allow performing fencing operations in parallel"),
         NULL,
     },
     {
-        PCMK_OPT_STARTUP_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_STARTUP_FENCING, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_advanced,
         N_("Whether to fence unseen nodes at start-up"),
@@ -322,7 +322,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "potentially leading to data loss and/or service unavailability."),
     },
     {
-        PCMK_OPT_PRIORITY_FENCING_DELAY, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_PRIORITY_FENCING_DELAY, PCMK_VALUE_DURATION, NULL,
         "0", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("Apply fencing delay targeting the lost nodes with the highest "
@@ -341,7 +341,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "fencing delay is disabled."),
     },
     {
-        PCMK_OPT_NODE_PENDING_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_NODE_PENDING_TIMEOUT, PCMK_VALUE_DURATION, NULL,
         "0", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("How long to wait for a node that has joined the cluster to join "
@@ -353,7 +353,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "2 hours."),
     },
     {
-        PCMK_OPT_CLUSTER_DELAY, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_CLUSTER_DELAY, PCMK_VALUE_DURATION, NULL,
         "60s", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("Maximum time for node-to-node communication"),
@@ -366,7 +366,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Limits
     {
-        PCMK_OPT_LOAD_THRESHOLD, NULL, PCMK_VALUE_PERCENTAGE, NULL,
+        PCMK_OPT_LOAD_THRESHOLD, PCMK_VALUE_PERCENTAGE, NULL,
         "80%", pcmk__valid_percentage,
         pcmk__opt_controld,
         N_("Maximum amount of system load that should be used by cluster "
@@ -375,7 +375,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "system resources used (currently CPU) approaches this limit"),
     },
     {
-        PCMK_OPT_NODE_ACTION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_OPT_NODE_ACTION_LIMIT, PCMK_VALUE_INTEGER, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_controld,
         N_("Maximum number of jobs that can be scheduled per node (defaults to "
@@ -383,7 +383,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_BATCH_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_OPT_BATCH_LIMIT, PCMK_VALUE_INTEGER, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("Maximum number of jobs that the cluster may execute in parallel "
@@ -394,7 +394,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "high load."),
     },
     {
-        PCMK_OPT_MIGRATION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_OPT_MIGRATION_LIMIT, PCMK_VALUE_INTEGER, NULL,
         "-1", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of live migration actions that the cluster is allowed "
@@ -413,7 +413,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
          * Drop the PCMK_VALUE_NONNEGATIVE_INTEGER constant if we do this before
          * a release.
          */
-        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, PCMK_VALUE_NONNEGATIVE_INTEGER, NULL,
+        PCMK_OPT_CLUSTER_IPC_LIMIT, PCMK_VALUE_NONNEGATIVE_INTEGER, NULL,
         "500", pcmk__valid_positive_int,
         pcmk__opt_based,
         N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
@@ -424,14 +424,14 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Orphans and stopping
     {
-        PCMK_OPT_STOP_ALL_RESOURCES, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_STOP_ALL_RESOURCES, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether the cluster should stop all active resources"),
         NULL,
     },
     {
-        PCMK_OPT_STOP_ORPHAN_RESOURCES, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_STOP_ORPHAN_RESOURCES, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to stop resources that were removed from the "
@@ -439,7 +439,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STOP_ORPHAN_ACTIONS, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_STOP_ORPHAN_ACTIONS, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to cancel recurring actions removed from the "
@@ -449,21 +449,21 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Storing inputs
     {
-        PCMK_OPT_PE_ERROR_SERIES_MAX, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_OPT_PE_ERROR_SERIES_MAX, PCMK_VALUE_INTEGER, NULL,
         "-1", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of scheduler inputs resulting in errors to save"),
         N_("Zero to disable, -1 to store unlimited."),
     },
     {
-        PCMK_OPT_PE_WARN_SERIES_MAX, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_OPT_PE_WARN_SERIES_MAX, PCMK_VALUE_INTEGER, NULL,
         "5000", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of scheduler inputs resulting in warnings to save"),
         N_("Zero to disable, -1 to store unlimited."),
     },
     {
-        PCMK_OPT_PE_INPUT_SERIES_MAX, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_OPT_PE_INPUT_SERIES_MAX, PCMK_VALUE_INTEGER, NULL,
         "4000", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of scheduler inputs without errors or warnings to save"),
@@ -472,7 +472,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Node health
     {
-        PCMK_OPT_NODE_HEALTH_STRATEGY, NULL, PCMK_VALUE_SELECT,
+        PCMK_OPT_NODE_HEALTH_STRATEGY, PCMK_VALUE_SELECT,
             PCMK_VALUE_NONE ", " PCMK_VALUE_MIGRATE_ON_RED ", "
                 PCMK_VALUE_ONLY_GREEN ", " PCMK_VALUE_PROGRESSIVE ", "
                 PCMK_VALUE_CUSTOM,
@@ -484,7 +484,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"green\".")
     },
     {
-        PCMK_OPT_NODE_HEALTH_BASE, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_OPT_NODE_HEALTH_BASE, PCMK_VALUE_SCORE, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("Base health score assigned to a node"),
@@ -492,7 +492,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_GREEN, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_OPT_NODE_HEALTH_GREEN, PCMK_VALUE_SCORE, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
@@ -501,7 +501,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_YELLOW, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_OPT_NODE_HEALTH_YELLOW, PCMK_VALUE_SCORE, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
@@ -510,7 +510,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_RED, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_OPT_NODE_HEALTH_RED, PCMK_VALUE_SCORE, NULL,
         "-INFINITY", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
@@ -521,7 +521,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Placement strategy
     {
-        PCMK_OPT_PLACEMENT_STRATEGY, NULL, PCMK_VALUE_SELECT,
+        PCMK_OPT_PLACEMENT_STRATEGY, PCMK_VALUE_SELECT,
             PCMK_VALUE_DEFAULT ", " PCMK_VALUE_UTILIZATION ", "
                 PCMK_VALUE_MINIMAL ", " PCMK_VALUE_BALANCED,
         PCMK_VALUE_DEFAULT, pcmk__valid_placement_strategy,
@@ -534,14 +534,14 @@ static const pcmk__cluster_option_t cluster_options[] = {
 };
 
 static const pcmk__cluster_option_t fencing_params[] = {
-    /* name, old name, type, allowed values,
+    /* name, type, allowed values,
      * default value, validator,
      * flags,
      * short description,
      * long description
      */
     {
-        PCMK_STONITH_HOST_ARGUMENT, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_STONITH_HOST_ARGUMENT, PCMK_VALUE_STRING, NULL,
         "port", NULL,
         pcmk__opt_advanced,
         N_("An alternate parameter to supply instead of 'port'"),
@@ -552,7 +552,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "to supply any additional parameters."),
     },
     {
-        PCMK_STONITH_HOST_MAP, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_STONITH_HOST_MAP, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("A mapping of node names to port numbers for devices that do not "
@@ -561,7 +561,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "port 1 for node1 and ports 2 and 3 for node2."),
     },
     {
-        PCMK_STONITH_HOST_LIST, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_STONITH_HOST_LIST, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("Nodes targeted by this device"),
@@ -570,7 +570,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
            "\"static-list\", either this or pcmk_host_map must be set."),
     },
     {
-        PCMK_STONITH_HOST_CHECK, NULL, PCMK_VALUE_SELECT,
+        PCMK_STONITH_HOST_CHECK, PCMK_VALUE_SELECT,
             PCMK_VALUE_DYNAMIC_LIST ", " PCMK_VALUE_STATIC_LIST ", "
             PCMK_VALUE_STATUS ", " PCMK_VALUE_NONE,
         NULL, NULL,
@@ -586,7 +586,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "supports the status operation; otherwise \"none\""),
     },
     {
-        PCMK_STONITH_DELAY_MAX, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_STONITH_DELAY_MAX, PCMK_VALUE_DURATION, NULL,
         "0s", NULL,
         pcmk__opt_none,
         N_("Enable a delay of no more than the time specified before executing "
@@ -597,7 +597,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "that the sum is kept below this maximum."),
     },
     {
-        PCMK_STONITH_DELAY_BASE, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_STONITH_DELAY_BASE, PCMK_VALUE_STRING, NULL,
         "0s", NULL,
         pcmk__opt_none,
         N_("Enable a base delay for fencing actions and specify base delay "
@@ -612,7 +612,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "\"node1:1s;node2:5\") to set a different value for each target."),
     },
     {
-        PCMK_STONITH_ACTION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_STONITH_ACTION_LIMIT, PCMK_VALUE_INTEGER, NULL,
         "1", NULL,
         pcmk__opt_none,
         N_("The maximum number of actions can be performed in parallel on this "
@@ -624,7 +624,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "parallel."),
     },
     {
-        "pcmk_reboot_action", NULL, PCMK_VALUE_STRING, NULL,
+        "pcmk_reboot_action", PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_REBOOT, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'reboot'"),
@@ -633,7 +633,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'reboot' action."),
     },
     {
-        "pcmk_reboot_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "pcmk_reboot_timeout", PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'reboot' actions instead "
@@ -643,7 +643,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'reboot' actions."),
     },
     {
-        "pcmk_reboot_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "pcmk_reboot_retries", PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'reboot' command within the "
@@ -655,7 +655,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "tries a 'reboot' action before giving up."),
     },
     {
-        "pcmk_off_action", NULL, PCMK_VALUE_STRING, NULL,
+        "pcmk_off_action", PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_OFF, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'off'"),
@@ -664,7 +664,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'off' action."),
     },
     {
-        "pcmk_off_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "pcmk_off_timeout", PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'off' actions instead of "
@@ -674,7 +674,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'off' actions."),
     },
     {
-        "pcmk_off_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "pcmk_off_retries", PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'off' command within the "
@@ -686,7 +686,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "tries a 'off' action before giving up."),
     },
     {
-        "pcmk_on_action", NULL, PCMK_VALUE_STRING, NULL,
+        "pcmk_on_action", PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_ON, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'on'"),
@@ -695,7 +695,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'on' action."),
     },
     {
-        "pcmk_on_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "pcmk_on_timeout", PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'on' actions instead of "
@@ -705,7 +705,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'on' actions."),
     },
     {
-        "pcmk_on_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "pcmk_on_retries", PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'on' command within the "
@@ -717,7 +717,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "tries a 'on' action before giving up."),
     },
     {
-        "pcmk_list_action", NULL, PCMK_VALUE_STRING, NULL,
+        "pcmk_list_action", PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_LIST, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'list'"),
@@ -726,7 +726,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'list' action."),
     },
     {
-        "pcmk_list_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "pcmk_list_timeout", PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'list' actions instead of "
@@ -736,7 +736,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'list' actions."),
     },
     {
-        "pcmk_list_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "pcmk_list_retries", PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'list' command within the "
@@ -748,7 +748,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "tries a 'list' action before giving up."),
     },
     {
-        "pcmk_monitor_action", NULL, PCMK_VALUE_STRING, NULL,
+        "pcmk_monitor_action", PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_MONITOR, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'monitor'"),
@@ -757,7 +757,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'monitor' action."),
     },
     {
-        "pcmk_monitor_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "pcmk_monitor_timeout", PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'monitor' actions instead "
@@ -767,7 +767,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'monitor' actions."),
     },
     {
-        "pcmk_monitor_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "pcmk_monitor_retries", PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'monitor' command within "
@@ -779,7 +779,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "tries a 'monitor' action before giving up."),
     },
     {
-        "pcmk_status_action", NULL, PCMK_VALUE_STRING, NULL,
+        "pcmk_status_action", PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_STATUS, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'status'"),
@@ -788,7 +788,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'status' action."),
     },
     {
-        "pcmk_status_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "pcmk_status_timeout", PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'status' actions instead "
@@ -798,7 +798,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'status' actions."),
     },
     {
-        "pcmk_status_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "pcmk_status_retries", PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'status' command within "
@@ -814,14 +814,14 @@ static const pcmk__cluster_option_t fencing_params[] = {
 };
 
 static const pcmk__cluster_option_t primitive_meta[] = {
-    /* name, old name, type, allowed values,
+    /* name, type, allowed values,
      * default value, validator,
      * flags,
      * short description,
      * long description
      */
     {
-        PCMK_META_PRIORITY, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_META_PRIORITY, PCMK_VALUE_SCORE, NULL,
         "0", NULL,
         pcmk__opt_none,
         N_("Resource assignment priority"),
@@ -830,7 +830,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "active."),
     },
     {
-        PCMK_META_CRITICAL, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_META_CRITICAL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, NULL,
         pcmk__opt_none,
         N_("Default value for influence in colocation constraints"),
@@ -839,7 +839,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "colocation constraints created if this resource is in a group."),
     },
     {
-        PCMK_META_TARGET_ROLE, NULL, PCMK_VALUE_SELECT,
+        PCMK_META_TARGET_ROLE, PCMK_VALUE_SELECT,
             PCMK_ROLE_STOPPED ", " PCMK_ROLE_STARTED ", "
             PCMK_ROLE_UNPROMOTED ", " PCMK_ROLE_PROMOTED,
         PCMK_ROLE_STARTED, NULL,
@@ -853,7 +853,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "\"Promoted\" is equivalent to \"Started\"."),
     },
     {
-        PCMK_META_IS_MANAGED, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_META_IS_MANAGED, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, NULL,
         pcmk__opt_none,
         N_("Whether the cluster is allowed to actively change the resource's "
@@ -865,7 +865,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "maintenance resource meta-attribute overrides this."),
     },
     {
-        PCMK_META_MAINTENANCE, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_META_MAINTENANCE, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, NULL,
         pcmk__opt_none,
         N_("If true, the cluster will not schedule any actions involving the "
@@ -877,7 +877,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "attribute overrides this."),
     },
     {
-        PCMK_META_RESOURCE_STICKINESS, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_META_RESOURCE_STICKINESS, PCMK_VALUE_SCORE, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("Score to add to the current node when a resource is already "
@@ -890,7 +890,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "other resources."),
     },
     {
-        PCMK_META_REQUIRES, NULL, PCMK_VALUE_SELECT,
+        PCMK_META_REQUIRES, PCMK_VALUE_SELECT,
             PCMK_VALUE_NOTHING ", " PCMK_VALUE_QUORUM ", "
             PCMK_VALUE_FENCING ", " PCMK_VALUE_UNFENCING,
         NULL, NULL,
@@ -914,7 +914,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "otherwise, \"quorum\"."),
     },
     {
-        PCMK_META_MIGRATION_THRESHOLD, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_META_MIGRATION_THRESHOLD, PCMK_VALUE_SCORE, NULL,
         PCMK_VALUE_INFINITY, NULL,
         pcmk__opt_none,
         N_("Number of failures on a node before the resource becomes "
@@ -930,7 +930,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "start-failure-is-fatal cluster property is set to false."),
     },
     {
-        PCMK_META_FAILURE_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_META_FAILURE_TIMEOUT, PCMK_VALUE_DURATION, NULL,
         "0", NULL,
         pcmk__opt_none,
         N_("Number of seconds before acting as if a failure had not occurred"),
@@ -940,7 +940,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "A value of 0 indicates that this feature is disabled."),
     },
     {
-        PCMK_META_MULTIPLE_ACTIVE, NULL, PCMK_VALUE_SELECT,
+        PCMK_META_MULTIPLE_ACTIVE, PCMK_VALUE_SELECT,
             PCMK_VALUE_BLOCK ", " PCMK_VALUE_STOP_ONLY ", "
             PCMK_VALUE_STOP_START ", " PCMK_VALUE_STOP_UNEXPECTED,
         PCMK_VALUE_STOP_START, NULL,
@@ -963,7 +963,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "still need to be restarted.)"),
     },
     {
-        PCMK_META_ALLOW_MIGRATE, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_META_ALLOW_MIGRATE, PCMK_VALUE_BOOLEAN, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("Whether the cluster should try to \"live migrate\" this resource "
@@ -974,7 +974,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "otherwise."),
     },
     {
-        PCMK_META_ALLOW_UNHEALTHY_NODES, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_META_ALLOW_UNHEALTHY_NODES, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, NULL,
         pcmk__opt_none,
         N_("Whether the resource should be allowed to run on a node even if "
@@ -982,7 +982,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
         NULL,
     },
     {
-        PCMK_META_CONTAINER_ATTRIBUTE_TARGET, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_META_CONTAINER_ATTRIBUTE_TARGET, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("Where to check user-defined node attributes"),
@@ -996,7 +996,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "primitive resource, this is the bundle node)."),
     },
     {
-        PCMK_META_REMOTE_NODE, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_META_REMOTE_NODE, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("Name of the Pacemaker Remote guest node this resource is "
@@ -1010,7 +1010,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "IDs."),
     },
     {
-        PCMK_META_REMOTE_ADDR, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_META_REMOTE_ADDR, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("If remote-node is specified, the IP address or hostname used to "
@@ -1022,7 +1022,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "The default is the value of the remote-node meta-attribute."),
     },
     {
-        PCMK_META_REMOTE_PORT, NULL, PCMK_VALUE_PORT, NULL,
+        PCMK_META_REMOTE_PORT, PCMK_VALUE_PORT, NULL,
         "3121", NULL,
         pcmk__opt_none,
         N_("If remote-node is specified, port on the guest used for its "
@@ -1032,7 +1032,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "guest must be configured to listen on this port."),
     },
     {
-        PCMK_META_REMOTE_CONNECT_TIMEOUT, NULL, PCMK_VALUE_TIMEOUT, NULL,
+        PCMK_META_REMOTE_CONNECT_TIMEOUT, PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_none,
         N_("If remote-node is specified, how long before a pending Pacemaker "
@@ -1040,7 +1040,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
         NULL,
     },
     {
-        PCMK_META_REMOTE_ALLOW_MIGRATE, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_META_REMOTE_ALLOW_MIGRATE, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, NULL,
         pcmk__opt_none,
         N_("If remote-node is specified, this acts as the allow-migrate "
@@ -1334,19 +1334,6 @@ cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
 
     if (table != NULL) {
         value = g_hash_table_lookup(table, option->name);
-
-        if ((value == NULL) && (option->alt_name != NULL)) {
-            value = g_hash_table_lookup(table, option->alt_name);
-            if (value != NULL) {
-                pcmk__config_warn("Support for legacy name '%s' for cluster "
-                                  "option '%s' is deprecated and will be "
-                                  "removed in a future release",
-                                  option->alt_name, option->name);
-
-                // Inserting copy with current name ensures we only warn once
-                pcmk__insert_dup(table, option->name, value);
-            }
-        }
 
         if ((value != NULL) && (option->is_valid != NULL)
             && !option->is_valid(value)) {
