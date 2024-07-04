@@ -8,7 +8,7 @@
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-crmd-transition-delay" name="crmd-transition-delay" value="30"/>
+        <nvpair id="cib-bootstrap-options-crmd-transition-delay" name="transition-delay" value="30"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>

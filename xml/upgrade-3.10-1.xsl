@@ -19,6 +19,8 @@
    "join-finalization-timeout".
  * The crmd-integration-timeout cluster property has been renamed to
    "join-integration-timeout".
+ * The crmd-transition-delay cluster property has been renamed to
+   "transition-delay".
  * The remove-after-stop cluster property is not present.
  * The stonith-action cluster property is set to "off" if it was previously set
    to "poweroff".
@@ -139,6 +141,12 @@
 <xsl:template match="cluster_property_set
                      /nvpair[@name = 'crmd-integration-timeout']/@name">
     <xsl:attribute name="name">join-integration-timeout</xsl:attribute>
+</xsl:template>
+
+<!-- Rename crmd-transition-delay property to transition-delay -->
+<xsl:template match="cluster_property_set
+                     /nvpair[@name = 'crmd-transition-delay']/@name">
+    <xsl:attribute name="name">transition-delay</xsl:attribute>
 </xsl:template>
 
 <!-- Drop remove-after-stop property -->

@@ -143,8 +143,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", PCMK_VALUE_DURATION,
-            NULL,
+        PCMK_OPT_TRANSITION_DELAY, NULL, PCMK_VALUE_DURATION, NULL,
         "0s", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("Enabling this option will slow down cluster recovery under all "

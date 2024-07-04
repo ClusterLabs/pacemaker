@@ -30,6 +30,7 @@
               <choice>
                 <value>crmd-finalization-timeout</value>
                 <value>crmd-integration-timeout</value>
+                <value>crmd-transition-delay</value>
                 <value>remove-after-stop</value>
                 <value>stonith-action</value>
               </choice>
