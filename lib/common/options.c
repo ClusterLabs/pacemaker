@@ -135,9 +135,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        // @COMPAT crmd-finalization-timeout is disallowed by the schema
-        PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, "crmd-finalization-timeout",
-            PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
         "30min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
