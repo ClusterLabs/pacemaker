@@ -8,7 +8,7 @@
       -->
     <crm_config original="1">
       <cluster_property_set id="cib-bootstrap-options" original="1">
-        <nvpair id="cib-bootstrap-options-crmd-integration-timeout" name="crmd-integration-timeout" value="30" original="1"/>
+        <nvpair id="cib-bootstrap-options-crmd-integration-timeout" name="join-integration-timeout" value="30" original="1"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true" original="1"/>
       </cluster_property_set>
     </crm_config>

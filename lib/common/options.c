@@ -127,8 +127,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout",
-            PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
         "3min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
