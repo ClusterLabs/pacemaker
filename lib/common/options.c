@@ -127,6 +127,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
+        // @COMPAT crmd-integration-timeout is disallowed by the schema
         PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout",
             PCMK_VALUE_DURATION, NULL,
         "3min", pcmk__valid_interval_spec,

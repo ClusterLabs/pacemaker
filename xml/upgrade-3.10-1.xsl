@@ -15,6 +15,8 @@
    "cib-bootstrap-options" always sorts first relative to its siblings.
  * Each nvpair has a value attribute. If an nvpair did not have a value
    attribute prior to this transformation, it is dropped.
+ * The crmd-integration-timeout cluster property has been renamed to
+   "join-integration-timeout".
  * The remove-after-stop cluster property is not present.
  * The stonith-action cluster property is set to "off" if it was previously set
    to "poweroff".
@@ -119,6 +121,12 @@
 
 
 <!-- Cluster properties -->
+
+<!-- Rename crmd-integration-timeout property to join-integration-timeout -->
+<xsl:template match="cluster_property_set
+                     /nvpair[@name = 'crmd-integration-timeout']/@name">
+    <xsl:attribute name="name">join-integration-timeout</xsl:attribute>
+</xsl:template>
 
 <!-- Drop remove-after-stop property -->
 <xsl:template match="cluster_property_set/nvpair[@name = 'remove-after-stop']"/>
