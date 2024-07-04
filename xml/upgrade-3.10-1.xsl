@@ -15,6 +15,8 @@
    "cib-bootstrap-options" always sorts first relative to its siblings.
  * Each nvpair has a value attribute. If an nvpair did not have a value
    attribute prior to this transformation, it is dropped.
+ * The crmd-finalization-timeout cluster property has been renamed to
+   "join-finalization-timeout".
  * The crmd-integration-timeout cluster property has been renamed to
    "join-integration-timeout".
  * The remove-after-stop cluster property is not present.
@@ -126,6 +128,12 @@
 
 
 <!-- Cluster properties -->
+
+<!-- Rename crmd-finalization-timeout property to join-finalization-timeout -->
+<xsl:template match="cluster_property_set
+                     /nvpair[@name = 'crmd-finalization-timeout']/@name">
+    <xsl:attribute name="name">join-finalization-timeout</xsl:attribute>
+</xsl:template>
 
 <!-- Rename crmd-integration-timeout property to join-integration-timeout -->
 <xsl:template match="cluster_property_set

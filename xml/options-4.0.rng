@@ -28,6 +28,7 @@
           <data type="string">
             <except>
               <choice>
+                <value>crmd-finalization-timeout</value>
                 <value>crmd-integration-timeout</value>
                 <value>remove-after-stop</value>
                 <value>stonith-action</value>
