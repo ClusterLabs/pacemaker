@@ -1,0 +1,21 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="2" num_updates="0" admin_epoch="0">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * The crmd-finalization-timeout cluster property is set to any value.
+
+         In this situation, the crmd-finalization-timeout cluster property
+         should be renamed to join-finalization-timeout. The value should be
+         unchanged.
+      -->
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-crmd-finalization-timeout" name="crmd-finalization-timeout" value="30"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
