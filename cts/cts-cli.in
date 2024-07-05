@@ -217,6 +217,7 @@ def sanitize_output(s):
     # A list of tuples of regular expressions and their replacements.
     replacements = [
         (r'Device not configured', r'No such device or address'),
+        (r'^Entity: line [0-9][0-9]*: ', r''),
         (r'Last change: .*', r'Last change:'),
         (r'Last updated: .*', r'Last updated:'),
         (r'^Migration will take effect until: .*', r'Migration will take effect until:'),
@@ -2016,6 +2017,75 @@ class CrmMonRegressionTest(RegressionTest):
         ]
 
 
+class ValidityRegressionTest(RegressionTest):
+    """A class for testing CIB validity."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "validity"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        basic_tests = [
+            Test("Try to make resulting CIB invalid (enum violation)",
+                 """cibadmin -M -o constraints --xml-text '<rsc_order id="ord_1-2" first="dummy1" first-action="break" then="dummy2"/>'""",
+                 expected_rc=ExitStatus.CONFIG, update_cib=True),
+            Test("Run crm_simulate with invalid CIB (enum violation)",
+                 "crm_simulate -p -S",
+                 stdin=StdinCmd("""cibadmin -Q | sed 's#"start"#"break"#'"""),
+                 expected_rc=ExitStatus.CONFIG),
+            Test("Try to make resulting CIB invalid (unrecognized validate-with)",
+                 "cibadmin -M --xml-text '<cib validate-with=\"pacemaker-9999.0\"/>'",
+                 expected_rc=ExitStatus.CONFIG, update_cib=True),
+            Test("Run crm_simulate with invalid CIB (unrecognized validate-with)",
+                 "crm_simulate -p -S",
+                 stdin=StdinCmd("""cibadmin -Q | sed 's#"pacemaker-1.2"#"pacemaker-9999.0"#'"""),
+                 expected_rc=ExitStatus.CONFIG),
+            Test("Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1)",
+                 "cibadmin -C -o configuration --xml-text '<tags/>'",
+                 expected_rc=ExitStatus.CONFIG, update_cib=True),
+            Test("Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)",
+                 "crm_simulate -p -S",
+                 stdin=StdinCmd("cibadmin -Q | sed 's#</configuration>#<tags/></configuration>#'")),
+            Test("Make resulting CIB valid, although without validate-with attribute",
+                 "cibadmin -p -R",
+                 stdin=StdinCmd("""cibadmin -Q | sed 's#[ 	][ 	]*validate-with="[^"]*"##'"""),
+                 update_cib=True),
+            Test("Run crm_simulate with valid CIB, but without validate-with attribute",
+                 "crm_simulate -p -S",
+                 stdin=StdinCmd("cibadmin -Q")),
+            # this will just disable validation and accept the config, outputting
+            # validation errors
+            Test("Make resulting CIB invalid, and without validate-with attribute",
+                 "cibadmin -p -R",
+                 stdin=StdinCmd("""cibadmin -Q | """
+                                """sed -e 's#[ 	][ 	]*validate-with="[^"]*"##' """
+                                """    -e 's#\\([ 	][ 	]*epoch="[^"]*\\)"#\\10"#' """
+                                """    -e 's#"start"#"break"#'"""),
+                 update_cib=True),
+            Test("Run crm_simulate with invalid CIB, also without validate-with attribute",
+                 "crm_simulate -p -S",
+                 stdin=StdinCmd("""cibadmin -Q | """
+                                """sed -e 's#[ 	][ 	]*validate-with="[^"]*"##' """
+                                """    -e 's#\\([ 	][ 	]*epoch="[^"]*\\)"#\\10"#' """
+                                """    -e 's#"start"#"break"#'""")),
+        ]
+
+        basic_tests_setup = [
+            """cibadmin -C -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>'""",
+            """cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'""",
+            """cibadmin -C -o constraints --xml-text '<rsc_order id="ord_1-2" first="dummy1" first-action="start" then="dummy2"/>'""",
+        ]
+
+        return [
+            ShadowTestGroup(basic_tests, validate_with="pacemaker-1.2",
+                            setup=basic_tests_setup,
+                            env={"PCMK_trace_functions": "apply_upgrade,pcmk__update_schema"}),
+        ]
+
+
 class UpgradeRegressionTest(RegressionTest):
     """A class for testing upgrading the CIB."""
 
@@ -2450,6 +2520,7 @@ regression_classes = [
     CrmadminRegressionTest,
     CrmVerifyRegressionTest,
     CrmMonRegressionTest,
+    ValidityRegressionTest,
     UpgradeRegressionTest,
     RulesRegressionTest,
     FeatureSetRegressionTest,
