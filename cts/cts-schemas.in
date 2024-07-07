@@ -104,10 +104,19 @@ log2_or_0_add() {
 
 # stdin: input file per line
 test_cleaner() {
-    while read _tc_origin; do
-        _tc_origin=${_tc_origin%.*}
-        rm -f "${_tc_origin}.up" "${_tc_origin}.up.err"
-        rm -f "$(dirname "${_tc_origin}")/.$(basename "${_tc_origin}").up"
+    while read _tc_source; do
+        _tc_source_dir=$(dirname "$_tc_source")
+        _tc_ref_dir="${_tc_source_dir/%xml/ref}"
+        _tc_ref_err_dir="${_tc_source_dir/%xml/ref.err}"
+
+        _tc_source_basename=$(basename "$_tc_source")
+        _tc_up_basename="${_tc_source_basename%.*}.up"
+        _tc_up_err_basename="${_tc_source_basename%.*}.up.err"
+
+        _tc_up="$_tc_ref_dir/$_tc_up_basename"
+        _tc_up_err="$_tc_ref_err_dir/$_tc_up_err_basename"
+
+        rm -f "$_tc_up" "$_tc_up_err"
     done
 }
 
@@ -142,18 +151,25 @@ test_runner_upgrade() {
     _tru_source=${2:?}  # filename
     _tru_mode=${3:?}  # extra modes wrt. "referential" outcome, see below
 
-    _tru_ref="${_tru_source%.*}.ref"
+    _tru_source_dir=$(dirname "$_tru_source")
+    _tru_ref_dir="${_tru_source_dir/%xml/ref}"
+    _tru_ref_err_dir="${_tru_source_dir/%xml/ref.err}"
 
-    if [ "$((_tru_mode & (1 << 0)))" -ne 0 ] || [ -f "${_tru_ref}.err" ]; then
-        _tru_ref_err="${_tru_ref}.err"
-    else
+    _tru_source_basename=$(basename "$_tru_source")
+    _tru_ref_basename="${_tru_source_basename%.*}.ref"
+    _tru_ref_err_basename="${_tru_source_basename%.*}.ref.err"
+
+    _tru_ref="$_tru_ref_dir/$_tru_ref_basename"
+    _tru_ref_err="$_tru_ref_err_dir/$_tru_ref_err_basename"
+
+    if ! [ "$((_tru_mode & (1 << 0)))" -ne 0 ] && ! [ -f "${_tru_ref_err}" ]; then
         _tru_ref_err=/dev/null
     fi
 
     _tru_proc_rc=0
     _tru_diff_rc=0
-    _tru_target="${_tru_source%.*}.up"
-    _tru_target_err="${_tru_target}.err"
+    _tru_target="${_tru_ref/%.ref/.up}"
+    _tru_target_err="${_tru_ref_err/%.ref.err/.up.err}"
 
     _tru_transforms=$(ls "$PCMK_schema_directory"/upgrade-$_tru_template-*.xsl \
                       | sort -n)
@@ -395,7 +411,7 @@ test2to3() {
         _t23_pattern="( ${_t23_pattern%-o} )"
     fi
 
-    find "$suites_dir/test-2" -name test-2 -o -type d -prune    \
+    find "$suites_dir/test-2/xml" -name xml -o -type d -prune    \
             -o -name '*.xml' ${_t23_pattern} -print \
         | env LC_ALL=C sort \
         | { case " $* " in

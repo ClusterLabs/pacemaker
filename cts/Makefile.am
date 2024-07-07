@@ -32,9 +32,9 @@ ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
 cts_SCRIPTS		= cts
 
 schemasdir			= $(testdir)/schemas
-dist_schemas_DATA	= $(wildcard schemas/*/*.ref)		\
-			  $(wildcard schemas/*/*.ref.err)	\
-			  $(wildcard schemas/*/*.xml)
+dist_schemas_DATA	= $(wildcard schemas/*/ref/*.ref)		\
+			  $(wildcard schemas/*/ref.err/*.ref.err)	\
+			  $(wildcard schemas/*/xml/*.xml)
 
 noinst_SCRIPTS		= cluster_test
 
