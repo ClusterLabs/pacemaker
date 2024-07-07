@@ -180,79 +180,27 @@ test_runner_upgrade() {
     # Zero the error file before we append to it
     > "$_tru_target_err"
 
-    if [ "$((_tru_mode & (1 << 2)))" -eq 0 ]; then
-        for transform in $_tru_transforms; do
-            $XSLT_PROCESSOR "$transform" "$_tru_input"  \
-                > "$_tru_target" 2>> "$_tru_target_err" \
-            || _tru_proc_rc=$?
+    for transform in $_tru_transforms; do
+        $XSLT_PROCESSOR "$transform" "$_tru_input"  \
+            > "$_tru_target" 2>> "$_tru_target_err" \
+        || _tru_proc_rc=$?
 
-            cp "$_tru_target" "$_tru_input"
-
-            if [ "$_tru_proc_rc" -ne 0 ]; then
-                break;
-            fi
-        done
-
-        rm -f "$_tru_input"
-        cleanup_module_error "$_tru_target_err"
+        cp "$_tru_target" "$_tru_input"
 
         if [ "$_tru_proc_rc" -ne 0 ]; then
-            echo "$_tru_target_err"
-            return "$_tru_proc_rc"
+            break;
         fi
-    else
-        # when -B (deblanked outcomes handling) requested, we:
-        # - drop blanks from the source XML
-        #   (effectively emulating pacemaker handling)
-        # - re-drop blanks from the XSLT outcome,
-        #   which is compared with referential outcome
-        #   processed with even greedier custom deblanking
-        #   (extraneous inter-element whitespace like blank
-        #   lines will not get removed otherwise, see lower)
-        for transform in $_tru_transforms; do
-            xmllint --noblanks "$_tru_input"    \
-                | $XSLT_PROCESSOR "$transform" -    \
-                > "$_tru_target" 2>> "$_tru_target_err" \
-            || _tru_proc_rc=$?
+    done
 
-            cp "$_tru_target" "$_tru_input"
+    rm -f "$_tru_input"
+    cleanup_module_error "$_tru_target_err"
 
-            if [ "$_tru_proc_rc" -ne 0 ]; then
-                break;
-            fi
-        done
-
-        rm -f "$_tru_input"
-        cleanup_module_error "$_tru_target_err"
-
-        if [ "$_tru_proc_rc" -ne 0 ]; then
-            echo "$_tru_target_err"
-            return "$_tru_proc_rc"
-        fi
-
-        # reusing variable no longer needed
-        _tru_template="$(dirname "${_tru_target}")"
-        _tru_template="${_tru_template}/.$(basename "${_tru_target}")"
-        mv "${_tru_target}" "${_tru_template}"
-        ${XSLT_PROCESSOR} - "${_tru_template}" > "${_tru_target}" <<EOF
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
-<xsl:template match="@*|*|comment()|processing-instruction()">
-  <xsl:copy>
-    <xsl:apply-templates select="@*|node()"/>
-  </xsl:copy>
-</xsl:template>
-<xsl:template match="text()">
-  <xsl:value-of select="normalize-space(.)"/>
-</xsl:template>
-</xsl:stylesheet>
-EOF
+    if [ "$_tru_proc_rc" -ne 0 ]; then
+        echo "$_tru_target_err"
+        return "$_tru_proc_rc"
     fi
 
-    # only respond with the flags except for "-B", i.e., when both:
-    # - _tru_mode non-zero
-    # - "-B" in _tru_mode is zero (hence non-zero when flipped with XOR)
-    if [ "$((_tru_mode * ((_tru_mode ^ (1 << 2)) & (1 << 2))))" -ne 0 ]; then
+    if [ "$_tru_mode" -ne 0 ]; then
         if [ "$((_tru_mode & (1 << 0)))" -ne 0 ]; then
             cp -a "${_tru_target}" "${_tru_ref}"
             cp -a "${_tru_target_err}" "${_tru_ref_err}"
@@ -276,24 +224,7 @@ EOF
         fi
 
     elif [ -f "$_tru_ref" ] && [ -e "$_tru_ref_err" ]; then
-        if [ "$((_tru_mode & (1 << 2)))" -eq 0 ]; then
-            _output=$(cat "$_tru_ref")
-        else
-            _output=$($XSLT_PROCESSOR - "$_tru_ref" <<EOF
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
-<xsl:template match="@*|*|comment()|processing-instruction()">
-  <xsl:copy>
-    <xsl:apply-templates select="@*|node()"/>
-  </xsl:copy>
-</xsl:template>
-<xsl:template match="text()">
-  <xsl:value-of select="normalize-space(.)"/>
-</xsl:template>
-</xsl:stylesheet>
-EOF
-)
-        fi
+        _output=$(cat "$_tru_ref")
 
         echo "$_output" | $DIFF - "$_tru_target" >&2 || _tru_diff_rc=$?
         if [ "$_tru_diff_rc" -eq 0 ]; then
@@ -325,7 +256,6 @@ test_runner_validate() {
 
 # -o= ... which conventional version to deem as the transform origin
 # -t= ... which conventional version to deem as the transform target
-# -B
 # -D
 # -G ... see usage
 # stdin: input file per line
@@ -344,7 +274,6 @@ test_runner() {
             -t=*) _tr_schema_t="$PCMK_schema_directory/pacemaker-${1#-t=}.rng";;
             -G) _tr_mode=$((_tr_mode | (1 << 0)));;
             -D) _tr_mode=$((_tr_mode | (1 << 1)));;
-            -B) _tr_mode=$((_tr_mode | (1 << 2)));;
         esac
         shift
     done
@@ -543,11 +472,10 @@ test_suite() {
 usage() {
     printf \
 '%s\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
-    "usage: $0 [-{B,C,D,G,X}]* \\" \
+    "usage: $0 [-{C,D,G,X}]* \\" \
           "       [-|{${tests## }}*]" \
     "- when no suites (arguments) provided, \"test*\" ones get used" \
     "- with '-' suite specification the actual ones grabbed on stdin" \
-    "- use '-B' to run validate-only check suppressing blanks first" \
     "- use '-C' to only cleanup ephemeral byproducts" \
     "- use '-D' to review originals vs. \"referential\" outcomes" \
     "- use '-G' to generate \"referential\" outcomes" \
