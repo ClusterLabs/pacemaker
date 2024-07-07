@@ -369,6 +369,7 @@ test_runner() {
         fi
 
         echo "OK"
+        echo "$_tr_origin" | test_cleaner
     done
 
     log2_or_0_return ${_tr_ret}
