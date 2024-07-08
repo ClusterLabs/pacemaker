@@ -1609,6 +1609,10 @@ main(int argc, char **argv)
     scheduler = pe_new_working_set();
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = out;
+    if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
+        // Currently used only in the times section
+        pcmk__query_node_name(out, 0, &(scheduler->priv->local_node_name), 0);
+    }
 
     out->message(out, "crm-mon-disconnected",
                  "Waiting for initial connection", pcmkd_state);

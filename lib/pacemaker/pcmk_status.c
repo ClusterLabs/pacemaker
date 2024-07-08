@@ -106,14 +106,6 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
     scheduler->input = cib_copy;
     cluster_status(scheduler);
 
-    if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
-        if (pcmk__our_nodename == NULL) {
-            // Currently used only in the times section
-            pcmk__query_node_name(out, 0, &pcmk__our_nodename, 0);
-        }
-        scheduler->priv->local_node_name = pcmk__str_copy(pcmk__our_nodename);
-    }
-
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
@@ -269,6 +261,11 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     scheduler = pe_new_working_set();
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = out;
+
+    if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
+        // Currently used only in the times section
+        pcmk__query_node_name(out, 0, &(scheduler->priv->local_node_name), 0);
+    }
 
     rc = pcmk__output_cluster_status(scheduler, stonith, cib, current_cib,
                                      pcmkd_state, fence_history, show,
