@@ -105,18 +105,14 @@ log2_or_0_add() {
 # stdin: input file per line
 test_cleaner() {
     while read _tc_source; do
+        _tc_source_basename=$(basename "$_tc_source")
+
         _tc_source_dir=$(dirname "$_tc_source")
         _tc_ref_dir="${_tc_source_dir/%xml/ref}"
         _tc_ref_err_dir="${_tc_source_dir/%xml/ref.err}"
 
-        _tc_source_basename=$(basename "$_tc_source")
-        _tc_up_basename="${_tc_source_basename%.*}.up"
-        _tc_up_err_basename="${_tc_source_basename%.*}.up.err"
-
-        _tc_up="$_tc_ref_dir/$_tc_up_basename"
-        _tc_up_err="$_tc_ref_err_dir/$_tc_up_err_basename"
-
-        rm -f "$_tc_up" "$_tc_up_err"
+        rm -f "$_tc_ref_dir/${_tc_source_basename%.*}-*.up" \
+            "_tc_ref_err_dir/${_tc_source_basename%.*}-*.up.err"
     done
 }
 
@@ -145,76 +141,64 @@ cleanup_module_error() {
     mv -- "$1.new" "$1"
 }
 
-# stdout: filename of the transformed file
-test_runner_upgrade() {
-    _tru_template=${1:?}
-    _tru_source=${2:?}  # filename
-    _tru_mode=${3:?}  # extra modes wrt. "referential" outcome, see below
+test_runner_upgrade_one() {
+    _truo_source=${1:?}
+    _truo_input=${2:?}
+    _truo_transform=${3:?}
+    _truo_mode=${4:?}  # extra modes wrt. "referential" outcome, see below
 
-    _tru_source_dir=$(dirname "$_tru_source")
-    _tru_ref_dir="${_tru_source_dir/%xml/ref}"
-    _tru_ref_err_dir="${_tru_source_dir/%xml/ref.err}"
+    _truo_transform_num="${_truo_transform##*-}"
+    _truo_transform_num="${_truo_transform_num%.xsl}"
 
-    _tru_source_basename=$(basename "$_tru_source")
-    _tru_ref_basename="${_tru_source_basename%.*}.ref"
-    _tru_ref_err_basename="${_tru_source_basename%.*}.ref.err"
+    _truo_source_dir=$(dirname "$_truo_source")
+    _truo_ref_dir="${_truo_source_dir/%xml/ref}"
+    _truo_ref_err_dir="${_truo_source_dir/%xml/ref.err}"
 
-    _tru_ref="$_tru_ref_dir/$_tru_ref_basename"
-    _tru_ref_err="$_tru_ref_err_dir/$_tru_ref_err_basename"
+    _truo_source_basename=$(basename "$_truo_source")
+    _truo_ref_basename="${_truo_source_basename%.*}.ref-${_truo_transform_num}"
+    _truo_ref_err_basename="${_truo_source_basename%.*}.ref.err-${_truo_transform_num}"
 
-    if ! [ "$((_tru_mode & (1 << 0)))" -ne 0 ] && ! [ -f "${_tru_ref_err}" ]; then
-        _tru_ref_err=/dev/null
+    _truo_ref="$_truo_ref_dir/$_truo_ref_basename"
+    _truo_ref_err="$_truo_ref_err_dir/$_truo_ref_err_basename"
+
+    _truo_target="${_truo_ref/.ref/.up}"
+    _truo_target_err="${_truo_ref_err/.ref.err/.up.err}"
+
+    _truo_proc_rc=0
+    _truo_diff_rc=0
+
+    if ! [ "$((_truo_mode & (1 << 0)))" -ne 0 ] \
+        && ! [ -f "${_truo_ref_err}" ]; then
+
+        _truo_ref_err=/dev/null
     fi
 
-    _tru_proc_rc=0
-    _tru_diff_rc=0
-    _tru_target="${_tru_ref/%.ref/.up}"
-    _tru_target_err="${_tru_ref_err/%.ref.err/.up.err}"
+    $XSLT_PROCESSOR "$_truo_transform" "$_truo_input"   \
+        > "$_truo_target" 2> "$_truo_target_err"  \
+    || _truo_proc_rc=$?
 
-    _tru_transforms=$(ls "$PCMK_schema_directory"/upgrade-$_tru_template-*.xsl \
-                      | sort -n)
-    _tru_input=$(mktemp)
+    cleanup_module_error "$_truo_target_err"
 
-    cp "$_tru_source" "$_tru_input"
-
-    # Zero the error file before we append to it
-    > "$_tru_target_err"
-
-    for transform in $_tru_transforms; do
-        $XSLT_PROCESSOR "$transform" "$_tru_input"  \
-            > "$_tru_target" 2>> "$_tru_target_err" \
-        || _tru_proc_rc=$?
-
-        cp "$_tru_target" "$_tru_input"
-
-        if [ "$_tru_proc_rc" -ne 0 ]; then
-            break;
-        fi
-    done
-
-    rm -f "$_tru_input"
-    cleanup_module_error "$_tru_target_err"
-
-    if [ "$_tru_proc_rc" -ne 0 ]; then
-        echo "$_tru_target_err"
-        return "$_tru_proc_rc"
+    if [ "$_truo_proc_rc" -ne 0 ]; then
+        echo "$_truo_target_err"
+        return "$_truo_proc_rc"
     fi
 
-    if [ "$_tru_mode" -ne 0 ]; then
-        if [ "$((_tru_mode & (1 << 0)))" -ne 0 ]; then
-            cp -a "${_tru_target}" "${_tru_ref}"
-            cp -a "${_tru_target_err}" "${_tru_ref_err}"
+    if [ "$_truo_mode" -ne 0 ]; then
+        if [ "$((_truo_mode & (1 << 0)))" -ne 0 ]; then
+            cp -a "${_truo_target}" "${_truo_ref}"
+            cp -a "${_truo_target_err}" "${_truo_ref_err}"
         fi
-        if [ "$((_tru_mode & (1 << 1)))" -ne 0 ]; then
-            { ${DIFF} "${_tru_source}" "${_tru_ref}" \
+        if [ "$((_truo_mode & (1 << 1)))" -ne 0 ]; then
+            { ${DIFF} "${_truo_input}" "${_truo_ref}" \
               && printf '\n(files match)\n'; } | ${DIFF_PAGER} >&2
             if [ $? -ne 0 ]; then
                 printf "\npager failure\n" >&2
                 return 1
             fi
             printf '\nIs comparison OK? ' >&2
-            if read _tru_answer </dev/tty; then
-                case "${_tru_answer}" in
+            if read _truo_answer </dev/tty; then
+                case "${_truo_answer}" in
                     y|yes) ;;
                     *) echo "Answer not 'y' nor 'yes'" >&2; return 1;;
                 esac
@@ -223,25 +207,57 @@ test_runner_upgrade() {
             fi
         fi
 
-    elif [ -f "$_tru_ref" ] && [ -e "$_tru_ref_err" ]; then
-        _output=$(cat "$_tru_ref")
+    elif [ -f "$_truo_ref" ] && [ -e "$_truo_ref_err" ]; then
+        _output=$(cat "$_truo_ref")
 
-        echo "$_output" | $DIFF - "$_tru_target" >&2 || _tru_diff_rc=$?
-        if [ "$_tru_diff_rc" -eq 0 ]; then
-            $DIFF "$_tru_ref_err" "$_tru_target_err" >&2 || _tru_diff_rc=$?
+        echo "$_output" | $DIFF - "$_truo_target" >&2 || _truo_diff_rc=$?
+        if [ "$_truo_diff_rc" -eq 0 ]; then
+            $DIFF "$_truo_ref_err" "$_truo_target_err" >&2 || _truo_diff_rc=$?
         fi
-        if [ "$_tru_diff_rc" -ne 0 ]; then
+        if [ "$_truo_diff_rc" -ne 0 ]; then
             emit_error "Outputs differ from referential ones"
             echo "/dev/null"
             return 1
         fi
     else
-        emit_error "Referential file(s) missing: ${_tru_ref}"
+        emit_error "Referential file(s) missing: ${_truo_ref}"
         echo "/dev/null"
         return 1
     fi
 
+    echo "$_truo_target"
+}
+
+# stdout: filename of the transformed file
+test_runner_upgrade() {
+    _tru_template=${1:?}
+    _tru_source=${2:?}  # filename
+    _tru_mode=${3:?}  # extra modes wrt. "referential" outcome, see below
+
+    _tru_target=
+    _tru_rc=0
+
+    _tru_transforms=$(ls "$PCMK_schema_directory"/upgrade-$_tru_template-*.xsl \
+                      | sort -n)
+    _tru_input=$(mktemp)
+
+    cp "$_tru_source" "$_tru_input"
+
+    for transform in $_tru_transforms; do
+        _tru_target=$(test_runner_upgrade_one "$_tru_source" "$_tru_input"  \
+                        "$transform" "$_tru_mode")
+        _tru_rc=$?
+
+        if [ $_tru_rc -ne 0 ]; then
+            break;
+        fi
+        cp "$_tru_target" "$_tru_input"
+    done
+
+    rm -f "$_tru_input"
+
     echo "${_tru_target}"
+    return "$_tru_rc"
 }
 
 test_runner_validate() {

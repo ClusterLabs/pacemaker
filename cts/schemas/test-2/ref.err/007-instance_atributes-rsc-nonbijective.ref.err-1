@@ -2,4 +2,3 @@ INFO: Resources-operation instance_attributes: mySmartFuse-monitor-inputpower (r
 INFO: Resources-operation instance_attributes: ... only start/promote operation taken into account
 INFO: Resources-operation instance_attributes: mySmartFuse-monitor-outputpower (rsc=mySmartFuse, meta=mySmartFuse-outputpower-instanceparams): dropping requires
 INFO: Resources-operation instance_attributes: ... only start/promote operation taken into account
-DEBUG: instance_attributes: original element pointed to with @id-ref (mySmartFuse-outputpower-instanceparams) disappeared during upgrade
