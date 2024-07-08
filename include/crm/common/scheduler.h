@@ -97,7 +97,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    GHashTable *tags;               // Configuration tags (ID -> pcmk__idref_t*)
     int blocked_resources;          // Number of blocked resources in cluster
     int disabled_resources;         // Number of disabled resources in cluster
     GList *param_check;             // History entries that need to be checked

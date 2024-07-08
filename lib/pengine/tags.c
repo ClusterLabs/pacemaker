@@ -22,11 +22,11 @@ pe__rscs_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
     gpointer value;
     GList *retval = NULL;
 
-    if (scheduler->tags == NULL) {
+    if (scheduler->priv->tags == NULL) {
         return retval;
     }
 
-    value = g_hash_table_lookup(scheduler->tags, tag_name);
+    value = g_hash_table_lookup(scheduler->priv->tags, tag_name);
 
     if (value == NULL) {
         return retval;
@@ -56,11 +56,11 @@ pe__unames_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
     gpointer value;
     GList *retval = NULL;
 
-    if (scheduler->tags == NULL) {
+    if (scheduler->priv->tags == NULL) {
         return retval;
     }
 
-    value = g_hash_table_lookup(scheduler->tags, tag_name);
+    value = g_hash_table_lookup(scheduler->priv->tags, tag_name);
 
     if (value == NULL) {
         return retval;

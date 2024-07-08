@@ -950,7 +950,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_tag = NULL;
 
-    scheduler->tags = pcmk__strkey_table(free, pcmk__free_idref);
+    scheduler->priv->tags = pcmk__strkey_table(free, pcmk__free_idref);
 
     for (xml_tag = pcmk__xe_first_child(xml_tags, NULL, NULL, NULL);
          xml_tag != NULL; xml_tag = pcmk__xe_next(xml_tag)) {
@@ -983,7 +983,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
                 continue;
             }
 
-            pcmk__add_idref(scheduler->tags, tag_id, obj_ref);
+            pcmk__add_idref(scheduler->priv->tags, tag_id, obj_ref);
         }
     }
 

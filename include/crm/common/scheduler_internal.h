@@ -174,6 +174,7 @@ struct pcmk__scheduler_private {
     xmlNode *op_defaults;           // Configured operation defaults
     GList *resources;               // Resources in cluster
     GHashTable *templates;          // Key = template ID, value = resource list
+    GHashTable *tags;               // Key = tag ID, value = element list
     GList *actions;                 // All scheduled actions
     GHashTable *singletons;         // Scheduled non-resource actions
     int next_action_id;             // Counter used as ID for actions

@@ -348,8 +348,8 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         g_hash_table_destroy(scheduler->priv->templates);
     }
 
-    if (scheduler->tags) {
-        g_hash_table_destroy(scheduler->tags);
+    if (scheduler->priv->tags != NULL) {
+        g_hash_table_destroy(scheduler->priv->tags);
     }
 
     crm_trace("deleting resources");
