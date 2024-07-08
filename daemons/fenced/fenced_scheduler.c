@@ -95,7 +95,6 @@ fenced_scheduler_cleanup(void)
             pcmk__output_free(logger);
             scheduler->priv->out = NULL;
         }
-        free((void *) scheduler->priv->local_node_name);
         pe_free_working_set(scheduler);
         scheduler = NULL;
     }

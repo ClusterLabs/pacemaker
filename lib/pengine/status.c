@@ -57,6 +57,7 @@ pe_free_working_set(pcmk_scheduler_t *scheduler)
 {
     if (scheduler != NULL) {
         pe_reset_working_set(scheduler);
+        free(scheduler->priv->local_node_name);
         free(scheduler->priv);
         free(scheduler);
     }
@@ -409,7 +410,7 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
     // These members must be preserved
     pcmk__scheduler_private_t *priv = scheduler->priv;
     pcmk__output_t *out = priv->out;
-    const char *local_node_name = scheduler->priv->local_node_name;
+    char *local_node_name = scheduler->priv->local_node_name;
 
     // Wipe the main structs (any other members must have previously been freed)
     memset(scheduler, 0, sizeof(pcmk_scheduler_t));

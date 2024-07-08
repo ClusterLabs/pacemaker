@@ -818,7 +818,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             // Currently used only in the times section
             pcmk__query_node_name(out, 0, &pcmk__our_nodename, 0);
         }
-        scheduler->priv->local_node_name = pcmk__our_nodename;
+        scheduler->priv->local_node_name = pcmk__str_copy(pcmk__our_nodename);
     }
 
     if (!out->is_quiet(out)) {
