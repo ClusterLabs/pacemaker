@@ -1,0 +1,4 @@
+INFO: Resources-operation instance_attributes: mySmartFuse-monitor-inputpower (rsc=mySmartFuse, meta=mySmartFuse-inputpower-instanceparams): dropping requires
+INFO: Resources-operation instance_attributes: ... only start/promote operation taken into account
+INFO: Resources-operation instance_attributes: mySmartFuse-monitor-outputpower (rsc=mySmartFuse, meta=mySmartFuse-outputpower-instanceparams): dropping requires
+INFO: Resources-operation instance_attributes: ... only start/promote operation taken into account

@@ -1,0 +1,24 @@
+<cib validate-with="pacemaker-3.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+
+      <primitive class="stonith" id="fence-vbox" type="fence_vbox">
+        <instance_attributes id="fence-vbox-params">
+          <nvpair id="fence-vbox-params-ipaddr" name="ipaddr" value="192.0.3.10"/>
+          <nvpair id="fence-vbox-params-login" name="login" value="vboxadmin"/>
+          <nvpair id="fence-vbox-params-passwd_script" name="passwd_script" value="/usr/local/cluster/vboxpass.sh"/>
+          <nvpair id="fence-vbox-params-plug" name="plug" value="vboxhost"/>
+          <nvpair id="fence-vbox-pcmk_monitor_cmd" name="pcmk_monitor_action" value="metadata"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-vbox-monitor" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

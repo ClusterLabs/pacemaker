@@ -1,0 +1,50 @@
+<cib validate-with="pacemaker-2.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+
+      <primitive class="stonith" id="fence-vbox1" type="fence_vbox">
+        <instance_attributes id="fence-vbox1-params">
+          <nvpair id="fence-vbox1-params-ipaddr" name="ipaddr" value="192.0.3.10"/>
+          <nvpair id="fence-vbox1-params-login" name="login" value="vboxadmin"/>
+          <nvpair id="fence-vbox1-params-passwd_script" name="passwd_script" value="/usr/local/cluster/vboxpass.sh"/>
+          <nvpair id="fence-vbox1-params-plug" name="plug" value="vboxhost"/>
+          <nvpair id="fence-vbox1-pcmk_arg_map" name="pcmk_arg_map" value="port:port"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-vbox1-monitor" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+
+      <primitive class="stonith" id="fence-vbox2" type="fence_vbox">
+        <instance_attributes id="fence-vbox2-params">
+          <nvpair id="fence-vbox2-params-ipaddr" name="ipaddr" value="192.0.3.10"/>
+          <nvpair id="fence-vbox2-params-login" name="login" value="vboxadmin"/>
+          <nvpair id="fence-vbox2-params-passwd_script" name="passwd_script" value="/usr/local/cluster/vboxpass.sh"/>
+          <nvpair id="fence-vbox2-params-plug" name="plug" value="vboxhost"/>
+          <nvpair id="fence-vbox2-pcmk_arg_map" name="pcmk_arg_map" value="dropme:sure,port:port"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-vbox2-monitor" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+
+      <primitive class="stonith" id="fence-vbox3" type="fence_vbox">
+        <instance_attributes id="fence-vbox3-params">
+          <nvpair id="fence-vbox3-params-ipaddr" name="ipaddr" value="192.0.3.10"/>
+          <nvpair id="fence-vbox3-params-login" name="login" value="vboxadmin"/>
+          <nvpair id="fence-vbox3-params-passwd_script" name="passwd_script" value="/usr/local/cluster/vboxpass.sh"/>
+          <nvpair id="fence-vbox3-params-plug" name="plug" value="vboxhost"/>
+          <nvpair id="fence-vbox3-pcmk_arg_map" name="pcmk_arg_map" value="port:port,dropme:justhope"/>
+        </instance_attributes>
+        <operations>
+          <op id="fence-vbox3-monitor" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

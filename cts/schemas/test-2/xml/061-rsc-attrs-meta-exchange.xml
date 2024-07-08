@@ -1,0 +1,29 @@
+<cib validate-with="pacemaker-2.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+
+      <primitive class="ocf" id="res1" provider="heartbeat" type="Dummy">
+        <operations>
+          <op id="res1-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+        <meta_attributes id="res1-meta_attributes">
+          <nvpair id="res1-resource-failure-stickiness" name="resource-failure-stickiness" value="-INFINITY"/>
+        </meta_attributes>
+      </primitive>
+
+      <primitive class="ocf" id="res2" provider="heartbeat" type="Dummy">
+        <operations>
+          <op id="res2-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+        <meta_attributes id="res2-meta_attributes">
+          <nvpair id="res2-resource-failure-stickiness" name="resource-failure-stickiness" value="0"/>
+        </meta_attributes>
+      </primitive>
+
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
