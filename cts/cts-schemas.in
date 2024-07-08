@@ -119,8 +119,8 @@ test_cleaner() {
         ref_dir="${source_dir/%xml/ref}"
         ref_err_dir="${source_dir/%xml/ref.err}"
 
-        rm -f "$ref_dir/${source_basename%.*}-*.up" \
-            "$ref_err_dir/${source_basename%.*}-*.up.err"
+        rm -f "$ref_dir/${source_basename%.*}".up* \
+            "$ref_err_dir/${source_basename%.*}".up.err*
     done
 }
 
