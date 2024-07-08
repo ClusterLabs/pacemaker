@@ -812,15 +812,6 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     reset(scheduler, input, out, use_date, flags);
     cluster_status(scheduler);
 
-    if ((cib->variant == cib_native)
-        && pcmk_is_set(section_opts, pcmk_section_times)) {
-        if (pcmk__our_nodename == NULL) {
-            // Currently used only in the times section
-            pcmk__query_node_name(out, 0, &pcmk__our_nodename, 0);
-        }
-        scheduler->priv->local_node_name = pcmk__str_copy(pcmk__our_nodename);
-    }
-
     if (!out->is_quiet(out)) {
         const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
 
