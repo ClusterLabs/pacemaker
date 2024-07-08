@@ -746,9 +746,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    if (scheduler->localhost) {
-        localhost_save = scheduler->localhost;
-    }
+    localhost_save = scheduler->priv->local_node_name;
 
     CRM_ASSERT(cib != NULL);
     crm_trace("Calculating cluster status");
@@ -761,7 +759,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
     set_working_set_defaults(scheduler);
 
     if (localhost_save) {
-        scheduler->localhost = localhost_save;
+        scheduler->priv->local_node_name = localhost_save;
     }
 
     pcmk__set_scheduler_flags(scheduler, flags);

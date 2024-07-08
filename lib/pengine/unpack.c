@@ -667,11 +667,12 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
         }
     }
 
-    if (scheduler->localhost
-        && (pcmk_find_node(scheduler, scheduler->localhost) == NULL)) {
+    if ((scheduler->priv->local_node_name != NULL)
+        && (pcmk_find_node(scheduler,
+                           scheduler->priv->local_node_name) == NULL)) {
         crm_info("Creating a fake local node");
-        pe_create_node(scheduler->localhost, scheduler->localhost, NULL, 0,
-                       scheduler);
+        pe_create_node(scheduler->priv->local_node_name,
+                       scheduler->priv->local_node_name, NULL, 0, scheduler);
     }
 
     return TRUE;

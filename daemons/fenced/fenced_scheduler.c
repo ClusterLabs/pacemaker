@@ -221,7 +221,7 @@ fenced_scheduler_run(xmlNode *cib)
         crm_time_free(scheduler->priv->now);
         scheduler->priv->now = NULL;
     }
-    scheduler->localhost = stonith_our_uname;
+    scheduler->priv->local_node_name = stonith_our_uname;
     pcmk__schedule_actions(cib, pcmk__sched_location_only
                                 |pcmk__sched_no_counts, scheduler);
     g_list_foreach(scheduler->priv->resources, register_if_fencing_device,

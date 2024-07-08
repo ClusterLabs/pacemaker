@@ -163,6 +163,7 @@ enum pcmk__scheduler_flags {
 struct pcmk__scheduler_private {
     // Be careful about when each piece of information is available and final
 
+    const char *local_node_name;    // Name of node running scheduler (if known)
     crm_time_t *now;                // Time to use when evaluating rules
     pcmk__output_t *out;            // Output object for displaying messages
     GHashTable *options;            // Cluster options
