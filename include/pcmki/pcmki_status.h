@@ -22,8 +22,9 @@
 extern "C" {
 #endif
 
-int pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith,
-                                cib_t *cib, xmlNode *current_cib,
+int pcmk__output_cluster_status(pcmk_scheduler_t *scheduler,
+                                stonith_t *stonith, cib_t *cib,
+                                xmlNode *current_cib,
                                 enum pcmk_pacemakerd_state pcmkd_state,
                                 enum pcmk__fence_history fence_history,
                                 uint32_t show, uint32_t show_opts,

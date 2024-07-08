@@ -45,7 +45,7 @@ fencing_connect(void)
  * \internal
  * \brief Output the cluster status given a fencer and CIB connection
  *
- * \param[in,out] out                  Output object
+ * \param[in,out] scheduler            Scheduler object (will be reset)
  * \param[in,out] stonith              Fencer connection
  * \param[in,out] cib                  CIB connection
  * \param[in]     current_cib          Current CIB XML
@@ -66,8 +66,8 @@ fencing_connect(void)
  * \return Standard Pacemaker return code
  */
 int
-pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
-                            xmlNode *current_cib,
+pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
+                            cib_t *cib, xmlNode *current_cib,
                             enum pcmk_pacemakerd_state pcmkd_state,
                             enum pcmk__fence_history fence_history,
                             uint32_t show, uint32_t show_opts,
@@ -77,11 +77,16 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
     xmlNode *cib_copy = pcmk__xml_copy(NULL, current_cib);
     stonith_history_t *stonith_history = NULL;
     int history_rc = 0;
-    pcmk_scheduler_t *scheduler = NULL;
     GList *unames = NULL;
     GList *resources = NULL;
+    pcmk__output_t *out = NULL;
 
     int rc = pcmk_rc_ok;
+
+    if ((scheduler == NULL) || (scheduler->priv->out == NULL)) {
+        return EINVAL;
+    }
+    out = scheduler->priv->out;
 
     rc = pcmk_update_configured_schema(&cib_copy, false);
     if (rc != pcmk_rc_ok) {
@@ -97,11 +102,8 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
                                                fence_history);
     }
 
-    scheduler = pe_new_working_set();
-    pcmk__mem_assert(scheduler);
-
+    pe_reset_working_set(scheduler);
     scheduler->input = cib_copy;
-    scheduler->priv->out = out;
     cluster_status(scheduler);
 
     if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
@@ -138,7 +140,6 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
 
     stonith_history_free(stonith_history);
     stonith_history = NULL;
-    pe_free_working_set(scheduler);
     return rc;
 }
 
@@ -220,6 +221,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     stonith_t *stonith = NULL;
     enum pcmk_pacemakerd_state pcmkd_state = pcmk_pacemakerd_state_invalid;
     time_t last_updated = 0;
+    pcmk_scheduler_t *scheduler = NULL;
 
     if (cib == NULL) {
         return ENOTCONN;
@@ -264,7 +266,11 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
         goto done;
     }
 
-    rc = pcmk__output_cluster_status(out, stonith, cib, current_cib,
+    scheduler = pe_new_working_set();
+    pcmk__mem_assert(scheduler);
+    scheduler->priv->out = out;
+
+    rc = pcmk__output_cluster_status(scheduler, stonith, cib, current_cib,
                                      pcmkd_state, fence_history, show,
                                      show_opts, only_node, only_rsc,
                                      neg_location_prefix);
@@ -273,6 +279,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     }
 
 done:
+    pe_free_working_set(scheduler);
     stonith_api_delete(stonith);
     pcmk__xml_free(current_cib);
     return pcmk_rc_ok;
