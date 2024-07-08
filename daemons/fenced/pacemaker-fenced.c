@@ -40,7 +40,6 @@
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
-char *stonith_our_uname = NULL;
 long long stonith_watchdog_timeout_ms = 0;
 GList *stonith_watchdog_targets = NULL;
 
@@ -112,7 +111,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         crm_xml_add(request, PCMK__XA_ST_OP, op);
         crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
         crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
-        crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, stonith_our_uname);
+        crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
         pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, request);
         pcmk__xml_free(request);
@@ -137,7 +136,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
     crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
-    crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, stonith_our_uname);
+    crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
     crm_log_xml_trace(request, "ipc-received");
     stonith_command(c, id, flags, request, NULL);
@@ -434,9 +433,6 @@ stonith_cleanup(void)
     free_device_list();
     free_metadata_cache();
     fenced_unregister_handlers();
-
-    free(stonith_our_uname);
-    stonith_our_uname = NULL;
 }
 
 static gboolean
@@ -634,14 +630,14 @@ main(int argc, char **argv)
             crm_crit("Cannot sign in to the cluster... terminating");
             goto done;
         }
-        pcmk__str_update(&stonith_our_uname, cluster->priv->node_name);
+        fenced_set_local_node(cluster->priv->node_name);
 
         if (!options.no_cib_connect) {
             setup_cib();
         }
 
     } else {
-        pcmk__str_update(&stonith_our_uname, "localhost");
+        fenced_set_local_node("localhost");
         crm_warn("Stand-alone mode is deprecated and will be removed "
                  "in a future release");
     }
