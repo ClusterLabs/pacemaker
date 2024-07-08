@@ -409,6 +409,7 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
     // These members must be preserved
     pcmk__scheduler_private_t *priv = scheduler->priv;
     pcmk__output_t *out = priv->out;
+    const char *local_node_name = scheduler->priv->local_node_name;
 
     // Wipe the main structs (any other members must have previously been freed)
     memset(scheduler, 0, sizeof(pcmk_scheduler_t));
@@ -417,6 +418,7 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
     // Restore the members to preserve
     scheduler->priv = priv;
     scheduler->priv->out = out;
+    scheduler->priv->local_node_name = local_node_name;
 
     // Set defaults for everything else
     scheduler->priv->next_ordering_id = 1;

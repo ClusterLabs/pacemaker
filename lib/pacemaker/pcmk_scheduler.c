@@ -738,15 +738,11 @@ log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
 static void
 unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
 {
-    const char* localhost_save = NULL;
-
     if (pcmk_is_set(scheduler->flags, pcmk__sched_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
         pcmk__set_scheduler_flags(scheduler, flags);
         return;
     }
-
-    localhost_save = scheduler->priv->local_node_name;
 
     CRM_ASSERT(cib != NULL);
     crm_trace("Calculating cluster status");
@@ -757,10 +753,6 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
      * previously called, whether directly or via pcmk__schedule_actions()).
      */
     set_working_set_defaults(scheduler);
-
-    if (localhost_save) {
-        scheduler->priv->local_node_name = localhost_save;
-    }
 
     pcmk__set_scheduler_flags(scheduler, flags);
     scheduler->input = cib;
