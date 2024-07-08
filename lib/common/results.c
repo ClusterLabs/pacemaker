@@ -941,8 +941,6 @@ crm_exit(crm_exit_t rc)
     mainloop_cleanup();
     pcmk__xml_cleanup();
 
-    free(pcmk__our_nodename);
-
     if (crm_system_name) {
         crm_info("Exiting %s " QB_XS " with status %d", crm_system_name, rc);
         free(crm_system_name);
