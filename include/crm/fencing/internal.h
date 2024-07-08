@@ -105,7 +105,11 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
                                      const char *device_name,
                                      xmlNode *metadata);
 
-#  define ST_LEVEL_MAX 10
+/* Only 1-9 is allowed for fencing topology levels,
+ * however, 0 is used to unregister all levels in
+ * unregister requests.
+ */
+#  define ST__LEVEL_COUNT 10
 
 #  define STONITH_ATTR_ACTION_OP   "action"
 

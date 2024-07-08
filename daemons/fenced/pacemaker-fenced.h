@@ -209,7 +209,7 @@ typedef struct stonith_topology_s {
     char *target_attribute;
 
     /*! Names of fencing devices at each topology level */
-    GList *levels[ST_LEVEL_MAX];
+    GList *levels[ST__LEVEL_COUNT];
 
 } stonith_topology_t;
 

@@ -908,6 +908,42 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Parse configuration XML for fencing topology information
+ *
+ * \param[in]     xml_fencing_topology  Top of fencing topology configuration XML
+ * \param[in,out] scheduler             Scheduler data
+ *
+ * \return void
+ */
+void
+pcmk__unpack_fencing_topology(const xmlNode *xml_fencing_topology, pcmk_scheduler_t *scheduler)
+{
+    xmlNode *xml_obj = NULL;
+    int id = 0;
+
+    for (xml_obj = pcmk__xe_first_child(xml_fencing_topology, PCMK_XE_FENCING_LEVEL, NULL, NULL);
+         xml_obj != NULL; xml_obj = pcmk__xe_next_same(xml_obj)) {
+
+        crm_element_value_int(xml_obj, PCMK_XA_INDEX, &id);
+
+        // Ensure an ID was given
+        if (pcmk__str_empty(pcmk__xe_id(xml_obj))) {
+            pcmk__config_warn("Ignoring registration for topology level without ID");
+            continue;
+        }
+
+        // Ensure level ID is in allowed range
+        if ((id < ST__LEVEL_MIN) || (id > ST__LEVEL_MAX)) {
+            pcmk__config_warn("Ignoring topology registration with invalid level %d",
+                               id);
+            continue;
+        }
+
+    }
+}
+
 gboolean
 unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
 {
