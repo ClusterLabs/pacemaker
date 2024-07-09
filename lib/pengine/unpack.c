@@ -232,7 +232,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     pe__unpack_dataset_nvpairs(config, PCMK_XE_CLUSTER_PROPERTY_SET, &rule_data,
                                config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS,
-                               FALSE, scheduler);
+                               scheduler);
 
     pcmk__validate_cluster_options(config_hash);
 
@@ -4996,20 +4996,18 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
         GHashTable *unpacked = pcmk__strkey_table(free, free);
 
         pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES,
-                                   &rule_data, unpacked, NULL, FALSE,
-                                   scheduler);
+                                   &rule_data, unpacked, NULL, scheduler);
         g_hash_table_foreach_steal(unpacked, insert_attr, node->priv->attrs);
         g_hash_table_destroy(unpacked);
 
     } else {
         pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES,
-                                   &rule_data, node->priv->attrs, NULL, FALSE,
+                                   &rule_data, node->priv->attrs, NULL,
                                    scheduler);
     }
 
     pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_UTILIZATION, &rule_data,
-                               node->priv->utilization, NULL,
-                               FALSE, scheduler);
+                               node->priv->utilization, NULL, scheduler);
 
     if (pcmk__node_attr(node, CRM_ATTR_SITE_NAME, NULL,
                         pcmk__rsc_node_current) == NULL) {

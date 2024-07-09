@@ -2024,9 +2024,8 @@ main(int argc, char **argv)
                 };
 
                 params = pcmk__strkey_table(free, free);
-                pe__unpack_dataset_nvpairs(rsc->priv->xml,
-                                           PCMK_XE_UTILIZATION, &rule_data,
-                                           params, NULL, FALSE, scheduler);
+                pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_UTILIZATION,
+                                           &rule_data, params, NULL, scheduler);
 
                 value = g_hash_table_lookup(params, options.prop_name);
             }

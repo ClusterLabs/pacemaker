@@ -259,8 +259,7 @@ pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
     };
 
     pe__unpack_dataset_nvpairs(action_xml, PCMK_XE_INSTANCE_ATTRIBUTES,
-                               &rule_data, params, NULL,
-                               FALSE, scheduler);
+                               &rule_data, params, NULL, scheduler);
     return params;
 }
 
@@ -717,7 +716,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (action_config != NULL) {
         // <op> <meta_attributes> take precedence over defaults
         pe__unpack_dataset_nvpairs(action_config, PCMK_XE_META_ATTRIBUTES,
-                                   &rule_data, meta, NULL, FALSE,
+                                   &rule_data, meta, NULL,
                                    rsc->priv->scheduler);
 
         /* Anything set as an <op> XML property has highest precedence.
@@ -757,7 +756,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     // Cluster-wide <op_defaults> <meta_attributes>
     pe__unpack_dataset_nvpairs(rsc->priv->scheduler->priv->op_defaults,
                                PCMK_XE_META_ATTRIBUTES, &rule_data, meta, NULL,
-                               FALSE, rsc->priv->scheduler);
+                               rsc->priv->scheduler);
 
     g_hash_table_remove(meta, PCMK_XA_ID);
 

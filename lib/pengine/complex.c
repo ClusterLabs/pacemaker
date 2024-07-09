@@ -150,7 +150,7 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
     while(p != NULL) {
         /* A hash table for comparison is generated, including the id-ref. */
         pe__unpack_dataset_nvpairs(p->priv->xml, PCMK_XE_META_ATTRIBUTES,
-                                   rule_data, parent_orig_meta, NULL, FALSE,
+                                   rule_data, parent_orig_meta, NULL,
                                    scheduler);
         p = p->priv->parent;
     }
@@ -203,7 +203,7 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
     }
 
     pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_META_ATTRIBUTES,
-                               &rule_data, meta_hash, NULL, FALSE, scheduler);
+                               &rule_data, meta_hash, NULL, scheduler);
 
     /* Set the PCMK_XE_META_ATTRIBUTES explicitly set in the parent resource to
      * the hash table of the child resource. If it is already explicitly set as
@@ -216,7 +216,7 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
     /* check the defaults */
     pe__unpack_dataset_nvpairs(scheduler->priv->rsc_defaults,
                                PCMK_XE_META_ATTRIBUTES, &rule_data, meta_hash,
-                               NULL, FALSE, scheduler);
+                               NULL, scheduler);
 
     /* If there is PCMK_XE_META_ATTRIBUTES that the parent resource has not
      * explicitly set, set a value that is not set from PCMK_XE_RSC_DEFAULTS
@@ -245,7 +245,7 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
     }
 
     pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_INSTANCE_ATTRIBUTES,
-                               &rule_data, meta_hash, NULL, FALSE, scheduler);
+                               &rule_data, meta_hash, NULL, scheduler);
 
     /* set anything else based on the parent */
     if (rsc->priv->parent != NULL) {
@@ -269,7 +269,7 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
         /* and finally check the defaults */
         pe__unpack_dataset_nvpairs(scheduler->priv->rsc_defaults,
                                    PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
-                                   meta_hash, NULL, FALSE, scheduler);
+                                   meta_hash, NULL, scheduler);
     }
 }
 
@@ -982,7 +982,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     pe__unpack_dataset_nvpairs(rsc_private->xml, PCMK_XE_UTILIZATION,
                                &rule_data, rsc_private->utilization, NULL,
-                               FALSE, scheduler);
+                               scheduler);
 
     if (expanded_xml) {
         if (add_template_rsc(xml_obj, scheduler) == FALSE) {
