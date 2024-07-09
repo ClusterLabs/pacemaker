@@ -97,7 +97,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    GList *stop_needed;             // Containers that need stop actions
     time_t recheck_by;              // Hint to controller when to reschedule
     int ninstances;                 // Total number of resource instances
     guint shutdown_lock;            // How long to lock resources (seconds)

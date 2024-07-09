@@ -1452,8 +1452,10 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
     /* Now that we know where resources are, we can schedule stops of containers
      * with failed bundle connections
      */
-    if (scheduler->stop_needed != NULL) {
-        for (GList *item = scheduler->stop_needed; item; item = item->next) {
+    if (scheduler->priv->stop_needed != NULL) {
+        for (GList *item = scheduler->priv->stop_needed;
+             item != NULL; item = item->next) {
+
             pcmk_resource_t *container = item->data;
             pcmk_node_t *node = pcmk__current_node(container);
 
@@ -1461,8 +1463,8 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
                 stop_action(container, node, FALSE);
             }
         }
-        g_list_free(scheduler->stop_needed);
-        scheduler->stop_needed = NULL;
+        g_list_free(scheduler->priv->stop_needed);
+        scheduler->priv->stop_needed = NULL;
     }
 
     /* Now that we know status of all Pacemaker Remote connections and nodes,
@@ -2478,8 +2480,9 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                  * container is running yet, so remember it and add a stop
                  * action for it later.
                  */
-                scheduler->stop_needed = g_list_prepend(scheduler->stop_needed,
-                                                        rsc->priv->launcher);
+                scheduler->priv->stop_needed =
+                    g_list_prepend(scheduler->priv->stop_needed,
+                                   rsc->priv->launcher);
             } else if (rsc->priv->launcher != NULL) {
                 stop_action(rsc->priv->launcher, node, FALSE);
             } else if (known_active) {

@@ -362,7 +362,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     pe_free_nodes(scheduler->nodes);
 
     pe__free_param_checks(scheduler);
-    g_list_free(scheduler->stop_needed);
+    g_list_free(scheduler->priv->stop_needed);
     crm_time_free(scheduler->priv->now);
     pcmk__xml_free(scheduler->input);
     pcmk__xml_free(scheduler->priv->failed);
