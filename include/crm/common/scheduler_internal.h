@@ -179,6 +179,7 @@ struct pcmk__scheduler_private {
     GHashTable *singletons;         // Scheduled non-resource actions
     int next_action_id;             // Counter used as ID for actions
     xmlNode *failed;                // History entries of failed actions
+    GList *param_check;             // History entries that need to be checked
     GList *location_constraints;    // Location constraints
     GList *colocation_constraints;  // Colocation constraints
     GList *ordering_constraints;    // Ordering constraints

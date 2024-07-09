@@ -205,7 +205,8 @@ pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
     check_op->rsc = rsc;
     check_op->node = node;
     check_op->check_type = flag;
-    scheduler->param_check = g_list_prepend(scheduler->param_check, check_op);
+    scheduler->priv->param_check = g_list_prepend(scheduler->priv->param_check,
+                                                  check_op);
 }
 
 /*!
@@ -222,7 +223,7 @@ pe__foreach_param_check(pcmk_scheduler_t *scheduler,
 {
     CRM_CHECK(scheduler && cb, return);
 
-    for (GList *item = scheduler->param_check;
+    for (GList *item = scheduler->priv->param_check;
          item != NULL; item = item->next) {
         struct check_op *check_op = item->data;
 
@@ -234,8 +235,8 @@ pe__foreach_param_check(pcmk_scheduler_t *scheduler,
 void
 pe__free_param_checks(pcmk_scheduler_t *scheduler)
 {
-    if (scheduler && scheduler->param_check) {
-        g_list_free_full(scheduler->param_check, free);
-        scheduler->param_check = NULL;
+    if ((scheduler != NULL) && (scheduler->priv->param_check != NULL)) {
+        g_list_free_full(scheduler->priv->param_check, free);
+        scheduler->priv->param_check = NULL;
     }
 }
