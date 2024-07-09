@@ -2468,7 +2468,12 @@ function test_tools() {
     
     CIB_file_invalid_1="$test_home/cli/crm_verify_invalid_bz.xml"
     CIB_file_invalid_2="$test_home/cli/crm_verify_invalid_no_stonith.xml"
-    
+    CIB_file_invalid_3="$test_home/cli/crm_verify_invalid_fencing_topology.xml"
+
+    desc="Verbosely verify a file-specified configuration with an unallowed fencing level ID"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_3' --verbose"
+    test_assert $CRM_EX_CONFIG 0
+
     desc="Verify a file-specified invalid configuration (text output)"
     cmd="crm_verify --xml-file '$CIB_file_invalid_1'"
     test_assert $CRM_EX_CONFIG 0

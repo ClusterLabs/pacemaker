@@ -84,4 +84,7 @@
 
 #define PCMK__CONTROLD_CMD_NODES        "list-nodes"
 
-#endif                          /* CRM_INTERNAL__H */
+#define ST__LEVEL_MIN 1
+#define ST__LEVEL_MAX 9
+
+#endif // CRM_INTERNAL__H
