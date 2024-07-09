@@ -97,7 +97,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    guint shutdown_lock;            // How long to lock resources (seconds)
     int priority_fencing_delay;     // Priority fencing delay
 
     pcmk__scheduler_private_t *priv;    // For Pacemaker use only

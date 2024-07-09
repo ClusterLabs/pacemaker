@@ -431,11 +431,10 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                     pcmk__sched_shutdown_lock);
     if (pcmk_is_set(scheduler->flags, pcmk__sched_shutdown_lock)) {
         value = pcmk__cluster_option(config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
-        pcmk_parse_interval_spec(value, &(scheduler->shutdown_lock));
-        scheduler->shutdown_lock /= 1000;
+        pcmk_parse_interval_spec(value, &(scheduler->priv->shutdown_lock_ms));
         crm_trace("Resources will be locked to nodes that were cleanly "
                   "shut down (locks expire after %s)",
-                  pcmk__readable_interval(scheduler->shutdown_lock));
+                  pcmk__readable_interval(scheduler->priv->shutdown_lock_ms));
     } else {
         crm_trace("Resources will not be locked to nodes that were cleanly "
                   "shut down");
@@ -2722,9 +2721,9 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
     if ((crm_element_value_epoch(rsc_entry, PCMK_OPT_SHUTDOWN_LOCK,
                                  &lock_time) == pcmk_ok) && (lock_time != 0)) {
 
-        if ((scheduler->shutdown_lock > 0)
+        if ((scheduler->priv->shutdown_lock_ms > 0U)
             && (get_effective_time(scheduler)
-                > (lock_time + scheduler->shutdown_lock))) {
+                > (lock_time + (scheduler->priv->shutdown_lock_ms / 1000U)))) {
             pcmk__rsc_info(rsc, "Shutdown lock for %s on %s expired",
                            rsc->id, pcmk__node_name(node));
             pe__clear_resource_history(rsc, node);
