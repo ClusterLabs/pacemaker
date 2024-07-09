@@ -41,7 +41,7 @@ EOF
         rm -f "$TESTFILE"
         exit 1
     fi
-    if [ -n "$CXX" ]
+    if [ -n "$CXX" ] && [ command -v "$CXX" >/dev/null 2>&1 ]
     then
         ${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LIBS} \
             -I "${SRCDIR}/include" -I"${SRCDIR}/lib" "$TESTFILE" -o /dev/null
