@@ -1056,6 +1056,9 @@ PKG_CHECK_MODULES(LIBXML2, [libxml-2.0 >= 2.9.2],
                   [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
                    LIBS="${LIBS} ${LIBXML2_LIBS}"])
 
+AC_PATH_PROGS(XMLLINT_PATH, xmllint, /usr/bin/xmllint)
+AC_DEFINE_UNQUOTED(XMLLINT_PATH, "$XMLLINT_PATH", xmllint command)
+
 REQUIRE_LIB([xslt], [xsltApplyStylesheet])
 
 AC_MSG_CHECKING([whether __progname and __progname_full are available])

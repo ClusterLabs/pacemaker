@@ -80,3 +80,6 @@ class BuildOptions:
 
     UNIT_DIR = "@systemdsystemunitdir@"
     """Where system-wide systemd unit files are stored."""
+
+    XMLLINT_PATH = "@XMLLINT_PATH@"
+    """Path to the xmllint program."""
