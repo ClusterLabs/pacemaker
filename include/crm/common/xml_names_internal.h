@@ -163,6 +163,7 @@ extern "C" {
 #define PCMK__XA_HIDDEN                 "hidden"
 #define PCMK__XA_HTTP_EQUIV             "http-equiv"
 #define PCMK__XA_IN_CCM                 "in_ccm"
+#define PCMK__XA_IPC_PROTO_VERSION      "ipc-protocol-version"
 #define PCMK__XA_JOIN                   "join"
 #define PCMK__XA_JOIN_ID                "join_id"
 #define PCMK__XA_LINE                   "line"

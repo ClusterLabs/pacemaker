@@ -31,12 +31,6 @@
 extern "C" {
 #endif
 
-/*
- * XML attribute names used only by internal code
- */
-
-#define PCMK__XA_IPC_PROTO_VERSION  "ipc-protocol-version"
-
 /* denotes "non yieldable PID" on FreeBSD, or actual PID1 in scenarios that
    require a delicate handling anyway (socket-based activation with systemd);
    we can be reasonably sure that this PID is never possessed by the actual
