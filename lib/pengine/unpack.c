@@ -217,7 +217,6 @@ gboolean
 unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 {
     const char *value = NULL;
-    guint interval_ms = 0U;
     GHashTable *config_hash = pcmk__strkey_table(free, free);
 
     pe_rule_eval_data_t rule_data = {
@@ -257,14 +256,10 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                  scheduler);
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
-    pcmk_parse_interval_spec(value, &interval_ms);
+    pcmk_parse_interval_spec(value, &(scheduler->priv->fence_timeout_ms));
 
-    if (interval_ms >= INT_MAX) {
-        scheduler->priv->fence_timeout_ms = INT_MAX;
-    } else {
-        scheduler->priv->fence_timeout_ms = (int) interval_ms;
-    }
-    crm_debug("STONITH timeout: %d", scheduler->priv->fence_timeout_ms);
+    crm_debug("Default fencing action timeout: %s",
+              pcmk__readable_interval(scheduler->priv->fence_timeout_ms));
 
     set_config_flag(scheduler, PCMK_OPT_STONITH_ENABLED,
                     pcmk__sched_fencing_enabled);
