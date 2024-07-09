@@ -130,13 +130,16 @@ typedef struct {
  *       \c pcmk__xml_free().
  */
 #define pcmk__new_reply(original_request, data) \
-    create_reply_adv((original_request), (data), __func__)
+    pcmk__new_reply_as(__func__, (original_request), (data))
 
 xmlNode *pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
                               const char *reply_to, const char *sender_system,
                               const char *recipient_node,
                               const char *recipient_system, const char *task,
                               xmlNode *data);
+
+xmlNode *pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
+                            xmlNode *data);
 
 GHashTable *pcmk__register_handlers(const pcmk__server_command_t handlers[]);
 xmlNode *pcmk__process_request(pcmk__request_t *request, GHashTable *handlers);

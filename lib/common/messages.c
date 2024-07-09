@@ -143,13 +143,18 @@ create_request_adv(const char *task, xmlNode *msg_data,
 }
 
 /*!
+ * \internal
  * \brief Create a Pacemaker reply (for IPC or cluster layer)
  *
- * \param[in] original_request   XML of request this is a reply to
- * \param[in] xml_response_data  XML to copy as data section of reply
- * \param[in] origin             Name of function that called this one
+ * \param[in] origin            Name of function that called this one
+ * \param[in] original_request  XML of request being replied to
+ * \param[in] data              If not NULL, copy as reply's data (callers
+ *                              should not add attributes to the returned
+ *                              message element, but instead pass any desired
+ *                              information here, though this is not always
+ *                              honored currently)
  *
- * \return XML of new reply
+ * \return Newly created reply XML
  *
  * \note This function should not be called directly, but via the
  *       pcmk__new_reply() wrapper.
@@ -157,8 +162,8 @@ create_request_adv(const char *task, xmlNode *msg_data,
  *       \c pcmk__xml_free().
  */
 xmlNode *
-create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
-                 const char *origin)
+pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
+                   xmlNode *data)
 {
     const char *host_from = crm_element_value(original_request, PCMK__XA_SRC);
     const char *sys_from = crm_element_value(original_request,
@@ -172,8 +177,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
                                                       PCMK_XA_REFERENCE);
 
     if (type == NULL) {
-        crm_err("Cannot create new_message, no message type in original message");
-        CRM_ASSERT(type != NULL);
+        crm_warn("Cannot reply to invalid message: No message type specified");
         return NULL;
     }
 
@@ -186,8 +190,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
 
     // Since this is a reply, we reverse the sender and recipient info
     return pcmk__new_message_as(origin, pcmk_ipc_controld, crm_msg_reference,
-                                sys_to, host_from, sys_from, operation,
-                                xml_response_data);
+                                sys_to, host_from, sys_from, operation, data);
 }
 
 /*!
