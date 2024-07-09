@@ -2118,6 +2118,279 @@ class CrmMonRegressionTest(RegressionTest):
         ]
 
 
+class AclsRegressionTest(RegressionTest):
+    """A class for testing access control lists."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "acls"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        acl_cib = """
+<acls>
+  <acl_target id="l33t-haxor">
+    <role id="nothing"/>
+  </acl_target>
+  <acl_target id="niceguy">
+    <role id="observer"/>
+  </acl_target>
+  <acl_target id="bob">
+    <role id="admin"/>
+  </acl_target>
+  <acl_target id="joe">
+    <role id="super_user"/>
+  </acl_target>
+  <acl_target id="mike">
+    <role id="rsc_writer"/>
+  </acl_target>
+  <acl_target id="chris">
+    <role id="rsc_denied"/>
+  </acl_target>
+  <acl_role id="nothing">
+    <acl_permission id="nothing-deny" kind="deny" xpath="/cib"/>
+  </acl_role>
+  <acl_role id="observer">
+    <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+    <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+    <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
+  </acl_role>
+  <acl_role id="admin">
+    <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+    <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
+  </acl_role>
+  <acl_role id="super_user">
+    <acl_permission id="super_user-write-1" kind="write" xpath="/cib"/>
+  </acl_role>
+  <acl_role id="rsc_writer">
+    <acl_permission id="rsc-writer-deny-1" kind="deny" xpath="/cib"/>
+    <acl_permission id="rsc-writer-write-1" kind="write" xpath="//resources"/>
+  </acl_role>
+  <acl_role id="rsc_denied">
+    <acl_permission id="rsc-denied-write-1" kind="write" xpath="/cib"/>
+    <acl_permission id="rsc-denied-deny-1" kind="deny" xpath="//resources"/>
+  </acl_role>
+</acls>
+"""
+
+        basic_tests = [
+            Test("Configure some ACLs", "cibadmin -M -o acls -p",
+                 update_cib=True, stdin=acl_cib),
+            Test("Enable ACLs", "crm_attribute -n enable-acl -v true",
+                 update_cib=True),
+            Test("Set cluster option", "crm_attribute -n no-quorum-policy -v ignore",
+                 update_cib=True),
+            Test("New ACL role",
+                 """cibadmin --create -o acls --xml-text '<acl_role id="badidea-role"><acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/></acl_role>'""",
+                 update_cib=True),
+            Test("New ACL target",
+                 """cibadmin --create -o acls --xml-text '<acl_target id="badidea"><role id="badidea-role"/></acl_target>'""",
+                 update_cib=True),
+            Test("Another ACL role",
+                 """cibadmin --create -o acls --xml-text '<acl_role id="betteridea-role"><acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/></acl_role>'""",
+                 update_cib=True),
+            Test("Another ACL target",
+                 """cibadmin --create -o acls --xml-text '<acl_target id="betteridea"><role id="betteridea-role"/></acl_target>'""",
+                 update_cib=True),
+            Test("Updated ACL",
+                 """cibadmin --replace -o acls --xml-text '<acl_role id="betteridea-role"><acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/><acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/></acl_role>'""",
+                 update_cib=True),
+        ]
+
+        no_acl_tests = [
+            Test("unknownguy: Query configuration", "cibadmin -Q",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            Test("unknownguy: Set enable-acl",
+                 "crm_attribute -n enable-acl -v false",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            Test("unknownguy: Set stonith-enabled",
+                 "crm_attribute -n stonith-enabled -v false",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            Test("unknownguy: Create a resource",
+                 """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+        ]
+
+        deny_cib_tests = [
+            Test("l33t-haxor: Query configuration",
+                 "cibadmin -Q",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            Test("l33t-haxor: Set enable-acl",
+                 "crm_attribute -n enable-acl -v false",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            Test("l33t-haxor: Set stonith-enabled",
+                 "crm_attribute -n stonith-enabled -v false",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            Test("l33t-haxor: Create a resource",
+                 """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+        ]
+
+        observer_tests = [
+            Test("niceguy: Query configuration", "cibadmin -Q"),
+            Test("niceguy: Set enable-acl",
+                 "crm_attribute -n enable-acl -v false",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            Test("niceguy: Set stonith-enabled",
+                 "crm_attribute -n stonith-enabled -v false",
+                 update_cib=True),
+            Test("niceguy: Create a resource",
+                 """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            Test("root: Query configuration", "cibadmin -Q",
+                 env={"CIB_user": "root"}),
+            Test("root: Set stonith-enabled", "crm_attribute -n stonith-enabled -v true",
+                 update_cib=True, env={"CIB_user": "root"}),
+            Test("root: Create a resource",
+                 """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
+                 update_cib=True, env={"CIB_user": "root"}),
+        ]
+
+        deny_cib_2_tests = [
+            Test("l33t-haxor: Create a resource meta attribute",
+                 "crm_resource -r dummy --meta -p target-role -v Stopped",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            Test("l33t-haxor: Query a resource meta attribute",
+                 "crm_resource -r dummy --meta -g target-role",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            Test("l33t-haxor: Remove a resource meta attribute",
+                 "crm_resource -r dummy --meta -d target-role",
+                 expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+        ]
+
+        observer_2_tests = [
+            Test("niceguy: Create a resource meta attribute",
+                 "crm_resource -r dummy --meta -p target-role -v Stopped",
+                 update_cib=True),
+            Test("niceguy: Query a resource meta attribute",
+                 "crm_resource -r dummy --meta -g target-role",
+                 update_cib=True),
+            Test("niceguy: Remove a resource meta attribute",
+                 "crm_resource -r dummy --meta -d target-role",
+                 update_cib=True),
+            Test("niceguy: Create a resource meta attribute",
+                 "crm_resource -r dummy --meta -p target-role -v Started",
+                 update_cib=True),
+        ]
+
+        read_meta_tests = [
+            Test("badidea: Query configuration - implied deny", "cibadmin -Q"),
+        ]
+
+        deny_cib_3_tests = [
+            Test("betteridea: Query configuration - explicit deny", "cibadmin -Q"),
+        ]
+
+        replace_tests = [
+            TestGroup([
+                AclTest("niceguy: Replace - remove acls",
+                        "cibadmin --replace -p",
+                        setup="cibadmin --delete --xml-text '<acls/>'",
+                        expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+                AclTest("niceguy: Replace - create resource",
+                        "cibadmin --replace -p",
+                        setup="""cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'""",
+                        expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+                AclTest("niceguy: Replace - modify attribute (deny)",
+                        "cibadmin --replace -p",
+                        setup="crm_attribute -n enable-acl -v false",
+                        expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+                AclTest("niceguy: Replace - delete attribute (deny)",
+                        "cibadmin --replace -p",
+                        setup="""cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'""",
+                        expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+                AclTest("niceguy: Replace - create attribute (deny)",
+                        "cibadmin --replace -p",
+                        setup="""cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'""",
+                        expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            ], env={"CIB_user": "niceguy"}),
+
+            # admin role
+            TestGroup([
+                AclTest("bob: Replace - create attribute (direct allow)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'"""),
+                AclTest("bob: Replace - modify attribute (direct allow)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'"""),
+                AclTest("bob: Replace - delete attribute (direct allow)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'"""),
+            ], env={"CIB_user": "bob"}),
+
+            # super_user role
+            TestGroup([
+                AclTest("joe: Replace - create attribute (inherited allow)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'"""),
+                AclTest("joe: Replace - modify attribute (inherited allow)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'"""),
+                AclTest("joe: Replace - delete attribute (inherited allow)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'"""),
+            ], env={"CIB_user": "joe"}),
+
+            # rsc_writer role
+            TestGroup([
+                AclTest("mike: Replace - create attribute (allow overrides deny)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'"""),
+                AclTest("mike: Replace - modify attribute (allow overrides deny)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'"""),
+                AclTest("mike: Replace - delete attribute (allow overrides deny)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'"""),
+                # Create an additional resource for deny-overrides-allow testing
+                AclTest("mike: Create another resource",
+                        """cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>'""",
+                        update_cib=True),
+            ], env={"CIB_user": "mike"}),
+
+            # rsc_denied role
+            TestGroup([
+                AclTest("chris: Replace - create attribute (deny overrides allow)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'""",
+                        expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+                AclTest("chris: Replace - modify attribute (deny overrides allow)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'""",
+                        expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+                AclTest("chris: Replace - delete attribute (deny overrides allow)",
+                        "cibadmin --replace -o resources -p",
+                        setup="""cibadmin --replace -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'""",
+                        expected_rc=ExitStatus.INSUFFICIENT_PRIV),
+            ], env={"CIB_user": "chris"}),
+        ]
+
+        loop_tests = [
+            # no ACL
+            TestGroup(no_acl_tests, env={"CIB_user": "unknownguy"}),
+            # deny /cib permission
+            TestGroup(deny_cib_tests, env={"CIB_user": "l33t-haxor"}),
+            # observer role
+            TestGroup(observer_tests, env={"CIB_user": "niceguy"}),
+            # deny /cib permission
+            TestGroup(deny_cib_2_tests, env={"CIB_user": "l33t-haxor"}),
+            # observer role
+            TestGroup(observer_2_tests, env={"CIB_user": "niceguy"}),
+            # read //meta_attributes
+            TestGroup(read_meta_tests, env={"CIB_user": "badidea"}),
+            # deny /cib, read //meta_attributes
+            TestGroup(deny_cib_3_tests, env={"CIB_user": "betteridea"}),
+        ] + replace_tests
+
+        return [
+            ShadowTestGroup(basic_tests + [
+                            TestGroup(loop_tests,
+                                      env={"PCMK_trace_functions": "pcmk__check_acl,pcmk__apply_creation_acl"})]),
+        ]
+
+
 class ValidityRegressionTest(RegressionTest):
     """A class for testing CIB validity."""
 
@@ -2621,6 +2894,7 @@ regression_classes = [
     CrmadminRegressionTest,
     CrmVerifyRegressionTest,
     CrmMonRegressionTest,
+    AclsRegressionTest,
     ValidityRegressionTest,
     UpgradeRegressionTest,
     RulesRegressionTest,
