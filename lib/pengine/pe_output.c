@@ -458,7 +458,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(scheduler->nodes),
                      scheduler->ninstances, scheduler->disabled_resources,
-                     scheduler->blocked_resources);
+                     scheduler->priv->blocked_resources);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_options)) {
@@ -533,7 +533,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(scheduler->nodes),
                      scheduler->ninstances, scheduler->disabled_resources,
-                     scheduler->blocked_resources);
+                     scheduler->priv->blocked_resources);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_options)) {

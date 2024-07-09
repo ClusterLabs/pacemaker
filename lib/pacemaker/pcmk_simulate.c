@@ -819,14 +819,16 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             printed = out->message(out, "maint-mode", scheduler->flags);
         }
 
-        if (scheduler->disabled_resources || scheduler->blocked_resources) {
+        if ((scheduler->disabled_resources > 0)
+            || (scheduler->priv->blocked_resources > 0)) {
+
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             printed = out->info(out,
                                 "%d of %d resource instances DISABLED and "
                                 "%d BLOCKED from further action due to failure",
                                 scheduler->disabled_resources,
                                 scheduler->ninstances,
-                                scheduler->blocked_resources);
+                                scheduler->priv->blocked_resources);
         }
 
         /* Most formatted output headers use caps for each word, but this one
