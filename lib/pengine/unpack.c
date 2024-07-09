@@ -217,7 +217,6 @@ gboolean
 unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 {
     const char *value = NULL;
-    guint interval_ms = 0U;
     GHashTable *config_hash = pcmk__strkey_table(free, free);
 
     pe_rule_eval_data_t rule_data = {
@@ -257,14 +256,10 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                  scheduler);
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
-    pcmk_parse_interval_spec(value, &interval_ms);
+    pcmk_parse_interval_spec(value, &(scheduler->priv->fence_timeout_ms));
 
-    if (interval_ms >= INT_MAX) {
-        scheduler->priv->fence_timeout_ms = INT_MAX;
-    } else {
-        scheduler->priv->fence_timeout_ms = (int) interval_ms;
-    }
-    crm_debug("STONITH timeout: %d", scheduler->priv->fence_timeout_ms);
+    crm_debug("Default fencing action timeout: %s",
+              pcmk__readable_interval(scheduler->priv->fence_timeout_ms));
 
     set_config_flag(scheduler, PCMK_OPT_STONITH_ENABLED,
                     pcmk__sched_fencing_enabled);
@@ -296,10 +291,10 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_PRIORITY_FENCING_DELAY);
     if (value) {
-        pcmk_parse_interval_spec(value, &interval_ms);
-        scheduler->priority_fencing_delay = (int) (interval_ms / 1000);
-        crm_trace("Priority fencing delay is %ds",
-                  scheduler->priority_fencing_delay);
+        pcmk_parse_interval_spec(value,
+                                 &(scheduler->priv->priority_fencing_ms));
+        crm_trace("Priority fencing delay is %s",
+                  pcmk__readable_interval(scheduler->priv->priority_fencing_ms));
     }
 
     set_config_flag(scheduler, PCMK_OPT_STOP_ALL_RESOURCES,
@@ -431,25 +426,22 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                     pcmk__sched_shutdown_lock);
     if (pcmk_is_set(scheduler->flags, pcmk__sched_shutdown_lock)) {
         value = pcmk__cluster_option(config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
-        pcmk_parse_interval_spec(value, &(scheduler->shutdown_lock));
-        scheduler->shutdown_lock /= 1000;
+        pcmk_parse_interval_spec(value, &(scheduler->priv->shutdown_lock_ms));
         crm_trace("Resources will be locked to nodes that were cleanly "
                   "shut down (locks expire after %s)",
-                  pcmk__readable_interval(scheduler->shutdown_lock));
+                  pcmk__readable_interval(scheduler->priv->shutdown_lock_ms));
     } else {
         crm_trace("Resources will not be locked to nodes that were cleanly "
                   "shut down");
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
-    pcmk_parse_interval_spec(value, &(scheduler->node_pending_timeout));
-    scheduler->node_pending_timeout /= 1000;
-    if (scheduler->node_pending_timeout == 0) {
+    pcmk_parse_interval_spec(value, &(scheduler->priv->node_pending_ms));
+    if (scheduler->priv->node_pending_ms == 0U) {
         crm_trace("Do not fence pending nodes");
     } else {
         crm_trace("Fence pending nodes after %s",
-                  pcmk__readable_interval(scheduler->node_pending_timeout
-                                          * 1000));
+                  pcmk__readable_interval(scheduler->priv->node_pending_ms));
     }
 
     return TRUE;
@@ -950,7 +942,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_tag = NULL;
 
-    scheduler->tags = pcmk__strkey_table(free, pcmk__free_idref);
+    scheduler->priv->tags = pcmk__strkey_table(free, pcmk__free_idref);
 
     for (xml_tag = pcmk__xe_first_child(xml_tags, NULL, NULL, NULL);
          xml_tag != NULL; xml_tag = pcmk__xe_next(xml_tag)) {
@@ -983,7 +975,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
                 continue;
             }
 
-            pcmk__add_idref(scheduler->tags, tag_id, obj_ref);
+            pcmk__add_idref(scheduler->priv->tags, tag_id, obj_ref);
         }
     }
 
@@ -1452,8 +1444,10 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
     /* Now that we know where resources are, we can schedule stops of containers
      * with failed bundle connections
      */
-    if (scheduler->stop_needed != NULL) {
-        for (GList *item = scheduler->stop_needed; item; item = item->next) {
+    if (scheduler->priv->stop_needed != NULL) {
+        for (GList *item = scheduler->priv->stop_needed;
+             item != NULL; item = item->next) {
+
             pcmk_resource_t *container = item->data;
             pcmk_node_t *node = pcmk__current_node(container);
 
@@ -1461,8 +1455,8 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
                 stop_action(container, node, FALSE);
             }
         }
-        g_list_free(scheduler->stop_needed);
-        scheduler->stop_needed = NULL;
+        g_list_free(scheduler->priv->stop_needed);
+        scheduler->priv->stop_needed = NULL;
     }
 
     /* Now that we know status of all Pacemaker Remote connections and nodes,
@@ -1654,11 +1648,12 @@ static inline bool
 pending_too_long(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                  long long when_member, long long when_online)
 {
-    if ((scheduler->node_pending_timeout > 0)
+    if ((scheduler->priv->node_pending_ms > 0U)
         && (when_member > 0) && (when_online <= 0)) {
         // There is a timeout on pending nodes, and node is pending
 
-        time_t timeout = when_member + scheduler->node_pending_timeout;
+        time_t timeout = when_member
+                         + (scheduler->priv->node_pending_ms / 1000U);
 
         if (get_effective_time(node->priv->scheduler) >= timeout) {
             return true; // Node has timed out
@@ -2478,8 +2473,9 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                  * container is running yet, so remember it and add a stop
                  * action for it later.
                  */
-                scheduler->stop_needed = g_list_prepend(scheduler->stop_needed,
-                                                        rsc->priv->launcher);
+                scheduler->priv->stop_needed =
+                    g_list_prepend(scheduler->priv->stop_needed,
+                                   rsc->priv->launcher);
             } else if (rsc->priv->launcher != NULL) {
                 stop_action(rsc->priv->launcher, node, FALSE);
             } else if (known_active) {
@@ -2719,9 +2715,9 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
     if ((crm_element_value_epoch(rsc_entry, PCMK_OPT_SHUTDOWN_LOCK,
                                  &lock_time) == pcmk_ok) && (lock_time != 0)) {
 
-        if ((scheduler->shutdown_lock > 0)
+        if ((scheduler->priv->shutdown_lock_ms > 0U)
             && (get_effective_time(scheduler)
-                > (lock_time + scheduler->shutdown_lock))) {
+                > (lock_time + (scheduler->priv->shutdown_lock_ms / 1000U)))) {
             pcmk__rsc_info(rsc, "Shutdown lock for %s on %s expired",
                            rsc->id, pcmk__node_name(node));
             pe__clear_resource_history(rsc, node);

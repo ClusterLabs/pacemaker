@@ -1697,10 +1697,10 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
         return;
     }
 
-    if (scheduler->shutdown_lock > 0) {
-        time_t lock_expiration;
+    if (scheduler->priv->shutdown_lock_ms > 0U) {
+        time_t lock_expiration = rsc->priv->lock_time
+                                 + (scheduler->priv->shutdown_lock_ms / 1000U);
 
-        lock_expiration = rsc->priv->lock_time + scheduler->shutdown_lock;
         pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
                        rsc->id, pcmk__node_name(rsc->priv->lock_node),
                        (long long) lock_expiration);

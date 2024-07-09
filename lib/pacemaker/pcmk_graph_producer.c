@@ -1049,11 +1049,11 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         crm_xml_add(scheduler->priv->graph, PCMK_OPT_MIGRATION_LIMIT, value);
     }
 
-    if (scheduler->recheck_by > 0) {
+    if (scheduler->priv->recheck_by > 0) {
         char *recheck_epoch = NULL;
 
-        recheck_epoch = crm_strdup_printf("%llu",
-                                          (long long) scheduler->recheck_by);
+        recheck_epoch = crm_strdup_printf("%llu", (unsigned long long)
+                                          scheduler->priv->recheck_by);
         crm_xml_add(scheduler->priv->graph, "recheck-by", recheck_epoch);
         free(recheck_epoch);
     }

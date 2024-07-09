@@ -159,7 +159,7 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
     }
 
     // If not, check whether id refers to a tag
-    if (g_hash_table_lookup_extended(scheduler->tags, id,
+    if (g_hash_table_lookup_extended(scheduler->priv->tags, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
             crm_notice("No resource is tagged with '%s'", id);

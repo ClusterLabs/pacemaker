@@ -675,9 +675,9 @@ pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
                         const char *reason)
 {
     if ((recheck > get_effective_time(scheduler))
-        && ((scheduler->recheck_by == 0)
-            || (scheduler->recheck_by > recheck))) {
-        scheduler->recheck_by = recheck;
+        && ((scheduler->priv->recheck_by == 0)
+            || (scheduler->priv->recheck_by > recheck))) {
+        scheduler->priv->recheck_by = recheck;
         crm_debug("Updated next scheduler recheck to %s for %s",
                   pcmk__trim(ctime(&recheck)), reason);
     }

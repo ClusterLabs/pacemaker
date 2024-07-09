@@ -187,8 +187,9 @@ cluster_status(pcmk_scheduler_t * scheduler)
             rsc->priv->fns->count(item->data);
         }
         crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
-                  scheduler->ninstances, scheduler->disabled_resources,
-                  scheduler->blocked_resources);
+                  scheduler->priv->ninstances,
+                  scheduler->priv->disabled_resources,
+                  scheduler->priv->blocked_resources);
     }
 
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_status);
@@ -348,8 +349,8 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         g_hash_table_destroy(scheduler->priv->templates);
     }
 
-    if (scheduler->tags) {
-        g_hash_table_destroy(scheduler->tags);
+    if (scheduler->priv->tags != NULL) {
+        g_hash_table_destroy(scheduler->priv->tags);
     }
 
     crm_trace("deleting resources");
@@ -362,7 +363,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     pe_free_nodes(scheduler->nodes);
 
     pe__free_param_checks(scheduler);
-    g_list_free(scheduler->stop_needed);
+    g_list_free(scheduler->priv->stop_needed);
     crm_time_free(scheduler->priv->now);
     pcmk__xml_free(scheduler->input);
     pcmk__xml_free(scheduler->priv->failed);

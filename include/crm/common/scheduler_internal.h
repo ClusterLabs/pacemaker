@@ -168,21 +168,31 @@ struct pcmk__scheduler_private {
     pcmk__output_t *out;            // Output object for displaying messages
     GHashTable *options;            // Cluster options
     const char *fence_action;       // Default fencing action
-    int fence_timeout_ms;           // Value of stonith-timeout property in ms
+    guint fence_timeout_ms;         // Default fencing action timeout (in ms)
+    guint priority_fencing_ms;      // Priority-based fencing delay (in ms)
+    guint shutdown_lock_ms;         // How long to lock resources (in ms)
+    guint node_pending_ms;          // Pending join times out after this (in ms)
     const char *placement_strategy; // Value of placement-strategy property
     xmlNode *rsc_defaults;          // Configured resource defaults
     xmlNode *op_defaults;           // Configured operation defaults
     GList *resources;               // Resources in cluster
     GHashTable *templates;          // Key = template ID, value = resource list
+    GHashTable *tags;               // Key = tag ID, value = element list
     GList *actions;                 // All scheduled actions
     GHashTable *singletons;         // Scheduled non-resource actions
     int next_action_id;             // Counter used as ID for actions
     xmlNode *failed;                // History entries of failed actions
+    GList *param_check;             // History entries that need to be checked
+    GList *stop_needed;             // Containers that need stop actions
     GList *location_constraints;    // Location constraints
     GList *colocation_constraints;  // Colocation constraints
     GList *ordering_constraints;    // Ordering constraints
     GHashTable *ticket_constraints; // Key = ticket ID, value = pcmk__ticket_t
     int next_ordering_id;           // Counter used as ID for orderings
+    int ninstances;                 // Total number of resource instances
+    int blocked_resources;          // Number of blocked resources in cluster
+    int disabled_resources;         // Number of disabled resources in cluster
+    time_t recheck_by;              // Hint to controller when to reschedule
     xmlNode *graph;                 // Transition graph
     int synapse_count;              // Number of transition graph synapses
 };

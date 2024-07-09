@@ -457,8 +457,9 @@ cluster_summary(pcmk__output_t *out, va_list args) {
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(scheduler->nodes),
-                     scheduler->ninstances, scheduler->disabled_resources,
-                     scheduler->blocked_resources);
+                     scheduler->priv->ninstances,
+                     scheduler->priv->disabled_resources,
+                     scheduler->priv->blocked_resources);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_options)) {
@@ -532,8 +533,9 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(scheduler->nodes),
-                     scheduler->ninstances, scheduler->disabled_resources,
-                     scheduler->blocked_resources);
+                     scheduler->priv->ninstances,
+                     scheduler->priv->disabled_resources,
+                     scheduler->priv->blocked_resources);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_options)) {
@@ -1202,9 +1204,11 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
                                                    pcmk__sched_in_maintenance);
     const char *stop_all_resources = pcmk__flag_text(scheduler->flags,
                                                      pcmk__sched_stop_all);
-    char *stonith_timeout_ms_s = pcmk__itoa(scheduler->priv->fence_timeout_ms);
+    char *stonith_timeout_ms_s =
+        crm_strdup_printf("%u", scheduler->priv->fence_timeout_ms);
+
     char *priority_fencing_delay_ms_s =
-        pcmk__itoa(scheduler->priority_fencing_delay * 1000);
+        crm_strdup_printf("%u", scheduler->priv->priority_fencing_ms);
 
     pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_OPTIONS,
                                  PCMK_XA_STONITH_ENABLED, stonith_enabled,

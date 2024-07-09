@@ -72,7 +72,6 @@ typedef struct pcmk__scheduler_private pcmk__scheduler_private_t;
  * @COMPAT Drop this struct once all members are moved to
  * pcmk__scheduler_private_t, and repoint pcmk_scheduler_t to that
  */
-//!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 struct pcmk__scheduler {
     // Be careful about when each piece of information is available and final
@@ -97,21 +96,8 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    GHashTable *tags;               // Configuration tags (ID -> pcmk__idref_t*)
-    int blocked_resources;          // Number of blocked resources in cluster
-    int disabled_resources;         // Number of disabled resources in cluster
-    GList *param_check;             // History entries that need to be checked
-    GList *stop_needed;             // Containers that need stop actions
-    time_t recheck_by;              // Hint to controller when to reschedule
-    int ninstances;                 // Total number of resource instances
-    guint shutdown_lock;            // How long to lock resources (seconds)
-    int priority_fencing_delay;     // Priority fencing delay
-
-    pcmk__scheduler_private_t *priv;    // For Pacemaker use only
-
-    guint node_pending_timeout;     // Pending join times out after this (ms)
+    pcmk__scheduler_private_t *priv;    //!< \internal For Pacemaker use only
 };
-//!@}
 
 pcmk_node_t *pcmk_get_dc(const pcmk_scheduler_t *scheduler);
 enum pe_quorum_policy pcmk_get_no_quorum_policy(const pcmk_scheduler_t
