@@ -171,6 +171,7 @@ struct pcmk__scheduler_private {
     guint fence_timeout_ms;         // Default fencing action timeout (in ms)
     guint priority_fencing_ms;      // Priority-based fencing delay (in ms)
     guint shutdown_lock_ms;         // How long to lock resources (in ms)
+    guint node_pending_ms;          // Pending join times out after this (in ms)
     const char *placement_strategy; // Value of placement-strategy property
     xmlNode *rsc_defaults;          // Configured resource defaults
     xmlNode *op_defaults;           // Configured operation defaults

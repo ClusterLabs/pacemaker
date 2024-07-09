@@ -436,14 +436,12 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
-    pcmk_parse_interval_spec(value, &(scheduler->node_pending_timeout));
-    scheduler->node_pending_timeout /= 1000;
-    if (scheduler->node_pending_timeout == 0) {
+    pcmk_parse_interval_spec(value, &(scheduler->priv->node_pending_ms));
+    if (scheduler->priv->node_pending_ms == 0U) {
         crm_trace("Do not fence pending nodes");
     } else {
         crm_trace("Fence pending nodes after %s",
-                  pcmk__readable_interval(scheduler->node_pending_timeout
-                                          * 1000));
+                  pcmk__readable_interval(scheduler->priv->node_pending_ms));
     }
 
     return TRUE;
@@ -1650,11 +1648,12 @@ static inline bool
 pending_too_long(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                  long long when_member, long long when_online)
 {
-    if ((scheduler->node_pending_timeout > 0)
+    if ((scheduler->priv->node_pending_ms > 0U)
         && (when_member > 0) && (when_online <= 0)) {
         // There is a timeout on pending nodes, and node is pending
 
-        time_t timeout = when_member + scheduler->node_pending_timeout;
+        time_t timeout = when_member
+                         + (scheduler->priv->node_pending_ms / 1000U);
 
         if (get_effective_time(node->priv->scheduler) >= timeout) {
             return true; // Node has timed out
