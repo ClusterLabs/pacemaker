@@ -188,6 +188,7 @@ struct pcmk__scheduler_private {
     int next_ordering_id;           // Counter used as ID for orderings
     int blocked_resources;          // Number of blocked resources in cluster
     int disabled_resources;         // Number of disabled resources in cluster
+    time_t recheck_by;              // Hint to controller when to reschedule
     xmlNode *graph;                 // Transition graph
     int synapse_count;              // Number of transition graph synapses
 };
