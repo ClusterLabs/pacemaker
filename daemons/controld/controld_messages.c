@@ -833,7 +833,7 @@ handle_ping(const xmlNode *msg)
     crm_xml_add(ping, PCMK_XA_RESULT, "ok");
 
     // Send reply
-    reply = create_reply(msg, ping);
+    reply = pcmk__new_reply(msg, ping);
     pcmk__xml_free(ping);
     if (reply != NULL) {
         (void) relay_message(reply, TRUE);
@@ -872,7 +872,7 @@ handle_node_list(const xmlNode *request)
     }
 
     // Create and send reply
-    reply = create_reply(request, reply_data);
+    reply = pcmk__new_reply(request, reply_data);
     pcmk__xml_free(reply_data);
     if (reply) {
         (void) relay_message(reply, TRUE);
@@ -936,7 +936,7 @@ handle_node_info_request(const xmlNode *msg)
     }
 
     // Send reply
-    reply = create_reply(msg, reply_data);
+    reply = pcmk__new_reply(msg, reply_data);
     pcmk__xml_free(reply_data);
     if (reply != NULL) {
         (void) relay_message(reply, TRUE);

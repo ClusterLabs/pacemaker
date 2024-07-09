@@ -60,7 +60,7 @@ handle_ping_request(pcmk__request_t *request)
     crm_xml_add_ll(ping, PCMK_XA_CRM_TIMESTAMP,
                    (long long) subdaemon_check_progress);
     crm_xml_add(ping, PCMK_XA_RESULT, "ok");
-    reply = create_reply(msg, ping);
+    reply = pcmk__new_reply(msg, ping);
 
     pcmk__xml_free(ping);
 
@@ -123,7 +123,7 @@ handle_shutdown_request(pcmk__request_t *request)
         crm_xml_add_int(shutdown, PCMK__XA_OP_STATUS, CRM_EX_INSUFFICIENT_PRIV);
     }
 
-    reply = create_reply(msg, shutdown);
+    reply = pcmk__new_reply(msg, shutdown);
     pcmk__xml_free(shutdown);
 
     if (reply == NULL) {

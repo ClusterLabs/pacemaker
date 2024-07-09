@@ -123,7 +123,7 @@ handle_pecalc_request(pcmk__request_t *request)
               series[series_id].name, series_wrap, seq, value);
 
     scheduler->input = NULL;
-    reply = create_reply(msg, scheduler->priv->graph);
+    reply = pcmk__new_reply(msg, scheduler->priv->graph);
 
     if (reply == NULL) {
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,

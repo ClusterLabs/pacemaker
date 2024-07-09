@@ -114,6 +114,24 @@ typedef struct {
                          (sender_system), (recipient_node),                 \
                          (recipient_system), (task), (data))
 
+/*!
+ * \internal
+ * \brief Create a Pacemaker reply (for IPC or cluster layer)
+ *
+ * \param[in] original_request  XML of request being replied to
+ * \param[in] data              If not NULL, copy as reply's data (callers
+ *                              should not add attributes to the returned
+ *                              message element, but instead pass any desired
+ *                              information here, though this is not always
+ *                              honored currently)
+ *
+ * \return Newly created reply XML
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
+ */
+#define pcmk__new_reply(original_request, data) \
+    create_reply_adv((original_request), (data), __func__)
+
 xmlNode *pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
                               const char *reply_to, const char *sender_system,
                               const char *recipient_node,

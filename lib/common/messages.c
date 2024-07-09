@@ -152,7 +152,7 @@ create_request_adv(const char *task, xmlNode *msg_data,
  * \return XML of new reply
  *
  * \note This function should not be called directly, but via the
- *       create_reply() wrapper.
+ *       pcmk__new_reply() wrapper.
  * \note The caller is responsible for freeing the return value using
  *       \c pcmk__xml_free().
  */
