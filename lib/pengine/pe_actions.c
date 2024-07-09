@@ -1203,7 +1203,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
     GList *gIter = NULL;
 
     // PCMK_OPT_PRIORITY_FENCING_DELAY is disabled
-    if (scheduler->priority_fencing_delay <= 0) {
+    if (scheduler->priv->priority_fencing_ms == 0U) {
         return 0;
     }
 
@@ -1257,7 +1257,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         return 0;
     }
 
-    return scheduler->priority_fencing_delay;
+    return (int) (scheduler->priv->priority_fencing_ms / 1000U);
 }
 
 pcmk_action_t *
@@ -1336,7 +1336,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
         free(op_key);
     }
 
-    if (scheduler->priority_fencing_delay > 0
+    if ((scheduler->priv->priority_fencing_ms > 0U)
 
             /* It's a suitable case where PCMK_OPT_PRIORITY_FENCING_DELAY
              * applies. At least add PCMK_OPT_PRIORITY_FENCING_DELAY field as

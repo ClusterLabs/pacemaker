@@ -97,8 +97,6 @@ struct pcmk__scheduler {
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
 
-    int priority_fencing_delay;     // Priority fencing delay
-
     pcmk__scheduler_private_t *priv;    // For Pacemaker use only
 
     guint node_pending_timeout;     // Pending join times out after this (ms)

@@ -168,7 +168,8 @@ struct pcmk__scheduler_private {
     pcmk__output_t *out;            // Output object for displaying messages
     GHashTable *options;            // Cluster options
     const char *fence_action;       // Default fencing action
-    int fence_timeout_ms;           // Value of stonith-timeout property in ms
+    int fence_timeout_ms;           // Default fencing action timeout (in ms)
+    guint priority_fencing_ms;      // Priority-based fencing delay (in ms)
     guint shutdown_lock_ms;         // How long to lock resources (in ms)
     const char *placement_strategy; // Value of placement-strategy property
     xmlNode *rsc_defaults;          // Configured resource defaults

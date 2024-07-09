@@ -1206,7 +1206,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
                                                      pcmk__sched_stop_all);
     char *stonith_timeout_ms_s = pcmk__itoa(scheduler->priv->fence_timeout_ms);
     char *priority_fencing_delay_ms_s =
-        pcmk__itoa(scheduler->priority_fencing_delay * 1000);
+        crm_strdup_printf("%u", scheduler->priv->priority_fencing_ms);
 
     pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_OPTIONS,
                                  PCMK_XA_STONITH_ENABLED, stonith_enabled,

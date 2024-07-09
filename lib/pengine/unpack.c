@@ -296,10 +296,10 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_PRIORITY_FENCING_DELAY);
     if (value) {
-        pcmk_parse_interval_spec(value, &interval_ms);
-        scheduler->priority_fencing_delay = (int) (interval_ms / 1000);
-        crm_trace("Priority fencing delay is %ds",
-                  scheduler->priority_fencing_delay);
+        pcmk_parse_interval_spec(value,
+                                 &(scheduler->priv->priority_fencing_ms));
+        crm_trace("Priority fencing delay is %s",
+                  pcmk__readable_interval(scheduler->priv->priority_fencing_ms));
     }
 
     set_config_flag(scheduler, PCMK_OPT_STOP_ALL_RESOURCES,
