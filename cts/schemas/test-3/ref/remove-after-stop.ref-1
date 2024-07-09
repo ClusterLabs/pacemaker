@@ -1,0 +1,20 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="2" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * The remove-after-stop cluster property is set to any value.
+
+         In this situation, the remove-after-stop cluster property should be
+         removed.
+      -->
+    <crm_config original="1">
+      <cluster_property_set id="cib-bootstrap-options" original="1">
+        <nvpair id="cib-bootstrap-options-remove-after-stop" name="remove-after-stop" value="false" original="1"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true" original="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes original="1"/>
+    <resources original="1"/>
+    <constraints original="1"/>
+  </configuration>
+  <status original="1"/>
+</cib>
