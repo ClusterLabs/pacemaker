@@ -51,9 +51,10 @@ class OutputFoundError(TestError):
 class XmlValidationError(TestError):
     """Exception raised when xmllint fails."""
 
-    def __init__(self, output):
+    def __init__(self, output, exit_code):
         """Create a new XmlValidationError instance."""
         TestError.__init__(self)
+        self.exit_code = exit_code
         self.output = output
 
     def __str__(self):
