@@ -1243,7 +1243,7 @@ pe__count_common(pcmk_resource_t *rsc)
                || (rsc->priv->orig_role > pcmk_role_stopped)) {
         rsc->priv->scheduler->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
-            rsc->priv->scheduler->disabled_resources++;
+            rsc->priv->scheduler->priv->disabled_resources++;
         }
         if (pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
             rsc->priv->scheduler->priv->blocked_resources++;

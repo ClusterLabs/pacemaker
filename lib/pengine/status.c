@@ -187,7 +187,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
             rsc->priv->fns->count(item->data);
         }
         crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
-                  scheduler->ninstances, scheduler->disabled_resources,
+                  scheduler->ninstances, scheduler->priv->disabled_resources,
                   scheduler->priv->blocked_resources);
     }
 

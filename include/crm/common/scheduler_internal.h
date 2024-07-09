@@ -185,6 +185,7 @@ struct pcmk__scheduler_private {
     GHashTable *ticket_constraints; // Key = ticket ID, value = pcmk__ticket_t
     int next_ordering_id;           // Counter used as ID for orderings
     int blocked_resources;          // Number of blocked resources in cluster
+    int disabled_resources;         // Number of disabled resources in cluster
     xmlNode *graph;                 // Transition graph
     int synapse_count;              // Number of transition graph synapses
 };
