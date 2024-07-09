@@ -145,12 +145,6 @@ enum pcmk__scheduler_flags {
     // Skip counting of total, disabled, and blocked resource instances
     pcmk__sched_no_counts               = (1ULL << 23),
 
-    /*
-     * Skip deprecated code kept solely for backward API compatibility
-     * (internal code should always set this)
-     */
-    pcmk__sched_no_compat               = (1ULL << 24),
-
     // Whether node scores should be output instead of logged
     pcmk__sched_output_scores           = (1ULL << 25),
 
@@ -169,6 +163,7 @@ enum pcmk__scheduler_flags {
 struct pcmk__scheduler_private {
     // Be careful about when each piece of information is available and final
 
+    char *local_node_name;          // Name of node running scheduler (if known)
     crm_time_t *now;                // Time to use when evaluating rules
     pcmk__output_t *out;            // Output object for displaying messages
     GHashTable *options;            // Cluster options
@@ -178,14 +173,17 @@ struct pcmk__scheduler_private {
     xmlNode *rsc_defaults;          // Configured resource defaults
     xmlNode *op_defaults;           // Configured operation defaults
     GList *resources;               // Resources in cluster
+    GHashTable *templates;          // Key = template ID, value = resource list
     GList *actions;                 // All scheduled actions
     GHashTable *singletons;         // Scheduled non-resource actions
+    int next_action_id;             // Counter used as ID for actions
     xmlNode *failed;                // History entries of failed actions
     GList *location_constraints;    // Location constraints
     GList *colocation_constraints;  // Colocation constraints
     GList *ordering_constraints;    // Ordering constraints
     GHashTable *ticket_constraints; // Key = ticket ID, value = pcmk__ticket_t
     int next_ordering_id;           // Counter used as ID for orderings
+    xmlNode *graph;                 // Transition graph
     int synapse_count;              // Number of transition graph synapses
 };
 

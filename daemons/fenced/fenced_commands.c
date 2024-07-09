@@ -537,7 +537,7 @@ stonith_device_execute(stonith_device_t * device)
     if (pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
                          STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
         if (pcmk__is_fencing_action(cmd->action)) {
-            if (node_does_watchdog_fencing(stonith_our_uname)) {
+            if (node_does_watchdog_fencing(fenced_get_local_node())) {
                 pcmk__panic(__func__);
                 goto done;
             }
@@ -1349,6 +1349,8 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
             rv = -ENODEV;
             /* fall through to cleanup & return */
         } else {
+            const char *local_node_name = fenced_get_local_node();
+
             if (pcmk__str_eq(device->agent, STONITH_WATCHDOG_AGENT,
                              pcmk__str_none)) {
                 /* this either has an empty list or the targets
@@ -1358,11 +1360,11 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
                 stonith_watchdog_targets = device->targets;
                 device->targets = NULL;
             }
-            if (node_does_watchdog_fencing(stonith_our_uname)) {
+            if (node_does_watchdog_fencing(local_node_name)) {
                 g_list_free_full(device->targets, free);
-                device->targets = stonith__parse_targets(stonith_our_uname);
+                device->targets = stonith__parse_targets(local_node_name);
                 pcmk__insert_dup(device->params,
-                                 PCMK_STONITH_HOST_LIST, stonith_our_uname);
+                                 PCMK_STONITH_HOST_LIST, local_node_name);
                 /* proceed as with any other stonith-device */
                 break;
             }
@@ -1998,7 +2000,7 @@ static gboolean
 localhost_is_eligible(const stonith_device_t *device, const char *action,
                       const char *target, gboolean allow_suicide)
 {
-    gboolean localhost_is_target = pcmk__str_eq(target, stonith_our_uname,
+    gboolean localhost_is_target = pcmk__str_eq(target, fenced_get_local_node(),
                                                 pcmk__str_casei);
 
     if ((device != NULL) && (action != NULL)
@@ -3012,7 +3014,7 @@ set_fencing_completed(remote_fencing_op_t *op)
 static const char *
 check_alternate_host(const char *target)
 {
-    if (pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(target, fenced_get_local_node(), pcmk__str_casei)) {
         GHashTableIter gIter;
         pcmk__node_status_t *entry = NULL;
 
@@ -3050,7 +3052,8 @@ remove_relay_op(xmlNode * request)
     client_name = crm_element_value(request, PCMK__XA_ST_CLIENTNAME);
 
     /* Delete RELAY operation. */
-    if (relay_op_id && target && pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
+    if ((relay_op_id != NULL) && (target != NULL)
+        && pcmk__str_eq(target, fenced_get_local_node(), pcmk__str_casei)) {
         relay_op = g_hash_table_lookup(stonith_remote_op_list, relay_op_id);
 
         if (relay_op) {

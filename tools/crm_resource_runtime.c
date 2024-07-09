@@ -1381,8 +1381,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
     pcmk__output_t *out = scheduler->priv->out;
 
     pe_reset_working_set(scheduler);
-    pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_no_counts|pcmk__sched_no_compat);
+    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
     rc = update_scheduler_input_to_cib(out, scheduler, cib);
     if (rc != pcmk_rc_ok) {
         return rc;
@@ -1416,8 +1415,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
             goto done;
         }
 
-        pcmk__schedule_actions(scheduler->input,
-                               pcmk__sched_no_counts|pcmk__sched_no_compat,
+        pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
                                scheduler);
 
         prev_quiet = out->is_quiet(out);
@@ -2039,8 +2037,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         if (rc != pcmk_rc_ok) {
             break;
         }
-        pcmk__schedule_actions(scheduler->input,
-                               pcmk__sched_no_counts|pcmk__sched_no_compat,
+        pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
                                scheduler);
 
         if (!printed_version_warning) {

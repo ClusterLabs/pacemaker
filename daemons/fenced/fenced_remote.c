@@ -603,7 +603,8 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     }
 
     if (pcmk__result_ok(&op->result) || dup
-        || !pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
+        || !pcmk__str_eq(op->originator, fenced_get_local_node(),
+                         pcmk__str_casei)) {
         level = LOG_NOTICE;
     }
     do_crm_log(level, "Operation '%s'%s%s by %s for %s@%s%s: %s (%s%s%s) "
@@ -1198,7 +1199,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     op->originator = crm_element_value_copy(dev, PCMK__XA_ST_ORIGIN);
     if (op->originator == NULL) {
         /* Local or relayed request */
-        op->originator = pcmk__str_copy(stonith_our_uname);
+        op->originator = pcmk__str_copy(fenced_get_local_node());
     }
 
     // Delegate may not be set
@@ -1724,7 +1725,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
         return;
     }
 
-    if (pcmk__str_eq(client_node, stonith_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(client_node, fenced_get_local_node(), pcmk__str_casei)) {
         // Client is connected to this node, so send update directly to them
         do_stonith_async_timeout_update(client_id, call_id, op_timeout);
         return;
@@ -2478,7 +2479,8 @@ fenced_process_fencing_reply(xmlNode *msg)
         finalize_op(op, msg, false);
         return;
 
-    } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
+    } else if (!pcmk__str_eq(op->originator, fenced_get_local_node(),
+                             pcmk__str_casei)) {
         /* If this isn't a remote level broadcast, and we are not the
          * originator of the operation, we should not be receiving this msg. */
         crm_err("Received non-broadcast fencing result for operation %.8s "

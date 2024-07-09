@@ -149,7 +149,7 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
     *tag = NULL;
 
     // Check whether id refers to a resource set template
-    if (g_hash_table_lookup_extended(scheduler->template_rsc_sets, id,
+    if (g_hash_table_lookup_extended(scheduler->priv->templates, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
             crm_notice("No resource is derived from template '%s'", id);

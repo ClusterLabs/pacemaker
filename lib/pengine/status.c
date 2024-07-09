@@ -57,6 +57,7 @@ pe_free_working_set(pcmk_scheduler_t *scheduler)
 {
     if (scheduler != NULL) {
         pe_reset_working_set(scheduler);
+        free(scheduler->priv->local_node_name);
         free(scheduler->priv);
         free(scheduler);
     }
@@ -343,8 +344,8 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         g_hash_table_destroy(scheduler->priv->ticket_constraints);
     }
 
-    if (scheduler->template_rsc_sets) {
-        g_hash_table_destroy(scheduler->template_rsc_sets);
+    if (scheduler->priv->templates != NULL) {
+        g_hash_table_destroy(scheduler->priv->templates);
     }
 
     if (scheduler->tags) {
@@ -362,10 +363,10 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
 
     pe__free_param_checks(scheduler);
     g_list_free(scheduler->stop_needed);
-    pcmk__xml_free(scheduler->graph);
     crm_time_free(scheduler->priv->now);
     pcmk__xml_free(scheduler->input);
     pcmk__xml_free(scheduler->priv->failed);
+    pcmk__xml_free(scheduler->priv->graph);
 
     set_working_set_defaults(scheduler);
 
@@ -409,6 +410,7 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
     // These members must be preserved
     pcmk__scheduler_private_t *priv = scheduler->priv;
     pcmk__output_t *out = priv->out;
+    char *local_node_name = scheduler->priv->local_node_name;
 
     // Wipe the main structs (any other members must have previously been freed)
     memset(scheduler, 0, sizeof(pcmk_scheduler_t));
@@ -417,10 +419,11 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
     // Restore the members to preserve
     scheduler->priv = priv;
     scheduler->priv->out = out;
+    scheduler->priv->local_node_name = local_node_name;
 
     // Set defaults for everything else
     scheduler->priv->next_ordering_id = 1;
-    scheduler->action_id = 1;
+    scheduler->priv->next_action_id = 1;
     scheduler->no_quorum_policy = pcmk_no_quorum_stop;
     pcmk__set_scheduler_flags(scheduler,
                               pcmk__sched_symmetric_cluster

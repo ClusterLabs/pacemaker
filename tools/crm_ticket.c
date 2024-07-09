@@ -395,8 +395,7 @@ main(int argc, char **argv)
                     "Could not allocate scheduler data: %s", pcmk_rc_str(rc));
         goto done;
     }
-    pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_no_counts|pcmk__sched_no_compat);
+    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {

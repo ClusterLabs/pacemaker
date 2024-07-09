@@ -86,9 +86,8 @@ struct pcmk__scheduler {
     pcmk_node_t *dc_node;           // Node object for DC
 
     // NOTE: sbd (as of at least 1.5.2) uses this
-    // @COMPAT Change to uint64_t at a compatibility break
     //! \deprecated Call pcmk_has_quorum() to check quorum
-    unsigned long long flags;       // Group of enum pcmk__scheduler_flags
+    uint64_t flags;                 // Group of enum pcmk__scheduler_flags
 
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_get_no_quorum_policy() to get no-quorum policy
@@ -97,13 +96,6 @@ struct pcmk__scheduler {
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
-
-    int action_id;                  // ID to use for next created action
-    xmlNode *graph;                 // Transition graph
-    GHashTable *template_rsc_sets;  // Mappings of template ID to resource ID
-
-    // @COMPAT Replace this with a fencer variable (only place it's used)
-    const char *localhost;          // \deprecated Do not use
 
     GHashTable *tags;               // Configuration tags (ID -> pcmk__idref_t*)
     int blocked_resources;          // Number of blocked resources in cluster

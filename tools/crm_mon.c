@@ -84,6 +84,7 @@ static gchar **processed_args = NULL;
 static time_t last_refresh = 0;
 volatile crm_trigger_t *refresh_trigger = NULL;
 
+static pcmk_scheduler_t *scheduler = NULL;
 static enum pcmk__fence_history fence_history = pcmk__fence_history_none;
 
 int interactive_fence_level = 0;
@@ -1605,6 +1606,14 @@ main(int argc, char **argv)
         one_shot();
     }
 
+    scheduler = pe_new_working_set();
+    pcmk__mem_assert(scheduler);
+    scheduler->priv->out = out;
+    if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
+        // Currently used only in the times section
+        pcmk__query_node_name(out, 0, &(scheduler->priv->local_node_name), 0);
+    }
+
     out->message(out, "crm-mon-disconnected",
                  "Waiting for initial connection", pcmkd_state);
     do {
@@ -1999,8 +2008,9 @@ mon_refresh_display(gpointer user_data)
         out->reset(out);
     }
 
-    rc = pcmk__output_cluster_status(out, st, cib, current_cib, pcmkd_state,
-                                     fence_history, show, show_opts,
+    rc = pcmk__output_cluster_status(scheduler, st, cib, current_cib,
+                                     pcmkd_state, fence_history, show,
+                                     show_opts,
                                      options.only_node,options.only_rsc,
                                      options.neg_location_prefix);
 
@@ -2123,6 +2133,8 @@ clean_up(crm_exit_t exit_code)
     g_slist_free_full(options.includes_excludes, free);
 
     g_strfreev(processed_args);
+
+    pe_free_working_set(scheduler);
 
     /* (2) If this is abnormal termination and we're in curses mode, shut down
      * curses first.  Any messages displayed to the screen before curses is shut

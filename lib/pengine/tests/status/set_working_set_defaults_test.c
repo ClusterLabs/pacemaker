@@ -37,7 +37,7 @@ check_defaults(void **state) {
 
     assert_null(scheduler->priv->out);
     assert_int_equal(scheduler->priv->next_ordering_id, 1);
-    assert_int_equal(scheduler->action_id, 1);
+    assert_int_equal(scheduler->priv->next_action_id, 1);
     assert_int_equal(scheduler->no_quorum_policy, pcmk_no_quorum_stop);
     assert_int_equal(scheduler->flags, flags);
 

@@ -1018,9 +1018,7 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
         if (scheduler == NULL) {
             rc = ENOMEM;
         } else {
-            pcmk__set_scheduler_flags(scheduler,
-                                      pcmk__sched_no_counts
-                                      |pcmk__sched_no_compat);
+            pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
             scheduler->priv->out = out;
             rc = update_scheduler_input(scheduler, cib_xml_copy);
         }
