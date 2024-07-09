@@ -1,0 +1,75 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-3.10" epoch="8" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * There is one of each kind of several nvset element
+           (cluster_property_set, instance_attributes, meta_attributes,
+           utilization).
+         * Each nvset contains multiple nvpairs with the same name (two of which
+           have value "#default"), as well as one nvpair with a different name.
+         * Two nvsets use id-refs.
+
+         In this situation:
+         * If the last nvpair with a given name in a given nvset has value
+           "#default", keep only that one.
+         * Otherwise, keep only the first nvpair with a given name in a given
+           nvset after the last one with that name and value "#default".
+      -->
+    <crm_config original="1">
+      <cluster_property_set id="cluster-properties1" original="1">
+        <nvpair id="cluster-properties1-option1" name="option" value="#default" original="1"/>
+        <nvpair id="cluster-properties1-option2" name="option" value="#default" original="1"/>
+        <nvpair id="cluster-properties1-option3" name="option" value="value3" original="1"/>
+        <nvpair id="cluster-properties1-option4" name="option" value="value4" original="1"/>
+        <nvpair id="cluster-properties1-option5" name="option" value="value5" original="1"/>
+        <nvpair id="cluster-properties1-other-option" name="other-option" value="value0" original="1"/>
+      </cluster_property_set>
+      <cluster_property_set id="cluster-properties2" original="1">
+        <nvpair id="cluster-properties2-option1" name="option" value="#default" original="1"/>
+        <nvpair id="cluster-properties2-option2" name="option" value="value1" original="1"/>
+        <nvpair id="cluster-properties2-option3" name="option" value="#default" original="1"/>
+        <nvpair id="cluster-properties2-option4" name="option" value="value4" original="1"/>
+        <nvpair id="cluster-properties2-option5" name="option" value="value5" original="1"/>
+        <nvpair id="cluster-properties2-other-option" name="other-option" value="value0" original="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes original="1"/>
+    <resources original="1">
+      <primitive class="ocf" id="rsc1" provider="heartbeat" type="apache" original="1">
+        <instance_attributes id="rsc1-instance_attributes" original="1">
+          <nvpair id="rsc1-instance_attributes-option1" name="option" value="value1" original="1"/>
+          <nvpair id="rsc1-instance_attributes-option2" name="option" value="#default" original="1"/>
+          <nvpair id="rsc1-instance_attributes-other-option" name="other-option" value="value0" original="1"/>
+          <nvpair id="rsc1-instance_attributes-option3" name="option" value="#default" original="1"/>
+          <nvpair id="rsc1-instance_attributes-option4" name="option" value="value4" original="1"/>
+          <nvpair id="rsc1-instance_attributes-option5" name="option" value="value5" original="1"/>
+        </instance_attributes>
+        <meta_attributes id="rsc1-meta_attributes" original="1">
+          <nvpair id="rsc1-meta_attributes-option1" name="option" value="value1" original="1"/>
+          <nvpair id="rsc1-meta_attributes-other-option" name="other-option" value="value0" original="1"/>
+          <nvpair id="rsc1-meta_attributes-option2" name="option" value="#default" original="1"/>
+          <nvpair id="rsc1-meta_attributes-option3" name="option" value="value3" original="1"/>
+          <nvpair id="rsc1-meta_attributes-option4" name="option" value="#default" original="1"/>
+          <nvpair id="rsc1-meta_attributes-option5" name="option" value="value5" original="1"/>
+        </meta_attributes>
+        <utilization id="rsc1-utilization1" original="1">
+          <nvpair id="rsc1-utilization1-other-option" name="other-option" value="valueX" original="1"/>
+          <nvpair id="rsc1-utilization1-option1" name="option" value="valueA" original="1"/>
+          <nvpair id="rsc1-utilization2-option2" name="option" value="valueB" original="0"/>
+          <nvpair id="rsc1-utilization1-option3" name="option" value="#default" original="1"/>
+          <nvpair id="rsc1-utilization1-option4" name="option" value="valueD" original="1"/>
+          <nvpair id="rsc1-utilization1-option5" name="option" value="#default" original="1"/>
+        </utilization>
+        <utilization id="rsc1-utilization2" original="1">
+          <nvpair id="rsc1-utilization1-other-option" name="other-option" value="valueX" original="0"/>
+          <nvpair id="rsc1-utilization1-option1" name="option" value="valueA" original="0"/>
+          <nvpair id="rsc1-utilization2-option2" name="option" value="valueB" original="1"/>
+          <nvpair id="rsc1-utilization1-option3" name="option" value="#default" original="0"/>
+          <nvpair id="rsc1-utilization1-option4" name="option" value="valueD" original="0"/>
+          <nvpair id="rsc1-utilization1-option5" name="option" value="#default" original="0"/>
+        </utilization>
+      </primitive>
+    </resources>
+    <constraints original="1"/>
+  </configuration>
+  <status original="1"/>
+</cib>
