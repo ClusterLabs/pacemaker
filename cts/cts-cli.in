@@ -535,6 +535,107 @@ class Test:
         return False
 
 
+class AclTest(Test):
+    """
+    A Test subclass specialized for running certain ACL tests.
+
+    Differences from the Test class:
+
+    * Does not use the stdin= parameter.
+    * Runs the setup and teardown hooks in an environment that also sets
+      CIB_user=root, CIB_shadow="", and CIB_file to a temporary file.
+    * The setup hooks should construct a new CIB and write it to that
+      temporary file.
+    * Prints the input CIB before running the test.
+    """
+
+    def run(self, group, env=None, valgrind=False):
+        """
+        Run this test.
+
+        Basic output is printed to stdout, while detailed output is available
+        in the self.output property after this function has been run.  Return
+        True if the return code matches self.expected_rc, and False otherwise.
+
+        Arguments:
+        group -- The name of the group this test is a part of, for logging purposes
+
+        Keyword arguments:
+        env   -- If not None, a dict of values to be added to the test environment
+        """
+        self._output = []
+
+        cmd = apply_substitutions(self.cmd)
+        app = cmd.split(" ")[0]
+
+        test_id = "%s(%s)" % (app, group)
+        print("* Running: %-31s - %s" % (test_id, self.desc))
+
+        # Add any environment variables specified in Test.__init__
+        if env is None:
+            env = self._env
+        else:
+            env = env.update(self._env)
+
+        with environ(env):
+            with NamedTemporaryFile(prefix="cts-cli.cib.") as fp:
+                fp.write(current_cib().encode())
+                fp.flush()
+
+                # Run the setup hook, if any.  Typically, this is something that
+                # modifies the existing CIB.  We need to do these modifications
+                # in a different environment from what the test will run in, since
+                # the test may not have the permissions necessary to do the
+                # modifications.
+                with environ({"CIB_user": "root", "CIB_file": fp.name, "CIB_shadow": None}):
+                    if not self._run_setup_teardown(self._setup, app):
+                        return False
+
+                    # At the least, print the CIB that will be the test input.
+                    self._output.extend(current_cib().splitlines())
+
+                # Note: This is positioned differently from where it is in Test.run.
+                self._log_start_test()
+
+                # Define basic arguments for running this test.
+                kwargs = {"stdout": subprocess.PIPE, "stderr": subprocess.PIPE,
+                          "shell": True, "universal_newlines": True, "check": False}
+
+                # Read in the potentially modified CIB as the stdin for the test.
+                fp.seek(0)
+                kwargs["input"] = fp.read().decode(encoding="utf-8")
+
+                if valgrind:
+                    cmd = "valgrind %s %s" % (" ".join(VALGRIND_ARGS), cmd)
+
+                # Run the test command
+                # We handle the "check" argument above in the kwargs dict.
+                # pylint: disable-msg=subprocess-run-check
+                cmd_p = subprocess.run(cmd, **kwargs)
+                rc = cmd_p.returncode
+
+                self._output.extend(cmd_p.stderr.splitlines())
+                self._output.extend(cmd_p.stdout.splitlines())
+
+                # Run the teardown hook, if any
+                with environ({"CIB_user": "root", "CIB_file": fp.name, "CIB_shadow": None}):
+                    if not self._run_setup_teardown(self._teardown, app):
+                        return False
+
+        if self.update_cib:
+            self._output.append("=#=#=#= Current cib after: %s =#=#=#=" % self.desc)
+            self._output.extend(current_cib().splitlines())
+
+        self._validate_hook(rc, cmd_p.stdout, cmd_p.stderr, valgrind=valgrind)
+
+        if rc == self.expected_rc:
+            self._log_test_passed(app)
+            return True
+
+        self._log_test_failed(app, rc)
+        return False
+
+
 class ValidatingTest(Test):
     """A Test subclass that additionally runs test results through xmllint."""
 
