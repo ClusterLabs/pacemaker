@@ -1241,7 +1241,7 @@ pe__count_common(pcmk_resource_t *rsc)
 
     } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)
                || (rsc->priv->orig_role > pcmk_role_stopped)) {
-        rsc->priv->scheduler->ninstances++;
+        rsc->priv->scheduler->priv->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
             rsc->priv->scheduler->priv->disabled_resources++;
         }

@@ -827,7 +827,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
                                 "%d of %d resource instances DISABLED and "
                                 "%d BLOCKED from further action due to failure",
                                 scheduler->priv->disabled_resources,
-                                scheduler->ninstances,
+                                scheduler->priv->ninstances,
                                 scheduler->priv->blocked_resources);
         }
 
