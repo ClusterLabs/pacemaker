@@ -50,8 +50,8 @@ do_cl_join_query(long long action,
                  enum crmd_fsa_state cur_state,
                  enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    xmlNode *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
-                                  CRM_SYSTEM_DC, CRM_SYSTEM_CRMD);
+    xmlNode *req = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
+                                     CRM_SYSTEM_DC, CRM_OP_JOIN_ANNOUNCE, NULL);
 
     sleep(1);                   // Give the cluster layer time to propagate to the DC
     update_dc(NULL);            /* Unset any existing value so that the result is not discarded */
@@ -80,8 +80,9 @@ do_cl_join_announce(long long action,
 
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_STARTING)) {
         /* send as a broadcast */
-        xmlNode *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
-                                      CRM_SYSTEM_DC, CRM_SYSTEM_CRMD);
+        xmlNode *req = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
+                                         NULL, CRM_SYSTEM_DC,
+                                         CRM_OP_JOIN_ANNOUNCE, NULL);
 
         crm_debug("Announcing availability");
         update_dc(NULL);
@@ -166,7 +167,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
         crm_debug("Membership is in flux, not continuing join-%s", join_id);
 
     } else {
-        xmlNode *reply = NULL;
+        xmlNode *join_request = NULL;
         const pcmk__node_status_t *dc_node =
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);
@@ -175,14 +176,15 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
                   join_id, controld_globals.dc_name);
         pcmk__xe_copy_attrs(generation, output, pcmk__xaf_none);
 
-        reply = create_request(CRM_OP_JOIN_REQUEST, generation,
-                               controld_globals.dc_name, CRM_SYSTEM_DC,
-                               CRM_SYSTEM_CRMD);
+        join_request = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
+                                         controld_globals.dc_name,
+                                         CRM_SYSTEM_DC, CRM_OP_JOIN_REQUEST,
+                                         generation);
 
-        crm_xml_add(reply, PCMK__XA_JOIN_ID, join_id);
-        crm_xml_add(reply, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-        pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, reply);
-        pcmk__xml_free(reply);
+        crm_xml_add(join_request, PCMK__XA_JOIN_ID, join_id);
+        crm_xml_add(join_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+        pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, join_request);
+        pcmk__xml_free(join_request);
     }
 
   done:
@@ -309,14 +311,16 @@ do_cl_join_finalize_respond(long long action,
     tmp1 = controld_query_executor_state();
     if (tmp1 != NULL) {
         xmlNode *remotes = NULL;
-        xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1,
-                                        controld_globals.dc_name, CRM_SYSTEM_DC,
-                                        CRM_SYSTEM_CRMD);
+        xmlNode *join_confirm = pcmk__new_request(pcmk_ipc_controld,
+                                                  CRM_SYSTEM_CRMD,
+                                                  controld_globals.dc_name,
+                                                  CRM_SYSTEM_DC,
+                                                  CRM_OP_JOIN_CONFIRM, tmp1);
         const pcmk__node_status_t *dc_node =
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);
 
-        crm_xml_add_int(reply, PCMK__XA_JOIN_ID, join_id);
+        crm_xml_add_int(join_confirm, PCMK__XA_JOIN_ID, join_id);
 
         crm_debug("Confirming join-%d: sending local operation history to %s",
                   join_id, controld_globals.dc_name);
@@ -343,8 +347,8 @@ do_cl_join_finalize_respond(long long action,
             }
         }
 
-        pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, reply);
-        pcmk__xml_free(reply);
+        pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, join_confirm);
+        pcmk__xml_free(join_confirm);
 
         if (AM_I_DC == FALSE) {
             register_fsa_input_adv(cause, I_NOT_DC, NULL, A_NOTHING, TRUE,

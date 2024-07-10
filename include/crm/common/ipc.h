@@ -36,11 +36,6 @@ extern "C" {
 
 // @COMPAT Make internal when we can break API backward compatibility
 //! \deprecated Do not use
-#define create_request(task, xml_data, host_to, sys_to, sys_from) \
-    create_request_adv(task, xml_data, host_to, sys_to, sys_from, __func__)
-
-// @COMPAT Make internal when we can break API backward compatibility
-//! \deprecated Do not use
 xmlNode *create_request_adv(const char *task, xmlNode *xml_data,
                             const char *host_to, const char *sys_to,
                             const char *sender_system, const char *origin);

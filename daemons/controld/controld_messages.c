@@ -366,7 +366,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         return TRUE;
     }
 
-    // Require message type (set by create_request())
+    // Require message type (set by pcmk__new_request())
     if (!pcmk__str_eq(type, PCMK__VALUE_CRMD, pcmk__str_none)) {
         crm_warn("Ignoring invalid message %s with type '%s' "
                  "(not '" PCMK__VALUE_CRMD "')",
@@ -375,7 +375,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         return TRUE;
     }
 
-    // Require a destination subsystem (also set by create_request())
+    // Require a destination subsystem (also set by pcmk__new_request())
     if (sys_to == NULL) {
         crm_warn("Ignoring invalid message %s with no " PCMK__XA_CRM_SYS_TO,
                  ref);
@@ -1159,8 +1159,9 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         name = crm_element_value(stored_msg, PCMK_XA_UNAME);
 
         if(cause == C_IPC_MESSAGE) {
-            msg = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL,
-                                 CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD);
+            msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
+                                    CRM_SYSTEM_CRMD, CRM_OP_RM_NODE_CACHE,
+                                    NULL);
             if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
                 crm_err("Could not instruct peers to remove references to node %s/%u", name, id);
             } else {
@@ -1345,8 +1346,9 @@ delete_ha_msg_input(ha_msg_input_t * orig)
 void
 broadcast_remote_state_message(const char *node_name, bool node_up)
 {
-    xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL, NULL,
-                                  CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD);
+    xmlNode *msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
+                                     CRM_SYSTEM_CRMD, CRM_OP_REMOTE_STATE,
+                                     NULL);
 
     crm_info("Notifying cluster of Pacemaker Remote node %s %s",
              node_name, node_up? "coming up" : "going down");

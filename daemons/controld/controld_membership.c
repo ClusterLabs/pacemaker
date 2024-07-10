@@ -84,8 +84,9 @@ post_cache_update(int instance)
     /* Membership changed, remind everyone we're here.
      * This will aid detection of duplicate DCs
      */
-    no_op = create_request(CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
-                           (AM_I_DC? CRM_SYSTEM_DC : CRM_SYSTEM_CRMD));
+    no_op = pcmk__new_request(pcmk_ipc_controld,
+                              (AM_I_DC? CRM_SYSTEM_DC : CRM_SYSTEM_CRMD), NULL,
+                              CRM_SYSTEM_CRMD, CRM_OP_NOOP, NULL);
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, no_op);
     pcmk__xml_free(no_op);
 }

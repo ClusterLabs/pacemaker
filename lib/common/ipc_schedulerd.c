@@ -160,7 +160,8 @@ do_schedulerd_api_call(pcmk_ipc_api_t *api, const char *task, xmlNode *cib, char
 
     sender_system = crm_strdup_printf("%s_%s", private->client_uuid,
                                       pcmk__s(crm_system_name, "client"));
-    cmd = create_request(task, cib, NULL, CRM_SYSTEM_PENGINE, sender_system);
+    cmd = pcmk__new_request(pcmk_ipc_controld, sender_system, NULL,
+                            CRM_SYSTEM_PENGINE, task, cib);
     free(sender_system);
 
     if (cmd) {

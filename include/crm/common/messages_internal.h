@@ -116,6 +116,36 @@ typedef struct {
 
 /*!
  * \internal
+ * \brief Create a Pacemaker request (for IPC or cluster layer)
+ *
+ * \param[in] server            Server whose protocol defines message semantics
+ * \param[in] sender_system     Sender's subsystem (required; this is an
+ *                              arbitrary string that may have meaning between
+ *                              the sender and recipient)
+ * \param[in] recipient_node    If not NULL, add as message's recipient node
+ *                              (NULL typically indicates a broadcast message)
+ * \param[in] recipient_system  If not NULL, add as message's recipient
+ *                              subsystem (this is an arbitrary string that may
+ *                              have meaning between the sender and recipient)
+ * \param[in] task              Add as message's task (required)
+ * \param[in] data              If not NULL, copy as message's data (callers
+ *                              should not add attributes to the returned
+ *                              message element, but instead pass any desired
+ *                              information here, though this is not always
+ *                              honored currently)
+ *
+ * \return Newly created request XML
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
+ */
+#define pcmk__new_request(server, sender_system, recipient_node,            \
+                          recipient_system, task, data)                     \
+    pcmk__new_message_as(__func__, (server), NULL,                          \
+                         (sender_system), (recipient_node),                 \
+                         (recipient_system), (task), (data))
+
+/*!
+ * \internal
  * \brief Create a Pacemaker reply (for IPC or cluster layer)
  *
  * \param[in] original_request  XML of request being replied to

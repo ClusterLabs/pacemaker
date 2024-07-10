@@ -114,8 +114,6 @@ pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
  *
  * \return XML of new request
  *
- * \note This function should not be called directly, but via the
- *       create_request() wrapper.
  * \note The caller is responsible for freeing the return value using
  *       \c pcmk__xml_free().
  */
