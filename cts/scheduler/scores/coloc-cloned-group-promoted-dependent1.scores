@@ -1,0 +1,27 @@
+
+grp1:0 promotion score on node2: 50
+grp1:1 promotion score on node1: 11
+pcmk__clone_assign: grp1-clone allocation score on node1: 0
+pcmk__clone_assign: grp1-clone allocation score on node2: 0
+pcmk__clone_assign: grp1:0 allocation score on node1: 0
+pcmk__clone_assign: grp1:0 allocation score on node2: 50
+pcmk__clone_assign: grp1:1 allocation score on node1: 10
+pcmk__clone_assign: grp1:1 allocation score on node2: 0
+pcmk__clone_assign: rsc1:0 allocation score on node1: 0
+pcmk__clone_assign: rsc1:0 allocation score on node2: 1
+pcmk__clone_assign: rsc1:1 allocation score on node1: 1
+pcmk__clone_assign: rsc1:1 allocation score on node2: 0
+pcmk__group_assign: grp1:0 allocation score on node1: 0
+pcmk__group_assign: grp1:0 allocation score on node2: 50
+pcmk__group_assign: grp1:1 allocation score on node1: 10
+pcmk__group_assign: grp1:1 allocation score on node2: -INFINITY
+pcmk__group_assign: rsc1:0 allocation score on node1: 0
+pcmk__group_assign: rsc1:0 allocation score on node2: 1
+pcmk__group_assign: rsc1:1 allocation score on node1: 1
+pcmk__group_assign: rsc1:1 allocation score on node2: -INFINITY
+pcmk__primitive_assign: primary allocation score on node1: 1
+pcmk__primitive_assign: primary allocation score on node2: 0
+pcmk__primitive_assign: rsc1:0 allocation score on node1: 0
+pcmk__primitive_assign: rsc1:0 allocation score on node2: 1
+pcmk__primitive_assign: rsc1:1 allocation score on node1: 1
+pcmk__primitive_assign: rsc1:1 allocation score on node2: -INFINITY
