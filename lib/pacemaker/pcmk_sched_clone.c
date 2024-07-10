@@ -245,14 +245,17 @@ can_interleave(const pcmk__colocation_t *colocation)
  * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
                               const pcmk_resource_t *primary,
                               const pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
     const GList *iter = NULL;
+    int priority_delta = 0;
 
     /* This should never be called for the clone itself as a dependent. Instead,
      * we add its colocation constraints to its instances and call the
@@ -268,7 +271,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
                         "Delaying processing colocation %s "
                         "because cloned primary %s is still provisional",
                         colocation->id, primary->id);
-        return;
+        return 0;
     }
 
     pcmk__rsc_trace(primary, "Processing colocation %s (%s with clone %s @%s)",
@@ -283,14 +286,14 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
             // We're assigning the dependent to a node
             pcmk__update_dependent_with_promotable(primary, dependent,
                                                    colocation);
-            return;
+            return 0;
         }
 
         if (colocation->dependent_role == pcmk_role_promoted) {
             // We're choosing a role for the dependent
-            pcmk__update_promotable_dependent_priority(primary, dependent,
-                                                       colocation);
-            return;
+            return pcmk__update_promotable_dependent_priority(primary,
+                                                              dependent,
+                                                              colocation);
         }
     }
 
@@ -304,11 +307,13 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
         if (primary_instance != NULL) {
             pcmk__rsc_debug(primary, "Interleaving %s with %s",
                             dependent->id, primary_instance->id);
-            dependent->priv->cmds->apply_coloc_score(dependent,
-                                                     primary_instance,
-                                                     colocation, true);
 
-        } else if (colocation->score >= PCMK_SCORE_INFINITY) {
+            return dependent->priv->cmds->apply_coloc_score(dependent,
+                                                            primary_instance,
+                                                            colocation, true);
+        }
+
+        if (colocation->score >= PCMK_SCORE_INFINITY) {
             crm_notice("%s cannot run because it cannot interleave with "
                        "any instance of %s", dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true, true);
@@ -320,7 +325,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
                             dependent->id, primary->id);
         }
 
-        return;
+        return 0;
     }
 
     // Apply mandatory colocations
@@ -346,16 +351,20 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
         pcmk__colocation_intersect_nodes(dependent, primary, colocation,
                                          primary_nodes, false);
         g_list_free(primary_nodes);
-        return;
+        return 0;
     }
 
     // Apply optional colocations
     for (iter = primary->priv->children; iter != NULL; iter = iter->next) {
         const pcmk_resource_t *instance = iter->data;
+        int instance_delta = instance->priv->cmds->apply_coloc_score(dependent,
+                                                                     instance,
+                                                                     colocation,
+                                                                     false);
 
-        instance->priv->cmds->apply_coloc_score(dependent, instance,
-                                                colocation, false);
+        priority_delta = pcmk__add_scores(priority_delta, instance_delta);
     }
+    return priority_delta;
 }
 
 // Clone implementation of pcmk__assignment_methods_t:with_this_colocations()

@@ -1419,8 +1419,10 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
  * \param[in,out] dependent   Dependent resource in colocation
  * \param[in]     primary     Primary resource in colocation
  * \param[in]     colocation  Colocation constraint
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
                               const pcmk_resource_t *primary,
                               const pcmk__colocation_t *colocation)
@@ -1429,6 +1431,7 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     const char *primary_value = NULL;
     const char *attr = colocation->node_attribute;
     int score_multiplier = 1;
+    int priority_delta = 0;
     const pcmk_node_t *primary_node = NULL;
     const pcmk_node_t *dependent_node = NULL;
 
@@ -1439,7 +1442,7 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     dependent_node = dependent->priv->assigned_node;
 
     if ((primary_node == NULL) || (dependent_node == NULL)) {
-        return;
+        return 0;
     }
 
     if (colocation->primary_role != pcmk_role_unknown) {
@@ -1451,7 +1454,7 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
         const pcmk_resource_t *role_rsc = get_resource_for_role(primary);
 
         if (colocation->primary_role != role_rsc->priv->next_role) {
-            return;
+            return 0;
         }
     }
 
@@ -1470,7 +1473,7 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
 
         } else {
             // Otherwise, ignore the colocation if attribute values don't match
-            return;
+            return 0;
         }
 
     } else if (colocation->dependent_role == pcmk_role_unpromoted) {
@@ -1480,15 +1483,17 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
         score_multiplier = -1;
     }
 
-    dependent->priv->priority =
-        pcmk__add_scores(score_multiplier * colocation->score,
-                         dependent->priv->priority);
+    priority_delta = score_multiplier * colocation->score;
+    dependent->priv->priority = pcmk__add_scores(priority_delta,
+                                                 dependent->priv->priority);
     pcmk__rsc_trace(dependent,
                     "Applied %s to %s promotion priority (now %s after %s %d)",
                     colocation->id, dependent->id,
                     pcmk_readable_score(dependent->priv->priority),
                     ((score_multiplier == 1)? "adding" : "subtracting"),
                     colocation->score);
+
+    return priority_delta;
 }
 
 /*!

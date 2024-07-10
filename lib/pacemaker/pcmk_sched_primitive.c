@@ -1110,8 +1110,10 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
  * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__primitive_apply_coloc_score(pcmk_resource_t *dependent,
                                   const pcmk_resource_t *primary,
                                   const pcmk__colocation_t *colocation,
@@ -1124,9 +1126,8 @@ pcmk__primitive_apply_coloc_score(pcmk_resource_t *dependent,
 
     if (for_dependent) {
         // Always process on behalf of primary resource
-        primary->priv->cmds->apply_coloc_score(dependent, primary, colocation,
-                                               false);
-        return;
+        return primary->priv->cmds->apply_coloc_score(dependent, primary,
+                                                      colocation, false);
     }
 
     filter_results = pcmk__colocation_affects(dependent, primary, colocation,
@@ -1139,13 +1140,15 @@ pcmk__primitive_apply_coloc_score(pcmk_resource_t *dependent,
 
     switch (filter_results) {
         case pcmk__coloc_affects_role:
-            pcmk__apply_coloc_to_priority(dependent, primary, colocation);
-            break;
+            return pcmk__apply_coloc_to_priority(dependent, primary,
+                                                 colocation);
+
         case pcmk__coloc_affects_location:
             pcmk__apply_coloc_to_scores(dependent, primary, colocation);
-            break;
+            return 0;
+
         default: // pcmk__coloc_affects_nothing
-            return;
+            return 0;
     }
 }
 
