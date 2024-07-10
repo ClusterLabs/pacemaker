@@ -1,6 +1,6 @@
 
-grp1:0 promotion score on node2: 50
-grp1:1 promotion score on node1: 11
+grp1:0 promotion score on node2: -INFINITY
+grp1:1 promotion score on node1: INFINITY
 pcmk__clone_assign: grp1-clone allocation score on node1: 0
 pcmk__clone_assign: grp1-clone allocation score on node2: 0
 pcmk__clone_assign: grp1:0 allocation score on node1: 0
