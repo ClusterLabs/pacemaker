@@ -9,22 +9,8 @@ Current cluster status:
     * primary	(ocf:pacemaker:Dummy):	 Started node1
 
 Transition Summary:
-  * Promote    rsc1:0     ( Unpromoted -> Promoted node2 )
-  * Demote     rsc1:1     ( Promoted -> Unpromoted node1 )
 
 Executing Cluster Transition:
-  * Resource action: rsc1            cancel=10000 on node2
-  * Pseudo action:   grp1-clone_demote_0
-  * Pseudo action:   grp1:1_demote_0
-  * Resource action: rsc1            demote on node1
-  * Pseudo action:   grp1:1_demoted_0
-  * Resource action: rsc1            monitor=10000 on node1
-  * Pseudo action:   grp1-clone_demoted_0
-  * Pseudo action:   grp1-clone_promote_0
-  * Pseudo action:   grp1:0_promote_0
-  * Resource action: rsc1            promote on node2
-  * Pseudo action:   grp1:0_promoted_0
-  * Pseudo action:   grp1-clone_promoted_0
 
 Revised Cluster Status:
   * Node List:
@@ -32,6 +18,6 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: grp1-clone [grp1] (promotable):
-      * Promoted: [ node2 ]
-      * Unpromoted: [ node1 ]
+      * Promoted: [ node1 ]
+      * Unpromoted: [ node2 ]
     * primary	(ocf:pacemaker:Dummy):	 Started node1

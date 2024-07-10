@@ -353,6 +353,8 @@ static int
 colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
                     const pcmk__colocation_t *colocation)
 {
+    int priority_delta = 0;
+
     if (dependent->children == NULL) {
         return 0;
     }
@@ -364,24 +366,50 @@ colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
         // Colocate first member (internal colocations will handle the rest)
         pcmk_resource_t *member = dependent->children->data;
 
-        member->cmds->apply_coloc_score(member, primary, colocation, true);
-        return 0;
+        priority_delta = member->cmds->apply_coloc_score(member, primary,
+                                                         colocation, true);
+
+    } else {
+        if (colocation->score >= PCMK_SCORE_INFINITY) {
+            pcmk__config_err("%s: Cannot perform mandatory colocation between "
+                             "non-colocated group and %s",
+                             dependent->id, primary->id);
+            return 0;
+        }
+
+        // Colocate each member individually
+        for (GList *iter = dependent->children; iter != NULL;
+             iter = iter->next) {
+
+            pcmk_resource_t *member = iter->data;
+            int instance_delta = member->cmds->apply_coloc_score(member,
+                                                                 primary,
+                                                                 colocation,
+                                                                 false);
+
+            /* priority_delta is used for determining which instances of a
+             * promotable clone to promote. It's possible that colocations
+             * involving promotable cloned non-colocated groups may not behave
+             * correctly in all circumstances. Non-colocated groups are
+             * deprecated, and testing focused on colocated groups.
+             */
+            priority_delta = pcmk__add_scores(priority_delta, instance_delta);
+        }
     }
 
-    if (colocation->score >= PCMK_SCORE_INFINITY) {
-        pcmk__config_err("%s: Cannot perform mandatory colocation between "
-                         "non-colocated group and %s",
-                         dependent->id, primary->id);
-        return 0;
-    }
+    if (priority_delta != 0) {
+        dependent->priority = pcmk__add_scores(priority_delta,
+                                               dependent->priority);
 
-    // Colocate each member individually
-    for (GList *iter = dependent->children; iter != NULL; iter = iter->next) {
-        pcmk_resource_t *member = iter->data;
-
-        member->cmds->apply_coloc_score(member, primary, colocation, true);
+        pcmk__rsc_trace(dependent,
+                        "Applied %s to %s promotion priority "
+                        "(now %s after %s %d)",
+                        colocation->id, dependent->id,
+                        pcmk_readable_score(dependent->priority),
+                        ((priority_delta > 0)? "adding" : "subtracting"),
+                        QB_ABS(priority_delta));
     }
-    return 0;
+    return priority_delta;
 }
 
 /*!
@@ -402,6 +430,7 @@ static int
 colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
                     const pcmk__colocation_t *colocation)
 {
+    int priority_delta = 0;
     const pcmk_resource_t *member = NULL;
 
     pcmk__rsc_trace(primary,
@@ -431,8 +460,8 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
             return 0;   // Nothing to colocate with
         }
 
-        member->cmds->apply_coloc_score(dependent, member, colocation, false);
-        return 0;
+        return member->cmds->apply_coloc_score(dependent, member, colocation,
+                                               false);
     }
 
     if (colocation->score >= PCMK_SCORE_INFINITY) {
@@ -445,10 +474,15 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
     // Colocate dependent with each member individually
     for (const GList *iter = primary->children; iter != NULL;
          iter = iter->next) {
+
+        int instance_delta = 0;
+
         member = iter->data;
-        member->cmds->apply_coloc_score(dependent, member, colocation, false);
+        instance_delta = member->cmds->apply_coloc_score(dependent, member,
+                                                         colocation, false);
+        priority_delta = pcmk__add_scores(priority_delta, instance_delta);
     }
-    return 0;
+    return priority_delta;
 }
 
 /*!
