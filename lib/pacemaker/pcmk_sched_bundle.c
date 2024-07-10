@@ -454,6 +454,7 @@ struct coloc_data {
     const pcmk__colocation_t *colocation;
     pcmk_resource_t *dependent;
     GList *container_hosts;
+    int priority_delta;
 };
 
 /*!
@@ -473,10 +474,14 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
     pcmk_node_t *chosen = NULL;
 
     if (coloc_data->colocation->score < PCMK_SCORE_INFINITY) {
-        replica->container->cmds->apply_coloc_score(coloc_data->dependent,
-                                                    replica->container,
-                                                    coloc_data->colocation,
-                                                    false);
+        int priority_delta =
+            replica->container->cmds->apply_coloc_score(coloc_data->dependent,
+                                                        replica->container,
+                                                        coloc_data->colocation,
+                                                        false);
+
+        coloc_data->priority_delta =
+            pcmk__add_scores(coloc_data->priority_delta, priority_delta);
         return true;
     }
 
@@ -513,14 +518,16 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
  * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
                                const pcmk_resource_t *primary,
                                const pcmk__colocation_t *colocation,
                                bool for_dependent)
 {
-    struct coloc_data coloc_data = { colocation, dependent, NULL };
+    struct coloc_data coloc_data = { colocation, dependent, NULL, 0 };
 
     /* This should never be called for the bundle itself as a dependent.
      * Instead, we add its colocation constraints to its containers and bundled
@@ -534,7 +541,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
                         "Skipping applying colocation %s "
                         "because %s is still provisional",
                         colocation->id, primary->id);
-        return;
+        return 0;
     }
     pcmk__rsc_trace(primary, "Applying colocation %s (%s with %s at %s)",
                     colocation->id, dependent->id, primary->id,
@@ -550,10 +557,13 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
         if (primary_container != NULL) { // Success, we found one
             pcmk__rsc_debug(primary, "Pairing %s with %s",
                             dependent->id, primary_container->id);
-            dependent->cmds->apply_coloc_score(dependent, primary_container,
-                                               colocation, true);
 
-        } else if (colocation->score >= PCMK_SCORE_INFINITY) {
+            return dependent->cmds->apply_coloc_score(dependent,
+                                                      primary_container,
+                                                      colocation, true);
+        }
+
+        if (colocation->score >= PCMK_SCORE_INFINITY) {
             // Failure, and it's fatal
             crm_notice("%s cannot run because there is no compatible "
                        "instance of %s to colocate with",
@@ -565,7 +575,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
                             "%s cannot be colocated with any instance of %s",
                             dependent->id, primary->id);
         }
-        return;
+        return 0;
     }
 
     pe__foreach_const_bundle_replica(primary, replica_apply_coloc_score,
@@ -576,6 +586,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
                                          coloc_data.container_hosts, false);
     }
     g_list_free(coloc_data.container_hosts);
+    return coloc_data.priority_delta;
 }
 
 // Bundle implementation of pcmk_assignment_methods_t:with_this_colocations()

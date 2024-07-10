@@ -11,6 +11,8 @@
 
 #include <stdbool.h>
 
+#include <qb/qbdefs.h>              // QB_ABS()
+
 #include <crm/common/xml.h>
 
 #include <pacemaker-internal.h>
@@ -344,15 +346,15 @@ pcmk__group_internal_constraints(pcmk_resource_t *rsc)
  * \param[in,out] dependent      Dependent group resource in colocation
  * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
+ *
+ * \return The score added to the dependent's priority
  */
-static void
+static int
 colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
                     const pcmk__colocation_t *colocation)
 {
-    pcmk_resource_t *member = NULL;
-
     if (dependent->children == NULL) {
-        return;
+        return 0;
     }
 
     pcmk__rsc_trace(primary, "Processing %s (group %s with %s) for dependent",
@@ -360,23 +362,26 @@ colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
 
     if (pe__group_flag_is_set(dependent, pcmk__group_colocated)) {
         // Colocate first member (internal colocations will handle the rest)
-        member = (pcmk_resource_t *) dependent->children->data;
+        pcmk_resource_t *member = dependent->children->data;
+
         member->cmds->apply_coloc_score(member, primary, colocation, true);
-        return;
+        return 0;
     }
 
     if (colocation->score >= PCMK_SCORE_INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation between "
                          "non-colocated group and %s",
                          dependent->id, primary->id);
-        return;
+        return 0;
     }
 
     // Colocate each member individually
     for (GList *iter = dependent->children; iter != NULL; iter = iter->next) {
-        member = (pcmk_resource_t *) iter->data;
+        pcmk_resource_t *member = iter->data;
+
         member->cmds->apply_coloc_score(member, primary, colocation, true);
     }
+    return 0;
 }
 
 /*!
@@ -390,8 +395,10 @@ colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
  * \param[in,out] dependent      Dependent resource in colocation
  * \param[in]     primary        Primary group resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
+ *
+ * \return The score added to the dependent's priority
  */
-static void
+static int
 colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
                     const pcmk__colocation_t *colocation)
 {
@@ -402,7 +409,7 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
                     colocation->id, dependent->id, primary->id);
 
     if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
-        return;
+        return 0;
     }
 
     if (pe__group_flag_is_set(primary, pcmk__group_colocated)) {
@@ -421,18 +428,18 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
             member = (pcmk_resource_t *) primary->children->data;
         }
         if (member == NULL) {
-            return; // Nothing to colocate with
+            return 0;   // Nothing to colocate with
         }
 
         member->cmds->apply_coloc_score(dependent, member, colocation, false);
-        return;
+        return 0;
     }
 
     if (colocation->score >= PCMK_SCORE_INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation with"
                          " non-colocated group %s",
                          dependent->id, primary->id);
-        return;
+        return 0;
     }
 
     // Colocate dependent with each member individually
@@ -441,6 +448,7 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
         member = iter->data;
         member->cmds->apply_coloc_score(dependent, member, colocation, false);
     }
+    return 0;
 }
 
 /*!
@@ -455,8 +463,10 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
  * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__group_apply_coloc_score(pcmk_resource_t *dependent,
                               const pcmk_resource_t *primary,
                               const pcmk__colocation_t *colocation,
@@ -466,13 +476,13 @@ pcmk__group_apply_coloc_score(pcmk_resource_t *dependent,
                && (colocation != NULL));
 
     if (for_dependent) {
-        colocate_group_with(dependent, primary, colocation);
+        return colocate_group_with(dependent, primary, colocation);
 
     } else {
         // Method should only be called for primitive dependents
         CRM_ASSERT(pcmk__is_primitive(dependent));
 
-        colocate_with_group(dependent, primary, colocation);
+        return colocate_with_group(dependent, primary, colocation);
     }
 }
 
