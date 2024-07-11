@@ -18,6 +18,7 @@ SUBDIRS = \
 	io		\
 	iso8601		\
 	lists		\
+	messages	\
 	nodes  		\
 	nvpair 		\
 	options		\

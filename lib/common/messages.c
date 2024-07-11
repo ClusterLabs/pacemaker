@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdio.h>
+#include <time.h>                       // time()
 #include <sys/types.h>
 
 #include <glib.h>
@@ -17,6 +18,87 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
+
+/*!
+ * \internal
+ * \brief Create message XML (for IPC or the cluster layer)
+ *
+ * Create standard, generic XML that can be used as a message sent via IPC or
+ * the cluster layer. Currently, not all IPC and cluster layer messaging uses
+ * this, but it should (eventually, keeping backward compatibility in mind).
+ *
+ * \param[in] origin            Name of function that called this one (required)
+ * \param[in] server            Server whose protocol defines message semantics
+ * \param[in] reply_to          If NULL, create message as a request with a
+ *                              generated message ID, otherwise create message
+ *                              as a reply to this message ID
+ * \param[in] sender_system     Sender's subsystem (required; this is an
+ *                              arbitrary string that may have meaning between
+ *                              the sender and recipient)
+ * \param[in] recipient_node    If not NULL, add as message's recipient node
+ *                              (NULL typically indicates a broadcast message)
+ * \param[in] recipient_system  If not NULL, add as message's recipient
+ *                              subsystem (this is an arbitrary string that may
+ *                              have meaning between the sender and recipient)
+ * \param[in] task              Add as message's task (required)
+ * \param[in] data              If not NULL, copy as message's data (callers
+ *                              should not add attributes to the returned
+ *                              message element, but instead pass any desired
+ *                              information here, though this is not always
+ *                              honored currently)
+ *
+ * \return Newly created message XML
+ *
+ * \note This function should usually not be called directly, but via the
+ *       pcmk__new_message() wrapper.
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
+ */
+xmlNode *
+pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
+                     const char *reply_to, const char *sender_system,
+                     const char *recipient_node, const char *recipient_system,
+                     const char *task, xmlNode *data)
+{
+    static unsigned int message_counter = 0U;
+
+    xmlNode *message = NULL;
+    char *message_id = NULL;
+    const char *subtype = PCMK__VALUE_RESPONSE;
+
+    CRM_CHECK(!pcmk__str_empty(origin)
+              && !pcmk__str_empty(sender_system)
+              && !pcmk__str_empty(task),
+              return NULL);
+
+    if (reply_to == NULL) {
+        subtype = PCMK__VALUE_REQUEST;
+        message_id = crm_strdup_printf("%s-%s-%llu-%u", task, sender_system,
+                                       (unsigned long long) time(NULL),
+                                       message_counter++);
+        reply_to = message_id;
+    }
+
+    message = pcmk__xe_create(NULL, PCMK__XE_MESSAGE);
+    pcmk__xe_set_props(message,
+                       PCMK_XA_ORIGIN, origin,
+                       PCMK__XA_T, pcmk__server_message_type(server),
+                       PCMK__XA_SUBT, subtype,
+                       PCMK_XA_VERSION, CRM_FEATURE_SET,
+                       PCMK_XA_REFERENCE, reply_to,
+                       PCMK__XA_CRM_SYS_FROM, sender_system,
+                       PCMK__XA_CRM_HOST_TO, recipient_node,
+                       PCMK__XA_CRM_SYS_TO, recipient_system,
+                       PCMK__XA_CRM_TASK, task,
+                       NULL);
+    if (data != NULL) {
+        xmlNode *wrapper = pcmk__xe_create(message, PCMK__XE_CRM_XML);
+
+        pcmk__xml_copy(wrapper, data);
+    }
+    free(message_id);
+    return message;
+}
 
 /*!
  * \brief Create a Pacemaker request (for IPC or cluster layer)
@@ -43,14 +125,8 @@ create_request_adv(const char *task, xmlNode *msg_data,
                    const char *sys_from, const char *uuid_from,
                    const char *origin)
 {
-    static uint ref_counter = 0;
-
     char *true_from = NULL;
     xmlNode *request = NULL;
-    char *reference = crm_strdup_printf("%s-%s-%lld-%u",
-                                        (task? task : "_empty_"),
-                                        (sys_from? sys_from : "_empty_"),
-                                        (long long) time(NULL), ref_counter++);
 
     if (uuid_from != NULL) {
         true_from = crm_strdup_printf("%s_%s", uuid_from,
@@ -60,31 +136,9 @@ create_request_adv(const char *task, xmlNode *msg_data,
     } else {
         crm_err("Cannot create IPC request: No originating system specified");
     }
-
-    // host_from will get set for us if necessary by the controller when routed
-    request = pcmk__xe_create(NULL, PCMK__XE_MESSAGE);
-    crm_xml_add(request, PCMK_XA_ORIGIN, origin);
-    crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_CRMD);
-    crm_xml_add(request, PCMK_XA_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(request, PCMK__XA_SUBT, PCMK__VALUE_REQUEST);
-    crm_xml_add(request, PCMK_XA_REFERENCE, reference);
-    crm_xml_add(request, PCMK__XA_CRM_TASK, task);
-    crm_xml_add(request, PCMK__XA_CRM_SYS_TO, sys_to);
-    crm_xml_add(request, PCMK__XA_CRM_SYS_FROM, true_from);
-
-    /* HOSTTO will be ignored if it is to the DC anyway. */
-    if (host_to != NULL && strlen(host_to) > 0) {
-        crm_xml_add(request, PCMK__XA_CRM_HOST_TO, host_to);
-    }
-
-    if (msg_data != NULL) {
-        xmlNode *wrapper = pcmk__xe_create(request, PCMK__XE_CRM_XML);
-
-        pcmk__xml_copy(wrapper, msg_data);
-    }
-    free(reference);
+    request = pcmk__new_message_as(origin, pcmk_ipc_controld, NULL, true_from,
+                                   host_to, sys_to, task, msg_data);
     free(true_from);
-
     return request;
 }
 
@@ -106,8 +160,6 @@ xmlNode *
 create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
                  const char *origin)
 {
-    xmlNode *reply = NULL;
-
     const char *host_from = crm_element_value(original_request, PCMK__XA_SRC);
     const char *sys_from = crm_element_value(original_request,
                                              PCMK__XA_CRM_SYS_FROM);
@@ -132,30 +184,10 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
         crm_trace("Creating a reply for a non-request original message");
     }
 
-    reply = pcmk__xe_create(NULL, PCMK__XE_MESSAGE);
-    crm_xml_add(reply, PCMK_XA_ORIGIN, origin);
-    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_CRMD);
-    crm_xml_add(reply, PCMK_XA_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(reply, PCMK__XA_SUBT, PCMK__VALUE_RESPONSE);
-    crm_xml_add(reply, PCMK_XA_REFERENCE, crm_msg_reference);
-    crm_xml_add(reply, PCMK__XA_CRM_TASK, operation);
-
-    /* since this is a reply, we reverse the from and to */
-    crm_xml_add(reply, PCMK__XA_CRM_SYS_TO, sys_from);
-    crm_xml_add(reply, PCMK__XA_CRM_SYS_FROM, sys_to);
-
-    /* HOSTTO will be ignored if it is to the DC anyway. */
-    if (host_from != NULL && strlen(host_from) > 0) {
-        crm_xml_add(reply, PCMK__XA_CRM_HOST_TO, host_from);
-    }
-
-    if (xml_response_data != NULL) {
-        xmlNode *wrapper = pcmk__xe_create(reply, PCMK__XE_CRM_XML);
-
-        pcmk__xml_copy(wrapper, xml_response_data);
-    }
-
-    return reply;
+    // Since this is a reply, we reverse the sender and recipient info
+    return pcmk__new_message_as(origin, pcmk_ipc_controld, crm_msg_reference,
+                                sys_to, host_from, sys_from, operation,
+                                xml_response_data);
 }
 
 /*!
