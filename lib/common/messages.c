@@ -62,7 +62,7 @@ create_request_adv(const char *task, xmlNode *msg_data,
     }
 
     // host_from will get set for us if necessary by the controller when routed
-    request = pcmk__xe_create(NULL, __func__);
+    request = pcmk__xe_create(NULL, PCMK__XE_MESSAGE);
     crm_xml_add(request, PCMK_XA_ORIGIN, origin);
     crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_CRMD);
     crm_xml_add(request, PCMK_XA_VERSION, CRM_FEATURE_SET);
@@ -132,7 +132,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
         crm_trace("Creating a reply for a non-request original message");
     }
 
-    reply = pcmk__xe_create(NULL, __func__);
+    reply = pcmk__xe_create(NULL, PCMK__XE_MESSAGE);
     crm_xml_add(reply, PCMK_XA_ORIGIN, origin);
     crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_CRMD);
     crm_xml_add(reply, PCMK_XA_VERSION, CRM_FEATURE_SET);
