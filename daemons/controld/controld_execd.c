@@ -1212,7 +1212,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 }
 
 static void
-handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
+handle_reprobe_op(lrm_state_t *lrm_state, xmlNode *msg, const char *from_sys,
                   const char *from_host, const char *user_name,
                   gboolean is_remote_node, bool reprobe_all_nodes)
 {
@@ -1221,10 +1221,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
                   reprobe_all_nodes);
 
     if (!pcmk__strcase_any_of(from_sys, CRM_SYSTEM_PENGINE, CRM_SYSTEM_TENGINE, NULL)) {
-
-        xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, NULL, from_host,
-                                        from_sys, CRM_SYSTEM_LRMD,
-                                        controld_globals.our_uuid);
+        xmlNode *reply = pcmk__new_reply(msg, NULL);
 
         crm_debug("ACK'ing re-probe from %s (%s)", from_sys, from_host);
 
@@ -1455,7 +1452,7 @@ do_lrm_invoke(long long action,
             // For CRM_OP_REPROBE, a NULL target means we're targeting all nodes
             raw_target = crm_element_value(input->xml, PCMK__META_ON_NODE);
         }
-        handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
+        handle_reprobe_op(lrm_state, input->msg, from_sys, from_host, user_name,
                           is_remote_node, (raw_target == NULL));
 
     } else if (operation != NULL) {
