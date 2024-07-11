@@ -434,7 +434,7 @@ run_controller_mainloop(void)
 static void
 print_node_id(void)
 {
-    uint32_t nodeid;
+    uint32_t nodeid = 0;
     int rc = pcmk__query_node_info(out, &nodeid, NULL, NULL, NULL, NULL, NULL,
                                    false, 0);
 
