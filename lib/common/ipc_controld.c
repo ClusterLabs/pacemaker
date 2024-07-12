@@ -9,9 +9,12 @@
 
 #include <crm_internal.h>
 
-#include <stdio.h>
-#include <stdbool.h>
 #include <errno.h>
+#include <inttypes.h>                   // PRIu32
+#include <stdbool.h>
+#include <stdint.h>                     // uint32_t
+#include <stdio.h>
+
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
@@ -417,7 +420,7 @@ pcmk_controld_api_node_info(pcmk_ipc_api_t *api, uint32_t nodeid)
         return EINVAL;
     }
     if (nodeid > 0) {
-        pcmk__xe_set_id(request, "%lu", (unsigned long) nodeid);
+        crm_xml_add_ll(request, PCMK_XA_ID, nodeid);
     }
 
     rc = send_controller_request(api, request, true);
