@@ -85,7 +85,7 @@ post_cache_update(int instance)
      * This will aid detection of duplicate DCs
      */
     no_op = create_request(CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
-                           AM_I_DC ? CRM_SYSTEM_DC : CRM_SYSTEM_CRMD, NULL);
+                           (AM_I_DC? CRM_SYSTEM_DC : CRM_SYSTEM_CRMD));
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, no_op);
     pcmk__xml_free(no_op);
 }

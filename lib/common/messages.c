@@ -107,13 +107,13 @@ pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
  * \param[in] msg_data      What to add as the request's data contents
  * \param[in] host_to       What to set as the request's destination host
  * \param[in] sys_to        What to set as the request's destination system
- * \param[in] sys_from      If not NULL, set as request's origin system
- * \param[in] uuid_from     If not NULL, use in request's origin system
+ * \param[in] sender_system  Sender's subsystem (required; this is an
+ *                           arbitrary string that may have meaning between
+ *                           the sender and recipient)
  * \param[in] origin        Name of function that called this one
  *
  * \return XML of new request
  *
- * \note One of sys_from or uuid_from must be non-NULL
  * \note This function should not be called directly, but via the
  *       create_request() wrapper.
  * \note The caller is responsible for freeing the return value using
@@ -122,24 +122,10 @@ pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
 xmlNode *
 create_request_adv(const char *task, xmlNode *msg_data,
                    const char *host_to, const char *sys_to,
-                   const char *sys_from, const char *uuid_from,
-                   const char *origin)
+                   const char *sender_system, const char *origin)
 {
-    char *true_from = NULL;
-    xmlNode *request = NULL;
-
-    if (uuid_from != NULL) {
-        true_from = crm_strdup_printf("%s_%s", uuid_from,
-                                      (sys_from? sys_from : "none"));
-    } else if (sys_from != NULL) {
-        true_from = strdup(sys_from);
-    } else {
-        crm_err("Cannot create IPC request: No originating system specified");
-    }
-    request = pcmk__new_message_as(origin, pcmk_ipc_controld, NULL, true_from,
-                                   host_to, sys_to, task, msg_data);
-    free(true_from);
-    return request;
+    return pcmk__new_message_as(origin, pcmk_ipc_controld, NULL, sender_system,
+                                host_to, sys_to, task, msg_data);
 }
 
 /*!

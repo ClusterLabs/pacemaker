@@ -51,7 +51,7 @@ do_cl_join_query(long long action,
                  enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     xmlNode *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
-                                  CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+                                  CRM_SYSTEM_DC, CRM_SYSTEM_CRMD);
 
     sleep(1);                   // Give the cluster layer time to propagate to the DC
     update_dc(NULL);            /* Unset any existing value so that the result is not discarded */
@@ -81,7 +81,7 @@ do_cl_join_announce(long long action,
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_STARTING)) {
         /* send as a broadcast */
         xmlNode *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
-                                      CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+                                      CRM_SYSTEM_DC, CRM_SYSTEM_CRMD);
 
         crm_debug("Announcing availability");
         update_dc(NULL);
@@ -177,7 +177,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
         reply = create_request(CRM_OP_JOIN_REQUEST, generation,
                                controld_globals.dc_name, CRM_SYSTEM_DC,
-                               CRM_SYSTEM_CRMD, NULL);
+                               CRM_SYSTEM_CRMD);
 
         crm_xml_add(reply, PCMK__XA_JOIN_ID, join_id);
         crm_xml_add(reply, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
@@ -311,7 +311,7 @@ do_cl_join_finalize_respond(long long action,
         xmlNode *remotes = NULL;
         xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1,
                                         controld_globals.dc_name, CRM_SYSTEM_DC,
-                                        CRM_SYSTEM_CRMD, NULL);
+                                        CRM_SYSTEM_CRMD);
         const pcmk__node_status_t *dc_node =
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);

@@ -687,7 +687,7 @@ purge_node_from_fencer(const char *node_name, long node_id)
     }
 
     cmd = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, "stonith-ng",
-                         crm_system_name, NULL);
+                         crm_system_name);
     if (node_id > 0) {
         crm_xml_add_ll(cmd, PCMK_XA_ID, node_id);
     }

@@ -1159,7 +1159,8 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         name = crm_element_value(stored_msg, PCMK_XA_UNAME);
 
         if(cause == C_IPC_MESSAGE) {
-            msg = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+            msg = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL,
+                                 CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD);
             if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
                 crm_err("Could not instruct peers to remove references to node %s/%u", name, id);
             } else {
@@ -1345,7 +1346,7 @@ void
 broadcast_remote_state_message(const char *node_name, bool node_up)
 {
     xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL, NULL,
-                                  CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+                                  CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD);
 
     crm_info("Notifying cluster of Pacemaker Remote node %s %s",
              node_name, node_up? "coming up" : "going down");

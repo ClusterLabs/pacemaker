@@ -757,7 +757,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
         case pcmk_ipc_fenced:
         case pcmk_ipc_pacemakerd:
             request = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL,
-                                     pcmk_ipc_name(api, false), client, NULL);
+                                     pcmk_ipc_name(api, false), client);
             if (nodeid > 0) {
                 crm_xml_add_ll(request, PCMK_XA_ID, (long long) nodeid);
             }

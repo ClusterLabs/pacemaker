@@ -280,6 +280,7 @@ static int
 do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *task)
 {
     pacemakerd_api_private_t *private;
+    char *sender_system = NULL;
     xmlNode *cmd;
     int rc;
 
@@ -290,9 +291,10 @@ do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *ta
     private = api->api_data;
     CRM_ASSERT(private != NULL);
 
-    cmd = create_request(task, NULL, NULL, CRM_SYSTEM_MCP,
-                         pcmk__ipc_sys_name(ipc_name, "client"),
-                         private->client_uuid);
+    sender_system = crm_strdup_printf("%s_%s", private->client_uuid,
+                                      pcmk__ipc_sys_name(ipc_name, "client"));
+    cmd = create_request(task, NULL, NULL, CRM_SYSTEM_MCP, sender_system);
+    free(sender_system);
 
     if (cmd) {
         rc = pcmk__send_ipc_request(api, cmd);

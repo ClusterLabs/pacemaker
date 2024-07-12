@@ -60,7 +60,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
             }
 
             cmd = create_request(task, pseudo->xml, node->name,
-                                 CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
+                                 CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE);
             pcmk__cluster_send_message(node, pcmk_ipc_controld, cmd);
             pcmk__xml_free(cmd);
         }
@@ -166,7 +166,8 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
     }
 
-    cmd = create_request(task, action->xml, router_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
+    cmd = create_request(task, action->xml, router_node, CRM_SYSTEM_CRMD,
+                         CRM_SYSTEM_TENGINE);
 
     counter = pcmk__transition_key(controld_globals.transition_graph->id,
                                    action->id, get_target_rc(action),
@@ -407,7 +408,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                (no_wait? " without waiting" : ""), action->id);
 
     cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, router_node,
-                         CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
+                         CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE);
 
     if (is_local) {
         /* shortcut local resource commands */

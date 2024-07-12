@@ -228,7 +228,7 @@ static xmlNode *
 create_dc_message(const char *join_op, const char *host_to)
 {
     xmlNode *msg = create_request(join_op, NULL, host_to, CRM_SYSTEM_CRMD,
-                                  CRM_SYSTEM_DC, NULL);
+                                  CRM_SYSTEM_DC);
 
     /* Identify which election this is a part of */
     crm_xml_add_int(msg, PCMK__XA_JOIN_ID, current_join_id);

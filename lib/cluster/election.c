@@ -307,7 +307,8 @@ election_vote(election_t *e)
 
     election_reset(e);
     e->state = election_in_progress;
-    vote = create_request(CRM_OP_VOTE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+    vote = create_request(CRM_OP_VOTE, NULL, NULL, CRM_SYSTEM_CRMD,
+                          CRM_SYSTEM_CRMD);
 
     e->count++;
     crm_xml_add(vote, PCMK__XA_ELECTION_OWNER, our_node->xml_id);
@@ -503,7 +504,7 @@ send_no_vote(pcmk__node_status_t *peer, struct vote *vote)
     // @TODO probably shouldn't hardcode CRM_SYSTEM_CRMD and pcmk_ipc_controld
 
     xmlNode *novote = create_request(CRM_OP_NOVOTE, NULL, vote->from,
-                                     CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+                                     CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD);
 
     crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
     crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);

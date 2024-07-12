@@ -323,6 +323,8 @@ create_controller_request(const pcmk_ipc_api_t *api, const char *op,
 {
     struct controld_api_private_s *private = NULL;
     const char *sys_to = NULL;
+    char *sender_system = NULL;
+    xmlNode *request = NULL;
 
     if (api == NULL) {
         return NULL;
@@ -333,9 +335,11 @@ create_controller_request(const pcmk_ipc_api_t *api, const char *op,
     } else {
         sys_to = CRM_SYSTEM_CRMD;
     }
-    return create_request(op, msg_data, node, sys_to,
-                          (crm_system_name? crm_system_name : "client"),
-                          private->client_uuid);
+    sender_system = crm_strdup_printf("%s_%s", private->client_uuid,
+                                      pcmk__s(crm_system_name, "client"));
+    request = create_request(op, msg_data, node, sys_to, sender_system);
+    free(sender_system);
+    return request;
 }
 
 // \return Standard Pacemaker return code
@@ -632,6 +636,7 @@ create_hello_message(const char *uuid, const char *client_name,
 {
     xmlNode *hello_node = NULL;
     xmlNode *hello = NULL;
+    char *sender_system = NULL;
 
     if (pcmk__str_empty(uuid) || pcmk__str_empty(client_name)
         || pcmk__str_empty(major_version) || pcmk__str_empty(minor_version)) {
@@ -650,13 +655,15 @@ create_hello_message(const char *uuid, const char *client_name,
     // @TODO Nothing uses this. Drop, or keep for debugging?
     crm_xml_add(hello_node, PCMK__XA_CLIENT_UUID, uuid);
 
-    hello = create_request(CRM_OP_HELLO, hello_node, NULL, NULL, client_name, uuid);
+    sender_system = crm_strdup_printf("%s_%s", uuid, client_name);
+    hello = create_request(CRM_OP_HELLO, hello_node, NULL, NULL, sender_system);
+    free(sender_system);
+    pcmk__xml_free(hello_node);
     if (hello == NULL) {
         crm_err("Could not create IPC hello message from %s (UUID %s): "
                 "Request creation failed", client_name, uuid);
         return NULL;
     }
-    pcmk__xml_free(hello_node);
 
     crm_trace("Created hello message from %s (UUID %s)", client_name, uuid);
     return hello;

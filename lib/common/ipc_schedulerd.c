@@ -149,6 +149,7 @@ do_schedulerd_api_call(pcmk_ipc_api_t *api, const char *task, xmlNode *cib, char
     schedulerd_api_private_t *private;
     xmlNode *cmd = NULL;
     int rc;
+    char *sender_system = NULL;
 
     if (!pcmk_ipc_is_connected(api)) {
         return ENOTCONN;
@@ -157,9 +158,10 @@ do_schedulerd_api_call(pcmk_ipc_api_t *api, const char *task, xmlNode *cib, char
     private = api->api_data;
     CRM_ASSERT(private != NULL);
 
-    cmd = create_request(task, cib, NULL, CRM_SYSTEM_PENGINE,
-                         crm_system_name? crm_system_name : "client",
-                         private->client_uuid);
+    sender_system = crm_strdup_printf("%s_%s", private->client_uuid,
+                                      pcmk__s(crm_system_name, "client"));
+    cmd = create_request(task, cib, NULL, CRM_SYSTEM_PENGINE, sender_system);
+    free(sender_system);
 
     if (cmd) {
         rc = pcmk__send_ipc_request(api, cmd);
