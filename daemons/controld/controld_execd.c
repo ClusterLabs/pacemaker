@@ -1740,7 +1740,15 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     controld_add_resource_history_xml(iter, rsc, op,
                                       controld_globals.our_nodename);
-    reply = create_request(CRM_OP_INVOKE_LRM, update, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
+
+    /* We don't have the original message ID, so use "direct-ack" (we just need
+     * something non-NULL for this to create a reply)
+     *
+     * @TODO It would be better to use the server, message ID, and task from the
+     * original request when callers have it available
+     */
+    reply = pcmk__new_message(pcmk_ipc_controld, "direct-ack", CRM_SYSTEM_LRMD,
+                              to_host, to_sys, CRM_OP_INVOKE_LRM, update);
 
     crm_log_xml_trace(update, "[direct ACK]");
 

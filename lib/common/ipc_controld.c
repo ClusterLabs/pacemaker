@@ -220,14 +220,17 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     // Do some basic validation of the reply
 
-    /* @TODO We should be able to verify that value is always a response, but
-     *       currently the controller doesn't always properly set the type. Even
-     *       if we fix the controller, we'll still need to handle replies from
-     *       old versions (feature set could be used to differentiate).
-     */
     value = crm_element_value(reply, PCMK__XA_SUBT);
-    if (!pcmk__str_any_of(value, PCMK__VALUE_REQUEST, PCMK__VALUE_RESPONSE,
-                          NULL)) {
+    if (pcmk__str_eq(value, PCMK__VALUE_REQUEST, pcmk__str_none)) {
+        /* @COMPAT Controllers <3.0.0 set PCMK__XA_SUBT to PCMK__VALUE_REQUEST
+         * for certain replies. Once we no longer support Pacemaker Remote nodes
+         * connecting to cluster nodes <3.0.0, or rolling upgrades from <3.0.0,
+         * we can drop this check.
+         */
+        crm_trace("Received a reply that was marked as a request "
+                  "(bug unless sent by a controller <3.0.0)");
+
+    } else if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         crm_info("Unrecognizable message from controller: "
                  "invalid message type '%s'", pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
