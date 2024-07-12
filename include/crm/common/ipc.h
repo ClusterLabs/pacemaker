@@ -27,21 +27,6 @@ extern "C" {
  */
 
 /*
- * Message creation utilities
- *
- * These are used for both IPC messages and cluster layer messages. However,
- * since this is public API, they stay in this header for backward
- * compatibility.
- */
-
-// @COMPAT Make internal when we can break API backward compatibility
-//! \deprecated Do not use
-xmlNode *create_request_adv(const char *task, xmlNode *xml_data,
-                            const char *host_to, const char *sys_to,
-                            const char *sender_system, const char *origin);
-
-
-/*
  * The library supports two methods of creating IPC connections. The older code
  * allows connecting to any arbitrary IPC name. The newer code only allows
  * connecting to one of the Pacemaker daemons.

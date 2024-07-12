@@ -101,32 +101,6 @@ pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
 }
 
 /*!
- * \brief Create a Pacemaker request (for IPC or cluster layer)
- *
- * \param[in] task          What to set as the request's task
- * \param[in] msg_data      What to add as the request's data contents
- * \param[in] host_to       What to set as the request's destination host
- * \param[in] sys_to        What to set as the request's destination system
- * \param[in] sender_system  Sender's subsystem (required; this is an
- *                           arbitrary string that may have meaning between
- *                           the sender and recipient)
- * \param[in] origin        Name of function that called this one
- *
- * \return XML of new request
- *
- * \note The caller is responsible for freeing the return value using
- *       \c pcmk__xml_free().
- */
-xmlNode *
-create_request_adv(const char *task, xmlNode *msg_data,
-                   const char *host_to, const char *sys_to,
-                   const char *sender_system, const char *origin)
-{
-    return pcmk__new_message_as(origin, pcmk_ipc_controld, NULL, sender_system,
-                                host_to, sys_to, task, msg_data);
-}
-
-/*!
  * \internal
  * \brief Create a Pacemaker reply (for IPC or cluster layer)
  *
