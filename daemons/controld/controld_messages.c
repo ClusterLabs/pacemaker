@@ -908,7 +908,11 @@ handle_node_info_request(const xmlNode *msg)
                            pcmk_is_set(controld_globals.flags,
                                        controld_has_quorum));
 
-    // Check whether client requested node info by ID and/or name
+    /* Check whether client requested node info by ID and/or name
+     *
+     * @TODO A Corosync-layer node ID is of type uint32_t. We should be able to
+     * handle legitimate node IDs greater than INT_MAX, but currently we do not.
+     */
     crm_element_value_int(msg, PCMK_XA_ID, &node_id);
     if (node_id < 0) {
         node_id = 0;
