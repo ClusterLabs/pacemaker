@@ -1,0 +1,134 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="16" num_updates="0" admin_epoch="0">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * There are four location constraints:
+           * ban-rsc1-node1 uses node/score and has a lifetime element with two
+             defined rules.
+           * ban-rsc2-node1 uses a top-level rule and has a lifetime element
+             with two referenced rules.
+           * ban-rsc3-node1 uses node/score and has a lifetime element with one
+             defined rule.
+           * ban-rsc4-node1 uses a top-level rule and has a lifetime element
+             with one referenced rule.
+         * There are two colocation constraints:
+           * rsc2-with-rsc1 has a lifetime element with two defined rules.
+           * rsc4-with-rsc3 has a lifetime element with two referenced rules.
+         * There are two order constraints:
+           * rsc1-then-rsc2 has a lifetime element with two defined rules.
+           * rsc3-then-rsc4 has a lifetime element with two referenced rules.
+         * A cluster_property_set ("cluster-properties") references two rules
+           that are defined in the lifetime elements of colocation and order
+           constraints.
+
+         In this situation:
+         * All lifetime elements should be removed.
+         * For ban-rsc1-node1, the node/score attributes should be removed and a
+           compound "and" rule should be created containing the following:
+           * A rule version of the node/score attributes
+           * A compound "or" rule containing the lifetime rules
+         * For ban-rsc1-node2, a compound "and" rule should be created
+           containing the following:
+           * The existing top-level rule
+           * A compound "or" rule containing the lifetime rules
+         * For ban-rsc1-node3, a compound "and" rule should be created
+           containing the following:
+           * A rule version of the node/score attributes
+           * The lifetime rule
+         * For ban-rsc1-node4, a compound "and" rule should be created
+           containing the following:
+           * The existing top-level rule
+           * The lifetime rule
+         * A new location constraint should be created with a rsc-pattern that
+           can't match any resources. It should have a compound rule containing
+           all the rules defined in the lifetime elements of the colocation and
+           order constraints that are referenced elsewhere
+           (rsc2-with-rsc1-lifetime-rule1 and rsc1-then-rsc2-lifetime-rule2).
+      -->
+    <crm_config>
+      <cluster_property_set id="cluster-properties">
+        <rule id="cluster-properties-rule">
+          <rule id-ref="rsc1-then-rsc2-lifetime-rule2"/>
+          <rule id-ref="rsc2-with-rsc1-lifetime-rule1"/>
+        </rule>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1" type="member"/>
+    </nodes>
+    <resources>
+      <primitive id="rsc1" class="ocf" type="Dummy" provider="pacemaker"/>
+      <primitive id="rsc2" class="ocf" type="Dummy" provider="pacemaker"/>
+      <primitive id="rsc3" class="ocf" type="Dummy" provider="pacemaker"/>
+      <primitive id="rsc4" class="ocf" type="Dummy" provider="pacemaker"/>
+    </resources>
+    <constraints>
+      <rsc_location id="ban-rsc1-node1" rsc="rsc1" score="-INFINITY" node="node1">
+        <lifetime>
+          <rule id="ban-rsc1-node1-lifetime-rule1">
+            <date_expression id="ban-rsc1-node1-lifetime-rule1-expr" operation="in_range" start="2004-001"/>
+          </rule>
+          <rule id="ban-rsc1-node1-lifetime-rule2">
+            <date_expression id="ban-rsc1-node1-lifetime-rule2-expr" operation="in_range" end="2005-001"/>
+          </rule>
+        </lifetime>
+      </rsc_location>
+      <rsc_location id="ban-rsc2-node1" rsc="rsc2">
+        <rule id="ban-rsc2-node1-rule" score="-INFINITY">
+          <expression id="ban-rsc2-node1-rule-expr" attribute="#uname" operation="eq" value="node1"/>
+        </rule>
+        <lifetime>
+          <rule id-ref="ban-rsc1-node1-lifetime-rule1"/>
+          <rule id-ref="ban-rsc1-node1-lifetime-rule2"/>
+        </lifetime>
+      </rsc_location>
+      <rsc_location id="ban-rsc3-node1" rsc="rsc3" score="-INFINITY" node="node1">
+        <lifetime>
+          <rule id="ban-rsc3-node1-lifetime-rule">
+            <date_expression id="ban-rsc3-node1-lifetime-rule-expr" operation="in_range" start="2004-001"/>
+          </rule>
+        </lifetime>
+      </rsc_location>
+      <rsc_location id="ban-rsc4-node1" rsc="rsc4">
+        <rule id="ban-rsc4-node1-rule" score="-INFINITY">
+          <expression id="ban-rsc4-node1-rule-expr" attribute="#uname" operation="eq" value="node1"/>
+        </rule>
+        <lifetime>
+          <rule id-ref="ban-rsc3-node1-lifetime-rule"/>
+        </lifetime>
+      </rsc_location>
+      <rsc_colocation id="rsc2-with-rsc1" score="INFINITY" rsc="rsc2" with-rsc="rsc1">
+        <lifetime>
+          <rule id="rsc2-with-rsc1-lifetime-rule1">
+            <date_expression id="rsc2-with-rsc1-lifetime-rule1-expr" operation="in_range" start="2004-001"/>
+          </rule>
+          <rule id="rsc2-with-rsc1-lifetime-rule2">
+            <date_expression id="rsc2-with-rsc1-lifetime-rule2-expr" operation="in_range" end="2005-001"/>
+          </rule>
+        </lifetime>
+      </rsc_colocation>
+      <rsc_colocation id="rsc4-with-rsc3" score="INFINITY" rsc="rsc4" with-rsc="rsc3">
+        <lifetime>
+          <rule id-ref="rsc2-with-rsc1-lifetime-rule1"/>
+          <rule id-ref="rsc2-with-rsc1-lifetime-rule2"/>
+        </lifetime>
+      </rsc_colocation>
+      <rsc_order id="rsc1-then-rsc2" first="rsc1" then="rsc2">
+        <lifetime>
+          <rule id="rsc1-then-rsc2-lifetime-rule1">
+            <date_expression id="rsc1-then-rsc2-lifetime-rule1-expr" operation="in_range" start="2004-001"/>
+          </rule>
+          <rule id="rsc1-then-rsc2-lifetime-rule2">
+            <date_expression id="rsc1-then-rsc2-lifetime-rule2-expr" operation="in_range" end="2005-001"/>
+          </rule>
+        </lifetime>
+      </rsc_order>
+      <rsc_order id="rsc3-then-rsc4" first="rsc3" then="rsc4">
+        <lifetime>
+          <rule id-ref="rsc1-then-rsc2-lifetime-rule1"/>
+          <rule id-ref="rsc1-then-rsc2-lifetime-rule2"/>
+        </lifetime>
+      </rsc_order>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
