@@ -10,6 +10,10 @@
  Guarantees after this transformation:
  * Within a given nvset, there is at most one nvpair with a given name. If there
    were duplicates prior to this transformation, only the first one is kept.
+ * There is at most one top-level rule within a location constraint. If a
+   location constraint had N top-level rules (N > 1) prior to this
+   transformation, it is now converted to N location constraints, each with a
+   single top-level rule.
  -->
 
 <xsl:stylesheet version="1.0"
@@ -17,9 +21,18 @@
 
 <xsl:import href="upgrade-3.10-common.xsl"/>
 
-<!-- Copy everything unaltered by default -->
+<!--
+ Copy everything unaltered by default, except optionally set "original"
+
+ Params:
+ * original: See identity template
+ -->
 <xsl:template match="/|@*|node()">
-    <xsl:call-template name="identity"/>
+    <xsl:param name="original"/>
+
+    <xsl:call-template name="identity">
+        <xsl:with-param name="original" select="$original"/>
+    </xsl:call-template>
 </xsl:template>
 
 
@@ -93,6 +106,61 @@
             <xsl:call-template name="identity"/>
         </xsl:otherwise>
     </xsl:choose>
+</xsl:template>
+
+
+<!-- Constraints -->
+
+<!--
+ If a location constraint contains multiple top-level rules, replace it with
+ a set of new location constraints, one for each top-level rule.
+ -->
+<xsl:template match="rsc_location[count(rule) > 1]">
+    <xsl:for-each select="rule">
+        <xsl:element name="rsc_location">
+            <!-- Copy attributes from the original rsc_location -->
+            <xsl:apply-templates select="../@*"/>
+            <xsl:attribute name="original">0</xsl:attribute>
+
+            <!--
+             Set a probably-unique ID for the new rsc_location, based on the
+             existing rsc_location's ID and the rule's position
+             -->
+            <xsl:attribute name="id">
+                <xsl:value-of select="concat($upgrade_prefix, ../@id, '-',
+                                             position())"/>
+            </xsl:attribute>
+
+            <!-- Add resource sets, rule, and lifetime (in order) -->
+            <xsl:choose>
+                <!--
+                 The descendants of the first rsc_location created should keep
+                 their "original" values from the old rsc_location, if any
+                 -->
+                <xsl:when test="position() = 1">
+                    <xsl:apply-templates select="../resource_set"/>
+                    <xsl:apply-templates select="."/>
+                    <xsl:apply-templates select="../lifetime"/>
+                </xsl:when>
+
+                <!--
+                 The descendants of later rsc_location elements should all have
+                 original="0"
+                 -->
+                <xsl:otherwise>
+                    <xsl:apply-templates select="../resource_set">
+                        <xsl:with-param name="original" select="'0'"/>
+                    </xsl:apply-templates>
+                    <xsl:apply-templates select=".">
+                        <xsl:with-param name="original" select="'0'"/>
+                    </xsl:apply-templates>
+                    <xsl:apply-templates select="../lifetime">
+                        <xsl:with-param name="original" select="'0'"/>
+                    </xsl:apply-templates>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:element>
+    </xsl:for-each>
 </xsl:template>
 
 </xsl:stylesheet>

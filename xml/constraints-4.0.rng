@@ -42,11 +42,7 @@
           <externalRef href="score.rng"/>
           <attribute name="node"><text/></attribute>
         </group>
-        <!--
-         @COMPAT: When we can break backward compatibility, limit this to a
-         single rule
-         -->
-        <oneOrMore>
+        <optional>
           <grammar>
             <include href="rule-4.0.rng">
               <start>
@@ -54,7 +50,7 @@
               </start>
             </include>
           </grammar>
-        </oneOrMore>
+        </optional>
       </choice>
 
       <!-- @COMPAT: The lifetime element is deprecated -->

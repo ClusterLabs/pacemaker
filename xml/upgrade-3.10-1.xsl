@@ -49,6 +49,8 @@
  with unsupported values without changing behavior.
  -->
 <xsl:template match="/|@*|node()">
+    <xsl:param name="original"/>
+
     <xsl:copy>
         <xsl:variable name="nvsets"
                       select="cluster_property_set
@@ -60,7 +62,9 @@
         <xsl:variable name="non_nvsets"
                       select="@*|node()[count(.|$nvsets) != count($nvsets)]"/>
 
-        <xsl:apply-templates select="$non_nvsets"/>
+        <xsl:apply-templates select="$non_nvsets">
+            <xsl:with-param name="original" select="$original"/>
+        </xsl:apply-templates>
         <xsl:apply-templates select="$nvsets">
             <!--
              Order cluster_property_set with id "cib-bootstrap-options" before
@@ -95,6 +99,7 @@
         </xsl:apply-templates>
     </xsl:copy>
 </xsl:template>
+
 
 <!--
  Bump cib/@validate-with, or set it if not already set. Pacemaker does this, but
