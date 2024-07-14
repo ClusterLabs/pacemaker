@@ -36,8 +36,6 @@ int pcmk__evaluate_date_expression(const xmlNode *date_expression,
                                    crm_time_t *next_change);
 int pcmk__evaluate_condition(xmlNode *expr, const pcmk_rule_input_t *rule_input,
                              crm_time_t *next_change);
-int pcmk__evaluate_rules(xmlNode *xml, const pcmk_rule_input_t *rule_input,
-                         crm_time_t *next_change);
 
 #ifdef __cplusplus
 }
