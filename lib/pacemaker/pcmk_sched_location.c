@@ -104,13 +104,14 @@ parse_location_role(const char *role_spec, enum rsc_role_e *role)
  * \param[in,out] rule_input     Values used to evaluate rule criteria
  *                               (node-specific values will be overwritten by
  *                               this function)
+ * \param[in]     constraint_id  ID of location constraint (for logging only)
  *
  * \return true if rule is valid, otherwise false
  */
 static bool
 generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
-                       pcmk_rule_input_t *rule_input)
+                       pcmk_rule_input_t *rule_input, const char *constraint_id)
 {
     const char *rule_id = NULL;
     const char *score = NULL;
@@ -133,8 +134,9 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
     rule_id = crm_element_value(rule_xml, PCMK_XA_ID);
     if (rule_id == NULL) {
-        pcmk__config_err("Ignoring " PCMK_XE_RULE " without " PCMK_XA_ID
-                         " in location constraint");
+        pcmk__config_err("Ignoring location constraint '%s' because its rule "
+                         "has no " PCMK_XA_ID,
+                         constraint_id);
         return false;
     }
 
@@ -144,8 +146,9 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     if (parse_location_role(role_spec, &role)) {
         crm_trace("Setting rule %s role filter to %s", rule_id, role_spec);
     } else {
-        pcmk__config_err("Ignoring rule %s: Invalid " PCMK_XA_ROLE " '%s'",
-                         rule_id, role_spec);
+        pcmk__config_err("Ignoring location constraint '%s' because rule '%s' "
+                         "has invalid " PCMK_XA_ROLE " '%s'",
+                         constraint_id, rule_id, role_spec);
         return false;
     }
 
@@ -166,9 +169,9 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
             break;
 
         default: // Not possible with schema validation enabled
-            pcmk__config_err("Ignoring location constraint rule %s "
-                             "because '%s' is not a valid " PCMK_XA_BOOLEAN_OP,
-                             rule_id, boolean);
+            pcmk__config_err("Ignoring location constraint '%s' because rule "
+                             "'%s' has invalid " PCMK_XA_BOOLEAN_OP " '%s'",
+                             constraint_id, rule_id, boolean);
             return false;
     }
 
@@ -279,8 +282,9 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         location->role_filter = role;
 
     } else {
-        bool empty = true;
         crm_time_t *next_change = crm_time_new_undefined();
+        xmlNode *rule_xml = pcmk__xe_first_child(xml_obj, PCMK_XE_RULE, NULL,
+                                                 NULL);
         pcmk_rule_input_t rule_input = {
             .now = rsc->priv->scheduler->priv->now,
             .rsc_meta = rsc->priv->meta,
@@ -289,41 +293,8 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
             .rsc_id_nmatches = rsc_id_nmatches,
         };
 
-        /* This loop is logically parallel to pcmk__evaluate_rules(), except
-         * instead of checking whether any rule is active, we set up location
-         * constraints for each active rule.
-         *
-         * @COMPAT When we can break backward compatibility, limit location
-         * constraints to a single rule, for consistency with other contexts.
-         * Since a rule may contain other rules, this does not prohibit any
-         * existing use cases.
-         *
-         * The schema already limits location constraints to a single rule.
-         */
-        for (xmlNode *rule_xml = pcmk__xe_first_child(xml_obj, PCMK_XE_RULE,
-                                                      NULL, NULL);
-             rule_xml != NULL; rule_xml = pcmk__xe_next_same(rule_xml)) {
-
-            if (generate_location_rule(rsc, rule_xml, discovery, next_change,
-                                       &rule_input)) {
-                if (empty) {
-                    empty = false;
-                    continue;
-                }
-                pcmk__warn_once(pcmk__wo_location_rules,
-                                "Support for multiple " PCMK_XE_RULE
-                                " elements in a location constraint is "
-                                "deprecated and will be removed in a future "
-                                "release (use a single new rule combining the "
-                                "previous rules with " PCMK_XA_BOOLEAN_OP
-                                " set to '" PCMK_VALUE_OR "' instead)");
-            }
-        }
-
-        if (empty) {
-            pcmk__config_err("Ignoring constraint '%s' because it contains "
-                             "no valid rules", id);
-        }
+        generate_location_rule(rsc, rule_xml, discovery, next_change,
+                               &rule_input, id);
 
         /* If there is a point in the future when the evaluation of a rule will
          * change, make sure the scheduler is re-run by that time.
