@@ -297,6 +297,8 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
          * constraints to a single rule, for consistency with other contexts.
          * Since a rule may contain other rules, this does not prohibit any
          * existing use cases.
+         *
+         * The schema already limits location constraints to a single rule.
          */
         for (xmlNode *rule_xml = pcmk__xe_first_child(xml_obj, PCMK_XE_RULE,
                                                       NULL, NULL);

@@ -48,10 +48,12 @@
       <primitive id="rsc4" class="ocf" type="Dummy" provider="pacemaker" original="1"/>
     </resources>
     <constraints original="1">
-      <rsc_location id="ban-rsc1" rsc="rsc1" original="1">
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc1-1" rsc="rsc1" original="0">
         <rule id="ban-rsc1-rule1" score="-INFINITY" original="1">
           <expression id="ban-rsc1-rule1-expr" attribute="#uname" operation="eq" value="node1" original="1"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc1-2" rsc="rsc1" original="0">
         <rule id="ban-rsc1-rule2" score="-INFINITY" original="1">
           <expression id="ban-rsc1-rule2-expr" attribute="#uname" operation="eq" value="node2" original="1"/>
         </rule>
@@ -71,7 +73,7 @@
           </rule>
         </rule>
       </rsc_location>
-      <rsc_location id="ban-rsc3-rsc4-node1-node2" original="1">
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc3-rsc4-node1-node2-1" original="0">
         <resource_set id="ban-rsc3-rsc4-node1-node2-set1" original="1">
           <resource_ref id="rsc3" original="1"/>
         </resource_set>
@@ -80,9 +82,6 @@
         </resource_set>
         <rule id="ban-rsc3-rsc4-node1-node2-rule1" score="-INFINITY" original="1">
           <expression id="ban-rsc3-rsc4-node1-node2-rule1-expr" attribute="#uname" operation="eq" value="node1" original="1"/>
-        </rule>
-        <rule id="ban-rsc3-rsc4-node1-node2-rule2" score="-INFINITY" original="1">
-          <expression id="ban-rsc3-rsc4-node1-node2-rule2-expr" attribute="#uname" operation="eq" value="node2" original="1"/>
         </rule>
         <lifetime original="1">
           <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule1" original="1">
@@ -93,7 +92,26 @@
           </rule>
         </lifetime>
       </rsc_location>
-      <rsc_location id="ban-rsc3-rsc4-node3-node4" original="1">
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc3-rsc4-node1-node2-2" original="0">
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set1" original="0">
+          <resource_ref id="rsc3" original="0"/>
+        </resource_set>
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set2" original="0">
+          <resource_ref id="rsc4" original="0"/>
+        </resource_set>
+        <rule id="ban-rsc3-rsc4-node1-node2-rule2" score="-INFINITY" original="1">
+          <expression id="ban-rsc3-rsc4-node1-node2-rule2-expr" attribute="#uname" operation="eq" value="node2" original="1"/>
+        </rule>
+        <lifetime original="0">
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule1" original="0">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule1-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule2" original="0">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule2-expr" operation="in_range" end="2005-001" original="0"/>
+          </rule>
+        </lifetime>
+      </rsc_location>
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc3-rsc4-node3-node4-1" original="0">
         <resource_set id="ban-rsc3-rsc4-node1-node2-set1" original="0">
           <resource_ref id="rsc3" original="0"/>
         </resource_set>
@@ -103,10 +121,26 @@
         <rule id="ban-rsc3-rsc4-node3-node4-rule1" score="-INFINITY" original="1">
           <expression id="ban-rsc3-rsc4-node3-node4-rule1-expr" attribute="#uname" operation="eq" value="node3" original="1"/>
         </rule>
+        <lifetime original="1">
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule1" original="0">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule1-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule2" original="0">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule2-expr" operation="in_range" end="2005-001" original="0"/>
+          </rule>
+        </lifetime>
+      </rsc_location>
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc3-rsc4-node3-node4-2" original="0">
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set1" original="0">
+          <resource_ref id="rsc3" original="0"/>
+        </resource_set>
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set2" original="0">
+          <resource_ref id="rsc4" original="0"/>
+        </resource_set>
         <rule id="ban-rsc3-rsc4-node3-node4-rule2" score="-INFINITY" original="1">
           <expression id="ban-rsc3-rsc4-node3-node4-rule2-expr" attribute="#uname" operation="eq" value="node4" original="1"/>
         </rule>
-        <lifetime original="1">
+        <lifetime original="0">
           <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule1" original="0">
             <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule1-expr" operation="in_range" start="2004-001" original="0"/>
           </rule>
