@@ -356,6 +356,96 @@ or_fails(void **state)
     pcmk__xml_free(xml);
 }
 
+/*
+ * Test negate attribute
+ */
+
+#define RULE_NEGATE_PASSING_AND_FAILS                       \
+    "<" PCMK_XE_RULE " " PCMK_XA_ID "='r' "                 \
+        PCMK_XA_BOOLEAN_OP "='" PCMK_VALUE_AND "' "         \
+        PCMK_XA_NEGATE "='" PCMK_VALUE_TRUE "' >"           \
+    "  <" PCMK_XE_RSC_EXPRESSION " " PCMK_XA_ID "='e1' "    \
+          PCMK_XA_TYPE "='IPaddr2' />"                      \
+    "  <" PCMK_XE_OP_EXPRESSION " " PCMK_XA_ID "='e2' "     \
+          PCMK_XA_NAME "='" PCMK_ACTION_MONITOR "' "        \
+          PCMK_XA_INTERVAL "='10s' />"                      \
+    "</" PCMK_XE_RULE ">"
+
+static void
+negate_passing_and_fails(void **state)
+{
+    xmlNode *xml = pcmk__xml_parse(RULE_NEGATE_PASSING_AND_FAILS);
+
+    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
+                     pcmk_rc_op_unsatisfied);
+
+    pcmk__xml_free(xml);
+}
+
+#define RULE_NEGATE_FAILING_AND_PASSES                      \
+    "<" PCMK_XE_RULE " " PCMK_XA_ID "='r' "                 \
+        PCMK_XA_BOOLEAN_OP "='" PCMK_VALUE_AND "' "         \
+        PCMK_XA_NEGATE "='" PCMK_VALUE_TRUE "' >"           \
+    "  <" PCMK_XE_RSC_EXPRESSION " " PCMK_XA_ID "='e1' "    \
+          PCMK_XA_TYPE "='Dummy' />"                        \
+    "  <" PCMK_XE_OP_EXPRESSION " " PCMK_XA_ID "='e2' "     \
+          PCMK_XA_NAME "='" PCMK_ACTION_MONITOR "' "        \
+          PCMK_XA_INTERVAL "='10s' />"                      \
+    "</" PCMK_XE_RULE ">"
+
+static void
+negate_failing_and_passes(void **state)
+{
+    xmlNode *xml = pcmk__xml_parse(RULE_NEGATE_FAILING_AND_PASSES);
+
+    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
+
+    pcmk__xml_free(xml);
+}
+
+#define RULE_NEGATE_PASSING_OR_FAILS                        \
+    "<" PCMK_XE_RULE " " PCMK_XA_ID "='r' "                 \
+        PCMK_XA_BOOLEAN_OP "='" PCMK_VALUE_OR "' "          \
+        PCMK_XA_NEGATE "='" PCMK_VALUE_TRUE "' >"           \
+    "  <" PCMK_XE_RSC_EXPRESSION " " PCMK_XA_ID "='e1' "    \
+          PCMK_XA_TYPE "='Dummy' />"                        \
+    "  <" PCMK_XE_OP_EXPRESSION " " PCMK_XA_ID "='e2' "     \
+          PCMK_XA_NAME "='" PCMK_ACTION_MONITOR "' "        \
+          PCMK_XA_INTERVAL "='10s' />"                      \
+    "</" PCMK_XE_RULE ">"
+
+static void
+negate_passing_or_fails(void **state)
+{
+    xmlNode *xml = pcmk__xml_parse(RULE_NEGATE_PASSING_OR_FAILS);
+
+    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
+                     pcmk_rc_op_unsatisfied);
+
+    pcmk__xml_free(xml);
+}
+
+#define RULE_NEGATE_FAILING_OR_PASSES                       \
+    "<" PCMK_XE_RULE " " PCMK_XA_ID "='r' "                 \
+        PCMK_XA_BOOLEAN_OP "='" PCMK_VALUE_OR "' "          \
+        PCMK_XA_NEGATE "='" PCMK_VALUE_TRUE "' >"           \
+    "  <" PCMK_XE_RSC_EXPRESSION " " PCMK_XA_ID "='e1' "    \
+          PCMK_XA_TYPE "='Dummy' />"                        \
+    "  <" PCMK_XE_OP_EXPRESSION " " PCMK_XA_ID "='e2' "     \
+          PCMK_XA_NAME "='" PCMK_ACTION_MONITOR "' "        \
+          PCMK_XA_INTERVAL "='20s' />"                      \
+    "</" PCMK_XE_RULE ">"
+
+static void
+negate_failing_or_passes(void **state)
+{
+    xmlNode *xml = pcmk__xml_parse(RULE_NEGATE_FAILING_OR_PASSES);
+
+    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
+
+    pcmk__xml_free(xml);
+}
+
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(null_invalid),
                 cmocka_unit_test(id_missing),
@@ -373,4 +463,8 @@ PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(or_one_passes),
                 cmocka_unit_test(or_two_pass),
                 cmocka_unit_test(lonely_or_passes),
-                cmocka_unit_test(or_fails))
+                cmocka_unit_test(or_fails),
+                cmocka_unit_test(negate_passing_and_fails),
+                cmocka_unit_test(negate_failing_and_passes),
+                cmocka_unit_test(negate_passing_or_fails),
+                cmocka_unit_test(negate_failing_or_passes))

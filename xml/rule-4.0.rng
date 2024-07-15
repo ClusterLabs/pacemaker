@@ -192,6 +192,9 @@
         </choice>
       </attribute>
     </optional>
+    <optional>
+      <attribute name="negate"><data type="boolean"/></attribute>
+    </optional>
 
     <!--
      @COMPAT Role applies only to rules within location constraints. When we can
