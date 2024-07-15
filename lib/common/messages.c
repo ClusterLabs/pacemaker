@@ -165,6 +165,7 @@ xmlNode *
 pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
                    xmlNode *data)
 {
+    const char *message_type = crm_element_value(original_request, PCMK__XA_T);
     const char *host_from = crm_element_value(original_request, PCMK__XA_SRC);
     const char *sys_from = crm_element_value(original_request,
                                              PCMK__XA_CRM_SYS_FROM);
@@ -175,6 +176,18 @@ pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
                                               PCMK__XA_CRM_TASK);
     const char *crm_msg_reference = crm_element_value(original_request,
                                                       PCMK_XA_REFERENCE);
+    enum pcmk_ipc_server server = pcmk__parse_server(message_type);
+
+    if (server == pcmk_ipc_unknown) {
+        /* @COMPAT Not all requests currently specify a message type, so use a
+         * default that preserves past behavior.
+         *
+         * @TODO Ensure all requests specify a message type, drop this check
+         * after we no longer support rolling upgrades or Pacemaker Remote
+         * connections involving versions before that.
+         */
+        server = pcmk_ipc_controld;
+    }
 
     if (type == NULL) {
         crm_warn("Cannot reply to invalid message: No message type specified");
@@ -189,8 +202,8 @@ pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
     }
 
     // Since this is a reply, we reverse the sender and recipient info
-    return pcmk__new_message_as(origin, pcmk_ipc_controld, crm_msg_reference,
-                                sys_to, host_from, sys_from, operation, data);
+    return pcmk__new_message_as(origin, server, crm_msg_reference, sys_to,
+                                host_from, sys_from, operation, data);
 }
 
 /*!
