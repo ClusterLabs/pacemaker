@@ -208,6 +208,17 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         return ack_status == CRM_EX_INDETERMINATE;
     }
 
+    value = crm_element_value(reply, PCMK__XA_T);
+    if (pcmk__parse_server(value) != pcmk_ipc_pacemakerd) {
+        /* @COMPAT pacemakerd <3.0.0 sets PCMK__VALUE_CRMD as the message type,
+         * so we can't enforce this check until we no longer support
+         * Pacemaker Remote nodes connecting to cluster nodes older than that.
+         */
+        crm_trace("Message from %s has unexpected message type '%s' "
+                  "(bug if not from pacemakerd <3.0.0)",
+                  pcmk_ipc_name(api, true), pcmk__s(value, ""));
+    }
+
     value = crm_element_value(reply, PCMK__XA_SUBT);
     if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         crm_info("Unrecognizable message from %s: "
@@ -293,7 +304,7 @@ do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *ta
 
     sender_system = crm_strdup_printf("%s_%s", private->client_uuid,
                                       pcmk__ipc_sys_name(ipc_name, "client"));
-    cmd = pcmk__new_request(pcmk_ipc_controld, sender_system, NULL,
+    cmd = pcmk__new_request(pcmk_ipc_pacemakerd, sender_system, NULL,
                             CRM_SYSTEM_MCP, task, NULL);
     free(sender_system);
 
