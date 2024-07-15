@@ -1424,6 +1424,10 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
         rc = pcmk_rc_ok;
     }
 
+    if (crm_is_true(crm_element_value(rule, PCMK_XA_NEGATE))) {
+        rc = (rc == pcmk_rc_ok)? pcmk_rc_op_unsatisfied : pcmk_rc_ok;
+    }
+
     crm_trace("Rule %s is %ssatisfied", id, ((rc == pcmk_rc_ok)? "" : "not "));
     return rc;
 }
