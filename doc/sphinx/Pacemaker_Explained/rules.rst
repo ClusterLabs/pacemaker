@@ -59,9 +59,18 @@ Each context that supports rules may contain a single ``rule`` element.
      - ``and``
      - How to combine conditions if this rule contains more than one. Allowed
        values:
-       
+
        * ``and``: the rule is satisfied only if all conditions are satisfied
        * ``or``: the rule is satisfied if any condition is satisfied
+   * - .. _negate:
+
+       .. index::
+          pair: rule; negate
+
+       negate
+     - :ref:`boolean <boolean>`
+     - false
+     - If true, evaluate the rule's negation instead of the rule itself
 
 .. _rule_conditions:
 
