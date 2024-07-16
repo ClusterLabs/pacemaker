@@ -85,7 +85,6 @@ extern char *crm_system_name;
 #  define CRM_SYSTEM_LRMD		"lrmd"
 #  define CRM_SYSTEM_PENGINE	"pengine"
 #  define CRM_SYSTEM_TENGINE	"tengine"
-#  define CRM_SYSTEM_STONITHD	"stonithd"
 #  define CRM_SYSTEM_MCP	"pacemakerd"
 
 // Names of internally generated node attributes

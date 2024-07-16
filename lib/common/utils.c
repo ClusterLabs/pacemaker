@@ -523,7 +523,6 @@ crm_is_daemon_name(const char *name)
                             CRM_SYSTEM_LRMD,
                             CRM_SYSTEM_MCP,
                             CRM_SYSTEM_PENGINE,
-                            CRM_SYSTEM_STONITHD,
                             CRM_SYSTEM_TENGINE,
                             "pacemaker-attrd",
                             "pacemaker-based",
@@ -533,6 +532,7 @@ crm_is_daemon_name(const char *name)
                             "pacemaker-remoted",
                             "pacemaker-schedulerd",
                             "stonith-ng",
+                            "stonithd",
                             NULL);
 }
 
