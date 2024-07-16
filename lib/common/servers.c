@@ -109,3 +109,19 @@ pcmk__server_log_name(enum pcmk_ipc_server server)
               return NULL);
     return server_info[server].log_name;
 }
+
+/*!
+ * \internal
+ * \brief Return the (primary) IPC endpoint name for a server
+ *
+ * \param[in] server  Server to get IPC endpoint for
+ *
+ * \return IPC endpoint for server (or NULL if invalid)
+ */
+const char *
+pcmk__server_ipc_name(enum pcmk_ipc_server server)
+{
+    CRM_CHECK((server > 0) && (server < PCMK__NELEM(server_info)),
+              return NULL);
+    return server_info[server].ipc_names[0];
+}

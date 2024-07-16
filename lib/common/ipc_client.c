@@ -255,29 +255,14 @@ pcmk_ipc_name(const pcmk_ipc_api_t *api, bool for_log)
         return pcmk__s(name, "Pacemaker");
     }
     switch (api->server) {
-        case pcmk_ipc_attrd:
-            return PCMK__VALUE_ATTRD;
-
+        // These servers do not have pcmk_ipc_api_t implementations yet
         case pcmk_ipc_based:
-            return NULL /* PCMK__SERVER_BASED_RW */;
-
-        case pcmk_ipc_controld:
-            return CRM_SYSTEM_CRMD;
-
         case pcmk_ipc_execd:
-            return NULL /* CRM_SYSTEM_LRMD */;
-
         case pcmk_ipc_fenced:
-            return NULL /* "stonith-ng" */;
-
-        case pcmk_ipc_pacemakerd:
-            return CRM_SYSTEM_MCP;
-
-        case pcmk_ipc_schedulerd:
-            return CRM_SYSTEM_PENGINE;
+            return NULL;
 
         default:
-            return NULL;
+            return pcmk__server_ipc_name(api->server);
     }
 }
 
