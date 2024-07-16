@@ -1,3 +1,15 @@
+* Tue Jul 16 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8-rc4
+- 6 commits with 21 files changed, 126 insertions(+), 38 deletions(-)
+
+- Features added since Pacemaker-2.1.8-rc3
+  + tools: crm_verify now reports invalid fence topology levels
+
+- Fixes since Pacemaker-2.1.8-rc3
+  + tools: crm_node -i must initialize nodeid before passing pointer
+    (regression introduced in 2.1.7)
+  + tools: cibadmin, crm_attribute, crm_node, crm_resource, crm_shadow, and
+    crm_ticket now retry CIB connections after transient failures
+
 * Tue Jul 02 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8-rc3
 - 16 commits with 11 files changed, 157 insertions(+), 57 deletions(-)
 
@@ -1139,7 +1151,6 @@
                 agent's metadata action runs crm_node
   + controller: avoid timing issue that increments resource fail count twice
   + fencing: unfence all nodes after device configuration changes
-  + fencing: avoid memory leaks when processing topology requests
   + fencing: ignore node that executed action when checking whether actions
              are equivalent
   + scheduler,controller: calculate secure digest consistently
