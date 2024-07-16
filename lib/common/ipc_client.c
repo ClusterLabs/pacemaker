@@ -92,6 +92,11 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
             // @TODO max_size could vary by client, maybe take as argument?
             (*api)->ipc_size_max = 5 * 1024 * 1024; // 5MB
             break;
+
+        default: // pcmk_ipc_unknown
+            pcmk_free_ipc_api(*api);
+            *api = NULL;
+            return EINVAL;
     }
     if ((*api)->cmds == NULL) {
         pcmk_free_ipc_api(*api);
@@ -773,6 +778,9 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
         case pcmk_ipc_execd:
         case pcmk_ipc_schedulerd:
             break;
+
+        default: // pcmk_ipc_unknown (shouldn't be possible)
+            return NULL;
     }
     return request;
 }
