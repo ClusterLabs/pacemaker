@@ -957,8 +957,7 @@ done:
 }
 
 int
-cib__signon_attempts(cib_t *cib, const char *name, enum cib_conn_type type,
-                     int attempts)
+cib__signon_attempts(cib_t *cib, enum cib_conn_type type, int attempts)
 {
     int rc = pcmk_rc_ok;
 
@@ -966,7 +965,7 @@ cib__signon_attempts(cib_t *cib, const char *name, enum cib_conn_type type,
               attempts, pcmk__plural_s(attempts));
 
     for (int remaining = attempts - 1; remaining >= 0; --remaining) {
-        rc = cib->cmds->signon(cib, name, type);
+        rc = cib->cmds->signon(cib, crm_system_name, type);
 
         if ((rc == pcmk_rc_ok)
             || (remaining == 0)
