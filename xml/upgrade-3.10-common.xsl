@@ -223,10 +223,14 @@
  * default_value:            Value that, if applied in one of
                              candidate_default_nvsets for some nvpair, would
                              unset a same-named nvpair in the current nvset
+ * unset_names:              List of text nodes containing names of nvpairs that
+                             may be unset by $default_value (empty to match any
+                             name)
  -->
 <xsl:template name="handle_defaults">
     <xsl:param name="candidate_default_nvsets"/>
     <xsl:param name="default_value"/>
+    <xsl:param name="unset_names"/>
 
     <!--
      nvpairs that may be unset by a default value in one of
@@ -235,20 +239,24 @@
     <xsl:variable name="candidate_unset_nvpairs"
                   select="nvpair
                           [(@value != $default_value)
+                           and (not($unset_names) or (@name = $unset_names))
                            and (@name
                                 = $candidate_default_nvsets
                                   /nvpair[@value = $default_value]/@name)]"/>
 
     <!--
-     nvpairs to keep in the current nvset:
-     * If an nvpair has value $default_value, then it's dropped.
-     * If an nvpair may be unset, then it's handled in the for-each, where it's
-       either placed in a newly created nvset or dropped.
+     nvpairs to keep in the current nvset. We drop an nvpair from the current
+     nvset if:
+     * it has value $default_value and its name is in $unset_names (or
+       $unset_names is empty)
+     * it may be unset; in that case, it's handled in the for-each
      -->
     <xsl:variable name="kept_nvpairs"
-                  select="nvpair[(@value != $default_value)
-                                 and (count(.|$candidate_unset_nvpairs)
-                                      != count($candidate_unset_nvpairs))]"/>
+                  select="nvpair[not(((@value = $default_value)
+                                      and (not($unset_names)
+                                           or (@name = $unset_names)))
+                                     or (count(.|$candidate_unset_nvpairs)
+                                         = count($candidate_unset_nvpairs)))]"/>
 
     <xsl:for-each select="$candidate_unset_nvpairs">
         <!--
@@ -265,6 +273,9 @@
                 <xsl:choose>
                     <xsl:when test="$default_value = '#default'">
                         <xsl:value-of select="'-no-hash-default'"/>
+                    </xsl:when>
+                    <xsl:when test="$default_value = 'default'">
+                        <xsl:value-of select="'-no-default'"/>
                     </xsl:when>
                 </xsl:choose>
             </xsl:with-param>

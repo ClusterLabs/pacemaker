@@ -55,16 +55,45 @@
    re-allow these as custom meta-attributes or values.
    -->
   <define name="rsc_meta_attributes.nvpair.unsupported">
-    <group>
-      <attribute name="name">
-        <data type="string">
-          <except>
-            <value>restart-type</value>
-          </except>
-        </data>
-      </attribute>
-      <ref name="element-nvset.value"/>
-    </group>
+    <choice>
+      <group>
+        <attribute name="name">
+          <data type="string">
+            <except>
+              <choice>
+                <value>is-managed</value>
+                <value>restart-type</value>
+              </choice>
+            </except>
+          </data>
+        </attribute>
+        <ref name="element-nvset.value"/>
+      </group>
+
+      <!--
+       These meta-attributes are allowed with value other than "default" and
+       "#default" (the latter disallowed for all nvpairs)
+       -->
+      <group>
+        <attribute name="name">
+          <choice>
+            <value type="string">is-managed</value>
+          </choice>
+        </attribute>
+        <optional>
+          <attribute name="value">
+            <data type="string">
+              <except>
+                <choice>
+                  <value>default</value>
+                  <value>#default</value>
+                </choice>
+              </except>
+            </data>
+          </attribute>
+        </optional>
+      </group>
+    </choice>
   </define>
 
   <!--
