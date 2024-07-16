@@ -293,20 +293,9 @@ ais_dest(const pcmk__cpg_host_t *host)
 static inline const char *
 msg_type2text(enum pcmk_ipc_server type)
 {
-    switch (type) {
-        case pcmk_ipc_attrd:
-            return "attrd";
-        case pcmk_ipc_based:
-            return "cib";
-        case pcmk_ipc_controld:
-            return "crmd";
-        case pcmk_ipc_execd:
-            return "lrmd";
-        case pcmk_ipc_fenced:
-            return "stonith-ng";
-        default:
-            return "unknown";
-    }
+    const char *name = pcmk__server_message_type(type);
+
+    return pcmk__s(name, "unknown");
 }
 
 /*!

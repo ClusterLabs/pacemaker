@@ -125,3 +125,19 @@ pcmk__server_ipc_name(enum pcmk_ipc_server server)
               return NULL);
     return server_info[server].ipc_names[0];
 }
+
+/*!
+ * \internal
+ * \brief Return the (primary) message type for a server
+ *
+ * \param[in] server  Server to get message type for
+ *
+ * \return Message type for server (or NULL if invalid)
+ */
+const char *
+pcmk__server_message_type(enum pcmk_ipc_server server)
+{
+    CRM_CHECK((server > 0) && (server < PCMK__NELEM(server_info)),
+              return NULL);
+    return server_info[server].message_types[0];
+}
