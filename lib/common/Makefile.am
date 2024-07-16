@@ -99,6 +99,7 @@ libcrmcommon_la_SOURCES	+= rules.c
 libcrmcommon_la_SOURCES	+= scheduler.c
 libcrmcommon_la_SOURCES	+= schemas.c
 libcrmcommon_la_SOURCES	+= scores.c
+libcrmcommon_la_SOURCES	+= servers.c
 libcrmcommon_la_SOURCES	+= strings.c
 libcrmcommon_la_SOURCES	+= utils.c
 libcrmcommon_la_SOURCES	+= watchdog.c
