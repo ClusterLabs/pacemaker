@@ -26,7 +26,6 @@ extern "C" {
  */
 enum pcmk__warnings {
     pcmk__wo_blind          = (1 << 0),
-    pcmk__wo_restart_type   = (1 << 1),
     pcmk__wo_role_after     = (1 << 2),
     pcmk__wo_require_all    = (1 << 4),
     pcmk__wo_order_score    = (1 << 5),

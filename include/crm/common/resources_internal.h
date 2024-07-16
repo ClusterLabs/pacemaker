@@ -66,12 +66,6 @@ enum pcmk__multiply_active {
     pcmk__multiply_active_unexpected,   //!< Stop unexpected instances
 };
 
-//! \deprecated
-enum pcmk__restart {
-    pcmk__restart_restart,
-    pcmk__restart_ignore,
-};
-
 //! Resource scheduling flags
 enum pcmk__rsc_flags {
     // No resource flags set (compare with equality rather than bit set)
@@ -345,7 +339,6 @@ struct pcmk__resource_private {
     GList *children;                // Resource's child resources, if any
     pcmk_resource_t *parent;        // Resource's parent resource, if any
     pcmk_scheduler_t *scheduler;    // Scheduler data containing resource
-    enum pcmk__restart restart_type;    // Deprecated
 
     // Resource configuration (possibly expanded from template)
     xmlNode *xml;
