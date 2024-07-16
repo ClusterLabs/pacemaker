@@ -141,3 +141,47 @@ pcmk__server_message_type(enum pcmk_ipc_server server)
               return NULL);
     return server_info[server].message_types[0];
 }
+
+/*!
+ * \internal
+ * \brief Get the server corresponding to a name
+ *
+ * \param[in] text  A system name, IPC endpoint name, or message type
+ *
+ * \return Server corresponding to \p text
+ */
+enum pcmk_ipc_server
+pcmk__parse_server(const char *text)
+{
+    if (text == NULL) {
+        return pcmk_ipc_unknown;
+    }
+    for (enum pcmk_ipc_server server = pcmk_ipc_attrd;
+         server <= pcmk_ipc_schedulerd; ++server) {
+
+        int name;
+
+        for (name = 0;
+             (name < 2) && (server_info[server].system_names[name] != NULL);
+             ++name) {
+            if (strcmp(text, server_info[server].system_names[name]) == 0) {
+                return server;
+            }
+        }
+        for (name = 0;
+             (name < 3) && (server_info[server].ipc_names[name] != NULL);
+             ++name) {
+            if (strcmp(text, server_info[server].ipc_names[name]) == 0) {
+                return server;
+            }
+        }
+        for (name = 0;
+             (name < 3) && (server_info[server].message_types[name] != NULL);
+             ++name) {
+            if (strcmp(text, server_info[server].message_types[name]) == 0) {
+                return server;
+            }
+        }
+    }
+    return pcmk_ipc_unknown;
+}

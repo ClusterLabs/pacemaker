@@ -279,7 +279,6 @@ void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
 
-enum pcmk_ipc_server pcmk__cluster_parse_msg_type(const char *text);
 bool pcmk__cluster_send_message(const pcmk__node_status_t *node,
                                 enum pcmk_ipc_server service,
                                 const xmlNode *data);

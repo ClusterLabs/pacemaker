@@ -34,41 +34,6 @@ CRM_TRACE_INIT_DATA(cluster);
 
 /*!
  * \internal
- * \brief Get the message type equivalent of a string
- *
- * \param[in] text  String of message type
- *
- * \return Message type equivalent of \p text
- */
-enum pcmk_ipc_server
-pcmk__cluster_parse_msg_type(const char *text)
-{
-    CRM_CHECK(text != NULL, return pcmk_ipc_unknown);
-
-    text = pcmk__message_name(text);
-
-    if (pcmk__str_eq(text, "attrd", pcmk__str_none)) {
-        return pcmk_ipc_attrd;
-
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_none)) {
-        return pcmk_ipc_based;
-
-    } else if (pcmk__str_any_of(text, CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL)) {
-        return pcmk_ipc_controld;
-
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_LRMD, pcmk__str_none)) {
-        return pcmk_ipc_execd;
-
-    } else if (pcmk__str_eq(text, "stonith-ng", pcmk__str_none)) {
-        return pcmk_ipc_fenced;
-
-    } else {
-        return pcmk_ipc_unknown;
-    }
-}
-
-/*!
- * \internal
  * \brief Get a node's cluster-layer UUID, setting it if not already set
  *
  * \param[in,out] node  Node to check

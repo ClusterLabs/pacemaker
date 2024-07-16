@@ -960,7 +960,7 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     }
 
     msg->sender.id = 0;
-    msg->sender.type = pcmk__cluster_parse_msg_type(crm_system_name);
+    msg->sender.type = pcmk__parse_server(crm_system_name);
     msg->sender.pid = local_pid;
     msg->sender.size = local_name_len;
     memset(msg->sender.uname, 0, MAX_NAME);

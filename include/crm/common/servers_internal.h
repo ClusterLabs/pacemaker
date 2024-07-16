@@ -19,6 +19,7 @@ extern "C" {
 const char *pcmk__server_log_name(enum pcmk_ipc_server server);
 const char *pcmk__server_ipc_name(enum pcmk_ipc_server server);
 const char *pcmk__server_message_type(enum pcmk_ipc_server server);
+enum pcmk_ipc_server pcmk__parse_server(const char *text);
 
 #ifdef __cplusplus
 }
