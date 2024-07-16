@@ -1910,22 +1910,16 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
  * \param[in,out] target   If not NULL, update this XML
  * \param[in]     update   Make the desired XML match this (must not be \c NULL)
  * \param[in]     flags    Group of <tt>enum pcmk__xa_flags</tt>
- * \param[in]     as_diff  If \c true, preserve order of attributes (deprecated
- *                         since 2.0.5)
  *
  * \note At least one of \p parent and \p target must be non-<tt>NULL</tt>.
  * \note This function is recursive. For the top-level call, \p parent is
  *       \c NULL and \p target is not \c NULL. For recursive calls, \p target is
  *       \c NULL and \p parent is not \c NULL.
  */
-void
-pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
-                 uint32_t flags, bool as_diff)
+static void
+update_xe(xmlNode *parent, xmlNode *target, xmlNode *update, uint32_t flags)
 {
-    /* @COMPAT Refactor further and staticize after v1 patchset deprecation.
-     *
-     * @COMPAT Drop as_diff argument when apply_xml_diff() is dropped.
-     */
+    // @TODO Try to refactor further, possibly using pcmk__xml_tree_foreach()
     const char *update_name = NULL;
     const char *update_id_attr = NULL;
     const char *update_id_val = NULL;
@@ -1988,26 +1982,13 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
 
-    if (!as_diff) {
-        pcmk__xe_copy_attrs(target, update, flags);
-
-    } else {
-        // Preserve order of attributes. Don't use pcmk__xe_copy_attrs().
-        for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
-             a = a->next) {
-            const char *p_value = pcmk__xml_attr_value(a);
-
-            /* Remove it first so the ordering of the update is preserved */
-            xmlUnsetProp(target, a->name);
-            xmlSetProp(target, a->name, (pcmkXmlStr) p_value);
-        }
-    }
+    pcmk__xe_copy_attrs(target, update, flags);
 
     for (xmlNode *child = pcmk__xml_first_child(update); child != NULL;
          child = pcmk__xml_next(child)) {
 
         crm_trace("Updating child of %s", pcmk__s(trace_s, update_name));
-        pcmk__xml_update(target, NULL, child, flags, as_diff);
+        update_xe(target, NULL, child, flags);
     }
 
     crm_trace("Finished with %s", pcmk__s(trace_s, update_name));
@@ -2230,7 +2211,7 @@ struct update_data {
  * \brief Update one XML subtree with another if the two match
  *
  * "Update" means to merge a source subtree into a target subtree (see
- * \c pcmk__xml_update()).
+ * \c update_xe()).
  *
  * A match is defined as follows:
  * * \p xml and \p user_data->update are both element nodes of the same type.
@@ -2264,7 +2245,7 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
 
     crm_log_xml_trace(xml, "update-match");
     crm_log_xml_trace(update, "update-with");
-    pcmk__xml_update(NULL, xml, update, data->flags, false);
+    update_xe(NULL, xml, update, data->flags);
 
     // Found a match and replaced it; stop traversing tree
     return false;
@@ -2275,7 +2256,7 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
  * \brief Search an XML tree depth-first and update the first matching element
  *
  * "Update" means to merge a source subtree into a target subtree (see
- * \c pcmk__xml_update()).
+ * \c update_xe()).
  *
  * A match with a node \c node is defined as follows:
  * * \c node and \p update are both element nodes of the same type.

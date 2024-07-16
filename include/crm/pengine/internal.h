@@ -363,7 +363,6 @@ void pe__register_messages(pcmk__output_t *out);
 void pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                                 const pe_rule_eval_data_t *rule_data,
                                 GHashTable *hash, const char *always_first,
-                                gboolean overwrite,
                                 pcmk_scheduler_t *scheduler);
 
 bool pe__resource_is_disabled(const pcmk_resource_t *rsc);

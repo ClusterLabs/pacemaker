@@ -226,7 +226,8 @@ make_pairs(const xmlNode *xml_obj, const char *set_name)
  * \param[in]     rule_data     Matching parameters to use when unpacking
  * \param[out]    hash          Where to store extracted name/value pairs
  * \param[in]     always_first  If not NULL, process block with this ID first
- * \param[in]     overwrite     Whether to replace existing values with same name
+ * \param[in]     overwrite     Whether to replace existing values with same
+ *                              name (all internal callers pass \c FALSE)
  * \param[out]    next_change   If not NULL, set to when evaluation will change
  */
 void
@@ -262,7 +263,8 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
  * \param[in]     node_hash     Node attributes to use when evaluating rules
  * \param[out]    hash          Where to store extracted name/value pairs
  * \param[in]     always_first  If not NULL, process block with this ID first
- * \param[in]     overwrite     Whether to replace existing values with same name
+ * \param[in]     overwrite     Whether to replace existing values with same
+ *                              name (all internal callers pass \c FALSE)
  * \param[in]     now           Time to use when evaluating rules
  * \param[out]    next_change   If not NULL, set to when evaluation will change
  */

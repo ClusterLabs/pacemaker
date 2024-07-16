@@ -692,19 +692,18 @@ pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
  * \param[in]     rule_data     Matching parameters to use when unpacking
  * \param[out]    hash          Where to store extracted name/value pairs
  * \param[in]     always_first  If not NULL, process block with this ID first
- * \param[in]     overwrite     Whether to replace existing values with same name
  * \param[in,out] scheduler     Scheduler data containing \p xml_obj
  */
 void
 pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                            const pe_rule_eval_data_t *rule_data,
                            GHashTable *hash, const char *always_first,
-                           gboolean overwrite, pcmk_scheduler_t *scheduler)
+                           pcmk_scheduler_t *scheduler)
 {
     crm_time_t *next_change = crm_time_new_undefined();
 
     pe_eval_nvpairs(scheduler->input, xml_obj, set_name, rule_data, hash,
-                    always_first, overwrite, next_change);
+                    always_first, FALSE, next_change);
     if (crm_time_is_defined(next_change)) {
         time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
 

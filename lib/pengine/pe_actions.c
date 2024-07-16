@@ -259,8 +259,7 @@ pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
     };
 
     pe__unpack_dataset_nvpairs(action_xml, PCMK_XE_INSTANCE_ATTRIBUTES,
-                               &rule_data, params, NULL,
-                               FALSE, scheduler);
+                               &rule_data, params, NULL, scheduler);
     return params;
 }
 
@@ -714,13 +713,27 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     meta = pcmk__strkey_table(free, free);
 
-    // Cluster-wide <op_defaults> <meta_attributes>
-    pe__unpack_dataset_nvpairs(rsc->priv->scheduler->priv->op_defaults,
-                               PCMK_XE_META_ATTRIBUTES, &rule_data, meta, NULL,
-                               FALSE, rsc->priv->scheduler);
+    if (action_config != NULL) {
+        // <op> <meta_attributes> take precedence over defaults
+        pe__unpack_dataset_nvpairs(action_config, PCMK_XE_META_ATTRIBUTES,
+                                   &rule_data, meta, NULL,
+                                   rsc->priv->scheduler);
+
+        /* Anything set as an <op> XML property has highest precedence.
+         * This ensures we use the name and interval from the <op> tag.
+         * (See below for the only exception, fence device start/probe timeout.)
+         */
+        for (xmlAttrPtr attr = action_config->properties;
+             attr != NULL; attr = attr->next) {
+            pcmk__insert_dup(meta, (const char *) attr->name,
+                             pcmk__xml_attr_value(attr));
+        }
+    }
 
     // Derive default timeout for probes from recurring monitor timeouts
-    if (pcmk_is_probe(action_name, interval_ms)) {
+    if (pcmk_is_probe(action_name, interval_ms)
+        && (g_hash_table_lookup(meta, PCMK_META_TIMEOUT) == NULL)) {
+
         xmlNode *min_interval_mon = most_frequent_monitor(rsc);
 
         if (min_interval_mon != NULL) {
@@ -740,22 +753,10 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
         }
     }
 
-    if (action_config != NULL) {
-        // <op> <meta_attributes> take precedence over defaults
-        pe__unpack_dataset_nvpairs(action_config, PCMK_XE_META_ATTRIBUTES,
-                                   &rule_data, meta, NULL, TRUE,
-                                   rsc->priv->scheduler);
-
-        /* Anything set as an <op> XML property has highest precedence.
-         * This ensures we use the name and interval from the <op> tag.
-         * (See below for the only exception, fence device start/probe timeout.)
-         */
-        for (xmlAttrPtr attr = action_config->properties;
-             attr != NULL; attr = attr->next) {
-            pcmk__insert_dup(meta, (const char *) attr->name,
-                             pcmk__xml_attr_value(attr));
-        }
-    }
+    // Cluster-wide <op_defaults> <meta_attributes>
+    pe__unpack_dataset_nvpairs(rsc->priv->scheduler->priv->op_defaults,
+                               PCMK_XE_META_ATTRIBUTES, &rule_data, meta, NULL,
+                               rsc->priv->scheduler);
 
     g_hash_table_remove(meta, PCMK_XA_ID);
 

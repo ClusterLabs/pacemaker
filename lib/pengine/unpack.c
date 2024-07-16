@@ -231,7 +231,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     pe__unpack_dataset_nvpairs(config, PCMK_XE_CLUSTER_PROPERTY_SET, &rule_data,
                                config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS,
-                               FALSE, scheduler);
+                               scheduler);
 
     pcmk__validate_cluster_options(config_hash);
 
@@ -4928,6 +4928,24 @@ done:
                     pcmk_role_text(rsc->priv->next_role));
 }
 
+/*!
+ * \internal
+ * \brief Insert a node attribute with value into a \c GHashTable
+ *
+ * \param[in,out] key        Key to insert (either freed or owned by
+ *                           \p user_data upon return)
+ * \param[in]     value      Value to insert (owned by \p user_data upon return)
+ * \param[in]     user_data  \c GHashTable to insert into
+ */
+static gboolean
+insert_attr(gpointer key, gpointer value, gpointer user_data)
+{
+    GHashTable *table = user_data;
+
+    g_hash_table_insert(table, key, value);
+    return TRUE;
+}
+
 static void
 add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                pcmk_scheduler_t *scheduler)
@@ -4967,13 +4985,25 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                          cluster_name);
     }
 
-    pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
-                               node->priv->attrs, NULL, overwrite,
-                               scheduler);
+    if (overwrite) {
+        /* @TODO Try to reorder some unpacking so that we don't need the
+         * overwrite argument or to unpack into a temporary table
+         */
+        GHashTable *unpacked = pcmk__strkey_table(free, free);
+
+        pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES,
+                                   &rule_data, unpacked, NULL, scheduler);
+        g_hash_table_foreach_steal(unpacked, insert_attr, node->priv->attrs);
+        g_hash_table_destroy(unpacked);
+
+    } else {
+        pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES,
+                                   &rule_data, node->priv->attrs, NULL,
+                                   scheduler);
+    }
 
     pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_UTILIZATION, &rule_data,
-                               node->priv->utilization, NULL,
-                               FALSE, scheduler);
+                               node->priv->utilization, NULL, scheduler);
 
     if (pcmk__node_attr(node, CRM_ATTR_SITE_NAME, NULL,
                         pcmk__rsc_node_current) == NULL) {

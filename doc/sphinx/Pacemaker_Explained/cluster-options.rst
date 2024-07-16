@@ -62,6 +62,101 @@ Normally, you will use command-line tools that abstract the XML, so the
 distinction will be unimportant; both properties and options are cluster
 settings you can tweak.
 
+Options can appear within four types of enclosing elements:
+
+* ``cluster_property_set``
+* ``instance_attributes``
+* ``meta_attributes``
+* ``utilization``
+
+We will refer to a set of options and its enclosing element as a *block*.
+
+.. list-table:: **Properties of an Option Block's Enclosing Element**
+   :class: longtable
+   :widths: 2 2 3 5
+   :header-rows: 1
+
+   * - Name
+     - Type
+     - Default
+     - Description
+
+   * - .. _option_block_id:
+
+       .. index::
+          pair: id; cluster_property_set
+          pair: id; instance_attributes
+          pair: id; meta_attributes
+          pair: id; utilization
+          single: attribute; id (cluster_property_set)
+          single: attribute; id (instance_attributes)
+          single: attribute; id (meta_attributes)
+          single: attribute; id (utilization)
+
+       id
+     - :ref:`id <id>`
+     -
+     - A unique name for the block (required)
+
+   * - .. _option_block_score:
+
+       .. index::
+          pair: score; cluster_property_set
+          pair: score; instance_attributes
+          pair: score; meta_attributes
+          pair: score; utilization
+          single: attribute; score (cluster_property_set)
+          single: attribute; score (instance_attributes)
+          single: attribute; score (meta_attributes)
+          single: attribute; score (utilization)
+
+       score
+     - :ref:`score <score>`
+     - 0
+     - Priority with which to process the block
+
+Each block may optionally contain a :ref:`rule <option_rule>`.
+
+
+.. _option_precedence:
+
+Option Precedence
+#################
+
+This subsection describes the precedence of options within a set of blocks and
+within a single block.
+
+Options are processed as follows:
+
+* All option blocks of a given type are processed in order of their ``score``
+  attribute, from highest to lowest. For ``cluster_property_set``, if there is a
+  block whose enclosing element has ``id="cib-bootstrap-options"``, then that
+  block is always processed first regardless of score.
+* If a block contains a rule that evaluates to false, that block is skipped.
+* Within a block, options are processed in order from first to last.
+* The first value found for a given option is applied, and the rest are ignored.
+
+Note that this means it is pointless to configure the same option twice in a
+single block, because occurrences after the first one would be ignored.
+
+For example, in the following configuration snippet, the ``no-quorum-policy``
+value ``demote`` is applied. ``property-set2`` has a higher score than
+``property-set1``, so it's processed first. There are no rules in this snippet,
+so both sets are processed. Within ``property-set2``, the value ``demote``
+appears first, so the later value ``freeze`` is ignored. We've already found a
+value for ``no-quorum-policy`` before we begin processing ``property-set1``, so
+its value ``stop`` is ignored.
+
+.. code-block:: xml
+
+   <cluster_property_set id="property-set1" score="500">
+     <nvpair id="no-quorum-policy1" name="no-quorum-policy" value="stop"/>
+   </cluster_property_set>
+   <cluster_property_set id="property-set2" score="1000">
+     <nvpair id="no-quorum-policy2a" name="no-quorum-policy" value="demote"/>
+     <nvpair id="no-quorum-policy2b" name="no-quorum-policy" value="freeze"/>
+   </cluster_property_set>
+
 
 CIB Properties
 ##############
