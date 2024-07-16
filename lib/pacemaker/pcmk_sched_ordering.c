@@ -381,26 +381,6 @@ clone_min_ordering(const char *id,
 
 /*!
  * \internal
- * \brief Update ordering flags for restart-type=restart
- *
- * \param[in]     rsc    'Then' resource in ordering
- * \param[in]     kind   Ordering kind
- * \param[in]     flag   Ordering flag to set (when applicable)
- * \param[in,out] flags  Ordering flag set to update
- *
- * \compat The \c PCMK__META_RESTART_TYPE resource meta-attribute is deprecated.
- *         Eventually, it will be removed, and \c pcmk__restart_ignore will be
- *         the only behavior, at which time this can just be removed entirely.
- */
-#define handle_restart_type(rsc, kind, flag, flags) do {                    \
-        if (((kind) == pe_order_kind_optional)                              \
-            && ((rsc)->priv->restart_type == pcmk__restart_restart)) {      \
-            pcmk__set_relation_flags((flags), (flag));                      \
-        }                                                                   \
-    } while (0)
-
-/*!
- * \internal
  * \brief Create new ordering for inverse of symmetric constraint
  *
  * \param[in]     id            Ordering ID (for logging only)
@@ -424,7 +404,6 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
         uint32_t flags = ordering_flags_for_kind(kind, action_first,
                                                  ordering_symmetric_inverse);
 
-        handle_restart_type(rsc_then, kind, pcmk__ar_then_implies_first, flags);
         pcmk__order_resource_actions(rsc_then, action_then, rsc_first,
                                      action_first, flags);
     }
@@ -479,8 +458,6 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
     flags = ordering_flags_for_kind(kind, action_first, symmetry);
-
-    handle_restart_type(rsc_then, kind, pcmk__ar_first_implies_then, flags);
 
     /* If there is a minimum number of instances that must be runnable before
      * the 'then' action is runnable, we use a pseudo-action for convenience:

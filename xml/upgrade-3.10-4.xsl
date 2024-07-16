@@ -15,6 +15,7 @@
    * migration-threshold
    * resource-stickiness
    * target-role
+ * The restart-type resource meta-attribute is not present.
  -->
 
 <xsl:stylesheet version="1.0"
@@ -46,6 +47,9 @@
     <pcmk:item>target-role</pcmk:item>
 </pcmk:list>
 
+
+<!-- Resources -->
+
 <!--
  Drop nvpairs with certain "default" values for certain resource
  meta-attributes. As needed, create new meta_attributes blocks with rules to
@@ -68,5 +72,14 @@
                                 /text()"/>
     </xsl:call-template>
 </xsl:template>
+
+<!-- Drop restart-type resource meta-attribute -->
+<xsl:template match="template/meta_attributes/nvpair[@name = 'restart-type']
+                     |primitive/meta_attributes/nvpair[@name = 'restart-type']
+                     |group/meta_attributes/nvpair[@name = 'restart-type']
+                     |clone/meta_attributes/nvpair[@name = 'restart-type']
+                     |bundle/meta_attributes/nvpair[@name = 'restart-type']
+                     |rsc_defaults/meta_attributes/nvpair
+                          [@name = 'restart-type']"/>
 
 </xsl:stylesheet>

@@ -188,9 +188,6 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__META_PROMOTED_NODE_MAX_LEGACY "master-node-max"
 
 // @COMPAT Deprecated meta-attribute since 2.0.0
-#define PCMK__META_RESTART_TYPE             "restart-type"
-
-// @COMPAT Deprecated meta-attribute since 2.0.0
 #define PCMK__META_ROLE_AFTER_FAILURE       "role_after_failure"
 
 // Constants for enumerated values
