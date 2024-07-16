@@ -32,14 +32,12 @@ Transition Summary:
   * Move       child_rsc2:1     ( node1 -> node2 )
   * Move       child_rsc4:1     ( node1 -> node2 )
   * Move       child_rsc5:1     ( node2 -> node1 )
-  * Restart    child_rsc6:0     (          node1 )  due to required rsc5 running
-  * Restart    child_rsc6:1     (          node2 )  due to required rsc5 running
   * Move       child_rsc7:1     ( node2 -> node1 )
 
 Executing Cluster Transition:
   * Pseudo action:   rsc2_stop_0
   * Pseudo action:   rsc4_stop_0
-  * Pseudo action:   rsc6_stop_0
+  * Pseudo action:   rsc5_stop_0
   * Pseudo action:   rsc7_stop_0
   * Resource action: child_rsc2:1    stop on node1
   * Pseudo action:   rsc2_stopped_0
@@ -47,9 +45,9 @@ Executing Cluster Transition:
   * Resource action: child_rsc4:1    stop on node1
   * Pseudo action:   rsc4_stopped_0
   * Pseudo action:   rsc4_start_0
-  * Resource action: child_rsc6:0    stop on node1
-  * Resource action: child_rsc6:1    stop on node2
-  * Pseudo action:   rsc6_stopped_0
+  * Resource action: child_rsc5:1    stop on node2
+  * Pseudo action:   rsc5_stopped_0
+  * Pseudo action:   rsc5_start_0
   * Resource action: child_rsc7:1    stop on node2
   * Pseudo action:   rsc7_stopped_0
   * Pseudo action:   rsc7_start_0
@@ -57,18 +55,10 @@ Executing Cluster Transition:
   * Pseudo action:   rsc2_running_0
   * Resource action: child_rsc4:1    start on node2
   * Pseudo action:   rsc4_running_0
-  * Pseudo action:   rsc5_stop_0
-  * Resource action: child_rsc7:1    start on node1
-  * Pseudo action:   rsc7_running_0
-  * Resource action: child_rsc5:1    stop on node2
-  * Pseudo action:   rsc5_stopped_0
-  * Pseudo action:   rsc5_start_0
   * Resource action: child_rsc5:1    start on node1
   * Pseudo action:   rsc5_running_0
-  * Pseudo action:   rsc6_start_0
-  * Resource action: child_rsc6:0    start on node1
-  * Resource action: child_rsc6:1    start on node2
-  * Pseudo action:   rsc6_running_0
+  * Resource action: child_rsc7:1    start on node1
+  * Pseudo action:   rsc7_running_0
 
 Revised Cluster Status:
   * Node List:

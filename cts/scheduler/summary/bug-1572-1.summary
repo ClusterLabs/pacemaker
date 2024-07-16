@@ -12,22 +12,16 @@ Current cluster status:
       * IPaddr_147_81_84_133	(ocf:heartbeat:IPaddr):	 Started arc-tkincaidlx.wsicorp.com
 
 Transition Summary:
-  * Stop       rsc_drbd_7788:0          (            Unpromoted arc-dknightlx )  due to node availability
-  * Restart    rsc_drbd_7788:1          ( Promoted arc-tkincaidlx.wsicorp.com )  due to resource definition change
-  * Restart    fs_mirror                (          arc-tkincaidlx.wsicorp.com )  due to required ms_drbd_7788 notified
-  * Restart    pgsql_5555               (          arc-tkincaidlx.wsicorp.com )  due to required fs_mirror start
-  * Restart    IPaddr_147_81_84_133     (          arc-tkincaidlx.wsicorp.com )  due to required pgsql_5555 start
+  * Stop       rsc_drbd_7788:0     (            Unpromoted arc-dknightlx )  due to node availability
+  * Restart    rsc_drbd_7788:1     ( Promoted arc-tkincaidlx.wsicorp.com )  due to resource definition change
 
 Executing Cluster Transition:
   * Pseudo action:   ms_drbd_7788_pre_notify_demote_0
-  * Pseudo action:   grp_pgsql_mirror_stop_0
-  * Resource action: IPaddr_147_81_84_133 stop on arc-tkincaidlx.wsicorp.com
+  * Resource action: pgsql_5555      monitor=30000 on arc-tkincaidlx.wsicorp.com
+  * Resource action: IPaddr_147_81_84_133 monitor=25000 on arc-tkincaidlx.wsicorp.com
   * Resource action: rsc_drbd_7788:0 notify on arc-dknightlx
   * Resource action: rsc_drbd_7788:1 notify on arc-tkincaidlx.wsicorp.com
   * Pseudo action:   ms_drbd_7788_confirmed-pre_notify_demote_0
-  * Resource action: pgsql_5555      stop on arc-tkincaidlx.wsicorp.com
-  * Resource action: fs_mirror       stop on arc-tkincaidlx.wsicorp.com
-  * Pseudo action:   grp_pgsql_mirror_stopped_0
   * Pseudo action:   ms_drbd_7788_demote_0
   * Resource action: rsc_drbd_7788:1 demote on arc-tkincaidlx.wsicorp.com
   * Pseudo action:   ms_drbd_7788_demoted_0
@@ -63,13 +57,6 @@ Executing Cluster Transition:
   * Pseudo action:   ms_drbd_7788_post_notify_promoted_0
   * Resource action: rsc_drbd_7788:1 notify on arc-tkincaidlx.wsicorp.com
   * Pseudo action:   ms_drbd_7788_confirmed-post_notify_promoted_0
-  * Pseudo action:   grp_pgsql_mirror_start_0
-  * Resource action: fs_mirror       start on arc-tkincaidlx.wsicorp.com
-  * Resource action: pgsql_5555      start on arc-tkincaidlx.wsicorp.com
-  * Resource action: pgsql_5555      monitor=30000 on arc-tkincaidlx.wsicorp.com
-  * Resource action: IPaddr_147_81_84_133 start on arc-tkincaidlx.wsicorp.com
-  * Resource action: IPaddr_147_81_84_133 monitor=25000 on arc-tkincaidlx.wsicorp.com
-  * Pseudo action:   grp_pgsql_mirror_running_0
 
 Revised Cluster Status:
   * Node List:

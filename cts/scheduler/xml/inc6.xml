@@ -24,7 +24,6 @@
       <clone id="rsc2">
         <primitive id="child_rsc2" class="ocf" provider="heartbeat" type="apache"/>
         <meta_attributes id="clone-rsc2.meta">
-          <nvpair id="restart_type.meta.auto-38" name="restart-type" value="restart"/>
           <nvpair id="nvpair.meta.auto-48" name="resource-stickiness" value="1"/>
           <nvpair id="nvpair.meta.auto-44" name="clone-max" value="3"/>
           <nvpair id="nvpair.meta.auto-46" name="clone-node-max" value="1"/>
@@ -34,7 +33,6 @@
       <clone id="rsc3">
         <primitive id="child_rsc3" class="ocf" provider="heartbeat" type="apache"/>
         <meta_attributes id="clone-rsc3.meta">
-          <nvpair id="restart_type.meta.auto-55" name="restart-type" value="restart"/>
           <nvpair id="nvpair.meta.auto-65" name="resource-stickiness" value="1"/>
           <nvpair id="nvpair.meta.auto-61" name="clone-max" value="3"/>
           <nvpair id="nvpair.meta.auto-63" name="clone-node-max" value="1"/>
@@ -61,7 +59,6 @@
       <clone id="rsc6">
         <primitive id="child_rsc6" class="ocf" provider="heartbeat" type="apache"/>
         <meta_attributes id="clone-rsc6.meta">
-          <nvpair id="restart_type.meta.auto-106" name="restart-type" value="restart"/>
           <nvpair id="nvpair.meta.auto-116" name="resource-stickiness" value="1"/>
           <nvpair id="nvpair.meta.auto-112" name="clone-max" value="3"/>
           <nvpair id="nvpair.meta.auto-114" name="clone-node-max" value="1"/>
@@ -70,7 +67,6 @@
       <clone id="rsc7">
         <primitive id="child_rsc7" class="ocf" provider="heartbeat" type="apache"/>
         <meta_attributes id="clone-rsc7.meta">
-          <nvpair id="restart_type.meta.auto-123" name="restart-type" value="restart"/>
           <nvpair id="nvpair.meta.auto-133" name="resource-stickiness" value="1"/>
           <nvpair id="nvpair.meta.auto-129" name="clone-max" value="3"/>
           <nvpair id="nvpair.meta.auto-131" name="clone-node-max" value="1"/>

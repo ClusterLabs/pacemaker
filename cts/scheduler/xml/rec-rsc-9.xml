@@ -18,19 +18,9 @@
       </meta_attributes>
     </rsc_defaults>
     <resources>
-      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc1.meta">
-          <nvpair id="restart_type.meta.auto-23" name="restart-type" value="restart"/>
-        </meta_attributes>
-      </primitive>
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache"/>
       <group id="foo">
-        <meta_attributes id="meta_attributes.id21894">
-          <nvpair id="nvpair.id21901" name="restart-type" value="restart"/>
-        </meta_attributes>
         <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache"/>
-        <meta_attributes id="group-foo.meta">
-          <nvpair id="restart_type.meta.auto-25" name="restart-type" value="restart"/>
-        </meta_attributes>
       </group>
       <group id="bar">
         <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache"/>

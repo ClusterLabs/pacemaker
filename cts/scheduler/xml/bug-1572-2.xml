@@ -48,9 +48,6 @@
         </meta_attributes>
       </clone>
       <group id="grp_pgsql_mirror">
-        <meta_attributes id="meta_attributes.id22162">
-          <nvpair id="nvpair.id22169" name="restart-type" value="restart"/>
-        </meta_attributes>
         <primitive id="fs_mirror" class="ocf" type="Filesystem" provider="heartbeat">
           <instance_attributes id="instance_attributes.id22190">
             <nvpair id="nvpair.id22196" name="device" value="/dev/drbd0"/>

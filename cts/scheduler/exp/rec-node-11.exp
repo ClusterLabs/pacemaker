@@ -88,9 +88,6 @@
       <trigger>
         <pseudo_event id="13" operation="stopped" operation_key="group1_stopped_0"/>
       </trigger>
-      <trigger>
-        <rsc_op id="15" operation="start" operation_key="rsc3_start_0" on_node="node2" on_node_uuid="uuid2"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="6">
@@ -195,35 +192,6 @@
     <inputs/>
   </synapse>
   <synapse id="12">
-    <action_set>
-      <rsc_op id="15" operation="start" operation_key="rsc3_start_0" on_node="node2" on_node_uuid="uuid2">
-        <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="1" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="14" operation="stop" operation_key="rsc3_stop_0" on_node="node2" on_node_uuid="uuid2"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="13">
-    <action_set>
-      <rsc_op id="14" operation="stop" operation_key="rsc3_stop_0" on_node="node2" on_node_uuid="uuid2">
-        <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="13" operation="stopped" operation_key="group1_stopped_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="14">
     <action_set>
       <crm_event id="1" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1">
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_stonith_action="reboot" />
