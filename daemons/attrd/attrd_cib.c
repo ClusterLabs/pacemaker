@@ -114,7 +114,7 @@ attrd_cib_connect(int max_retry)
         }
         attempts++;
         crm_debug("Connection attempt %d to the CIB manager", attempts);
-        rc = the_cib->cmds->signon(the_cib, PCMK__VALUE_ATTRD, cib_command);
+        rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
     } while ((rc != pcmk_ok) && (attempts < max_retry));
 

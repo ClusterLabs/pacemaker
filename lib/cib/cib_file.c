@@ -423,14 +423,15 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     if (rc == pcmk_ok) {
         crm_debug("Opened connection to local file '%s' for %s",
-                  private->filename, name);
+                  private->filename, pcmk__s(name, "client"));
         cib->state = cib_connected_command;
         cib->type = cib_command;
         register_client(cib);
 
     } else {
         crm_info("Connection to local file '%s' for %s (client %s) failed: %s",
-                 private->filename, name, private->id, pcmk_strerror(rc));
+                 private->filename, pcmk__s(name, "client"), private->id,
+                 pcmk_strerror(rc));
     }
     return rc;
 }

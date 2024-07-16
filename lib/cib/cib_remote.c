@@ -432,6 +432,10 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     cib_remote_opaque_t *private = cib->variant_opaque;
     xmlNode *hello = NULL;
 
+    if (name == NULL) {
+        name = pcmk__s(crm_system_name, "client");
+    }
+
     if (private->passwd == NULL) {
         if (private->out == NULL) {
             /* If no pcmk__output_t is set, just assume that a text prompt
