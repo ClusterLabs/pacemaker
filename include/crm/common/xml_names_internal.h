@@ -203,7 +203,6 @@ extern "C" {
 #define PCMK__XA_MAJOR_VERSION          "major_version"
 #define PCMK__XA_MINOR_VERSION          "minor_version"
 #define PCMK__XA_MODE                   "mode"
-#define PCMK__XA_MOON                   "moon"
 #define PCMK__XA_NAMESPACE              "namespace"
 #define PCMK__XA_NODE_FENCED            "node_fenced"
 #define PCMK__XA_NODE_IN_MAINTENANCE    "node_in_maintenance"

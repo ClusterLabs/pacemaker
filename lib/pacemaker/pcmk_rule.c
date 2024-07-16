@@ -51,8 +51,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
      * to check. For the moment, these rules must only have a single
      * date_expression child and:
      * - Do not have a date_spec operation, or
-     * - Have a date_spec operation that contains years= but does not contain
-     *   moon=.
+     * - Have a date_spec operation that contains years=
      *
      * We do this in steps to provide better error messages. First, check that
      * there's any rule with the given ID.
@@ -111,9 +110,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
                                   "[@" PCMK_XA_OPERATION
                                       "='" PCMK_VALUE_DATE_SPEC "' "
                                   "and " PCMK_XE_DATE_SPEC
-                                      "/@" PCMK_XA_YEARS " "
-                                  "and not(" PCMK_XE_DATE_SPEC
-                                      "/@" PCMK__XA_MOON ")]",
+                                      "/@" PCMK_XA_YEARS "]",
                                   rule_id);
         xpath_obj = xpath_search(cib_constraints, xpath);
         num_results = numXpathResults(xpath_obj);
@@ -123,8 +120,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
         if (num_results == 0) {
             freeXpathObject(xpath_obj);
             *error = "Rule must either not use " PCMK_XE_DATE_SPEC ", or use "
-                     PCMK_XE_DATE_SPEC " with " PCMK_XA_YEARS "= but not "
-                     PCMK__XA_MOON "=";
+                     PCMK_XE_DATE_SPEC " with " PCMK_XA_YEARS "=";
             return EOPNOTSUPP;
         }
     }

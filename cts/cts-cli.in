@@ -3263,20 +3263,6 @@ EOF
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
     cat <<EOF > "$TMPXML"
-<rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
-  <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
-    <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
-      <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
-    </date_expression>
-  </rule>
-</rsc_location>
-EOF
-
-    cibadmin -C -o constraints -x "$TMPXML"
-    rm -f "$TMPXML"
-
-    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
-    cat <<EOF > "$TMPXML"
 <rsc_location id="cli-no-date_expression" rsc="dummy">
   <rule id="cli-no-date_expression-rule" score="INFINITY">
     <expression id="ban-apache-expr" attribute="#uname" operation="eq" value="node3"/>
@@ -3389,14 +3375,6 @@ EOF
 
     desc="Try to check a rule whose date_spec does not contain years= (XML)"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years --output-as=xml"
-    test_assert_validate $CRM_EX_UNIMPLEMENT_FEATURE 0
-
-    desc="Try to check a rule whose date_spec contains years= and moon="
-    cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon"
-    test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
-
-    desc="Try to check a rule whose date_spec contains years= and moon= (XML)"
-    cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon --output-as=xml"
     test_assert_validate $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     desc="Try to check a rule with no date_expression"
