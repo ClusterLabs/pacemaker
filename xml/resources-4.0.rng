@@ -212,9 +212,7 @@
     <zeroOrMore>
       <choice>
         <ref name="element-instance_attributes"/>
-        <element name="meta_attributes">
-          <externalRef href="nvset-4.0.rng"/>
-        </element>
+        <ref name="element-meta_attributes.rsc"/>
       </choice>
     </zeroOrMore>
   </define>
@@ -223,9 +221,7 @@
     <zeroOrMore>
       <choice>
         <ref name="element-instance_attributes"/>
-        <element name="meta_attributes">
-          <externalRef href="nvset-4.0.rng"/>
-        </element>
+        <ref name="element-meta_attributes.rsc"/>
         <element name="utilization">
           <externalRef href="nvset-4.0.rng"/>
         </element>
@@ -237,19 +233,7 @@
     <zeroOrMore>
       <choice>
         <ref name="element-instance_attributes"/>
-        <element name="meta_attributes">
-          <grammar>
-            <include href="nvset-4.0.rng">
-              <!--
-               @COMPAT: Support for node attribute expressions is deprecated
-               here. We can just delete this define when we drop support.
-              -->
-              <define name="element-nvset.rule">
-                <parentRef name="element-rule-node-allowed"/>
-              </define>
-            </include>
-          </grammar>
-        </element>
+        <ref name="element-meta_attributes.op"/>
       </choice>
     </zeroOrMore>
   </define>
@@ -348,4 +332,33 @@
        </grammar>
      </element>
   </define>
+
+  <define name="element-meta_attributes.rsc">
+    <element name="meta_attributes">
+      <grammar>
+        <include href="nvset-4.0.rng">
+          <define name="element-nvset.name-value">
+            <ref name="rsc_meta_attributes.nvpair.unsupported"/>
+          </define>
+        </include>
+      </grammar>
+    </element>
+  </define>
+
+  <define name="element-meta_attributes.op">
+    <element name="meta_attributes">
+      <grammar>
+        <include href="nvset-4.0.rng">
+          <!--
+           @COMPAT: Support for node attribute expressions is deprecated here.
+           We can just delete this define when we drop support.
+           -->
+          <define name="element-nvset.rule">
+            <parentRef name="element-rule-node-allowed"/>
+          </define>
+        </include>
+      </grammar>
+    </element>
+  </define>
+
 </grammar>

@@ -15,6 +15,12 @@
     </attribute>
   </define>
 
+  <define name="element-nvset.value">
+    <attribute name="value">
+      <text/>
+    </attribute>
+  </define>
+
   <!-- nvpair/@name:
        * defer element-nvset.name grammar item
        nvpair/@value:
@@ -22,12 +28,31 @@
        enumerated pairs (i.e. related to @name) at once -->
   <define name="element-nvset.name-value">
     <ref name="element-nvset.name"/>
-    <attribute name="value"><text/></attribute>
+    <ref name="element-nvset.value"/>
   </define>
 
   <!-- Allow easy redefinition in parent grammars -->
   <define name="element-nvset.rule">
     <externalRef href="rule-4.0.rng"/>
+  </define>
+
+  <!--
+   Disallow resource meta-attribute name-value pairs for which support was
+   recently dropped. The idea is to prevent a user from adding the option under
+   the belief that it will still affect behavior. Sometime in the future,
+   re-allow these as custom meta-attributes or values.
+   -->
+  <define name="rsc_meta_attributes.nvpair.unsupported">
+    <group>
+      <attribute name="name">
+        <data type="string">
+          <except>
+            <value>restart-type</value>
+          </except>
+        </data>
+      </attribute>
+      <ref name="element-nvset.value"/>
+    </group>
   </define>
 
   <define name="element-nvset">
