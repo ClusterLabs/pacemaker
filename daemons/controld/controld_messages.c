@@ -328,7 +328,7 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
 gboolean
 relay_message(xmlNode * msg, gboolean originated_locally)
 {
-    enum pcmk__cluster_msg dest = pcmk__cluster_msg_unknown;
+    enum pcmk_ipc_server dest = pcmk_ipc_unknown;
     bool is_for_dc = false;
     bool is_for_dcib = false;
     bool is_for_te = false;
@@ -386,12 +386,12 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     // Get the message type appropriate to the destination subsystem
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         dest = pcmk__cluster_parse_msg_type(sys_to);
-        if (dest == pcmk__cluster_msg_unknown) {
+        if (dest == pcmk_ipc_unknown) {
             /* Unrecognized value, use a sane default
              *
              * @TODO Maybe we should bail instead
              */
-            dest = pcmk__cluster_msg_controld;
+            dest = pcmk_ipc_controld;
         }
     }
 
@@ -1160,8 +1160,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
         if(cause == C_IPC_MESSAGE) {
             msg = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
-            if (!pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld,
-                                            msg)) {
+            if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
                 crm_err("Could not instruct peers to remove references to node %s/%u", name, id);
             } else {
                 crm_notice("Instructing peers to remove references to node %s/%u", name, id);
@@ -1359,7 +1358,7 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
                     controld_globals.our_nodename);
     }
 
-    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld, msg);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg);
     pcmk__xml_free(msg);
 }
 

@@ -61,7 +61,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
 
             cmd = create_request(task, pseudo->xml, node->name,
                                  CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
-            pcmk__cluster_send_message(node, pcmk__cluster_msg_controld, cmd);
+            pcmk__cluster_send_message(node, pcmk_ipc_controld, cmd);
             pcmk__xml_free(cmd);
         }
 
@@ -175,7 +175,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     node = pcmk__get_node(0, router_node, NULL,
                           pcmk__node_search_cluster_member);
-    rc = pcmk__cluster_send_message(node, pcmk__cluster_msg_controld, cmd);
+    rc = pcmk__cluster_send_message(node, pcmk_ipc_controld, cmd);
     free(counter);
     pcmk__xml_free(cmd);
 
@@ -434,7 +434,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             pcmk__get_node(0, router_node, NULL,
                            pcmk__node_search_cluster_member);
 
-        rc = pcmk__cluster_send_message(node, pcmk__cluster_msg_execd, cmd);
+        rc = pcmk__cluster_send_message(node, pcmk_ipc_execd, cmd);
     }
 
     free(counter);

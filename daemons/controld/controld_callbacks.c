@@ -138,7 +138,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
         crm_debug("Sending hello to node %" PRIu32 " so that it learns our "
                   "node name",
                   node->cluster_layer_id);
-        pcmk__cluster_send_message(node, pcmk__cluster_msg_controld, query);
+        pcmk__cluster_send_message(node, pcmk_ipc_controld, query);
 
         pcmk__xml_free(query);
     }

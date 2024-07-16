@@ -49,7 +49,7 @@ static int cs_message_timer = 0;
 struct pcmk__cpg_host_s {
     uint32_t id;
     uint32_t pid;
-    enum pcmk__cluster_msg type;
+    enum pcmk_ipc_server type;  // For logging only
     uint32_t size;
     char uname[MAX_NAME];
 } __attribute__ ((packed));
@@ -291,18 +291,18 @@ ais_dest(const pcmk__cpg_host_t *host)
 }
 
 static inline const char *
-msg_type2text(enum pcmk__cluster_msg type)
+msg_type2text(enum pcmk_ipc_server type)
 {
     switch (type) {
-        case pcmk__cluster_msg_attrd:
+        case pcmk_ipc_attrd:
             return "attrd";
-        case pcmk__cluster_msg_based:
+        case pcmk_ipc_based:
             return "cib";
-        case pcmk__cluster_msg_controld:
+        case pcmk_ipc_controld:
             return "crmd";
-        case pcmk__cluster_msg_execd:
+        case pcmk_ipc_execd:
             return "lrmd";
-        case pcmk__cluster_msg_fenced:
+        case pcmk_ipc_fenced:
             return "stonith-ng";
         default:
             return "unknown";
@@ -920,7 +920,7 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
  */
 static bool
 send_cpg_text(const char *data, const pcmk__node_status_t *node,
-              enum pcmk__cluster_msg dest)
+              enum pcmk_ipc_server dest)
 {
     static int msg_id = 0;
     static int local_pid = 0;
@@ -1047,7 +1047,7 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
  */
 bool
 pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
-                   enum pcmk__cluster_msg dest)
+                   enum pcmk_ipc_server dest)
 {
     bool rc = true;
     GString *data = g_string_sized_new(1024);
