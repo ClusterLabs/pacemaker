@@ -785,7 +785,8 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     uint32_t id = 0;
     pcmk__node_status_t *peer = NULL;
     cpg_handle_t handle = 0;
-    const char *message_name = pcmk__message_name(crm_system_name);
+    enum pcmk_ipc_server server = pcmk__parse_server(crm_system_name);
+    const char *cpg_group_name = pcmk__server_message_type(server);
     uid_t found_uid = 0;
     gid_t found_gid = 0;
     pid_t found_pid = 0;
@@ -805,15 +806,17 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     };
 
     cpg_evicted = false;
-    cluster->priv->group.length = 0;
-    cluster->priv->group.value[0] = 0;
 
-    /* group.value is char[128] */
-    strncpy(cluster->priv->group.value, message_name, 127);
-    cluster->priv->group.value[127] = 0;
-    cluster->priv->group.length = QB_MIN(127,
-                                         strlen(cluster->priv->group.value));
-    cluster->priv->group.length++;
+    if (cpg_group_name == NULL) {
+        /* The name will already be non-NULL for Pacemaker servers. If a
+         * command-line tool or external caller connects to the cluster,
+         * they will join this CPG group.
+         */
+        cpg_group_name = pcmk__s(crm_system_name, "unknown");
+    }
+    memset(cluster->priv->group.value, 0, 128);
+    strncpy(cluster->priv->group.value, cpg_group_name, 127);
+    cluster->priv->group.length = strlen(cluster->priv->group.value) + 1;
 
     cs_repeat(rc, retries, 30, cpg_model_initialize(&handle, CPG_MODEL_V1, (cpg_model_data_t *)&cpg_model_info, NULL));
     if (rc != CS_OK) {
@@ -856,7 +859,7 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     retries = 0;
     cs_repeat(rc, retries, 30, cpg_join(handle, &cluster->priv->group));
     if (rc != CS_OK) {
-        crm_err("Could not join the CPG group '%s': %d", message_name, rc);
+        crm_err("Could not join the CPG group '%s': %d", cpg_group_name, rc);
         goto bail;
     }
 
