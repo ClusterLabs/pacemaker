@@ -13,14 +13,14 @@
       <cluster_property_set id="cluster-properties1">
         <rule id="cluster-properties1-rule">
           <date_expression id="cluster-properties1-rule-expr" operation="date_spec">
-            <date_spec id="cluster-properties1-rule-expr-date_spec" seconds="0-59" minutes="0-59" hours="0-23" monthdays="1-31" weekdays="1-7" yeardays="1-366" months="1-12" weeks="1-53" years="2024" weekyears="2024" moon="0-7"/>
+            <date_spec id="cluster-properties1-rule-expr-date_spec" seconds="0-59" minutes="0-59" hours="0-23" monthdays="1-31" weekdays="1-7" yeardays="1-366" months="1-12" weeks="1-53" years="2024" weekyears="2024"/>
           </date_expression>
         </rule>
       </cluster_property_set>
       <cluster_property_set id="cluster-properties2">
         <rule id="cluster-properties2-rule">
           <date_expression id="cluster-properties2-rule-expr" operation="date_spec">
-            <date_spec id="cluster-properties2-rule-expr-date_spec" moon="0-7"/>
+            <date_spec id="cluster-properties2-rule-expr-date_spec"/>
           </date_expression>
         </rule>
       </cluster_property_set>

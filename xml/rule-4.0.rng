@@ -419,9 +419,6 @@
       <optional>
         <attribute name="weekdays"><text/></attribute>
       </optional>
-      <optional>
-        <attribute name="moon"><text/></attribute>
-      </optional>
 
       <!-- @COMPAT: The below attributes are invalid here -->
       <optional>
