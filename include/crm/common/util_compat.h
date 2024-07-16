@@ -10,7 +10,8 @@
 #ifndef PCMK__CRM_COMMON_UTIL_COMPAT__H
 #define PCMK__CRM_COMMON_UTIL_COMPAT__H
 
-#include <glib.h>   // gboolean
+#include <stdbool.h>    // bool
+#include <glib.h>       // gboolean
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,6 +25,9 @@ extern "C" {
  *             header, and the header itself, will be removed in a future
  *             release.
  */
+
+//! \deprecated Do not use (will be dropped in a future release)
+bool crm_is_daemon_name(const char *name);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead

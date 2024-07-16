@@ -77,7 +77,6 @@ typedef struct {
     xmlNode *(*handler)(pcmk__request_t *request);
 } pcmk__server_command_t;
 
-const char *pcmk__message_name(const char *name);
 GHashTable *pcmk__register_handlers(const pcmk__server_command_t handlers[]);
 xmlNode *pcmk__process_request(pcmk__request_t *request, GHashTable *handlers);
 void pcmk__reset_request(pcmk__request_t *request);

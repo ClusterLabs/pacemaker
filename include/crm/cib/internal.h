@@ -13,6 +13,7 @@
 #include <crm/cib.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/output_internal.h>
+#include <crm/common/servers_internal.h>
 #include <crm/common/strings_internal.h>
 
 #ifdef __cplusplus
@@ -161,7 +162,7 @@ cib_t *cib_new_variant(void);
 static inline bool
 cib__client_triggers_refresh(const char *name)
 {
-    return !crm_is_daemon_name(name)
+    return (pcmk__parse_server(name) == pcmk_ipc_unknown)
            && !pcmk__str_any_of(name,
                                 "attrd_updater",
                                 "crm_attribute",
