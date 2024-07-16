@@ -54,9 +54,6 @@
         </meta_attributes>
       </clone>
       <group id="grp_pgsql_mirror">
-        <meta_attributes id="meta_attributes.id22200">
-          <nvpair id="nvpair.id22206" name="restart-type" value="restart"/>
-        </meta_attributes>
         <primitive id="fs_mirror" class="ocf" type="Filesystem" provider="heartbeat">
           <instance_attributes id="instance_attributes.id22227">
             <nvpair id="nvpair.id22234" name="device" value="/dev/drbd0"/>
@@ -95,7 +92,7 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order id="drbd_before_fs-1" first="ms_drbd_7788" then="grp_pgsql_mirror" then-action="start" first-action="promote" kind="Optional"/>
+      <rsc_order id="drbd_before_fs-1" first="ms_drbd_7788" then="grp_pgsql_mirror" then-action="start" first-action="promote"/>
       <rsc_location id="locate_drbd" rsc="ms_drbd_7788">
         <rule id="rule_drbd_on_tk" role="Promoted" score="100">
           <expression id="expression.id22465" attribute="#uname" operation="eq" value="arc-tkincaidlx.wsicorp.com"/>

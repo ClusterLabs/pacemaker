@@ -14,34 +14,18 @@
     </nodes>
     <resources>
       <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache"/>
-      <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc2.meta">
-          <nvpair id="restart_type.meta.auto-23" name="restart-type" value="restart"/>
-        </meta_attributes>
-      </primitive>
-      <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc3.meta">
-          <nvpair id="restart_type.meta.auto-25" name="restart-type" value="restart"/>
-        </meta_attributes>
-      </primitive>
+      <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache"/>
+      <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache"/>
       <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache"/>
       <primitive id="rsc5" class="ocf" provider="heartbeat" type="apache"/>
-      <primitive id="rsc6" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc6.meta">
-          <nvpair id="restart_type.meta.auto-31" name="restart-type" value="restart"/>
-        </meta_attributes>
-      </primitive>
-      <primitive id="rsc7" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc7.meta">
-          <nvpair id="restart_type.meta.auto-33" name="restart-type" value="restart"/>
-        </meta_attributes>
-      </primitive>
+      <primitive id="rsc6" class="ocf" provider="heartbeat" type="apache"/>
+      <primitive id="rsc7" class="ocf" provider="heartbeat" type="apache"/>
       <primitive id="rsc8" class="ocf" provider="heartbeat" type="apache"/>
     </resources>
     <constraints>
-      <rsc_order id="order1" first="rsc1" then="rsc2" kind="Optional"/>
+      <rsc_order id="order1" first="rsc1" then="rsc2"/>
       <rsc_order id="order2" first="rsc3" then="rsc4" kind="Optional"/>
-      <rsc_order id="order3" first="rsc5" then="rsc6" kind="Optional"/>
+      <rsc_order id="order3" first="rsc5" then="rsc6"/>
       <rsc_order id="order4" first="rsc7" then="rsc8" kind="Optional"/>
     </constraints>
   </configuration>
