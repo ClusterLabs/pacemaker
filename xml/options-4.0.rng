@@ -55,6 +55,9 @@
             <element name="meta_attributes">
               <grammar>
                 <include href="nvset-4.0.rng">
+                  <define name="element-nvset.name-value">
+                    <ref name="rsc_meta_attributes.nvpair.unsupported"/>
+                  </define>
                   <define name="element-nvset.rule">
                     <parentRef name="element-rule-rsc_defaults"/>
                   </define>

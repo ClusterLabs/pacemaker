@@ -786,13 +786,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_IS_MANAGED);
     if (value != NULL) {
-        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-            // @COMPAT Deprecated since 2.1.8
-            pcmk__config_warn("Support for setting " PCMK_META_IS_MANAGED
-                              " to the explicit value '" PCMK_VALUE_DEFAULT
-                              "' is deprecated and will be removed in a "
-                              "future release (just leave it unset)");
-        } else if (crm_is_true(value)) {
+        if (crm_is_true(value)) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);
         } else {
             pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
