@@ -10,10 +10,12 @@
 #ifndef PCMK__CRM_CLUSTER_ELECTION_INTERNAL__H
 #define PCMK__CRM_CLUSTER_ELECTION_INTERNAL__H
 
-#include <stdbool.h>
+#include <stdbool.h>        // bool
 
 #include <glib.h>           // guint, GSourceFunc
 #include <libxml/tree.h>    // xmlNode
+
+#include <crm/common/ipc.h> // enum pcmk_ipc_server
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,7 +73,8 @@ enum election_result {
 
 void election_fini(election_t *e);
 void election_reset(election_t *e);
-election_t *election_init(const char *name, const char *uname, guint period_ms, GSourceFunc cb);
+election_t *election_init(enum pcmk_ipc_server, const char *name,
+                          const char *uname, guint period_ms, GSourceFunc cb);
 
 void election_timeout_set_period(election_t *e, guint period_ms);
 void election_timeout_stop(election_t *e);
