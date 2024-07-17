@@ -1196,7 +1196,21 @@ pcmk_update_configured_schema(xmlNode **xml)
  * \return Standard Pacemaker return code
  */
 int
-pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
+pcmk_update_configured_schema(xmlNode **xml, bool to_logs) {
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__xml_output_new(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    rc = pcmk__update_configured_schema(xml, out);
+    return rc;
+}
+
+int
+pcmk__update_configured_schema(xmlNode **xml, pcmk__output_t *out)
 {
     int rc = pcmk_rc_ok;
     char *original_schema_name = NULL;
@@ -1228,7 +1242,7 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
 
         entry = NULL;
         converted = pcmk__xml_copy(NULL, *xml);
-        if (pcmk__update_schema(&converted, NULL, true, to_logs) == pcmk_rc_ok) {
+        if (pcmk__update_schema(&converted, NULL, true, out) == pcmk_rc_ok) {
             new_schema_name = crm_element_value(converted,
                                                 PCMK_XA_VALIDATE_WITH);
             entry = pcmk__get_schema(new_schema_name);
@@ -1242,38 +1256,20 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
             if ((orig_version == -1) || (schema == NULL)
                 || (schema->schema_index < orig_version)) {
                 // We couldn't validate any schema at all
-                if (to_logs) {
-                    pcmk__config_err("Cannot upgrade configuration (claiming "
-                                     "%s schema) to at least %s because it "
-                                     "does not validate with any schema from "
-                                     "%s to the latest",
-                                     pcmk__s(original_schema_name, "no"),
-                                     x_0_schema->name, effective_original_name);
-                } else {
-                    fprintf(stderr, "Cannot upgrade configuration (claiming "
-                                    "%s schema) to at least %s because it "
-                                    "does not validate with any schema from "
-                                    "%s to the latest\n",
-                                    pcmk__s(original_schema_name, "no"),
-                                    x_0_schema->name, effective_original_name);
-                }
+                out->err(out, "Cannot upgrade configuration (claiming "
+                              "%s schema) to at least %s because it "
+                              "does not validate with any schema from "
+                              "%s to the latest",
+                              pcmk__s(original_schema_name, "no"),
+                              x_0_schema->name, effective_original_name);
             } else {
                 // We updated configuration successfully, but still too low
-                if (to_logs) {
-                    pcmk__config_err("Cannot upgrade configuration (claiming "
-                                     "%s schema) to at least %s because it "
-                                     "would not upgrade past %s",
-                                     pcmk__s(original_schema_name, "no"),
-                                     x_0_schema->name,
-                                     pcmk__s(new_schema_name, "unspecified version"));
-                } else {
-                    fprintf(stderr, "Cannot upgrade configuration (claiming "
-                                    "%s schema) to at least %s because it "
-                                    "would not upgrade past %s\n",
-                                    pcmk__s(original_schema_name, "no"),
-                                    x_0_schema->name,
-                                    pcmk__s(new_schema_name, "unspecified version"));
-                }
+                out->err(out, "Cannot upgrade configuration (claiming "
+                              "%s schema) to at least %s because it "
+                              "would not upgrade past %s",
+                              pcmk__s(original_schema_name, "no"),
+                              x_0_schema->name,
+                              pcmk__s(new_schema_name, "unspecified version"));
             }
 
             pcmk__xml_free(converted);
@@ -1286,18 +1282,17 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
             *xml = converted;
 
             if (schema->schema_index < xml_latest_schema_index()) {
-                if (to_logs) {
-                    pcmk__config_warn("Configuration with %s schema was "
-                                      "internally upgraded to acceptable (but "
-                                      "not most recent) %s",
-                                      pcmk__s(original_schema_name, "no"),
-                                      schema->name);
-                }
-            } else if (to_logs) {
-                crm_info("Configuration with %s schema was internally "
-                         "upgraded to latest version %s",
-                         pcmk__s(original_schema_name, "no"),
-                         schema->name);
+                // NOTE: originally warn, not info
+                out->info(out, "Configuration with %s schema was "
+                               "internally upgraded to acceptable (but "
+                               "not most recent) %s",
+                               pcmk__s(original_schema_name, "no"),
+                               schema->name);
+            } else {
+                out->info(out, "Configuration with %s schema was internally "
+                               "upgraded to latest version %s",
+                               pcmk__s(original_schema_name, "no"),
+                               schema->name);
             }
         }
 
@@ -1309,11 +1304,11 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
         CRM_ASSERT((entry != NULL) && (entry->data != NULL));
 
         none_schema = entry->data;
-        if (!to_logs && (orig_version >= none_schema->schema_index)) {
-            fprintf(stderr, "Schema validation of configuration is "
-                            "disabled (support for " PCMK_XA_VALIDATE_WITH
-                            " set to \"" PCMK_VALUE_NONE "\" is deprecated"
-                            " and will be removed in a future release)\n");
+        if (orig_version >= none_schema->schema_index) {
+            out->err(out, "Schema validation of configuration is "
+                          "disabled (support for " PCMK_XA_VALIDATE_WITH
+                          " set to \"" PCMK_VALUE_NONE "\" is deprecated"
+                          " and will be removed in a future release)\n");
         }
     }
 
