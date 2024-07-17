@@ -1338,8 +1338,10 @@ pcmk__update_dependent_with_promotable(const pcmk_resource_t *primary,
  * \param[in]     primary     Primary resource in the colocation
  * \param[in,out] dependent   Dependent resource in the colocation
  * \param[in]     colocation  Colocation constraint to apply
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
                                            pcmk_resource_t *dependent,
                                            const pcmk__colocation_t *colocation)
@@ -1365,13 +1367,17 @@ pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
                         pcmk_readable_score(colocation->score),
                         pcmk_readable_score(new_priority));
         dependent->priv->priority = new_priority;
+        return colocation->score;
+    }
 
-    } else if (colocation->score >= PCMK_SCORE_INFINITY) {
+    if (colocation->score >= PCMK_SCORE_INFINITY) {
         // Mandatory colocation, but primary won't be here
         pcmk__rsc_trace(colocation->primary,
                         "Applying %s (%s with %s) to %s: can't be promoted",
                         colocation->id, colocation->dependent->id,
                         colocation->primary->id, dependent->id);
         dependent->priv->priority = -PCMK_SCORE_INFINITY;
+        return -PCMK_SCORE_INFINITY;
     }
+    return 0;
 }
