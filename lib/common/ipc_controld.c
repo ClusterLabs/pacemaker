@@ -29,6 +29,10 @@ struct controld_api_private_s {
     unsigned int replies_expected;
 };
 
+static xmlNode *create_hello_message(const char *uuid, const char *client_name,
+                                     const char *major_version,
+                                     const char *minor_version);
+
 /*!
  * \internal
  * \brief Get a string representation of a controller API reply type
@@ -626,12 +630,10 @@ pcmk_controld_api_replies_expected(const pcmk_ipc_api_t *api)
 }
 
 /*!
+ * \internal
  * \brief Create XML for a controller IPC "hello" message
- *
- * \deprecated This function is deprecated as part of the public C API.
  */
-// \todo make this static to this file when breaking API backward compatibility
-xmlNode *
+static xmlNode *
 create_hello_message(const char *uuid, const char *client_name,
                      const char *major_version, const char *minor_version)
 {

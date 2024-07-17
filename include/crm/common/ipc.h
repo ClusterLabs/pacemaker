@@ -206,11 +206,6 @@ unsigned int crm_ipc_default_buffer_size(void);
 int crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
                                  pid_t *gotpid, uid_t *gotuid, gid_t *gotgid);
 
-// @COMPAT Make internal when we can break API backward compatibility
-//! \deprecated Do not use
-xmlNode *create_hello_message(const char *uuid, const char *client_name,
-                              const char *major_version, const char *minor_version);
-
 #ifdef __cplusplus
 }
 #endif
