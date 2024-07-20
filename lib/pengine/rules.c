@@ -111,7 +111,6 @@ sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
 static void
 populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
 {
-    const char *name = NULL;
     const char *value = NULL;
     const char *old_value = NULL;
     xmlNode *list = nvpair_list;
@@ -126,11 +125,7 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
 
         if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
             xmlNode *ref_nvpair = pcmk__xe_resolve_idref(an_attr, NULL);
-
-            name = crm_element_value(an_attr, PCMK_XA_NAME);
-            if ((name == NULL) && (ref_nvpair != NULL)) {
-                name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
-            }
+            const char *name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
 
             value = crm_element_value(an_attr, PCMK_XA_VALUE);
             if ((value == NULL) && (ref_nvpair != NULL)) {
