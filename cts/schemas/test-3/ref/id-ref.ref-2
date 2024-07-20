@@ -1,0 +1,72 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="16" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * There is a cluster_properties_set element with an id attribute (set
+           to cluster-properties1) and a set of nvpair children.
+         * There are two cluster_properties_set elements with an id-ref
+           attribute (set to cluster-properties1): one before and one after the
+           original.
+         * There is a primitive resource (rsc1) with a meta_attributes element
+           containing nvpair children.
+           * The first nvpair is a definition has an id attribute.
+           * The second has an id-ref attribute with no name attribute.
+           * The third has id-ref="cluster-properties1-option1" and
+             name="option3". Setting both id-ref and name is an undocumented
+             feature that allows the same nvpair value to be used with multiple
+             names (see commit 3912538 and associated pull request).
+
+         In this situation:
+         * In the first step of the upgrade transformation pipeline:
+           * Each element with an id-ref attribute without a name attribute
+             should be replaced by a copy of the element whose id attribute is
+             set to the same value, but with the "original" attribute set to 1.
+           * Each element with an id-ref attribute and a name attribute should
+             be replaced by a copy of the element whose id attribute is set to
+             the original id-ref value, except that in the copy:
+             * The id attribute begins with $upgrade_prefix and ends with the
+               value of @name.
+             * The name attribute is overridden by the reference's @name value.
+         * In the final step:
+           * Resolved references that did not have name attributes should be
+             converted back to references.
+           * For resolved references that did have name attributes, such that
+             the id of the resolved element differs from the original id-ref
+             value:
+             * The first element with the new id value remains expanded as a
+               definition.
+             * Any subsequent elements with the new id value are converted to
+               references to the first one.
+      -->
+    <crm_config original="1">
+      <cluster_property_set id="cluster-properties1" original="0">
+        <nvpair id="cluster-properties1-option1" name="option1" value="value1" original="0"/>
+        <nvpair id="cluster-properties1-option2" name="option2" value="value2" original="0"/>
+      </cluster_property_set>
+      <cluster_property_set id="cluster-properties1" original="1">
+        <nvpair id="cluster-properties1-option1" name="option1" value="value1" original="1"/>
+        <nvpair id="cluster-properties1-option2" name="option2" value="value2" original="1"/>
+      </cluster_property_set>
+      <cluster_property_set id="cluster-properties1" original="0">
+        <nvpair id="cluster-properties1-option1" name="option1" value="value1" original="0"/>
+        <nvpair id="cluster-properties1-option2" name="option2" value="value2" original="0"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes original="1"/>
+    <resources original="1">
+      <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy" original="1">
+        <meta_attributes id="rsc1-meta_attributes" original="1">
+          <nvpair id="rsc1-meta_attributes-option1" name="option1" value="valueX" original="1"/>
+          <nvpair id="cluster-properties1-option1" name="option1" value="value1" original="0"/>
+          <nvpair id="pcmk__3_10_upgrade-cluster-properties1-option1-option3" name="option3" value="value1" original="0"/>
+        </meta_attributes>
+      </primitive>
+      <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy" original="1">
+        <meta_attributes id="rsc2-meta_attributes" original="1">
+          <nvpair id="pcmk__3_10_upgrade-cluster-properties1-option1-option3" name="option3" value="value1" original="0"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints original="1"/>
+  </configuration>
+  <status original="1"/>
+</cib>
