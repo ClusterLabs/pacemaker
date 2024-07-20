@@ -44,12 +44,7 @@
       <zeroOrMore>
         <element name="nvpair">
           <choice>
-            <group>
-              <attribute name="id-ref"><data type="IDREF"/></attribute>
-              <optional>
-                <attribute name="name"><text/></attribute>
-              </optional>
-            </group>
+            <attribute name="id-ref"><data type="IDREF"/></attribute>
             <group>
               <attribute name="id"><data type="ID"/></attribute>
               <ref name="element-nvset.name-value"/>
