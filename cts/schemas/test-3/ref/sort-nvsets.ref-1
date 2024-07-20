@@ -29,86 +29,86 @@
          occur, but it should be exhaustive enough to be satisfactory.
       -->
     <crm_config original="1">
-      <cluster_property_set id="cps7" score="-30" original="1"/>
-      <cluster_property_set id="cps3" score="120" original="1"/>
-      <cluster_property_set id="cps5" original="1"/>
-      <cluster_property_set id="cps8" score="-INFINITY" original="1"/>
       <cluster_property_set id="cib-bootstrap-options" score="-INFINITY" original="1"/>
-      <cluster_property_set id="cps4" score="70" original="1"/>
-      <cluster_property_set id="cps6" score="0" original="1"/>
       <cluster_property_set id="cps1" score="+INFINITY" original="1"/>
       <cluster_property_set id="cps2" score="INFINITY" original="1"/>
+      <cluster_property_set id="cps3" score="120" original="1"/>
+      <cluster_property_set id="cps4" score="70" original="1"/>
+      <cluster_property_set id="cps5" original="1"/>
+      <cluster_property_set id="cps6" score="0" original="1"/>
+      <cluster_property_set id="cps7" score="-30" original="1"/>
+      <cluster_property_set id="cps8" score="-INFINITY" original="1"/>
     </crm_config>
     <nodes original="1"/>
     <resources original="1">
       <clone id="clone1" original="1">
-        <meta_attributes id="cma7" score="-30" original="1"/>
-        <meta_attributes id="cma3" score="120" original="1"/>
-        <meta_attributes id="cma5" original="1"/>
-        <meta_attributes id="cma8" score="-INFINITY" original="1"/>
         <primitive class="ocf" id="rsc1" provider="heartbeat" type="apache" original="1">
-          <utilization id="pu3" score="120" original="1"/>
-          <instance_attributes id="pia5" original="1"/>
-          <meta_attributes id="pma7" score="-30" original="1"/>
-          <meta_attributes id="pma3" score="120" original="1"/>
-          <utilization id="pu5" original="1"/>
-          <instance_attributes id="pia3" score="120" original="1"/>
-          <meta_attributes id="pma5" original="1"/>
-          <utilization id="pu7" score="-30" original="1"/>
           <operations original="1">
             <op id="rsc1_monitor_20000" interval="20s" name="monitor" original="1">
+              <meta_attributes id="oma1" score="120" original="1"/>
               <meta_attributes id="oma2" original="1"/>
               <meta_attributes id="oma3" score="-30" original="1"/>
-              <meta_attributes id="oma1" score="120" original="1"/>
             </op>
           </operations>
           <instance_attributes id="pia1" score="+INFINITY" original="1"/>
-          <meta_attributes id="pma8" score="-INFINITY" original="1"/>
           <instance_attributes id="pia2" score="INFINITY" original="1"/>
+          <utilization id="pu1" score="+INFINITY" original="1"/>
+          <meta_attributes id="pma1" score="+INFINITY" original="1"/>
+          <meta_attributes id="pma2" score="INFINITY" original="1"/>
+          <utilization id="pu2" score="INFINITY" original="1"/>
+          <utilization id="pu3" score="120" original="1"/>
+          <meta_attributes id="pma3" score="120" original="1"/>
+          <instance_attributes id="pia3" score="120" original="1"/>
           <meta_attributes id="pma4" score="70" original="1"/>
           <utilization id="pu4" score="70" original="1"/>
-          <utilization id="pu1" score="+INFINITY" original="1"/>
-          <instance_attributes id="pia7" score="-30" original="1"/>
-          <meta_attributes id="pma6" score="0" original="1"/>
-          <utilization id="pu8" score="-INFINITY" original="1"/>
-          <meta_attributes id="pma1" score="+INFINITY" original="1"/>
-          <instance_attributes id="pia8" score="-INFINITY" original="1"/>
           <instance_attributes id="pia4" score="70" original="1"/>
-          <meta_attributes id="pma2" score="INFINITY" original="1"/>
+          <instance_attributes id="pia5" original="1"/>
+          <utilization id="pu5" original="1"/>
+          <meta_attributes id="pma5" original="1"/>
+          <meta_attributes id="pma6" score="0" original="1"/>
           <utilization id="pu6" score="0" original="1"/>
           <instance_attributes id="pia6" score="0" original="1"/>
-          <utilization id="pu2" score="INFINITY" original="1"/>
+          <meta_attributes id="pma7" score="-30" original="1"/>
+          <utilization id="pu7" score="-30" original="1"/>
+          <instance_attributes id="pia7" score="-30" original="1"/>
+          <meta_attributes id="pma8" score="-INFINITY" original="1"/>
+          <utilization id="pu8" score="-INFINITY" original="1"/>
+          <instance_attributes id="pia8" score="-INFINITY" original="1"/>
         </primitive>
-        <meta_attributes id="cma4" score="70" original="1"/>
-        <meta_attributes id="cma6" score="0" original="1"/>
         <meta_attributes id="cma1" score="+INFINITY" original="1"/>
         <meta_attributes id="cma2" score="INFINITY" original="1"/>
+        <meta_attributes id="cma3" score="120" original="1"/>
+        <meta_attributes id="cma4" score="70" original="1"/>
+        <meta_attributes id="cma5" original="1"/>
+        <meta_attributes id="cma6" score="0" original="1"/>
+        <meta_attributes id="cma7" score="-30" original="1"/>
+        <meta_attributes id="cma8" score="-INFINITY" original="1"/>
       </clone>
     </resources>
     <constraints original="1"/>
     <rsc_defaults original="1">
-      <meta_attributes id="rdma7" score="-30" original="1"/>
+      <meta_attributes id="rdma1" score="INFINITY" original="1"/>
+      <meta_attributes id="rdma2" score="+INFINITY" original="1"/>
       <meta_attributes id="rdma3" score="120" original="1">
         <nvpair id="rdma3-option1" name="option1" value="value1" original="1"/>
       </meta_attributes>
+      <meta_attributes id="rdma4" score="70" original="1"/>
       <meta_attributes id="rdma5" score="0" original="1"/>
       <meta_attributes id="rdma6" original="1"/>
+      <meta_attributes id="rdma7" score="-30" original="1"/>
       <meta_attributes id="rdma8" score="-INFINITY" original="1"/>
-      <meta_attributes id="rdma4" score="70" original="1"/>
-      <meta_attributes id="rdma1" score="INFINITY" original="1"/>
-      <meta_attributes id="rdma2" score="+INFINITY" original="1"/>
     </rsc_defaults>
     <op_defaults original="1">
-      <meta_attributes id="rdma7" score="-30" original="0"/>
+      <meta_attributes id="rdma1" score="INFINITY" original="0"/>
+      <meta_attributes id="rdma2" score="+INFINITY" original="0"/>
       <meta_attributes id="rdma3" score="120" original="0">
         <nvpair id="rdma3-option1" name="option1" value="value1" original="0"/>
       </meta_attributes>
-      <meta_attributes id="rdma5" score="0" original="0"/>
-      <meta_attributes id="rdma8" score="-INFINITY" original="0"/>
       <meta_attributes id="rdma4" score="70" original="0"/>
+      <meta_attributes id="rdma5" score="0" original="0"/>
       <meta_attributes id="rdma6" original="0"/>
-      <meta_attributes id="rdma1" score="INFINITY" original="0"/>
-      <meta_attributes id="rdma2" score="+INFINITY" original="0"/>
+      <meta_attributes id="rdma7" score="-30" original="0"/>
+      <meta_attributes id="rdma8" score="-INFINITY" original="0"/>
     </op_defaults>
   </configuration>
   <status original="1"/>
