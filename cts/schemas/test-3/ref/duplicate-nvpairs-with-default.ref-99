@@ -16,19 +16,11 @@
       -->
     <crm_config>
       <cluster_property_set id="cluster-properties1">
-        <nvpair id="cluster-properties1-option1" name="option" value="#default"/>
-        <nvpair id="cluster-properties1-option2" name="option" value="#default"/>
         <nvpair id="cluster-properties1-option3" name="option" value="value3"/>
-        <nvpair id="cluster-properties1-option4" name="option" value="value4"/>
-        <nvpair id="cluster-properties1-option5" name="option" value="value5"/>
         <nvpair id="cluster-properties1-other-option" name="other-option" value="value0"/>
       </cluster_property_set>
       <cluster_property_set id="cluster-properties2">
-        <nvpair id="cluster-properties2-option1" name="option" value="#default"/>
-        <nvpair id="cluster-properties2-option2" name="option" value="value1"/>
-        <nvpair id="cluster-properties2-option3" name="option" value="#default"/>
         <nvpair id="cluster-properties2-option4" name="option" value="value4"/>
-        <nvpair id="cluster-properties2-option5" name="option" value="value5"/>
         <nvpair id="cluster-properties2-other-option" name="other-option" value="value0"/>
       </cluster_property_set>
     </crm_config>
@@ -36,35 +28,19 @@
     <resources>
       <primitive class="ocf" id="rsc1" provider="heartbeat" type="apache">
         <instance_attributes id="rsc1-instance_attributes">
-          <nvpair id="rsc1-instance_attributes-option1" name="option" value="value1"/>
-          <nvpair id="rsc1-instance_attributes-option2" name="option" value="#default"/>
           <nvpair id="rsc1-instance_attributes-other-option" name="other-option" value="value0"/>
-          <nvpair id="rsc1-instance_attributes-option3" name="option" value="#default"/>
           <nvpair id="rsc1-instance_attributes-option4" name="option" value="value4"/>
-          <nvpair id="rsc1-instance_attributes-option5" name="option" value="value5"/>
         </instance_attributes>
         <meta_attributes id="rsc1-meta_attributes">
-          <nvpair id="rsc1-meta_attributes-option1" name="option" value="value1"/>
           <nvpair id="rsc1-meta_attributes-other-option" name="other-option" value="value0"/>
-          <nvpair id="rsc1-meta_attributes-option2" name="option" value="#default"/>
-          <nvpair id="rsc1-meta_attributes-option3" name="option" value="value3"/>
-          <nvpair id="rsc1-meta_attributes-option4" name="option" value="#default"/>
           <nvpair id="rsc1-meta_attributes-option5" name="option" value="value5"/>
         </meta_attributes>
         <utilization id="rsc1-utilization1">
           <nvpair id="rsc1-utilization1-other-option" name="other-option" value="valueX"/>
-          <nvpair id="rsc1-utilization1-option1" name="option" value="valueA"/>
-          <nvpair id-ref="rsc1-utilization2-option2"/>
-          <nvpair id="rsc1-utilization1-option3" name="option" value="#default"/>
-          <nvpair id="rsc1-utilization1-option4" name="option" value="valueD"/>
           <nvpair id="rsc1-utilization1-option5" name="option" value="#default"/>
         </utilization>
         <utilization id="rsc1-utilization2">
           <nvpair id-ref="rsc1-utilization1-other-option"/>
-          <nvpair id-ref="rsc1-utilization1-option1"/>
-          <nvpair id="rsc1-utilization2-option2" name="option" value="valueB"/>
-          <nvpair id-ref="rsc1-utilization1-option3"/>
-          <nvpair id-ref="rsc1-utilization1-option4"/>
           <nvpair id-ref="rsc1-utilization1-option5"/>
         </utilization>
       </primitive>
