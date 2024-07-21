@@ -1,0 +1,15 @@
+<cib crm_feature_set="3.19.7" epoch="16" num_updates="0" admin_epoch="0">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * The cib element does not contain a validate-with attribute.
+
+         In this situation, the validate-with attribute should be set to
+         "pacemaker-4.0".
+      -->
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

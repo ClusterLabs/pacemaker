@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.19.7" validate-with="pacemaker-3.10" epoch="16" num_updates="0" admin_epoch="0">
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="16" num_updates="0" admin_epoch="0">
   <configuration>
     <!-- The essential elements of this test are:
          * There is a cluster_properties_set element with an id attribute (set
