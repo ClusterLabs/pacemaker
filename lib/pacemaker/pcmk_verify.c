@@ -69,21 +69,22 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     if (!pcmk__validate_xml(*cib_object, NULL,
                             (xmlRelaxNGValidityErrorFunc) out->err, out)) {
-        crm_config_error = TRUE;
+        pcmk__config_has_error = true;
         rc = pcmk_rc_schema_validation;
         goto verify_done;
     }
 
     rc = pcmk_update_configured_schema(cib_object, false);
     if (rc != pcmk_rc_ok) {
-        crm_config_error = TRUE;
+        pcmk__config_has_error = true;
         out->err(out, "The cluster will NOT be able to use this configuration.\n"
                  "Please manually update the configuration to conform to the %s syntax.",
                  pcmk__highest_schema_name());
         goto verify_done;
     }
 
-    /* Process the configuration to set crm_config_error/crm_config_warning.
+    /* Process the configuration to set pcmk__config_has_error and
+     * crm_config_warning.
      *
      * @TODO Some parts of the configuration are unpacked only when needed (for
      * example, action configuration), so we aren't necessarily checking those.
@@ -106,7 +107,7 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     }
 
 verify_done:
-    if (crm_config_error) {
+    if (pcmk__config_has_error) {
         rc = pcmk_rc_schema_validation;
         pcmk__config_err("CIB did not pass schema validation");
     } else if (crm_config_warning) {

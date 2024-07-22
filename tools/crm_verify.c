@@ -258,7 +258,7 @@ main(int argc, char **argv)
     rc = pcmk__verify(scheduler, out, &cib_object);
 
     if (rc == pcmk_rc_schema_validation) {
-        if (crm_config_error) {
+        if (pcmk__config_has_error) {
             failure_type = "Errors found during check: ";
           } else if (crm_config_warning) {
             failure_type = "Warnings found during check: ";

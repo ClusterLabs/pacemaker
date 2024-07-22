@@ -41,7 +41,7 @@
 
 CRM_TRACE_INIT_DATA(common);
 
-gboolean crm_config_error = FALSE;
+bool pcmk__config_has_error = false;
 gboolean crm_config_warning = FALSE;
 char *crm_system_name = NULL;
 

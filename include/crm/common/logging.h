@@ -57,13 +57,6 @@ extern unsigned int crm_log_level;
 extern unsigned int crm_trace_nonlog;
 
 /*! \deprecated Pacemaker library functions set this when a configuration
- *              error is found, which turns on extra messages at the end of
- *              processing. It should not be used directly and will be removed
- *              from the public C API in a future release.
- */
-extern gboolean crm_config_error;
-
-/*! \deprecated Pacemaker library functions set this when a configuration
  *              warning is found, which turns on extra messages at the end of
  *              processing. It should not be used directly and will be removed
  *              from the public C API in a future release.
