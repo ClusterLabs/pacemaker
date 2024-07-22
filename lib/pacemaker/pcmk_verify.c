@@ -84,7 +84,7 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     }
 
     /* Process the configuration to set pcmk__config_has_error and
-     * crm_config_warning.
+     * pcmk__config_has_warning.
      *
      * @TODO Some parts of the configuration are unpacked only when needed (for
      * example, action configuration), so we aren't necessarily checking those.
@@ -110,7 +110,7 @@ verify_done:
     if (pcmk__config_has_error) {
         rc = pcmk_rc_schema_validation;
         pcmk__config_err("CIB did not pass schema validation");
-    } else if (crm_config_warning) {
+    } else if (pcmk__config_has_warning) {
         rc = pcmk_rc_schema_validation;
     }
     return rc;

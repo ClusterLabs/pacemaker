@@ -101,7 +101,7 @@ handle_pecalc_request(pcmk__request_t *request)
         || pcmk__config_has_error) {
         series_id = 0;
     } else if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_warning)
-               || crm_config_warning) {
+               || pcmk__config_has_warning) {
         series_id = 1;
     } else {
         series_id = 2;

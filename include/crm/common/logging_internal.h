@@ -94,6 +94,11 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
  */
 extern bool pcmk__config_has_error;
 
+/* Pacemaker library functions set this when a configuration warning is found,
+ * which turns on extra messages at the end of processing.
+ */
+extern bool pcmk__config_has_warning;
+
 /*!
  * \internal
  * \brief Log an error and make crm_verify return failure status
@@ -116,7 +121,7 @@ extern bool pcmk__config_has_error;
  * \param[in] fmt...  printf(3)-style format string and arguments
  */
 #define pcmk__config_warn(fmt...) do {                                      \
-        crm_config_warning = TRUE;                                          \
+        pcmk__config_has_warning = true;                                    \
         if (pcmk__config_warning_handler == NULL) {                         \
             crm_warn(fmt);                                                  \
         } else {                                                            \

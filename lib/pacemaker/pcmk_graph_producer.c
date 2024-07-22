@@ -961,7 +961,7 @@ pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
                 (filename == NULL)? "" : filename);
 
     } else if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_warning)
-               || crm_config_warning) {
+               || pcmk__config_has_warning) {
         crm_warn("Calculated transition %d (with warnings)%s%s",
                  transition_id,
                  (filename == NULL)? "" : ", saving inputs in ",
