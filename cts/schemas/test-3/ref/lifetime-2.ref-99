@@ -24,38 +24,10 @@
       <primitive id="rsc4" class="ocf" type="Dummy" provider="pacemaker"/>
     </resources>
     <constraints>
-      <rsc_colocation id="rsc2-with-rsc1" score="INFINITY" rsc="rsc2" with-rsc="rsc1">
-        <lifetime>
-          <rule id="rsc2-with-rsc1-lifetime-rule1">
-            <date_expression id="rsc2-with-rsc1-lifetime-rule1-expr" operation="in_range" start="2004-001"/>
-          </rule>
-          <rule id="rsc2-with-rsc1-lifetime-rule2">
-            <date_expression id="rsc2-with-rsc1-lifetime-rule2-expr" operation="in_range" end="2005-001"/>
-          </rule>
-        </lifetime>
-      </rsc_colocation>
-      <rsc_colocation id="rsc4-with-rsc3" score="INFINITY" rsc="rsc4" with-rsc="rsc3">
-        <lifetime>
-          <rule id-ref="rsc2-with-rsc1-lifetime-rule1"/>
-          <rule id-ref="rsc2-with-rsc1-lifetime-rule2"/>
-        </lifetime>
-      </rsc_colocation>
-      <rsc_order id="rsc1-then-rsc2" first="rsc1" then="rsc2">
-        <lifetime>
-          <rule id="rsc1-then-rsc2-lifetime-rule1">
-            <date_expression id="rsc1-then-rsc2-lifetime-rule1-expr" operation="in_range" start="2004-001"/>
-          </rule>
-          <rule id="rsc1-then-rsc2-lifetime-rule2">
-            <date_expression id="rsc1-then-rsc2-lifetime-rule2-expr" operation="in_range" end="2005-001"/>
-          </rule>
-        </lifetime>
-      </rsc_order>
-      <rsc_order id="rsc3-then-rsc4" first="rsc3" then="rsc4">
-        <lifetime>
-          <rule id-ref="rsc1-then-rsc2-lifetime-rule1"/>
-          <rule id-ref="rsc1-then-rsc2-lifetime-rule2"/>
-        </lifetime>
-      </rsc_order>
+      <rsc_colocation id="rsc2-with-rsc1" score="INFINITY" rsc="rsc2" with-rsc="rsc1"/>
+      <rsc_colocation id="rsc4-with-rsc3" score="INFINITY" rsc="rsc4" with-rsc="rsc3"/>
+      <rsc_order id="rsc1-then-rsc2" first="rsc1" then="rsc2"/>
+      <rsc_order id="rsc3-then-rsc4" first="rsc3" then="rsc4"/>
     </constraints>
   </configuration>
   <status/>
