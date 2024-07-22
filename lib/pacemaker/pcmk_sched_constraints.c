@@ -26,27 +26,6 @@
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
 
-static bool
-evaluate_lifetime(xmlNode *lifetime, pcmk_scheduler_t *scheduler)
-{
-    bool result = false;
-    crm_time_t *next_change = crm_time_new_undefined();
-    pcmk_rule_input_t rule_input = {
-        .now = scheduler->priv->now,
-    };
-
-    result = (pcmk__evaluate_rules(lifetime, &rule_input,
-                                   next_change) == pcmk_rc_ok);
-
-    if (crm_time_is_defined(next_change)) {
-        time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
-
-        pe__update_recheck_time(recheck, scheduler, "constraint lifetime");
-    }
-    crm_time_free(next_change);
-    return result;
-}
-
 /*!
  * \internal
  * \brief Unpack constraints from XML
@@ -66,7 +45,6 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
                                                  NULL);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
 
-        xmlNode *lifetime = NULL;
         const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
         const char *tag = (const char *) xml_obj->name;
 
@@ -78,17 +56,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
 
         crm_trace("Unpacking %s constraint '%s'", tag, id);
 
-        lifetime = pcmk__xe_first_child(xml_obj, PCMK__XE_LIFETIME, NULL, NULL);
-        if (lifetime != NULL) {
-            pcmk__config_warn("Support for '" PCMK__XE_LIFETIME "' element "
-                              "(in %s) is deprecated and will be dropped "
-                              "in a later release", id);
-        }
-
-        if ((lifetime != NULL) && !evaluate_lifetime(lifetime, scheduler)) {
-            crm_info("Constraint %s %s is not active", tag, id);
-
-        } else if (pcmk__str_eq(PCMK_XE_RSC_ORDER, tag, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK_XE_RSC_ORDER, tag, pcmk__str_none)) {
             pcmk__unpack_ordering(xml_obj, scheduler);
 
         } else if (pcmk__str_eq(PCMK_XE_RSC_COLOCATION, tag, pcmk__str_none)) {

@@ -66,86 +66,70 @@
       <primitive id="rsc4" class="ocf" type="Dummy" provider="pacemaker" original="1"/>
     </resources>
     <constraints original="1">
-      <rsc_location id="ban-rsc1-node1" rsc="rsc1" score="-INFINITY" node="node1" original="1">
-        <lifetime original="1">
-          <rule id="ban-rsc1-node1-lifetime-rule1" original="1">
-            <date_expression id="ban-rsc1-node1-lifetime-rule1-expr" operation="in_range" start="2004-001" original="1"/>
+      <rsc_location id="ban-rsc1-node1" rsc="rsc1" original="1">
+        <rule id="pcmk__3_10_upgrade-ban-rsc1-node1-lifetime-and-rule" boolean-op="and">
+          <rule id="pcmk__3_10_upgrade-ban-rsc1-node1-node-score-rule" score="-INFINITY">
+            <expression id="pcmk__3_10_upgrade-ban-rsc1-node1-node-score-rule-expr" attribute="#uname" operation="eq" value="node1"/>
           </rule>
-          <rule id="ban-rsc1-node1-lifetime-rule2" original="1">
-            <date_expression id="ban-rsc1-node1-lifetime-rule2-expr" operation="in_range" end="2005-001" original="1"/>
+          <rule id="pcmk__3_10_upgrade-ban-rsc1-node1-lifetime-or-rule" boolean-op="or">
+            <rule id="ban-rsc1-node1-lifetime-rule1" original="1">
+              <date_expression id="ban-rsc1-node1-lifetime-rule1-expr" operation="in_range" start="2004-001" original="1"/>
+            </rule>
+            <rule id="ban-rsc1-node1-lifetime-rule2" original="1">
+              <date_expression id="ban-rsc1-node1-lifetime-rule2-expr" operation="in_range" end="2005-001" original="1"/>
+            </rule>
           </rule>
-        </lifetime>
+        </rule>
       </rsc_location>
       <rsc_location id="ban-rsc2-node1" rsc="rsc2" original="1">
-        <rule id="ban-rsc2-node1-rule" score="-INFINITY" original="1">
-          <expression id="ban-rsc2-node1-rule-expr" attribute="#uname" operation="eq" value="node1" original="1"/>
+        <rule id="pcmk__3_10_upgrade-ban-rsc2-node1-lifetime-and-rule" boolean-op="and">
+          <rule id="ban-rsc2-node1-rule" score="-INFINITY" original="1">
+            <expression id="ban-rsc2-node1-rule-expr" attribute="#uname" operation="eq" value="node1" original="1"/>
+          </rule>
+          <rule id="pcmk__3_10_upgrade-ban-rsc2-node1-lifetime-or-rule" boolean-op="or">
+            <rule id="ban-rsc1-node1-lifetime-rule1" original="0">
+              <date_expression id="ban-rsc1-node1-lifetime-rule1-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <rule id="ban-rsc1-node1-lifetime-rule2" original="0">
+              <date_expression id="ban-rsc1-node1-lifetime-rule2-expr" operation="in_range" end="2005-001" original="0"/>
+            </rule>
+          </rule>
         </rule>
-        <lifetime original="1">
-          <rule id="ban-rsc1-node1-lifetime-rule1" original="0">
-            <date_expression id="ban-rsc1-node1-lifetime-rule1-expr" operation="in_range" start="2004-001" original="0"/>
-          </rule>
-          <rule id="ban-rsc1-node1-lifetime-rule2" original="0">
-            <date_expression id="ban-rsc1-node1-lifetime-rule2-expr" operation="in_range" end="2005-001" original="0"/>
-          </rule>
-        </lifetime>
       </rsc_location>
-      <rsc_location id="ban-rsc3-node1" rsc="rsc3" score="-INFINITY" node="node1" original="1">
-        <lifetime original="1">
+      <rsc_location id="ban-rsc3-node1" rsc="rsc3" original="1">
+        <rule id="pcmk__3_10_upgrade-ban-rsc3-node1-lifetime-and-rule" boolean-op="and">
+          <rule id="pcmk__3_10_upgrade-ban-rsc3-node1-node-score-rule" score="-INFINITY">
+            <expression id="pcmk__3_10_upgrade-ban-rsc3-node1-node-score-rule-expr" attribute="#uname" operation="eq" value="node1"/>
+          </rule>
           <rule id="ban-rsc3-node1-lifetime-rule" original="1">
             <date_expression id="ban-rsc3-node1-lifetime-rule-expr" operation="in_range" start="2004-001" original="1"/>
           </rule>
-        </lifetime>
+        </rule>
       </rsc_location>
       <rsc_location id="ban-rsc4-node1" rsc="rsc4" original="1">
-        <rule id="ban-rsc4-node1-rule" score="-INFINITY" original="1">
-          <expression id="ban-rsc4-node1-rule-expr" attribute="#uname" operation="eq" value="node1" original="1"/>
-        </rule>
-        <lifetime original="1">
+        <rule id="pcmk__3_10_upgrade-ban-rsc4-node1-lifetime-and-rule" boolean-op="and">
+          <rule id="ban-rsc4-node1-rule" score="-INFINITY" original="1">
+            <expression id="ban-rsc4-node1-rule-expr" attribute="#uname" operation="eq" value="node1" original="1"/>
+          </rule>
           <rule id="ban-rsc3-node1-lifetime-rule" original="0">
             <date_expression id="ban-rsc3-node1-lifetime-rule-expr" operation="in_range" start="2004-001" original="0"/>
           </rule>
-        </lifetime>
+        </rule>
       </rsc_location>
-      <rsc_colocation id="rsc2-with-rsc1" score="INFINITY" rsc="rsc2" with-rsc="rsc1" original="1">
-        <lifetime original="1">
+      <rsc_colocation id="rsc2-with-rsc1" score="INFINITY" rsc="rsc2" with-rsc="rsc1" original="1"/>
+      <rsc_colocation id="rsc4-with-rsc3" score="INFINITY" rsc="rsc4" with-rsc="rsc3" original="1"/>
+      <rsc_order id="rsc1-then-rsc2" first="rsc1" then="rsc2" original="1"/>
+      <rsc_order id="rsc3-then-rsc4" first="rsc3" then="rsc4" original="1"/>
+      <rsc_location id="pcmk__3_10_upgrade-coloc-order-lifetime-rules" rsc-pattern="a^">
+        <rule id="pcmk__3_10_upgrade-coloc-order-lifetime-rules-rule" score="-INFINITY">
           <rule id="rsc2-with-rsc1-lifetime-rule1" original="1">
             <date_expression id="rsc2-with-rsc1-lifetime-rule1-expr" operation="in_range" start="2004-001" original="1"/>
-          </rule>
-          <rule id="rsc2-with-rsc1-lifetime-rule2" original="1">
-            <date_expression id="rsc2-with-rsc1-lifetime-rule2-expr" operation="in_range" end="2005-001" original="1"/>
-          </rule>
-        </lifetime>
-      </rsc_colocation>
-      <rsc_colocation id="rsc4-with-rsc3" score="INFINITY" rsc="rsc4" with-rsc="rsc3" original="1">
-        <lifetime original="1">
-          <rule id="rsc2-with-rsc1-lifetime-rule1" original="0">
-            <date_expression id="rsc2-with-rsc1-lifetime-rule1-expr" operation="in_range" start="2004-001" original="0"/>
-          </rule>
-          <rule id="rsc2-with-rsc1-lifetime-rule2" original="0">
-            <date_expression id="rsc2-with-rsc1-lifetime-rule2-expr" operation="in_range" end="2005-001" original="0"/>
-          </rule>
-        </lifetime>
-      </rsc_colocation>
-      <rsc_order id="rsc1-then-rsc2" first="rsc1" then="rsc2" original="1">
-        <lifetime original="1">
-          <rule id="rsc1-then-rsc2-lifetime-rule1" original="1">
-            <date_expression id="rsc1-then-rsc2-lifetime-rule1-expr" operation="in_range" start="2004-001" original="1"/>
           </rule>
           <rule id="rsc1-then-rsc2-lifetime-rule2" original="1">
             <date_expression id="rsc1-then-rsc2-lifetime-rule2-expr" operation="in_range" end="2005-001" original="1"/>
           </rule>
-        </lifetime>
-      </rsc_order>
-      <rsc_order id="rsc3-then-rsc4" first="rsc3" then="rsc4" original="1">
-        <lifetime original="1">
-          <rule id="rsc1-then-rsc2-lifetime-rule1" original="0">
-            <date_expression id="rsc1-then-rsc2-lifetime-rule1-expr" operation="in_range" start="2004-001" original="0"/>
-          </rule>
-          <rule id="rsc1-then-rsc2-lifetime-rule2" original="0">
-            <date_expression id="rsc1-then-rsc2-lifetime-rule2-expr" operation="in_range" end="2005-001" original="0"/>
-          </rule>
-        </lifetime>
-      </rsc_order>
+        </rule>
+      </rsc_location>
     </constraints>
   </configuration>
   <status original="1"/>

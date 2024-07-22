@@ -1439,12 +1439,11 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
  * \return Standard Pacemaker return code (pcmk_rc_ok if there are no contained
  *         rules or any contained rule passes, otherwise the result of the last
  *         rule)
- * \deprecated On code paths leading to this function, the schema allows
- *             multiple top-level rules only in the deprecated lifetime element
- *             of location constraints. The code also allows multiple top-level
- *             rules when unpacking attribute sets, but this is deprecated and
- *             already prevented by schema validation. This function can be
- *             dropped when support for those is dropped.
+ * \deprecated This is reachable only with schema validation disabled. The code
+ *             allows multiple top-level rules when unpacking attribute sets,
+ *             but this is deprecated and already prevented by schema
+ *             validation. This function can be dropped when support for those
+ *             is dropped.
  */
 int
 pcmk__evaluate_rules(xmlNode *xml, const pcmk_rule_input_t *rule_input,
