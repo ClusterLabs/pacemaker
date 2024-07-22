@@ -342,14 +342,6 @@ cib_client_delete(cib_t * cib, const char *section, xmlNode * data, int call_opt
 }
 
 static int
-cib_client_delete_absolute(cib_t * cib, const char *section, xmlNode * data, int call_options)
-{
-    op_common(cib);
-    return cib_internal_op(cib, PCMK__CIB_REQUEST_ABS_DELETE, NULL, section,
-                           data, NULL, call_options, cib->user);
-}
-
-static int
 cib_client_erase(cib_t * cib, xmlNode ** output_data, int call_options)
 {
     op_common(cib);
@@ -697,9 +689,6 @@ cib_new_variant(void)
     new_cib->cmds->replace = cib_client_replace;
     new_cib->cmds->remove = cib_client_delete;
     new_cib->cmds->erase = cib_client_erase;
-
-    // Deprecated method
-    new_cib->cmds->delete_absolute = cib_client_delete_absolute;
 
     new_cib->cmds->init_transaction = cib_client_init_transaction;
     new_cib->cmds->end_transaction = cib_client_end_transaction;

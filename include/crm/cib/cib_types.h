@@ -175,10 +175,6 @@ typedef struct cib_api_operations_s {
                    int call_options);
     int (*erase) (cib_t *cib, xmlNode **output_data, int call_options);
 
-    //! \deprecated This method does nothing and should not be called
-    int (*delete_absolute) (cib_t *cib, const char *section, xmlNode *data,
-                            int call_options);
-
     //! \deprecated This method is not implemented and should not be used
     int (*quit) (cib_t *cib, int call_options);
 
