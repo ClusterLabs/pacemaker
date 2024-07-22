@@ -152,7 +152,9 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
         old_value = g_hash_table_lookup(hash, name);
 
         if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
-            // @COMPAT Deprecated since 2.1.8
+            /* @COMPAT Deprecated since 2.1.8; not possible with schema
+             * validation enabled
+             */
             pcmk__config_warn("Support for setting meta-attributes (such as "
                               "%s) to the explicit value '#default' is "
                               "deprecated and will be removed in a future "

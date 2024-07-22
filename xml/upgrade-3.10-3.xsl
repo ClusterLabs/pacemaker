@@ -8,6 +8,9 @@
  upgrade-3.10-3.xsl
 
  Guarantees after this transformation:
+ * There are no nvpairs with value "#default". If there were any prior to this
+   transformation, new nvsets and rule references have been added to achieve
+   the same behavior.
  * There are no lifetime elements.
    * If a lifetime element existed in a location constraint prior to this
      transformation, we drop it. If the lifetime element had multiple top-level
@@ -33,9 +36,35 @@
 <!-- Index all rules by ID -->
 <xsl:key name='rule_id' match="rule" use="@id"/>
 
-<!-- Copy everything unaltered by default -->
+<!--
+ Copy everything unaltered by default, except optionally set "original"
+
+ Params:
+ * original: See identity template
+ -->
 <xsl:template match="/|@*|node()">
-    <xsl:call-template name="identity"/>
+    <xsl:param name="original"/>
+
+    <xsl:call-template name="identity">
+        <xsl:with-param name="original" select="$original"/>
+    </xsl:call-template>
+</xsl:template>
+
+
+<!-- Name/value pairs -->
+
+<!-- Don't apply an nvpair if it would be unset later by a #default value -->
+<xsl:template match="cluster_property_set
+                     |instance_attributes
+                     |meta_attributes
+                     |utilization">
+
+    <xsl:call-template name="handle_defaults">
+        <xsl:with-param name="candidate_default_nvsets"
+                        select="following-sibling::*
+                                [local-name(.) = local-name(current())]"/>
+        <xsl:with-param name="default_value" select="'#default'"/>
+    </xsl:call-template>
 </xsl:template>
 
 

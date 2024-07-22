@@ -38,11 +38,9 @@
         </meta_attributes>
         <utilization id="rsc1-utilization1" original="1">
           <nvpair id="rsc1-utilization1-other-option" name="other-option" value="valueX" original="1"/>
-          <nvpair id="rsc1-utilization1-option5" name="option" value="#default" original="1"/>
         </utilization>
         <utilization id="rsc1-utilization2" original="1">
           <nvpair id="rsc1-utilization1-other-option" name="other-option" value="valueX" original="0"/>
-          <nvpair id="rsc1-utilization1-option5" name="option" value="#default" original="0"/>
         </utilization>
       </primitive>
     </resources>

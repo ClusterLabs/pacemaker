@@ -37,7 +37,13 @@
             </except>
           </data>
         </attribute>
-        <attribute name="value"><text/></attribute>
+        <grammar>
+          <include href="nvset-4.0.rng">
+            <start combine="choice">
+              <ref name="element-nvset.value"/>
+            </start>
+          </include>
+        </grammar>
       </group>
 
       <!-- stonith-action is allowed with value other than "poweroff" -->
@@ -50,6 +56,7 @@
             <except>
               <choice>
                 <value>poweroff</value>
+                <value>#default</value>
               </choice>
             </except>
           </data>

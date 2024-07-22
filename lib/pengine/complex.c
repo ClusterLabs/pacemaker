@@ -115,7 +115,9 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 
     CRM_CHECK((key != NULL) && (table != NULL), return);
     if (pcmk__str_eq((const char *) value, "#default", pcmk__str_casei)) {
-        // @COMPAT Deprecated since 2.1.8
+        /* @COMPAT Deprecated since 2.1.8; not possible with schema validation
+         * enabled
+         */
         pcmk__config_warn("Support for setting meta-attributes (such as %s) to "
                           "the explicit value '#default' is deprecated and "
                           "will be removed in a future release",
