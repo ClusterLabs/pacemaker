@@ -111,10 +111,8 @@ typedef struct stonith_history_s {
 
 typedef struct stonith_s stonith_t;
 
-typedef struct stonith_event_s
-{
+typedef struct stonith_event_s {
     char *id;
-    char *type;     //!< \deprecated Will be removed in future release
     char *message;  //!< \deprecated Will be removed in future release
     char *operation;
 
