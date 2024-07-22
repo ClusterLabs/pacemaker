@@ -214,7 +214,7 @@ class JournalObj(SearchObj):
         host     -- The cluster node on which to watch the journal
         name     -- A unique name to use when logging about this watch
         """
-        SearchObj.__init__(self, name, host, name)
+        SearchObj.__init__(self, "journal", host, name)
         self._parser = isoparser()
 
     def _msg_after_limit(self, msg):
@@ -394,8 +394,8 @@ class LogWatcher:
         if not self.hosts:
             raise ValueError("LogWatcher requires hosts argument")
 
-        if not self.filename:
-            raise ValueError("LogWatcher requires log argument")
+        if self.kind != LogKind.JOURNAL and not self.filename:
+            raise ValueError("LogWatcher requires log file name if not journal")
 
         if not silent:
             for regex in self.regexes:
