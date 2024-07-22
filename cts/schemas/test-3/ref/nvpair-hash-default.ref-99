@@ -59,198 +59,359 @@
          * No rule definitions should be deleted.
       -->
     <crm_config>
+      <cluster_property_set id="pcmk__3_10_upgrade-cluster-properties1-option1-no-hash-default" score="7">
+        <rule id="pcmk__3_10_upgrade-cluster-properties1-option1-no-hash-default-rule">
+          <rule id-ref="cluster-properties1-rule"/>
+          <rule id="pcmk__3_10_upgrade-cluster-properties2-rule-negated" negate="1">
+            <rule id-ref="cluster-properties2-rule"/>
+          </rule>
+          <rule id="pcmk__3_10_upgrade-cluster-properties5-rule-negated" negate="1">
+            <rule id-ref="cluster-properties5-rule"/>
+          </rule>
+          <rule id="pcmk__3_10_upgrade-cluster-properties6-rule-negated" negate="1">
+            <rule id-ref="cluster-properties6-rule"/>
+          </rule>
+        </rule>
+        <nvpair id="cluster-properties1-option1" name="option1" value="value1"/>
+      </cluster_property_set>
       <cluster_property_set id="cluster-properties1" score="7">
         <rule id="cluster-properties1-rule">
           <date_expression id="cluster-properties1-rule-expr" operation="in_range" start="2004-001"/>
         </rule>
-        <nvpair id="cluster-properties1-option1" name="option1" value="value1"/>
-        <nvpair id="cluster-properties1-option2" name="option2" value="#default"/>
+      </cluster_property_set>
+      <cluster_property_set id="pcmk__3_10_upgrade-cluster-properties2-option2-no-hash-default" score="6">
+        <rule id="pcmk__3_10_upgrade-cluster-properties2-option2-no-hash-default-rule">
+          <rule id-ref="cluster-properties2-rule"/>
+          <rule id-ref="pcmk__3_10_upgrade-cluster-properties5-rule-negated"/>
+          <rule id="pcmk__3_10_upgrade-cluster-properties8-rule-negated" negate="1">
+            <rule id-ref="cluster-properties8-rule"/>
+          </rule>
+        </rule>
+        <nvpair id="cluster-properties2-option2" name="option2" value="value2"/>
       </cluster_property_set>
       <cluster_property_set id="cluster-properties2" score="6">
         <rule id="cluster-properties2-rule">
           <date_expression id="cluster-properties2-rule-expr" operation="in_range" start="2004-001"/>
         </rule>
-        <nvpair id="cluster-properties2-option1" name="option1" value="#default"/>
-        <nvpair id="cluster-properties2-option2" name="option2" value="value2"/>
+      </cluster_property_set>
+      <cluster_property_set id="pcmk__3_10_upgrade-cluster-properties3-option1-no-hash-default" score="5">
+        <rule id="pcmk__3_10_upgrade-cluster-properties3-option1-no-hash-default-rule">
+          <rule id-ref="cluster-properties3-rule"/>
+          <rule id-ref="pcmk__3_10_upgrade-cluster-properties5-rule-negated"/>
+          <rule id-ref="pcmk__3_10_upgrade-cluster-properties6-rule-negated"/>
+        </rule>
+        <nvpair id="cluster-properties3-option1" name="option1" value="value3"/>
+      </cluster_property_set>
+      <cluster_property_set id="pcmk__3_10_upgrade-cluster-properties3-option2-no-hash-default" score="5">
+        <rule id="pcmk__3_10_upgrade-cluster-properties3-option2-no-hash-default-rule">
+          <rule id-ref="cluster-properties3-rule"/>
+          <rule id-ref="pcmk__3_10_upgrade-cluster-properties5-rule-negated"/>
+          <rule id-ref="pcmk__3_10_upgrade-cluster-properties8-rule-negated"/>
+        </rule>
+        <nvpair id="cluster-properties3-option2" name="option2" value="value3"/>
       </cluster_property_set>
       <cluster_property_set id="cluster-properties3" score="5">
         <rule id="cluster-properties3-rule">
           <date_expression id="cluster-properties3-rule-expr" operation="in_range" start="2004-001"/>
         </rule>
-        <nvpair id="cluster-properties3-option1" name="option1" value="value3"/>
-        <nvpair id="cluster-properties3-option2" name="option2" value="value3"/>
+      </cluster_property_set>
+      <cluster_property_set id="pcmk__3_10_upgrade-cluster-properties4-option1-no-hash-default">
+        <rule id="pcmk__3_10_upgrade-cluster-properties4-option1-no-hash-default-rule">
+          <rule id-ref="cluster-properties4-rule"/>
+          <rule id-ref="pcmk__3_10_upgrade-cluster-properties5-rule-negated"/>
+          <rule id-ref="pcmk__3_10_upgrade-cluster-properties6-rule-negated"/>
+        </rule>
+        <nvpair id="cluster-properties4-option1" name="option1" value="value4"/>
+      </cluster_property_set>
+      <cluster_property_set id="pcmk__3_10_upgrade-cluster-properties4-option2-no-hash-default">
+        <rule id="pcmk__3_10_upgrade-cluster-properties4-option2-no-hash-default-rule">
+          <rule id-ref="cluster-properties4-rule"/>
+          <rule id-ref="pcmk__3_10_upgrade-cluster-properties5-rule-negated"/>
+          <rule id-ref="pcmk__3_10_upgrade-cluster-properties8-rule-negated"/>
+        </rule>
+        <nvpair id="cluster-properties4-option2" name="option2" value="value4"/>
       </cluster_property_set>
       <cluster_property_set id="cluster-properties4">
         <rule id="cluster-properties4-rule">
           <date_expression id="cluster-properties4-rule-expr" operation="in_range" start="2004-001"/>
         </rule>
-        <nvpair id="cluster-properties4-option1" name="option1" value="value4"/>
-        <nvpair id="cluster-properties4-option2" name="option2" value="value4"/>
       </cluster_property_set>
       <cluster_property_set id="cluster-properties5" score="-1">
         <rule id="cluster-properties5-rule">
           <date_expression id="cluster-properties5-rule-expr" operation="in_range" start="2004-001"/>
         </rule>
-        <nvpair id="cluster-properties5-option1" name="option1" value="#default"/>
-        <nvpair id="cluster-properties5-option2" name="option2" value="#default"/>
+      </cluster_property_set>
+      <cluster_property_set id="pcmk__3_10_upgrade-cluster-properties6-option2-no-hash-default" score="-2">
+        <rule id="pcmk__3_10_upgrade-cluster-properties6-option2-no-hash-default-rule">
+          <rule id-ref="cluster-properties6-rule"/>
+          <rule id-ref="pcmk__3_10_upgrade-cluster-properties8-rule-negated"/>
+        </rule>
+        <nvpair id="cluster-properties6-option2" name="option2" value="value6"/>
       </cluster_property_set>
       <cluster_property_set id="cluster-properties6" score="-2">
         <rule id="cluster-properties6-rule">
           <date_expression id="cluster-properties6-rule-expr" operation="in_range" start="2004-001"/>
         </rule>
-        <nvpair id="cluster-properties6-option1" name="option1" value="#default"/>
-        <nvpair id="cluster-properties6-option2" name="option2" value="value6"/>
+      </cluster_property_set>
+      <cluster_property_set id="pcmk__3_10_upgrade-cluster-properties7-option2-no-hash-default" score="-3">
+        <rule id="pcmk__3_10_upgrade-cluster-properties7-option2-no-hash-default-rule">
+          <rule id-ref="cluster-properties7-rule"/>
+          <rule id-ref="pcmk__3_10_upgrade-cluster-properties8-rule-negated"/>
+        </rule>
+        <nvpair id="cluster-properties7-option2" name="option2" value="value7"/>
       </cluster_property_set>
       <cluster_property_set id="cluster-properties7" score="-3">
         <rule id="cluster-properties7-rule">
           <date_expression id="cluster-properties7-rule-expr" operation="in_range" start="2004-001"/>
         </rule>
         <nvpair id="cluster-properties7-option1" name="option1" value="value7"/>
-        <nvpair id="cluster-properties7-option2" name="option2" value="value7"/>
       </cluster_property_set>
       <cluster_property_set id="cluster-properties8" score="-4">
         <rule id="cluster-properties8-rule">
           <date_expression id="cluster-properties8-rule-expr" operation="in_range" start="2004-001"/>
         </rule>
         <nvpair id="cluster-properties8-option1" name="option1" value="value8"/>
-        <nvpair id="cluster-properties8-option2" name="option2" value="#default"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
     <resources>
       <primitive class="ocf" id="rsc1" provider="heartbeat" type="apache">
+        <instance_attributes id="pcmk__3_10_upgrade-rsc1-instance_attributes1-option1-no-hash-default" score="1000">
+          <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes1-option1-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes1-rule"/>
+            <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes2-rule-negated" negate="1">
+              <rule id-ref="rsc1-instance_attributes2-rule"/>
+            </rule>
+            <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated" negate="1">
+              <rule id-ref="rsc1-instance_attributes5-rule"/>
+            </rule>
+            <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes6-rule-negated" negate="1">
+              <rule id-ref="rsc1-instance_attributes6-rule"/>
+            </rule>
+          </rule>
+          <nvpair id="rsc1-instance_attributes1-option1" name="option1" value="value1"/>
+        </instance_attributes>
         <instance_attributes id="rsc1-instance_attributes1" score="1000">
           <rule id="rsc1-instance_attributes1-rule">
             <date_expression id="rsc1-instance_attributes1-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
-          <nvpair id="rsc1-instance_attributes1-option1" name="option1" value="value1"/>
-          <nvpair id="rsc1-instance_attributes1-option2" name="option2" value="#default"/>
+        </instance_attributes>
+        <instance_attributes id="pcmk__3_10_upgrade-rsc1-instance_attributes2-option2-no-hash-default" score="999">
+          <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes2-option2-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes2-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes8-rule-negated" negate="1">
+              <rule id-ref="rsc1-instance_attributes8-rule"/>
+            </rule>
+          </rule>
+          <nvpair id="rsc1-instance_attributes2-option2" name="option2" value="value2"/>
         </instance_attributes>
         <instance_attributes id="rsc1-instance_attributes2" score="999">
           <rule id="rsc1-instance_attributes2-rule">
             <date_expression id="rsc1-instance_attributes2-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
-          <nvpair id="rsc1-instance_attributes2-option1" name="option1" value="#default"/>
-          <nvpair id="rsc1-instance_attributes2-option2" name="option2" value="value2"/>
+        </instance_attributes>
+        <instance_attributes id="pcmk__3_10_upgrade-rsc1-instance_attributes3-option1-no-hash-default" score="998">
+          <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes3-option1-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes3-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes6-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-instance_attributes3-option1" name="option1" value="value3"/>
+        </instance_attributes>
+        <instance_attributes id="pcmk__3_10_upgrade-rsc1-instance_attributes3-option2-no-hash-default" score="998">
+          <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes3-option2-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes3-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes8-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-instance_attributes3-option2" name="option2" value="value3"/>
         </instance_attributes>
         <instance_attributes id="rsc1-instance_attributes3" score="998">
           <rule id="rsc1-instance_attributes3-rule">
             <date_expression id="rsc1-instance_attributes3-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
-          <nvpair id="rsc1-instance_attributes3-option1" name="option1" value="value3"/>
-          <nvpair id="rsc1-instance_attributes3-option2" name="option2" value="value3"/>
+        </instance_attributes>
+        <instance_attributes id="pcmk__3_10_upgrade-rsc1-instance_attributes4-option1-no-hash-default" score="997">
+          <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes4-option1-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes4-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes6-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-instance_attributes4-option1" name="option1" value="value4"/>
+        </instance_attributes>
+        <instance_attributes id="pcmk__3_10_upgrade-rsc1-instance_attributes4-option2-no-hash-default" score="997">
+          <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes4-option2-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes4-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes8-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-instance_attributes4-option2" name="option2" value="value4"/>
         </instance_attributes>
         <instance_attributes id="rsc1-instance_attributes4" score="997">
           <rule id="rsc1-instance_attributes4-rule">
             <date_expression id="rsc1-instance_attributes4-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
-          <nvpair id="rsc1-instance_attributes4-option1" name="option1" value="value4"/>
-          <nvpair id="rsc1-instance_attributes4-option2" name="option2" value="value4"/>
         </instance_attributes>
         <instance_attributes id="rsc1-instance_attributes5" score="996">
           <rule id="rsc1-instance_attributes5-rule">
             <date_expression id="rsc1-instance_attributes5-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
-          <nvpair id="rsc1-instance_attributes5-option1" name="option1" value="#default"/>
-          <nvpair id="rsc1-instance_attributes5-option2" name="option2" value="#default"/>
+        </instance_attributes>
+        <instance_attributes id="pcmk__3_10_upgrade-rsc1-instance_attributes6-option2-no-hash-default" score="995">
+          <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes6-option2-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes6-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes8-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-instance_attributes6-option2" name="option2" value="value6"/>
         </instance_attributes>
         <instance_attributes id="rsc1-instance_attributes6" score="995">
           <rule id="rsc1-instance_attributes6-rule">
             <date_expression id="rsc1-instance_attributes6-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
-          <nvpair id="rsc1-instance_attributes6-option1" name="option1" value="#default"/>
-          <nvpair id="rsc1-instance_attributes6-option2" name="option2" value="value6"/>
+        </instance_attributes>
+        <instance_attributes id="pcmk__3_10_upgrade-rsc1-instance_attributes7-option2-no-hash-default" score="994">
+          <rule id="pcmk__3_10_upgrade-rsc1-instance_attributes7-option2-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes7-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes8-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-instance_attributes7-option2" name="option2" value="value7"/>
         </instance_attributes>
         <instance_attributes id="rsc1-instance_attributes7" score="994">
           <rule id="rsc1-instance_attributes7-rule">
             <date_expression id="rsc1-instance_attributes7-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
           <nvpair id="rsc1-instance_attributes7-option1" name="option1" value="value7"/>
-          <nvpair id="rsc1-instance_attributes7-option2" name="option2" value="value7"/>
         </instance_attributes>
         <instance_attributes id="rsc1-instance_attributes8" score="993">
           <rule id="rsc1-instance_attributes8-rule">
             <date_expression id="rsc1-instance_attributes8-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
           <nvpair id="rsc1-instance_attributes8-option1" name="option1" value="value8"/>
-          <nvpair id="rsc1-instance_attributes8-option2" name="option2" value="#default"/>
         </instance_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes1-option1-no-hash-default" score="500">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-option1-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes1-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes2-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes6-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes1-option1" name="option1" value="value1"/>
+        </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes1" score="500">
           <rule id-ref="rsc1-instance_attributes1-rule"/>
-          <nvpair id="rsc1-meta_attributes1-option1" name="option1" value="value1"/>
-          <nvpair id="rsc1-meta_attributes1-option2" name="option2" value="#default"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes2-option2-no-hash-default" score="499">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes2-option2-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes2-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes8-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes2-option2" name="option2" value="value2"/>
         </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes2" score="499">
           <rule id-ref="rsc1-instance_attributes2-rule"/>
-          <nvpair id="rsc1-meta_attributes2-option1" name="option1" value="#default"/>
-          <nvpair id="rsc1-meta_attributes2-option2" name="option2" value="value2"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes3-option1-no-hash-default" score="498">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes3-option1-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes3-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes6-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes3-option1" name="option1" value="value3"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes3-option2-no-hash-default" score="498">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes3-option2-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes3-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes8-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes3-option2" name="option2" value="value3"/>
         </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes3" score="498">
           <rule id-ref="rsc1-instance_attributes3-rule"/>
-          <nvpair id="rsc1-meta_attributes3-option1" name="option1" value="value3"/>
-          <nvpair id="rsc1-meta_attributes3-option2" name="option2" value="value3"/>
         </meta_attributes>
-        <meta_attributes id="rsc1-meta_attributes4" score="497">
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes4-option1-no-hash-default" score="497">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes4-option1-no-hash-default-rule">
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes6-rule-negated"/>
+          </rule>
           <nvpair id="rsc1-meta_attributes4-option1" name="option1" value="value4"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes4-option2-no-hash-default" score="497">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes4-option2-no-hash-default-rule">
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes8-rule-negated"/>
+          </rule>
           <nvpair id="rsc1-meta_attributes4-option2" name="option2" value="value4"/>
         </meta_attributes>
+        <meta_attributes id="rsc1-meta_attributes4" score="497"/>
         <meta_attributes id="rsc1-meta_attributes5" score="496">
           <rule id-ref="rsc1-instance_attributes5-rule"/>
-          <nvpair id="rsc1-meta_attributes5-option1" name="option1" value="#default"/>
-          <nvpair id="rsc1-meta_attributes5-option2" name="option2" value="#default"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes6-option2-no-hash-default" score="495">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes6-option2-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes6-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes8-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes6-option2" name="option2" value="value6"/>
         </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes6" score="495">
           <rule id-ref="rsc1-instance_attributes6-rule"/>
-          <nvpair id="rsc1-meta_attributes6-option1" name="option1" value="#default"/>
-          <nvpair id="rsc1-meta_attributes6-option2" name="option2" value="value6"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes7-option2-no-hash-default" score="494">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes7-option2-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes7-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes8-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes7-option2" name="option2" value="value7"/>
         </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes7" score="494">
           <rule id-ref="rsc1-instance_attributes7-rule"/>
           <nvpair id="rsc1-meta_attributes7-option1" name="option1" value="value7"/>
-          <nvpair id="rsc1-meta_attributes7-option2" name="option2" value="value7"/>
         </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes8" score="493">
           <rule id-ref="rsc1-instance_attributes8-rule"/>
           <nvpair id="rsc1-meta_attributes8-option1" name="option1" value="value8"/>
-          <nvpair id="rsc1-meta_attributes8-option2" name="option2" value="#default"/>
         </meta_attributes>
         <utilization id="rsc1-utilization1" score="7">
           <rule id-ref="rsc1-instance_attributes1-rule"/>
-          <nvpair id="rsc1-utilization1-option1" name="option1" value="value1"/>
-          <nvpair id="rsc1-utilization1-option2" name="option2" value="#default"/>
         </utilization>
-        <utilization id="rsc1-utilization2" score="6">
-          <nvpair id="rsc1-utilization2-option1" name="option1" value="#default"/>
-          <nvpair id="rsc1-utilization2-option2" name="option2" value="value2"/>
+        <utilization id="rsc1-utilization2" score="6"/>
+        <utilization id="pcmk__3_10_upgrade-rsc1-utilization3-option1-no-hash-default" score="5">
+          <rule id="pcmk__3_10_upgrade-rsc1-utilization3-option1-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes3-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes6-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-utilization3-option1" name="option1" value="value3"/>
         </utilization>
         <utilization id="rsc1-utilization3" score="5">
           <rule id-ref="rsc1-instance_attributes3-rule"/>
-          <nvpair id="rsc1-utilization3-option1" name="option1" value="value3"/>
-          <nvpair id="rsc1-utilization3-option2" name="option2" value="value3"/>
+        </utilization>
+        <utilization id="pcmk__3_10_upgrade-rsc1-utilization4-option1-no-hash-default">
+          <rule id="pcmk__3_10_upgrade-rsc1-utilization4-option1-no-hash-default-rule">
+            <rule id-ref="rsc1-instance_attributes4-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes5-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-instance_attributes6-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-utilization4-option1" name="option1" value="value4"/>
         </utilization>
         <utilization id="rsc1-utilization4">
           <rule id-ref="rsc1-instance_attributes4-rule"/>
-          <nvpair id="rsc1-utilization4-option1" name="option1" value="value4"/>
-          <nvpair id="rsc1-utilization4-option2" name="option2" value="value4"/>
         </utilization>
         <utilization id="rsc1-utilization5" score="-1">
           <rule id-ref="rsc1-instance_attributes5-rule"/>
-          <nvpair id="rsc1-utilization5-option1" name="option1" value="#default"/>
-          <nvpair id="rsc1-utilization5-option2" name="option2" value="#default"/>
         </utilization>
         <utilization id="rsc1-utilization6" score="-2">
           <rule id-ref="rsc1-instance_attributes6-rule"/>
-          <nvpair id="rsc1-utilization6-option1" name="option1" value="#default"/>
-          <nvpair id="rsc1-utilization6-option2" name="option2" value="value6"/>
         </utilization>
         <utilization id="rsc1-utilization7" score="-3">
           <rule id-ref="rsc1-instance_attributes7-rule"/>
           <nvpair id="rsc1-utilization7-option1" name="option1" value="value7"/>
-          <nvpair id="rsc1-utilization7-option2" name="option2" value="value7"/>
         </utilization>
         <utilization id="rsc1-utilization8" score="-4">
           <nvpair id="rsc1-utilization8-option1" name="option1" value="value8"/>
-          <nvpair id="rsc1-utilization8-option2" name="option2" value="#default"/>
         </utilization>
       </primitive>
     </resources>

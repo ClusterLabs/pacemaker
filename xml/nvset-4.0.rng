@@ -15,6 +15,26 @@
     </attribute>
   </define>
 
+  <!--
+   Disallow values for which support was recently dropped. The idea is to
+   prevent a user from adding the option under the belief that it will still
+   affect behavior. Sometime in the future, re-allow these.
+
+   RelaxNG does not allow an <except> to contain a <ref>, so these must be
+   included explicitly anywhere the list of unsupported values is overridden.
+   -->
+  <define name="element-nvset.value">
+    <attribute name="value">
+      <data type="string">
+        <except>
+          <choice>
+            <value>#default</value>
+          </choice>
+        </except>
+      </data>
+    </attribute>
+  </define>
+
   <!-- nvpair/@name:
        * defer element-nvset.name grammar item
        nvpair/@value:
@@ -22,7 +42,7 @@
        enumerated pairs (i.e. related to @name) at once -->
   <define name="element-nvset.name-value">
     <ref name="element-nvset.name"/>
-    <attribute name="value"><text/></attribute>
+    <ref name="element-nvset.value"/>
   </define>
 
   <!-- Allow easy redefinition in parent grammars -->
@@ -42,7 +62,12 @@
       <zeroOrMore>
         <element name="nvpair">
           <choice>
-            <attribute name="id-ref"><data type="IDREF"/></attribute>
+            <group>
+              <attribute name="id-ref"><data type="IDREF"/></attribute>
+              <optional>
+                <attribute name="name"><text/></attribute>
+              </optional>
+            </group>
             <group>
               <attribute name="id"><data type="ID"/></attribute>
               <ref name="element-nvset.name-value"/>

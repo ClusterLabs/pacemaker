@@ -22,7 +22,13 @@
           <data type="string"/>
         </attribute>
         <optional>
-          <attribute name="value"><text/></attribute>
+          <grammar>
+            <include href="nvset-4.0.rng">
+              <start combine="choice">
+                <ref name="element-nvset.value"/>
+              </start>
+            </include>
+          </grammar>
         </optional>
       </group>
     </choice>
