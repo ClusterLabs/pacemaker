@@ -128,11 +128,6 @@ typedef struct cib_api_operations_s {
 
     int (*free) (cib_t *cib);
 
-    //! \deprecated This method will be removed and should not be used
-    int (*set_op_callback) (cib_t *cib, void (*callback) (const xmlNode *msg,
-                                                          int callid, int rc,
-                                                          xmlNode *output));
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     int (*add_notify_callback) (cib_t *cib, const char *event,
                                 void (*callback) (const char *event,

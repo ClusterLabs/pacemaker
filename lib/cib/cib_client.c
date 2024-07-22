@@ -34,21 +34,6 @@ static GHashTable *cib_op_callback_table = NULL;
         }                                                               \
     } while(0)
 
-static int
-cib_client_set_op_callback(cib_t *cib,
-                           void (*callback) (const xmlNode * msg, int call_id,
-                                             int rc, xmlNode * output))
-{
-    if (callback == NULL) {
-        crm_info("Un-Setting operation callback");
-
-    } else {
-        crm_trace("Setting operation callback");
-    }
-    cib->op_callback = callback;
-    return pcmk_ok;
-}
-
 static gint
 ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
 {
@@ -701,9 +686,6 @@ cib_new_variant(void)
         free(new_cib);
         return NULL;
     }
-
-    // Deprecated method
-    new_cib->cmds->set_op_callback = cib_client_set_op_callback;
 
     new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
     new_cib->cmds->del_notify_callback = cib_client_del_notify_callback;
