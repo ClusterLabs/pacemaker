@@ -264,14 +264,6 @@ cib_client_query_from(cib_t * cib, const char *host, const char *section,
 }
 
 static int
-is_primary(cib_t *cib)
-{
-    op_common(cib);
-    return cib_internal_op(cib, PCMK__CIB_REQUEST_IS_PRIMARY, NULL, NULL, NULL,
-                           NULL, cib_sync_call, cib->user);
-}
-
-static int
 set_secondary(cib_t *cib, int call_options)
 {
     op_common(cib);
@@ -699,8 +691,6 @@ cib_new_variant(void)
 
     new_cib->cmds->query_from = cib_client_query_from;
     new_cib->cmds->sync_from = cib_client_sync_from;
-
-    new_cib->cmds->is_master = is_primary; // Deprecated method
 
     new_cib->cmds->set_primary = set_primary;
     new_cib->cmds->set_master = set_primary; // Deprecated method

@@ -83,6 +83,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 
     crm_trace("Processing \"%s\" event", op);
 
+    // @COMPAT Pacemaker Remote clients <3.0.0 may send this
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_IS_PRIMARY, pcmk__str_none)) {
         if (based_is_primary) {
             result = pcmk_ok;
