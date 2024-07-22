@@ -141,9 +141,6 @@ typedef struct cib_api_operations_s {
     int (*set_connection_dnotify) (cib_t *cib,
                                    void (*dnotify) (gpointer user_data));
 
-    //! \deprecated This method will be removed and should not be used
-    int (*inputfd) (cib_t *cib);
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated This method will be removed and should not be used
     int (*noop) (cib_t *cib, int call_options);
