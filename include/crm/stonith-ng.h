@@ -113,9 +113,7 @@ typedef struct stonith_s stonith_t;
 
 typedef struct stonith_event_s {
     char *id;
-    char *message;  //!< \deprecated Will be removed in future release
     char *operation;
-
     int result;
     char *origin;
     char *target;
