@@ -272,12 +272,6 @@ set_secondary(cib_t *cib, int call_options)
 }
 
 static int
-set_all_secondary(cib_t * cib, int call_options)
-{
-    return -EPROTONOSUPPORT;
-}
-
-static int
 set_primary(cib_t *cib, int call_options)
 {
     op_common(cib);
@@ -694,7 +688,6 @@ cib_new_variant(void)
 
     new_cib->cmds->set_primary = set_primary;
     new_cib->cmds->set_secondary = set_secondary;
-    new_cib->cmds->set_slave_all = set_all_secondary; // Deprecated method
 
     new_cib->cmds->upgrade = cib_client_upgrade;
     new_cib->cmds->bump_epoch = cib_client_bump_epoch;
