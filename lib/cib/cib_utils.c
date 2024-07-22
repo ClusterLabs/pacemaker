@@ -744,7 +744,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
                   pcmk__s(blob->id, "without ID"), call_id);
         blob->callback(msg, call_id, rc, output, blob->user_data);
 
-    } else if (cib && cib->op_callback == NULL && rc != pcmk_ok) {
+    } else if ((cib != NULL) && (rc != pcmk_ok)) {
         crm_warn("CIB command failed: %s", pcmk_strerror(rc));
         crm_log_xml_debug(msg, "Failed CIB Update");
     }
@@ -754,10 +754,6 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         remove_cib_op_callback(call_id, FALSE);
     }
 
-    if (cib && cib->op_callback != NULL) {
-        crm_trace("Invoking global callback for call %d", call_id);
-        cib->op_callback(msg, call_id, rc, output);
-    }
     crm_trace("OP callback activated for %d", call_id);
 }
 

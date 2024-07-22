@@ -271,11 +271,6 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         cib_set_file_flags(private, cib_file_flag_dirty);
     }
 
-    // Global operation callback (deprecated)
-    if (cib->op_callback != NULL) {
-        cib->op_callback(NULL, call_id, rc, *output);
-    }
-
 done:
     if ((result_cib != private->cib_xml) && (result_cib != *output)) {
         pcmk__xml_free(result_cib);
