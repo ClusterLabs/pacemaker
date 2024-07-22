@@ -154,9 +154,6 @@ typedef struct cib_api_operations_s {
     int (*query_from) (cib_t *cib, const char *host, const char *section,
                        xmlNode **output_data, int call_options);
 
-    //! \deprecated Use the set_primary() method instead
-    int (*set_master) (cib_t *cib, int call_options);
-
     //! \deprecated Use the set_secondary() method instead
     int (*set_slave) (cib_t *cib, int call_options);
 

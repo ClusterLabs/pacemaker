@@ -693,8 +693,6 @@ cib_new_variant(void)
     new_cib->cmds->sync_from = cib_client_sync_from;
 
     new_cib->cmds->set_primary = set_primary;
-    new_cib->cmds->set_master = set_primary; // Deprecated method
-
     new_cib->cmds->set_secondary = set_secondary;
     new_cib->cmds->set_slave = set_secondary; // Deprecated method
 
