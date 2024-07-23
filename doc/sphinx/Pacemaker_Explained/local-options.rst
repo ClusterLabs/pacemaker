@@ -713,7 +713,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _sbd_sync_resource_startup:
 
        .. index::
-          pair:: node option; SBD_SYNC_RESOURCE_STARTUP
+          pair: node option; SBD_SYNC_RESOURCE_STARTUP
 
        SBD_SYNC_RESOURCE_STARTUP
      - :ref:`boolean <boolean>`
@@ -726,7 +726,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _sbd_watchdog_timeout:
 
        .. index::
-          pair:: node option; SBD_WATCHDOG_TIMEOUT
+          pair: node option; SBD_WATCHDOG_TIMEOUT
 
        SBD_WATCHDOG_TIMEOUT
      - :ref:`duration <duration>`
