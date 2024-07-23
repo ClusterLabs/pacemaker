@@ -357,7 +357,7 @@ class Environment:
         grp2 = parser.add_argument_group("Options that CTS will usually auto-detect correctly")
         grp2.add_argument("-L", "--logfile",
                           metavar="PATH",
-                          help="Where to look for logs from cluster nodes")
+                          help="Where to look for logs from cluster nodes (or 'journal' for systemd journal)")
         grp2.add_argument("--at-boot", "--cluster-starts-at-boot",
                           choices=["1", "0", "yes", "no"],
                           help="Does the cluster software start at boot time?")
@@ -584,7 +584,10 @@ class Environment:
             self["ClobberCIB"] = True
             self["IPBase"] = args.ip
 
-        if args.logfile:
+        if args.logfile == "journal":
+            self["LogAuditDisabled"] = True
+            self["log_kind"] = LogKind.JOURNAL
+        elif args.logfile:
             self["LogAuditDisabled"] = True
             self["LogFileName"] = args.logfile
             self["log_kind"] = LogKind.REMOTE_FILE
