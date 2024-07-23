@@ -496,3 +496,45 @@ pcmk__sleep_ms(unsigned int ms)
     }
 #endif
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/util_compat.h>
+
+/*!
+ * \brief Check whether string represents a client name used by cluster daemons
+ *
+ * \param[in] name  String to check
+ *
+ * \return true if name is standard client name used by daemons, false otherwise
+ *
+ * \note This is provided by the client, and so cannot be used by itself as a
+ *       secure means of authentication.
+ */
+bool
+crm_is_daemon_name(const char *name)
+{
+    return pcmk__str_any_of(name,
+                            "attrd",
+                            CRM_SYSTEM_CIB,
+                            CRM_SYSTEM_CRMD,
+                            CRM_SYSTEM_DC,
+                            CRM_SYSTEM_LRMD,
+                            CRM_SYSTEM_MCP,
+                            CRM_SYSTEM_PENGINE,
+                            CRM_SYSTEM_TENGINE,
+                            "pacemaker-attrd",
+                            "pacemaker-based",
+                            "pacemaker-controld",
+                            "pacemaker-execd",
+                            "pacemaker-fenced",
+                            "pacemaker-remoted",
+                            "pacemaker-schedulerd",
+                            "stonith-ng",
+                            "stonithd",
+                            NULL);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

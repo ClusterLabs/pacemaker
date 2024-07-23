@@ -56,7 +56,7 @@ do_cl_join_query(long long action,
     sleep(1);                   // Give the cluster layer time to propagate to the DC
     update_dc(NULL);            /* Unset any existing value so that the result is not discarded */
     crm_debug("Querying for a DC");
-    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld, req);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
     pcmk__xml_free(req);
 }
 
@@ -85,7 +85,7 @@ do_cl_join_announce(long long action,
 
         crm_debug("Announcing availability");
         update_dc(NULL);
-        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld, req);
+        pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
         pcmk__xml_free(req);
 
     } else {
@@ -181,7 +181,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
         crm_xml_add(reply, PCMK__XA_JOIN_ID, join_id);
         crm_xml_add(reply, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-        pcmk__cluster_send_message(dc_node, pcmk__cluster_msg_controld, reply);
+        pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, reply);
         pcmk__xml_free(reply);
     }
 
@@ -343,7 +343,7 @@ do_cl_join_finalize_respond(long long action,
             }
         }
 
-        pcmk__cluster_send_message(dc_node, pcmk__cluster_msg_controld, reply);
+        pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, reply);
         pcmk__xml_free(reply);
 
         if (AM_I_DC == FALSE) {

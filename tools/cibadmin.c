@@ -924,7 +924,7 @@ do_init(void)
     int rc = pcmk_ok;
 
     the_cib = cib_new();
-    rc = cib__signon_attempts(the_cib, crm_system_name, cib_command, 5);
+    rc = cib__signon_attempts(the_cib, cib_command, 5);
     if (rc != pcmk_ok) {
         crm_err("Could not connect to the CIB: %s", pcmk_strerror(rc));
         fprintf(stderr, "Could not connect to the CIB: %s\n",

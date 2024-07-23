@@ -331,7 +331,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
             cib_client->name = pcmk__itoa(cib_client->pid);
         } else {
             cib_client->name = pcmk__str_copy(value);
-            if (crm_is_daemon_name(value)) {
+            if (pcmk__parse_server(value) != pcmk_ipc_unknown) {
                 pcmk__set_client_flags(cib_client, cib_is_daemon);
             }
         }
@@ -383,7 +383,7 @@ cib_digester_cb(gpointer data)
         crm_xml_add(ping, PCMK__XA_CIB_PING_ID, buffer);
 
         crm_xml_add(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_based, ping);
+        pcmk__cluster_send_message(NULL, pcmk_ipc_based, ping);
 
         pcmk__xml_free(ping);
     }
@@ -708,7 +708,7 @@ forward_request(xmlNode *request)
     if (host != NULL) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    pcmk__cluster_send_message(peer, pcmk__cluster_msg_based, request);
+    pcmk__cluster_send_message(peer, pcmk_ipc_based, request);
 
     // Return the request to its original state
     pcmk__xe_remove_attr(request, PCMK__XA_CIB_DELEGATED_FROM);
@@ -729,7 +729,7 @@ send_peer_reply(xmlNode *msg, const char *originator)
 
     crm_trace("Sending request result to %s only", originator);
     crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
-    pcmk__cluster_send_message(node, pcmk__cluster_msg_based, msg);
+    pcmk__cluster_send_message(node, pcmk_ipc_based, msg);
 }
 
 /*!
@@ -1252,7 +1252,7 @@ initiate_exit(void)
     crm_xml_add(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
 
-    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_based, leaving);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_based, leaving);
     pcmk__xml_free(leaving);
 
     g_timeout_add(EXIT_ESCALATION_MS, cib_force_exit, NULL);

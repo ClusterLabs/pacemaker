@@ -274,6 +274,10 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
         .destroy = cib_native_destroy
     };
 
+    if (name == NULL) {
+        name = pcmk__s(crm_system_name, "client");
+    }
+
     cib->call_timeout = PCMK__IPC_TIMEOUT;
 
     if (type == cib_command) {

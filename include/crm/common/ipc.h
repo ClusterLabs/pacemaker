@@ -73,8 +73,12 @@ xmlNode *create_request_adv(const char *task, xmlNode *xml_data,
  * Pacemaker daemon IPC
  */
 
+/* @COMPAT This is also used internally for cluster message types, but it's not
+ * worth the hassle of redefining this public API just to change the name.
+ */
 //! Available IPC interfaces
 enum pcmk_ipc_server {
+    pcmk_ipc_unknown,       //!< Unknown or invalid
     pcmk_ipc_attrd,         //!< Attribute manager
     pcmk_ipc_based,         //!< CIB manager
     pcmk_ipc_controld,      //!< Controller

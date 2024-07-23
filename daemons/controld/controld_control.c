@@ -125,7 +125,7 @@ do_shutdown_req(long long action,
              pcmk__s(controld_globals.dc_name, "not set"));
     msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-    if (!pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld, msg)) {
+    if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
     pcmk__xml_free(msg);

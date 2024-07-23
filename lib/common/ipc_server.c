@@ -986,31 +986,3 @@ pcmk__serve_schedulerd_ipc(struct qb_ipcs_service_handlers *cb)
 {
     return mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_NATIVE, cb);
 }
-
-/*!
- * \brief Check whether string represents a client name used by cluster daemons
- *
- * \param[in] name  String to check
- *
- * \return true if name is standard client name used by daemons, false otherwise
- *
- * \note This is provided by the client, and so cannot be used by itself as a
- *       secure means of authentication.
- */
-bool
-crm_is_daemon_name(const char *name)
-{
-    return pcmk__str_any_of(pcmk__message_name(name),
-                            "attrd",
-                            CRM_SYSTEM_CIB,
-                            CRM_SYSTEM_CRMD,
-                            CRM_SYSTEM_DC,
-                            CRM_SYSTEM_LRMD,
-                            CRM_SYSTEM_MCP,
-                            CRM_SYSTEM_PENGINE,
-                            CRM_SYSTEM_STONITHD,
-                            CRM_SYSTEM_TENGINE,
-                            "pacemaker-remoted",
-                            "stonith-ng",
-                            NULL);
-}

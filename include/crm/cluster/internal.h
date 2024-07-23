@@ -16,6 +16,7 @@
 #include <glib.h>           // gboolean
 #include <libxml/tree.h>    // xmlNode
 
+#include <crm/common/ipc.h> // enum crm_ipc_server
 #include <crm/cluster.h>
 
 #if SUPPORT_COROSYNC
@@ -25,20 +26,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/*!
- * \internal
- * \enum pcmk__cluster_msg
- * \brief Types of message sent via the cluster layer
- */
-enum pcmk__cluster_msg {
-    pcmk__cluster_msg_unknown,
-    pcmk__cluster_msg_attrd,
-    pcmk__cluster_msg_based,
-    pcmk__cluster_msg_controld,
-    pcmk__cluster_msg_execd,
-    pcmk__cluster_msg_fenced,
-};
 
 enum crm_proc_flag {
     /* @COMPAT When pcmk__node_status_t:processes is made internal, we can merge
@@ -292,9 +279,8 @@ void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
 
-enum pcmk__cluster_msg pcmk__cluster_parse_msg_type(const char *text);
 bool pcmk__cluster_send_message(const pcmk__node_status_t *node,
-                                enum pcmk__cluster_msg service,
+                                enum pcmk_ipc_server service,
                                 const xmlNode *data);
 
 // Membership

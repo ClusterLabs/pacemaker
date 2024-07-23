@@ -120,6 +120,7 @@ typedef struct cib_s cib_t;
 
 typedef struct cib_api_operations_s {
     // NOTE: sbd (as of at least 1.5.2) uses this
+    // @COMPAT At compatibility break, drop name (always use crm_system_name)
     int (*signon) (cib_t *cib, const char *name, enum cib_conn_type type);
 
     //! \deprecated This method will be removed and should not be used

@@ -318,7 +318,7 @@ election_vote(election_t *e)
     crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
                         PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
 
-    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld, vote);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_controld, vote);
     pcmk__xml_free(vote);
 
     crm_debug("Started %s round %d", e->name, e->count);
@@ -500,9 +500,7 @@ record_vote(election_t *e, struct vote *vote)
 static void
 send_no_vote(pcmk__node_status_t *peer, struct vote *vote)
 {
-    /* @TODO probably shouldn't hardcode CRM_SYSTEM_CRMD and
-     * pcmk__cluster_msg_controld
-     */
+    // @TODO probably shouldn't hardcode CRM_SYSTEM_CRMD and pcmk_ipc_controld
 
     xmlNode *novote = create_request(CRM_OP_NOVOTE, NULL, vote->from,
                                      CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
@@ -510,7 +508,7 @@ send_no_vote(pcmk__node_status_t *peer, struct vote *vote)
     crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
     crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
 
-    pcmk__cluster_send_message(peer, pcmk__cluster_msg_controld, novote);
+    pcmk__cluster_send_message(peer, pcmk_ipc_controld, novote);
     pcmk__xml_free(novote);
 }
 

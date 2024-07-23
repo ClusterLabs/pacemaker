@@ -422,7 +422,7 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
     notify_data = fencing_result2xml(wrapper, op);
     stonith__xe_set_result(notify_data, &op->result);
 
-    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, bcast);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, bcast);
     pcmk__xml_free(bcast);
 
     return;
@@ -1352,7 +1352,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
         }
     }
 
-    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, query);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, query);
     pcmk__xml_free(query);
 
     query_timeout = op->base_timeout * TIMEOUT_MULTIPLY_FACTOR;
@@ -1740,7 +1740,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
 
     pcmk__cluster_send_message(pcmk__get_node(0, client_node, NULL,
                                               pcmk__node_search_cluster_member),
-                               pcmk__cluster_msg_fenced, update);
+                               pcmk_ipc_fenced, update);
 
     pcmk__xml_free(update);
 
@@ -1995,8 +1995,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
         }
 
-        pcmk__cluster_send_message(peer_node, pcmk__cluster_msg_fenced,
-                                   remote_op);
+        pcmk__cluster_send_message(peer_node, pcmk_ipc_fenced, remote_op);
         peer->tried = TRUE;
         pcmk__xml_free(remote_op);
         return;

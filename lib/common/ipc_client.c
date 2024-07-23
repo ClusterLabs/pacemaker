@@ -92,6 +92,11 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
             // @TODO max_size could vary by client, maybe take as argument?
             (*api)->ipc_size_max = 5 * 1024 * 1024; // 5MB
             break;
+
+        default: // pcmk_ipc_unknown
+            pcmk_free_ipc_api(*api);
+            *api = NULL;
+            return EINVAL;
     }
     if ((*api)->cmds == NULL) {
         pcmk_free_ipc_api(*api);
@@ -244,30 +249,20 @@ pcmk_ipc_name(const pcmk_ipc_api_t *api, bool for_log)
     if (api == NULL) {
         return for_log? "Pacemaker" : NULL;
     }
+    if (for_log) {
+        const char *name = pcmk__server_log_name(api->server);
+
+        return pcmk__s(name, "Pacemaker");
+    }
     switch (api->server) {
-        case pcmk_ipc_attrd:
-            return for_log? "attribute manager" : PCMK__VALUE_ATTRD;
-
+        // These servers do not have pcmk_ipc_api_t implementations yet
         case pcmk_ipc_based:
-            return for_log? "CIB manager" : NULL /* PCMK__SERVER_BASED_RW */;
-
-        case pcmk_ipc_controld:
-            return for_log? "controller" : CRM_SYSTEM_CRMD;
-
         case pcmk_ipc_execd:
-            return for_log? "executor" : NULL /* CRM_SYSTEM_LRMD */;
-
         case pcmk_ipc_fenced:
-            return for_log? "fencer" : NULL /* "stonith-ng" */;
-
-        case pcmk_ipc_pacemakerd:
-            return for_log? "launcher" : CRM_SYSTEM_MCP;
-
-        case pcmk_ipc_schedulerd:
-            return for_log? "scheduler" : CRM_SYSTEM_PENGINE;
+            return NULL;
 
         default:
-            return for_log? "Pacemaker" : NULL;
+            return pcmk__server_ipc_name(api->server);
     }
 }
 
@@ -773,6 +768,9 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
         case pcmk_ipc_execd:
         case pcmk_ipc_schedulerd:
             break;
+
+        default: // pcmk_ipc_unknown (shouldn't be possible)
+            return NULL;
     }
     return request;
 }
