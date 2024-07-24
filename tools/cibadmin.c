@@ -828,7 +828,7 @@ main(int argc, char **argv)
 
                     if (the_cib->cmds->query(the_cib, NULL, &obj,
                                              options.cmd_options) == pcmk_ok) {
-                        pcmk__update_schema(&obj, NULL, true, false);
+                        pcmk__update_schema(&obj, NULL, true); // todo: to_logs was false
                     }
                     pcmk__xml_free(obj);
 

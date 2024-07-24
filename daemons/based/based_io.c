@@ -310,7 +310,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
     // @COMPAT Not specifying validate-with is deprecated since 2.1.8
     } else if (validation == NULL) {
-        pcmk__update_schema(&root, NULL, false, false);
+        pcmk__update_schema(&root, NULL, false); //todo: to_logs was false
         validation = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
         if (validation != NULL) {
             crm_notice("Enabling %s validation on"
