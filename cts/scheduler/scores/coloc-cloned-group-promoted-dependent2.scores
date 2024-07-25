@@ -1,6 +1,6 @@
 
 grp1:0 promotion score on node2: 50
-grp1:1 promotion score on node1: 2011
+grp1:1 promotion score on node1: 2010
 pcmk__clone_assign: grp1-clone allocation score on node1: 0
 pcmk__clone_assign: grp1-clone allocation score on node2: 0
 pcmk__clone_assign: grp1:0 allocation score on node1: 0
