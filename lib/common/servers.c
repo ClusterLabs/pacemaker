@@ -96,6 +96,22 @@ static struct {
 
 /*!
  * \internal
+ * \brief Return server's (primary) system name
+ *
+ * \param[in] server  Server to get system name for
+ *
+ * \return System name for server (or NULL if invalid)
+ */
+const char *
+pcmk__server_name(enum pcmk_ipc_server server)
+{
+    CRM_CHECK((server > 0) && (server < PCMK__NELEM(server_info)),
+              return NULL);
+    return server_info[server].system_names[0];
+}
+
+/*!
+ * \internal
  * \brief Return a readable description of server for logging
  *
  * \param[in] server  Server to get log name for
