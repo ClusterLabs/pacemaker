@@ -40,7 +40,6 @@ typedef struct pcmk_child_s {
     pid_t pid;
     int respawn_count;
     const char *uid;
-    const char *command;
     int check_count;
     uint32_t flags;
 } pcmk_child_t;
@@ -55,32 +54,26 @@ typedef struct pcmk_child_s {
 static pcmk_child_t pcmk_children[] = {
     {
         pcmk_ipc_based, 0, 0, CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-based",
         0, child_respawn | child_needs_cluster
     },
     {
         pcmk_ipc_fenced, 0, 0, NULL,
-        CRM_DAEMON_DIR "/pacemaker-fenced",
         0, child_respawn | child_needs_cluster
     },
     {
         pcmk_ipc_execd, 0, 0, NULL,
-        CRM_DAEMON_DIR "/pacemaker-execd",
         0, child_respawn
     },
     {
         pcmk_ipc_attrd, 0, 0, CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-attrd",
         0, child_respawn | child_needs_cluster
     },
     {
         pcmk_ipc_schedulerd, 0, 0, CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-schedulerd",
         0, child_respawn
     },
     {
         pcmk_ipc_controld, 0, 0, CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-controld",
         0, child_respawn | child_needs_cluster
     },
 };
@@ -123,6 +116,22 @@ static void pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo
 static void pcmk_process_exit(pcmk_child_t * child);
 static gboolean pcmk_shutdown_worker(gpointer user_data);
 static gboolean stop_child(pcmk_child_t * child, int signal);
+
+/*!
+ * \internal
+ * \brief Get path to subdaemon executable
+ *
+ * \param[in] subdaemon  Subdaemon to get path for
+ *
+ * \return Newly allocated string with path to subdaemon executable
+ * \note It is the caller's responsibility to free() the return value
+ */
+static inline char *
+subdaemon_path(pcmk_child_t *subdaemon)
+{
+    return crm_strdup_printf(CRM_DAEMON_DIR "/%s",
+                             pcmk__server_name(subdaemon->server));
+}
 
 static bool
 pcmkd_cluster_connected(void)
@@ -409,8 +418,6 @@ start_child(pcmk_child_t * child)
     child->flags &= ~child_active_before_startup;
     child->check_count = 0;
 
-    CRM_ASSERT(child->command != NULL);
-
     if (env_callgrind != NULL && crm_is_true(env_callgrind)) {
         use_callgrind = TRUE;
         use_valgrind = TRUE;
@@ -466,15 +473,15 @@ start_child(pcmk_child_t * child)
             opts_vgrind[1] = pcmk__str_copy("--tool=callgrind");
             opts_vgrind[2] = pcmk__str_copy("--callgrind-out-file="
                                             CRM_STATE_DIR "/callgrind.out.%p");
-            opts_vgrind[3] = pcmk__str_copy(child->command);
+            opts_vgrind[3] = subdaemon_path(child);
             opts_vgrind[4] = NULL;
         } else {
-            opts_vgrind[1] = pcmk__str_copy(child->command);
+            opts_vgrind[1] = subdaemon_path(child);
             opts_vgrind[2] = NULL;
             opts_vgrind[3] = NULL;
             opts_vgrind[4] = NULL;
         }
-        opts_default[0] = pcmk__str_copy(child->command);
+        opts_default[0] = subdaemon_path(child);
 
         if(gid) {
             // Drop root group access if not needed
@@ -509,9 +516,12 @@ start_child(pcmk_child_t * child)
         if (use_valgrind) {
             (void)execvp(VALGRIND_BIN, opts_vgrind);
         } else {
-            (void)execvp(child->command, opts_default);
+            char *path = subdaemon_path(child);
+
+            (void) execvp(path, opts_default);
+            free(path);
         }
-        crm_crit("Could not execute %s: %s", child->command, strerror(errno));
+        crm_crit("Could not execute subdaemon %s: %s", name, strerror(errno));
         crm_exit(CRM_EX_FATAL);
     }
     return pcmk_rc_ok;          /* never reached */
@@ -846,7 +856,7 @@ stop_child(pcmk_child_t * child, int signal)
        - FreeBSD ~ how untrackable process behind IPC is masqueraded as
        - elsewhere: how "init" task is designated; in particular, in systemd
          arrangement of socket-based activation, this is pretty real */
-    if (child->command == NULL || child->pid == PCMK__SPECIAL_PID) {
+    if (child->pid == PCMK__SPECIAL_PID) {
         crm_debug("Nothing to do to stop subdaemon %s[%lld]",
                   name, (long long) PCMK__SPECIAL_PID_AS_0(child->pid));
         return TRUE;
