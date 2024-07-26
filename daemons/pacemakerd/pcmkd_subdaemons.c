@@ -41,7 +41,6 @@ typedef struct pcmk_child_s {
     int respawn_count;
     const char *uid;
     const char *command;
-    const char *endpoint;  /* IPC server name */
     int check_count;
     uint32_t flags;
 } pcmk_child_t;
@@ -56,32 +55,32 @@ typedef struct pcmk_child_s {
 static pcmk_child_t pcmk_children[] = {
     {
         pcmk_ipc_based, 0, 0, CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-based", PCMK__SERVER_BASED_RO,
+        CRM_DAEMON_DIR "/pacemaker-based",
         0, child_respawn | child_needs_cluster
     },
     {
         pcmk_ipc_fenced, 0, 0, NULL,
-        CRM_DAEMON_DIR "/pacemaker-fenced", "stonith-ng",
+        CRM_DAEMON_DIR "/pacemaker-fenced",
         0, child_respawn | child_needs_cluster
     },
     {
         pcmk_ipc_execd, 0, 0, NULL,
-        CRM_DAEMON_DIR "/pacemaker-execd", CRM_SYSTEM_LRMD,
+        CRM_DAEMON_DIR "/pacemaker-execd",
         0, child_respawn
     },
     {
         pcmk_ipc_attrd, 0, 0, CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-attrd", PCMK__VALUE_ATTRD,
+        CRM_DAEMON_DIR "/pacemaker-attrd",
         0, child_respawn | child_needs_cluster
     },
     {
         pcmk_ipc_schedulerd, 0, 0, CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-schedulerd", CRM_SYSTEM_PENGINE,
+        CRM_DAEMON_DIR "/pacemaker-schedulerd",
         0, child_respawn
     },
     {
         pcmk_ipc_controld, 0, 0, CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-controld", CRM_SYSTEM_CRMD,
+        CRM_DAEMON_DIR "/pacemaker-controld",
         0, child_respawn | child_needs_cluster
     },
 };
@@ -308,7 +307,7 @@ pcmk_process_exit(pcmk_child_t * child)
 
     } else if (child_liveness(child) == pcmk_rc_ok) {
         crm_warn("Not respawning subdaemon %s because IPC endpoint %s is OK",
-                 name, child->endpoint);
+                 name, pcmk__server_ipc_name(child->server));
 
     } else if (pcmk_is_set(child->flags, child_needs_cluster) && !pcmkd_cluster_connected()) {
         crm_notice("Not respawning subdaemon %s until cluster returns", name);
@@ -547,47 +546,41 @@ child_liveness(pcmk_child_t *child)
     const gid_t *ref_gid;
     const char *name = pcmk__server_name(child->server);
     int rc = pcmk_rc_ipc_unresponsive;
+    int legacy_rc = pcmk_ok;
     pid_t ipc_pid = 0;
 
-    if (child->endpoint == NULL
-            && (child->pid <= 0 || child->pid == PCMK__SPECIAL_PID)) {
-        crm_err("Cannot track subdaemon %s: No API endpoint or PID", name);
-        rc = EINVAL; // Misuse of function when child is not trackable
+    if (child->uid == NULL) {
+        ref_uid = &root_uid;
+        ref_gid = &root_gid;
+    } else {
+        ref_uid = &cl_uid;
+        ref_gid = &cl_gid;
+        legacy_rc = pcmk_daemon_user(&cl_uid, &cl_gid);
+    }
 
-    } else if (child->endpoint != NULL) {
-        int legacy_rc = pcmk_ok;
+    if (legacy_rc < 0) {
+        rc = pcmk_legacy2rc(legacy_rc);
+        crm_err("Could not find user and group IDs for user %s: %s "
+                QB_XS " rc=%d", CRM_DAEMON_USER, pcmk_rc_str(rc), rc);
+    } else {
+        const char *ipc_name = pcmk__server_ipc_name(child->server);
 
-        if (child->uid == NULL) {
-            ref_uid = &root_uid;
-            ref_gid = &root_gid;
-        } else {
-            ref_uid = &cl_uid;
-            ref_gid = &cl_gid;
-            legacy_rc = pcmk_daemon_user(&cl_uid, &cl_gid);
-        }
-
-        if (legacy_rc < 0) {
-            rc = pcmk_legacy2rc(legacy_rc);
-            crm_err("Could not find user and group IDs for user %s: %s "
-                    QB_XS " rc=%d", CRM_DAEMON_USER, pcmk_rc_str(rc), rc);
-        } else {
-            rc = pcmk__ipc_is_authentic_process_active(child->endpoint,
-                                                       *ref_uid, *ref_gid,
-                                                       &ipc_pid);
-            if ((rc == pcmk_rc_ok) || (rc == pcmk_rc_ipc_unresponsive)) {
-                if (child->pid <= 0) {
-                    /* If rc is pcmk_rc_ok, ipc_pid is nonzero and this
-                     * initializes a new child. If rc is
-                     * pcmk_rc_ipc_unresponsive, ipc_pid is zero, and we will
-                     * investigate further.
-                     */
-                    child->pid = ipc_pid;
-                } else if ((ipc_pid != 0) && (child->pid != ipc_pid)) {
-                    /* An unexpected (but authorized) process is responding to
-                     * IPC. Investigate further.
-                     */
-                    rc = pcmk_rc_ipc_unresponsive;
-                }
+        rc = pcmk__ipc_is_authentic_process_active(ipc_name,
+                                                   *ref_uid, *ref_gid,
+                                                   &ipc_pid);
+        if ((rc == pcmk_rc_ok) || (rc == pcmk_rc_ipc_unresponsive)) {
+            if (child->pid <= 0) {
+                /* If rc is pcmk_rc_ok, ipc_pid is nonzero and this
+                 * initializes a new child. If rc is
+                 * pcmk_rc_ipc_unresponsive, ipc_pid is zero, and we will
+                 * investigate further.
+                 */
+                child->pid = ipc_pid;
+            } else if ((ipc_pid != 0) && (child->pid != ipc_pid)) {
+                /* An unexpected (but authorized) process is responding to
+                 * IPC. Investigate further.
+                 */
+                rc = pcmk_rc_ipc_unresponsive;
             }
         }
     }
@@ -684,9 +677,9 @@ find_and_track_existing_processes(void)
         wait_in_progress = false;
         for (i = 0; i < PCMK__NELEM(pcmk_children); i++) {
             const char *name = pcmk__server_name(pcmk_children[i].server);
+            const char *ipc_name = NULL;
 
-            if ((pcmk_children[i].endpoint == NULL)
-                || (pcmk_children[i].respawn_count < 0)) {
+            if (pcmk_children[i].respawn_count < 0) {
                 continue;
             }
 
@@ -700,6 +693,7 @@ find_and_track_existing_processes(void)
             }
 
             // @TODO Functionize more of this to reduce nesting
+            ipc_name = pcmk__server_ipc_name(pcmk_children[i].server);
             pcmk_children[i].respawn_count = rounds;
             switch (rc) {
                 case pcmk_rc_ok:
@@ -708,8 +702,7 @@ find_and_track_existing_processes(void)
                             crm_crit("Cannot reliably track pre-existing"
                                      " authentic process behind %s IPC on this"
                                      " platform and PCMK_" PCMK__ENV_FAIL_FAST
-                                     " requested",
-                                     pcmk_children[i].endpoint);
+                                     " requested", ipc_name);
                             return EOPNOTSUPP;
                         } else if (pcmk_children[i].respawn_count == WAIT_TRIES) {
                             crm_notice("Assuming pre-existing authentic, though"
@@ -734,7 +727,7 @@ find_and_track_existing_processes(void)
                             crm_warn("Cannot reliably track pre-existing"
                                      " authentic process behind %s IPC on this"
                                      " platform, can still disappear in %d"
-                                     " attempt(s)", pcmk_children[i].endpoint,
+                                     " attempt(s)", ipc_name,
                                      WAIT_TRIES - pcmk_children[i].respawn_count);
                             continue;
                         }
@@ -750,7 +743,7 @@ find_and_track_existing_processes(void)
                     if (pcmk_children[i].respawn_count == WAIT_TRIES) {
                         crm_crit("%s IPC endpoint for existing authentic"
                                  " process %lld did not (re)appear",
-                                 pcmk_children[i].endpoint,
+                                 ipc_name,
                                  (long long) PCMK__SPECIAL_PID_AS_0(
                                                  pcmk_children[i].pid));
                         return rc;
@@ -759,7 +752,7 @@ find_and_track_existing_processes(void)
                     crm_warn("Cannot find %s IPC endpoint for existing"
                              " authentic process %lld, can still (re)appear"
                              " in %d attempts (?)",
-                             pcmk_children[i].endpoint,
+                             ipc_name,
                              (long long) PCMK__SPECIAL_PID_AS_0(
                                              pcmk_children[i].pid),
                              WAIT_TRIES - pcmk_children[i].respawn_count);
