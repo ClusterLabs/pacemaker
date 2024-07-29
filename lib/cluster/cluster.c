@@ -147,6 +147,7 @@ pcmk_cluster_new(void)
     pcmk_cluster_t *cluster = pcmk__assert_alloc(1, sizeof(pcmk_cluster_t));
 
     cluster->priv = pcmk__assert_alloc(1, sizeof(pcmk__cluster_private_t));
+    cluster->priv->server = pcmk__parse_server(crm_system_name);
     return cluster;
 }
 

@@ -87,6 +87,8 @@ enum pcmk__node_update {
 
 //! Implementation of pcmk__cluster_private_t
 struct pcmk__cluster_private {
+    enum pcmk_ipc_server server;    //!< Server this connection is for (if any)
+
     // @TODO Drop and replace with per-daemon cluster-layer ID global variables?
     uint32_t node_id;               //!< Local node ID at cluster layer
 

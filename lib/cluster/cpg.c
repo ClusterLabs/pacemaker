@@ -785,8 +785,7 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     uint32_t id = 0;
     pcmk__node_status_t *peer = NULL;
     cpg_handle_t handle = 0;
-    enum pcmk_ipc_server server = pcmk__parse_server(crm_system_name);
-    const char *cpg_group_name = pcmk__server_message_type(server);
+    const char *cpg_group_name = NULL;
     uid_t found_uid = 0;
     gid_t found_gid = 0;
     pid_t found_pid = 0;
@@ -807,6 +806,7 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
 
     cpg_evicted = false;
 
+    cpg_group_name = pcmk__server_message_type(cluster->priv->server);
     if (cpg_group_name == NULL) {
         /* The name will already be non-NULL for Pacemaker servers. If a
          * command-line tool or external caller connects to the cluster,
