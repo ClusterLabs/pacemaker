@@ -25,7 +25,6 @@ struct pcmk__election {
     enum pcmk_ipc_server server;    // For message type
     enum election_result state;
     guint count;        // How many times local node has voted
-    char *name;         // Descriptive name for this election
     char *uname;        // Local node's name
     GSourceFunc cb;     // Function to call if election is won
     GHashTable *voted;  // Key = node name, value = how node voted
@@ -51,7 +50,7 @@ election_timer_cb(gpointer user_data)
 {
     pcmk__election_t *e = user_data;
 
-    crm_info("%s timed out, declaring local node as winner", e->name);
+    crm_info("Declaring local node as winner after election timed out");
     election_complete(e);
     return FALSE;
 }
@@ -83,7 +82,6 @@ election_state(const pcmk__election_t *e)
  * only create a single election object.
  *
  * \param[in] server     Server to use for message type in election messages
- * \param[in] name       Label for election (for logging)
  * \param[in] uname      Local node's name
  * \param[in] cb         Function to call if local node wins election
  *
@@ -92,20 +90,17 @@ election_state(const pcmk__election_t *e)
  *       election_fini().
  */
 pcmk__election_t *
-election_init(enum pcmk_ipc_server server, const char *name, const char *uname,
-              GSourceFunc cb)
+election_init(enum pcmk_ipc_server server, const char *uname, GSourceFunc cb)
 {
     pcmk__election_t *e = NULL;
-    static guint count = 0;
+    const char *name = pcmk__s(crm_system_name, "election");
 
     CRM_ASSERT(uname != NULL);
     e = pcmk__assert_alloc(1, sizeof(pcmk__election_t));
     e->server = server;
     e->uname = pcmk__str_copy(uname);
-    e->name = name? crm_strdup_printf("election-%s", name)
-                  : crm_strdup_printf("election-%u", count++);
     e->cb = cb;
-    e->timeout = mainloop_timer_add(e->name, ELECTION_TIMEOUT_MS, FALSE,
+    e->timeout = mainloop_timer_add(name, ELECTION_TIMEOUT_MS, FALSE,
                                     election_timer_cb, e);
     return e;
 }
@@ -123,7 +118,7 @@ void
 election_remove(pcmk__election_t *e, const char *uname)
 {
     if ((e != NULL) && (uname != NULL) && (e->voted != NULL)) {
-        crm_trace("Discarding %s (no-)vote from lost peer %s", e->name, uname);
+        crm_trace("Discarding (no-)vote from lost peer %s", uname);
         g_hash_table_remove(e->voted, uname);
     }
 }
@@ -137,7 +132,7 @@ void
 election_reset(pcmk__election_t *e)
 {
     if (e != NULL) {
-        crm_trace("Resetting election %s", e->name);
+        crm_trace("Resetting election");
         mainloop_timer_stop(e->timeout);
         if (e->voted) {
             crm_trace("Destroying voted cache with %d members", g_hash_table_size(e->voted));
@@ -160,10 +155,9 @@ election_fini(pcmk__election_t *e)
 {
     if (e != NULL) {
         election_reset(e);
-        crm_trace("Destroying %s", e->name);
+        crm_trace("Destroying election");
         mainloop_timer_del(e->timeout);
         free(e->uname);
-        free(e->name);
         free(e);
     }
 }
@@ -296,8 +290,7 @@ election_vote(pcmk__election_t *e)
     our_node = pcmk__get_node(0, e->uname, NULL,
                               pcmk__node_search_cluster_member);
     if (!pcmk__cluster_is_node_active(our_node)) {
-        crm_trace("Cannot vote in %s yet: local node not connected to cluster",
-                  e->name);
+        crm_trace("Cannot vote yet: local node not connected to cluster");
         return;
     }
 
@@ -323,7 +316,7 @@ election_vote(pcmk__election_t *e)
     pcmk__cluster_send_message(NULL, e->server, vote);
     pcmk__xml_free(vote);
 
-    crm_debug("Started %s round %d", e->name, e->count);
+    crm_debug("Started election round %d", e->count);
     election_timeout_start(e);
     return;
 }
@@ -354,7 +347,7 @@ election_check(pcmk__election_t *e)
         return FALSE;
     }
     if (e->voted == NULL) {
-        crm_trace("%s check requested, but no votes received yet", e->name);
+        crm_trace("Election check requested, but no votes received yet");
         return FALSE;
     }
 
@@ -373,7 +366,7 @@ election_check(pcmk__election_t *e)
             const pcmk__node_status_t *node = NULL;
             char *key = NULL;
 
-            crm_warn("Received too many votes in %s", e->name);
+            crm_warn("Received too many votes in election");
             g_hash_table_iter_init(&gIter, pcmk__peer_cache);
             while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) & node)) {
                 if (pcmk__cluster_is_node_active(node)) {
@@ -388,13 +381,14 @@ election_check(pcmk__election_t *e)
 
         }
 
-        crm_info("%s won by local node", e->name);
+        crm_info("Election won by local node");
         election_complete(e);
         return TRUE;
 
     } else {
-        crm_debug("%s still waiting on %d of %d votes",
-                  e->name, num_members - voted_size, num_members);
+        crm_debug("Election still waiting on %d of %d vote%s",
+                  num_members - voted_size, num_members,
+                  pcmk__plural_s(num_members));
     }
 
     return FALSE;
@@ -442,10 +436,10 @@ parse_election_message(const pcmk__election_t *e, const xmlNode *message,
     if ((vote->op == NULL) || (vote->from == NULL) || (vote->version == NULL)
         || (vote->election_owner == NULL) || (vote->election_id < 0)) {
 
-        crm_warn("Invalid %s message from %s in %s ",
-                 (vote->op? vote->op : "election"),
-                 (vote->from? vote->from : "unspecified node"),
-                 (e? e->name : "election"));
+        crm_warn("Invalid %s message from %s",
+                 pcmk__s(vote->op, "election"),
+                 pcmk__s(vote->from, "unspecified node"));
+        crm_log_xml_trace(message, "bad-vote");
         return FALSE;
     }
 
@@ -458,14 +452,14 @@ parse_election_message(const pcmk__election_t *e, const xmlNode *message,
         crm_element_value_timeval(message, PCMK__XA_ELECTION_AGE_SEC,
                                   PCMK__XA_ELECTION_AGE_NANO_SEC, &(vote->age));
         if ((vote->age.tv_sec < 0) || (vote->age.tv_usec < 0)) {
-            crm_warn("Cannot count %s %s from %s because it is missing uptime",
-                     (e? e->name : "election"), vote->op, vote->from);
+            crm_warn("Cannot count election %s from %s "
+                     "because it is missing uptime", vote->op, vote->from);
             return FALSE;
         }
 
     } else if (!pcmk__str_eq(vote->op, CRM_OP_NOVOTE, pcmk__str_none)) {
-        crm_info("Cannot process %s message from %s because %s is not a known election op",
-                 (e? e->name : "election"), vote->from, vote->op);
+        crm_info("Cannot process election message from %s "
+                 "because %s is not a known election op", vote->from, vote->op);
         return FALSE;
     }
 
@@ -481,8 +475,8 @@ parse_election_message(const pcmk__election_t *e, const xmlNode *message,
      * the question is how we managed to get here.
      */
     if (pcmk__peer_cache == NULL) {
-        crm_info("Cannot count %s %s from %s because no peer information available",
-                 e->name, vote->op, vote->from);
+        crm_info("Cannot count election %s from %s "
+                 "because no peer information available", vote->op, vote->from);
         return FALSE;
     }
     return TRUE;
@@ -581,15 +575,17 @@ election_count_vote(pcmk__election_t *e, const xmlNode *message, bool can_win)
          * for us to win
          */
         if (!we_are_owner) {
-            crm_warn("Cannot count %s round %d %s from %s because we are not election owner (%s)",
-                     e->name, vote.election_id, vote.op, vote.from,
+            crm_warn("Cannot count election round %d %s from %s "
+                     "because we did not start election (node ID %s did)",
+                     vote.election_id, vote.op, vote.from,
                      vote.election_owner);
             return election_error;
         }
         if (e->state != election_in_progress) {
             // Should only happen if we already lost
-            crm_debug("Not counting %s round %d %s from %s because no election in progress",
-                      e->name, vote.election_id, vote.op, vote.from);
+            crm_debug("Not counting election round %d %s from %s "
+                      "because no election in progress",
+                      vote.election_id, vote.op, vote.from);
             return e->state;
         }
         record_vote(e, &vote);
@@ -636,8 +632,8 @@ election_count_vote(pcmk__election_t *e, const xmlNode *message, bool can_win)
          */
         e->election_wins++;
         if (e->election_wins > (peers * peers)) {
-            crm_warn("%s election storm detected: %d wins in %d seconds",
-                     e->name, e->election_wins, STORM_INTERVAL);
+            crm_warn("Election storm detected: %d wins in %d seconds",
+                     e->election_wins, STORM_INTERVAL);
             e->election_wins = 0;
             e->expires = tm_now + STORM_INTERVAL;
             if (e->wrote_blackbox == FALSE) {
@@ -659,9 +655,9 @@ election_count_vote(pcmk__election_t *e, const xmlNode *message, bool can_win)
 
     if (done) {
         do_crm_log(log_level + 1,
-                   "Processed %s round %d %s (current round %d) from %s (%s)",
-                   e->name, vote.election_id, vote.op, e->count, vote.from,
-                   reason);
+                   "Processed election round %d %s (current round %d) "
+                   "from %s (%s)",
+                   vote.election_id, vote.op, e->count, vote.from, reason);
         return e->state;
 
     } else if (we_lose == FALSE) {
@@ -681,8 +677,10 @@ election_count_vote(pcmk__election_t *e, const xmlNode *message, bool can_win)
         if ((e->last_election_loss == 0)
             || ((tm_now - e->last_election_loss) > (time_t) LOSS_DAMPEN)) {
 
-            do_crm_log(log_level, "%s round %d (owner node ID %s) pass: %s from %s (%s)",
-                       e->name, vote.election_id, vote.election_owner, vote.op,
+            do_crm_log(log_level,
+                       "Election round %d (started by node ID %s) pass: "
+                       "%s from %s (%s)",
+                       vote.election_id, vote.election_owner, vote.op,
                        vote.from, reason);
 
             e->last_election_loss = 0;
@@ -699,16 +697,19 @@ election_count_vote(pcmk__election_t *e, const xmlNode *message, bool can_win)
                 loss_time += 11;
                 loss_time[8] = '\0';
             }
-            crm_info("Ignoring %s round %d (owner node ID %s) pass vs %s because we lost less than %ds ago at %s",
-                     e->name, vote.election_id, vote.election_owner, vote.from,
+            crm_info("Ignoring election round %d (started by node ID %s) pass "
+                     "vs %s because we lost less than %ds ago at %s",
+                     vote.election_id, vote.election_owner, vote.from,
                      LOSS_DAMPEN, (loss_time? loss_time : "unknown"));
         }
     }
 
     e->last_election_loss = tm_now;
 
-    do_crm_log(log_level, "%s round %d (owner node ID %s) lost: %s from %s (%s)",
-               e->name, vote.election_id, vote.election_owner, vote.op,
+    do_crm_log(log_level,
+               "Election round %d (started by node ID %s) lost: "
+               "%s from %s (%s)",
+               vote.election_id, vote.election_owner, vote.op,
                vote.from, reason);
 
     election_reset(e);

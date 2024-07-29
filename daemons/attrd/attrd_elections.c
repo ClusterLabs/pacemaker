@@ -35,8 +35,8 @@ attrd_election_cb(gpointer user_data)
 void
 attrd_election_init(void)
 {
-    writer = election_init(pcmk_ipc_attrd, PCMK__VALUE_ATTRD,
-                           attrd_cluster->priv->node_name, attrd_election_cb);
+    writer = election_init(pcmk_ipc_attrd, attrd_cluster->priv->node_name,
+                           attrd_election_cb);
 }
 
 void
