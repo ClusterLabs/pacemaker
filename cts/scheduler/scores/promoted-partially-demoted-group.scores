@@ -2,7 +2,7 @@
 cdev-pool-0-drbd:0 promotion score on sd01-1: 10800
 cdev-pool-0-drbd:1 promotion score on sd01-0: INFINITY
 cdev-pool-0-iscsi-vips-fw:0 promotion score on sd01-1: -INFINITY
-cdev-pool-0-iscsi-vips-fw:1 promotion score on sd01-0: 2000
+cdev-pool-0-iscsi-vips-fw:1 promotion score on sd01-0: INFINITY
 pcmk__clone_assign: cdev-pool-0-drbd:0 allocation score on sd01-0: 0
 pcmk__clone_assign: cdev-pool-0-drbd:0 allocation score on sd01-1: 10100
 pcmk__clone_assign: cdev-pool-0-drbd:1 allocation score on sd01-0: 10100

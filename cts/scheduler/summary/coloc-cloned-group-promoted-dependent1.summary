@@ -1,0 +1,23 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * Clone Set: grp1-clone [grp1] (promotable):
+      * Promoted: [ node1 ]
+      * Unpromoted: [ node2 ]
+    * primary	(ocf:pacemaker:Dummy):	 Started node1
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * Clone Set: grp1-clone [grp1] (promotable):
+      * Promoted: [ node1 ]
+      * Unpromoted: [ node2 ]
+    * primary	(ocf:pacemaker:Dummy):	 Started node1

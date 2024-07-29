@@ -1403,8 +1403,10 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
  * \param[in,out] dependent   Dependent resource in colocation
  * \param[in]     primary     Primary resource in colocation
  * \param[in]     colocation  Colocation constraint
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
                               const pcmk_resource_t *primary,
                               const pcmk__colocation_t *colocation)
@@ -1413,14 +1415,30 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     const char *primary_value = NULL;
     const char *attr = colocation->node_attribute;
     int score_multiplier = 1;
+    int priority_delta = 0;
 
-    const pcmk_resource_t *primary_role_rsc = NULL;
+    CRM_ASSERT((dependent != NULL) && (primary != NULL)
+               && (colocation != NULL));
 
-    CRM_ASSERT((dependent != NULL) && (primary != NULL) &&
-               (colocation != NULL));
+    if (dependent->allocated_to == NULL) {
+        return 0;
+    }
 
-    if ((primary->allocated_to == NULL) || (dependent->allocated_to == NULL)) {
-        return;
+    if ((primary->allocated_to != NULL)
+        && (colocation->primary_role != pcmk_role_unknown)) {
+        /* Colocation applies only if the primary's next role matches.
+         *
+         * If primary->allocated_to == NULL, we want to proceed past this block,
+         * so that dependent->allocated_to is marked ineligible for promotion.
+         *
+         * @TODO Why ignore a mandatory colocation in this case when we apply
+         * its negation in the mismatched value case?
+         */
+        const pcmk_resource_t *role_rsc = get_resource_for_role(primary);
+
+        if (colocation->primary_role != role_rsc->next_role) {
+            return 0;
+        }
     }
 
     dependent_value = pcmk__colocation_node_attr(dependent->allocated_to, attr,
@@ -1428,33 +1446,38 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     primary_value = pcmk__colocation_node_attr(primary->allocated_to, attr,
                                                primary);
 
-    primary_role_rsc = get_resource_for_role(primary);
-
     if (!pcmk__str_eq(dependent_value, primary_value, pcmk__str_casei)) {
         if ((colocation->score == PCMK_SCORE_INFINITY)
             && (colocation->dependent_role == pcmk_role_promoted)) {
-            dependent->priority = -PCMK_SCORE_INFINITY;
+
+            /* For a mandatory promoted-role colocation, mark the dependent node
+             * ineligible to promote the dependent if its attribute value
+             * doesn't match the primary node's
+             */
+            score_multiplier = -1;
+
+        } else {
+            // Otherwise, ignore the colocation if attribute values don't match
+            return 0;
         }
-        return;
-    }
 
-    if ((colocation->primary_role != pcmk_role_unknown)
-        && (colocation->primary_role != primary_role_rsc->next_role)) {
-        return;
-    }
-
-    if (colocation->dependent_role == pcmk_role_unpromoted) {
+    } else if (colocation->dependent_role == pcmk_role_unpromoted) {
+        /* Node attribute values matched, so we want to avoid promoting the
+         * dependent on this node
+         */
         score_multiplier = -1;
     }
 
-    dependent->priority = pcmk__add_scores(score_multiplier * colocation->score,
-                                           dependent->priority);
+    priority_delta = score_multiplier * colocation->score;
+    dependent->priority = pcmk__add_scores(priority_delta, dependent->priority);
     pcmk__rsc_trace(dependent,
-                    "Applied %s to %s promotion priority (now %s after %s %s)",
+                    "Applied %s to %s promotion priority (now %s after %s %d)",
                     colocation->id, dependent->id,
                     pcmk_readable_score(dependent->priority),
                     ((score_multiplier == 1)? "adding" : "subtracting"),
-                    pcmk_readable_score(colocation->score));
+                    colocation->score);
+
+    return priority_delta;
 }
 
 /*!

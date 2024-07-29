@@ -342,37 +342,6 @@ add_sort_index_to_node_score(gpointer data, gpointer user_data)
 
 /*!
  * \internal
- * \brief Apply colocation to dependent's node scores if for promoted role
- *
- * \param[in,out] data       Colocation constraint to apply
- * \param[in,out] user_data  Promotable clone that is constraint's dependent
- */
-static void
-apply_coloc_to_dependent(gpointer data, gpointer user_data)
-{
-    pcmk__colocation_t *colocation = data;
-    pcmk_resource_t *clone = user_data;
-    pcmk_resource_t *primary = colocation->primary;
-    uint32_t flags = pcmk__coloc_select_default;
-    float factor = colocation->score / (float) PCMK_SCORE_INFINITY;
-
-    if (colocation->dependent_role != pcmk_role_promoted) {
-        return;
-    }
-    if (colocation->score < PCMK_SCORE_INFINITY) {
-        flags = pcmk__coloc_select_active;
-    }
-    pcmk__rsc_trace(clone, "Applying colocation %s (promoted %s with %s) @%s",
-                    colocation->id, colocation->dependent->id,
-                    colocation->primary->id,
-                    pcmk_readable_score(colocation->score));
-    primary->cmds->add_colocated_node_scores(primary, clone, clone->id,
-                                             &clone->allowed_nodes, colocation,
-                                             factor, flags);
-}
-
-/*!
- * \internal
  * \brief Apply colocation to primary's node scores if for promoted role
  *
  * \param[in,out] data       Colocation constraint to apply
@@ -478,10 +447,7 @@ sort_promotable_instances(pcmk_resource_t *clone)
 
     g_list_foreach(clone->children, add_sort_index_to_node_score, clone);
 
-    colocations = pcmk__this_with_colocations(clone);
-    g_list_foreach(colocations, apply_coloc_to_dependent, clone);
-    g_list_free(colocations);
-
+    // "this with" colocations were already applied via set_instance_priority()
     colocations = pcmk__with_this_colocations(clone);
     g_list_foreach(colocations, apply_coloc_to_primary, clone);
     g_list_free(colocations);
@@ -1286,8 +1252,10 @@ pcmk__update_dependent_with_promotable(const pcmk_resource_t *primary,
  * \param[in]     primary     Primary resource in the colocation
  * \param[in,out] dependent   Dependent resource in the colocation
  * \param[in]     colocation  Colocation constraint to apply
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
                                            pcmk_resource_t *dependent,
                                            const pcmk__colocation_t *colocation)
@@ -1313,13 +1281,17 @@ pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
                         pcmk_readable_score(colocation->score),
                         pcmk_readable_score(new_priority));
         dependent->priority = new_priority;
+        return colocation->score;
+    }
 
-    } else if (colocation->score >= PCMK_SCORE_INFINITY) {
+    if (colocation->score >= PCMK_SCORE_INFINITY) {
         // Mandatory colocation, but primary won't be here
         pcmk__rsc_trace(colocation->primary,
                         "Applying %s (%s with %s) to %s: can't be promoted",
                         colocation->id, colocation->dependent->id,
                         colocation->primary->id, dependent->id);
         dependent->priority = -PCMK_SCORE_INFINITY;
+        return -PCMK_SCORE_INFINITY;
     }
+    return 0;
 }

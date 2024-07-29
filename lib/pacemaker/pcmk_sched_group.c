@@ -11,6 +11,8 @@
 
 #include <stdbool.h>
 
+#include <qb/qbdefs.h>              // QB_ABS()
+
 #include <crm/common/xml.h>
 
 #include <pacemaker-internal.h>
@@ -344,15 +346,17 @@ pcmk__group_internal_constraints(pcmk_resource_t *rsc)
  * \param[in,out] dependent      Dependent group resource in colocation
  * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
+ *
+ * \return The score added to the dependent's priority
  */
-static void
+static int
 colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
                     const pcmk__colocation_t *colocation)
 {
-    pcmk_resource_t *member = NULL;
+    int priority_delta = 0;
 
     if (dependent->children == NULL) {
-        return;
+        return 0;
     }
 
     pcmk__rsc_trace(primary, "Processing %s (group %s with %s) for dependent",
@@ -360,23 +364,52 @@ colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
 
     if (pe__group_flag_is_set(dependent, pcmk__group_colocated)) {
         // Colocate first member (internal colocations will handle the rest)
-        member = (pcmk_resource_t *) dependent->children->data;
-        member->cmds->apply_coloc_score(member, primary, colocation, true);
-        return;
+        pcmk_resource_t *member = dependent->children->data;
+
+        priority_delta = member->cmds->apply_coloc_score(member, primary,
+                                                         colocation, true);
+
+    } else {
+        if (colocation->score >= PCMK_SCORE_INFINITY) {
+            pcmk__config_err("%s: Cannot perform mandatory colocation between "
+                             "non-colocated group and %s",
+                             dependent->id, primary->id);
+            return 0;
+        }
+
+        // Colocate each member individually
+        for (GList *iter = dependent->children; iter != NULL;
+             iter = iter->next) {
+
+            pcmk_resource_t *member = iter->data;
+            int instance_delta = member->cmds->apply_coloc_score(member,
+                                                                 primary,
+                                                                 colocation,
+                                                                 false);
+
+            /* priority_delta is used for determining which instances of a
+             * promotable clone to promote. It's possible that colocations
+             * involving promotable cloned non-colocated groups may not behave
+             * correctly in all circumstances. Non-colocated groups are
+             * deprecated, and testing focused on colocated groups.
+             */
+            priority_delta = pcmk__add_scores(priority_delta, instance_delta);
+        }
     }
 
-    if (colocation->score >= PCMK_SCORE_INFINITY) {
-        pcmk__config_err("%s: Cannot perform mandatory colocation between "
-                         "non-colocated group and %s",
-                         dependent->id, primary->id);
-        return;
-    }
+    if (priority_delta != 0) {
+        dependent->priority = pcmk__add_scores(priority_delta,
+                                               dependent->priority);
 
-    // Colocate each member individually
-    for (GList *iter = dependent->children; iter != NULL; iter = iter->next) {
-        member = (pcmk_resource_t *) iter->data;
-        member->cmds->apply_coloc_score(member, primary, colocation, true);
+        pcmk__rsc_trace(dependent,
+                        "Applied %s to %s promotion priority "
+                        "(now %s after %s %d)",
+                        colocation->id, dependent->id,
+                        pcmk_readable_score(dependent->priority),
+                        ((priority_delta > 0)? "adding" : "subtracting"),
+                        QB_ABS(priority_delta));
     }
+    return priority_delta;
 }
 
 /*!
@@ -390,11 +423,14 @@ colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
  * \param[in,out] dependent      Dependent resource in colocation
  * \param[in]     primary        Primary group resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
+ *
+ * \return The score added to the dependent's priority
  */
-static void
+static int
 colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
                     const pcmk__colocation_t *colocation)
 {
+    int priority_delta = 0;
     const pcmk_resource_t *member = NULL;
 
     pcmk__rsc_trace(primary,
@@ -402,7 +438,7 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
                     colocation->id, dependent->id, primary->id);
 
     if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
-        return;
+        return 0;
     }
 
     if (pe__group_flag_is_set(primary, pcmk__group_colocated)) {
@@ -421,26 +457,32 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
             member = (pcmk_resource_t *) primary->children->data;
         }
         if (member == NULL) {
-            return; // Nothing to colocate with
+            return 0;   // Nothing to colocate with
         }
 
-        member->cmds->apply_coloc_score(dependent, member, colocation, false);
-        return;
+        return member->cmds->apply_coloc_score(dependent, member, colocation,
+                                               false);
     }
 
     if (colocation->score >= PCMK_SCORE_INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation with"
                          " non-colocated group %s",
                          dependent->id, primary->id);
-        return;
+        return 0;
     }
 
     // Colocate dependent with each member individually
     for (const GList *iter = primary->children; iter != NULL;
          iter = iter->next) {
+
+        int instance_delta = 0;
+
         member = iter->data;
-        member->cmds->apply_coloc_score(dependent, member, colocation, false);
+        instance_delta = member->cmds->apply_coloc_score(dependent, member,
+                                                         colocation, false);
+        priority_delta = pcmk__add_scores(priority_delta, instance_delta);
     }
+    return priority_delta;
 }
 
 /*!
@@ -455,8 +497,10 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
  * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__group_apply_coloc_score(pcmk_resource_t *dependent,
                               const pcmk_resource_t *primary,
                               const pcmk__colocation_t *colocation,
@@ -466,13 +510,13 @@ pcmk__group_apply_coloc_score(pcmk_resource_t *dependent,
                && (colocation != NULL));
 
     if (for_dependent) {
-        colocate_group_with(dependent, primary, colocation);
+        return colocate_group_with(dependent, primary, colocation);
 
     } else {
         // Method should only be called for primitive dependents
         CRM_ASSERT(pcmk__is_primitive(dependent));
 
-        colocate_with_group(dependent, primary, colocation);
+        return colocate_with_group(dependent, primary, colocation);
     }
 }
 

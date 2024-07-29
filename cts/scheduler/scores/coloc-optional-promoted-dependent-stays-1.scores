@@ -1,0 +1,15 @@
+
+coloc_dependent:0 promotion score on fastvm-fedora39-22: 100
+coloc_dependent:1 promotion score on fastvm-fedora39-23: 210
+pcmk__clone_assign: coloc_dependent-clone allocation score on fastvm-fedora39-22: 0
+pcmk__clone_assign: coloc_dependent-clone allocation score on fastvm-fedora39-23: 0
+pcmk__clone_assign: coloc_dependent:0 allocation score on fastvm-fedora39-22: 101
+pcmk__clone_assign: coloc_dependent:0 allocation score on fastvm-fedora39-23: 0
+pcmk__clone_assign: coloc_dependent:1 allocation score on fastvm-fedora39-22: 0
+pcmk__clone_assign: coloc_dependent:1 allocation score on fastvm-fedora39-23: 151
+pcmk__primitive_assign: coloc_dependent:0 allocation score on fastvm-fedora39-22: 101
+pcmk__primitive_assign: coloc_dependent:0 allocation score on fastvm-fedora39-23: -INFINITY
+pcmk__primitive_assign: coloc_dependent:1 allocation score on fastvm-fedora39-22: 0
+pcmk__primitive_assign: coloc_dependent:1 allocation score on fastvm-fedora39-23: 151
+pcmk__primitive_assign: coloc_primary allocation score on fastvm-fedora39-22: 1
+pcmk__primitive_assign: coloc_primary allocation score on fastvm-fedora39-23: INFINITY
