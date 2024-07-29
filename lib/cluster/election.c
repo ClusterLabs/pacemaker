@@ -91,31 +91,17 @@ election_init(enum pcmk_ipc_server server, const char *name, const char *uname,
               guint period_ms, GSourceFunc cb)
 {
     pcmk__election_t *e = NULL;
-
     static guint count = 0;
 
-    CRM_CHECK(uname != NULL, return NULL);
-
-    e = calloc(1, sizeof(pcmk__election_t));
-    if (e == NULL) {
-        crm_perror(LOG_CRIT, "Cannot create election");
-        return NULL;
-    }
-
+    CRM_ASSERT(uname != NULL);
+    e = pcmk__assert_alloc(1, sizeof(pcmk__election_t));
     e->server = server;
-    e->uname = strdup(uname);
-    if (e->uname == NULL) {
-        crm_perror(LOG_CRIT, "Cannot create election");
-        free(e);
-        return NULL;
-    }
-
+    e->uname = pcmk__str_copy(uname);
     e->name = name? crm_strdup_printf("election-%s", name)
                   : crm_strdup_printf("election-%u", count++);
     e->cb = cb;
     e->timeout = mainloop_timer_add(e->name, period_ms, FALSE,
                                     election_timer_cb, e);
-    crm_trace("Created %s", e->name);
     return e;
 }
 
