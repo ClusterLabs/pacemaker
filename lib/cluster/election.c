@@ -408,7 +408,6 @@ struct vote {
 /*!
  * \brief Unpack an election message
  *
- * \param[in] e        Election object (for logging only)
  * \param[in] message  Election message XML
  * \param[out] vote    Parsed fields from message
  *
@@ -417,8 +416,7 @@ struct vote {
  *       the message argument.
  */
 static bool
-parse_election_message(const pcmk__election_t *e, const xmlNode *message,
-                       struct vote *vote)
+parse_election_message(const xmlNode *message, struct vote *vote)
 {
     CRM_CHECK(message && vote, return FALSE);
 
@@ -460,14 +458,6 @@ parse_election_message(const pcmk__election_t *e, const xmlNode *message,
     } else if (!pcmk__str_eq(vote->op, CRM_OP_NOVOTE, pcmk__str_none)) {
         crm_info("Cannot process election message from %s "
                  "because %s is not a known election op", vote->from, vote->op);
-        return FALSE;
-    }
-
-    // Election validation
-
-    if (e == NULL) {
-        crm_info("Cannot count %s from %s because no election available",
-                 vote->op, vote->from);
         return FALSE;
     }
 
@@ -536,8 +526,8 @@ election_count_vote(pcmk__election_t *e, const xmlNode *message, bool can_win)
     time_t tm_now = time(NULL);
     struct vote vote;
 
-    CRM_CHECK(message != NULL, return election_error);
-    if (parse_election_message(e, message, &vote) == FALSE) {
+    CRM_CHECK((e != NULL) && (message != NULL), return election_error);
+    if (!parse_election_message(message, &vote)) {
         return election_error;
     }
 
