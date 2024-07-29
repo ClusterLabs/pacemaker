@@ -41,14 +41,13 @@ do_ha_control(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     gboolean registered = FALSE;
-    static pcmk_cluster_t *cluster = NULL;
 
-    if (cluster == NULL) {
-        cluster = pcmk_cluster_new();
+    if (controld_globals.cluster == NULL) {
+        controld_globals.cluster = pcmk_cluster_new();
     }
 
     if (action & A_HA_DISCONNECT) {
-        pcmk_cluster_disconnect(cluster);
+        pcmk_cluster_disconnect(controld_globals.cluster);
         crm_info("Disconnected from the cluster");
 
         controld_set_fsa_input_flags(R_HA_DISCONNECTED);
@@ -60,17 +59,19 @@ do_ha_control(long long action,
 
 #if SUPPORT_COROSYNC
         if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-            registered = crm_connect_corosync(cluster);
+            registered = crm_connect_corosync(controld_globals.cluster);
         }
 #endif // SUPPORT_COROSYNC
 
         if (registered) {
             pcmk__node_status_t *node =
-                pcmk__get_node(cluster->priv->node_id, cluster->priv->node_name,
-                               NULL, pcmk__node_search_cluster_member);
+                pcmk__get_node(controld_globals.cluster->priv->node_id,
+                               controld_globals.cluster->priv->node_name, NULL,
+                               pcmk__node_search_cluster_member);
 
-            controld_election_init(cluster->priv->node_name);
-            controld_globals.our_nodename = cluster->priv->node_name;
+            controld_election_init(controld_globals.cluster->priv->node_name);
+            controld_globals.our_nodename =
+                controld_globals.cluster->priv->node_name;
 
             free(controld_globals.our_uuid);
             controld_globals.our_uuid =

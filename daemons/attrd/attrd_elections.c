@@ -15,7 +15,6 @@
 #include "pacemaker-attrd.h"
 
 static char *peer_writer = NULL;
-static pcmk__election_t *writer = NULL;
 
 static gboolean
 attrd_election_cb(gpointer user_data)
@@ -35,44 +34,44 @@ attrd_election_cb(gpointer user_data)
 void
 attrd_election_init(void)
 {
-    writer = election_init(pcmk_ipc_attrd, attrd_cluster->priv->node_name,
-                           attrd_election_cb);
+    election_init(attrd_cluster, pcmk_ipc_attrd, attrd_cluster->priv->node_name,
+                  attrd_election_cb);
 }
 
 void
 attrd_election_fini(void)
 {
-    election_fini(writer);
+    election_fini(attrd_cluster);
 }
 
 void
 attrd_start_election_if_needed(void)
 {
     if ((peer_writer == NULL)
-        && (election_state(writer) != election_in_progress)
+        && (election_state(attrd_cluster) != election_in_progress)
         && !attrd_shutting_down(false)) {
 
         crm_info("Starting an election to determine the writer");
-        election_vote(writer);
+        election_vote(attrd_cluster);
     }
 }
 
 bool
 attrd_election_won(void)
 {
-    return (election_state(writer) == election_won);
+    return (election_state(attrd_cluster) == election_won);
 }
 
 void
 attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
 {
     enum election_result rc = 0;
-    enum election_result previous = election_state(writer);
+    enum election_result previous = election_state(attrd_cluster);
 
     crm_xml_add(xml, PCMK__XA_SRC, peer->name);
 
     // Don't become writer if we're shutting down
-    rc = election_count_vote(writer, xml, !attrd_shutting_down(false));
+    rc = election_count_vote(attrd_cluster, xml, !attrd_shutting_down(false));
 
     switch(rc) {
         case election_start:
@@ -80,7 +79,7 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
                       peer_writer? peer_writer : "unset");
             free(peer_writer);
             peer_writer = NULL;
-            election_vote(writer);
+            election_vote(attrd_cluster);
             break;
 
         case election_lost:
@@ -103,7 +102,7 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
             break;
 
         case election_in_progress:
-            election_check(writer);
+            election_check(attrd_cluster);
             break;
 
         default:
@@ -119,13 +118,13 @@ attrd_check_for_new_writer(const pcmk__node_status_t *peer, const xmlNode *xml)
 
     crm_element_value_int(xml, PCMK__XA_ATTR_WRITER, &peer_state);
     if (peer_state == election_won) {
-        if ((election_state(writer) == election_won)
+        if ((election_state(attrd_cluster) == election_won)
             && !pcmk__str_eq(peer->name, attrd_cluster->priv->node_name,
                              pcmk__str_casei)) {
             crm_notice("Detected another attribute writer (%s), starting new "
                        "election",
                        peer->name);
-            election_vote(writer);
+            election_vote(attrd_cluster);
 
         } else if (!pcmk__str_eq(peer->name, peer_writer, pcmk__str_casei)) {
             crm_notice("Recorded new attribute writer: %s (was %s)",
@@ -147,7 +146,7 @@ attrd_declare_winner(void)
 void
 attrd_remove_voter(const pcmk__node_status_t *peer)
 {
-    election_remove(writer, peer->name);
+    election_remove(attrd_cluster, peer->name);
     if ((peer_writer != NULL)
         && pcmk__str_eq(peer->name, peer_writer, pcmk__str_casei)) {
 
@@ -158,7 +157,7 @@ attrd_remove_voter(const pcmk__node_status_t *peer)
         /* Clear any election dampening in effect. Otherwise, if the lost writer
          * had just won, the election could fizzle out with no new writer.
          */
-        election_clear_dampening(writer);
+        election_clear_dampening(attrd_cluster);
 
         /* If the writer received attribute updates during its shutdown, it will
          * not have written them to the CIB. Ensure we get a new writer so they
@@ -172,14 +171,14 @@ attrd_remove_voter(const pcmk__node_status_t *peer)
      * this lost peer is the only one that hasn't voted, otherwise the election
      * would be pending until it's timed out.
      */
-    } else if (election_state(writer) == election_in_progress) {
+    } else if (election_state(attrd_cluster) == election_in_progress) {
        crm_debug("Checking election status upon loss of voter %s", peer->name);
-       election_check(writer);
+       election_check(attrd_cluster);
     }
 }
 
 void
 attrd_xml_add_writer(xmlNode *xml)
 {
-    crm_xml_add_int(xml, PCMK__XA_ATTR_WRITER, election_state(writer));
+    crm_xml_add_int(xml, PCMK__XA_ATTR_WRITER, election_state(attrd_cluster));
 }

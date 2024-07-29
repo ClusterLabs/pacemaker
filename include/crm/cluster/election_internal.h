@@ -16,6 +16,7 @@
 #include <libxml/tree.h>    // xmlNode
 
 #include <crm/common/ipc.h> // enum pcmk_ipc_server
+#include <crm/cluster.h>    // pcmk_cluster_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,8 +61,6 @@ extern "C" {
  * must implement that if desired.
  */
 
-typedef struct pcmk__election pcmk__election_t;
-
 /*! Possible election states */
 enum election_result {
     election_start = 0,     /*! new election needed */
@@ -71,21 +70,21 @@ enum election_result {
     election_error,         /*! election message or election object invalid */
 };
 
-void election_fini(pcmk__election_t *e);
-void election_reset(pcmk__election_t *e);
-pcmk__election_t *election_init(enum pcmk_ipc_server, const char *uname,
-                                GSourceFunc cb);
+void election_fini(pcmk_cluster_t *cluster);
+void election_reset(pcmk_cluster_t *cluster);
+void election_init(pcmk_cluster_t *cluster, enum pcmk_ipc_server,
+                   const char *uname, GSourceFunc cb);
 
-void election_timeout_set_period(pcmk__election_t *e, guint period_ms);
-void election_timeout_stop(pcmk__election_t *e);
+void election_timeout_set_period(pcmk_cluster_t *cluster, guint period_ms);
+void election_timeout_stop(pcmk_cluster_t *cluster);
 
-void election_vote(pcmk__election_t *e);
-bool election_check(pcmk__election_t *e);
-void election_remove(pcmk__election_t *e, const char *uname);
-enum election_result election_state(const pcmk__election_t *e);
-enum election_result election_count_vote(pcmk__election_t *e,
+void election_vote(pcmk_cluster_t *cluster);
+bool election_check(pcmk_cluster_t *cluster);
+void election_remove(pcmk_cluster_t *cluster, const char *uname);
+enum election_result election_state(const pcmk_cluster_t *cluster);
+enum election_result election_count_vote(pcmk_cluster_t *cluster,
                                          const xmlNode *message, bool can_win);
-void election_clear_dampening(pcmk__election_t *e);
+void election_clear_dampening(pcmk_cluster_t *cluster);
 
 #ifdef __cplusplus
 }

@@ -85,6 +85,8 @@ enum pcmk__node_update {
     pcmk__node_update_processes,    //!< Node process group membership updated
 };
 
+typedef struct pcmk__election pcmk__election_t;
+
 //! Implementation of pcmk__cluster_private_t
 struct pcmk__cluster_private {
     enum pcmk_ipc_server server;    //!< Server this connection is for (if any)
@@ -94,6 +96,8 @@ struct pcmk__cluster_private {
 
     // @TODO Drop and replace with per-daemon node name global variables?
     char *node_name;                //!< Local node name at cluster layer
+
+    pcmk__election_t *election;     //!< Election state (if election is needed)
 
 #if SUPPORT_COROSYNC
     /* @TODO Make these members a separate struct and use void *cluster_data
