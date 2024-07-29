@@ -49,7 +49,7 @@ int pcmk__query_node_info(pcmk__output_t *out, uint32_t *node_id,
  * \param[out]    node_name           If not \p NULL, where to store the node
  *                                    name
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
- *                                    \p pacemaker-controld API. If 0,
+ *                                    controller API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
  *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
  *                                    be used.

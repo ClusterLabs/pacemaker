@@ -723,7 +723,7 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
 
     if (sys_from == NULL) {
         if (state == pcmk_pacemakerd_state_remote) {
-            sys_from = "pacemaker-remoted";
+            sys_from = PCMK__SERVER_REMOTED;
         } else {
             sys_from = CRM_SYSTEM_MCP;
         }
@@ -764,7 +764,7 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
 
     if (sys_from == NULL) {
         if (state == pcmk_pacemakerd_state_remote) {
-            sys_from = "pacemaker-remoted";
+            sys_from = PCMK__SERVER_REMOTED;
         } else {
             sys_from = CRM_SYSTEM_MCP;
         }
@@ -828,7 +828,7 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 
     if (sys_from == NULL) {
         if (state == pcmk_pacemakerd_state_remote) {
-            sys_from = "pacemaker-remoted";
+            sys_from = PCMK__SERVER_REMOTED;
         } else {
             sys_from = CRM_SYSTEM_MCP;
         }

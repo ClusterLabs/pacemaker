@@ -937,7 +937,7 @@ main(int argc, char **argv)
         if (options.command == attr_cmd_delete) {
             update = "<none>";
         }
-        crm_info("Update %s=%s sent via pacemaker-attrd",
+        crm_info("Update %s=%s sent to the attribute manager",
                  options.attr_name, update);
 
     } else if (options.command == attr_cmd_delete) {

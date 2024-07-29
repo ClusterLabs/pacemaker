@@ -24,7 +24,8 @@
 
 #include "pacemaker-schedulerd.h"
 
-#define SUMMARY "pacemaker-schedulerd - daemon for calculating a Pacemaker cluster's response to events"
+#define SUMMARY PCMK__SERVER_SCHEDULERD " - daemon for calculating a " \
+                "Pacemaker cluster's response to events"
 
 struct {
     gchar **remainder;
@@ -54,7 +55,7 @@ void pengine_shutdown(int nsig);
 static int
 scheduler_metadata(pcmk__output_t *out)
 {
-    return pcmk__daemon_metadata(out, "pacemaker-schedulerd",
+    return pcmk__daemon_metadata(out, PCMK__SERVER_SCHEDULERD,
                                  "Pacemaker scheduler options",
                                  "Cluster options used by Pacemaker's "
                                  "scheduler",
@@ -133,7 +134,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__cli_init_logging("pacemaker-schedulerd", args->verbosity);
+    pcmk__cli_init_logging(PCMK__SERVER_SCHEDULERD, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker scheduler");
 
@@ -148,7 +149,8 @@ main(int argc, char **argv)
     ipcs = pcmk__serve_schedulerd_ipc(&ipc_callbacks);
     if (ipcs == NULL) {
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Failed to create pacemaker-schedulerd server: exiting and inhibiting respawn");
+                    "Exiting fatally because unable to serve "
+                    "scheduler server IPC");
         exit_code = CRM_EX_FATAL;
         goto done;
     }

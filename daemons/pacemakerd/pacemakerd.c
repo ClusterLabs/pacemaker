@@ -157,7 +157,7 @@ create_pcmk_dirs(void)
         CRM_BLACKBOX_DIR,  // blackbox dumps
         PE_STATE_DIR,      // scheduler inputs
         CRM_CONFIG_DIR,    // the Cluster Information Base (CIB)
-        // Don't build CRM_RSCTMP_DIR, pacemaker-execd will do it
+        // Don't build CRM_RSCTMP_DIR, the executor will do it
         NULL
     };
 
@@ -317,7 +317,7 @@ main(int argc, char **argv)
     }
 
     if (options.shutdown) {
-        pcmk__cli_init_logging("pacemakerd", args->verbosity);
+        pcmk__cli_init_logging(PCMK__SERVER_PACEMAKERD, args->verbosity);
     } else {
         crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     }

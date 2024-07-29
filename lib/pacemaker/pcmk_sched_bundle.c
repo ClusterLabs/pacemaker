@@ -803,7 +803,7 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
         && pe__bundle_needs_remote_name(replica->remote)) {
 
         /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
-         * run pacemaker-remoted inside, without needing a separate IP for
+         * run the remote executor inside, without needing a separate IP for
          * the container. This is done by configuring the inner remote's
          * connection host as the magic string "#uname", then
          * replacing it with the underlying host when needed.

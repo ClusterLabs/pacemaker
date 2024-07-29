@@ -48,19 +48,19 @@ typedef struct {
 
 /*!
  * \internal
- * \brief Send a request to pacemaker-attrd to clear resource failure
+ * \brief Send a request to the attribute manager to clear resource failure
  *
- * \param[in,out] api           pacemaker-attrd IPC object
+ * \param[in,out] api           Attribute manager IPC object
  * \param[in]     node          Affect only this node (or NULL for all nodes)
  * \param[in]     resource      Name of resource to clear (or NULL for all)
  * \param[in]     operation     Name of operation to clear (or NULL for all)
  * \param[in]     interval_spec If operation is not NULL, its interval
- * \param[in]     user_name     ACL user to pass to pacemaker-attrd
+ * \param[in]     user_name     ACL user to pass to the attribute manager
  * \param[in]     options       Bitmask of pcmk__node_attr_opts
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is
- *       not NULL but is not yet connected to pacemaker-attrd, the object
+ *       not NULL but is not yet connected to the attribute manager, the object
  *       will be connected for this operation and left connected afterwards.
  *       This allows for reusing an IPC connection.
  *
@@ -76,7 +76,7 @@ int pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
  *
  * \brief Delete a previously set attribute by setting its value to NULL
  *
- * \param[in,out] api      Connection to pacemaker-attrd (or NULL to use
+ * \param[in,out] api      Connection to the attribute manager (or NULL to use
  *                         a temporary new connection)
  * \param[in]     node     Delete attribute for this node (or NULL for local)
  * \param[in]     name     Attribute name
@@ -91,13 +91,13 @@ int pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *na
  * \internal
  * \brief Request removal of a node's transient attributes
  *
- * \param[in,out] api           pacemaker-attrd IPC object
+ * \param[in,out] api           Attribute manager IPC object
  * \param[in]     node          Node whose attributes should be purged
  * \param[in]     reap          If true, also request removal from node caches
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is
- *       not NULL but is not yet connected to pacemaker-attrd, the object
+ *       not NULL but is not yet connected to the attribute manager, the object
  *       will be connected for this operation and left connected afterwards.
  *       This allows for reusing an IPC connection.
  *
@@ -107,9 +107,9 @@ int pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap);
 
 /*!
  * \internal
- * \brief Get the value of an attribute from pacemaker-attrd
+ * \brief Get the value of an attribute from the attribute manager
  *
- * \param[in,out] api           Connection to pacemaker-attrd
+ * \param[in,out] api           Connection to the attribute manager
  * \param[in]     node          Look up the attribute for this node
  *                              (or NULL for the local node)
  * \param[in]     name          Attribute name
@@ -125,14 +125,14 @@ int pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *nam
 
 /*!
  * \internal
- * \brief Tell pacemaker-attrd to update the CIB with current values
+ * \brief Tell the attribute manager to update the CIB with current values
  *
- * \param[in,out] api   pacemaker-attrd IPC object
+ * \param[in,out] api   Attribute manager IPC object
  * \param[in]     node  Affect only this node (or NULL for all nodes)
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is
- *       not NULL but is not yet connected to pacemaker-attrd, the object
+ *       not NULL but is not yet connected to the attribute manager, the object
  *       will be connected for this operation and left connected afterwards.
  *       This allows for reusing an IPC connection.
  *
@@ -144,18 +144,18 @@ int pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node);
  * \internal
  * \brief Update an attribute's value, time to wait, or both
  *
- * \param[in,out] api        pacemaker-attrd IPC object
+ * \param[in,out] api        Attribute manager IPC object
  * \param[in]     node       Affect only this node (or NULL for current node)
  * \param[in]     name       Attribute name
  * \param[in]     value      The attribute's new value, or NULL to unset
  * \param[in]     dampen     The new time to wait value, or NULL to unset
  * \param[in]     set        ID of attribute set to use (or NULL for first)
- * \param[in]     user_name  ACL user to pass to pacemaker-attrd
+ * \param[in]     user_name  ACL user to pass to the attribute manager
  * \param[in]     options    Bitmask of pcmk__node_attr_opts
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is
- *       not NULL but is not yet connected to pacemaker-attrd, the object
+ *       not NULL but is not yet connected to the attribute manager, the object
  *       will be connected for this operation and left connected afterwards.
  *       This allows for reusing an IPC connection.
  *
@@ -169,16 +169,16 @@ int pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *na
  * \internal
  * \brief Like pcmk__attrd_api_update, but for multiple attributes at once
  *
- * \param[in,out] api        pacemaker-attrd IPC object
+ * \param[in,out] api        Attribute manager IPC object
  * \param[in,out] attrs      A list of pcmk__attr_query_pair_t structs
  * \param[in]     dampen     The new time to wait value, or NULL to unset
  * \param[in]     set        ID of attribute set to use (or NULL for first)
- * \param[in]     user_name  ACL user to pass to pacemaker-attrd
+ * \param[in]     user_name  ACL user to pass to the attribute manager
  * \param[in]     options    Bitmask of pcmk__node_attr_opts
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is
- *       not NULL but is not yet connected to pacemaker-attrd, the object
+ *       not NULL but is not yet connected to the attribute manager, the object
  *       will be connected for this operation and left connected afterwards.
  *       This allows for reusing an IPC connection.
  *

@@ -44,7 +44,7 @@ static const cib__op_fn_t cib_op_functions[] = {
  *
  * \param[in] operation  Operation whose function to look up
  *
- * \return Function that performs \p operation within \c pacemaker-based
+ * \return Function that performs \p operation within the CIB manager
  */
 cib__op_fn_t
 based_get_op_function(const cib__operation_t *operation)

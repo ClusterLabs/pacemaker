@@ -16,6 +16,16 @@
 extern "C" {
 #endif
 
+// Pacemaker server names
+#define PCMK__SERVER_ATTRD      "pacemaker-attrd"
+#define PCMK__SERVER_BASED      "pacemaker-based"
+#define PCMK__SERVER_CONTROLD   "pacemaker-controld"
+#define PCMK__SERVER_EXECD      "pacemaker-execd"
+#define PCMK__SERVER_FENCED     "pacemaker-fenced"
+#define PCMK__SERVER_PACEMAKERD "pacemakerd"
+#define PCMK__SERVER_REMOTED    "pacemaker-remoted"
+#define PCMK__SERVER_SCHEDULERD "pacemaker-schedulerd"
+
 const char *pcmk__server_name(enum pcmk_ipc_server server);
 const char *pcmk__server_log_name(enum pcmk_ipc_server server);
 const char *pcmk__server_ipc_name(enum pcmk_ipc_server server);

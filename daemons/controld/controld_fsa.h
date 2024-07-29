@@ -340,9 +340,9 @@ enum crmd_fsa_input {
 #  define A_READCONFIG              0x0080000000000000ULL
 
 /* -- LRM Actions -- */
-        /* Connect to pacemaker-execd */
+        // Connect to the local executor
 #  define A_LRM_CONNECT             0x0100000000000000ULL
-        /* Disconnect from pacemaker-execd */
+        // Disconnect from the local executor
 #  define A_LRM_DISCONNECT          0x0200000000000000ULL
 #  define A_LRM_INVOKE              0x0400000000000000ULL
 #  define A_LRM_EVENT               0x0800000000000000ULL
@@ -386,7 +386,7 @@ enum crmd_fsa_input {
 #  define R_PE_CONNECTED    0x00000200ULL   // Is the scheduler connected?
 #  define R_TE_CONNECTED    0x00000400ULL
                                         /* Is the Transition Engine connected? */
-#  define R_LRM_CONNECTED   0x00000800ULL   // Is pacemaker-execd connected?
+#  define R_LRM_CONNECTED   0x00000800ULL   // Is the executor connected?
 
 #  define R_CIB_REQUIRED    0x00001000ULL
                                         /* Is the CIB required? */

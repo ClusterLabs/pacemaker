@@ -132,7 +132,7 @@ setup_stand_alone(GError **error)
 static int
 based_metadata(pcmk__output_t *out)
 {
-    return pcmk__daemon_metadata(out, "pacemaker-based",
+    return pcmk__daemon_metadata(out, PCMK__SERVER_BASED,
                                  "Cluster Information Base manager options",
                                  "Cluster options used by Pacemaker's Cluster "
                                  "Information Base manager",
@@ -226,7 +226,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__cli_init_logging("pacemaker-based", args->verbosity);
+    pcmk__cli_init_logging(PCMK__SERVER_BASED, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker CIB manager");
 
@@ -243,7 +243,8 @@ main(int argc, char **argv)
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_err("pacemaker-based is already active, aborting startup");
+        crm_crit("Aborting start-up because another CIB manager instance is "
+                 "already active");
         goto done;
     } else {
         /* not up or not authentic, we'll proceed either way */

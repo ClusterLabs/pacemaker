@@ -45,14 +45,14 @@ static struct {
 
     [pcmk_ipc_attrd] = {
         "attribute manager",
-        { "pacemaker-attrd", NULL, },
+        { PCMK__SERVER_ATTRD, NULL, },
         { PCMK__VALUE_ATTRD, NULL, NULL, },
         { PCMK__VALUE_ATTRD, NULL, NULL, },
     },
 
     [pcmk_ipc_based] = {
         "CIB manager",
-        { "pacemaker-based", NULL, },
+        { PCMK__SERVER_BASED, NULL, },
         { PCMK__SERVER_BASED_RW, PCMK__SERVER_BASED_RO,
           PCMK__SERVER_BASED_SHM, },
         { CRM_SYSTEM_CIB, NULL, NULL, },
@@ -60,35 +60,35 @@ static struct {
 
     [pcmk_ipc_controld] = {
         "controller",
-        { "pacemaker-controld", NULL, },
+        { PCMK__SERVER_CONTROLD, NULL, },
         { PCMK__VALUE_CRMD, NULL, NULL, },
         { PCMK__VALUE_CRMD, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, },
     },
 
     [pcmk_ipc_execd] = {
         "executor",
-        { "pacemaker-execd", "pacemaker-remoted", },
+        { PCMK__SERVER_EXECD, PCMK__SERVER_REMOTED, },
         { PCMK__VALUE_LRMD, NULL, NULL, },
         { PCMK__VALUE_LRMD, NULL, NULL, },
     },
 
     [pcmk_ipc_fenced] = {
         "fencer",
-        { "pacemaker-fenced", NULL, },
+        { PCMK__SERVER_FENCED, NULL, },
         { PCMK__VALUE_STONITH_NG, NULL, NULL, },
         { PCMK__VALUE_STONITH_NG, NULL, NULL, },
     },
 
     [pcmk_ipc_pacemakerd] = {
         "launcher",
-        { "pacemakerd", NULL, },
+        { PCMK__SERVER_PACEMAKERD, NULL, },
         { CRM_SYSTEM_MCP, NULL, NULL, },
         { CRM_SYSTEM_MCP, NULL, NULL, },
     },
 
     [pcmk_ipc_schedulerd] = {
         "scheduler",
-        { "pacemaker-schedulerd", NULL, },
+        { PCMK__SERVER_SCHEDULERD, NULL, },
         { CRM_SYSTEM_PENGINE, NULL, NULL, },
         { CRM_SYSTEM_PENGINE, NULL, NULL, },
     },

@@ -91,7 +91,8 @@ pcmk__pcmkd_state_enum2friendly(enum pcmk_pacemakerd_state state)
              */
             return "Pacemaker daemons are shut down (reporting to SBD)";
         case pcmk_pacemakerd_state_remote:
-            return "pacemaker-remoted is running (on a Pacemaker Remote node)";
+            return PCMK__SERVER_REMOTED " is running "
+                   "(on a Pacemaker Remote node)";
         default:
             return "Invalid pacemakerd state";
     }

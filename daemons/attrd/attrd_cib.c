@@ -215,10 +215,10 @@ attrd_cib_init(void)
      * this handles the case where the node restarted so quickly that the
      * cluster layer didn't notice.
      *
-     * \todo If pacemaker-attrd respawns after crashing (see PCMK_ENV_RESPAWNED),
-     *       ideally we'd skip this and sync our attributes from the writer.
-     *       However, currently we reject any values for us that the writer has, in
-     *       attrd_peer_update().
+     * \todo If the attribute manager respawns after crashing (see
+     *       PCMK_ENV_RESPAWNED), ideally we'd skip this and sync our attributes
+     *       from the writer. However, currently we reject any values for us
+     *       that the writer has, in attrd_peer_update().
      */
     attrd_cib_erase_transient_attrs(attrd_cluster->priv->node_name);
 

@@ -78,7 +78,7 @@ panic_local(void)
         union sigval signal_value;
 
         memset(&signal_value, 0, sizeof(signal_value));
-        ppid = pcmk__procfs_pid_of("pacemakerd");
+        ppid = pcmk__procfs_pid_of(PCMK__SERVER_PACEMAKERD);
         crm_emerg("Signaling pacemakerd[%lld] to panic", (long long) ppid);
 
         if(ppid > 1 && sigqueue(ppid, SIGQUIT, signal_value) < 0) {
