@@ -133,7 +133,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in crmd_ha_msg_filter()
          */
-        xmlNode *query = create_request(CRM_OP_HELLO, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+        xmlNode *query = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
+                                           NULL, CRM_SYSTEM_CRMD, CRM_OP_HELLO,
+                                           NULL);
 
         crm_debug("Sending hello to node %" PRIu32 " so that it learns our "
                   "node name",

@@ -366,7 +366,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         return TRUE;
     }
 
-    // Require message type (set by create_request())
+    // Require message type (set by pcmk__new_request())
     if (!pcmk__str_eq(type, PCMK__VALUE_CRMD, pcmk__str_none)) {
         crm_warn("Ignoring invalid message %s with type '%s' "
                  "(not '" PCMK__VALUE_CRMD "')",
@@ -375,7 +375,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         return TRUE;
     }
 
-    // Require a destination subsystem (also set by create_request())
+    // Require a destination subsystem (also set by pcmk__new_request())
     if (sys_to == NULL) {
         crm_warn("Ignoring invalid message %s with no " PCMK__XA_CRM_SYS_TO,
                  ref);
@@ -833,7 +833,7 @@ handle_ping(const xmlNode *msg)
     crm_xml_add(ping, PCMK_XA_RESULT, "ok");
 
     // Send reply
-    reply = create_reply(msg, ping);
+    reply = pcmk__new_reply(msg, ping);
     pcmk__xml_free(ping);
     if (reply != NULL) {
         (void) relay_message(reply, TRUE);
@@ -872,7 +872,7 @@ handle_node_list(const xmlNode *request)
     }
 
     // Create and send reply
-    reply = create_reply(request, reply_data);
+    reply = pcmk__new_reply(request, reply_data);
     pcmk__xml_free(reply_data);
     if (reply) {
         (void) relay_message(reply, TRUE);
@@ -936,7 +936,7 @@ handle_node_info_request(const xmlNode *msg)
     }
 
     // Send reply
-    reply = create_reply(msg, reply_data);
+    reply = pcmk__new_reply(msg, reply_data);
     pcmk__xml_free(reply_data);
     if (reply != NULL) {
         (void) relay_message(reply, TRUE);
@@ -1159,7 +1159,9 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         name = crm_element_value(stored_msg, PCMK_XA_UNAME);
 
         if(cause == C_IPC_MESSAGE) {
-            msg = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+            msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
+                                    CRM_SYSTEM_CRMD, CRM_OP_RM_NODE_CACHE,
+                                    NULL);
             if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
                 crm_err("Could not instruct peers to remove references to node %s/%u", name, id);
             } else {
@@ -1344,8 +1346,9 @@ delete_ha_msg_input(ha_msg_input_t * orig)
 void
 broadcast_remote_state_message(const char *node_name, bool node_up)
 {
-    xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL, NULL,
-                                  CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+    xmlNode *msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
+                                     CRM_SYSTEM_CRMD, CRM_OP_REMOTE_STATE,
+                                     NULL);
 
     crm_info("Notifying cluster of Pacemaker Remote node %s %s",
              node_name, node_up? "coming up" : "going down");

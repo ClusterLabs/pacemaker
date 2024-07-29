@@ -22,6 +22,7 @@
 #define STORM_INTERVAL   2      /* in seconds */
 
 struct election_s {
+    enum pcmk_ipc_server server;    // For message type
     enum election_result state;
     guint count;        // How many times local node has voted
     char *name;         // Descriptive name for this election
@@ -75,6 +76,7 @@ election_state(const election_t *e)
  * object. Typically, this should be done once, at start-up. A caller should
  * only create a single election object.
  *
+ * \param[in] server     Server to use for message type in election messages
  * \param[in] name       Label for election (for logging)
  * \param[in] uname      Local node's name
  * \param[in] period_ms  How long to wait for all peers to vote
@@ -85,7 +87,8 @@ election_state(const election_t *e)
  *       election_fini().
  */
 election_t *
-election_init(const char *name, const char *uname, guint period_ms, GSourceFunc cb)
+election_init(enum pcmk_ipc_server server, const char *name, const char *uname,
+              guint period_ms, GSourceFunc cb)
 {
     election_t *e = NULL;
 
@@ -99,6 +102,7 @@ election_init(const char *name, const char *uname, guint period_ms, GSourceFunc 
         return NULL;
     }
 
+    e->server = server;
     e->uname = strdup(uname);
     if (e->uname == NULL) {
         crm_perror(LOG_CRIT, "Cannot create election");
@@ -307,7 +311,8 @@ election_vote(election_t *e)
 
     election_reset(e);
     e->state = election_in_progress;
-    vote = create_request(CRM_OP_VOTE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+    vote = pcmk__new_request(e->server, CRM_SYSTEM_CRMD, NULL,
+                             CRM_SYSTEM_CRMD, CRM_OP_VOTE, NULL);
 
     e->count++;
     crm_xml_add(vote, PCMK__XA_ELECTION_OWNER, our_node->xml_id);
@@ -498,12 +503,12 @@ record_vote(election_t *e, struct vote *vote)
 }
 
 static void
-send_no_vote(pcmk__node_status_t *peer, struct vote *vote)
+send_no_vote(election_t *e, pcmk__node_status_t *peer, struct vote *vote)
 {
-    // @TODO probably shouldn't hardcode CRM_SYSTEM_CRMD and pcmk_ipc_controld
-
-    xmlNode *novote = create_request(CRM_OP_NOVOTE, NULL, vote->from,
-                                     CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+    // @TODO shouldn't hardcode CRM_SYSTEM_CRMD
+    xmlNode *novote = pcmk__new_request(e->server, CRM_SYSTEM_CRMD,
+                                        vote->from, CRM_SYSTEM_CRMD,
+                                        CRM_OP_NOVOTE, NULL);
 
     crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
     crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
@@ -710,7 +715,7 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
                vote.from, reason);
 
     election_reset(e);
-    send_no_vote(your_node, &vote);
+    send_no_vote(e, your_node, &vote);
     e->state = election_lost;
     return e->state;
 }

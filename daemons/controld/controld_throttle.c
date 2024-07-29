@@ -367,7 +367,8 @@ throttle_send_command(enum throttle_state_e mode)
                  load2str(mode), load2str(last));
         last = mode;
 
-        xml = create_request(CRM_OP_THROTTLE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+        xml = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
+                                CRM_SYSTEM_CRMD, CRM_OP_THROTTLE, NULL);
         crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MODE, mode);
         crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MAX, throttle_job_max);
 

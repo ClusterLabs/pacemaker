@@ -77,6 +77,100 @@ typedef struct {
     xmlNode *(*handler)(pcmk__request_t *request);
 } pcmk__server_command_t;
 
+/*!
+ * \internal
+ * \brief Create message XML (for IPC or the cluster layer)
+ *
+ * Create standard, generic XML that can be used as a message sent via IPC or
+ * the cluster layer. Currently, not all IPC and cluster layer messaging uses
+ * this, but it should (eventually, keeping backward compatibility in mind).
+ *
+ * \param[in] server            Server whose protocol defines message semantics
+ * \param[in] reply_to          If NULL, create message as a request with a
+ *                              generated message ID, otherwise create message
+ *                              as a reply to this message ID
+ * \param[in] sender_system     Sender's subsystem (required; this is an
+ *                              arbitrary string that may have meaning between
+ *                              the sender and recipient)
+ * \param[in] recipient_node    If not NULL, add as message's recipient node
+ *                              (NULL typically indicates a broadcast message)
+ * \param[in] recipient_system  If not NULL, add as message's recipient
+ *                              subsystem (this is an arbitrary string that may
+ *                              have meaning between the sender and recipient)
+ * \param[in] task              Add as message's task (required)
+ * \param[in] data              If not NULL, copy as message's data (callers
+ *                              should not add attributes to the returned
+ *                              message element, but instead pass any desired
+ *                              information here, though this is not always
+ *                              honored currently)
+ *
+ * \return Newly created message XML
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
+ */
+#define pcmk__new_message(server, reply_to, sender_system,                  \
+                          recipient_node, recipient_system, task, data)     \
+    pcmk__new_message_as(__func__, (server), (reply_to),                    \
+                         (sender_system), (recipient_node),                 \
+                         (recipient_system), (task), (data))
+
+/*!
+ * \internal
+ * \brief Create a Pacemaker request (for IPC or cluster layer)
+ *
+ * \param[in] server            Server whose protocol defines message semantics
+ * \param[in] sender_system     Sender's subsystem (required; this is an
+ *                              arbitrary string that may have meaning between
+ *                              the sender and recipient)
+ * \param[in] recipient_node    If not NULL, add as message's recipient node
+ *                              (NULL typically indicates a broadcast message)
+ * \param[in] recipient_system  If not NULL, add as message's recipient
+ *                              subsystem (this is an arbitrary string that may
+ *                              have meaning between the sender and recipient)
+ * \param[in] task              Add as message's task (required)
+ * \param[in] data              If not NULL, copy as message's data (callers
+ *                              should not add attributes to the returned
+ *                              message element, but instead pass any desired
+ *                              information here, though this is not always
+ *                              honored currently)
+ *
+ * \return Newly created request XML
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
+ */
+#define pcmk__new_request(server, sender_system, recipient_node,            \
+                          recipient_system, task, data)                     \
+    pcmk__new_message_as(__func__, (server), NULL,                          \
+                         (sender_system), (recipient_node),                 \
+                         (recipient_system), (task), (data))
+
+/*!
+ * \internal
+ * \brief Create a Pacemaker reply (for IPC or cluster layer)
+ *
+ * \param[in] original_request  XML of request being replied to
+ * \param[in] data              If not NULL, copy as reply's data (callers
+ *                              should not add attributes to the returned
+ *                              message element, but instead pass any desired
+ *                              information here, though this is not always
+ *                              honored currently)
+ *
+ * \return Newly created reply XML
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
+ */
+#define pcmk__new_reply(original_request, data) \
+    pcmk__new_reply_as(__func__, (original_request), (data))
+
+xmlNode *pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
+                              const char *reply_to, const char *sender_system,
+                              const char *recipient_node,
+                              const char *recipient_system, const char *task,
+                              xmlNode *data);
+
+xmlNode *pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
+                            xmlNode *data);
+
 GHashTable *pcmk__register_handlers(const pcmk__server_command_t handlers[]);
 xmlNode *pcmk__process_request(pcmk__request_t *request, GHashTable *handlers);
 void pcmk__reset_request(pcmk__request_t *request);

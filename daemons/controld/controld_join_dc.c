@@ -227,8 +227,8 @@ start_join_round(void)
 static xmlNode *
 create_dc_message(const char *join_op, const char *host_to)
 {
-    xmlNode *msg = create_request(join_op, NULL, host_to, CRM_SYSTEM_CRMD,
-                                  CRM_SYSTEM_DC, NULL);
+    xmlNode *msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_DC, host_to,
+                                     CRM_SYSTEM_CRMD, join_op, NULL);
 
     /* Identify which election this is a part of */
     crm_xml_add_int(msg, PCMK__XA_JOIN_ID, current_join_id);

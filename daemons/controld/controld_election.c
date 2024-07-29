@@ -31,7 +31,8 @@ election_win_cb(gpointer data)
 void
 controld_election_init(const char *uname)
 {
-    fsa_election = election_init("DC", uname, 60000 /*60s*/, election_win_cb);
+    fsa_election = election_init(pcmk_ipc_controld, "DC", uname, 60000,
+                                 election_win_cb);
 }
 
 /*!

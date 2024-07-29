@@ -29,6 +29,10 @@ struct controld_api_private_s {
     unsigned int replies_expected;
 };
 
+static xmlNode *create_hello_message(const char *uuid, const char *client_name,
+                                     const char *major_version,
+                                     const char *minor_version);
+
 /*!
  * \internal
  * \brief Get a string representation of a controller API reply type
@@ -220,14 +224,17 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     // Do some basic validation of the reply
 
-    /* @TODO We should be able to verify that value is always a response, but
-     *       currently the controller doesn't always properly set the type. Even
-     *       if we fix the controller, we'll still need to handle replies from
-     *       old versions (feature set could be used to differentiate).
-     */
     value = crm_element_value(reply, PCMK__XA_SUBT);
-    if (!pcmk__str_any_of(value, PCMK__VALUE_REQUEST, PCMK__VALUE_RESPONSE,
-                          NULL)) {
+    if (pcmk__str_eq(value, PCMK__VALUE_REQUEST, pcmk__str_none)) {
+        /* @COMPAT Controllers <3.0.0 set PCMK__XA_SUBT to PCMK__VALUE_REQUEST
+         * for certain replies. Once we no longer support Pacemaker Remote nodes
+         * connecting to cluster nodes <3.0.0, or rolling upgrades from <3.0.0,
+         * we can drop this check.
+         */
+        crm_trace("Received a reply that was marked as a request "
+                  "(bug unless sent by a controller <3.0.0)");
+
+    } else if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         crm_info("Unrecognizable message from controller: "
                  "invalid message type '%s'", pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
@@ -320,6 +327,8 @@ create_controller_request(const pcmk_ipc_api_t *api, const char *op,
 {
     struct controld_api_private_s *private = NULL;
     const char *sys_to = NULL;
+    char *sender_system = NULL;
+    xmlNode *request = NULL;
 
     if (api == NULL) {
         return NULL;
@@ -330,9 +339,12 @@ create_controller_request(const pcmk_ipc_api_t *api, const char *op,
     } else {
         sys_to = CRM_SYSTEM_CRMD;
     }
-    return create_request(op, msg_data, node, sys_to,
-                          (crm_system_name? crm_system_name : "client"),
-                          private->client_uuid);
+    sender_system = crm_strdup_printf("%s_%s", private->client_uuid,
+                                      pcmk__s(crm_system_name, "client"));
+    request = pcmk__new_request(pcmk_ipc_controld, sender_system, node, sys_to,
+                                op, msg_data);
+    free(sender_system);
+    return request;
 }
 
 // \return Standard Pacemaker return code
@@ -618,17 +630,16 @@ pcmk_controld_api_replies_expected(const pcmk_ipc_api_t *api)
 }
 
 /*!
+ * \internal
  * \brief Create XML for a controller IPC "hello" message
- *
- * \deprecated This function is deprecated as part of the public C API.
  */
-// \todo make this static to this file when breaking API backward compatibility
-xmlNode *
+static xmlNode *
 create_hello_message(const char *uuid, const char *client_name,
                      const char *major_version, const char *minor_version)
 {
     xmlNode *hello_node = NULL;
     xmlNode *hello = NULL;
+    char *sender_system = NULL;
 
     if (pcmk__str_empty(uuid) || pcmk__str_empty(client_name)
         || pcmk__str_empty(major_version) || pcmk__str_empty(minor_version)) {
@@ -647,13 +658,16 @@ create_hello_message(const char *uuid, const char *client_name,
     // @TODO Nothing uses this. Drop, or keep for debugging?
     crm_xml_add(hello_node, PCMK__XA_CLIENT_UUID, uuid);
 
-    hello = create_request(CRM_OP_HELLO, hello_node, NULL, NULL, client_name, uuid);
+    sender_system = crm_strdup_printf("%s_%s", uuid, client_name);
+    hello = pcmk__new_request(pcmk_ipc_controld, sender_system, NULL, NULL,
+                              CRM_OP_HELLO, hello_node);
+    free(sender_system);
+    pcmk__xml_free(hello_node);
     if (hello == NULL) {
         crm_err("Could not create IPC hello message from %s (UUID %s): "
                 "Request creation failed", client_name, uuid);
         return NULL;
     }
-    pcmk__xml_free(hello_node);
 
     crm_trace("Created hello message from %s (UUID %s)", client_name, uuid);
     return hello;

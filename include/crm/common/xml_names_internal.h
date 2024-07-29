@@ -49,6 +49,7 @@ extern "C" {
 #define PCMK__XE_LRMD_RSC               "lrmd_rsc"
 #define PCMK__XE_LRMD_RSC_OP            "lrmd_rsc_op"
 #define PCMK__XE_MAINTENANCE            "maintenance"
+#define PCMK__XE_MESSAGE                "message"
 #define PCMK__XE_META                   "meta"
 #define PCMK__XE_NACK                   "nack"
 #define PCMK__XE_NODE_STATE             "node_state"

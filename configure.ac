@@ -2093,6 +2093,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/io/Makefile                        \
                 lib/common/tests/iso8601/Makefile                   \
                 lib/common/tests/lists/Makefile                     \
+                lib/common/tests/messages/Makefile                  \
                 lib/common/tests/nodes/Makefile                     \
                 lib/common/tests/nvpair/Makefile                    \
                 lib/common/tests/options/Makefile                   \

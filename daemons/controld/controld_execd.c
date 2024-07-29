@@ -1212,7 +1212,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 }
 
 static void
-handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
+handle_reprobe_op(lrm_state_t *lrm_state, xmlNode *msg, const char *from_sys,
                   const char *from_host, const char *user_name,
                   gboolean is_remote_node, bool reprobe_all_nodes)
 {
@@ -1221,10 +1221,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
                   reprobe_all_nodes);
 
     if (!pcmk__strcase_any_of(from_sys, CRM_SYSTEM_PENGINE, CRM_SYSTEM_TENGINE, NULL)) {
-
-        xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, NULL, from_host,
-                                        from_sys, CRM_SYSTEM_LRMD,
-                                        controld_globals.our_uuid);
+        xmlNode *reply = pcmk__new_reply(msg, NULL);
 
         crm_debug("ACK'ing re-probe from %s (%s)", from_sys, from_host);
 
@@ -1455,7 +1452,7 @@ do_lrm_invoke(long long action,
             // For CRM_OP_REPROBE, a NULL target means we're targeting all nodes
             raw_target = crm_element_value(input->xml, PCMK__META_ON_NODE);
         }
-        handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
+        handle_reprobe_op(lrm_state, input->msg, from_sys, from_host, user_name,
                           is_remote_node, (raw_target == NULL));
 
     } else if (operation != NULL) {
@@ -1743,7 +1740,15 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     controld_add_resource_history_xml(iter, rsc, op,
                                       controld_globals.our_nodename);
-    reply = create_request(CRM_OP_INVOKE_LRM, update, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
+
+    /* We don't have the original message ID, so use "direct-ack" (we just need
+     * something non-NULL for this to create a reply)
+     *
+     * @TODO It would be better to use the server, message ID, and task from the
+     * original request when callers have it available
+     */
+    reply = pcmk__new_message(pcmk_ipc_controld, "direct-ack", CRM_SYSTEM_LRMD,
+                              to_host, to_sys, CRM_OP_INVOKE_LRM, update);
 
     crm_log_xml_trace(update, "[direct ACK]");
 
