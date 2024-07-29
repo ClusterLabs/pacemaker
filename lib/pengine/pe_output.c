@@ -1006,10 +1006,10 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long int")
+PCMK__OUTPUT_ARGS("maint-mode", "uint64_t")
 static int
 cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
-    unsigned long long flags = va_arg(args, unsigned long long);
+    uint64_t flags = va_arg(args, uint64_t);
 
     if (pcmk_is_set(flags, pcmk__sched_in_maintenance)) {
         pcmk__formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
