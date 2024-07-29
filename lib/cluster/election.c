@@ -21,7 +21,7 @@
 
 #define STORM_INTERVAL   2      /* in seconds */
 
-struct election_s {
+struct pcmk__election {
     enum pcmk_ipc_server server;    // For message type
     enum election_result state;
     guint count;        // How many times local node has voted
@@ -37,7 +37,7 @@ struct election_s {
 };
 
 static void
-election_complete(election_t *e)
+election_complete(pcmk__election_t *e)
 {
     e->state = election_won;
     if (e->cb != NULL) {
@@ -49,7 +49,7 @@ election_complete(election_t *e)
 static gboolean
 election_timer_cb(gpointer user_data)
 {
-    election_t *e = user_data;
+    pcmk__election_t *e = user_data;
 
     crm_info("%s timed out, declaring local node as winner", e->name);
     election_complete(e);
@@ -64,7 +64,7 @@ election_timer_cb(gpointer user_data)
  * \return Current state of \e
  */
 enum election_result
-election_state(const election_t *e)
+election_state(const pcmk__election_t *e)
 {
     return (e == NULL)? election_error : e->state;
 }
@@ -86,17 +86,17 @@ election_state(const election_t *e)
  * \note The caller is responsible for freeing the returned value using
  *       election_fini().
  */
-election_t *
+pcmk__election_t *
 election_init(enum pcmk_ipc_server server, const char *name, const char *uname,
               guint period_ms, GSourceFunc cb)
 {
-    election_t *e = NULL;
+    pcmk__election_t *e = NULL;
 
     static guint count = 0;
 
     CRM_CHECK(uname != NULL, return NULL);
 
-    e = calloc(1, sizeof(election_t));
+    e = calloc(1, sizeof(pcmk__election_t));
     if (e == NULL) {
         crm_perror(LOG_CRIT, "Cannot create election");
         return NULL;
@@ -129,7 +129,7 @@ election_init(enum pcmk_ipc_server server, const char *name, const char *uname,
  * \param[in]     uname  Name of peer to disregard
  */
 void
-election_remove(election_t *e, const char *uname)
+election_remove(pcmk__election_t *e, const char *uname)
 {
     if ((e != NULL) && (uname != NULL) && (e->voted != NULL)) {
         crm_trace("Discarding %s (no-)vote from lost peer %s", e->name, uname);
@@ -143,7 +143,7 @@ election_remove(election_t *e, const char *uname)
  * \param[in,out] e  Election object
  */
 void
-election_reset(election_t *e)
+election_reset(pcmk__election_t *e)
 {
     if (e != NULL) {
         crm_trace("Resetting election %s", e->name);
@@ -165,7 +165,7 @@ election_reset(election_t *e)
  * \param[in,out] e  Election object
  */
 void
-election_fini(election_t *e)
+election_fini(pcmk__election_t *e)
 {
     if (e != NULL) {
         election_reset(e);
@@ -178,7 +178,7 @@ election_fini(election_t *e)
 }
 
 static void
-election_timeout_start(election_t *e)
+election_timeout_start(pcmk__election_t *e)
 {
     if (e != NULL) {
         mainloop_timer_start(e->timeout);
@@ -191,7 +191,7 @@ election_timeout_start(election_t *e)
  * \param[in,out] e  Election object
  */
 void
-election_timeout_stop(election_t *e)
+election_timeout_stop(pcmk__election_t *e)
 {
     if (e != NULL) {
         mainloop_timer_stop(e->timeout);
@@ -205,7 +205,7 @@ election_timeout_stop(election_t *e)
  * \param[in]     period  New timeout
  */
 void
-election_timeout_set_period(election_t *e, guint period)
+election_timeout_set_period(pcmk__election_t *e, guint period)
 {
     if (e != NULL) {
         mainloop_timer_set_period(e->timeout, period);
@@ -290,7 +290,7 @@ compare_age(struct timeval your_age)
  *       vote, or we did not call election_check() in time.)
  */
 void
-election_vote(election_t *e)
+election_vote(pcmk__election_t *e)
 {
     struct timeval age;
     xmlNode *vote = NULL;
@@ -353,7 +353,7 @@ election_vote(election_t *e)
  *       \c election_in_progress.
  */
 bool
-election_check(election_t *e)
+election_check(pcmk__election_t *e)
 {
     int voted_size = 0;
     int num_members = 0;
@@ -432,7 +432,7 @@ struct vote {
  *       the message argument.
  */
 static bool
-parse_election_message(const election_t *e, const xmlNode *message,
+parse_election_message(const pcmk__election_t *e, const xmlNode *message,
                        struct vote *vote)
 {
     CRM_CHECK(message && vote, return FALSE);
@@ -498,7 +498,7 @@ parse_election_message(const election_t *e, const xmlNode *message,
 }
 
 static void
-record_vote(election_t *e, struct vote *vote)
+record_vote(pcmk__election_t *e, struct vote *vote)
 {
     CRM_ASSERT(e && vote && vote->from && vote->op);
 
@@ -509,7 +509,7 @@ record_vote(election_t *e, struct vote *vote)
 }
 
 static void
-send_no_vote(election_t *e, pcmk__node_status_t *peer, struct vote *vote)
+send_no_vote(pcmk__election_t *e, pcmk__node_status_t *peer, struct vote *vote)
 {
     const char *message_type = pcmk__server_message_type(e->server);
     xmlNode *novote = pcmk__new_request(e->server, message_type,
@@ -539,7 +539,7 @@ send_no_vote(election_t *e, pcmk__node_status_t *peer, struct vote *vote)
  *       this function, and then compare the result.
  */
 enum election_result
-election_count_vote(election_t *e, const xmlNode *message, bool can_win)
+election_count_vote(pcmk__election_t *e, const xmlNode *message, bool can_win)
 {
     int log_level = LOG_INFO;
     gboolean done = FALSE;
@@ -732,7 +732,7 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
  * \param[in,out] e        Election object to clear
  */
 void
-election_clear_dampening(election_t *e)
+election_clear_dampening(pcmk__election_t *e)
 {
     e->last_election_loss = 0;
 }

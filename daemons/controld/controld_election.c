@@ -19,7 +19,7 @@
 
 #include <pacemaker-controld.h>
 
-static election_t *fsa_election = NULL;
+static pcmk__election_t *fsa_election = NULL;
 
 static gboolean
 election_win_cb(gpointer data)

@@ -15,7 +15,7 @@
 #include "pacemaker-attrd.h"
 
 static char *peer_writer = NULL;
-static election_t *writer = NULL;
+static pcmk__election_t *writer = NULL;
 
 static gboolean
 attrd_election_cb(gpointer user_data)

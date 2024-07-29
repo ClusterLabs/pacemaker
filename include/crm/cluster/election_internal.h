@@ -60,7 +60,7 @@ extern "C" {
  * must implement that if desired.
  */
 
-typedef struct election_s election_t;
+typedef struct pcmk__election pcmk__election_t;
 
 /*! Possible election states */
 enum election_result {
@@ -71,21 +71,22 @@ enum election_result {
     election_error,         /*! election message or election object invalid */
 };
 
-void election_fini(election_t *e);
-void election_reset(election_t *e);
-election_t *election_init(enum pcmk_ipc_server, const char *name,
-                          const char *uname, guint period_ms, GSourceFunc cb);
+void election_fini(pcmk__election_t *e);
+void election_reset(pcmk__election_t *e);
+pcmk__election_t *election_init(enum pcmk_ipc_server, const char *name,
+                                const char *uname, guint period_ms,
+                                GSourceFunc cb);
 
-void election_timeout_set_period(election_t *e, guint period_ms);
-void election_timeout_stop(election_t *e);
+void election_timeout_set_period(pcmk__election_t *e, guint period_ms);
+void election_timeout_stop(pcmk__election_t *e);
 
-void election_vote(election_t *e);
-bool election_check(election_t *e);
-void election_remove(election_t *e, const char *uname);
-enum election_result election_state(const election_t *e);
-enum election_result election_count_vote(election_t *e, const xmlNode *message,
-                                         bool can_win);
-void election_clear_dampening(election_t *e);
+void election_vote(pcmk__election_t *e);
+bool election_check(pcmk__election_t *e);
+void election_remove(pcmk__election_t *e, const char *uname);
+enum election_result election_state(const pcmk__election_t *e);
+enum election_result election_count_vote(pcmk__election_t *e,
+                                         const xmlNode *message, bool can_win);
+void election_clear_dampening(pcmk__election_t *e);
 
 #ifdef __cplusplus
 }
