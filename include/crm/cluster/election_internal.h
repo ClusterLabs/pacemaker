@@ -74,8 +74,7 @@ enum election_result {
 void election_fini(pcmk__election_t *e);
 void election_reset(pcmk__election_t *e);
 pcmk__election_t *election_init(enum pcmk_ipc_server, const char *name,
-                                const char *uname, guint period_ms,
-                                GSourceFunc cb);
+                                const char *uname, GSourceFunc cb);
 
 void election_timeout_set_period(pcmk__election_t *e, guint period_ms);
 void election_timeout_stop(pcmk__election_t *e);

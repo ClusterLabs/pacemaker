@@ -69,6 +69,12 @@ election_state(const pcmk__election_t *e)
     return (e == NULL)? election_error : e->state;
 }
 
+/* The local node will be declared the winner if missing votes are not received
+ * within this time. The value is chosen to be the same as the default for the
+ * election-timeout cluster option.
+ */
+#define ELECTION_TIMEOUT_MS 120000
+
 /*!
  * \brief Create a new election object
  *
@@ -79,7 +85,6 @@ election_state(const pcmk__election_t *e)
  * \param[in] server     Server to use for message type in election messages
  * \param[in] name       Label for election (for logging)
  * \param[in] uname      Local node's name
- * \param[in] period_ms  How long to wait for all peers to vote
  * \param[in] cb         Function to call if local node wins election
  *
  * \return Newly allocated election object on success, NULL on error
@@ -88,7 +93,7 @@ election_state(const pcmk__election_t *e)
  */
 pcmk__election_t *
 election_init(enum pcmk_ipc_server server, const char *name, const char *uname,
-              guint period_ms, GSourceFunc cb)
+              GSourceFunc cb)
 {
     pcmk__election_t *e = NULL;
     static guint count = 0;
@@ -100,7 +105,7 @@ election_init(enum pcmk_ipc_server server, const char *name, const char *uname,
     e->name = name? crm_strdup_printf("election-%s", name)
                   : crm_strdup_printf("election-%u", count++);
     e->cb = cb;
-    e->timeout = mainloop_timer_add(e->name, period_ms, FALSE,
+    e->timeout = mainloop_timer_add(e->name, ELECTION_TIMEOUT_MS, FALSE,
                                     election_timer_cb, e);
     return e;
 }

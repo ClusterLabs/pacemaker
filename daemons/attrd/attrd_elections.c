@@ -36,8 +36,7 @@ void
 attrd_election_init(void)
 {
     writer = election_init(pcmk_ipc_attrd, PCMK__VALUE_ATTRD,
-                           attrd_cluster->priv->node_name, 120000,
-                           attrd_election_cb);
+                           attrd_cluster->priv->node_name, attrd_election_cb);
 }
 
 void
