@@ -327,7 +327,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
         } else if (appeared == FALSE) {
             if ((controld_globals.transition_graph == NULL)
-                || (controld_globals.transition_graph->id == -1)) {
+                || (controld_globals.transition_graph->id <= 0)) {
                 crm_info("Stonith/shutdown of node %s is unknown to the "
                          "current DC", node->name);
             } else {

@@ -754,10 +754,6 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
         return NULL;
     }
 
-    new_graph->id = -1;
-    new_graph->abort_priority = 0;
-    new_graph->network_delay = 0;
-    new_graph->stonith_timeout = 0;
     new_graph->completion_action = pcmk__graph_done;
 
     // Parse top-level attributes from PCMK__XE_TRANSITION_GRAPH
@@ -766,7 +762,7 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
 
         CRM_CHECK(buf != NULL,
                   pcmk__free_graph(new_graph); return NULL);
-        pcmk__scan_min_int(buf, &(new_graph->id), -1);
+        pcmk__scan_min_int(buf, &(new_graph->id), 1);
 
         buf = crm_element_value(xml_graph, PCMK_OPT_CLUSTER_DELAY);
         CRM_CHECK(buf != NULL,
