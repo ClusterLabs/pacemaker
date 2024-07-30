@@ -884,15 +884,21 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
                 const char *section, xmlNode * data,
                 xmlNode ** output_data, int call_options, const char *user_name)
 {
-    int (*delegate) (cib_t * cib, const char *op, const char *host,
-                     const char *section, xmlNode * data,
-                     xmlNode ** output_data, int call_options, const char *user_name) =
-        cib->delegate_fn;
+    int (*delegate)(cib_t *cib, const char *op, const char *host,
+                    const char *section, xmlNode *data, xmlNode **output_data,
+                    int call_options, const char *user_name) = NULL;
 
-    if(user_name == NULL) {
-        user_name = getenv("CIB_user");
+    if (cib == NULL) {
+        return -EINVAL;
     }
 
+    delegate = cib->delegate_fn;
+    if (delegate == NULL) {
+        return -EPROTONOSUPPORT;
+    }
+    if (user_name == NULL) {
+        user_name = getenv("CIB_user");
+    }
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
 }
 
