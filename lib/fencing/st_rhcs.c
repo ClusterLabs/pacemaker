@@ -60,8 +60,8 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
 #else
             if (dirfd == -1) {
                 if (i == 0) {
-                    crm_notice("Problem with listing %s directory"
-                               QB_XS "errno=%d", RH_STONITH_PREFIX, errno);
+                    crm_notice("Problem with listing %s directory "
+                               QB_XS " errno=%d", RH_STONITH_PREFIX, errno);
                 }
                 free(namelist[i]);
                 continue;

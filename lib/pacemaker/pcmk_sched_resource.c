@@ -622,7 +622,7 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (remaining_tries <= 0) {
         pcmk__sched_warn(rsc->priv->scheduler,
                          "%s cannot run on %s due to reaching migration "
-                         "threshold (clean up resource to allow again)"
+                         "threshold (clean up resource to allow again) "
                          QB_XS " failures=%d "
                          PCMK_META_MIGRATION_THRESHOLD "=%d",
                          rsc_to_ban->id, pcmk__node_name(node), fail_count,
