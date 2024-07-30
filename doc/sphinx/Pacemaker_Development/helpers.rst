@@ -468,6 +468,118 @@ At this point, you need to determine whether your test case is incorrect or
 whether the code being tested is incorrect.  Fix whichever is wrong and continue.
 
 
+Fuzz Testing
+############
+
+Pacemaker is integrated with the
+`OSS-Fuzz <https://github.com/google/oss-fuzz>`_ project. OSS-Fuzz calls
+selected Pacemaker APIs with random argument values to catch edge cases that
+might be missed by other forms of testing.
+
+The OSS-Fuzz project has a contact address for Pacemaker in
+projects/pacemaker/project.yaml that will receive bug reports. The address must
+have been used to commit to Pacemaker, and should be tied to a Google account.
+
+Open reports that aren't security-related can be seen at `OSS-Fuzz testcases
+<https://oss-fuzz.com/testcases?project=pacemaker&open=yes>`_.
+
+
+Fuzzers
+_______
+
+Each fuzz-tested library has a fuzzers subdirectory (for example,
+``lib/common/fuzzers``). That directory has a file for each fuzzed source file,
+named the same except ending in ``_fuzzer.c`` (for example,
+``lib/common/fuzzers/strings_fuzzer.c`` has fuzzing for
+``lib/common/strings.c``). Those files are not built or distributed as part of
+Pacemaker but are used by OSS-Fuzz (see ``projects/pacemaker/build.sh`` in the
+OSS-Fuzz repository).
+
+By default, fuzzing uses `libFuzzer <https://llvm.org/docs/LibFuzzer.html>`_.
+Only Pacemaker APIs that accept any input and do not exit can be fuzzed.
+Ideally, fuzzed functions will not modify global state or vary code paths by
+anything other than the fuzzed input (such as environment variable values,
+date/time, etc.).
+
+
+Local Fuzzing
+_____________
+
+You can use OSS-Fuzz locally to run fuzz testing or reproduce issues reported
+by OSS-Fuzz.
+
+To prep a test host:
+
+1. If podman is installed, it will conflict with Docker, so remove it first.
+   Example for RHEL-like OSes:
+
+   * ``dnf remove runc``
+
+1. Install and start Docker. Example for RHEL-like OSes:
+
+   * ``dnf config-manager --add-repo
+     https://download.docker.com/linux/rhel/docker-ce.repo``
+   * ``dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin
+     docker-compose-plugin``
+   * ``usermod -a -G docker $USER``
+
+2. Clone the OSS-Fuzz repository:
+
+   * ``cd`` to wherever you want to put it
+   * ``git clone https://github.com/google/oss-fuzz.git``
+   * ``cd oss-fuzz``
+
+3. Specify the Pacemaker source you want to test:
+
+   * Edit ``projects/pacemaker/Dockerfile`` and replace the last ``git clone``
+     with the source that you want to test. For example, if you have a branch
+     ``my-fuzzing-branch`` that you've pushed to your GitHub account, you could
+     use: ``git clone -b my-fuzzing-branch --single-branch --depth 1
+     https://github.com/$USER/pacemaker``.
+
+To fuzz the code:
+
+1. Ensure Docker is running:
+
+   * ``systemctl start docker``
+
+2. Build the necessary Docker containers:
+
+   * ``python3 infra/helper.py build_image pacemaker``
+
+3. Build the fuzzers. There are three possible sanitizers: address, memory, and
+   undefined. The memory sanitizer requires special preparation and is
+   generally not used. If you are reproducing an OSS-Fuzz-reported issue, the
+   issue will list the sanitizer that was used.
+
+   * ``python3 infra/helper.py build_fuzzers --sanitizer address pacemaker``
+
+4. Ensure the build succeeded:
+
+   * ``python3 infra/helper.py check_build pacemaker``
+
+5. If you want to run fuzzing yourself, choose a fuzzer (for example,
+   ``iso8601_fuzzer``). Create a temporary directory for the fuzzer's outputs,
+   then run the fuzzing command, which will fuzz for 25 seconds then time out:
+
+   * ``rm -rf /tmp/corpus >/dev/null 2>&/dev/null``
+   * ``mkdir /tmp/corpus``
+   * ``python3 infra/helper.py run_fuzzer --corpus-dir=/tmp/corpus pacemaker
+     $FUZZER``
+   * This can be repeated with different fuzzers. The ``build_fuzzers`` step
+     can also be repeated with a different sanitizer, and the fuzzers tested
+     again.
+
+6. If you want to reproduce an OSS-Fuzz-reported issue, make a note of the
+   fuzzer that was used (``$FUZZER`` in this example) and download the provided
+   reproducer test case file (``$TESTCASE`` in this example), then run:
+
+   * ``python3 infra/helper.py reproduce pacemaker $FUZZER $TESTCASE``
+
+For details, see the `OSS-Fuzz documentation
+<https://google.github.io/oss-fuzz/getting-started/new-project-guide/#testing-locally>`_.
+
+
 Code Coverage
 #############
 
