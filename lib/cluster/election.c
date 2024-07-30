@@ -25,7 +25,6 @@
 struct pcmk__election {
     enum election_result state;
     guint count;        // How many times local node has voted
-    char *uname;        // Local node's name
     GSourceFunc cb;     // Function to call if election is won
     GHashTable *voted;  // Key = node name, value = how node voted
     mainloop_timer_t *timeout; // When to abort if all votes not received
@@ -85,19 +84,16 @@ election_state(const pcmk_cluster_t *cluster)
  * election once, typically at start-up.
  *
  * \param[in] cluster    Cluster that election is for
- * \param[in] uname      Local node's name
  * \param[in] cb         Function to call if local node wins election
  */
 void
-election_init(pcmk_cluster_t *cluster, const char *uname, GSourceFunc cb)
+election_init(pcmk_cluster_t *cluster, GSourceFunc cb)
 {
     const char *name = pcmk__s(crm_system_name, "election");
 
-    CRM_ASSERT(uname != NULL);
     CRM_CHECK(cluster->priv->election == NULL, return);
 
     cluster->priv->election = pcmk__assert_alloc(1, sizeof(pcmk__election_t));
-    cluster->priv->election->uname = pcmk__str_copy(uname);
     cluster->priv->election->cb = cb;
     cluster->priv->election->timeout = mainloop_timer_add(name,
                                                           ELECTION_TIMEOUT_MS,
@@ -158,7 +154,6 @@ election_fini(pcmk_cluster_t *cluster)
         election_reset(cluster);
         crm_trace("Destroying election");
         mainloop_timer_del(cluster->priv->election->timeout);
-        free(cluster->priv->election->uname);
         free(cluster->priv->election);
         cluster->priv->election = NULL;
     }
@@ -281,7 +276,12 @@ election_vote(pcmk_cluster_t *cluster)
 
     CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL), return);
 
-    our_node = pcmk__get_node(0, cluster->priv->election->uname, NULL,
+    if (cluster->priv->node_name == NULL) {
+        crm_err("Cannot start an election: Local node name unknown");
+        return;
+    }
+
+    our_node = pcmk__get_node(0, cluster->priv->node_name, NULL,
                               pcmk__node_search_cluster_member);
     if (!pcmk__cluster_is_node_active(our_node)) {
         crm_trace("Cannot vote yet: local node not connected to cluster");
@@ -523,7 +523,8 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
     struct vote vote;
 
     CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL)
-              && (message != NULL), return election_error);
+              && (message != NULL) && (cluster->priv->node_name != NULL),
+              return election_error);
 
     if (!parse_election_message(message, &vote)) {
         return election_error;
@@ -531,7 +532,7 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
 
     your_node = pcmk__get_node(0, vote.from, NULL,
                                pcmk__node_search_cluster_member);
-    our_node = pcmk__get_node(0, cluster->priv->election->uname, NULL,
+    our_node = pcmk__get_node(0, cluster->priv->node_name, NULL,
                               pcmk__node_search_cluster_member);
     we_are_owner = (our_node != NULL)
                    && pcmk__str_eq(our_node->xml_id, vote.election_owner,
@@ -559,7 +560,7 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
         done = TRUE;
 
     } else if (pcmk__str_eq(vote.op, CRM_OP_NOVOTE, pcmk__str_none)
-               || pcmk__str_eq(vote.from, cluster->priv->election->uname,
+               || pcmk__str_eq(vote.from, cluster->priv->node_name,
                                pcmk__str_casei)) {
         /* Receiving our own broadcast vote, or a no-vote from peer, is a vote
          * for us to win
@@ -601,7 +602,7 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
         } else if (age_result > 0) {
             reason = "Uptime";
 
-        } else if (strcasecmp(cluster->priv->election->uname, vote.from) > 0) {
+        } else if (strcasecmp(cluster->priv->node_name, vote.from) > 0) {
             reason = "Host name";
             we_lose = TRUE;
 

@@ -69,7 +69,7 @@ do_ha_control(long long action,
                                controld_globals.cluster->priv->node_name, NULL,
                                pcmk__node_search_cluster_member);
 
-            controld_election_init(controld_globals.cluster->priv->node_name);
+            controld_election_init();
             controld_globals.our_nodename =
                 controld_globals.cluster->priv->node_name;
 

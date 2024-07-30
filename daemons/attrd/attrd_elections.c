@@ -34,8 +34,7 @@ attrd_election_cb(gpointer user_data)
 void
 attrd_election_init(void)
 {
-    election_init(attrd_cluster, attrd_cluster->priv->node_name,
-                  attrd_election_cb);
+    election_init(attrd_cluster, attrd_election_cb);
 }
 
 void
