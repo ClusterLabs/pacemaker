@@ -111,13 +111,9 @@ typedef struct stonith_history_s {
 
 typedef struct stonith_s stonith_t;
 
-typedef struct stonith_event_s
-{
+typedef struct stonith_event_s {
     char *id;
-    char *type;     //!< \deprecated Will be removed in future release
-    char *message;  //!< \deprecated Will be removed in future release
     char *operation;
-
     int result;
     char *origin;
     char *target;
@@ -540,14 +536,10 @@ typedef struct stonith_api_operations_s
 
 } stonith_api_operations_t;
 
-struct stonith_s
-{
+struct stonith_s {
     enum stonith_state state;
-
     int call_id;
-    int call_timeout;   //!< \deprecated Unused
     void *st_private;
-
     stonith_api_operations_t *cmds;
 };
 /* *INDENT-ON* */

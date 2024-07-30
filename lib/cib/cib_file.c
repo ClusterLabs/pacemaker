@@ -271,11 +271,6 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         cib_set_file_flags(private, cib_file_flag_dirty);
     }
 
-    // Global operation callback (deprecated)
-    if (cib->op_callback != NULL) {
-        cib->op_callback(NULL, call_id, rc, *output);
-    }
-
 done:
     if ((result_cib != private->cib_xml) && (result_cib != *output)) {
         pcmk__xml_free(result_cib);
@@ -599,12 +594,6 @@ cib_file_free(cib_t *cib)
 }
 
 static int
-cib_file_inputfd(cib_t *cib)
-{
-    return -EPROTONOSUPPORT;
-}
-
-static int
 cib_file_register_notification(cib_t *cib, const char *callback, int enabled)
 {
     return -EPROTONOSUPPORT;
@@ -682,8 +671,6 @@ cib_file_new(const char *cib_location)
     cib->cmds->signon = cib_file_signon;
     cib->cmds->signoff = cib_file_signoff;
     cib->cmds->free = cib_file_free;
-    cib->cmds->inputfd = cib_file_inputfd; // Deprecated method
-
     cib->cmds->register_notification = cib_file_register_notification;
     cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;
 

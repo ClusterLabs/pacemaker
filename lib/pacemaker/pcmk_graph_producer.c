@@ -954,14 +954,14 @@ pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
                              const char *filename)
 {
     if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_error)
-        || crm_config_error) {
+        || pcmk__config_has_error) {
         crm_err("Calculated transition %d (with errors)%s%s",
                 transition_id,
                 (filename == NULL)? "" : ", saving inputs in ",
                 (filename == NULL)? "" : filename);
 
     } else if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_warning)
-               || crm_config_warning) {
+               || pcmk__config_has_warning) {
         crm_warn("Calculated transition %d (with warnings)%s%s",
                  transition_id,
                  (filename == NULL)? "" : ", saving inputs in ",
@@ -973,7 +973,7 @@ pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
                    (filename == NULL)? "" : ", saving inputs in ",
                    (filename == NULL)? "" : filename);
     }
-    if (crm_config_error) {
+    if (pcmk__config_has_error) {
         crm_notice("Configuration errors found during scheduler processing,"
                    "  please run \"crm_verify -L\" to identify issues");
     }

@@ -722,16 +722,9 @@ static GOptionEntry display_entries[] = {
 };
 
 static GOptionEntry deprecated_entries[] = {
-    /* @COMPAT At least the following resource agents use --as-xml at time of
-     * writing:
-     * * galera
-     * * pgsql
-     * * rabbitmq-cluster
-     * * redis
-     *
-     * Removing this option must wait until those are updated and we no longer
-     * support building on any platforms that ship the older agents in stock
-     * packages.
+    /* @COMPAT resource-agents <4.15.0 uses --as-xml, so removing this option
+     * must wait until we no longer support building on any platforms that ship
+     * the older agents.
      */
     { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
       "Write cluster status as XML to stdout. This will enable one-shot mode.\n"

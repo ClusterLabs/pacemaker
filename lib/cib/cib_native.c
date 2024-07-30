@@ -261,8 +261,7 @@ cib_native_signoff(cib_t *cib)
 }
 
 static int
-cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
-                      int *async_fd)
+cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 {
     int rc = pcmk_ok;
     const char *channel = NULL;
@@ -298,26 +297,9 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
 
     crm_trace("Connecting %s channel", channel);
 
-    if (async_fd != NULL) {
-        native->ipc = crm_ipc_new(channel, 0);
-        if (native->ipc != NULL) {
-            rc = pcmk__connect_generic_ipc(native->ipc);
-            if (rc == pcmk_rc_ok) {
-                rc = pcmk__ipc_fd(native->ipc, async_fd);
-                if (rc != pcmk_rc_ok) {
-                    crm_info("Couldn't get file descriptor for %s IPC",
-                             channel);
-                }
-            }
-            rc = pcmk_rc2legacy(rc);
-        }
-
-    } else {
-        native->source =
-            mainloop_add_ipc_client(channel, G_PRIORITY_HIGH, 512 * 1024 /* 512k */ , cib,
-                                    &cib_callbacks);
-        native->ipc = mainloop_get_ipc_client(native->source);
-    }
+    native->source = mainloop_add_ipc_client(channel, G_PRIORITY_HIGH,
+                                             512 * 1024, cib, &cib_callbacks);
+    native->ipc = mainloop_get_ipc_client(native->source);
 
     if (rc != pcmk_ok || native->ipc == NULL || !crm_ipc_connected(native->ipc)) {
         crm_info("Could not connect to CIB manager for %s", name);
@@ -368,12 +350,6 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
              name, pcmk_strerror(rc));
     cib_native_signoff(cib);
     return rc;
-}
-
-static int
-cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
-{
-    return cib_native_signon_raw(cib, name, type, NULL);
 }
 
 static int
@@ -498,7 +474,6 @@ cib_native_new(void)
     /* assign variant specific ops */
     cib->delegate_fn = cib_native_perform_op_delegate;
     cib->cmds->signon = cib_native_signon;
-    cib->cmds->signon_raw = cib_native_signon_raw;
     cib->cmds->signoff = cib_native_signoff;
     cib->cmds->free = cib_native_free;
 

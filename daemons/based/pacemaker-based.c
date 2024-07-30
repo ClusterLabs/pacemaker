@@ -126,6 +126,8 @@ setup_stand_alone(GError **error)
 
 /* @COMPAT Deprecated since 2.1.8. Use pcmk_list_cluster_options() or
  * crm_attribute --list-options=cluster instead of querying daemon metadata.
+ *
+ * NOTE: pcs (as of at least 0.11.8) uses this
  */
 static int
 based_metadata(pcmk__output_t *out)

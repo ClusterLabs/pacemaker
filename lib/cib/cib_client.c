@@ -34,21 +34,6 @@ static GHashTable *cib_op_callback_table = NULL;
         }                                                               \
     } while(0)
 
-static int
-cib_client_set_op_callback(cib_t *cib,
-                           void (*callback) (const xmlNode * msg, int call_id,
-                                             int rc, xmlNode * output))
-{
-    if (callback == NULL) {
-        crm_info("Un-Setting operation callback");
-
-    } else {
-        crm_trace("Setting operation callback");
-    }
-    cib->op_callback = callback;
-    return pcmk_ok;
-}
-
 static gint
 ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
 {
@@ -279,25 +264,11 @@ cib_client_query_from(cib_t * cib, const char *host, const char *section,
 }
 
 static int
-is_primary(cib_t *cib)
-{
-    op_common(cib);
-    return cib_internal_op(cib, PCMK__CIB_REQUEST_IS_PRIMARY, NULL, NULL, NULL,
-                           NULL, cib_sync_call, cib->user);
-}
-
-static int
 set_secondary(cib_t *cib, int call_options)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_SECONDARY, NULL, NULL, NULL,
                            NULL, call_options, cib->user);
-}
-
-static int
-set_all_secondary(cib_t * cib, int call_options)
-{
-    return -EPROTONOSUPPORT;
 }
 
 static int
@@ -368,14 +339,6 @@ cib_client_delete(cib_t * cib, const char *section, xmlNode * data, int call_opt
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_DELETE, NULL, section, data,
                            NULL, call_options, cib->user);
-}
-
-static int
-cib_client_delete_absolute(cib_t * cib, const char *section, xmlNode * data, int call_options)
-{
-    op_common(cib);
-    return cib_internal_op(cib, PCMK__CIB_REQUEST_ABS_DELETE, NULL, section,
-                           data, NULL, call_options, cib->user);
 }
 
 static int
@@ -689,8 +652,6 @@ cib_new_variant(void)
 
     new_cib->type = cib_no_connection;
     new_cib->state = cib_disconnected;
-
-    new_cib->op_callback = NULL;
     new_cib->variant_opaque = NULL;
     new_cib->notify_list = NULL;
 
@@ -701,9 +662,6 @@ cib_new_variant(void)
         free(new_cib);
         return NULL;
     }
-
-    // Deprecated method
-    new_cib->cmds->set_op_callback = cib_client_set_op_callback;
 
     new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
     new_cib->cmds->del_notify_callback = cib_client_del_notify_callback;
@@ -718,28 +676,17 @@ cib_new_variant(void)
     new_cib->cmds->query_from = cib_client_query_from;
     new_cib->cmds->sync_from = cib_client_sync_from;
 
-    new_cib->cmds->is_master = is_primary; // Deprecated method
-
     new_cib->cmds->set_primary = set_primary;
-    new_cib->cmds->set_master = set_primary; // Deprecated method
-
     new_cib->cmds->set_secondary = set_secondary;
-    new_cib->cmds->set_slave = set_secondary; // Deprecated method
-
-    new_cib->cmds->set_slave_all = set_all_secondary; // Deprecated method
 
     new_cib->cmds->upgrade = cib_client_upgrade;
     new_cib->cmds->bump_epoch = cib_client_bump_epoch;
 
     new_cib->cmds->create = cib_client_create;
     new_cib->cmds->modify = cib_client_modify;
-    new_cib->cmds->update = cib_client_modify; // Deprecated method
     new_cib->cmds->replace = cib_client_replace;
     new_cib->cmds->remove = cib_client_delete;
     new_cib->cmds->erase = cib_client_erase;
-
-    // Deprecated method
-    new_cib->cmds->delete_absolute = cib_client_delete_absolute;
 
     new_cib->cmds->init_transaction = cib_client_init_transaction;
     new_cib->cmds->end_transaction = cib_client_end_transaction;

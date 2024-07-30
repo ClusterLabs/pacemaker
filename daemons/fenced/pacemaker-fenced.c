@@ -485,6 +485,8 @@ st_peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
 /* @COMPAT Deprecated since 2.1.8. Use pcmk_list_fence_attrs() or
  * crm_resource --list-options=fencing instead of querying daemon metadata.
+ *
+ * NOTE: pcs (as of at least 0.11.8) uses this
  */
 static int
 fencer_metadata(void)

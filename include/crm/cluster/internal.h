@@ -27,11 +27,8 @@
 extern "C" {
 #endif
 
+// @TODO Replace this with a pcmk__node_status_flags value
 enum crm_proc_flag {
-    /* @COMPAT When pcmk__node_status_t:processes is made internal, we can merge
-     * this into node flags or turn it into a boolean. Until then, in theory
-     * something could depend on these particular numeric values.
-     */
     crm_proc_none       = 0x00000001,
 
     // Cluster layers

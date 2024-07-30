@@ -1474,8 +1474,6 @@ event_free(stonith_event_t * event)
     struct event_private *event_private = event->opaque;
 
     free(event->id);
-    free(event->type);
-    free(event->message);
     free(event->operation);
     free(event->origin);
     free(event->action);
