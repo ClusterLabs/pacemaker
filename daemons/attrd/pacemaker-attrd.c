@@ -195,7 +195,6 @@ main(int argc, char **argv)
     if (initialized) {
         crm_info("Shutting down attribute manager");
 
-        attrd_election_fini();
         attrd_ipc_fini();
         attrd_lrmd_disconnect();
 

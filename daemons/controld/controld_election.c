@@ -63,12 +63,6 @@ controld_remove_voter(const char *uname)
 }
 
 void
-controld_election_fini(void)
-{
-    election_fini(controld_globals.cluster);
-}
-
-void
 controld_stop_current_election_timeout(void)
 {
     election_timeout_stop(controld_globals.cluster);

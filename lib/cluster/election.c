@@ -12,12 +12,13 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#include <crm/crm.h>
+#include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 
-#include <crm/common/mainloop.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election_internal.h>
-#include <crm/crm.h>
+#include "crmcluster_private.h"
 
 #define STORM_INTERVAL   2      /* in seconds */
 
@@ -88,9 +89,6 @@ election_state(const pcmk_cluster_t *cluster)
  * \param[in] server     Server to use for message type in election messages
  * \param[in] uname      Local node's name
  * \param[in] cb         Function to call if local node wins election
- *
- * \note The caller is responsible for freeing the new election using
- *       election_fini().
  */
 void
 election_init(pcmk_cluster_t *cluster, enum pcmk_ipc_server server,

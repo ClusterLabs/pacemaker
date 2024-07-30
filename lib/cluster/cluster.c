@@ -162,6 +162,7 @@ pcmk_cluster_free(pcmk_cluster_t *cluster)
     if (cluster == NULL) {
         return;
     }
+    election_fini(cluster);
     free(cluster->priv->node_name);
     free(cluster->priv);
     free(cluster);

@@ -104,7 +104,6 @@ int attrd_send_attribute_alert(const char *node, int nodeid,
 
 // Elections
 void attrd_election_init(void);
-void attrd_election_fini(void);
 void attrd_start_election_if_needed(void);
 bool attrd_election_won(void);
 void attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml);

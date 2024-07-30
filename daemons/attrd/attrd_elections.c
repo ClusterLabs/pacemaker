@@ -39,12 +39,6 @@ attrd_election_init(void)
 }
 
 void
-attrd_election_fini(void)
-{
-    election_fini(attrd_cluster);
-}
-
-void
 attrd_start_election_if_needed(void)
 {
     if ((peer_writer == NULL)

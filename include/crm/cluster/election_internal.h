@@ -70,7 +70,6 @@ enum election_result {
     election_error,         /*! election message or election object invalid */
 };
 
-void election_fini(pcmk_cluster_t *cluster);
 void election_reset(pcmk_cluster_t *cluster);
 void election_init(pcmk_cluster_t *cluster, enum pcmk_ipc_server,
                    const char *uname, GSourceFunc cb);

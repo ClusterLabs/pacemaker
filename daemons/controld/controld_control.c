@@ -232,7 +232,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_globals.fsa_message_queue = NULL;
 
     controld_free_node_pending_timers();
-    controld_election_fini();
+    election_reset(controld_globals.cluster); // Stop any election timer
 
     /* Tear down the CIB manager connection, but don't free it yet -- it could
      * be used when we drain the mainloop later.
