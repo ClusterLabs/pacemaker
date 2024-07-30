@@ -164,6 +164,7 @@ check_next_subdaemon(gpointer user_data)
 
         case pcmk_rc_ipc_pid_only: // Child was previously OK
             if (++(child->check_count) >= PCMK_PROCESS_CHECK_RETRIES) {
+                // cts-lab looks for this message
                 crm_crit("Subdaemon %s[%lld] is unresponsive to IPC "
                          "after %d attempt%s and will now be killed",
                          name, pid, child->check_count,
@@ -208,6 +209,7 @@ check_next_subdaemon(gpointer user_data)
                 break;
             }
             if (pcmk_is_set(child->flags, child_respawn)) {
+                // cts-lab looks for this message
                 crm_err("Subdaemon %s[%lld] terminated", name, pid);
             } else {
                 /* orderly shutdown */
@@ -251,6 +253,7 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
     const char *name = mainloop_child_name(p);
 
     if (signo) {
+        // cts-lab looks for this message
         do_crm_log(((signo == SIGKILL)? LOG_WARNING : LOG_ERR),
                    "%s[%d] terminated with signal %d (%s)%s",
                    name, pid, signo, strsignal(signo),
@@ -280,6 +283,7 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
                 break;
 
             default:
+                // cts-lab looks for this message
                 crm_err("%s[%d] exited with status %d (%s)",
                         name, pid, exitcode, crm_exit_str(exitcode));
                 break;
@@ -323,6 +327,7 @@ pcmk_process_exit(pcmk_child_t * child)
         child->flags |= child_needs_retry;
 
     } else {
+        // cts-lab looks for this message
         crm_notice("Respawning subdaemon %s after unexpected exit", name);
         start_child(child);
     }

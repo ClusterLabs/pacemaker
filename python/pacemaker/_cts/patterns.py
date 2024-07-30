@@ -158,7 +158,7 @@ class Corosync2Patterns(BasePatterns):
             "Pat:ChildExit": r"\[[0-9]+\] exited with status [0-9]+ \(",
             # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
             "Pat:ChildKilled": r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
-            "Pat:ChildRespawn": r"%s\W.*pacemakerd.*Respawning %s subdaemon after unexpected exit",
+            "Pat:ChildRespawn": r"%s\W.*pacemakerd.*Respawning subdaemon %s after unexpected exit",
 
             "Pat:InfraUp": r"%s\W.*corosync.*Initializing transport",
             "Pat:PacemakerUp": r"%s\W.*pacemakerd.*Starting Pacemaker",
@@ -201,7 +201,8 @@ class Corosync2Patterns(BasePatterns):
             r"Faking parameter digest creation",
             r"Parameters to .* action changed:",
             r"Parameters to .* changed",
-            r"pacemakerd.*\[[0-9]+\] terminated( with signal| as IPC server|$)",
+            r"pacemakerd.*\[[0-9]+\] terminated( with signal|$)",
+            r"pacemakerd.*\[[0-9]+\] .* will now be killed",
             r"pacemaker-schedulerd.*Recover\s+.*\(.* -\> .*\)",
             r"rsyslogd.* lost .* due to rate-limiting",
             r"Peer is not part of our cluster",
@@ -265,10 +266,10 @@ class Corosync2Patterns(BasePatterns):
         self._components["pacemaker-based"] = [
             r"pacemakerd.* pacemaker-attrd\[[0-9]+\] exited with status 102",
             r"pacemakerd.* pacemaker-controld\[[0-9]+\] exited with status 1",
-            r"pacemakerd.* Respawning pacemaker-attrd subdaemon after unexpected exit",
-            r"pacemakerd.* Respawning pacemaker-based subdaemon after unexpected exit",
-            r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
-            r"pacemakerd.* Respawning pacemaker-fenced subdaemon after unexpected exit",
+            r"pacemakerd.* Respawning subdaemon pacemaker-attrd after unexpected exit",
+            r"pacemakerd.* Respawning subdaemon pacemaker-based after unexpected exit",
+            r"pacemakerd.* Respawning subdaemon pacemaker-controld after unexpected exit",
+            r"pacemakerd.* Respawning subdaemon pacemaker-fenced after unexpected exit",
             r"pacemaker-.* Connection to cib_.* (failed|closed)",
             r"pacemaker-attrd.*:.*Lost connection to the CIB manager",
             r"pacemaker-controld.*:.*Lost connection to the CIB manager",
@@ -291,8 +292,8 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
             r"pacemaker-controld.*Could not recover from internal error",
             r"pacemakerd.*pacemaker-controld\[[0-9]+\] exited with status 1",
-            r"pacemakerd.* Respawning pacemaker-execd subdaemon after unexpected exit",
-            r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
+            r"pacemakerd.* Respawning subdaemon pacemaker-execd after unexpected exit",
+            r"pacemakerd.* Respawning subdaemon pacemaker-controld after unexpected exit",
         ]
 
         self._components["pacemaker-execd-ignore"] = [
@@ -310,7 +311,7 @@ class Corosync2Patterns(BasePatterns):
 
         self._components["pacemaker-schedulerd"] = [
             r"State transition .* S_RECOVERY",
-            r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
+            r"pacemakerd.* Respawning subdaemon pacemaker-controld after unexpected exit",
             r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
             r"pacemaker-controld.*Lost connection to the scheduler",
             r"pacemaker-controld.*I_ERROR.*save_cib_contents",
