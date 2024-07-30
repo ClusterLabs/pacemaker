@@ -29,8 +29,7 @@ election_win_cb(gpointer data)
 void
 controld_election_init(const char *uname)
 {
-    election_init(controld_globals.cluster, pcmk_ipc_controld, uname,
-                  election_win_cb);
+    election_init(controld_globals.cluster, uname, election_win_cb);
 }
 
 /*!

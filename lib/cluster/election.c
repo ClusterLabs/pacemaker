@@ -23,7 +23,6 @@
 #define STORM_INTERVAL   2      /* in seconds */
 
 struct pcmk__election {
-    enum pcmk_ipc_server server;    // For message type
     enum election_result state;
     guint count;        // How many times local node has voted
     char *uname;        // Local node's name
@@ -86,13 +85,11 @@ election_state(const pcmk_cluster_t *cluster)
  * election once, typically at start-up.
  *
  * \param[in] cluster    Cluster that election is for
- * \param[in] server     Server to use for message type in election messages
  * \param[in] uname      Local node's name
  * \param[in] cb         Function to call if local node wins election
  */
 void
-election_init(pcmk_cluster_t *cluster, enum pcmk_ipc_server server,
-              const char *uname, GSourceFunc cb)
+election_init(pcmk_cluster_t *cluster, const char *uname, GSourceFunc cb)
 {
     const char *name = pcmk__s(crm_system_name, "election");
 
@@ -100,7 +97,6 @@ election_init(pcmk_cluster_t *cluster, enum pcmk_ipc_server server,
     CRM_CHECK(cluster->priv->election == NULL, return);
 
     cluster->priv->election = pcmk__assert_alloc(1, sizeof(pcmk__election_t));
-    cluster->priv->election->server = server;
     cluster->priv->election->uname = pcmk__str_copy(uname);
     cluster->priv->election->cb = cb;
     cluster->priv->election->timeout = mainloop_timer_add(name,
@@ -294,12 +290,12 @@ election_vote(pcmk_cluster_t *cluster)
 
     election_reset(cluster);
     cluster->priv->election->state = election_in_progress;
-    message_type = pcmk__server_message_type(cluster->priv->election->server);
+    message_type = pcmk__server_message_type(cluster->priv->server);
 
     /* @COMPAT We use message_type as the sender and recipient system for
      * backward compatibility (see T566).
      */
-    vote = pcmk__new_request(cluster->priv->election->server, message_type,
+    vote = pcmk__new_request(cluster->priv->server, message_type,
                              NULL, message_type, CRM_OP_VOTE, NULL);
 
     cluster->priv->election->count++;
@@ -311,7 +307,7 @@ election_vote(pcmk_cluster_t *cluster)
     crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
                         PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
 
-    pcmk__cluster_send_message(NULL, cluster->priv->election->server, vote);
+    pcmk__cluster_send_message(NULL, cluster->priv->server, vote);
     pcmk__xml_free(vote);
 
     crm_debug("Started election round %d", cluster->priv->election->count);
@@ -487,13 +483,13 @@ send_no_vote(pcmk_cluster_t *cluster, pcmk__node_status_t *peer,
     const char *message_type = NULL;
     xmlNode *novote = NULL;
 
-    message_type = pcmk__server_message_type(cluster->priv->election->server);
-    novote = pcmk__new_request(cluster->priv->election->server, message_type,
+    message_type = pcmk__server_message_type(cluster->priv->server);
+    novote = pcmk__new_request(cluster->priv->server, message_type,
                                vote->from, message_type, CRM_OP_NOVOTE, NULL);
     crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
     crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
 
-    pcmk__cluster_send_message(peer, cluster->priv->election->server, novote);
+    pcmk__cluster_send_message(peer, cluster->priv->server, novote);
     pcmk__xml_free(novote);
 }
 
