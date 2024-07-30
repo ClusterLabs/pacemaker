@@ -179,9 +179,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     if (pcmk__is_pacemaker_remote_node(node)) {
-        const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-
-        if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_none)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
             reason = "Pacemaker Remote nodes cannot run stonith agents";
             goto no_probe;
 

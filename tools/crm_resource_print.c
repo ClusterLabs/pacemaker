@@ -72,7 +72,7 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
     const char *rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
     pcmk_node_t *node = pcmk__current_node(rsc);
 
-    if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
         needs_quorum = FALSE;
     } else {
         // @TODO check requires in resource meta-data and rsc_defaults
