@@ -376,7 +376,7 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         pcmk__xe_create(cib_object, PCMK_XE_STATUS);
     }
 
-    rc = pcmk_update_configured_schema(&cib_object, false);
+    rc = pcmk__update_configured_schema(&cib_object, false);
     if (rc != pcmk_rc_ok) {
         free_xml(cib_object);
         return rc;
