@@ -218,6 +218,12 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
         crm_trace("Processing \"%s\" event", op);
         original_schema = crm_element_value(existing_cib,
                                             PCMK_XA_VALIDATE_WITH);
+        if (original_schema == NULL) {
+            crm_info("Rejecting upgrade request from %s: No "
+                     PCMK_XA_VALIDATE_WITH, host);
+            return -pcmk_err_cib_corrupt;
+        }
+
         rc = pcmk__update_schema(&scratch, NULL, true, true);
         rc = pcmk_rc2legacy(rc);
         new_schema = crm_element_value(scratch, PCMK_XA_VALIDATE_WITH);

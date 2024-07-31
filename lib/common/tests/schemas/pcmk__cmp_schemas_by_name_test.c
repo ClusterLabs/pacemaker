@@ -30,9 +30,7 @@ teardown(void **state)
     return 0;
 }
 
-// NULL schema name defaults to the "none" schema
-// @COMPAT none is deprecated since 2.1.8
-
+// Unknown schemas (including NULL) are unsupported, but sort first as failsafe
 static void
 unknown_is_lesser(void **state)
 {
@@ -42,21 +40,25 @@ unknown_is_lesser(void **state)
                                           "pacemaker-1.0") < 0);
     assert_true(pcmk__cmp_schemas_by_name("pacemaker-1.0",
                                           "pacemaker-0.1") > 0);
-    assert_true(pcmk__cmp_schemas_by_name("pacemaker-1.1", NULL) < 0);
-    assert_true(pcmk__cmp_schemas_by_name(NULL, "pacemaker-0.0") > 0);
+    assert_true(pcmk__cmp_schemas_by_name("pacemaker-0.1",
+                                          PCMK_VALUE_NONE) < 0);
+    assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE,
+                                          "pacemaker-0.1") > 0);
+    assert_true(pcmk__cmp_schemas_by_name(NULL, NULL) == 0);
+    assert_true(pcmk__cmp_schemas_by_name(NULL, "pacemaker-0.0") == 0);
+    assert_true(pcmk__cmp_schemas_by_name(NULL, "pacemaker-2.0") < 0);
+    assert_true(pcmk__cmp_schemas_by_name("pacemaker-1.3", NULL) > 0);
+    assert_true(pcmk__cmp_schemas_by_name(NULL, PCMK_VALUE_NONE) < 0);
+    assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE, NULL) > 0);
 }
 
 // @COMPAT none is deprecated since 2.1.8
 static void
 none_is_greater(void **state)
 {
-    assert_true(pcmk__cmp_schemas_by_name(NULL, NULL) == 0);
-    assert_true(pcmk__cmp_schemas_by_name(NULL, PCMK_VALUE_NONE) == 0);
-    assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE, NULL) == 0);
     assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE,
                                           PCMK_VALUE_NONE) == 0);
-
-    assert_true(pcmk__cmp_schemas_by_name("pacemaker-3.0",
+    assert_true(pcmk__cmp_schemas_by_name("pacemaker-3.10",
                                           PCMK_VALUE_NONE) < 0);
     assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE,
                                           "pacemaker-1.0") > 0);

@@ -539,9 +539,10 @@ do_dc_join_filter_offer(long long action,
 
         if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with first CIB "
-                    "generation) due to unknown schema version %s "
-                    QB_XS " ref=%s",
-                    join_id, join_from, pcmk__s(validation, "(missing)"), ref);
+                    "generation) due to %s schema version %s " QB_XS " ref=%s",
+                    join_id, join_from,
+                    ((validation == NULL)? "missing" : "unknown"),
+                    pcmk__s(validation, ""), ref);
             ack_nack_bool = FALSE;
 
         } else {
@@ -559,10 +560,11 @@ do_dc_join_filter_offer(long long action,
 
         if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with better CIB "
-                    "generation than current best from %s) due to unknown "
+                    "generation than current best from %s) due to %s "
                     "schema version %s " QB_XS " ref=%s",
                     join_id, join_from, max_generation_from,
-                    pcmk__s(validation, "(missing)"), ref);
+                    ((validation == NULL)? "missing" : "unknown"),
+                    pcmk__s(validation, ""), ref);
             ack_nack_bool = FALSE;
 
         } else {

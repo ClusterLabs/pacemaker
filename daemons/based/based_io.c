@@ -193,7 +193,6 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     char *filename = NULL;
     const char *name = NULL;
     const char *value = NULL;
-    const char *validation = NULL;
     const char *use_valgrind = pcmk__env_option(PCMK__ENV_VALGRIND_ENABLED);
 
     xmlNode *root = NULL;
@@ -302,25 +301,9 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_log_xml_trace(root, "[on-disk]");
     }
 
-    validation = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
     if (!pcmk__configured_schema_validates(root)) {
-        crm_err("CIB does not validate with %s",
-                pcmk__s(validation, "no schema specified"));
         cib_status = -pcmk_err_schema_validation;
-
-    // @COMPAT Not specifying validate-with is deprecated since 2.1.8
-    } else if (validation == NULL) {
-        pcmk__update_schema(&root, NULL, false, false);
-        validation = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
-        if (validation != NULL) {
-            crm_notice("Enabling %s validation on"
-                       " the existing (sane) configuration", validation);
-        } else {
-            crm_err("CIB does not validate with any known schema");
-            cib_status = -pcmk_err_schema_validation;
-        }
     }
-
     return root;
 }
 
