@@ -563,9 +563,10 @@ main(int argc, char **argv)
 
             if (rc == EACCES) {
                 ticket_revoke_warning(options.ticket_id);
-                exit_code = pcmk_rc2exitc(rc);
+                exit_code = CRM_EX_UNSAFE;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                             "Ticket modification not allowed without --force");
+                goto done;
             }
         } else {
             rc = pcmk__ticket_set_attr(out, cib_conn, scheduler, options.ticket_id,
@@ -581,9 +582,10 @@ main(int argc, char **argv)
                     ticket_revoke_warning(options.ticket_id);
                 }
 
-                exit_code = pcmk_rc2exitc(rc);
+                exit_code = CRM_EX_UNSAFE;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                             "Ticket modification not allowed without --force");
+                goto done;
             }
         }
 
