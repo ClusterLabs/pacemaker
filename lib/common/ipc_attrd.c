@@ -127,11 +127,11 @@ pcmk__attrd_api_methods(void)
 
 /*!
  * \internal
- * \brief Create a generic pacemaker-attrd operation
+ * \brief Create a generic attribute manager operation
  *
  * \param[in] user_name  If not NULL, ACL user to set for operation
  *
- * \return XML of pacemaker-attrd operation
+ * \return XML of attribute manager operation
  */
 static xmlNode *
 create_attrd_op(const char *user_name)

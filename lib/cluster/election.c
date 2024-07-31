@@ -295,6 +295,7 @@ election_vote(election_t *e)
     struct timeval age;
     xmlNode *vote = NULL;
     pcmk__node_status_t *our_node = NULL;
+    const char *message_type = NULL;
 
     if (e == NULL) {
         crm_trace("Election vote requested, but no election available");
@@ -311,8 +312,13 @@ election_vote(election_t *e)
 
     election_reset(e);
     e->state = election_in_progress;
-    vote = pcmk__new_request(e->server, CRM_SYSTEM_CRMD, NULL,
-                             CRM_SYSTEM_CRMD, CRM_OP_VOTE, NULL);
+    message_type = pcmk__server_message_type(e->server);
+
+    /* @COMPAT We use message_type as the sender and recipient system for
+     * backward compatibility (see T566).
+     */
+    vote = pcmk__new_request(e->server, message_type, NULL,
+                             message_type, CRM_OP_VOTE, NULL);
 
     e->count++;
     crm_xml_add(vote, PCMK__XA_ELECTION_OWNER, our_node->xml_id);
@@ -323,7 +329,7 @@ election_vote(election_t *e)
     crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
                         PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
 
-    pcmk__cluster_send_message(NULL, pcmk_ipc_controld, vote);
+    pcmk__cluster_send_message(NULL, e->server, vote);
     pcmk__xml_free(vote);
 
     crm_debug("Started %s round %d", e->name, e->count);
@@ -505,15 +511,15 @@ record_vote(election_t *e, struct vote *vote)
 static void
 send_no_vote(election_t *e, pcmk__node_status_t *peer, struct vote *vote)
 {
-    // @TODO shouldn't hardcode CRM_SYSTEM_CRMD
-    xmlNode *novote = pcmk__new_request(e->server, CRM_SYSTEM_CRMD,
-                                        vote->from, CRM_SYSTEM_CRMD,
+    const char *message_type = pcmk__server_message_type(e->server);
+    xmlNode *novote = pcmk__new_request(e->server, message_type,
+                                        vote->from, message_type,
                                         CRM_OP_NOVOTE, NULL);
 
     crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
     crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
 
-    pcmk__cluster_send_message(peer, pcmk_ipc_controld, novote);
+    pcmk__cluster_send_message(peer, e->server, novote);
     pcmk__xml_free(novote);
 }
 

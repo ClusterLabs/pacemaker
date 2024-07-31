@@ -491,7 +491,7 @@ st_peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 static int
 fencer_metadata(void)
 {
-    const char *name = "pacemaker-fenced";
+    const char *name = PCMK__SERVER_FENCED;
     const char *desc_short = N_("Instance attributes available for all "
                                 "\"stonith\"-class resources");
     const char *desc_long = N_("Instance attributes available for all "
@@ -594,7 +594,8 @@ main(int argc, char **argv)
         // IPC endpoint already up
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_err("pacemaker-fenced is already active, aborting startup");
+        crm_crit("Aborting start-up because another fencer instance is "
+                 "already active");
         goto done;
     } else {
         // Not up or not authentic, we'll proceed either way

@@ -129,7 +129,7 @@ remote_proxy_free(gpointer data)
 int
 remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 {
-    // Async responses from cib and friends to clients via pacemaker-remoted
+    // Async responses from servers to clients via the remote executor
     xmlNode *xml = NULL;
     uint32_t flags = 0;
     remote_proxy_t *proxy = userdata;

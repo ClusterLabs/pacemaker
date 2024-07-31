@@ -76,7 +76,7 @@ load2str(enum throttle_state_e mode)
 static char *
 find_cib_loadfile(void)
 {
-    pid_t pid = pcmk__procfs_pid_of("pacemaker-based");
+    pid_t pid = pcmk__procfs_pid_of(PCMK__SERVER_BASED);
 
     return pid? crm_strdup_printf("/proc/%lld/stat", (long long) pid) : NULL;
 }

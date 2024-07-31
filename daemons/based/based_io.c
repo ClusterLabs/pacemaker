@@ -250,8 +250,9 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_warn("Continuing with an empty configuration.");
     }
 
-    if (cib_writes_enabled && use_valgrind &&
-        (crm_is_true(use_valgrind) || strstr(use_valgrind, "pacemaker-based"))) {
+    if (cib_writes_enabled && (use_valgrind != NULL)
+        && (crm_is_true(use_valgrind)
+            || (strstr(use_valgrind, PCMK__SERVER_BASED) != NULL))) {
 
         cib_writes_enabled = FALSE;
         crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");

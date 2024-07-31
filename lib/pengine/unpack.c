@@ -1226,11 +1226,11 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
 
     uname = crm_element_value(state, PCMK_XA_UNAME);
     if (uname == NULL) {
-        /* If a joining peer makes the cluster acquire the quorum from corosync
-         * meanwhile it has not joined CPG membership of pacemaker-controld yet,
-         * it's possible that the created PCMK__XE_NODE_STATE entry doesn't have
-         * a PCMK_XA_UNAME yet. We should recognize the node as `pending` and
-         * wait for it to join CPG.
+        /* If a joining peer makes the cluster acquire the quorum from Corosync
+         * but has not joined the controller CPG membership yet, it's possible
+         * that the created PCMK__XE_NODE_STATE entry doesn't have a
+         * PCMK_XA_UNAME yet. Recognize the node as pending and wait for it to
+         * join CPG.
          */
         crm_trace("Handling " PCMK__XE_NODE_STATE " entry with id=\"%s\" "
                   "without " PCMK_XA_UNAME,

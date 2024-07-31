@@ -54,7 +54,7 @@ static pcmk__supported_format_t formats[] = {
 static int
 controld_metadata(pcmk__output_t *out)
 {
-    return pcmk__daemon_metadata(out, "pacemaker-controld",
+    return pcmk__daemon_metadata(out, PCMK__SERVER_CONTROLD,
                                  "Pacemaker controller options",
                                  "Cluster options used by Pacemaker's "
                                  "controller",
@@ -121,7 +121,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__cli_init_logging("pacemaker-controld", args->verbosity);
+    pcmk__cli_init_logging(PCMK__SERVER_CONTROLD, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker controller");
 
@@ -136,7 +136,8 @@ main(int argc, char **argv)
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_err("pacemaker-controld is already active, aborting startup");
+        crm_crit("Aborting start-up because another controller instance is "
+                 "already active");
         initialize = false;
         goto done;
 

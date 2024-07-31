@@ -45,14 +45,14 @@ static struct {
 
     [pcmk_ipc_attrd] = {
         "attribute manager",
-        { "pacemaker-attrd", NULL, },
+        { PCMK__SERVER_ATTRD, NULL, },
         { PCMK__VALUE_ATTRD, NULL, NULL, },
         { PCMK__VALUE_ATTRD, NULL, NULL, },
     },
 
     [pcmk_ipc_based] = {
         "CIB manager",
-        { "pacemaker-based", NULL, },
+        { PCMK__SERVER_BASED, NULL, },
         { PCMK__SERVER_BASED_RW, PCMK__SERVER_BASED_RO,
           PCMK__SERVER_BASED_SHM, },
         { CRM_SYSTEM_CIB, NULL, NULL, },
@@ -60,39 +60,57 @@ static struct {
 
     [pcmk_ipc_controld] = {
         "controller",
-        { "pacemaker-controld", NULL, },
+        { PCMK__SERVER_CONTROLD, NULL, },
         { PCMK__VALUE_CRMD, NULL, NULL, },
         { PCMK__VALUE_CRMD, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, },
     },
 
     [pcmk_ipc_execd] = {
         "executor",
-        { "pacemaker-execd", "pacemaker-remoted", },
+        { PCMK__SERVER_EXECD, PCMK__SERVER_REMOTED, },
         { PCMK__VALUE_LRMD, NULL, NULL, },
         { PCMK__VALUE_LRMD, NULL, NULL, },
     },
 
     [pcmk_ipc_fenced] = {
         "fencer",
-        { "pacemaker-fenced", NULL, },
+        { PCMK__SERVER_FENCED, NULL, },
         { PCMK__VALUE_STONITH_NG, NULL, NULL, },
         { PCMK__VALUE_STONITH_NG, NULL, NULL, },
     },
 
     [pcmk_ipc_pacemakerd] = {
         "launcher",
-        { "pacemakerd", NULL, },
+        { PCMK__SERVER_PACEMAKERD, NULL, },
         { CRM_SYSTEM_MCP, NULL, NULL, },
         { CRM_SYSTEM_MCP, NULL, NULL, },
     },
 
     [pcmk_ipc_schedulerd] = {
         "scheduler",
-        { "pacemaker-schedulerd", NULL, },
+        { PCMK__SERVER_SCHEDULERD, NULL, },
         { CRM_SYSTEM_PENGINE, NULL, NULL, },
         { CRM_SYSTEM_PENGINE, NULL, NULL, },
     },
 };
+
+/*!
+ * \internal
+ * \brief Return server's (primary) system name
+ *
+ * \param[in] server  Server to get system name for
+ *
+ * \return System name for server (or NULL if invalid)
+ * \note If \p server is an \c enum pcmk_ipc_server value other than
+ *       \c pcmk_ipc_unknown, the return value is guaranteed to be non-NULL.
+ */
+const char *
+pcmk__server_name(enum pcmk_ipc_server server)
+{
+    CRM_CHECK((server > 0) && (server < PCMK__NELEM(server_info)),
+              return NULL);
+    return server_info[server].system_names[0];
+}
 
 /*!
  * \internal
@@ -101,6 +119,8 @@ static struct {
  * \param[in] server  Server to get log name for
  *
  * \return Log name for server (or NULL if invalid)
+ * \note If \p server is an \c enum pcmk_ipc_server value other than
+ *       \c pcmk_ipc_unknown, the return value is guaranteed to be non-NULL.
  */
 const char *
 pcmk__server_log_name(enum pcmk_ipc_server server)
@@ -117,6 +137,8 @@ pcmk__server_log_name(enum pcmk_ipc_server server)
  * \param[in] server  Server to get IPC endpoint for
  *
  * \return IPC endpoint for server (or NULL if invalid)
+ * \note If \p server is an \c enum pcmk_ipc_server value other than
+ *       \c pcmk_ipc_unknown, the return value is guaranteed to be non-NULL.
  */
 const char *
 pcmk__server_ipc_name(enum pcmk_ipc_server server)
@@ -133,6 +155,8 @@ pcmk__server_ipc_name(enum pcmk_ipc_server server)
  * \param[in] server  Server to get message type for
  *
  * \return Message type for server (or NULL if invalid)
+ * \note If \p server is an \c enum pcmk_ipc_server value other than
+ *       \c pcmk_ipc_unknown, the return value is guaranteed to be non-NULL.
  */
 const char *
 pcmk__server_message_type(enum pcmk_ipc_server server)

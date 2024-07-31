@@ -28,11 +28,11 @@
 
 #ifdef PCMK__COMPILE_REMOTE
 #  define EXECD_TYPE "remote"
-#  define EXECD_NAME "pacemaker-remoted"
+#  define EXECD_NAME PCMK__SERVER_REMOTED
 #  define SUMMARY "resource agent executor daemon for Pacemaker Remote nodes"
 #else
 #  define EXECD_TYPE "local"
-#  define EXECD_NAME "pacemaker-execd"
+#  define EXECD_NAME PCMK__SERVER_EXECD
 #  define SUMMARY "resource agent executor daemon for Pacemaker cluster nodes"
 #endif
 

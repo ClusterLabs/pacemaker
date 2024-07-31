@@ -241,7 +241,7 @@ typedef struct cib_api_operations_s {
      *   CIB copy)
      * * are not queries
      * * do not involve other nodes
-     * * do not affect the state of pacemaker-based itself
+     * * do not affect the state of the CIB manager itself
      *
      * Currently supported CIB API functions include:
      * * \p bump_epoch()
