@@ -101,6 +101,8 @@ static struct {
  * \param[in] server  Server to get system name for
  *
  * \return System name for server (or NULL if invalid)
+ * \note If \p server is an \c enum pcmk_ipc_server value other than
+ *       \c pcmk_ipc_unknown, the return value is guaranteed to be non-NULL.
  */
 const char *
 pcmk__server_name(enum pcmk_ipc_server server)
@@ -117,6 +119,8 @@ pcmk__server_name(enum pcmk_ipc_server server)
  * \param[in] server  Server to get log name for
  *
  * \return Log name for server (or NULL if invalid)
+ * \note If \p server is an \c enum pcmk_ipc_server value other than
+ *       \c pcmk_ipc_unknown, the return value is guaranteed to be non-NULL.
  */
 const char *
 pcmk__server_log_name(enum pcmk_ipc_server server)
@@ -133,6 +137,8 @@ pcmk__server_log_name(enum pcmk_ipc_server server)
  * \param[in] server  Server to get IPC endpoint for
  *
  * \return IPC endpoint for server (or NULL if invalid)
+ * \note If \p server is an \c enum pcmk_ipc_server value other than
+ *       \c pcmk_ipc_unknown, the return value is guaranteed to be non-NULL.
  */
 const char *
 pcmk__server_ipc_name(enum pcmk_ipc_server server)
@@ -149,6 +155,8 @@ pcmk__server_ipc_name(enum pcmk_ipc_server server)
  * \param[in] server  Server to get message type for
  *
  * \return Message type for server (or NULL if invalid)
+ * \note If \p server is an \c enum pcmk_ipc_server value other than
+ *       \c pcmk_ipc_unknown, the return value is guaranteed to be non-NULL.
  */
 const char *
 pcmk__server_message_type(enum pcmk_ipc_server server)
