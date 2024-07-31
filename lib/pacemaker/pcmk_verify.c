@@ -74,7 +74,7 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         goto verify_done;
     }
 
-    rc = pcmk_update_configured_schema(cib_object, false);
+    rc = pcmk__update_configured_schema(cib_object, false);
     if (rc != pcmk_rc_ok) {
         crm_config_error = TRUE;
         out->err(out, "The cluster will NOT be able to use this configuration.\n"

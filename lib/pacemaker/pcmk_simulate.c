@@ -345,7 +345,7 @@ profile_file(const char *xml_file, long long repeat,
         pcmk__xe_create(cib_object, PCMK_XE_STATUS);
     }
 
-    if (pcmk_update_configured_schema(&cib_object, false) != pcmk_rc_ok) {
+    if (pcmk__update_configured_schema(&cib_object, false) != pcmk_rc_ok) {
         pcmk__xml_free(cib_object);
         return;
     }
