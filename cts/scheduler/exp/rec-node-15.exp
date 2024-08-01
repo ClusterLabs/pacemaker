@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="5min" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+<transition_graph cluster-delay="5min" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0">
     <action_set>
       <rsc_op id="10" operation="start" operation_key="stonith-1_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">

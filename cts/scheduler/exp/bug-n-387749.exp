@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0" priority="1000000">
     <action_set>
       <rsc_op id="34" operation="notify" operation_key="export_home_ocfs2:0_post_notify_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
