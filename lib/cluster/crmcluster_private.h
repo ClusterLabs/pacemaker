@@ -34,6 +34,9 @@ extern "C" {
 G_GNUC_INTERNAL
 void pcmk__cluster_set_quorum(bool quorate);
 
+G_GNUC_INTERNAL
+void election_fini(pcmk_cluster_t *cluster);
+
 #if SUPPORT_COROSYNC
 
 G_GNUC_INTERNAL

@@ -16,6 +16,7 @@
 #include <libxml/tree.h>    // xmlNode
 
 #include <crm/common/ipc.h> // enum pcmk_ipc_server
+#include <crm/cluster.h>    // pcmk_cluster_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,32 +61,28 @@ extern "C" {
  * must implement that if desired.
  */
 
-typedef struct election_s election_t;
-
-/*! Possible election states */
+// Possible election results
 enum election_result {
-    election_start = 0,     /*! new election needed */
-    election_in_progress,   /*! election started but not all peers have voted */
-    election_lost,          /*! local node lost most recent election */
-    election_won,           /*! local node won most recent election */
-    election_error,         /*! election message or election object invalid */
+    election_start = 0,     // New election needed
+    election_in_progress,   // Election started but not all peers have voted
+    election_lost,          // Local node lost most recent election
+    election_won,           // Local node won most recent election
+    election_error,         // Election message or object invalid
 };
 
-void election_fini(election_t *e);
-void election_reset(election_t *e);
-election_t *election_init(enum pcmk_ipc_server, const char *name,
-                          const char *uname, guint period_ms, GSourceFunc cb);
+void election_reset(pcmk_cluster_t *cluster);
+void election_init(pcmk_cluster_t *cluster, void (*cb)(pcmk_cluster_t *));
 
-void election_timeout_set_period(election_t *e, guint period_ms);
-void election_timeout_stop(election_t *e);
+void election_timeout_set_period(pcmk_cluster_t *cluster, guint period_ms);
+void election_timeout_stop(pcmk_cluster_t *cluster);
 
-void election_vote(election_t *e);
-bool election_check(election_t *e);
-void election_remove(election_t *e, const char *uname);
-enum election_result election_state(const election_t *e);
-enum election_result election_count_vote(election_t *e, const xmlNode *message,
-                                         bool can_win);
-void election_clear_dampening(election_t *e);
+void election_vote(pcmk_cluster_t *cluster);
+bool election_check(pcmk_cluster_t *cluster);
+void election_remove(pcmk_cluster_t *cluster, const char *uname);
+enum election_result election_state(const pcmk_cluster_t *cluster);
+enum election_result election_count_vote(pcmk_cluster_t *cluster,
+                                         const xmlNode *message, bool can_win);
+void election_clear_dampening(pcmk_cluster_t *cluster);
 
 #ifdef __cplusplus
 }

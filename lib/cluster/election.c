@@ -12,22 +12,20 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#include <crm/crm.h>
+#include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 
-#include <crm/common/mainloop.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election_internal.h>
-#include <crm/crm.h>
+#include "crmcluster_private.h"
 
 #define STORM_INTERVAL   2      /* in seconds */
 
-struct election_s {
-    enum pcmk_ipc_server server;    // For message type
-    enum election_result state;
-    guint count;        // How many times local node has voted
-    char *name;         // Descriptive name for this election
-    char *uname;        // Local node's name
-    GSourceFunc cb;     // Function to call if election is won
+struct pcmk__election {
+    enum election_result state;     // Current state of election
+    guint count;                    // How many times local node has voted
+    void (*cb)(pcmk_cluster_t *);   // Function to call if election is won
     GHashTable *voted;  // Key = node name, value = how node voted
     mainloop_timer_t *timeout; // When to abort if all votes not received
     int election_wins;         // Track wins, for storm detection
@@ -37,181 +35,167 @@ struct election_s {
 };
 
 static void
-election_complete(election_t *e)
+election_complete(pcmk_cluster_t *cluster)
 {
-    e->state = election_won;
-    if (e->cb != NULL) {
-        e->cb(e);
+    CRM_ASSERT((cluster != NULL) && (cluster->priv->election != NULL));
+    cluster->priv->election->state = election_won;
+    if (cluster->priv->election->cb != NULL) {
+        cluster->priv->election->cb(cluster);
     }
-    election_reset(e);
+    election_reset(cluster);
 }
 
 static gboolean
 election_timer_cb(gpointer user_data)
 {
-    election_t *e = user_data;
+    pcmk_cluster_t *cluster = user_data;
 
-    crm_info("%s timed out, declaring local node as winner", e->name);
-    election_complete(e);
+    crm_info("Declaring local node as winner after election timed out");
+    election_complete(cluster);
     return FALSE;
 }
 
 /*!
+ * \internal
  * \brief Get current state of an election
  *
- * \param[in] e  Election object
+ * \param[in] cluster  Cluster with election
  *
  * \return Current state of \e
  */
 enum election_result
-election_state(const election_t *e)
+election_state(const pcmk_cluster_t *cluster)
 {
-    return (e == NULL)? election_error : e->state;
+    if ((cluster == NULL) || (cluster->priv->election == NULL)) {
+        return election_error;
+    }
+    return cluster->priv->election->state;
 }
 
-/*!
- * \brief Create a new election object
- *
- * Every node that wishes to participate in an election must create an election
- * object. Typically, this should be done once, at start-up. A caller should
- * only create a single election object.
- *
- * \param[in] server     Server to use for message type in election messages
- * \param[in] name       Label for election (for logging)
- * \param[in] uname      Local node's name
- * \param[in] period_ms  How long to wait for all peers to vote
- * \param[in] cb         Function to call if local node wins election
- *
- * \return Newly allocated election object on success, NULL on error
- * \note The caller is responsible for freeing the returned value using
- *       election_fini().
+/* The local node will be declared the winner if missing votes are not received
+ * within this time. The value is chosen to be the same as the default for the
+ * election-timeout cluster option.
  */
-election_t *
-election_init(enum pcmk_ipc_server server, const char *name, const char *uname,
-              guint period_ms, GSourceFunc cb)
+#define ELECTION_TIMEOUT_MS 120000
+
+/*!
+ * \internal
+ * \brief Track election state in a cluster
+ *
+ * Every node that wishes to participate in an election must initialize the
+ * election once, typically at start-up.
+ *
+ * \param[in] cluster    Cluster that election is for
+ * \param[in] cb         Function to call if local node wins election
+ */
+void
+election_init(pcmk_cluster_t *cluster, void (*cb)(pcmk_cluster_t *))
 {
-    election_t *e = NULL;
+    const char *name = pcmk__s(crm_system_name, "election");
 
-    static guint count = 0;
+    CRM_CHECK(cluster->priv->election == NULL, return);
 
-    CRM_CHECK(uname != NULL, return NULL);
-
-    e = calloc(1, sizeof(election_t));
-    if (e == NULL) {
-        crm_perror(LOG_CRIT, "Cannot create election");
-        return NULL;
-    }
-
-    e->server = server;
-    e->uname = strdup(uname);
-    if (e->uname == NULL) {
-        crm_perror(LOG_CRIT, "Cannot create election");
-        free(e);
-        return NULL;
-    }
-
-    e->name = name? crm_strdup_printf("election-%s", name)
-                  : crm_strdup_printf("election-%u", count++);
-    e->cb = cb;
-    e->timeout = mainloop_timer_add(e->name, period_ms, FALSE,
-                                    election_timer_cb, e);
-    crm_trace("Created %s", e->name);
-    return e;
+    cluster->priv->election = pcmk__assert_alloc(1, sizeof(pcmk__election_t));
+    cluster->priv->election->cb = cb;
+    cluster->priv->election->timeout = mainloop_timer_add(name,
+                                                          ELECTION_TIMEOUT_MS,
+                                                          FALSE,
+                                                          election_timer_cb,
+                                                          cluster);
 }
 
 /*!
+ * \internal
  * \brief Disregard any previous vote by specified peer
  *
  * This discards any recorded vote from a specified peer. Election users should
  * call this whenever a voting peer becomes inactive.
  *
- * \param[in,out] e      Election object
- * \param[in]     uname  Name of peer to disregard
+ * \param[in,out] cluster  Cluster with election
+ * \param[in]     uname    Name of peer to disregard
  */
 void
-election_remove(election_t *e, const char *uname)
+election_remove(pcmk_cluster_t *cluster, const char *uname)
 {
-    if ((e != NULL) && (uname != NULL) && (e->voted != NULL)) {
-        crm_trace("Discarding %s (no-)vote from lost peer %s", e->name, uname);
-        g_hash_table_remove(e->voted, uname);
+    if ((cluster != NULL) && (cluster->priv->election != NULL)
+        && (uname != NULL) && (cluster->priv->election->voted != NULL)) {
+        crm_trace("Discarding (no-)vote from lost peer %s", uname);
+        g_hash_table_remove(cluster->priv->election->voted, uname);
     }
 }
 
 /*!
+ * \internal
  * \brief Stop election timer and disregard all votes
  *
- * \param[in,out] e  Election object
+ * \param[in,out] cluster  Cluster with election
  */
 void
-election_reset(election_t *e)
+election_reset(pcmk_cluster_t *cluster)
 {
-    if (e != NULL) {
-        crm_trace("Resetting election %s", e->name);
-        mainloop_timer_stop(e->timeout);
-        if (e->voted) {
-            crm_trace("Destroying voted cache with %d members", g_hash_table_size(e->voted));
-            g_hash_table_destroy(e->voted);
-            e->voted = NULL;
+    if ((cluster != NULL) && (cluster->priv->election != NULL)) {
+        crm_trace("Resetting election");
+        mainloop_timer_stop(cluster->priv->election->timeout);
+        if (cluster->priv->election->voted != NULL) {
+            g_hash_table_destroy(cluster->priv->election->voted);
+            cluster->priv->election->voted = NULL;
         }
     }
 }
 
 /*!
+ * \internal
  * \brief Free an election object
  *
  * Free all memory associated with an election object, stopping its
  * election timer (if running).
  *
- * \param[in,out] e  Election object
+ * \param[in,out] cluster  Cluster with election
  */
 void
-election_fini(election_t *e)
+election_fini(pcmk_cluster_t *cluster)
 {
-    if (e != NULL) {
-        election_reset(e);
-        crm_trace("Destroying %s", e->name);
-        mainloop_timer_del(e->timeout);
-        free(e->uname);
-        free(e->name);
-        free(e);
+    if ((cluster != NULL) && (cluster->priv->election != NULL)) {
+        election_reset(cluster);
+        crm_trace("Destroying election");
+        mainloop_timer_del(cluster->priv->election->timeout);
+        free(cluster->priv->election);
+        cluster->priv->election = NULL;
     }
 }
 
 static void
-election_timeout_start(election_t *e)
+election_timeout_start(pcmk_cluster_t *cluster)
 {
-    if (e != NULL) {
-        mainloop_timer_start(e->timeout);
-    }
+    mainloop_timer_start(cluster->priv->election->timeout);
 }
 
 /*!
+ * \internal
  * \brief Stop an election's timer, if running
  *
- * \param[in,out] e  Election object
+ * \param[in,out] cluster  Cluster with election
  */
 void
-election_timeout_stop(election_t *e)
+election_timeout_stop(pcmk_cluster_t *cluster)
 {
-    if (e != NULL) {
-        mainloop_timer_stop(e->timeout);
+    if ((cluster != NULL) && (cluster->priv->election != NULL)) {
+        mainloop_timer_stop(cluster->priv->election->timeout);
     }
 }
 
 /*!
+ * \internal
  * \brief Change an election's timeout (restarting timer if running)
  *
- * \param[in,out] e       Election object
- * \param[in]     period  New timeout
+ * \param[in,out] cluster  Cluster with election
+ * \param[in]     period   New timeout
  */
 void
-election_timeout_set_period(election_t *e, guint period)
+election_timeout_set_period(pcmk_cluster_t *cluster, guint period)
 {
-    if (e != NULL) {
-        mainloop_timer_set_period(e->timeout, period);
-    } else {
-        crm_err("No election defined");
-    }
+    CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL), return);
+    mainloop_timer_set_period(cluster->priv->election->timeout, period);
 }
 
 static int
@@ -276,12 +260,13 @@ compare_age(struct timeval your_age)
 }
 
 /*!
+ * \internal
  * \brief Start a new election by offering local node's candidacy
  *
  * Broadcast a "vote" election message containing the local node's ID,
  * (incremented) election counter, and uptime, and start the election timer.
  *
- * \param[in,out] e  Election object
+ * \param[in,out] cluster  Cluster with election
  *
  * \note Any nodes agreeing to the candidacy will send a "no-vote" reply, and if
  *       all active peers do so, or if the election times out, the local node
@@ -290,60 +275,62 @@ compare_age(struct timeval your_age)
  *       vote, or we did not call election_check() in time.)
  */
 void
-election_vote(election_t *e)
+election_vote(pcmk_cluster_t *cluster)
 {
     struct timeval age;
     xmlNode *vote = NULL;
     pcmk__node_status_t *our_node = NULL;
     const char *message_type = NULL;
 
-    if (e == NULL) {
-        crm_trace("Election vote requested, but no election available");
+    CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL), return);
+
+    if (cluster->priv->node_name == NULL) {
+        crm_err("Cannot start an election: Local node name unknown");
         return;
     }
 
-    our_node = pcmk__get_node(0, e->uname, NULL,
+    our_node = pcmk__get_node(0, cluster->priv->node_name, NULL,
                               pcmk__node_search_cluster_member);
     if (!pcmk__cluster_is_node_active(our_node)) {
-        crm_trace("Cannot vote in %s yet: local node not connected to cluster",
-                  e->name);
+        crm_trace("Cannot vote yet: local node not connected to cluster");
         return;
     }
 
-    election_reset(e);
-    e->state = election_in_progress;
-    message_type = pcmk__server_message_type(e->server);
+    election_reset(cluster);
+    cluster->priv->election->state = election_in_progress;
+    message_type = pcmk__server_message_type(cluster->priv->server);
 
     /* @COMPAT We use message_type as the sender and recipient system for
      * backward compatibility (see T566).
      */
-    vote = pcmk__new_request(e->server, message_type, NULL,
-                             message_type, CRM_OP_VOTE, NULL);
+    vote = pcmk__new_request(cluster->priv->server, message_type,
+                             NULL, message_type, CRM_OP_VOTE, NULL);
 
-    e->count++;
+    cluster->priv->election->count++;
     crm_xml_add(vote, PCMK__XA_ELECTION_OWNER, our_node->xml_id);
-    crm_xml_add_int(vote, PCMK__XA_ELECTION_ID, e->count);
+    crm_xml_add_int(vote, PCMK__XA_ELECTION_ID, cluster->priv->election->count);
 
     // Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is actually microseconds
     get_uptime(&age);
     crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
                         PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
 
-    pcmk__cluster_send_message(NULL, e->server, vote);
+    pcmk__cluster_send_message(NULL, cluster->priv->server, vote);
     pcmk__xml_free(vote);
 
-    crm_debug("Started %s round %d", e->name, e->count);
-    election_timeout_start(e);
+    crm_debug("Started election round %u", cluster->priv->election->count);
+    election_timeout_start(cluster);
     return;
 }
 
 /*!
+ * \internal
  * \brief Check whether local node has won an election
  *
  * If all known peers have sent no-vote messages, stop the election timer, set
  * the election state to won, and call any registered win callback.
  *
- * \param[in,out] e  Election object
+ * \param[in,out] cluster  Cluster with election
  *
  * \return TRUE if local node has won, FALSE otherwise
  * \note If all known peers have sent no-vote messages, but the election owner
@@ -353,21 +340,20 @@ election_vote(election_t *e)
  *       \c election_in_progress.
  */
 bool
-election_check(election_t *e)
+election_check(pcmk_cluster_t *cluster)
 {
     int voted_size = 0;
     int num_members = 0;
 
-    if (e == NULL) {
-        crm_trace("Election check requested, but no election available");
-        return FALSE;
-    }
-    if (e->voted == NULL) {
-        crm_trace("%s check requested, but no votes received yet", e->name);
+    CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL),
+              return false);
+
+    if (cluster->priv->election->voted == NULL) {
+        crm_trace("Election check requested, but no votes received yet");
         return FALSE;
     }
 
-    voted_size = g_hash_table_size(e->voted);
+    voted_size = g_hash_table_size(cluster->priv->election->voted);
     num_members = pcmk__cluster_num_active_nodes();
 
     /* in the case of #voted > #members, it is better to
@@ -376,13 +362,13 @@ election_check(election_t *e)
      */
     if (voted_size >= num_members) {
         /* we won and everyone has voted */
-        election_timeout_stop(e);
+        election_timeout_stop(cluster);
         if (voted_size > num_members) {
             GHashTableIter gIter;
             const pcmk__node_status_t *node = NULL;
             char *key = NULL;
 
-            crm_warn("Received too many votes in %s", e->name);
+            crm_warn("Received too many votes in election");
             g_hash_table_iter_init(&gIter, pcmk__peer_cache);
             while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) & node)) {
                 if (pcmk__cluster_is_node_active(node)) {
@@ -390,20 +376,21 @@ election_check(election_t *e)
                 }
             }
 
-            g_hash_table_iter_init(&gIter, e->voted);
+            g_hash_table_iter_init(&gIter, cluster->priv->election->voted);
             while (g_hash_table_iter_next(&gIter, (gpointer *) & key, NULL)) {
                 crm_warn("* actual vote: %s", key);
             }
 
         }
 
-        crm_info("%s won by local node", e->name);
-        election_complete(e);
+        crm_info("Election won by local node");
+        election_complete(cluster);
         return TRUE;
 
     } else {
-        crm_debug("%s still waiting on %d of %d votes",
-                  e->name, num_members - voted_size, num_members);
+        crm_debug("Election still waiting on %d of %d vote%s",
+                  num_members - voted_size, num_members,
+                  pcmk__plural_s(num_members));
     }
 
     return FALSE;
@@ -421,9 +408,9 @@ struct vote {
 };
 
 /*!
+ * \internal
  * \brief Unpack an election message
  *
- * \param[in] e        Election object (for logging only)
  * \param[in] message  Election message XML
  * \param[out] vote    Parsed fields from message
  *
@@ -432,8 +419,7 @@ struct vote {
  *       the message argument.
  */
 static bool
-parse_election_message(const election_t *e, const xmlNode *message,
-                       struct vote *vote)
+parse_election_message(const xmlNode *message, struct vote *vote)
 {
     CRM_CHECK(message && vote, return FALSE);
 
@@ -451,10 +437,10 @@ parse_election_message(const election_t *e, const xmlNode *message,
     if ((vote->op == NULL) || (vote->from == NULL) || (vote->version == NULL)
         || (vote->election_owner == NULL) || (vote->election_id < 0)) {
 
-        crm_warn("Invalid %s message from %s in %s ",
-                 (vote->op? vote->op : "election"),
-                 (vote->from? vote->from : "unspecified node"),
-                 (e? e->name : "election"));
+        crm_warn("Invalid %s message from %s",
+                 pcmk__s(vote->op, "election"),
+                 pcmk__s(vote->from, "unspecified node"));
+        crm_log_xml_trace(message, "bad-vote");
         return FALSE;
     }
 
@@ -467,22 +453,14 @@ parse_election_message(const election_t *e, const xmlNode *message,
         crm_element_value_timeval(message, PCMK__XA_ELECTION_AGE_SEC,
                                   PCMK__XA_ELECTION_AGE_NANO_SEC, &(vote->age));
         if ((vote->age.tv_sec < 0) || (vote->age.tv_usec < 0)) {
-            crm_warn("Cannot count %s %s from %s because it is missing uptime",
-                     (e? e->name : "election"), vote->op, vote->from);
+            crm_warn("Cannot count election %s from %s "
+                     "because it is missing uptime", vote->op, vote->from);
             return FALSE;
         }
 
     } else if (!pcmk__str_eq(vote->op, CRM_OP_NOVOTE, pcmk__str_none)) {
-        crm_info("Cannot process %s message from %s because %s is not a known election op",
-                 (e? e->name : "election"), vote->from, vote->op);
-        return FALSE;
-    }
-
-    // Election validation
-
-    if (e == NULL) {
-        crm_info("Cannot count %s from %s because no election available",
-                 vote->op, vote->from);
+        crm_info("Cannot process election message from %s "
+                 "because %s is not a known election op", vote->from, vote->op);
         return FALSE;
     }
 
@@ -490,43 +468,46 @@ parse_election_message(const election_t *e, const xmlNode *message,
      * the question is how we managed to get here.
      */
     if (pcmk__peer_cache == NULL) {
-        crm_info("Cannot count %s %s from %s because no peer information available",
-                 e->name, vote->op, vote->from);
+        crm_info("Cannot count election %s from %s "
+                 "because no peer information available", vote->op, vote->from);
         return FALSE;
     }
     return TRUE;
 }
 
 static void
-record_vote(election_t *e, struct vote *vote)
+record_vote(pcmk_cluster_t *cluster, struct vote *vote)
 {
-    CRM_ASSERT(e && vote && vote->from && vote->op);
+    CRM_ASSERT((vote->from != NULL) && (vote->op != NULL));
 
-    if (e->voted == NULL) {
-        e->voted = pcmk__strkey_table(free, free);
+    if (cluster->priv->election->voted == NULL) {
+        cluster->priv->election->voted = pcmk__strkey_table(free, free);
     }
-    pcmk__insert_dup(e->voted, vote->from, vote->op);
+    pcmk__insert_dup(cluster->priv->election->voted, vote->from, vote->op);
 }
 
 static void
-send_no_vote(election_t *e, pcmk__node_status_t *peer, struct vote *vote)
+send_no_vote(pcmk_cluster_t *cluster, pcmk__node_status_t *peer,
+             struct vote *vote)
 {
-    const char *message_type = pcmk__server_message_type(e->server);
-    xmlNode *novote = pcmk__new_request(e->server, message_type,
-                                        vote->from, message_type,
-                                        CRM_OP_NOVOTE, NULL);
+    const char *message_type = NULL;
+    xmlNode *novote = NULL;
 
+    message_type = pcmk__server_message_type(cluster->priv->server);
+    novote = pcmk__new_request(cluster->priv->server, message_type,
+                               vote->from, message_type, CRM_OP_NOVOTE, NULL);
     crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
     crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
 
-    pcmk__cluster_send_message(peer, e->server, novote);
+    pcmk__cluster_send_message(peer, cluster->priv->server, novote);
     pcmk__xml_free(novote);
 }
 
 /*!
+ * \internal
  * \brief Process an election message (vote or no-vote) from a peer
  *
- * \param[in,out] e        Election object
+ * \param[in,out] cluster  Cluster with election
  * \param[in]     message  Election message XML from peer
  * \param[in]     can_win  Whether local node is eligible to win
  *
@@ -539,7 +520,8 @@ send_no_vote(election_t *e, pcmk__node_status_t *peer, struct vote *vote)
  *       this function, and then compare the result.
  */
 enum election_result
-election_count_vote(election_t *e, const xmlNode *message, bool can_win)
+election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
+                    bool can_win)
 {
     int log_level = LOG_INFO;
     gboolean done = FALSE;
@@ -551,14 +533,17 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
     time_t tm_now = time(NULL);
     struct vote vote;
 
-    CRM_CHECK(message != NULL, return election_error);
-    if (parse_election_message(e, message, &vote) == FALSE) {
+    CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL)
+              && (message != NULL) && (cluster->priv->node_name != NULL),
+              return election_error);
+
+    if (!parse_election_message(message, &vote)) {
         return election_error;
     }
 
     your_node = pcmk__get_node(0, vote.from, NULL,
                                pcmk__node_search_cluster_member);
-    our_node = pcmk__get_node(0, e->uname, NULL,
+    our_node = pcmk__get_node(0, cluster->priv->node_name, NULL,
                               pcmk__node_search_cluster_member);
     we_are_owner = (our_node != NULL)
                    && pcmk__str_eq(our_node->xml_id, vote.election_owner,
@@ -573,7 +558,8 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         log_level = LOG_ERR;
         we_lose = TRUE;
 
-    } else if (we_are_owner && (vote.election_id != e->count)) {
+    } else if (we_are_owner
+               && (vote.election_id != cluster->priv->election->count)) {
         log_level = LOG_TRACE;
         reason = "Superseded";
         done = TRUE;
@@ -585,23 +571,26 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         done = TRUE;
 
     } else if (pcmk__str_eq(vote.op, CRM_OP_NOVOTE, pcmk__str_none)
-               || pcmk__str_eq(vote.from, e->uname, pcmk__str_none)) {
+               || pcmk__str_eq(vote.from, cluster->priv->node_name,
+                               pcmk__str_casei)) {
         /* Receiving our own broadcast vote, or a no-vote from peer, is a vote
          * for us to win
          */
         if (!we_are_owner) {
-            crm_warn("Cannot count %s round %d %s from %s because we are not election owner (%s)",
-                     e->name, vote.election_id, vote.op, vote.from,
+            crm_warn("Cannot count election round %d %s from %s "
+                     "because we did not start election (node ID %s did)",
+                     vote.election_id, vote.op, vote.from,
                      vote.election_owner);
             return election_error;
         }
-        if (e->state != election_in_progress) {
+        if (cluster->priv->election->state != election_in_progress) {
             // Should only happen if we already lost
-            crm_debug("Not counting %s round %d %s from %s because no election in progress",
-                      e->name, vote.election_id, vote.op, vote.from);
-            return e->state;
+            crm_debug("Not counting election round %d %s from %s "
+                      "because no election in progress",
+                      vote.election_id, vote.op, vote.from);
+            return cluster->priv->election->state;
         }
-        record_vote(e, &vote);
+        record_vote(cluster, &vote);
         reason = "Recorded";
         done = TRUE;
 
@@ -624,7 +613,7 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         } else if (age_result > 0) {
             reason = "Uptime";
 
-        } else if (strcasecmp(e->uname, vote.from) > 0) {
+        } else if (strcasecmp(cluster->priv->node_name, vote.from) > 0) {
             reason = "Host name";
             we_lose = TRUE;
 
@@ -633,9 +622,9 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         }
     }
 
-    if (e->expires < tm_now) {
-        e->election_wins = 0;
-        e->expires = tm_now + STORM_INTERVAL;
+    if (cluster->priv->election->expires < tm_now) {
+        cluster->priv->election->election_wins = 0;
+        cluster->priv->election->expires = tm_now + STORM_INTERVAL;
 
     } else if (done == FALSE && we_lose == FALSE) {
         int peers = 1 + g_hash_table_size(pcmk__peer_cache);
@@ -643,13 +632,13 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         /* If every node has to vote down every other node, thats N*(N-1) total elections
          * Allow some leeway before _really_ complaining
          */
-        e->election_wins++;
-        if (e->election_wins > (peers * peers)) {
-            crm_warn("%s election storm detected: %d wins in %d seconds",
-                     e->name, e->election_wins, STORM_INTERVAL);
-            e->election_wins = 0;
-            e->expires = tm_now + STORM_INTERVAL;
-            if (e->wrote_blackbox == FALSE) {
+        cluster->priv->election->election_wins++;
+        if (cluster->priv->election->election_wins > (peers * peers)) {
+            crm_warn("Election storm detected: %d wins in %d seconds",
+                     cluster->priv->election->election_wins, STORM_INTERVAL);
+            cluster->priv->election->election_wins = 0;
+            cluster->priv->election->expires = tm_now + STORM_INTERVAL;
+            if (!(cluster->priv->election->wrote_blackbox)) {
                 /* It's questionable whether a black box (from every node in the
                  * cluster) would be truly helpful in diagnosing an election
                  * storm. It's also highly doubtful a production environment
@@ -661,17 +650,18 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
                  * write a blackbox on every Nth occurrence.
                  */
                 crm_write_blackbox(0, NULL);
-                e->wrote_blackbox = TRUE;
+                cluster->priv->election->wrote_blackbox = true;
             }
         }
     }
 
     if (done) {
         do_crm_log(log_level + 1,
-                   "Processed %s round %d %s (current round %d) from %s (%s)",
-                   e->name, vote.election_id, vote.op, e->count, vote.from,
-                   reason);
-        return e->state;
+                   "Processed election round %u %s (current round %d) "
+                   "from %s (%s)",
+                   vote.election_id, vote.op, cluster->priv->election->count,
+                   vote.from, reason);
+        return cluster->priv->election->state;
 
     } else if (we_lose == FALSE) {
         /* We track the time of the last election loss to implement an election
@@ -687,52 +677,62 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
          * would allow us to clear the dampening when the previous winner
          * leaves (and would allow other improvements as well).
          */
-        if ((e->last_election_loss == 0)
-            || ((tm_now - e->last_election_loss) > (time_t) LOSS_DAMPEN)) {
+        if ((cluster->priv->election->last_election_loss == 0)
+            || ((tm_now - cluster->priv->election->last_election_loss)
+                > (time_t) LOSS_DAMPEN)) {
 
-            do_crm_log(log_level, "%s round %d (owner node ID %s) pass: %s from %s (%s)",
-                       e->name, vote.election_id, vote.election_owner, vote.op,
+            do_crm_log(log_level,
+                       "Election round %d (started by node ID %s) pass: "
+                       "%s from %s (%s)",
+                       vote.election_id, vote.election_owner, vote.op,
                        vote.from, reason);
 
-            e->last_election_loss = 0;
-            election_timeout_stop(e);
+            cluster->priv->election->last_election_loss = 0;
+            election_timeout_stop(cluster);
 
             /* Start a new election by voting down this, and other, peers */
-            e->state = election_start;
-            return e->state;
+            cluster->priv->election->state = election_start;
+            return cluster->priv->election->state;
         } else {
-            char *loss_time = ctime(&e->last_election_loss);
+            char *loss_time = NULL;
 
+            loss_time = ctime(&(cluster->priv->election->last_election_loss));
             if (loss_time) {
                 // Show only HH:MM:SS
                 loss_time += 11;
                 loss_time[8] = '\0';
             }
-            crm_info("Ignoring %s round %d (owner node ID %s) pass vs %s because we lost less than %ds ago at %s",
-                     e->name, vote.election_id, vote.election_owner, vote.from,
+            crm_info("Ignoring election round %d (started by node ID %s) pass "
+                     "vs %s because we lost less than %ds ago at %s",
+                     vote.election_id, vote.election_owner, vote.from,
                      LOSS_DAMPEN, (loss_time? loss_time : "unknown"));
         }
     }
 
-    e->last_election_loss = tm_now;
+    cluster->priv->election->last_election_loss = tm_now;
 
-    do_crm_log(log_level, "%s round %d (owner node ID %s) lost: %s from %s (%s)",
-               e->name, vote.election_id, vote.election_owner, vote.op,
+    do_crm_log(log_level,
+               "Election round %d (started by node ID %s) lost: "
+               "%s from %s (%s)",
+               vote.election_id, vote.election_owner, vote.op,
                vote.from, reason);
 
-    election_reset(e);
-    send_no_vote(e, your_node, &vote);
-    e->state = election_lost;
-    return e->state;
+    election_reset(cluster);
+    send_no_vote(cluster, your_node, &vote);
+    cluster->priv->election->state = election_lost;
+    return cluster->priv->election->state;
 }
 
 /*!
+ * \internal
  * \brief Reset any election dampening currently in effect
  *
- * \param[in,out] e        Election object to clear
+ * \param[in,out] cluster  Cluster with election
  */
 void
-election_clear_dampening(election_t *e)
+election_clear_dampening(pcmk_cluster_t *cluster)
 {
-    e->last_election_loss = 0;
+    if ((cluster != NULL) && (cluster->priv->election != NULL)) {
+        cluster->priv->election->last_election_loss = 0;
+    }
 }

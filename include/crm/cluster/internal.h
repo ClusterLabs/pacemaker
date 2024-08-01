@@ -85,13 +85,18 @@ enum pcmk__node_update {
     pcmk__node_update_processes,    //!< Node process group membership updated
 };
 
+typedef struct pcmk__election pcmk__election_t;
+
 //! Implementation of pcmk__cluster_private_t
 struct pcmk__cluster_private {
-    // @TODO Drop and replace with per-daemon cluster-layer ID global variables?
-    uint32_t node_id;               //!< Local node ID at cluster layer
-
-    // @TODO Drop and replace with per-daemon node name global variables?
+    enum pcmk_ipc_server server;    //!< Server this connection is for (if any)
     char *node_name;                //!< Local node name at cluster layer
+    pcmk__election_t *election;     //!< Election state (if election is needed)
+
+    /* @TODO Corosync uses an integer node ID, but cluster layers in the
+     * abstract do not necessarily need to
+     */
+    uint32_t node_id;               //!< Local node ID at cluster layer
 
 #if SUPPORT_COROSYNC
     /* @TODO Make these members a separate struct and use void *cluster_data

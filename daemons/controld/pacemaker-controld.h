@@ -29,10 +29,9 @@
     controld_trigger_config_as(__func__, __LINE__)
 
 void controld_trigger_config_as(const char *fn, int line);
-void controld_election_init(const char *uname);
+void controld_election_init(void);
 void controld_configure_election(GHashTable *options);
 void controld_remove_voter(const char *uname);
-void controld_election_fini(void);
 void controld_stop_current_election_timeout(void);
 
 void set_join_state(const char *start_state, const char *node_name,
