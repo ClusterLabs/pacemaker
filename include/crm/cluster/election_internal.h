@@ -61,13 +61,13 @@ extern "C" {
  * must implement that if desired.
  */
 
-/*! Possible election states */
+// Possible election results
 enum election_result {
-    election_start = 0,     /*! new election needed */
-    election_in_progress,   /*! election started but not all peers have voted */
-    election_lost,          /*! local node lost most recent election */
-    election_won,           /*! local node won most recent election */
-    election_error,         /*! election message or election object invalid */
+    election_start = 0,     // New election needed
+    election_in_progress,   // Election started but not all peers have voted
+    election_lost,          // Local node lost most recent election
+    election_won,           // Local node won most recent election
+    election_error,         // Election message or object invalid
 };
 
 void election_reset(pcmk_cluster_t *cluster);

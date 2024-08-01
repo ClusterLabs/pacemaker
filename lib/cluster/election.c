@@ -56,6 +56,7 @@ election_timer_cb(gpointer user_data)
 }
 
 /*!
+ * \internal
  * \brief Get current state of an election
  *
  * \param[in] cluster  Cluster with election
@@ -78,6 +79,7 @@ election_state(const pcmk_cluster_t *cluster)
 #define ELECTION_TIMEOUT_MS 120000
 
 /*!
+ * \internal
  * \brief Track election state in a cluster
  *
  * Every node that wishes to participate in an election must initialize the
@@ -103,6 +105,7 @@ election_init(pcmk_cluster_t *cluster, void (*cb)(pcmk_cluster_t *))
 }
 
 /*!
+ * \internal
  * \brief Disregard any previous vote by specified peer
  *
  * This discards any recorded vote from a specified peer. Election users should
@@ -122,6 +125,7 @@ election_remove(pcmk_cluster_t *cluster, const char *uname)
 }
 
 /*!
+ * \internal
  * \brief Stop election timer and disregard all votes
  *
  * \param[in,out] cluster  Cluster with election
@@ -140,6 +144,7 @@ election_reset(pcmk_cluster_t *cluster)
 }
 
 /*!
+ * \internal
  * \brief Free an election object
  *
  * Free all memory associated with an election object, stopping its
@@ -166,6 +171,7 @@ election_timeout_start(pcmk_cluster_t *cluster)
 }
 
 /*!
+ * \internal
  * \brief Stop an election's timer, if running
  *
  * \param[in,out] cluster  Cluster with election
@@ -179,6 +185,7 @@ election_timeout_stop(pcmk_cluster_t *cluster)
 }
 
 /*!
+ * \internal
  * \brief Change an election's timeout (restarting timer if running)
  *
  * \param[in,out] cluster  Cluster with election
@@ -253,6 +260,7 @@ compare_age(struct timeval your_age)
 }
 
 /*!
+ * \internal
  * \brief Start a new election by offering local node's candidacy
  *
  * Broadcast a "vote" election message containing the local node's ID,
@@ -316,6 +324,7 @@ election_vote(pcmk_cluster_t *cluster)
 }
 
 /*!
+ * \internal
  * \brief Check whether local node has won an election
  *
  * If all known peers have sent no-vote messages, stop the election timer, set
@@ -399,6 +408,7 @@ struct vote {
 };
 
 /*!
+ * \internal
  * \brief Unpack an election message
  *
  * \param[in] message  Election message XML
@@ -494,6 +504,7 @@ send_no_vote(pcmk_cluster_t *cluster, pcmk__node_status_t *peer,
 }
 
 /*!
+ * \internal
  * \brief Process an election message (vote or no-vote) from a peer
  *
  * \param[in,out] cluster  Cluster with election
@@ -713,6 +724,7 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
 }
 
 /*!
+ * \internal
  * \brief Reset any election dampening currently in effect
  *
  * \param[in,out] cluster  Cluster with election
