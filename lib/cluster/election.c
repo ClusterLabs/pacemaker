@@ -310,7 +310,7 @@ election_vote(pcmk_cluster_t *cluster)
     pcmk__cluster_send_message(NULL, cluster->priv->server, vote);
     pcmk__xml_free(vote);
 
-    crm_debug("Started election round %d", cluster->priv->election->count);
+    crm_debug("Started election round %u", cluster->priv->election->count);
     election_timeout_start(cluster);
     return;
 }
@@ -646,7 +646,7 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
 
     if (done) {
         do_crm_log(log_level + 1,
-                   "Processed election round %d %s (current round %d) "
+                   "Processed election round %u %s (current round %d) "
                    "from %s (%s)",
                    vote.election_id, vote.op, cluster->priv->election->count,
                    vote.from, reason);
