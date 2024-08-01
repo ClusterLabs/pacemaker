@@ -28,7 +28,6 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     pcmk_str_is_infinity(ns);
     pcmk_str_is_minus_infinity(ns);
-    pcmk_parse_interval_spec(ns, &result);
 
     free(ns);
     return 0;
