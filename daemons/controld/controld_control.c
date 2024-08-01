@@ -320,6 +320,9 @@ crmd_exit(crm_exit_t exit_code)
 
     throttle_fini();
 
+    pcmk_cluster_free(controld_globals.cluster);
+    controld_globals.cluster = NULL;
+
     /* Graceful */
     crm_trace("Done preparing for exit with status %d (%s)",
               exit_code, crm_exit_str(exit_code));
