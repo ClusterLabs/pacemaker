@@ -291,32 +291,15 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 
 #include <crm/pengine/rules_compat.h>
 
-static gboolean
-pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
-             crm_time_t *now, crm_time_t *next_change,
-             pe_match_data_t *match_data)
+gboolean
+test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
     pcmk_rule_input_t rule_input = {
         .node_attrs = node_hash,
         .now = now,
     };
 
-    if (match_data != NULL) {
-        rule_input.rsc_params = match_data->params;
-        rule_input.rsc_meta = match_data->meta;
-        if (match_data->re != NULL) {
-            rule_input.rsc_id = match_data->re->string;
-            rule_input.rsc_id_submatches = match_data->re->pmatch;
-            rule_input.rsc_id_nmatches = match_data->re->nregs;
-        }
-    }
-    return pcmk_evaluate_rule(rule, &rule_input, next_change) == pcmk_rc_ok;
-}
-
-gboolean
-test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
-{
-    return pe_test_rule(rule, node_hash, role, now, NULL, NULL);
+    return pcmk_evaluate_rule(rule, &rule_input, NULL) == pcmk_rc_ok;
 }
 
 // LCOV_EXCL_STOP
