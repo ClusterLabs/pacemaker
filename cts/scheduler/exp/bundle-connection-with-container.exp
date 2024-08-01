@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="1">
   <synapse id="0">
     <action_set>
       <rsc_op id="53" operation="monitor" operation_key="httpd_monitor_15000" internal_operation_key="httpd:0_monitor_15000" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rhel8-1">

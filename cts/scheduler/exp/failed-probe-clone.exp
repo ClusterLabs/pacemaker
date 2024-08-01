@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0">
     <action_set>
       <crm_event id="6" operation="clear_failcount" operation_key="ping-1_clear_failcount_0" internal_operation_key="ping-1:0_clear_failcount_0" on_node="cluster02" on_node_uuid="2">

@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="1">
   <synapse id="0">
     <action_set>
       <rsc_op id="33" operation="monitor" operation_key="lsb-dummy_monitor_5000" on_node="pcmk-3" on_node_uuid="pcmk-3">
