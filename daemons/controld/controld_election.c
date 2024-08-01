@@ -19,11 +19,10 @@
 
 #include <pacemaker-controld.h>
 
-static gboolean
-election_win_cb(gpointer data)
+static void
+election_win_cb(pcmk_cluster_t *cluster)
 {
     register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
-    return FALSE;
 }
 
 void

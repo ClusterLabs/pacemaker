@@ -16,8 +16,8 @@
 
 static char *peer_writer = NULL;
 
-static gboolean
-attrd_election_cb(gpointer user_data)
+static void
+attrd_election_cb(pcmk_cluster_t *cluster)
 {
     attrd_declare_winner();
 
@@ -28,7 +28,6 @@ attrd_election_cb(gpointer user_data)
      * attributes as the winner knows them.
      */
     attrd_write_attributes(attrd_write_all);
-    return G_SOURCE_REMOVE;
 }
 
 void

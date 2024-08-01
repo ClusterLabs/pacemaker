@@ -23,9 +23,9 @@
 #define STORM_INTERVAL   2      /* in seconds */
 
 struct pcmk__election {
-    enum election_result state;
-    guint count;        // How many times local node has voted
-    GSourceFunc cb;     // Function to call if election is won
+    enum election_result state;     // Current state of election
+    guint count;                    // How many times local node has voted
+    void (*cb)(pcmk_cluster_t *);   // Function to call if election is won
     GHashTable *voted;  // Key = node name, value = how node voted
     mainloop_timer_t *timeout; // When to abort if all votes not received
     int election_wins;         // Track wins, for storm detection
@@ -87,7 +87,7 @@ election_state(const pcmk_cluster_t *cluster)
  * \param[in] cb         Function to call if local node wins election
  */
 void
-election_init(pcmk_cluster_t *cluster, GSourceFunc cb)
+election_init(pcmk_cluster_t *cluster, void (*cb)(pcmk_cluster_t *))
 {
     const char *name = pcmk__s(crm_system_name, "election");
 
