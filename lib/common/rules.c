@@ -1376,12 +1376,10 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
 
     // Validate XML ID
     id = pcmk__xe_id(rule);
-    if (pcmk__str_empty(id)) {
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * fail the rule
-         */
-        pcmk__config_warn(PCMK_XE_RULE " has no " PCMK_XA_ID);
-        id = "without ID"; // for logging
+    if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
+        pcmk__config_err("Treating " PCMK_XE_RULE " without " PCMK_XA_ID
+                         " as not passing");
+        return pcmk_rc_unpack_error;
     }
 
     value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
@@ -1396,15 +1394,11 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
             rc = pcmk_rc_op_unsatisfied;
             break;
 
-        default:
-            /* @COMPAT When we can break behavioral backward compatibility,
-             * return pcmk_rc_unpack_error
-             */
-            pcmk__config_warn("Rule %s has invalid " PCMK_XA_BOOLEAN_OP
-                              " value '%s', using default '" PCMK_VALUE_AND "'",
-                              pcmk__xe_id(rule), value);
-            combine = pcmk__combine_and;
-            break;
+        default: // Not possible with schema validation enabled
+            pcmk__config_err("Treating " PCMK_XE_RULE " %s as not passing "
+                             "because '%s' is not a valid " PCMK_XA_BOOLEAN_OP,
+                             id, value);
+            return pcmk_rc_unpack_error;
     }
 
     // Evaluate each condition
@@ -1425,12 +1419,9 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
     }
 
     if (empty) { // Not possible with schema validation enabled
-        /* @COMPAT Currently, we don't actually ignore "or" rules because
-         * rc is initialized to failure above in that case. When we can break
-         * backward compatibility, reset rc to pcmk_rc_ok here.
-         */
         pcmk__config_warn("Ignoring rule %s because it contains no conditions",
                           id);
+        rc = pcmk_rc_ok;
     }
 
     crm_trace("Rule %s is %ssatisfied", id, ((rc == pcmk_rc_ok)? "" : "not "));
