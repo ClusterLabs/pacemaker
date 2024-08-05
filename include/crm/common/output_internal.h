@@ -143,7 +143,6 @@ typedef struct pcmk__supported_format_s {
  */
 
 extern GOptionEntry pcmk__html_output_entries[];
-extern GOptionEntry pcmk__text_output_entries[];
 
 pcmk__output_t *pcmk__mk_html_output(char **argv);
 pcmk__output_t *pcmk__mk_log_output(char **argv);
@@ -154,7 +153,7 @@ pcmk__output_t *pcmk__mk_xml_output(char **argv);
 #define PCMK__SUPPORTED_FORMAT_HTML { "html", pcmk__mk_html_output, pcmk__html_output_entries }
 #define PCMK__SUPPORTED_FORMAT_LOG  { "log", pcmk__mk_log_output, NULL }
 #define PCMK__SUPPORTED_FORMAT_NONE { PCMK_VALUE_NONE, pcmk__mk_none_output, NULL }
-#define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__mk_text_output, pcmk__text_output_entries }
+#define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__mk_text_output, NULL }
 #define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, NULL }
 
 /*!

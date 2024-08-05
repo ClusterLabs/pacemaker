@@ -17,18 +17,6 @@
 
 #include "crmcommon_private.h"
 
-// @COMPAT Drop at 3.0.0
-static gboolean fancy = FALSE;
-
-// @COMPAT Drop at 3.0.0
-GOptionEntry pcmk__text_output_entries[] = {
-    { "text-fancy", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &fancy,
-      "Use more highly formatted output (requires --output-as=text)",
-      NULL },
-
-    { NULL }
-};
-
 typedef struct text_list_data_s {
     unsigned int len;
     char *singular_noun;
@@ -214,7 +202,7 @@ text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plur
 
     va_start(ap, format);
 
-    if ((fancy || priv->fancy) && (format != NULL)) {
+    if (priv->fancy && (format != NULL)) {
         pcmk__indented_vprintf(out, format, ap);
         fprintf(out->dest, ":\n");
     }
@@ -240,7 +228,7 @@ text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
     priv = out->priv;
     va_start(ap, format);
 
-    if (fancy || priv->fancy) {
+    if (priv->fancy) {
         if (id != NULL) {
             /* Not really a good way to do this all in one call, so make it two.
              * The first handles the indentation and list styling.  The second
@@ -440,7 +428,7 @@ pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
 
     priv = out->priv;
 
-    if (fancy || priv->fancy) {
+    if (priv->fancy) {
         int level = 0;
         private_data_t *priv = out->priv;
 
