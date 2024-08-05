@@ -4487,11 +4487,6 @@ unpack_action_result(struct action_history *history)
     if ((crm_element_value_int(history->xml, PCMK__XA_RC_CODE,
                                &(history->exit_status)) < 0)
         || (history->exit_status < 0) || (history->exit_status > CRM_EX_MAX)) {
-#if 0
-        /* @COMPAT We should ignore malformed entries, but since that would
-         * change behavior, it should be done at a major or minor series
-         * release.
-         */
         pcmk__config_err("Ignoring resource history entry %s for %s on %s "
                          "with invalid " PCMK__XA_RC_CODE " '%s'",
                          history->id, history->rsc->id,
@@ -4500,9 +4495,6 @@ unpack_action_result(struct action_history *history)
                                                    PCMK__XA_RC_CODE),
                                  ""));
         return pcmk_rc_unpack_error;
-#else
-        history->exit_status = CRM_EX_ERROR;
-#endif
     }
     history->exit_reason = crm_element_value(history->xml, PCMK_XA_EXIT_REASON);
     return pcmk_rc_ok;
