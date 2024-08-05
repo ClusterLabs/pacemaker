@@ -1245,27 +1245,26 @@ pcmk__evaluate_op_expression(const xmlNode *op_expression,
     // Get operation expression ID (for logging)
     id = pcmk__xe_id(op_expression);
     if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_op_unsatisfied
-         */
-        pcmk__config_warn(PCMK_XE_OP_EXPRESSION " element has no " PCMK_XA_ID);
-        id = "without ID"; // for logging
+        pcmk__config_err("Treating " PCMK_XE_OP_EXPRESSION " without "
+                         PCMK_XA_ID " as not passing");
+        return pcmk_rc_unpack_error;
     }
 
     // Validate operation name
     name = crm_element_value(op_expression, PCMK_XA_NAME);
     if (name == NULL) { // Not possible with schema validation enabled
-        pcmk__config_warn("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
-                          "passing because it has no " PCMK_XA_NAME, id);
+        pcmk__config_err("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
+                         "passing because it has no " PCMK_XA_NAME, id);
         return pcmk_rc_unpack_error;
     }
 
     // Validate operation interval
     interval_s = crm_element_value(op_expression, PCMK_META_INTERVAL);
     if (pcmk_parse_interval_spec(interval_s, &interval_ms) != pcmk_rc_ok) {
-        pcmk__config_warn("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
-                          "passing because '%s' is not a valid interval",
-                          id, interval_s);
+        pcmk__config_err("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
+                         "passing because '%s' is not a valid "
+                         PCMK_META_INTERVAL,
+                         id, interval_s);
         return pcmk_rc_unpack_error;
     }
 
