@@ -130,8 +130,7 @@ null_invalid(void **state)
 static void
 id_missing(void **state)
 {
-    // Currently acceptable
-    assert_attr_expression(EXPR_ID_MISSING, pcmk_rc_ok);
+    assert_attr_expression(EXPR_ID_MISSING, pcmk_rc_unpack_error);
 }
 
 
@@ -200,8 +199,7 @@ source_missing(void **state)
 static void
 source_invalid(void **state)
 {
-    // Currently treated as literal
-    assert_attr_expression(EXPR_SOURCE_INVALID, pcmk_rc_ok);
+    assert_attr_expression(EXPR_SOURCE_INVALID, pcmk_rc_unpack_error);
 }
 
 static void
@@ -720,8 +718,7 @@ op_defined_fails(void **state)
 static void
 op_defined_with_value(void **state)
 {
-    // Ill-formed but currently accepted
-    assert_attr_expression(EXPR_OP_DEFINED_WITH_VALUE, pcmk_rc_ok);
+    assert_attr_expression(EXPR_OP_DEFINED_WITH_VALUE, pcmk_rc_unpack_error);
 }
 
 #define EXPR_OP_UNDEFINED_PASSES                        \
@@ -762,16 +759,15 @@ value_missing_defined_ok(void **state)
     assert_attr_expression(EXPR_VALUE_MISSING_DEFINED_OK, pcmk_rc_ok);
 }
 
-#define EXPR_VALUE_MISSING_EQ_OK                        \
+#define EXPR_VALUE_MISSING_EQ_FAILS                     \
         "<" PCMK_XE_EXPRESSION " " PCMK_XA_ID "='e' "   \
         PCMK_XA_ATTRIBUTE "='not-an-attr' "             \
         PCMK_XA_OPERATION "='" PCMK_VALUE_EQ "' />"
 
 static void
-value_missing_eq_ok(void **state)
+value_missing_eq_fails(void **state)
 {
-    // Currently treated as NULL reference value
-    assert_attr_expression(EXPR_VALUE_MISSING_EQ_OK, pcmk_rc_ok);
+    assert_attr_expression(EXPR_VALUE_MISSING_EQ_FAILS, pcmk_rc_unpack_error);
 }
 
 
@@ -828,4 +824,4 @@ PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 expr_test(op_undefined_passes),
                 expr_test(op_undefined_fails),
                 expr_test(value_missing_defined_ok),
-                expr_test(value_missing_eq_ok))
+                expr_test(value_missing_eq_fails))

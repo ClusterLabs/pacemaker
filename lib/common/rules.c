@@ -1034,11 +1034,9 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     // Get expression ID (for logging)
     id = pcmk__xe_id(expression);
     if (pcmk__str_empty(id)) {
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * fail the expression
-         */
-        pcmk__config_warn(PCMK_XE_EXPRESSION " element has no " PCMK_XA_ID);
-        id = "without ID"; // for logging
+        pcmk__config_err("Treating " PCMK_XE_EXPRESSION " without " PCMK_XA_ID
+                         " as not passing");
+        return pcmk_rc_unpack_error;
     }
 
     /* Get name of node attribute to compare (expanding any %0-%9 to
@@ -1080,11 +1078,11 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     source = pcmk__parse_source(source_s);
     if (source == pcmk__source_unknown) {
         // Not possible with schema validation enabled
-        // @COMPAT Fail expression once we can break backward compatibility
-        pcmk__config_warn("Expression %s has invalid " PCMK_XA_VALUE_SOURCE
-                          " value '%s', using default "
-                          "('" PCMK_VALUE_LITERAL "')", id, source_s);
-        source = pcmk__source_literal;
+        pcmk__config_err("Treating " PCMK_XE_EXPRESSION " %s as not passing "
+                         "because '%s' is not a valid " PCMK_XA_VALUE_SOURCE,
+                         id, source_s);
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     // Get and validate reference value
@@ -1093,16 +1091,23 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
         case pcmk__comparison_defined:
         case pcmk__comparison_undefined:
             if (value != NULL) {
-                pcmk__config_warn("Ignoring " PCMK_XA_VALUE " in "
-                                  PCMK_XE_EXPRESSION " %s because it is unused "
-                                  "when " PCMK_XA_BOOLEAN_OP " is %s", id, op);
+                pcmk__config_err("Treating " PCMK_XE_EXPRESSION " %s as not "
+                                 "passing because " PCMK_XA_VALUE " is not "
+                                 "allowed when " PCMK_XA_OPERATION " is %s",
+                                 id, op);
+                rc = pcmk_rc_unpack_error;
+                goto done;
             }
             break;
 
         default:
             if (value == NULL) {
-                pcmk__config_warn(PCMK_XE_EXPRESSION " %s has no "
-                                  PCMK_XA_VALUE, id);
+                pcmk__config_err("Treating " PCMK_XE_EXPRESSION " %s as not "
+                                 "passing because " PCMK_XA_VALUE " is "
+                                 "required when " PCMK_XA_OPERATION " is %s",
+                                 id, op);
+                rc = pcmk_rc_unpack_error;
+                goto done;
             }
             break;
     }
@@ -1117,14 +1122,11 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     type_s = crm_element_value(expression, PCMK_XA_TYPE);
     type = pcmk__parse_type(type_s, comparison, actual, reference);
     if (type == pcmk__type_unknown) {
-        /* Not possible with schema validation enabled
-         *
-         * @COMPAT When we can break behavioral backward compatibility, treat
-         * the expression as not passing.
-         */
-        pcmk__config_warn("Non-empty node attribute values will be treated as "
-                          "equal for " PCMK_XE_EXPRESSION " %s because '%s' "
-                          "is not a valid type", id, type);
+        // Not possible with schema validation enabled
+        pcmk__config_err("Treating " PCMK_XE_EXPRESSION " %s as not passing "
+                         "because '%s' is not a valid type", id, type_s);
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     rc = evaluate_attr_comparison(actual, reference, type, comparison);
