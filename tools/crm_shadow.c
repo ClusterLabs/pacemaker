@@ -421,11 +421,12 @@ check_file_exists(const char *filename, bool should_exist, GError **error)
     }
 
     if (should_exist && (stat(filename, &buf) < 0)) {
-        // @COMPAT: Use pcmk_rc2exitc(errno)?
-        exit_code = CRM_EX_NOSUCH;
+        int rc = errno;
+
+        exit_code = pcmk_rc2exitc(rc);
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
                     "Could not access shadow instance '%s': %s",
-                    options.instance, strerror(errno));
+                    options.instance, strerror(rc));
         return errno;
     }
 
