@@ -222,17 +222,13 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     }
 
     if (rsc->priv->children == NULL) {
-        /* The schema does not allow empty groups, but if validation is
-         * disabled, we allow them (members can be added later).
-         *
-         * @COMPAT At a major release bump, we should consider this a failure so
-         *         that group methods can assume children is not NULL, and there
-         *         are no strange effects from phantom groups due to their
-         *         presence or meta-attributes.
-         */
-        pcmk__config_warn("Group %s will be ignored because it does not have "
-                          "any members", rsc->id);
+        // Not possible with schema validation enabled
+        free(group_data);
+        rsc->priv->variant_opaque = NULL;
+        pcmk__config_err("Group %s has no members", rsc->id);
+        return FALSE;
     }
+
     return TRUE;
 }
 
