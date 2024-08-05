@@ -4446,22 +4446,11 @@ update_resource_state(struct action_history *history, int exit_status,
 static inline bool
 can_affect_state(struct action_history *history)
 {
-#if 0
-    /* @COMPAT It might be better to parse only actions we know we're interested
-     * in, rather than exclude a couple we don't. However that would be a
-     * behavioral change that should be done at a major or minor series release.
-     * Currently, unknown operations can affect whether a resource is considered
-     * active and/or failed.
-     */
      return pcmk__str_any_of(history->task, PCMK_ACTION_MONITOR,
                              PCMK_ACTION_START, PCMK_ACTION_STOP,
                              PCMK_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
                              PCMK_ACTION_MIGRATE_TO, PCMK_ACTION_MIGRATE_FROM,
                              "asyncmon", NULL);
-#else
-     return !pcmk__str_any_of(history->task, PCMK_ACTION_NOTIFY,
-                              PCMK_ACTION_META_DATA, NULL);
-#endif
 }
 
 /*!
