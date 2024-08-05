@@ -262,13 +262,16 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
 }
 
 #define ADD_COMPONENT(component) do {                                       \
-        int sub_rc = pcmk__add_time_from_xml(*end, component, duration);    \
-        if (sub_rc != pcmk_rc_ok) {                                         \
-            /* @COMPAT return sub_rc when we can break compatibility */     \
-            pcmk__config_warn("Ignoring %s in " PCMK_XE_DURATION " %s "     \
-                              "because it is invalid",                      \
-                              pcmk__time_component_attr(component), id);    \
-            rc = sub_rc;                                                    \
+        int rc = pcmk__add_time_from_xml(*end, component, duration);        \
+        if (rc != pcmk_rc_ok) {                                             \
+            pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s "     \
+                             "as not passing because " PCMK_XE_DURATION     \
+                             " %s attribute %s is invalid",                 \
+                             parent_id, id,                                 \
+                             pcmk__time_component_attr(component));         \
+            crm_time_free(*end);                                            \
+            *end = NULL;                                                    \
+            return rc;                                                      \
         }                                                                   \
     } while (0)
 
@@ -288,7 +291,6 @@ int
 pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
                       crm_time_t **end)
 {
-    int rc = pcmk_rc_ok;
     const char *id = NULL;
     const char *parent_id = loggable_parent_id(duration);
 
@@ -300,13 +302,10 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
     // Get duration ID (for logging)
     id = pcmk__xe_id(duration);
     if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_unpack_error instead
-         */
-        pcmk__config_warn(PCMK_XE_DURATION " subelement of "
-                          PCMK_XE_DATE_EXPRESSION " %s has no " PCMK_XA_ID,
-                          parent_id);
-        id = "without ID";
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s "
+                         "as not passing because " PCMK_XE_DURATION
+                         " subelement has no " PCMK_XA_ID, parent_id);
+        return pcmk_rc_unpack_error;
     }
 
     *end = pcmk_copy_time(start);
@@ -319,7 +318,7 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
     ADD_COMPONENT(pcmk__time_minutes);
     ADD_COMPONENT(pcmk__time_seconds);
 
-    return rc;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -378,10 +377,15 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
                                                  PCMK_XE_DURATION, NULL, NULL);
 
         if (duration != NULL) {
-            /* @COMPAT When we can break behavioral backward compatibility,
-             * return the result of this if not OK
-             */
-            pcmk__unpack_duration(duration, start, &end);
+            int rc = pcmk__unpack_duration(duration, start, &end);
+
+            if (rc != pcmk_rc_ok) {
+                pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION
+                                 " %s as not passing because duration "
+                                 "is invalid", id);
+                crm_time_free(start);
+                return rc;
+            }
         }
     }
 
