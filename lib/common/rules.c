@@ -1177,11 +1177,9 @@ pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
     id = pcmk__xe_id(rsc_expression);
     if (pcmk__str_empty(id)) {
         // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * fail the expression
-         */
-        pcmk__config_warn(PCMK_XE_RSC_EXPRESSION " has no " PCMK_XA_ID);
-        id = "without ID"; // for logging
+        pcmk__config_err("Treating " PCMK_XE_RSC_EXPRESSION " without "
+                         PCMK_XA_ID " as not passing");
+        return pcmk_rc_unpack_error;
     }
 
     // Compare resource standard
