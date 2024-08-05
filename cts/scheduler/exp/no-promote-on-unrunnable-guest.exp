@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0" priority="1000000">
     <action_set>
       <rsc_op id="267" operation="notify" operation_key="ovndb_servers_post_notify_promote_0" internal_operation_key="ovndb_servers:1_post_notify_promote_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-1">

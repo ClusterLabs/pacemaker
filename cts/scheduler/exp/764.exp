@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="3m" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+<transition_graph cluster-delay="3m" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0">
     <action_set>
       <rsc_op id="12" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">

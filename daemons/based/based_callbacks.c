@@ -780,12 +780,13 @@ cib_process_request(xmlNode *request, gboolean privileged,
 
     if (cib_client == NULL) {
         crm_trace("Processing peer %s operation from %s/%s on %s intended for %s (reply=%s)",
-                  op, client_name, call_id, originator, pcmk__s(host, "all"),
-                  reply_to);
+                  op, pcmk__s(client_name, "client"), call_id, originator,
+                  pcmk__s(host, "all"), reply_to);
     } else {
         crm_xml_add(request, PCMK__XA_SRC, OUR_NODENAME);
         crm_trace("Processing local %s operation from %s/%s intended for %s",
-                  op, client_name, call_id, pcmk__s(host, "all"));
+                  op, pcmk__s(client_name, "client"), call_id,
+                  pcmk__s(host, "all"));
     }
 
     rc = cib__get_operation(op, &operation);
@@ -893,7 +894,8 @@ cib_process_request(xmlNode *request, gboolean privileged,
         do_crm_log(level,
                    "Completed %s operation for section %s: %s (rc=%d, origin=%s/%s/%s, version=%s.%s.%s)",
                    op, section ? section : "'all'", pcmk_strerror(rc), rc,
-                   originator ? originator : "local", client_name, call_id,
+                   originator ? originator : "local",
+                   pcmk__s(client_name, "client"), call_id,
                    pcmk__s(admin_epoch_s, "0"),
                    pcmk__s(epoch_s, "0"),
                    pcmk__s(num_updates_s, "0"));
@@ -914,7 +916,8 @@ cib_process_request(xmlNode *request, gboolean privileged,
 
     if (is_update) {
         crm_trace("Completed pre-sync update from %s/%s/%s%s",
-                  originator ? originator : "local", client_name, call_id,
+                  originator ? originator : "local",
+                  pcmk__s(client_name, "client"), call_id,
                   local_notify?" with local notification":"");
 
     } else if (!needs_reply || stand_alone) {

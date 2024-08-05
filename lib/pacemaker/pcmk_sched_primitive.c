@@ -1649,17 +1649,14 @@ ban_if_not_locked(gpointer data, gpointer user_data)
 void
 pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 {
-    const char *class = NULL;
     pcmk_scheduler_t *scheduler = NULL;
 
     CRM_ASSERT(pcmk__is_primitive(rsc));
     scheduler = rsc->priv->scheduler;
 
-    class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-
     // Fence devices and remote connections can't be locked
-    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_null_matches)
-        || pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
+    if (pcmk_any_flags_set(rsc->flags, pcmk__rsc_fence_device
+                                       |pcmk__rsc_is_remote_connection)) {
         return;
     }
 

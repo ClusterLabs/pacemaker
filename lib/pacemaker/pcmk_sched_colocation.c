@@ -1067,6 +1067,52 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
 /*!
  * \internal
+ * \brief Check whether colocation's dependent preferences should be considered
+ *
+ * \param[in] colocation  Colocation constraint
+ * \param[in] rsc         Primary instance (normally this will be
+ *                        colocation->primary, which NULL will be treated as,
+ *                        but for clones or bundles with multiple instances
+ *                        this can be a particular instance)
+ *
+ * \return true if colocation influence should be effective, otherwise false
+ */
+bool
+pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
+                               const pcmk_resource_t *rsc)
+{
+    if (rsc == NULL) {
+        rsc = colocation->primary;
+    }
+
+    /* A bundle replica colocates its remote connection with its container,
+     * using a finite score so that the container can run on Pacemaker Remote
+     * nodes.
+     *
+     * Moving a connection is lightweight and does not interrupt the service,
+     * while moving a container is heavyweight and does interrupt the service,
+     * so don't move a clean, active container based solely on the preferences
+     * of its connection.
+     *
+     * This also avoids problematic scenarios where two containers want to
+     * perpetually swap places.
+     */
+    if (pcmk_is_set(colocation->dependent->flags,
+                    pcmk__rsc_remote_nesting_allowed)
+        && !pcmk_is_set(rsc->flags, pcmk__rsc_failed)
+        && pcmk__list_of_1(rsc->priv->active_nodes)) {
+        return false;
+    }
+
+    /* The dependent in a colocation influences the primary's location
+     * if the PCMK_XA_INFLUENCE option is true or the primary is not yet active.
+     */
+    return pcmk_is_set(colocation->flags, pcmk__coloc_influence)
+           || (rsc->priv->active_nodes == NULL);
+}
+
+/*!
+ * \internal
  * \brief Make actions of a given type unrunnable for a given resource
  *
  * \param[in,out] rsc     Resource whose actions should be blocked
