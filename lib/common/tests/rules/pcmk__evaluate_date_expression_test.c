@@ -582,10 +582,9 @@ spec_missing(void **state)
 static void
 spec_invalid(void **state)
 {
-    // Currently treated as date_spec with no ranges (which passes)
     xmlNodePtr xml = pcmk__xml_parse(EXPR_SPEC_INVALID);
 
-    assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_ok);
+    assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_unpack_error);
     pcmk__xml_free(xml);
 }
 
@@ -632,26 +631,10 @@ spec_valid(void **state)
 static void
 spec_missing_id(void **state)
 {
-    // Currently acceptable; date_spec does not currently support next_change
     xmlNodePtr xml = pcmk__xml_parse(EXPR_SPEC_MISSING_ID);
 
-    // Now is just before spec start
     assert_date_expression(xml, "2024-01-01 23:59:59", NULL, NULL,
-                           pcmk_rc_before_range);
-
-    // Now matches spec start
-    assert_date_expression(xml, "2024-02-01 00:00:00", NULL, NULL, pcmk_rc_ok);
-
-    // Now is within spec range
-    assert_date_expression(xml, "2024-02-22 22:22:22", NULL, NULL, pcmk_rc_ok);
-
-    // Now matches spec end
-    assert_date_expression(xml, "2024-02-29 23:59:59", NULL, NULL, pcmk_rc_ok);
-
-    // Now is just past spec end
-    assert_date_expression(xml, "2024-03-01 00:00:00", NULL, NULL,
-                           pcmk_rc_after_range);
-
+                           pcmk_rc_unpack_error);
     pcmk__xml_free(xml);
 }
 

@@ -48,16 +48,15 @@ null_invalid(void **state)
 static void
 spec_id_missing(void **state)
 {
-    // Currently acceptable
-    run_one_test("2020-01-01", "<date_spec years='2020'/>", pcmk_rc_ok);
+    run_one_test("2020-01-01", "<date_spec years='2020'/>",
+                 pcmk_rc_unpack_error);
 }
 
 static void
 invalid_range(void **state)
 {
-    // Currently acceptable
     run_one_test("2020-01-01", "<date_spec years='not-a-year' months='1'/>",
-                 pcmk_rc_ok);
+                 pcmk_rc_unpack_error);
 }
 
 static void

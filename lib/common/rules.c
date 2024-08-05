@@ -133,7 +133,7 @@ phase_of_the_moon(const crm_time_t *now)
  * \brief Check an integer value against a range from a date specification
  *
  * \param[in] date_spec  XML of PCMK_XE_DATE_SPEC element to check
- * \param[in] id         XML ID for logging purposes
+ * \param[in] id         XML ID of parent date expression for logging purposes
  * \param[in] attr       Name of XML attribute with range to check against
  * \param[in] value      Value to compare against range
  *
@@ -151,18 +151,16 @@ check_range(const xmlNode *date_spec, const char *id, const char *attr,
     const char *range = crm_element_value(date_spec, attr);
     long long low, high;
 
-    if (range == NULL) { // Attribute not present
-        goto bail;
-    }
+    if (range == NULL) {
+        // Attribute not present
 
-    if (pcmk__parse_ll_range(range, &low, &high) != pcmk_rc_ok) {
+    } else if (pcmk__parse_ll_range(range, &low, &high) != pcmk_rc_ok) {
         // Invalid range
-        /* @COMPAT When we can break behavioral backward compatibility, treat
-         * the entire rule as not passing.
-         */
-        pcmk__config_err("Ignoring " PCMK_XE_DATE_SPEC
-                         " %s attribute %s because '%s' is not a valid range",
-                         id, attr, range);
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s "
+                         "as not passing because '%s' is not a valid range "
+                         "for " PCMK_XE_DATE_SPEC " attribute %s",
+                         id, range, attr);
+        rc = pcmk_rc_unpack_error;
 
     } else if ((low != -1) && (value < low)) {
         rc = pcmk_rc_before_range;
@@ -171,8 +169,8 @@ check_range(const xmlNode *date_spec, const char *id, const char *attr,
         rc = pcmk_rc_after_range;
     }
 
-bail:
-    crm_trace("Checked " PCMK_XE_DATE_SPEC " %s %s='%s' for %" PRIu32 ": %s",
+    crm_trace(PCMK_XE_DATE_EXPRESSION " %s: " PCMK_XE_DATE_SPEC
+              " %s='%s' for %" PRIu32 ": %s",
               id, attr, pcmk__s(range, ""), value, pcmk_rc_str(rc));
     return rc;
 }
@@ -185,9 +183,9 @@ bail:
  * \param[in] now        Time to check
  *
  * \return Standard Pacemaker return code (specifically, EINVAL for NULL
- *         arguments, pcmk_rc_ok if time matches specification, or
- *         pcmk_rc_before_range, pcmk_rc_after_range, or pcmk_rc_op_unsatisfied
- *         as appropriate to how time relates to specification)
+ *         arguments, pcmk_rc_unpack_error if the specification XML is invalid,
+ *         \c pcmk_rc_ok if \p now is within the specification's ranges, or
+ *         \c pcmk_rc_before_range or \c pcmk_rc_after_range as appropriate)
  */
 int
 pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
@@ -220,13 +218,10 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     // Get specification ID (for logging)
     id = pcmk__xe_id(date_spec);
     if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * fail the specification
-         */
-        pcmk__config_warn(PCMK_XE_DATE_SPEC " subelement of "
-                          PCMK_XE_DATE_EXPRESSION " %s has no " PCMK_XA_ID,
-                          parent_id);
-        id = "without ID"; // for logging
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                         "passing because " PCMK_XE_DATE_SPEC
+                         " subelement has no " PCMK_XA_ID, parent_id);
+        return pcmk_rc_unpack_error;
     }
 
     // Year, month, day
@@ -254,7 +249,8 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     }
 
     for (int i = 0; i < PCMK__NELEM(ranges); ++i) {
-        int rc = check_range(date_spec, id, ranges[i].attr, ranges[i].value);
+        int rc = check_range(date_spec, parent_id, ranges[i].attr,
+                             ranges[i].value);
 
         if (rc != pcmk_rc_ok) {
             return rc;
