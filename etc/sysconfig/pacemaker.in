@@ -317,7 +317,7 @@
 #
 # Specify an alternate location for RNG schemas and XSL transforms.
 #
-# Default: PCMK_schema_directory="@CRM_SCHEMA_DIRECTORY@"
+# Default: PCMK_schema_directory="@PCMK_SCHEMA_DIR@"
 
 # PCMK_remote_schema_directory (Advanced Use Only)
 #

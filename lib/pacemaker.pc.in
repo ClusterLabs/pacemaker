@@ -15,7 +15,7 @@ features=@PCMK_FEATURES@
 
 # Duplicates from other .pc files, since those may eventually go away
 configdir=@CRM_CONFIG_DIR@
-schemadir=@CRM_SCHEMA_DIRECTORY@
+schemadir=@PCMK_SCHEMA_DIR@
 penginedir=@PE_STATE_DIR@
 ocfdir=@OCF_RA_INSTALL_DIR@
 

@@ -51,7 +51,7 @@
 #undef CRM_STATE_DIR
 
 /* Location for the Pacemaker Relax-NG Schema */
-#undef CRM_SCHEMA_DIRECTORY
+#undef PCMK_SCHEMA_DIR
 
 /* Where to keep configuration files like authkey */
 #undef PACEMAKER_CONFIG_DIR

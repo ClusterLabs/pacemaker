@@ -31,7 +31,7 @@ if [ -d "$src_dir/xml" ]; then
     export PCMK_schema_directory="$src_dir/xml"
     echo "Using local schemas from: $PCMK_schema_directory"
 else
-    export PCMK_schema_directory=@CRM_SCHEMA_DIRECTORY@
+    export PCMK_schema_directory=@PCMK_SCHEMA_DIR@
 fi
 
 DIFF="diff -u"

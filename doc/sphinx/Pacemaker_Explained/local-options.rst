@@ -660,7 +660,7 @@ environment variables when Pacemaker daemons start up.
 
        PCMK_schema_directory
      - :ref:`text <text>`
-     - |CRM_SCHEMA_DIRECTORY|
+     - |PCMK_SCHEMA_DIR|
      - *Advanced Use Only:* Specify an alternate location for RNG schemas and
        XSL transforms.
 

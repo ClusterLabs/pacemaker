@@ -75,7 +75,7 @@ class BuildOptions:
     SBIN_DIR = "@sbindir@"
     """Where administrative programs are installed."""
 
-    SCHEMA_DIR = "@CRM_SCHEMA_DIRECTORY@"
+    SCHEMA_DIR = "@PCMK_SCHEMA_DIR@"
     """Where Relax-NG schema files are stored."""
 
     UNIT_DIR = "@systemdsystemunitdir@"

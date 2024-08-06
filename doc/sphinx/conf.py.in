@@ -34,7 +34,7 @@ rst_prolog="""
 .. |CRM_CONFIG_DIR| replace:: ``%CRM_CONFIG_DIR%``
 .. |CRM_DAEMON_GROUP| replace:: ``%CRM_DAEMON_GROUP%``
 .. |CRM_DAEMON_USER| replace:: ``%CRM_DAEMON_USER%``
-.. |CRM_SCHEMA_DIRECTORY| replace:: %CRM_SCHEMA_DIRECTORY%
+.. |PCMK_SCHEMA_DIR| replace:: %PCMK_SCHEMA_DIR%
 .. |PCMK_AUTHKEY_FILE| replace:: %PACEMAKER_CONFIG_DIR%/authkey
 .. |PCMK_CONFIG_FILE| replace:: ``%CONFIGDIR%/pacemaker``
 .. |PCMK__GNUTLS_PRIORITIES| replace:: %PCMK__GNUTLS_PRIORITIES%
