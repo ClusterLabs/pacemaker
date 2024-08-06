@@ -216,7 +216,7 @@ pcmk__locate_sbd(void)
     }
 
     /* Look for the pid file */
-    pidfile = crm_strdup_printf(PCMK_RUN_DIR "/sbd.pid");
+    pidfile = crm_strdup_printf(PCMK__RUN_DIR "/sbd.pid");
     sbd_path = crm_strdup_printf("%s/sbd", SBIN_DIR);
 
     /* Read the pid file */

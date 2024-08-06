@@ -743,7 +743,7 @@ AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"],
 
 AS_IF([test x"${runstatedir}" = x""], [runstatedir="${pcmk_runstatedir}"])
 expand_path_option runstatedir "${localstatedir}/run"
-AC_DEFINE_UNQUOTED([PCMK_RUN_DIR], ["$runstatedir"],
+AC_DEFINE_UNQUOTED([PCMK__RUN_DIR], ["$runstatedir"],
                    [Location for modifiable per-process data])
 AC_SUBST(runstatedir)
 
