@@ -93,10 +93,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
 gboolean
 lrm_state_is_local(lrm_state_t *lrm_state)
 {
-    return (lrm_state != NULL)
-           && pcmk__str_eq(lrm_state->node_name,
-                           controld_globals.cluster->priv->node_name,
-                           pcmk__str_casei);
+    return (lrm_state != NULL) && controld_is_local_node(lrm_state->node_name);
 }
 
 /*!

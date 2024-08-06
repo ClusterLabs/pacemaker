@@ -381,7 +381,7 @@ do_dc_join_offer_one(long long action,
     /* If the offer isn't to the local node, make an offer to the local node as
      * well, to ensure the correct value for max_generation_from.
      */
-    if (strcasecmp(join_to, controld_globals.cluster->priv->node_name) != 0) {
+    if (!controld_is_local_node(join_to)) {
         member = pcmk__get_node(0, controld_globals.cluster->priv->node_name,
                                 NULL, pcmk__node_search_cluster_member);
         join_make_offer(NULL, member, NULL);
@@ -543,10 +543,7 @@ do_dc_join_filter_offer(long long action,
         }
 
     } else if ((cmp < 0)
-               || ((cmp == 0)
-                   && pcmk__str_eq(join_from,
-                                   controld_globals.cluster->priv->node_name,
-                                   pcmk__str_casei))) {
+               || ((cmp == 0) && controld_is_local_node(join_from))) {
         const char *validation = crm_element_value(generation,
                                                    PCMK_XA_VALIDATE_WITH);
 
@@ -629,9 +626,8 @@ do_dc_join_finalize(long long action,
     }
 
     controld_clear_fsa_input_flags(R_HAVE_CIB);
-    if (pcmk__str_eq(max_generation_from,
-                     controld_globals.cluster->priv->node_name,
-                     pcmk__str_null_matches|pcmk__str_casei)) {
+    if ((max_generation_from == NULL)
+        || controld_is_local_node(max_generation_from)) {
         controld_set_fsa_input_flags(R_HAVE_CIB);
     }
 
@@ -832,8 +828,7 @@ do_dc_join_ack(long long action,
     }
 
     // Update CIB with node's latest known executor state
-    if (pcmk__str_eq(join_from, controld_globals.cluster->priv->node_name,
-                     pcmk__str_casei)) {
+    if (controld_is_local_node(join_from)) {
 
         // Use the latest possible state if processing our own join ack
         execd_state = controld_query_executor_state();

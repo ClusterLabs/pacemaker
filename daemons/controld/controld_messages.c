@@ -424,8 +424,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             is_local = true;
         }
 
-    } else if (pcmk__str_eq(controld_globals.cluster->priv->node_name, host_to,
-                            pcmk__str_casei)) {
+    } else if (controld_is_local_node(host_to)) {
         is_local = true;
 
     } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {

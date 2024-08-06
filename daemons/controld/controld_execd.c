@@ -1405,9 +1405,7 @@ do_lrm_invoke(long long action,
     bool crm_rsc_delete = FALSE;
 
     // Message routed to the local node is targeting a specific, non-local node
-    is_remote_node = !pcmk__str_eq(target_node,
-                                   controld_globals.cluster->priv->node_name,
-                                   pcmk__str_casei);
+    is_remote_node = !controld_is_local_node(target_node);
 
     lrm_state = lrm_state_find(target_node);
     if ((lrm_state == NULL) && is_remote_node) {

@@ -18,6 +18,22 @@
 
 #include <pacemaker-controld.h>
 
+/*!
+ * \internal
+ * \brief Check whether a given name is for the local node
+ *
+ * \param[in] name  Name to check
+ *
+ * \return true if \p name is the name of the local node, otherwise false
+ */
+bool
+controld_is_local_node(const char *name)
+{
+    CRM_CHECK(controld_globals.cluster != NULL, return false);
+    return pcmk__str_eq(name, controld_globals.cluster->priv->node_name,
+                        pcmk__str_casei);
+}
+
 const char *
 fsa_input2string(enum crmd_fsa_input input)
 {
@@ -699,10 +715,7 @@ update_dc(xmlNode * msg)
         CRM_CHECK(dc_version != NULL, return FALSE);
         CRM_CHECK(welcome_from != NULL, return FALSE);
 
-        if (AM_I_DC
-            && !pcmk__str_eq(welcome_from,
-                             controld_globals.cluster->priv->node_name,
-                             pcmk__str_casei)) {
+        if (AM_I_DC && !controld_is_local_node(welcome_from)) {
             invalid = TRUE;
 
         } else if ((controld_globals.dc_name != NULL)

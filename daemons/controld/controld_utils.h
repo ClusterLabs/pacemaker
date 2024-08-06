@@ -61,7 +61,7 @@ void crmd_join_phase_log(int level);
 void crmd_peer_down(pcmk__node_status_t *peer, bool full);
 
 bool feature_set_compatible(const char *dc_version, const char *join_version);
-
+bool controld_is_local_node(const char *name);
 const char *get_node_id(xmlNode *lrm_rsc_op);
 
 #endif

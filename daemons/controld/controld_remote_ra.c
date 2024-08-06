@@ -1036,13 +1036,8 @@ is_remote_lrmd_ra(const char *agent, const char *provider, const char *id)
     if (agent && provider && !strcmp(agent, REMOTE_LRMD_RA) && !strcmp(provider, "pacemaker")) {
         return TRUE;
     }
-    if ((id != NULL) && (lrm_state_find(id) != NULL)
-        && !pcmk__str_eq(id, controld_globals.cluster->priv->node_name,
-                         pcmk__str_casei)) {
-        return TRUE;
-    }
-
-    return FALSE;
+    return (id != NULL) && (lrm_state_find(id) != NULL)
+           && !controld_is_local_node(id);
 }
 
 lrmd_rsc_info_t *

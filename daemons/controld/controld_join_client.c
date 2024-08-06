@@ -288,9 +288,7 @@ do_cl_join_finalize_respond(long long action,
         return;
     }
 
-    if (!AM_I_DC
-        && pcmk__str_eq(welcome_from, controld_globals.cluster->priv->node_name,
-                        pcmk__str_casei)) {
+    if (!AM_I_DC && controld_is_local_node(welcome_from)) {
         crm_warn("Discarding our own welcome - we're no longer the DC");
         return;
     }

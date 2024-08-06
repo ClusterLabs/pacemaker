@@ -535,10 +535,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
         return;
     }
 
-    if (succeeded
-        && pcmk__str_eq(event->target,
-                        controld_globals.cluster->priv->node_name,
-                        pcmk__str_casei)) {
+    if (succeeded && controld_is_local_node(event->target)) {
         /* We were notified of our own fencing. Most likely, either fencing was
          * misconfigured, or fabric fencing that doesn't cut cluster
          * communication is in use.
@@ -632,9 +629,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
              * have one node update the CIB now and, if the new DC is different,
              * have them do so too after the election
              */
-            if (pcmk__str_eq(event->executioner,
-                             controld_globals.cluster->priv->node_name,
-                             pcmk__str_casei)) {
+            if (controld_is_local_node(event->executioner)) {
                 send_stonith_update(NULL, event->target, uuid);
             }
             add_stonith_cleanup(event->target);

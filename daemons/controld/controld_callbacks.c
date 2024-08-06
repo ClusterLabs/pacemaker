@@ -35,8 +35,7 @@ crmd_ha_msg_filter(xmlNode * msg)
         if (pcmk__str_eq(sys_from, CRM_SYSTEM_DC, pcmk__str_casei)) {
             const char *from = crm_element_value(msg, PCMK__XA_SRC);
 
-            if (!pcmk__str_eq(from, controld_globals.cluster->priv->node_name,
-                              pcmk__str_casei)) {
+            if (!controld_is_local_node(from)) {
                 int level = LOG_INFO;
                 const char *op = crm_element_value(msg, PCMK__XA_CRM_TASK);
 
@@ -225,10 +224,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                 return;
             }
 
-            if (!appeared
-                && pcmk__str_eq(node->name,
-                                controld_globals.cluster->priv->node_name,
-                                pcmk__str_casei)) {
+            if (!appeared && controld_is_local_node(node->name)) {
                 /* Did we get evicted? */
                 crm_notice("Our peer connection failed");
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);

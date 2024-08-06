@@ -883,8 +883,7 @@ controld_update_resource_history(const char *node_name,
 
     //   <node_state ...>
     xml = pcmk__xe_create(update, PCMK__XE_NODE_STATE);
-    if (pcmk__str_eq(node_name, controld_globals.cluster->priv->node_name,
-                     pcmk__str_casei)) {
+    if (controld_is_local_node(node_name)) {
         node_id = controld_globals.our_uuid;
     } else {
         node_id = node_name;
