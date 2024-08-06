@@ -17,6 +17,7 @@
 
 #include <crm/lrmd_events.h>            // lrmd_event_data_t
 #include <crm/common/nodes.h>
+#include <crm/common/probes.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,10 +85,6 @@ bool crm_op_needs_metadata(const char *rsc_class, const char *op);
 xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
                            const char *task, const char *interval_spec,
                            const char *timeout);
-
-bool pcmk_is_probe(const char *task, guint interval);
-bool pcmk_xe_is_probe(const xmlNode *xml_op);
-bool pcmk_xe_mask_probe_failure(const xmlNode *xml_op);
 
 #ifdef __cplusplus
 }

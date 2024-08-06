@@ -27,6 +27,7 @@ header_HEADERS = acl.h 			\
 		 nvpair.h 		\
 		 options.h 		\
 		 output.h 		\
+		 probes.h 		\
 		 resources.h		\
 		 results.h 		\
 		 roles.h		\
