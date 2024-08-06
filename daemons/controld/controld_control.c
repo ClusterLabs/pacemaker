@@ -64,10 +64,7 @@ do_ha_control(long long action,
 #endif // SUPPORT_COROSYNC
 
         if (registered) {
-            pcmk__node_status_t *node =
-                pcmk__get_node(controld_globals.cluster->priv->node_id,
-                               controld_globals.cluster->priv->node_name, NULL,
-                               pcmk__node_search_cluster_member);
+            pcmk__node_status_t *node = controld_get_local_node_status();
 
             controld_election_init();
 

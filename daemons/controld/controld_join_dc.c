@@ -382,8 +382,7 @@ do_dc_join_offer_one(long long action,
      * well, to ensure the correct value for max_generation_from.
      */
     if (!controld_is_local_node(join_to)) {
-        member = pcmk__get_node(0, controld_globals.cluster->priv->node_name,
-                                NULL, pcmk__node_search_cluster_member);
+        member = controld_get_local_node_status();
         join_make_offer(NULL, member, NULL);
     }
 

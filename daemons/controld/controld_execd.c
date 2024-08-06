@@ -1728,8 +1728,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
         to_sys = CRM_SYSTEM_TENGINE;
     }
 
-    peer = pcmk__get_node(0, controld_globals.cluster->priv->node_name, NULL,
-                          pcmk__node_search_cluster_member);
+    peer = controld_get_local_node_status();
     update = create_node_state_update(peer, node_update_none, NULL,
                                       __func__);
 

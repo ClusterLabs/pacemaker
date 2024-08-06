@@ -34,6 +34,21 @@ controld_is_local_node(const char *name)
                         pcmk__str_casei);
 }
 
+/*!
+ * \internal
+ * \brief Get node status object for local node
+ *
+ * \return Node status object for local node
+ */
+pcmk__node_status_t *
+controld_get_local_node_status(void)
+{
+    CRM_CHECK(controld_globals.cluster != NULL, return NULL);
+    return pcmk__get_node(controld_globals.cluster->priv->node_id,
+                          controld_globals.cluster->priv->node_name, NULL,
+                          pcmk__node_search_cluster_member);
+}
+
 const char *
 fsa_input2string(enum crmd_fsa_input input)
 {
