@@ -345,6 +345,19 @@ type_default_int(void **state)
     assert_attr_expression(EXPR_TYPE_DEFAULT_INT, pcmk_rc_ok);
 }
 
+#define EXPR_TYPE_INVALID                               \
+        "<" PCMK_XE_EXPRESSION " " PCMK_XA_ID "='e' "   \
+        PCMK_XA_TYPE "='not-a-value' "                  \
+        PCMK_XA_OPERATION "='" PCMK_VALUE_EQ "' "       \
+        PCMK_XA_ATTRIBUTE "='foo' "                     \
+        PCMK_XA_VALUE "='bar' />"
+
+static void
+type_invalid(void **state)
+{
+    assert_attr_expression(EXPR_TYPE_INVALID, pcmk_rc_unpack_error);
+}
+
 #define EXPR_TYPE_STRING_PASSES                         \
         "<" PCMK_XE_EXPRESSION " " PCMK_XA_ID "='e' "   \
         PCMK_XA_TYPE "='" PCMK_VALUE_STRING "' "        \
@@ -792,6 +805,7 @@ PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 expr_test(source_meta_fails),
                 expr_test(type_default_number),
                 expr_test(type_default_int),
+                expr_test(type_invalid),
                 expr_test(type_string_passes),
                 expr_test(type_string_fails),
                 expr_test(type_integer_passes),
