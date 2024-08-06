@@ -293,28 +293,32 @@ lrm_state_destroy_all(void)
     }
 }
 
+/*!
+ * \internal
+ * \brief Get executor state object
+ *
+ * \param[in] node_name  Get executor state for this node (local node if NULL)
+ * \param[in] create     If true, create executor state if it doesn't exist
+ *
+ * \return Executor state object for \p node_name
+ */
 lrm_state_t *
-lrm_state_find(const char *node_name)
+controld_get_executor_state(const char *node_name, bool create)
 {
+    lrm_state_t *state = NULL;
+
+    if ((node_name == NULL) && (controld_globals.cluster != NULL)) {
+        node_name = controld_globals.cluster->priv->node_name;
+    }
     if ((node_name == NULL) || (lrm_state_table == NULL)) {
         return NULL;
     }
-    return g_hash_table_lookup(lrm_state_table, node_name);
-}
 
-lrm_state_t *
-lrm_state_find_or_create(const char *node_name)
-{
-    lrm_state_t *lrm_state;
-
-    CRM_CHECK(lrm_state_table != NULL, return NULL);
-
-    lrm_state = g_hash_table_lookup(lrm_state_table, node_name);
-    if (!lrm_state) {
-        lrm_state = lrm_state_create(node_name);
+    state = g_hash_table_lookup(lrm_state_table, node_name);
+    if ((state == NULL) && create) {
+        state = lrm_state_create(node_name);
     }
-
-    return lrm_state;
+    return state;
 }
 
 GList *
@@ -436,7 +440,7 @@ crmd_proxy_send(const char *session, xmlNode *msg)
         return;
     }
     crm_log_xml_trace(msg, "to-proxy");
-    lrm_state = lrm_state_find(proxy->node_name);
+    lrm_state = controld_get_executor_state(proxy->node_name, false);
     if (lrm_state) {
         crm_trace("Sending event to %.8s on %s", proxy->session_id, proxy->node_name);
         remote_proxy_relay_event(proxy, msg);
@@ -782,7 +786,7 @@ lrm_state_register_rsc(lrm_state_t * lrm_state,
     }
 
     if (is_remote_lrmd_ra(agent, provider, NULL)) {
-        return lrm_state_find_or_create(rsc_id)? pcmk_ok : -EINVAL;
+        return controld_get_executor_state(rsc_id, true)? pcmk_ok : -EINVAL;
     }
 
     /* @TODO Implement an asynchronous version of this (currently a blocking

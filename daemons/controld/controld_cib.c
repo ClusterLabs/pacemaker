@@ -678,7 +678,7 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
         return;
     }
 
-    lrm_state = lrm_state_find(node_name);
+    lrm_state = controld_get_executor_state(node_name, false);
     if (lrm_state == NULL) {
         crm_warn("Cannot calculate digests for operation " PCMK__OP_FMT
                  " because we have no connection to executor for %s",
