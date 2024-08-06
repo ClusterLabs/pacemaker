@@ -1632,10 +1632,10 @@ AS_IF([test $with_cibsecrets -ne $DISABLED],
       [
           with_cibsecrets=$REQUIRED
           PCMK_FEATURES="$PCMK_FEATURES cibsecrets"
-          LRM_CIBSECRETS_DIR="${localstatedir}/lib/pacemaker/lrm/secrets"
-          AC_DEFINE_UNQUOTED([LRM_CIBSECRETS_DIR], ["$LRM_CIBSECRETS_DIR"],
+          PCMK__CIB_SECRETS_DIR="${localstatedir}/lib/pacemaker/lrm/secrets"
+          AC_DEFINE_UNQUOTED([PCMK__CIB_SECRETS_DIR], ["$PCMK__CIB_SECRETS_DIR"],
                              [Location for CIB secrets])
-          AC_SUBST([LRM_CIBSECRETS_DIR])
+          AC_SUBST([PCMK__CIB_SECRETS_DIR])
       ]
 )
 AC_DEFINE_UNQUOTED([SUPPORT_CIBSECRETS], [$with_cibsecrets], [Support CIB secrets])
