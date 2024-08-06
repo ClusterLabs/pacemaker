@@ -805,10 +805,10 @@ AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
                    [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
 AC_SUBST(CRM_CORE_DIR)
 
-CRM_PACEMAKER_DIR="${localstatedir}/lib/pacemaker"
-AC_DEFINE_UNQUOTED([CRM_PACEMAKER_DIR], ["$CRM_PACEMAKER_DIR"],
+PCMK__PERSISTENT_DATA_DIR="${localstatedir}/lib/pacemaker"
+AC_DEFINE_UNQUOTED([PCMK__PERSISTENT_DATA_DIR], ["$PCMK__PERSISTENT_DATA_DIR"],
                    [Location to store directory produced by Pacemaker daemons])
-AC_SUBST(CRM_PACEMAKER_DIR)
+AC_SUBST(PCMK__PERSISTENT_DATA_DIR)
 
 CRM_BLACKBOX_DIR="${localstatedir}/lib/pacemaker/blackbox"
 AC_DEFINE_UNQUOTED([CRM_BLACKBOX_DIR], ["$CRM_BLACKBOX_DIR"],

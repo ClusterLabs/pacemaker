@@ -152,11 +152,11 @@ create_pcmk_dirs(void)
     gid_t pcmk_gid = 0;
 
     const char *dirs[] = {
-        CRM_PACEMAKER_DIR, // core/blackbox/scheduler/CIB files
-        CRM_CORE_DIR,      // core files
-        CRM_BLACKBOX_DIR,  // blackbox dumps
-        PE_STATE_DIR,      // scheduler inputs
-        CRM_CONFIG_DIR,    // the Cluster Information Base (CIB)
+        PCMK__PERSISTENT_DATA_DIR,  // core/blackbox/scheduler/CIB files
+        CRM_CORE_DIR,               // core files
+        CRM_BLACKBOX_DIR,           // blackbox dumps
+        PE_STATE_DIR,               // scheduler inputs
+        CRM_CONFIG_DIR,             // the Cluster Information Base (CIB)
         // Don't build CRM_RSCTMP_DIR, the executor will do it
         NULL
     };
