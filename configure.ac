@@ -543,8 +543,8 @@ dnl Bash is needed for building man pages and running regression tests.
 dnl We set "BASH_PATH" because "BASH" is already an environment variable.
 REQUIRE_PROG([BASH_PATH], [bash])
 
-AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
-AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
+AC_PATH_PROGS(PCMK__VALGRIND_EXEC, valgrind, /usr/bin/valgrind)
+AC_DEFINE_UNQUOTED(PCMK__VALGRIND_EXEC, "$PCMK__VALGRIND_EXEC", Valgrind command)
 
 
 dnl ==============================================
