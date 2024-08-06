@@ -1638,7 +1638,7 @@ AS_IF([test $with_cibsecrets -ne $DISABLED],
           AC_SUBST([PCMK__CIB_SECRETS_DIR])
       ]
 )
-AC_DEFINE_UNQUOTED([SUPPORT_CIBSECRETS], [$with_cibsecrets], [Support CIB secrets])
+AC_DEFINE_UNQUOTED([PCMK__ENABLE_CIBSECRETS], [$with_cibsecrets], [Support CIB secrets])
 AM_CONDITIONAL([BUILD_CIBSECRETS], [test $with_cibsecrets -eq $REQUIRED])
 
 dnl ========================================================================

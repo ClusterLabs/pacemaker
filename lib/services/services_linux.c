@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -977,7 +977,7 @@ action_launch_child(svc_action_t *op)
      * exit reason for the parent to parse.
      */
 
-#if SUPPORT_CIBSECRETS
+#if PCMK__ENABLE_CIBSECRETS
     rc = pcmk__substitute_secrets(op->rsc, op->params);
     if (rc != pcmk_rc_ok) {
         if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_casei)) {

@@ -193,7 +193,7 @@ static GOptionEntry addl_entries[] = {
     { "device", 'v', 0, G_OPTION_ARG_CALLBACK, add_stonith_device,
       "Device ID (with --register-level, device to associate with\n"
       INDENT "a given host and level; may be specified multiple times)"
-#if SUPPORT_CIBSECRETS
+#if PCMK__ENABLE_CIBSECRETS
       "\n" INDENT "(with --validate, name to use to load CIB secrets)"
 #endif
       ".",

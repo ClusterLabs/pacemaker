@@ -1762,7 +1762,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
         }
     }
 
-#if SUPPORT_CIBSECRETS
+#if PCMK__ENABLE_CIBSECRETS
     rc = pcmk__substitute_secrets(rsc_id, params_table);
     if (rc != pcmk_rc_ok) {
         crm_warn("Could not replace secret parameters for validation of %s: %s",
