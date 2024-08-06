@@ -452,14 +452,14 @@ AC_ARG_WITH([ocfdir],
 )
 
 dnl Get default from resource-agents if possible
-PKG_CHECK_VAR([OCF_RA_PATH], [resource-agents], [ocfrapath], [],
-              [OCF_RA_PATH="$OCF_ROOT_DIR/resource.d"])
+PKG_CHECK_VAR([PCMK__OCF_RA_PATH], [resource-agents], [ocfrapath], [],
+              [PCMK__OCF_RA_PATH="$OCF_ROOT_DIR/resource.d"])
 AC_ARG_WITH([ocfrapath],
     [AS_HELP_STRING([--with-ocfrapath=DIR], m4_normalize([
         OCF resource agent directories (colon-separated) to search
         @<:@value from resource-agents package if available otherwise
         OCFDIR/resource.d@:>@]))],
-    [ OCF_RA_PATH="$withval" ]
+    [ PCMK__OCF_RA_PATH="$withval" ]
 )
 
 OCF_RA_INSTALL_DIR="$OCF_ROOT_DIR/resource.d"
@@ -780,9 +780,9 @@ AC_SUBST(OCF_ROOT_DIR)
 AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
                    [OCF root directory for resource agents and libraries])
 
-expand_path_option OCF_RA_PATH
-AC_SUBST(OCF_RA_PATH)
-AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
+expand_path_option PCMK__OCF_RA_PATH
+AC_SUBST(PCMK__OCF_RA_PATH)
+AC_DEFINE_UNQUOTED([PCMK__OCF_RA_PATH], ["$PCMK__OCF_RA_PATH"],
                    [OCF directories to search for resource agents ])
 
 expand_path_option OCF_RA_INSTALL_DIR

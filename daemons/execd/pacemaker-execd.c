@@ -544,7 +544,7 @@ main(int argc, char **argv, char **envp)
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker " EXECD_TYPE " executor successfully started and accepting connections");
-    crm_notice("OCF resource agent search path is %s", OCF_RA_PATH);
+    crm_notice("OCF resource agent search path is %s", PCMK__OCF_RA_PATH);
     g_main_loop_run(mainloop);
 
     /* should never get here */
