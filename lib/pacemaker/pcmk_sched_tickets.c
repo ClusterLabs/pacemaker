@@ -343,7 +343,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         if (rsc == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
-                              "'%s'", id, rsc_id, instance);
+                              id, rsc_id, instance);
             return;
         }
     }
