@@ -255,7 +255,7 @@
 # for Pacemaker Remote connections, as they are required for the respective
 # functionality.
 #
-# Default: PCMK_tls_priorities="@PCMK_GNUTLS_PRIORITIES@"
+# Default: PCMK_tls_priorities="@PCMK__GNUTLS_PRIORITIES@"
 # Example: PCMK_tls_priorities="SECURE128:+SECURE192:-VERS-ALL:+VERS-TLS1.2"
 
 # PCMK_dh_max_bits (Advanced Use Only)

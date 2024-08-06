@@ -311,11 +311,11 @@ AC_ARG_WITH([cibsecrets],
 yes_no_try "$with_cibsecrets" "no"
 with_cibsecrets=$?
 
-PCMK_GNUTLS_PRIORITIES="NORMAL"
+PCMK__GNUTLS_PRIORITIES="NORMAL"
 AC_ARG_WITH([gnutls-priorities],
     [AS_HELP_STRING([--with-gnutls-priorities],
         [default GnuTLS cipher priorities @<:@NORMAL@:>@])],
-    [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ]
+    [ test x"$withval" = x"no" || PCMK__GNUTLS_PRIORITIES="$withval" ]
 )
 
 AC_ARG_WITH([concurrent-fencing-default],
@@ -644,11 +644,11 @@ AC_DEFINE_UNQUOTED([PCMK__RESOURCE_STICKINESS_DEFAULT],
                    [$with_resource_stickiness_default],
                    [Default value for resource-stickiness resource meta-attribute])
 
-AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
+AS_IF([test x"${PCMK__GNUTLS_PRIORITIES}" != x""], [],
       [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
-AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
+AC_DEFINE_UNQUOTED([PCMK__GNUTLS_PRIORITIES], ["$PCMK__GNUTLS_PRIORITIES"],
                    [GnuTLS cipher priorities])
-AC_SUBST(PCMK_GNUTLS_PRIORITIES)
+AC_SUBST(PCMK__GNUTLS_PRIORITIES)
 
 AC_SUBST(BUG_URL)
 AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
