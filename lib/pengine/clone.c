@@ -719,7 +719,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
             pcmk_node_t *location = NULL;
 
-            location = child_rsc->priv->fns->location(child_rsc, NULL, TRUE);
+            location = child_rsc->priv->fns->location(child_rsc, NULL,
+                                                      pcmk__rsc_node_current);
             if (location) {
                 // Instance is active on a single node
 

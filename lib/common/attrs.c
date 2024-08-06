@@ -114,6 +114,7 @@ const char *
 pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
                 enum pcmk__rsc_node node_type)
 {
+    // @TODO accept a group of enum pcmk__rsc_node flags as node_type
     const char *value = NULL;       // Attribute value to return
     const char *node_type_s = NULL; // Readable equivalent of node_type
     const pcmk_node_t *host = NULL;

@@ -910,15 +910,14 @@ native_resource_state(const pcmk_resource_t * rsc, gboolean current)
  *
  * \param[in]  rsc      Resource to check
  * \param[out] list     List to add result to
- * \param[in]  current  0 = where allocated, 1 = where running,
- *                      2 = where running or pending
+ * \param[in]  target   Which resource conditions to target (group of
+ *                      enum pcmk__rsc_node flags)
  *
  * \return If list contains only one node, that node, or NULL otherwise
  */
 pcmk_node_t *
-native_location(const pcmk_resource_t *rsc, GList **list, int current)
+native_location(const pcmk_resource_t *rsc, GList **list, uint32_t target)
 {
-    // @COMPAT: Accept a pcmk__rsc_node argument instead of int current
     pcmk_node_t *one = NULL;
     GList *result = NULL;
 
@@ -929,22 +928,22 @@ native_location(const pcmk_resource_t *rsc, GList **list, int current)
 
             pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
 
-            child->priv->fns->location(child, &result, current);
+            child->priv->fns->location(child, &result, target);
         }
 
-    } else if (current) {
-
-        result = g_list_copy(rsc->priv->active_nodes);
-        if ((current == 2) && (rsc->priv->pending_node != NULL)
-            && !pe_find_node_id(result,
-                                rsc->priv->pending_node->priv->id)) {
-
-                result = g_list_append(result,
-                                       (gpointer) rsc->priv->pending_node);
+    } else {
+        if (pcmk_is_set(target, pcmk__rsc_node_current)) {
+            result = g_list_copy(rsc->priv->active_nodes);
         }
-
-    } else if (!current && (rsc->priv->assigned_node != NULL)) {
-        result = g_list_append(NULL, rsc->priv->assigned_node);
+        if (pcmk_is_set(target, pcmk__rsc_node_pending)
+            && (rsc->priv->pending_node != NULL)
+            && !pe_find_node_id(result, rsc->priv->pending_node->priv->id)) {
+            result = g_list_append(result, (gpointer) rsc->priv->pending_node);
+        }
+        if (pcmk_is_set(target, pcmk__rsc_node_assigned)
+            && (rsc->priv->assigned_node != NULL)) {
+            result = g_list_append(result, rsc->priv->assigned_node);
+        }
     }
 
     if (result && (result->next == NULL)) {

@@ -2129,7 +2129,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
          * (3) when we re-run calculations on the same scheduler data as part of
          *     a simulation.
          */
-        child->priv->fns->location(child, &locations, 2);
+        child->priv->fns->location(child, &locations, pcmk__rsc_node_current
+                                                      |pcmk__rsc_node_pending);
         if (locations) {
             /* We should never associate the same numbered anonymous clone
              * instance with multiple nodes, and clone instances can't migrate,

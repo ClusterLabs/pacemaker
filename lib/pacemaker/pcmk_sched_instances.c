@@ -1099,8 +1099,14 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
     }
 
     if (!is_set_recursive(instance, pcmk__rsc_blocked, true)) {
+        uint32_t target = pcmk__rsc_node_assigned;
+
+        if (current) {
+            target = pcmk__rsc_node_current;
+        }
+
         // We only want instances that haven't failed
-        instance_node = instance->priv->fns->location(instance, NULL, current);
+        instance_node = instance->priv->fns->location(instance, NULL, target);
     }
 
     if (instance_node == NULL) {
@@ -1191,9 +1197,14 @@ pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
     GList *nodes = NULL;
     const pcmk_node_t *node = NULL;
     GHashTable *allowed_nodes = match_rsc->priv->allowed_nodes;
+    uint32_t target = pcmk__rsc_node_assigned;
+
+    if (current) {
+        target = pcmk__rsc_node_current;
+    }
 
     // If match_rsc has a node, check only that node
-    node = match_rsc->priv->fns->location(match_rsc, NULL, current);
+    node = match_rsc->priv->fns->location(match_rsc, NULL, target);
     if (node != NULL) {
         return find_compatible_instance_on_node(match_rsc, rsc, node, role,
                                                 current);

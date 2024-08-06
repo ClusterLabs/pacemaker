@@ -45,7 +45,8 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
     if (consider_guest && pcmk__is_guest_or_bundle_node(node)) {
         pcmk_resource_t *guest = node->priv->remote->priv->launcher;
 
-        if (guest->priv->fns->location(guest, NULL, FALSE) == NULL) {
+        if (guest->priv->fns->location(guest, NULL,
+                                       pcmk__rsc_node_assigned) == NULL) {
             return false;
         }
     }

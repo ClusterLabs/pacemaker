@@ -404,7 +404,8 @@ get_bundle_node_host(const pcmk_node_t *node)
         const pcmk_resource_t *container = NULL;
 
         container = node->priv->remote->priv->launcher;
-        return container->priv->fns->location(container, NULL, 0);
+        return container->priv->fns->location(container, NULL,
+                                              pcmk__rsc_node_assigned);
     }
     return node;
 }
@@ -428,7 +429,8 @@ compatible_container(const pcmk_resource_t *dependent,
     struct match_data match_data = { NULL, NULL };
 
     // If dependent is assigned, only check there
-    match_data.node = dependent->priv->fns->location(dependent, NULL, 0);
+    match_data.node = dependent->priv->fns->location(dependent, NULL,
+                                                     pcmk__rsc_node_assigned);
     match_data.node = get_bundle_node_host(match_data.node);
     if (match_data.node != NULL) {
         pe__foreach_const_bundle_replica(bundle, match_replica_container,
@@ -492,7 +494,8 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
         return true;
     }
 
-    chosen = container->priv->fns->location(container, NULL, 0);
+    chosen = container->priv->fns->location(container, NULL,
+                                            pcmk__rsc_node_assigned);
     if ((chosen == NULL)
         || is_set_recursive(container, pcmk__rsc_blocked, true)) {
         return true;
