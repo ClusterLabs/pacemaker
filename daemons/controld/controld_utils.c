@@ -700,7 +700,8 @@ update_dc(xmlNode * msg)
         CRM_CHECK(welcome_from != NULL, return FALSE);
 
         if (AM_I_DC
-            && !pcmk__str_eq(welcome_from, controld_globals.our_nodename,
+            && !pcmk__str_eq(welcome_from,
+                             controld_globals.cluster->priv->node_name,
                              pcmk__str_casei)) {
             invalid = TRUE;
 

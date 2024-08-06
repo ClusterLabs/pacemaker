@@ -424,7 +424,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             is_local = true;
         }
 
-    } else if (pcmk__str_eq(controld_globals.our_nodename, host_to,
+    } else if (pcmk__str_eq(controld_globals.cluster->priv->node_name, host_to,
                             pcmk__str_casei)) {
         is_local = true;
 
@@ -922,7 +922,7 @@ handle_node_info_request(const xmlNode *msg)
 
     // Default to local node if none given
     if ((node_id == 0) && (value == NULL)) {
-        value = controld_globals.our_nodename;
+        value = controld_globals.cluster->priv->node_name;
     }
 
     node = pcmk__search_node_caches(node_id, value, pcmk__node_search_any);
@@ -1257,7 +1257,7 @@ handle_shutdown_request(xmlNode * stored_msg)
 
     if (host_from == NULL) {
         /* we're shutting down and the DC */
-        host_from = controld_globals.our_nodename;
+        host_from = controld_globals.cluster->priv->node_name;
     }
 
     crm_info("Creating shutdown request for %s (state=%s)", host_from,
@@ -1282,7 +1282,8 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
     client_channel = pcmk__find_client_by_id(sys);
 
     if (crm_element_value(msg, PCMK__XA_SRC) == NULL) {
-        crm_xml_add(msg, PCMK__XA_SRC, controld_globals.our_nodename);
+        crm_xml_add(msg, PCMK__XA_SRC,
+                    controld_globals.cluster->priv->node_name);
     }
 
     if (client_channel != NULL) {
@@ -1357,7 +1358,7 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
 
     if (node_up) {
         crm_xml_add(msg, PCMK__XA_CONNECTION_HOST,
-                    controld_globals.our_nodename);
+                    controld_globals.cluster->priv->node_name);
     }
 
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg);

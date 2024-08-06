@@ -70,8 +70,6 @@ do_ha_control(long long action,
                                pcmk__node_search_cluster_member);
 
             controld_election_init();
-            controld_globals.our_nodename =
-                controld_globals.cluster->priv->node_name;
 
             free(controld_globals.our_uuid);
             controld_globals.our_uuid =
@@ -256,9 +254,6 @@ crmd_exit(crm_exit_t exit_code)
     controld_free_fsa_timers();
     te_cleanup_stonith_history_sync(NULL, TRUE);
     controld_free_sched_timer();
-
-    free(controld_globals.our_nodename);
-    controld_globals.our_nodename = NULL;
 
     free(controld_globals.our_uuid);
     controld_globals.our_uuid = NULL;

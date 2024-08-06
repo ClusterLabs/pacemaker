@@ -536,7 +536,8 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
     }
 
     if (succeeded
-        && pcmk__str_eq(event->target, controld_globals.our_nodename,
+        && pcmk__str_eq(event->target,
+                        controld_globals.cluster->priv->node_name,
                         pcmk__str_casei)) {
         /* We were notified of our own fencing. Most likely, either fencing was
          * misconfigured, or fabric fencing that doesn't cut cluster
@@ -631,7 +632,8 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
              * have one node update the CIB now and, if the new DC is different,
              * have them do so too after the election
              */
-            if (pcmk__str_eq(event->executioner, controld_globals.our_nodename,
+            if (pcmk__str_eq(event->executioner,
+                             controld_globals.cluster->priv->node_name,
                              pcmk__str_casei)) {
                 send_stonith_update(NULL, event->target, uuid);
             }
@@ -1012,7 +1014,7 @@ bool
 controld_verify_stonith_watchdog_timeout(const char *value)
 {
     long long st_timeout = (value != NULL)? crm_get_msec(value) : 0;
-    const char *our_nodename = controld_globals.our_nodename;
+    const char *our_nodename = controld_globals.cluster->priv->node_name;
 
     if (st_timeout == 0
         || (stonith_api && (stonith_api->state != stonith_disconnected) &&

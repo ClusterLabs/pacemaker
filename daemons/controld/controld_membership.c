@@ -35,7 +35,7 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
     crm_update_peer_join(__func__, node, controld_join_none);
 
     if ((node != NULL) && (node->name != NULL)) {
-        if (pcmk__str_eq(controld_globals.our_nodename, node->name,
+        if (pcmk__str_eq(controld_globals.cluster->priv->node_name, node->name,
                          pcmk__str_casei)) {
             crm_err("We're not part of the cluster anymore");
             register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);

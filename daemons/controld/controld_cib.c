@@ -664,7 +664,8 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
     CRM_CHECK(caller_version != NULL, caller_version = CRM_FEATURE_SET);
 
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
-                                      controld_globals.our_nodename, func);
+                                      controld_globals.cluster->priv->node_name,
+                                      func);
     if (xml_op == NULL) {
         return;
     }
@@ -882,7 +883,7 @@ controld_update_resource_history(const char *node_name,
 
     //   <node_state ...>
     xml = pcmk__xe_create(update, PCMK__XE_NODE_STATE);
-    if (pcmk__str_eq(node_name, controld_globals.our_nodename,
+    if (pcmk__str_eq(node_name, controld_globals.cluster->priv->node_name,
                      pcmk__str_casei)) {
         node_id = controld_globals.our_uuid;
     } else {

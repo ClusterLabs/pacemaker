@@ -289,7 +289,7 @@ do_cl_join_finalize_respond(long long action,
     }
 
     if (!AM_I_DC
-        && pcmk__str_eq(welcome_from, controld_globals.our_nodename,
+        && pcmk__str_eq(welcome_from, controld_globals.cluster->priv->node_name,
                         pcmk__str_casei)) {
         crm_warn("Discarding our own welcome - we're no longer the DC");
         return;
@@ -304,8 +304,8 @@ do_cl_join_finalize_respond(long long action,
     update_dc_expected(input->msg);
 
     /* record the node's feature set as a transient attribute */
-    update_attrd(controld_globals.our_nodename, CRM_ATTR_FEATURE_SET,
-                 CRM_FEATURE_SET, NULL, FALSE);
+    update_attrd(controld_globals.cluster->priv->node_name,
+                 CRM_ATTR_FEATURE_SET, CRM_FEATURE_SET, NULL, FALSE);
 
     /* send our status section to the DC */
     tmp1 = controld_query_executor_state();
@@ -342,7 +342,8 @@ do_cl_join_finalize_respond(long long action,
 
             first_join = FALSE;
             if (start_state) {
-                set_join_state(start_state, controld_globals.our_nodename,
+                set_join_state(start_state,
+                               controld_globals.cluster->priv->node_name,
                                controld_globals.our_uuid, false);
             }
         }

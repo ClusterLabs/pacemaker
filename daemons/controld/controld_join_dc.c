@@ -381,9 +381,9 @@ do_dc_join_offer_one(long long action,
     /* If the offer isn't to the local node, make an offer to the local node as
      * well, to ensure the correct value for max_generation_from.
      */
-    if (strcasecmp(join_to, controld_globals.our_nodename) != 0) {
-        member = pcmk__get_node(0, controld_globals.our_nodename, NULL,
-                                pcmk__node_search_cluster_member);
+    if (strcasecmp(join_to, controld_globals.cluster->priv->node_name) != 0) {
+        member = pcmk__get_node(0, controld_globals.cluster->priv->node_name,
+                                NULL, pcmk__node_search_cluster_member);
         join_make_offer(NULL, member, NULL);
     }
 
@@ -544,7 +544,8 @@ do_dc_join_filter_offer(long long action,
 
     } else if ((cmp < 0)
                || ((cmp == 0)
-                   && pcmk__str_eq(join_from, controld_globals.our_nodename,
+                   && pcmk__str_eq(join_from,
+                                   controld_globals.cluster->priv->node_name,
                                    pcmk__str_casei))) {
         const char *validation = crm_element_value(generation,
                                                    PCMK_XA_VALIDATE_WITH);
@@ -628,7 +629,8 @@ do_dc_join_finalize(long long action,
     }
 
     controld_clear_fsa_input_flags(R_HAVE_CIB);
-    if (pcmk__str_eq(max_generation_from, controld_globals.our_nodename,
+    if (pcmk__str_eq(max_generation_from,
+                     controld_globals.cluster->priv->node_name,
                      pcmk__str_null_matches|pcmk__str_casei)) {
         controld_set_fsa_input_flags(R_HAVE_CIB);
     }
@@ -643,7 +645,7 @@ do_dc_join_finalize(long long action,
 
     if (pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
         // Send our CIB out to everyone
-        sync_from = pcmk__str_copy(controld_globals.our_nodename);
+        sync_from = pcmk__str_copy(controld_globals.cluster->priv->node_name);
         crm_debug("Finalizing join-%d for %d node%s (sync'ing from local CIB)",
                   current_join_id, count_finalizable,
                   pcmk__plural_s(count_finalizable));
@@ -830,7 +832,7 @@ do_dc_join_ack(long long action,
     }
 
     // Update CIB with node's latest known executor state
-    if (pcmk__str_eq(join_from, controld_globals.our_nodename,
+    if (pcmk__str_eq(join_from, controld_globals.cluster->priv->node_name,
                      pcmk__str_casei)) {
 
         // Use the latest possible state if processing our own join ack

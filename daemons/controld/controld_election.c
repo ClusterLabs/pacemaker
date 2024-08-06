@@ -261,7 +261,7 @@ do_dc_release(long long action,
         if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
             pcmk__node_status_t *node =
-                pcmk__get_node(0, controld_globals.our_nodename,
+                pcmk__get_node(0, controld_globals.cluster->priv->node_name,
                                NULL, pcmk__node_search_cluster_member);
 
             pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
