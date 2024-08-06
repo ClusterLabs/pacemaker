@@ -86,9 +86,8 @@ null_invalid(void **state)
 static void
 id_missing(void **state)
 {
-    // Currently acceptable
-    assert_op_expression(EXPR_ID_MISSING, pcmk_rc_ok);
-    assert_op_expression(EXPR_ID_EMPTY, pcmk_rc_ok);
+    assert_op_expression(EXPR_ID_MISSING, pcmk_rc_unpack_error);
+    assert_op_expression(EXPR_ID_EMPTY, pcmk_rc_unpack_error);
 }
 
 

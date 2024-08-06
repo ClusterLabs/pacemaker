@@ -133,7 +133,7 @@ phase_of_the_moon(const crm_time_t *now)
  * \brief Check an integer value against a range from a date specification
  *
  * \param[in] date_spec  XML of PCMK_XE_DATE_SPEC element to check
- * \param[in] id         XML ID for logging purposes
+ * \param[in] id         XML ID of parent date expression for logging purposes
  * \param[in] attr       Name of XML attribute with range to check against
  * \param[in] value      Value to compare against range
  *
@@ -151,18 +151,16 @@ check_range(const xmlNode *date_spec, const char *id, const char *attr,
     const char *range = crm_element_value(date_spec, attr);
     long long low, high;
 
-    if (range == NULL) { // Attribute not present
-        goto bail;
-    }
+    if (range == NULL) {
+        // Attribute not present
 
-    if (pcmk__parse_ll_range(range, &low, &high) != pcmk_rc_ok) {
+    } else if (pcmk__parse_ll_range(range, &low, &high) != pcmk_rc_ok) {
         // Invalid range
-        /* @COMPAT When we can break behavioral backward compatibility, treat
-         * the entire rule as not passing.
-         */
-        pcmk__config_err("Ignoring " PCMK_XE_DATE_SPEC
-                         " %s attribute %s because '%s' is not a valid range",
-                         id, attr, range);
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s "
+                         "as not passing because '%s' is not a valid range "
+                         "for " PCMK_XE_DATE_SPEC " attribute %s",
+                         id, range, attr);
+        rc = pcmk_rc_unpack_error;
 
     } else if ((low != -1) && (value < low)) {
         rc = pcmk_rc_before_range;
@@ -171,8 +169,8 @@ check_range(const xmlNode *date_spec, const char *id, const char *attr,
         rc = pcmk_rc_after_range;
     }
 
-bail:
-    crm_trace("Checked " PCMK_XE_DATE_SPEC " %s %s='%s' for %" PRIu32 ": %s",
+    crm_trace(PCMK_XE_DATE_EXPRESSION " %s: " PCMK_XE_DATE_SPEC
+              " %s='%s' for %" PRIu32 ": %s",
               id, attr, pcmk__s(range, ""), value, pcmk_rc_str(rc));
     return rc;
 }
@@ -185,9 +183,9 @@ bail:
  * \param[in] now        Time to check
  *
  * \return Standard Pacemaker return code (specifically, EINVAL for NULL
- *         arguments, pcmk_rc_ok if time matches specification, or
- *         pcmk_rc_before_range, pcmk_rc_after_range, or pcmk_rc_op_unsatisfied
- *         as appropriate to how time relates to specification)
+ *         arguments, pcmk_rc_unpack_error if the specification XML is invalid,
+ *         \c pcmk_rc_ok if \p now is within the specification's ranges, or
+ *         \c pcmk_rc_before_range or \c pcmk_rc_after_range as appropriate)
  */
 int
 pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
@@ -220,13 +218,10 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     // Get specification ID (for logging)
     id = pcmk__xe_id(date_spec);
     if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * fail the specification
-         */
-        pcmk__config_warn(PCMK_XE_DATE_SPEC " subelement of "
-                          PCMK_XE_DATE_EXPRESSION " %s has no " PCMK_XA_ID,
-                          parent_id);
-        id = "without ID"; // for logging
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                         "passing because " PCMK_XE_DATE_SPEC
+                         " subelement has no " PCMK_XA_ID, parent_id);
+        return pcmk_rc_unpack_error;
     }
 
     // Year, month, day
@@ -254,7 +249,8 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     }
 
     for (int i = 0; i < PCMK__NELEM(ranges); ++i) {
-        int rc = check_range(date_spec, id, ranges[i].attr, ranges[i].value);
+        int rc = check_range(date_spec, parent_id, ranges[i].attr,
+                             ranges[i].value);
 
         if (rc != pcmk_rc_ok) {
             return rc;
@@ -266,13 +262,16 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
 }
 
 #define ADD_COMPONENT(component) do {                                       \
-        int sub_rc = pcmk__add_time_from_xml(*end, component, duration);    \
-        if (sub_rc != pcmk_rc_ok) {                                         \
-            /* @COMPAT return sub_rc when we can break compatibility */     \
-            pcmk__config_warn("Ignoring %s in " PCMK_XE_DURATION " %s "     \
-                              "because it is invalid",                      \
-                              pcmk__time_component_attr(component), id);    \
-            rc = sub_rc;                                                    \
+        int rc = pcmk__add_time_from_xml(*end, component, duration);        \
+        if (rc != pcmk_rc_ok) {                                             \
+            pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s "     \
+                             "as not passing because " PCMK_XE_DURATION     \
+                             " %s attribute %s is invalid",                 \
+                             parent_id, id,                                 \
+                             pcmk__time_component_attr(component));         \
+            crm_time_free(*end);                                            \
+            *end = NULL;                                                    \
+            return rc;                                                      \
         }                                                                   \
     } while (0)
 
@@ -292,7 +291,6 @@ int
 pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
                       crm_time_t **end)
 {
-    int rc = pcmk_rc_ok;
     const char *id = NULL;
     const char *parent_id = loggable_parent_id(duration);
 
@@ -304,13 +302,10 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
     // Get duration ID (for logging)
     id = pcmk__xe_id(duration);
     if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_unpack_error instead
-         */
-        pcmk__config_warn(PCMK_XE_DURATION " subelement of "
-                          PCMK_XE_DATE_EXPRESSION " %s has no " PCMK_XA_ID,
-                          parent_id);
-        id = "without ID";
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s "
+                         "as not passing because " PCMK_XE_DURATION
+                         " subelement has no " PCMK_XA_ID, parent_id);
+        return pcmk_rc_unpack_error;
     }
 
     *end = pcmk_copy_time(start);
@@ -323,7 +318,7 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
     ADD_COMPONENT(pcmk__time_minutes);
     ADD_COMPONENT(pcmk__time_seconds);
 
-    return rc;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -348,33 +343,26 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
 
     if (pcmk__xe_get_datetime(date_expression, PCMK_XA_START,
                               &start) != pcmk_rc_ok) {
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_unpack_error
-         */
-        pcmk__config_warn("Ignoring " PCMK_XA_START " in "
-                          PCMK_XE_DATE_EXPRESSION " %s because it is invalid",
-                          id);
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                         "passing because " PCMK_XA_START " is invalid", id);
+        return pcmk_rc_unpack_error;
     }
 
     if (pcmk__xe_get_datetime(date_expression, PCMK_XA_END,
                               &end) != pcmk_rc_ok) {
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_unpack_error
-         */
-        pcmk__config_warn("Ignoring " PCMK_XA_END " in "
-                          PCMK_XE_DATE_EXPRESSION " %s because it is invalid",
-                          id);
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                         "passing because " PCMK_XA_END " is invalid", id);
+        crm_time_free(start);
+        return pcmk_rc_unpack_error;
     }
 
     if ((start == NULL) && (end == NULL)) {
         // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_unpack_error
-         */
-        pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
-                          "passing because in_range requires at least one of "
-                          PCMK_XA_START " or " PCMK_XA_END, id);
-        return pcmk_rc_undetermined;
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                         "passing because " PCMK_VALUE_IN_RANGE
+                         " requires at least one of " PCMK_XA_START " or "
+                         PCMK_XA_END, id);
+        return pcmk_rc_unpack_error;
     }
 
     if (end == NULL) {
@@ -382,10 +370,15 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
                                                  PCMK_XE_DURATION, NULL, NULL);
 
         if (duration != NULL) {
-            /* @COMPAT When we can break behavioral backward compatibility,
-             * return the result of this if not OK
-             */
-            pcmk__unpack_duration(duration, start, &end);
+            int rc = pcmk__unpack_duration(duration, start, &end);
+
+            if (rc != pcmk_rc_ok) {
+                pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION
+                                 " %s as not passing because duration "
+                                 "is invalid", id);
+                crm_time_free(start);
+                return rc;
+            }
         }
     }
 
@@ -436,23 +429,17 @@ evaluate_gt(const xmlNode *date_expression, const char *id,
 
     if (pcmk__xe_get_datetime(date_expression, PCMK_XA_START,
                               &start) != pcmk_rc_ok) {
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_unpack_error
-         */
-        pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
-                          "passing because " PCMK_XA_START " is invalid",
-                          id);
-        return pcmk_rc_undetermined;
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                         "passing because " PCMK_XA_START " is invalid",
+                         id);
+        return pcmk_rc_unpack_error;
     }
 
     if (start == NULL) { // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_unpack_error
-         */
-        pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
-                          "passing because " PCMK_VALUE_GT " requires "
-                          PCMK_XA_START, id);
-        return pcmk_rc_undetermined;
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                         "passing because " PCMK_VALUE_GT " requires "
+                         PCMK_XA_START, id);
+        return pcmk_rc_unpack_error;
     }
 
     if (crm_time_compare(now, start) > 0) {
@@ -488,22 +475,16 @@ evaluate_lt(const xmlNode *date_expression, const char *id,
 
     if (pcmk__xe_get_datetime(date_expression, PCMK_XA_END,
                               &end) != pcmk_rc_ok) {
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_unpack_error
-         */
-        pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
-                          "passing because " PCMK_XA_END " is invalid", id);
-        return pcmk_rc_undetermined;
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                         "passing because " PCMK_XA_END " is invalid", id);
+        return pcmk_rc_unpack_error;
     }
 
     if (end == NULL) { // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_unpack_error
-         */
-        pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
-                          "passing because " PCMK_VALUE_GT " requires "
-                          PCMK_XA_END, id);
-        return pcmk_rc_undetermined;
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                         "passing because " PCMK_VALUE_GT " requires "
+                         PCMK_XA_END, id);
+        return pcmk_rc_unpack_error;
     }
 
     if (crm_time_compare(now, end) < 0) {
@@ -536,7 +517,7 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
 {
     const char *id = NULL;
     const char *op = NULL;
-    int rc = pcmk_rc_undetermined;
+    int rc = pcmk_rc_ok;
 
     if ((date_expression == NULL) || (now == NULL)) {
         return EINVAL;
@@ -545,12 +526,9 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
     // Get expression ID (for logging)
     id = pcmk__xe_id(date_expression);
     if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_unpack_error
-         */
-        pcmk__config_warn(PCMK_XE_DATE_EXPRESSION " element has no "
-                          PCMK_XA_ID);
-        id = "without ID"; // for logging
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " without "
+                         PCMK_XA_ID " as not passing");
+        return pcmk_rc_unpack_error;
     }
 
     op = crm_element_value(date_expression, PCMK_XA_OPERATION);
@@ -564,17 +542,15 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
                                                   NULL);
 
         if (date_spec == NULL) { // Not possible with schema validation enabled
-            /* @COMPAT When we can break behavioral backward compatibility,
-             * return pcmk_rc_unpack_error
-             */
-            pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION " %s "
-                              "as not passing because " PCMK_VALUE_DATE_SPEC
-                              " operations require a " PCMK_XE_DATE_SPEC
-                              " subelement", id);
-        } else {
-            // @TODO set next_change appropriately
-            rc = pcmk__evaluate_date_spec(date_spec, now);
+            pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s "
+                             "as not passing because " PCMK_VALUE_DATE_SPEC
+                             " operations require a " PCMK_XE_DATE_SPEC
+                             " subelement", id);
+            return pcmk_rc_unpack_error;
         }
+
+        // @TODO set next_change appropriately
+        rc = pcmk__evaluate_date_spec(date_spec, now);
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
         rc = evaluate_gt(date_expression, id, now, next_change);
@@ -583,12 +559,10 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
         rc = evaluate_lt(date_expression, id, now, next_change);
 
     } else { // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_unpack_error
-         */
-        pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION
-                          " %s as not passing because '%s' is not a valid "
-                          PCMK_XE_OPERATION, op);
+        pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION
+                         " %s as not passing because '%s' is not a valid "
+                         PCMK_XE_OPERATION, id, op);
+        return pcmk_rc_unpack_error;
     }
 
     crm_trace(PCMK_XE_DATE_EXPRESSION " %s (%s): %s (%d)",
@@ -1060,11 +1034,9 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     // Get expression ID (for logging)
     id = pcmk__xe_id(expression);
     if (pcmk__str_empty(id)) {
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * fail the expression
-         */
-        pcmk__config_warn(PCMK_XE_EXPRESSION " element has no " PCMK_XA_ID);
-        id = "without ID"; // for logging
+        pcmk__config_err("Treating " PCMK_XE_EXPRESSION " without " PCMK_XA_ID
+                         " as not passing");
+        return pcmk_rc_unpack_error;
     }
 
     /* Get name of node attribute to compare (expanding any %0-%9 to
@@ -1106,11 +1078,11 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     source = pcmk__parse_source(source_s);
     if (source == pcmk__source_unknown) {
         // Not possible with schema validation enabled
-        // @COMPAT Fail expression once we can break backward compatibility
-        pcmk__config_warn("Expression %s has invalid " PCMK_XA_VALUE_SOURCE
-                          " value '%s', using default "
-                          "('" PCMK_VALUE_LITERAL "')", id, source_s);
-        source = pcmk__source_literal;
+        pcmk__config_err("Treating " PCMK_XE_EXPRESSION " %s as not passing "
+                         "because '%s' is not a valid " PCMK_XA_VALUE_SOURCE,
+                         id, source_s);
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     // Get and validate reference value
@@ -1119,16 +1091,23 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
         case pcmk__comparison_defined:
         case pcmk__comparison_undefined:
             if (value != NULL) {
-                pcmk__config_warn("Ignoring " PCMK_XA_VALUE " in "
-                                  PCMK_XE_EXPRESSION " %s because it is unused "
-                                  "when " PCMK_XA_BOOLEAN_OP " is %s", id, op);
+                pcmk__config_err("Treating " PCMK_XE_EXPRESSION " %s as not "
+                                 "passing because " PCMK_XA_VALUE " is not "
+                                 "allowed when " PCMK_XA_OPERATION " is %s",
+                                 id, op);
+                rc = pcmk_rc_unpack_error;
+                goto done;
             }
             break;
 
         default:
             if (value == NULL) {
-                pcmk__config_warn(PCMK_XE_EXPRESSION " %s has no "
-                                  PCMK_XA_VALUE, id);
+                pcmk__config_err("Treating " PCMK_XE_EXPRESSION " %s as not "
+                                 "passing because " PCMK_XA_VALUE " is "
+                                 "required when " PCMK_XA_OPERATION " is %s",
+                                 id, op);
+                rc = pcmk_rc_unpack_error;
+                goto done;
             }
             break;
     }
@@ -1143,14 +1122,11 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     type_s = crm_element_value(expression, PCMK_XA_TYPE);
     type = pcmk__parse_type(type_s, comparison, actual, reference);
     if (type == pcmk__type_unknown) {
-        /* Not possible with schema validation enabled
-         *
-         * @COMPAT When we can break behavioral backward compatibility, treat
-         * the expression as not passing.
-         */
-        pcmk__config_warn("Non-empty node attribute values will be treated as "
-                          "equal for " PCMK_XE_EXPRESSION " %s because '%s' "
-                          "is not a valid type", id, type);
+        // Not possible with schema validation enabled
+        pcmk__config_err("Treating " PCMK_XE_EXPRESSION " %s as not passing "
+                         "because '%s' is not a valid type", id, type_s);
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     rc = evaluate_attr_comparison(actual, reference, type, comparison);
@@ -1201,11 +1177,9 @@ pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
     id = pcmk__xe_id(rsc_expression);
     if (pcmk__str_empty(id)) {
         // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * fail the expression
-         */
-        pcmk__config_warn(PCMK_XE_RSC_EXPRESSION " has no " PCMK_XA_ID);
-        id = "without ID"; // for logging
+        pcmk__config_err("Treating " PCMK_XE_RSC_EXPRESSION " without "
+                         PCMK_XA_ID " as not passing");
+        return pcmk_rc_unpack_error;
     }
 
     // Compare resource standard
@@ -1271,27 +1245,26 @@ pcmk__evaluate_op_expression(const xmlNode *op_expression,
     // Get operation expression ID (for logging)
     id = pcmk__xe_id(op_expression);
     if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return pcmk_rc_op_unsatisfied
-         */
-        pcmk__config_warn(PCMK_XE_OP_EXPRESSION " element has no " PCMK_XA_ID);
-        id = "without ID"; // for logging
+        pcmk__config_err("Treating " PCMK_XE_OP_EXPRESSION " without "
+                         PCMK_XA_ID " as not passing");
+        return pcmk_rc_unpack_error;
     }
 
     // Validate operation name
     name = crm_element_value(op_expression, PCMK_XA_NAME);
     if (name == NULL) { // Not possible with schema validation enabled
-        pcmk__config_warn("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
-                          "passing because it has no " PCMK_XA_NAME, id);
+        pcmk__config_err("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
+                         "passing because it has no " PCMK_XA_NAME, id);
         return pcmk_rc_unpack_error;
     }
 
     // Validate operation interval
     interval_s = crm_element_value(op_expression, PCMK_META_INTERVAL);
     if (pcmk_parse_interval_spec(interval_s, &interval_ms) != pcmk_rc_ok) {
-        pcmk__config_warn("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
-                          "passing because '%s' is not a valid interval",
-                          id, interval_s);
+        pcmk__config_err("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
+                         "passing because '%s' is not a valid "
+                         PCMK_META_INTERVAL,
+                         id, interval_s);
         return pcmk_rc_unpack_error;
     }
 
@@ -1403,12 +1376,10 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
 
     // Validate XML ID
     id = pcmk__xe_id(rule);
-    if (pcmk__str_empty(id)) {
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * fail the rule
-         */
-        pcmk__config_warn(PCMK_XE_RULE " has no " PCMK_XA_ID);
-        id = "without ID"; // for logging
+    if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
+        pcmk__config_err("Treating " PCMK_XE_RULE " without " PCMK_XA_ID
+                         " as not passing");
+        return pcmk_rc_unpack_error;
     }
 
     value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
@@ -1423,15 +1394,11 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
             rc = pcmk_rc_op_unsatisfied;
             break;
 
-        default:
-            /* @COMPAT When we can break behavioral backward compatibility,
-             * return pcmk_rc_unpack_error
-             */
-            pcmk__config_warn("Rule %s has invalid " PCMK_XA_BOOLEAN_OP
-                              " value '%s', using default '" PCMK_VALUE_AND "'",
-                              pcmk__xe_id(rule), value);
-            combine = pcmk__combine_and;
-            break;
+        default: // Not possible with schema validation enabled
+            pcmk__config_err("Treating " PCMK_XE_RULE " %s as not passing "
+                             "because '%s' is not a valid " PCMK_XA_BOOLEAN_OP,
+                             id, value);
+            return pcmk_rc_unpack_error;
     }
 
     // Evaluate each condition
@@ -1452,12 +1419,9 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
     }
 
     if (empty) { // Not possible with schema validation enabled
-        /* @COMPAT Currently, we don't actually ignore "or" rules because
-         * rc is initialized to failure above in that case. When we can break
-         * backward compatibility, reset rc to pcmk_rc_ok here.
-         */
         pcmk__config_warn("Ignoring rule %s because it contains no conditions",
                           id);
+        rc = pcmk_rc_ok;
     }
 
     crm_trace("Rule %s is %ssatisfied", id, ((rc == pcmk_rc_ok)? "" : "not "));

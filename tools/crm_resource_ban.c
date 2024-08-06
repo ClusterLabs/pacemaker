@@ -473,12 +473,13 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
 
         /* And then finally, see if the date expression is expired.  If so,
          * clear the constraint.
-         *
-         * @COMPAT Check for error once we are rejecting rules with invalid end
          */
         rc = pcmk__xe_get_datetime(date_expr_node, PCMK_XA_END, &end);
         if (rc != pcmk_rc_ok) {
-            crm_trace("Invalid " PCMK_XA_END ": %s", pcmk_rc_str(rc));
+            crm_trace("Date expression %s has invalid " PCMK_XA_END ": %s",
+                      pcmk__s(pcmk__xe_id(date_expr_node), "without ID"),
+                      pcmk_rc_str(rc));
+            continue; // Treat as unexpired
         }
 
         if (crm_time_compare(now, end) == 1) {

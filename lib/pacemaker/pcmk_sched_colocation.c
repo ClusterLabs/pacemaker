@@ -841,7 +841,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
         if (primary == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
-                              "'%s'", id, primary_id, primary_instance);
+                              id, primary_id, primary_instance);
             return;
         }
     }
