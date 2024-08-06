@@ -169,6 +169,13 @@ enum pcmk__rsc_flags {
     pcmk__rsc_needs_unfencing        = (1ULL << 30),
 };
 
+// Where to look for a resource
+enum pcmk__rsc_node {
+    pcmk__rsc_node_assigned = 0,  // Where resource is assigned
+    pcmk__rsc_node_current  = 1,  // Where resource is running
+    pcmk__rsc_node_pending  = 2,  // Where resource is pending
+};
+
 //! Resource assignment methods (implementation defined by libpacemaker)
 typedef struct pcmk__assignment_methods pcmk__assignment_methods_t;
 
