@@ -17,9 +17,9 @@
 #include <glib.h>               // guint, GList, GHashTable
 #include <libxml/tree.h>        // xmlNode
 
-#include <crm/common/util.h>    // crm_strdup_printf()
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
+#include <crm/common/strings.h>  // crm_strdup_printf()
 #include <crm/common/actions_internal.h>
 #include <crm/common/digest_internal.h>
 #include <crm/common/health_internal.h>

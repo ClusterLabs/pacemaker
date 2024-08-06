@@ -16,7 +16,7 @@
 #include <glib.h>               // guint, GList, GHashTable
 
 #include <crm/common/options.h> // PCMK_VALUE_TRUE, PCMK_VALUE_FALSE
-#include <crm/common/util.h>    // crm_strdup_printf
+#include <crm/common/strings.h> // crm_strdup_printf()
 
 #ifdef __cplusplus
 extern "C" {

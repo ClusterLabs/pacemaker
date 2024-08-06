@@ -35,6 +35,7 @@ header_HEADERS = acl.h 			\
 		 scheduler_types.h	\
 		 schemas.h		\
 		 scores.h		\
+		 strings.h		\
 		 util.h 		\
 		 util_compat.h 		\
 		 xml.h 			\
