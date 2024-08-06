@@ -835,10 +835,10 @@ AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
                    [Where to keep state files and sockets])
 AC_SUBST(CRM_STATE_DIR)
 
-CRM_RSCTMP_DIR="${runstatedir}/resource-agents"
-AC_DEFINE_UNQUOTED([CRM_RSCTMP_DIR], ["$CRM_RSCTMP_DIR"],
+PCMK__OCF_TMP_DIR="${runstatedir}/resource-agents"
+AC_DEFINE_UNQUOTED([PCMK__OCF_TMP_DIR], ["$PCMK__OCF_TMP_DIR"],
                    [Where resource agents should keep state files])
-AC_SUBST(CRM_RSCTMP_DIR)
+AC_SUBST(PCMK__OCF_TMP_DIR)
 
 PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
 AC_DEFINE_UNQUOTED([PACEMAKER_CONFIG_DIR], ["$PACEMAKER_CONFIG_DIR"],

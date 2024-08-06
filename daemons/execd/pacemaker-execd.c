@@ -516,11 +516,11 @@ main(int argc, char **argv, char **envp)
 
     {
         // Temporary directory for resource agent use (leave owned by root)
-        int rc = pcmk__build_path(CRM_RSCTMP_DIR, 0755);
+        int rc = pcmk__build_path(PCMK__OCF_TMP_DIR, 0755);
 
         if (rc != pcmk_rc_ok) {
             crm_warn("Could not create resource agent temporary directory "
-                     CRM_RSCTMP_DIR ": %s", pcmk_rc_str(rc));
+                     PCMK__OCF_TMP_DIR ": %s", pcmk_rc_str(rc));
         }
     }
 

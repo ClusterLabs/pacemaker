@@ -157,7 +157,7 @@ create_pcmk_dirs(void)
         CRM_BLACKBOX_DIR,           // blackbox dumps
         PE_STATE_DIR,               // scheduler inputs
         CRM_CONFIG_DIR,             // the Cluster Information Base (CIB)
-        // Don't build CRM_RSCTMP_DIR, the executor will do it
+        // Don't build PCMK__OCF_TMP_DIR the executor will do it
         NULL
     };
 
