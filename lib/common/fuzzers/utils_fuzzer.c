@@ -20,14 +20,14 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     char *ns = NULL;
     guint result = 0U;
 
-    if (size < 10) {
-        return -1; // Do not add input to testing corpus
+    if (size > 0) {
+        ns = pcmk__assert_alloc(1, size + 1);
+        memcpy(ns, data, size);
+        ns[size] = '\0';
     }
-    ns = pcmk__assert_alloc(1, size + 1);
-    memcpy(ns, data, size);
-    ns[size] = '\0';
 
-    pcmk_parse_interval_spec(ns, &result);
+    pcmk_str_is_infinity(ns);
+    pcmk_str_is_minus_infinity(ns);
 
     free(ns);
     return 0;

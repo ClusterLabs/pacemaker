@@ -547,20 +547,22 @@ To fuzz the code:
 
    * ``python3 infra/helper.py build_image pacemaker``
 
-3. Build the fuzzers. There are three possible sanitizers: address, memory, and
-   undefined. The memory sanitizer requires special preparation and is
-   generally not used. If you are reproducing an OSS-Fuzz-reported issue, the
-   issue will list the sanitizer that was used.
+3. Build the fuzzers. Choose a sanitizer (for example, ``SANITIZER=address``).
+   There are three possible sanitizers: address, memory, and undefined. The
+   memory sanitizer requires special preparation and is generally not used. If
+   you are reproducing an OSS-Fuzz-reported issue, the issue will list the
+   sanitizer that was used.
 
-   * ``python3 infra/helper.py build_fuzzers --sanitizer address pacemaker``
+   * ``python3 infra/helper.py build_fuzzers --sanitizer $SANITIZER pacemaker``
 
-4. Ensure the build succeeded:
+4. Ensure the build succeeded (use the same sanitizer as the previous step):
 
-   * ``python3 infra/helper.py check_build pacemaker``
+   * ``python3 infra/helper.py check_build --sanitizer $SANITIZER pacemaker``
 
 5. If you want to run fuzzing yourself, choose a fuzzer (for example,
-   ``iso8601_fuzzer``). Create a temporary directory for the fuzzer's outputs,
-   then run the fuzzing command, which will fuzz for 25 seconds then time out:
+   ``FUZZER=iso8601_fuzzer``). Create a temporary directory for the fuzzer's
+   outputs, then run the fuzzing command, which will fuzz for 25 seconds then
+   time out:
 
    * ``rm -rf /tmp/corpus >/dev/null 2>&/dev/null``
    * ``mkdir /tmp/corpus``
