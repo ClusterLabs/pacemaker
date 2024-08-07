@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -92,10 +92,6 @@ typedef struct {
 
     // Designated controller's Pacemaker version
     char *dc_version;
-
-    // Local node's node name
-    // @TODO Use controld_globals.cluster->priv->node_name instead
-    char *our_nodename;
 
     // Local node's UUID
     char *our_uuid;

@@ -54,8 +54,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *cmd = NULL;
 
-            if (pcmk__str_eq(controld_globals.our_nodename, node->name,
-                             pcmk__str_casei)) {
+            if (controld_is_local_node(node->name)) {
                 continue;
             }
 
@@ -131,13 +130,12 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             const char *mode = crm_element_value(action->xml, PCMK__XA_MODE);
 
             if (pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
-                router_node = controld_globals.our_nodename;
+                router_node = controld_globals.cluster->priv->node_name;
             }
         }
     }
 
-    if (pcmk__str_eq(router_node, controld_globals.our_nodename,
-                     pcmk__str_casei)) {
+    if (controld_is_local_node(router_node)) {
         is_local = TRUE;
     }
 
@@ -394,8 +392,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                    controld_globals.te_uuid);
     crm_xml_add(rsc_op, PCMK__XA_TRANSITION_KEY, counter);
 
-    if (pcmk__str_eq(router_node, controld_globals.our_nodename,
-                     pcmk__str_casei)) {
+    if (controld_is_local_node(router_node)) {
         is_local = TRUE;
     }
 

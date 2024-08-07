@@ -10,8 +10,10 @@
 #ifndef PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 #define PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 
-#include <glib.h>                       // gboolean, GList
+#include <stdint.h>                     // uint32_t
+#include <glib.h>                       // gboolean, guint, GHashTable, GList
 #include <libxml/tree.h>                // xmlNode
+
 #include <crm/common/resources.h>       // pcmk_resource_t
 #include <crm/common/roles.h>           // enum rsc_role_e
 #include <crm/common/scheduler_types.h> // pcmk_node_t, etc.
@@ -169,6 +171,14 @@ enum pcmk__rsc_flags {
     pcmk__rsc_needs_unfencing        = (1ULL << 30),
 };
 
+// Where to look for a resource
+enum pcmk__rsc_node {
+    pcmk__rsc_node_none     = 0U,           // Nowhere
+    pcmk__rsc_node_assigned = (1U << 0),    // Where resource is assigned
+    pcmk__rsc_node_current  = (1U << 1),    // Where resource is running
+    pcmk__rsc_node_pending  = (1U << 2),    // Where resource is pending
+};
+
 //! Resource assignment methods (implementation defined by libpacemaker)
 typedef struct pcmk__assignment_methods pcmk__assignment_methods_t;
 
@@ -243,13 +253,13 @@ typedef struct {
      *
      * \param[in]  rsc      Resource to check
      * \param[out] list     List to add result to
-     * \param[in]  current  If 0, list nodes where \p rsc is assigned;
-     *                      if 1, where active; if 2, where active or pending
+     * \param[in]  target   Which resource conditions to target (group of
+     *                      enum pcmk__rsc_node flags)
      *
      * \return If list contains only one node, that node, otherwise NULL
      */
     pcmk_node_t *(*location)(const pcmk_resource_t *rsc, GList **list,
-                             int current);
+                             uint32_t target);
 
     /*!
      * \internal

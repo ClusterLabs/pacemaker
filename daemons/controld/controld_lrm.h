@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -108,15 +108,7 @@ gboolean lrm_state_init_local(void);
  */
 void lrm_state_destroy_all(void);
 
-/*!
- * \brief Find lrm_state data by node name
- */
-lrm_state_t *lrm_state_find(const char *node_name);
-
-/*!
- * \brief Either find or create a new entry
- */
-lrm_state_t *lrm_state_find_or_create(const char *node_name);
+lrm_state_t *controld_get_executor_state(const char *node_name, bool create);
 
 /*!
  * The functions below are wrappers for the executor API the controller uses.

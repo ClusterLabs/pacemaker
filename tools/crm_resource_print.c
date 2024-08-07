@@ -702,7 +702,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
         for (lpc = resources; lpc != NULL; lpc = lpc->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
-            rsc->priv->fns->location(rsc, &hosts, TRUE);
+            rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
 
             if (hosts == NULL) {
                 out->list_item(out, "reason", "Resource %s is not running", rsc->id);
@@ -754,7 +754,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
     } else if ((rsc != NULL) && (host_uname == NULL)) {
         GList *hosts = NULL;
 
-        rsc->priv->fns->location(rsc, &hosts, TRUE);
+        rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
         out->list_item(out, "reason", "Resource %s is %srunning",
                        rsc->id, (hosts? "" : "not "));
         cli_resource_check(out, rsc, NULL);
@@ -789,7 +789,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
             const char *running = NULL;
 
-            rsc->priv->fns->location(rsc, &hosts, TRUE);
+            rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
             running = pcmk__btoa(hosts != NULL);
 
             pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE,
@@ -855,7 +855,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
     } else if ((rsc != NULL) && (host_uname == NULL)) {
         GList *hosts = NULL;
 
-        rsc->priv->fns->location(rsc, &hosts, TRUE);
+        rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
         crm_xml_add(xml_node, PCMK_XA_RUNNING, pcmk__btoa(hosts != NULL));
         cli_resource_check(out, rsc, NULL);
         g_list_free(hosts);

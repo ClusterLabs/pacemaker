@@ -551,12 +551,14 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         pcmk_node_t *then_node = then->node;
         pcmk_node_t *first_node = first->node;
 
+        const uint32_t target = pcmk__rsc_node_assigned;
+
         if ((first->rsc != NULL)
             && pcmk__is_group(first->rsc)
             && pcmk__str_eq(first->task, PCMK_ACTION_START, pcmk__str_none)) {
 
             first_node = first->rsc->priv->fns->location(first->rsc, NULL,
-                                                         FALSE);
+                                                         target);
             if (first_node != NULL) {
                 pcmk__rsc_trace(first->rsc, "Found %s for 'first' %s",
                                 pcmk__node_name(first_node), first->uuid);
@@ -566,7 +568,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         if (pcmk__is_group(then->rsc)
             && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)) {
 
-            then_node = then->rsc->priv->fns->location(then->rsc, NULL, FALSE);
+            then_node = then->rsc->priv->fns->location(then->rsc, NULL, target);
             if (then_node != NULL) {
                 pcmk__rsc_trace(then->rsc, "Found %s for 'then' %s",
                                 pcmk__node_name(then_node), then->uuid);

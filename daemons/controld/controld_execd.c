@@ -275,7 +275,8 @@ send_task_ok_ack(const lrm_state_t *lrm_state, const ha_msg_input_t *input,
 static inline const char *
 op_node_name(lrmd_event_data_t *op)
 {
-    return pcmk__s(op->remote_nodename, controld_globals.our_nodename);
+    return pcmk__s(op->remote_nodename,
+                   controld_globals.cluster->priv->node_name);
 }
 
 void
@@ -294,7 +295,8 @@ lrm_op_callback(lrmd_event_data_t * op)
 
         case lrmd_event_exec_complete:
             {
-                lrm_state_t *lrm_state = lrm_state_find(op_node_name(op));
+                lrm_state_t *lrm_state =
+                    controld_get_executor_state(op_node_name(op), false);
 
                 CRM_ASSERT(lrm_state != NULL);
                 process_lrm_event(lrm_state, op, NULL, NULL);
@@ -355,10 +357,10 @@ do_lrm_control(long long action,
 
     lrm_state_t *lrm_state = NULL;
 
-    if (controld_globals.our_nodename == NULL) {
-        return; /* Nothing to do */
+    if (controld_globals.cluster->priv->node_name == NULL) {
+        return; // Shouldn't be possible
     }
-    lrm_state = lrm_state_find_or_create(controld_globals.our_nodename);
+    lrm_state = controld_get_executor_state(NULL, true);
     if (lrm_state == NULL) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         return;
@@ -575,11 +577,10 @@ controld_query_executor_state(void)
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
     pcmk__node_status_t *peer = NULL;
-    lrm_state_t *lrm_state = lrm_state_find(controld_globals.our_nodename);
+    lrm_state_t *lrm_state = controld_get_executor_state(NULL, false);
 
     if (!lrm_state) {
-        crm_err("Could not find executor state for node %s",
-                controld_globals.our_nodename);
+        crm_err("Could not get executor state for local node");
         return NULL;
     }
 
@@ -770,7 +771,7 @@ void
 lrm_clear_last_failure(const char *rsc_id, const char *node_name,
                        const char *operation, guint interval_ms)
 {
-    lrm_state_t *lrm_state = lrm_state_find(node_name);
+    lrm_state_t *lrm_state = controld_get_executor_state(node_name, false);
 
     if (lrm_state == NULL) {
         return;
@@ -1051,7 +1052,8 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
             unregister = false;
 
             if (reprobe_all_nodes) {
-                lrm_state_t *remote_lrm_state = lrm_state_find(entry->id);
+                lrm_state_t *remote_lrm_state =
+                    controld_get_executor_state(entry->id, false);
 
                 if (remote_lrm_state != NULL) {
                     /* If reprobing all nodes, be sure to reprobe the remote
@@ -1149,7 +1151,7 @@ lrm_op_target(const xmlNode *xml)
         target = crm_element_value(xml, PCMK__META_ON_NODE);
     }
     if (target == NULL) {
-        target = controld_globals.our_nodename;
+        target = controld_globals.cluster->priv->node_name;
     }
     return target;
 }
@@ -1371,7 +1373,8 @@ metadata_complete(int pid, const pcmk__action_result_t *result, void *user_data)
     struct metadata_cb_data *data = (struct metadata_cb_data *) user_data;
 
     struct ra_metadata_s *md = NULL;
-    lrm_state_t *lrm_state = lrm_state_find(lrm_op_target(data->input_xml));
+    lrm_state_t *lrm_state =
+        controld_get_executor_state(lrm_op_target(data->input_xml), false);
 
     if ((lrm_state != NULL) && pcmk__result_ok(result)) {
         md = controld_cache_metadata(lrm_state->metadata_cache, data->rsc,
@@ -1402,10 +1405,9 @@ do_lrm_invoke(long long action,
     bool crm_rsc_delete = FALSE;
 
     // Message routed to the local node is targeting a specific, non-local node
-    is_remote_node = !pcmk__str_eq(target_node, controld_globals.our_nodename,
-                                   pcmk__str_casei);
+    is_remote_node = !controld_is_local_node(target_node);
 
-    lrm_state = lrm_state_find(target_node);
+    lrm_state = controld_get_executor_state(target_node, false);
     if ((lrm_state == NULL) && is_remote_node) {
         crm_err("Failing action because local node has never had connection to remote node %s",
                 target_node);
@@ -1726,8 +1728,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
         to_sys = CRM_SYSTEM_TENGINE;
     }
 
-    peer = pcmk__get_node(0, controld_globals.our_nodename, NULL,
-                          pcmk__node_search_cluster_member);
+    peer = controld_get_local_node_status();
     update = create_node_state_update(peer, node_update_none, NULL,
                                       __func__);
 
@@ -1739,7 +1740,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     crm_xml_add(iter, PCMK_XA_ID, op->rsc_id);
 
     controld_add_resource_history_xml(iter, rsc, op,
-                                      controld_globals.our_nodename);
+                                      controld_globals.cluster->priv->node_name);
 
     /* We don't have the original message ID, so use "direct-ack" (we just need
      * something non-NULL for this to create a reply)

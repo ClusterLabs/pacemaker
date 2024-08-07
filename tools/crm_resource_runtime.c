@@ -1230,7 +1230,7 @@ bool resource_is_running_on(pcmk_resource_t *rsc, const char *host)
         return false;
     }
 
-    rsc->priv->fns->location(rsc, &hosts, TRUE);
+    rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
     for (hIter = hosts; host != NULL && hIter != NULL; hIter = hIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) hIter->data;
 

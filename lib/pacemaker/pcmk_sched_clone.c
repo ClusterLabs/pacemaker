@@ -339,7 +339,8 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
             const pcmk_resource_t *instance = iter->data;
             pcmk_node_t *chosen = NULL;
 
-            chosen = instance->priv->fns->location(instance, NULL, 0);
+            chosen = instance->priv->fns->location(instance, NULL,
+                                                   pcmk__rsc_node_assigned);
             if ((chosen != NULL)
                 && !is_set_recursive(instance, pcmk__rsc_blocked, TRUE)) {
                 pcmk__rsc_trace(primary, "Allowing %s: %s %d",
@@ -564,7 +565,8 @@ probe_anonymous_clone(pcmk_resource_t *clone, pcmk_node_t *node)
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
         const pcmk_node_t *instance_node = NULL;
 
-        instance_node = instance->priv->fns->location(instance, NULL, 0);
+        instance_node = instance->priv->fns->location(instance, NULL,
+                                                      pcmk__rsc_node_assigned);
         if (pcmk__same_node(instance_node, node)) {
             child = instance;
         }

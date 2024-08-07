@@ -15,6 +15,7 @@
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/options.h>     // PCMK_META_INTERVAL
+#include <crm/common/probes.h>
 #include <crm/common/xml.h>         // PCMK_XA_OPERATION
 
 /*!

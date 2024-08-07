@@ -18,7 +18,7 @@
 #include <glib.h>     // GHashTable
 #include <stdbool.h>  // bool
 
-#include <crm/common/util.h>                // pcmk_parse_interval_spec()
+#include <crm/common/strings.h>             // pcmk_parse_interval_spec()
 #include <crm/common/output_internal.h>     // pcmk__output_t
 
 #ifdef __cplusplus

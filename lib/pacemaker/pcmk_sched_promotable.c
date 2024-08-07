@@ -183,7 +183,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
         }
     }
 
-    node = rsc->priv->fns->location(rsc, NULL, FALSE);
+    node = rsc->priv->fns->location(rsc, NULL, pcmk__rsc_node_assigned);
     if (node == NULL) {
         pcmk__rsc_trace(rsc, "%s can't be promoted because it won't be active",
                         rsc->id);
@@ -332,7 +332,7 @@ add_promotion_priority_to_node_score(gpointer data, gpointer user_data)
         return;
     }
 
-    chosen = child->priv->fns->location(child, NULL, FALSE);
+    chosen = child->priv->fns->location(child, NULL, pcmk__rsc_node_assigned);
     if (chosen == NULL) {
         pcmk__rsc_trace(clone, "Not adding promotion priority of %s: inactive",
                         child->id);
@@ -397,7 +397,8 @@ set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
     pcmk_resource_t *child = (pcmk_resource_t *) data;
     const pcmk_resource_t *clone = (const pcmk_resource_t *) user_data;
 
-    pcmk_node_t *chosen = child->priv->fns->location(child, NULL, FALSE);
+    pcmk_node_t *chosen = child->priv->fns->location(child, NULL,
+                                                     pcmk__rsc_node_assigned);
 
     if (!pcmk_is_set(child->flags, pcmk__rsc_managed)
         && (child->priv->next_role == pcmk_role_promoted)) {
@@ -856,7 +857,7 @@ set_next_role_unpromoted(void *data, void *user_data)
     pcmk_resource_t *rsc = (pcmk_resource_t *) data;
     GList *assigned = NULL;
 
-    rsc->priv->fns->location(rsc, &assigned, FALSE);
+    rsc->priv->fns->location(rsc, &assigned, pcmk__rsc_node_assigned);
     if (assigned == NULL) {
         pe__set_next_role(rsc, pcmk_role_stopped, "stopped instance");
     } else {
@@ -893,9 +894,11 @@ set_next_role_promoted(void *data, gpointer user_data)
 static void
 show_promotion_score(pcmk_resource_t *instance)
 {
-    pcmk_node_t *chosen = instance->priv->fns->location(instance, NULL, FALSE);
+    pcmk_node_t *chosen = NULL;
     const char *score_s = NULL;
 
+    chosen = instance->priv->fns->location(instance, NULL,
+                                           pcmk__rsc_node_assigned);
     score_s = pcmk_readable_score(instance->priv->promotion_priority);
     if (pcmk_is_set(instance->priv->scheduler->flags,
                     pcmk__sched_output_scores)
@@ -944,7 +947,8 @@ set_instance_priority(gpointer data, gpointer user_data)
     }
 
     // Only an instance that will be active can be promoted
-    chosen = instance->priv->fns->location(instance, &list, FALSE);
+    chosen = instance->priv->fns->location(instance, &list,
+                                           pcmk__rsc_node_assigned);
     if (pcmk__list_of_multiple(list)) {
         pcmk__config_err("Cannot promote non-colocated child %s",
                          instance->id);
@@ -1262,9 +1266,10 @@ pcmk__update_dependent_with_promotable(const pcmk_resource_t *primary,
          iter != NULL; iter = iter->next) {
 
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
-        pcmk_node_t *node = instance->priv->fns->location(instance, NULL,
-                                                          FALSE);
+        pcmk_node_t *node = NULL;
 
+        node = instance->priv->fns->location(instance, NULL,
+                                             pcmk__rsc_node_assigned);
         if (node == NULL) {
             continue;
         }
