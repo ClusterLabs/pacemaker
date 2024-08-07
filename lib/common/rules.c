@@ -588,7 +588,7 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
          */
         pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION
                           " %s as not passing because '%s' is not a valid "
-                          PCMK_XE_OPERATION, op);
+                          PCMK_XE_OPERATION, id, op);
     }
 
     crm_trace(PCMK_XE_DATE_EXPRESSION " %s (%s): %s (%d)",
@@ -1150,7 +1150,7 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
          */
         pcmk__config_warn("Non-empty node attribute values will be treated as "
                           "equal for " PCMK_XE_EXPRESSION " %s because '%s' "
-                          "is not a valid type", id, type);
+                          "is not a valid type", id, type_s);
     }
 
     rc = evaluate_attr_comparison(actual, reference, type, comparison);

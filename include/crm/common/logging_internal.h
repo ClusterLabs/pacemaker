@@ -77,8 +77,10 @@ enum pcmk__warnings {
         }                                                               \
     } while (0)
 
-typedef void (*pcmk__config_error_func) (void *ctx, const char *msg, ...);
-typedef void (*pcmk__config_warning_func) (void *ctx, const char *msg, ...);
+typedef void (*pcmk__config_error_func) (void *ctx, const char *msg, ...)
+        G_GNUC_PRINTF(2, 3);
+typedef void (*pcmk__config_warning_func) (void *ctx, const char *msg, ...)
+        G_GNUC_PRINTF(2, 3);
 
 extern pcmk__config_error_func pcmk__config_error_handler;
 extern pcmk__config_warning_func pcmk__config_warning_handler;
