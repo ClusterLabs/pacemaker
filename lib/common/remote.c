@@ -125,36 +125,52 @@ localized_remote_header(pcmk__remote_t *remote)
 }
 
 int
+pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
+{
+    int rc = pcmk_rc_ok;
+
+    if (gnutls_rc != NULL) {
+        *gnutls_rc = GNUTLS_E_SUCCESS;
+    }
+
+    rc = gnutls_handshake(*remote->tls_session);
+
+    switch (rc) {
+        case GNUTLS_E_SUCCESS:
+            rc = pcmk_rc_ok;
+            break;
+
+        case GNUTLS_E_INTERRUPTED:
+        case GNUTLS_E_AGAIN:
+            rc = EAGAIN;
+            break;
+
+        default:
+            if (gnutls_rc != NULL) {
+                *gnutls_rc = rc;
+            }
+
+            rc = EPROTO;
+            break;
+    }
+
+    return rc;
+}
+
+int
 pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
                            int *gnutls_rc)
 {
     const time_t time_limit = time(NULL) + timeout_sec;
 
-    if (gnutls_rc != NULL) {
-        *gnutls_rc = GNUTLS_E_SUCCESS;
-    }
     do {
-        int rc = gnutls_handshake(*remote->tls_session);
+        int rc = pcmk__tls_client_try_handshake(remote, gnutls_rc);
 
-        switch (rc) {
-            case GNUTLS_E_SUCCESS:
-                return pcmk_rc_ok;
-
-            case GNUTLS_E_INTERRUPTED:
-            case GNUTLS_E_AGAIN:
-                rc = pcmk__remote_ready(remote, 1000);
-                if ((rc != pcmk_rc_ok) && (rc != ETIME)) { // Fatal error
-                    return rc;
-                }
-                break;
-
-            default:
-                if (gnutls_rc != NULL) {
-                    *gnutls_rc = rc;
-                }
-                return EPROTO;
+        if (rc != EAGAIN) {
+            return rc;
         }
     } while (time(NULL) < time_limit);
+
     return ETIME;
 }
 
