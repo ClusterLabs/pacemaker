@@ -800,13 +800,6 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         }
         cmd_handled = TRUE;
 
-    } else if ((op->type == lrmd_event_new_client)
-               && pcmk__str_eq(cmd->action, PCMK_ACTION_STOP,
-                               pcmk__str_casei)) {
-
-        handle_remote_ra_stop(lrm_state, cmd);
-        cmd_handled = TRUE;
-
     } else {
         crm_debug("Event did not match %s action", ra_data->cur_cmd->action);
     }
