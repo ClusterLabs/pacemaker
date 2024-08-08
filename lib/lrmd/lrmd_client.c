@@ -63,6 +63,7 @@ gnutls_psk_client_credentials_t psk_cred_s;
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
 static void lrmd_tls_connection_destroy(gpointer userdata);
+static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake);
 
 typedef struct lrmd_private_s {
     uint64_t type;
@@ -1311,6 +1312,32 @@ report_async_connection_result(lrmd_t * lrmd, int rc)
     }
 }
 
+static void
+tls_handshake_failed(lrmd_t *lrmd, int tls_rc, int rc)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    crm_warn("Disconnecting after TLS handshake with "
+             "Pacemaker Remote server %s:%d failed: %s",
+             native->server, native->port,
+             (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
+    gnutls_deinit(*native->remote->tls_session);
+    gnutls_free(native->remote->tls_session);
+    native->remote->tls_session = NULL;
+    lrmd_tls_connection_destroy(lrmd);
+}
+
+static void
+tls_handshake_succeeded(lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
+             native->server, native->port);
+    add_tls_to_mainloop(lrmd, true);
+    report_async_connection_result(lrmd, pcmk_rc2legacy(pcmk_rc_ok));
+}
+
 /*!
  * \internal
  * \brief Perform a TLS client handshake with a Pacemaker Remote server
@@ -1328,15 +1355,9 @@ tls_client_handshake(lrmd_t *lrmd)
                                         &tls_rc);
 
     if (rc != pcmk_rc_ok) {
-        crm_warn("Disconnecting after TLS handshake with "
-                 "Pacemaker Remote server %s:%d failed: %s",
-                 native->server, native->port,
-                 (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
-        gnutls_deinit(*native->remote->tls_session);
-        gnutls_free(native->remote->tls_session);
-        native->remote->tls_session = NULL;
-        lrmd_tls_connection_destroy(lrmd);
+        tls_handshake_failed(lrmd, tls_rc, rc);
     }
+
     return rc;
 }
 
@@ -1434,10 +1455,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
         return;
     }
 
-    crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
-             native->server, native->port);
-    rc = add_tls_to_mainloop(lrmd, true);
-    report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+    tls_handshake_succeeded(lrmd);
 }
 
 static int
