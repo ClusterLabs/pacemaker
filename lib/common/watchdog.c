@@ -86,21 +86,14 @@ panic_local_nonroot(pid_t ppid)
 static void
 panic_local(void)
 {
-    int rc = pcmk_ok;
-    uid_t uid = geteuid();
-    pid_t ppid = getppid();
     const char *full_panic_action = pcmk__env_option(PCMK__ENV_PANIC_ACTION);
     const char *panic_action = full_panic_action;
+    int reboot_cmd = RB_AUTOBOOT; // Default panic action is reboot
 
-    // Default panic action is to reboot
-    int reboot_cmd = RB_AUTOBOOT;
-
-    if (uid != 0) { // Non-root caller such as the controller
-        panic_local_nonroot(ppid);
+    if (geteuid() != 0) { // Non-root caller such as the controller
+        panic_local_nonroot(getppid());
         return;
     }
-
-    /* We're either pacemakerd, or a pacemaker daemon running as root */
 
     if (pcmk__starts_with(full_panic_action, "sync-")) {
         panic_action += sizeof("sync-") - 1;
@@ -128,17 +121,14 @@ panic_local(void)
         sysrq_trigger('b');
     }
 
+    // sysrq failed or is not supported on this platform, so fall back to reboot
     reboot(reboot_cmd);
-    rc = errno;
 
-    crm_emerg("Reboot failed, escalating to parent %lld: %s " QB_XS " rc=%d",
-              (long long) ppid, pcmk_rc_str(rc), rc);
-
-    if(ppid > 1) {
-        /* child daemon */
+    // Even reboot failed, nothing left to do but exit
+    crm_emerg("Exiting after reboot failed: %s", strerror(errno));
+    if (getppid() > 1) { // pacemakerd is parent process
         crm_exit(CRM_EX_PANIC);
-    } else {
-        /* pacemakerd or orphan child */
+    } else { // This is pacemakerd, or an orphaned subdaemon
         crm_exit(CRM_EX_FATAL);
     }
 }
