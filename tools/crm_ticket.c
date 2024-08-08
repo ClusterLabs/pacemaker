@@ -430,7 +430,7 @@ main(int argc, char **argv)
         }
     }
 
-    rc = pcmk_update_configured_schema(&cib_xml_copy, false);
+    rc = pcmk__update_configured_schema(&cib_xml_copy, false);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,

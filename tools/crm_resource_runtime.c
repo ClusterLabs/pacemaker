@@ -1325,7 +1325,7 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
 int
 update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
 {
-    int rc = pcmk_update_configured_schema(xml, false);
+    int rc = pcmk__update_configured_schema(xml, false);
 
     if (rc == pcmk_rc_ok) {
         scheduler->input = *xml;

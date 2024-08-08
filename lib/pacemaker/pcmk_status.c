@@ -88,7 +88,7 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
     }
     out = scheduler->priv->out;
 
-    rc = pcmk_update_configured_schema(&cib_copy, false);
+    rc = pcmk__update_configured_schema(&cib_copy, false);
     if (rc != pcmk_rc_ok) {
         cib__clean_up_connection(&cib);
         pcmk__xml_free(cib_copy);
