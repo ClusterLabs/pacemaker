@@ -44,6 +44,41 @@ sysrq_trigger(char t)
 
 /*!
  * \internal
+ * \brief Tell pacemakerd to panic the local host
+ *
+ * \param[in] ppid  Process ID of parent process
+ */
+static void
+panic_local_nonroot(pid_t ppid)
+{
+    if (ppid > 1) { // pacemakerd is still our parent
+        crm_emerg("Escalating panic to " PCMK__SERVER_PACEMAKERD "[%lld]",
+                  (long long) ppid);
+    } else { // Signal (non-parent) pacemakerd if possible
+#if HAVE_LINUX_PROCFS
+        ppid = pcmk__procfs_pid_of(PCMK__SERVER_PACEMAKERD);
+        if (ppid > 0) {
+            union sigval signal_value;
+
+            crm_emerg("Signaling " PCMK__SERVER_PACEMAKERD "[%lld] to panic",
+                      (long long) ppid);
+            memset(&signal_value, 0, sizeof(signal_value));
+            if (sigqueue(ppid, SIGQUIT, signal_value) < 0) {
+                crm_emerg("Exiting after signal failure: %s", strerror(errno));
+            }
+        } else {
+#endif
+            crm_emerg("Exiting with no known " PCMK__SERVER_PACEMAKERD
+                      "process");
+#if HAVE_LINUX_PROCFS
+        }
+#endif
+    }
+    crm_exit(CRM_EX_PANIC);
+}
+
+/*!
+ * \internal
  * \brief Panic the local host (if root) or tell pacemakerd to do so
  */
 static void
@@ -58,37 +93,8 @@ panic_local(void)
     // Default panic action is to reboot
     int reboot_cmd = RB_AUTOBOOT;
 
-    if(uid != 0 && ppid > 1) {
-        /* We're a non-root pacemaker daemon (pacemaker-based,
-         * pacemaker-controld, pacemaker-schedulerd, pacemaker-attrd, etc.) with
-         * the original pacemakerd parent.
-         *
-         * Of these, only the controller is likely to be initiating resets.
-         */
-        crm_emerg("Signaling parent %lld to panic", (long long) ppid);
-        crm_exit(CRM_EX_PANIC);
-        return;
-
-    } else if (uid != 0) {
-#if HAVE_LINUX_PROCFS
-        /*
-         * No permissions, and no pacemakerd parent to escalate to.
-         * Track down the new pacemakerd process and send a signal instead.
-         */
-        union sigval signal_value;
-
-        memset(&signal_value, 0, sizeof(signal_value));
-        ppid = pcmk__procfs_pid_of(PCMK__SERVER_PACEMAKERD);
-        crm_emerg("Signaling pacemakerd[%lld] to panic", (long long) ppid);
-
-        if(ppid > 1 && sigqueue(ppid, SIGQUIT, signal_value) < 0) {
-            crm_perror(LOG_EMERG, "Cannot signal pacemakerd[%lld] to panic",
-                       (long long) ppid);
-        }
-#endif // HAVE_LINUX_PROCFS
-
-        /* The best we can do now is die */
-        crm_exit(CRM_EX_PANIC);
+    if (uid != 0) { // Non-root caller such as the controller
+        panic_local_nonroot(ppid);
         return;
     }
 
