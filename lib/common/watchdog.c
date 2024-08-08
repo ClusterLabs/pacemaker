@@ -22,25 +22,27 @@
 
 static pid_t sbd_pid = 0;
 
+/*!
+ * \internal
+ * \brief Trigger a sysrq command if supported on current platform
+ *
+ * \param[in] t  Sysrq command to trigger
+ */
 static void
 sysrq_trigger(char t)
 {
 #if HAVE_LINUX_PROCFS
-    FILE *procf;
-
     // Root can always write here, regardless of kernel.sysrq value
-    procf = fopen("/proc/sysrq-trigger", "a");
-    if (!procf) {
-        crm_perror(LOG_WARNING, "Opening sysrq-trigger failed");
-        return;
-    }
-    crm_info("sysrq-trigger: %c", t);
-    fprintf(procf, "%c\n", t);
-    fclose(procf);
-#endif // HAVE_LINUX_PROCFS
-    return;
-}
+    FILE *procf = fopen("/proc/sysrq-trigger", "a");
 
+    if (procf == NULL) {
+        crm_warn("Could not open sysrq-trigger: %s", strerror(errno));
+    } else {
+        fprintf(procf, "%c\n", t);
+        fclose(procf);
+    }
+#endif // HAVE_LINUX_PROCFS
+}
 
 /*!
  * \internal
