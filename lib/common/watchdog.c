@@ -52,10 +52,10 @@ panic_local(void)
     int rc = pcmk_ok;
     uid_t uid = geteuid();
     pid_t ppid = getppid();
-    const char *panic_action = pcmk__env_option(PCMK__ENV_PANIC_ACTION);
+    const char *full_panic_action = pcmk__env_option(PCMK__ENV_PANIC_ACTION);
+    const char *panic_action = full_panic_action;
 
     // Default panic action is to reboot
-    char sysrq = 'b';
     int reboot_cmd = RB_AUTOBOOT;
 
     if(uid != 0 && ppid > 1) {
@@ -94,24 +94,32 @@ panic_local(void)
 
     /* We're either pacemakerd, or a pacemaker daemon running as root */
 
-    if (pcmk__starts_with(panic_action, "sync-")) {
+    if (pcmk__starts_with(full_panic_action, "sync-")) {
+        panic_action += sizeof("sync-") - 1;
         sync();
-        panic_action += strlen("sync-");
-    };
+    }
 
-    if (pcmk__str_eq(panic_action, "crash", pcmk__str_casei)) {
-        sysrq = 'c';
+    if (pcmk__str_empty(full_panic_action)
+        || pcmk__str_eq(panic_action, "reboot", pcmk__str_none)) {
+        sysrq_trigger('b');
 
-    } else if (pcmk__str_eq(panic_action, "off", pcmk__str_casei)) {
-        sysrq = 'o';
+    } else if (pcmk__str_eq(panic_action, "crash", pcmk__str_none)) {
+        sysrq_trigger('c');
+
+    } else if (pcmk__str_eq(panic_action, "off", pcmk__str_none)) {
+        sysrq_trigger('o');
 #ifdef RB_POWER_OFF
         reboot_cmd = RB_POWER_OFF;
 #elif defined(RB_POWEROFF)
         reboot_cmd = RB_POWEROFF;
 #endif
+    } else {
+        crm_warn("Using default 'reboot' for local option PCMK_"
+                 PCMK__ENV_PANIC_ACTION " because '%s' is not a valid value",
+                 full_panic_action);
+        sysrq_trigger('b');
     }
 
-    sysrq_trigger(sysrq);
     reboot(reboot_cmd);
     rc = errno;
 
