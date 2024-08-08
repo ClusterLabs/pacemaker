@@ -136,6 +136,7 @@ extern     "C" {
 #define PCMK_VALUE_BOOLEAN                      "boolean"
 #define PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS        "cib-bootstrap-options"
 #define PCMK_VALUE_COROSYNC                     "corosync"
+#define PCMK_VALUE_CRASH                        "crash"
 #define PCMK_VALUE_CREATE                       "create"
 #define PCMK_VALUE_CUSTOM                       "custom"
 #define PCMK_VALUE_DATE_SPEC                    "date_spec"

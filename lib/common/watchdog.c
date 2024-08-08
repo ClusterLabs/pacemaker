@@ -104,7 +104,7 @@ panic_local(void)
         || pcmk__str_eq(panic_action, "reboot", pcmk__str_none)) {
         sysrq_trigger('b');
 
-    } else if (pcmk__str_eq(panic_action, "crash", pcmk__str_none)) {
+    } else if (pcmk__str_eq(panic_action, PCMK_VALUE_CRASH, pcmk__str_none)) {
         sysrq_trigger('c');
 
     } else if (pcmk__str_eq(panic_action, "off", pcmk__str_none)) {
