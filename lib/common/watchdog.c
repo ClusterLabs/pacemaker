@@ -107,7 +107,7 @@ panic_local(void)
     } else if (pcmk__str_eq(panic_action, PCMK_VALUE_CRASH, pcmk__str_none)) {
         sysrq_trigger('c');
 
-    } else if (pcmk__str_eq(panic_action, "off", pcmk__str_none)) {
+    } else if (pcmk__str_eq(panic_action, PCMK_VALUE_OFF, pcmk__str_none)) {
         sysrq_trigger('o');
 #ifdef RB_POWER_OFF
         reboot_cmd = RB_POWER_OFF;

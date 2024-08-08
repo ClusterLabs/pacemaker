@@ -66,7 +66,7 @@ is_false(void **state) {
     assert_false(ret);
     assert_int_equal(crm_str_to_boolean("fAlSe", &ret), 1);
     assert_false(ret);
-    assert_int_equal(crm_str_to_boolean("off", &ret), 1);
+    assert_int_equal(crm_str_to_boolean(PCMK_VALUE_OFF, &ret), 1);
     assert_false(ret);
     assert_int_equal(crm_str_to_boolean("OFF", &ret), 1);
     assert_false(ret);
@@ -83,7 +83,7 @@ is_false(void **state) {
 
     // Ensure it still validates the string with a NULL result argument
     assert_int_equal(crm_str_to_boolean("false", NULL), 1);
-    assert_int_equal(crm_str_to_boolean("off", NULL), 1);
+    assert_int_equal(crm_str_to_boolean(PCMK_VALUE_OFF, NULL), 1);
     assert_int_equal(crm_str_to_boolean("no", NULL), 1);
     assert_int_equal(crm_str_to_boolean("n", NULL), 1);
     assert_int_equal(crm_str_to_boolean("0", NULL), 1);
