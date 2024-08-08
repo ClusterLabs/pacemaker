@@ -1,54 +1,9 @@
-* Tue Jul 16 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8-rc4
-- 6 commits with 21 files changed, 126 insertions(+), 38 deletions(-)
-
-- Features added since Pacemaker-2.1.8-rc3
-  + tools: crm_verify now reports invalid fence topology levels
-
-- Fixes since Pacemaker-2.1.8-rc3
-  + tools: crm_node -i must initialize nodeid before passing pointer
-    (regression introduced in 2.1.7)
-  + tools: cibadmin, crm_attribute, crm_node, crm_resource, crm_shadow, and
-    crm_ticket now retry CIB connections after transient failures
-
-* Tue Jul 02 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8-rc3
-- 16 commits with 11 files changed, 157 insertions(+), 57 deletions(-)
-
-- Features added since Pacemaker-2.1.8-rc2
-  + sysconfig: deprecate PCMK_dh_min_bits environment variable
-
-- Fixes since Pacemaker-2.1.8-rc2
-  + libcrmcluster: use local hostname for node name if not configured in
-    Corosync (regression introduced in 2.1.8-rc1)
-  + tools: crm_verify distinguishes configuration warnings and errors
-    (regression introduced in 2.1.7)
-  + tools: avoid double-free XML in crm_verify after schema update
-    (regression introduced in 2.1.8-rc1)
-  + libcrmcommon: avoid potential buffer overflows when formatting date/times
-  + scheduler: consider group's location constraints when a member is an
-    explicit dependent in a colocation constraint
-
-* Tue Jun 11 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8-rc2
-- 38 commits with 23 files changed, 600 insertions(+), 283 deletions(-)
-
-- Features added since Pacemaker-2.1.8-rc1
-  + libcrmcommon: support PCMK_panic_action="off" or "sync-off"
-
-- Fixes since Pacemaker-2.1.8-rc1
-  + libcrmcommon: avoid possible buffer overflows when parsing date/times
-  + libpacemaker: correctly retrieve any existing fail-count for increment
-                  (regression introduced in 2.1.8-rc1)
-  + libstonithd: avoid double free when invalid replies are received
-  + libstonithd: avoid use-after-free when retrieving metadata of Linux-HA fence agents
-                 (regression introduced in 2.1.8-rc1)
-  + libstonithd: free escaped metadata descriptions with g_free()
-                 (regression introduced in 2.1.8-rc1)
-  + tools: restore whitespace to attrd_updater query output
-           (regression introduced in 2.1.8-rc1)
-
-* Wed May 15 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8-rc1
-- 2480 commits with 507 files changed, 45891 insertions(+), 22991 deletions(-)
+* Thu Aug 08 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8
+- 2559 commits with 511 files changed, 46898 insertions(+), 23417 deletions(-)
 
 - Features added since Pacemaker-2.1.7
+  + local options: support PCMK_panic_action="off" or "sync-off"
+  + local options: deprecate PCMK_dh_min_bits environment variable
   + CIB: deprecate omitting validate-with from the CIB or setting it to "none"
     or an unknown schema
   + CIB: deprecate "default" and "#default" as explicit meta-attribute values
@@ -64,21 +19,28 @@
     option (instead, use crm_attribute --list-options mentioned below)
   + pacemaker-remoted: newer schema files are now downloaded from the cluster,
     allowing more command-line tools to work when the Pacemaker Remote node
-    has an older Pacemaker version
+    has an older Pacemaker version than the cluster
   + agents: deprecate the ocf:pacemaker:o2cb resource agent
+  + tools: deprecate --text-fancy command-line option in all tools
   + tools: crm_attribute --list-options lists all possible cluster options
   + tools: crm_resource --list-options lists all possible primitive
     meta-attributes or special fence device parameters
+  + tools: crm_verify now reports invalid fence topology levels
   + tools: new --score option for cibadmin --modify and crm_attribute --update
     enables expansion of "++" and "+=" in attribute values without a warning
     (using such expansions without --score is now deprecated)
   + tools: crm_ticket supports standard --output-as/--output-to arguments
-  + tools: deprecate --text-fancy standard command-line option
 
 - Fixes since Pacemaker-2.1.7
   + tools: restore the (deprecated) ability to automatically correct malformed
     XML passed via standard input (regression introduced in 2.1.7)
+  + tools: crm_verify distinguishes configuration warnings and errors
+    (regression introduced in 2.1.7)
+  + tools: crm_node -i must initialize nodeid before passing pointer
+    (regression introduced in 2.1.7)
   + CIB manager: avoid memory leak from asynchronous client requests
+    (regression introduced in 2.1.7)
+  + scheduler: don't apply colocations twice for promotion priority
     (regression introduced in 2.1.7)
   + CIB: restore the (deprecated) ability to use validate-with="pacemaker-next"
     (regression introduced in 2.1.6)
@@ -86,6 +48,8 @@
     synchronous meta-data action is in progress
     (regression introduced in 2.1.5)
   + libcrmcommon: avoid file descriptor leak in asynchronous IPC clients
+    (regression introduced in 2.1.3)
+  + scheduler: avoid crash when logging an invalid utilization attribute value
     (regression introduced in 2.1.3)
   + tools: crm_mon no longer crashes on some platforms when the fencer
     connection is lost (regression introduced in 2.1.0)
@@ -100,14 +64,22 @@
     seconds
   + fencer: avoid unnecessary timeouts when the watchdog timeout is greater
     than a query timeout, per-device fencing timeout, or stonith-timeout
+  + libcrmcommon: avoid possible buffer overflows when parsing and formatting
+    date/times
   + libcrmcommon: don't assume next schema will validate when not transforming
   + libcrmcommon: when displaying XML, don't show "<null>" for empty attribute
     values, and properly escape special characters
+  + libstonithd: avoid double free when invalid replies are received
   + scheduler: if the user specifies a timeout of 0, use the default 20s as
     documented
+  + scheduler: consider group's location constraints when a member is an
+    explicit dependent in a colocation constraint
+  + scheduler: sort promotable cloned group instances properly for promotion
   + agents: ocf:pacemaker:SysInfo respects attrd_updater dampening
   + agents: ocf:pacemaker:HealthSMART properly handles SMART data missing
     temperature
+  + tools: cibadmin, crm_attribute, crm_node, crm_resource, crm_shadow, and
+    crm_ticket now retry CIB connections after transient failures
   + tools: cibadmin --replace now leaves "++" and "+=" unexpanded in XML
     attribute values rather than wrongly treat them as 0
   + tools: cibsecret avoids possible truncation issue in process listing
