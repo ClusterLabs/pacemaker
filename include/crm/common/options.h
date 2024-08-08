@@ -196,6 +196,7 @@ extern     "C" {
 #define PCMK_VALUE_PROGRESSIVE                  "progressive"
 #define PCMK_VALUE_QUORUM                       "quorum"
 #define PCMK_VALUE_READ                         "read"
+#define PCMK_VALUE_REBOOT                       "reboot"
 #define PCMK_VALUE_RED                          "red"
 #define PCMK_VALUE_REMOTE                       "remote"
 #define PCMK_VALUE_RESTART                      "restart"

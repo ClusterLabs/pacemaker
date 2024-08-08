@@ -87,7 +87,8 @@ static gboolean
 section_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (pcmk__str_any_of(optarg, PCMK_XE_NODES, "forever", NULL)) {
         pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_perm);
-    } else if (pcmk__str_any_of(optarg, PCMK_XE_STATUS, "reboot", NULL)) {
+    } else if (pcmk__str_any_of(optarg, PCMK_XE_STATUS, PCMK_VALUE_REBOOT,
+                                NULL)) {
         pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_perm);
     } else {
         g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_USAGE, "Unknown value for --lifetime: %s",

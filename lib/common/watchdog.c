@@ -101,7 +101,7 @@ panic_local(void)
     }
 
     if (pcmk__str_empty(full_panic_action)
-        || pcmk__str_eq(panic_action, "reboot", pcmk__str_none)) {
+        || pcmk__str_eq(panic_action, PCMK_VALUE_REBOOT, pcmk__str_none)) {
         sysrq_trigger('b');
 
     } else if (pcmk__str_eq(panic_action, PCMK_VALUE_CRASH, pcmk__str_none)) {
@@ -115,7 +115,7 @@ panic_local(void)
         reboot_cmd = RB_POWEROFF;
 #endif
     } else {
-        crm_warn("Using default 'reboot' for local option PCMK_"
+        crm_warn("Using default '" PCMK_VALUE_REBOOT "' for local option PCMK_"
                  PCMK__ENV_PANIC_ACTION " because '%s' is not a valid value",
                  full_panic_action);
         sysrq_trigger('b');

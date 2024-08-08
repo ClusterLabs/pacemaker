@@ -651,7 +651,7 @@ set_type(void)
             options.type = g_strdup(PCMK_XE_CRM_CONFIG);
         }
 
-    } else if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(options.type, PCMK_VALUE_REBOOT, pcmk__str_casei)) {
         options.type = g_strdup(PCMK_XE_STATUS);
 
     } else if (pcmk__str_eq(options.type, "forever", pcmk__str_casei)) {
