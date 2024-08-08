@@ -1,0 +1,66 @@
+=#=#=#= Begin test: List all nodes =#=#=#=
+cluster node: overcloud-controller-0 (1)
+cluster node: overcloud-controller-1 (2)
+cluster node: overcloud-controller-2 (3)
+cluster node: overcloud-galera-0 (4)
+cluster node: overcloud-galera-1 (5)
+cluster node: overcloud-galera-2 (6)
+guest node: lxc1 (lxc1)
+guest node: lxc2 (lxc2)
+remote node: overcloud-rabbit-0 (overcloud-rabbit-0)
+remote node: overcloud-rabbit-1 (overcloud-rabbit-1)
+remote node: overcloud-rabbit-2 (overcloud-rabbit-2)
+=#=#=#= End test: List all nodes - OK (0) =#=#=#=
+* Passed: crmadmin              - List all nodes
+=#=#=#= Begin test: Minimally list all nodes =#=#=#=
+overcloud-controller-0
+overcloud-controller-1
+overcloud-controller-2
+overcloud-galera-0
+overcloud-galera-1
+overcloud-galera-2
+lxc1
+lxc2
+overcloud-rabbit-0
+overcloud-rabbit-1
+overcloud-rabbit-2
+=#=#=#= End test: Minimally list all nodes - OK (0) =#=#=#=
+* Passed: crmadmin              - Minimally list all nodes
+=#=#=#= Begin test: List all nodes as bash exports =#=#=#=
+export overcloud-controller-0=1
+export overcloud-controller-1=2
+export overcloud-controller-2=3
+export overcloud-galera-0=4
+export overcloud-galera-1=5
+export overcloud-galera-2=6
+export lxc1=lxc1
+export lxc2=lxc2
+export overcloud-rabbit-0=overcloud-rabbit-0
+export overcloud-rabbit-1=overcloud-rabbit-1
+export overcloud-rabbit-2=overcloud-rabbit-2
+=#=#=#= End test: List all nodes as bash exports - OK (0) =#=#=#=
+* Passed: crmadmin              - List all nodes as bash exports
+=#=#=#= Begin test: List cluster nodes =#=#=#=
+6
+=#=#=#= End test: List cluster nodes - OK (0) =#=#=#=
+* Passed: crmadmin              - List cluster nodes
+=#=#=#= Begin test: List guest nodes =#=#=#=
+2
+=#=#=#= End test: List guest nodes - OK (0) =#=#=#=
+* Passed: crmadmin              - List guest nodes
+=#=#=#= Begin test: List remote nodes =#=#=#=
+3
+=#=#=#= End test: List remote nodes - OK (0) =#=#=#=
+* Passed: crmadmin              - List remote nodes
+=#=#=#= Begin test: List cluster,remote nodes =#=#=#=
+9
+=#=#=#= End test: List cluster,remote nodes - OK (0) =#=#=#=
+* Passed: crmadmin              - List cluster,remote nodes
+=#=#=#= Begin test: List guest,remote nodes =#=#=#=
+5
+=#=#=#= End test: List guest,remote nodes - OK (0) =#=#=#=
+* Passed: crmadmin              - List guest,remote nodes
+=#=#=#= Begin test: Check that CIB_file="-" works =#=#=#=
+11
+=#=#=#= End test: Check that CIB_file="-" works - OK (0) =#=#=#=
+* Passed: crmadmin              - Check that CIB_file="-" works

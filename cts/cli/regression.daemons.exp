@@ -31,7 +31,7 @@
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get CIB manager metadata - OK (0) =#=#=#=
-* Passed: pacemaker-based - Get CIB manager metadata
+* Passed: pacemaker-based       - Get CIB manager metadata
 =#=#=#= Begin test: Get controller metadata =#=#=#=
 <resource-agent name="pacemaker-controld" version="">
   <version>
@@ -185,7 +185,7 @@
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get controller metadata - OK (0) =#=#=#=
-* Passed: pacemaker-controld - Get controller metadata
+* Passed: pacemaker-controld    - Get controller metadata
 =#=#=#= Begin test: Get fencer metadata =#=#=#=
 <resource-agent name="pacemaker-fenced" version="">
   <version>
@@ -431,7 +431,7 @@
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get fencer metadata - OK (0) =#=#=#=
-* Passed: pacemaker-fenced - Get fencer metadata
+* Passed: pacemaker-fenced      - Get fencer metadata
 =#=#=#= Begin test: Get scheduler metadata =#=#=#=
 <resource-agent name="pacemaker-schedulerd" version="">
   <version>
@@ -747,4 +747,4 @@
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get scheduler metadata - OK (0) =#=#=#=
-* Passed: pacemaker-schedulerd - Get scheduler metadata
+* Passed: pacemaker-schedulerd  - Get scheduler metadata

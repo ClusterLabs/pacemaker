@@ -1,6 +1,3 @@
-Created new pacemaker configuration
-A new shadow instance was created. To begin using it, enter the following into your shell:
-	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Configure some ACLs =#=#=#=
 =#=#=#= Current cib after: Configure some ACLs =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="0">
@@ -56,7 +53,7 @@ A new shadow instance was created. To begin using it, enter the following into y
   <status/>
 </cib>
 =#=#=#= End test: Configure some ACLs - OK (0) =#=#=#=
-* Passed: cibadmin       - Configure some ACLs
+* Passed: cibadmin              - Configure some ACLs
 =#=#=#= Begin test: Enable ACLs =#=#=#=
 =#=#=#= Current cib after: Enable ACLs =#=#=#=
 <cib epoch="3" num_updates="0" admin_epoch="0">
@@ -116,7 +113,7 @@ A new shadow instance was created. To begin using it, enter the following into y
   <status/>
 </cib>
 =#=#=#= End test: Enable ACLs - OK (0) =#=#=#=
-* Passed: crm_attribute  - Enable ACLs
+* Passed: crm_attribute         - Enable ACLs
 =#=#=#= Begin test: Set cluster option =#=#=#=
 =#=#=#= Current cib after: Set cluster option =#=#=#=
 <cib epoch="4" num_updates="0" admin_epoch="0">
@@ -177,7 +174,7 @@ A new shadow instance was created. To begin using it, enter the following into y
   <status/>
 </cib>
 =#=#=#= End test: Set cluster option - OK (0) =#=#=#=
-* Passed: crm_attribute  - Set cluster option
+* Passed: crm_attribute         - Set cluster option
 =#=#=#= Begin test: New ACL role =#=#=#=
 =#=#=#= Current cib after: New ACL role =#=#=#=
 <cib epoch="5" num_updates="0" admin_epoch="0">
@@ -241,7 +238,7 @@ A new shadow instance was created. To begin using it, enter the following into y
   <status/>
 </cib>
 =#=#=#= End test: New ACL role - OK (0) =#=#=#=
-* Passed: cibadmin       - New ACL role
+* Passed: cibadmin              - New ACL role
 =#=#=#= Begin test: New ACL target =#=#=#=
 =#=#=#= Current cib after: New ACL target =#=#=#=
 <cib epoch="6" num_updates="0" admin_epoch="0">
@@ -308,7 +305,7 @@ A new shadow instance was created. To begin using it, enter the following into y
   <status/>
 </cib>
 =#=#=#= End test: New ACL target - OK (0) =#=#=#=
-* Passed: cibadmin       - New ACL target
+* Passed: cibadmin              - New ACL target
 =#=#=#= Begin test: Another ACL role =#=#=#=
 =#=#=#= Current cib after: Another ACL role =#=#=#=
 <cib epoch="7" num_updates="0" admin_epoch="0">
@@ -378,7 +375,7 @@ A new shadow instance was created. To begin using it, enter the following into y
   <status/>
 </cib>
 =#=#=#= End test: Another ACL role - OK (0) =#=#=#=
-* Passed: cibadmin       - Another ACL role
+* Passed: cibadmin              - Another ACL role
 =#=#=#= Begin test: Another ACL target =#=#=#=
 =#=#=#= Current cib after: Another ACL target =#=#=#=
 <cib epoch="8" num_updates="0" admin_epoch="0">
@@ -451,7 +448,7 @@ A new shadow instance was created. To begin using it, enter the following into y
   <status/>
 </cib>
 =#=#=#= End test: Another ACL target - OK (0) =#=#=#=
-* Passed: cibadmin       - Another ACL target
+* Passed: cibadmin              - Another ACL target
 =#=#=#= Begin test: Updated ACL =#=#=#=
 =#=#=#= Current cib after: Updated ACL =#=#=#=
 <cib epoch="9" num_updates="0" admin_epoch="0">
@@ -525,43 +522,43 @@ A new shadow instance was created. To begin using it, enter the following into y
   <status/>
 </cib>
 =#=#=#= End test: Updated ACL - OK (0) =#=#=#=
-* Passed: cibadmin       - Updated ACL
+* Passed: cibadmin              - Updated ACL
 =#=#=#= Begin test: unknownguy: Query configuration =#=#=#=
 Call failed: Permission denied
 =#=#=#= End test: unknownguy: Query configuration - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - unknownguy: Query configuration
+* Passed: cibadmin              - unknownguy: Query configuration
 =#=#=#= Begin test: unknownguy: Set enable-acl =#=#=#=
 crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: unknownguy: Set enable-acl - Insufficient privileges (4) =#=#=#=
-* Passed: crm_attribute  - unknownguy: Set enable-acl
+* Passed: crm_attribute         - unknownguy: Set enable-acl
 =#=#=#= Begin test: unknownguy: Set stonith-enabled =#=#=#=
 crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: unknownguy: Set stonith-enabled - Insufficient privileges (4) =#=#=#=
-* Passed: crm_attribute  - unknownguy: Set stonith-enabled
+* Passed: crm_attribute         - unknownguy: Set stonith-enabled
 =#=#=#= Begin test: unknownguy: Create a resource =#=#=#=
 pcmk__check_acl 	trace: User 'unknownguy' without ACLs denied read/write access to /cib/configuration/resources/primitive[@id='dummy']
 pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
 Call failed: Permission denied
 =#=#=#= End test: unknownguy: Create a resource - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - unknownguy: Create a resource
+* Passed: cibadmin              - unknownguy: Create a resource
 =#=#=#= Begin test: l33t-haxor: Query configuration =#=#=#=
 Call failed: Permission denied
 =#=#=#= End test: l33t-haxor: Query configuration - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - l33t-haxor: Query configuration
+* Passed: cibadmin              - l33t-haxor: Query configuration
 =#=#=#= Begin test: l33t-haxor: Set enable-acl =#=#=#=
 crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Set enable-acl - Insufficient privileges (4) =#=#=#=
-* Passed: crm_attribute  - l33t-haxor: Set enable-acl
+* Passed: crm_attribute         - l33t-haxor: Set enable-acl
 =#=#=#= Begin test: l33t-haxor: Set stonith-enabled =#=#=#=
 crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Set stonith-enabled - Insufficient privileges (4) =#=#=#=
-* Passed: crm_attribute  - l33t-haxor: Set stonith-enabled
+* Passed: crm_attribute         - l33t-haxor: Set stonith-enabled
 =#=#=#= Begin test: l33t-haxor: Create a resource =#=#=#=
 pcmk__check_acl 	trace: Parent ACL denies user 'l33t-haxor' read/write access to /cib/configuration/resources/primitive[@id='dummy']
 pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
 Call failed: Permission denied
 =#=#=#= End test: l33t-haxor: Create a resource - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - l33t-haxor: Create a resource
+* Passed: cibadmin              - l33t-haxor: Create a resource
 =#=#=#= Begin test: niceguy: Query configuration =#=#=#=
 <cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
@@ -634,13 +631,13 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= End test: niceguy: Query configuration - OK (0) =#=#=#=
-* Passed: cibadmin       - niceguy: Query configuration
+* Passed: cibadmin              - niceguy: Query configuration
 =#=#=#= Begin test: niceguy: Set enable-acl =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]
 Error setting enable-acl=false (section=crm_config, set=<null>): Permission denied
 crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: niceguy: Set enable-acl - Insufficient privileges (4) =#=#=#=
-* Passed: crm_attribute  - niceguy: Set enable-acl
+* Passed: crm_attribute         - niceguy: Set enable-acl
 =#=#=#= Begin test: niceguy: Set stonith-enabled =#=#=#=
 pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="cib-bootstrap-options-stonith-enabled"
 =#=#=#= Current cib after: niceguy: Set stonith-enabled =#=#=#=
@@ -716,13 +713,13 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="cib-bo
   <status/>
 </cib>
 =#=#=#= End test: niceguy: Set stonith-enabled - OK (0) =#=#=#=
-* Passed: crm_attribute  - niceguy: Set stonith-enabled
+* Passed: crm_attribute         - niceguy: Set stonith-enabled
 =#=#=#= Begin test: niceguy: Create a resource =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/resources/primitive[@id='dummy']
 pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Create a resource - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - niceguy: Create a resource
+* Passed: cibadmin              - niceguy: Create a resource
 =#=#=#= Begin test: root: Query configuration =#=#=#=
 <cib epoch="10" num_updates="0" admin_epoch="0">
   <configuration>
@@ -796,7 +793,7 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= End test: root: Query configuration - OK (0) =#=#=#=
-* Passed: cibadmin       - root: Query configuration
+* Passed: cibadmin              - root: Query configuration
 =#=#=#= Begin test: root: Set stonith-enabled =#=#=#=
 =#=#=#= Current cib after: root: Set stonith-enabled =#=#=#=
 <cib epoch="11" num_updates="0" admin_epoch="0">
@@ -871,7 +868,7 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= End test: root: Set stonith-enabled - OK (0) =#=#=#=
-* Passed: crm_attribute  - root: Set stonith-enabled
+* Passed: crm_attribute         - root: Set stonith-enabled
 =#=#=#= Begin test: root: Create a resource =#=#=#=
 =#=#=#= Current cib after: root: Create a resource =#=#=#=
 <cib epoch="12" num_updates="0" admin_epoch="0">
@@ -948,19 +945,19 @@ Call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= End test: root: Create a resource - OK (0) =#=#=#=
-* Passed: cibadmin       - root: Create a resource
+* Passed: cibadmin              - root: Create a resource
 =#=#=#= Begin test: l33t-haxor: Create a resource meta attribute =#=#=#=
 crm_resource: Error performing operation: Insufficient privileges
 =#=#=#= End test: l33t-haxor: Create a resource meta attribute - Insufficient privileges (4) =#=#=#=
-* Passed: crm_resource   - l33t-haxor: Create a resource meta attribute
+* Passed: crm_resource          - l33t-haxor: Create a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Query a resource meta attribute =#=#=#=
 crm_resource: Error performing operation: Insufficient privileges
 =#=#=#= End test: l33t-haxor: Query a resource meta attribute - Insufficient privileges (4) =#=#=#=
-* Passed: crm_resource   - l33t-haxor: Query a resource meta attribute
+* Passed: crm_resource          - l33t-haxor: Query a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Remove a resource meta attribute =#=#=#=
 crm_resource: Error performing operation: Insufficient privileges
 =#=#=#= End test: l33t-haxor: Remove a resource meta attribute - Insufficient privileges (4) =#=#=#=
-* Passed: crm_resource   - l33t-haxor: Remove a resource meta attribute
+* Passed: crm_resource          - l33t-haxor: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
@@ -1047,7 +1044,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
   <status/>
 </cib>
 =#=#=#= End test: niceguy: Create a resource meta attribute - OK (0) =#=#=#=
-* Passed: crm_resource   - niceguy: Create a resource meta attribute
+* Passed: crm_resource          - niceguy: Create a resource meta attribute
 =#=#=#= Begin test: niceguy: Query a resource meta attribute =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
@@ -1132,7 +1129,7 @@ Stopped
   <status/>
 </cib>
 =#=#=#= End test: niceguy: Query a resource meta attribute - OK (0) =#=#=#=
-* Passed: crm_resource   - niceguy: Query a resource meta attribute
+* Passed: crm_resource          - niceguy: Query a resource meta attribute
 =#=#=#= Begin test: niceguy: Remove a resource meta attribute =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
@@ -1215,7 +1212,7 @@ Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
   <status/>
 </cib>
 =#=#=#= End test: niceguy: Remove a resource meta attribute - OK (0) =#=#=#=
-* Passed: crm_resource   - niceguy: Remove a resource meta attribute
+* Passed: crm_resource          - niceguy: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
@@ -1301,7 +1298,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
   <status/>
 </cib>
 =#=#=#= End test: niceguy: Create a resource meta attribute - OK (0) =#=#=#=
-* Passed: crm_resource   - niceguy: Create a resource meta attribute
+* Passed: crm_resource          - niceguy: Create a resource meta attribute
 =#=#=#= Begin test: badidea: Query configuration - implied deny =#=#=#=
 <cib>
   <configuration>
@@ -1315,7 +1312,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
   </configuration>
 </cib>
 =#=#=#= End test: badidea: Query configuration - implied deny - OK (0) =#=#=#=
-* Passed: cibadmin       - badidea: Query configuration - implied deny
+* Passed: cibadmin              - badidea: Query configuration - implied deny
 =#=#=#= Begin test: betteridea: Query configuration - explicit deny =#=#=#=
 <cib>
   <configuration>
@@ -1329,7 +1326,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
   </configuration>
 </cib>
 =#=#=#= End test: betteridea: Query configuration - explicit deny - OK (0) =#=#=#=
-* Passed: cibadmin       - betteridea: Query configuration - explicit deny
+* Passed: cibadmin              - betteridea: Query configuration - explicit deny
 <cib epoch="16" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -1356,7 +1353,7 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - remove acls - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - niceguy: Replace - remove acls
+* Passed: cibadmin              - niceguy: Replace - remove acls
 <cib epoch="16" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -1441,7 +1438,7 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy2"
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create resource - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - niceguy: Replace - create resource
+* Passed: cibadmin              - niceguy: Replace - create resource
 <cib epoch="16" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -1524,7 +1521,7 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - modify attribute (deny) - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - niceguy: Replace - modify attribute (deny)
+* Passed: cibadmin              - niceguy: Replace - modify attribute (deny)
 <cib epoch="16" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -1607,7 +1604,7 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl']
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - delete attribute (deny) - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - niceguy: Replace - delete attribute (deny)
+* Passed: cibadmin              - niceguy: Replace - delete attribute (deny)
 <cib epoch="16" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -1690,7 +1687,7 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/resources/primitive[@id='dummy'][@description]
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create attribute (deny) - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - niceguy: Replace - create attribute (deny)
+* Passed: cibadmin              - niceguy: Replace - create attribute (deny)
 <cib epoch="16" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -1770,7 +1767,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: bob: Replace - create attribute (direct allow) =#=#=#=
 =#=#=#= End test: bob: Replace - create attribute (direct allow) - OK (0) =#=#=#=
-* Passed: cibadmin       - bob: Replace - create attribute (direct allow)
+* Passed: cibadmin              - bob: Replace - create attribute (direct allow)
 <cib epoch="17" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -1850,7 +1847,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: bob: Replace - modify attribute (direct allow) =#=#=#=
 =#=#=#= End test: bob: Replace - modify attribute (direct allow) - OK (0) =#=#=#=
-* Passed: cibadmin       - bob: Replace - modify attribute (direct allow)
+* Passed: cibadmin              - bob: Replace - modify attribute (direct allow)
 <cib epoch="18" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -1926,7 +1923,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: bob: Replace - delete attribute (direct allow) =#=#=#=
 =#=#=#= End test: bob: Replace - delete attribute (direct allow) - OK (0) =#=#=#=
-* Passed: cibadmin       - bob: Replace - delete attribute (direct allow)
+* Passed: cibadmin              - bob: Replace - delete attribute (direct allow)
 <cib epoch="19" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -2002,7 +1999,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: joe: Replace - create attribute (inherited allow) =#=#=#=
 =#=#=#= End test: joe: Replace - create attribute (inherited allow) - OK (0) =#=#=#=
-* Passed: cibadmin       - joe: Replace - create attribute (inherited allow)
+* Passed: cibadmin              - joe: Replace - create attribute (inherited allow)
 <cib epoch="20" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -2078,7 +2075,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: joe: Replace - modify attribute (inherited allow) =#=#=#=
 =#=#=#= End test: joe: Replace - modify attribute (inherited allow) - OK (0) =#=#=#=
-* Passed: cibadmin       - joe: Replace - modify attribute (inherited allow)
+* Passed: cibadmin              - joe: Replace - modify attribute (inherited allow)
 <cib epoch="21" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -2154,7 +2151,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: joe: Replace - delete attribute (inherited allow) =#=#=#=
 =#=#=#= End test: joe: Replace - delete attribute (inherited allow) - OK (0) =#=#=#=
-* Passed: cibadmin       - joe: Replace - delete attribute (inherited allow)
+* Passed: cibadmin              - joe: Replace - delete attribute (inherited allow)
 <cib epoch="22" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -2230,7 +2227,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: mike: Replace - create attribute (allow overrides deny) =#=#=#=
 =#=#=#= End test: mike: Replace - create attribute (allow overrides deny) - OK (0) =#=#=#=
-* Passed: cibadmin       - mike: Replace - create attribute (allow overrides deny)
+* Passed: cibadmin              - mike: Replace - create attribute (allow overrides deny)
 <cib epoch="23" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -2306,7 +2303,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: mike: Replace - modify attribute (allow overrides deny) =#=#=#=
 =#=#=#= End test: mike: Replace - modify attribute (allow overrides deny) - OK (0) =#=#=#=
-* Passed: cibadmin       - mike: Replace - modify attribute (allow overrides deny)
+* Passed: cibadmin              - mike: Replace - modify attribute (allow overrides deny)
 <cib epoch="24" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -2382,164 +2379,8 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: mike: Replace - delete attribute (allow overrides deny) =#=#=#=
 =#=#=#= End test: mike: Replace - delete attribute (allow overrides deny) - OK (0) =#=#=#=
-* Passed: cibadmin       - mike: Replace - delete attribute (allow overrides deny)
-<cib epoch="25" num_updates="0" admin_epoch="0">
-  <configuration>
-    <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
-        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
-      </cluster_property_set>
-    </crm_config>
-    <nodes/>
-    <resources>
-      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>
-    </resources>
-    <constraints/>
-    <acls>
-      <acl_target id="l33t-haxor">
-        <role id="nothing"/>
-      </acl_target>
-      <acl_target id="niceguy">
-        <role id="observer"/>
-      </acl_target>
-      <acl_target id="bob">
-        <role id="admin"/>
-      </acl_target>
-      <acl_target id="joe">
-        <role id="super_user"/>
-      </acl_target>
-      <acl_target id="mike">
-        <role id="rsc_writer"/>
-      </acl_target>
-      <acl_target id="chris">
-        <role id="rsc_denied"/>
-      </acl_target>
-      <acl_role id="nothing">
-        <acl_permission id="nothing-deny" kind="deny" xpath="/cib"/>
-      </acl_role>
-      <acl_role id="observer">
-        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
-      </acl_role>
-      <acl_role id="admin">
-        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
-      </acl_role>
-      <acl_role id="super_user">
-        <acl_permission id="super_user-write-1" kind="write" xpath="/cib"/>
-      </acl_role>
-      <acl_role id="rsc_writer">
-        <acl_permission id="rsc-writer-deny-1" kind="deny" xpath="/cib"/>
-        <acl_permission id="rsc-writer-write-1" kind="write" xpath="//resources"/>
-      </acl_role>
-      <acl_role id="rsc_denied">
-        <acl_permission id="rsc-denied-write-1" kind="write" xpath="/cib"/>
-        <acl_permission id="rsc-denied-deny-1" kind="deny" xpath="//resources"/>
-      </acl_role>
-      <acl_role id="badidea-role">
-        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
-      </acl_role>
-      <acl_target id="badidea">
-        <role id="badidea-role"/>
-      </acl_target>
-      <acl_role id="betteridea-role">
-        <acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/>
-        <acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/>
-      </acl_role>
-      <acl_target id="betteridea">
-        <role id="betteridea-role"/>
-      </acl_target>
-    </acls>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= Begin test: chris: Replace - create attribute (deny overrides allow) =#=#=#=
-pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib/configuration/resources/primitive[@id='dummy'][@description]
-Call failed: Permission denied
-=#=#=#= End test: chris: Replace - create attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - chris: Replace - create attribute (deny overrides allow)
-<cib epoch="26" num_updates="0" admin_epoch="0">
-  <configuration>
-    <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
-        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
-      </cluster_property_set>
-    </crm_config>
-    <nodes/>
-    <resources>
-      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="something interesting"/>
-    </resources>
-    <constraints/>
-    <acls>
-      <acl_target id="l33t-haxor">
-        <role id="nothing"/>
-      </acl_target>
-      <acl_target id="niceguy">
-        <role id="observer"/>
-      </acl_target>
-      <acl_target id="bob">
-        <role id="admin"/>
-      </acl_target>
-      <acl_target id="joe">
-        <role id="super_user"/>
-      </acl_target>
-      <acl_target id="mike">
-        <role id="rsc_writer"/>
-      </acl_target>
-      <acl_target id="chris">
-        <role id="rsc_denied"/>
-      </acl_target>
-      <acl_role id="nothing">
-        <acl_permission id="nothing-deny" kind="deny" xpath="/cib"/>
-      </acl_role>
-      <acl_role id="observer">
-        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
-      </acl_role>
-      <acl_role id="admin">
-        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
-      </acl_role>
-      <acl_role id="super_user">
-        <acl_permission id="super_user-write-1" kind="write" xpath="/cib"/>
-      </acl_role>
-      <acl_role id="rsc_writer">
-        <acl_permission id="rsc-writer-deny-1" kind="deny" xpath="/cib"/>
-        <acl_permission id="rsc-writer-write-1" kind="write" xpath="//resources"/>
-      </acl_role>
-      <acl_role id="rsc_denied">
-        <acl_permission id="rsc-denied-write-1" kind="write" xpath="/cib"/>
-        <acl_permission id="rsc-denied-deny-1" kind="deny" xpath="//resources"/>
-      </acl_role>
-      <acl_role id="badidea-role">
-        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
-      </acl_role>
-      <acl_target id="badidea">
-        <role id="badidea-role"/>
-      </acl_target>
-      <acl_role id="betteridea-role">
-        <acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/>
-        <acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/>
-      </acl_role>
-      <acl_target id="betteridea">
-        <role id="betteridea-role"/>
-      </acl_target>
-    </acls>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= Begin test: chris: Replace - modify attribute (deny overrides allow) =#=#=#=
-pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib/configuration/resources/primitive[@id='dummy'][@description]
-Call failed: Permission denied
-=#=#=#= End test: chris: Replace - modify attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - chris: Replace - modify attribute (deny overrides allow)
-<cib epoch="27" num_updates="0" admin_epoch="0">
+* Passed: cibadmin              - mike: Replace - delete attribute (allow overrides deny)
+<cib epoch="24" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2612,8 +2453,319 @@ Call failed: Permission denied
   </configuration>
   <status/>
 </cib>
+=#=#=#= Begin test: mike: Create another resource =#=#=#=
+pcmk__apply_creation_acl 	trace: ACLs allow creation of <primitive> with id="dummy2"
+=#=#=#= Current cib after: mike: Create another resource =#=#=#=
+<cib epoch="25" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+      <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_target id="l33t-haxor">
+        <role id="nothing"/>
+      </acl_target>
+      <acl_target id="niceguy">
+        <role id="observer"/>
+      </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
+      <acl_target id="joe">
+        <role id="super_user"/>
+      </acl_target>
+      <acl_target id="mike">
+        <role id="rsc_writer"/>
+      </acl_target>
+      <acl_target id="chris">
+        <role id="rsc_denied"/>
+      </acl_target>
+      <acl_role id="nothing">
+        <acl_permission id="nothing-deny" kind="deny" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="observer">
+        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="super_user">
+        <acl_permission id="super_user-write-1" kind="write" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="rsc_writer">
+        <acl_permission id="rsc-writer-deny-1" kind="deny" xpath="/cib"/>
+        <acl_permission id="rsc-writer-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="rsc_denied">
+        <acl_permission id="rsc-denied-write-1" kind="write" xpath="/cib"/>
+        <acl_permission id="rsc-denied-deny-1" kind="deny" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="badidea-role">
+        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="badidea">
+        <role id="badidea-role"/>
+      </acl_target>
+      <acl_role id="betteridea-role">
+        <acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/>
+        <acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="betteridea">
+        <role id="betteridea-role"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: mike: Create another resource - OK (0) =#=#=#=
+* Passed: cibadmin              - mike: Create another resource
+<cib epoch="26" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>
+      <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_target id="l33t-haxor">
+        <role id="nothing"/>
+      </acl_target>
+      <acl_target id="niceguy">
+        <role id="observer"/>
+      </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
+      <acl_target id="joe">
+        <role id="super_user"/>
+      </acl_target>
+      <acl_target id="mike">
+        <role id="rsc_writer"/>
+      </acl_target>
+      <acl_target id="chris">
+        <role id="rsc_denied"/>
+      </acl_target>
+      <acl_role id="nothing">
+        <acl_permission id="nothing-deny" kind="deny" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="observer">
+        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="super_user">
+        <acl_permission id="super_user-write-1" kind="write" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="rsc_writer">
+        <acl_permission id="rsc-writer-deny-1" kind="deny" xpath="/cib"/>
+        <acl_permission id="rsc-writer-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="rsc_denied">
+        <acl_permission id="rsc-denied-write-1" kind="write" xpath="/cib"/>
+        <acl_permission id="rsc-denied-deny-1" kind="deny" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="badidea-role">
+        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="badidea">
+        <role id="badidea-role"/>
+      </acl_target>
+      <acl_role id="betteridea-role">
+        <acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/>
+        <acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="betteridea">
+        <role id="betteridea-role"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: chris: Replace - create attribute (deny overrides allow) =#=#=#=
+pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib/configuration/resources/primitive[@id='dummy'][@description]
+Call failed: Permission denied
+=#=#=#= End test: chris: Replace - create attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
+* Passed: cibadmin              - chris: Replace - create attribute (deny overrides allow)
+<cib epoch="26" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="something interesting"/>
+      <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_target id="l33t-haxor">
+        <role id="nothing"/>
+      </acl_target>
+      <acl_target id="niceguy">
+        <role id="observer"/>
+      </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
+      <acl_target id="joe">
+        <role id="super_user"/>
+      </acl_target>
+      <acl_target id="mike">
+        <role id="rsc_writer"/>
+      </acl_target>
+      <acl_target id="chris">
+        <role id="rsc_denied"/>
+      </acl_target>
+      <acl_role id="nothing">
+        <acl_permission id="nothing-deny" kind="deny" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="observer">
+        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="super_user">
+        <acl_permission id="super_user-write-1" kind="write" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="rsc_writer">
+        <acl_permission id="rsc-writer-deny-1" kind="deny" xpath="/cib"/>
+        <acl_permission id="rsc-writer-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="rsc_denied">
+        <acl_permission id="rsc-denied-write-1" kind="write" xpath="/cib"/>
+        <acl_permission id="rsc-denied-deny-1" kind="deny" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="badidea-role">
+        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="badidea">
+        <role id="badidea-role"/>
+      </acl_target>
+      <acl_role id="betteridea-role">
+        <acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/>
+        <acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="betteridea">
+        <role id="betteridea-role"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= Begin test: chris: Replace - modify attribute (deny overrides allow) =#=#=#=
+pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib/configuration/resources/primitive[@id='dummy'][@description]
+Call failed: Permission denied
+=#=#=#= End test: chris: Replace - modify attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
+* Passed: cibadmin              - chris: Replace - modify attribute (deny overrides allow)
+<cib epoch="26" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+      <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_target id="l33t-haxor">
+        <role id="nothing"/>
+      </acl_target>
+      <acl_target id="niceguy">
+        <role id="observer"/>
+      </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
+      <acl_target id="joe">
+        <role id="super_user"/>
+      </acl_target>
+      <acl_target id="mike">
+        <role id="rsc_writer"/>
+      </acl_target>
+      <acl_target id="chris">
+        <role id="rsc_denied"/>
+      </acl_target>
+      <acl_role id="nothing">
+        <acl_permission id="nothing-deny" kind="deny" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="observer">
+        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="super_user">
+        <acl_permission id="super_user-write-1" kind="write" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="rsc_writer">
+        <acl_permission id="rsc-writer-deny-1" kind="deny" xpath="/cib"/>
+        <acl_permission id="rsc-writer-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="rsc_denied">
+        <acl_permission id="rsc-denied-write-1" kind="write" xpath="/cib"/>
+        <acl_permission id="rsc-denied-deny-1" kind="deny" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="badidea-role">
+        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="badidea">
+        <role id="badidea-role"/>
+      </acl_target>
+      <acl_role id="betteridea-role">
+        <acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/>
+        <acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="betteridea">
+        <role id="betteridea-role"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
 =#=#=#= Begin test: chris: Replace - delete attribute (deny overrides allow) =#=#=#=
-pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib/configuration/resources/primitive[@id='dummy']
+pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib/configuration/resources/primitive[@id='dummy2']
 Call failed: Permission denied
 =#=#=#= End test: chris: Replace - delete attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
-* Passed: cibadmin       - chris: Replace - delete attribute (deny overrides allow)
+* Passed: cibadmin              - chris: Replace - delete attribute (deny overrides allow)

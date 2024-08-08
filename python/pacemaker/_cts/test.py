@@ -23,34 +23,8 @@ import time
 
 from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError, XmlValidationError
 from pacemaker._cts.process import pipe_communicate
-from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.validate import validate
 from pacemaker.exitstatus import ExitStatus
-
-
-def find_validator(rng_file):
-    """
-    Return the command line used to validate XML output.
-
-    If no validator is found, return None.
-    """
-    if os.access("/usr/bin/xmllint", os.X_OK):
-        if rng_file is None:
-            return ["xmllint", "-"]
-
-        return ["xmllint", "--relaxng", rng_file, "-"]
-
-    return None
-
-
-def rng_directory():
-    """Return the directory containing RNG schema files."""
-    if "PCMK_schema_directory" in os.environ:
-        return os.environ["PCMK_schema_directory"]
-
-    if os.path.exists("%s/cts-fencing.in" % sys.path[0]):
-        return "xml"
-
-    return BuildOptions.SCHEMA_DIR
 
 
 class Pattern:
@@ -409,26 +383,10 @@ class Test:
             raise OutputFoundError(output)
 
         if args['validate']:
-            if args['check_rng']:
-                rng_file = "%s/api/api-result.rng" % rng_directory()
-            else:
-                rng_file = None
-
-            cmd = find_validator(rng_file)
-            if not cmd:
-                raise XmlValidationError("Could not find validator for %s" % rng_file)
+            output = validate(output, args['check_rng'], args['verbose'])
 
             if self.verbose:
-                print("\nRunning: %s" % " ".join(cmd))
-
-            with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as validator:
-                output = pipe_communicate(validator, check_stderr=True, stdin=output)
-
-                if self.verbose:
-                    print(output)
-
-                if validator.returncode != 0:
-                    raise XmlValidationError(output)
+                print(output)
 
         return ExitStatus.OK
 

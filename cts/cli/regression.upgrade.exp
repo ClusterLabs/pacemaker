@@ -1,6 +1,3 @@
-Created new pacemaker configuration
-A new shadow instance was created. To begin using it, enter the following into your shell:
-	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Set stonith-enabled=false =#=#=#=
 =#=#=#= Current cib after: Set stonith-enabled=false =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="0">
@@ -17,7 +14,7 @@ A new shadow instance was created. To begin using it, enter the following into y
   <status/>
 </cib>
 =#=#=#= End test: Set stonith-enabled=false - OK (0) =#=#=#=
-* Passed: crm_attribute  - Set stonith-enabled=false
+* Passed: crm_attribute         - Set stonith-enabled=false
 =#=#=#= Begin test: Configure the initial resource =#=#=#=
 =#=#=#= Current cib after: Configure the initial resource =#=#=#=
 <cib epoch="3" num_updates="0" admin_epoch="0">
@@ -55,7 +52,7 @@ A new shadow instance was created. To begin using it, enter the following into y
   <status/>
 </cib>
 =#=#=#= End test: Configure the initial resource - OK (0) =#=#=#=
-* Passed: cibadmin       - Configure the initial resource
+* Passed: cibadmin              - Configure the initial resource
 =#=#=#= Begin test: Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping) =#=#=#=
 pcmk__update_schema 	debug: Schema pacemaker-2.10 validates
 apply_upgrade 	debug: Upgrading schema from pacemaker-2.10 to pacemaker-3.0: applying XSL transform upgrade-2.10-0.xsl
@@ -109,7 +106,7 @@ pcmk__update_schema 	info: Transformed the configuration schema to pacemaker-3.1
   <status/>
 </cib>
 =#=#=#= End test: Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping) - OK (0) =#=#=#=
-* Passed: cibadmin       - Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping)
+* Passed: cibadmin              - Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping)
 =#=#=#= Begin test: Query a resource instance attribute (shall survive) =#=#=#=
 outputpower
 =#=#=#= Current cib after: Query a resource instance attribute (shall survive) =#=#=#=
@@ -142,4 +139,4 @@ outputpower
   <status/>
 </cib>
 =#=#=#= End test: Query a resource instance attribute (shall survive) - OK (0) =#=#=#=
-* Passed: crm_resource   - Query a resource instance attribute (shall survive)
+* Passed: crm_resource          - Query a resource instance attribute (shall survive)
