@@ -753,7 +753,7 @@ op_undefined_passes(void **state)
 static void
 op_undefined_fails(void **state)
 {
-    assert_attr_expression(EXPR_OP_DEFINED_FAILS, pcmk_rc_op_unsatisfied);
+    assert_attr_expression(EXPR_OP_UNDEFINED_FAILS, pcmk_rc_op_unsatisfied);
 }
 
 
