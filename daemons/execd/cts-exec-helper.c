@@ -461,7 +461,7 @@ generate_params(void)
     if (rc != pcmk_rc_ok) {
         return rc;
     }
-    rc = pcmk_update_configured_schema(&cib_xml_copy, false);
+    rc = pcmk__update_configured_schema(&cib_xml_copy, false);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
