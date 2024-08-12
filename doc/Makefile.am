@@ -39,7 +39,7 @@ SUBDIRS		= sphinx
 EXTRA_DIST	= $(DEPRECATED_ORIGINAL)
 
 # toplevel rsync destination for www targets (without trailing slash)
-RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
+RSYNC_DEST      ?= sites.clusterlabs.org:/var/www/html
 
 # recursive, preserve symlinks, preserve permissions, verbose, compress,
 # don't cross filesystems, sparse, show progress
