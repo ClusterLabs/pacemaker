@@ -10,7 +10,6 @@
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-option1" name="option1"/>
         <nvpair id="cib-bootstrap-options-option2" name="option2" value="value2"/>
       </cluster_property_set>
     </crm_config>
@@ -19,14 +18,11 @@
       <primitive class="ocf" id="rsc1" provider="pacemaker" type="Dummy">
         <instance_attributes id="rsc1-instance_attributes">
           <nvpair id="rsc1-instance_attributes-option2" name="option2" value="value2"/>
-          <nvpair id="rsc1-instance_attributes-option1" name="option1"/>
         </instance_attributes>
         <meta_attributes id="rsc1-meta_attributes">
-          <nvpair id="rsc1-meta_attributes-option1" name="option1"/>
           <nvpair id="rsc1-meta_attributes-option2" name="option2" value="value2"/>
         </meta_attributes>
         <utilization id="rsc1-utilization">
-          <nvpair id="rsc1-utilization-option1" name="option1"/>
           <nvpair id="rsc1-utilization-option2" name="option2" value="value2"/>
         </utilization>
       </primitive>

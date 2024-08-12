@@ -13,6 +13,8 @@
    elements (remaining in document order in the case of a tie) and placed below
    all non-nvset siblings. Exception: a cluster_property_set with id
    "cib-bootstrap-options" always sorts first relative to its siblings.
+ * Each nvpair has a value attribute. If an nvpair did not have a value
+   attribute prior to this transformation, it is dropped.
 
  nvset elements include the following:
  * cluster_property_set
@@ -105,5 +107,11 @@
         <xsl:apply-templates select="node()"/>
     </xsl:copy>
 </xsl:template>
+
+
+<!-- Name/value pairs -->
+
+<!-- Drop any nvpair that does not have a value attribute -->
+<xsl:template match="nvpair[not(@value)]"/>
 
 </xsl:stylesheet>
