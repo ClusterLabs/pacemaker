@@ -150,6 +150,7 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     int rc = pcmk_rc_ok;
     bool created_api = false;
+    enum pcmk_ipc_dispatch dispatch = pcmk_ipc_dispatch_sync;
 
     if (api == NULL) {
         rc = pcmk_new_ipc_api(&api, pcmk_ipc_attrd);
@@ -157,9 +158,11 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
             return rc;
         }
         created_api = true;
+    } else {
+        dispatch = api->dispatch_type;
     }
 
-    rc = pcmk__connect_ipc(api, pcmk_ipc_dispatch_sync, 5);
+    rc = pcmk__connect_ipc(api, dispatch, 5);
     if (rc == pcmk_rc_ok) {
         rc = pcmk__send_ipc_request(api, request);
     }
