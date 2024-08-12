@@ -44,8 +44,8 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
 # Individual tool tests are split out, but can also be accessed as a group with "tools"
-tools_tests = ["crm_attribute", "crm_standby", "crm_resource", "crm_ticket", "crmadmin",
-               "crm_shadow", "crm_verify"]
+tools_tests = ["cibadmin", "crm_attribute", "crm_standby", "crm_resource",
+               "crm_ticket", "crmadmin", "crm_shadow", "crm_verify"]
 # The default list of tests to run, in the order they should be run
 default_tests = ["access_render", "daemons", "dates", "error_codes"] + tools_tests + \
                 ["crm_mon", "acls", "validity", "upgrade", "rules", "feature_set"]
@@ -1252,6 +1252,41 @@ class ErrorCodeRegressionTest(RegressionTest):
         return legacy_tests + standard_tests + crm_exit_t_tests
 
 
+class CibadminRegressionTest(RegressionTest):
+    """A class for testing cibadmin."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "cibadmin"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        basic_tests = [
+            Test("Validate CIB", "cibadmin -Q", update_cib=True),
+            Test("Digest calculation", "cibadmin -Q | cibadmin -5 -p 2>&1"),
+            Test("Require --force for CIB erasure", "cibadmin -E",
+                 expected_rc=ExitStatus.UNSAFE, update_cib=True),
+            Test("Allow CIB erasure with --force", "cibadmin -E --force"),
+            # Verify the output after erasure
+            Test("Query CIB", "cibadmin -Q",
+                 setup=delete_shadow_resource_defaults,
+                 update_cib=True),
+        ]
+
+        # Add some stuff to the empty CIB so we know that erasing it did something.
+        basic_tests_setup = [
+            """cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1">'""",
+            """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/></cluster_property_set>'""",
+            """cibadmin -C -o resources --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'"""
+        ]
+
+        return [
+            ShadowTestGroup(basic_tests, setup=basic_tests_setup),
+        ]
+
+
 class CrmAttributeRegressionTest(RegressionTest):
     """A class for testing crm_attribute."""
 
@@ -1280,9 +1315,6 @@ class CrmAttributeRegressionTest(RegressionTest):
         ]
 
         value_update_tests = [
-            # This isn't a test of updating values, but it's gotta go somewhere
-            # and this is as good a place as any
-            Test("Validate CIB", "cibadmin -Q", update_cib=True),
             Test("Query the value of an attribute that does not exist",
                  "crm_attribute -n ABCD --query --quiet",
                  expected_rc=ExitStatus.NOSUCH),
@@ -1312,15 +1344,6 @@ class CrmAttributeRegressionTest(RegressionTest):
             make_test_group("Test '+=' nvpair value update syntax (--score not set)",
                             "crm_attribute -n test_attr -v 'value+=2' {fmt}",
                             [Test, ValidatingTest], update_cib=True),
-            # These last two aren't a test of updating values, but they've gotta
-            # go somewhere and this is as good a place as any
-            Test("Require --force for CIB erasure", "cibadmin -E",
-                 expected_rc=ExitStatus.UNSAFE, update_cib=True),
-            Test("Allow CIB erasure with --force", "cibadmin -E --force"),
-            # Verify the output after erasure
-            Test("Query CIB", "cibadmin -Q",
-                 setup=delete_shadow_resource_defaults,
-                 update_cib=True),
         ]
 
         query_set_tests = [
@@ -1400,9 +1423,6 @@ class CrmAttributeRegressionTest(RegressionTest):
                  update_cib=True),
             Test("Query utilization node attribute",
                  "crm_attribute --query -n cpu -N node1 -z"),
-            # These last two aren't a test of updating values, but they've gotta
-            # go somewhere and this is as good a place as any
-            Test("Digest calculation", "cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null"),
             # This update will fail because it has version numbers
             Test("Replace operation should fail",
                  """cibadmin -Q | sed -e 's/epoch="[^"]*"/epoch="1"/' | cibadmin -R -p""",
@@ -3354,6 +3374,7 @@ regression_classes = [
     DaemonsRegressionTest,
     DatesRegressionTest,
     ErrorCodeRegressionTest,
+    CibadminRegressionTest,
     CrmAttributeRegressionTest,
     CrmStandbyRegressionTest,
     CrmResourceRegressionTest,

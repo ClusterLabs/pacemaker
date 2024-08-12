@@ -906,28 +906,6 @@ Also known as properties, these are options that affect behavior across the enti
 crm_attribute: -p/--promotion must be called from an OCF resource agent or with a resource ID specified
 =#=#=#= End test: Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings - Incorrect usage (64) =#=#=#=
 * Passed: crm_attribute         - Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings
-=#=#=#= Begin test: Validate CIB =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
-  <configuration>
-    <crm_config/>
-    <nodes/>
-    <resources/>
-    <constraints/>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= Current cib after: Validate CIB =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
-  <configuration>
-    <crm_config/>
-    <nodes/>
-    <resources/>
-    <constraints/>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= End test: Validate CIB - OK (0) =#=#=#=
-* Passed: cibadmin              - Validate CIB
 =#=#=#= Begin test: Query the value of an attribute that does not exist =#=#=#=
 crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Query the value of an attribute that does not exist - No such object (105) =#=#=#=
@@ -1165,49 +1143,6 @@ crm_attribute: Error performing operation: No such device or address
 </cib>
 =#=#=#= End test: Test '+=' nvpair value update syntax (--score not set) (XML) - OK (0) =#=#=#=
 * Passed: crm_attribute         - Test '+=' nvpair value update syntax (--score not set) (XML)
-=#=#=#= Begin test: Require --force for CIB erasure =#=#=#=
-cibadmin: The supplied command is considered dangerous. To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
-=#=#=#= Current cib after: Require --force for CIB erasure =#=#=#=
-<cib epoch="10" num_updates="0" admin_epoch="6">
-  <configuration>
-    <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="17"/>
-      </cluster_property_set>
-    </crm_config>
-    <nodes/>
-    <resources/>
-    <constraints/>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= End test: Require --force for CIB erasure - Operation not safe (107) =#=#=#=
-* Passed: cibadmin              - Require --force for CIB erasure
-=#=#=#= Begin test: Allow CIB erasure with --force =#=#=#=
-=#=#=#= End test: Allow CIB erasure with --force - OK (0) =#=#=#=
-* Passed: cibadmin              - Allow CIB erasure with --force
-=#=#=#= Begin test: Query CIB =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
-  <configuration>
-    <crm_config/>
-    <nodes/>
-    <resources/>
-    <constraints/>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= Current cib after: Query CIB =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
-  <configuration>
-    <crm_config/>
-    <nodes/>
-    <resources/>
-    <constraints/>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= End test: Query CIB - OK (0) =#=#=#=
-* Passed: cibadmin              - Query CIB
 =#=#=#= Begin test: Set cluster option =#=#=#=
 =#=#=#= Current cib after: Set cluster option =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="0">
@@ -1850,10 +1785,6 @@ crm_attribute: Error: must specify attribute name or pattern to delete
 scope=nodes name=cpu value=1
 =#=#=#= End test: Query utilization node attribute - OK (0) =#=#=#=
 * Passed: crm_attribute         - Query utilization node attribute
-=#=#=#= Begin test: Digest calculation =#=#=#=
-Digest: 
-=#=#=#= End test: Digest calculation - OK (0) =#=#=#=
-* Passed: cibadmin              - Digest calculation
 =#=#=#= Begin test: Replace operation should fail =#=#=#=
 Call failed: Update was older than existing configuration
 =#=#=#= End test: Replace operation should fail - Update was older than existing configuration (103) =#=#=#=
