@@ -103,7 +103,8 @@ global-clean:
 .PHONY: manhtml
 manhtml:
 	$(MAKE) $(AM_MAKEFLAGS) -C .. all
-	find .. -name "[a-z]*.[78]" -exec $(MAKE) $(AM_MAKEFLAGS) \{\}.html \;
+	find ../agents ../daemons ../tools -name "[a-z]*.[78]"	\
+		-exec $(MAKE) $(AM_MAKEFLAGS) \{\}.html \;
 
 .PHONY: manhtml-upload
 manhtml-upload: manhtml
