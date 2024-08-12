@@ -41,9 +41,9 @@ EXTRA_DIST	= $(DEPRECATED_ORIGINAL)
 # toplevel rsync destination for www targets (without trailing slash)
 RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
 
-# recursive, preserve symlinks/permissions/times, verbose, compress,
+# recursive, preserve symlinks, preserve permissions, verbose, compress,
 # don't cross filesystems, sparse, show progress
-RSYNC_OPTS      = -rlptvzxS --progress
+RSYNC_OPTS      = -rlpvzxS --progress
 
 if IS_ASCIIDOC
 ASCIIDOC_HTML_ARGS	= --unsafe --backend=xhtml11
