@@ -17,12 +17,14 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta
 import fileinput
 from functools import partial
+from gettext import ngettext
 from multiprocessing import Pool, cpu_count
 import os
 import pathlib
 import re
 from shutil import copyfile
 import signal
+from string import Formatter
 import subprocess
 import sys
 from tempfile import NamedTemporaryFile, TemporaryDirectory, mkstemp
@@ -59,6 +61,31 @@ SHADOW_NAME = "cts-cli"
 VALGRIND_ARGS = ["-q", "--gen-suppressions=all", "--show-reachable=no", "--leak-check=full",
                  "--trace-children=no", "--time-stamp=yes", "--num-callers=20",
                  "--suppressions=%s/valgrind-pcmk.suppressions" % test_home]
+
+
+class PluralFormatter(Formatter):
+    """
+    Special string formatting class for selecting singular vs. plurals.
+
+    Use like so:
+    fmt = PluralFormatter()
+    print(fmt.format("{0} {0}:plural,test,tests} succeeded", n_tests))
+    """
+
+    def format_field(self, value, format_spec):
+        """Convert a value to a formatted representation."""
+        if format_spec.startswith("plural,"):
+            eles = format_spec.split(',')
+            if len(eles) == 2:
+                singular = eles[1]
+                plural = singular + "s"
+            else:
+                singular = eles[1]
+                plural = eles[2]
+
+            return ngettext(singular, plural, value)
+
+        return super().format_field(value, format_spec)
 
 
 def apply_substitutions(s, extra=None):
@@ -3282,12 +3309,15 @@ def summary(regs, output_differs, verbose):
     for r in regs:
         print("\n".join(r.summary))
 
+    fmt = PluralFormatter()
+
     # Then, print information specific to each result possibility.  Basically,
     # if there were failures then we print the output differences, leave the
     # failed output files in place, and exit with an error.  Otherwise, clean up
     # anything that passed.
     if test_failures > 0 and output_differs > 0:
-        print("%d test failed; see output in:" % test_failures)
+        print(fmt.format("{0} {0:plural,test} failed; see output in:",
+                         test_failures))
 
         for r in regs:
             r.process_results(verbose)
@@ -3295,7 +3325,7 @@ def summary(regs, output_differs, verbose):
         return ExitStatus.ERROR
 
     if test_failures > 0:
-        print("%d tests failed" % test_failures)
+        print(fmt.format("{0} {0:plural,test} failed", test_failures))
 
         for r in regs:
             r.process_results(verbose)
@@ -3303,14 +3333,15 @@ def summary(regs, output_differs, verbose):
         return ExitStatus.ERROR
 
     if output_differs:
-        print("%d tests passed but output was unexpected; see output in:" % test_successes)
+        print(fmt.format("{0} {0:plural,test} passed but output was "
+                         "unexpected; see output in:", test_successes))
 
         for r in regs:
             r.process_results(verbose)
 
         return ExitStatus.DIGEST
 
-    print("%d tests passed" % test_successes)
+    print(fmt.format("{0} {0:plural,test} passed", test_successes))
 
     for r in regs:
         r.cleanup()
