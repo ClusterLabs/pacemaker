@@ -58,6 +58,8 @@
                     <value>member</value>
                     <value>remote</value>
                     <value>ping</value>
+                    <value>cluster</value>
+                    <value>guest</value>
                 </choice>
             </attribute>
 
