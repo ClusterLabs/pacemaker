@@ -17,6 +17,7 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/common/scheduler.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/iso8601.h>
@@ -170,6 +171,44 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
 
     pcmk__config_warn("No resource, template, or tag named '%s'", id);
     return false;
+}
+
+/*!
+ * \internal
+ * \brief Parse a role attribute from a constraint
+ *
+ * This is like pcmk_parse_role() except that started is treated as
+ * pcmk_role_unknown (indicating any role), and the return value is
+ * pcmk_rc_unpack_error for invalid specifications.
+ *
+ * \param[in] id         ID of constraint being parsed (for logging only)
+ * \param[in] role_spec  Role specification
+ * \param[in] role       Where to store parsed role
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__parse_constraint_role(const char *id, const char *role_spec,
+                            enum rsc_role_e *role)
+{
+    *role = pcmk_parse_role(role_spec);
+    switch (*role) {
+        case pcmk_role_unknown:
+            if (role_spec != NULL) {
+                pcmk__config_err("Ignoring constraint %s: Invalid role '%s'",
+                                 id, role_spec);
+                return pcmk_rc_unpack_error;
+            }
+            break;
+
+        case pcmk_role_started:
+            *role = pcmk_role_unknown;
+            break;
+
+        default:
+            break;
+    }
+    return pcmk_rc_ok;
 }
 
 /*!

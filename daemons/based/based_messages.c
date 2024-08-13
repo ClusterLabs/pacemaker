@@ -354,7 +354,7 @@ cib_process_replace_svr(const char *op, int options, const char *section, xmlNod
 }
 
 /* @COMPAT: Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed
- * (Clients on Pacemaker Remote nodes <3.0.0 can send it)
+ * (At least external client code <3.0.0 can send it)
  */
 int
 cib_process_delete_absolute(const char *op, int options, const char *section, xmlNode * req,

@@ -13,6 +13,7 @@
 #include <glib.h>
 
 #include <crm/crm.h>
+#include <crm/common/scheduler.h>
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
@@ -373,23 +374,34 @@ anti_colocation_order(pcmk_resource_t *first_rsc, int first_role,
  * \param[in]     score           Constraint score
  * \param[in,out] dependent       Resource to be colocated
  * \param[in,out] primary         Resource to colocate \p dependent with
- * \param[in]     dependent_role  Current role of \p dependent
- * \param[in]     primary_role    Current role of \p primary
+ * \param[in]     dependent_role_spec  If not NULL, only \p dependent instances
+ *                                     with this role should be colocated
+ * \param[in]     primary_role_spec    If not NULL, only \p primary instances
+ *                                     with this role should be colocated
  * \param[in]     flags           Group of enum pcmk__coloc_flags
  */
 void
 pcmk__new_colocation(const char *id, const char *node_attr, int score,
                      pcmk_resource_t *dependent, pcmk_resource_t *primary,
-                     const char *dependent_role, const char *primary_role,
-                     uint32_t flags)
+                     const char *dependent_role_spec,
+                     const char *primary_role_spec, uint32_t flags)
 {
     pcmk__colocation_t *new_con = NULL;
+    enum rsc_role_e dependent_role = pcmk_role_unknown;
+    enum rsc_role_e primary_role = pcmk_role_unknown;
 
     CRM_CHECK(id != NULL, return);
 
     if ((dependent == NULL) || (primary == NULL)) {
         pcmk__config_err("Ignoring colocation '%s' because resource "
                          "does not exist", id);
+        return;
+    }
+    if ((pcmk__parse_constraint_role(id, dependent_role_spec,
+                                     &dependent_role) != pcmk_rc_ok)
+        || (pcmk__parse_constraint_role(id, primary_role_spec,
+                                        &primary_role) != pcmk_rc_ok)) {
+        // Not possible with schema validation enabled (error already logged)
         return;
     }
 
@@ -401,23 +413,13 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     }
 
     new_con = pcmk__assert_alloc(1, sizeof(pcmk__colocation_t));
-
-    if (pcmk__str_eq(dependent_role, PCMK_ROLE_STARTED,
-                     pcmk__str_null_matches|pcmk__str_casei)) {
-        dependent_role = PCMK__ROLE_UNKNOWN;
-    }
-
-    if (pcmk__str_eq(primary_role, PCMK_ROLE_STARTED,
-                     pcmk__str_null_matches|pcmk__str_casei)) {
-        primary_role = PCMK__ROLE_UNKNOWN;
-    }
-
     new_con->id = id;
     new_con->dependent = dependent;
     new_con->primary = primary;
     new_con->score = score;
-    new_con->dependent_role = pcmk_parse_role(dependent_role);
-    new_con->primary_role = pcmk_parse_role(primary_role);
+    new_con->dependent_role = dependent_role;
+    new_con->primary_role = primary_role;
+
     new_con->node_attribute = pcmk__s(node_attr, CRM_ATTR_UNAME);
     new_con->flags = flags;
 

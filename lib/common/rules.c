@@ -967,15 +967,6 @@ value_from_source(const char *value, enum pcmk__reference_source source,
 {
     GHashTable *table = NULL;
 
-    if (pcmk__str_empty(value)) {
-        /* @COMPAT When we can break backward compatibility, drop this block so
-         * empty strings are treated as such (there should never be an empty
-         * string as an instance attribute or meta-attribute name, so those will
-         * get NULL anyway, but it could matter for literal comparisons)
-         */
-        return NULL;
-    }
-
     switch (source) {
         case pcmk__source_literal:
             return value;
@@ -1109,9 +1100,9 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
                 rc = pcmk_rc_unpack_error;
                 goto done;
             }
+            reference = value_from_source(value, source, rule_input);
             break;
     }
-    reference = value_from_source(value, source, rule_input);
 
     // Get actual value of node attribute
     if (rule_input->node_attrs != NULL) {

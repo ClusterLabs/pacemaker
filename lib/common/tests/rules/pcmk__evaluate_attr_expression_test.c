@@ -62,6 +62,7 @@ setup(void **state)
     pcmk__insert_dup(rule_input.node_attrs, "num", "10");
     pcmk__insert_dup(rule_input.node_attrs, "ver", "3.5.0");
     pcmk__insert_dup(rule_input.node_attrs, "prefer-north", "100");
+    pcmk__insert_dup(rule_input.node_attrs, "empty", "");
 
     return 0;
 }
@@ -660,6 +661,18 @@ op_eq_passes(void **state)
     assert_attr_expression(EXPR_OP_EQ_PASSES, pcmk_rc_ok);
 }
 
+#define EXPR_EQ_EMPTY_VS_EMPTY_PASSES                   \
+        "<" PCMK_XE_EXPRESSION " " PCMK_XA_ID "='e' "   \
+        PCMK_XA_ATTRIBUTE "='empty' "                   \
+        PCMK_XA_OPERATION "='" PCMK_VALUE_EQ "' "       \
+        PCMK_XA_VALUE "='' />"
+
+static void
+op_eq_empty_vs_empty_passes(void **state)
+{
+    assert_attr_expression(EXPR_EQ_EMPTY_VS_EMPTY_PASSES, pcmk_rc_ok);
+}
+
 #define EXPR_OP_EQ_FAILS                                \
         "<" PCMK_XE_EXPRESSION " " PCMK_XA_ID "='e' "   \
         PCMK_XA_TYPE "='" PCMK_VALUE_INTEGER "' "       \
@@ -671,6 +684,19 @@ static void
 op_eq_fails(void **state)
 {
     assert_attr_expression(EXPR_OP_EQ_FAILS, pcmk_rc_op_unsatisfied);
+}
+
+#define EXPR_EQ_UNDEFINED_VS_EMPTY_FAILS                \
+        "<" PCMK_XE_EXPRESSION " " PCMK_XA_ID "='e' "   \
+        PCMK_XA_ATTRIBUTE "='boo' "                     \
+        PCMK_XA_OPERATION "='" PCMK_VALUE_EQ "' "       \
+        PCMK_XA_VALUE "='' />"
+
+static void
+op_eq_undefined_vs_empty_fails(void **state)
+{
+    assert_attr_expression(EXPR_EQ_UNDEFINED_VS_EMPTY_FAILS,
+                           pcmk_rc_op_unsatisfied);
 }
 
 #define EXPR_OP_NE_PASSES                               \
@@ -709,6 +735,17 @@ static void
 op_defined_passes(void **state)
 {
     assert_attr_expression(EXPR_OP_DEFINED_PASSES, pcmk_rc_ok);
+}
+
+#define EXPR_OP_DEFINED_EMPTY_PASSES                    \
+        "<" PCMK_XE_EXPRESSION " " PCMK_XA_ID "='e' "   \
+        PCMK_XA_ATTRIBUTE "='empty' "                   \
+        PCMK_XA_OPERATION "='" PCMK_VALUE_DEFINED "' />"
+
+static void
+op_defined_empty_passes(void **state)
+{
+    assert_attr_expression(EXPR_OP_DEFINED_EMPTY_PASSES, pcmk_rc_ok);
 }
 
 #define EXPR_OP_DEFINED_FAILS                           \
@@ -753,7 +790,19 @@ op_undefined_passes(void **state)
 static void
 op_undefined_fails(void **state)
 {
-    assert_attr_expression(EXPR_OP_DEFINED_FAILS, pcmk_rc_op_unsatisfied);
+    assert_attr_expression(EXPR_OP_UNDEFINED_FAILS, pcmk_rc_op_unsatisfied);
+}
+
+#define EXPR_OP_UNDEFINED_EMPTY_FAILS                   \
+        "<" PCMK_XE_EXPRESSION " " PCMK_XA_ID "='e' "   \
+        PCMK_XA_ATTRIBUTE "='empty' "                   \
+        PCMK_XA_OPERATION "='" PCMK_VALUE_NOT_DEFINED "' />"
+
+static void
+op_undefined_empty_fails(void **state)
+{
+    assert_attr_expression(EXPR_OP_UNDEFINED_EMPTY_FAILS,
+                           pcmk_rc_op_unsatisfied);
 }
 
 
@@ -829,13 +878,17 @@ PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 expr_test(op_gte_eq_passes),
                 expr_test(op_gte_fails),
                 expr_test(op_eq_passes),
+                expr_test(op_eq_empty_vs_empty_passes),
                 expr_test(op_eq_fails),
+                expr_test(op_eq_undefined_vs_empty_fails),
                 expr_test(op_ne_passes),
                 expr_test(op_ne_fails),
                 expr_test(op_defined_passes),
+                expr_test(op_defined_empty_passes),
                 expr_test(op_defined_fails),
                 expr_test(op_defined_with_value),
                 expr_test(op_undefined_passes),
                 expr_test(op_undefined_fails),
+                expr_test(op_undefined_empty_fails),
                 expr_test(value_missing_defined_ok),
                 expr_test(value_missing_eq_fails))
