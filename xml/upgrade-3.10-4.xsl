@@ -13,6 +13,7 @@
    rules have been added as needed to achieve the same behavior.
    * is-managed
    * migration-threshold
+   * resource-stickiness
  -->
 
 <xsl:stylesheet version="1.0"
@@ -40,6 +41,7 @@
 <pcmk:list id="default_overrides">
     <pcmk:item>is-managed</pcmk:item>
     <pcmk:item>migration-threshold</pcmk:item>
+    <pcmk:item>resource-stickiness</pcmk:item>
 </pcmk:list>
 
 <!--
