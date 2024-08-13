@@ -652,7 +652,7 @@ listed in the table below.
        ``PCMK_logfacility`` if set to a value other than ``none`` or
        ``/dev/null``.
    * - .. _PCMK_LOGFILE:
-       .. _HA_LOGFILE::
+       .. _HA_LOGFILE:
 
        .. index::
           single: PCMK_LOGFILE:

@@ -1,8 +1,5 @@
 [synopsis]
-crm_rule mode [options]
+crm_rule <mode> [options]
 
-/state of rules/
+/from the Pacemaker configuration/
 .SH OPTIONS
-
-/multiple times/
-.SH NOTICE
