@@ -349,6 +349,10 @@
     <element name="meta_attributes">
       <grammar>
         <include href="nvset-4.0.rng">
+          <define name="element-nvset.name-value">
+            <ref name="op_meta_attributes.nvpair.unsupported"/>
+          </define>
+
           <!--
            @COMPAT: Support for node attribute expressions is deprecated here.
            We can just delete this define when we drop support.

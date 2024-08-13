@@ -30,7 +30,6 @@
         <operations original="1">
           <op id="template1_monitor_20000" interval="20s" name="monitor" original="1">
             <meta_attributes id="template1_monitor_20000-meta_attributes" original="1">
-              <nvpair id="template_monitor_20000-meta_attributes-can_fail" name="can_fail" value="true" original="1"/>
               <nvpair id="template_monitor_20000-meta_attributes-other" name="other" value="true" original="1"/>
             </meta_attributes>
           </op>
@@ -40,7 +39,6 @@
         <operations original="1">
           <op id="rsc1_monitor_20000" interval="20s" name="monitor" original="1">
             <meta_attributes id="rsc1_monitor_20000-meta_attributes" original="1">
-              <nvpair id="rsc1_monitor_20000-meta_attributes-can_fail" name="can_fail" value="false" original="1"/>
               <nvpair id="rsc1_monitor_20000-meta_attributes-other" name="other" value="false" original="1"/>
             </meta_attributes>
           </op>
@@ -60,7 +58,6 @@
           <operations original="1">
             <op id="rsc2_monitor_20000" interval="20s" name="monitor" original="1">
               <meta_attributes id="rsc2_monitor_20000-meta_attributes" original="1">
-                <nvpair id="rsc2_monitor_20000-meta_attributes-can_fail" name="can_fail" value="true" original="1"/>
                 <nvpair id="rsc2_monitor_20000-meta_attributes-other" name="other" value="true" original="1"/>
               </meta_attributes>
             </op>
@@ -72,7 +69,6 @@
           <operations original="1">
             <op id="rsc3_monitor_20000" interval="20s" name="monitor" original="1">
               <meta_attributes id="rsc3_monitor_20000-meta_attributes" original="1">
-                <nvpair id="rsc3_monitor_20000-meta_attributes-can_fail" name="can_fail" value="false" original="1"/>
                 <nvpair id="rsc3_monitor_20000-meta_attributes-other" name="other" value="false" original="1"/>
               </meta_attributes>
             </op>
@@ -85,7 +81,6 @@
             <operations original="1">
               <op id="rsc4_monitor_20000" interval="20s" name="monitor" original="1">
                 <meta_attributes id="rsc4_monitor_20000-meta_attributes" original="1">
-                  <nvpair id="rsc4_monitor_20000-meta_attributes-can_fail" name="can_fail" value="true" original="1"/>
                   <nvpair id="rsc4_monitor_20000-meta_attributes-other" name="other" value="true" original="1"/>
                 </meta_attributes>
               </op>
@@ -99,7 +94,6 @@
           <operations original="1">
             <op id="rsc5_monitor_20000" interval="20s" name="monitor" original="1">
               <meta_attributes id="rsc5_monitor_20000-meta_attributes" original="1">
-                <nvpair id="rsc5_monitor_20000-meta_attributes-can_fail" name="can_fail" value="false" original="1"/>
                 <nvpair id="rsc5_monitor_20000-meta_attributes-other" name="other" value="false" original="1"/>
               </meta_attributes>
             </op>
@@ -110,7 +104,6 @@
     <constraints original="1"/>
     <op_defaults original="1">
       <meta_attributes id="op_defaults-meta_attributes" original="1">
-        <nvpair id="op_defaults-meta_attributes-can_fail" name="can_fail" value="true" original="1"/>
         <nvpair id="op_defaults-meta_attributes-other" name="other" value="true" original="1"/>
       </meta_attributes>
     </op_defaults>
