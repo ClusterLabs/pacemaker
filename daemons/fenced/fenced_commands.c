@@ -901,10 +901,6 @@ is_nodeid_required(xmlNode * xml)
 {
     xmlXPathObjectPtr xpath = NULL;
 
-    if (stand_alone) {
-        return FALSE;
-    }
-
     if (!xml) {
         return FALSE;
     }
@@ -1553,8 +1549,7 @@ unpack_level_kind(const xmlNode *level)
     if (crm_element_value(level, PCMK_XA_TARGET_PATTERN) != NULL) {
         return fenced_target_by_pattern;
     }
-    if (!stand_alone /* if standalone, there's no attribute manager */
-        && (crm_element_value(level, PCMK_XA_TARGET_ATTRIBUTE) != NULL)
+    if ((crm_element_value(level, PCMK_XA_TARGET_ATTRIBUTE) != NULL)
         && (crm_element_value(level, PCMK_XA_TARGET_VALUE) != NULL)) {
         return fenced_target_by_attribute;
     }
@@ -2590,7 +2585,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
         pcmk__xe_set_bool_attr(reply, PCMK__XA_ST_OP_MERGED, true);
     }
 
-    if (!stand_alone && pcmk__is_fencing_action(cmd->action)
+    if (pcmk__is_fencing_action(cmd->action)
         && pcmk__str_eq(cmd->origin, cmd->target, pcmk__str_casei)) {
         /* The target was also the originator, so broadcast the result on its
          * behalf (since it will be unable to).
@@ -2607,23 +2602,6 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
 
     crm_log_xml_trace(reply, "Reply");
     pcmk__xml_free(reply);
-
-    if (stand_alone) {
-        /* Do notification with a clean data object */
-        xmlNode *notify_data = pcmk__xe_create(NULL, PCMK__XE_ST_NOTIFY_FENCE);
-
-        stonith__xe_set_result(notify_data, result);
-        crm_xml_add(notify_data, PCMK__XA_ST_TARGET, cmd->target);
-        crm_xml_add(notify_data, PCMK__XA_ST_OP, cmd->op);
-        crm_xml_add(notify_data, PCMK__XA_ST_DELEGATE, "localhost");
-        crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ID, cmd->device);
-        crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
-        crm_xml_add(notify_data, PCMK__XA_ST_ORIGIN, cmd->client);
-
-        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_FENCE, result,
-                                 notify_data);
-        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
-    }
 }
 
 static void
@@ -3262,7 +3240,7 @@ handle_relay_request(pcmk__request_t *request)
 static xmlNode *
 handle_fence_request(pcmk__request_t *request)
 {
-    if ((request->peer != NULL) || stand_alone) {
+    if (request->peer != NULL) {
         fence_locally(request->xml, &request->result);
 
     } else if (pcmk_is_set(request->call_options, st_opt_manual_ack)) {

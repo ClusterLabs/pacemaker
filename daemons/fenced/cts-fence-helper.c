@@ -284,15 +284,15 @@ run_standard_test(void)
     params = NULL;
 
     single_test(st->cmds->list(st, st_opts, "test-id", NULL, 1),
-                PCMK_ACTION_LIST, 1, 0);
+                PCMK_ACTION_LIST, 0, 0);
 
-    single_test(st->cmds->monitor(st, st_opts, "test-id", 1), "Monitor", 1, 0);
+    single_test(st->cmds->monitor(st, st_opts, "test-id", 1), "Monitor", 0, 0);
 
     single_test(st->cmds->status(st, st_opts, "test-id", "false_1_node2", 1),
-                "Status false_1_node2", 1, 0);
+                "Status false_1_node2", 0, 0);
 
     single_test(st->cmds->status(st, st_opts, "test-id", "false_1_node1", 1),
-                "Status false_1_node1", 1, 0);
+                "Status false_1_node1", 0, 0);
 
     single_test(st->cmds->fence(st, st_opts, "unknown-host", PCMK_ACTION_OFF,
                                 1, 0),
