@@ -16,6 +16,7 @@
    * resource-stickiness
    * target-role
  * The restart-type resource meta-attribute is not present.
+ * The can_fail operation meta-attribute is not present.
  -->
 
 <xsl:stylesheet version="1.0"
@@ -81,5 +82,9 @@
                      |bundle/meta_attributes/nvpair[@name = 'restart-type']
                      |rsc_defaults/meta_attributes/nvpair
                           [@name = 'restart-type']"/>
+
+<!-- Drop can_fail operation meta-attribute -->
+<xsl:template match="op/meta_attributes/nvpair[@name = 'can_fail']
+                     |op_defaults/meta_attributes/nvpair[@name = 'can_fail']"/>
 
 </xsl:stylesheet>

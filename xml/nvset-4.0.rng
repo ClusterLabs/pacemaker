@@ -105,6 +105,29 @@
     </choice>
   </define>
 
+  <!--
+   Disallow operation meta-attribute name-value pairs for which support was
+   recently dropped. The idea is to prevent a user from adding the option under
+   the belief that it will still affect behavior. Sometime in the future,
+   re-allow these as custom meta-attributes or values.
+   -->
+  <define name="op_meta_attributes.nvpair.unsupported">
+    <choice>
+      <group>
+        <attribute name="name">
+          <data type="string">
+            <except>
+              <choice>
+                <value>can_fail</value>
+              </choice>
+            </except>
+          </data>
+        </attribute>
+        <ref name="element-nvset.value"/>
+      </group>
+    </choice>
+  </define>
+
   <define name="element-nvset">
    <choice>
    <attribute name="id-ref"><data type="IDREF"/></attribute>
