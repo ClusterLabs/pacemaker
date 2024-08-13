@@ -659,7 +659,7 @@ unpack_migration_threshold(pcmk_resource_t *rsc)
                                             PCMK_META_MIGRATION_THRESHOLD);
 
     if (pcmk__str_eq(value, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
-        // @COMPAT Deprecated since 2.1.8
+        // @COMPAT Deprecated since 2.1.8; disallowed by schema
         pcmk__config_warn("Support for setting "
                           PCMK_META_MIGRATION_THRESHOLD
                           " to the explicit value '" PCMK_VALUE_DEFAULT

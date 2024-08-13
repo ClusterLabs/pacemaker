@@ -62,6 +62,7 @@
             <except>
               <choice>
                 <value>is-managed</value>
+                <value>migration-threshold</value>
                 <value>restart-type</value>
               </choice>
             </except>
@@ -78,6 +79,7 @@
         <attribute name="name">
           <choice>
             <value type="string">is-managed</value>
+            <value type="string">migration-threshold</value>
           </choice>
         </attribute>
         <optional>

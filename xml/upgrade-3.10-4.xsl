@@ -17,6 +17,7 @@
    "default". If there were any prior to this transformation, new nvsets and
    rules have been added as needed to achieve the same behavior.
    * is-managed
+   * migration-threshold
  * The can_fail operation meta-attribute is not present.
  * The role_after_failure operation meta-attribute is not present.
  -->
@@ -130,6 +131,7 @@
 <!-- Resource meta-attributes with default values to transform -->
 <pcmk:list id="default_overrides">
     <pcmk:item>is-managed</pcmk:item>
+    <pcmk:item>migration-threshold</pcmk:item>
 </pcmk:list>
 
 <!--
