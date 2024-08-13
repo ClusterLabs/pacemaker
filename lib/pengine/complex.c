@@ -619,23 +619,13 @@ unpack_stickiness(pcmk_resource_t *rsc)
 {
     const char *value = g_hash_table_lookup(rsc->priv->meta,
                                             PCMK_META_RESOURCE_STICKINESS);
+    int rc = pcmk_parse_score(value, &(rsc->priv->stickiness), 0);
 
-    if (pcmk__str_eq(value, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
-        // @COMPAT Deprecated since 2.1.8; disallowed by schema
-        pcmk__config_warn("Support for setting "
+    if (rc != pcmk_rc_ok) {
+        pcmk__config_warn("Using default (0) for resource %s "
                           PCMK_META_RESOURCE_STICKINESS
-                          " to the explicit value '" PCMK_VALUE_DEFAULT
-                          "' is deprecated and will be removed in a "
-                          "future release (just leave it unset)");
-    } else {
-        int rc = pcmk_parse_score(value, &(rsc->priv->stickiness), 0);
-
-        if (rc != pcmk_rc_ok) {
-            pcmk__config_warn("Using default (0) for resource %s "
-                              PCMK_META_RESOURCE_STICKINESS
-                              " because '%s' is not a valid value: %s",
-                              rsc->id, value, pcmk_rc_str(rc));
-        }
+                          " because '%s' is not a valid value: %s",
+                          rsc->id, value, pcmk_rc_str(rc));
     }
 }
 
