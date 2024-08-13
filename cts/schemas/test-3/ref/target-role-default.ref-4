@@ -51,7 +51,6 @@
     <resources original="1">
       <template class="ocf" id="template1" provider="pacemaker" type="Dummy" original="1">
         <meta_attributes id="template1-meta_attributes" original="1">
-          <nvpair id="template1-meta_attributes-target-role" name="target-role" value="default" original="1"/>
           <nvpair id="template1-meta_attributes-some-option" name="some-option" value="default" original="1"/>
         </meta_attributes>
       </template>
@@ -80,25 +79,47 @@
           <rule id="rsc1-meta_attributes2-rule" original="1">
             <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="1"/>
           </rule>
-          <nvpair id="rsc1-meta_attributes2-target-role" name="target-role" value="default" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes3-target-role-no-default" original="0">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes3-target-role-no-default-rule">
+            <rule id="rsc1-meta_attributes3-rule" original="0">
+              <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated" negate="1">
+              <rule id="rsc1-meta_attributes2-rule" original="0">
+                <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+            </rule>
+          </rule>
+          <nvpair id="rsc1-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
         </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes3" original="1">
           <rule id="rsc1-meta_attributes3-rule" original="1">
             <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="1"/>
           </rule>
-          <nvpair id="rsc1-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes4-target-role-no-default" original="0">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes4-target-role-no-default-rule">
+            <rule id="rsc1-meta_attributes4-rule" original="0">
+              <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated" negate="1">
+              <rule id="rsc1-meta_attributes2-rule" original="0">
+                <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+            </rule>
+          </rule>
+          <nvpair id="rsc1-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
         </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes4" original="1">
           <rule id="rsc1-meta_attributes4-rule" original="1">
             <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="1"/>
           </rule>
-          <nvpair id="rsc1-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
         </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes5" original="1">
           <rule id="rsc1-meta_attributes5-rule" original="1">
             <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="1"/>
           </rule>
-          <nvpair id="rsc1-meta_attributes5-target-role" name="target-role" value="default" original="1"/>
         </meta_attributes>
       </primitive>
       <group id="grp1" original="1">
@@ -112,25 +133,21 @@
           </meta_attributes>
           <meta_attributes id="rsc2-meta_attributes2" original="1">
             <!-- No rule for first "default" nvpair -->
-            <nvpair id="rsc2-meta_attributes2-target-role" name="target-role" value="default" original="1"/>
           </meta_attributes>
           <meta_attributes id="rsc2-meta_attributes3" original="1">
             <rule id="rsc1-meta_attributes3-rule" original="0">
               <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="rsc2-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="rsc2-meta_attributes4" original="1">
             <rule id="rsc1-meta_attributes4-rule" original="0">
               <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="rsc2-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="rsc2-meta_attributes5" original="1">
             <rule id="rsc1-meta_attributes5-rule" original="0">
               <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="rsc2-meta_attributes5-target-role" name="target-role" value="default" original="1"/>
           </meta_attributes>
         </primitive>
         <!-- Started, default, Started, Started, default -->
@@ -142,23 +159,19 @@
         </meta_attributes>
         <meta_attributes id="grp1-meta_attributes2" original="1">
           <!-- No rule for first "default" nvpair -->
-          <nvpair id="grp1-meta_attributes2-target-role" name="target-role" value="default" original="1"/>
         </meta_attributes>
         <meta_attributes id="grp1-meta_attributes3" original="1">
           <!-- No rule for first non-"default" nvpair after first "default" -->
-          <nvpair id="grp1-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
         </meta_attributes>
         <meta_attributes id="grp1-meta_attributes4" original="1">
           <rule id="rsc1-meta_attributes4-rule" original="0">
             <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
           </rule>
-          <nvpair id="grp1-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
         </meta_attributes>
         <meta_attributes id="grp1-meta_attributes5" original="1">
           <rule id="rsc1-meta_attributes5-rule" original="0">
             <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
           </rule>
-          <nvpair id="grp1-meta_attributes5-target-role" name="target-role" value="default" original="1"/>
         </meta_attributes>
       </group>
       <clone id="clone1" original="1">
@@ -174,23 +187,45 @@
             <rule id="rsc1-meta_attributes2-rule" original="0">
               <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="rsc3-meta_attributes2-target-role" name="target-role" value="default" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-rsc3-meta_attributes3-target-role-no-default" original="0">
+            <rule id="pcmk__3_10_upgrade-rsc3-meta_attributes3-target-role-no-default-rule">
+              <rule id="rsc1-meta_attributes3-rule" original="0">
+                <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes2-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+            </rule>
+            <nvpair id="rsc3-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="rsc3-meta_attributes3" original="1">
             <rule id="rsc1-meta_attributes3-rule" original="0">
               <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="rsc3-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-rsc3-meta_attributes4-target-role-no-default" original="0">
+            <rule id="pcmk__3_10_upgrade-rsc3-meta_attributes4-target-role-no-default-rule">
+              <rule id="rsc1-meta_attributes4-rule" original="0">
+                <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes2-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+            </rule>
+            <nvpair id="rsc3-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="rsc3-meta_attributes4" original="1">
             <rule id="rsc1-meta_attributes4-rule" original="0">
               <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="rsc3-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="rsc3-meta_attributes5" original="1">
             <!-- No rule for last "default" nvpair -->
-            <nvpair id="rsc3-meta_attributes5-target-role" name="target-role" value="default" original="1"/>
           </meta_attributes>
         </primitive>
         <!-- Started, default, Started, Started, default -->
@@ -198,18 +233,10 @@
         <meta_attributes id="clone1-meta_attributes1" original="1">
           <nvpair id="clone1-meta_attributes1-target-role" name="target-role" value="Started" original="1"/>
         </meta_attributes>
-        <meta_attributes id="clone1-meta_attributes2" original="1">
-          <nvpair id="clone1-meta_attributes2-target-role" name="target-role" value="default" original="1"/>
-        </meta_attributes>
-        <meta_attributes id="clone1-meta_attributes3" original="1">
-          <nvpair id="clone1-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
-        </meta_attributes>
-        <meta_attributes id="clone1-meta_attributes4" original="1">
-          <nvpair id="clone1-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
-        </meta_attributes>
-        <meta_attributes id="clone1-meta_attributes5" original="1">
-          <nvpair id="clone1-meta_attributes5-target-role" name="target-role" value="default" original="1"/>
-        </meta_attributes>
+        <meta_attributes id="clone1-meta_attributes2" original="1"/>
+        <meta_attributes id="clone1-meta_attributes3" original="1"/>
+        <meta_attributes id="clone1-meta_attributes4" original="1"/>
+        <meta_attributes id="clone1-meta_attributes5" original="1"/>
       </clone>
       <clone id="clone2" original="1">
         <group id="grp2" original="1">
@@ -237,13 +264,11 @@
               <rule id="rsc1-meta_attributes4-rule" original="0">
                 <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
               </rule>
-              <nvpair id="rsc4-meta_attributes4-target-role" name="target-role" value="default" original="1"/>
             </meta_attributes>
             <meta_attributes id="rsc4-meta_attributes5" original="1">
               <rule id="rsc1-meta_attributes5-rule" original="0">
                 <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
               </rule>
-              <nvpair id="rsc4-meta_attributes5-target-role" name="target-role" value="default" original="1"/>
             </meta_attributes>
           </primitive>
           <!-- default, default, Started, Started, Started -->
@@ -251,31 +276,80 @@
             <rule id="rsc1-meta_attributes1-rule" original="0">
               <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="grp2-meta_attributes1-target-role" name="target-role" value="default" original="1"/>
           </meta_attributes>
           <meta_attributes id="grp2-meta_attributes2" original="1">
             <rule id="rsc1-meta_attributes2-rule" original="0">
               <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="grp2-meta_attributes2-target-role" name="target-role" value="default" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-grp2-meta_attributes3-target-role-no-default" original="0">
+            <rule id="pcmk__3_10_upgrade-grp2-meta_attributes3-target-role-no-default-rule">
+              <rule id="rsc1-meta_attributes3-rule" original="0">
+                <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes1-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes2-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+            </rule>
+            <nvpair id="grp2-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="grp2-meta_attributes3" original="1">
             <rule id="rsc1-meta_attributes3-rule" original="0">
               <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="grp2-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-grp2-meta_attributes4-target-role-no-default" original="0">
+            <rule id="pcmk__3_10_upgrade-grp2-meta_attributes4-target-role-no-default-rule">
+              <rule id="rsc1-meta_attributes4-rule" original="0">
+                <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes1-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes2-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+            </rule>
+            <nvpair id="grp2-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="grp2-meta_attributes4" original="1">
             <rule id="rsc1-meta_attributes4-rule" original="0">
               <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="grp2-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-grp2-meta_attributes5-target-role-no-default" original="0">
+            <rule id="pcmk__3_10_upgrade-grp2-meta_attributes5-target-role-no-default-rule">
+              <rule id="rsc1-meta_attributes5-rule" original="0">
+                <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes1-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes2-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+            </rule>
+            <nvpair id="grp2-meta_attributes5-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="grp2-meta_attributes5" original="1">
             <rule id="rsc1-meta_attributes5-rule" original="0">
               <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="grp2-meta_attributes5-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
         </group>
         <!-- default, Started, default, Started, Started -->
@@ -283,31 +357,75 @@
           <rule id="rsc1-meta_attributes1-rule" original="0">
             <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
           </rule>
-          <nvpair id="clone2-meta_attributes1-target-role" name="target-role" value="default" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-clone2-meta_attributes2-target-role-no-default" original="0">
+          <rule id="pcmk__3_10_upgrade-clone2-meta_attributes2-target-role-no-default-rule">
+            <rule id="rsc1-meta_attributes2-rule" original="0">
+              <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+              <rule id="rsc1-meta_attributes1-rule" original="0">
+                <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+            </rule>
+          </rule>
+          <nvpair id="clone2-meta_attributes2-target-role" name="target-role" value="Started" original="1"/>
         </meta_attributes>
         <meta_attributes id="clone2-meta_attributes2" original="1">
           <rule id="rsc1-meta_attributes2-rule" original="0">
             <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
           </rule>
-          <nvpair id="clone2-meta_attributes2-target-role" name="target-role" value="Started" original="1"/>
         </meta_attributes>
         <meta_attributes id="clone2-meta_attributes3" original="1">
           <rule id="rsc1-meta_attributes3-rule" original="0">
             <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
           </rule>
-          <nvpair id="clone2-meta_attributes3-target-role" name="target-role" value="default" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-clone2-meta_attributes4-target-role-no-default" original="0">
+          <rule id="pcmk__3_10_upgrade-clone2-meta_attributes4-target-role-no-default-rule">
+            <rule id="rsc1-meta_attributes4-rule" original="0">
+              <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+              <rule id="rsc1-meta_attributes1-rule" original="0">
+                <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+            </rule>
+            <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes3-rule-negated" negate="1">
+              <rule id="rsc1-meta_attributes3-rule" original="0">
+                <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+            </rule>
+          </rule>
+          <nvpair id="clone2-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
         </meta_attributes>
         <meta_attributes id="clone2-meta_attributes4" original="1">
           <rule id="rsc1-meta_attributes4-rule" original="0">
             <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
           </rule>
-          <nvpair id="clone2-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-clone2-meta_attributes5-target-role-no-default" original="0">
+          <rule id="pcmk__3_10_upgrade-clone2-meta_attributes5-target-role-no-default-rule">
+            <rule id="rsc1-meta_attributes5-rule" original="0">
+              <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+              <rule id="rsc1-meta_attributes1-rule" original="0">
+                <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+            </rule>
+            <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes3-rule-negated" negate="1">
+              <rule id="rsc1-meta_attributes3-rule" original="0">
+                <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+            </rule>
+          </rule>
+          <nvpair id="clone2-meta_attributes5-target-role" name="target-role" value="Started" original="1"/>
         </meta_attributes>
         <meta_attributes id="clone2-meta_attributes5" original="1">
           <rule id="rsc1-meta_attributes5-rule" original="0">
             <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
           </rule>
-          <nvpair id="clone2-meta_attributes5-target-role" name="target-role" value="Started" original="1"/>
         </meta_attributes>
       </clone>
       <bundle id="bundle1" original="1">
@@ -318,36 +436,73 @@
             <rule id="rsc1-meta_attributes1-rule" original="0">
               <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="rsc5-meta_attributes1-target-role" name="target-role" value="default" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-rsc5-meta_attributes2-target-role-no-default" original="0">
+            <rule id="pcmk__3_10_upgrade-rsc5-meta_attributes2-target-role-no-default-rule">
+              <rule id="rsc1-meta_attributes2-rule" original="0">
+                <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes1-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+            </rule>
+            <nvpair id="rsc5-meta_attributes2-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="rsc5-meta_attributes2" original="1">
             <rule id="rsc1-meta_attributes2-rule" original="0">
               <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="rsc5-meta_attributes2-target-role" name="target-role" value="Started" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-rsc5-meta_attributes3-target-role-no-default" original="0">
+            <rule id="pcmk__3_10_upgrade-rsc5-meta_attributes3-target-role-no-default-rule">
+              <rule id="rsc1-meta_attributes3-rule" original="0">
+                <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes1-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+            </rule>
+            <nvpair id="rsc5-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="rsc5-meta_attributes3" original="1">
             <rule id="rsc1-meta_attributes3-rule" original="0">
               <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="rsc5-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="rsc5-meta_attributes4" original="1">
             <rule id="rsc1-meta_attributes4-rule" original="0">
               <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="rsc5-meta_attributes4-target-role" name="target-role" value="default" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-rsc5-meta_attributes5-target-role-no-default" original="0">
+            <rule id="pcmk__3_10_upgrade-rsc5-meta_attributes5-target-role-no-default-rule">
+              <rule id="rsc1-meta_attributes5-rule" original="0">
+                <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes1-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes4-rule-negated" negate="1">
+                <rule id="rsc1-meta_attributes4-rule" original="0">
+                  <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+                </rule>
+              </rule>
+            </rule>
+            <nvpair id="rsc5-meta_attributes5-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
           <meta_attributes id="rsc5-meta_attributes5" original="1">
             <rule id="rsc1-meta_attributes5-rule" original="0">
               <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
             </rule>
-            <nvpair id="rsc5-meta_attributes5-target-role" name="target-role" value="Started" original="1"/>
           </meta_attributes>
         </primitive>
-        <meta_attributes id="bundle1-meta_attributes" original="1">
-          <nvpair id="bundle1-meta_attributes-target-role" name="target-role" value="default" original="1"/>
-        </meta_attributes>
+        <meta_attributes id="bundle1-meta_attributes" original="1"/>
       </bundle>
     </resources>
     <constraints original="1"/>
@@ -357,31 +512,65 @@
         <rule id="rsc1-meta_attributes1-rule" original="0">
           <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
         </rule>
-        <nvpair id="rsc_defaults-meta_attributes1-target-role" name="target-role" value="default" original="1"/>
+      </meta_attributes>
+      <meta_attributes id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes2-target-role-no-default" original="0">
+        <rule id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes2-target-role-no-default-rule">
+          <rule id="rsc1-meta_attributes2-rule" original="0">
+            <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+            <rule id="rsc1-meta_attributes1-rule" original="0">
+              <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+          </rule>
+        </rule>
+        <nvpair id="rsc_defaults-meta_attributes2-target-role" name="target-role" value="Started" original="1"/>
       </meta_attributes>
       <meta_attributes id="rsc_defaults-meta_attributes2" original="1">
         <rule id="rsc1-meta_attributes2-rule" original="0">
           <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
         </rule>
-        <nvpair id="rsc_defaults-meta_attributes2-target-role" name="target-role" value="Started" original="1"/>
+      </meta_attributes>
+      <meta_attributes id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes3-target-role-no-default" original="0">
+        <rule id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes3-target-role-no-default-rule">
+          <rule id="rsc1-meta_attributes3-rule" original="0">
+            <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+            <rule id="rsc1-meta_attributes1-rule" original="0">
+              <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+          </rule>
+        </rule>
+        <nvpair id="rsc_defaults-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
       </meta_attributes>
       <meta_attributes id="rsc_defaults-meta_attributes3" original="1">
         <rule id="rsc1-meta_attributes3-rule" original="0">
           <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
         </rule>
-        <nvpair id="rsc_defaults-meta_attributes3-target-role" name="target-role" value="Started" original="1"/>
+      </meta_attributes>
+      <meta_attributes id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes4-target-role-no-default" original="0">
+        <rule id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes4-target-role-no-default-rule">
+          <rule id="rsc1-meta_attributes4-rule" original="0">
+            <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+            <rule id="rsc1-meta_attributes1-rule" original="0">
+              <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+          </rule>
+        </rule>
+        <nvpair id="rsc_defaults-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
       </meta_attributes>
       <meta_attributes id="rsc_defaults-meta_attributes4" original="1">
         <rule id="rsc1-meta_attributes4-rule" original="0">
           <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
         </rule>
-        <nvpair id="rsc_defaults-meta_attributes4-target-role" name="target-role" value="Started" original="1"/>
       </meta_attributes>
       <meta_attributes id="rsc_defaults-meta_attributes5" original="1">
         <rule id="rsc1-meta_attributes5-rule" original="0">
           <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
         </rule>
-        <nvpair id="rsc_defaults-meta_attributes5-target-role" name="target-role" value="default" original="1"/>
       </meta_attributes>
     </rsc_defaults>
   </configuration>

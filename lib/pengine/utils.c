@@ -424,14 +424,6 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
                      pcmk__str_null_matches|pcmk__str_casei)) {
         return FALSE;
     }
-    if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-        // @COMPAT Deprecated since 2.1.8
-        pcmk__config_warn("Support for setting " PCMK_META_TARGET_ROLE
-                          " to the explicit value '" PCMK_VALUE_DEFAULT
-                          "' is deprecated and will be removed in a "
-                          "future release (just leave it unset)");
-        return FALSE;
-    }
 
     local_role = pcmk_parse_role(value);
     if (local_role == pcmk_role_unknown) {

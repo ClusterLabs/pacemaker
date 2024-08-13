@@ -14,6 +14,7 @@
    * is-managed
    * migration-threshold
    * resource-stickiness
+   * target-role
  -->
 
 <xsl:stylesheet version="1.0"
@@ -42,6 +43,7 @@
     <pcmk:item>is-managed</pcmk:item>
     <pcmk:item>migration-threshold</pcmk:item>
     <pcmk:item>resource-stickiness</pcmk:item>
+    <pcmk:item>target-role</pcmk:item>
 </pcmk:list>
 
 <!--

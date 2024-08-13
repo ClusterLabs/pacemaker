@@ -66,6 +66,7 @@
                 <value>is-managed</value>
                 <value>migration-threshold</value>
                 <value>resource-stickiness</value>
+                <value>target-role</value>
               </choice>
             </except>
           </data>
@@ -83,6 +84,7 @@
             <value type="string">is-managed</value>
             <value type="string">migration-threshold</value>
             <value type="string">resource-stickiness</value>
+            <value type="string">target-role</value>
           </choice>
         </attribute>
         <optional>
