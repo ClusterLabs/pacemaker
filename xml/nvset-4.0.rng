@@ -64,6 +64,7 @@
             <except>
               <choice>
                 <value>is-managed</value>
+                <value>migration-threshold</value>
               </choice>
             </except>
           </data>
@@ -79,6 +80,7 @@
         <attribute name="name">
           <choice>
             <value type="string">is-managed</value>
+            <value type="string">migration-threshold</value>
           </choice>
         </attribute>
         <optional>

@@ -52,7 +52,6 @@
     <resources>
       <template class="ocf" id="template1" provider="pacemaker" type="Dummy">
         <meta_attributes id="template1-meta_attributes">
-          <nvpair id="template1-meta_attributes-migration-threshold" name="migration-threshold" value="default"/>
           <nvpair id="template1-meta_attributes-some-option" name="some-option" value="default"/>
         </meta_attributes>
       </template>
@@ -81,25 +80,37 @@
           <rule id="rsc1-meta_attributes2-rule">
             <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
-          <nvpair id="rsc1-meta_attributes2-migration-threshold" name="migration-threshold" value="default"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes3-migration-threshold-no-default">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes3-migration-threshold-no-default-rule">
+            <rule id-ref="rsc1-meta_attributes3-rule"/>
+            <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated" negate="1">
+              <rule id-ref="rsc1-meta_attributes2-rule"/>
+            </rule>
+          </rule>
+          <nvpair id="rsc1-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
         </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes3">
           <rule id="rsc1-meta_attributes3-rule">
             <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
-          <nvpair id="rsc1-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-rsc1-meta_attributes4-migration-threshold-no-default">
+          <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes4-migration-threshold-no-default-rule">
+            <rule id-ref="rsc1-meta_attributes4-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
         </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes4">
           <rule id="rsc1-meta_attributes4-rule">
             <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
-          <nvpair id="rsc1-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
         </meta_attributes>
         <meta_attributes id="rsc1-meta_attributes5">
           <rule id="rsc1-meta_attributes5-rule">
             <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001"/>
           </rule>
-          <nvpair id="rsc1-meta_attributes5-migration-threshold" name="migration-threshold" value="default"/>
         </meta_attributes>
       </primitive>
       <group id="grp1">
@@ -111,19 +122,15 @@
           </meta_attributes>
           <meta_attributes id="rsc2-meta_attributes2">
             <!-- No rule for first "default" nvpair -->
-            <nvpair id="rsc2-meta_attributes2-migration-threshold" name="migration-threshold" value="default"/>
           </meta_attributes>
           <meta_attributes id="rsc2-meta_attributes3">
             <rule id-ref="rsc1-meta_attributes3-rule"/>
-            <nvpair id="rsc2-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="rsc2-meta_attributes4">
             <rule id-ref="rsc1-meta_attributes4-rule"/>
-            <nvpair id="rsc2-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="rsc2-meta_attributes5">
             <rule id-ref="rsc1-meta_attributes5-rule"/>
-            <nvpair id="rsc2-meta_attributes5-migration-threshold" name="migration-threshold" value="default"/>
           </meta_attributes>
         </primitive>
         <!-- 10, default, 10, 10, default -->
@@ -133,19 +140,15 @@
         </meta_attributes>
         <meta_attributes id="grp1-meta_attributes2">
           <!-- No rule for first "default" nvpair -->
-          <nvpair id="grp1-meta_attributes2-migration-threshold" name="migration-threshold" value="default"/>
         </meta_attributes>
         <meta_attributes id="grp1-meta_attributes3">
           <!-- No rule for first non-"default" nvpair after first "default" -->
-          <nvpair id="grp1-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
         </meta_attributes>
         <meta_attributes id="grp1-meta_attributes4">
           <rule id-ref="rsc1-meta_attributes4-rule"/>
-          <nvpair id="grp1-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
         </meta_attributes>
         <meta_attributes id="grp1-meta_attributes5">
           <rule id-ref="rsc1-meta_attributes5-rule"/>
-          <nvpair id="grp1-meta_attributes5-migration-threshold" name="migration-threshold" value="default"/>
         </meta_attributes>
       </group>
       <clone id="clone1">
@@ -157,19 +160,29 @@
           </meta_attributes>
           <meta_attributes id="rsc3-meta_attributes2">
             <rule id-ref="rsc1-meta_attributes2-rule"/>
-            <nvpair id="rsc3-meta_attributes2-migration-threshold" name="migration-threshold" value="default"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-rsc3-meta_attributes3-migration-threshold-no-default">
+            <rule id="pcmk__3_10_upgrade-rsc3-meta_attributes3-migration-threshold-no-default-rule">
+              <rule id-ref="rsc1-meta_attributes3-rule"/>
+              <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated"/>
+            </rule>
+            <nvpair id="rsc3-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="rsc3-meta_attributes3">
             <rule id-ref="rsc1-meta_attributes3-rule"/>
-            <nvpair id="rsc3-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-rsc3-meta_attributes4-migration-threshold-no-default">
+            <rule id="pcmk__3_10_upgrade-rsc3-meta_attributes4-migration-threshold-no-default-rule">
+              <rule id-ref="rsc1-meta_attributes4-rule"/>
+              <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated"/>
+            </rule>
+            <nvpair id="rsc3-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="rsc3-meta_attributes4">
             <rule id-ref="rsc1-meta_attributes4-rule"/>
-            <nvpair id="rsc3-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="rsc3-meta_attributes5">
             <!-- No rule for last "default" nvpair -->
-            <nvpair id="rsc3-meta_attributes5-migration-threshold" name="migration-threshold" value="default"/>
           </meta_attributes>
         </primitive>
         <!-- 10, default, 10, 10, default -->
@@ -177,18 +190,10 @@
         <meta_attributes id="clone1-meta_attributes1">
           <nvpair id="clone1-meta_attributes1-migration-threshold" name="migration-threshold" value="10"/>
         </meta_attributes>
-        <meta_attributes id="clone1-meta_attributes2">
-          <nvpair id="clone1-meta_attributes2-migration-threshold" name="migration-threshold" value="default"/>
-        </meta_attributes>
-        <meta_attributes id="clone1-meta_attributes3">
-          <nvpair id="clone1-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
-        </meta_attributes>
-        <meta_attributes id="clone1-meta_attributes4">
-          <nvpair id="clone1-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
-        </meta_attributes>
-        <meta_attributes id="clone1-meta_attributes5">
-          <nvpair id="clone1-meta_attributes5-migration-threshold" name="migration-threshold" value="default"/>
-        </meta_attributes>
+        <meta_attributes id="clone1-meta_attributes2"/>
+        <meta_attributes id="clone1-meta_attributes3"/>
+        <meta_attributes id="clone1-meta_attributes4"/>
+        <meta_attributes id="clone1-meta_attributes5"/>
       </clone>
       <clone id="clone2">
         <group id="grp2">
@@ -208,55 +213,94 @@
             </meta_attributes>
             <meta_attributes id="rsc4-meta_attributes4">
               <rule id-ref="rsc1-meta_attributes4-rule"/>
-              <nvpair id="rsc4-meta_attributes4-migration-threshold" name="migration-threshold" value="default"/>
             </meta_attributes>
             <meta_attributes id="rsc4-meta_attributes5">
               <rule id-ref="rsc1-meta_attributes5-rule"/>
-              <nvpair id="rsc4-meta_attributes5-migration-threshold" name="migration-threshold" value="default"/>
             </meta_attributes>
           </primitive>
           <!-- default, default, 10, 10, 10 -->
           <meta_attributes id="grp2-meta_attributes1">
             <rule id-ref="rsc1-meta_attributes1-rule"/>
-            <nvpair id="grp2-meta_attributes1-migration-threshold" name="migration-threshold" value="default"/>
           </meta_attributes>
           <meta_attributes id="grp2-meta_attributes2">
             <rule id-ref="rsc1-meta_attributes2-rule"/>
-            <nvpair id="grp2-meta_attributes2-migration-threshold" name="migration-threshold" value="default"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-grp2-meta_attributes3-migration-threshold-no-default">
+            <rule id="pcmk__3_10_upgrade-grp2-meta_attributes3-migration-threshold-no-default-rule">
+              <rule id-ref="rsc1-meta_attributes3-rule"/>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated" negate="1">
+                <rule id-ref="rsc1-meta_attributes1-rule"/>
+              </rule>
+              <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated"/>
+            </rule>
+            <nvpair id="grp2-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="grp2-meta_attributes3">
             <rule id-ref="rsc1-meta_attributes3-rule"/>
-            <nvpair id="grp2-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-grp2-meta_attributes4-migration-threshold-no-default">
+            <rule id="pcmk__3_10_upgrade-grp2-meta_attributes4-migration-threshold-no-default-rule">
+              <rule id-ref="rsc1-meta_attributes4-rule"/>
+              <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated"/>
+              <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated"/>
+            </rule>
+            <nvpair id="grp2-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="grp2-meta_attributes4">
             <rule id-ref="rsc1-meta_attributes4-rule"/>
-            <nvpair id="grp2-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-grp2-meta_attributes5-migration-threshold-no-default">
+            <rule id="pcmk__3_10_upgrade-grp2-meta_attributes5-migration-threshold-no-default-rule">
+              <rule id-ref="rsc1-meta_attributes5-rule"/>
+              <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated"/>
+              <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes2-rule-negated"/>
+            </rule>
+            <nvpair id="grp2-meta_attributes5-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="grp2-meta_attributes5">
             <rule id-ref="rsc1-meta_attributes5-rule"/>
-            <nvpair id="grp2-meta_attributes5-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
         </group>
         <!-- default, 10, default, 10, 10 -->
         <meta_attributes id="clone2-meta_attributes1">
           <rule id-ref="rsc1-meta_attributes1-rule"/>
-          <nvpair id="clone2-meta_attributes1-migration-threshold" name="migration-threshold" value="default"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-clone2-meta_attributes2-migration-threshold-no-default">
+          <rule id="pcmk__3_10_upgrade-clone2-meta_attributes2-migration-threshold-no-default-rule">
+            <rule id-ref="rsc1-meta_attributes2-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated"/>
+          </rule>
+          <nvpair id="clone2-meta_attributes2-migration-threshold" name="migration-threshold" value="10"/>
         </meta_attributes>
         <meta_attributes id="clone2-meta_attributes2">
           <rule id-ref="rsc1-meta_attributes2-rule"/>
-          <nvpair id="clone2-meta_attributes2-migration-threshold" name="migration-threshold" value="10"/>
         </meta_attributes>
         <meta_attributes id="clone2-meta_attributes3">
           <rule id-ref="rsc1-meta_attributes3-rule"/>
-          <nvpair id="clone2-meta_attributes3-migration-threshold" name="migration-threshold" value="default"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-clone2-meta_attributes4-migration-threshold-no-default">
+          <rule id="pcmk__3_10_upgrade-clone2-meta_attributes4-migration-threshold-no-default-rule">
+            <rule id-ref="rsc1-meta_attributes4-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated"/>
+            <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes3-rule-negated" negate="1">
+              <rule id-ref="rsc1-meta_attributes3-rule"/>
+            </rule>
+          </rule>
+          <nvpair id="clone2-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
         </meta_attributes>
         <meta_attributes id="clone2-meta_attributes4">
           <rule id-ref="rsc1-meta_attributes4-rule"/>
-          <nvpair id="clone2-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
+        </meta_attributes>
+        <meta_attributes id="pcmk__3_10_upgrade-clone2-meta_attributes5-migration-threshold-no-default">
+          <rule id="pcmk__3_10_upgrade-clone2-meta_attributes5-migration-threshold-no-default-rule">
+            <rule id-ref="rsc1-meta_attributes5-rule"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated"/>
+            <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes3-rule-negated"/>
+          </rule>
+          <nvpair id="clone2-meta_attributes5-migration-threshold" name="migration-threshold" value="10"/>
         </meta_attributes>
         <meta_attributes id="clone2-meta_attributes5">
           <rule id-ref="rsc1-meta_attributes5-rule"/>
-          <nvpair id="clone2-meta_attributes5-migration-threshold" name="migration-threshold" value="10"/>
         </meta_attributes>
       </clone>
       <bundle id="bundle1">
@@ -265,28 +309,45 @@
           <!-- default, 10, 10, default, 10 -->
           <meta_attributes id="rsc5-meta_attributes1">
             <rule id-ref="rsc1-meta_attributes1-rule"/>
-            <nvpair id="rsc5-meta_attributes1-migration-threshold" name="migration-threshold" value="default"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-rsc5-meta_attributes2-migration-threshold-no-default">
+            <rule id="pcmk__3_10_upgrade-rsc5-meta_attributes2-migration-threshold-no-default-rule">
+              <rule id-ref="rsc1-meta_attributes2-rule"/>
+              <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated"/>
+            </rule>
+            <nvpair id="rsc5-meta_attributes2-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="rsc5-meta_attributes2">
             <rule id-ref="rsc1-meta_attributes2-rule"/>
-            <nvpair id="rsc5-meta_attributes2-migration-threshold" name="migration-threshold" value="10"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-rsc5-meta_attributes3-migration-threshold-no-default">
+            <rule id="pcmk__3_10_upgrade-rsc5-meta_attributes3-migration-threshold-no-default-rule">
+              <rule id-ref="rsc1-meta_attributes3-rule"/>
+              <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated"/>
+            </rule>
+            <nvpair id="rsc5-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="rsc5-meta_attributes3">
             <rule id-ref="rsc1-meta_attributes3-rule"/>
-            <nvpair id="rsc5-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="rsc5-meta_attributes4">
             <rule id-ref="rsc1-meta_attributes4-rule"/>
-            <nvpair id="rsc5-meta_attributes4-migration-threshold" name="migration-threshold" value="default"/>
+          </meta_attributes>
+          <meta_attributes id="pcmk__3_10_upgrade-rsc5-meta_attributes5-migration-threshold-no-default">
+            <rule id="pcmk__3_10_upgrade-rsc5-meta_attributes5-migration-threshold-no-default-rule">
+              <rule id-ref="rsc1-meta_attributes5-rule"/>
+              <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated"/>
+              <rule id="pcmk__3_10_upgrade-rsc1-meta_attributes4-rule-negated" negate="1">
+                <rule id-ref="rsc1-meta_attributes4-rule"/>
+              </rule>
+            </rule>
+            <nvpair id="rsc5-meta_attributes5-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
           <meta_attributes id="rsc5-meta_attributes5">
             <rule id-ref="rsc1-meta_attributes5-rule"/>
-            <nvpair id="rsc5-meta_attributes5-migration-threshold" name="migration-threshold" value="10"/>
           </meta_attributes>
         </primitive>
-        <meta_attributes id="bundle1-meta_attributes">
-          <nvpair id="bundle1-meta_attributes-migration-threshold" name="migration-threshold" value="default"/>
-        </meta_attributes>
+        <meta_attributes id="bundle1-meta_attributes"/>
       </bundle>
     </resources>
     <constraints/>
@@ -294,23 +355,39 @@
       <!-- default, 10, 10, 10, default -->
       <meta_attributes id="rsc_defaults-meta_attributes1">
         <rule id-ref="rsc1-meta_attributes1-rule"/>
-        <nvpair id="rsc_defaults-meta_attributes1-migration-threshold" name="migration-threshold" value="default"/>
+      </meta_attributes>
+      <meta_attributes id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes2-migration-threshold-no-default">
+        <rule id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes2-migration-threshold-no-default-rule">
+          <rule id-ref="rsc1-meta_attributes2-rule"/>
+          <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated"/>
+        </rule>
+        <nvpair id="rsc_defaults-meta_attributes2-migration-threshold" name="migration-threshold" value="10"/>
       </meta_attributes>
       <meta_attributes id="rsc_defaults-meta_attributes2">
         <rule id-ref="rsc1-meta_attributes2-rule"/>
-        <nvpair id="rsc_defaults-meta_attributes2-migration-threshold" name="migration-threshold" value="10"/>
+      </meta_attributes>
+      <meta_attributes id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes3-migration-threshold-no-default">
+        <rule id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes3-migration-threshold-no-default-rule">
+          <rule id-ref="rsc1-meta_attributes3-rule"/>
+          <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated"/>
+        </rule>
+        <nvpair id="rsc_defaults-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
       </meta_attributes>
       <meta_attributes id="rsc_defaults-meta_attributes3">
         <rule id-ref="rsc1-meta_attributes3-rule"/>
-        <nvpair id="rsc_defaults-meta_attributes3-migration-threshold" name="migration-threshold" value="10"/>
+      </meta_attributes>
+      <meta_attributes id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes4-migration-threshold-no-default">
+        <rule id="pcmk__3_10_upgrade-rsc_defaults-meta_attributes4-migration-threshold-no-default-rule">
+          <rule id-ref="rsc1-meta_attributes4-rule"/>
+          <rule id-ref="pcmk__3_10_upgrade-rsc1-meta_attributes1-rule-negated"/>
+        </rule>
+        <nvpair id="rsc_defaults-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
       </meta_attributes>
       <meta_attributes id="rsc_defaults-meta_attributes4">
         <rule id-ref="rsc1-meta_attributes4-rule"/>
-        <nvpair id="rsc_defaults-meta_attributes4-migration-threshold" name="migration-threshold" value="10"/>
       </meta_attributes>
       <meta_attributes id="rsc_defaults-meta_attributes5">
         <rule id-ref="rsc1-meta_attributes5-rule"/>
-        <nvpair id="rsc_defaults-meta_attributes5-migration-threshold" name="migration-threshold" value="default"/>
       </meta_attributes>
     </rsc_defaults>
   </configuration>

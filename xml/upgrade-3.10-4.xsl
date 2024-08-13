@@ -12,6 +12,7 @@
    "default". If there were any prior to this transformation, new nvsets and
    rules have been added as needed to achieve the same behavior.
    * is-managed
+   * migration-threshold
  -->
 
 <xsl:stylesheet version="1.0"
@@ -38,6 +39,7 @@
 <!-- Options with default values to transform -->
 <pcmk:list id="default_overrides">
     <pcmk:item>is-managed</pcmk:item>
+    <pcmk:item>migration-threshold</pcmk:item>
 </pcmk:list>
 
 <!--

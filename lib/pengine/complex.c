@@ -884,25 +884,16 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     value = g_hash_table_lookup(rsc_private->meta,
                                 PCMK_META_MIGRATION_THRESHOLD);
     if (value != NULL) {
-        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-            // @COMPAT Deprecated since 2.1.8
-            pcmk__config_warn("Support for setting "
-                              PCMK_META_MIGRATION_THRESHOLD
-                              " to the explicit value '" PCMK_VALUE_DEFAULT
-                              "' is deprecated and will be removed in a "
-                              "future release (just leave it unset)");
-        } else {
-            rsc_private->ban_after_failures = char2score(value);
-            if (rsc_private->ban_after_failures < 0) {
-                /* @COMPAT We use 1 here to preserve previous behavior, but this
-                 * should probably use the default (INFINITY) or 0 (to disable)
-                 * instead.
-                 */
-                pcmk__warn_once(pcmk__wo_neg_threshold,
-                                PCMK_META_MIGRATION_THRESHOLD
-                                " must be non-negative, using 1 instead");
-                rsc_private->ban_after_failures = 1;
-            }
+        rsc_private->ban_after_failures = char2score(value);
+        if (rsc_private->ban_after_failures < 0) {
+            /* @COMPAT We use 1 here to preserve previous behavior, but this
+             * should probably use the default (INFINITY) or 0 (to disable)
+             * instead.
+             */
+            pcmk__warn_once(pcmk__wo_neg_threshold,
+                            PCMK_META_MIGRATION_THRESHOLD
+                            " must be non-negative, using 1 instead");
+            rsc_private->ban_after_failures = 1;
         }
     }
 
