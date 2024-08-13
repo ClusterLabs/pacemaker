@@ -124,10 +124,17 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
         const char *value = crm_element_value(nvpair, PCMK_XA_VALUE);
         const char *old_value = NULL;
 
-        if ((name == NULL) && (ref_nvpair != NULL)) {
+        if (ref_nvpair == NULL) {
+            /* Not possible with schema validation enabled (error already
+             * logged)
+             */
+            continue;
+        }
+
+        if (name == NULL) {
             name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
         }
-        if ((value == NULL) && (ref_nvpair != NULL)) {
+        if (value == NULL) {
             value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
         }
         if ((name == NULL) || (value == NULL)) {
