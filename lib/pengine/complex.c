@@ -628,7 +628,7 @@ unpack_stickiness(pcmk_resource_t *rsc)
                                             PCMK_META_RESOURCE_STICKINESS);
 
     if (pcmk__str_eq(value, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
-        // @COMPAT Deprecated since 2.1.8
+        // @COMPAT Deprecated since 2.1.8; disallowed by schema
         pcmk__config_warn("Support for setting "
                           PCMK_META_RESOURCE_STICKINESS
                           " to the explicit value '" PCMK_VALUE_DEFAULT
