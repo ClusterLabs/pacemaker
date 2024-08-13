@@ -19,6 +19,7 @@
    * is-managed
    * migration-threshold
    * resource-stickiness
+   * target-role
  * The can_fail operation meta-attribute is not present.
  * The role_after_failure operation meta-attribute is not present.
  -->
@@ -134,6 +135,7 @@
     <pcmk:item>is-managed</pcmk:item>
     <pcmk:item>migration-threshold</pcmk:item>
     <pcmk:item>resource-stickiness</pcmk:item>
+    <pcmk:item>target-role</pcmk:item>
 </pcmk:list>
 
 <!--
