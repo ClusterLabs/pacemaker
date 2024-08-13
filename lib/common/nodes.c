@@ -161,3 +161,33 @@ pcmk__find_node_in_list(const GList *nodes, const char *node_name)
     }
     return NULL;
 }
+
+#define XP_SHUTDOWN "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']/"   \
+    PCMK__XE_TRANSIENT_ATTRIBUTES "/" PCMK_XE_INSTANCE_ATTRIBUTES "/"       \
+    PCMK_XE_NVPAIR "[@" PCMK_XA_NAME "='" PCMK__NODE_ATTR_SHUTDOWN "']"
+
+/*!
+ * \brief Get value of a node's shutdown attribute from CIB, if present
+ *
+ * \param[in] cib   CIB to check
+ * \param[in] node  Name of node to check
+ *
+ * \return Value of shutdown attribute for \p node in \p cib if any,
+ *         otherwise NULL
+ * \note The return value is a pointer into \p cib and so is valid only for the
+ *       lifetime of that object.
+ */
+const char *
+pcmk_cib_node_shutdown(xmlNode *cib, const char *node)
+{
+    if ((cib != NULL) && (node != NULL)) {
+        char *xpath = crm_strdup_printf(XP_SHUTDOWN, node);
+        xmlNode *match = get_xpath_object(xpath, cib, LOG_TRACE);
+
+        free(xpath);
+        if (match != NULL) {
+            return crm_element_value(match, PCMK_XA_VALUE);
+        }
+    }
+    return NULL;
+}
