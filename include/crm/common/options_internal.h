@@ -179,9 +179,6 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__META_CLEAR_FAILURE_OP         "clear_failure_op"
 #define PCMK__META_CLEAR_FAILURE_INTERVAL   "clear_failure_interval"
 
-// @COMPAT Deprecated meta-attribute since 2.1.0
-#define PCMK__META_CAN_FAIL                 "can_fail"
-
 // @COMPAT Deprecated alias for PCMK__META_PROMOTED_MAX since 2.0.0
 #define PCMK__META_PROMOTED_MAX_LEGACY      "master-max"
 
