@@ -1,4 +1,4 @@
-=#=#=#= Begin test: Basic text output =#=#=#=
+=#=#=#= Begin test: Basic output =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -28,10 +28,10 @@ Active Resources:
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
     * Promoted: [ cluster02 ]
     * Unpromoted: [ cluster01 ]
-=#=#=#= End test: Basic text output - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output
-=#=#=#= Begin test: XML output =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon --output-as=xml">
+=#=#=#= End test: Basic output - OK (0) =#=#=#=
+* Passed: crm_mon               - Basic output
+=#=#=#= Begin test: Basic output (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -245,9 +245,9 @@ Active Resources:
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output
-=#=#=#= Begin test: Basic text output without node section =#=#=#=
+=#=#=#= End test: Basic output (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Basic output (XML)
+=#=#=#= Begin test: Output without node section =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -273,10 +273,10 @@ Active Resources:
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
     * Promoted: [ cluster02 ]
     * Unpromoted: [ cluster01 ]
-=#=#=#= End test: Basic text output without node section - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output without node section
-=#=#=#= Begin test: XML output without the node section =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon --output-as=xml --exclude=nodes">
+=#=#=#= End test: Output without node section - OK (0) =#=#=#=
+* Passed: crm_mon               - Output without node section
+=#=#=#= Begin test: Output without node section (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon -1 --exclude=nodes --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -483,14 +483,14 @@ Active Resources:
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output without the node section - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output without the node section
-=#=#=#= Begin test: Text output with only the node section =#=#=#=
+=#=#=#= End test: Output without node section (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output without node section (XML)
+=#=#=#= Begin test: Output with only the node section =#=#=#=
 Node List:
   * Online: [ cluster01 cluster02 ]
   * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
-=#=#=#= End test: Text output with only the node section - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output with only the node section
+=#=#=#= End test: Output with only the node section - OK (0) =#=#=#=
+* Passed: crm_mon               - Output with only the node section
 =#=#=#= Begin test: Complete text output =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -592,7 +592,7 @@ Operations:
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output
+* Passed: crm_mon               - Complete text output
 =#=#=#= Begin test: Complete text output with detail =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -716,7 +716,7 @@ Operations:
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01 (1)
 =#=#=#= End test: Complete text output with detail - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output with detail
+* Passed: crm_mon               - Complete text output with detail
 =#=#=#= Begin test: Complete brief text output =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -818,7 +818,7 @@ Operations:
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete brief text output - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete brief text output
+* Passed: crm_mon               - Complete brief text output
 =#=#=#= Begin test: Complete text output grouped by node =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -926,7 +926,7 @@ Operations:
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output grouped by node - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output grouped by node
+* Passed: crm_mon               - Complete text output grouped by node
 =#=#=#= Begin test: Complete brief text output grouped by node =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -1034,9 +1034,9 @@ Operations:
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete brief text output grouped by node - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete brief text output grouped by node
-=#=#=#= Begin test: XML output grouped by node =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml --group-by-node">
+* Passed: crm_mon               - Complete brief text output grouped by node
+=#=#=#= Begin test: Output grouped by node (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --group-by-node">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -1286,9 +1286,9 @@ Negative Location Constraints:
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output grouped by node - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output grouped by node
-=#=#=#= Begin test: Complete text output filtered by node =#=#=#=
+=#=#=#= End test: Output grouped by node (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output grouped by node (XML)
+=#=#=#= Begin test: Complete output filtered by node =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -1345,10 +1345,10 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
-=#=#=#= End test: Complete text output filtered by node - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output filtered by node
-=#=#=#= Begin test: XML output filtered by node =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon --output-as xml --include=all --node=cluster01">
+=#=#=#= End test: Complete output filtered by node - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by node
+=#=#=#= Begin test: Complete output filtered by node (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon -1 --include=all --node=cluster01 --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -1471,9 +1471,9 @@ Negative Location Constraints:
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by node - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by node
-=#=#=#= Begin test: Complete text output filtered by tag =#=#=#=
+=#=#=#= End test: Complete output filtered by node (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by node (XML)
+=#=#=#= Begin test: Complete output filtered by tag =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -1536,10 +1536,10 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
-=#=#=#= End test: Complete text output filtered by tag - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output filtered by tag
-=#=#=#= Begin test: XML output filtered by tag =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon --output-as=xml --include=all --node=even-nodes">
+=#=#=#= End test: Complete output filtered by tag - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by tag
+=#=#=#= Begin test: Complete output filtered by tag (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon -1 --include=all --node=even-nodes --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -1674,9 +1674,9 @@ Negative Location Constraints:
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by tag - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by tag
-=#=#=#= Begin test: Complete text output filtered by resource tag =#=#=#=
+=#=#=#= End test: Complete output filtered by tag (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by tag (XML)
+=#=#=#= Begin test: Complete output filtered by resource tag =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -1704,10 +1704,10 @@ Operations:
     * Fencing: migration-threshold=1000000:
       * (15) start
       * (20) monitor: interval="60000ms"
-=#=#=#= End test: Complete text output filtered by resource tag - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output filtered by resource tag
-=#=#=#= Begin test: XML output filtered by resource tag =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon --output-as=xml --include=all --resource=fencing-rscs">
+=#=#=#= End test: Complete output filtered by resource tag - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by resource tag
+=#=#=#= Begin test: Complete output filtered by resource tag (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon -1 --include=all --resource=fencing-rscs --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -1748,9 +1748,9 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by resource tag - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by resource tag
-=#=#=#= Begin test: Basic text output filtered by node that doesn't exist =#=#=#=
+=#=#=#= End test: Complete output filtered by resource tag (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by resource tag (XML)
+=#=#=#= Begin test: Output filtered by node that doesn't exist =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -1761,10 +1761,10 @@ Cluster Summary:
 
 Active Resources:
   * No active resources
-=#=#=#= End test: Basic text output filtered by node that doesn't exist - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output filtered by node that doesn't exist
-=#=#=#= Begin test: XML output filtered by node that doesn't exist =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon --output-as=xml --node=blah">
+=#=#=#= End test: Output filtered by node that doesn't exist - OK (0) =#=#=#=
+* Passed: crm_mon               - Output filtered by node that doesn't exist
+=#=#=#= Begin test: Output filtered by node that doesn't exist (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon -1 --node=blah --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -1790,8 +1790,8 @@ Active Resources:
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by node that doesn't exist - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by node that doesn't exist
+=#=#=#= End test: Output filtered by node that doesn't exist (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output filtered by node that doesn't exist (XML)
 =#=#=#= Begin test: Basic text output with inactive resources =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -1828,7 +1828,7 @@ Full List of Resources:
     * Promoted: [ cluster02 ]
     * Unpromoted: [ cluster01 ]
 =#=#=#= End test: Basic text output with inactive resources - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output with inactive resources
+* Passed: crm_mon               - Basic text output with inactive resources
 =#=#=#= Begin test: Basic text output with inactive resources, filtered by node =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -1861,8 +1861,8 @@ Full List of Resources:
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
     * Promoted: [ cluster02 ]
 =#=#=#= End test: Basic text output with inactive resources, filtered by node - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output with inactive resources, filtered by node
-=#=#=#= Begin test: Complete text output filtered by primitive resource =#=#=#=
+* Passed: crm_mon               - Basic text output with inactive resources, filtered by node
+=#=#=#= Begin test: Complete output filtered by primitive resource =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -1890,10 +1890,10 @@ Operations:
     * Fencing: migration-threshold=1000000:
       * (15) start
       * (20) monitor: interval="60000ms"
-=#=#=#= End test: Complete text output filtered by primitive resource - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output filtered by primitive resource
-=#=#=#= Begin test: XML output filtered by primitive resource =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=Fencing">
+=#=#=#= End test: Complete output filtered by primitive resource - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by primitive resource
+=#=#=#= Begin test: Complete output filtered by primitive resource (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon -1 --include=all --resource=Fencing --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -1934,9 +1934,9 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by primitive resource - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by primitive resource
-=#=#=#= Begin test: Complete text output filtered by group resource =#=#=#=
+=#=#=#= End test: Complete output filtered by primitive resource (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by primitive resource (XML)
+=#=#=#= Begin test: Complete output filtered by group resource =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -1967,10 +1967,10 @@ Operations:
       * (2) start
     * Email: migration-threshold=1000000:
       * (2) start
-=#=#=#= End test: Complete text output filtered by group resource - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output filtered by group resource
-=#=#=#= Begin test: XML output filtered by group resource =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=exim-group">
+=#=#=#= End test: Complete output filtered by group resource - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by group resource
+=#=#=#= Begin test: Complete output filtered by group resource (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon -1 --include=all --resource=exim-group --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -2018,8 +2018,8 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by group resource - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by group resource
+=#=#=#= End test: Complete output filtered by group resource (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by group resource (XML)
 =#=#=#= Begin test: Complete text output filtered by group resource member =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -2049,8 +2049,8 @@ Operations:
     * Public-IP: migration-threshold=1000000:
       * (2) start
 =#=#=#= End test: Complete text output filtered by group resource member - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output filtered by group resource member
-=#=#=#= Begin test: XML output filtered by group resource member =#=#=#=
+* Passed: crm_mon               - Complete text output filtered by group resource member
+=#=#=#= Begin test: Output filtered by group resource member (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=Email">
   <summary>
     <stack type="corosync"/>
@@ -2093,9 +2093,9 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by group resource member - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by group resource member
-=#=#=#= Begin test: Complete text output filtered by clone resource =#=#=#=
+=#=#=#= End test: Output filtered by group resource member (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output filtered by group resource member (XML)
+=#=#=#= Begin test: Complete output filtered by clone resource =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -2128,10 +2128,10 @@ Operations:
     * ping: migration-threshold=1000000:
       * (17) start
       * (18) monitor: interval="10000ms"
-=#=#=#= End test: Complete text output filtered by clone resource - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output filtered by clone resource
-=#=#=#= Begin test: XML output filtered by clone resource =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=ping-clone">
+=#=#=#= End test: Complete output filtered by clone resource - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by clone resource
+=#=#=#= Begin test: Complete output filtered by clone resource (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon -1 --include=all --resource=ping-clone --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -2183,9 +2183,9 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by clone resource - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by clone resource
-=#=#=#= Begin test: Complete text output filtered by clone resource instance =#=#=#=
+=#=#=#= End test: Complete output filtered by clone resource (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by clone resource (XML)
+=#=#=#= Begin test: Complete output filtered by clone resource instance =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -2218,10 +2218,10 @@ Operations:
     * ping: migration-threshold=1000000:
       * (17) start
       * (18) monitor: interval="10000ms"
-=#=#=#= End test: Complete text output filtered by clone resource instance - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output filtered by clone resource instance
-=#=#=#= Begin test: XML output filtered by clone resource instance =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=ping">
+=#=#=#= End test: Complete output filtered by clone resource instance - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by clone resource instance
+=#=#=#= Begin test: Complete output filtered by clone resource instance (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon -1 --include=all --resource=ping --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -2273,8 +2273,8 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by clone resource instance - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by clone resource instance
+=#=#=#= End test: Complete output filtered by clone resource instance (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Complete output filtered by clone resource instance (XML)
 =#=#=#= Begin test: Complete text output filtered by exact clone resource instance =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -2312,8 +2312,8 @@ Operations:
       * (17) start
       * (18) monitor: interval="10000ms"
 =#=#=#= End test: Complete text output filtered by exact clone resource instance - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output filtered by exact clone resource instance
-=#=#=#= Begin test: XML output filtered by exact clone resource instance =#=#=#=
+* Passed: crm_mon               - Complete text output filtered by exact clone resource instance
+=#=#=#= Begin test: Output filtered by exact clone resource instance (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=ping:1">
   <summary>
     <stack type="corosync"/>
@@ -2363,9 +2363,9 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by exact clone resource instance - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by exact clone resource instance
-=#=#=#= Begin test: Basic text output filtered by resource that doesn't exist =#=#=#=
+=#=#=#= End test: Output filtered by exact clone resource instance (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output filtered by exact clone resource instance (XML)
+=#=#=#= Begin test: Output filtered by resource that doesn't exist =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -2380,10 +2380,10 @@ Node List:
 
 Active Resources:
   * No active resources
-=#=#=#= End test: Basic text output filtered by resource that doesn't exist - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output filtered by resource that doesn't exist
-=#=#=#= Begin test: XML output filtered by resource that doesn't exist =#=#=#=
-<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=blah">
+=#=#=#= End test: Output filtered by resource that doesn't exist - OK (0) =#=#=#=
+* Passed: crm_mon               - Output filtered by resource that doesn't exist
+=#=#=#= Begin test: Output filtered by resource that doesn't exist (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon -1 --resource=blah --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -2413,8 +2413,8 @@ Active Resources:
   <node_history/>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by resource that doesn't exist - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by resource that doesn't exist
+=#=#=#= End test: Output filtered by resource that doesn't exist (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output filtered by resource that doesn't exist (XML)
 =#=#=#= Begin test: Basic text output with inactive resources, filtered by tag =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -2435,7 +2435,7 @@ Full List of Resources:
     * inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
     * inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
 =#=#=#= End test: Basic text output with inactive resources, filtered by tag - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output with inactive resources, filtered by tag
+* Passed: crm_mon               - Basic text output with inactive resources, filtered by tag
 =#=#=#= Begin test: Basic text output with inactive resources, filtered by bundle resource =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -2455,8 +2455,8 @@ Full List of Resources:
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
     * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundle resource - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output with inactive resources, filtered by bundle resource
-=#=#=#= Begin test: XML output filtered by inactive bundle resource =#=#=#=
+* Passed: crm_mon               - Basic text output with inactive resources, filtered by bundle resource
+=#=#=#= Begin test: Output filtered by inactive bundle resource (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle">
   <summary>
     <stack type="corosync"/>
@@ -2563,8 +2563,8 @@ Full List of Resources:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by inactive bundle resource - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by inactive bundle resource
+=#=#=#= End test: Output filtered by inactive bundle resource (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output filtered by inactive bundle resource (XML)
 =#=#=#= Begin test: Basic text output with inactive resources, filtered by bundled IP address resource =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -2583,8 +2583,8 @@ Full List of Resources:
     * Replica[0]
       * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Started cluster01
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundled IP address resource - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output with inactive resources, filtered by bundled IP address resource
-=#=#=#= Begin test: XML output filtered by bundled IP address resource =#=#=#=
+* Passed: crm_mon               - Basic text output with inactive resources, filtered by bundled IP address resource
+=#=#=#= Begin test: Output filtered by bundled IP address resource (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle-ip-192.168.122.132">
   <summary>
     <stack type="corosync"/>
@@ -2662,8 +2662,8 @@ Full List of Resources:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by bundled IP address resource - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by bundled IP address resource
+=#=#=#= End test: Output filtered by bundled IP address resource (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output filtered by bundled IP address resource (XML)
 =#=#=#= Begin test: Basic text output with inactive resources, filtered by bundled container =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -2682,8 +2682,8 @@ Full List of Resources:
     * Replica[1]
       * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Started cluster02
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundled container - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output with inactive resources, filtered by bundled container
-=#=#=#= Begin test: XML output filtered by bundled container =#=#=#=
+* Passed: crm_mon               - Basic text output with inactive resources, filtered by bundled container
+=#=#=#= Begin test: Output filtered by bundled container (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle-docker-2">
   <summary>
     <stack type="corosync"/>
@@ -2759,8 +2759,8 @@ Full List of Resources:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by bundled container - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by bundled container
+=#=#=#= End test: Output filtered by bundled container (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output filtered by bundled container (XML)
 =#=#=#= Begin test: Basic text output with inactive resources, filtered by bundle connection =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -2779,8 +2779,8 @@ Full List of Resources:
     * Replica[0]
       * httpd-bundle-0	(ocf:pacemaker:remote):	 Started cluster01
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundle connection - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output with inactive resources, filtered by bundle connection
-=#=#=#= Begin test: XML output filtered by bundle connection =#=#=#=
+* Passed: crm_mon               - Basic text output with inactive resources, filtered by bundle connection
+=#=#=#= Begin test: Output filtered by bundle connection (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle-0">
   <summary>
     <stack type="corosync"/>
@@ -2858,8 +2858,8 @@ Full List of Resources:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by bundle connection - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by bundle connection
+=#=#=#= End test: Output filtered by bundle connection (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output filtered by bundle connection (XML)
 =#=#=#= Begin test: Basic text output with inactive resources, filtered by bundled primitive resource =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -2882,8 +2882,8 @@ Full List of Resources:
     * Replica[2]
       * httpd	(ocf:heartbeat:apache):	 Stopped
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundled primitive resource - OK (0) =#=#=#=
-* Passed: crm_mon        - Basic text output with inactive resources, filtered by bundled primitive resource
-=#=#=#= Begin test: XML output filtered by bundled primitive resource =#=#=#=
+* Passed: crm_mon               - Basic text output with inactive resources, filtered by bundled primitive resource
+=#=#=#= Begin test: Output filtered by bundled primitive resource (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd">
   <summary>
     <stack type="corosync"/>
@@ -2969,8 +2969,8 @@ Full List of Resources:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output filtered by bundled primitive resource - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output filtered by bundled primitive resource
+=#=#=#= End test: Output filtered by bundled primitive resource (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output filtered by bundled primitive resource (XML)
 =#=#=#= Begin test: Complete text output, filtered by clone name in cloned group =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -3011,8 +3011,8 @@ Operations:
       * (2) start
       * (3) monitor: interval="10000ms"
 =#=#=#= End test: Complete text output, filtered by clone name in cloned group - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output, filtered by clone name in cloned group
-=#=#=#= Begin test: XML output, filtered by clone name in cloned group =#=#=#=
+* Passed: crm_mon               - Complete text output, filtered by clone name in cloned group
+=#=#=#= Begin test: Output, filtered by clone name in cloned group (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-clone-group">
   <summary>
     <stack type="corosync"/>
@@ -3078,8 +3078,8 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output, filtered by clone name in cloned group - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output, filtered by clone name in cloned group
+=#=#=#= End test: Output, filtered by clone name in cloned group (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output, filtered by clone name in cloned group (XML)
 =#=#=#= Begin test: Complete text output, filtered by group name in cloned group =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -3120,8 +3120,8 @@ Operations:
       * (2) start
       * (3) monitor: interval="10000ms"
 =#=#=#= End test: Complete text output, filtered by group name in cloned group - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output, filtered by group name in cloned group
-=#=#=#= Begin test: XML output, filtered by group name in cloned group =#=#=#=
+* Passed: crm_mon               - Complete text output, filtered by group name in cloned group
+=#=#=#= Begin test: Output, filtered by group name in cloned group (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-group">
   <summary>
     <stack type="corosync"/>
@@ -3187,8 +3187,8 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output, filtered by group name in cloned group - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output, filtered by group name in cloned group
+=#=#=#= End test: Output, filtered by group name in cloned group (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output, filtered by group name in cloned group (XML)
 =#=#=#= Begin test: Complete text output, filtered by exact group instance name in cloned group =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -3227,8 +3227,8 @@ Operations:
       * (2) start
       * (3) monitor: interval="10000ms"
 =#=#=#= End test: Complete text output, filtered by exact group instance name in cloned group - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output, filtered by exact group instance name in cloned group
-=#=#=#= Begin test: XML output, filtered by exact group instance name in cloned group =#=#=#=
+* Passed: crm_mon               - Complete text output, filtered by exact group instance name in cloned group
+=#=#=#= Begin test: Output, filtered by exact group instance name in cloned group (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-group:1">
   <summary>
     <stack type="corosync"/>
@@ -3280,8 +3280,8 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output, filtered by exact group instance name in cloned group - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output, filtered by exact group instance name in cloned group
+=#=#=#= End test: Output, filtered by exact group instance name in cloned group (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output, filtered by exact group instance name in cloned group (XML)
 =#=#=#= Begin test: Complete text output, filtered by primitive name in cloned group =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -3322,8 +3322,8 @@ Operations:
       * (2) start
       * (3) monitor: interval="10000ms"
 =#=#=#= End test: Complete text output, filtered by primitive name in cloned group - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output, filtered by primitive name in cloned group
-=#=#=#= Begin test: XML output, filtered by primitive name in cloned group =#=#=#=
+* Passed: crm_mon               - Complete text output, filtered by primitive name in cloned group
+=#=#=#= Begin test: Output, filtered by primitive name in cloned group (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-proxy">
   <summary>
     <stack type="corosync"/>
@@ -3389,8 +3389,8 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output, filtered by primitive name in cloned group - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output, filtered by primitive name in cloned group
+=#=#=#= End test: Output, filtered by primitive name in cloned group (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output, filtered by primitive name in cloned group (XML)
 =#=#=#= Begin test: Complete text output, filtered by exact primitive instance name in cloned group =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -3429,8 +3429,8 @@ Operations:
       * (2) start
       * (3) monitor: interval="10000ms"
 =#=#=#= End test: Complete text output, filtered by exact primitive instance name in cloned group - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output, filtered by exact primitive instance name in cloned group
-=#=#=#= Begin test: XML output, filtered by exact primitive instance name in cloned group =#=#=#=
+* Passed: crm_mon               - Complete text output, filtered by exact primitive instance name in cloned group
+=#=#=#= Begin test: Output, filtered by exact primitive instance name in cloned group (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-proxy:1">
   <summary>
     <stack type="corosync"/>
@@ -3482,9 +3482,41 @@ Operations:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output, filtered by exact primitive instance name in cloned group - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output, filtered by exact primitive instance name in cloned group
-=#=#=#= Begin test: Text output of partially active resources =#=#=#=
+=#=#=#= End test: Output, filtered by exact primitive instance name in cloned group (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output, filtered by exact primitive instance name in cloned group (XML)
+=#=#=#= Begin test: Check that CIB_file="-" works =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 32 resource instances configured (4 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+
+Active Resources:
+  * Clone Set: ping-clone [ping]:
+    * Started: [ cluster01 cluster02 ]
+  * Fencing	(stonith:fence_xvm):	 Started cluster01
+  * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+    * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+  * Resource Group: exim-group:
+    * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
+    * Email	(lsb:exim):	 Started cluster02
+  * Clone Set: mysql-clone-group [mysql-group]:
+    * Started: [ cluster01 cluster02 ]
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * Promoted: [ cluster02 ]
+    * Unpromoted: [ cluster01 ]
+=#=#=#= End test: Check that CIB_file="-" works - OK (0) =#=#=#=
+* Passed: crm_mon               - Check that CIB_file="-" works
+=#=#=#= Begin test: Output of partially active resources =#=#=#=
 unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
 unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 Cluster Summary:
@@ -3523,12 +3555,12 @@ Active Resources:
 
 Failed Resource Actions:
   * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
-=#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of partially active resources
-=#=#=#= Begin test: XML output of partially active resources =#=#=#=
+=#=#=#= End test: Output of partially active resources - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of partially active resources
+=#=#=#= Begin test: Output of partially active resources (XML) =#=#=#=
 unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
 unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
-<pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -3672,9 +3704,9 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
   </failures>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output of partially active resources - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output of partially active resources
-=#=#=#= Begin test: Text output of partially active resources, with inactive resources =#=#=#=
+=#=#=#= End test: Output of partially active resources (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of partially active resources (XML)
+=#=#=#= Begin test: Output of partially active resources, with inactive resources =#=#=#=
 unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
 unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 Cluster Summary:
@@ -3716,8 +3748,8 @@ Full List of Resources:
 
 Failed Resource Actions:
   * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
-=#=#=#= End test: Text output of partially active resources, with inactive resources - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of partially active resources, with inactive resources
+=#=#=#= End test: Output of partially active resources, with inactive resources - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of partially active resources, with inactive resources
 =#=#=#= Begin test: Complete brief text output, with inactive resources =#=#=#=
 unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
 unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
@@ -3808,7 +3840,7 @@ Operations:
 Failed Resource Actions:
   * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
 =#=#=#= End test: Complete brief text output, with inactive resources - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete brief text output, with inactive resources
+* Passed: crm_mon               - Complete brief text output, with inactive resources
 =#=#=#= Begin test: Text output of partially active group =#=#=#=
 unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
 unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
@@ -3829,7 +3861,7 @@ Active Resources:
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
 =#=#=#= End test: Text output of partially active group - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of partially active group
+* Passed: crm_mon               - Text output of partially active group
 =#=#=#= Begin test: Text output of partially active group, with inactive resources =#=#=#=
 unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
 unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
@@ -3852,7 +3884,7 @@ Full List of Resources:
     * dummy-3	(ocf:pacemaker:Dummy):	 Stopped (disabled)
     * dummy-4	(ocf:pacemaker:Dummy):	 Stopped (not installed) 
 =#=#=#= End test: Text output of partially active group, with inactive resources - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of partially active group, with inactive resources
+* Passed: crm_mon               - Text output of partially active group, with inactive resources
 =#=#=#= Begin test: Text output of active member of partially active group =#=#=#=
 unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
 unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
@@ -3872,7 +3904,7 @@ Active Resources:
   * Resource Group: partially-active-group (2 members inactive):
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
 =#=#=#= End test: Text output of active member of partially active group - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of active member of partially active group
+* Passed: crm_mon               - Text output of active member of partially active group
 =#=#=#= Begin test: Text output of inactive member of partially active group =#=#=#=
 unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
 unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
@@ -3897,7 +3929,7 @@ Active Resources:
 Failed Resource Actions:
   * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
 =#=#=#= End test: Text output of inactive member of partially active group - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of inactive member of partially active group
+* Passed: crm_mon               - Text output of inactive member of partially active group
 =#=#=#= Begin test: Complete brief text output grouped by node, with inactive resources =#=#=#=
 unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
 unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
@@ -3991,7 +4023,7 @@ Operations:
 Failed Resource Actions:
   * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
 =#=#=#= End test: Complete brief text output grouped by node, with inactive resources - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete brief text output grouped by node, with inactive resources
+* Passed: crm_mon               - Complete brief text output grouped by node, with inactive resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources, filtered by node =#=#=#=
 unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
 unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
@@ -4014,11 +4046,11 @@ Full List of Resources:
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 FAILED cluster01
   * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped (not installed) 
 =#=#=#= End test: Text output of partially active resources, with inactive resources, filtered by node - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of partially active resources, with inactive resources, filtered by node
-=#=#=#= Begin test: Text output of partially active resources, filtered by node =#=#=#=
+* Passed: crm_mon               - Text output of partially active resources, with inactive resources, filtered by node
+=#=#=#= Begin test: Output of partially active resources, filtered by node (XML) =#=#=#=
 unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
 unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
-<pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml --node=cluster01">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --node=cluster01">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
@@ -4090,9 +4122,9 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: Text output of partially active resources, filtered by node - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of partially active resources, filtered by node
-=#=#=#= Begin test: Text output of active unmanaged resource on offline node =#=#=#=
+=#=#=#= End test: Output of partially active resources, filtered by node (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of partially active resources, filtered by node (XML)
+=#=#=#= Begin test: Output of active unmanaged resource on offline node =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -4112,9 +4144,9 @@ Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01 (maintenance)
   * rsc1	(ocf:pacemaker:Dummy):	 Started cluster01 (maintenance)
   * rsc2	(ocf:pacemaker:Dummy):	 Started cluster02 (maintenance)
-=#=#=#= End test: Text output of active unmanaged resource on offline node - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of active unmanaged resource on offline node
-=#=#=#= Begin test: XML output of active unmanaged resource on offline node =#=#=#=
+=#=#=#= End test: Output of active unmanaged resource on offline node - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of active unmanaged resource on offline node
+=#=#=#= Begin test: Output of active unmanaged resource on offline node (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml">
   <summary>
     <stack type="corosync"/>
@@ -4154,8 +4186,8 @@ Active Resources:
   </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output of active unmanaged resource on offline node - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output of active unmanaged resource on offline node
+=#=#=#= End test: Output of active unmanaged resource on offline node (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of active unmanaged resource on offline node (XML)
 =#=#=#= Begin test: Brief text output of active unmanaged resource on offline node =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -4177,7 +4209,7 @@ Active Resources:
   * 1	(ocf:pacemaker:Dummy):	Active cluster02
   * 1	(stonith:fence_xvm):	Active cluster01
 =#=#=#= End test: Brief text output of active unmanaged resource on offline node - OK (0) =#=#=#=
-* Passed: crm_mon        - Brief text output of active unmanaged resource on offline node
+* Passed: crm_mon               - Brief text output of active unmanaged resource on offline node
 =#=#=#= Begin test: Brief text output of active unmanaged resource on offline node, grouped by node =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -4199,8 +4231,8 @@ Node List:
     * Resources:
       * 1	(ocf:pacemaker:Dummy):	Active 
 =#=#=#= End test: Brief text output of active unmanaged resource on offline node, grouped by node - OK (0) =#=#=#=
-* Passed: crm_mon        - Brief text output of active unmanaged resource on offline node, grouped by node
-=#=#=#= Begin test: Text output of all resources with maintenance-mode enabled =#=#=#=
+* Passed: crm_mon               - Brief text output of active unmanaged resource on offline node, grouped by node
+=#=#=#= Begin test: Output of all resources with maintenance-mode enabled =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -4243,9 +4275,9 @@ Full List of Resources:
   * Clone Set: promotable-clone [promotable-rsc] (promotable, maintenance):
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted cluster02 (maintenance)
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted cluster01 (maintenance)
-=#=#=#= End test: Text output of all resources with maintenance-mode enabled - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of all resources with maintenance-mode enabled
-=#=#=#= Begin test: XML output of all resources with maintenance-mode enabled =#=#=#=
+=#=#=#= End test: Output of all resources with maintenance-mode enabled - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of all resources with maintenance-mode enabled
+=#=#=#= Begin test: Output of all resources with maintenance-mode enabled (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon -1 -r --output-as=xml">
   <summary>
     <stack type="corosync"/>
@@ -4460,9 +4492,9 @@ Full List of Resources:
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output of all resources with maintenance-mode enabled - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output of all resources with maintenance-mode enabled
-=#=#=#= Begin test: Text output of all resources with maintenance enabled for a node =#=#=#=
+=#=#=#= End test: Output of all resources with maintenance-mode enabled (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of all resources with maintenance-mode enabled (XML)
+=#=#=#= Begin test: Output of all resources with maintenance enabled for a node =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -4502,9 +4534,9 @@ Full List of Resources:
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted cluster02 (maintenance)
     * Unpromoted: [ cluster01 ]
-=#=#=#= End test: Text output of all resources with maintenance enabled for a node - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of all resources with maintenance enabled for a node
-=#=#=#= Begin test: XML output of all resources with maintenance enabled for a node =#=#=#=
+=#=#=#= End test: Output of all resources with maintenance enabled for a node - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of all resources with maintenance enabled for a node
+=#=#=#= Begin test: Output of all resources with maintenance enabled for a node (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon -1 -r --output-as=xml">
   <summary>
     <stack type="corosync"/>
@@ -4720,9 +4752,9 @@ Full List of Resources:
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output of all resources with maintenance enabled for a node - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output of all resources with maintenance enabled for a node
-=#=#=#= Begin test: Text output of all resources with maintenance meta attribute true =#=#=#=
+=#=#=#= End test: Output of all resources with maintenance enabled for a node (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of all resources with maintenance enabled for a node (XML)
+=#=#=#= Begin test: Output of all resources with maintenance meta attribute true =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -4762,9 +4794,9 @@ Full List of Resources:
   * Clone Set: promotable-clone [promotable-rsc] (promotable, maintenance):
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted cluster02 (maintenance)
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted cluster01 (maintenance)
-=#=#=#= End test: Text output of all resources with maintenance meta attribute true - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of all resources with maintenance meta attribute true
-=#=#=#= Begin test: XML output of all resources with maintenance meta attribute true =#=#=#=
+=#=#=#= End test: Output of all resources with maintenance meta attribute true - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of all resources with maintenance meta attribute true
+=#=#=#= Begin test: Output of all resources with maintenance meta attribute true (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon -1 -r --output-as=xml">
   <summary>
     <stack type="corosync"/>
@@ -4979,8 +5011,8 @@ Full List of Resources:
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output of all resources with maintenance meta attribute true - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output of all resources with maintenance meta attribute true
+=#=#=#= End test: Output of all resources with maintenance meta attribute true (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output of all resources with maintenance meta attribute true (XML)
 =#=#=#= Begin test: Text output of guest node's container on different node from its remote resource =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -5004,7 +5036,7 @@ Active Resources:
   * Container bundle: httpd-bundle2 [pcmktest:http]:
     * httpd-bundle2-0 (192.168.20.190)	(ocf:heartbeat:apache):	 Started cent7-host2
 =#=#=#= End test: Text output of guest node's container on different node from its remote resource - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output of guest node's container on different node from its remote resource
+* Passed: crm_mon               - Text output of guest node's container on different node from its remote resource
 =#=#=#= Begin test: Complete text output of guest node's container on different node from its remote resource =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -5036,4 +5068,4 @@ Active Resources:
       * httpd-bundle2-docker-0	(ocf:heartbeat:docker):	 Started cent7-host2
       * httpd-bundle2-0	(ocf:pacemaker:remote):	 Started cent7-host2
 =#=#=#= End test: Complete text output of guest node's container on different node from its remote resource - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output of guest node's container on different node from its remote resource
+* Passed: crm_mon               - Complete text output of guest node's container on different node from its remote resource

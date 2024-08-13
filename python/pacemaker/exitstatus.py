@@ -6,6 +6,8 @@ __license__ = "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+
 
 from enum import IntEnum, unique
 
+from pacemaker._library import _libcrmcommon
+
 
 # These values must be kept in sync with include/crm/common/results.h
 @unique
@@ -60,3 +62,7 @@ class ExitStatus(IntEnum):
     DEGRADED_PROMOTED = 191
     NONE = 193
     MAX = 255
+
+    def __str__(self):
+        """Given an ExitStatus, return the matching error string."""
+        return _libcrmcommon.crm_exit_str(self.value).decode()
