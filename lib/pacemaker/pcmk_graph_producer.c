@@ -932,7 +932,7 @@ add_action_to_graph(gpointer data, gpointer user_data)
     }
 }
 
-static int transition_id = -1;
+static int transition_id = 0;
 
 /*!
  * \internal

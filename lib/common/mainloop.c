@@ -758,7 +758,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
     }
 
     if (client->ipc && !crm_ipc_connected(client->ipc)) {
-        crm_err("Connection to %s closed " CRM_XS "client=%p condition=%d",
+        crm_err("Connection to %s closed " CRM_XS " client=%p condition=%d",
                 client->name, client, condition);
         rc = G_SOURCE_REMOVE;
 

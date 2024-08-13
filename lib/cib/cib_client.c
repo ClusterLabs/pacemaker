@@ -26,14 +26,6 @@
 
 static GHashTable *cib_op_callback_table = NULL;
 
-#define op_common(cib) do {                                             \
-        if(cib == NULL) {                                               \
-            return -EINVAL;						\
-        } else if(cib->delegate_fn == NULL) {                           \
-            return -EPROTONOSUPPORT;                                    \
-        }                                                               \
-    } while(0)
-
 static int
 cib_client_set_op_callback(cib_t *cib,
                            void (*callback) (const xmlNode * msg, int call_id,
@@ -250,7 +242,6 @@ cib_client_register_callback(cib_t *cib, int call_id, int timeout,
 static int
 cib_client_noop(cib_t * cib, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_NOOP, NULL, NULL, NULL, NULL,
                            call_options, cib->user);
 }
@@ -258,7 +249,6 @@ cib_client_noop(cib_t * cib, int call_options)
 static int
 cib_client_ping(cib_t * cib, xmlNode ** output_data, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, CRM_OP_PING, NULL, NULL, NULL, output_data,
                            call_options, cib->user);
 }
@@ -273,7 +263,6 @@ static int
 cib_client_query_from(cib_t * cib, const char *host, const char *section,
                       xmlNode ** output_data, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, host, section, NULL,
                            output_data, call_options, cib->user);
 }
@@ -281,7 +270,6 @@ cib_client_query_from(cib_t * cib, const char *host, const char *section,
 static int
 is_primary(cib_t *cib)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_IS_PRIMARY, NULL, NULL, NULL,
                            NULL, cib_scope_local|cib_sync_call, cib->user);
 }
@@ -289,7 +277,6 @@ is_primary(cib_t *cib)
 static int
 set_secondary(cib_t *cib, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_SECONDARY, NULL, NULL, NULL,
                            NULL, call_options, cib->user);
 }
@@ -303,7 +290,6 @@ set_all_secondary(cib_t * cib, int call_options)
 static int
 set_primary(cib_t *cib, int call_options)
 {
-    op_common(cib);
     crm_trace("Adding cib_scope_local to options");
     return cib_internal_op(cib, PCMK__CIB_REQUEST_PRIMARY, NULL, NULL, NULL,
                            NULL, call_options|cib_scope_local, cib->user);
@@ -312,7 +298,6 @@ set_primary(cib_t *cib, int call_options)
 static int
 cib_client_bump_epoch(cib_t * cib, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_BUMP, NULL, NULL, NULL, NULL,
                            call_options, cib->user);
 }
@@ -320,7 +305,6 @@ cib_client_bump_epoch(cib_t * cib, int call_options)
 static int
 cib_client_upgrade(cib_t * cib, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_UPGRADE, NULL, NULL, NULL,
                            NULL, call_options, cib->user);
 }
@@ -334,7 +318,6 @@ cib_client_sync(cib_t * cib, const char *section, int call_options)
 static int
 cib_client_sync_from(cib_t * cib, const char *host, const char *section, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_SYNC_TO_ALL, host, section,
                            NULL, NULL, call_options, cib->user);
 }
@@ -342,7 +325,6 @@ cib_client_sync_from(cib_t * cib, const char *host, const char *section, int cal
 static int
 cib_client_create(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_CREATE, NULL, section, data,
                            NULL, call_options, cib->user);
 }
@@ -350,7 +332,6 @@ cib_client_create(cib_t * cib, const char *section, xmlNode * data, int call_opt
 static int
 cib_client_modify(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_MODIFY, NULL, section, data,
                            NULL, call_options, cib->user);
 }
@@ -358,7 +339,6 @@ cib_client_modify(cib_t * cib, const char *section, xmlNode * data, int call_opt
 static int
 cib_client_replace(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_REPLACE, NULL, section, data,
                            NULL, call_options, cib->user);
 }
@@ -366,7 +346,6 @@ cib_client_replace(cib_t * cib, const char *section, xmlNode * data, int call_op
 static int
 cib_client_delete(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_DELETE, NULL, section, data,
                            NULL, call_options, cib->user);
 }
@@ -374,7 +353,6 @@ cib_client_delete(cib_t * cib, const char *section, xmlNode * data, int call_opt
 static int
 cib_client_delete_absolute(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_ABS_DELETE, NULL, section,
                            data, NULL, call_options, cib->user);
 }
@@ -382,7 +360,6 @@ cib_client_delete_absolute(cib_t * cib, const char *section, xmlNode * data, int
 static int
 cib_client_erase(cib_t * cib, xmlNode ** output_data, int call_options)
 {
-    op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_ERASE, NULL, NULL, NULL,
                            output_data, call_options, cib->user);
 }
@@ -392,7 +369,9 @@ cib_client_init_transaction(cib_t *cib)
 {
     int rc = pcmk_rc_ok;
 
-    op_common(cib);
+    if (cib == NULL) {
+        return -EINVAL;
+    }
 
     if (cib->transaction != NULL) {
         // A client can have at most one transaction at a time
@@ -419,7 +398,10 @@ cib_client_end_transaction(cib_t *cib, bool commit, int call_options)
     const char *client_id = NULL;
     int rc = pcmk_ok;
 
-    op_common(cib);
+    if (cib == NULL) {
+        return -EINVAL;
+    }
+
     cib->cmds->client_id(cib, NULL, &client_id);
     client_id = pcmk__s(client_id, "(unidentified)");
 

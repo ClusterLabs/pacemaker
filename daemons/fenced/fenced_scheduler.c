@@ -115,7 +115,6 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     pcmk_node_t *node = NULL;
     const char *name = NULL;
     const char *value = NULL;
-    const char *rclass = NULL;
     const char *agent = NULL;
     const char *rsc_provides = NULL;
     stonith_key_value_t *params = NULL;
@@ -131,8 +130,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         return;
     }
 
-    rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
-    if (!pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
         return; // Not a fencing device
     }
 

@@ -1896,8 +1896,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * get_op_total_timeout(op, peer);
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
         report_timeout_period(op, op->total_timeout);
-        crm_info("Total timeout set to %ds for peer's fencing targeting %s for %s"
-                 CRM_XS "id=%.8s",
+        crm_info("Total timeout set to %ds for peer's fencing targeting %s for %s "
+                 CRM_XS " id=%.8s",
                  op->total_timeout, op->target, op->client_name, op->id);
     }
 

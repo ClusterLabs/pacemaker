@@ -1203,7 +1203,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
     gboolean is_member;
 
     CRM_CHECK(node != NULL,
-              crm_err("Could not set state for unknown host to %s"
+              crm_err("Could not set state for unknown host to %s "
                       CRM_XS " source=%s", state, source);
               return NULL);
 
