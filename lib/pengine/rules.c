@@ -120,8 +120,8 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
          nvpair != NULL; nvpair = pcmk__xe_next_same(nvpair)) {
 
         xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, NULL);
-        const char *name = crm_element_value(nvpair, PCMK_XA_NAME);
-        const char *value = crm_element_value(nvpair, PCMK_XA_VALUE);
+        const char *name = NULL;
+        const char *value = NULL;
         const char *old_value = NULL;
 
         if (ref_nvpair == NULL) {
@@ -131,12 +131,24 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
             continue;
         }
 
+        name = crm_element_value(nvpair, PCMK_XA_NAME);
         if (name == NULL) {
+            /* @TODO Always get name from ref_nvpair. Currently an nvpair with
+             * an id-ref is allowed to have a name, which overrides the name in
+             * the referenced nvpair.
+             *
+             * This feature was added by commit 3912538 but is undocumented and
+             * inconsistently implemented. The code often ignores name if there
+             * is an id-ref, or in some places assumes that id and value exist
+             * if name exists.
+             *
+             * Disallow this in the schema first, and then update this function.
+             */
             name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
         }
-        if (value == NULL) {
-            value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
-        }
+
+        value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
+
         if ((name == NULL) || (value == NULL)) {
             continue;
         }
