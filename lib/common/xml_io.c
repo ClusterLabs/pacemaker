@@ -159,8 +159,7 @@ done:
  *                      \c stdin); if \p filename ends in \c ".bz2", the file
  *                      will be decompressed using \c bzip2
  *
- * \return XML tree parsed from the given file; may be \c NULL or only partial
- *         on error
+ * \return XML tree parsed from the given file on success, otherwise \c NULL
  */
 xmlNode *
 pcmk__xml_read(const char *filename)
@@ -220,12 +219,11 @@ pcmk__xml_read(const char *filename)
         }
     }
 
-    // @COMPAT At 3.0.0, free xml and return NULL if xml != NULL on error
     last_error = xmlCtxtGetLastError(ctxt);
-    if (last_error != NULL) {
-        if (xml != NULL) {
-            crm_log_xml_info(xml, "Partial");
-        }
+    if ((last_error != NULL) && (xml != NULL)) {
+        crm_log_xml_debug(xml, "partial");
+        pcmk__xml_free(xml);
+        xml = NULL;
     }
 
     xmlFreeParserCtxt(ctxt);
@@ -238,8 +236,7 @@ pcmk__xml_read(const char *filename)
  *
  * \param[in] input  String to parse
  *
- * \return XML tree parsed from the given string; may be \c NULL or only partial
- *         on error
+ * \return XML tree parsed from the given string on success, otherwise \c NULL
  */
 xmlNode *
 pcmk__xml_parse(const char *input)
@@ -269,12 +266,11 @@ pcmk__xml_parse(const char *input)
         xml = xmlDocGetRootElement(output);
     }
 
-    // @COMPAT At 3.0.0, free xml and return NULL if xml != NULL; update doxygen
     last_error = xmlCtxtGetLastError(ctxt);
-    if (last_error != NULL) {
-        if (xml != NULL) {
-            crm_log_xml_info(xml, "Partial");
-        }
+    if ((last_error != NULL) && (xml != NULL)) {
+        crm_log_xml_debug(xml, "partial");
+        pcmk__xml_free(xml);
+        xml = NULL;
     }
 
     xmlFreeParserCtxt(ctxt);
