@@ -15,69 +15,26 @@
 #include <crm/common/cib_internal.h>
 #include <crm/common/xml_internal.h>
 
-/*
- * to allow script compatibility we can have more than one
- * set of environment variables
- */
-const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX][3] =
-{
-    [PCMK__alert_key_recipient] = {
-        "CRM_notify_recipient",         "CRM_alert_recipient",          NULL
-    },
-    [PCMK__alert_key_node] = {
-        "CRM_notify_node",              "CRM_alert_node",               NULL
-    },
-    [PCMK__alert_key_nodeid] = {
-        "CRM_notify_nodeid",            "CRM_alert_nodeid",             NULL
-    },
-    [PCMK__alert_key_rsc] = {
-        "CRM_notify_rsc",               "CRM_alert_rsc",                NULL
-    },
-    [PCMK__alert_key_task] = {
-        "CRM_notify_task",              "CRM_alert_task",               NULL
-    },
-    [PCMK__alert_key_interval] = {
-        "CRM_notify_interval",          "CRM_alert_interval",           NULL
-    },
-    [PCMK__alert_key_desc] = {
-        "CRM_notify_desc",              "CRM_alert_desc",               NULL
-    },
-    [PCMK__alert_key_status] = {
-        "CRM_notify_status",            "CRM_alert_status",             NULL
-    },
-    [PCMK__alert_key_target_rc] = {
-        "CRM_notify_target_rc",         "CRM_alert_target_rc",          NULL
-    },
-    [PCMK__alert_key_rc] = {
-        "CRM_notify_rc",                "CRM_alert_rc",                 NULL
-    },
-    [PCMK__alert_key_kind] = {
-        "CRM_notify_kind",              "CRM_alert_kind",               NULL
-    },
-    [PCMK__alert_key_version] = {
-        "CRM_notify_version",           "CRM_alert_version",            NULL
-    },
-    [PCMK__alert_key_node_sequence] = {
-        "CRM_notify_node_sequence",     PCMK__ALERT_NODE_SEQUENCE,      NULL
-    },
-    [PCMK__alert_key_timestamp] = {
-        "CRM_notify_timestamp",         "CRM_alert_timestamp",          NULL
-    },
-    [PCMK__alert_key_attribute_name] = {
-        "CRM_notify_attribute_name",    "CRM_alert_attribute_name",     NULL
-    },
-    [PCMK__alert_key_attribute_value] = {
-        "CRM_notify_attribute_value",   "CRM_alert_attribute_value",    NULL
-    },
-    [PCMK__alert_key_timestamp_epoch] = {
-        "CRM_notify_timestamp_epoch",   "CRM_alert_timestamp_epoch",    NULL
-    },
-    [PCMK__alert_key_timestamp_usec] = {
-        "CRM_notify_timestamp_usec",    "CRM_alert_timestamp_usec",     NULL
-    },
-    [PCMK__alert_key_exec_time] = {
-        "CRM_notify_exec_time",         "CRM_alert_exec_time",          NULL
-    }
+const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX] = {
+    [PCMK__alert_key_recipient] = "CRM_alert_recipient",
+    [PCMK__alert_key_node] = "CRM_alert_node",
+    [PCMK__alert_key_nodeid] = "CRM_alert_nodeid",
+    [PCMK__alert_key_rsc] = "CRM_alert_rsc",
+    [PCMK__alert_key_task] = "CRM_alert_task",
+    [PCMK__alert_key_interval] = "CRM_alert_interval",
+    [PCMK__alert_key_desc] = "CRM_alert_desc",
+    [PCMK__alert_key_status] = "CRM_alert_status",
+    [PCMK__alert_key_target_rc] = "CRM_alert_target_rc",
+    [PCMK__alert_key_rc] = "CRM_alert_rc",
+    [PCMK__alert_key_kind] = "CRM_alert_kind",
+    [PCMK__alert_key_version] = "CRM_alert_version",
+    [PCMK__alert_key_node_sequence] = PCMK__ALERT_NODE_SEQUENCE,
+    [PCMK__alert_key_timestamp] = "CRM_alert_timestamp",
+    [PCMK__alert_key_attribute_name] = "CRM_alert_attribute_name",
+    [PCMK__alert_key_attribute_value] = "CRM_alert_attribute_value",
+    [PCMK__alert_key_timestamp_epoch] = "CRM_alert_timestamp_epoch",
+    [PCMK__alert_key_timestamp_usec] = "CRM_alert_timestamp_usec",
+    [PCMK__alert_key_exec_time] = "CRM_alert_exec_time",
 };
 
 /*!
@@ -149,13 +106,15 @@ void
 pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,
                     const char *value)
 {
-    for (const char **key = pcmk__alert_keys[name]; *key; key++) {
-        crm_trace("Inserting alert key %s = '%s'", *key, value);
-        if (value) {
-            pcmk__insert_dup(table, *key, value);
-        } else {
-            g_hash_table_remove(table, *key);
-        }
+    CRM_ASSERT((table != NULL) && (name >= 0)
+               && (name < PCMK__ALERT_INTERNAL_KEY_MAX));
+    if (value == NULL) {
+        crm_trace("Removing alert key %s", pcmk__alert_keys[name]);
+        g_hash_table_remove(table, pcmk__alert_keys[name]);
+    } else {
+        crm_trace("Inserting alert key %s = '%s'",
+                  pcmk__alert_keys[name], value);
+        pcmk__insert_dup(table, pcmk__alert_keys[name], value);
     }
 }
 
@@ -163,8 +122,9 @@ void
 pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
                         int value)
 {
-    for (const char **key = pcmk__alert_keys[name]; *key; key++) {
-        crm_trace("Inserting alert key %s = %d", *key, value);
-        g_hash_table_insert(table, pcmk__str_copy(*key), pcmk__itoa(value));
-    }
+    CRM_ASSERT((table != NULL) && (name >= 0)
+               && (name < PCMK__ALERT_INTERNAL_KEY_MAX));
+    crm_trace("Inserting alert key %s = %d", pcmk__alert_keys[name], value);
+    g_hash_table_insert(table, pcmk__str_copy(pcmk__alert_keys[name]),
+                        pcmk__itoa(value));
 }
