@@ -650,27 +650,16 @@ unpack_migration_threshold(pcmk_resource_t *rsc)
 {
     const char *value = g_hash_table_lookup(rsc->priv->meta,
                                             PCMK_META_MIGRATION_THRESHOLD);
+    int rc = pcmk_parse_score(value, &(rsc->priv->ban_after_failures),
+                              PCMK_SCORE_INFINITY);
 
-    if (pcmk__str_eq(value, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
-        // @COMPAT Deprecated since 2.1.8; disallowed by schema
-        pcmk__config_warn("Support for setting "
+    if ((rc != pcmk_rc_ok) || (rsc->priv->ban_after_failures < 0)) {
+        pcmk__config_warn("Using default (" PCMK_VALUE_INFINITY ") for "
+                          "resource %s meta-attribute "
                           PCMK_META_MIGRATION_THRESHOLD
-                          " to the explicit value '" PCMK_VALUE_DEFAULT
-                          "' is deprecated and will be removed in a "
-                          "future release (just leave it unset)");
+                          " because '%s' is not a valid value: %s",
+                          rsc->id, value, pcmk_rc_str(rc));
         rsc->priv->ban_after_failures = PCMK_SCORE_INFINITY;
-    } else {
-        int rc = pcmk_parse_score(value, &(rsc->priv->ban_after_failures),
-                                  PCMK_SCORE_INFINITY);
-
-        if ((rc != pcmk_rc_ok) || (rsc->priv->ban_after_failures < 0)) {
-            pcmk__config_warn("Using default (" PCMK_VALUE_INFINITY
-                              ") for resource %s meta-attribute "
-                              PCMK_META_MIGRATION_THRESHOLD
-                              " because '%s' is not a valid value: %s",
-                              rsc->id, value, pcmk_rc_str(rc));
-            rsc->priv->ban_after_failures = PCMK_SCORE_INFINITY;
-        }
     }
 }
 
