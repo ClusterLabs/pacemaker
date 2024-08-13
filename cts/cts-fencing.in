@@ -61,7 +61,7 @@ class FenceTest(Test):
         killall(["pacemakerd", "pacemaker-fenced"])
 
     def _start_daemons(self):
-        cmd = ["pacemaker-fenced", "-c", "-l", self.logpath]
+        cmd = ["pacemaker-fenced", "--stand-alone", "--logfile", self.logpath]
         if self.verbose:
             cmd += ["-V"]
             print("Starting %s" % " ".join(cmd))

@@ -58,7 +58,7 @@ pcmk__supported_format_t formats[] = {
 };
 
 static struct {
-    bool no_cib_connect;
+    gboolean stand_alone;
     gchar **log_files;
 } options;
 
@@ -434,14 +434,6 @@ stonith_cleanup(void)
     fenced_unregister_handlers();
 }
 
-static gboolean
-stand_alone_cpg_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-                   GError **error)
-{
-    options.no_cib_connect = true;
-    return TRUE;
-}
-
 struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = st_ipc_accept,
     .connection_created = NULL,
@@ -501,8 +493,9 @@ fencer_metadata(void)
 }
 
 static GOptionEntry entries[] = {
-    { "stand-alone-w-cpg", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-      stand_alone_cpg_cb, N_("Intended for use in regression testing only"), NULL },
+    { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+      &options.stand_alone, N_("Intended for use in regression testing only"),
+      NULL },
 
     { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
       &options.log_files, N_("Send logs to the additional named logfile"), NULL },
@@ -629,7 +622,7 @@ main(int argc, char **argv)
     }
     fenced_set_local_node(cluster->priv->node_name);
 
-    if (!options.no_cib_connect) {
+    if (!options.stand_alone) {
         setup_cib();
     }
 
