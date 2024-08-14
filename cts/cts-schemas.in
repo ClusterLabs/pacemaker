@@ -40,61 +40,63 @@ RNG_VALIDATOR="xmllint --noout --relaxng"
 XSLT_PROCESSOR="xsltproc --nonet"
 
 # Available test suites
-tests="test2to3"
+tests="test2to3 test3to4"
 
 #
 # commons
 #
 
 emit_result() {
-    _er_howmany=${1:?}  # how many errors (0/anything else incl. strings)
-    _er_subject=${2:?}
-    _er_prefix=${3-}
+    local howmany=${1:?}    # how many errors (0/anything else incl. strings)
+    local subject=${2:?}
+    local prefix=${3-}
 
-    if [ -n "$_er_prefix" ]; then
-        _er_prefix="${_er_prefix}: "
+    if [ -n "$prefix" ]; then
+        prefix="$prefix: "
     fi
 
-    if [ "$_er_howmany" = "0" ]; then
-        printf "%s%s finished OK\n" "${_er_prefix}" "${_er_subject}"
+    if [ "$howmany" = "0" ]; then
+        printf "%s%s finished OK\n" "$prefix" "$subject"
     else
-        printf "%s%s encountered ${_er_howmany} errors\n" \
-            "${_er_prefix}" "${_er_subject}"
+        printf "%s%s encountered $howmany errors\n" "$prefix" "$subject"
     fi
 }
 
 emit_error() {
-    _ee_msg=${1:?}
-    printf "%s\n" "${_ee_msg}" >&2
+    local msg=${1:?}
+    printf "%s\n" "$msg" >&2
 }
 
-# returns 1 + floor of base 2 logaritm for _lo0r_i in 1...255,
-# or 0 for _lo0r_i = 0
+# @TODO We can probably drop the log functions. It's unclear why they're needed.
+
+# returns 1 + floor of base 2 logarithm if the argument is between 1 and 255, or
+# 0 the argument is 0
 log2_or_0_return() {
-    _lo0r_i=${1:?}
-    return $(((!(_lo0r_i >> 1) && _lo0r_i) * 1 \
-                + (!(_lo0r_i >> 2) && _lo0r_i & (1 << 1)) * 2 \
-                + (!(_lo0r_i >> 3) && _lo0r_i & (1 << 2)) * 3 \
-                + (!(_lo0r_i >> 4) && _lo0r_i & (1 << 3)) * 4 \
-                + (!(_lo0r_i >> 5) && _lo0r_i & (1 << 4)) * 5 \
-                + (!(_lo0r_i >> 6) && _lo0r_i & (1 << 5)) * 6 \
-                + (!(_lo0r_i >> 7) && _lo0r_i & (1 << 6)) * 7 \
-                + !!(_lo0r_i >> 7) * 7 ))
+    local i=${1:?}
+
+    return $(((!(i >> 1) && i) * 1 \
+                + (!(i >> 2) && i & (1 << 1)) * 2 \
+                + (!(i >> 3) && i & (1 << 2)) * 3 \
+                + (!(i >> 4) && i & (1 << 3)) * 4 \
+                + (!(i >> 5) && i & (1 << 4)) * 5 \
+                + (!(i >> 6) && i & (1 << 5)) * 6 \
+                + (!(i >> 7) && i & (1 << 6)) * 7 \
+                + !!(i >> 7) * 7 ))
 }
 
 # rough addition of two base 2 logarithms
 log2_or_0_add() {
-    _lo0a_op1=${1:?}
-    _lo0a_op2=${2:?}
+    local op1=${1:?}
+    local op2=${2:?}
 
-    if [ "$_lo0a_op1" -gt "$_lo0a_op2" ]; then
-        return ${_lo0a_op1}
-    elif [ "$_lo0a_op2" -gt "$_lo0a_op1" ]; then
-        return ${_lo0a_op2}
-    elif [ "$_lo0a_op1" -gt 0 ]; then
-        return $((_lo0a_op1 + 1))
+    if [ "$op1" -gt "$op2" ]; then
+        return $op1
+    elif [ "$op2" -gt "$op1" ]; then
+        return $op2
+    elif [ "$op1" -gt 0 ]; then
+        return $((op1 + 1))
     else
-        return ${_lo0a_op1}
+        return $op1
     fi
 }
 
@@ -104,29 +106,35 @@ log2_or_0_add() {
 
 # stdin: input file per line
 test_cleaner() {
-    while read _tc_source; do
-        _tc_source_basename=$(basename "$_tc_source")
+    local source=""
+    local source_basename=""
+    local source_dir=""
+    local ref_dir=""
+    local ref_err_dir=""
 
-        _tc_source_dir=$(dirname "$_tc_source")
-        _tc_ref_dir="${_tc_source_dir/%xml/ref}"
-        _tc_ref_err_dir="${_tc_source_dir/%xml/ref.err}"
+    while read source; do
+        source_basename=$(basename "$source")
 
-        rm -f "$_tc_ref_dir/${_tc_source_basename%.*}-*.up" \
-            "_tc_ref_err_dir/${_tc_source_basename%.*}-*.up.err"
+        source_dir=$(dirname "$source")
+        ref_dir="${source_dir/%xml/ref}"
+        ref_err_dir="${source_dir/%xml/ref.err}"
+
+        rm -f "$ref_dir/${source_basename%.*}".up* \
+            "$ref_err_dir/${source_basename%.*}".up.err*
     done
 }
 
 test_explanation() {
-    _tsc_template=
+    local template=""
 
     while [ $# -gt 0 ]; do
         case "$1" in
-            -o=*) _tsc_template="$PCMK_schema_directory/upgrade-${1#-o=}.xsl";;
+            -o=*) template="$PCMK_schema_directory/upgrade-${1#-o=}.xsl";;
         esac
         shift
     done
 
-    $XSLT_PROCESSOR "$PCMK_schema_directory/upgrade-detail.xsl" "$_tsc_template"
+    $XSLT_PROCESSOR "$PCMK_schema_directory/upgrade-detail.xsl" "$template"
 }
 
 cleanup_module_error() {
@@ -142,63 +150,63 @@ cleanup_module_error() {
 }
 
 test_runner_upgrade_one() {
-    _truo_source=${1:?}
-    _truo_input=${2:?}
-    _truo_transform=${3:?}
-    _truo_mode=${4:?}  # extra modes wrt. "referential" outcome, see below
+    local source=${1:?}
+    local input=${2:?}
+    local transform=${3:?}
+    local mode=${4:?}  # extra modes wrt. "referential" outcome, see below
 
-    _truo_transform_num="${_truo_transform##*-}"
-    _truo_transform_num="${_truo_transform_num%.xsl}"
+    local transform_num="${transform##*-}"
+    transform_num="${transform_num%.xsl}"
 
-    _truo_source_dir=$(dirname "$_truo_source")
-    _truo_ref_dir="${_truo_source_dir/%xml/ref}"
-    _truo_ref_err_dir="${_truo_source_dir/%xml/ref.err}"
+    local source_dir=$(dirname "$source")
+    local ref_dir="${source_dir/%xml/ref}"
+    local ref_err_dir="${source_dir/%xml/ref.err}"
 
-    _truo_source_basename=$(basename "$_truo_source")
-    _truo_ref_basename="${_truo_source_basename%.*}.ref-${_truo_transform_num}"
-    _truo_ref_err_basename="${_truo_source_basename%.*}.ref.err-${_truo_transform_num}"
+    local source_basename=$(basename "$source")
+    local ref_basename="${source_basename%.*}.ref-$transform_num"
+    local ref_err_basename="${source_basename%.*}.ref.err-$transform_num"
 
-    _truo_ref="$_truo_ref_dir/$_truo_ref_basename"
-    _truo_ref_err="$_truo_ref_err_dir/$_truo_ref_err_basename"
+    local ref="$ref_dir/$ref_basename"
+    local ref_err="$ref_err_dir/$ref_err_basename"
 
-    _truo_target="${_truo_ref/.ref/.up}"
-    _truo_target_err="${_truo_ref_err/.ref.err/.up.err}"
+    local target="${ref/.ref/.up}"
+    local target_err="${ref_err/.ref.err/.up.err}"
 
-    _truo_proc_rc=0
-    _truo_diff_rc=0
+    local proc_rc=0
+    local diff_rc=0
 
-    if ! [ "$((_truo_mode & (1 << 0)))" -ne 0 ] \
-        && ! [ -f "${_truo_ref_err}" ]; then
+    local answer=""
 
-        _truo_ref_err=/dev/null
+    if ! [ "$((mode & (1 << 0)))" -ne 0 ] && ! [ -f "$ref_err" ]; then
+        ref_err="/dev/null"
     fi
 
-    $XSLT_PROCESSOR "$_truo_transform" "$_truo_input"   \
-        > "$_truo_target" 2> "$_truo_target_err"  \
-    || _truo_proc_rc=$?
+    $XSLT_PROCESSOR "$transform" "$input" > "$target" 2> "$target_err"  \
+        || proc_rc=$?
 
-    cleanup_module_error "$_truo_target_err"
+    cleanup_module_error "$target_err"
 
-    if [ "$_truo_proc_rc" -ne 0 ]; then
-        echo "$_truo_target_err"
-        return "$_truo_proc_rc"
+    if [ "$proc_rc" -ne 0 ]; then
+        echo "$target_err"
+        return "$proc_rc"
     fi
 
-    if [ "$_truo_mode" -ne 0 ]; then
-        if [ "$((_truo_mode & (1 << 0)))" -ne 0 ]; then
-            cp -a "${_truo_target}" "${_truo_ref}"
-            cp -a "${_truo_target_err}" "${_truo_ref_err}"
+    if [ "$mode" -ne 0 ]; then
+        if [ "$((mode & (1 << 0)))" -ne 0 ]; then
+            cp -a "$target" "$ref"
+            cp -a "$target_err" "$ref_err"
         fi
-        if [ "$((_truo_mode & (1 << 1)))" -ne 0 ]; then
-            { ${DIFF} "${_truo_input}" "${_truo_ref}" \
-              && printf '\n(files match)\n'; } | ${DIFF_PAGER} >&2
+        if [ "$((mode & (1 << 1)))" -ne 0 ]; then
+            { $DIFF "$input" "$ref" && printf '\n(files match)\n'; }    \
+                | $DIFF_PAGER >&2
+
             if [ $? -ne 0 ]; then
                 printf "\npager failure\n" >&2
                 return 1
             fi
             printf '\nIs comparison OK? ' >&2
-            if read _truo_answer </dev/tty; then
-                case "${_truo_answer}" in
+            if read answer </dev/tty; then
+                case "$answer" in
                     y|yes) ;;
                     *) echo "Answer not 'y' nor 'yes'" >&2; return 1;;
                 esac
@@ -207,66 +215,66 @@ test_runner_upgrade_one() {
             fi
         fi
 
-    elif [ -f "$_truo_ref" ] && [ -e "$_truo_ref_err" ]; then
-        _output=$(cat "$_truo_ref")
+    elif [ -f "$ref" ] && [ -e "$ref_err" ]; then
+        _output=$(cat "$ref")
 
-        echo "$_output" | $DIFF - "$_truo_target" >&2 || _truo_diff_rc=$?
-        if [ "$_truo_diff_rc" -eq 0 ]; then
-            $DIFF "$_truo_ref_err" "$_truo_target_err" >&2 || _truo_diff_rc=$?
+        echo "$_output" | $DIFF - "$target" >&2 || diff_rc=$?
+        if [ "$diff_rc" -eq 0 ]; then
+            $DIFF "$ref_err" "$target_err" >&2 || diff_rc=$?
         fi
-        if [ "$_truo_diff_rc" -ne 0 ]; then
+        if [ "$diff_rc" -ne 0 ]; then
             emit_error "Outputs differ from referential ones"
             echo "/dev/null"
             return 1
         fi
     else
-        emit_error "Referential file(s) missing: ${_truo_ref}"
+        emit_error "Referential file(s) missing: $ref"
         echo "/dev/null"
         return 1
     fi
 
-    echo "$_truo_target"
+    echo "$target"
 }
 
 # stdout: filename of the transformed file
 test_runner_upgrade() {
-    _tru_template=${1:?}
-    _tru_source=${2:?}  # filename
-    _tru_mode=${3:?}  # extra modes wrt. "referential" outcome, see below
+    local template=${1:?}
+    local source=${2:?} # filename
+    local mode=${3:?}   # extra modes wrt. "referential" outcome, see below
 
-    _tru_target=
-    _tru_rc=0
+    local target=""
+    local transform=""
+    local rc=0
 
-    _tru_transforms=$(ls "$PCMK_schema_directory"/upgrade-$_tru_template-*.xsl \
-                      | sort -n)
-    _tru_input=$(mktemp)
+    local transforms=$(ls "$PCMK_schema_directory"/upgrade-$template-*.xsl  \
+                        | grep -v "upgrade-$template-common" | sort -n)
+    local input=$(mktemp)
 
-    cp "$_tru_source" "$_tru_input"
+    cp "$source" "$input"
 
-    for transform in $_tru_transforms; do
-        _tru_target=$(test_runner_upgrade_one "$_tru_source" "$_tru_input"  \
-                        "$transform" "$_tru_mode")
-        _tru_rc=$?
+    for transform in $transforms; do
+        target=$(test_runner_upgrade_one "$source" "$input" "$transform"    \
+                    "$mode")
+        rc=$?
 
-        if [ $_tru_rc -ne 0 ]; then
+        if [ "$rc" -ne 0 ]; then
             break;
         fi
-        cp "$_tru_target" "$_tru_input"
+        cp "$target" "$input"
     done
 
-    rm -f "$_tru_input"
+    rm -f "$input"
 
-    echo "${_tru_target}"
-    return "$_tru_rc"
+    echo "$target"
+    return "$rc"
 }
 
 test_runner_validate() {
-    _trv_schema=${1:?}
-    _trv_target=${2:?}  # filename
+    local schema=${1:?}
+    local target=${2:?} # filename
 
-    if ! ${RNG_VALIDATOR} "${_trv_schema}" "${_trv_target}" \
-        2>/dev/null; then
-        ${RNG_VALIDATOR} "${_trv_schema}" "${_trv_target}"
+    if ! $RNG_VALIDATOR "$schema" "$target" 2>/dev/null; then
+        $RNG_VALIDATOR "$schema" "$target"
     fi
 }
 
@@ -276,64 +284,64 @@ test_runner_validate() {
 # -G ... see usage
 # stdin: input file per line
 test_runner() {
-    _tr_mode=0
-    _tr_ret=0
-    _tr_schema_o=
-    _tr_schema_t=
-    _tr_target=
-    _tr_template=
+    local template=""
+    local schema_o=""
+    local schema_t=""
+    local mode=0
+    local ret=0
+    local origin=""
+    local target=""
 
     while [ $# -gt 0 ]; do
         case "$1" in
-            -o=*) _tr_template="${1#-o=}"
-                  _tr_schema_o="$PCMK_schema_directory/pacemaker-${1#-o=}.rng";;
-            -t=*) _tr_schema_t="$PCMK_schema_directory/pacemaker-${1#-t=}.rng";;
-            -G) _tr_mode=$((_tr_mode | (1 << 0)));;
-            -D) _tr_mode=$((_tr_mode | (1 << 1)));;
+            -o=*) template="${1#-o=}"
+                  schema_o="$PCMK_schema_directory/pacemaker-${1#-o=}.rng";;
+            -t=*) schema_t="$PCMK_schema_directory/pacemaker-${1#-t=}.rng";;
+            -G) mode=$((mode | (1 << 0)));;
+            -D) mode=$((mode | (1 << 1)));;
         esac
         shift
     done
 
-    if [ ! -f "${_tr_schema_o:?}" ] || [ ! -f "${_tr_schema_t:?}" ]; then
+    if [ ! -f "${schema_o:?}" ] || [ ! -f "${schema_t:?}" ]; then
         emit_error "Origin and/or target schema missing, rerun make"
         return 1
     fi
 
-    while read _tr_origin; do
-        printf '%-60s' "${_tr_origin}... "
+    while read origin; do
+        printf '%-60s' "$origin... "
 
         # pre-validate
-        if ! test_runner_validate "${_tr_schema_o}" "${_tr_origin}"; then
-            _tr_ret=$((_tr_ret + 1)); echo "E:pre-validate"; continue
+        if ! test_runner_validate "$schema_o" "$origin"; then
+            ret=$((ret + 1)); echo "E:pre-validate"; continue
         fi
 
         # upgrade
-        if ! _tr_target=$(test_runner_upgrade "${_tr_template}" \
-                          "${_tr_origin}" "${_tr_mode}"); then
-            _tr_ret=$((_tr_ret + 1));
-            if [ -z "$_tr_target" ]; then
+        if ! target=$(test_runner_upgrade "$template" "$origin" "$mode"); then
+            ret=$((ret + 1));
+            if [ -z "$target" ]; then
                 break
             fi
 
             echo "E:upgrade"
-            if [ -s "$_tr_target" ]; then
+            if [ -s "$target" ]; then
                 echo ---
-                cat "$_tr_target" || :
+                cat "$target" || :
                 echo ---
             fi
             continue
         fi
 
         # post-validate
-        if ! test_runner_validate "${_tr_schema_t}" "${_tr_target}"; then
-            _tr_ret=$((_tr_ret + 1)); echo "E:post-validate"; continue
+        if ! test_runner_validate "$schema_t" "$target"; then
+            ret=$((ret + 1)); echo "E:post-validate"; continue
         fi
 
         echo "OK"
-        echo "$_tr_origin" | test_cleaner
+        echo "$origin" | test_cleaner
     done
 
-    log2_or_0_return ${_tr_ret}
+    log2_or_0_return "$ret"
 }
 
 #
@@ -344,25 +352,56 @@ test_runner() {
 #
 
 test2to3() {
-    _t23_pattern=
+    local spec=""
+    local pattern=""
 
-    while read _t23_spec; do
-        _t23_spec=${_t23_spec%.xml}
-        _t23_spec=${_t23_spec%\*}
-        _t23_pattern="${_t23_pattern} -name ${_t23_spec}*.xml -o"
+    while read spec; do
+        spec=${spec%.xml}
+        spec=${spec%\*}
+        pattern="$pattern -name ${spec}*.xml -o"
     done
 
-    if [ -n "$_t23_pattern" ]; then
-        _t23_pattern="( ${_t23_pattern%-o} )"
+    if [ -n "$pattern" ]; then
+        pattern="( ${pattern%-o} )"
     fi
 
     find "$suites_dir/test-2/xml" -name xml -o -type d -prune    \
-            -o -name '*.xml' ${_t23_pattern} -print \
+            -o -name '*.xml' $pattern -print \
         | env LC_ALL=C sort \
         | { case " $* " in
                 *\ -C\ *) test_cleaner;;
                 *\ -X\ *) test_explanation -o=2.10;;
                 *) test_runner -o=2.10 -t=3.0 "$@" || return $?;;
+            esac; }
+}
+
+#
+# -C
+# -X
+# stdin: granular test specification(s) if any
+#
+
+test3to4() {
+    local spec=""
+    local pattern=""
+
+    while read spec; do
+        spec=${spec%.xml}
+        spec=${spec%\*}
+        pattern="$pattern -name ${spec}*.xml -o"
+    done
+
+    if [ -n "$pattern" ]; then
+        pattern="( ${pattern%-o} )"
+    fi
+
+    find "$suites_dir/test-3/xml" -name xml -o -type d -prune    \
+            -o -name '*.xml' $pattern -print \
+        | env LC_ALL=C sort \
+        | { case " $* " in
+                *\ -C\ *) test_cleaner;;
+                *\ -X\ *) test_explanation -o=3.10;;
+                *) test_runner -o=3.10 -t=4.0 "$@" || return $?;;
             esac; }
 }
 
@@ -373,85 +412,89 @@ test2to3() {
 # option-likes ... options to be passed down
 # argument-likes ... drives a test selection
 test_suite() {
-    _ts_pass=
-    _ts_select=
-    _ts_select_full=
-    _ts_test_specs=
-    _ts_global_ret=0
-    _ts_ret=0
+    local pass=""
+    local select=""
+    local select_full=""
+    local spec=""
+    local _test=""
+    local global_ret=0
+    local ret=0
+
+    local test_spec=""
+    local test_specs=""
+
+    local test_full=""
 
     while [ $# -gt 0 ]; do
         case "$1" in
             -) printf '%s\n' 'waiting for tests specified at stdin...';
-                while read _ts_spec; do
-                    _ts_select="${_ts_spec}@$1"
+                while read spec; do
+                    select="${spec}@$1"
                 done;;
-            -*) _ts_pass="${_ts_pass} $1";;
-            *) _ts_select_full="${_ts_select_full}@$1"
-               _ts_select="${_ts_select}@${1%%/*}";;
+            -*) pass="$pass $1";;
+            *) select_full="${select_full}@$1"
+               select="${select}@${1%%/*}";;
         esac
         shift
     done
 
-    # _ts_select contains a '@'-delimited list of test suite names from CLI
-    _ts_select="${_ts_select}@"
+    # select contains a '@'-delimited list of test suite names from CLI
+    select="${select}@"
 
-    # _ts_select_full contains a '@'-delimited list of test names
-    _ts_select_full="${_ts_select_full}@"
+    # select_full contains a '@'-delimited list of test names
+    select_full="${select_full}@"
 
-    for _ts_test in ${tests}; do
-
-        _ts_test_specs=
+    for _test in ${tests}; do
         while true; do
-            case "${_ts_select}" in
-                *@${_ts_test}@*)
-                    # A known test suite _ts_test was found in the list of
-                    # requested test suites _ts_select. Strip it out of
-                    # _ts_select.
+            case "$select" in
+                *@${_test}@*)
+                    # A known test suite _test was found in the list of
+                    # requested test suites select. Strip it out of select.
                     #
                     # The purpose of this seems to be to prevent the later
-                    # _ts_select_full loop from selecting specific tests from
-                    # this suite, if the user also requested the entire suite.
+                    # select_full loop from selecting specific tests from this
+                    # suite, if the user also requested the entire suite.
 
-                    _ts_test_specs="${_ts_select%%@${_ts_test}@*}"\
-"@${_ts_select#*@${_ts_test}@}"
+                    test_specs="${select%%@${_test}@*}@${select#*@${_test}@}"
 
-                    if [ "$_ts_test_specs" = "@" ]; then
-                        _ts_select=  # nothing left
+                    if [ "$test_specs" = "@" ]; then
+                        select=  # nothing left
                     else
-                        _ts_select="$_ts_test_specs"
+                        select="$test_specs"
                     fi
                     continue
                     ;;
                 @)
-                    case "${_ts_test}" in test*) break;; esac  # filter
+                    case "$_test" in
+                        test*) break;;
+                    esac  # filter
                     ;;
             esac
 
-            if [ -n "$_ts_test_specs" ]; then
+            if [ -n "$test_specs" ]; then
                 break
             fi
             continue 2  # move on to matching with next local test
         done
 
-        _ts_test_specs=
+        test_specs=
         while true; do
-            case "${_ts_select_full}" in
-                *@${_ts_test}/*)
+            case "$select_full" in
+                *@${_test}/*)
                     # A test was requested from a known test suite. This does
                     # not mean the requested test actually exists, but rather
                     # that it was requested as the form "<known_suite>/...".
 
                     # Strip extraneous data from test path
-                    _ts_test_full="${_ts_test}/${_ts_select_full#*@${_ts_test}/}"
-                    _ts_test_full="${_ts_test_full%%@*}"
+                    test_full="${_test}/${select_full#*@${_test}/}"
+                    test_full="${test_full%%@*}"
 
-                    # Strip the requested test out of _ts_select_full
-                    _ts_select_full="${_ts_select_full%%@${_ts_test_full}@*}"\
-"@${_ts_select_full#*@${_ts_test_full}@}"
+                    # Strip the requested test out of select_full
+                    select_full="${select_full%%@${test_full}@*}"\
+"@${select_full#*@${test_full}@}"
 
                     # Strip the test suite name and slash from the test spec
-                    _ts_test_specs="${_ts_test_specs} ${_ts_test_full#*/}"
+                    test_specs="$test_specs ${test_full#*/}"
                     ;;
                 *)
                     break
@@ -460,27 +503,26 @@ test_suite() {
         done
 
         # Feed the test specs (if any) as stdin to the respective test suite
-        # function _ts_test()
-        for _ts_test_spec in ${_ts_test_specs}; do
-            printf '%s\n' "${_ts_test_spec}"
-        done | "${_ts_test}" ${_ts_pass} || _ts_ret=$?
+        # function _test()
+        for test_spec in $test_specs; do
+            printf '%s\n' "$test_spec"
+        done | "$_test" $pass || ret=$?
 
-        if [ "$_ts_ret" = 0 ]; then
-            emit_result "$_ts_ret" "$_ts_test"
+        if [ "$ret" = 0 ]; then
+            emit_result "$ret" "$_test"
         else
-            emit_result "at least 2^$((_ts_ret - 1))" "$_ts_test"
+            emit_result "at least 2^$((ret - 1))" "$_test"
         fi
 
-        log2_or_0_add ${_ts_global_ret} ${_ts_ret}
-        _ts_global_ret=$?
+        log2_or_0_add "$global_ret" "$ret"
+        global_ret=$?
     done
-    if [ -n "${_ts_select#@}" ]; then
-        emit_error "Non-existing test(s):$(echo "${_ts_select}" \
-                                            | tr '@' ' ')"
-        log2_or_0_add ${_ts_global_ret} 1 || _ts_global_ret=$?
+    if [ -n "${select#@}" ]; then
+        emit_error "Non-existing test(s):$(echo "${select}" | tr '@' ' ')"
+        log2_or_0_add "$global_ret" 1 || global_ret=$?
     fi
 
-    return ${_ts_global_ret}
+    return "$global_ret"
 }
 
 # NOTE: big letters are dedicated for per-test-set behaviour,
@@ -500,32 +542,32 @@ usage() {
 }
 
 main() {
-    _main_pass=
-    _main_bailout=0
-    _main_ret=0
+    local pass=""
+    local bailout=0
+    local ret=0
 
     while [ $# -gt 0 ]; do
         case "$1" in
             -h) usage; exit;;
-            -C|-G|-X) _main_bailout=1;;
+            -C|-G|-X) bailout=1;;
         esac
-        _main_pass="${_main_pass} $1"
+        pass="$pass $1"
         shift
     done
 
-    test_suite ${_main_pass} || _main_ret=$?
+    test_suite $pass || ret=$?
 
-    if [ "$_main_bailout" -eq 0 ]; then
-        test_suite -C $_main_pass >/dev/null || true
+    if [ "$bailout" -eq 0 ]; then
+        test_suite -C $pass >/dev/null || true
     fi
 
-    if [ "$_main_ret" = 0 ]; then
-        emit_result "$_main_ret" "Overall suite"
+    if [ "$ret" = 0 ]; then
+        emit_result "$ret" "Overall suite"
     else
-        emit_result "at least 2^$((_main_ret - 1))" "Overall suite"
+        emit_result "at least 2^$((ret - 1))" "Overall suite"
     fi
 
-    return ${_main_ret}
+    return "$ret"
 }
 
 main "$@"

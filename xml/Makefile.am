@@ -115,12 +115,14 @@ CIB_base		= cib 			\
 API_abs_files		= $(foreach base,$(API_base),$(wildcard $(abs_srcdir)/api/$(base)-*.rng))
 CIB_abs_files		= $(foreach base,$(CIB_base),$(wildcard $(abs_srcdir)/$(base).rng $(abs_srcdir)/$(base)-*.rng))
 CIB_abs_xsl		= $(abs_srcdir)/upgrade-1.3-0.xsl		\
-			  $(wildcard $(abs_srcdir)/upgrade-2.10-[0-2].xsl)
+			  $(wildcard $(abs_srcdir)/upgrade-2.10-[0-2].xsl)	\
+			  $(wildcard $(abs_srcdir)/upgrade-3.10-*.xsl)
 MON_abs_files 		= $(abs_srcdir)/crm_mon.rng
 API_files		= $(foreach base,$(API_base),$(wildcard $(srcdir)/api/$(base)-*.rng))
 CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(srcdir)/$(base).rng $(srcdir)/$(base)-*.rng))
 CIB_xsl			= $(srcdir)/upgrade-1.3-0.xsl			\
-			  $(wildcard $(srcdir)/upgrade-2.10-[0-2].xsl)
+			  $(wildcard $(srcdir)/upgrade-2.10-[0-2].xsl)	\
+			  $(wildcard $(srcdir)/upgrade-3.10-*.xsl)
 MON_files 		= $(srcdir)/crm_mon.rng
 
 # Sorted lists of all numeric schema versions
