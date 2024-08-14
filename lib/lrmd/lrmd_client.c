@@ -1321,6 +1321,8 @@ tls_handshake_failed(lrmd_t *lrmd, int tls_rc, int rc)
              "Pacemaker Remote server %s:%d failed: %s",
              native->server, native->port,
              (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
+    report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+
     gnutls_deinit(*native->remote->tls_session);
     gnutls_free(native->remote->tls_session);
     native->remote->tls_session = NULL;
@@ -1451,7 +1453,6 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
     }
 
     if (tls_client_handshake(lrmd) != pcmk_rc_ok) {
-        report_async_connection_result(lrmd, -EKEYREJECTED);
         return;
     }
 
@@ -1578,10 +1579,6 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
             break;
         case pcmk__client_tls:
             rc = lrmd_tls_connect_async(lrmd, timeout);
-            if (rc) {
-                /* connection failed, report rc now */
-                report_async_connection_result(lrmd, rc);
-            }
             break;
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
