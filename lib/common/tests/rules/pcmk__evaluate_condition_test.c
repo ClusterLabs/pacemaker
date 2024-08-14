@@ -172,10 +172,11 @@ op_expression(void **state)
 }
 
 #define EXPR_SUBRULE                                        \
-        "<" PCMK_XE_RULE " " PCMK_XA_ID "='r' "             \
-        "  <" PCMK_XE_OP_EXPRESSION " " PCMK_XA_ID "='e' "  \
-        PCMK_XA_NAME "='" PCMK_ACTION_MONITOR "' "          \
-        PCMK_XA_INTERVAL "='10s' /> />"
+        "<" PCMK_XE_RULE " " PCMK_XA_ID "='r'> "            \
+          "<" PCMK_XE_OP_EXPRESSION " " PCMK_XA_ID "='e' "  \
+              PCMK_XA_NAME "='" PCMK_ACTION_MONITOR "' "    \
+              PCMK_XA_INTERVAL "='10s' /> "                 \
+        "</" PCMK_XE_RULE ">"
 
 static void
 subrule(void **state)
