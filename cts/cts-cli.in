@@ -3303,13 +3303,13 @@ def results(regs, save, verbose):
     for r in regs:
         r.write()
 
-        r.diff()
-        if not r.identical:
-            output_differs += 1
-
         if save:
             dest = "%s/cli/regression.%s.exp" % (test_home, r.name)
             copyfile(r.results_file, dest)
+
+        r.diff()
+        if not r.identical:
+            output_differs += 1
 
     return output_differs
 
