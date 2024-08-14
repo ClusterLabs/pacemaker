@@ -30,16 +30,10 @@ crm_rule: --check requires use of --rule=
 pcmk__log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
 pcmk__log_xmllib_err 	error: XML Error: invalidxml
 pcmk__log_xmllib_err 	error: XML Error: ^
-pcmk__log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
-pcmk__log_xmllib_err 	error: XML Error: invalidxml
-pcmk__log_xmllib_err 	error: XML Error: ^
 crm_rule: Couldn't parse input string: invalidxml
 =#=#=#= End test: crm_rule given invalid input XML - Invalid data given (65) =#=#=#=
 * Passed: crm_rule              - crm_rule given invalid input XML
 =#=#=#= Begin test: crm_rule given invalid input XML (XML) =#=#=#=
-pcmk__log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
-pcmk__log_xmllib_err 	error: XML Error: invalidxml
-pcmk__log_xmllib_err 	error: XML Error: ^
 pcmk__log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
 pcmk__log_xmllib_err 	error: XML Error: invalidxml
 pcmk__log_xmllib_err 	error: XML Error: ^
@@ -56,16 +50,10 @@ pcmk__log_xmllib_err 	error: XML Error: ^
 pcmk__log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
 pcmk__log_xmllib_err 	error: XML Error: invalidxml
 pcmk__log_xmllib_err 	error: XML Error: ^
-pcmk__log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
-pcmk__log_xmllib_err 	error: XML Error: invalidxml
-pcmk__log_xmllib_err 	error: XML Error: ^
 crm_rule: Couldn't parse input from STDIN
 =#=#=#= End test: crm_rule given invalid input XML on stdin - Invalid data given (65) =#=#=#=
 * Passed: crm_rule              - crm_rule given invalid input XML on stdin
 =#=#=#= Begin test: crm_rule given invalid input XML on stdin (XML) =#=#=#=
-pcmk__log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
-pcmk__log_xmllib_err 	error: XML Error: invalidxml
-pcmk__log_xmllib_err 	error: XML Error: ^
 pcmk__log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
 pcmk__log_xmllib_err 	error: XML Error: invalidxml
 pcmk__log_xmllib_err 	error: XML Error: ^
