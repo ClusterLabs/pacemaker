@@ -383,7 +383,7 @@ class Test:
             raise OutputFoundError(output)
 
         if args['validate']:
-            output = validate(output, args['check_rng'], args['verbose'])
+            output = validate(output, args['check_rng'], self.verbose)
 
             if self.verbose:
                 print(output)
