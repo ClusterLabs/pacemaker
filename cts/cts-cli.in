@@ -280,7 +280,7 @@ def sanitize_output(s):
         (r'(@validate-with=pacemaker-)[0-9.]+,', r'\1X,'),
         (r' version="[^"]*"', r' version=""'),
         (r'\(version .*\)', r'(version)'),
-        (r'--xml-file .*cts/cli/(.*)\.xml', r'--xml-file \1.xml'),
+        (r'--xml-file .*cli/(.*)\.xml', r'--xml-file \1.xml'),
     ]
 
     new_output = []
