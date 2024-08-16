@@ -6,10 +6,7 @@
 # This source code is licensed under the GNU Lesser General Public License
 # version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
 #
-
-MAINTAINERCLEANFILES = Makefile.in
-
-AM_CPPFLAGS			= -I$(top_srcdir)/include
+include $(top_srcdir)/mk/common.mk
 
 lib_LTLIBRARIES			= libcrmservice.la
 noinst_HEADERS			= $(wildcard *.h)

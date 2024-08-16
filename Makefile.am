@@ -60,8 +60,6 @@ SUBDIRS	= $(CORE) 	\
 	  maint 	\
 	  tests
 
-AM_CPPFLAGS		= -I$(top_srcdir)/include
-
 doc_DATA = README.markdown \
 	   COPYING
 
