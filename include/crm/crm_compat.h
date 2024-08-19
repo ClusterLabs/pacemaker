@@ -12,6 +12,7 @@
 
 #include <glib.h>               // GList
 
+#include <crm_config.h>         // PCMK_SCHEMA_DIR
 #include <crm/common/scores.h>  // PCMK_SCORE_INFINITY
 
 #ifdef __cplusplus
@@ -29,6 +30,9 @@ extern "C" {
 
 //! \deprecated Do not use (will be removed in a future release)
 #define CRM_SYSTEM_STONITHD "stonithd"
+
+//! \deprecated Use PCMK_SCHEMA_DIR instead
+#define CRM_SCHEMA_DIRECTORY PCMK_SCHEMA_DIR
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use PCMK_SCORE_INFINITY instead
