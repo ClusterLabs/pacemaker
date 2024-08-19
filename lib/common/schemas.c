@@ -1170,12 +1170,6 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform)
     return rc;
 }
 
-int
-pcmk_update_configured_schema(xmlNode **xml)
-{
-    return pcmk__update_configured_schema(xml, true);
-}
-
 /*!
  * \brief Update XML from its configured schema to the latest major series
  *
@@ -1521,7 +1515,14 @@ pcmk__warn_if_schema_deprecated(const char *schema)
 gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
-    int rc = pcmk__update_configured_schema(xml, to_logs);
+    pcmk__output_t *out = NULL;
+
+    int rc = pcmk__xml_output_new(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    rc = pcmk__update_configured_schema(xml, out);
 
     if (best_version != NULL) {
         const char *name = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);

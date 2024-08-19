@@ -24,7 +24,7 @@ extern "C" {
  */
 
 int
-pcmk_update_configured_schema(xmlNode **xml);
+pcmk_update_configured_schema(xmlNode **xml, bool to_logs);
 
 #ifdef __cplusplus
 }
