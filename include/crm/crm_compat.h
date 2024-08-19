@@ -12,7 +12,7 @@
 
 #include <glib.h>               // GList
 
-#include <crm_config.h>         // PCMK_SCHEDULER_INPUT_DIR, PCMK_SCHEMA_DIR
+#include <crm_config.h>         // PCMK_OCF_ROOT, PCMK_SCHEDULER_INPUT_DIR, PCMK_SCHEMA_DIR
 #include <crm/common/scores.h>  // PCMK_SCORE_INFINITY
 
 #ifdef __cplusplus
@@ -40,6 +40,9 @@ extern "C" {
 
 //! \deprecated Use PCMK_SCHEDULER_INPUT_DIR instead
 #define PE_STATE_DIR PCMK_SCHEDULER_INPUT_DIR
+
+//! \deprecated Use PCMK_OCF_ROOT instead
+#define OCF_ROOT_DIR PCMK_OCF_ROOT
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
