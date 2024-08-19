@@ -1,11 +1,10 @@
 =#=#=#= Begin test: Verbosely verify a file-specified configuration with an unallowed fencing level ID =#=#=#=
 warning: Ignoring topology registration with invalid level 10
-Warnings found during check: config not valid
+Configuration invalid (with warnings)
 =#=#=#= End test: Verbosely verify a file-specified configuration with an unallowed fencing level ID - Invalid configuration (78) =#=#=#=
 * Passed: crm_verify            - Verbosely verify a file-specified configuration with an unallowed fencing level ID
 =#=#=#= Begin test: Verify a file-specified invalid configuration =#=#=#=
-Errors found during check: config not valid
--V may provide more details
+Configuration invalid (with errors) (-V may provide more detail)
 =#=#=#= End test: Verify a file-specified invalid configuration - Invalid configuration (78) =#=#=#=
 * Passed: crm_verify            - Verify a file-specified invalid configuration
 =#=#=#= Begin test: Verify a file-specified invalid configuration (XML) =#=#=#=
@@ -15,7 +14,7 @@ Errors found during check: config not valid
       <error>error: Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
       <error>error: Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
       <error>error: CIB did not pass schema validation</error>
-      <error>Errors found during check: config not valid</error>
+      <error>Configuration invalid (with errors)</error>
     </errors>
   </status>
 </pacemaker-result>
@@ -26,7 +25,7 @@ unpack_config 	warning: Blind faith: not fencing unseen nodes
 error: Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource
 error: Ignoring <clone> resource 'test2-clone' because configuration is invalid
 error: CIB did not pass schema validation
-Errors found during check: config not valid
+Configuration invalid (with errors)
 =#=#=#= End test: Verify a file-specified invalid configuration (verbose) - Invalid configuration (78) =#=#=#=
 * Passed: crm_verify            - Verify a file-specified invalid configuration (verbose)
 =#=#=#= Begin test: Verify a file-specified invalid configuration (verbose) (XML) =#=#=#=
@@ -37,7 +36,7 @@ unpack_config 	warning: Blind faith: not fencing unseen nodes
       <error>error: Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
       <error>error: Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
       <error>error: CIB did not pass schema validation</error>
-      <error>Errors found during check: config not valid</error>
+      <error>Configuration invalid (with errors)</error>
     </errors>
   </status>
 </pacemaker-result>
@@ -68,7 +67,7 @@ unpack_config 	warning: Blind faith: not fencing unseen nodes
       <error>warning: Node pcmk-1 is unclean but cannot be fenced</error>
       <error>warning: Node pcmk-2 is unclean but cannot be fenced</error>
       <error>error: CIB did not pass schema validation</error>
-      <error>Errors found during check: config not valid</error>
+      <error>Configuration invalid (with errors)</error>
     </errors>
   </status>
 </pacemaker-result>
