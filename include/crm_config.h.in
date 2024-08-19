@@ -41,7 +41,7 @@
 #undef CRM_CONFIG_DIR
 
 /* Where to keep scheduler outputs */
-#undef PE_STATE_DIR
+#undef PCMK_SCHEDULER_INPUT_DIR
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 /* Location to store core files produced by Pacemaker daemons */

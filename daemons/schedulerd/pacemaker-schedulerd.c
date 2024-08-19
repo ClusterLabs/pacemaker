@@ -138,11 +138,12 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker scheduler");
 
-    if (pcmk__daemon_can_write(PE_STATE_DIR, NULL) == FALSE) {
-        crm_err("Terminating due to bad permissions on " PE_STATE_DIR);
+    if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
+        crm_err("Terminating due to bad permissions on " PCMK_SCHEDULER_INPUT_DIR);
         exit_code = CRM_EX_FATAL;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "ERROR: Bad permissions on %s (see logs for details)", PE_STATE_DIR);
+                    "ERROR: Bad permissions on %s (see logs for details)",
+                    PCMK_SCHEDULER_INPUT_DIR);
         goto done;
     }
 

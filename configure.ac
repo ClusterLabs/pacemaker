@@ -815,10 +815,10 @@ AC_DEFINE_UNQUOTED([CRM_BLACKBOX_DIR], ["$CRM_BLACKBOX_DIR"],
                    [Where to keep blackbox dumps])
 AC_SUBST(CRM_BLACKBOX_DIR)
 
-PE_STATE_DIR="${localstatedir}/lib/pacemaker/pengine"
-AC_DEFINE_UNQUOTED([PE_STATE_DIR], ["$PE_STATE_DIR"],
+PCMK_SCHEDULER_INPUT_DIR="${localstatedir}/lib/pacemaker/pengine"
+AC_DEFINE_UNQUOTED([PCMK_SCHEDULER_INPUT_DIR], ["$PCMK_SCHEDULER_INPUT_DIR"],
                    [Where to keep scheduler outputs])
-AC_SUBST(PE_STATE_DIR)
+AC_SUBST(PCMK_SCHEDULER_INPUT_DIR)
 
 CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
 AC_DEFINE_UNQUOTED([CRM_CONFIG_DIR], ["$CRM_CONFIG_DIR"],

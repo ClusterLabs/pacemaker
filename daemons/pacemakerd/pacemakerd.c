@@ -155,7 +155,7 @@ create_pcmk_dirs(void)
         PCMK__PERSISTENT_DATA_DIR,  // core/blackbox/scheduler/CIB files
         CRM_CORE_DIR,               // core files
         CRM_BLACKBOX_DIR,           // blackbox dumps
-        PE_STATE_DIR,               // scheduler inputs
+        PCMK_SCHEDULER_INPUT_DIR,   // scheduler inputs
         CRM_CONFIG_DIR,             // the Cluster Information Base (CIB)
         // Don't build PCMK__OCF_TMP_DIR the executor will do it
         NULL

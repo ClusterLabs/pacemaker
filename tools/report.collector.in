@@ -1,7 +1,7 @@
 #
 # Originally based on hb_report
 # Copyright 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
-# Later changes copyright 2010-2018 the Pacemaker project contributors
+# Later changes copyright 2010-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -400,13 +400,13 @@ getbacktraces() {
 }
 
 getpeinputs() {
-    if [ -n "$PE_STATE_DIR" ]; then
+    if [ -n "$PCMK_SCHEDULER_INPUT_DIR" ]; then
         flist=$(
-            find_files "$PE_STATE_DIR" "$1" "$2" | sed "s,`dirname $PE_STATE_DIR`/,,g"
+            find_files "$PCMK_SCHEDULER_INPUT_DIR" "$1" "$2" | sed "s,`dirname $PCMK_SCHEDULER_INPUT_DIR`/,,g"
         )
         if [ "$flist" ]; then
-            (cd $(dirname "$PE_STATE_DIR") && tar cf - $flist) | (cd "$3" && tar xf -)
-            debug "found `echo $flist | wc -w` scheduler input files in $PE_STATE_DIR"
+            (cd $(dirname "$PCMK_SCHEDULER_INPUT_DIR") && tar cf - $flist) | (cd "$3" && tar xf -)
+            debug "found `echo $flist | wc -w` scheduler input files in $PCMK_SCHEDULER_INPUT_DIR"
         fi
     fi
 }
@@ -662,7 +662,7 @@ get_logfiles() {
 
 essential_files() {
 	cat<<EOF
-d $PE_STATE_DIR 0750 hacluster haclient
+d $PCMK_SCHEDULER_INPUT_DIR 0750 hacluster haclient
 d $CRM_CONFIG_DIR 0750 hacluster haclient
 d $CRM_STATE_DIR 0750 hacluster haclient
 EOF

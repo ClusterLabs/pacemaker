@@ -114,7 +114,7 @@ handle_pecalc_request(pcmk__request_t *request)
         series_wrap = series[series_id].wrap;
     }
 
-    if (pcmk__read_series_sequence(PE_STATE_DIR, series[series_id].name,
+    if (pcmk__read_series_sequence(PCMK_SCHEDULER_INPUT_DIR, series[series_id].name,
                                    &seq) != pcmk_rc_ok) {
         // @TODO maybe handle errors better ...
         seq = 0;
@@ -138,7 +138,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
     } else if (!is_repoke) { // Input changed, save to disk
         free(filename);
-        filename = pcmk__series_filename(PE_STATE_DIR,
+        filename = pcmk__series_filename(PCMK_SCHEDULER_INPUT_DIR,
                                          series[series_id].name, seq, true);
     }
 
@@ -157,7 +157,7 @@ handle_pecalc_request(pcmk__request_t *request)
         crm_xml_add_ll(xml_data, PCMK_XA_EXECUTION_DATE,
                        (long long) execution_date);
         pcmk__xml_write_file(xml_data, filename, true);
-        pcmk__write_series_sequence(PE_STATE_DIR, series[series_id].name,
+        pcmk__write_series_sequence(PCMK_SCHEDULER_INPUT_DIR, series[series_id].name,
                                     ++seq, series_wrap);
     }
 
