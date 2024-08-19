@@ -3,7 +3,7 @@
 #
 #	Dummy LSB RA. Does nothing but touch and remove a state file
 #
-# Copyright 2006-2021 the Pacemaker project contributors
+# Copyright 2006-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -14,7 +14,7 @@
 # Initialization:
 
 desc="Dummy LSB service"
-. @OCF_ROOT_DIR@/resource.d/heartbeat/.ocf-directories
+. @PCMK_OCF_ROOT@/resource.d/heartbeat/.ocf-directories
 : ${HA_VARRUN=/tmp} # Backup in case .ocf-directories doesn't exist
 
 #######################################################################

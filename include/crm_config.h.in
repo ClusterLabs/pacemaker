@@ -57,7 +57,7 @@
 #undef PACEMAKER_CONFIG_DIR
 
 /* Where OCF resource agents and libraries can be found */
-#undef OCF_ROOT_DIR
+#undef PCMK_OCF_ROOT
 
 /****** Features ******/
 

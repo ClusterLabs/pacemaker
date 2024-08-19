@@ -440,20 +440,20 @@ dnl /usr/lib rather than libdir because it's determined by the OCF project and
 dnl not Pacemaker. Even if a user wants to install Pacemaker to /usr/local or
 dnl such, the OCF agents will be expected in their usual location. However, we
 dnl do give the user the option to override it.
-PKG_CHECK_VAR([OCF_ROOT_DIR], [resource-agents], [ocfrootdir], [],
-              [OCF_ROOT_DIR="/usr/lib/ocf"])
+PKG_CHECK_VAR([PCMK_OCF_ROOT], [resource-agents], [ocfrootdir], [],
+              [PCMK_OCF_ROOT="/usr/lib/ocf"])
 AC_ARG_WITH([ocfdir],
     [AS_HELP_STRING([--with-ocfdir=DIR], m4_normalize([
         OCF resource agent root directory (advanced option: changing this
         may break other cluster components unless similarly configured)
         @<:@value from resource-agents package if available otherwise
         /usr/lib/ocf@:>@]))],
-    [ OCF_ROOT_DIR="$withval" ]
+    [ PCMK_OCF_ROOT="$withval" ]
 )
 
 dnl Get default from resource-agents if possible
 PKG_CHECK_VAR([PCMK__OCF_RA_PATH], [resource-agents], [ocfrapath], [],
-              [PCMK__OCF_RA_PATH="$OCF_ROOT_DIR/resource.d"])
+              [PCMK__OCF_RA_PATH="$PCMK_OCF_ROOT/resource.d"])
 AC_ARG_WITH([ocfrapath],
     [AS_HELP_STRING([--with-ocfrapath=DIR], m4_normalize([
         OCF resource agent directories (colon-separated) to search
@@ -462,7 +462,7 @@ AC_ARG_WITH([ocfrapath],
     [ PCMK__OCF_RA_PATH="$withval" ]
 )
 
-OCF_RA_INSTALL_DIR="$OCF_ROOT_DIR/resource.d"
+OCF_RA_INSTALL_DIR="$PCMK_OCF_ROOT/resource.d"
 AC_ARG_WITH([ocfrainstalldir],
     [AS_HELP_STRING([--with-ocfrainstalldir=DIR], m4_normalize([
         OCF installation directory for Pacemakers resource agents
@@ -775,9 +775,9 @@ AC_SUBST(PCMK__FENCE_BINDIR)
 AC_DEFINE_UNQUOTED([PCMK__FENCE_BINDIR], ["$PCMK__FENCE_BINDIR"],
                    [Location for executable fence agents])
 
-expand_path_option OCF_ROOT_DIR
-AC_SUBST(OCF_ROOT_DIR)
-AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
+expand_path_option PCMK_OCF_ROOT
+AC_SUBST(PCMK_OCF_ROOT)
+AC_DEFINE_UNQUOTED([PCMK_OCF_ROOT], ["$PCMK_OCF_ROOT"],
                    [OCF root directory for resource agents and libraries])
 
 expand_path_option PCMK__OCF_RA_PATH
@@ -2175,7 +2175,7 @@ AC_MSG_NOTICE([  Header files             = ${includedir}])
 AC_MSG_NOTICE([  Arch-independent files   = ${datadir}])
 AC_MSG_NOTICE([  State information        = ${localstatedir}])
 AC_MSG_NOTICE([  System configuration     = ${sysconfdir}])
-AC_MSG_NOTICE([  OCF agents               = ${OCF_ROOT_DIR}])
+AC_MSG_NOTICE([  OCF agents               = ${PCMK_OCF_ROOT}])
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_NOTICE([  HA user name             = ${CRM_DAEMON_USER}])

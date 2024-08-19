@@ -449,7 +449,7 @@ add_action_env_vars(const svc_action_t *op)
 
     set_ocf_env("OCF_RA_VERSION_MAJOR", PCMK_OCF_MAJOR_VERSION, NULL);
     set_ocf_env("OCF_RA_VERSION_MINOR", PCMK_OCF_MINOR_VERSION, NULL);
-    set_ocf_env("OCF_ROOT", OCF_ROOT_DIR, NULL);
+    set_ocf_env("OCF_ROOT", PCMK_OCF_ROOT, NULL);
     set_ocf_env("OCF_EXIT_REASON_PREFIX", PCMK_OCF_REASON_PREFIX, NULL);
 
     if (op->rsc) {
