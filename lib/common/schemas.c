@@ -641,7 +641,7 @@ pcmk__get_schema(const char *name)
     for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
         pcmk__schema_t *schema = iter->data;
 
-        if (pcmk__str_eq(name, schema->name, pcmk__str_casei)) {
+        if (pcmk__str_eq(name, schema->name, pcmk__str_none)) {
             return iter;
         }
     }
@@ -1510,7 +1510,7 @@ void
 pcmk__warn_if_schema_deprecated(const char *schema)
 {
     if (pcmk__str_eq(schema, PCMK_VALUE_NONE,
-                     pcmk__str_casei|pcmk__str_null_matches)) {
+                     pcmk__str_none|pcmk__str_null_matches)) {
         pcmk__config_warn("Support for " PCMK_XA_VALIDATE_WITH "='%s' is "
                           "deprecated and will be removed in a future release "
                           "without the possibility of upgrades (manually edit "
