@@ -282,9 +282,6 @@ extern "C" {
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"
 
-// @COMPAT Deprecated since 2.1.5
-#define PCMK__XA_FIRST_INSTANCE         "first-instance"
-
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XA_ORDERING               "ordering"
 
@@ -299,15 +296,6 @@ extern "C" {
 
 // @COMPAT Deprecated alias for \c PCMK_XA_AUTOMATIC since 1.1.14
 #define PCMK__XA_REQUIRED               "required"
-
-// @COMPAT Deprecated since 2.1.5
-#define PCMK__XA_RSC_INSTANCE           "rsc-instance"
-
-// @COMPAT Deprecated since 2.1.5
-#define PCMK__XA_THEN_INSTANCE          "then-instance"
-
-// @COMPAT Deprecated since 2.1.5
-#define PCMK__XA_WITH_RSC_INSTANCE      "with-rsc-instance"
 
 #ifdef __cplusplus
 }

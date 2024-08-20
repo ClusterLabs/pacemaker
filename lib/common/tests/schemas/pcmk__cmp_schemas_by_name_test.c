@@ -44,14 +44,6 @@ unknown_is_lesser(void **state)
                                           "pacemaker-0.1") > 0);
     assert_true(pcmk__cmp_schemas_by_name("pacemaker-1.1", NULL) < 0);
     assert_true(pcmk__cmp_schemas_by_name(NULL, "pacemaker-0.0") > 0);
-
-    /* @COMPAT pacemaker-next is deprecated since 2.1.5,
-     * and pacemaker-0.6 and pacemaker-0.7 since 2.1.8
-     */
-    assert_true(pcmk__cmp_schemas_by_name("pacemaker-0.6",
-                                          "pacemaker-next") < 0);
-    assert_true(pcmk__cmp_schemas_by_name("pacemaker-next",
-                                          "pacemaker-0.7") > 0);
 }
 
 // @COMPAT none is deprecated since 2.1.8
@@ -68,27 +60,6 @@ none_is_greater(void **state)
                                           PCMK_VALUE_NONE) < 0);
     assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE,
                                           "pacemaker-1.0") > 0);
-
-    // @COMPAT pacemaker-next is deprecated since 2.1.5
-    assert_true(pcmk__cmp_schemas_by_name("pacemaker-next",
-                                          PCMK_VALUE_NONE) < 0);
-    assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE,
-                                          "pacemaker-next") > 0);
-}
-
-// @COMPAT pacemaker-next is deprecated since 2.1.5
-// @COMPAT none is deprecated since 2.1.8
-static void
-next_is_before_none(void **state)
-{
-    assert_true(pcmk__cmp_schemas_by_name("pacemaker-next",
-                                          "pacemaker-next") == 0);
-    assert_true(pcmk__cmp_schemas_by_name(NULL, "pacemaker-next") > 0);
-    assert_true(pcmk__cmp_schemas_by_name("pacemaker-next", NULL) < 0);
-    assert_true(pcmk__cmp_schemas_by_name("pacemaker-3.0",
-                                          "pacemaker-next") < 0);
-    assert_true(pcmk__cmp_schemas_by_name("pacemaker-next",
-                                          "pacemaker-1.0") > 0);
 }
 
 static void
@@ -103,19 +74,18 @@ known_numeric(void **state)
 }
 
 static void
-case_insensitive(void **state)
+case_sensitive(void **state)
 {
     assert_true(pcmk__cmp_schemas_by_name("Pacemaker-1.0",
-                                          "pacemaker-1.0") == 0);
+                                          "pacemaker-1.0") != 0);
     assert_true(pcmk__cmp_schemas_by_name("PACEMAKER-1.2",
-                                          "pacemaker-1.0") > 0);
-    assert_true(pcmk__cmp_schemas_by_name("PaceMaker-1.2",
-                                          "pacemaker-2.0") < 0);
+                                          "pacemaker-1.2") != 0);
+    assert_true(pcmk__cmp_schemas_by_name("PaceMaker-2.0",
+                                          "pacemaker-2.0") != 0);
 }
 
 PCMK__UNIT_TEST(setup, teardown,
                 cmocka_unit_test(unknown_is_lesser),
                 cmocka_unit_test(none_is_greater),
-                cmocka_unit_test(next_is_before_none),
                 cmocka_unit_test(known_numeric),
-                cmocka_unit_test(case_insensitive));
+                cmocka_unit_test(case_sensitive));

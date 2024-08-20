@@ -31,12 +31,11 @@ numeric_versions = $(shell ls -1 $(1) \
 			  | sed -n -e 's/^.*-\([0-9][0-9.]*\).rng$$/\1/p' \
 			  | sort -u -t. -k 1,1n -k 2,2n -k 3,3n)
 
-# @COMPAT: pacemaker-next is deprecated since 2.1.5
 version_pairs = $(join \
 			    $(1),$(addprefix \
 			      -,$(wordlist \
 			        2,$(words $(1)),$(1) \
-			      ) next \
+			      ) \
 			    ) \
 			  )
 
@@ -125,20 +124,15 @@ CIB_xsl			= $(srcdir)/upgrade-1.3-0.xsl			\
 			  $(wildcard $(srcdir)/upgrade-3.10-*.xsl)
 MON_files 		= $(srcdir)/crm_mon.rng
 
-# Sorted lists of all numeric schema versions
-API_numeric_versions	= $(call numeric_versions,${API_files})
-CIB_numeric_versions	= $(call numeric_versions,${CIB_files})
-MON_numeric_versions 	= $(call numeric_versions,$(wildcard $(srcdir)/api/crm_mon*.rng))
+# Sorted lists of all schema versions
+API_versions	= $(call numeric_versions,${API_files})
+CIB_versions	= $(call numeric_versions,${CIB_files})
+MON_versions 	= $(call numeric_versions,$(wildcard $(srcdir)/api/crm_mon*.rng))
 
 # The highest numeric schema version
-API_max			?= $(lastword $(API_numeric_versions))
-CIB_max			?= $(lastword $(CIB_numeric_versions))
-MON_max 			?= $(lastword $(MON_numeric_versions))
-
-# Sorted lists of all schema versions (including "next")
-# @COMPAT: pacemaker-next is deprecated since 2.1.5
-API_versions		= next $(API_numeric_versions)
-CIB_versions		= next $(CIB_numeric_versions)
+API_max			?= $(lastword $(API_versions))
+CIB_max			?= $(lastword $(CIB_versions))
+MON_max 		?= $(lastword $(MON_versions))
 
 # Build tree locations of static schema files and transforms (for VPATH builds)
 API_build_copies	= $(foreach f,$(API_abs_files),$(subst $(abs_srcdir),$(abs_builddir),$(f)))
@@ -152,7 +146,7 @@ CIB_generated		= pacemaker.rng 					\
 			  versions.rng
 MON_generated 		= crm_mon.rng
 
-CIB_version_pairs	= $(call version_pairs,${CIB_numeric_versions})
+CIB_version_pairs	= $(call version_pairs,${CIB_versions})
 CIB_version_pairs_cnt	= $(words ${CIB_version_pairs})
 CIB_version_pairs_last  = $(call version_pairs_last,${CIB_version_pairs_cnt},${CIB_version_pairs})
 
@@ -216,9 +210,7 @@ pacemaker-%.rng: $(CIB_build_copies) rng-helper Makefile.am
 
 # Dynamically generated CIB schema listing all pacemaker versions
 #
-# @COMPAT none, pacemaker-0.6, pacemaker-0.7, pacemaker-1.1, and
-# transitional-0.6 are deprecated since 2.1.8, as is validate-with being
-# optional
+# @COMPAT none is deprecated since 2.1.8, as is validate-with being optional
 versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
 	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
@@ -228,10 +220,6 @@ versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_at)echo '      <attribute name="validate-with">' >> $@
 	$(AM_V_at)echo '        <choice>' >> $@
 	$(AM_V_at)echo '          <value>none</value>' >> $@
-	$(AM_V_at)echo '          <value>pacemaker-0.6</value>' >> $@
-	$(AM_V_at)echo '          <value>transitional-0.6</value>' >> $@
-	$(AM_V_at)echo '          <value>pacemaker-0.7</value>' >> $@
-	$(AM_V_at)echo '          <value>pacemaker-1.1</value>' >> $@
 	$(AM_V_at)for rng in $(CIB_versions); do echo "          <value>pacemaker-$$rng</value>" >> $@; done
 	$(AM_V_at)echo '        </choice>' >> $@
 	$(AM_V_at)echo '      </attribute>' >> $@

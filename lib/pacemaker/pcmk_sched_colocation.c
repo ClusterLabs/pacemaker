@@ -781,8 +781,6 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
                                                  PCMK_XA_WITH_RSC_ROLE);
     const char *attr = crm_element_value(xml_obj, PCMK_XA_NODE_ATTRIBUTE);
 
-    const char *primary_instance = NULL;
-    const char *dependent_instance = NULL;
     pcmk_resource_t *primary = NULL;
     pcmk_resource_t *dependent = NULL;
 
@@ -790,20 +788,6 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
                                              primary_id);
     dependent = pcmk__find_constraint_resource(scheduler->priv->resources,
                                                dependent_id);
-
-    // @COMPAT: Deprecated since 2.1.5
-    primary_instance = crm_element_value(xml_obj, PCMK__XA_WITH_RSC_INSTANCE);
-    dependent_instance = crm_element_value(xml_obj, PCMK__XA_RSC_INSTANCE);
-    if (dependent_instance != NULL) {
-        pcmk__warn_once(pcmk__wo_coloc_inst,
-                        "Support for " PCMK__XA_RSC_INSTANCE " is deprecated "
-                        "and will be removed in a future release");
-    }
-    if (primary_instance != NULL) {
-        pcmk__warn_once(pcmk__wo_coloc_inst,
-                        "Support for " PCMK__XA_WITH_RSC_INSTANCE " is "
-                        "deprecated and will be removed in a future release");
-    }
 
     if (dependent == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
@@ -814,38 +798,6 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", id, primary_id);
         return;
-
-    } else if ((dependent_instance != NULL) && !pcmk__is_clone(dependent)) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "is not a clone but instance '%s' was requested",
-                         id, dependent_id, dependent_instance);
-        return;
-
-    } else if ((primary_instance != NULL) && !pcmk__is_clone(primary)) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "is not a clone but instance '%s' was requested",
-                         id, primary_id, primary_instance);
-        return;
-    }
-
-    if (dependent_instance != NULL) {
-        dependent = find_clone_instance(dependent, dependent_instance);
-        if (dependent == NULL) {
-            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                              "does not have an instance '%s'",
-                              id, dependent_id, dependent_instance);
-            return;
-        }
-    }
-
-    if (primary_instance != NULL) {
-        primary = find_clone_instance(primary, primary_instance);
-        if (primary == NULL) {
-            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                              "does not have an instance '%s'",
-                              id, primary_id, primary_instance);
-            return;
-        }
     }
 
     if (pcmk__xe_attr_is_true(xml_obj, PCMK_XA_SYMMETRICAL)) {

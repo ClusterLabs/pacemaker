@@ -333,8 +333,6 @@ element rsc_order: Relax-NG validity error : Invalid attribute first-action for 
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 =#=#=#= Current cib after: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
 <cib epoch="41" num_updates="0" admin_epoch="0" validate-with="none">
   <configuration>
@@ -354,8 +352,6 @@ element rsc_order: Relax-NG validity error : Element constraints has extra conte
 * Passed: cibadmin              - Make resulting CIB invalid, and without validate-with attribute
 =#=#=#= Begin test: Run crm_simulate with invalid CIB, also without validate-with attribute =#=#=#=
 Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
