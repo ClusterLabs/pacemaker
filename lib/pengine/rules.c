@@ -111,60 +111,70 @@ sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
 static void
 populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
 {
-    const char *name = NULL;
-    const char *value = NULL;
-    const char *old_value = NULL;
-    xmlNode *list = nvpair_list;
-    xmlNode *an_attr = NULL;
-
-    if (pcmk__xe_is(list->children, PCMK__XE_ATTRIBUTES)) {
-        list = list->children;
+    if (pcmk__xe_is(nvpair_list->children, PCMK__XE_ATTRIBUTES)) {
+        nvpair_list = nvpair_list->children;
     }
 
-    for (an_attr = pcmk__xe_first_child(list, NULL, NULL, NULL);
-         an_attr != NULL; an_attr = pcmk__xe_next(an_attr)) {
+    for (xmlNode *nvpair = pcmk__xe_first_child(nvpair_list, PCMK_XE_NVPAIR,
+                                                NULL, NULL);
+         nvpair != NULL; nvpair = pcmk__xe_next_same(nvpair)) {
 
-        if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
-            xmlNode *ref_nvpair = pcmk__xe_resolve_idref(an_attr, NULL);
+        xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, NULL);
+        const char *name = NULL;
+        const char *value = NULL;
+        const char *old_value = NULL;
 
-            name = crm_element_value(an_attr, PCMK_XA_NAME);
-            if ((name == NULL) && (ref_nvpair != NULL)) {
-                name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
+        if (ref_nvpair == NULL) {
+            /* Not possible with schema validation enabled (error already
+             * logged)
+             */
+            continue;
+        }
+
+        name = crm_element_value(nvpair, PCMK_XA_NAME);
+        if (name == NULL) {
+            /* @TODO Always get name from ref_nvpair. Currently an nvpair with
+             * an id-ref is allowed to have a name, which overrides the name in
+             * the referenced nvpair.
+             *
+             * This feature was added by commit 3912538 but is undocumented and
+             * inconsistently implemented. The code often ignores name if there
+             * is an id-ref, or in some places assumes that id and value exist
+             * if name exists.
+             *
+             * Disallow this in the schema first, and then update this function.
+             */
+            name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
+        }
+
+        value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
+
+        if ((name == NULL) || (value == NULL)) {
+            continue;
+        }
+
+        old_value = g_hash_table_lookup(hash, name);
+
+        if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
+            // @COMPAT Deprecated since 2.1.8
+            pcmk__config_warn("Support for setting meta-attributes (such as "
+                              "%s) to the explicit value '#default' is "
+                              "deprecated and will be removed in a future "
+                              "release", name);
+            if (old_value != NULL) {
+                crm_trace("Letting %s default (removing explicit value \"%s\")",
+                          name, value);
+                g_hash_table_remove(hash, name);
             }
 
-            value = crm_element_value(an_attr, PCMK_XA_VALUE);
-            if ((value == NULL) && (ref_nvpair != NULL)) {
-                value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
-            }
+        } else if (old_value == NULL) {
+            crm_trace("Setting %s=\"%s\"", name, value);
+            pcmk__insert_dup(hash, name, value);
 
-            if (name == NULL || value == NULL) {
-                continue;
-            }
-
-            old_value = g_hash_table_lookup(hash, name);
-
-            if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
-                // @COMPAT Deprecated since 2.1.8
-                pcmk__config_warn("Support for setting meta-attributes (such "
-                                  "as %s) to the explicit value '#default' is "
-                                  "deprecated and will be removed in a future "
-                                  "release", name);
-                if (old_value) {
-                    crm_trace("Letting %s default (removing explicit value \"%s\")",
-                              name, value);
-                    g_hash_table_remove(hash, name);
-                }
-                continue;
-
-            } else if (old_value == NULL) {
-                crm_trace("Setting %s=\"%s\"", name, value);
-                pcmk__insert_dup(hash, name, value);
-
-            } else if (overwrite) {
-                crm_trace("Setting %s=\"%s\" (overwriting old value \"%s\")",
-                          name, value, old_value);
-                pcmk__insert_dup(hash, name, value);
-            }
+        } else if (overwrite) {
+            crm_trace("Setting %s=\"%s\" (overwriting old value \"%s\")",
+                      name, value, old_value);
+            pcmk__insert_dup(hash, name, value);
         }
     }
 }
@@ -175,8 +185,11 @@ unpack_attr_set(gpointer data, gpointer user_data)
     xmlNode *pair = data;
     pcmk__nvpair_unpack_t *unpack_data = user_data;
 
-    if (pcmk__evaluate_rules(pair, &(unpack_data->rule_input),
-                             unpack_data->next_change) != pcmk_rc_ok) {
+    xmlNode *rule_xml = pcmk__xe_first_child(pair, PCMK_XE_RULE, NULL, NULL);
+
+    if ((rule_xml != NULL)
+        && (pcmk_evaluate_rule(rule_xml, &(unpack_data->rule_input),
+                               unpack_data->next_change) != pcmk_rc_ok)) {
         return;
     }
 

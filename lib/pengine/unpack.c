@@ -451,10 +451,32 @@ pcmk_node_t *
 pe_create_node(const char *id, const char *uname, const char *type,
                const char *score, pcmk_scheduler_t *scheduler)
 {
+    enum pcmk__node_variant variant = pcmk__node_variant_cluster;
     pcmk_node_t *new_node = NULL;
 
     if (pcmk_find_node(scheduler, uname) != NULL) {
         pcmk__config_warn("More than one node entry has name '%s'", uname);
+    }
+
+    if (pcmk__str_eq(type, PCMK_VALUE_MEMBER,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
+        variant = pcmk__node_variant_cluster;
+
+    } else if (pcmk__str_eq(type, PCMK_VALUE_REMOTE, pcmk__str_casei)) {
+        variant = pcmk__node_variant_remote;
+
+    } else if (pcmk__str_eq(type, PCMK__VALUE_PING, pcmk__str_casei)) {
+        pcmk__warn_once(pcmk__wo_ping_node,
+                        "Support for nodes of type '" PCMK__VALUE_PING "' "
+                        "(such as %s) is deprecated and will be removed in a "
+                        "future release",
+                        pcmk__s(uname, "unnamed node"));
+        variant = pcmk__node_variant_ping;
+
+    } else {
+        pcmk__config_err("Ignoring node %s with unrecognized type '%s'",
+                         pcmk__s(uname, "without name"), type);
+        return NULL;
     }
 
     new_node = calloc(1, sizeof(pcmk_node_t));
@@ -487,42 +509,17 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->shutdown = FALSE;
     new_node->details->running_rsc = NULL;
     new_node->priv->scheduler = scheduler;
-
-    if (pcmk__str_eq(type, PCMK_VALUE_MEMBER,
-                     pcmk__str_null_matches|pcmk__str_casei)) {
-        new_node->priv->variant = pcmk__node_variant_cluster;
-
-    } else if (pcmk__str_eq(type, PCMK_VALUE_REMOTE, pcmk__str_casei)) {
-        new_node->priv->variant = pcmk__node_variant_remote;
-        pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_remote_nodes);
-
-    } else {
-        /* @COMPAT 'ping' is the default for backward compatibility, but it
-         * should be changed to 'member' at a compatibility break
-         */
-        if (!pcmk__str_eq(type, PCMK__VALUE_PING, pcmk__str_casei)) {
-            pcmk__config_warn("Node %s has unrecognized type '%s', "
-                              "assuming '" PCMK__VALUE_PING "'",
-                              pcmk__s(uname, "without name"), type);
-        }
-        pcmk__warn_once(pcmk__wo_ping_node,
-                        "Support for nodes of type '" PCMK__VALUE_PING "' "
-                        "(such as %s) is deprecated and will be removed in a "
-                        "future release",
-                        pcmk__s(uname, "unnamed node"));
-        new_node->priv->variant = pcmk__node_variant_ping;
-    }
-
+    new_node->priv->variant = variant;
     new_node->priv->attrs = pcmk__strkey_table(free, free);
+    new_node->priv->utilization = pcmk__strkey_table(free, free);
+    new_node->priv->digest_cache = pcmk__strkey_table(free, pe__free_digests);
 
     if (pcmk__is_pacemaker_remote_node(new_node)) {
         pcmk__insert_dup(new_node->priv->attrs, CRM_ATTR_KIND, "remote");
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_remote_nodes);
     } else {
         pcmk__insert_dup(new_node->priv->attrs, CRM_ATTR_KIND, "cluster");
     }
-
-    new_node->priv->utilization = pcmk__strkey_table(free, free);
-    new_node->priv->digest_cache = pcmk__strkey_table(free, pe__free_digests);
 
     scheduler->nodes = g_list_insert_sorted(scheduler->nodes, new_node,
                                             pe__cmp_node_name);
