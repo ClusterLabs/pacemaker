@@ -2,7 +2,7 @@ sub=pe_status
 libdir=@libdir@
 includedir=@includedir@/@PACKAGE_TARNAME@
 
-penginedir=@PE_STATE_DIR@
+penginedir=@PCMK_SCHEDULER_INPUT_DIR@
 
 Name:             lib${sub}
 URL:              @PACKAGE_URL@

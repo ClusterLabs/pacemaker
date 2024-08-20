@@ -60,10 +60,10 @@ class BuildOptions:
     OCF_RA_INSTALL_DIR = "@OCF_RA_INSTALL_DIR@"
     """Where resource agents are installed."""
 
-    OCF_ROOT_DIR = "@OCF_ROOT_DIR@"
+    OCF_ROOT_DIR = "@PCMK_OCF_ROOT@"
     """Root directory for OCF resource agents and libraries."""
 
-    RSC_TMP_DIR = "@CRM_RSCTMP_DIR@"
+    RSC_TMP_DIR = "@PCMK__OCF_TMP_DIR@"
     """Where resource agents should keep state files."""
 
     REMOTE_ENABLED = True
@@ -75,7 +75,7 @@ class BuildOptions:
     SBIN_DIR = "@sbindir@"
     """Where administrative programs are installed."""
 
-    SCHEMA_DIR = "@CRM_SCHEMA_DIRECTORY@"
+    SCHEMA_DIR = "@PCMK_SCHEMA_DIR@"
     """Where Relax-NG schema files are stored."""
 
     UNIT_DIR = "@systemdsystemunitdir@"

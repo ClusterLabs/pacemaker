@@ -41,7 +41,7 @@
 #undef CRM_CONFIG_DIR
 
 /* Where to keep scheduler outputs */
-#undef PE_STATE_DIR
+#undef PCMK_SCHEDULER_INPUT_DIR
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 /* Location to store core files produced by Pacemaker daemons */
@@ -51,13 +51,13 @@
 #undef CRM_STATE_DIR
 
 /* Location for the Pacemaker Relax-NG Schema */
-#undef CRM_SCHEMA_DIRECTORY
+#undef PCMK_SCHEMA_DIR
 
 /* Where to keep configuration files like authkey */
 #undef PACEMAKER_CONFIG_DIR
 
 /* Where OCF resource agents and libraries can be found */
-#undef OCF_ROOT_DIR
+#undef PCMK_OCF_ROOT
 
 /****** Features ******/
 

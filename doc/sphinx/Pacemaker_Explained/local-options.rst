@@ -552,7 +552,7 @@ environment variables when Pacemaker daemons start up.
 
        PCMK_tls_priorities
      - :ref:`text <text>`
-     - |PCMK_GNUTLS_PRIORITIES|
+     - |PCMK__GNUTLS_PRIORITIES|
      - *Advanced Use Only:* These GnuTLS cipher priorities will be used for TLS
        connections (whether for Pacemaker Remote connections or remote CIB
        access, when enabled). See:
@@ -660,7 +660,7 @@ environment variables when Pacemaker daemons start up.
 
        PCMK_schema_directory
      - :ref:`text <text>`
-     - |CRM_SCHEMA_DIRECTORY|
+     - |PCMK_SCHEMA_DIR|
      - *Advanced Use Only:* Specify an alternate location for RNG schemas and
        XSL transforms.
 

@@ -33,7 +33,7 @@ DBOOK_OPTS = --stringparam command.prefix ocf_pacemaker_ 	\
 	     --param man.vol 7
 
 ocf_pacemaker_%.xml:  %
-	$(AM_V_GEN)OCF_FUNCTIONS=/dev/null OCF_ROOT=$(OCF_ROOT_DIR) $(abs_builddir)/$< meta-data > $@
+	$(AM_V_GEN)OCF_FUNCTIONS=/dev/null OCF_ROOT=$(PCMK_OCF_ROOT) $(abs_builddir)/$< meta-data > $@
 
 endif
 

@@ -116,7 +116,7 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 
     crm_debug("Replace secret parameters for resource %s", rsc_id);
 
-    if (snprintf(local_file, FILENAME_MAX, LRM_CIBSECRETS_DIR "/%s/", rsc_id)
+    if (snprintf(local_file, FILENAME_MAX, PCMK__CIB_SECRETS_DIR "/%s/", rsc_id)
             > FILENAME_MAX) {
         crm_err("Can't replace secret parameters for %s: file name size exceeded",
                 rsc_id);
@@ -142,7 +142,7 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
         secret_value = read_local_file(local_file);
         if (!secret_value) {
             crm_err("secret for rsc %s parameter %s not found in %s",
-                    rsc_id, key, LRM_CIBSECRETS_DIR);
+                    rsc_id, key, PCMK__CIB_SECRETS_DIR);
             rc = ENOENT;
             continue;
         }

@@ -16,13 +16,13 @@ noarch_pkgconfig_DATA	= $(builddir)/pacemaker-schemas.pc
 #
 # See README.md for details on updating CIB schema files (API is similar)
 
-# The CIB and crm_mon schemas are installed directly in CRM_SCHEMA_DIRECTORY
+# The CIB and crm_mon schemas are installed directly in PCMK_SCHEMA_DIR
 # for historical reasons, while the API schema is installed in a subdirectory.
-APIdir	= $(CRM_SCHEMA_DIRECTORY)/api
-CIBdir	= $(CRM_SCHEMA_DIRECTORY)
-MONdir	= $(CRM_SCHEMA_DIRECTORY)
+APIdir	= $(PCMK_SCHEMA_DIR)/api
+CIBdir	= $(PCMK_SCHEMA_DIR)
+MONdir	= $(PCMK_SCHEMA_DIR)
 
-basexsltdir		= $(CRM_SCHEMA_DIRECTORY)/base
+basexsltdir		= $(PCMK_SCHEMA_DIR)/base
 dist_basexslt_DATA	= $(srcdir)/base/access-render-2.xsl
 
 # Extract a sorted list of available numeric schema versions

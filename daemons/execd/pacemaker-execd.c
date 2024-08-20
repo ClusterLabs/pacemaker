@@ -516,11 +516,11 @@ main(int argc, char **argv, char **envp)
 
     {
         // Temporary directory for resource agent use (leave owned by root)
-        int rc = pcmk__build_path(CRM_RSCTMP_DIR, 0755);
+        int rc = pcmk__build_path(PCMK__OCF_TMP_DIR, 0755);
 
         if (rc != pcmk_rc_ok) {
             crm_warn("Could not create resource agent temporary directory "
-                     CRM_RSCTMP_DIR ": %s", pcmk_rc_str(rc));
+                     PCMK__OCF_TMP_DIR ": %s", pcmk_rc_str(rc));
         }
     }
 
@@ -544,7 +544,7 @@ main(int argc, char **argv, char **envp)
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker " EXECD_TYPE " executor successfully started and accepting connections");
-    crm_notice("OCF resource agent search path is %s", OCF_RA_PATH);
+    crm_notice("OCF resource agent search path is %s", PCMK__OCF_RA_PATH);
     g_main_loop_run(mainloop);
 
     /* should never get here */

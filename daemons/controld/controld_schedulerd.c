@@ -62,7 +62,7 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
     CRM_CHECK(id != NULL, return);
 
     if (rc == pcmk_ok) {
-        char *filename = crm_strdup_printf(PE_STATE_DIR "/pe-core-%s.bz2", id);
+        char *filename = crm_strdup_printf(PCMK_SCHEDULER_INPUT_DIR "/pe-core-%s.bz2", id);
 
         if (pcmk__xml_write_file(output, filename, true) != pcmk_rc_ok) {
             crm_err("Could not save Cluster Information Base to %s after scheduler crash",
@@ -90,7 +90,7 @@ handle_disconnect(void)
         char *uuid_str = crm_generate_uuid();
 
         crm_crit("Lost connection to the scheduler "
-                 QB_XS " CIB will be saved to " PE_STATE_DIR "/pe-core-%s.bz2",
+                 QB_XS " CIB will be saved to " PCMK_SCHEDULER_INPUT_DIR "/pe-core-%s.bz2",
                  uuid_str);
 
         /*

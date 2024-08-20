@@ -48,7 +48,7 @@ extern bool pcmk__is_daemon;
 // Number of elements in a statically defined array
 #define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
 
-#if SUPPORT_CIBSECRETS
+#if PCMK__ENABLE_CIBSECRETS
 /* internal CIB utilities (from cib_secrets.c) */
 
 int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);

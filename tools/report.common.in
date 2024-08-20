@@ -1,7 +1,7 @@
 #
 # Originally based on hb_report
 # Copyright 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
-# Later changes copyright 2010-2022 the Pacemaker project contributors
+# Later changes copyright 2010-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -279,7 +279,7 @@ detect_host() {
     BLACKBOX_DIR=$config_root/blackbox
     debug "Pacemaker blackboxes (if any) located in: $BLACKBOX_DIR"
 
-    PE_STATE_DIR=$(detect_pe_dir "$config_root")
+    PCMK_SCHEDULER_INPUT_DIR=$(detect_pe_dir "$config_root")
 
     CRM_CORE_DIRS=""
     for d in $config_root/cores $local_state_dir/lib/corosync; do

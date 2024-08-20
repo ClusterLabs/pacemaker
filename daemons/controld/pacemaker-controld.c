@@ -147,11 +147,11 @@ main(int argc, char **argv)
         old_instance = NULL;
     }
 
-    if (pcmk__daemon_can_write(PE_STATE_DIR, NULL) == FALSE) {
+    if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
         exit_code = CRM_EX_FATAL;
-        crm_err("Terminating due to bad permissions on " PE_STATE_DIR);
+        crm_err("Terminating due to bad permissions on " PCMK_SCHEDULER_INPUT_DIR);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Bad permissions on " PE_STATE_DIR
+                    "Bad permissions on " PCMK_SCHEDULER_INPUT_DIR
                     " (see logs for details)");
         goto done;
 

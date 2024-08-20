@@ -15,8 +15,8 @@ features=@PCMK_FEATURES@
 
 # Duplicates from other .pc files, since those may eventually go away
 configdir=@CRM_CONFIG_DIR@
-schemadir=@CRM_SCHEMA_DIRECTORY@
-penginedir=@PE_STATE_DIR@
+schemadir=@PCMK_SCHEMA_DIR@
+penginedir=@PCMK_SCHEDULER_INPUT_DIR@
 ocfdir=@OCF_RA_INSTALL_DIR@
 
 Name:             lib${sub}

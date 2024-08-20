@@ -311,11 +311,11 @@ AC_ARG_WITH([cibsecrets],
 yes_no_try "$with_cibsecrets" "no"
 with_cibsecrets=$?
 
-PCMK_GNUTLS_PRIORITIES="NORMAL"
+PCMK__GNUTLS_PRIORITIES="NORMAL"
 AC_ARG_WITH([gnutls-priorities],
     [AS_HELP_STRING([--with-gnutls-priorities],
         [default GnuTLS cipher priorities @<:@NORMAL@:>@])],
-    [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ]
+    [ test x"$withval" = x"no" || PCMK__GNUTLS_PRIORITIES="$withval" ]
 )
 
 AC_ARG_WITH([concurrent-fencing-default],
@@ -440,29 +440,29 @@ dnl /usr/lib rather than libdir because it's determined by the OCF project and
 dnl not Pacemaker. Even if a user wants to install Pacemaker to /usr/local or
 dnl such, the OCF agents will be expected in their usual location. However, we
 dnl do give the user the option to override it.
-PKG_CHECK_VAR([OCF_ROOT_DIR], [resource-agents], [ocfrootdir], [],
-              [OCF_ROOT_DIR="/usr/lib/ocf"])
+PKG_CHECK_VAR([PCMK_OCF_ROOT], [resource-agents], [ocfrootdir], [],
+              [PCMK_OCF_ROOT="/usr/lib/ocf"])
 AC_ARG_WITH([ocfdir],
     [AS_HELP_STRING([--with-ocfdir=DIR], m4_normalize([
         OCF resource agent root directory (advanced option: changing this
         may break other cluster components unless similarly configured)
         @<:@value from resource-agents package if available otherwise
         /usr/lib/ocf@:>@]))],
-    [ OCF_ROOT_DIR="$withval" ]
+    [ PCMK_OCF_ROOT="$withval" ]
 )
 
 dnl Get default from resource-agents if possible
-PKG_CHECK_VAR([OCF_RA_PATH], [resource-agents], [ocfrapath], [],
-              [OCF_RA_PATH="$OCF_ROOT_DIR/resource.d"])
+PKG_CHECK_VAR([PCMK__OCF_RA_PATH], [resource-agents], [ocfrapath], [],
+              [PCMK__OCF_RA_PATH="$PCMK_OCF_ROOT/resource.d"])
 AC_ARG_WITH([ocfrapath],
     [AS_HELP_STRING([--with-ocfrapath=DIR], m4_normalize([
         OCF resource agent directories (colon-separated) to search
         @<:@value from resource-agents package if available otherwise
         OCFDIR/resource.d@:>@]))],
-    [ OCF_RA_PATH="$withval" ]
+    [ PCMK__OCF_RA_PATH="$withval" ]
 )
 
-OCF_RA_INSTALL_DIR="$OCF_ROOT_DIR/resource.d"
+OCF_RA_INSTALL_DIR="$PCMK_OCF_ROOT/resource.d"
 AC_ARG_WITH([ocfrainstalldir],
     [AS_HELP_STRING([--with-ocfrainstalldir=DIR], m4_normalize([
         OCF installation directory for Pacemakers resource agents
@@ -543,8 +543,8 @@ dnl Bash is needed for building man pages and running regression tests.
 dnl We set "BASH_PATH" because "BASH" is already an environment variable.
 REQUIRE_PROG([BASH_PATH], [bash])
 
-AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
-AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
+AC_PATH_PROGS(PCMK__VALGRIND_EXEC, valgrind, /usr/bin/valgrind)
+AC_DEFINE_UNQUOTED(PCMK__VALGRIND_EXEC, "$PCMK__VALGRIND_EXEC", Valgrind command)
 
 
 dnl ==============================================
@@ -644,11 +644,11 @@ AC_DEFINE_UNQUOTED([PCMK__RESOURCE_STICKINESS_DEFAULT],
                    [$with_resource_stickiness_default],
                    [Default value for resource-stickiness resource meta-attribute])
 
-AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
+AS_IF([test x"${PCMK__GNUTLS_PRIORITIES}" != x""], [],
       [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
-AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
+AC_DEFINE_UNQUOTED([PCMK__GNUTLS_PRIORITIES], ["$PCMK__GNUTLS_PRIORITIES"],
                    [GnuTLS cipher priorities])
-AC_SUBST(PCMK_GNUTLS_PRIORITIES)
+AC_SUBST(PCMK__GNUTLS_PRIORITIES)
 
 AC_SUBST(BUG_URL)
 AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
@@ -743,7 +743,7 @@ AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"],
 
 AS_IF([test x"${runstatedir}" = x""], [runstatedir="${pcmk_runstatedir}"])
 expand_path_option runstatedir "${localstatedir}/run"
-AC_DEFINE_UNQUOTED([PCMK_RUN_DIR], ["$runstatedir"],
+AC_DEFINE_UNQUOTED([PCMK__RUN_DIR], ["$runstatedir"],
                    [Location for modifiable per-process data])
 AC_SUBST(runstatedir)
 
@@ -775,14 +775,14 @@ AC_SUBST(PCMK__FENCE_BINDIR)
 AC_DEFINE_UNQUOTED([PCMK__FENCE_BINDIR], ["$PCMK__FENCE_BINDIR"],
                    [Location for executable fence agents])
 
-expand_path_option OCF_ROOT_DIR
-AC_SUBST(OCF_ROOT_DIR)
-AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
+expand_path_option PCMK_OCF_ROOT
+AC_SUBST(PCMK_OCF_ROOT)
+AC_DEFINE_UNQUOTED([PCMK_OCF_ROOT], ["$PCMK_OCF_ROOT"],
                    [OCF root directory for resource agents and libraries])
 
-expand_path_option OCF_RA_PATH
-AC_SUBST(OCF_RA_PATH)
-AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
+expand_path_option PCMK__OCF_RA_PATH
+AC_SUBST(PCMK__OCF_RA_PATH)
+AC_DEFINE_UNQUOTED([PCMK__OCF_RA_PATH], ["$PCMK__OCF_RA_PATH"],
                    [OCF directories to search for resource agents ])
 
 expand_path_option OCF_RA_INSTALL_DIR
@@ -790,10 +790,10 @@ AC_SUBST(OCF_RA_INSTALL_DIR)
 
 # Derived paths
 
-CRM_SCHEMA_DIRECTORY="${datadir}/pacemaker"
-AC_DEFINE_UNQUOTED([CRM_SCHEMA_DIRECTORY], ["$CRM_SCHEMA_DIRECTORY"],
+PCMK_SCHEMA_DIR="${datadir}/pacemaker"
+AC_DEFINE_UNQUOTED([PCMK_SCHEMA_DIR], ["$PCMK_SCHEMA_DIR"],
                    [Location for the Pacemaker Relax-NG Schema])
-AC_SUBST(CRM_SCHEMA_DIRECTORY)
+AC_SUBST(PCMK_SCHEMA_DIR)
 
 PCMK__REMOTE_SCHEMA_DIR="${localstatedir}/lib/pacemaker/schemas"
 AC_DEFINE_UNQUOTED([PCMK__REMOTE_SCHEMA_DIR], ["$PCMK__REMOTE_SCHEMA_DIR"],
@@ -805,20 +805,20 @@ AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
                    [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
 AC_SUBST(CRM_CORE_DIR)
 
-CRM_PACEMAKER_DIR="${localstatedir}/lib/pacemaker"
-AC_DEFINE_UNQUOTED([CRM_PACEMAKER_DIR], ["$CRM_PACEMAKER_DIR"],
+PCMK__PERSISTENT_DATA_DIR="${localstatedir}/lib/pacemaker"
+AC_DEFINE_UNQUOTED([PCMK__PERSISTENT_DATA_DIR], ["$PCMK__PERSISTENT_DATA_DIR"],
                    [Location to store directory produced by Pacemaker daemons])
-AC_SUBST(CRM_PACEMAKER_DIR)
+AC_SUBST(PCMK__PERSISTENT_DATA_DIR)
 
 CRM_BLACKBOX_DIR="${localstatedir}/lib/pacemaker/blackbox"
 AC_DEFINE_UNQUOTED([CRM_BLACKBOX_DIR], ["$CRM_BLACKBOX_DIR"],
                    [Where to keep blackbox dumps])
 AC_SUBST(CRM_BLACKBOX_DIR)
 
-PE_STATE_DIR="${localstatedir}/lib/pacemaker/pengine"
-AC_DEFINE_UNQUOTED([PE_STATE_DIR], ["$PE_STATE_DIR"],
+PCMK_SCHEDULER_INPUT_DIR="${localstatedir}/lib/pacemaker/pengine"
+AC_DEFINE_UNQUOTED([PCMK_SCHEDULER_INPUT_DIR], ["$PCMK_SCHEDULER_INPUT_DIR"],
                    [Where to keep scheduler outputs])
-AC_SUBST(PE_STATE_DIR)
+AC_SUBST(PCMK_SCHEDULER_INPUT_DIR)
 
 CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
 AC_DEFINE_UNQUOTED([CRM_CONFIG_DIR], ["$CRM_CONFIG_DIR"],
@@ -835,10 +835,10 @@ AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
                    [Where to keep state files and sockets])
 AC_SUBST(CRM_STATE_DIR)
 
-CRM_RSCTMP_DIR="${runstatedir}/resource-agents"
-AC_DEFINE_UNQUOTED([CRM_RSCTMP_DIR], ["$CRM_RSCTMP_DIR"],
+PCMK__OCF_TMP_DIR="${runstatedir}/resource-agents"
+AC_DEFINE_UNQUOTED([PCMK__OCF_TMP_DIR], ["$PCMK__OCF_TMP_DIR"],
                    [Where resource agents should keep state files])
-AC_SUBST(CRM_RSCTMP_DIR)
+AC_SUBST(PCMK__OCF_TMP_DIR)
 
 PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
 AC_DEFINE_UNQUOTED([PACEMAKER_CONFIG_DIR], ["$PACEMAKER_CONFIG_DIR"],
@@ -1384,7 +1384,6 @@ AS_IF([test $with_profiling -ne $DISABLED],
           AC_MSG_NOTICE([CFLAGS after: $CFLAGS])
       ]
 )
-AC_DEFINE_UNQUOTED([SUPPORT_PROFILING], [$with_profiling], [Support profiling])
 AM_CONDITIONAL([BUILD_PROFILING], [test "$with_profiling" = "$REQUIRED"])
 
 dnl ========================================================================
@@ -1633,13 +1632,13 @@ AS_IF([test $with_cibsecrets -ne $DISABLED],
       [
           with_cibsecrets=$REQUIRED
           PCMK_FEATURES="$PCMK_FEATURES cibsecrets"
-          LRM_CIBSECRETS_DIR="${localstatedir}/lib/pacemaker/lrm/secrets"
-          AC_DEFINE_UNQUOTED([LRM_CIBSECRETS_DIR], ["$LRM_CIBSECRETS_DIR"],
+          PCMK__CIB_SECRETS_DIR="${localstatedir}/lib/pacemaker/lrm/secrets"
+          AC_DEFINE_UNQUOTED([PCMK__CIB_SECRETS_DIR], ["$PCMK__CIB_SECRETS_DIR"],
                              [Location for CIB secrets])
-          AC_SUBST([LRM_CIBSECRETS_DIR])
+          AC_SUBST([PCMK__CIB_SECRETS_DIR])
       ]
 )
-AC_DEFINE_UNQUOTED([SUPPORT_CIBSECRETS], [$with_cibsecrets], [Support CIB secrets])
+AC_DEFINE_UNQUOTED([PCMK__ENABLE_CIBSECRETS], [$with_cibsecrets], [Support CIB secrets])
 AM_CONDITIONAL([BUILD_CIBSECRETS], [test $with_cibsecrets -eq $REQUIRED])
 
 dnl ========================================================================
@@ -2176,7 +2175,7 @@ AC_MSG_NOTICE([  Header files             = ${includedir}])
 AC_MSG_NOTICE([  Arch-independent files   = ${datadir}])
 AC_MSG_NOTICE([  State information        = ${localstatedir}])
 AC_MSG_NOTICE([  System configuration     = ${sysconfdir}])
-AC_MSG_NOTICE([  OCF agents               = ${OCF_ROOT_DIR}])
+AC_MSG_NOTICE([  OCF agents               = ${PCMK_OCF_ROOT}])
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_NOTICE([  HA user name             = ${CRM_DAEMON_USER}])

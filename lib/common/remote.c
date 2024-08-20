@@ -187,7 +187,7 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
 
     prio_base = pcmk__env_option(PCMK__ENV_TLS_PRIORITIES);
     if (prio_base == NULL) {
-        prio_base = PCMK_GNUTLS_PRIORITIES;
+        prio_base = PCMK__GNUTLS_PRIORITIES;
     }
     prio = crm_strdup_printf("%s:%s", prio_base,
                              (cred_type == GNUTLS_CRD_ANON)? "+ANON-DH" : "+DHE-PSK:+PSK");

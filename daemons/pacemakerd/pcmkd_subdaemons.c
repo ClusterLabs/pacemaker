@@ -440,7 +440,7 @@ start_child(pcmk_child_t * child)
         use_valgrind = TRUE;
     }
 
-    if (use_valgrind && strlen(VALGRIND_BIN) == 0) {
+    if (use_valgrind && strlen(PCMK__VALGRIND_EXEC) == 0) {
         crm_warn("Cannot enable valgrind for subdaemon %s: valgrind not found",
                  name);
         use_valgrind = FALSE;
@@ -465,7 +465,7 @@ start_child(pcmk_child_t * child)
 
         crm_info("Forked process %lld for subdaemon %s%s",
                  (long long) child->pid, name,
-                 use_valgrind ? " (valgrind enabled: " VALGRIND_BIN ")" : "");
+                 use_valgrind ? " (valgrind enabled: " PCMK__VALGRIND_EXEC ")" : "");
         return pcmk_rc_ok;
 
     } else {
@@ -473,7 +473,7 @@ start_child(pcmk_child_t * child)
         (void)setsid();
 
         /* Setup the two alternate arg arrays */
-        opts_vgrind[0] = pcmk__str_copy(VALGRIND_BIN);
+        opts_vgrind[0] = pcmk__str_copy(PCMK__VALGRIND_EXEC);
         if (use_callgrind) {
             opts_vgrind[1] = pcmk__str_copy("--tool=callgrind");
             opts_vgrind[2] = pcmk__str_copy("--callgrind-out-file="
@@ -519,7 +519,7 @@ start_child(pcmk_child_t * child)
         pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
 
         if (use_valgrind) {
-            (void)execvp(VALGRIND_BIN, opts_vgrind);
+            (void)execvp(PCMK__VALGRIND_EXEC, opts_vgrind);
         } else {
             char *path = subdaemon_path(child);
 
