@@ -86,6 +86,19 @@ int pcmk__read_handshake_data(const pcmk__client_t *client);
 
 /*!
  * \internal
+ * \brief Make a single attempt to perform the client TLS handshake
+ *
+ * \param[in,out] remote       Newly established remote connection
+ * \param[out]    gnutls_rc    If this is non-NULL, it will be set to the GnuTLS
+ *                             rc (for logging) if this function returns EPROTO,
+ *                             otherwise GNUTLS_E_SUCCESS
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc);
+
+/*!
+ * \internal
  * \brief Perform client TLS handshake after establishing TCP socket
  *
  * \param[in,out] remote       Newly established remote connection
