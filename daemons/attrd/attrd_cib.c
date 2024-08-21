@@ -81,7 +81,8 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    if (status_changed || pcmk__cib_element_in_patchset(patchset, PCMK_XE_NODES)) {
+    if (status_changed
+        || pcmk__cib_element_in_patchset(patchset, PCMK_XE_NODES)) {
         /* An unsafe client modified the PCMK_XE_NODES or PCMK_XE_STATUS
          * section. Write transient attributes to ensure they're up-to-date in
          * the CIB.
