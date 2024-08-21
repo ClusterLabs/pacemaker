@@ -23,6 +23,7 @@ SUBDIRS = \
 	nvpair 		\
 	options		\
 	output 		\
+	patchset 	\
 	probes 		\
 	resources	\
 	results		\

@@ -58,8 +58,8 @@ do_cib_updated(const char *event, xmlNode * msg)
         return;
     }
 
-    if (cib__element_in_patchset(patchset, PCMK_XE_ALERTS)
-        || cib__element_in_patchset(patchset, PCMK_XE_CRM_CONFIG)) {
+    if (pcmk__cib_element_in_patchset(patchset, PCMK_XE_ALERTS)
+        || pcmk__cib_element_in_patchset(patchset, PCMK_XE_CRM_CONFIG)) {
 
         controld_trigger_config();
     }
@@ -75,8 +75,8 @@ do_cib_updated(const char *event, xmlNode * msg)
         return;
     }
 
-    if (cib__element_in_patchset(patchset, PCMK_XE_NODES)
-        || cib__element_in_patchset(patchset, PCMK_XE_STATUS)) {
+    if (pcmk__cib_element_in_patchset(patchset, PCMK_XE_NODES)
+        || pcmk__cib_element_in_patchset(patchset, PCMK_XE_STATUS)) {
 
         /* An unsafe client modified the PCMK_XE_NODES or PCMK_XE_STATUS
          * section. Ensure the node list is up-to-date, and start the join

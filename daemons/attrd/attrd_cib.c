@@ -62,11 +62,11 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    if (cib__element_in_patchset(patchset, PCMK_XE_ALERTS)) {
+    if (pcmk__cib_element_in_patchset(patchset, PCMK_XE_ALERTS)) {
         mainloop_set_trigger(attrd_config_read);
     }
 
-    status_changed = cib__element_in_patchset(patchset, PCMK_XE_STATUS);
+    status_changed = pcmk__cib_element_in_patchset(patchset, PCMK_XE_STATUS);
 
     client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTNAME);
     if (!cib__client_triggers_refresh(client_name)) {
@@ -81,7 +81,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    if (status_changed || cib__element_in_patchset(patchset, PCMK_XE_NODES)) {
+    if (status_changed || pcmk__cib_element_in_patchset(patchset, PCMK_XE_NODES)) {
         /* An unsafe client modified the PCMK_XE_NODES or PCMK_XE_STATUS
          * section. Write transient attributes to ensure they're up-to-date in
          * the CIB.

@@ -21,6 +21,7 @@
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
+#include <crm/common/cib_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  // CRM_XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
@@ -830,5 +831,60 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         free(new_digest);
     }
     pcmk__xml_free(old);
+    return rc;
+}
+
+bool
+pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
+{
+    const char *element_xpath = pcmk__cib_abs_xpath_for(element);
+    const char *parent_xpath = pcmk_cib_parent_name_for(element);
+    char *element_regex = NULL;
+    bool rc = false;
+    int format = 1;
+
+    CRM_ASSERT(patchset != NULL);
+
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    if (format != 2) {
+        crm_warn("Unknown patch format: %d", format);
+        return false;
+    }
+
+    CRM_CHECK(element_xpath != NULL, return false); // Unsupported element
+
+    /* Matches if and only if element_xpath is part of a changed path
+     * (supported values for element never contain XML IDs with schema
+     * validation enabled)
+     *
+     * @TODO Use POSIX word boundary instead of (/|$), if it works:
+     * https://www.regular-expressions.info/wordboundaries.html.
+     */
+    element_regex = crm_strdup_printf("^%s(/|$)", element_xpath);
+
+    for (const xmlNode *change = pcmk__xe_first_child(patchset, PCMK_XE_CHANGE,
+                                                      NULL, NULL);
+         change != NULL; change = pcmk__xe_next_same(change)) {
+
+        const char *op = crm_element_value(change, PCMK__XA_CIB_OP);
+        const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);
+
+        if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
+            // Change to an existing element
+            rc = true;
+            break;
+        }
+
+        if (pcmk__str_eq(op, PCMK_VALUE_CREATE, pcmk__str_none)
+            && pcmk__str_eq(diff_xpath, parent_xpath, pcmk__str_none)
+            && pcmk__xe_is(pcmk__xe_first_child(change, NULL, NULL, NULL),
+                                                element)) {
+            // Newly added element
+            rc = true;
+            break;
+        }
+    }
+
+    free(element_regex);
     return rc;
 }
