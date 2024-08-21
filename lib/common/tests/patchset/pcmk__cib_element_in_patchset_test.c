@@ -21,8 +21,8 @@ empty_arguments(void **state) {
 
     missing = pcmk__xml_parse("<diff format=\"2\"/>");
     assert_false(pcmk__cib_element_in_patchset(missing, NULL));
-    xmlFreeNode(missing);
+    pcmk__xml_free(missing);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(empty_arguments))
