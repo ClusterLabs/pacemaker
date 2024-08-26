@@ -369,15 +369,13 @@ class CIB:
 
         g.commit()
 
-        # LSB resource
-        lsb = Resource(self._factory, "lsb-dummy", "LSBDummy", "lsb")
-        lsb.add_op("monitor", "5s")
-
-        # LSB with group
-        lsb.after("group-1")
-        lsb.colocate("group-1")
-
-        lsb.commit()
+        # LSB resource dependent on group-1
+        if BuildOptions.INIT_DIR is not None:
+            lsb = Resource(self._factory, "lsb-dummy", "LSBDummy", "lsb")
+            lsb.add_op("monitor", "5s")
+            lsb.after("group-1")
+            lsb.colocate("group-1")
+            lsb.commit()
 
 
 class ConfigFactory:

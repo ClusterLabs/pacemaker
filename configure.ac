@@ -429,10 +429,12 @@ AC_ARG_WITH([nagios-metadata-dir],
 
 INITDIR=""
 AC_ARG_WITH([initdir],
-    [AS_HELP_STRING([--with-initdir=DIR],
-        [directory for init (rc) scripts])],
+    [AS_HELP_STRING([--with-initdir=DIR], m4_normalize([
+        directory for lsb resources (init scripts), or "try" to check for
+        common locations, or "no" to disable] @<:@try@:>@))],
     [ INITDIR="$withval" ]
 )
+AS_IF([test x"$INITDIR" = x""], [INITDIR="try"])
 
 systemdsystemunitdir="${systemdsystemunitdir-}"
 AC_ARG_WITH([systemdsystemunitdir],
@@ -744,24 +746,6 @@ expand_path_option() {
     )
 }
 
-AC_MSG_NOTICE([Sanitizing INITDIR: ${INITDIR}])
-AS_CASE([$INITDIR],
-        [prefix], [INITDIR=$prefix],
-        [""], [
-            AC_MSG_CHECKING([which init (rc) directory to use])
-            for initdir in /etc/init.d /etc/rc.d/init.d /sbin/init.d \
-                /usr/local/etc/rc.d /etc/rc.d
-            do
-                AS_IF([test -d $initdir],
-                      [
-                          INITDIR=$initdir
-                          break
-                      ])
-            done
-            AC_MSG_RESULT([$INITDIR])
-        ])
-AC_SUBST(INITDIR)
-
 dnl Expand values of autoconf-provided directory options
 expand_path_option prefix
 expand_path_option exec_prefix
@@ -783,7 +767,35 @@ AC_DEFUN([AC_DATAROOTDIR_CHECKED])
 
 dnl Expand values of custom directory options
 
-AM_CONDITIONAL([BUILD_LSB], [true])
+AS_IF([test x"$INITDIR" = x"try"],
+      [
+          AC_MSG_CHECKING([for an init directory])
+          INITDIR=no
+          for initdir in /etc/init.d /etc/rc.d/init.d /sbin/init.d \
+                         /usr/local/etc/rc.d /etc/rc.d ${sysconfdir}/init.d
+          do
+              AS_IF([test -d $initdir],
+                    [
+                        INITDIR=$initdir
+                        break
+                    ])
+          done
+          AC_MSG_RESULT([$INITDIR])
+      ])
+support_lsb=$DISABLED
+AM_CONDITIONAL([BUILD_LSB], [test x"${INITDIR}" != x"no"])
+AM_COND_IF([BUILD_LSB],
+           [
+               support_lsb=$REQUIRED
+               expand_path_option INITDIR
+               PCMK_FEATURES="$PCMK_FEATURES lsb"
+           ],
+           [ INITDIR="" ])
+AC_SUBST(INITDIR)
+AC_DEFINE_UNQUOTED([PCMK__ENABLE_LSB], [$support_lsb],
+                   [Whether to support LSB resource agents])
+AC_DEFINE_UNQUOTED([PCMK__LSB_INIT_DIR], ["$INITDIR"],
+                   [Location for LSB init scripts])
 
 expand_path_option localedir "${datadir}/locale"
 AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"],
@@ -794,10 +806,6 @@ expand_path_option runstatedir "${localstatedir}/run"
 AC_DEFINE_UNQUOTED([PCMK_RUN_DIR], ["$runstatedir"],
                    [Location for modifiable per-process data])
 AC_SUBST(runstatedir)
-
-expand_path_option INITDIR
-AC_DEFINE_UNQUOTED([PCMK__LSB_INIT_DIR], ["$INITDIR"],
-                   [Location for LSB init scripts])
 
 expand_path_option docdir "${datadir}/doc/${PACKAGE}-${VERSION}"
 AC_SUBST(docdir)
@@ -901,7 +909,7 @@ for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     mandir INITDIR docdir CONFIGDIR localedir
 do
     dirname=`eval echo '${'${j}'}'`
-    AS_IF([test ! -d "$dirname"],
+    AS_IF([test -n "$dirname" && test ! -d "$dirname"],
           [AC_MSG_WARN([$j directory ($dirname) does not exist (yet)])])
 done
 
@@ -2254,6 +2262,8 @@ AC_MSG_NOTICE([  Arch-independent files   = ${datadir}])
 AC_MSG_NOTICE([  State information        = ${localstatedir}])
 AC_MSG_NOTICE([  System configuration     = ${sysconfdir}])
 AC_MSG_NOTICE([  OCF agents               = ${OCF_ROOT_DIR}])
+AM_COND_IF([BUILD_LSB],
+           [AC_MSG_NOTICE([  LSB agents               = ${INITDIR}])])
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_NOTICE([  HA user name             = ${CRM_DAEMON_USER}])

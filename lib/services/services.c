@@ -29,7 +29,10 @@
 #include <crm/common/xml.h>
 #include "services_private.h"
 #include "services_ocf.h"
+
+#if PCMK__ENABLE_LSB
 #include "services_lsb.h"
+#endif
 
 #if SUPPORT_UPSTART
 #  include <upstart.h>
@@ -71,9 +74,11 @@ static void handle_blocked_ops(void);
 const char *
 resources_find_service_class(const char *agent)
 {
+#if PCMK__ENABLE_LSB
     if (services__lsb_agent_exists(agent)) {
         return PCMK_RESOURCE_CLASS_LSB;
     }
+#endif
 
 #if SUPPORT_SYSTEMD
     if (systemd_unit_exists(agent)) {
@@ -138,9 +143,20 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
             crm_debug("Found %s agent %s for %s", found_class, agent, rsc);
             expanded_class = pcmk__str_copy(found_class);
         } else {
-            crm_info("Assuming resource class lsb for agent %s for %s",
-                     agent, rsc);
-            expanded_class = pcmk__str_copy(PCMK_RESOURCE_CLASS_LSB);
+            const char *default_standard = NULL;
+
+#if PCMK__ENABLE_LSB
+            default_standard = PCMK_RESOURCE_CLASS_LSB;
+#elif SUPPORT_SYSTEMD
+            default_standard = PCMK_RESOURCE_CLASS_SYSTEMD;
+#elif SUPPORT_UPSTART
+            default_standard = PCMK_RESOURCE_CLASS_UPSTART;
+#else
+#error No standards supported for service alias (configure script bug)
+#endif
+            crm_info("Assuming resource class %s for agent %s for %s",
+                     default_standard, agent, rsc);
+            expanded_class = pcmk__str_copy(default_standard);
         }
     }
 #endif
@@ -306,9 +322,10 @@ services__create_resource_action(const char *name, const char *standard,
     if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         rc = services__ocf_prepare(op);
 
+#if PCMK__ENABLE_LSB
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         rc = services__lsb_prepare(op);
-
+#endif
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         rc = services__systemd_prepare(op);
@@ -571,9 +588,11 @@ services_result2ocf(const char *standard, const char *action, int exit_status)
         return services__nagios2ocf(exit_status);
 #endif
 
+#if PCMK__ENABLE_LSB
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_LSB,
                             pcmk__str_casei)) {
         return services__lsb2ocf(action, exit_status);
+#endif
 
     } else {
         crm_warn("Treating result from unknown standard '%s' as OCF",
@@ -1004,10 +1023,12 @@ execute_metadata_action(svc_action_t *op)
     }
 #endif
 
+#if PCMK__ENABLE_LSB
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {
         return pcmk_legacy2rc(services__get_lsb_metadata(op->agent,
                                                          &op->stdout_data));
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
@@ -1071,7 +1092,9 @@ resources_list_standards(void)
     standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_SERVICE));
 #endif
 
+#if PCMK__ENABLE_LSB
     standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_LSB));
+#endif
 
 #if SUPPORT_SYSTEMD
     {
@@ -1133,7 +1156,7 @@ resources_list_agents(const char *standard, const char *provider)
 
         GList *tmp1;
         GList *tmp2;
-        GList *result = services__list_lsb_agents();
+        GList *result = NULL;
 
         if (standard == NULL) {
             tmp1 = result;
@@ -1142,6 +1165,11 @@ resources_list_agents(const char *standard, const char *provider)
                 result = g_list_concat(tmp1, tmp2);
             }
         }
+
+#if PCMK__ENABLE_LSB
+        result = g_list_concat(result, services__list_lsb_agents());
+#endif
+
 #if SUPPORT_SYSTEMD
         tmp1 = result;
         tmp2 = systemd_unit_listall();
@@ -1162,8 +1190,10 @@ resources_list_agents(const char *standard, const char *provider)
 
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         return resources_os_list_ocf_agents(provider);
+#if PCMK__ENABLE_LSB
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         return services__list_lsb_agents();
+#endif
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         return systemd_unit_listall();
@@ -1223,20 +1253,25 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 
 #if PCMK__ENABLE_SERVICE
     if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei)) {
+#if PCMK__ENABLE_LSB
         if (services__lsb_agent_exists(agent)) {
             rc = TRUE;
-#if SUPPORT_SYSTEMD
-        } else if (systemd_unit_exists(agent)) {
-            rc = TRUE;
-#endif
-
-#if SUPPORT_UPSTART
-        } else if (upstart_job_exists(agent)) {
-            rc = TRUE;
-#endif
-        } else {
-            rc = FALSE;
+            goto done;
         }
+#endif
+#if SUPPORT_SYSTEMD
+        if (systemd_unit_exists(agent)) {
+            rc = TRUE;
+            goto done;
+        }
+#endif
+#if SUPPORT_UPSTART
+        if (upstart_job_exists(agent)) {
+            rc = TRUE;
+            goto done;
+        }
+#endif
+        rc = FALSE;
         goto done;
     }
 #endif
@@ -1244,8 +1279,10 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
     if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
         rc = services__ocf_agent_exists(provider, agent);
 
+#if PCMK__ENABLE_LSB
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {
         rc = services__lsb_agent_exists(agent);
+#endif
 
 #if SUPPORT_SYSTEMD
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
