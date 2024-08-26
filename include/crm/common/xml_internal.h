@@ -602,7 +602,8 @@ pcmk__map_element_name(const xmlNode *xml)
  *
  * \return \c true if \p element was modified, or \c false otherwise
  */
-bool pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element);
+bool pcmk__cib_element_in_patchset(const xmlNode *patchset,
+                                   const char *element);
 
 #ifdef __cplusplus
 }
