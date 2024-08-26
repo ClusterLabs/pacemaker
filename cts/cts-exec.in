@@ -186,7 +186,12 @@ class ExecTests(Tests):
 
         print("Testing resource classes %r" % self._rsc_classes)
 
-        service_agent = "LSBDummy"
+        if "lsb" in self._rsc_classes:
+            service_agent = "LSBDummy"
+        elif "systemd" in self._rsc_classes:
+            service_agent = "pacemaker-cts-dummyd@3"
+        else:
+            service_agent = "unsupported"
 
         self._common_cmds = {
             "ocf_reg_line": '-c register_rsc -r ocf_test_rsc ' + self._action_timeout + ' -C ocf -P pacemaker -T Dummy',
@@ -820,15 +825,17 @@ class ExecTests(Tests):
         test.add_cmd(args="-c metadata -P pacemaker -T Stateful", expected_exitcode=ExitStatus.ERROR)
         test.add_cmd(args="-c metadata -C ocf -P pacemaker -T fake_agent", expected_exitcode=ExitStatus.ERROR)
 
-        # get metadata
-        test = self.new_test("get_lsb_metadata", "Retrieve metadata for a resource")
-        test.add_cmd(args="-c metadata -C lsb -T LSBDummy",
-                     stdout_match="resource-agent name='LSBDummy'")
-
         # get stonith metadata
         test = self.new_test("get_stonith_metadata", "Retrieve stonith metadata for a resource")
         test.add_cmd(args="-c metadata -C stonith -P pacemaker -T fence_dummy",
                      stdout_match="resource-agent name=\"fence_dummy\"")
+
+        # get lsb metadata
+        if "lsb" in self._rsc_classes:
+            test = self.new_test("get_lsb_metadata",
+                                 "Retrieve metadata for an LSB resource")
+            test.add_cmd(args="-c metadata -C lsb -T LSBDummy",
+                         stdout_match="resource-agent name='LSBDummy'")
 
         # get metadata
         if "systemd" in self._rsc_classes:
@@ -868,14 +875,12 @@ class ExecTests(Tests):
 
         if "systemd" in self._rsc_classes:
             test.add_cmd(args="-c list_agents ", stdout_match="pacemaker-cts-dummyd@")                         # systemd
-            test.add_cmd(args="-c list_agents -C service", stdout_match="LSBDummy")
             test.add_cmd(args="-c list_agents -C systemd", stdout_match="", stdout_no_match="Stateful")        # should not exist
             test.add_cmd(args="-c list_agents -C systemd", stdout_match="pacemaker-cts-dummyd@")
             test.add_cmd(args="-c list_agents -C systemd", stdout_match="", stdout_no_match="fence_dummy")     # should not exist
 
         if "upstart" in self._rsc_classes:
             test.add_cmd(args="-c list_agents ", stdout_match="pacemaker-cts-dummyd")                          # upstart
-            test.add_cmd(args="-c list_agents -C service", stdout_match="LSBDummy")
             test.add_cmd(args="-c list_agents -C upstart", stdout_match="", stdout_no_match="Stateful")        # should not exist
             test.add_cmd(args="-c list_agents -C upstart", stdout_match="pacemaker-cts-dummyd")
             test.add_cmd(args="-c list_agents -C upstart", stdout_match="", stdout_no_match="fence_dummy")     # should not exist

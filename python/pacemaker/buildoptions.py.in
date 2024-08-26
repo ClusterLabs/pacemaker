@@ -45,7 +45,7 @@ class BuildOptions:
     _FENCE_BINDIR = "@PCMK__FENCE_BINDIR@"
     """Where executable fence agents are installed."""
 
-    INIT_DIR = "@INITDIR@"
+    INIT_DIR = "@INITDIR@" if "@INITDIR@" else None
     """Where LSB init scripts are stored."""
 
     LIBEXEC_DIR = "@libexecdir@"
