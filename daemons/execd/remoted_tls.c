@@ -84,26 +84,43 @@ static int
 lrmd_remote_client_msg(gpointer data)
 {
     int id = 0;
-    int rc;
+    int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
     pcmk__client_t *client = data;
 
-    if (!pcmk_is_set(client->flags,
-                     pcmk__client_tls_handshake_complete)) {
+    if (!pcmk_is_set(client->flags, pcmk__client_tls_handshake_complete)) {
         return remoted__read_handshake_data(client);
     }
 
-    switch (pcmk__remote_ready(client->remote, 0)) {
+    rc = pcmk__remote_ready(client->remote, 0);
+    switch (rc) {
         case pcmk_rc_ok:
             break;
-        case ETIME: // No message available to read
+
+        case ETIME:
+            /* No message available to read */
             return 0;
-        default:    // Error
-            crm_info("Remote client disconnected while polling it");
+
+        default:
+            /* Error */
+            crm_info("Error polling remote client: %s", pcmk_rc_str(rc));
             return -1;
     }
 
-    rc = pcmk__read_remote_message(client->remote, -1);
+    rc = pcmk__read_available_remote_data(client->remote);
+    switch (rc) {
+        case pcmk_rc_ok:
+            break;
+
+        case EAGAIN:
+            /* We haven't read the whole message yet */
+            return 0;
+
+        default:
+            /* Error */
+            crm_info("Error reading from remote client: %s", pcmk_rc_str(rc));
+            return -1;
+    }
 
     request = pcmk__remote_message_xml(client->remote);
     while (request) {
@@ -128,11 +145,6 @@ lrmd_remote_client_msg(gpointer data)
 
         /* process all the messages in the current buffer */
         request = pcmk__remote_message_xml(client->remote);
-    }
-
-    if (rc == ENOTCONN) {
-        crm_info("Remote client disconnected while reading from it");
-        return -1;
     }
 
     return 0;
