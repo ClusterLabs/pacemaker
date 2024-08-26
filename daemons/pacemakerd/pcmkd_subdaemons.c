@@ -275,11 +275,19 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
                 break;
 
             case CRM_EX_PANIC:
-                crm_emerg("%s[%d] instructed the machine to reset", name, pid);
-                child->flags &= ~child_respawn;
-                fatal_error = TRUE;
-                pcmk__panic(__func__);
-                pcmk_shutdown(SIGTERM);
+                {
+                    char *msg = NULL;
+
+                    child->flags &= ~child_respawn;
+                    fatal_error = TRUE;
+                    msg = crm_strdup_printf("Subdaemon %s[%d] requested panic",
+                                            name, pid);
+                    pcmk__panic(msg);
+
+                    // Should never get here
+                    free(msg);
+                    pcmk_shutdown(SIGTERM);
+                }
                 break;
 
             default:
@@ -315,8 +323,7 @@ pcmk_process_exit(pcmk_child_t * child)
         /* nothing to do */
 
     } else if (crm_is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
-        crm_err("Rebooting system because of subdaemon %s failure", name);
-        pcmk__panic(__func__);
+        pcmk__panic("Subdaemon failed");
 
     } else if (child_liveness(child) == pcmk_rc_ok) {
         crm_warn("Not respawning subdaemon %s because IPC endpoint %s is OK",

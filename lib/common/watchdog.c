@@ -143,13 +143,10 @@ panic_sbd(void)
     union sigval signal_value;
     pid_t ppid = getppid();
 
-    crm_emerg("Signaling sbd[%lld] to panic", (long long) sbd_pid);
-
     memset(&signal_value, 0, sizeof(signal_value));
     /* TODO: Arrange for a slightly less brutal option? */
     if(sigqueue(sbd_pid, SIGKILL, signal_value) < 0) {
-        crm_perror(LOG_EMERG, "Cannot signal sbd[%lld] to terminate",
-                   (long long) sbd_pid);
+        crm_emerg("Panicking directly because couldn't signal sbd");
         panic_local();
     }
 
@@ -169,18 +166,18 @@ panic_sbd(void)
  * Panic the local host either by sbd (if running), directly, or by asking
  * pacemakerd. If trace logging this function, exit instead.
  *
- * \param[in] origin   Function caller (for logging only)
+ * \param[in] reason  Why panic is needed (for logging only)
  */
 void
-pcmk__panic(const char *origin)
+pcmk__panic(const char *reason)
 {
     if (pcmk__locate_sbd() > 1) {
         crm_emerg("Signaling sbd[%lld] to panic the system: %s",
-                  (long long) sbd_pid, origin);
+                  (long long) sbd_pid, reason);
         panic_sbd();
 
     } else {
-        crm_emerg("Panicking the system directly: %s", origin);
+        crm_emerg("Panicking the system directly: %s", reason);
         panic_local();
     }
 }

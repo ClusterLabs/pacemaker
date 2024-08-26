@@ -131,7 +131,7 @@ pcmk_ignore(int nsig)
 static void
 pcmk_sigquit(int nsig)
 {
-    pcmk__panic(__func__);
+    pcmk__panic("Received SIGQUIT");
 }
 
 static void
