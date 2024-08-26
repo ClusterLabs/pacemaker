@@ -174,22 +174,7 @@ panic_sbd(void)
 void
 pcmk__panic(const char *origin)
 {
-    /* Ensure sbd_pid is set */
-    (void) pcmk__locate_sbd();
-
-    pcmk__if_tracing(
-        {
-            // getppid() == 1 means our original parent no longer exists
-            crm_emerg("Shutting down instead of panicking the node "
-                      QB_XS " origin=%s sbd=%lld parent=%d",
-                      origin, (long long) sbd_pid, getppid());
-            crm_exit(CRM_EX_FATAL);
-            return;
-        },
-        {}
-    );
-
-    if(sbd_pid > 1) {
+    if (pcmk__locate_sbd() > 1) {
         crm_emerg("Signaling sbd[%lld] to panic the system: %s",
                   (long long) sbd_pid, origin);
         panic_sbd();
