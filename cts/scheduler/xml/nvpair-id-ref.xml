@@ -23,7 +23,6 @@
       <primitive class="ocf" id="rsc2" provider="pacemaker" type="Dummy">
         <instance_attributes id="rsc2-instance_attributes">
           <nvpair id-ref="rsc1-instance_attributes-fake"/>
-          <nvpair id-ref="rsc1-instance_attributes-fake" name="fake_fake"/>
         </instance_attributes>
         <operations>
           <op id="rsc2-monitor-10" interval="10" name="monitor"/>

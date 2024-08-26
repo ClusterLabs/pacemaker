@@ -1,0 +1,33 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="8" num_updates="0" admin_epoch="0">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * There is one nvset element of each type: cluster_property_set,
+           instance_attributes, meta_attributes, utilization.
+         * Each nvset contains one nvpair with a value and one nvpair with no
+           value.
+
+         In this situation, all nvpair elements with no value should be dropped.
+      -->
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-option2" name="option2" value="value2"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive class="ocf" id="rsc1" provider="pacemaker" type="Dummy">
+        <instance_attributes id="rsc1-instance_attributes">
+          <nvpair id="rsc1-instance_attributes-option2" name="option2" value="value2"/>
+        </instance_attributes>
+        <meta_attributes id="rsc1-meta_attributes">
+          <nvpair id="rsc1-meta_attributes-option2" name="option2" value="value2"/>
+        </meta_attributes>
+        <utilization id="rsc1-utilization">
+          <nvpair id="rsc1-utilization-option2" name="option2" value="value2"/>
+        </utilization>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

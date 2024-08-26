@@ -1,5 +1,5 @@
-<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="16" num_updates="0" admin_epoch="0">
-  <configuration>
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="16" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
     <!-- The essential elements of this test are:
          * There is a cluster_properties_set element with an id attribute (set
            to cluster-properties1) and a set of nvpair children.
@@ -37,30 +37,36 @@
              * Any subsequent elements with the new id value are converted to
                references to the first one.
       -->
-    <crm_config>
-      <cluster_property_set id-ref="cluster-properties1"/>
-      <cluster_property_set id="cluster-properties1">
-        <nvpair id="cluster-properties1-option1" name="option1" value="value1"/>
-        <nvpair id="cluster-properties1-option2" name="option2" value="value2"/>
+    <crm_config original="1">
+      <cluster_property_set id="cluster-properties1" original="0">
+        <nvpair id="cluster-properties1-option1" name="option1" value="value1" original="0"/>
+        <nvpair id="cluster-properties1-option2" name="option2" value="value2" original="0"/>
       </cluster_property_set>
-      <cluster_property_set id-ref="cluster-properties1"/>
+      <cluster_property_set id="cluster-properties1" original="1">
+        <nvpair id="cluster-properties1-option1" name="option1" value="value1" original="1"/>
+        <nvpair id="cluster-properties1-option2" name="option2" value="value2" original="1"/>
+      </cluster_property_set>
+      <cluster_property_set id="cluster-properties1" original="0">
+        <nvpair id="cluster-properties1-option1" name="option1" value="value1" original="0"/>
+        <nvpair id="cluster-properties1-option2" name="option2" value="value2" original="0"/>
+      </cluster_property_set>
     </crm_config>
-    <nodes/>
-    <resources>
-      <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="rsc1-meta_attributes">
-          <nvpair id="rsc1-meta_attributes-option1" name="option1" value="valueX"/>
-          <nvpair id-ref="cluster-properties1-option1"/>
-          <nvpair id="pcmk__3_10_upgrade-cluster-properties1-option1-option3" name="option3" value="value1"/>
+    <nodes original="1"/>
+    <resources original="1">
+      <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy" original="1">
+        <meta_attributes id="rsc1-meta_attributes" original="1">
+          <nvpair id="rsc1-meta_attributes-option1" name="option1" value="valueX" original="1"/>
+          <nvpair id="cluster-properties1-option1" name="option1" value="value1" original="0"/>
+          <nvpair id="pcmk__3_10_upgrade-cluster-properties1-option1-option3" name="option3" value="value1" original="0"/>
         </meta_attributes>
       </primitive>
-      <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="rsc2-meta_attributes">
-          <nvpair id-ref="pcmk__3_10_upgrade-cluster-properties1-option1-option3"/>
+      <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy" original="1">
+        <meta_attributes id="rsc2-meta_attributes" original="1">
+          <nvpair id="pcmk__3_10_upgrade-cluster-properties1-option1-option3" name="option3" value="value1" original="0"/>
         </meta_attributes>
       </primitive>
     </resources>
-    <constraints/>
+    <constraints original="1"/>
   </configuration>
-  <status/>
+  <status original="1"/>
 </cib>
