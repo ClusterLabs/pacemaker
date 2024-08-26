@@ -7,42 +7,33 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <crm_internal.h>
-#include <crm/cib/internal.h>
+#include <crm/cib.h>
 
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     char *filename = NULL;
     int fd = 0;
+    cib_t *cib = NULL;
 
     // Have at least some data
     if (size < 5) {
         return -1; // Do not add input to testing corpus
     }
 
-    filename = crm_strdup_printf("%s/libfuzzer.XXXXXX", pcmk__get_tmpdir());
-    fd = mkstemp(filename);
-    if (fd == -1) {
-        free(filename);
-        return 0;
-    }
-    if (write(fd, data, size) < 0) {
-        close(fd);
-        unlink(filename);
-        free(filename);
-        return 0;
-    }
-    close(fd);
+    filename = pcmk__assert_alloc(size + 1, sizeof(char));
+    memcpy(filename, data, size);
+    filename[size] = '\0';
 
-    cib_file_read_and_verify(filename, NULL, NULL);
+    cib = cib_file_new(filename);
 
-    unlink(filename);
+    cib_delete(cib);
     free(filename);
-
     return 0;
 }
