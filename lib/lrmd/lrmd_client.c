@@ -258,8 +258,11 @@ lrmd_free_event(lrmd_event_data_t *event)
 }
 
 static void
-lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
+lrmd_dispatch_internal(gpointer data, gpointer user_data)
 {
+    xmlNode *msg = data;
+    lrmd_t *lrmd = user_data;
+
     const char *type;
     const char *proxy_session = crm_element_value(msg,
                                                   PCMK__XA_LRMD_IPC_SESSION);
@@ -357,7 +360,7 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     if (native->callback != NULL) {
         xmlNode *msg = pcmk__xml_parse(buffer);
 
-        lrmd_dispatch_internal(lrmd, msg);
+        lrmd_dispatch_internal(msg, lrmd);
         pcmk__xml_free(msg);
     }
     return 0;
@@ -406,12 +409,8 @@ lrmd_tls_dispatch(gpointer userdata)
     /* First check if there are any pending notifies to process that came
      * while we were waiting for replies earlier. */
     if (native->pending_notify) {
-        GList *iter = NULL;
-
         crm_trace("Processing pending notifies");
-        for (iter = native->pending_notify; iter; iter = iter->next) {
-            lrmd_dispatch_internal(lrmd, iter->data);
-        }
+        g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
         g_list_free_full(native->pending_notify, lrmd_free_xml);
         native->pending_notify = NULL;
     }
@@ -434,7 +433,7 @@ lrmd_tls_dispatch(gpointer userdata)
         const char *msg_type = crm_element_value(xml,
                                                  PCMK__XA_LRMD_REMOTE_MSG_TYPE);
         if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
-            lrmd_dispatch_internal(lrmd, xml);
+            lrmd_dispatch_internal(xml, lrmd);
         } else if (pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
             if (native->expected_late_replies > 0) {
                 native->expected_late_replies--;
