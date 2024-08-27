@@ -215,15 +215,15 @@ static int month_days[13] = {
 /*!
  * \brief Return number of days in given month of given year
  *
- * \param[in]  Ordinal month (1-12)
- * \param[in]  Gregorian year
+ * \param[in] month  Ordinal month (1-12)
+ * \param[in] year   Gregorian year
  *
- * \return Number of days in given month (0 if given month is invalid)
+ * \return Number of days in given month (0 if given month or year is invalid)
  */
 int
 crm_time_days_in_month(int month, int year)
 {
-    if ((month < 1) || (month > 12)) {
+    if ((month < 1) || (month > 12) || (year < 1)) {
         return 0;
     }
     if ((month == 2) && crm_time_leapyear(year)) {
