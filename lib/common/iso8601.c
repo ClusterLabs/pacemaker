@@ -246,15 +246,30 @@ crm_time_leapyear(int year)
     return is_leap;
 }
 
-static uint32_t
+/*!
+ * \internal
+ * \brief Get ordinal day number of year corresponding to given date
+ *
+ * \param[in] y   Year
+ * \param[in] m   Month (1-12)
+ * \param[in] d   Day of month (1-31)
+ *
+ * \return Day number of year \p y corresponding to month \p m and day \p d,
+ *         or 0 for invalid arguments
+ */
+static int
 get_ordinal_days(uint32_t y, uint32_t m, uint32_t d)
 {
-    int lpc;
+    int result = 0;
 
-    for (lpc = 1; lpc < m; lpc++) {
-        d += crm_time_days_in_month(lpc, y);
+    CRM_CHECK((y > 0) && (y <= INT_MAX) && (m >= 1) && (m <= 12)
+              && (d >= 1) && (d <= 31), return 0);
+
+    result = d;
+    for (int lpc = 1; lpc < m; lpc++) {
+        result += crm_time_days_in_month(lpc, y);
     }
-    return d;
+    return result;
 }
 
 void
