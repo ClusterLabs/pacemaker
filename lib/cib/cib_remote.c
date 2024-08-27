@@ -197,6 +197,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
 
 struct remote_cb_data_s {
     cib_t *cib;
+    time_t start_time;
     int timeout_sec;
 };
 
@@ -210,9 +211,36 @@ cib_remote_callback_dispatch(gpointer user_data)
 
     xmlNode *msg = NULL;
 
-    crm_info("Message on callback channel");
+    /* If start_time is 0, we've previously handled a complete message and this
+     * callback is being reused for a new message.  Reset the start_time, giving
+     * this new message timeout_sec from now to complete.
+     */
+    if (rd->start_time == 0) {
+        rd->start_time = time(NULL);
+    } else if (time(NULL) >= rd->start_time + rd->timeout_sec) {
+        free(rd);
+        crm_info("Error reading from remote client: %s", pcmk_rc_str(ETIME));
+        return -1;
+    }
 
-    rc = pcmk__read_remote_message(&private->callback, rd->timeout_sec);
+    rc = pcmk__read_available_remote_data(&private->callback);
+    switch (rc) {
+        case pcmk_rc_ok:
+            /* We have the whole message so process it */
+            break;
+
+        case EAGAIN:
+            /* We haven't read the whole message yet */
+            return 0;
+
+        default:
+            /* Error */
+            crm_info("Error reading from remote client: %s", pcmk_rc_str(rc));
+            free(rd);
+            return -1;
+    }
+
+    crm_info("Message on callback channel");
 
     msg = pcmk__remote_message_xml(&private->callback);
     while (msg) {
@@ -234,11 +262,7 @@ cib_remote_callback_dispatch(gpointer user_data)
         msg = pcmk__remote_message_xml(&private->callback);
     }
 
-    if (rc == ENOTCONN) {
-        free(rd);
-        return -1;
-    }
-
+    rd->start_time = 0;
     return 0;
 }
 
@@ -250,16 +274,32 @@ cib_remote_command_dispatch(gpointer user_data)
     int rc;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    rc = pcmk__read_remote_message(&private->command, rd->timeout_sec);
+    /* See cib_remote_callback_dispatch */
+    if (rd->start_time == 0) {
+        rd->start_time = time(NULL);
+    } else if (time(NULL) >= rd->start_time + rd->timeout_sec) {
+        free(rd);
+        crm_info("Error reading from remote client: %s", pcmk_rc_str(ETIME));
+        return -1;
+    }
+
+    rc = pcmk__read_available_remote_data(&private->command);
+    if (rc == EAGAIN) {
+        /* We haven't read the whole message yet */
+        return 0;
+    }
 
     free(private->command.buffer);
     private->command.buffer = NULL;
     crm_err("received late reply for remote cib connection, discarding");
 
-    if (rc == ENOTCONN) {
+    if (rc != pcmk_rc_ok) {
+        crm_info("Error reading from remote client: %s", pcmk_rc_str(rc));
         free(rd);
         return -1;
     }
+
+    rd->start_time = 0;
     return 0;
 }
 
