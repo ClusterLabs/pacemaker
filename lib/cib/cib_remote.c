@@ -195,18 +195,24 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     return rc;
 }
 
+struct remote_cb_data_s {
+    cib_t *cib;
+    int timeout_sec;
+};
+
 static int
 cib_remote_callback_dispatch(gpointer user_data)
 {
+    struct remote_cb_data_s *rd = user_data;
+    cib_t *cib = rd->cib;
     int rc;
-    cib_t *cib = user_data;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
     xmlNode *msg = NULL;
 
     crm_info("Message on callback channel");
 
-    rc = pcmk__read_remote_message(&private->callback, -1);
+    rc = pcmk__read_remote_message(&private->callback, rd->timeout_sec);
 
     msg = pcmk__remote_message_xml(&private->callback);
     while (msg) {
@@ -229,6 +235,7 @@ cib_remote_callback_dispatch(gpointer user_data)
     }
 
     if (rc == ENOTCONN) {
+        free(rd);
         return -1;
     }
 
@@ -238,17 +245,19 @@ cib_remote_callback_dispatch(gpointer user_data)
 static int
 cib_remote_command_dispatch(gpointer user_data)
 {
+    struct remote_cb_data_s *rd = user_data;
+    cib_t *cib = rd->cib;
     int rc;
-    cib_t *cib = user_data;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    rc = pcmk__read_remote_message(&private->command, -1);
+    rc = pcmk__read_remote_message(&private->command, rd->timeout_sec);
 
     free(private->command.buffer);
     private->command.buffer = NULL;
     crm_err("received late reply for remote cib connection, discarding");
 
     if (rc == ENOTCONN) {
+        free(rd);
         return -1;
     }
     return 0;
@@ -316,6 +325,10 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     xmlNode *login = NULL;
 
     static struct mainloop_fd_callbacks cib_fd_callbacks = { 0, };
+
+    struct remote_cb_data_s *rd = pcmk__assert_alloc(1, sizeof(struct remote_cb_data_s));
+    rd->cib = cib;
+    rd->timeout_sec = 60;
 
     cib_fd_callbacks.dispatch =
         event_channel ? cib_remote_callback_dispatch : cib_remote_command_dispatch;
@@ -413,7 +426,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     crm_trace("remote client connection established");
     connection->source = mainloop_add_fd("cib-remote", G_PRIORITY_HIGH,
-                                         connection->tcp_socket, cib,
+                                         connection->tcp_socket, rd,
                                          &cib_fd_callbacks);
     return rc;
 }
