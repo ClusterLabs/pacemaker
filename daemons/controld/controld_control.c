@@ -580,7 +580,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     controld_verify_stonith_watchdog_timeout(value);
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
-    if (pcmk__str_eq(value, PCMK_VALUE_FENCE_LEGACY, pcmk__str_casei)
+    if (pcmk__strcase_any_of(value, PCMK_VALUE_FENCE, PCMK_VALUE_FENCE_LEGACY,
+                             NULL)
         && (pcmk__locate_sbd() != 0)) {
         controld_set_global_flags(controld_no_quorum_panic);
     }
