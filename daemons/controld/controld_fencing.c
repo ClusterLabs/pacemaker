@@ -548,7 +548,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
         crm_crit("We were allegedly just fenced by %s for %s!",
                  executioner, event->origin); // Dumps blackbox if enabled
         if (fence_reaction_panic) {
-            pcmk__panic(__func__);
+            pcmk__panic("Notified of own fencing");
         } else {
             crm_exit(CRM_EX_FATAL);
         }

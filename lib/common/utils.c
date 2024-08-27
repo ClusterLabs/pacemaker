@@ -442,17 +442,6 @@ crm_gnutls_global_init(void)
     gnutls_global_init();
 }
 
-bool
-pcmk_str_is_infinity(const char *s) {
-    return pcmk__str_any_of(s, PCMK_VALUE_INFINITY, PCMK_VALUE_PLUS_INFINITY,
-                            NULL);
-}
-
-bool
-pcmk_str_is_minus_infinity(const char *s) {
-    return pcmk__str_eq(s, PCMK_VALUE_MINUS_INFINITY, pcmk__str_none);
-}
-
 /*!
  * \internal
  * \brief Sleep for given milliseconds

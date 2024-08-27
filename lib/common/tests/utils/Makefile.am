@@ -14,8 +14,6 @@ include $(top_srcdir)/mk/unittest.mk
 check_PROGRAMS = compare_version_test			\
 		 crm_user_lookup_test			\
 		 pcmk_daemon_user_test			\
-		 pcmk_str_is_infinity_test		\
-		 pcmk_str_is_minus_infinity_test 	\
 		 pcmk__fail_attr_name_test 		\
 		 pcmk__failcount_name_test 		\
 		 pcmk__getpid_s_test 			\

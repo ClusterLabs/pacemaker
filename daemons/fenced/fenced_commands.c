@@ -538,7 +538,7 @@ stonith_device_execute(stonith_device_t * device)
                          STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
         if (pcmk__is_fencing_action(cmd->action)) {
             if (node_does_watchdog_fencing(fenced_get_local_node())) {
-                pcmk__panic(__func__);
+                pcmk__panic("Watchdog self-fencing required");
                 goto done;
             }
         } else {

@@ -10,6 +10,8 @@
 #ifndef PCMK__CRM_COMMON_SCORES__H
 #define PCMK__CRM_COMMON_SCORES__H
 
+#include <stdbool.h>        // bool
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,6 +27,8 @@ extern "C" {
 
 const char *pcmk_readable_score(int score);
 int char2score(const char *score);
+bool pcmk_str_is_infinity(const char *s);
+bool pcmk_str_is_minus_infinity(const char *s);
 
 #ifdef __cplusplus
 }
