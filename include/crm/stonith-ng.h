@@ -50,7 +50,10 @@ enum stonith_call_options {
 #endif
 
     //! The fencing target is allowed to execute the request
-    st_opt_allow_suicide        = (1 << 1),
+    st_opt_allow_self_fencing   = (1 << 1),
+
+    //! The fencing target is allowed to execute the request
+    st_opt_allow_suicide        = st_opt_allow_self_fencing,
 
     // Used internally to indicate that request is manual fence confirmation
     //! \internal Do not use

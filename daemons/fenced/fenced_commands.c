@@ -2497,9 +2497,11 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
              * versions will ignore "off" and "on", so they are not a problem.
              */
             add_disallowed(dev, action, device, query->target,
-                           pcmk_is_set(query->call_options, st_opt_allow_suicide));
+                           pcmk_is_set(query->call_options,
+                                       st_opt_allow_self_fencing));
             add_action_reply(dev, PCMK_ACTION_OFF, device, query->target,
-                             pcmk_is_set(query->call_options, st_opt_allow_suicide));
+                             pcmk_is_set(query->call_options,
+                                         st_opt_allow_self_fencing));
             add_action_reply(dev, PCMK_ACTION_ON, device, query->target, FALSE);
         }
 
@@ -3272,7 +3274,8 @@ handle_query_request(pcmk__request_t *request)
 
     crm_element_value_int(request->xml, PCMK__XA_ST_TIMEOUT, &timeout);
     get_capable_devices(target, action, timeout,
-                        pcmk_is_set(query->call_options, st_opt_allow_suicide),
+                        pcmk_is_set(query->call_options,
+                                    st_opt_allow_self_fencing),
                         query, stonith_query_capable_device_cb, st_device_supports_none);
     return NULL;
 }

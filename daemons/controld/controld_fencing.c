@@ -940,7 +940,7 @@ fence_with_delay(const char *target, const char *type, int delay)
                              / 1000);
 
     if (crmd_join_phase_count(crm_join_confirmed) == 1) {
-        stonith__set_call_options(options, target, st_opt_allow_suicide);
+        stonith__set_call_options(options, target, st_opt_allow_self_fencing);
     }
     return stonith_api->cmds->fence_with_delay(stonith_api, options, target,
                                                type, timeout_sec, 0, delay);
