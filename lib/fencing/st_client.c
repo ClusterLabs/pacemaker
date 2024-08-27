@@ -1993,7 +1993,7 @@ stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
         int opts = 0;
 
         stonith__set_call_options(opts, name,
-                                  st_opt_sync_call|st_opt_allow_suicide);
+                                  st_opt_sync_call|st_opt_allow_self_fencing);
         if ((uname == NULL) && (nodeid > 0)) {
             stonith__set_call_options(opts, name, st_opt_cs_nodeid);
         }
