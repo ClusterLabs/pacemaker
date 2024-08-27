@@ -44,8 +44,10 @@ enum stonith_call_options {
     //! No options
     st_opt_none                 = 0,
 
-    //! Unused
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Unused
     st_opt_verbose              = (1 << 0),
+#endif
 
     //! The fencing target is allowed to execute the request
     st_opt_allow_suicide        = (1 << 1),
