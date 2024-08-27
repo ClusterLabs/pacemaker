@@ -162,7 +162,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_NO_QUORUM_POLICY, NULL, PCMK_VALUE_SELECT,
             PCMK_VALUE_STOP ", " PCMK_VALUE_FREEZE ", " PCMK_VALUE_IGNORE
-                ", " PCMK_VALUE_DEMOTE ", " PCMK_VALUE_FENCE_LEGACY,
+                ", " PCMK_VALUE_DEMOTE ", " PCMK_VALUE_FENCE ", "
+                PCMK_VALUE_FENCE_LEGACY,
         PCMK_VALUE_STOP, pcmk__valid_no_quorum_policy,
         pcmk__opt_schedulerd,
         N_("What to do when the cluster does not have quorum"),
@@ -1291,7 +1292,8 @@ pcmk__valid_no_quorum_policy(const char *value)
     return pcmk__strcase_any_of(value,
                                 PCMK_VALUE_STOP, PCMK_VALUE_FREEZE,
                                 PCMK_VALUE_IGNORE, PCMK_VALUE_DEMOTE,
-                                PCMK_VALUE_FENCE_LEGACY, NULL);
+                                PCMK_VALUE_FENCE, PCMK_VALUE_FENCE_LEGACY,
+                                NULL);
 }
 
 /*!
