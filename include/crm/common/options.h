@@ -220,7 +220,7 @@ extern     "C" {
 #define PCMK_VALUE_WRITE                        "write"
 #define PCMK_VALUE_YELLOW                       "yellow"
 
-// @COMPAT This will become a deprecated alias for PCMK_VALUE_FENCE (see T279)
+// \deprecated Use PCMK_VALUE_FENCE instead
 #define PCMK_VALUE_FENCE_LEGACY                 "suicide"
 
 
