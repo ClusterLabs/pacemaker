@@ -1060,7 +1060,8 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
             break;
 
         case pcmk_no_quorum_fence:
-            out->list_item(out, NULL, "No quorum policy: Suicide");
+            out->list_item(out, NULL,
+                           "No quorum policy: Fence nodes in partition");
             break;
     }
 
@@ -1150,7 +1151,8 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
             break;
 
         case pcmk_no_quorum_fence:
-            out->list_item(out, NULL, "No quorum policy: Suicide");
+            out->list_item(out, NULL,
+                           "No quorum policy: Fence nodes in partition");
             break;
     }
 
@@ -1182,7 +1184,7 @@ no_quorum_policy_text(enum pe_quorum_policy policy)
             return PCMK_VALUE_IGNORE;
 
         case pcmk_no_quorum_fence:
-            return PCMK_VALUE_FENCE_LEGACY;
+            return PCMK_VALUE_FENCE;
 
         default:
             return PCMK_VALUE_UNKNOWN;
