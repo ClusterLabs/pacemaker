@@ -63,8 +63,10 @@ enum stonith_call_options {
     //! \internal Do not use
     st_opt_topology             = (1 << 6),
 
-    //! Unused
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Unused
     st_opt_scope_local          = (1 << 8),
+#endif
 
     //! Interpret target as node cluster layer ID instead of name
     st_opt_cs_nodeid            = (1 << 9),
