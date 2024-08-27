@@ -52,8 +52,10 @@ enum stonith_call_options {
     //! The fencing target is allowed to execute the request
     st_opt_allow_self_fencing   = (1 << 1),
 
-    //! The fencing target is allowed to execute the request
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use st_opt_allow_self_fencing instead
     st_opt_allow_suicide        = st_opt_allow_self_fencing,
+#endif
 
     // Used internally to indicate that request is manual fence confirmation
     //! \internal Do not use
