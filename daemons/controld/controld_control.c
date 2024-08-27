@@ -582,7 +582,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     value = g_hash_table_lookup(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
     if (pcmk__str_eq(value, PCMK_VALUE_FENCE_LEGACY, pcmk__str_casei)
         && (pcmk__locate_sbd() != 0)) {
-        controld_set_global_flags(controld_no_quorum_suicide);
+        controld_set_global_flags(controld_no_quorum_panic);
     }
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_SHUTDOWN_LOCK);
