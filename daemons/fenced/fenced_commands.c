@@ -52,7 +52,7 @@ struct device_search_s {
     /* number of device replies received so far */
     int replies_received;
     /* whether the target is eligible to perform requested action (or off) */
-    bool allow_suicide;
+    bool allow_self;
 
     /* private data to pass to search callback function */
     void *user_data;
@@ -1992,13 +1992,13 @@ search_devices_record_result(struct device_search_s *search, const char *device,
  * \param[in] device         Fence device to check
  * \param[in] action         Fence action to check
  * \param[in] target         Hostname of fence target
- * \param[in] allow_suicide  Whether self-fencing is allowed for this operation
+ * \param[in] allow_self     Whether self-fencing is allowed for this operation
  *
  * \return TRUE if local host is allowed to execute action, FALSE otherwise
  */
 static gboolean
 localhost_is_eligible(const stonith_device_t *device, const char *action,
-                      const char *target, gboolean allow_suicide)
+                      const char *target, gboolean allow_self)
 {
     gboolean localhost_is_target = pcmk__str_eq(target, fenced_get_local_node(),
                                                 pcmk__str_casei);
@@ -2014,7 +2014,7 @@ localhost_is_eligible(const stonith_device_t *device, const char *action,
             return FALSE;
         }
 
-    } else if (localhost_is_target && !allow_suicide) {
+    } else if (localhost_is_target && !allow_self) {
         crm_trace("'%s' operation does not support self-fencing", action);
         return FALSE;
     }
@@ -2093,7 +2093,7 @@ can_fence_host_with_device(stonith_device_t *dev,
         goto search_report_results;
 
     } else if (!localhost_is_eligible_with_remap(dev, action, target,
-                                                 search->allow_suicide)) {
+                                                 search->allow_self)) {
         check_type = "This node is not allowed to execute action";
         goto search_report_results;
     }
@@ -2185,8 +2185,10 @@ search_devices(gpointer key, gpointer value, gpointer user_data)
 
 #define DEFAULT_QUERY_TIMEOUT 20
 static void
-get_capable_devices(const char *host, const char *action, int timeout, bool suicide, void *user_data,
-                    void (*callback) (GList * devices, void *user_data), uint32_t support_action_only)
+get_capable_devices(const char *host, const char *action, int timeout,
+                    bool allow_self, void *user_data,
+                    void (*callback) (GList * devices, void *user_data),
+                    uint32_t support_action_only)
 {
     struct device_search_s *search;
     guint ndevices = g_hash_table_size(device_list);
@@ -2201,7 +2203,7 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     search->host = pcmk__str_copy(host);
     search->action = pcmk__str_copy(action);
     search->per_device_timeout = timeout;
-    search->allow_suicide = suicide;
+    search->allow_self = allow_self;
     search->callback = callback;
     search->user_data = user_data;
     search->support_action_only = support_action_only;
@@ -2295,13 +2297,13 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
  * \param[in]     action         Fence action
  * \param[in]     device         Fence device
  * \param[in]     target         Fence target
- * \param[in]     allow_suicide  Whether self-fencing is allowed
+ * \param[in]     allow_self     Whether self-fencing is allowed
  */
 static void
 add_disallowed(xmlNode *xml, const char *action, const stonith_device_t *device,
-               const char *target, gboolean allow_suicide)
+               const char *target, gboolean allow_self)
 {
-    if (!localhost_is_eligible(device, action, target, allow_suicide)) {
+    if (!localhost_is_eligible(device, action, target, allow_self)) {
         crm_trace("Action '%s' using %s is disallowed for local host",
                   action, device->id);
         pcmk__xe_set_bool_attr(xml, PCMK__XA_ST_ACTION_DISALLOWED, true);
@@ -2316,18 +2318,18 @@ add_disallowed(xmlNode *xml, const char *action, const stonith_device_t *device,
  * \param[in]     action         Fence action
  * \param[in]     device         Fence device
  * \param[in]     target         Fence target
- * \param[in]     allow_suicide  Whether self-fencing is allowed
+ * \param[in]     allow_self     Whether self-fencing is allowed
  */
 static void
 add_action_reply(xmlNode *xml, const char *action,
                  const stonith_device_t *device, const char *target,
-                 gboolean allow_suicide)
+                 gboolean allow_self)
 {
     xmlNode *child = pcmk__xe_create(xml, PCMK__XE_ST_DEVICE_ACTION);
 
     crm_xml_add(child, PCMK_XA_ID, action);
     add_action_specific_attributes(child, action, device, target);
-    add_disallowed(child, action, device, target, allow_suicide);
+    add_disallowed(child, action, device, target, allow_self);
 }
 
 /*!
