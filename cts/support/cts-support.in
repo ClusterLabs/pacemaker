@@ -39,7 +39,7 @@ DUMMY_DAEMON = "pacemaker-cts-dummyd"
 DUMMY_DAEMON_UNIT = "pacemaker-cts-dummyd@.service"
 
 FENCE_DUMMY = "fence_dummy"
-FENCE_DUMMY_ALIASES = ["auto_unfence", "no_reboot", "no_on"]
+FENCE_DUMMY_ALIASES = ["auto_unfence", "no_reboot", "no_on", "no_nodeid"]
 LSB_DUMMY = "LSBDummy"
 
 

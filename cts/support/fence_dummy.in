@@ -446,6 +446,8 @@ def main():
         no_reboot = True
     elif sys.argv[0].endswith("_no_on"):
         no_on = True
+    elif sys.argv[0].endswith("_no_nodeid"):
+        del ALL_OPT["nodeid"]
 
     device_opt = ALL_OPT.keys()
 

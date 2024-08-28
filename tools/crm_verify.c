@@ -178,8 +178,6 @@ main(int argc, char **argv)
 
     GOptionGroup *output_group = NULL;
 
-    const char *failure_type = NULL;
-
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "xSX");
     GOptionContext *context = build_arg_context(args, &output_group);
@@ -199,7 +197,8 @@ main(int argc, char **argv)
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
         exit_code = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
@@ -229,14 +228,14 @@ main(int argc, char **argv)
         cib_source = NULL;
     } else {
         rc = ENODATA;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "No input specified");
+        g_set_error(&error, PCMK__RC_ERROR, rc, "No input specified");
         goto done;
     }
 
     rc = pcmk__parse_cib(out, cib_source, &cib_object);
-
     if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__EXITC_ERROR, rc, "Couldn't parse input");
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Verification failed: %s",
+                    pcmk_rc_str(rc));
         goto done;
     }
 
@@ -257,25 +256,20 @@ main(int argc, char **argv)
 
     rc = pcmk__verify(scheduler, out, &cib_object);
 
-    if (rc == pcmk_rc_schema_validation) {
+    if ((rc == pcmk_rc_schema_validation) && !args->quiet) {
+        const char *failure_type = "";
+        const char *verbose_hint = "";
+
         if (pcmk__config_has_error) {
-            failure_type = "Errors found during check: ";
-          } else if (pcmk__config_has_warning) {
-            failure_type = "Warnings found during check: ";
-          } else {
-            failure_type = "";
-          }
-
-          if (args->quiet) {
-              // User requested no output
-
-          } else if (options.verbosity > 0) {
-              out->err(out, "%sconfig not valid", failure_type);
-
-          } else {
-              out->err(out, "%sconfig not valid\n-V may provide more details", failure_type);
-          }
+            failure_type = " (with errors)";
+        } else if (pcmk__config_has_warning) {
+            failure_type = " (with warnings)";
         }
+        if (options.verbosity == 0) {
+            verbose_hint = " (-V may provide more detail)";
+        }
+        out->err(out, "Configuration invalid%s%s", failure_type, verbose_hint);
+    }
 
     pe_free_working_set(scheduler);
 

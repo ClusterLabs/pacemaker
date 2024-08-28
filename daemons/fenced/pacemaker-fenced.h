@@ -321,7 +321,6 @@ fenced_support_flag(const char *action)
     return st_device_supports_none;
 }
 
-extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
 extern long long stonith_watchdog_timeout_ms;
