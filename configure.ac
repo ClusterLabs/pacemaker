@@ -319,13 +319,14 @@ AC_ARG_WITH([gnutls-priorities],
 )
 
 AC_ARG_WITH([concurrent-fencing-default],
-    [AS_HELP_STRING([--with-concurrent-fencing-default],
-        [default value for concurrent-fencing cluster option @<:@false@:>@])],
+    [AS_HELP_STRING([--with-concurrent-fencing-default], m4_normalize([
+        default value for concurrent-fencing cluster option (deprecated)
+        @<:@true@:>@]))],
 )
 AS_CASE([$with_concurrent_fencing_default],
-        [""], [with_concurrent_fencing_default="false"],
-        [false], [],
-        [true], [PCMK_FEATURES="$PCMK_FEATURES default-concurrent-fencing"],
+        [""], [with_concurrent_fencing_default="true"],
+        [true], [],
+        [false], [PCMK_FEATURES="$PCMK_FEATURES concurrent-fencing-default-false"],
         [AC_MSG_ERROR([Invalid value "$with_concurrent_fencing_default" for --with-concurrent-fencing-default])]
 )
 

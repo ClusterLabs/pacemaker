@@ -630,11 +630,9 @@ static const pcmk__cluster_option_t fencing_params[] = {
         pcmk__opt_none,
         N_("The maximum number of actions can be performed in parallel on this "
             "device"),
-        N_("Cluster property concurrent-fencing=\"true\" needs to be "
-            "configured first. Then use this to specify the maximum number of "
-            "actions can be performed in parallel on this device. A value of "
-            "-1 means an unlimited number of actions can be performed in "
-            "parallel."),
+        N_("If the concurrent-fencing cluster property is \"true\", this "
+            "specifies the maximum number of actions that can be performed in "
+            "parallel on this device. A value of -1 means unlimited."),
     },
     {
         "pcmk_reboot_action", NULL, PCMK_VALUE_STRING, NULL,
