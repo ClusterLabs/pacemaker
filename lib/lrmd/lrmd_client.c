@@ -397,6 +397,7 @@ lrmd_tls_dispatch(gpointer userdata)
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
     xmlNode *xml = NULL;
+    const char *msg_type = NULL;
     int rc = pcmk_rc_ok;
 
     if (!remote_executor_connected(lrmd)) {
@@ -416,44 +417,42 @@ lrmd_tls_dispatch(gpointer userdata)
     }
 
     /* Next read the current buffer and see if there are any messages to handle. */
-    switch (pcmk__remote_ready(native->remote, 0)) {
-        case pcmk_rc_ok:
-            rc = pcmk__read_remote_message(native->remote, -1);
-            xml = pcmk__remote_message_xml(native->remote);
-            break;
-        case ETIME:
-            // Nothing to read, check if a full message is already in buffer
-            xml = pcmk__remote_message_xml(native->remote);
-            break;
-        default:
-            rc = ENOTCONN;
-            break;
-    }
-    while (xml) {
-        const char *msg_type = crm_element_value(xml,
-                                                 PCMK__XA_LRMD_REMOTE_MSG_TYPE);
-        if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
-            lrmd_dispatch_internal(xml, lrmd);
-        } else if (pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
-            if (native->expected_late_replies > 0) {
-                native->expected_late_replies--;
-            } else {
-                int reply_id = 0;
-                crm_element_value_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
-                /* if this happens, we want to know about it */
-                crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
-            }
-        }
-        pcmk__xml_free(xml);
-        xml = pcmk__remote_message_xml(native->remote);
+    rc = pcmk__remote_ready(native->remote, 0);
+    if (rc == pcmk_rc_ok) {
+        rc = pcmk__read_remote_message(native->remote, -1);
     }
 
-    if (rc == ENOTCONN) {
+    if (rc != pcmk_rc_ok && rc != ETIME) {
         crm_info("Lost %s executor connection while reading data",
                  (native->remote_nodename? native->remote_nodename : "local"));
         lrmd_tls_disconnect(lrmd);
         return 0;
     }
+
+    /* If rc is ETIME, there was nothing to read but we may already have a
+     * full message in the buffer
+     */
+    xml = pcmk__remote_message_xml(native->remote);
+
+    if (xml == NULL) {
+        return 1;
+    }
+
+    msg_type = crm_element_value(xml, PCMK__XA_LRMD_REMOTE_MSG_TYPE);
+    if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
+        lrmd_dispatch_internal(xml, lrmd);
+    } else if (pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
+        if (native->expected_late_replies > 0) {
+            native->expected_late_replies--;
+        } else {
+            int reply_id = 0;
+            crm_element_value_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
+            /* if this happens, we want to know about it */
+            crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
+        }
+    }
+
+    pcmk__xml_free(xml);
     return 1;
 }
 
