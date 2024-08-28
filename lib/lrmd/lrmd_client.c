@@ -380,6 +380,42 @@ remote_executor_connected(lrmd_t * lrmd)
     return (native->remote->tls_session != NULL);
 }
 
+static void
+handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+    const char *msg_type = NULL;
+
+    msg_type = crm_element_value(xml, PCMK__XA_LRMD_REMOTE_MSG_TYPE);
+    if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
+        lrmd_dispatch_internal(xml, lrmd);
+    } else if (pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
+        if (native->expected_late_replies > 0) {
+            native->expected_late_replies--;
+        } else {
+            int reply_id = 0;
+            crm_element_value_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
+            /* if this happens, we want to know about it */
+            crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
+        }
+    }
+}
+
+static void
+process_pending_notifies(lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->pending_notify == NULL) {
+        return;
+    }
+
+    crm_trace("Processing pending notifies");
+    g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
+    g_list_free_full(native->pending_notify, lrmd_free_xml);
+    native->pending_notify = NULL;
+}
+
 /*!
  * \internal
  * \brief TLS dispatch function (for both trigger and file descriptor sources)
@@ -397,7 +433,6 @@ lrmd_tls_dispatch(gpointer userdata)
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
     xmlNode *xml = NULL;
-    const char *msg_type = NULL;
     int rc = pcmk_rc_ok;
 
     if (!remote_executor_connected(lrmd)) {
@@ -408,13 +443,9 @@ lrmd_tls_dispatch(gpointer userdata)
     crm_trace("TLS dispatch triggered");
 
     /* First check if there are any pending notifies to process that came
-     * while we were waiting for replies earlier. */
-    if (native->pending_notify) {
-        crm_trace("Processing pending notifies");
-        g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
-        g_list_free_full(native->pending_notify, lrmd_free_xml);
-        native->pending_notify = NULL;
-    }
+     * while we were waiting for replies earlier.
+     */
+    process_pending_notifies(lrmd);
 
     /* Next read the current buffer and see if there are any messages to handle. */
     rc = pcmk__remote_ready(native->remote, 0);
@@ -438,20 +469,7 @@ lrmd_tls_dispatch(gpointer userdata)
         return 1;
     }
 
-    msg_type = crm_element_value(xml, PCMK__XA_LRMD_REMOTE_MSG_TYPE);
-    if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
-        lrmd_dispatch_internal(xml, lrmd);
-    } else if (pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
-        if (native->expected_late_replies > 0) {
-            native->expected_late_replies--;
-        } else {
-            int reply_id = 0;
-            crm_element_value_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
-            /* if this happens, we want to know about it */
-            crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
-        }
-    }
-
+    handle_remote_msg(xml, lrmd);
     pcmk__xml_free(xml);
     return 1;
 }
