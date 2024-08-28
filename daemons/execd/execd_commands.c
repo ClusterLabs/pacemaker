@@ -844,10 +844,14 @@ action_complete(svc_action_t * action)
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
 #ifdef PCMK__TIME_USE_CGT
-    if (rsc && pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei)) {
-        rclass = resources_find_service_class(rsc->type);
-    } else if(rsc) {
+    if (rsc != NULL) {
         rclass = rsc->class;
+#if PCMK__ENABLE_SERVICE
+        if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_SERVICE,
+                         pcmk__str_casei)) {
+            rclass = resources_find_service_class(rsc->type);
+        }
+#endif
     }
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {

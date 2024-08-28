@@ -737,6 +737,8 @@ AC_DEFUN([AC_DATAROOTDIR_CHECKED])
 
 dnl Expand values of custom directory options
 
+AM_CONDITIONAL([BUILD_LSB], [true])
+
 expand_path_option localedir "${datadir}/locale"
 AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"],
                    [Base directory for message catalogs])
@@ -1564,6 +1566,20 @@ AC_SUBST(NAGIOS_METADATA_DIR)
 STACKS=""
 CLUSTERLIBS=""
 PC_NAME_CLUSTER=""
+
+dnl ========================================================================
+dnl Detect support for "service" alias
+dnl ========================================================================
+
+PCMK__ENABLE_SERVICE=$DISABLED
+AM_COND_IF([BUILD_LSB], [PCMK__ENABLE_SERVICE=$REQUIRED])
+AM_COND_IF([BUILD_SYSTEMD], [PCMK__ENABLE_SERVICE=$REQUIRED])
+AM_COND_IF([BUILD_UPSTART], [PCMK__ENABLE_SERVICE=$REQUIRED])
+AS_IF([test $PCMK__ENABLE_SERVICE -ne $DISABLED],
+      [PCMK_FEATURES="$PCMK_FEATURES service"])
+AC_SUBST(PCMK__ENABLE_SERVICE)
+AC_DEFINE_UNQUOTED([PCMK__ENABLE_SERVICE], [$PCMK__ENABLE_SERVICE],
+                   [Whether "service" is supported as an agent standard])
 
 dnl ========================================================================
 dnl    Cluster stack - Corosync

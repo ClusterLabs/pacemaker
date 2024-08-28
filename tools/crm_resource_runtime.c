@@ -2188,9 +2188,12 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
         return CRM_EX_OSERR;
     }
 
+#if PCMK__ENABLE_SERVICE
     if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei)) {
         class = resources_find_service_class(rsc_type);
     }
+#endif
+
     if (!pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_cli_exec)) {
         services__format_result(op, CRM_EX_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
                                 "Manual execution of the %s standard is "

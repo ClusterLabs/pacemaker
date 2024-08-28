@@ -23,7 +23,7 @@ extern "C" {
 #include <stdint.h>       // uint32_t
 #include <stdbool.h>
 
-// Known resource classes
+// Known (not necessarily supported) resource classes
 #define PCMK_RESOURCE_CLASS_OCF     "ocf"
 #define PCMK_RESOURCE_CLASS_SERVICE "service"
 #define PCMK_RESOURCE_CLASS_LSB     "lsb"
