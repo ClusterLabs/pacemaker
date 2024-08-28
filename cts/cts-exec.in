@@ -187,6 +187,8 @@ class ExecTests(Tests):
 
         print("Testing resource classes", repr(self._rsc_classes))
 
+        service_agent = "LSBDummy"
+
         self._common_cmds = {
             "ocf_reg_line"      : "-c register_rsc -r ocf_test_rsc "+self._action_timeout+" -C ocf -P pacemaker -T Dummy",
             "ocf_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:ocf_test_rsc action:none rc:ok op_status:complete\"",
@@ -229,7 +231,8 @@ class ExecTests(Tests):
             "upstart_cancel_line"   : '-c cancel -r upstart_test_rsc -a monitor -i 2s ' + self._action_timeout,
             "upstart_cancel_event"  : "-l \"NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:monitor rc:ok op_status:Cancelled\" ",
 
-            "service_reg_line"      : "-c register_rsc -r service_test_rsc "+self._action_timeout+" -C service -T LSBDummy",
+            "service_reg_line": '-c register_rsc -r service_test_rsc ' + self._action_timeout
+                                + ' -C service -T %s' % service_agent,
             "service_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:service_test_rsc action:none rc:ok op_status:complete\"",
             "service_unreg_line"    : "-c unregister_rsc -r \"service_test_rsc\" "+self._action_timeout,
             "service_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:service_test_rsc action:none rc:ok op_status:complete\"",
@@ -843,19 +846,18 @@ class ExecTests(Tests):
 
         ### Verify agents only exist in their lists ###
         test = self.new_test("verify_agent_lists", "Verify the agent lists contain the right data.")
-        test.add_cmd_check_stdout("-c list_agents ", "Stateful")                                  ### ocf ###
-        test.add_cmd_check_stdout("-c list_agents -C ocf", "Stateful")
-        test.add_cmd_check_stdout("-c list_agents -C lsb", "", "Stateful")                        ### should not exist
-        test.add_cmd_check_stdout("-c list_agents -C service", "", "Stateful")                    ### should not exist
-        test.add_cmd_check_stdout("-c list_agents ", "LSBDummy")                                  ### init.d ###
-        test.add_cmd_check_stdout("-c list_agents -C lsb", "LSBDummy")
-        test.add_cmd_check_stdout("-c list_agents -C service", "LSBDummy")
-        test.add_cmd_check_stdout("-c list_agents -C ocf", "", "pacemaker-cts-dummyd@")           ### should not exist
 
-        test.add_cmd_check_stdout("-c list_agents -C ocf", "", "pacemaker-cts-dummyd@")           ### should not exist
-        test.add_cmd_check_stdout("-c list_agents -C lsb", "", "fence_dummy")                     ### should not exist
-        test.add_cmd_check_stdout("-c list_agents -C service", "", "fence_dummy")                 ### should not exist
-        test.add_cmd_check_stdout("-c list_agents -C ocf", "", "fence_dummy")                     ### should not exist
+        if "ocf" in self._rsc_classes:
+            test.add_cmd_check_stdout("-c list_agents ", "Stateful")                                  ### ocf ###
+            test.add_cmd_check_stdout("-c list_agents -C ocf", "Stateful")
+
+        if "service" in self._rsc_classes:
+            test.add_cmd_check_stdout("-c list_agents -C service", "", "Stateful")
+
+        if "lsb" in self._rsc_classes:
+            test.add_cmd_check_stdout("-c list_agents ", "LSBDummy")
+            test.add_cmd_check_stdout("-c list_agents -C lsb", "LSBDummy")
+            test.add_cmd_check_stdout("-c list_agents -C service", "LSBDummy")
 
         if "systemd" in self._rsc_classes:
             test.add_cmd_check_stdout("-c list_agents ", "pacemaker-cts-dummyd@")             ### systemd ###

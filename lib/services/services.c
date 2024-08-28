@@ -130,21 +130,24 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
 {
     char *expanded_class = NULL;
 
+#if PCMK__ENABLE_SERVICE
     if (strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE) == 0) {
         const char *found_class = resources_find_service_class(agent);
 
-        if (found_class) {
+        if (found_class != NULL) {
             crm_debug("Found %s agent %s for %s", found_class, agent, rsc);
-            expanded_class = strdup(found_class);
+            expanded_class = pcmk__str_copy(found_class);
         } else {
             crm_info("Assuming resource class lsb for agent %s for %s",
                      agent, rsc);
-            expanded_class = strdup(PCMK_RESOURCE_CLASS_LSB);
+            expanded_class = pcmk__str_copy(PCMK_RESOURCE_CLASS_LSB);
         }
-    } else {
-        expanded_class = strdup(standard);
     }
-    CRM_ASSERT(expanded_class);
+#endif
+
+    if (expanded_class == NULL) {
+        expanded_class = pcmk__str_copy(standard);
+    }
     return expanded_class;
 }
 
@@ -987,6 +990,7 @@ execute_metadata_action(svc_action_t *op)
         return EINVAL;
     }
 
+#if PCMK__ENABLE_SERVICE
     if (!strcmp(class, PCMK_RESOURCE_CLASS_SERVICE)) {
         class = resources_find_service_class(op->agent);
     }
@@ -998,6 +1002,7 @@ execute_metadata_action(svc_action_t *op)
                              "Agent standard could not be determined");
         return EINVAL;
     }
+#endif
 
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {
         return pcmk_legacy2rc(services__get_lsb_metadata(op->agent,
@@ -1061,8 +1066,12 @@ resources_list_standards(void)
     GList *standards = NULL;
 
     standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_OCF));
-    standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_LSB));
+
+#if PCMK__ENABLE_SERVICE
     standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_SERVICE));
+#endif
+
+    standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_LSB));
 
 #if SUPPORT_SYSTEMD
     {
@@ -1117,7 +1126,10 @@ GList *
 resources_list_agents(const char *standard, const char *provider)
 {
     if ((standard == NULL)
-        || (strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE) == 0)) {
+#if PCMK__ENABLE_SERVICE
+        || (strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE) == 0)
+#endif
+        ) {
 
         GList *tmp1;
         GList *tmp2;
@@ -1209,6 +1221,7 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
         goto done;
     }
 
+#if PCMK__ENABLE_SERVICE
     if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei)) {
         if (services__lsb_agent_exists(agent)) {
             rc = TRUE;
@@ -1224,8 +1237,11 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
         } else {
             rc = FALSE;
         }
+        goto done;
+    }
+#endif
 
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
+    if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
         rc = services__ocf_agent_exists(provider, agent);
 
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {
