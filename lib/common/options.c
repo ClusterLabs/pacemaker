@@ -555,14 +555,13 @@ static const pcmk__cluster_option_t fencing_params[] = {
      */
     {
         PCMK_STONITH_HOST_ARGUMENT, NULL, PCMK_VALUE_STRING, NULL,
-        "port", NULL,
+        NULL, NULL,
         pcmk__opt_advanced,
-        N_("An alternate parameter to supply instead of 'port'"),
-        N_("Some devices do not support the standard 'port' parameter or may "
-            "provide additional ones. Use this to specify an alternate, device-"
-            "specific, parameter that should indicate the machine to be "
-            "fenced. A value of \"none\" can be used to tell the cluster not "
-            "to supply any additional parameters."),
+        N_("Name of agent parameter that should be set to the fencing target"),
+        N_("If the fencing agent metadata advertises support for the \"port\" "
+            "or \"plug\" parameter, that will be used as the default, "
+            "otherwise \"none\" will be used, which tells the cluster not to "
+            "supply any additional parameters."),
     },
     {
         PCMK_STONITH_HOST_MAP, NULL, PCMK_VALUE_STRING, NULL,

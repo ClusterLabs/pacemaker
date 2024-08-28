@@ -300,14 +300,11 @@ for ``pacemaker-fenced``.
 
        pcmk_host_argument
      - :ref:`text <text>`
-     - ``port`` otherwise ``plug`` if supported according to the metadata of
-       the fence agent
+     - ``port`` if the fence agent metadata advertises support for it,
+       otherwise ``plug`` if supported, otherwise ``none``
      - *Advanced use only.* Which parameter should be supplied to the fence
-       agent to identify the node to be fenced.  Some devices support neither
-       the standard ``plug`` nor the deprecated ``port`` parameter, or may
-       provide additional ones. Use this to specify an alternate,
-       device-specific parameter. A value of ``none`` tells the cluster not to
-       supply any additional parameters.
+       agent to identify the node to be fenced. A value of ``none`` tells the
+       cluster not to supply any additional parameters.
    * - .. _pcmk_reboot_action:
 
        .. index::

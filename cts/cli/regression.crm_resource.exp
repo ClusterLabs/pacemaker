@@ -437,9 +437,9 @@ Special parameters that are available for all fencing resources, regardless of t
     <shortdesc lang="en">Fencing resource common parameters</shortdesc>
     <parameters>
       <parameter name="pcmk_host_argument" advanced="1" generated="0">
-        <longdesc lang="en">Some devices do not support the standard 'port' parameter or may provide additional ones. Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced. A value of "none" can be used to tell the cluster not to supply any additional parameters.</longdesc>
-        <shortdesc lang="en">An alternate parameter to supply instead of 'port'</shortdesc>
-        <content type="string" default=""/>
+        <longdesc lang="en">If the fencing agent metadata advertises support for the "port" or "plug" parameter, that will be used as the default, otherwise "none" will be used, which tells the cluster not to supply any additional parameters.</longdesc>
+        <shortdesc lang="en">Name of agent parameter that should be set to the fencing target</shortdesc>
+        <content type="string"/>
       </parameter>
       <parameter name="pcmk_host_map" advanced="0" generated="0">
         <longdesc lang="en">For example, "node1:1;node2:2,3" would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2.</longdesc>
@@ -603,9 +603,9 @@ Special parameters that are available for all fencing resources, regardless of t
 
   * ADVANCED OPTIONS:
 
-    * pcmk_host_argument: An alternate parameter to supply instead of 'port'
-      * Some devices do not support the standard 'port' parameter or may provide additional ones. Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced. A value of "none" can be used to tell the cluster not to supply any additional parameters.
-      * Possible values: string (default: )
+    * pcmk_host_argument: Name of agent parameter that should be set to the fencing target
+      * If the fencing agent metadata advertises support for the "port" or "plug" parameter, that will be used as the default, otherwise "none" will be used, which tells the cluster not to supply any additional parameters.
+      * Possible values: string (no default)
 
     * pcmk_reboot_action: An alternate command to run instead of 'reboot'
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'reboot' action.
@@ -688,9 +688,9 @@ Special parameters that are available for all fencing resources, regardless of t
     <shortdesc lang="en">Fencing resource common parameters</shortdesc>
     <parameters>
       <parameter name="pcmk_host_argument" advanced="1" generated="0">
-        <longdesc lang="en">Some devices do not support the standard 'port' parameter or may provide additional ones. Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced. A value of "none" can be used to tell the cluster not to supply any additional parameters.</longdesc>
-        <shortdesc lang="en">An alternate parameter to supply instead of 'port'</shortdesc>
-        <content type="string" default=""/>
+        <longdesc lang="en">If the fencing agent metadata advertises support for the "port" or "plug" parameter, that will be used as the default, otherwise "none" will be used, which tells the cluster not to supply any additional parameters.</longdesc>
+        <shortdesc lang="en">Name of agent parameter that should be set to the fencing target</shortdesc>
+        <content type="string"/>
       </parameter>
       <parameter name="pcmk_host_map" advanced="0" generated="0">
         <longdesc lang="en">For example, "node1:1;node2:2,3" would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2.</longdesc>

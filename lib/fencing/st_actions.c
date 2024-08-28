@@ -168,23 +168,21 @@ make_args(const char *agent, const char *action, const char *target,
             g_hash_table_insert(arg_list, strdup("nodeid"), nodeid);
         }
 
-        // Check whether target must be specified in some other way
+        // Check whether target should be specified as some other argument
         param = g_hash_table_lookup(device_args, PCMK_STONITH_HOST_ARGUMENT);
-        if (!pcmk__str_eq(agent, "fence_legacy", pcmk__str_none)
+        if (param == NULL) {
+            // Use caller's default (likely from agent metadata)
+            param = host_arg;
+        }
+        if ((param != NULL)
+            && !pcmk__str_eq(agent, "fence_legacy", pcmk__str_none)
             && !pcmk__str_eq(param, PCMK_VALUE_NONE, pcmk__str_casei)) {
 
-            if (param == NULL) {
-                /* Use the caller's default for pcmk_host_argument, or "port" if
-                 * none was given
-                 */
-                param = (host_arg == NULL)? "port" : host_arg;
-            }
             value = g_hash_table_lookup(device_args, param);
-
             if (pcmk__str_eq(value, "dynamic",
                              pcmk__str_casei|pcmk__str_null_matches)) {
-                /* If the host argument was "dynamic" or not explicitly specified,
-                 * add it with the target
+                /* If the host argument is "dynamic" or not configured,
+                 * reset it to the target
                  */
                 const char *alias = NULL;
 

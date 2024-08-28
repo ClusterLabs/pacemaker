@@ -200,12 +200,12 @@
   <parameters>
     <parameter name="pcmk_host_argument">
       <longdesc lang="en">
-        Some devices do not support the standard 'port' parameter or may provide additional ones. Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced. A value of "none" can be used to tell the cluster not to supply any additional parameters.
+        If the fencing agent metadata advertises support for the "port" or "plug" parameter, that will be used as the default, otherwise "none" will be used, which tells the cluster not to supply any additional parameters.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** An alternate parameter to supply instead of 'port'
+        *** Advanced Use Only *** Name of agent parameter that should be set to the fencing target
       </shortdesc>
-      <content type="string" default=""/>
+      <content type="string"/>
     </parameter>
     <parameter name="pcmk_host_map">
       <longdesc lang="en">
