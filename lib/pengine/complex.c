@@ -228,28 +228,39 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
     }
 }
 
+/*!
+ * \brief Get final values of a resource's instance attributes
+ *
+ * \param[in,out] instance_attrs  Where to store the instance attributes
+ * \param[in]     rsc             Resource to get instance attributes for
+ * \param[in]     node            If not NULL, evaluate rules for this node
+ * \param[in,out] scheduler       Scheduler data
+ */
 void
-get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
+get_rsc_attributes(GHashTable *instance_attrs, const pcmk_resource_t *rsc,
                    const pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .now = scheduler->priv->now,
+        .now = NULL,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
     };
 
-    if (node) {
+    CRM_CHECK((instance_attrs != NULL) && (rsc != NULL) && (scheduler != NULL),
+              return);
+
+    rule_data.now = scheduler->priv->now;
+    if (node != NULL) {
         rule_data.node_hash = node->priv->attrs;
     }
 
+    // Evaluate resource's own values, then its ancestors' values
     pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_INSTANCE_ATTRIBUTES,
-                               &rule_data, meta_hash, NULL, scheduler);
-
-    /* set anything else based on the parent */
+                               &rule_data, instance_attrs, NULL, scheduler);
     if (rsc->priv->parent != NULL) {
-        get_rsc_attributes(meta_hash, rsc->priv->parent, node, scheduler);
+        get_rsc_attributes(instance_attrs, rsc->priv->parent, node, scheduler);
     }
 }
 
