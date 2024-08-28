@@ -123,29 +123,28 @@ lrmd_remote_client_msg(gpointer data)
     }
 
     request = pcmk__remote_message_xml(client->remote);
-    while (request) {
-        crm_element_value_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
-        crm_trace("Processing remote client request %d", id);
-        if (!client->name) {
-            client->name = crm_element_value_copy(request,
-                                                  PCMK__XA_LRMD_CLIENTNAME);
-        }
-
-        lrmd_call_id++;
-        if (lrmd_call_id < 1) {
-            lrmd_call_id = 1;
-        }
-
-        crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
-        crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
-        crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
-
-        process_lrmd_message(client, id, request);
-        pcmk__xml_free(request);
-
-        /* process all the messages in the current buffer */
-        request = pcmk__remote_message_xml(client->remote);
+    if (request == NULL) {
+        return 0;
     }
+
+    crm_element_value_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
+    crm_trace("Processing remote client request %d", id);
+    if (!client->name) {
+        client->name = crm_element_value_copy(request,
+                                              PCMK__XA_LRMD_CLIENTNAME);
+    }
+
+    lrmd_call_id++;
+    if (lrmd_call_id < 1) {
+        lrmd_call_id = 1;
+    }
+
+    crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
+    crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
+    crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
+
+    process_lrmd_message(client, id, request);
+    pcmk__xml_free(request);
 
     return 0;
 }
