@@ -20,28 +20,33 @@ interface for managing the service. This allows Pacemaker to be agnostic about
 the services it manages. Pacemaker doesn't need to understand how the service
 works because it relies on the resource agent to do the right thing when asked.
 
-Every resource has a *class* specifying the standard that its resource agent
-follows, and a *type* identifying the specific service being managed.
+Every resource has a *standard* (also called *class*) specifying the interface
+that its resource agent follows, and a *type* identifying the specific service
+being managed.
 
 
 .. _s-resource-supported:
 
 .. index::
-   single: resource; class
+   single: resource; standard
  
-Resource Classes
-################
+Resource Standards
+##################
 
-Pacemaker supports several classes, or standards, of resource agents:
+Pacemaker can use resource agents complying with these standards, described in
+more detail below:
 
-* OCF
-* LSB
-* Systemd
-* Service
-* Fencing
-* Nagios *(deprecated since 2.1.6)*
-* Upstart *(deprecated since 2.1.0)*
+* ocf
+* lsb
+* systemd
+* service
+* stonithd
+* nagios *(deprecated since 2.1.6)*
+* upstart *(deprecated since 2.1.0)*
 
+Support for some standards is controlled by build options and so might not be
+available in any particular build of Pacemaker. The command ``crm_resource
+--list-standards`` will show which standards are supported by the local build.
 
 .. index::
    single: resource; OCF
@@ -57,10 +62,11 @@ specifically designed for use in a Pacemaker cluster.
 
 OCF agents are scripts that support a variety of actions including ``start``,
 ``stop``, and ``monitor``. They may accept parameters, making them more
-flexible than other classes. The number and purpose of parameters is left to
+flexible than other standards. The number and purpose of parameters is left to
 the agent, which advertises them via the ``meta-data`` action.
 
-Unlike other classes, OCF agents have a *provider* as well as a class and type.
+Unlike other standards, OCF agents have a *provider* as well as a standard and
+type.
 
 For more information, see the "Resource Agents" chapter of *Pacemaker
 Administration* and the `OCF standard
@@ -82,8 +88,8 @@ and service management. *Unit files* specify how to manage services and are
 usually provided by the distribution.
 
 Pacemaker can manage systemd services. Simply create a resource with
-``systemd`` as the resource class and the unit file name as the resource type.
-Do *not* run ``systemctl enable`` on the unit.
+``systemd`` as the resource standard and the unit file name as the resource
+type. Do *not* run ``systemctl enable`` on the unit.
 
 .. important::
 
@@ -156,8 +162,8 @@ In order, Pacemaker will try to find the named service as:
 STONITH
 _______
 
-The ``stonith`` class is used for managing fencing devices, discussed later in
-:ref:`fencing`.
+The ``stonith`` standard is used for managing fencing devices, discussed later
+in :ref:`fencing`.
 
 
 .. index::
@@ -674,9 +680,9 @@ resources were specifically enabled by having their ``is-managed`` set to
 Resource Instance Attributes
 ____________________________
 
-The resource agents of some resource classes (lsb, systemd and upstart *not* among them)
-can be given parameters which determine how they behave and which instance
-of a service they control.
+The resource agents of some resource standards (lsb, systemd and upstart *not*
+among them) can be given parameters which determine how they behave and which
+instance of a service they control.
 
 If your resource agent supports parameters, you can add them with the
 ``crm_resource`` command. For example,
