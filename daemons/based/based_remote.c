@@ -450,10 +450,22 @@ cib_remote_msg(gpointer data)
     pcmk__client_t *client = ncd->new_client;
     xmlNode *command = NULL;
     int rc;
-    int timeout = 1000;
+    int timeout_sec = 1;
 
     if (pcmk_is_set(client->flags, pcmk__client_authenticated)) {
-        timeout = -1;
+        timeout_sec = 60;
+    }
+
+    /* If start_time is 0, we've previously handled a complete message and this
+     * callback is being reused for a new message.  Reset the start_time, giving
+     * this new message timeout_sec from now to complete.
+     */
+    if (ncd->start_time == 0) {
+        ncd->start_time = time(NULL);
+    } else if (time(NULL) >= ncd->start_time + timeout_sec) {
+        free(ncd);
+        crm_info("Error reading from remote client: %s", pcmk_rc_str(ETIME));
+        return -1;
     }
 
     crm_trace("Remote %s message received for client %s",
@@ -488,7 +500,21 @@ cib_remote_msg(gpointer data)
         return 0;
     }
 
-    rc = pcmk__read_remote_message(client->remote, timeout);
+    rc = pcmk__read_available_remote_data(client->remote);
+    switch (rc) {
+        case pcmk_rc_ok:
+            break;
+
+        case EAGAIN:
+            /* We haven't read the whole message yet */
+            return 0;
+
+        default:
+            /* Error */
+            crm_trace("Error reading from remote client: %s", pcmk_rc_str(rc));
+            free(ncd);
+            return -1;
+    }
 
     /* must pass auth before we will process anything else */
     if (!pcmk_is_set(client->flags, pcmk__client_authenticated)) {
@@ -528,12 +554,6 @@ cib_remote_msg(gpointer data)
         cib_handle_remote_msg(client, command);
         pcmk__xml_free(command);
         command = pcmk__remote_message_xml(client->remote);
-    }
-
-    if (rc == ENOTCONN) {
-        crm_trace("Remote CIB client disconnected while reading from it");
-        free(ncd);
-        return -1;
     }
 
     return 0;
