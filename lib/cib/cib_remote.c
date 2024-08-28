@@ -210,6 +210,7 @@ cib_remote_callback_dispatch(gpointer user_data)
     cib_remote_opaque_t *private = cib->variant_opaque;
 
     xmlNode *msg = NULL;
+    const char *type = NULL;
 
     /* If start_time is 0, we've previously handled a complete message and this
      * callback is being reused for a new message.  Reset the start_time, giving
@@ -243,24 +244,24 @@ cib_remote_callback_dispatch(gpointer user_data)
     crm_info("Message on callback channel");
 
     msg = pcmk__remote_message_xml(&private->callback);
-    while (msg) {
-        const char *type = crm_element_value(msg, PCMK__XA_T);
-
-        crm_trace("Activating %s callbacks...", type);
-
-        if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
-            cib_native_callback(cib, msg, 0, 0);
-
-        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
-            g_list_foreach(cib->notify_list, cib_native_notify, msg);
-
-        } else {
-            crm_err("Unknown message type: %s", type);
-        }
-
-        pcmk__xml_free(msg);
-        msg = pcmk__remote_message_xml(&private->callback);
+    if (msg == NULL) {
+        rd->start_time = 0;
+        return 0;
     }
+
+    type = crm_element_value(msg, PCMK__XA_T);
+
+    crm_trace("Activating %s callbacks...", type);
+
+    if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
+        cib_native_callback(cib, msg, 0, 0);
+    } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
+        g_list_foreach(cib->notify_list, cib_native_notify, msg);
+    } else {
+        crm_err("Unknown message type: %s", type);
+    }
+
+    pcmk__xml_free(msg);
 
     rd->start_time = 0;
     return 0;
