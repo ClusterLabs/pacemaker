@@ -1530,7 +1530,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 static int
 lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
 {
-    int rc;
+    int rc = pcmk_rc_ok;
     int timer_id = 0;
     lrmd_private_t *native = lrmd->lrmd_private;
 
@@ -1542,16 +1542,16 @@ lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
         crm_warn("Pacemaker Remote connection to %s:%d failed: %s "
                  QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
-        return pcmk_rc2legacy(rc);
+        return rc;
     }
     native->async_timer = timer_id;
-    return pcmk_ok;
+    return rc;
 }
 
 static int
 lrmd_tls_connect(lrmd_t * lrmd, int *fd)
 {
-    int rc;
+    int rc = pcmk_rc_ok;
 
     lrmd_private_t *native = lrmd->lrmd_private;
     gnutls_datum_t psk_key = { NULL, 0 };
@@ -1566,13 +1566,13 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
                  QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         lrmd_tls_connection_destroy(lrmd);
-        return -ENOTCONN;
+        return ENOTCONN;
     }
 
     rc = lrmd__init_remote_key(&psk_key);
     if (rc != pcmk_rc_ok) {
         lrmd_tls_connection_destroy(lrmd);
-        return pcmk_rc2legacy(rc);
+        return rc;
     }
 
     gnutls_psk_allocate_client_credentials(&native->psk_cred_c);
@@ -1584,11 +1584,11 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
                                                         native->psk_cred_c);
     if (native->remote->tls_session == NULL) {
         lrmd_tls_connection_destroy(lrmd);
-        return -EPROTO;
+        return EPROTO;
     }
 
     if (tls_client_handshake(lrmd) != pcmk_rc_ok) {
-        return -EKEYREJECTED;
+        return EKEYREJECTED;
     }
 
     crm_info("Client TLS connection established with Pacemaker Remote server %s:%d", native->server,
@@ -1597,9 +1597,9 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     if (fd) {
         *fd = native->sock;
     } else {
-        add_tls_to_mainloop(lrmd, false);
+        rc = add_tls_to_mainloop(lrmd, false);
     }
-    return pcmk_ok;
+    return rc;
 }
 
 static int
@@ -1614,6 +1614,7 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
             break;
         case pcmk__client_tls:
             rc = lrmd_tls_connect(lrmd, fd);
+            rc = pcmk_rc2legacy(rc);
             break;
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
@@ -1647,6 +1648,7 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
             break;
         case pcmk__client_tls:
             rc = lrmd_tls_connect_async(lrmd, timeout);
+            rc = pcmk_rc2legacy(rc);
             break;
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
