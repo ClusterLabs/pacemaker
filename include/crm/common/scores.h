@@ -25,6 +25,7 @@ extern "C" {
 //! Integer score to use to represent "infinity"
 #define PCMK_SCORE_INFINITY 1000000
 
+int pcmk_parse_score(const char *score_s, int *score, int default_score);
 const char *pcmk_readable_score(int score);
 int char2score(const char *score);
 bool pcmk_str_is_infinity(const char *s);
