@@ -348,8 +348,8 @@ _____________
    |                   |                 |    single: option; promoted-node-max (clone)          |
    |                   |                 |    single: promoted-node-max; clone option            |
    |                   |                 |                                                       |
-   |                   |                 | If ``promotable`` is **true** and ``globally-unique`` |
-   |                   |                 | is **false**, the number of clone instances can be    |
+   |                   |                 | If ``promotable`` and ``globally-unique`` are         |
+   |                   |                 | **true**, the number of clone instances can be        |
    |                   |                 | promoted at one time on a single node                 |
    +-------------------+-----------------+-------------------------------------------------------+
    
