@@ -452,6 +452,37 @@ detect_promotable(pcmk_resource_t *rsc)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a clone or instance being unpacked is globally unique
+ *
+ * \param[in] rsc  Clone or clone instance to check
+ *
+ * \return \c true if \p rsc is globally unique according to its
+ *         meta-attributes, otherwise \c false
+ */
+static bool
+detect_unique(const pcmk_resource_t *rsc)
+{
+    const char *value = g_hash_table_lookup(rsc->priv->meta,
+                                            PCMK_META_GLOBALLY_UNIQUE);
+
+    if (value == NULL) { // Default to true if clone-node-max > 1
+        value = g_hash_table_lookup(rsc->priv->meta,
+                                    PCMK_META_CLONE_NODE_MAX);
+        if (value != NULL) {
+            int node_max = 1;
+
+            if ((pcmk__scan_min_int(value, &node_max, 0) == pcmk_rc_ok)
+                && (node_max > 1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    return crm_is_true(value);
+}
+
 static void
 free_params_table(gpointer data)
 {
@@ -806,9 +837,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     if (pcmk__is_clone(pe__const_top_resource(*rsc, false))) {
-        value = g_hash_table_lookup(rsc_private->meta,
-                                    PCMK_META_GLOBALLY_UNIQUE);
-        if (crm_is_true(value)) {
+        if (detect_unique(*rsc)) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_unique);
         }
         if (detect_promotable(*rsc)) {
