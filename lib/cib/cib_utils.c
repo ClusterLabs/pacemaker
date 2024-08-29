@@ -160,7 +160,7 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
                                                       NULL, NULL);
          change != NULL; change = pcmk__xe_next_same(change)) {
 
-        const char *op = crm_element_value(change, PCMK__XA_CIB_OP);
+        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
         const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);
 
         if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
