@@ -15,11 +15,90 @@
 
 #include <stdio.h>      // snprintf(), NULL
 #include <string.h>     // strcpy(), strdup()
+#include <ctype.h>      // isspace()
 #include <sys/types.h>  // size_t
 
 int pcmk__score_red = 0;
 int pcmk__score_green = 0;
 int pcmk__score_yellow = 0;
+
+/*!
+ * \brief Parse an integer score from a string
+ *
+ * Parse an integer score from a string. This accepts infinity strings as well
+ * as red, yellow, and green, and bounds the result to +/-INFINITY.
+ *
+ * \param[in]  score_s        Score as string
+ * \param[out] score          Where to store integer value corresponding to
+ *                            \p score_s (may be NULL to only check validity)
+ * \param[in]  default_score  Value to use if \p score_s is NULL or invalid
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk_parse_score(const char *score_s, int *score, int default_score)
+{
+    int rc = pcmk_rc_ok;
+    int local_score = 0;
+
+    // Ensure default score is in bounds
+    default_score = QB_MIN(default_score, PCMK_SCORE_INFINITY);
+    default_score = QB_MAX(default_score, -PCMK_SCORE_INFINITY);
+    local_score = default_score;
+
+    if (score_s == NULL) {
+
+    } else if (pcmk_str_is_minus_infinity(score_s)) {
+        local_score = -PCMK_SCORE_INFINITY;
+
+    } else if (pcmk_str_is_infinity(score_s)) {
+        local_score = PCMK_SCORE_INFINITY;
+
+    } else if (pcmk__str_eq(score_s, PCMK_VALUE_RED, pcmk__str_casei)) {
+        local_score = pcmk__score_red;
+
+    } else if (pcmk__str_eq(score_s, PCMK_VALUE_YELLOW, pcmk__str_casei)) {
+        local_score = pcmk__score_yellow;
+
+    } else if (pcmk__str_eq(score_s, PCMK_VALUE_GREEN, pcmk__str_casei)) {
+        local_score = pcmk__score_green;
+
+    } else {
+        long long score_ll = 0LL;
+
+        rc = pcmk__scan_ll(score_s, &score_ll, default_score);
+        if ((rc == EOVERFLOW) || (rc == ERANGE)) {
+            const char *c = score_s;
+
+            while (isspace(*c)) {
+                ++c;
+            }
+            rc = pcmk_rc_ok;
+            if (*c == '-') {
+                score_ll = -PCMK_SCORE_INFINITY;
+            } else {
+                score_ll = PCMK_SCORE_INFINITY;
+            }
+        }
+        if (rc != pcmk_rc_ok) {
+            local_score = default_score;
+
+        } else if (score_ll > PCMK_SCORE_INFINITY) {
+            local_score = PCMK_SCORE_INFINITY;
+
+        } else if (score_ll < -PCMK_SCORE_INFINITY) {
+            local_score = -PCMK_SCORE_INFINITY;
+
+        } else {
+            local_score = (int) score_ll;
+        }
+    }
+
+    if (score != NULL) {
+        *score = local_score;
+    }
+    return rc;
+}
 
 /*!
  * \brief Get the integer value of a score string
@@ -35,38 +114,10 @@ int pcmk__score_yellow = 0;
 int
 char2score(const char *score)
 {
-    if (score == NULL) {
-        return 0;
+    int result = 0;
 
-    } else if (pcmk_str_is_minus_infinity(score)) {
-        return -PCMK_SCORE_INFINITY;
-
-    } else if (pcmk_str_is_infinity(score)) {
-        return PCMK_SCORE_INFINITY;
-
-    } else if (pcmk__str_eq(score, PCMK_VALUE_RED, pcmk__str_casei)) {
-        return pcmk__score_red;
-
-    } else if (pcmk__str_eq(score, PCMK_VALUE_YELLOW, pcmk__str_casei)) {
-        return pcmk__score_yellow;
-
-    } else if (pcmk__str_eq(score, PCMK_VALUE_GREEN, pcmk__str_casei)) {
-        return pcmk__score_green;
-
-    } else {
-        long long score_ll;
-
-        pcmk__scan_ll(score, &score_ll, 0LL);
-        if (score_ll > PCMK_SCORE_INFINITY) {
-            return PCMK_SCORE_INFINITY;
-
-        } else if (score_ll < -PCMK_SCORE_INFINITY) {
-            return -PCMK_SCORE_INFINITY;
-
-        } else {
-            return (int) score_ll;
-        }
-    }
+    (void) pcmk_parse_score(score, &result, 0);
+    return result;
 }
 
 /*!
