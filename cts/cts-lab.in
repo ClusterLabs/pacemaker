@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     audits = audit_list(cm)
 
-    if environment["Listtests"]:
+    if environment["ListTests"]:
         tests = test_list(cm, audits)
         LogFactory().log("Total %d tests" % len(tests))
 
