@@ -791,6 +791,9 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
 void
 pcmk_free_xml_subtree(xmlNode *xml)
 {
+    /* @TODO Free tree private data here when we drop
+     * new_private_data()/free_private_data()
+     */
     xmlUnlinkNode(xml); // Detaches from parent and siblings
     xmlFreeNode(xml);   // Frees
 }
@@ -1878,7 +1881,7 @@ replace_node(xmlNode *old, xmlNode *new)
         pcmk__apply_acl(new);
     }
     xml_calculate_changes(old, new);
-    xmlFreeNode(old);
+    pcmk_free_xml_subtree(old);
 }
 
 /*!

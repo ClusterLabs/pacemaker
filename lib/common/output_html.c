@@ -207,7 +207,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
         *copy_dest = pcmk__xml_copy(NULL, priv->root);
     }
 
-    g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
+    g_slist_free_full(extra_headers, (GDestroyNotify) free_xml);
     extra_headers = NULL;
 }
 

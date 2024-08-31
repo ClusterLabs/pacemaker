@@ -83,7 +83,7 @@ create_element_node(void **state) {
     assert_true(pcmk_all_flags_set(priv->flags, pcmk__xf_dirty|pcmk__xf_created));
 
     /* Clean up */
-    xmlFreeNode(node);
+    free_xml(node);
     xmlFreeDoc(doc);
 }
 
@@ -111,7 +111,7 @@ create_attr_node(void **state) {
     assert_true(pcmk_all_flags_set(priv->flags, pcmk__xf_dirty|pcmk__xf_created));
 
     /* Clean up */
-    xmlFreeNode(node);
+    free_xml(node);
     xmlFreeDoc(doc);
 }
 
@@ -137,7 +137,7 @@ create_comment_node(void **state) {
     assert_true(pcmk_all_flags_set(priv->flags, pcmk__xf_dirty|pcmk__xf_created));
 
     /* Clean up */
-    xmlFreeNode(node);
+    free_xml(node);
     xmlFreeDoc(doc);
 }
 
@@ -161,7 +161,7 @@ create_text_node(void **state) {
     assert_null(priv);
 
     /* Clean up */
-    xmlFreeNode(node);
+    free_xml(node);
     xmlFreeDoc(doc);
 }
 
@@ -211,7 +211,7 @@ create_cdata_node(void **state) {
     assert_null(priv);
 
     /* Clean up */
-    xmlFreeNode(node);
+    free_xml(node);
     xmlFreeDoc(doc);
 }
 
