@@ -245,14 +245,14 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
         comment = xmlNewDocComment(target->doc, (pcmkXmlStr) credentials);
         free(credentials);
         if (comment == NULL) {
-            xmlFreeNode(target);
+            pcmk__xml_free(target);
             return EINVAL;
         }
         xmlAddPrevSibling(xmlDocGetRootElement(target->doc), comment);
         *acl_evaled_doc = target->doc;
         return pcmk_rc_ok;
     } else {
-        xmlFreeNode(target);
+        pcmk__xml_free(target);
         return ret; //for now, it should be some kind of error
     }
 }

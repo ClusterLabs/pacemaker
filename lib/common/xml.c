@@ -1068,6 +1068,22 @@ pcmk__xe_set_id(xmlNode *node, const char *format, ...)
 
 /*!
  * \internal
+ * \brief Free an XML tree without ACL checks or change tracking
+ *
+ * \param[in,out] xml  XML node to free
+ */
+static void
+free_xml_node(xmlNode *xml)
+{
+    /* @TODO Free tree private data here when we drop
+     * new_private_data()/free_private_data()
+     */
+    xmlUnlinkNode(xml);
+    xmlFreeNode(xml);
+}
+
+/*!
+ * \internal
  * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
  *
  * If \p node is the root of its document, free the entire document.
@@ -1140,8 +1156,7 @@ free_xml_with_position(xmlNode *node, int position)
             pcmk__set_xml_doc_flag(node, pcmk__xf_dirty);
         }
     }
-    xmlUnlinkNode(node);
-    xmlFreeNode(node);
+    free_xml_node(node);
 }
 
 /*!
@@ -1218,8 +1233,7 @@ pcmk__strip_xml_text(xmlNode *xml)
 
         switch (iter->type) {
             case XML_TEXT_NODE:
-                xmlUnlinkNode(iter);
-                xmlFreeNode(iter);
+                free_xml_node(iter);
                 break;
 
             case XML_ELEMENT_NODE:
@@ -2106,7 +2120,7 @@ replace_node(xmlNode *old, xmlNode *new)
         pcmk__apply_acl(new);
     }
     xml_calculate_changes(old, new);
-    xmlFreeNode(old);
+    free_xml_node(old);
 }
 
 /*!
@@ -2523,8 +2537,7 @@ crm_xml_cleanup(void)
 void
 pcmk_free_xml_subtree(xmlNode *xml)
 {
-    xmlUnlinkNode(xml); // Detaches from parent and siblings
-    xmlFreeNode(xml);   // Frees
+    free_xml_node(xml);
 }
 
 void
