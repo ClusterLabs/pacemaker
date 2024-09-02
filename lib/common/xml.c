@@ -25,6 +25,9 @@
 #include <crm/common/xml_internal.h>    // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
+//! libxml2 supports only XML version 1.0, at least as of libxml2-2.12.5
+#define XML_VERSION ((pcmkXmlStr) "1.0")
+
 /*!
  * \internal
  * \brief Apply a function to each XML node in a tree (pre-order, depth-first)
@@ -721,9 +724,7 @@ pcmk__xe_create(xmlNode *parent, const char *name)
     CRM_ASSERT(!pcmk__str_empty(name));
 
     if (parent == NULL) {
-        xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
-
-        pcmk__mem_assert(doc);
+        xmlDoc *doc = pcmk__xml_new_doc();
 
         node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
         pcmk__mem_assert(node);
@@ -737,6 +738,27 @@ pcmk__xe_create(xmlNode *parent, const char *name)
 
     pcmk__xml_mark_created(node);
     return node;
+}
+
+/*!
+ * \internal
+ * \brief Create a new XML document
+ *
+ * \return Newly allocated XML document (guaranteed not to be \c NULL)
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c xmlFreeDoc().
+ */
+xmlDoc *
+pcmk__xml_new_doc(void)
+{
+    /* @TODO Allocate document private data here when we drop
+     * new_private_data()/free_private_data()
+     */
+    xmlDoc *doc = xmlNewDoc(XML_VERSION);
+
+    pcmk__mem_assert(doc);
+    return doc;
 }
 
 /*!
@@ -894,9 +916,7 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
         // The copy will be the root element of a new document
         CRM_ASSERT(src->type == XML_ELEMENT_NODE);
 
-        doc = xmlNewDoc(PCMK__XML_VERSION);
-        pcmk__mem_assert(doc);
-
+        doc = pcmk__xml_new_doc();
         copy = xmlDocCopyNode(src, doc, 1);
         pcmk__mem_assert(copy);
 
@@ -2335,7 +2355,7 @@ getDocPtr(xmlNode *node)
 
     doc = node->doc;
     if (doc == NULL) {
-        doc = xmlNewDoc(PCMK__XML_VERSION);
+        doc = pcmk__xml_new_doc();
         xmlDocSetRootElement(doc, node);
     }
     return doc;
@@ -2460,10 +2480,8 @@ crm_xml_escape(const char *text)
 xmlNode *
 copy_xml(xmlNode *src)
 {
-    xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
+    xmlDoc *doc = pcmk__xml_new_doc();
     xmlNode *copy = NULL;
-
-    pcmk__mem_assert(doc);
 
     copy = xmlDocCopyNode(src, doc, 1);
     pcmk__mem_assert(copy);
@@ -2481,11 +2499,7 @@ create_xml_node(xmlNode *parent, const char *name)
     CRM_CHECK(!pcmk__str_empty(name), return NULL);
 
     if (parent == NULL) {
-        xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
-
-        if (doc == NULL) {
-            return NULL;
-        }
+        xmlDoc *doc = pcmk__xml_new_doc();
 
         node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
         if (node == NULL) {

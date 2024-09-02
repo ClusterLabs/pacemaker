@@ -60,9 +60,6 @@ typedef struct xml_doc_private_s {
 #define PCMK__XML_ENTITY_LT     "&lt;"
 #define PCMK__XML_ENTITY_QUOT   "&quot;"
 
-//! libxml2 supports only XML version 1.0, at least as of libxml2-2.12.5
-#define PCMK__XML_VERSION ((pcmkXmlStr) "1.0")
-
 #define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
         (xml_priv)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
             LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
@@ -74,6 +71,9 @@ typedef struct xml_doc_private_s {
             LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
             (flags_to_clear), #flags_to_clear);                             \
     } while (0)
+
+G_GNUC_INTERNAL
+xmlDoc *pcmk__xml_new_doc(void);
 
 G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);

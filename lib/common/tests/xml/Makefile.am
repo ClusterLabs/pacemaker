@@ -17,6 +17,7 @@ check_PROGRAMS = crm_xml_init_test 		\
 		 pcmk__xe_foreach_child_test 	\
 		 pcmk__xe_set_score_test	\
 		 pcmk__xml_escape_test		\
-		 pcmk__xml_needs_escape_test
+		 pcmk__xml_needs_escape_test	\
+		 pcmk__xml_new_doc_test
 
 TESTS = $(check_PROGRAMS)
