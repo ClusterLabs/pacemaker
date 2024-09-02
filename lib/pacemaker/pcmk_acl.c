@@ -320,7 +320,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
                      XML_PARSE_NONET);
     CRM_ASSERT(res != NULL);
     xmlFree(annotated_dump);
-    xmlFreeDoc(annotated_doc);
+    pcmk__xml_free_doc(annotated_doc);
     annotated_doc = res;
 
     sfile = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_base_xslt,
@@ -364,7 +364,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     res = xsltApplyStylesheetUser(xslt, annotated_doc, NULL,
                                   NULL, NULL, xslt_ctxt);
 
-    xmlFreeDoc(annotated_doc);
+    pcmk__xml_free_doc(annotated_doc);
     annotated_doc = NULL;
     xsltFreeTransformContext(xslt_ctxt);
     xslt_ctxt = NULL;
@@ -382,7 +382,8 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     } else {
         int doc_txt_len;
         int temp = xsltSaveResultToString(doc_txt_ptr, &doc_txt_len, res, xslt);
-        xmlFreeDoc(res);
+
+        pcmk__xml_free_doc(res);
         if (temp != 0) {
             rc = EINVAL;
         }

@@ -52,8 +52,7 @@ create_element_node(void **state) {
     assert_true(pcmk_all_flags_set(priv->flags, pcmk__xf_dirty|pcmk__xf_created));
 
     /* Clean up */
-    pcmk__xml_free(node);
-    xmlFreeDoc(doc);
+    pcmk__xml_free_doc(doc);
 }
 
 static void
@@ -80,8 +79,7 @@ create_attr_node(void **state) {
     assert_true(pcmk_all_flags_set(priv->flags, pcmk__xf_dirty|pcmk__xf_created));
 
     /* Clean up */
-    pcmk__xml_free(node);
-    xmlFreeDoc(doc);
+    pcmk__xml_free_doc(doc);
 }
 
 static void
@@ -106,8 +104,7 @@ create_comment_node(void **state) {
     assert_true(pcmk_all_flags_set(priv->flags, pcmk__xf_dirty|pcmk__xf_created));
 
     /* Clean up */
-    pcmk__xml_free(node);
-    xmlFreeDoc(doc);
+    pcmk__xml_free_doc(doc);
 }
 
 static void
@@ -130,8 +127,7 @@ create_text_node(void **state) {
     assert_null(priv);
 
     /* Clean up */
-    pcmk__xml_free(node);
-    xmlFreeDoc(doc);
+    pcmk__xml_free_doc(doc);
 }
 
 static void
@@ -156,8 +152,8 @@ create_dtd_node(void **state) {
     assert_null(priv);
 
     /* Clean up */
-    /* If you call xmlFreeDtd before xmlFreeDoc, you get a segfault */
-    xmlFreeDoc(doc);
+    // If you call xmlFreeDtd() before pcmk__xml_free_doc(), you get a segfault
+    pcmk__xml_free_doc(doc);
 }
 
 static void
@@ -180,8 +176,7 @@ create_cdata_node(void **state) {
     assert_null(priv);
 
     /* Clean up */
-    pcmk__xml_free(node);
-    xmlFreeDoc(doc);
+    pcmk__xml_free_doc(doc);
 }
 
 // The group setup/teardown functions call pcmk__xml_init()/pcmk__cml_xleanup()
