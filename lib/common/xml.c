@@ -747,7 +747,7 @@ pcmk__xe_create(xmlNode *parent, const char *name)
  * \return Newly allocated XML document (guaranteed not to be \c NULL)
  *
  * \note The caller is responsible for freeing the return value using
- *       \c xmlFreeDoc().
+ *       \c pcmk__xml_free_doc().
  */
 xmlDoc *
 pcmk__xml_new_doc(void)
@@ -759,6 +759,23 @@ pcmk__xml_new_doc(void)
 
     pcmk__mem_assert(doc);
     return doc;
+}
+
+/*!
+ * \internal
+ * \brief Free a new XML document
+ *
+ * \param[in,out] doc  XML document to free
+ */
+void
+pcmk__xml_free_doc(xmlDoc *doc)
+{
+    /* @TODO Free document private data here when we drop
+     * new_private_data()/free_private_data()
+     */
+    if (doc != NULL) {
+        xmlFreeDoc(doc);
+    }
 }
 
 /*!
@@ -834,7 +851,7 @@ free_xml_with_position(xmlNode *child, int position)
 
     if ((doc != NULL) && (xmlDocGetRootElement(doc) == child)) {
         // Free everything
-        xmlFreeDoc(doc);
+        pcmk__xml_free_doc(doc);
         return;
     }
 
@@ -2503,7 +2520,7 @@ create_xml_node(xmlNode *parent, const char *name)
 
         node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
         if (node == NULL) {
-            xmlFreeDoc(doc);
+            pcmk__xml_free_doc(doc);
             return NULL;
         }
         xmlDocSetRootElement(doc, node);

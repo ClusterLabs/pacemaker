@@ -32,7 +32,7 @@ create_document_node(void **state) {
     assert_true(pcmk_all_flags_set(docpriv->flags,
                                    pcmk__xf_dirty|pcmk__xf_created));
 
-    xmlFreeDoc(doc);
+    pcmk__xml_free_doc(doc);
 }
 
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
