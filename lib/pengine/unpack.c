@@ -452,9 +452,23 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Create a new node object in scheduler data
+ *
+ * \param[in]     id         ID of new node
+ * \param[in]     uname      Name of new node
+ * \param[in]     type       Type of new node
+ * \param[in]     score      Score of new node
+ * \param[in,out] scheduler  Scheduler data
+ *
+ * \return Newly created node object
+ * \note The returned object is part of the scheduler data and should not be
+ *       freed separately.
+ */
 pcmk_node_t *
 pe_create_node(const char *id, const char *uname, const char *type,
-               const char *score, pcmk_scheduler_t *scheduler)
+               int score, pcmk_scheduler_t *scheduler)
 {
     pcmk_node_t *new_node = NULL;
 
@@ -468,7 +482,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
         return NULL;
     }
 
-    new_node->weight = char2score(score);
+    new_node->weight = score;
     new_node->details = calloc(1, sizeof(struct pe_node_shared_s));
 
     if (new_node->details == NULL) {
@@ -647,7 +661,8 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
                                  "> entry in configuration without id");
                 continue;
             }
-            new_node = pe_create_node(id, uname, type, score, scheduler);
+            new_node = pe_create_node(id, uname, type, char2score(score),
+                                      scheduler);
 
             if (new_node == NULL) {
                 return FALSE;
@@ -726,7 +741,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                 crm_trace("Found remote node %s defined by resource %s",
                           new_node_id, pcmk__xe_id(xml_obj));
                 pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
-                               NULL, scheduler);
+                               0, scheduler);
             }
             continue;
         }
@@ -746,7 +761,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                 crm_trace("Found guest node %s in resource %s",
                           new_node_id, pcmk__xe_id(xml_obj));
                 pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
-                               NULL, scheduler);
+                               0, scheduler);
             }
             continue;
         }
@@ -768,7 +783,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                               new_node_id, pcmk__xe_id(xml_obj2),
                               pcmk__xe_id(xml_obj));
                     pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
-                                   NULL, scheduler);
+                                   0, scheduler);
                 }
             }
         }
@@ -2019,7 +2034,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         crm_debug("Detected orphaned remote node %s", rsc_id);
         node = pcmk_find_node(scheduler, rsc_id);
         if (node == NULL) {
-            node = pe_create_node(rsc_id, rsc_id, PCMK_VALUE_REMOTE, NULL,
+            node = pe_create_node(rsc_id, rsc_id, PCMK_VALUE_REMOTE, 0,
                                   scheduler);
         }
         link_rsc2remotenode(scheduler, rsc);
