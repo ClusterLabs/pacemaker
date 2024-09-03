@@ -446,7 +446,7 @@
   <parameters>
     <parameter name="no-quorum-policy">
       <longdesc lang="en">
-        What to do when the cluster does not have quorum  Allowed values: stop, freeze, ignore, demote, suicide
+        What to do when the cluster does not have quorum  Allowed values: stop, freeze, ignore, demote, fence, suicide
       </longdesc>
       <shortdesc lang="en">
         What to do when the cluster does not have quorum
@@ -456,6 +456,7 @@
         <option value="freeze"/>
         <option value="ignore"/>
         <option value="demote"/>
+        <option value="fence"/>
         <option value="suicide"/>
       </content>
     </parameter>

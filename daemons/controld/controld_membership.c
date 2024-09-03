@@ -418,7 +418,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
 
     } else if (pcmk_all_flags_set(controld_globals.flags,
                                   controld_ever_had_quorum
-                                  |controld_no_quorum_suicide)) {
+                                  |controld_no_quorum_panic)) {
         pcmk__panic("Quorum lost");
     }
 

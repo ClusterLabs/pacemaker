@@ -369,7 +369,9 @@ values, by running the ``man pacemaker-schedulerd`` and
        * ``stop:`` stop all resources in the affected cluster partition
        * ``demote:`` demote promotable resources and stop all other resources
          in the affected cluster partition *(since 2.0.5)*
-       * ``suicide:`` fence all nodes in the affected cluster partition
+       * ``fence:`` fence all nodes in the affected cluster partition
+         *(since 2.1.9)*
+       * ``suicide:`` same as ``fence`` *(deprecated since 2.1.9)*
    * - .. _batch_limit:
        
        .. index::

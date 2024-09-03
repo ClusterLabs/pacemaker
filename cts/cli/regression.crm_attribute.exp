@@ -42,7 +42,7 @@ Also known as properties, these are options that affect behavior across the enti
     * Possible values: "stop" (default), "panic"
 
   * no-quorum-policy: What to do when the cluster does not have quorum
-    * Possible values: "stop" (default), "freeze", "ignore", "demote", "suicide"
+    * Possible values: "stop" (default), "freeze", "ignore", "demote", "fence", "suicide"
 
   * shutdown-lock: Whether to lock resources to a cleanly shut down node
     * When true, resources active on a node when it is cleanly shut down are kept "locked" to that node (not allowed to run elsewhere) until they start again on that node after it rejoins (or for at most shutdown-lock-limit, if set). Stonith resources and Pacemaker Remote connections are never locked. Clone and bundle instances and the promoted role of promotable clones are currently never locked, though support could be added in a future release.
@@ -236,6 +236,7 @@ Also known as properties, these are options that affect behavior across the enti
           <option value="freeze"/>
           <option value="ignore"/>
           <option value="demote"/>
+          <option value="fence"/>
           <option value="suicide"/>
         </content>
       </parameter>
@@ -471,7 +472,7 @@ Also known as properties, these are options that affect behavior across the enti
     * Possible values: "stop" (default), "panic"
 
   * no-quorum-policy: What to do when the cluster does not have quorum
-    * Possible values: "stop" (default), "freeze", "ignore", "demote", "suicide"
+    * Possible values: "stop" (default), "freeze", "ignore", "demote", "fence", "suicide"
 
   * shutdown-lock: Whether to lock resources to a cleanly shut down node
     * When true, resources active on a node when it is cleanly shut down are kept "locked" to that node (not allowed to run elsewhere) until they start again on that node after it rejoins (or for at most shutdown-lock-limit, if set). Stonith resources and Pacemaker Remote connections are never locked. Clone and bundle instances and the promoted role of promotable clones are currently never locked, though support could be added in a future release.
@@ -697,6 +698,7 @@ Also known as properties, these are options that affect behavior across the enti
           <option value="freeze"/>
           <option value="ignore"/>
           <option value="demote"/>
+          <option value="fence"/>
           <option value="suicide"/>
         </content>
       </parameter>
