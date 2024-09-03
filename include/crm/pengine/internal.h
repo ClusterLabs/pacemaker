@@ -305,7 +305,7 @@ void pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                    const char *reason, bool priority_delay);
 
 pcmk_node_t *pe_create_node(const char *id, const char *uname, const char *type,
-                            const char *score, pcmk_scheduler_t *scheduler);
+                            int score, pcmk_scheduler_t *scheduler);
 
 int pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
                            const char *name, const pcmk_node_t *node,

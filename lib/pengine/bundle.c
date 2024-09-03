@@ -738,7 +738,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         node = pcmk_find_node(scheduler, uname);
         if (node == NULL) {
             node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
-                                  PCMK_VALUE_MINUS_INFINITY, scheduler);
+                                  -PCMK_SCORE_INFINITY, scheduler);
         } else {
             node->assign->score = -PCMK_SCORE_INFINITY;
         }
