@@ -62,6 +62,11 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
     }
 }
 
+struct health_sum {
+    const pcmk_node_t *node; // Node that health score is being summed for
+    int sum;                 // Sum of health scores checked so far
+};
+
 /*!
  * \internal
  * \brief Add node attribute value to an integer, if it is a health attribute
@@ -75,12 +80,20 @@ static void
 add_node_health_value(gpointer key, gpointer value, gpointer user_data)
 {
     if (pcmk__starts_with((const char *) key, "#health")) {
-        int score = char2score((const char *) value);
-        int *health = (int *) user_data;
+        struct health_sum *health_sum = user_data;
+        int score = 0;
+        int rc = pcmk_parse_score((const char *) value, &score, 0);
 
-        *health = pcmk__add_scores(score, *health);
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Ignoring %s for %s because '%s' is not a valid value: %s",
+                     (const char *) key, pcmk__node_name(health_sum->node),
+                     (const char *) value, pcmk_rc_str(rc));
+            return;
+        }
+
+        health_sum->sum = pcmk__add_scores(score, health_sum->sum);
         crm_trace("Combined '%s' into node health score (now %s)",
-                  (const char *) value, pcmk_readable_score(*health));
+                  (const char *) value, pcmk_readable_score(health_sum->sum));
     }
 }
 
@@ -96,10 +109,12 @@ add_node_health_value(gpointer key, gpointer value, gpointer user_data)
 int
 pe__sum_node_health_scores(const pcmk_node_t *node, int base_health)
 {
+    struct health_sum health_sum = { node, base_health, };
+
     CRM_ASSERT(node != NULL);
     g_hash_table_foreach(node->details->attrs, add_node_health_value,
-                         &base_health);
-    return base_health;
+                         &health_sum);
+    return health_sum.sum;
 }
 
 /*!
@@ -132,6 +147,8 @@ pe__node_health(pcmk_node_t *node)
     while (g_hash_table_iter_next(&iter, (gpointer *) &name,
                                   (gpointer *) &value)) {
         if (pcmk__starts_with(name, "#health")) {
+            int parse_rc = pcmk_rc_ok;
+
             /* It's possible that pcmk__score_red equals pcmk__score_yellow,
              * or pcmk__score_yellow equals pcmk__score_green, so check the
              * textual value first to be able to distinguish those.
@@ -144,8 +161,15 @@ pe__node_health(pcmk_node_t *node)
                 continue;
             }
 
+            parse_rc = pcmk_parse_score(value, &score, 0);
+            if (parse_rc != pcmk_rc_ok) {
+                crm_warn("Treating %s for %s as 0 "
+                         "because '%s' is not a valid value: %s",
+                         name, pcmk__node_name(node), value,
+                         pcmk_rc_str(parse_rc));
+            }
+
             // The value is an integer, so compare numerically
-            score = char2score(value);
             if (score <= pcmk__score_red) {
                 return -1;
             } else if ((score <= pcmk__score_yellow)
