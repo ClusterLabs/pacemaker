@@ -69,9 +69,9 @@ sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
     const xmlNode *pair_b = b;
     pcmk__nvpair_unpack_t *unpack_data = user_data;
 
-    const char *score = NULL;
     int score_a = 0;
     int score_b = 0;
+    int rc = pcmk_rc_ok;
 
     if (a == NULL && b == NULL) {
         return 0;
@@ -90,11 +90,23 @@ sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
         return 1;
     }
 
-    score = crm_element_value(pair_a, PCMK_XA_SCORE);
-    score_a = char2score(score);
+    rc = pcmk__xe_get_score(pair_a, PCMK_XA_SCORE, &score_a, 0);
+    if (rc != pcmk_rc_ok) { // Not possible with schema validation enabled
+        pcmk__config_warn("Using 0 as %s score because '%s' "
+                          "is not a valid score: %s",
+                          pcmk__xe_id(pair_a),
+                          crm_element_value(pair_a, PCMK_XA_SCORE),
+                          pcmk_rc_str(rc));
+    }
 
-    score = crm_element_value(pair_b, PCMK_XA_SCORE);
-    score_b = char2score(score);
+    rc = pcmk__xe_get_score(pair_b, PCMK_XA_SCORE, &score_b, 0);
+    if (rc != pcmk_rc_ok) { // Not possible with schema validation enabled
+        pcmk__config_warn("Using 0 as %s score because '%s' "
+                          "is not a valid score: %s",
+                          pcmk__xe_id(pair_b),
+                          crm_element_value(pair_b, PCMK_XA_SCORE),
+                          pcmk_rc_str(rc));
+    }
 
     /* If we're overwriting values, we want lowest score first, so the highest
      * score is processed last; if we're not overwriting values, we want highest
