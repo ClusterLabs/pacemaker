@@ -122,7 +122,7 @@ enum cib_call_options {
      *   value and \c X are parsed and added as scores.
      *
      * Scores are integer values capped at \c INFINITY and \c -INFINITY. Refer
-     * to Pacemaker Explained and to the \c char2score() function for more
+     * to Pacemaker Explained and to the \c pcmk_parse_score() function for more
      * details on scores, including how they're parsed and added.
      *
      * Note: This is implemented only for modify operations.
