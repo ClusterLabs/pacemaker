@@ -637,18 +637,19 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
     const char *id = NULL;
     const char *uname = NULL;
     const char *type = NULL;
-    const char *score = NULL;
 
     for (xml_obj = pcmk__xe_first_child(xml_nodes, NULL, NULL, NULL);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
 
         if (pcmk__xe_is(xml_obj, PCMK_XE_NODE)) {
+            int score = 0;
+            int rc = pcmk__xe_get_score(xml_obj, PCMK_XA_SCORE, &score, 0);
+
             new_node = NULL;
 
             id = crm_element_value(xml_obj, PCMK_XA_ID);
             uname = crm_element_value(xml_obj, PCMK_XA_UNAME);
             type = crm_element_value(xml_obj, PCMK_XA_TYPE);
-            score = crm_element_value(xml_obj, PCMK_XA_SCORE);
             crm_trace("Processing node %s/%s", uname, id);
 
             if (id == NULL) {
@@ -656,8 +657,15 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
                                  "> entry in configuration without id");
                 continue;
             }
-            new_node = pe_create_node(id, uname, type, char2score(score),
-                                      scheduler);
+            if (rc != pcmk_rc_ok) {
+                // Not possible with schema validation enabled
+                pcmk__config_warn("Using 0 as score for node %s "
+                                  "because '%s' is not a valid score: %s",
+                                  pcmk__s(uname, "without name"),
+                                  crm_element_value(xml_obj, PCMK_XA_SCORE),
+                                  pcmk_rc_str(rc));
+            }
+            new_node = pe_create_node(id, uname, type, score, scheduler);
 
             if (new_node == NULL) {
                 return FALSE;
