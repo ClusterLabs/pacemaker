@@ -406,14 +406,6 @@ pe__health_strategy(pcmk_scheduler_t *scheduler)
     return pcmk__parse_health_strategy(strategy);
 }
 
-static inline int
-pe__health_score(const char *option, pcmk_scheduler_t *scheduler)
-{
-    const char *value = pcmk__cluster_option(scheduler->priv->options, option);
-
-    return char2score(value);
-}
-
 #ifdef __cplusplus
 }
 #endif
