@@ -131,25 +131,8 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
             continue;
         }
 
-        name = crm_element_value(nvpair, PCMK_XA_NAME);
-        if (name == NULL) {
-            /* @COMPAT Always get name from ref_nvpair. Currently an nvpair with
-             * an id-ref is allowed to have a name, which overrides the name in
-             * the referenced nvpair.
-             *
-             * This feature was added by commit 3912538 but is undocumented and
-             * inconsistently implemented. The code often ignores name if there
-             * is an id-ref, or in some places assumes that id and value exist
-             * if name exists.
-             *
-             * PCMK_XA_NAME with PCMK_XA_ID_REF is already disallowed by the
-             * schema for PCMK_XE_NVPAIR.
-             */
-            name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
-        }
-
+        name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
         value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
-
         if ((name == NULL) || (value == NULL)) {
             continue;
         }
