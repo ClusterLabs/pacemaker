@@ -449,6 +449,9 @@ enum pcmk__xa_flags {
     pcmk__xaf_score_update  = (1U << 1),
 };
 
+int pcmk__xe_get_score(const xmlNode *xml, const char *name, int *score,
+                       int default_score);
+
 int pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags);
 
 /*!
