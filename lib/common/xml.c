@@ -495,6 +495,30 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
 
 /*!
  * \internal
+ * \brief Parse an integer score from an XML attribute
+ *
+ * \param[in]  xml            XML element with attribute to parse
+ * \param[in]  name           Name of attribute to parse
+ * \param[out] score          Where to store parsed score (can be NULL to
+ *                            just validate)
+ * \param[in]  default_score  What to return if the attribute value is not
+ *                            present or invalid
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_get_score(const xmlNode *xml, const char *name, int *score,
+                   int default_score)
+{
+    const char *value = NULL;
+
+    CRM_CHECK((xml != NULL) && (name != NULL), return EINVAL);
+    value = crm_element_value(xml, name);
+    return pcmk_parse_score(value, score, default_score);
+}
+
+/*!
+ * \internal
  * \brief Set an XML attribute, expanding \c ++ and \c += where appropriate
  *
  * If \p target already has an attribute named \p name set to an integer value
