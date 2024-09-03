@@ -43,12 +43,12 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
             break;
 
         default: // progressive or custom
-            pcmk__score_red = pe__health_score(PCMK_OPT_NODE_HEALTH_RED,
-                                               scheduler);
-            pcmk__score_green = pe__health_score(PCMK_OPT_NODE_HEALTH_GREEN,
+            pcmk__score_red = pcmk__health_score(PCMK_OPT_NODE_HEALTH_RED,
                                                  scheduler);
-            pcmk__score_yellow = pe__health_score(PCMK_OPT_NODE_HEALTH_YELLOW,
-                                                  scheduler);
+            pcmk__score_green = pcmk__health_score(PCMK_OPT_NODE_HEALTH_GREEN,
+                                                   scheduler);
+            pcmk__score_yellow = pcmk__health_score(PCMK_OPT_NODE_HEALTH_YELLOW,
+                                                    scheduler);
             break;
     }
 
