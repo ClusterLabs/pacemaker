@@ -179,13 +179,19 @@
 
 # PCMK_panic_action
 #
-# Pacemaker will panic the local host under certain conditions. By default,
-# this means rebooting the host. This variable can change that behavior: if
-# "crash", trigger a kernel crash (useful if you want a kernel dump to
-# investigate); if "sync-reboot" or "sync-crash", synchronize filesystems
-# before rebooting the host or triggering a kernel crash. The sync values are
-# more likely to preserve log messages, but with the risk that the host may be
-# left active if the synchronization hangs.
+# Pacemaker panics the local node under certain conditions (for example, losing
+# quorum when no-quorum-policy is "suicide", or being notified of the local
+# node's own fencing when fence-reaction is "panic"). This variable determines
+# the panic behavior. Allowed values:
+#
+# reboot   Immediately reboot the host (not a clean reboot)
+# off      Immediately kill power to the host (not a clean shutdown)
+# crash    Trigger a kernel crash if possible, otherwise like reboot
+# sync-reboot, sync-off, sync-crash
+# 	   "sync-" can be put in front of any of the above values to synchronize
+#          filesystems before panicking (making log messages more likely to be
+#          preserved, but with the risk that the host may be left active if the
+#          synchronization hangs)
 #
 # Default: PCMK_panic_action="reboot"
 

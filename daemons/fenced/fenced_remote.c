@@ -1034,7 +1034,7 @@ merge_duplicates(remote_fencing_op_t *op)
             continue;
         }
         if (pcmk__str_eq(other->target, other->originator, pcmk__str_casei)) {
-            crm_trace("%.8s not duplicate of %.8s: suicide for %s",
+            crm_trace("%.8s not duplicate of %.8s: self-fencing for %s",
                       op->id, other->id, other->target);
             continue;
         }
@@ -1983,10 +1983,10 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                  come back in between
                - Delicate might be the case where we have watchdog-fencing
                  enabled for a node but the watchdog-fencing-device isn't
-                 explicitly chosen for suicide. Local pe-execution in sbd
-                 may detect the node as unclean and lead to timely suicide.
-                 Otherwise the selection of PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
-                 at least is questionable.
+                 explicitly chosen for self-fencing. Local scheduler execution
+                 in sbd might detect the node as unclean and lead to timely
+                 self-fencing. Otherwise the selection of
+                 PCMK_OPT_STONITH_WATCHDOG_TIMEOUT at least is questionable.
              */
 
             /* coming here we're not waiting for watchdog timeout -

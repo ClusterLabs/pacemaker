@@ -118,7 +118,7 @@ enum controld_flags {
     controld_has_quorum             = (1 << 3),
 
     //! Panic the local node if it loses quorum
-    controld_no_quorum_suicide      = (1 << 4),
+    controld_no_quorum_panic        = (1 << 4),
 
     //! Lock resources to the local node when it shuts down cleanly
     controld_shutdown_lock_enabled  = (1 << 5),

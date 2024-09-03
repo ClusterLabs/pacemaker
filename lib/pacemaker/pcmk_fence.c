@@ -20,7 +20,7 @@
 #include <pacemaker.h>
 #include <pacemaker-internal.h>
 
-static const int st_opts = st_opt_sync_call | st_opt_allow_suicide;
+static const int st_opts = st_opt_sync_call|st_opt_allow_self_fencing;
 
 static GMainLoop *mainloop = NULL;
 
@@ -160,7 +160,7 @@ async_fence_helper(gpointer user_data)
                                     notify_callback);
 
     call_id = st->cmds->fence_with_delay(st,
-                                         st_opt_allow_suicide,
+                                         st_opt_allow_self_fencing,
                                          async_fence_data.target,
                                          async_fence_data.action,
                                          async_fence_data.timeout/1000,

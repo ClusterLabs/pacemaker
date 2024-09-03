@@ -234,7 +234,7 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
-static const int st_opts = st_opt_sync_call | st_opt_allow_suicide;
+static const int st_opts = st_opt_sync_call|st_opt_allow_self_fencing;
 
 static char *name = NULL;
 

@@ -2449,8 +2449,17 @@ node_history_list(pcmk__output_t *out, va_list args) {
          rsc_entry != NULL; rsc_entry = pcmk__xe_next_same(rsc_entry)) {
 
         const char *rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
-        pcmk_resource_t *rsc = pe_find_resource(scheduler->resources, rsc_id);
-        const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
+        pcmk_resource_t *rsc = NULL;
+        const pcmk_resource_t *parent = NULL;
+
+        if (rsc_id == NULL) {
+            continue; // Malformed entry
+        }
+
+        rsc = pe_find_resource(scheduler->resources, rsc_id);
+        if (rsc == NULL) {
+            continue; // Resource was removed from configuration
+        }
 
         /* We can't use is_filtered here to filter group resources.  For is_filtered,
          * we have to decide whether to check the parent or not.  If we check the
@@ -2460,6 +2469,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
          *
          * For other resource types, is_filtered is okay.
          */
+        parent = pe__const_top_resource(rsc, false);
         if (pcmk__is_group(parent)) {
             if (!pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
                                    pcmk__str_star_matches)
