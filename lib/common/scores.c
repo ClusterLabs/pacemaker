@@ -86,26 +86,6 @@ pcmk_parse_score(const char *score_s, int *score, int default_score)
 }
 
 /*!
- * \brief Get the integer value of a score string
- *
- * Given a string representation of a score, return the integer equivalent.
- * This accepts infinity strings as well as red, yellow, and green, and
- * bounds the result to +/-INFINITY.
- *
- * \param[in] score  Score as string
- *
- * \return Integer value corresponding to \p score
- */
-int
-char2score(const char *score)
-{
-    int result = 0;
-
-    (void) pcmk_parse_score(score, &result, 0);
-    return result;
-}
-
-/*!
  * \brief Return a displayable static string for a score value
  *
  * Given a score value, return a pointer to a static string representation of
@@ -201,3 +181,20 @@ pcmk__add_scores(int score1, int score2)
 
     return result;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/scores_compat.h>
+
+int
+char2score(const char *score)
+{
+    int result = 0;
+
+    (void) pcmk_parse_score(score, &result, 0);
+    return result;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

@@ -295,9 +295,8 @@ static GOptionEntry addl_entries[] = {
       INDENT "   existing value and X are parsed and added as scores.\n\n"
 
       INDENT "Scores are integer values capped at INFINITY and -INFINITY.\n"
-      INDENT "Refer to Pacemaker Explained and to the char2score() function\n"
-      INDENT "for more details on scores, including how they're parsed and\n"
-      INDENT "added.",
+      INDENT "Refer to Pacemaker Explained for more details on scores,\n"
+      INDENT "including how they are parsed and added.",
       NULL },
 
     { "wait", 'W', 0, G_OPTION_ARG_CALLBACK, wait_cb,

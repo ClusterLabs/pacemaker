@@ -27,12 +27,15 @@ extern "C" {
 
 int pcmk_parse_score(const char *score_s, int *score, int default_score);
 const char *pcmk_readable_score(int score);
-int char2score(const char *score);
 bool pcmk_str_is_infinity(const char *s);
 bool pcmk_str_is_minus_infinity(const char *s);
 
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/scores_compat.h>
 #endif
 
 #endif // PCMK__CRM_COMMON_SCORES__H
