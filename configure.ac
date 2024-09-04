@@ -633,9 +633,12 @@ dnl ==============================================
 
 AS_IF([test x"$enable_nls" = x"yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
 
-AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT],
-                   ["$with_concurrent_fencing_default"],
-                   [Default value for concurrent-fencing cluster option])
+AS_IF([test x"$with_concurrent_fencing_default" = x"true"],
+      [PCMK__CONCURRENT_FENCING_DEFAULT_TRUE="1"],
+      [PCMK__CONCURRENT_FENCING_DEFAULT_TRUE="0"])
+AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT_TRUE],
+                   [$PCMK__CONCURRENT_FENCING_DEFAULT_TRUE],
+                   [Whether concurrent-fencing cluster option default is true])
 
 AC_DEFINE_UNQUOTED([PCMK__SBD_SYNC_DEFAULT],
                    [$with_sbd_sync_default],

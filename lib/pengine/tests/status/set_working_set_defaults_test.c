@@ -27,13 +27,11 @@ check_defaults(void **state) {
     set_working_set_defaults(scheduler);
 
     flags = pcmk__sched_symmetric_cluster
+#if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
+            |pcmk__sched_concurrent_fencing
+#endif
             |pcmk__sched_stop_removed_resources
             |pcmk__sched_cancel_removed_actions;
-
-    if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, PCMK_VALUE_TRUE)) {
-        flags |= pcmk__sched_concurrent_fencing;
-    }
-
 
     assert_null(scheduler->priv->out);
     assert_int_equal(scheduler->priv->next_ordering_id, 1);

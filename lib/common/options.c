@@ -313,7 +313,12 @@ static const pcmk__cluster_option_t cluster_options[] = {
     },
     {
         PCMK_OPT_CONCURRENT_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
-        PCMK__CONCURRENT_FENCING_DEFAULT, pcmk__valid_boolean,
+#if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
+        PCMK_VALUE_TRUE,
+#else
+        PCMK_VALUE_FALSE,
+#endif
+        pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Allow performing fencing operations in parallel"),
         NULL,

@@ -437,11 +437,11 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
     scheduler->no_quorum_policy = pcmk_no_quorum_stop;
     pcmk__set_scheduler_flags(scheduler,
                               pcmk__sched_symmetric_cluster
+#if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
+                              |pcmk__sched_concurrent_fencing
+#endif
                               |pcmk__sched_stop_removed_resources
                               |pcmk__sched_cancel_removed_actions);
-    if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, PCMK_VALUE_TRUE)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk__sched_concurrent_fencing);
-    }
 }
 
 pcmk_resource_t *
