@@ -1,0 +1,51 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="8" num_updates="0" admin_epoch="0">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * There is one of each kind of several nvset element
+           (cluster_property_set, instance_attributes, meta_attributes,
+           utilization).
+         * Each nvset contains multiple nvpairs with the same name (two of which
+           have value "#default"), as well as one nvpair with a different name.
+         * Two nvsets use id-refs.
+
+         In this situation:
+         * If the last nvpair with a given name in a given nvset has value
+           "#default", keep only that one.
+         * Otherwise, keep only the first nvpair with a given name in a given
+           nvset after the last one with that name and value "#default".
+      -->
+    <crm_config>
+      <cluster_property_set id="cluster-properties1">
+        <nvpair id="cluster-properties1-option3" name="option" value="value3"/>
+        <nvpair id="cluster-properties1-other-option" name="other-option" value="value0"/>
+      </cluster_property_set>
+      <cluster_property_set id="cluster-properties2">
+        <nvpair id="cluster-properties2-option4" name="option" value="value4"/>
+        <nvpair id="cluster-properties2-other-option" name="other-option" value="value0"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive class="ocf" id="rsc1" provider="heartbeat" type="apache">
+        <instance_attributes id="rsc1-instance_attributes">
+          <nvpair id="rsc1-instance_attributes-other-option" name="other-option" value="value0"/>
+          <nvpair id="rsc1-instance_attributes-option4" name="option" value="value4"/>
+        </instance_attributes>
+        <meta_attributes id="rsc1-meta_attributes">
+          <nvpair id="rsc1-meta_attributes-other-option" name="other-option" value="value0"/>
+          <nvpair id="rsc1-meta_attributes-option5" name="option" value="value5"/>
+        </meta_attributes>
+        <utilization id="rsc1-utilization1">
+          <nvpair id="rsc1-utilization1-other-option" name="other-option" value="valueX"/>
+          <nvpair id="rsc1-utilization1-option5" name="option" value="#default"/>
+        </utilization>
+        <utilization id="rsc1-utilization2">
+          <nvpair id-ref="rsc1-utilization1-other-option"/>
+          <nvpair id-ref="rsc1-utilization1-option5"/>
+        </utilization>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
