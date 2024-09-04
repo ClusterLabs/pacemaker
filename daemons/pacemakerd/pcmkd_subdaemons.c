@@ -401,7 +401,7 @@ pcmk_shutdown_worker(gpointer user_data)
 
     if (fatal_error) {
         crm_notice("Shutting down and staying down after fatal error");
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
         pcmkd_shutdown_corosync();
 #endif
         crm_exit(CRM_EX_FATAL);

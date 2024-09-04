@@ -393,7 +393,7 @@ main(int argc, char **argv)
         out = NULL;
     }
 
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
     if (pacemakerd_read_config() == FALSE) {
         crm_exit(CRM_EX_UNAVAILABLE);
     }
@@ -417,7 +417,7 @@ main(int argc, char **argv)
     create_pcmk_dirs();
     pcmk__serve_pacemakerd_ipc(&ipcs, &pacemakerd_ipc_callbacks);
 
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
     /* Allows us to block shutdown */
     if (!cluster_connect_cfg()) {
         exit_code = CRM_EX_PROTOCOL;
@@ -467,7 +467,7 @@ main(int argc, char **argv)
     }
 
     g_main_loop_unref(mainloop);
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
     cluster_disconnect_cfg();
 #endif
 
