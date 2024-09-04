@@ -750,11 +750,13 @@ services__generic_error(const svc_action_t *op)
         return PCMK_OCF_UNKNOWN_ERROR;
     }
 
+#if PCMK__ENABLE_LSB
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
         && pcmk__str_eq(op->action, PCMK_ACTION_STATUS, pcmk__str_casei)) {
 
         return PCMK_LSB_STATUS_UNKNOWN;
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
@@ -785,11 +787,13 @@ services__not_installed_error(const svc_action_t *op)
         return PCMK_OCF_UNKNOWN_ERROR;
     }
 
+#if PCMK__ENABLE_LSB
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
         && pcmk__str_eq(op->action, PCMK_ACTION_STATUS, pcmk__str_casei)) {
 
         return PCMK_LSB_STATUS_NOT_INSTALLED;
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
@@ -820,11 +824,13 @@ services__authorization_error(const svc_action_t *op)
         return PCMK_OCF_UNKNOWN_ERROR;
     }
 
+#if PCMK__ENABLE_LSB
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
         && pcmk__str_eq(op->action, PCMK_ACTION_STATUS, pcmk__str_casei)) {
 
         return PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
@@ -856,11 +862,13 @@ services__configuration_error(const svc_action_t *op, bool is_fatal)
         return PCMK_OCF_UNKNOWN_ERROR;
     }
 
+#if PCMK__ENABLE_LSB
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
         && pcmk__str_eq(op->action, PCMK_ACTION_STATUS, pcmk__str_casei)) {
 
         return PCMK_LSB_NOT_CONFIGURED;
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {

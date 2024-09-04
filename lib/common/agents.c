@@ -34,7 +34,8 @@ pcmk_get_ra_caps(const char *standard)
 
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF)) {
         return pcmk_ra_cap_provider | pcmk_ra_cap_params
-               | pcmk_ra_cap_unique | pcmk_ra_cap_promotable;
+               | pcmk_ra_cap_unique | pcmk_ra_cap_promotable
+               | pcmk_ra_cap_cli_exec;
 
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_STONITH)) {
         /* @COMPAT Stonith resources can't really be unique clones, but we've
@@ -48,14 +49,12 @@ pcmk_get_ra_caps(const char *standard)
         return pcmk_ra_cap_params | pcmk_ra_cap_unique | pcmk_ra_cap_stdin
                | pcmk_ra_cap_fence_params;
 
+    } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_LSB)) {
+        return pcmk_ra_cap_status | pcmk_ra_cap_cli_exec;
+
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD)
                || !strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE)
-               || !strcasecmp(standard, PCMK_RESOURCE_CLASS_LSB)
                || !strcasecmp(standard, PCMK_RESOURCE_CLASS_UPSTART)) {
-
-        /* Since service can map to LSB, systemd, or upstart, these should
-         * have identical capabilities
-         */
         return pcmk_ra_cap_status;
 
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_NAGIOS)) {

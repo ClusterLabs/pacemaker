@@ -31,8 +31,10 @@ sbin_PROGRAMS		= pacemaker-remoted
 if BUILD_SYSTEMD
 systemdsystemunit_DATA	= pacemaker_remote.service
 else
+if BUILD_LSB
 initdir			= $(INITDIR)
 init_SCRIPTS		= pacemaker_remote
+endif
 endif
 
 pacemaker_remoted_CPPFLAGS	= -DPCMK__COMPILE_REMOTE \

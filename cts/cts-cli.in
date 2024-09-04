@@ -3187,6 +3187,7 @@ class AgentRegressionTest(RegressionTest):
             make_test_group("Validate an invalid resource configuration",
                             "crm_resource --validate --class ocf --provider pacemaker --agent Dummy {fmt}",
                             [Test, ValidatingTest],
+                            expected_rc=ExitStatus.NOT_CONFIGURED,
                             env={"OCF_RESKEY_op_sleep": "asdf"}),
         ]
 
@@ -3423,3 +3424,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# vim: set filetype=python expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=120:
