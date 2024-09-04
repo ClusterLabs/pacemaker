@@ -642,6 +642,27 @@ warn_about_deprecated_classes(pcmk_resource_t *rsc)
 
 /*!
  * \internal
+ * \brief Parse resource priority from meta-attribute
+ *
+ * \param[in,out] rsc  Resource being unpacked
+ */
+static void
+unpack_priority(pcmk_resource_t *rsc)
+{
+    const char *value = g_hash_table_lookup(rsc->priv->meta,
+                                            PCMK_META_PRIORITY);
+    int rc = pcmk_parse_score(value, &(rsc->priv->priority), 0);
+
+    if (rc != pcmk_rc_ok) {
+        pcmk__config_warn("Using default (0) for resource %s "
+                          PCMK_META_PRIORITY
+                          " because '%s' is not a valid value: %s",
+                          rsc->id, value, pcmk_rc_str(rc));
+    }
+}
+
+/*!
+ * \internal
  * \brief Unpack configuration XML for a given resource
  *
  * Unpack the XML object containing a resource's configuration into a new
@@ -775,8 +796,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     rsc_private->ban_after_failures = PCMK_SCORE_INFINITY;
 
-    value = g_hash_table_lookup(rsc_private->meta, PCMK_META_PRIORITY);
-    rsc_private->priority = char2score(value);
+    unpack_priority(*rsc);
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {
