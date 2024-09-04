@@ -419,11 +419,11 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
 
     pcmk__set_scheduler_flags(scheduler,
                               pcmk_sched_symmetric_cluster
+#if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
+                              |pcmk_sched_concurrent_fencing
+#endif
                               |pcmk_sched_stop_removed_resources
                               |pcmk_sched_cancel_removed_actions);
-    if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, PCMK_VALUE_TRUE)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk_sched_concurrent_fencing);
-    }
 }
 
 pcmk_resource_t *
