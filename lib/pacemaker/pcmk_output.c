@@ -42,30 +42,26 @@ colocations_header(pcmk_resource_t *rsc, pcmk__colocation_t *cons,
 static void
 colocations_xml_node(pcmk__output_t *out, pcmk_resource_t *rsc,
                      pcmk__colocation_t *cons) {
-    xmlNodePtr node = NULL;
-
-    node = pcmk__output_create_xml_node(out, PCMK_XE_RSC_COLOCATION,
-                                        PCMK_XA_ID, cons->id,
-                                        PCMK_XA_RSC, cons->dependent->id,
-                                        PCMK_XA_WITH_RSC, cons->primary->id,
-                                        PCMK_XA_SCORE,
-                                        pcmk_readable_score(cons->score),
-                                        NULL);
-
-    if (cons->node_attribute) {
-        xmlSetProp(node, (pcmkXmlStr) PCMK_XA_NODE_ATTRIBUTE,
-                   (pcmkXmlStr) cons->node_attribute);
-    }
+    const char *score = pcmk_readable_score(cons->score);
+    const char *dependent_role = NULL;
+    const char *primary_role = NULL;
 
     if (cons->dependent_role != pcmk_role_unknown) {
-        xmlSetProp(node, (pcmkXmlStr) PCMK_XA_RSC_ROLE,
-                   (pcmkXmlStr) pcmk_role_text(cons->dependent_role));
+        dependent_role = pcmk_role_text(cons->dependent_role);
+    }
+    if (cons->primary_role != pcmk_role_unknown) {
+        primary_role = pcmk_role_text(cons->primary_role);
     }
 
-    if (cons->primary_role != pcmk_role_unknown) {
-        xmlSetProp(node, (pcmkXmlStr) PCMK_XA_WITH_RSC_ROLE,
-                   (pcmkXmlStr) pcmk_role_text(cons->primary_role));
-    }
+    pcmk__output_create_xml_node(out, PCMK_XE_RSC_COLOCATION,
+                                 PCMK_XA_ID, cons->id,
+                                 PCMK_XA_RSC, cons->dependent->id,
+                                 PCMK_XA_WITH_RSC, cons->primary->id,
+                                 PCMK_XA_SCORE, score,
+                                 PCMK_XA_NODE_ATTRIBUTE, cons->node_attribute,
+                                 PCMK_XA_RSC_ROLE, dependent_role,
+                                 PCMK_XA_WITH_RSC_ROLE, primary_role,
+                                 NULL);
 }
 
 static int

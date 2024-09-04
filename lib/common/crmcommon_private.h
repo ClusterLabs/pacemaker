@@ -116,6 +116,10 @@ G_GNUC_INTERNAL
 void pcmk__apply_creation_acl(xmlNode *xml, bool check_top);
 
 G_GNUC_INTERNAL
+xmlAttr *pcmk__xe_set_attr_force(xmlNode *node, const char *name,
+                                 const char *value);
+
+G_GNUC_INTERNAL
 void pcmk__mark_xml_attr_dirty(xmlAttr *a);
 
 G_GNUC_INTERNAL
