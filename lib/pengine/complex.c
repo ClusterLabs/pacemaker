@@ -228,48 +228,39 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
     }
 }
 
+/*!
+ * \brief Get final values of a resource's instance attributes
+ *
+ * \param[in,out] instance_attrs  Where to store the instance attributes
+ * \param[in]     rsc             Resource to get instance attributes for
+ * \param[in]     node            If not NULL, evaluate rules for this node
+ * \param[in,out] scheduler       Scheduler data
+ */
 void
-get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
+get_rsc_attributes(GHashTable *instance_attrs, const pcmk_resource_t *rsc,
                    const pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .now = scheduler->priv->now,
+        .now = NULL,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
     };
 
-    if (node) {
+    CRM_CHECK((instance_attrs != NULL) && (rsc != NULL) && (scheduler != NULL),
+              return);
+
+    rule_data.now = scheduler->priv->now;
+    if (node != NULL) {
         rule_data.node_hash = node->priv->attrs;
     }
 
+    // Evaluate resource's own values, then its ancestors' values
     pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_INSTANCE_ATTRIBUTES,
-                               &rule_data, meta_hash, NULL, scheduler);
-
-    /* set anything else based on the parent */
+                               &rule_data, instance_attrs, NULL, scheduler);
     if (rsc->priv->parent != NULL) {
-        get_rsc_attributes(meta_hash, rsc->priv->parent, node, scheduler);
-
-    } else {
-        if (pcmk__xe_first_child(scheduler->priv->rsc_defaults,
-                                 PCMK_XE_INSTANCE_ATTRIBUTES, NULL,
-                                 NULL) != NULL) {
-            /* Not possible with schema validation enabled
-             *
-             * @COMPAT Drop support when we can break behavioral
-             * backward compatibility
-             */
-            pcmk__warn_once(pcmk__wo_instance_defaults,
-                            "Support for " PCMK_XE_INSTANCE_ATTRIBUTES " in "
-                            PCMK_XE_RSC_DEFAULTS " is deprecated and will be "
-                            "removed in a future release");
-        }
-
-        /* and finally check the defaults */
-        pe__unpack_dataset_nvpairs(scheduler->priv->rsc_defaults,
-                                   PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
-                                   meta_hash, NULL, scheduler);
+        get_rsc_attributes(instance_attrs, rsc->priv->parent, node, scheduler);
     }
 }
 
@@ -459,6 +450,37 @@ detect_promotable(pcmk_resource_t *rsc)
         return TRUE;
     }
     return FALSE;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a clone or instance being unpacked is globally unique
+ *
+ * \param[in] rsc  Clone or clone instance to check
+ *
+ * \return \c true if \p rsc is globally unique according to its
+ *         meta-attributes, otherwise \c false
+ */
+static bool
+detect_unique(const pcmk_resource_t *rsc)
+{
+    const char *value = g_hash_table_lookup(rsc->priv->meta,
+                                            PCMK_META_GLOBALLY_UNIQUE);
+
+    if (value == NULL) { // Default to true if clone-node-max > 1
+        value = g_hash_table_lookup(rsc->priv->meta,
+                                    PCMK_META_CLONE_NODE_MAX);
+        if (value != NULL) {
+            int node_max = 1;
+
+            if ((pcmk__scan_min_int(value, &node_max, 0) == pcmk_rc_ok)
+                && (node_max > 1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    return crm_is_true(value);
 }
 
 static void
@@ -815,9 +837,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     if (pcmk__is_clone(pe__const_top_resource(*rsc, false))) {
-        value = g_hash_table_lookup(rsc_private->meta,
-                                    PCMK_META_GLOBALLY_UNIQUE);
-        if (crm_is_true(value)) {
+        if (detect_unique(*rsc)) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_unique);
         }
         if (detect_promotable(*rsc)) {

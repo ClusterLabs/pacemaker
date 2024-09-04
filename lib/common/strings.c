@@ -32,7 +32,7 @@
  *
  * \return Standard Pacemaker return code (\c pcmk_rc_ok on success,
  *         \c EINVAL on failed string conversion due to invalid input,
- *         or \c EOVERFLOW on arithmetic overflow)
+ *         or \c ERANGE if outside long long range)
  * \note Sets \c errno on error
  */
 static int
@@ -47,7 +47,7 @@ scan_ll(const char *text, long long *result, long long default_value,
     if (text != NULL) {
         local_result = strtoll(text, &local_end_text, 10);
         if (errno == ERANGE) {
-            rc = EOVERFLOW;
+            rc = errno;
             crm_warn("Integer parsed from '%s' was clipped to %lld",
                      text, local_result);
 
@@ -93,14 +93,8 @@ int
 pcmk__scan_ll(const char *text, long long *result, long long default_value)
 {
     long long local_result = default_value;
-    int rc = pcmk_rc_ok;
+    int rc = scan_ll(text, &local_result, default_value, NULL);
 
-    if (text != NULL) {
-        rc = scan_ll(text, &local_result, default_value, NULL);
-        if (rc != pcmk_rc_ok) {
-            local_result = default_value;
-        }
-    }
     if (result != NULL) {
         *result = local_result;
     }

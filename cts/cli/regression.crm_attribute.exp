@@ -85,9 +85,6 @@ Also known as properties, these are options that affect behavior across the enti
   * stonith-max-attempts: How many times fencing can fail before it will no longer be immediately re-attempted on a target
     * Possible values: score (default: )
 
-  * concurrent-fencing: Allow performing fencing operations in parallel
-    * Possible values: boolean (default: )
-
   * priority-fencing-delay: Apply fencing delay targeting the lost nodes with the highest total resource priority
     * Apply specified delay for the fencings that are targeting the lost nodes with the highest total resource priority in case we don't have the majority of the nodes in our cluster partition, so that the more significant nodes potentially win any fencing match, which is especially meaningful under split-brain of 2-node cluster. A promoted resource instance takes the base priority + 1 on calculation if the base priority is not 0. Any static/random delays that are introduced by `pcmk_delay_base/max` configured for the corresponding fencing resources will be added to this delay. This delay should be significantly greater than, safely twice, the maximum `pcmk_delay_base/max`. By default, priority fencing delay is disabled.
     * Possible values: duration (default: )
@@ -310,6 +307,7 @@ Also known as properties, these are options that affect behavior across the enti
         <content type="score" default=""/>
       </parameter>
       <parameter name="concurrent-fencing" advanced="0" generated="0">
+        <deprecated/>
         <longdesc lang="en">Allow performing fencing operations in parallel</longdesc>
         <shortdesc lang="en">Allow performing fencing operations in parallel</shortdesc>
         <content type="boolean" default=""/>
@@ -515,9 +513,6 @@ Also known as properties, these are options that affect behavior across the enti
   * stonith-max-attempts: How many times fencing can fail before it will no longer be immediately re-attempted on a target
     * Possible values: score (default: )
 
-  * concurrent-fencing: Allow performing fencing operations in parallel
-    * Possible values: boolean (default: )
-
   * priority-fencing-delay: Apply fencing delay targeting the lost nodes with the highest total resource priority
     * Apply specified delay for the fencings that are targeting the lost nodes with the highest total resource priority in case we don't have the majority of the nodes in our cluster partition, so that the more significant nodes potentially win any fencing match, which is especially meaningful under split-brain of 2-node cluster. A promoted resource instance takes the base priority + 1 on calculation if the base priority is not 0. Any static/random delays that are introduced by `pcmk_delay_base/max` configured for the corresponding fencing resources will be added to this delay. This delay should be significantly greater than, safely twice, the maximum `pcmk_delay_base/max`. By default, priority fencing delay is disabled.
     * Possible values: duration (default: )
@@ -619,6 +614,9 @@ Also known as properties, these are options that affect behavior across the enti
       * Possible values: boolean (default: )
 
   * DEPRECATED OPTIONS (will be removed in a future release):
+
+    * concurrent-fencing: Allow performing fencing operations in parallel
+      * Possible values: boolean (default: )
 
     * remove-after-stop: Whether to remove stopped resources from the executor
       * Values other than default are poorly tested and potentially dangerous.
@@ -772,6 +770,7 @@ Also known as properties, these are options that affect behavior across the enti
         <content type="score" default=""/>
       </parameter>
       <parameter name="concurrent-fencing" advanced="0" generated="0">
+        <deprecated/>
         <longdesc lang="en">Allow performing fencing operations in parallel</longdesc>
         <shortdesc lang="en">Allow performing fencing operations in parallel</shortdesc>
         <content type="boolean" default=""/>

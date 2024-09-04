@@ -313,8 +313,13 @@ static const pcmk__cluster_option_t cluster_options[] = {
     },
     {
         PCMK_OPT_CONCURRENT_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
-        PCMK__CONCURRENT_FENCING_DEFAULT, pcmk__valid_boolean,
-        pcmk__opt_schedulerd,
+#if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
+        PCMK_VALUE_TRUE,
+#else
+        PCMK_VALUE_FALSE,
+#endif
+        pcmk__valid_boolean,
+        pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Allow performing fencing operations in parallel"),
         NULL,
     },
@@ -555,14 +560,13 @@ static const pcmk__cluster_option_t fencing_params[] = {
      */
     {
         PCMK_STONITH_HOST_ARGUMENT, NULL, PCMK_VALUE_STRING, NULL,
-        "port", NULL,
+        NULL, NULL,
         pcmk__opt_advanced,
-        N_("An alternate parameter to supply instead of 'port'"),
-        N_("Some devices do not support the standard 'port' parameter or may "
-            "provide additional ones. Use this to specify an alternate, device-"
-            "specific, parameter that should indicate the machine to be "
-            "fenced. A value of \"none\" can be used to tell the cluster not "
-            "to supply any additional parameters."),
+        N_("Name of agent parameter that should be set to the fencing target"),
+        N_("If the fencing agent metadata advertises support for the \"port\" "
+            "or \"plug\" parameter, that will be used as the default, "
+            "otherwise \"none\" will be used, which tells the cluster not to "
+            "supply any additional parameters."),
     },
     {
         PCMK_STONITH_HOST_MAP, NULL, PCMK_VALUE_STRING, NULL,
@@ -630,11 +634,9 @@ static const pcmk__cluster_option_t fencing_params[] = {
         pcmk__opt_none,
         N_("The maximum number of actions can be performed in parallel on this "
             "device"),
-        N_("Cluster property concurrent-fencing=\"true\" needs to be "
-            "configured first. Then use this to specify the maximum number of "
-            "actions can be performed in parallel on this device. A value of "
-            "-1 means an unlimited number of actions can be performed in "
-            "parallel."),
+        N_("If the concurrent-fencing cluster property is \"true\", this "
+            "specifies the maximum number of actions that can be performed in "
+            "parallel on this device. A value of -1 means unlimited."),
     },
     {
         "pcmk_reboot_action", NULL, PCMK_VALUE_STRING, NULL,
