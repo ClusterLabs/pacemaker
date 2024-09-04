@@ -489,8 +489,15 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     const char *xml_rsc_id = NULL;
     const char *score_s = crm_element_value(set, PCMK_XA_SCORE);
 
-    if (score_s) {
-        local_score = char2score(score_s);
+    if (score_s != NULL) {
+        int rc = pcmk_parse_score(score_s, &local_score, 0);
+
+        if (rc != pcmk_rc_ok) { // Not possible with schema validation enabled
+            pcmk__config_err("Ignoring colocation '%s' for set '%s' "
+                             "because '%s' is not a valid score",
+                             coloc_id, set_id, score_s);
+            return;
+        }
     }
     if (local_score == 0) {
         crm_trace("Ignoring colocation '%s' for set '%s' because score is 0",
@@ -766,14 +773,22 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     }
 }
 
+/*!
+ * \internal
+ * \brief Unpack a colocation constraint that contains no resource sets
+ *
+ * \param[in]     xml_obj      Colocation constraint XML
+ * \param[in]     id           Colocation constraint XML ID (non-NULL)
+ * \param[in]     score        Integer score parsed from score attribute
+ * \param[in]     influence_s  Colocation constraint's influence attribute value
+ * \param[in,out] scheduler    Scheduler data
+ */
 static void
-unpack_simple_colocation(xmlNode *xml_obj, const char *id,
+unpack_simple_colocation(const xmlNode *xml_obj, const char *id, int score,
                          const char *influence_s, pcmk_scheduler_t *scheduler)
 {
-    int score_i = 0;
     uint32_t flags = pcmk__coloc_none;
 
-    const char *score = crm_element_value(xml_obj, PCMK_XA_SCORE);
     const char *dependent_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     const char *primary_id = crm_element_value(xml_obj, PCMK_XA_WITH_RSC);
     const char *dependent_role = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
@@ -806,12 +821,8 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
                           "removed");
     }
 
-    if (score) {
-        score_i = char2score(score);
-    }
-
     flags = pcmk__coloc_explicit | unpack_influence(id, dependent, influence_s);
-    pcmk__new_colocation(id, attr, score_i, dependent, primary,
+    pcmk__new_colocation(id, attr, score, dependent, primary,
                          dependent_role, primary_role, flags);
 }
 
@@ -981,7 +992,13 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     score = crm_element_value(xml_obj, PCMK_XA_SCORE);
     if (score != NULL) {
-        score_i = char2score(score);
+        int rc = pcmk_parse_score(score, &score_i, 0);
+
+        if (rc != pcmk_rc_ok) { // Not possible with schema validation enabled
+            pcmk__config_err("Ignoring colocation %s because '%s' "
+                             "is not a valid score", id, score);
+            return;
+        }
     }
     influence_s = crm_element_value(xml_obj, PCMK_XA_INFLUENCE);
 
@@ -1015,7 +1032,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     }
 
     if (last == NULL) {
-        unpack_simple_colocation(xml_obj, id, influence_s, scheduler);
+        unpack_simple_colocation(xml_obj, id, score_i, influence_s, scheduler);
     }
 }
 
