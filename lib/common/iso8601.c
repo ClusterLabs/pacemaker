@@ -947,7 +947,7 @@ parse_date(const char *date_str)
                     "because '%" PRIu32 "' is not a valid year",
                     date_str, year);
             goto invalid;
-        } else if ((day > INT_MAX)
+        } else if ((day < 1) || (day > INT_MAX)
                    || (day > crm_time_days_in_month(month, year))) {
             crm_err("'%s' is not a valid ISO 8601 date/time specification "
                     "because '%" PRIu32 "' is not a valid day of the month",
@@ -990,8 +990,9 @@ parse_date(const char *date_str)
     if (rc == 3) {
         if ((week < 1U) || (week > crm_time_weeks_in_year(year))) {
             crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%" PRIu32 "' is not a valid week of the year "
-                    "(1-%d)", date_str, week, crm_time_weeks_in_year(year));
+                    "because '%" PRIu32 "' is not a valid week of year %"
+                    PRIu32 " (1-%d)",
+                    date_str, week, year, crm_time_weeks_in_year(year));
             goto invalid;
         } else if ((day < 1U) || (day > 7U)) {
             crm_err("'%s' is not a valid ISO 8601 date/time specification "
