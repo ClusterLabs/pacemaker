@@ -201,6 +201,11 @@ pcmk__format_nvpair(const char *name, const char *value, const char *units)
 const char *
 crm_xml_add(xmlNode *node, const char *name, const char *value)
 {
+    /* @TODO Allocate attribute private data here when we drop
+     * new_private_data()/free_private_data()
+     *
+     * @TODO Replace with internal function that returns the new attribute
+     */
     bool dirty = FALSE;
     xmlAttr *attr = NULL;
 

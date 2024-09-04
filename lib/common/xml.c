@@ -1532,14 +1532,15 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     xmlAttr *attr = NULL;
     xml_node_private_t *nodepriv;
 
-    // Prevent the dirty flag being set recursively upwards
+    /* Restore the old value (without setting dirty flag recursively upwards or
+     * checking ACLs)
+     */
     pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
-
-    // Restore the old value (and the tracking flag)
-    attr = xmlSetProp(new_xml, (pcmkXmlStr) attr_name, (pcmkXmlStr) old_value);
+    crm_xml_add(new_xml, attr_name, old_value);
     pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Reset flags (so the attribute doesn't appear as newly created)
+    attr = xmlHasProp(new_xml, (pcmkXmlStr) attr_name);
     nodepriv = attr->_private;
     nodepriv->flags = 0;
 
@@ -1558,13 +1559,16 @@ static void
 mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
                   const char *old_value)
 {
+    xml_doc_private_t *docpriv = new_xml->doc->_private;
     char *vcopy = crm_element_value_copy(new_xml, attr_name);
 
     crm_trace("XML attribute %s was changed from '%s' to '%s' in %s",
               attr_name, old_value, vcopy, element);
 
-    // Restore the original value
-    xmlSetProp(new_xml, (pcmkXmlStr) attr_name, (pcmkXmlStr) old_value);
+    // Restore the original value (without checking ACLs)
+    pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
+    crm_xml_add(new_xml, attr_name, old_value);
+    pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Change it back to the new value, to check ACLs
     crm_xml_add(new_xml, attr_name, vcopy);
