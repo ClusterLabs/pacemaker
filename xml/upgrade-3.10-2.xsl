@@ -156,6 +156,16 @@
     </xsl:element>
 </xsl:template>
 
+<!--
+ Rename a bundle container's masters attribute to promoted-max. (This is the
+ only place the schema allows a masters attribute.)
+ -->
+<xsl:template match="@masters">
+    <xsl:attribute name="promoted-max">
+        <xsl:value-of select="."/>
+    </xsl:attribute>
+</xsl:template>
+
 
 <!-- Constraints -->
 

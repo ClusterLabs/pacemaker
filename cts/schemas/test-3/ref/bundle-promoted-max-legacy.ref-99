@@ -11,13 +11,13 @@
     <nodes/>
     <resources>
       <bundle id="bundle1">
-        <docker image="alpine:latest" masters="2" run-command="sleep 60"/>
+        <docker image="alpine:latest" promoted-max="2" run-command="sleep 60"/>
       </bundle>
       <bundle id="bundle2">
-        <podman image="alpine:latest" masters="2" run-command="sleep 60"/>
+        <podman image="alpine:latest" promoted-max="2" run-command="sleep 60"/>
       </bundle>
       <bundle id="bundle3">
-        <rkt image="alpine:latest" masters="2" run-command="sleep 60"/>
+        <rkt image="alpine:latest" promoted-max="2" run-command="sleep 60"/>
       </bundle>
     </resources>
     <constraints/>
