@@ -949,7 +949,6 @@ def main():
         exit_if_proc_running("pacemaker-execd")
         exit_if_proc_running("pacemaker-fenced")
 
-
     # Create a temporary directory for log files (the directory will
     # automatically be erased when done)
     with tempfile.TemporaryDirectory(prefix="cts-exec-") as logdir:
