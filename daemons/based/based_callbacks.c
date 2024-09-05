@@ -405,8 +405,11 @@ process_ping_reply(xmlNode *reply)
 
     } else {
         long long seq_ll;
+        int rc = pcmk__scan_ll(seq_s, &seq_ll, 0LL);
 
-        if (pcmk__scan_ll(seq_s, &seq_ll, 0LL) != pcmk_rc_ok) {
+        if (rc != pcmk_rc_ok) {
+            crm_debug("Ignoring ping reply with invalid " PCMK__XA_CIB_PING_ID
+                      " '%s': %s", seq_s, pcmk_rc_str(rc));
             return;
         }
         seq = (uint64_t) seq_ll;

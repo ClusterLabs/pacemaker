@@ -27,9 +27,9 @@ bad_input_string(void **state)
 {
     long long result;
 
-    assert_int_equal(pcmk__scan_ll("asdf", &result, 47), EINVAL);
+    assert_int_equal(pcmk__scan_ll("asdf", &result, 47), pcmk_rc_bad_input);
     assert_int_equal(result, 47);
-    assert_int_equal(pcmk__scan_ll("as12", &result, 47), EINVAL);
+    assert_int_equal(pcmk__scan_ll("as12", &result, 47), pcmk_rc_bad_input);
     assert_int_equal(result, 47);
 }
 
@@ -46,7 +46,7 @@ static void
 no_result_variable(void **state)
 {
     assert_int_equal(pcmk__scan_ll("1234", NULL, 47), pcmk_rc_ok);
-    assert_int_equal(pcmk__scan_ll("asdf", NULL, 47), EINVAL);
+    assert_int_equal(pcmk__scan_ll("asdf", NULL, 47), pcmk_rc_bad_input);
 }
 
 static void

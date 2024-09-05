@@ -409,14 +409,25 @@ static void
 throttle_update_job_max(const char *preference)
 {
     long long max = 0LL;
+
+    // Per-node override
     const char *env_limit = pcmk__env_option(PCMK__ENV_NODE_ACTION_LIMIT);
 
     if (env_limit != NULL) {
-        preference = env_limit; // Per-node override
+        int rc = pcmk__scan_ll(env_limit, &max, 0LL);
+
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Ignoring local option PCMK_" PCMK__ENV_NODE_ACTION_LIMIT
+                     " because '%s' is not a valid value: %s",
+                     env_limit, pcmk_rc_str(rc));
+            env_limit = NULL;
+        }
     }
-    if (preference != NULL) {
-        pcmk__scan_ll(preference, &max, 0LL);
+    if (env_limit == NULL) {
+        // Option validator should prevent invalid values
+        CRM_LOG_ASSERT(pcmk__scan_ll(preference, &max, 0LL) == pcmk_rc_ok);
     }
+
     if (max > 0) {
         throttle_job_max = (max >= INT_MAX)? INT_MAX : (int) max;
     } else {

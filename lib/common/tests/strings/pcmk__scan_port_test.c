@@ -16,7 +16,7 @@ empty_input_string(void **state)
 {
     int result;
 
-    assert_int_equal(pcmk__scan_port("", &result), EINVAL);
+    assert_int_equal(pcmk__scan_port("", &result), pcmk_rc_bad_input);
     assert_int_equal(result, -1);
 }
 
@@ -25,7 +25,7 @@ bad_input_string(void **state)
 {
     int result;
 
-    assert_int_equal(pcmk__scan_port("abc", &result), EINVAL);
+    assert_int_equal(pcmk__scan_port("abc", &result), pcmk_rc_bad_input);
     assert_int_equal(result, -1);
 }
 

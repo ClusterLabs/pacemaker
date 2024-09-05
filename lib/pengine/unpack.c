@@ -1022,9 +1022,15 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
 
     last_granted = g_hash_table_lookup(ticket->state, PCMK_XA_LAST_GRANTED);
     if (last_granted) {
-        long long last_granted_ll;
+        long long last_granted_ll = 0LL;
+        int rc = pcmk__scan_ll(last_granted, &last_granted_ll, 0LL);
 
-        pcmk__scan_ll(last_granted, &last_granted_ll, 0LL);
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Using %lld instead of invalid " PCMK_XA_LAST_GRANTED
+                     " value '%s' in state for ticket %s: %s",
+                     last_granted_ll, last_granted, ticket->id,
+                     pcmk_rc_str(rc));
+        }
         ticket->last_granted = (time_t) last_granted_ll;
     }
 
@@ -1566,6 +1572,7 @@ unpack_node_terminate(const pcmk_node_t *node, const xmlNode *node_state)
 {
     long long value = 0LL;
     int value_i = 0;
+    int rc = pcmk_rc_ok;
     const char *value_s = pcmk__node_attr(node, PCMK_NODE_ATTR_TERMINATE,
                                           NULL, pcmk__rsc_node_current);
 
@@ -1573,11 +1580,13 @@ unpack_node_terminate(const pcmk_node_t *node, const xmlNode *node_state)
     if (crm_str_to_boolean(value_s, &value_i) == 1) {
         return (value_i != 0);
     }
-    if (pcmk__scan_ll(value_s, &value, 0LL) == pcmk_rc_ok) {
+    rc = pcmk__scan_ll(value_s, &value, 0LL);
+    if (rc == pcmk_rc_ok) {
         return (value > 0);
     }
     crm_warn("Ignoring unrecognized value '%s' for " PCMK_NODE_ATTR_TERMINATE
-             "node attribute for %s", value_s, pcmk__node_name(node));
+             "node attribute for %s: %s",
+             value_s, pcmk__node_name(node), pcmk_rc_str(rc));
     return false;
 }
 

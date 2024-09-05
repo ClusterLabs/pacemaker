@@ -31,8 +31,8 @@
  *                            non-integer character
  *
  * \return Standard Pacemaker return code (\c pcmk_rc_ok on success,
- *         \c EINVAL on failed string conversion due to invalid input,
- *         or \c ERANGE if outside long long range)
+ *         \c pcmk_rc_bad_input on failed string conversion due to invalid
+ *         input, or \c ERANGE if outside long long range)
  * \note Sets \c errno on error
  */
 static int
@@ -48,25 +48,25 @@ scan_ll(const char *text, long long *result, long long default_value,
         local_result = strtoll(text, &local_end_text, 10);
         if (errno == ERANGE) {
             rc = errno;
-            crm_warn("Integer parsed from '%s' was clipped to %lld",
-                     text, local_result);
+            crm_debug("Integer parsed from '%s' was clipped to %lld",
+                      text, local_result);
+
+        } else if (local_end_text == text) {
+            rc = pcmk_rc_bad_input;
+            local_result = default_value;
+            crm_debug("Could not parse integer from '%s' (using %lld instead): "
+                      "No digits found", text, default_value);
 
         } else if (errno != 0) {
             rc = errno;
             local_result = default_value;
-            crm_warn("Could not parse integer from '%s' (using %lld instead): "
-                     "%s", text, default_value, pcmk_rc_str(rc));
-
-        } else if (local_end_text == text) {
-            rc = EINVAL;
-            local_result = default_value;
-            crm_warn("Could not parse integer from '%s' (using %lld instead): "
-                    "No digits found", text, default_value);
+            crm_debug("Could not parse integer from '%s' (using %lld instead): "
+                      "%s", text, default_value, pcmk_rc_str(rc));
         }
 
         if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
-            crm_warn("Characters left over after parsing '%s': '%s'",
-                     text, local_end_text);
+            crm_debug("Characters left over after parsing '%s': '%s'",
+                      text, local_end_text);
         }
         errno = rc;
     }
@@ -153,7 +153,10 @@ pcmk__scan_port(const char *text, int *port)
     long long port_ll;
     int rc = pcmk__scan_ll(text, &port_ll, -1LL);
 
-    if ((text != NULL) && (rc == pcmk_rc_ok) // wasn't default or invalid
+    if (rc != pcmk_rc_ok) {
+        crm_warn("'%s' is not a valid port: %s", text, pcmk_rc_str(rc));
+
+    } else if ((text != NULL) // wasn't default or invalid
         && ((port_ll < 0LL) || (port_ll > 65535LL))) {
         crm_warn("Ignoring port specification '%s' "
                  "not in valid range (0-65535)", text);
@@ -318,11 +321,14 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 
     rc = pcmk__scan_ll(value, &value_ll, 0LL);
     if (rc != pcmk_rc_ok) {
+        crm_warn("Using default (%u) for %s because '%s' is not a "
+                 "valid integer: %s", default_val, key, value, pcmk_rc_str(rc));
         return rc;
     }
 
     if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
-        crm_warn("Could not parse non-negative integer from %s", value);
+        crm_warn("Using default (%u) for %s because '%s' is not in valid range",
+                 default_val, key, value);
         return ERANGE;
     }
 
@@ -349,6 +355,7 @@ crm_get_msec(const char *input)
     long long multiplier = 1000;
     long long divisor = 1;
     long long msec = PCMK__PARSE_INT_DEFAULT;
+    int rc = pcmk_rc_ok;
 
     if (input == NULL) {
         return PCMK__PARSE_INT_DEFAULT;
@@ -359,8 +366,14 @@ crm_get_msec(const char *input)
         input++;
     }
 
-    // Reject negative and unparsable inputs
-    if ((scan_ll(input, &msec, -1, &units) == EINVAL) || (msec < 0)) {
+    rc = scan_ll(input, &msec, PCMK__PARSE_INT_DEFAULT, &units);
+
+    if ((rc == ERANGE) && (msec > 0)) {
+        crm_warn("'%s' will be clipped to %lld", input, msec);
+
+    } else if ((rc != pcmk_rc_ok) || (msec < 0)) {
+        crm_warn("'%s' is not a valid time duration: %s",
+                 input, ((rc == pcmk_rc_ok)? "Negative" : pcmk_rc_str(rc)));
         return PCMK__PARSE_INT_DEFAULT;
     }
 
@@ -913,11 +926,10 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     if (*srcstring == '-') {
         int rc = scan_ll(srcstring+1, end, PCMK__PARSE_INT_DEFAULT, &remainder);
 
-        if (rc != pcmk_rc_ok || *remainder != '\0') {
-            return pcmk_rc_bad_input;
-        } else {
-            return pcmk_rc_ok;
+        if ((rc == pcmk_rc_ok) && (*remainder != '\0')) {
+            rc = pcmk_rc_bad_input;
         }
+        return rc;
     }
 
     rc = scan_ll(srcstring, start, PCMK__PARSE_INT_DEFAULT, &remainder);

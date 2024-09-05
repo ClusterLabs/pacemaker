@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -67,7 +67,8 @@ conversion_errors(void **state)
     assert_int_equal(pcmk__guint_from_hash(tbl, "toobig", 456, &result), ERANGE);
     assert_int_equal(result, 456);
 
-    assert_int_equal(pcmk__guint_from_hash(tbl, "baddata", 456, &result), EINVAL);
+    assert_int_equal(pcmk__guint_from_hash(tbl, "baddata", 456, &result),
+                     pcmk_rc_bad_input);
     assert_int_equal(result, 456);
 
     g_hash_table_destroy(tbl);
