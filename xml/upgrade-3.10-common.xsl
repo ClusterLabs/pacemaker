@@ -18,6 +18,15 @@
  * No element of the input XML contains an id attribute whose value begins with
    "pcmk__3_10_upgrade-". This allows us to generate new IDs without fear of
    conflict. However, the schema does not enforce this assumption.
+ * For attributes of type IDREF, the referenced element is of the correct type.
+   For example, the rsc attribute in a constraint refers to a resource element
+   (primitive, group, clone, bundle). The schema cannot enforce this assumption;
+   it requires only that each IDREF refer to a valid ID. As a result, the result
+   of our transformation pipeline may fail to validate if IDREFs refer to
+   unexpected element types.
+
+ @TODO Try to clean up IDREFs to unexpected element types when the referenced
+ elements are removed.
  -->
 
 <xsl:stylesheet version="1.0"

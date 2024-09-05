@@ -30,6 +30,7 @@
 
 <xsl:import href="upgrade-3.10-common.xsl"/>
 
+<!-- Index all rules by ID -->
 <xsl:key name='rule_id' match="rule" use="@id"/>
 
 <!-- Copy everything unaltered by default -->
