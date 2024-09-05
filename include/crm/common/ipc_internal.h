@@ -223,7 +223,7 @@ pcmk__client_t *pcmk__new_unauth_client(void *key);
 pcmk__client_t *pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid, gid_t gid);
 void pcmk__free_client(pcmk__client_t *c);
 void pcmk__drop_all_clients(qb_ipcs_service_t *s);
-bool pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax);
+void pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax);
 
 xmlNode *pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
                                  const char *tag, const char *ver, crm_exit_t status);
