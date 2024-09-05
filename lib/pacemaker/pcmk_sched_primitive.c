@@ -1583,9 +1583,14 @@ shutdown_time(pcmk_node_t *node)
 
     if (shutdown != NULL) {
         long long result_ll;
+        int rc = pcmk__scan_ll(shutdown, &result_ll, 0LL);
 
-        if (pcmk__scan_ll(shutdown, &result_ll, 0LL) == pcmk_rc_ok) {
+        if (rc == pcmk_rc_ok) {
             result = (time_t) result_ll;
+        } else {
+            crm_warn("Ignoring invalid value '%s' for %s "
+                     PCMK__NODE_ATTR_SHUTDOWN " attribute: %s",
+                     shutdown, pcmk__node_name(node), pcmk_rc_str(rc));
         }
     }
     return (result == 0)? get_effective_time(node->details->data_set) : result;

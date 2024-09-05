@@ -270,8 +270,9 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
         if (sub_rc != pcmk_rc_ok) {                                         \
             /* @COMPAT return sub_rc when we can break compatibility */     \
             pcmk__config_warn("Ignoring %s in " PCMK_XE_DURATION " %s "     \
-                              "because it is invalid",                      \
-                              pcmk__time_component_attr(component), id);    \
+                              "because it is invalid: %s",                  \
+                              pcmk__time_component_attr(component), id,     \
+                              pcmk_rc_str(sub_rc));                         \
             rc = sub_rc;                                                    \
         }                                                                   \
     } while (0)

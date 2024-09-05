@@ -500,10 +500,16 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
     value = crm_element_value(data, name);
     if (value) {
         long long value_ll;
+        int rc = pcmk__scan_ll(value, &value_ll, 0LL);
 
-        if ((pcmk__scan_ll(value, &value_ll, 0LL) != pcmk_rc_ok)
-            || (value_ll < INT_MIN) || (value_ll > INT_MAX)) {
-            *dest = PCMK__PARSE_INT_DEFAULT;
+        *dest = PCMK__PARSE_INT_DEFAULT;
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Using default for %s "
+                     "because '%s' is not a valid integer: %s",
+                     name, value, pcmk_rc_str(rc));
+        } else if ((value_ll < INT_MIN) || (value_ll > INT_MAX)) {
+            crm_warn("Using default for %s because '%s' is out of range",
+                     name, value);
         } else {
             *dest = (int) value_ll;
             return 0;
@@ -530,9 +536,15 @@ crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
 
     CRM_CHECK(dest != NULL, return -1);
     value = crm_element_value(data, name);
-    if ((value != NULL)
-        && (pcmk__scan_ll(value, dest, PCMK__PARSE_INT_DEFAULT) == pcmk_rc_ok)) {
-        return 0;
+    if (value != NULL) {
+        int rc = pcmk__scan_ll(value, dest, PCMK__PARSE_INT_DEFAULT);
+
+        if (rc == pcmk_rc_ok) {
+            return 0;
+        }
+        crm_warn("Using default for %s "
+                 "because '%s' is not a valid integer: %s",
+                 name, value, pcmk_rc_str(rc));
     }
     return -1;
 }
@@ -553,12 +565,21 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
 {
     const char *value = NULL;
     long long value_ll;
+    int rc = pcmk_rc_ok;
 
     CRM_CHECK(dest != NULL, return -1);
     *dest = 0;
     value = crm_element_value(data, name);
-    if ((pcmk__scan_ll(value, &value_ll, 0LL) != pcmk_rc_ok)
-        || (value_ll < 0) || (value_ll > G_MAXUINT)) {
+    rc = pcmk__scan_ll(value, &value_ll, 0LL);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Using default for %s "
+                 "because '%s' is not valid milliseconds: %s",
+                 name, value, pcmk_rc_str(rc));
+        return -1;
+    }
+    if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
+        crm_warn("Using default for %s because '%s' is out of range",
+                 name, value);
         return -1;
     }
     *dest = (guint) value_ll;

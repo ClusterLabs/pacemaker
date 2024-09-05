@@ -3240,7 +3240,7 @@ ticket_default(pcmk__output_t *out, va_list args) {
                 char *epoch_str = NULL;
                 long long time_ll;
 
-                pcmk__scan_ll(value, &time_ll, 0);
+                (void) pcmk__scan_ll(value, &time_ll, 0);
                 epoch_str = pcmk__epoch2str((const time_t *) &time_ll, 0);
                 pcmk__g_strcat(detail_str, epoch_str, NULL);
                 free(epoch_str);

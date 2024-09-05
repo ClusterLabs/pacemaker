@@ -1005,6 +1005,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     const char *value = NULL;
     long long limit = 0LL;
     GHashTable *config_hash = scheduler->config_hash;
+    int rc = pcmk_rc_ok;
 
     transition_id++;
     crm_trace("Creating transition graph %d", transition_id);
@@ -1031,7 +1032,11 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     crm_xml_add_int(scheduler->graph, "transition_id", transition_id);
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_MIGRATION_LIMIT);
-    if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
+    rc = pcmk__scan_ll(value, &limit, 0LL);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Ignoring invalid value '%s' for " PCMK_OPT_MIGRATION_LIMIT
+                 ": %s", value, pcmk_rc_str(rc));
+    } else if (limit > 0) {
         crm_xml_add(scheduler->graph, PCMK_OPT_MIGRATION_LIMIT, value);
     }
 
