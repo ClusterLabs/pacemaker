@@ -362,11 +362,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     if (pcmk_is_set(cib_client->flags, cib_is_daemon)) {
         const char *qmax = cib_config_lookup(PCMK_OPT_CLUSTER_IPC_LIMIT);
 
-        if (pcmk__set_client_queue_max(cib_client, qmax)) {
-            crm_trace("IPC threshold for client %s[%u] is now %u",
-                      pcmk__client_name(cib_client), cib_client->pid,
-                      cib_client->queue_max);
-        }
+        pcmk__set_client_queue_max(cib_client, qmax);
     }
 
     crm_xml_add(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
