@@ -647,34 +647,46 @@ cib_file_client_id(const cib_t *cib, const char **async_id,
 cib_t *
 cib_file_new(const char *cib_location)
 {
+    cib_t *cib = NULL;
     cib_file_opaque_t *private = NULL;
-    cib_t *cib = cib_new_variant();
+    char *filename = NULL;
 
+    if (cib_location == NULL) {
+        cib_location = getenv("CIB_file");
+        if (cib_location == NULL) {
+            return NULL; // Shouldn't be possible if we were called internally
+        }
+    }
+
+    cib = cib_new_variant();
     if (cib == NULL) {
         return NULL;
     }
 
-    private = calloc(1, sizeof(cib_file_opaque_t));
-
-    if (private == NULL) {
+    filename = strdup(cib_location);
+    if (filename == NULL) {
         free(cib);
         return NULL;
     }
+
+    private = calloc(1, sizeof(cib_file_opaque_t));
+    if (private == NULL) {
+        free(cib);
+        free(filename);
+        return NULL;
+    }
+
     private->id = crm_generate_uuid();
+    private->filename = filename;
 
     cib->variant = cib_file;
     cib->variant_opaque = private;
 
-    if (cib_location == NULL) {
-        cib_location = getenv("CIB_file");
-        CRM_CHECK(cib_location != NULL, return NULL); // Shouldn't be possible
-    }
     private->flags = 0;
     if (cib_file_is_live(cib_location)) {
         cib_set_file_flags(private, cib_file_flag_live);
         crm_trace("File %s detected as live CIB", cib_location);
     }
-    private->filename = strdup(cib_location);
 
     /* assign variant specific ops */
     cib->delegate_fn = cib_file_perform_op_delegate;
