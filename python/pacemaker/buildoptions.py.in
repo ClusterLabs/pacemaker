@@ -39,6 +39,9 @@ class BuildOptions:
     DAEMON_USER = "@CRM_DAEMON_USER@"
     """User to run Pacemaker daemons as."""
 
+    INIT_DIR = "@INITDIR@" if "@INITDIR@" else None
+    """Where LSB init scripts are stored."""
+
     LOCAL_STATE_DIR = "@localstatedir@"
     """Where miscellaneous temporary state files are stored."""
 
