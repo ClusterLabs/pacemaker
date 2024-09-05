@@ -30,27 +30,53 @@
 unsigned int
 pcmk__ipc_buffer_size(unsigned int max)
 {
-    static unsigned int global_max = 0;
+    static long long env_value = 0LL; // Will be bounded to unsigned int
 
-    if (global_max == 0) {
-        long long global_ll;
+    if (env_value == 0LL) {
+        const char *env_value_s = pcmk__env_option(PCMK__ENV_IPC_BUFFER);
+        int rc = pcmk__scan_ll(env_value_s, &env_value, MAX_MSG_SIZE);
 
-        if ((pcmk__scan_ll(pcmk__env_option(PCMK__ENV_IPC_BUFFER), &global_ll,
-                           0LL) != pcmk_rc_ok)
-            || (global_ll <= 0)) {
-            global_max = MAX_MSG_SIZE; // Default for unset or invalid
+        if (rc != pcmk_rc_ok) {
+            env_value = MAX_MSG_SIZE;
+            max = QB_MAX(max, env_value);
+            crm_warn("Using %u as IPC buffer size because '%s' is not "
+                     "a valid value for PCMK_" PCMK__ENV_IPC_BUFFER ": %s",
+                     max, env_value_s, pcmk_rc_str(rc));
 
-        } else if (global_ll < MIN_MSG_SIZE) {
-            global_max = MIN_MSG_SIZE;
+        } else if (env_value <= 0LL) {
+            env_value = MAX_MSG_SIZE;
+            max = QB_MAX(max, env_value);
+            crm_warn("Using %u as IPC buffer size because PCMK_"
+                     PCMK__ENV_IPC_BUFFER " (%s) is not a positive integer",
+                     max, env_value_s);
 
-        } else if (global_ll > UINT_MAX) {
-            global_max = UINT_MAX;
+        } else if (env_value < MIN_MSG_SIZE) {
+            env_value = MIN_MSG_SIZE;
+            max = QB_MAX(max, env_value);
+            crm_debug("Using %u as IPC buffer size because PCMK_"
+                      PCMK__ENV_IPC_BUFFER " (%s) is too small",
+                      max, env_value_s);
 
-        } else {
-            global_max = (unsigned int) global_ll;
+        } else if (env_value > UINT_MAX) {
+            env_value = UINT_MAX;
+            max = UINT_MAX;
+            crm_debug("Using %u as IPC buffer size because PCMK_"
+                      PCMK__ENV_IPC_BUFFER " (%s) is too big",
+                      max, env_value_s);
         }
     }
-    return QB_MAX(max, global_max);
+
+    if (env_value > max) {
+        const char *source = "PCMK_" PCMK__ENV_IPC_BUFFER;
+
+        if (env_value == MAX_MSG_SIZE) {
+            source = "default";
+        }
+        crm_debug("Using IPC buffer size %lld from %s (not %u)",
+                  env_value, source, max);
+        max = env_value;
+    }
+    return max;
 }
 
 /*!
