@@ -45,6 +45,7 @@ class BuildOptions:
     _FENCE_BINDIR = "@PCMK__FENCE_BINDIR@"
     """Where executable fence agents are installed."""
 
+    # pylint: disable-msg=using-constant-test
     INIT_DIR = "@INITDIR@" if "@INITDIR@" else None
     """Where LSB init scripts are stored."""
 
