@@ -674,7 +674,7 @@ void
 pcmk__xe_remove_attr(xmlNode *element, const char *name)
 {
     if (name != NULL) {
-        pcmk__xa_remove(xmlHasProp(element, (pcmkXmlStr) name));
+        pcmk__xa_remove(xmlHasProp(element, (pcmkXmlStr) name), false);
     }
 }
 
@@ -720,7 +720,7 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
     for (xmlAttrPtr a = pcmk__xe_first_attr(element); a != NULL; a = next) {
         next = a->next; // Grab now because attribute might get removed
         if ((match == NULL) || match(a, user_data)) {
-            if (pcmk__xa_remove(a) != pcmk_rc_ok) {
+            if (pcmk__xa_remove(a, false) != pcmk_rc_ok) {
                 return;
             }
         }
@@ -1511,7 +1511,7 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     nodepriv->flags = 0;
 
     // Check ACLs and mark restored value for later removal
-    pcmk__xa_remove(attr);
+    pcmk__xa_remove(attr, false);
 
     crm_trace("XML attribute %s=%s was removed from %s",
               attr_name, old_value, element);
@@ -1651,7 +1651,7 @@ mark_created_attrs(xmlNode *new_xml)
                 pcmk__mark_xml_attr_dirty(new_attr);
             } else {
                 // Creation was not allowed, so remove the attribute
-                xmlRemoveProp(new_attr);
+                pcmk__xa_remove(new_attr, true);
             }
         }
     }
