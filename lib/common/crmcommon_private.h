@@ -88,6 +88,9 @@ typedef struct xml_doc_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
+void pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags);
+
+G_GNUC_INTERNAL
 xmlDoc *pcmk__xml_new_doc(void);
 
 G_GNUC_INTERNAL
@@ -125,6 +128,9 @@ void pcmk__apply_acl(xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__apply_creation_acl(xmlNode *xml, bool check_top);
+
+G_GNUC_INTERNAL
+int pcmk__xa_remove(xmlAttr *attr);
 
 G_GNUC_INTERNAL
 void pcmk__mark_xml_attr_dirty(xmlAttr *a);

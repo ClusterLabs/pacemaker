@@ -76,16 +76,17 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
     return TRUE;
 }
 
-static inline void
-set_parent_flag(xmlNode *xml, long flag) 
+void
+pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags)
 {
-    for(; xml; xml = xml->parent) {
+    for (; xml != NULL; xml = xml->parent) {
         xml_node_private_t *nodepriv = xml->_private;
 
-        if (nodepriv == NULL) {
-            /* During calls to xmlDocCopyNode(), _private will be unset for parent nodes */
-        } else {
-            pcmk__set_xml_flags(nodepriv, flag);
+        if (nodepriv != NULL) {
+            /* During calls to xmlDocCopyNode(), _private will be unset for
+             * parent nodes
+             */
+            pcmk__set_xml_flags(nodepriv, flags);
         }
     }
 }
@@ -106,7 +107,7 @@ void
 pcmk__mark_xml_node_dirty(xmlNode *xml)
 {
     pcmk__set_xml_doc_flag(xml, pcmk__xf_dirty);
-    set_parent_flag(xml, pcmk__xf_dirty);
+    pcmk__xml_set_parent_flags(xml, pcmk__xf_dirty);
 }
 
 /*!
@@ -664,41 +665,6 @@ pcmk__xe_sort_attrs(xmlNode *xml)
 
 /*!
  * \internal
- * \brief Remove an XML attribute from an element
- *
- * \param[in,out] element  XML element that owns \p attr
- * \param[in,out] attr     XML attribute to remove from \p element
- *
- * \return Standard Pacemaker return code (\c EPERM if ACLs prevent removal of
- *         attributes from \p element, or \c pcmk_rc_ok otherwise)
- */
-static int
-remove_xe_attr(xmlNode *element, xmlAttr *attr)
-{
-    if (attr == NULL) {
-        return pcmk_rc_ok;
-    }
-
-    if (!pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
-        // ACLs apply to element, not to particular attributes
-        crm_trace("ACLs prevent removal of attributes from %s element",
-                  (const char *) element->name);
-        return EPERM;
-    }
-
-    if (pcmk__tracking_xml_changes(element, false)) {
-        // Leave in place (marked for removal) until after diff is calculated
-        set_parent_flag(element, pcmk__xf_dirty);
-        pcmk__set_xml_flags((xml_node_private_t *) attr->_private,
-                            pcmk__xf_deleted);
-    } else {
-        xmlRemoveProp(attr);
-    }
-    return pcmk_rc_ok;
-}
-
-/*!
- * \internal
  * \brief Remove a named attribute from an XML element
  *
  * \param[in,out] element  XML element to remove an attribute from
@@ -708,7 +674,7 @@ void
 pcmk__xe_remove_attr(xmlNode *element, const char *name)
 {
     if (name != NULL) {
-        remove_xe_attr(element, xmlHasProp(element, (pcmkXmlStr) name));
+        pcmk__xa_remove(xmlHasProp(element, (pcmkXmlStr) name));
     }
 }
 
@@ -754,7 +720,7 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
     for (xmlAttrPtr a = pcmk__xe_first_attr(element); a != NULL; a = next) {
         next = a->next; // Grab now because attribute might get removed
         if ((match == NULL) || match(a, user_data)) {
-            if (remove_xe_attr(element, a) != pcmk_rc_ok) {
+            if (pcmk__xa_remove(a) != pcmk_rc_ok) {
                 return;
             }
         }
@@ -1545,7 +1511,7 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     nodepriv->flags = 0;
 
     // Check ACLs and mark restored value for later removal
-    remove_xe_attr(new_xml, attr);
+    pcmk__xa_remove(attr);
 
     crm_trace("XML attribute %s=%s was removed from %s",
               attr_name, old_value, element);

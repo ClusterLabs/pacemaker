@@ -27,6 +27,47 @@
 #include <crm/common/xml_internal.h>  // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
+/*!
+ * \internal
+ * \brief Remove an XML attribute from its parent and free it
+ *
+ * \param[in,out] attr   XML attribute to remove
+ *
+ * \return Standard Pacemaker return code (\c EPERM if ACLs prevent removal, or
+ *         or \c pcmk_rc_ok otherwise)
+ *
+ * \note If the attribute has no parent element, this function does not free it.
+ *       This mimics \c xmlRemoveProp().
+ */
+int
+pcmk__xa_remove(xmlAttr *attr)
+{
+    xmlNode *element = NULL;
+
+    if ((attr == NULL) || (attr->parent == NULL)) {
+        return pcmk_rc_ok;
+    }
+
+    element = attr->parent;
+
+    if (!pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
+        // ACLs apply to element, not to particular attributes
+        crm_trace("ACLs prevent removal of attributes from %s element",
+                  (const char *) element->name);
+        return EPERM;
+    }
+
+    if (pcmk__tracking_xml_changes(element, false)) {
+        // Leave in place (marked for removal) until after diff is calculated
+        pcmk__xml_set_parent_flags(element, pcmk__xf_dirty);
+        pcmk__set_xml_flags((xml_node_private_t *) attr->_private,
+                            pcmk__xf_deleted);
+    } else {
+        xmlRemoveProp(attr);
+    }
+    return pcmk_rc_ok;
+}
+
 void
 pcmk__mark_xml_attr_dirty(xmlAttr *a) 
 {
