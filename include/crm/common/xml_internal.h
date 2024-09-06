@@ -419,6 +419,7 @@ pcmk__xe_next(const xmlNode *child)
 }
 
 xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
+xmlNode *pcmk__xc_create(xmlDoc *doc, const char *content);
 void pcmk__xml_free(xmlNode *xml);
 void pcmk__xml_free_doc(xmlDoc *doc);
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);

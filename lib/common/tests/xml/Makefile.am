@@ -11,7 +11,8 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__xe_copy_attrs_test	\
+check_PROGRAMS = pcmk__xc_create_test		\
+		 pcmk__xe_copy_attrs_test	\
 		 pcmk__xe_first_child_test	\
 		 pcmk__xe_foreach_child_test 	\
 		 pcmk__xe_set_id_test		\

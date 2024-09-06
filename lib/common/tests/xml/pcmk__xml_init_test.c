@@ -83,31 +83,6 @@ create_attr_node(void **state) {
 }
 
 static void
-create_comment_node(void **state) {
-    xml_doc_private_t *docpriv = NULL;
-    xml_node_private_t *priv = NULL;
-    xmlDoc *doc = pcmk__xml_new_doc();
-    xmlNodePtr node = xmlNewDocComment(doc, (pcmkXmlStr) "blahblah");
-
-    /* Adding a node to the document marks it as dirty */
-    docpriv = doc->_private;
-    assert_true(pcmk_all_flags_set(docpriv->flags, pcmk__xf_dirty));
-
-    /* Double check things */
-    assert_non_null(node);
-    assert_int_equal(node->type, XML_COMMENT_NODE);
-
-    /* Check that the private data is initialized correctly */
-    priv = node->_private;
-    assert_non_null(priv);
-    assert_int_equal(priv->check, PCMK__XML_NODE_PRIVATE_MAGIC);
-    assert_true(pcmk_all_flags_set(priv->flags, pcmk__xf_dirty|pcmk__xf_created));
-
-    /* Clean up */
-    pcmk__xml_free_doc(doc);
-}
-
-static void
 create_text_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
@@ -184,7 +159,6 @@ PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(buffer_scheme_test),
                 cmocka_unit_test(create_element_node),
                 cmocka_unit_test(create_attr_node),
-                cmocka_unit_test(create_comment_node),
                 cmocka_unit_test(create_text_node),
                 cmocka_unit_test(create_dtd_node),
                 cmocka_unit_test(create_cdata_node));

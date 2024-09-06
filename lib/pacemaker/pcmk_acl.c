@@ -239,22 +239,18 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
     ret = annotate_with_siblings(target);
 
     if (ret == pcmk_rc_ok) {
-        char *credentials = crm_strdup_printf("ACLs as evaluated for user %s",
-                                              cred);
+        char *content = crm_strdup_printf("ACLs as evaluated for user %s",
+                                          cred);
 
-        comment = xmlNewDocComment(target->doc, (pcmkXmlStr) credentials);
-        free(credentials);
-        if (comment == NULL) {
-            pcmk__xml_free(target);
-            return EINVAL;
-        }
+        comment = pcmk__xc_create(target->doc, content);
         xmlAddPrevSibling(xmlDocGetRootElement(target->doc), comment);
         *acl_evaled_doc = target->doc;
-        return pcmk_rc_ok;
+        free(content);
+
     } else {
         pcmk__xml_free(target);
-        return ret; //for now, it should be some kind of error
     }
+    return ret;
 }
 
 int
