@@ -1,0 +1,141 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="8" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * There are three bundles: one rkt, one podman, and one docker.
+         * There are various constraints, many of which reference the rkt
+           bundle.
+
+         In this situation:
+         * The rkt bundle should be dropped.
+         * Constraints with attributes referencing the rkt bundles should be
+           dropped.
+         * Resource sets containing only references to rkt bundles should be
+         * Constraints with resource sets should be dropped if all of their
+           resource sets should be dropped.
+      -->
+    <crm_config original="1"/>
+    <nodes original="1"/>
+    <resources original="1">
+      <bundle id="bundle1_drop" original="1">
+        <rkt image="image" original="1"/>
+        <primitive id="bundle1_rsc" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+      </bundle>
+      <bundle id="bundle2_keep" original="1">
+        <podman image="image" original="1"/>
+        <primitive id="bundle2_rsc" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+      </bundle>
+      <bundle id="bundle3_keep" original="1">
+        <docker image="image" original="1"/>
+        <primitive id="bundle3_rsc" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+      </bundle>
+      <bundle id="bundle4_drop" original="1">
+        <rkt image="image" original="1"/>
+        <primitive id="bundle4_rsc" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+      </bundle>
+    </resources>
+    <constraints original="1">
+      <rsc_location id="location1_drop" rsc="bundle1_drop" node="node1" score="INFINITY" original="1"/>
+      <rsc_location id="location2_keep" rsc="bundle2_keep" node="node1" score="INFINITY" original="1"/>
+      <rsc_location id="location3_drop" node="node1" score="INFINITY" original="1">
+        <resource_set id="location3_drop-set" original="1">
+          <resource_ref id="bundle1_drop" original="1"/>
+        </resource_set>
+      </rsc_location>
+      <rsc_location id="location4_keep" node="node1" score="INFINITY" original="1">
+        <resource_set id="location4_keep-set" original="1">
+          <resource_ref id="bundle2_keep" original="1"/>
+          <resource_ref id="bundle4_drop" original="1"/>
+          <resource_ref id="bundle3_keep" original="1"/>
+        </resource_set>
+      </rsc_location>
+      <rsc_location id="location5_keep" node="node1" score="INFINITY" original="1">
+        <resource_set id="location5_keep-set_drop" original="1">
+          <resource_ref id="bundle1_drop" original="1"/>
+        </resource_set>
+        <resource_set id="location5_keep-set_keep" original="1">
+          <resource_ref id="bundle2_keep" original="1"/>
+          <resource_ref id="bundle4_drop" original="1"/>
+          <resource_ref id="bundle3_keep" original="1"/>
+        </resource_set>
+      </rsc_location>
+      <rsc_location id="location6_keep" rsc-pattern="bundle1_drop" node="node1" score="INFINITY" original="1"/>
+      <rsc_colocation id="colocation1_drop" rsc="bundle1_drop" with-rsc="bundle2_keep" original="1"/>
+      <rsc_colocation id="colocation2_drop" rsc="bundle2_keep" with-rsc="bundle1_drop" original="1"/>
+      <rsc_colocation id="colocation3_drop" rsc="bundle4_drop" with-rsc="bundle1_drop" original="1"/>
+      <rsc_colocation id="colocation4_keep" rsc="bundle3_keep" with-rsc="bundle2_keep" original="1"/>
+      <rsc_colocation id="colocation5_drop" original="1">
+        <resource_set id="colocation5_drop-set" original="1">
+          <resource_ref id="bundle1_drop" original="1"/>
+        </resource_set>
+      </rsc_colocation>
+      <rsc_colocation id="colocation6_keep" original="1">
+        <resource_set id="colocation6_keep-set" original="1">
+          <resource_ref id="bundle2_keep" original="1"/>
+          <resource_ref id="bundle4_drop" original="1"/>
+          <resource_ref id="bundle3_keep" original="1"/>
+        </resource_set>
+      </rsc_colocation>
+      <rsc_colocation id="colocation7_keep" original="1">
+        <resource_set id="colocation7_keep-set_drop" original="1">
+          <resource_ref id="bundle1_drop" original="1"/>
+        </resource_set>
+        <resource_set id="colocation7_keep-set_keep" original="1">
+          <resource_ref id="bundle2_keep" original="1"/>
+          <resource_ref id="bundle4_drop" original="1"/>
+          <resource_ref id="bundle3_keep" original="1"/>
+        </resource_set>
+      </rsc_colocation>
+      <rsc_order id="order1_drop" first="bundle1_drop" then="bundle2_keep" original="1"/>
+      <rsc_order id="order2_drop" first="bundle2_keep" then="bundle1_drop" original="1"/>
+      <rsc_order id="order3_drop" first="bundle4_drop" then="bundle1_drop" original="1"/>
+      <rsc_order id="order4_keep" first="bundle3_keep" then="bundle2_keep" original="1"/>
+      <rsc_order id="order5_drop" original="1">
+        <resource_set id="order5_drop-set" original="1">
+          <resource_ref id="bundle1_drop" original="1"/>
+        </resource_set>
+      </rsc_order>
+      <rsc_order id="order6_keep" original="1">
+        <resource_set id="order6_keep-set" original="1">
+          <resource_ref id="bundle2_keep" original="1"/>
+          <resource_ref id="bundle4_drop" original="1"/>
+          <resource_ref id="bundle3_keep" original="1"/>
+        </resource_set>
+      </rsc_order>
+      <rsc_order id="order7_keep" original="1">
+        <resource_set id="order7_keep-set_drop" original="1">
+          <resource_ref id="bundle1_drop" original="1"/>
+        </resource_set>
+        <resource_set id="order7_keep-set_keep" original="1">
+          <resource_ref id="bundle2_keep" original="1"/>
+          <resource_ref id="bundle4_drop" original="1"/>
+          <resource_ref id="bundle3_keep" original="1"/>
+        </resource_set>
+      </rsc_order>
+      <rsc_ticket id="ticket1_drop" rsc="bundle1_drop" ticket="ticket1" original="1"/>
+      <rsc_ticket id="ticket2_keep" rsc="bundle2_keep" ticket="ticket1" original="1"/>
+      <rsc_ticket id="ticket3_drop" ticket="ticket1" original="1">
+        <resource_set id="ticket3_drop-set" original="1">
+          <resource_ref id="bundle1_drop" original="1"/>
+        </resource_set>
+      </rsc_ticket>
+      <rsc_ticket id="ticket4_keep" ticket="ticket1" original="1">
+        <resource_set id="ticket4_keep-set" original="1">
+          <resource_ref id="bundle2_keep" original="1"/>
+          <resource_ref id="bundle4_drop" original="1"/>
+          <resource_ref id="bundle3_keep" original="1"/>
+        </resource_set>
+      </rsc_ticket>
+      <rsc_ticket id="ticket5_keep" ticket="ticket1" original="1">
+        <resource_set id="ticket5_keep-set_drop" original="1">
+          <resource_ref id="bundle1_drop" original="1"/>
+        </resource_set>
+        <resource_set id="ticket5_keep-set_keep" original="1">
+          <resource_ref id="bundle2_keep" original="1"/>
+          <resource_ref id="bundle4_drop" original="1"/>
+          <resource_ref id="bundle3_keep" original="1"/>
+        </resource_set>
+      </rsc_ticket>
+    </constraints>
+  </configuration>
+  <status original="1"/>
+</cib>
