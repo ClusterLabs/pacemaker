@@ -8,8 +8,8 @@
  upgrade-3.10-4.xsl
 
  Guarantees after this transformation:
- * There are no upstart-class resources. If there were any prior to this
-   transformation, they have been dropped.
+ * There are no nagios-class or upstart-class resources. If there were any prior
+   to this transformation, they have been dropped.
  -->
 
 <xsl:stylesheet version="1.0"
@@ -37,23 +37,25 @@
 <!-- Upstart-class templates -->
 <xsl:variable name="dropped_templates"
               select="//template
-                      [translate(@class, $upper, $lower) = 'upstart']"/>
+                      [(translate(@class, $upper, $lower) = 'nagios')
+                       or (translate(@class, $upper, $lower) = 'upstart')]"/>
 
 <!-- Upstart-class primitives -->
 <xsl:variable name="dropped_primitives"
               select="//primitive
-                      [(translate(@class, $upper, $lower) = 'upstart')
+                      [(translate(@class, $upper, $lower) = 'nagios')
+                       or (translate(@class, $upper, $lower) = 'upstart')
                        or (@template
                            and (count(key('template_id', @template)
                                       |$dropped_templates)
                                 = count($dropped_templates)))]"/>
 
-<!-- Groups containing only upstart-class primitives -->
+<!-- Groups containing only nagios- and upstart-class primitives -->
 <xsl:variable name="dropped_groups"
               select="//group[count(primitive|$dropped_primitives)
                               = count($dropped_primitives)]"/>
 
-<!-- Clones containing only upstart-class primitives -->
+<!-- Clones containing only nagios- and upstart-class primitives -->
 <xsl:variable name="dropped_clones"
               select="//clone[count(.//primitive|$dropped_primitives)
                               = count($dropped_primitives)]"/>
@@ -62,14 +64,14 @@
 <xsl:variable name="dropped_resources"
               select="$dropped_primitives|$dropped_groups|$dropped_clones"/>
 
-<!-- Drop upstart-class resource templates -->
+<!-- Drop nagios- and upstart-class resource templates -->
 <xsl:template match="template">
     <xsl:if test="count(.|$dropped_templates) != count($dropped_templates)">
         <xsl:call-template name="identity"/>
     </xsl:if>
 </xsl:template>
 
-<!-- Drop upstart-class primitives -->
+<!-- Drop nagios- and upstart-class primitives -->
 <xsl:template match="primitive">
     <xsl:if test="count(.|$dropped_primitives) != count($dropped_primitives)">
         <xsl:call-template name="identity"/>
