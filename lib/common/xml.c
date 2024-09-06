@@ -1685,7 +1685,7 @@ mark_created_attrs(xmlNode *new_xml)
                 pcmk__mark_xml_attr_dirty(new_attr);
             } else {
                 // Creation was not allowed, so remove the attribute
-                xmlUnsetProp(new_xml, new_attr->name);
+                xmlRemoveProp(new_attr);
             }
         }
     }
