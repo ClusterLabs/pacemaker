@@ -610,32 +610,25 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
 
 /*!
  * \internal
- * \brief Move an XML attribute to the end of its element's attribute list
+ * \brief Compare two XML attributes by name
  *
- * This does not consider ACLs and does not mark the attribute as deleted or
- * dirty. Upon return, the attribute still exists and is set to the same value
- * as before the call. Only its position in the attribute list may change.
+ * \param[in] a  First XML attribute to compare
+ * \param[in] b  Second XML attribute to compare
  *
- * \param[in]     data       \c pcmk_nvpair_t representing an XML attribute
- * \param[in,out] user_data  XML element whose attribute to move
+ * \retval  negative \c a->name is \c NULL or comes before \c b->name
+ *                   lexicographically
+ * \retval  0        \c a->name and \c b->name are equal
+ * \retval  positive \c b->name is \c NULL or comes before \c a->name
+ *                   lexicographically
  */
-static void
-move_xml_attr_to_end(gpointer data, gpointer user_data)
+static gint
+compare_xml_attr(gconstpointer a, gconstpointer b)
 {
-    const pcmk_nvpair_t *pair = data;
-    xmlNode *xml = user_data;
+    const xmlAttr *attr_a = a;
+    const xmlAttr *attr_b = b;
 
-    xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) pair->name);
-    xml_node_private_t *nodepriv = attr->_private;
-    uint32_t flags = (nodepriv != NULL)? nodepriv->flags : pcmk__xf_none;
-
-    xmlRemoveProp(attr);
-    attr = xmlSetProp(xml, (pcmkXmlStr) pair->name, (pcmkXmlStr) pair->value);
-
-    nodepriv = attr->_private;
-    if (nodepriv != NULL) {
-        nodepriv->flags = flags;
-    }
+    return pcmk__strcmp((const char *) attr_a->name,
+                        (const char *) attr_b->name, pcmk__str_none);
 }
 
 /*!
@@ -652,20 +645,21 @@ move_xml_attr_to_end(gpointer data, gpointer user_data)
 void
 pcmk__xe_sort_attrs(xmlNode *xml)
 {
-    xmlAttr *attr = pcmk__xe_first_attr(xml);
-    GSList *nvpairs = NULL;
+    GSList *attr_list = NULL;
 
-    if ((attr == NULL) || (attr->next == NULL)) {
-        return;
+    for (xmlAttr *iter = pcmk__xe_first_attr(xml); iter != NULL;
+         iter = iter->next) {
+        attr_list = g_slist_prepend(attr_list, iter);
     }
+    attr_list = g_slist_sort(attr_list, compare_xml_attr);
 
-    nvpairs = pcmk_xml_attrs2nvpairs(xml);
-    nvpairs = pcmk_sort_nvpairs(nvpairs);
+    for (GSList *iter = attr_list; iter != NULL; iter = iter->next) {
+        xmlNode *attr = iter->data;
 
-    // Reset attributes in sorted order
-    g_slist_foreach(nvpairs, move_xml_attr_to_end, xml);
-
-    pcmk_free_nvpairs(nvpairs);
+        xmlUnlinkNode(attr);
+        xmlAddChild(xml, attr);
+    }
+    g_slist_free(attr_list);
 }
 
 /*!
