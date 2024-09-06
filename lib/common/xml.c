@@ -1433,7 +1433,7 @@ mark_created_attrs(xmlNode *new_xml)
                 pcmk__mark_xml_attr_dirty(new_attr);
             } else {
                 // Creation was not allowed, so remove the attribute
-                xmlUnsetProp(new_xml, new_attr->name);
+                xmlRemoveProp(new_attr);
             }
         }
     }
@@ -1790,9 +1790,12 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
         for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
              a = a->next) {
             const char *p_value = pcmk__xml_attr_value(a);
+            xmlAttr *old_attr = xmlHasProp(target, a->name);
 
             /* Remove it first so the ordering of the update is preserved */
-            xmlUnsetProp(target, a->name);
+            if (old_attr != NULL) {
+                xmlRemoveProp(old_attr);
+            }
             pcmk__xe_set_attr_force(target, (const char *) a->name, p_value);
         }
     }
