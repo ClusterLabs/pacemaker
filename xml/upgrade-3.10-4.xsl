@@ -10,6 +10,8 @@
  Guarantees after this transformation:
  * There are no nagios-class or upstart-class resources. If there were any prior
    to this transformation, they have been dropped.
+ * There are no bundle resources based on rkt containers. If there were any
+   prior to this transformation, they have been dropped.
  -->
 
 <xsl:stylesheet version="1.0"
@@ -62,7 +64,10 @@
 
 <!-- All dropped resources -->
 <xsl:variable name="dropped_resources"
-              select="$dropped_primitives|$dropped_groups|$dropped_clones"/>
+              select="$dropped_primitives
+                      |$dropped_groups
+                      |$dropped_clones
+                      |//bundle[rkt]"/>
 
 <!-- Drop nagios- and upstart-class resource templates -->
 <xsl:template match="template">
@@ -91,6 +96,9 @@
         <xsl:call-template name="identity"/>
     </xsl:if>
 </xsl:template>
+
+<!-- Drop rkt bundles -->
+<xsl:template match="bundle[rkt]"/>
 
 
 <!-- Constraints -->

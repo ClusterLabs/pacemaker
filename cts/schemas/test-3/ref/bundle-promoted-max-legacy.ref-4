@@ -16,9 +16,6 @@
       <bundle id="bundle2" original="1">
         <podman image="alpine:latest" promoted-max="2" run-command="sleep 60" original="1"/>
       </bundle>
-      <bundle id="bundle3" original="1">
-        <rkt image="alpine:latest" promoted-max="2" run-command="sleep 60" original="1"/>
-      </bundle>
     </resources>
     <constraints original="1"/>
   </configuration>
