@@ -413,7 +413,7 @@ purge_xml_attributes(xmlNode *xml)
             continue;
         }
 
-        xmlRemoveProp(tmp);
+        pcmk__xa_remove(tmp, true);
     }
 
     child = pcmk__xml_first_child(xml);

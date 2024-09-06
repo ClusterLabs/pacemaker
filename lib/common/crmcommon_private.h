@@ -123,7 +123,7 @@ xmlAttr *pcmk__xe_set_attr_force(xmlNode *node, const char *name,
                                  const char *value);
 
 G_GNUC_INTERNAL
-int pcmk__xa_remove(xmlAttr *attr);
+int pcmk__xa_remove(xmlAttr *attr, bool force);
 
 G_GNUC_INTERNAL
 void pcmk__mark_xml_attr_dirty(xmlAttr *a);
