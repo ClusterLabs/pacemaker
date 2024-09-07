@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_COMMON_NVPAIR_COMPAT__H
 #define PCMK__CRM_COMMON_NVPAIR_COMPAT__H
 
-#include <glib.h>               // GSList
+#include <glib.h>               // GSList, gpointer
 #include <libxml/tree.h>        // xmlNode
 
 #ifdef __cplusplus
@@ -34,6 +34,9 @@ GSList *pcmk_xml_attrs2nvpairs(const xmlNode *xml);
 
 //! \deprecated Do not use
 void pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml);
+
+//! \deprecated Do not use
+void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 
 #ifdef __cplusplus
 }

@@ -718,28 +718,6 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
 }
 
 /*!
- * \brief Add XML nvpair element based on hash table entry
- *
- * Suitable for \c g_hash_table_foreach(), this function takes a hash table key
- * and value, with an XML node passed as the user data, and adds an \c nvpair
- * XML element with the specified name and value.
- *
- * \param[in]     key        Key of hash table entry
- * \param[in]     value      Value of hash table entry
- * \param[in,out] user_data  XML node
- */
-void
-hash2nvpair(gpointer key, gpointer value, gpointer user_data)
-{
-    const char *name = key;
-    const char *s_value = value;
-    xmlNode *xml_node = user_data;
-
-    crm_create_nvpair_xml(xml_node, name, name, s_value);
-    crm_trace("dumped: name=%s value=%s", name, s_value);
-}
-
-/*!
  * \brief Retrieve XML attributes as a hash table
  *
  * Given an XML element, this will look for any \<attributes> element child,
@@ -955,6 +933,17 @@ void
 pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
 {
     g_slist_foreach(list, pcmk__nvpair_add_xml_attr, xml);
+}
+
+void
+hash2nvpair(gpointer key, gpointer value, gpointer user_data)
+{
+    const char *name = key;
+    const char *s_value = value;
+    xmlNode *xml_node = user_data;
+
+    crm_create_nvpair_xml(xml_node, name, name, s_value);
+    crm_trace("dumped: name=%s value=%s", name, s_value);
 }
 
 // LCOV_EXCL_STOP
