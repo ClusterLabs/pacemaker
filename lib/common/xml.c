@@ -823,6 +823,14 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
         const char *content = NULL;
         char *buf = NULL;
 
+        /* xmlNodeSetContent() frees node->children and replaces it with new
+         * text. If this function is called for a node that already has a non-
+         * text child, it's a bug.
+         */
+        CRM_CHECK((node->children == NULL)
+                  || (node->children->type == XML_TEXT_NODE),
+                  return);
+
         if (strchr(format, '%') == NULL) {
             // Nothing to format
             content = format;
