@@ -103,37 +103,6 @@ pcmk_free_nvpairs(GSList *nvpairs)
     g_slist_free_full(nvpairs, pcmk__free_nvpair);
 }
 
-/*!
- * \internal
- * \brief Add an XML attribute corresponding to a name/value pair
- *
- * Suitable for glib list iterators, this function adds a NAME=VALUE
- * XML attribute based on a given name/value pair.
- *
- * \param[in]  data       Name/value pair
- * \param[out] user_data  XML node to add attributes to
- */
-static void
-pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
-{
-    pcmk_nvpair_t *pair = data;
-    xmlNode *parent = user_data;
-
-    crm_xml_add(parent, pair->name, pair->value);
-}
-
-/*!
- * \brief Add XML attributes based on a list of name/value pairs
- *
- * \param[in,out] list  List of name/value pairs
- * \param[in,out] xml   XML node to add attributes to
- */
-void
-pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
-{
-    g_slist_foreach(list, pcmk__nvpair_add_xml_attr, xml);
-}
-
 // convenience function for name=value strings
 
 /*!
@@ -971,6 +940,21 @@ pcmk_xml_attrs2nvpairs(const xmlNode *xml)
                                      (const char *) pcmk__xml_attr_value(iter));
     }
     return result;
+}
+
+static void
+pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
+{
+    pcmk_nvpair_t *pair = data;
+    xmlNode *parent = user_data;
+
+    crm_xml_add(parent, pair->name, pair->value);
+}
+
+void
+pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
+{
+    g_slist_foreach(list, pcmk__nvpair_add_xml_attr, xml);
 }
 
 // LCOV_EXCL_STOP

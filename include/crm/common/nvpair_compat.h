@@ -32,6 +32,9 @@ GSList *pcmk_sort_nvpairs(GSList *list);
 //! \deprecated Do not use
 GSList *pcmk_xml_attrs2nvpairs(const xmlNode *xml);
 
+//! \deprecated Do not use
+void pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml);
+
 #ifdef __cplusplus
 }
 #endif
