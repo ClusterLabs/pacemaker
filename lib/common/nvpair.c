@@ -201,11 +201,7 @@ pcmk__format_nvpair(const char *name, const char *value, const char *units)
 const char *
 crm_xml_add(xmlNode *node, const char *name, const char *value)
 {
-    /* @TODO Allocate attribute private data here when we drop
-     * new_private_data()/free_private_data()
-     *
-     * @TODO Replace with internal function that returns the new attribute
-     */
+    // @TODO Replace with internal function that returns the new attribute
     bool dirty = FALSE;
     xmlAttr *attr = NULL;
 
@@ -230,6 +226,12 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
     }
 
     attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
+
+    /* If the attribute already exists, this does nothing. Attribute values
+     * don't get private data.
+     */
+    pcmk__xml_new_private_data((xmlNode *) attr);
+
     if (dirty) {
         pcmk__mark_xml_attr_dirty(attr);
     }

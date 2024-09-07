@@ -27,9 +27,6 @@
 xmlNode *
 pcmk__xc_create(xmlDoc *doc, const char *content)
 {
-    /* @TODO Allocate comment private data here when we drop
-     * new_private_data()/free_private_data()
-     */
     xmlNode *node = NULL;
 
     // Pacemaker typically assumes every xmlNode has a doc
@@ -37,6 +34,7 @@ pcmk__xc_create(xmlDoc *doc, const char *content)
 
     node = xmlNewDocComment(doc, (pcmkXmlStr) content);
     pcmk__mem_assert(node);
+    pcmk__xml_new_private_data(node);
     pcmk__xml_mark_created(node);
     return node;
 }

@@ -65,9 +65,7 @@ pcmk__xa_remove(xmlAttr *attr, bool force)
         pcmk__set_xml_flags((xml_node_private_t *) attr->_private,
                             pcmk__xf_deleted);
     } else {
-        /* @TODO Free attribute private data here when we drop
-         * new_private_data()/free_private_data()
-         */
+        pcmk__xml_free_private_data((xmlNode *) attr);
         xmlRemoveProp(attr);
     }
     return pcmk_rc_ok;

@@ -91,6 +91,12 @@ G_GNUC_INTERNAL
 void pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags);
 
 G_GNUC_INTERNAL
+void pcmk__xml_new_private_data(xmlNode *xml);
+
+G_GNUC_INTERNAL
+void pcmk__xml_free_private_data(xmlNode *xml);
+
+G_GNUC_INTERNAL
 xmlDoc *pcmk__xml_new_doc(void);
 
 G_GNUC_INTERNAL
