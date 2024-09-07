@@ -891,6 +891,9 @@ free_xml(xmlNode * child)
 xmlNode *
 pcmk__xml_copy(xmlNode *parent, xmlNode *src)
 {
+    /* @TODO Allocate the copy tree's private data here when we drop
+     * new_private_data()/free_private_data()
+     */
     xmlNode *copy = NULL;
 
     if (src == NULL) {
@@ -1806,13 +1809,15 @@ pcmk__xe_delete_match(xmlNode *xml, xmlNode *search)
 static void
 replace_node(xmlNode *old, xmlNode *new)
 {
-    new = xmlCopyNode(new, 1);
-    pcmk__mem_assert(new);
+    // Pass old for its doc; it won't remain the parent of new
+    new = pcmk__xml_copy(old, new);
+    old = xmlReplaceNode(old, new);
+
+    // old == NULL means memory allocation error
+    CRM_ASSERT(old != NULL);
 
     // May be unnecessary but avoids slight changes to some test outputs
     pcmk__xml_tree_foreach(new, reset_xml_node_flags, NULL);
-
-    old = xmlReplaceNode(old, new);
 
     if (xml_tracking_changes(new)) {
         // Replaced sections may have included relevant ACLs
@@ -2282,6 +2287,9 @@ getDocPtr(xmlNode *node)
 xmlNode *
 add_node_copy(xmlNode *parent, xmlNode *src_node)
 {
+    /* @TODO Allocate the copy tree's private data here when we drop
+     * new_private_data()/free_private_data()
+     */
     xmlNode *child = NULL;
 
     CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
@@ -2398,6 +2406,9 @@ crm_xml_escape(const char *text)
 xmlNode *
 copy_xml(xmlNode *src)
 {
+    /* @TODO Allocate the copy tree's private data here when we drop
+     * new_private_data()/free_private_data()
+     */
     xmlDoc *doc = pcmk__xml_new_doc();
     xmlNode *copy = NULL;
 
