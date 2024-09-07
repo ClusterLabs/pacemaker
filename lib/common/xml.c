@@ -689,6 +689,9 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
 xmlNode *
 pcmk__xe_create(xmlNode *parent, const char *name)
 {
+    /* @TODO Allocate element private data here when we drop
+     * new_private_data()/free_private_data()
+     */
     xmlNode *node = NULL;
 
     CRM_ASSERT(!pcmk__str_empty(name));
@@ -2423,6 +2426,9 @@ xmlNode *
 create_xml_node(xmlNode *parent, const char *name)
 {
     // Like pcmk__xe_create(), but returns NULL on failure
+    /* @TODO Allocate element private data here when we drop
+     * new_private_data()/free_private_data()
+     */
     xmlNode *node = NULL;
 
     CRM_CHECK(!pcmk__str_empty(name), return NULL);
