@@ -313,6 +313,10 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     }
 
     xmlDocDumpFormatMemory(annotated_doc, &annotated_dump, &dump_size, 1);
+
+    /* res does not need private data: it's temporary and used only with libxslt
+     * functions
+     */
     res = xmlReadDoc(annotated_dump, "on-the-fly-access-render", NULL,
                      XML_PARSE_NONET);
     CRM_ASSERT(res != NULL);

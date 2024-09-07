@@ -290,10 +290,12 @@ pcmk__format_nvpair(const char *name, const char *value, const char *units)
 xmlAttr *
 pcmk__xe_set_attr_force(xmlNode *node, const char *name, const char *value)
 {
-    /* @TODO Allocate attribute private data here when we drop
-     * new_private_data()/free_private_data()
-     */
     xmlAttr *attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
+
+    /* If the attribute already exists, this does nothing. Attribute values
+     * don't get private data.
+     */
+    pcmk__xml_new_private_data((xmlNode *) attr);
 
     return attr;
 }

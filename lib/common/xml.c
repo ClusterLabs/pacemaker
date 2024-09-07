@@ -85,9 +85,6 @@ pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags)
         xml_node_private_t *nodepriv = xml->_private;
 
         if (nodepriv != NULL) {
-            /* During calls to xmlDocCopyNode(), _private will be unset for
-             * parent nodes
-             */
             pcmk__set_xml_flags(nodepriv, flags);
         }
     }
@@ -96,8 +93,7 @@ pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags)
 void
 pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag)
 {
-    if(xml && xml->doc && xml->doc->_private){
-        /* During calls to xmlDocCopyNode(), xml->doc may be unset */
+    if (xml != NULL) {
         xml_doc_private_t *docpriv = xml->doc->_private;
 
         pcmk__set_xml_flags(docpriv, flag);
@@ -214,94 +210,134 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
     }
 }
 
-// Free all private data associated with an XML node
-static void
-free_private_data(xmlNode *node)
+/*!
+ * \internal
+ * \brief Allocate and initialize private data for an XML node
+ *
+ * \param[in,out] node       XML node whose private data to initialize
+ * \param[in]     user_data  Ignored
+ *
+ * \return \c true (to continue traversing the tree)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+new_private_data(xmlNode *node, void *user_data)
 {
-    /* Note:
-    
-    This function frees private data assosciated with an XML node,
-    unless the function is being called as a result of internal
-    XSLT cleanup.
-    
-    That could happen through, for example, the following chain of
-    function calls:
-    
-       xsltApplyStylesheetInternal
-    -> xsltFreeTransformContext
-    -> xsltFreeRVTs
-    -> xmlFreeDoc
+    CRM_CHECK(node != NULL, return true);
 
-    And in that case, the node would fulfill three conditions:
-    
-    1. It would be a standalone document (i.e. it wouldn't be 
-       part of a document)
-    2. It would have a space-prefixed name (for reference, please
-       see xsltInternals.h: XSLT_MARK_RES_TREE_FRAG)
-    3. It would carry its own payload in the _private field.
-    
-    We do not free data in this circumstance to avoid a failed
-    assertion on the PCMK__XML_*_PRIVATE_MAGIC later.
-    
-    */
-    if (node->name == NULL || node->name[0] != ' ') {
-        if (node->_private) {
-            if (node->type == XML_DOCUMENT_NODE) {
-                reset_xml_private_data(node->_private);
-            } else {
-                CRM_ASSERT(((xml_node_private_t *) node->_private)->check
-                               == PCMK__XML_NODE_PRIVATE_MAGIC);
-                /* nothing dynamically allocated nested */
-            }
-            free(node->_private);
-            node->_private = NULL;
-        }
+    if (node->_private != NULL) {
+        return true;
     }
-}
 
-// Allocate and initialize private data for an XML node
-static void
-new_private_data(xmlNode *node)
-{
     switch (node->type) {
-        case XML_DOCUMENT_NODE: {
-            xml_doc_private_t *docpriv =
-                pcmk__assert_alloc(1, sizeof(xml_doc_private_t));
+        case XML_DOCUMENT_NODE:
+            {
+                xml_doc_private_t *docpriv =
+                    pcmk__assert_alloc(1, sizeof(xml_doc_private_t));
 
-            docpriv->check = PCMK__XML_DOC_PRIVATE_MAGIC;
-            /* Flags will be reset if necessary when tracking is enabled */
-            pcmk__set_xml_flags(docpriv, pcmk__xf_dirty|pcmk__xf_created);
-            node->_private = docpriv;
+                docpriv->check = PCMK__XML_DOC_PRIVATE_MAGIC;
+                node->_private = docpriv;
+                pcmk__set_xml_flags(docpriv, pcmk__xf_dirty|pcmk__xf_created);
+            }
             break;
-        }
+
         case XML_ELEMENT_NODE:
         case XML_ATTRIBUTE_NODE:
-        case XML_COMMENT_NODE: {
-            xml_node_private_t *nodepriv =
-                pcmk__assert_alloc(1, sizeof(xml_node_private_t));
+        case XML_COMMENT_NODE:
+            {
+                xml_node_private_t *nodepriv =
+                    pcmk__assert_alloc(1, sizeof(xml_node_private_t));
 
-            nodepriv->check = PCMK__XML_NODE_PRIVATE_MAGIC;
-            /* Flags will be reset if necessary when tracking is enabled */
-            pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
-            node->_private = nodepriv;
-            if (pcmk__tracking_xml_changes(node, FALSE)) {
-                /* XML_ELEMENT_NODE doesn't get picked up here, node->doc is
-                 * not hooked up at the point we are called
-                 */
-                pcmk__mark_xml_node_dirty(node);
+                nodepriv->check = PCMK__XML_NODE_PRIVATE_MAGIC;
+                node->_private = nodepriv;
+                pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
+
+                for (xmlAttr *iter = pcmk__xe_first_attr(node); iter != NULL;
+                     iter = iter->next) {
+
+                    new_private_data((xmlNode *) iter, user_data);
+                }
             }
             break;
-        }
+
         case XML_TEXT_NODE:
         case XML_DTD_NODE:
         case XML_CDATA_SECTION_NODE:
-            break;
+            return true;
+
         default:
-            /* Ignore */
-            crm_trace("Ignoring %p %d", node, node->type);
             CRM_LOG_ASSERT(node->type == XML_ELEMENT_NODE);
-            break;
+            return true;
     }
+
+    if (pcmk__tracking_xml_changes(node, false)) {
+        pcmk__mark_xml_node_dirty(node);
+    }
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Free private data for an XML node
+ *
+ * \param[in,out] node       XML node whose private data to free
+ * \param[in]     user_data  Ignored
+ *
+ * \return \c true (to continue traversing the tree)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+free_private_data(xmlNode *node, void *user_data)
+{
+    CRM_CHECK(node != NULL, return true);
+
+    if (node->_private == NULL) {
+        return true;
+    }
+
+    if (node->type == XML_DOCUMENT_NODE) {
+        reset_xml_private_data((xml_doc_private_t *) node->_private);
+
+    } else {
+        xml_node_private_t *nodepriv = node->_private;
+
+        CRM_ASSERT(nodepriv->check == PCMK__XML_NODE_PRIVATE_MAGIC);
+
+        for (xmlAttr *iter = pcmk__xe_first_attr(node); iter != NULL;
+             iter = iter->next) {
+
+            free_private_data((xmlNode *) iter, user_data);
+        }
+    }
+    free(node->_private);
+    node->_private = NULL;
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Allocate and initialize private data recursively for an XML tree
+ *
+ * \param[in,out] node  XML node whose private data to initialize
+ */
+void
+pcmk__xml_new_private_data(xmlNode *xml)
+{
+    pcmk__xml_tree_foreach(xml, new_private_data, NULL);
+}
+
+/*!
+ * \internal
+ * \brief Free private data recursively for an XML tree
+ *
+ * \param[in,out] node  XML node whose private data to free
+ */
+void
+pcmk__xml_free_private_data(xmlNode *xml)
+{
+    pcmk__xml_tree_foreach(xml, free_private_data, NULL);
 }
 
 void
@@ -689,9 +725,6 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
 xmlNode *
 pcmk__xe_create(xmlNode *parent, const char *name)
 {
-    /* @TODO Allocate element private data here when we drop
-     * new_private_data()/free_private_data()
-     */
     xmlNode *node = NULL;
 
     CRM_ASSERT(!pcmk__str_empty(name));
@@ -709,6 +742,7 @@ pcmk__xe_create(xmlNode *parent, const char *name)
         pcmk__mem_assert(node);
     }
 
+    pcmk__xml_new_private_data(node);
     pcmk__xml_mark_created(node);
     return node;
 }
@@ -725,12 +759,10 @@ pcmk__xe_create(xmlNode *parent, const char *name)
 xmlDoc *
 pcmk__xml_new_doc(void)
 {
-    /* @TODO Allocate document private data here when we drop
-     * new_private_data()/free_private_data()
-     */
     xmlDoc *doc = xmlNewDoc(XML_VERSION);
 
     pcmk__mem_assert(doc);
+    pcmk__xml_new_private_data((xmlNode *) doc);
     return doc;
 }
 
@@ -743,10 +775,8 @@ pcmk__xml_new_doc(void)
 void
 pcmk__xml_free_doc(xmlDoc *doc)
 {
-    /* @TODO Free document private data here when we drop
-     * new_private_data()/free_private_data()
-     */
     if (doc != NULL) {
+        pcmk__xml_free_private_data((xmlNode *) doc);
         xmlFreeDoc(doc);
     }
 }
@@ -811,9 +841,7 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
 void
 pcmk_free_xml_subtree(xmlNode *xml)
 {
-    /* @TODO Free tree private data here when we drop
-     * new_private_data()/free_private_data()
-     */
+    pcmk__xml_free_private_data(xml);
     xmlUnlinkNode(xml); // Detaches from parent and siblings
     xmlFreeNode(xml);   // Frees
 }
@@ -902,9 +930,6 @@ free_xml(xmlNode * child)
 xmlNode *
 pcmk__xml_copy(xmlNode *parent, xmlNode *src)
 {
-    /* @TODO Allocate the copy tree's private data here when we drop
-     * new_private_data()/free_private_data()
-     */
     xmlNode *copy = NULL;
 
     if (src == NULL) {
@@ -930,6 +955,7 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
         xmlAddChild(parent, copy);
     }
 
+    pcmk__xml_new_private_data(copy);
     pcmk__xml_mark_created(copy);
     return copy;
 }
@@ -2085,10 +2111,6 @@ crm_xml_init(void)
          */
         xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
 
-        /* Populate and free the _private field when nodes are created and destroyed */
-        xmlDeregisterNodeDefault(free_private_data);
-        xmlRegisterNodeDefault(new_private_data);
-
         crm_schema_init();
     }
 }
@@ -2298,9 +2320,6 @@ getDocPtr(xmlNode *node)
 xmlNode *
 add_node_copy(xmlNode *parent, xmlNode *src_node)
 {
-    /* @TODO Allocate the copy tree's private data here when we drop
-     * new_private_data()/free_private_data()
-     */
     xmlNode *child = NULL;
 
     CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
@@ -2310,6 +2329,7 @@ add_node_copy(xmlNode *parent, xmlNode *src_node)
         return NULL;
     }
     xmlAddChild(parent, child);
+    pcmk__xml_new_private_data(child);
     pcmk__xml_mark_created(child);
     return child;
 }
@@ -2417,9 +2437,6 @@ crm_xml_escape(const char *text)
 xmlNode *
 copy_xml(xmlNode *src)
 {
-    /* @TODO Allocate the copy tree's private data here when we drop
-     * new_private_data()/free_private_data()
-     */
     xmlDoc *doc = pcmk__xml_new_doc();
     xmlNode *copy = NULL;
 
@@ -2427,6 +2444,7 @@ copy_xml(xmlNode *src)
     pcmk__mem_assert(copy);
 
     xmlDocSetRootElement(doc, copy);
+    pcmk__xml_new_private_data(copy);
     return copy;
 }
 
@@ -2434,9 +2452,6 @@ xmlNode *
 create_xml_node(xmlNode *parent, const char *name)
 {
     // Like pcmk__xe_create(), but returns NULL on failure
-    /* @TODO Allocate element private data here when we drop
-     * new_private_data()/free_private_data()
-     */
     xmlNode *node = NULL;
 
     CRM_CHECK(!pcmk__str_empty(name), return NULL);
@@ -2457,6 +2472,7 @@ create_xml_node(xmlNode *parent, const char *name)
             return NULL;
         }
     }
+    pcmk__xml_new_private_data(node);
     pcmk__xml_mark_created(node);
     return node;
 }
