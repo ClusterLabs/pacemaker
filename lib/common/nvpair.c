@@ -104,50 +104,6 @@ pcmk_free_nvpairs(GSList *nvpairs)
 }
 
 /*!
- * \internal
- * \brief Compare two name/value pairs
- *
- * \param[in] a  First name/value pair to compare
- * \param[in] b  Second name/value pair to compare
- *
- * \return 0 if a == b, 1 if a > b, -1 if a < b
- */
-static gint
-pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
-{
-    int rc = 0;
-    const pcmk_nvpair_t *pair_a = a;
-    const pcmk_nvpair_t *pair_b = b;
-
-    CRM_ASSERT(a != NULL);
-    CRM_ASSERT(pair_a->name != NULL);
-
-    CRM_ASSERT(b != NULL);
-    CRM_ASSERT(pair_b->name != NULL);
-
-    rc = strcmp(pair_a->name, pair_b->name);
-    if (rc < 0) {
-        return -1;
-    } else if (rc > 0) {
-        return 1;
-    }
-    return 0;
-}
-
-/*!
- * \brief Sort a list of name/value pairs
- *
- * \param[in,out] list  List to sort
- *
- * \return New head of list
- */
-GSList *
-pcmk_sort_nvpairs(GSList *list)
-{
-    return g_slist_sort(list, pcmk__compare_nvpair);
-}
-
-/*!
  * \brief Create a list of name/value pairs from an XML node's attributes
  *
  * \param[in]  XML to parse
@@ -992,3 +948,39 @@ crm_meta_value(GHashTable *meta, const char *attr_name)
     }
     return NULL;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/nvpair_compat.h>
+
+static gint
+pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
+{
+    int rc = 0;
+    const pcmk_nvpair_t *pair_a = a;
+    const pcmk_nvpair_t *pair_b = b;
+
+    CRM_ASSERT(a != NULL);
+    CRM_ASSERT(pair_a->name != NULL);
+
+    CRM_ASSERT(b != NULL);
+    CRM_ASSERT(pair_b->name != NULL);
+
+    rc = strcmp(pair_a->name, pair_b->name);
+    if (rc < 0) {
+        return -1;
+    } else if (rc > 0) {
+        return 1;
+    }
+    return 0;
+}
+
+GSList *
+pcmk_sort_nvpairs(GSList *list)
+{
+    return g_slist_sort(list, pcmk__compare_nvpair);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

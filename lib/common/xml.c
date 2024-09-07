@@ -2536,6 +2536,7 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
+#include <crm/common/nvpair_compat.h>
 #include <crm/common/xml_compat.h>
 
 xmlNode *
