@@ -104,30 +104,6 @@ pcmk_free_nvpairs(GSList *nvpairs)
 }
 
 /*!
- * \brief Create a list of name/value pairs from an XML node's attributes
- *
- * \param[in]  XML to parse
- *
- * \return New list of name/value pairs
- * \note It is the caller's responsibility to free the list with
- *       \c pcmk_free_nvpairs().
- */
-GSList *
-pcmk_xml_attrs2nvpairs(const xmlNode *xml)
-{
-    GSList *result = NULL;
-
-    for (xmlAttrPtr iter = pcmk__xe_first_attr(xml); iter != NULL;
-         iter = iter->next) {
-
-        result = pcmk_prepend_nvpair(result,
-                                     (const char *) iter->name,
-                                     (const char *) pcmk__xml_attr_value(iter));
-    }
-    return result;
-}
-
-/*!
  * \internal
  * \brief Add an XML attribute corresponding to a name/value pair
  *
@@ -980,6 +956,21 @@ GSList *
 pcmk_sort_nvpairs(GSList *list)
 {
     return g_slist_sort(list, pcmk__compare_nvpair);
+}
+
+GSList *
+pcmk_xml_attrs2nvpairs(const xmlNode *xml)
+{
+    GSList *result = NULL;
+
+    for (xmlAttrPtr iter = pcmk__xe_first_attr(xml); iter != NULL;
+         iter = iter->next) {
+
+        result = pcmk_prepend_nvpair(result,
+                                     (const char *) iter->name,
+                                     (const char *) pcmk__xml_attr_value(iter));
+    }
+    return result;
 }
 
 // LCOV_EXCL_STOP

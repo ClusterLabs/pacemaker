@@ -11,6 +11,7 @@
 #define PCMK__CRM_COMMON_NVPAIR_COMPAT__H
 
 #include <glib.h>               // GSList
+#include <libxml/tree.h>        // xmlNode
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,6 +28,9 @@ extern "C" {
 
 //! \deprecated Do not use
 GSList *pcmk_sort_nvpairs(GSList *list);
+
+//! \deprecated Do not use
+GSList *pcmk_xml_attrs2nvpairs(const xmlNode *xml);
 
 #ifdef __cplusplus
 }
