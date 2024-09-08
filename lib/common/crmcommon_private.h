@@ -50,8 +50,11 @@ typedef struct xml_doc_private_s {
         GList *deleted_objs; // List of pcmk__deleted_xml_t
 } xml_doc_private_t;
 
-// XML entity references
+// XML private data magic numbers
+#define PCMK__XML_DOC_PRIVATE_MAGIC     0x81726354UL
+#define PCMK__XML_NODE_PRIVATE_MAGIC    0x54637281UL
 
+// XML entity references
 #define PCMK__XML_ENTITY_AMP    "&amp;"
 #define PCMK__XML_ENTITY_GT     "&gt;"
 #define PCMK__XML_ENTITY_LT     "&lt;"

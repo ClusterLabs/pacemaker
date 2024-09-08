@@ -15,10 +15,6 @@
 
 #include "crmcommon_private.h"
 
-/* Copied from lib/common/xml.c */
-#define XML_DOC_PRIVATE_MAGIC   0x81726354UL
-#define XML_NODE_PRIVATE_MAGIC  0x54637281UL
-
 static int
 setup(void **state) {
     crm_xml_init();
@@ -58,7 +54,7 @@ create_document_node(void **state) {
     /* Check that the private data is initialized correctly */
     docpriv = doc->_private;
     assert_non_null(docpriv);
-    assert_int_equal(docpriv->check, XML_DOC_PRIVATE_MAGIC);
+    assert_int_equal(docpriv->check, PCMK__XML_DOC_PRIVATE_MAGIC);
     assert_true(pcmk_all_flags_set(docpriv->flags, pcmk__xf_dirty|pcmk__xf_created));
 
     /* Clean up */
@@ -83,7 +79,7 @@ create_element_node(void **state) {
     /* Check that the private data is initialized correctly */
     priv = node->_private;
     assert_non_null(priv);
-    assert_int_equal(priv->check, XML_NODE_PRIVATE_MAGIC);
+    assert_int_equal(priv->check, PCMK__XML_NODE_PRIVATE_MAGIC);
     assert_true(pcmk_all_flags_set(priv->flags, pcmk__xf_dirty|pcmk__xf_created));
 
     /* Clean up */
@@ -111,7 +107,7 @@ create_attr_node(void **state) {
     /* Check that the private data is initialized correctly */
     priv = attr->_private;
     assert_non_null(priv);
-    assert_int_equal(priv->check, XML_NODE_PRIVATE_MAGIC);
+    assert_int_equal(priv->check, PCMK__XML_NODE_PRIVATE_MAGIC);
     assert_true(pcmk_all_flags_set(priv->flags, pcmk__xf_dirty|pcmk__xf_created));
 
     /* Clean up */
@@ -137,7 +133,7 @@ create_comment_node(void **state) {
     /* Check that the private data is initialized correctly */
     priv = node->_private;
     assert_non_null(priv);
-    assert_int_equal(priv->check, XML_NODE_PRIVATE_MAGIC);
+    assert_int_equal(priv->check, PCMK__XML_NODE_PRIVATE_MAGIC);
     assert_true(pcmk_all_flags_set(priv->flags, pcmk__xf_dirty|pcmk__xf_created));
 
     /* Clean up */
