@@ -174,9 +174,6 @@ pcmk__xml_mark_created(xmlNode *xml)
     pcmk__xml_tree_foreach(xml, mark_xml_dirty_created, NULL);
 }
 
-#define XML_DOC_PRIVATE_MAGIC   0x81726354UL
-#define XML_NODE_PRIVATE_MAGIC  0x54637281UL
-
 // Free an XML object previously marked as deleted
 static void
 free_deleted_object(void *data)
@@ -194,7 +191,7 @@ static void
 reset_xml_private_data(xml_doc_private_t *docpriv)
 {
     if (docpriv != NULL) {
-        CRM_ASSERT(docpriv->check == XML_DOC_PRIVATE_MAGIC);
+        CRM_ASSERT(docpriv->check == PCMK__XML_DOC_PRIVATE_MAGIC);
 
         free(docpriv->user);
         docpriv->user = NULL;
@@ -238,7 +235,7 @@ free_private_data(xmlNode *node)
     3. It would carry its own payload in the _private field.
     
     We do not free data in this circumstance to avoid a failed
-    assertion on the XML_*_PRIVATE_MAGIC later.
+    assertion on the PCMK__XML_*_PRIVATE_MAGIC later.
     
     */
     if (node->name == NULL || node->name[0] != ' ') {
@@ -247,7 +244,7 @@ free_private_data(xmlNode *node)
                 reset_xml_private_data(node->_private);
             } else {
                 CRM_ASSERT(((xml_node_private_t *) node->_private)->check
-                               == XML_NODE_PRIVATE_MAGIC);
+                               == PCMK__XML_NODE_PRIVATE_MAGIC);
                 /* nothing dynamically allocated nested */
             }
             free(node->_private);
@@ -265,7 +262,7 @@ new_private_data(xmlNode *node)
             xml_doc_private_t *docpriv =
                 pcmk__assert_alloc(1, sizeof(xml_doc_private_t));
 
-            docpriv->check = XML_DOC_PRIVATE_MAGIC;
+            docpriv->check = PCMK__XML_DOC_PRIVATE_MAGIC;
             /* Flags will be reset if necessary when tracking is enabled */
             pcmk__set_xml_flags(docpriv, pcmk__xf_dirty|pcmk__xf_created);
             node->_private = docpriv;
@@ -277,7 +274,7 @@ new_private_data(xmlNode *node)
             xml_node_private_t *nodepriv =
                 pcmk__assert_alloc(1, sizeof(xml_node_private_t));
 
-            nodepriv->check = XML_NODE_PRIVATE_MAGIC;
+            nodepriv->check = PCMK__XML_NODE_PRIVATE_MAGIC;
             /* Flags will be reset if necessary when tracking is enabled */
             pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
             node->_private = nodepriv;
