@@ -167,7 +167,7 @@ assignment_result_is_too_large(void **state)
     assert_set_score("5", "X+=100000000000", "1000000", pcmk_rc_ok);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(value_is_name_plus_plus),
                 cmocka_unit_test(value_is_name_plus_equals_integer),
                 cmocka_unit_test(target_is_NULL),
