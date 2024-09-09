@@ -103,9 +103,6 @@ G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
 
 G_GNUC_INTERNAL
-void pcmk__xml_mark_created(xmlNode *xml);
-
-G_GNUC_INTERNAL
 int pcmk__xml_position(const xmlNode *xml,
                        enum xml_private_flags ignore_if_set);
 
