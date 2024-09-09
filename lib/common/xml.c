@@ -160,8 +160,8 @@ mark_xml_dirty_created(xmlNode *xml, void *user_data)
  *
  * \param[in,out] xml  Tree to mark as dirty and created
  */
-void
-pcmk__xml_mark_created(xmlNode *xml)
+static void
+mark_xml_tree_dirty_created(xmlNode *xml)
 {
     CRM_ASSERT(xml != NULL);
 
@@ -743,7 +743,6 @@ pcmk__xe_create(xmlNode *parent, const char *name)
     }
 
     pcmk__xml_new_private_data(node);
-    pcmk__xml_mark_created(node);
     return node;
 }
 
@@ -956,7 +955,6 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
     }
 
     pcmk__xml_new_private_data(copy);
-    pcmk__xml_mark_created(copy);
     return copy;
 }
 
@@ -1529,7 +1527,7 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 
     CRM_CHECK(new_xml != NULL, return);
     if (old_xml == NULL) {
-        pcmk__xml_mark_created(new_xml);
+        mark_xml_tree_dirty_created(new_xml);
         pcmk__apply_creation_acl(new_xml, check_top);
         return;
     }
@@ -2330,7 +2328,6 @@ add_node_copy(xmlNode *parent, xmlNode *src_node)
     }
     xmlAddChild(parent, child);
     pcmk__xml_new_private_data(child);
-    pcmk__xml_mark_created(child);
     return child;
 }
 
@@ -2473,7 +2470,6 @@ create_xml_node(xmlNode *parent, const char *name)
         }
     }
     pcmk__xml_new_private_data(node);
-    pcmk__xml_mark_created(node);
     return node;
 }
 

@@ -35,7 +35,6 @@ pcmk__xc_create(xmlDoc *doc, const char *content)
     node = xmlNewDocComment(doc, (pcmkXmlStr) content);
     pcmk__mem_assert(node);
     pcmk__xml_new_private_data(node);
-    pcmk__xml_mark_created(node);
     return node;
 }
 
