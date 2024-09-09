@@ -393,7 +393,7 @@ purge_xml_attributes(xmlNode *xml)
             continue;
         }
 
-        xmlUnsetProp(xml, tmp->name);
+        pcmk__xa_remove(tmp, true);
     }
 
     child = pcmk__xml_first_child(xml);
@@ -569,19 +569,21 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
             /* is_root=true should be impossible with check_top=true, but check
              * for sanity
              */
-            bool is_root = (xml->doc != NULL)
-                           && (xmlDocGetRootElement(xml->doc) == xml);
+            bool is_root = (xmlDocGetRootElement(xml->doc) == xml);
+            xml_doc_private_t *docpriv = xml->doc->_private;
 
             crm_trace("ACLs disallow creation of %s<%s> with "
                       PCMK_XA_ID "=\"%s\"",
                       (is_root? "root element " : ""), xml->name,
                       display_id(xml));
 
-            if (is_root) {
-                xmlFreeDoc(xml->doc);
-            } else {
-                xmlUnlinkNode(xml);
-                xmlFreeNode(xml);
+            // pcmk__xml_free() checks ACLs if enabled, which would fail
+            pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
+            pcmk__xml_free(xml);
+
+            if (!is_root) {
+                // If root, the document was freed. Otherwise re-enable ACLs.
+                pcmk__set_xml_flags(docpriv, pcmk__xf_acl_enabled);
             }
             return;
 

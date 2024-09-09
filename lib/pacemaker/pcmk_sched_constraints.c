@@ -324,17 +324,14 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
                  */
 
                 for (iter = tag->refs; iter != NULL; iter = iter->next) {
-                    const char *obj_ref = iter->data;
-                    xmlNode *new_rsc_ref = NULL;
+                    const char *ref_id = iter->data;
+                    xmlNode *new_ref = pcmk__xe_create(set,
+                                                       PCMK_XE_RESOURCE_REF);
 
-                    new_rsc_ref = xmlNewDocRawNode(set->doc, NULL,
-                                                   (pcmkXmlStr)
-                                                   PCMK_XE_RESOURCE_REF,
-                                                   NULL);
-                    crm_xml_add(new_rsc_ref, PCMK_XA_ID, obj_ref);
-                    xmlAddNextSibling(last_ref, new_rsc_ref);
+                    crm_xml_add(new_ref, PCMK_XA_ID, ref_id);
+                    xmlAddNextSibling(last_ref, new_ref);
 
-                    last_ref = new_rsc_ref;
+                    last_ref = new_ref;
                 }
 
                 any_refs = true;

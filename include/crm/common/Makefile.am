@@ -25,6 +25,7 @@ header_HEADERS = acl.h 			\
 		 mainloop.h 		\
 		 nodes.h 		\
 		 nvpair.h 		\
+		 nvpair_compat.h 	\
 		 options.h 		\
 		 output.h 		\
 		 probes.h 		\

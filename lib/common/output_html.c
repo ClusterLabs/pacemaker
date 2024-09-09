@@ -157,7 +157,8 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
      * anything else that the user could add, and we want it done last to pick up
      * any options that may have been given.
      */
-    head_node = xmlNewDocRawNode(NULL, NULL, (pcmkXmlStr) "head", NULL);
+    head_node = pcmk__xe_create(priv->root, "head");
+    xmlAddPrevSibling(priv->root->children, head_node);
 
     if (title != NULL ) {
         child_node = pcmk__xe_create(head_node, "title");
@@ -171,8 +172,8 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     crm_xml_add(charset_node, "charset", "utf-8");
 
     /* Add any extra header nodes the caller might have created. */
-    for (int i = 0; i < g_slist_length(extra_headers); i++) {
-        xmlAddChild(head_node, xmlCopyNode(g_slist_nth_data(extra_headers, i), 1));
+    for (GSList *iter = extra_headers; iter != NULL; iter = iter->next) {
+        pcmk__xml_copy(head_node, (xmlNode *) iter->data);
     }
 
     /* Stylesheets are included two different ways.  The first is via a built-in
@@ -191,8 +192,6 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
                            NULL);
     }
 
-    xmlAddPrevSibling(priv->root->children, head_node);
-
     if (g_slist_length(priv->errors) > 0) {
         out->begin_list(out, "Errors", NULL, NULL);
         g_slist_foreach(priv->errors, add_error_node, (gpointer) out);
@@ -207,7 +206,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
         *copy_dest = pcmk__xml_copy(NULL, priv->root);
     }
 
-    g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
+    g_slist_free_full(extra_headers, (GDestroyNotify) pcmk__xml_free);
     extra_headers = NULL;
 }
 
@@ -500,7 +499,7 @@ pcmk__html_add_header(const char *name, ...) {
 
     va_start(ap, name);
 
-    header_node = xmlNewDocRawNode(NULL, NULL, (pcmkXmlStr) name, NULL);
+    header_node = pcmk__xe_create(NULL, name);
     while (1) {
         char *key = va_arg(ap, char *);
         char *value;

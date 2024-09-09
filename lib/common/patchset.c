@@ -691,27 +691,16 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 match_child = match_child->next;
             }
 
-            child = xmlDocCopyNode(change->children, match->doc, 1);
-            if (child == NULL) {
-                return ENOMEM;
-            }
+            child = pcmk__xml_copy(match, change->children);
 
-            if (match_child) {
+            if (match_child != NULL) {
                 crm_trace("Adding %s at position %d", child->name, position);
                 xmlAddPrevSibling(match_child, child);
 
-            } else if (match->last) {
+            } else {
                 crm_trace("Adding %s at position %d (end)",
                           child->name, position);
-                xmlAddNextSibling(match->last, child);
-
-            } else {
-                crm_trace("Adding %s at position %d (first)",
-                          child->name, position);
-                CRM_LOG_ASSERT(position == 0);
-                xmlAddChild(match, child);
             }
-            pcmk__xml_mark_created(child);
 
         } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
             int position = 0;

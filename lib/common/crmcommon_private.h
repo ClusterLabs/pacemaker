@@ -65,15 +65,15 @@ typedef struct xml_doc_private_s {
         GList *deleted_objs; // List of pcmk__deleted_xml_t
 } xml_doc_private_t;
 
-// XML entity references
+// XML private data magic numbers
+#define PCMK__XML_DOC_PRIVATE_MAGIC     0x81726354UL
+#define PCMK__XML_NODE_PRIVATE_MAGIC    0x54637281UL
 
+// XML entity references
 #define PCMK__XML_ENTITY_AMP    "&amp;"
 #define PCMK__XML_ENTITY_GT     "&gt;"
 #define PCMK__XML_ENTITY_LT     "&lt;"
 #define PCMK__XML_ENTITY_QUOT   "&quot;"
-
-//! libxml2 supports only XML version 1.0, at least as of libxml2-2.12.5
-#define PCMK__XML_VERSION ((pcmkXmlStr) "1.0")
 
 #define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
         (xml_priv)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
@@ -88,10 +88,19 @@ typedef struct xml_doc_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
-bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
+void pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags);
 
 G_GNUC_INTERNAL
-void pcmk__xml_mark_created(xmlNode *xml);
+void pcmk__xml_new_private_data(xmlNode *xml);
+
+G_GNUC_INTERNAL
+void pcmk__xml_free_private_data(xmlNode *xml);
+
+G_GNUC_INTERNAL
+xmlDoc *pcmk__xml_new_doc(void);
+
+G_GNUC_INTERNAL
+bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
 
 G_GNUC_INTERNAL
 int pcmk__xml_position(const xmlNode *xml,
@@ -122,6 +131,9 @@ void pcmk__apply_acl(xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__apply_creation_acl(xmlNode *xml, bool check_top);
+
+G_GNUC_INTERNAL
+int pcmk__xa_remove(xmlAttr *attr, bool force);
 
 G_GNUC_INTERNAL
 void pcmk__mark_xml_attr_dirty(xmlAttr *a);
