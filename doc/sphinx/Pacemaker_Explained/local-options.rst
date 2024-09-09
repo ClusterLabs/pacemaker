@@ -443,9 +443,10 @@ environment variables when Pacemaker daemons start up.
        PCMK_node_action_limit
      - :ref:`nonnegative integer <nonnegative_integer>`
      -
-     - Specify the maximum number of jobs that can be scheduled on this node. If
-       set, this overrides the :ref:`node-action-limit <node_action_limit>`
-       cluster option on this node.
+     - If set, this overrides the :ref:`node-action-limit <node_action_limit>`
+       cluster option on this node to specify the maximum number of jobs that
+       can be scheduled on this node (or 0 to use twice the number of CPU
+       cores).
 
    * - .. _pcmk_fail_fast:
 
