@@ -1041,6 +1041,60 @@ which ends lists, are important because lists can be useful, yet differently
 handled by the different output types.
 
 .. index::
+   pair: C; XML
+
+XML
+###
+
+External Libraries
+__________________
+
+Pacemaker uses `libxml2 <http://xmlsoft.org/html>`_ and
+`libxslt <http://xmlsoft.org/libxslt/index.html>`_ to process XML. These
+libraries implement only version 1.0 of the XML, XPath, and XSLT specifications.
+
+
+Naming
+______
+
+Names of functions, constants, and enum values related to XML should contain
+substrings indicating the type of object they're used with, according to the
+following convention:
+
+* ``xml``: XML subtree, or XML generically
+* ``xe``: XML element node, including the attributes belonging to an element
+* ``xa``: XML attribute node
+* ``xc``: XML comment node
+
+
+Private Data
+____________
+
+Libxml2 data structures such as ``xmlNode`` and ``xmlDoc`` contain a
+``void *_private`` member for application-specific data. Pacemaker uses this
+field to store internal bookkeeping data, such as changes relative to another
+XML tree, or ACLs.
+
+XML documents, elements, attributes, and comments have private data. The private
+data field must be allocated immediately after the node is created and freed
+immediately before the node is freed.
+
+
+Wrapper Functions
+_________________
+
+Pacemaker provides wrappers for a variety of libxml2 and libxslt functions. They
+should be used whenever possible. Some are merely for convenience. However, many
+perform additional, Pacemaker-specific tasks, such as change tracking, ACL
+checking, and allocation/deallocation of XML documents and private data.
+
+Pacemaker assumes that every XML node is part of a document and has private data
+allocated. If libxml2 APIs are used directly instead of the wrapper functions,
+Pacemaker may crash with a segmentation fault, or change tracking and ACL
+checking may be incorrectly disabled.
+
+
+.. index::
    single: Makefile.am
 
 Makefiles
