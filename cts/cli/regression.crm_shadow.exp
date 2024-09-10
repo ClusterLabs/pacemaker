@@ -1430,6 +1430,11 @@ Diff: +++ 0.1.0 (null)
 </pacemaker-result>
 =#=#=#= End test: Get active shadow instance's diff (empty CIB) (XML) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's diff (empty CIB) (XML)
+=#=#=#= Begin test: Resetting active shadow instance to active CIB requires force =#=#=#=
+crm_shadow: The reset command overwrites the active shadow configuration.
+To prevent accidental destruction of the shadow file, the --force flag is required in order to proceed.
+=#=#=#= End test: Resetting active shadow instance to active CIB requires force - Incorrect usage (64) =#=#=#=
+* Passed: crm_shadow            - Resetting active shadow instance to active CIB requires force
 =#=#=#= Begin test: Reset active shadow instance to active CIB =#=#=#=
 A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
@@ -1446,7 +1451,7 @@ Diff: +++ 1.2.0 (null)
 =#=#=#= End test: Active shadow instance differs from active CIB after change - Error occurred (1) =#=#=#=
 * Passed: crm_shadow            - Active shadow instance differs from active CIB after change
 =#=#=#= Begin test: Reset active shadow instance to active CIB (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --force --output-as=xml">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1488,32 +1493,18 @@ Diff: +++ 1.2.0 (null)
 =#=#=#= End test: Active shadow instance differs from active CIB after change (XML) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow            - Active shadow instance differs from active CIB after change (XML)
 =#=#=#= Begin test: Reset shadow instance to active CIB with nonexistent shadow file =#=#=#=
-crm_shadow: Could not access shadow instance 'cts-cli': No such file or directory
-=#=#=#= End test: Reset shadow instance to active CIB with nonexistent shadow file - No such object (105) =#=#=#=
-* Passed: crm_shadow            - Reset shadow instance to active CIB with nonexistent shadow file
-=#=#=#= Begin test: Reset shadow instance to active CIB with nonexistent shadow file (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --output-as=xml">
-  <status code="105" message="No such object">
-    <errors>
-      <error>crm_shadow: Could not access shadow instance 'cts-cli': No such file or directory</error>
-    </errors>
-  </status>
-</pacemaker-result>
-=#=#=#= End test: Reset shadow instance to active CIB with nonexistent shadow file (XML) - No such object (105) =#=#=#=
-* Passed: crm_shadow            - Reset shadow instance to active CIB with nonexistent shadow file (XML)
-=#=#=#= Begin test: Force-reset shadow instance to active CIB with nonexistent shadow file =#=#=#=
 A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
-=#=#=#= End test: Force-reset shadow instance to active CIB with nonexistent shadow file - OK (0) =#=#=#=
-* Passed: crm_shadow            - Force-reset shadow instance to active CIB with nonexistent shadow file
-=#=#=#= Begin test: Force-reset shadow instance to active CIB with nonexistent shadow file (XML) =#=#=#=
+=#=#=#= End test: Reset shadow instance to active CIB with nonexistent shadow file - OK (0) =#=#=#=
+* Passed: crm_shadow            - Reset shadow instance to active CIB with nonexistent shadow file
+=#=#=#= Begin test: Reset shadow instance to active CIB with nonexistent shadow file (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --force --output-as=xml">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: Force-reset shadow instance to active CIB with nonexistent shadow file (XML) - OK (0) =#=#=#=
-* Passed: crm_shadow            - Force-reset shadow instance to active CIB with nonexistent shadow file (XML)
+=#=#=#= End test: Reset shadow instance to active CIB with nonexistent shadow file (XML) - OK (0) =#=#=#=
+* Passed: crm_shadow            - Reset shadow instance to active CIB with nonexistent shadow file (XML)
 =#=#=#= Begin test: Active shadow instance no different from active CIB after force-reset =#=#=#=
 =#=#=#= End test: Active shadow instance no different from active CIB after force-reset - OK (0) =#=#=#=
 * Passed: crm_shadow            - Active shadow instance no different from active CIB after force-reset
@@ -1523,29 +1514,13 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Reset inactive shadow instance (none active) to active CIB - OK (0) =#=#=#=
 * Passed: crm_shadow            - Reset inactive shadow instance (none active) to active CIB
 =#=#=#= Begin test: Reset inactive shadow instance (none active) to active CIB (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --force --batch --output-as=xml">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Reset inactive shadow instance (none active) to active CIB (XML) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Reset inactive shadow instance (none active) to active CIB (XML)
-=#=#=#= Begin test: Resetting inactive shadow instance while another instance active requires --force =#=#=#=
-crm_shadow: The supplied shadow instance (cts-cli) is not the same as the active one (nonexistent_shadow).
-To prevent accidental destruction of the shadow file, the --force flag is required in order to proceed.
-=#=#=#= End test: Resetting inactive shadow instance while another instance active requires --force - Incorrect usage (64) =#=#=#=
-* Passed: crm_shadow            - Resetting inactive shadow instance while another instance active requires --force
-=#=#=#= Begin test: Resetting inactive shadow instance while another instance active requires --force (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --output-as=xml">
-  <status code="64" message="Incorrect usage">
-    <errors>
-      <error>crm_shadow: The supplied shadow instance (cts-cli) is not the same as the active one (nonexistent_shadow).
-To prevent accidental destruction of the shadow file, the --force flag is required in order to proceed.</error>
-    </errors>
-  </status>
-</pacemaker-result>
-=#=#=#= End test: Resetting inactive shadow instance while another instance active requires --force (XML) - Incorrect usage (64) =#=#=#=
-* Passed: crm_shadow            - Resetting inactive shadow instance while another instance active requires --force (XML)
 =#=#=#= Begin test: Reset inactive shadow instance while another instance active =#=#=#=
 A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
@@ -1564,7 +1539,7 @@ crm_shadow: Could not connect to CIB: No such device or address
 =#=#=#= End test: Reset shadow instance with nonexistent CIB - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Reset shadow instance with nonexistent CIB
 =#=#=#= Begin test: Reset shadow instance with nonexistent CIB (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --force --output-as=xml">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: Could not connect to CIB: No such device or address</error>
@@ -1573,20 +1548,6 @@ crm_shadow: Could not connect to CIB: No such device or address
 </pacemaker-result>
 =#=#=#= End test: Reset shadow instance with nonexistent CIB (XML) - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Reset shadow instance with nonexistent CIB (XML)
-=#=#=#= Begin test: Force-reset shadow instance with nonexistent CIB =#=#=#=
-crm_shadow: Could not connect to CIB: No such device or address
-=#=#=#= End test: Force-reset shadow instance with nonexistent CIB - No such object (105) =#=#=#=
-* Passed: crm_shadow            - Force-reset shadow instance with nonexistent CIB
-=#=#=#= Begin test: Force-reset shadow instance with nonexistent CIB (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --force --output-as=xml">
-  <status code="105" message="No such object">
-    <errors>
-      <error>crm_shadow: Could not connect to CIB: No such device or address</error>
-    </errors>
-  </status>
-</pacemaker-result>
-=#=#=#= End test: Force-reset shadow instance with nonexistent CIB (XML) - No such object (105) =#=#=#=
-* Passed: crm_shadow            - Force-reset shadow instance with nonexistent CIB (XML)
 =#=#=#= Begin test: Switch to new shadow instance =#=#=#=
 To switch to the named shadow instance, enter the following into your shell:
 	export CIB_shadow=cts-cli

@@ -2230,8 +2230,11 @@ class CrmShadowRegressionTest(RegressionTest):
         ]
 
         reset_1_tests = [
+            Test("Resetting active shadow instance to active CIB requires force",
+                 "crm_shadow --reset {shadow} --batch",
+                 expected_rc=ExitStatus.USAGE),
             Test("Reset active shadow instance to active CIB",
-                 "crm_shadow --reset {shadow} --batch"),
+                 "crm_shadow --reset {shadow} --batch --force"),
             Test("Active shadow instance no different from active CIB after reset",
                  "crm_shadow --diff"),
             Test("Active shadow instance differs from active CIB after change",
@@ -2240,7 +2243,7 @@ class CrmShadowRegressionTest(RegressionTest):
                  expected_rc=ExitStatus.ERROR),
 
             ValidatingTest("Reset active shadow instance to active CIB",
-                           "crm_shadow --reset {shadow} --batch --output-as=xml"),
+                           "crm_shadow --reset {shadow} --batch --force --output-as=xml"),
             ValidatingTest("Active shadow instance no different from active CIB after reset",
                            "crm_shadow --diff --output-as=xml"),
             ValidatingTest("Active shadow instance differs from active CIB after change",
@@ -2249,11 +2252,6 @@ class CrmShadowRegressionTest(RegressionTest):
                            expected_rc=ExitStatus.ERROR),
 
             make_test_group("Reset shadow instance to active CIB with nonexistent shadow file",
-                            "crm_shadow --reset {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force",
-                            expected_rc=ExitStatus.NOSUCH),
-            make_test_group("Force-reset shadow instance to active CIB with nonexistent shadow file",
                             "crm_shadow --reset {shadow} --batch --force {fmt}",
                             [Test, ValidatingTest],
                             setup="crm_shadow --delete {shadow} --force"),
@@ -2263,15 +2261,11 @@ class CrmShadowRegressionTest(RegressionTest):
 
         reset_2_tests = [
             make_test_group("Reset inactive shadow instance (none active) to active CIB",
-                            "crm_shadow --reset {shadow} --batch {fmt}",
+                            "crm_shadow --reset {shadow} --force --batch {fmt}",
                             [Test, ValidatingTest]),
         ]
 
         reset_3_tests = [
-            make_test_group("Resetting inactive shadow instance while another instance active requires --force",
-                            "crm_shadow --reset {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.USAGE),
             make_test_group("Reset inactive shadow instance while another instance active",
                             "crm_shadow --reset {shadow} --batch --force {fmt}",
                             [Test, ValidatingTest]),
@@ -2279,10 +2273,6 @@ class CrmShadowRegressionTest(RegressionTest):
 
         reset_4_tests = [
             make_test_group("Reset shadow instance with nonexistent CIB",
-                            "crm_shadow --reset {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.NOSUCH),
-            make_test_group("Force-reset shadow instance with nonexistent CIB",
                             "crm_shadow --reset {shadow} --batch --force {fmt}",
                             [Test, ValidatingTest],
                             expected_rc=ExitStatus.NOSUCH),
