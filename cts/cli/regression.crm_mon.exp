@@ -160,83 +160,83 @@ Active Resources:
   <node_history>
     <node name="cluster02">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="11" task="start" rc="0" rc_text="ok" exec-time="2044ms" queue-time="0ms"/>
-        <operation_history call="12" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
+        <operation_history call="11" task="start" rc="0" rc_text="OK" exec-time="2044ms" queue-time="0ms"/>
+        <operation_history call="12" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="18" task="start" rc="0" rc_text="ok" exec-time="6020ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
+        <operation_history call="18" task="start" rc="0" rc_text="OK" exec-time="6020ms" queue-time="0ms"/>
+        <operation_history call="19" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Email" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="7" task="monitor" rc="8" rc_text="promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="5" task="cancel" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="promote" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="Promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="17" task="start" rc="0" rc_text="ok" exec-time="2038ms" queue-time="0ms"/>
-        <operation_history call="18" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
+        <operation_history call="17" task="start" rc="0" rc_text="OK" exec-time="2038ms" queue-time="0ms"/>
+        <operation_history call="18" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="15" task="start" rc="0" rc_text="OK" exec-time="36ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="16" task="stop" rc="0" rc_text="ok" exec-time="6048ms" queue-time="0ms"/>
+        <operation_history call="16" task="stop" rc="0" rc_text="OK" exec-time="6048ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -398,83 +398,83 @@ Active Resources:
   <node_history>
     <node name="cluster02">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="11" task="start" rc="0" rc_text="ok" exec-time="2044ms" queue-time="0ms"/>
-        <operation_history call="12" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
+        <operation_history call="11" task="start" rc="0" rc_text="OK" exec-time="2044ms" queue-time="0ms"/>
+        <operation_history call="12" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="18" task="start" rc="0" rc_text="ok" exec-time="6020ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
+        <operation_history call="18" task="start" rc="0" rc_text="OK" exec-time="6020ms" queue-time="0ms"/>
+        <operation_history call="19" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Email" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="7" task="monitor" rc="8" rc_text="promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="5" task="cancel" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="promote" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="Promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="17" task="start" rc="0" rc_text="ok" exec-time="2038ms" queue-time="0ms"/>
-        <operation_history call="18" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
+        <operation_history call="17" task="start" rc="0" rc_text="OK" exec-time="2038ms" queue-time="0ms"/>
+        <operation_history call="18" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="15" task="start" rc="0" rc_text="OK" exec-time="36ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="16" task="stop" rc="0" rc_text="ok" exec-time="6048ms" queue-time="0ms"/>
+        <operation_history call="16" task="stop" rc="0" rc_text="OK" exec-time="6048ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -1201,83 +1201,83 @@ Negative Location Constraints:
   <node_history>
     <node name="cluster02">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="11" task="start" rc="0" rc_text="ok" exec-time="2044ms" queue-time="0ms"/>
-        <operation_history call="12" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
+        <operation_history call="11" task="start" rc="0" rc_text="OK" exec-time="2044ms" queue-time="0ms"/>
+        <operation_history call="12" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="18" task="start" rc="0" rc_text="ok" exec-time="6020ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
+        <operation_history call="18" task="start" rc="0" rc_text="OK" exec-time="6020ms" queue-time="0ms"/>
+        <operation_history call="19" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Email" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="7" task="monitor" rc="8" rc_text="promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="5" task="cancel" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="promote" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="Promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="17" task="start" rc="0" rc_text="ok" exec-time="2038ms" queue-time="0ms"/>
-        <operation_history call="18" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
+        <operation_history call="17" task="start" rc="0" rc_text="OK" exec-time="2038ms" queue-time="0ms"/>
+        <operation_history call="18" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="15" task="start" rc="0" rc_text="OK" exec-time="36ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="16" task="stop" rc="0" rc_text="ok" exec-time="6048ms" queue-time="0ms"/>
+        <operation_history call="16" task="stop" rc="0" rc_text="OK" exec-time="6048ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -1434,35 +1434,35 @@ Negative Location Constraints:
   <node_history>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="17" task="start" rc="0" rc_text="ok" exec-time="2038ms" queue-time="0ms"/>
-        <operation_history call="18" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
+        <operation_history call="17" task="start" rc="0" rc_text="OK" exec-time="2038ms" queue-time="0ms"/>
+        <operation_history call="18" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="15" task="start" rc="0" rc_text="OK" exec-time="36ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="16" task="stop" rc="0" rc_text="ok" exec-time="6048ms" queue-time="0ms"/>
+        <operation_history call="16" task="stop" rc="0" rc_text="OK" exec-time="6048ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -1632,40 +1632,40 @@ Negative Location Constraints:
   <node_history>
     <node name="cluster02">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="11" task="start" rc="0" rc_text="ok" exec-time="2044ms" queue-time="0ms"/>
-        <operation_history call="12" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
+        <operation_history call="11" task="start" rc="0" rc_text="OK" exec-time="2044ms" queue-time="0ms"/>
+        <operation_history call="12" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="18" task="start" rc="0" rc_text="ok" exec-time="6020ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
+        <operation_history call="18" task="start" rc="0" rc_text="OK" exec-time="6020ms" queue-time="0ms"/>
+        <operation_history call="19" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Email" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="7" task="monitor" rc="8" rc_text="promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="5" task="cancel" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="promote" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="Promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -1741,8 +1741,8 @@ Operations:
   <node_history>
     <node name="cluster01">
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="15" task="start" rc="0" rc_text="OK" exec-time="36ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -1927,8 +1927,8 @@ Operations:
   <node_history>
     <node name="cluster01">
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="15" task="start" rc="0" rc_text="OK" exec-time="36ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -2009,10 +2009,10 @@ Operations:
   <node_history>
     <node name="cluster02">
       <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Email" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -2087,7 +2087,7 @@ Operations:
   <node_history>
     <node name="cluster02">
       <resource_history id="Email" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -2170,14 +2170,14 @@ Operations:
   <node_history>
     <node name="cluster02">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="11" task="start" rc="0" rc_text="ok" exec-time="2044ms" queue-time="0ms"/>
-        <operation_history call="12" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
+        <operation_history call="11" task="start" rc="0" rc_text="OK" exec-time="2044ms" queue-time="0ms"/>
+        <operation_history call="12" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="17" task="start" rc="0" rc_text="ok" exec-time="2038ms" queue-time="0ms"/>
-        <operation_history call="18" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
+        <operation_history call="17" task="start" rc="0" rc_text="OK" exec-time="2038ms" queue-time="0ms"/>
+        <operation_history call="18" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -2260,14 +2260,14 @@ Operations:
   <node_history>
     <node name="cluster02">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="11" task="start" rc="0" rc_text="ok" exec-time="2044ms" queue-time="0ms"/>
-        <operation_history call="12" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
+        <operation_history call="11" task="start" rc="0" rc_text="OK" exec-time="2044ms" queue-time="0ms"/>
+        <operation_history call="12" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="17" task="start" rc="0" rc_text="ok" exec-time="2038ms" queue-time="0ms"/>
-        <operation_history call="18" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
+        <operation_history call="17" task="start" rc="0" rc_text="OK" exec-time="2038ms" queue-time="0ms"/>
+        <operation_history call="18" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -2350,14 +2350,14 @@ Operations:
   <node_history>
     <node name="cluster02">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="11" task="start" rc="0" rc_text="ok" exec-time="2044ms" queue-time="0ms"/>
-        <operation_history call="12" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
+        <operation_history call="11" task="start" rc="0" rc_text="OK" exec-time="2044ms" queue-time="0ms"/>
+        <operation_history call="12" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="17" task="start" rc="0" rc_text="ok" exec-time="2038ms" queue-time="0ms"/>
-        <operation_history call="18" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
+        <operation_history call="17" task="start" rc="0" rc_text="OK" exec-time="2038ms" queue-time="0ms"/>
+        <operation_history call="18" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -2524,40 +2524,40 @@ Full List of Resources:
   <node_history>
     <node name="cluster02">
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -2623,40 +2623,40 @@ Full List of Resources:
   <node_history>
     <node name="cluster02">
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -2720,40 +2720,40 @@ Full List of Resources:
   <node_history>
     <node name="cluster02">
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -2819,40 +2819,40 @@ Full List of Resources:
   <node_history>
     <node name="cluster02">
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -2930,40 +2930,40 @@ Full List of Resources:
   <node_history>
     <node name="cluster02">
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -3065,14 +3065,14 @@ Operations:
   <node_history>
     <node name="cluster02">
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -3174,14 +3174,14 @@ Operations:
   <node_history>
     <node name="cluster02">
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -3267,14 +3267,14 @@ Operations:
   <node_history>
     <node name="cluster02">
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -3376,14 +3376,14 @@ Operations:
   <node_history>
     <node name="cluster02">
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -3469,14 +3469,14 @@ Operations:
   <node_history>
     <node name="cluster02">
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -3517,8 +3517,8 @@ Active Resources:
 =#=#=#= End test: Check that CIB_file="-" works - OK (0) =#=#=#=
 * Passed: crm_mon               - Check that CIB_file="-" works
 =#=#=#= Begin test: Output of partially active resources =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (Unimplemented) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (Invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3536,7 +3536,7 @@ Node List:
 Active Resources:
   * Clone Set: ping-clone [ping]:
     * ping	(ocf:pacemaker:ping):	 Started cluster01
-    * ping	(ocf:pacemaker:ping):	 Stopped (not installed) 
+    * ping	(ocf:pacemaker:ping):	 Stopped (Not installed) 
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
     * Replica[0]
@@ -3554,12 +3554,12 @@ Active Resources:
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
 
 Failed Resource Actions:
-  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='Done', queued=0ms, exec=33ms
+  * dummy-2_monitor_0 on cluster02 'Unimplemented' (3): call=2, status='Done', queued=0ms, exec=33ms
 =#=#=#= End test: Output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon               - Output of partially active resources
 =#=#=#= Begin test: Output of partially active resources (XML) =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (Unimplemented) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (Invalid parameter) | httpd_last_failure_0
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml">
   <summary>
     <stack type="corosync"/>
@@ -3639,76 +3639,76 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
   <node_history>
     <node name="cluster02">
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy-2" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="probe" rc="3" rc_text="unimplemented feature" exec-time="33ms" queue-time="0ms"/>
+        <operation_history call="2" task="probe" rc="3" rc_text="Unimplemented" exec-time="33ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy-4" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="probe" rc="5" rc_text="not installed" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="probe" rc="5" rc_text="Not installed" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="smart-mon" orphan="false" migration-threshold="1000000">
-        <operation_history call="9" task="probe" rc="5" rc_text="not installed" exec-time="33ms" queue-time="0ms"/>
+        <operation_history call="9" task="probe" rc="5" rc_text="Not installed" exec-time="33ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="6" task="probe" rc="5" rc_text="not installed" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="probe" rc="5" rc_text="Not installed" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="15" task="start" rc="0" rc_text="OK" exec-time="36ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="probe" rc="2" rc_text="invalid parameter" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="probe" rc="2" rc_text="Invalid parameter" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
   <failures>
-    <failure op_key="dummy-2_monitor_0" node="cluster02" exitstatus="unimplemented feature" exitreason="" exitcode="3" call="2" status="Done" queued="0" exec="33" interval="0" task="monitor"/>
+    <failure op_key="dummy-2_monitor_0" node="cluster02" exitstatus="Unimplemented" exitreason="" exitcode="3" call="2" status="Done" queued="0" exec="33" interval="0" task="monitor"/>
   </failures>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Output of partially active resources (XML) - OK (0) =#=#=#=
 * Passed: crm_mon               - Output of partially active resources (XML)
 =#=#=#= Begin test: Output of partially active resources, with inactive resources =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (Unimplemented) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (Invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3726,7 +3726,7 @@ Node List:
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
     * ping	(ocf:pacemaker:ping):	 Started cluster01
-    * ping	(ocf:pacemaker:ping):	 Stopped (not installed) 
+    * ping	(ocf:pacemaker:ping):	 Stopped (Not installed) 
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
     * Replica[0]
@@ -3743,16 +3743,16 @@ Full List of Resources:
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
     * dummy-3	(ocf:pacemaker:Dummy):	 Stopped (disabled)
-    * dummy-4	(ocf:pacemaker:Dummy):	 Stopped (not installed) 
-  * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped (not installed) 
+    * dummy-4	(ocf:pacemaker:Dummy):	 Stopped (Not installed) 
+  * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped (Not installed) 
 
 Failed Resource Actions:
-  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='Done', queued=0ms, exec=33ms
+  * dummy-2_monitor_0 on cluster02 'Unimplemented' (3): call=2, status='Done', queued=0ms, exec=33ms
 =#=#=#= End test: Output of partially active resources, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon               - Output of partially active resources, with inactive resources
 =#=#=#= Begin test: Complete brief text output, with inactive resources =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (Unimplemented) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (Invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3772,7 +3772,7 @@ Full List of Resources:
   * 1/1	(stonith:fence_xvm):	Active cluster01
   * Clone Set: ping-clone [ping]:
     * ping	(ocf:pacemaker:ping):	 Started cluster01
-    * ping	(ocf:pacemaker:ping):	 Stopped (not installed) 
+    * ping	(ocf:pacemaker:ping):	 Stopped (Not installed) 
   * Container bundle set: httpd-bundle [pcmk:http]:
     * Replica[0]
       * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Started cluster02
@@ -3838,12 +3838,12 @@ Operations:
       * (1) probe
 
 Failed Resource Actions:
-  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='Done', queued=0ms, exec=33ms
+  * dummy-2_monitor_0 on cluster02 'Unimplemented' (3): call=2, status='Done', queued=0ms, exec=33ms
 =#=#=#= End test: Complete brief text output, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon               - Complete brief text output, with inactive resources
 =#=#=#= Begin test: Text output of partially active group =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (Unimplemented) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (Invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -3863,8 +3863,8 @@ Active Resources:
 =#=#=#= End test: Text output of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon               - Text output of partially active group
 =#=#=#= Begin test: Text output of partially active group, with inactive resources =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (Unimplemented) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (Invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -3882,12 +3882,12 @@ Full List of Resources:
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
     * dummy-3	(ocf:pacemaker:Dummy):	 Stopped (disabled)
-    * dummy-4	(ocf:pacemaker:Dummy):	 Stopped (not installed) 
+    * dummy-4	(ocf:pacemaker:Dummy):	 Stopped (Not installed) 
 =#=#=#= End test: Text output of partially active group, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon               - Text output of partially active group, with inactive resources
 =#=#=#= Begin test: Text output of active member of partially active group =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (Unimplemented) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (Invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -3906,8 +3906,8 @@ Active Resources:
 =#=#=#= End test: Text output of active member of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon               - Text output of active member of partially active group
 =#=#=#= Begin test: Text output of inactive member of partially active group =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (Unimplemented) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (Invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3927,12 +3927,12 @@ Active Resources:
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
 
 Failed Resource Actions:
-  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='Done', queued=0ms, exec=33ms
+  * dummy-2_monitor_0 on cluster02 'Unimplemented' (3): call=2, status='Done', queued=0ms, exec=33ms
 =#=#=#= End test: Text output of inactive member of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon               - Text output of inactive member of partially active group
 =#=#=#= Begin test: Complete brief text output grouped by node, with inactive resources =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (Unimplemented) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (Invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3965,10 +3965,10 @@ Node List:
 Inactive Resources:
   * Clone Set: ping-clone [ping]:
     * ping	(ocf:pacemaker:ping):	 Started cluster01
-    * ping	(ocf:pacemaker:ping):	 Stopped (not installed) 
+    * ping	(ocf:pacemaker:ping):	 Stopped (Not installed) 
   * Resource Group: partially-active-group:
     * 2/4	(ocf:pacemaker:Dummy):	Active cluster02
-  * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped (not installed) 
+  * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped (Not installed) 
 
 Node Attributes:
   * Node: cluster01 (1):
@@ -4021,12 +4021,12 @@ Operations:
       * (1) probe
 
 Failed Resource Actions:
-  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='Done', queued=0ms, exec=33ms
+  * dummy-2_monitor_0 on cluster02 'Unimplemented' (3): call=2, status='Done', queued=0ms, exec=33ms
 =#=#=#= End test: Complete brief text output grouped by node, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon               - Complete brief text output grouped by node, with inactive resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources, filtered by node =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (Unimplemented) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (Invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -4044,12 +4044,12 @@ Full List of Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 FAILED cluster01
-  * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped (not installed) 
+  * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped (Not installed) 
 =#=#=#= End test: Text output of partially active resources, with inactive resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon               - Text output of partially active resources, with inactive resources, filtered by node
 =#=#=#= Begin test: Output of partially active resources, filtered by node (XML) =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (Unimplemented) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (Invalid parameter) | httpd_last_failure_0
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --node=cluster01">
   <summary>
     <stack type="corosync"/>
@@ -4099,24 +4099,24 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
   <node_history>
     <node name="cluster01">
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="15" task="start" rc="0" rc_text="OK" exec-time="36ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -4175,12 +4175,12 @@ Active Resources:
   <node_history>
     <node name="cluster01">
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="6" task="cancel" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="cancel" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="rsc1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -4407,83 +4407,83 @@ Full List of Resources:
   <node_history>
     <node name="cluster02">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="11" task="start" rc="0" rc_text="ok" exec-time="2044ms" queue-time="0ms"/>
-        <operation_history call="12" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
+        <operation_history call="11" task="start" rc="0" rc_text="OK" exec-time="2044ms" queue-time="0ms"/>
+        <operation_history call="12" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="18" task="start" rc="0" rc_text="ok" exec-time="6020ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
+        <operation_history call="18" task="start" rc="0" rc_text="OK" exec-time="6020ms" queue-time="0ms"/>
+        <operation_history call="19" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Email" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="7" task="monitor" rc="8" rc_text="promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="5" task="cancel" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="promote" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="Promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="17" task="start" rc="0" rc_text="ok" exec-time="2038ms" queue-time="0ms"/>
-        <operation_history call="18" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
+        <operation_history call="17" task="start" rc="0" rc_text="OK" exec-time="2038ms" queue-time="0ms"/>
+        <operation_history call="18" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="15" task="start" rc="0" rc_text="OK" exec-time="36ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="16" task="stop" rc="0" rc_text="ok" exec-time="6048ms" queue-time="0ms"/>
+        <operation_history call="16" task="stop" rc="0" rc_text="OK" exec-time="6048ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -4667,83 +4667,83 @@ Full List of Resources:
   <node_history>
     <node name="cluster02">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="11" task="start" rc="0" rc_text="ok" exec-time="2044ms" queue-time="0ms"/>
-        <operation_history call="12" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
+        <operation_history call="11" task="start" rc="0" rc_text="OK" exec-time="2044ms" queue-time="0ms"/>
+        <operation_history call="12" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="18" task="start" rc="0" rc_text="ok" exec-time="6020ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
+        <operation_history call="18" task="start" rc="0" rc_text="OK" exec-time="6020ms" queue-time="0ms"/>
+        <operation_history call="19" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Email" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="7" task="monitor" rc="8" rc_text="promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="5" task="cancel" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="promote" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="Promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="17" task="start" rc="0" rc_text="ok" exec-time="2038ms" queue-time="0ms"/>
-        <operation_history call="18" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
+        <operation_history call="17" task="start" rc="0" rc_text="OK" exec-time="2038ms" queue-time="0ms"/>
+        <operation_history call="18" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="15" task="start" rc="0" rc_text="OK" exec-time="36ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="16" task="stop" rc="0" rc_text="ok" exec-time="6048ms" queue-time="0ms"/>
+        <operation_history call="16" task="stop" rc="0" rc_text="OK" exec-time="6048ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -4926,83 +4926,83 @@ Full List of Resources:
   <node_history>
     <node name="cluster02">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="11" task="start" rc="0" rc_text="ok" exec-time="2044ms" queue-time="0ms"/>
-        <operation_history call="12" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
+        <operation_history call="11" task="start" rc="0" rc_text="OK" exec-time="2044ms" queue-time="0ms"/>
+        <operation_history call="12" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2031ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="18" task="start" rc="0" rc_text="ok" exec-time="6020ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
+        <operation_history call="18" task="start" rc="0" rc_text="OK" exec-time="6020ms" queue-time="0ms"/>
+        <operation_history call="19" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="6015ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Email" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="7" task="monitor" rc="8" rc_text="promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="5" task="cancel" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="promote" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="Promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
-        <operation_history call="17" task="start" rc="0" rc_text="ok" exec-time="2038ms" queue-time="0ms"/>
-        <operation_history call="18" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
+        <operation_history call="17" task="start" rc="0" rc_text="OK" exec-time="2038ms" queue-time="0ms"/>
+        <operation_history call="18" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="2034ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
-        <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="15" task="start" rc="0" rc_text="OK" exec-time="36ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
-        <operation_history call="16" task="stop" rc="0" rc_text="ok" exec-time="6048ms" queue-time="0ms"/>
+        <operation_history call="16" task="stop" rc="0" rc_text="OK" exec-time="6048ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="OK" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
-        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="2" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="OK" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-0">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
     <node name="httpd-bundle-1">
       <resource_history id="httpd" orphan="false" migration-threshold="1000000">
-        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="1" task="start" rc="0" rc_text="OK" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>

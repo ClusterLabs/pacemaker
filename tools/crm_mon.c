@@ -1785,7 +1785,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
         }
 
     } else if (status == PCMK_EXEC_DONE) {
-        desc = services_ocf_exitcode_str(rc);
+        desc = crm_exit_str(rc);
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
 
     } else {

@@ -253,7 +253,7 @@ agent_status_default(pcmk__output_t *out, va_list args) {
                   class,
                   ((provider == NULL)? "" : ":"),
                   ((provider == NULL)? "" : provider),
-                  type, (int) rc, services_ocf_exitcode_str((int) rc),
+                  type, (int) rc, crm_exit_str(rc),
                   ((exit_reason == NULL)? "" : ": "),
                   ((exit_reason == NULL)? "" : exit_reason));
     } else {
@@ -289,7 +289,7 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     const char *exit_reason = va_arg(args, const char *);
 
     char *exit_s = pcmk__itoa(rc);
-    const char *message = services_ocf_exitcode_str((int) rc);
+    const char *message = crm_exit_str(rc);
     char *status_s = pcmk__itoa(status);
     const char *execution_message = pcmk_exec_status_str(status);
 

@@ -179,7 +179,7 @@ test_exit(crm_exit_t exit_code)
              lrmd_event_type2str(event->type),                          \
              event->rsc_id,                                             \
              event->op_type ? event->op_type : "none",                  \
-             services_ocf_exitcode_str(event->rc),                      \
+             crm_exit_str((crm_exit_t) event->rc),                      \
              pcmk_exec_status_str(event->op_status));                   \
     crm_info("%s", event_buf_v0);
 

@@ -382,7 +382,7 @@ lrmd_send_resource_alert(lrmd_t *lrmd, const GList *alert_list,
 
     if (op->op_status == PCMK_EXEC_DONE) {
         params = alert_key2param(params, PCMK__alert_key_desc,
-                                 services_ocf_exitcode_str(op->rc));
+                                 crm_exit_str((crm_exit_t) op->rc));
     } else {
         params = alert_key2param(params, PCMK__alert_key_desc,
                                  pcmk_exec_status_str(op->op_status));

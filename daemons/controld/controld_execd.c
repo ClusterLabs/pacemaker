@@ -2132,7 +2132,7 @@ log_executor_event(const lrmd_event_data_t *op, const char *op_key,
     switch (op->op_status) {
         case PCMK_EXEC_DONE:
             log_level = LOG_NOTICE;
-            pcmk__g_strcat(str, ": ", services_ocf_exitcode_str(op->rc), NULL);
+            pcmk__g_strcat(str, ": ", crm_exit_str((crm_exit_t) op->rc), NULL);
             break;
 
         case PCMK_EXEC_TIMEOUT:

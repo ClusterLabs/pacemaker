@@ -884,7 +884,7 @@ action_complete(svc_action_t * action)
                 crm_debug("%s systemd %s is now complete (elapsed=%dms, "
                           "remaining=%dms): %s (%d)",
                           cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
-                          services_ocf_exitcode_str(cmd->result.exit_status),
+                          crm_exit_str(cmd->result.exit_status),
                           cmd->result.exit_status);
                 cmd_original_times(cmd);
 
@@ -929,11 +929,13 @@ action_complete(svc_action_t * action)
                          cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
 
             } else {
-                crm_notice("%s %s failed '%s' (%d): re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                crm_notice("%s %s failed: %s: Re-scheduling (remaining "
+                           "timeout %s) " QB_XS
+                           " exitstatus=%d elapsed=%dms start_delay=%dms)",
                            cmd->rsc_id, cmd->action,
-                           services_ocf_exitcode_str(cmd->result.exit_status),
-                           cmd->result.exit_status, time_sum, timeout_left,
-                           delay);
+                           crm_exit_str(cmd->result.exit_status),
+                           pcmk__readable_interval(timeout_left),
+                           cmd->result.exit_status, time_sum, delay);
             }
 
             cmd_reset(cmd);

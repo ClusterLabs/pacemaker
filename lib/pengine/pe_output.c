@@ -282,7 +282,7 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
                                 last_change_str ? last_change_str : "",
                                 exec_str ? exec_str : "",
                                 queue_str ? queue_str : "",
-                                rc, services_ocf_exitcode_str(rc));
+                                rc, crm_exit_str(rc));
 
         if (last_change_str) {
             free(last_change_str);
@@ -1441,8 +1441,7 @@ failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
                    node_name, NULL);
 
     if (status == PCMK_EXEC_DONE) {
-        pcmk__g_strcat(str, " returned '", services_ocf_exitcode_str(rc), "'",
-                       NULL);
+        pcmk__g_strcat(str, " returned '", crm_exit_str(rc), "'", NULL);
         if (!pcmk__str_empty(exit_reason)) {
             pcmk__g_strcat(str, " (", exit_reason, ")", NULL);
         }
@@ -1502,7 +1501,7 @@ failed_action_technical(pcmk__output_t *out, const xmlNode *xml_op,
 {
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     const char *queue_time = crm_element_value(xml_op, PCMK_XA_QUEUE_TIME);
-    const char *exit_status = services_ocf_exitcode_str(rc);
+    const char *exit_status = crm_exit_str(rc);
     const char *lrm_status = pcmk_exec_status_str(status);
     time_t last_change_epoch = 0;
     GString *str = NULL;
@@ -1615,7 +1614,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     if (crm_element_value(xml_op, PCMK__XA_OPERATION_KEY) == NULL) {
         op_key_name = PCMK_XA_ID;
     }
-    exitstatus = services_ocf_exitcode_str(rc);
+    exitstatus = crm_exit_str(rc);
     rc_s = pcmk__itoa(rc);
     status_s = pcmk_exec_status_str(status);
     node = pcmk__output_create_xml_node(out, PCMK_XE_FAILURE,
@@ -2819,7 +2818,7 @@ op_history_xml(pcmk__output_t *out, va_list args) {
 
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     char *rc_s = pcmk__itoa(rc);
-    const char *rc_text = services_ocf_exitcode_str(rc);
+    const char *rc_text = crm_exit_str(rc);
     xmlNodePtr node = NULL;
 
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION_HISTORY,
