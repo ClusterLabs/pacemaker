@@ -3554,7 +3554,7 @@ Active Resources:
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
 
 Failed Resource Actions:
-  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
+  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='Done', queued=0ms, exec=33ms
 =#=#=#= End test: Output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon               - Output of partially active resources
 =#=#=#= Begin test: Output of partially active resources (XML) =#=#=#=
@@ -3700,7 +3700,7 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
     </node>
   </node_history>
   <failures>
-    <failure op_key="dummy-2_monitor_0" node="cluster02" exitstatus="unimplemented feature" exitreason="" exitcode="3" call="2" status="complete" queued="0" exec="33" interval="0" task="monitor"/>
+    <failure op_key="dummy-2_monitor_0" node="cluster02" exitstatus="unimplemented feature" exitreason="" exitcode="3" call="2" status="Done" queued="0" exec="33" interval="0" task="monitor"/>
   </failures>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -3747,7 +3747,7 @@ Full List of Resources:
   * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped (not installed) 
 
 Failed Resource Actions:
-  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
+  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='Done', queued=0ms, exec=33ms
 =#=#=#= End test: Output of partially active resources, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon               - Output of partially active resources, with inactive resources
 =#=#=#= Begin test: Complete brief text output, with inactive resources =#=#=#=
@@ -3838,7 +3838,7 @@ Operations:
       * (1) probe
 
 Failed Resource Actions:
-  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
+  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='Done', queued=0ms, exec=33ms
 =#=#=#= End test: Complete brief text output, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon               - Complete brief text output, with inactive resources
 =#=#=#= Begin test: Text output of partially active group =#=#=#=
@@ -3927,7 +3927,7 @@ Active Resources:
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
 
 Failed Resource Actions:
-  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
+  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='Done', queued=0ms, exec=33ms
 =#=#=#= End test: Text output of inactive member of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon               - Text output of inactive member of partially active group
 =#=#=#= Begin test: Complete brief text output grouped by node, with inactive resources =#=#=#=
@@ -4021,7 +4021,7 @@ Operations:
       * (1) probe
 
 Failed Resource Actions:
-  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
+  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='Done', queued=0ms, exec=33ms
 =#=#=#= End test: Complete brief text output grouped by node, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon               - Complete brief text output grouped by node, with inactive resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources, filtered by node =#=#=#=
