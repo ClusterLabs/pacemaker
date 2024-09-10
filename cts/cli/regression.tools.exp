@@ -8739,7 +8739,7 @@ cts-cli
 =#=#=#= End test: Get active shadow instance's file name (copied) (XML) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Get active shadow instance's file name (copied) (XML)
 =#=#=#= Begin test: Get active shadow instance's contents (copied) =#=#=#=
-<cib epoch="1" num_updates="173" admin_epoch="1">
+<cib epoch="1" num_updates="173" admin_epoch="1" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -9059,7 +9059,7 @@ cts-cli
 =#=#=#= Begin test: Get active shadow instance's contents (copied) (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_shadow --display --output-as=xml">
   <shadow instance="cts-cli">
-    <content><![CDATA[<cib epoch="1" num_updates="173" admin_epoch="1">
+    <content><![CDATA[<cib epoch="1" num_updates="173" admin_epoch="1" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -9415,7 +9415,7 @@ Diff: +++ 1.4.1 (null)
       <change-attr name="num_updates" operation="set" value="1"/>
     </change-list>
     <change-result>
-      <cib epoch="4" num_updates="1" admin_epoch="1"/>
+      <cib epoch="4" num_updates="1" admin_epoch="1" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2"/>
     </change-result>
   </change>
   <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']">
@@ -9494,7 +9494,7 @@ To prevent accidental destruction of the cluster, the --force flag is required i
       <change-attr name="num_updates" operation="set" value="1"/>
     </change-list>
     <change-result>
-      <cib epoch="4" num_updates="1" admin_epoch="1"/>
+      <cib epoch="4" num_updates="1" admin_epoch="1" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2"/>
     </change-result>
   </change>
   <change operation="create" path="/cib/status" position="4">
@@ -9526,7 +9526,7 @@ To prevent accidental destruction of the cluster, the --force flag is required i
       <change-attr name="num_updates" operation="set" value="1"/>
     </change-list>
     <change-result>
-      <cib epoch="4" num_updates="1" admin_epoch="1"/>
+      <cib epoch="4" num_updates="1" admin_epoch="1" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2"/>
     </change-result>
   </change>
 </diff>
