@@ -37,7 +37,7 @@
   <synapse id="3">
     <action_set>
       <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-5-reboot" on_node="rhel7-5" on_node_uuid="5">
-        <attributes CRM_meta_cts_fencing="levels-and" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="5"/>
         </downed>

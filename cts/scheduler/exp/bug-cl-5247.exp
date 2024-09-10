@@ -545,7 +545,7 @@
   <synapse id="37">
     <action_set>
       <pseudo_event id="70" operation="stonith" operation_key="stonith-pgsr02-off" on_node="pgsr02" on_node_uuid="pgsr02">
-        <attributes CRM_meta_master_pgsql="10" CRM_meta_on_node="pgsr02" CRM_meta_on_node_uuid="pgsr02" CRM_meta_stonith_action="off" />
+        <attributes CRM_meta_on_node="pgsr02" CRM_meta_on_node_uuid="pgsr02" CRM_meta_stonith_action="off" />
         <downed>
           <node id="pgsr02"/>
         </downed>

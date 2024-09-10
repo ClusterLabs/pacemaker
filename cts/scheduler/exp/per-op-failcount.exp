@@ -64,7 +64,7 @@
   <synapse id="5">
     <action_set>
       <crm_event id="2" operation="stonith" operation_key="stonith-rh73-01-snmp-reboot" on_node="rh73-01-snmp" on_node_uuid="3232238265">
-        <attributes CRM_meta_on_node="rh73-01-snmp" CRM_meta_on_node_uuid="3232238265" CRM_meta_shutdown="0" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="rh73-01-snmp" CRM_meta_on_node_uuid="3232238265" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="3232238265"/>
         </downed>
