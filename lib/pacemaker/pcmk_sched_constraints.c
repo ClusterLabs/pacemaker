@@ -81,6 +81,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
 
         lifetime = pcmk__xe_first_child(xml_obj, PCMK__XE_LIFETIME, NULL, NULL);
         if (lifetime != NULL) {
+            // @COMPAT Not possible with schema validation enabled
             pcmk__config_warn("Support for '" PCMK__XE_LIFETIME "' element "
                               "(in %s) is deprecated and will be dropped "
                               "in a later release", id);

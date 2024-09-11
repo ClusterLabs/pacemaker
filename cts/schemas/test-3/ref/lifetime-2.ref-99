@@ -1,0 +1,34 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="16" num_updates="0" admin_epoch="0">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * There are two colocation constraints:
+           * rsc2-with-rsc1 has a lifetime element with two defined rules.
+           * rsc4-with-rsc3 has a lifetime element with two referenced rules.
+         * There are two order constraints:
+           * rsc1-then-rsc2 has a lifetime element with two defined rules.
+           * rsc3-then-rsc4 has a lifetime element with two referenced rules.
+         * The rules defined in the colocation and order constraints are not
+           referenced anywhere else.
+
+         In this situation, all lifetime elements should be removed, along with
+         their rule definitions.
+      -->
+    <crm_config/>
+    <nodes>
+      <node id="node1" uname="node1" type="member"/>
+    </nodes>
+    <resources>
+      <primitive id="rsc1" class="ocf" type="Dummy" provider="pacemaker"/>
+      <primitive id="rsc2" class="ocf" type="Dummy" provider="pacemaker"/>
+      <primitive id="rsc3" class="ocf" type="Dummy" provider="pacemaker"/>
+      <primitive id="rsc4" class="ocf" type="Dummy" provider="pacemaker"/>
+    </resources>
+    <constraints>
+      <rsc_colocation id="rsc2-with-rsc1" score="INFINITY" rsc="rsc2" with-rsc="rsc1"/>
+      <rsc_colocation id="rsc4-with-rsc3" score="INFINITY" rsc="rsc4" with-rsc="rsc3"/>
+      <rsc_order id="rsc1-then-rsc2" first="rsc1" then="rsc2"/>
+      <rsc_order id="rsc3-then-rsc4" first="rsc3" then="rsc4"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>

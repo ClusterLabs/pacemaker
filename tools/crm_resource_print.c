@@ -32,7 +32,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
         return pcmk_rc_ok;
     }
 
-    // @COMPAT PCMK__XE_LIFETIME is deprecated
+    // @COMPAT Not possible with schema validation enabled
     lifetime = pcmk__xe_first_child(xml_obj, PCMK__XE_LIFETIME, NULL, NULL);
     if (pcmk__evaluate_rules(lifetime, &rule_input, NULL) != pcmk_rc_ok) {
         return pcmk_rc_ok;
