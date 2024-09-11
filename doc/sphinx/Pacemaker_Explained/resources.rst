@@ -1,12 +1,9 @@
 .. _resource:
 
-Cluster Resources
------------------
+Resources
+---------
 
 .. _s-resource-primitive:
-
-What is a Cluster Resource?
-###########################
 
 .. index::
    single: resource
@@ -563,74 +560,6 @@ behave and can be easily set using the ``--meta`` option of the
      -
      - Specific to bundle resources; see :ref:`s-bundle-attributes`
 
-   * - .. _meta_remote_node:
-       
-       .. index::
-          single: remote-node; resource option
-          single: resource; option, remote-node
-
-       remote-node
-     - :ref:`text <text>`
-     -
-     - The name of the Pacemaker Remote guest node this resource is associated
-       with, if any. If specified, this both enables the resource as a guest
-       node and defines the unique name used to identify the guest node. The
-       guest must be configured to run the Pacemaker Remote daemon when it is
-       started. **WARNING:** This value cannot overlap with any resource or node
-       IDs.
-
-   * - .. _meta_remote_addr:
-       
-       .. index::
-          single: remote-addr; resource option
-          single: resource; option, remote-addr
-
-       remote-addr
-     - :ref:`text <text>`
-     - value of ``remote-node``
-     - If ``remote-node`` is specified, the IP address or hostname used to
-       connect to the guest via Pacemaker Remote. The Pacemaker Remote daemon on
-       the guest must be configured to accept connections on this address.
-
-   * - .. _meta_remote_port:
-       
-       .. index::
-          single: remote-port; resource option
-          single: resource; option, remote-port
-
-       remote-port
-     - :ref:`port <port>`
-     - 3121
-     - If ``remote-node`` is specified, the port on the guest used for its
-       Pacemaker Remote connection. The Pacemaker Remote daemon on the guest
-       must be configured to listen on this port.
-
-   * - .. _meta_remote_connect_timeout:
-       
-       .. index::
-          single: remote-connect-timeout; resource option
-          single: resource; option, remote-connect-timeout
-
-       remote-connect-timeout
-     - :ref:`timeout <timeout>`
-     - 60s
-     - If ``remote-node`` is specified, how long before a pending guest
-       connection will time out.
-
-   * - .. _meta_remote_allow_migrate:
-
-       .. index::
-          single: remote-allow-migrate; resource option
-          single: resource; option, remote-allow-migrate
-
-       remote-allow-migrate
-     - :ref:`boolean <boolean>`
-     - true
-     - If ``remote-node`` is specified, this acts as the ``allow-migrate``
-       meta-attribute for the implicit remote connection resource
-       (``ocf:pacemaker:remote``).
-
-
 As an example of setting resource options, if you performed the following
 commands on an LSB Email resource:
 
@@ -798,3 +727,186 @@ attributes, their purpose and default values.
       <action name="meta-data"    timeout="5s" />
       </actions>
       </resource-agent>
+
+
+Pacemaker Remote Resources
+##########################
+
+:ref:`Pacemaker Remote <pacemaker_remote>` nodes are defined by resources.
+
+.. _remote_nodes:
+
+.. index::
+   single: node; remote
+   single: Pacemaker Remote; remote node
+   single: remote node
+
+Remote nodes
+____________
+
+A remote node is defined by a connection resource using the special,
+built-in **ocf:pacemaker:remote** resource agent.
+
+.. list-table:: **ocf:pacemaker:remote Instance Attributes**
+   :class: longtable
+   :widths: 2 2 3 5
+   :header-rows: 1
+
+   * - Name
+     - Type
+     - Default
+     - Description
+
+   * - .. _remote_server:
+       
+       .. index::
+          pair: remote node; server
+
+       server
+     - :ref:`text <text>`
+     - resource ID
+     - Hostname or IP address used to connect to the remote node. The remote
+       executor on the remote node must be configured to accept connections on
+       this address.
+
+   * - .. _remote_port:
+       
+       .. index::
+          pair: remote node; port
+
+       port
+     - :ref:`port <port>`
+     - 3121
+     - TCP port on the remote node used for its Pacemaker Remote connection.
+       The remote executor on the remote node must be configured to listen on
+       this port.
+
+   * - .. _remote_reconnect_interval:
+       
+       .. index::
+          pair: remote node; reconnect_interval
+
+       reconnect_interval
+     - :ref:`duration <duration>`
+     - 0
+     - If positive, the cluster will attempt to reconnect to a remote node
+       at this interval after an active connection has been lost. Otherwise,
+       the cluster will attempt to reconnect immediately (after any fencing, if
+       needed).
+
+.. _guest_nodes:
+
+.. index::
+   single: node; guest
+   single: Pacemaker Remote; guest node
+   single: guest node
+
+Guest Nodes
+___________
+
+When configuring a virtual machine as a guest node, the virtual machine is
+created using one of the usual resource agents for that purpose (for example,
+**ocf:heartbeat:VirtualDomain** or **ocf:heartbeat:Xen**), with additional
+meta-attributes.
+
+No restrictions are enforced on what agents may be used to create a guest node,
+but obviously the agent must create a distinct environment capable of running
+the remote executor and cluster resources. An additional requirement is that
+fencing the node hosting the guest node resource must be sufficient for
+ensuring the guest node is stopped. This means that not all hypervisors
+supported by **VirtualDomain** may be used to create guest nodes; if the guest
+can survive the hypervisor being fenced, it is unsuitable for use as a guest
+node.
+
+.. list-table:: **Guest node meta-attributes**
+   :class: longtable
+   :widths: 2 2 3 5
+   :header-rows: 1
+
+   * - Name
+     - Type
+     - Default
+     - Description
+
+   * - .. _meta_remote_node:
+       
+       .. index::
+          single: remote-node; resource option
+          single: resource; option, remote-node
+
+       remote-node
+     - :ref:`text <text>`
+     -
+     - If specified, this resource defines a guest node using this node name.
+       The guest must be configured to run the remote executor when it is
+       started. This value *must not* be the same as any resource or node ID.
+
+   * - .. _meta_remote_addr:
+       
+       .. index::
+          single: remote-addr; resource option
+          single: resource; option, remote-addr
+
+       remote-addr
+     - :ref:`text <text>`
+     - value of ``remote-node``
+     - If ``remote-node`` is specified, the hostname or IP address used to
+       connect to the guest. The remote executor on the guest must be
+       configured to accept connections on this address.
+
+   * - .. _meta_remote_port:
+       
+       .. index::
+          single: remote-port; resource option
+          single: resource; option, remote-port
+
+       remote-port
+     - :ref:`port <port>`
+     - 3121
+     - If ``remote-node`` is specified, the port on the guest used for its
+       Pacemaker Remote connection. The remote executor on the guest must be
+       configured to listen on this port.
+
+   * - .. _meta_remote_connect_timeout:
+       
+       .. index::
+          single: remote-connect-timeout; resource option
+          single: resource; option, remote-connect-timeout
+
+       remote-connect-timeout
+     - :ref:`timeout <timeout>`
+     - 60s
+     - If ``remote-node`` is specified, how long before a pending guest
+       connection will time out.
+
+   * - .. _meta_remote_allow_migrate:
+
+       .. index::
+          single: remote-allow-migrate; resource option
+          single: resource; option, remote-allow-migrate
+
+       remote-allow-migrate
+     - :ref:`boolean <boolean>`
+     - true
+     - If ``remote-node`` is specified, this acts as the ``allow-migrate``
+       meta-attribute for its implicitly created remote connection resource
+       (``ocf:pacemaker:remote``).
+
+Removing Pacemaker Remote Nodes
+_______________________________
+
+If the resource creating a remote node connection or guest node is removed from
+the configuration, status output may continue to show the affected node (as
+offline).
+
+If you want to get rid of that output, run the following command, replacing
+``$NODE_NAME`` appropriately:
+
+.. code-block:: none
+
+    # crm_node --force --remove $NODE_NAME
+
+.. WARNING::
+
+    Be absolutely sure that there are no references to the node's resource in the
+    configuration before running the above command.

@@ -490,10 +490,11 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
      - :ref:`text <text>`
      - |PCMK_AUTHKEY_FILE|
      - Use the contents of this file as the authorization key to use with
-       Pacemaker Remote connections. This file must be readable by Pacemaker
-       daemons (that is, it must allow read permissions to either the
-       |CRM_DAEMON_USER| user or the |CRM_DAEMON_GROUP| group), and its contents
-       must be identical on all nodes.
+       :ref:`Pacemaker Remote <pacemaker_remote>` connections. This file must
+       be readable by Pacemaker daemons (that is, it must allow read
+       permissions to either the |CRM_DAEMON_USER| user or the
+       |CRM_DAEMON_GROUP| group), and its contents must be identical on all
+       nodes.
 
    * - .. _pcmk_remote_address:
 
@@ -503,12 +504,13 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
        PCMK_remote_address
      - :ref:`text <text>`
      -
-     - By default, if the Pacemaker Remote service is run on the local node, it
-       will listen for connections on all IP addresses. This may be set to one
-       address to listen on instead, as a resolvable hostname or as a numeric
-       IPv4 or IPv6 address. When resolving names or listening on all addresses,
-       IPv6 will be preferred if available. When listening on an IPv6 address,
-       IPv4 clients will be supported via IPv4-mapped IPv6 addresses.
+     - By default, if the :ref:`Pacemaker Remote <pacemaker_remote>` service is
+       run on the local node, it will listen for connections on all IP
+       addresses. This may be set to one address to listen on instead, as a
+       resolvable hostname or as a numeric IPv4 or IPv6 address. When resolving
+       names or listening on all addresses, IPv6 will be preferred if
+       available. When listening on an IPv6 address, IPv4 clients will be
+       supported via IPv4-mapped IPv6 addresses.
 
        Example: ``PCMK_remote_address="192.0.2.1"``
 
@@ -520,8 +522,8 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
        PCMK_remote_port
      - :ref:`port <port>`
      - 3121
-     - Use this TCP port number for Pacemaker Remote node connections. This
-       value must be the same on all nodes.
+     - Use this TCP port number for :ref:`Pacemaker Remote <pacemaker_remote>`
+       node connections. This value must be the same on all nodes.
 
    * - .. _pcmk_remote_pid1:
 
@@ -532,10 +534,10 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
      - :ref:`enumeration <enumeration>`
      - default
      - *Advanced Use Only:* When a bundle resource's ``run-command`` option is
-       left to default, Pacemaker Remote runs as PID 1 in the bundle's
-       containers. When it does so, it loads environment variables from the
-       container's |PCMK_INIT_ENV_FILE| and performs the PID 1 responsibility of
-       reaping dead subprocesses.
+       left to default, :ref:`Pacemaker Remote <pacemaker_remote>` runs as PID
+       1 in the bundle's containers. When it does so, it loads environment
+       variables from the container's |PCMK_INIT_ENV_FILE| and performs the PID
+       1 responsibility of reaping dead subprocesses.
 
        This option controls whether those actions are performed when Pacemaker
        Remote is not running as PID 1. It is intended primarily for developer
@@ -560,8 +562,8 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
      - :ref:`text <text>`
      - |PCMK__GNUTLS_PRIORITIES|
      - *Advanced Use Only:* These GnuTLS cipher priorities will be used for TLS
-       connections (whether for Pacemaker Remote connections or remote CIB
-       access, when enabled). See:
+       connections (whether for :ref:`Pacemaker Remote <pacemaker_remote>`
+       connections or remote CIB access, when enabled). See:
 
          https://gnutls.org/manual/html_node/Priority-Strings.html
 
@@ -584,12 +586,12 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
        number generated for Diffie-Hellman parameters needed by TLS connections.
        The default is no maximum.
 
-       The server (Pacemaker Remote daemon, or CIB manager configured to accept
-       remote clients) will use this value to provide a ceiling for the value
-       recommended by the GnuTLS library. The library will only accept a limited
-       number of specific values, which vary by library version, so setting
-       these is recommended only when required for compatibility with specific
-       client versions.
+       The server (:ref:`Pacemaker Remote <pacemaker_remote>` daemon, or CIB
+       manager configured to accept remote clients) will use this value to
+       provide a ceiling for the value recommended by the GnuTLS library. The
+       library will only accept a limited number of specific values, which vary
+       by library version, so setting these is recommended only when required
+       for compatibility with specific client versions.
 
        Clients do not use ``PCMK_dh_max_bits``.
 
@@ -654,9 +656,9 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
        PCMK_remote_schema_directory
      - :ref:`text <text>`
      - |PCMK__REMOTE_SCHEMA_DIR|
-     - *Advanced Use Only:* Specify an alternate location on Pacemaker Remote
-       nodes for storing newer RNG schemas and XSL transforms fetched from
-       the cluster.
+     - *Advanced Use Only:* Specify an alternate location on
+       :ref:`Pacemaker Remote <pacemaker_remote>` nodes for storing newer RNG
+       schemas and XSL transforms fetched from the cluster.
 
    * - .. _pcmk_valgrind_enabled:
 
