@@ -1,4 +1,5 @@
 <cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:06 2012">
+  <!-- This also tests that globally-unique defaults to true when clone-node-max > 1 -->
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">
@@ -22,7 +23,6 @@
           <nvpair id="nvpair.meta.auto-29" name="clone-node-max" value="2"/>
           <nvpair id="nvpair.meta.auto-31" name="promoted-max" value="2"/>
           <nvpair id="nvpair.meta.auto-33" name="promoted-node-max" value="1"/>
-          <nvpair id="unique-1" name="globally-unique" value="true"/>
         </meta_attributes>
       </clone>
     </resources>

@@ -44,6 +44,8 @@
 #include <crm/common/output_internal.h>
 #include <crm/common/scheduler_internal.h>
 #include <crm/common/schemas_internal.h>
+#include <crm/common/servers_internal.h>
+#include <crm/common/xml_comment_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/xml_io_internal.h>
 #include <crm/common/xml_names_internal.h>
@@ -87,6 +89,9 @@ extern "C" {
 #define PCMK__ATTRD_CMD_CONFIRM         "confirm"
 
 #define PCMK__CONTROLD_CMD_NODES        "list-nodes"
+
+#define ST__LEVEL_MIN 1
+#define ST__LEVEL_MAX 9
 
 #ifdef __cplusplus
 }

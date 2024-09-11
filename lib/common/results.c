@@ -9,10 +9,6 @@
 
 #include <crm_internal.h>
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
 #include <bzlib.h>
 #include <errno.h>
 #include <netdb.h>
@@ -944,8 +940,6 @@ crm_exit(crm_exit_t rc)
 
     mainloop_cleanup();
     pcmk__xml_cleanup();
-
-    free(pcmk__our_nodename);
 
     if (crm_system_name) {
         crm_info("Exiting %s " QB_XS " with status %d", crm_system_name, rc);

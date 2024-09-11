@@ -376,7 +376,7 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         pcmk__xe_create(cib_object, PCMK_XE_STATUS);
     }
 
-    rc = pcmk_update_configured_schema(&cib_object, false);
+    rc = pcmk__update_configured_schema(&cib_object, false);
     if (rc != pcmk_rc_ok) {
         pcmk__xml_free(cib_object);
         return rc;
@@ -524,7 +524,6 @@ main(int argc, char **argv)
     if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
-    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_compat);
 
     if (options.test_dir != NULL) {
         scheduler->priv->out = out;

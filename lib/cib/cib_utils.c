@@ -105,72 +105,6 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
 }
 
 /*!
- * \internal
- * \brief Check whether a given CIB element was modified in a CIB patchset
- *
- * \param[in] patchset  CIB XML patchset
- * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c PCMK_XE_CIB). Supported values include any CIB
- *                      element supported by \c pcmk__cib_abs_xpath_for().
- *
- * \return \c true if \p element was modified, or \c false otherwise
- */
-bool
-cib__element_in_patchset(const xmlNode *patchset, const char *element)
-{
-    const char *element_xpath = pcmk__cib_abs_xpath_for(element);
-    const char *parent_xpath = pcmk_cib_parent_name_for(element);
-    char *element_regex = NULL;
-    bool rc = false;
-    int format = 1;
-
-    CRM_ASSERT(patchset != NULL);
-
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
-    if (format != 2) {
-        crm_warn("Unknown patch format: %d", format);
-        return false;
-    }
-
-    CRM_CHECK(element_xpath != NULL, return false); // Unsupported element
-
-    /* Matches if and only if element_xpath is part of a changed path
-     * (supported values for element never contain XML IDs with schema
-     * validation enabled)
-     *
-     * @TODO Use POSIX word boundary instead of (/|$), if it works:
-     * https://www.regular-expressions.info/wordboundaries.html.
-     */
-    element_regex = crm_strdup_printf("^%s(/|$)", element_xpath);
-
-    for (const xmlNode *change = pcmk__xe_first_child(patchset, PCMK_XE_CHANGE,
-                                                      NULL, NULL);
-         change != NULL; change = pcmk__xe_next_same(change)) {
-
-        const char *op = crm_element_value(change, PCMK__XA_CIB_OP);
-        const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);
-
-        if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
-            // Change to an existing element
-            rc = true;
-            break;
-        }
-
-        if (pcmk__str_eq(op, PCMK_VALUE_CREATE, pcmk__str_none)
-            && pcmk__str_eq(diff_xpath, parent_xpath, pcmk__str_none)
-            && pcmk__xe_is(pcmk__xe_first_child(change, NULL, NULL, NULL),
-                                                element)) {
-            // Newly added element
-            rc = true;
-            break;
-        }
-    }
-
-    free(element_regex);
-    return rc;
-}
-
-/*!
  * \brief Create XML for a new (empty) CIB
  *
  * \param[in] cib_epoch  What to use as \c PCMK_XA_EPOCH CIB attribute
@@ -744,7 +678,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
                   pcmk__s(blob->id, "without ID"), call_id);
         blob->callback(msg, call_id, rc, output, blob->user_data);
 
-    } else if (cib && cib->op_callback == NULL && rc != pcmk_ok) {
+    } else if ((cib != NULL) && (rc != pcmk_ok)) {
         crm_warn("CIB command failed: %s", pcmk_strerror(rc));
         crm_log_xml_debug(msg, "Failed CIB Update");
     }
@@ -754,10 +688,6 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         remove_cib_op_callback(call_id, FALSE);
     }
 
-    if (cib && cib->op_callback != NULL) {
-        crm_trace("Invoking global callback for call %d", call_id);
-        cib->op_callback(msg, call_id, rc, output);
-    }
     crm_trace("OP callback activated for %d", call_id);
 }
 
@@ -809,9 +739,9 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 
     config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
     if (config) {
-        pe_unpack_nvpairs(current_cib, config, PCMK_XE_CLUSTER_PROPERTY_SET,
-                          NULL, options, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, TRUE,
-                          now, NULL);
+        pe_unpack_nvpairs(NULL, config, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
+                          options, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, FALSE, now,
+                          NULL);
     }
 
     pcmk__validate_cluster_options(options);
@@ -826,15 +756,21 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
                 const char *section, xmlNode * data,
                 xmlNode ** output_data, int call_options, const char *user_name)
 {
-    int (*delegate) (cib_t * cib, const char *op, const char *host,
-                     const char *section, xmlNode * data,
-                     xmlNode ** output_data, int call_options, const char *user_name) =
-        cib->delegate_fn;
+    int (*delegate)(cib_t *cib, const char *op, const char *host,
+                    const char *section, xmlNode *data, xmlNode **output_data,
+                    int call_options, const char *user_name) = NULL;
 
-    if(user_name == NULL) {
-        user_name = getenv("CIB_user");
+    if (cib == NULL) {
+        return -EINVAL;
     }
 
+    delegate = cib->delegate_fn;
+    if (delegate == NULL) {
+        return -EPROTONOSUPPORT;
+    }
+    if (user_name == NULL) {
+        user_name = getenv("CIB_user");
+    }
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
 }
 
@@ -953,6 +889,32 @@ done:
     if ((rc == pcmk_rc_ok) && (*cib_object == NULL)) {
         return pcmk_rc_no_input;
     }
+    return rc;
+}
+
+int
+cib__signon_attempts(cib_t *cib, enum cib_conn_type type, int attempts)
+{
+    int rc = pcmk_rc_ok;
+
+    crm_trace("Attempting connection to CIB manager (up to %d time%s)",
+              attempts, pcmk__plural_s(attempts));
+
+    for (int remaining = attempts - 1; remaining >= 0; --remaining) {
+        rc = cib->cmds->signon(cib, crm_system_name, type);
+
+        if ((rc == pcmk_rc_ok)
+            || (remaining == 0)
+            || ((errno != EAGAIN) && (errno != EALREADY))) {
+            break;
+        }
+
+        // Retry after soft error (interrupted by signal, etc.)
+        pcmk__sleep_ms((attempts - remaining) * 500);
+        crm_debug("Re-attempting connection to CIB manager (%d attempt%s remaining)",
+                  remaining, pcmk__plural_s(remaining));
+    }
+
     return rc;
 }
 

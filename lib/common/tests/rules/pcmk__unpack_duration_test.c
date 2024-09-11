@@ -66,14 +66,12 @@ no_id(void **state)
     xmlNode *duration = pcmk__xml_parse(NO_ID);
     crm_time_t *start = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *end = NULL;
-    crm_time_t *reference = crm_time_new("2025-03-21 16:01:01");
 
-    assert_int_equal(pcmk__unpack_duration(duration, start, &end), pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(end, reference), 0);
+    assert_int_equal(pcmk__unpack_duration(duration, start, &end),
+                     pcmk_rc_unpack_error);
+    assert_null(end);
 
     crm_time_free(start);
-    crm_time_free(end);
-    crm_time_free(reference);
     pcmk__xml_free(duration);
 }
 
@@ -83,15 +81,12 @@ years_invalid(void **state)
     xmlNode *duration = pcmk__xml_parse(YEARS_INVALID);
     crm_time_t *start = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *end = NULL;
-    crm_time_t *reference = crm_time_new("2024-03-21 16:01:01");
 
     assert_int_equal(pcmk__unpack_duration(duration, start, &end),
                      pcmk_rc_unpack_error);
-    assert_int_equal(crm_time_compare(end, reference), 0);
+    assert_null(end);
 
     crm_time_free(start);
-    crm_time_free(end);
-    crm_time_free(reference);
     pcmk__xml_free(duration);
 }
 

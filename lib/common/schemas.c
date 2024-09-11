@@ -59,29 +59,29 @@ static int
 xml_latest_schema_index(void)
 {
     /* This function assumes that pcmk__schema_init() has been called
-     * beforehand, so we have at least three schemas (one real schema, the
-     * "pacemaker-next" schema, and the "none" schema).
+     * beforehand, so we have at least two schemas (one real schema and the
+     * "none" schema).
      *
-     * @COMPAT: pacemaker-next is deprecated since 2.1.5 and none since 2.1.8.
-     * Update this when we drop those.
+     * @COMPAT: The "none" schema is deprecated since 2.1.8.
+     * Update this when we drop that schema.
      */
-    return g_list_length(known_schemas) - 3;
+    return g_list_length(known_schemas) - 2;
 }
 
 /*!
  * \internal
  * \brief Return the schema entry of the highest-versioned schema
  *
- * \return Schema entry of highest-versioned schema (or NULL on error)
+ * \return Schema entry of highest-versioned schema
  */
 static GList *
 get_highest_schema(void)
 {
-    /* The highest numerically versioned schema is the one before pacemaker-next
+    /* The highest numerically versioned schema is the one before none
      *
-     * @COMPAT pacemaker-next is deprecated since 2.1.5
+     * @COMPAT none is deprecated since 2.1.8
      */
-    GList *entry = pcmk__get_schema("pacemaker-next");
+    GList *entry = pcmk__get_schema("none");
 
     CRM_ASSERT((entry != NULL) && (entry->prev != NULL));
     return entry->prev;
@@ -215,14 +215,11 @@ schema_cmp_directory(const struct dirent **a, const struct dirent **b)
 /*!
  * \internal
  * \brief Add given schema + auxiliary data to internal bookkeeping.
- *
- * \note When providing \p version, should not be called directly but
- *       through \c add_schema_by_version.
  */
 static void
-add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *version,
-           const char *name, const char *transform,
-           const char *transform_enter, bool transform_onleave)
+add_schema(enum pcmk__schema_validator validator,
+           const pcmk__schema_version_t *version, const char *name,
+           GList *transforms)
 {
     pcmk__schema_t *schema = NULL;
 
@@ -231,7 +228,7 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
     schema->validator = validator;
     schema->version.v[0] = version->v[0];
     schema->version.v[1] = version->v[1];
-    schema->transform_onleave = transform_onleave;
+    schema->transforms = transforms;
     // schema->schema_index is set after all schemas are loaded and sorted
 
     if (version->v[0] || version->v[1]) {
@@ -240,112 +237,7 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
         schema->name = pcmk__str_copy(name);
     }
 
-    if (transform) {
-        schema->transform = pcmk__str_copy(transform);
-    }
-
-    if (transform_enter) {
-        schema->transform_enter = pcmk__str_copy(transform_enter);
-    }
-
     known_schemas = g_list_prepend(known_schemas, schema);
-}
-
-/*!
- * \internal
- * \brief Add version-specified schema + auxiliary data to internal bookkeeping.
- * \return Standard Pacemaker return value (the only possible values are
- * \c ENOENT when no upgrade schema is associated, or \c pcmk_rc_ok otherwise.
- *
- * \note There's no reliance on the particular order of schemas entering here.
- *
- * \par A bit of theory
- * We track 3 XSLT stylesheets that differ per usage:
- * - "upgrade":
- *   . sparsely spread over the sequence of all available schemas,
- *     as they are only relevant when major version of the schema
- *     is getting bumped -- in that case, it MUST be set
- *   . name convention:  upgrade-X.Y.xsl
- * - "upgrade-enter":
- *   . may only accompany "upgrade" occurrence, but doesn't need to
- *     be present anytime such one is, i.e., it MAY not be set when
- *     "upgrade" is
- *   . name convention:  upgrade-X.Y-enter.xsl,
- *     when not present: upgrade-enter.xsl
- * - "upgrade-leave":
- *   . like "upgrade-enter", but SHOULD be present whenever
- *     "upgrade-enter" is (and vice versa, but that's only
- *     to prevent confusion based on observing the files,
- *     it would get ignored regardless)
- *   . name convention:  (see "upgrade-enter")
- */
-static int
-add_schema_by_version(const pcmk__schema_version_t *version, bool transform_expected)
-{
-    bool transform_onleave = FALSE;
-    int rc = pcmk_rc_ok;
-    struct stat s;
-    char *xslt = NULL,
-         *transform_upgrade = NULL,
-         *transform_enter = NULL;
-
-    /* prologue for further transform_expected handling */
-    if (transform_expected) {
-        /* check if there's suitable "upgrade" stylesheet */
-        transform_upgrade = schema_strdup_printf("upgrade-", *version, );
-        xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
-                                       transform_upgrade);
-    }
-
-    if (!transform_expected) {
-        /* jump directly to the end */
-
-    } else if (stat(xslt, &s) == 0) {
-        /* perhaps there's also a targeted "upgrade-enter" stylesheet */
-        transform_enter = schema_strdup_printf("upgrade-", *version, "-enter");
-        free(xslt);
-        xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
-                                       transform_enter);
-        if (stat(xslt, &s) != 0) {
-            /* or initially, at least a generic one */
-            crm_debug("Upgrade-enter transform %s.xsl not found", xslt);
-            free(xslt);
-            free(transform_enter);
-            transform_enter = strdup("upgrade-enter");
-            xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
-                                           transform_enter);
-            if (stat(xslt, &s) != 0) {
-                crm_debug("Upgrade-enter transform %s.xsl not found, either", xslt);
-                free(xslt);
-                xslt = NULL;
-            }
-        }
-        /* xslt contains full path to "upgrade-enter" stylesheet */
-        if (xslt != NULL) {
-            /* then there should be "upgrade-leave" counterpart (enter->leave) */
-            memcpy(strrchr(xslt, '-') + 1, "leave", sizeof("leave") - 1);
-            transform_onleave = (stat(xslt, &s) == 0);
-            free(xslt);
-        } else {
-            free(transform_enter);
-            transform_enter = NULL;
-        }
-
-    } else {
-        crm_err("Upgrade transform %s not found", xslt);
-        free(xslt);
-        free(transform_upgrade);
-        transform_upgrade = NULL;
-        rc = ENOENT;
-    }
-
-    add_schema(pcmk__schema_validator_rng, version, NULL,
-               transform_upgrade, transform_enter, transform_onleave);
-
-    free(transform_upgrade);
-    free(transform_enter);
-
-    return rc;
 }
 
 static void
@@ -380,11 +272,99 @@ wrap_libxslt(bool finalize)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether a directory entry matches the upgrade XSLT pattern
+ *
+ * \param[in] entry  Directory entry whose filename to check
+ *
+ * \return 1 if the entry's filename is of the form
+ *         <tt>upgrade-X.Y-ORDER.xsl</tt>, or 0 otherwise
+ */
+static int
+transform_filter(const struct dirent *entry)
+{
+    return pcmk__str_eq(entry->d_name,
+                        "upgrade-[[:digit:]]+.[[:digit:]]+-[[:digit:]]+.xsl",
+                        pcmk__str_regex)? 1 : 0;
+}
+
+/*!
+ * \internal
+ * \brief Free a list of XSLT transform <tt>struct dirent</tt> objects
+ *
+ * \param[in,out] data  List to free
+ */
+static void
+free_transform_list(void *data)
+{
+    g_list_free_full((GList *) data, free);
+}
+
+/*!
+ * \internal
+ * \brief Load names of upgrade XSLT stylesheets from a directory into a table
+ *
+ * Stylesheets must have names of the form "upgrade-X.Y-order.xsl", where:
+ * * X is the schema major version
+ * * Y is the schema minor version
+ * * ORDER is the order in which the stylesheet occurs in the transform pipeline
+ *
+ * \param[in] dir  Directory containing XSLT stylesheets
+ *
+ * \return Table with schema version as key and \c GList of associated transform
+ *         files (as <tt>struct dirent</tt>) as value
+ */
+static GHashTable *
+load_transforms_from_dir(const char *dir)
+{
+    struct dirent **namelist = NULL;
+    int num_matches = scandir(dir, &namelist, transform_filter, versionsort);
+    GHashTable *transforms = pcmk__strkey_table(free, free_transform_list);
+
+    for (int i = 0; i < num_matches; i++) {
+        pcmk__schema_version_t version = SCHEMA_ZERO;
+        int order = 0;  // Placeholder only
+
+        if (sscanf(namelist[i]->d_name, "upgrade-%hhu.%hhu-%d.xsl",
+                   &(version.v[0]), &(version.v[1]), &order) == 3) {
+
+            char *version_s = crm_strdup_printf("%hhu.%hhu",
+                                                version.v[0], version.v[1]);
+            GList *list = g_hash_table_lookup(transforms, version_s);
+
+            if (list == NULL) {
+                /* Prepend is more efficient. However, there won't be many of
+                 * these, and we want them to remain sorted by version. It's not
+                 * worth reversing all the lists at the end.
+                 *
+                 * Avoid calling g_hash_table_insert() if the list already
+                 * exists. Otherwise free_transform_list() gets called on it.
+                 */
+                list = g_list_append(list, namelist[i]);
+                g_hash_table_insert(transforms, version_s, list);
+
+            } else {
+                list = g_list_append(list, namelist[i]);
+                free(version_s);
+            }
+
+        } else {
+            // Sanity only, should never happen thanks to transform_filter()
+            free(namelist[i]);
+        }
+    }
+
+    free(namelist);
+    return transforms;
+}
+
 void
 pcmk__load_schemas_from_dir(const char *dir)
 {
     int lpc, max;
     struct dirent **namelist = NULL;
+    GHashTable *transforms = NULL;
 
     max = scandir(dir, &namelist, schema_filter, schema_cmp_directory);
     if (max < 0) {
@@ -392,27 +372,34 @@ pcmk__load_schemas_from_dir(const char *dir)
         return;
     }
 
+    // Look for any upgrade transforms in the same directory
+    transforms = load_transforms_from_dir(dir);
+
     for (lpc = 0; lpc < max; lpc++) {
-        bool transform_expected = false;
         pcmk__schema_version_t version = SCHEMA_ZERO;
 
-        if (!version_from_filename(namelist[lpc]->d_name, &version)) {
+        if (version_from_filename(namelist[lpc]->d_name, &version)) {
+            char *version_s = crm_strdup_printf("%hhu.%hhu",
+                                                version.v[0], version.v[1]);
+            char *orig_key = NULL;
+            GList *transform_list = NULL;
+
+            // The schema becomes the owner of transform_list
+            g_hash_table_lookup_extended(transforms, version_s,
+                                         (gpointer *) &orig_key,
+                                         (gpointer *) &transform_list);
+            g_hash_table_steal(transforms, version_s);
+
+            add_schema(pcmk__schema_validator_rng, &version, NULL,
+                       transform_list);
+
+            free(version_s);
+            free(orig_key);
+
+        } else {
             // Shouldn't be possible, but makes static analysis happy
             crm_warn("Skipping schema '%s': could not parse version",
                      namelist[lpc]->d_name);
-            continue;
-        }
-        if ((lpc + 1) < max) {
-            pcmk__schema_version_t next_version = SCHEMA_ZERO;
-
-            if (version_from_filename(namelist[lpc+1]->d_name, &next_version)
-                    && (version.v[0] < next_version.v[0])) {
-                transform_expected = true;
-            }
-        }
-
-        if (add_schema_by_version(&version, transform_expected) != pcmk_rc_ok) {
-            break;
         }
     }
 
@@ -421,6 +408,7 @@ pcmk__load_schemas_from_dir(const char *dir)
     }
 
     free(namelist);
+    g_hash_table_destroy(transforms);
 }
 
 static gint
@@ -429,16 +417,10 @@ schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
     const pcmk__schema_t *schema_a = a;
     const pcmk__schema_t *schema_b = b;
 
-    // @COMPAT pacemaker-next is deprecated since 2.1.5 and none since 2.1.8
-    if (pcmk__str_eq(schema_a->name, "pacemaker-next", pcmk__str_none)) {
-        if (pcmk__str_eq(schema_b->name, PCMK_VALUE_NONE, pcmk__str_none)) {
-            return -1;
-        } else {
-            return 1;
-        }
-    } else if (pcmk__str_eq(schema_a->name, PCMK_VALUE_NONE, pcmk__str_none)) {
+    // @COMPAT The "none" schema is deprecated since 2.1.8
+    if (pcmk__str_eq(schema_a->name, PCMK_VALUE_NONE, pcmk__str_none)) {
         return 1;
-    } else if (pcmk__str_eq(schema_b->name, "pacemaker-next", pcmk__str_none)) {
+    } else if (pcmk__str_eq(schema_b->name, PCMK_VALUE_NONE, pcmk__str_none)) {
         return -1;
     } else {
         return schema_cmp(schema_a->version, schema_b->version);
@@ -448,7 +430,7 @@ schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
 /*!
  * \internal
  * \brief Sort the list of known schemas such that all pacemaker-X.Y are in
- *        version order, then pacemaker-next, then none
+ *        version order, then "none"
  *
  * This function should be called whenever additional schemas are loaded using
  * \c pcmk__load_schemas_from_dir(), after the initial sets in
@@ -484,13 +466,8 @@ pcmk__schema_init(void)
         pcmk__load_schemas_from_dir(remote_schema_dir);
         free(base);
 
-        // @COMPAT: Deprecated since 2.1.5
-        add_schema(pcmk__schema_validator_rng, &zero, "pacemaker-next", NULL,
-                   NULL, FALSE);
-
         // @COMPAT Deprecated since 2.1.8
-        add_schema(pcmk__schema_validator_none, &zero, PCMK_VALUE_NONE, NULL,
-                   NULL, FALSE);
+        add_schema(pcmk__schema_validator_none, &zero, PCMK_VALUE_NONE, NULL);
 
         /* add_schema() prepends items to the list, so in the simple case, this
          * just reverses the list. However if there were any remote schemas,
@@ -502,12 +479,7 @@ pcmk__schema_init(void)
         for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
             pcmk__schema_t *schema = iter->data;
 
-            if (schema->transform == NULL) {
-                crm_debug("Loaded schema %d: %s", schema_index, schema->name);
-            } else {
-                crm_debug("Loaded schema %d: %s (upgrades with %s.xsl)",
-                          schema_index, schema->name, schema->transform);
-            }
+            crm_debug("Loaded schema %d: %s", schema_index, schema->name);
             schema->schema_index = schema_index++;
         }
     }
@@ -631,8 +603,7 @@ free_schema(gpointer data)
     }
 
     free(schema->name);
-    free(schema->transform);
-    free(schema->transform_enter);
+    g_list_free_full(schema->transforms, free);
     free(schema);
 }
 
@@ -670,7 +641,7 @@ pcmk__get_schema(const char *name)
     for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
         pcmk__schema_t *schema = iter->data;
 
-        if (pcmk__str_eq(name, schema->name, pcmk__str_casei)) {
+        if (pcmk__str_eq(name, schema->name, pcmk__str_none)) {
             return iter;
         }
     }
@@ -985,6 +956,9 @@ apply_transformation(const xmlNode *xml, const char *transform,
     xslt = xsltParseStylesheetFile((pcmkXmlStr) xform);
     CRM_CHECK(xslt != NULL, goto cleanup);
 
+    /* Caller allocates private data for final result document. Intermediate
+     * result documents are temporary and don't need private data.
+     */
     res = xsltApplyStylesheet(xslt, xml->doc, NULL);
     CRM_CHECK(res != NULL, goto cleanup);
 
@@ -1006,11 +980,7 @@ apply_transformation(const xmlNode *xml, const char *transform,
  * \internal
  * \brief Perform all transformations needed to upgrade XML to next schema
  *
- * A schema upgrade can require up to three XSL transformations: an "enter"
- * transform, the main upgrade transform, and a "leave" transform. Perform
- * all needed transforms to upgrade given XML to the next schema.
- *
- * \param[in] original_xml  XML to transform
+ * \param[in] input_xml     XML to transform
  * \param[in] schema_index  Index of schema that successfully validates
  *                          \p original_xml
  * \param[in] to_logs       If false, certain validation errors will be sent to
@@ -1019,16 +989,14 @@ apply_transformation(const xmlNode *xml, const char *transform,
  * \return XML result of schema transforms if successful, otherwise NULL
  */
 static xmlNode *
-apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
+apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
 {
     pcmk__schema_t *schema = g_list_nth_data(known_schemas, schema_index);
     pcmk__schema_t *upgraded_schema = g_list_nth_data(known_schemas,
                                                       schema_index + 1);
-    bool transform_onleave = false;
-    char *transform_leave;
-    const xmlNode *xml = original_xml;
-    xmlNode *upgrade = NULL;
-    xmlNode *final = NULL;
+
+    xmlNode *old_xml = NULL;
+    xmlNode *new_xml = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = NULL;
 
     CRM_ASSERT((schema != NULL) && (upgraded_schema != NULL));
@@ -1037,71 +1005,41 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
         error_handler = (xmlRelaxNGValidityErrorFunc) xml_log;
     }
 
-    transform_onleave = schema->transform_onleave;
-    if (schema->transform_enter != NULL) {
-        crm_debug("Upgrading schema from %s to %s: "
-                  "applying pre-upgrade XSL transform %s",
-                  schema->name, upgraded_schema->name, schema->transform_enter);
-        upgrade = apply_transformation(xml, schema->transform_enter, to_logs);
-        if (upgrade == NULL) {
-            crm_warn("Pre-upgrade XSL transform %s failed, "
-                     "will skip post-upgrade transform",
-                     schema->transform_enter);
-            transform_onleave = FALSE;
-        } else {
-            xml = upgrade;
+    for (GList *iter = schema->transforms; iter != NULL; iter = iter->next) {
+        const struct dirent *entry = iter->data;
+        const char *transform = entry->d_name;
+
+        crm_debug("Upgrading schema from %s to %s: applying XSL transform %s",
+                  schema->name, upgraded_schema->name, transform);
+
+        new_xml = apply_transformation(input_xml, transform, to_logs);
+        pcmk__xml_free(old_xml);
+
+        if (new_xml == NULL) {
+            crm_err("XSL transform %s failed, aborting upgrade", transform);
+            return NULL;
         }
+        input_xml = new_xml;
+        old_xml = new_xml;
     }
 
-
-    crm_debug("Upgrading schema from %s to %s: "
-              "applying upgrade XSL transform %s",
-              schema->name, upgraded_schema->name, schema->transform);
-    final = apply_transformation(xml, schema->transform, to_logs);
-    if (upgrade != xml) {
-        pcmk__xml_free(upgrade);
-        upgrade = NULL;
-    }
-
-    if ((final != NULL) && transform_onleave) {
-        upgrade = final;
-        /* following condition ensured in add_schema_by_version */
-        CRM_ASSERT(schema->transform_enter != NULL);
-        transform_leave = strdup(schema->transform_enter);
-        /* enter -> leave */
-        memcpy(strrchr(transform_leave, '-') + 1, "leave", sizeof("leave") - 1);
-        crm_debug("Upgrading schema from %s to %s: "
-                  "applying post-upgrade XSL transform %s",
-                  schema->name, upgraded_schema->name, transform_leave);
-        final = apply_transformation(upgrade, transform_leave, to_logs);
-        if (final == NULL) {
-            crm_warn("Ignoring failure of post-upgrade XSL transform %s",
-                     transform_leave);
-            final = upgrade;
-        } else {
-            pcmk__xml_free(upgrade);
-        }
-        free(transform_leave);
-    }
-
-    if (final == NULL) {
-        return NULL;
-    }
+    // Final result document from upgrade pipeline needs private data
+    pcmk__xml_new_private_data((xmlNode *) new_xml->doc);
 
     // Ensure result validates with its new schema
-    if (!validate_with(final, upgraded_schema, error_handler,
+    if (!validate_with(new_xml, upgraded_schema, error_handler,
                        GUINT_TO_POINTER(LOG_ERR))) {
         crm_err("Schema upgrade from %s to %s failed: "
-                "XSL transform %s produced an invalid configuration",
-                schema->name, upgraded_schema->name, schema->transform);
-        crm_log_xml_debug(final, "bad-transform-result");
-        pcmk__xml_free(final);
+                "XSL transform pipeline produced an invalid configuration",
+                schema->name, upgraded_schema->name);
+        crm_log_xml_debug(new_xml, "bad-transform-result");
+        pcmk__xml_free(new_xml);
         return NULL;
     }
 
     crm_info("Schema upgrade from %s to %s succeeded",
              schema->name, upgraded_schema->name);
-    return final;
+    return new_xml;
 }
 
 /*!
@@ -1204,7 +1142,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
             break; // No further transformations possible
         }
 
-        if (!transform || (current_schema->transform == NULL)
+        if (!transform || (current_schema->transforms == NULL)
             || validate_with_silent(*xml, entry->next->data)) {
             /* The next schema either doesn't require a transform or validates
              * successfully even without the transform. Skip the transform and
@@ -1239,6 +1177,12 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
     return rc;
 }
 
+int
+pcmk_update_configured_schema(xmlNode **xml)
+{
+    return pcmk__update_configured_schema(xml, true);
+}
+
 /*!
  * \brief Update XML from its configured schema to the latest major series
  *
@@ -1249,7 +1193,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
  * \return Standard Pacemaker return code
  */
 int
-pcmk_update_configured_schema(xmlNode **xml, bool to_logs)
+pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
 {
     int rc = pcmk_rc_ok;
     char *original_schema_name = NULL;
@@ -1399,32 +1343,20 @@ pcmk__schema_files_later_than(const char *name)
     for (GList *iter = g_list_nth(known_schemas, xml_latest_schema_index());
          iter != NULL; iter = iter->prev) {
         pcmk__schema_t *schema = iter->data;
-        char *s = NULL;
 
         if (schema_cmp(ver, schema->version) != -1) {
             continue;
         }
 
-        s = crm_strdup_printf("%s.rng", schema->name);
-        lst = g_list_prepend(lst, s);
+        for (GList *iter2 = g_list_last(schema->transforms); iter2 != NULL;
+             iter2 = iter2->prev) {
 
-        if (schema->transform != NULL) {
-            char *xform = crm_strdup_printf("%s.xsl", schema->transform);
-            lst = g_list_prepend(lst, xform);
+            const struct dirent *entry = iter2->data;
+
+            lst = g_list_prepend(lst, pcmk__str_copy(entry->d_name));
         }
 
-        if (schema->transform_enter != NULL) {
-            char *enter = crm_strdup_printf("%s.xsl", schema->transform_enter);
-
-            lst = g_list_prepend(lst, enter);
-
-            if (schema->transform_onleave) {
-                int last_dash = strrchr(enter, '-') - enter;
-                char *leave = crm_strdup_printf("%.*s-leave.xsl", last_dash, enter);
-
-                lst = g_list_prepend(lst, leave);
-            }
-        }
+        lst = g_list_prepend(lst, crm_strdup_printf("%s.rng", schema->name));
     }
 
     return lst;
@@ -1583,8 +1515,8 @@ pcmk__remote_schema_dir(void)
 void
 pcmk__warn_if_schema_deprecated(const char *schema)
 {
-    if ((schema == NULL) ||
-        pcmk__strcase_any_of(schema, "pacemaker-next", PCMK_VALUE_NONE, NULL)) {
+    if (pcmk__str_eq(schema, PCMK_VALUE_NONE,
+                     pcmk__str_none|pcmk__str_null_matches)) {
         pcmk__config_warn("Support for " PCMK_XA_VALIDATE_WITH "='%s' is "
                           "deprecated and will be removed in a future release "
                           "without the possibility of upgrades (manually edit "
@@ -1600,7 +1532,7 @@ pcmk__warn_if_schema_deprecated(const char *schema)
 gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
-    int rc = pcmk_update_configured_schema(xml, to_logs);
+    int rc = pcmk__update_configured_schema(xml, to_logs);
 
     if (best_version != NULL) {
         const char *name = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);

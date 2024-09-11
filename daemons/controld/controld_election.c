@@ -19,19 +19,16 @@
 
 #include <pacemaker-controld.h>
 
-static election_t *fsa_election = NULL;
-
-static gboolean
-election_win_cb(gpointer data)
+static void
+election_win_cb(pcmk_cluster_t *cluster)
 {
     register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
-    return FALSE;
 }
 
 void
-controld_election_init(const char *uname)
+controld_election_init(void)
 {
-    fsa_election = election_init("DC", uname, 60000 /*60s*/, election_win_cb);
+    election_init(controld_globals.cluster, election_win_cb);
 }
 
 /*!
@@ -47,33 +44,26 @@ controld_configure_election(GHashTable *options)
     guint interval_ms = 0U;
 
     pcmk_parse_interval_spec(value, &interval_ms);
-    election_timeout_set_period(fsa_election, interval_ms);
+    election_timeout_set_period(controld_globals.cluster, interval_ms);
 }
 
 void
 controld_remove_voter(const char *uname)
 {
-    election_remove(fsa_election, uname);
+    election_remove(controld_globals.cluster, uname);
 
     if (pcmk__str_eq(uname, controld_globals.dc_name, pcmk__str_casei)) {
         /* Clear any election dampening in effect. Otherwise, if the lost DC had
          * just won, an immediate new election could fizzle out with no new DC.
          */
-        election_clear_dampening(fsa_election);
+        election_clear_dampening(controld_globals.cluster);
     }
-}
-
-void
-controld_election_fini(void)
-{
-    election_fini(fsa_election);
-    fsa_election = NULL;
 }
 
 void
 controld_stop_current_election_timeout(void)
 {
-    election_timeout_stop(fsa_election);
+    election_timeout_stop(controld_globals.cluster);
 }
 
 /*	A_ELECTION_VOTE	*/
@@ -119,7 +109,7 @@ do_election_vote(long long action,
         return;
     }
 
-    election_vote(fsa_election);
+    election_vote(controld_globals.cluster);
     return;
 }
 
@@ -130,7 +120,7 @@ do_election_check(long long action,
                   enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (controld_globals.fsa_state == S_ELECTION) {
-        election_check(fsa_election);
+        election_check(controld_globals.cluster);
     } else {
         crm_debug("Ignoring election check because we are not in an election");
     }
@@ -153,10 +143,11 @@ do_election_count_vote(long long action,
         return;
     }
 
-    rc = election_count_vote(fsa_election, vote->msg, cur_state != S_STARTING);
+    rc = election_count_vote(controld_globals.cluster, vote->msg,
+                             (cur_state != S_STARTING));
     switch(rc) {
         case election_start:
-            election_reset(fsa_election);
+            election_reset(controld_globals.cluster);
             register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
             break;
 
@@ -221,7 +212,7 @@ do_dc_takeover(long long action,
     controld_set_fsa_input_flags(R_THE_DC);
     execute_stonith_cleanup();
 
-    election_reset(fsa_election);
+    election_reset(controld_globals.cluster);
     controld_set_fsa_input_flags(R_JOIN_OK|R_INVOKE_PE);
 
     controld_globals.cib_conn->cmds->set_primary(controld_globals.cib_conn,
@@ -269,9 +260,7 @@ do_dc_release(long long action,
         crm_info("DC role released");
         if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
-            pcmk__node_status_t *node =
-                pcmk__get_node(0, controld_globals.our_nodename,
-                               NULL, pcmk__node_search_cluster_member);
+            pcmk__node_status_t *node = controld_get_local_node_status();
 
             pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
             update = create_node_state_update(node, node_update_expected, NULL,

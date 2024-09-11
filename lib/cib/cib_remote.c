@@ -432,6 +432,10 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     cib_remote_opaque_t *private = cib->variant_opaque;
     xmlNode *hello = NULL;
 
+    if (name == NULL) {
+        name = pcmk__s(crm_system_name, "client");
+    }
+
     if (private->passwd == NULL) {
         if (private->out == NULL) {
             /* If no pcmk__output_t is set, just assume that a text prompt
@@ -520,14 +524,6 @@ cib_remote_free(cib_t *cib)
 }
 
 static int
-cib_remote_inputfd(cib_t * cib)
-{
-    cib_remote_opaque_t *private = cib->variant_opaque;
-
-    return private->callback.tcp_socket;
-}
-
-static int
 cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
 {
     xmlNode *notify_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
@@ -613,8 +609,6 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib->cmds->signon = cib_remote_signon;
     cib->cmds->signoff = cib_remote_signoff;
     cib->cmds->free = cib_remote_free;
-    cib->cmds->inputfd = cib_remote_inputfd; // Deprecated method
-
     cib->cmds->register_notification = cib_remote_register_notification;
     cib->cmds->set_connection_dnotify = cib_remote_set_connection_dnotify;
 

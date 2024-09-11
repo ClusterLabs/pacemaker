@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2023 the Pacemaker project contributors
+# Copyright 2012-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -26,8 +26,10 @@ libcrmservice_la_LIBADD		= $(top_builddir)/lib/common/libcrmcommon.la \
 ## Library sources (*must* use += format for bumplibs)
 libcrmservice_la_SOURCES	= services.c
 libcrmservice_la_SOURCES	+= services_linux.c
-libcrmservice_la_SOURCES	+= services_lsb.c
 libcrmservice_la_SOURCES	+= services_ocf.c
+if BUILD_LSB
+libcrmservice_la_SOURCES	+= services_lsb.c
+endif
 if BUILD_DBUS
 libcrmservice_la_SOURCES	+= dbus.c
 endif

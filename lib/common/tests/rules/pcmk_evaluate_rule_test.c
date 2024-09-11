@@ -69,12 +69,11 @@ null_invalid(void **state)
 static void
 id_missing(void **state)
 {
-    // Currently acceptable
     xmlNode *xml = pcmk__xml_parse(RULE_OP_MISSING_ID);
     crm_time_t *next_change = crm_time_new_undefined();
 
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, next_change),
-                     pcmk_rc_ok);
+                     pcmk_rc_unpack_error);
 
     crm_time_free(next_change);
     pcmk__xml_free(xml);
@@ -149,11 +148,10 @@ empty_and(void **state)
 static void
 empty_or(void **state)
 {
-    // Currently treated as unsatisfied
     xmlNode *xml = pcmk__xml_parse(RULE_EMPTY_OR);
 
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
-                     pcmk_rc_op_unsatisfied);
+                     pcmk_rc_ok);
 
     pcmk__xml_free(xml);
 }
@@ -192,11 +190,10 @@ default_boolean_op(void **state)
 static void
 invalid_boolean_op(void **state)
 {
-    // Currently defaults to PCMK_VALUE_AND
     xmlNode *xml = pcmk__xml_parse(RULE_INVALID_BOOLEAN_OP);
 
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
-                     pcmk_rc_op_unsatisfied);
+                     pcmk_rc_unpack_error);
 
     pcmk__xml_free(xml);
 }

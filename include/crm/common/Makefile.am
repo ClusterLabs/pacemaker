@@ -25,8 +25,10 @@ header_HEADERS = acl.h 			\
 		 mainloop.h 		\
 		 nodes.h 		\
 		 nvpair.h 		\
+		 nvpair_compat.h 	\
 		 options.h 		\
 		 output.h 		\
+		 probes.h 		\
 		 resources.h		\
 		 results.h 		\
 		 roles.h		\
@@ -35,6 +37,7 @@ header_HEADERS = acl.h 			\
 		 scheduler_types.h	\
 		 schemas.h		\
 		 scores.h		\
+		 strings.h		\
 		 util.h 		\
 		 util_compat.h 		\
 		 xml.h 			\

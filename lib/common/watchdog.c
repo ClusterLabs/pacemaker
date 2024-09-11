@@ -22,25 +22,62 @@
 
 static pid_t sbd_pid = 0;
 
+/*!
+ * \internal
+ * \brief Trigger a sysrq command if supported on current platform
+ *
+ * \param[in] t  Sysrq command to trigger
+ */
 static void
 sysrq_trigger(char t)
 {
 #if HAVE_LINUX_PROCFS
-    FILE *procf;
-
     // Root can always write here, regardless of kernel.sysrq value
-    procf = fopen("/proc/sysrq-trigger", "a");
-    if (!procf) {
-        crm_perror(LOG_WARNING, "Opening sysrq-trigger failed");
-        return;
+    FILE *procf = fopen("/proc/sysrq-trigger", "a");
+
+    if (procf == NULL) {
+        crm_warn("Could not open sysrq-trigger: %s", strerror(errno));
+    } else {
+        fprintf(procf, "%c\n", t);
+        fclose(procf);
     }
-    crm_info("sysrq-trigger: %c", t);
-    fprintf(procf, "%c\n", t);
-    fclose(procf);
 #endif // HAVE_LINUX_PROCFS
-    return;
 }
 
+/*!
+ * \internal
+ * \brief Tell pacemakerd to panic the local host
+ *
+ * \param[in] ppid  Process ID of parent process
+ */
+static void
+panic_local_nonroot(pid_t ppid)
+{
+    if (ppid > 1) { // pacemakerd is still our parent
+        crm_emerg("Escalating panic to " PCMK__SERVER_PACEMAKERD "[%lld]",
+                  (long long) ppid);
+    } else { // Signal (non-parent) pacemakerd if possible
+#if HAVE_LINUX_PROCFS
+        ppid = pcmk__procfs_pid_of(PCMK__SERVER_PACEMAKERD);
+        if (ppid > 0) {
+            union sigval signal_value;
+
+            crm_emerg("Signaling " PCMK__SERVER_PACEMAKERD "[%lld] to panic",
+                      (long long) ppid);
+            memset(&signal_value, 0, sizeof(signal_value));
+            if (sigqueue(ppid, SIGQUIT, signal_value) < 0) {
+                crm_emerg("Exiting after signal failure: %s", strerror(errno));
+            }
+        } else {
+#endif
+            crm_emerg("Exiting with no known " PCMK__SERVER_PACEMAKERD
+                      "process");
+#if HAVE_LINUX_PROCFS
+        }
+#endif
+    }
+    crm_exit(CRM_EX_PANIC);
+}
 
 /*!
  * \internal
@@ -49,80 +86,49 @@ sysrq_trigger(char t)
 static void
 panic_local(void)
 {
-    int rc = pcmk_ok;
-    uid_t uid = geteuid();
-    pid_t ppid = getppid();
-    const char *panic_action = pcmk__env_option(PCMK__ENV_PANIC_ACTION);
+    const char *full_panic_action = pcmk__env_option(PCMK__ENV_PANIC_ACTION);
+    const char *panic_action = full_panic_action;
+    int reboot_cmd = RB_AUTOBOOT; // Default panic action is reboot
 
-    // Default panic action is to reboot
-    char sysrq = 'b';
-    int reboot_cmd = RB_AUTOBOOT;
-
-    if(uid != 0 && ppid > 1) {
-        /* We're a non-root pacemaker daemon (pacemaker-based,
-         * pacemaker-controld, pacemaker-schedulerd, pacemaker-attrd, etc.) with
-         * the original pacemakerd parent.
-         *
-         * Of these, only the controller is likely to be initiating resets.
-         */
-        crm_emerg("Signaling parent %lld to panic", (long long) ppid);
-        crm_exit(CRM_EX_PANIC);
-        return;
-
-    } else if (uid != 0) {
-#if HAVE_LINUX_PROCFS
-        /*
-         * No permissions, and no pacemakerd parent to escalate to.
-         * Track down the new pacemakerd process and send a signal instead.
-         */
-        union sigval signal_value;
-
-        memset(&signal_value, 0, sizeof(signal_value));
-        ppid = pcmk__procfs_pid_of("pacemakerd");
-        crm_emerg("Signaling pacemakerd[%lld] to panic", (long long) ppid);
-
-        if(ppid > 1 && sigqueue(ppid, SIGQUIT, signal_value) < 0) {
-            crm_perror(LOG_EMERG, "Cannot signal pacemakerd[%lld] to panic",
-                       (long long) ppid);
-        }
-#endif // HAVE_LINUX_PROCFS
-
-        /* The best we can do now is die */
-        crm_exit(CRM_EX_PANIC);
+    if (geteuid() != 0) { // Non-root caller such as the controller
+        panic_local_nonroot(getppid());
         return;
     }
 
-    /* We're either pacemakerd, or a pacemaker daemon running as root */
-
-    if (pcmk__starts_with(panic_action, "sync-")) {
+    if (pcmk__starts_with(full_panic_action, "sync-")) {
+        panic_action += sizeof("sync-") - 1;
         sync();
-        panic_action += strlen("sync-");
-    };
+    }
 
-    if (pcmk__str_eq(panic_action, "crash", pcmk__str_casei)) {
-        sysrq = 'c';
+    if (pcmk__str_empty(full_panic_action)
+        || pcmk__str_eq(panic_action, PCMK_VALUE_REBOOT, pcmk__str_none)) {
+        sysrq_trigger('b');
 
-    } else if (pcmk__str_eq(panic_action, "off", pcmk__str_casei)) {
-        sysrq = 'o';
+    } else if (pcmk__str_eq(panic_action, PCMK_VALUE_CRASH, pcmk__str_none)) {
+        sysrq_trigger('c');
+
+    } else if (pcmk__str_eq(panic_action, PCMK_VALUE_OFF, pcmk__str_none)) {
+        sysrq_trigger('o');
 #ifdef RB_POWER_OFF
         reboot_cmd = RB_POWER_OFF;
 #elif defined(RB_POWEROFF)
         reboot_cmd = RB_POWEROFF;
 #endif
+    } else {
+        crm_warn("Using default '" PCMK_VALUE_REBOOT "' for local option PCMK_"
+                 PCMK__ENV_PANIC_ACTION " because '%s' is not a valid value",
+                 full_panic_action);
+        sysrq_trigger('b');
     }
 
-    sysrq_trigger(sysrq);
+    // sysrq failed or is not supported on this platform, so fall back to reboot
     reboot(reboot_cmd);
-    rc = errno;
 
-    crm_emerg("Reboot failed, escalating to parent %lld: %s " QB_XS " rc=%d",
-              (long long) ppid, pcmk_rc_str(rc), rc);
-
-    if(ppid > 1) {
-        /* child daemon */
+    // Even reboot failed, nothing left to do but exit
+    crm_emerg("Exiting after reboot failed: %s", strerror(errno));
+    if (getppid() > 1) { // pacemakerd is parent process
         crm_exit(CRM_EX_PANIC);
-    } else {
-        /* pacemakerd or orphan child */
+    } else { // This is pacemakerd, or an orphaned subdaemon
         crm_exit(CRM_EX_FATAL);
     }
 }
@@ -137,13 +143,10 @@ panic_sbd(void)
     union sigval signal_value;
     pid_t ppid = getppid();
 
-    crm_emerg("Signaling sbd[%lld] to panic", (long long) sbd_pid);
-
     memset(&signal_value, 0, sizeof(signal_value));
     /* TODO: Arrange for a slightly less brutal option? */
     if(sigqueue(sbd_pid, SIGKILL, signal_value) < 0) {
-        crm_perror(LOG_EMERG, "Cannot signal sbd[%lld] to terminate",
-                   (long long) sbd_pid);
+        crm_emerg("Panicking directly because couldn't signal sbd");
         panic_local();
     }
 
@@ -163,33 +166,18 @@ panic_sbd(void)
  * Panic the local host either by sbd (if running), directly, or by asking
  * pacemakerd. If trace logging this function, exit instead.
  *
- * \param[in] origin   Function caller (for logging only)
+ * \param[in] reason  Why panic is needed (for logging only)
  */
 void
-pcmk__panic(const char *origin)
+pcmk__panic(const char *reason)
 {
-    /* Ensure sbd_pid is set */
-    (void) pcmk__locate_sbd();
-
-    pcmk__if_tracing(
-        {
-            // getppid() == 1 means our original parent no longer exists
-            crm_emerg("Shutting down instead of panicking the node "
-                      QB_XS " origin=%s sbd=%lld parent=%d",
-                      origin, (long long) sbd_pid, getppid());
-            crm_exit(CRM_EX_FATAL);
-            return;
-        },
-        {}
-    );
-
-    if(sbd_pid > 1) {
+    if (pcmk__locate_sbd() > 1) {
         crm_emerg("Signaling sbd[%lld] to panic the system: %s",
-                  (long long) sbd_pid, origin);
+                  (long long) sbd_pid, reason);
         panic_sbd();
 
     } else {
-        crm_emerg("Panicking the system directly: %s", origin);
+        crm_emerg("Panicking the system directly: %s", reason);
         panic_local();
     }
 }
@@ -210,7 +198,7 @@ pcmk__locate_sbd(void)
     }
 
     /* Look for the pid file */
-    pidfile = crm_strdup_printf(PCMK_RUN_DIR "/sbd.pid");
+    pidfile = crm_strdup_printf(PCMK__RUN_DIR "/sbd.pid");
     sbd_path = crm_strdup_printf("%s/sbd", SBIN_DIR);
 
     /* Read the pid file */

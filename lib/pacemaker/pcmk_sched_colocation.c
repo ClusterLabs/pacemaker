@@ -13,6 +13,7 @@
 #include <glib.h>
 
 #include <crm/crm.h>
+#include <crm/common/scheduler.h>
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
@@ -373,23 +374,34 @@ anti_colocation_order(pcmk_resource_t *first_rsc, int first_role,
  * \param[in]     score           Constraint score
  * \param[in,out] dependent       Resource to be colocated
  * \param[in,out] primary         Resource to colocate \p dependent with
- * \param[in]     dependent_role  Current role of \p dependent
- * \param[in]     primary_role    Current role of \p primary
+ * \param[in]     dependent_role_spec  If not NULL, only \p dependent instances
+ *                                     with this role should be colocated
+ * \param[in]     primary_role_spec    If not NULL, only \p primary instances
+ *                                     with this role should be colocated
  * \param[in]     flags           Group of enum pcmk__coloc_flags
  */
 void
 pcmk__new_colocation(const char *id, const char *node_attr, int score,
                      pcmk_resource_t *dependent, pcmk_resource_t *primary,
-                     const char *dependent_role, const char *primary_role,
-                     uint32_t flags)
+                     const char *dependent_role_spec,
+                     const char *primary_role_spec, uint32_t flags)
 {
     pcmk__colocation_t *new_con = NULL;
+    enum rsc_role_e dependent_role = pcmk_role_unknown;
+    enum rsc_role_e primary_role = pcmk_role_unknown;
 
     CRM_CHECK(id != NULL, return);
 
     if ((dependent == NULL) || (primary == NULL)) {
         pcmk__config_err("Ignoring colocation '%s' because resource "
                          "does not exist", id);
+        return;
+    }
+    if ((pcmk__parse_constraint_role(id, dependent_role_spec,
+                                     &dependent_role) != pcmk_rc_ok)
+        || (pcmk__parse_constraint_role(id, primary_role_spec,
+                                        &primary_role) != pcmk_rc_ok)) {
+        // Not possible with schema validation enabled (error already logged)
         return;
     }
 
@@ -401,23 +413,13 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     }
 
     new_con = pcmk__assert_alloc(1, sizeof(pcmk__colocation_t));
-
-    if (pcmk__str_eq(dependent_role, PCMK_ROLE_STARTED,
-                     pcmk__str_null_matches|pcmk__str_casei)) {
-        dependent_role = PCMK__ROLE_UNKNOWN;
-    }
-
-    if (pcmk__str_eq(primary_role, PCMK_ROLE_STARTED,
-                     pcmk__str_null_matches|pcmk__str_casei)) {
-        primary_role = PCMK__ROLE_UNKNOWN;
-    }
-
     new_con->id = id;
     new_con->dependent = dependent;
     new_con->primary = primary;
     new_con->score = score;
-    new_con->dependent_role = pcmk_parse_role(dependent_role);
-    new_con->primary_role = pcmk_parse_role(primary_role);
+    new_con->dependent_role = dependent_role;
+    new_con->primary_role = primary_role;
+
     new_con->node_attribute = pcmk__s(node_attr, CRM_ATTR_UNAME);
     new_con->flags = flags;
 
@@ -426,8 +428,8 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pcmk__add_with_this(&(primary->priv->with_this_colocations), new_con,
                         primary);
 
-    dependent->priv->scheduler->colocation_constraints =
-        g_list_prepend(dependent->priv->scheduler->colocation_constraints,
+    dependent->priv->scheduler->priv->colocation_constraints =
+        g_list_prepend(dependent->priv->scheduler->priv->colocation_constraints,
                        new_con);
 
     if (score <= -PCMK_SCORE_INFINITY) {
@@ -525,8 +527,9 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
              xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             xml_rsc_id = pcmk__xe_id(xml_rsc);
-            resource = pcmk__find_constraint_resource(scheduler->resources,
-                                                      xml_rsc_id);
+            resource =
+                pcmk__find_constraint_resource(scheduler->priv->resources,
+                                               xml_rsc_id);
             if (resource == NULL) {
                 // Should be possible only with validation disabled
                 pcmk__config_err("Ignoring %s and later resources in set %s: "
@@ -564,8 +567,9 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
             xmlNode *xml_rsc_with = NULL;
 
             xml_rsc_id = pcmk__xe_id(xml_rsc);
-            resource = pcmk__find_constraint_resource(scheduler->resources,
-                                                      xml_rsc_id);
+            resource =
+                pcmk__find_constraint_resource(scheduler->priv->resources,
+                                               xml_rsc_id);
             if (resource == NULL) {
                 // Should be possible only with validation disabled
                 pcmk__config_err("Ignoring %s and later resources in set %s: "
@@ -583,8 +587,9 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 if (pcmk__str_eq(resource->id, xml_rsc_id, pcmk__str_none)) {
                     break;
                 }
-                other = pcmk__find_constraint_resource(scheduler->resources,
-                                                       xml_rsc_id);
+                other =
+                    pcmk__find_constraint_resource(scheduler->priv->resources,
+                                                   xml_rsc_id);
                 CRM_ASSERT(other != NULL); // We already processed it
                 pcmk__new_colocation(set_id, NULL, local_score,
                                      resource, other, role, role, flags);
@@ -635,7 +640,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF, NULL, NULL);
         if (xml_rsc != NULL) {
             xml_rsc_id = pcmk__xe_id(xml_rsc);
-            rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
+            rsc_1 = pcmk__find_constraint_resource(scheduler->priv->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
                 // Should be possible only with validation disabled
@@ -657,7 +662,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             xml_rsc_id = pcmk__xe_id(xml_rsc);
         }
-        rsc_2 = pcmk__find_constraint_resource(scheduler->resources,
+        rsc_2 = pcmk__find_constraint_resource(scheduler->priv->resources,
                                                xml_rsc_id);
         if (rsc_2 == NULL) {
             // Should be possible only with validation disabled
@@ -680,7 +685,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             xml_rsc_id = pcmk__xe_id(xml_rsc);
-            rsc_2 = pcmk__find_constraint_resource(scheduler->resources,
+            rsc_2 = pcmk__find_constraint_resource(scheduler->priv->resources,
                                                    xml_rsc_id);
             if (rsc_2 == NULL) {
                 // Should be possible only with validation disabled
@@ -700,7 +705,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             xml_rsc_id = pcmk__xe_id(xml_rsc);
-            rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
+            rsc_1 = pcmk__find_constraint_resource(scheduler->priv->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
                 // Should be possible only with validation disabled
@@ -724,7 +729,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
             xmlNode *xml_rsc_2 = NULL;
 
             xml_rsc_id = pcmk__xe_id(xml_rsc);
-            rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
+            rsc_1 = pcmk__find_constraint_resource(scheduler->priv->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
                 // Should be possible only with validation disabled
@@ -742,8 +747,9 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                  xml_rsc_2 != NULL; xml_rsc_2 = pcmk__xe_next_same(xml_rsc_2)) {
 
                 xml_rsc_id = pcmk__xe_id(xml_rsc_2);
-                rsc_2 = pcmk__find_constraint_resource(scheduler->resources,
-                                                       xml_rsc_id);
+                rsc_2 =
+                    pcmk__find_constraint_resource(scheduler->priv->resources,
+                                                   xml_rsc_id);
                 if (rsc_2 == NULL) {
                     // Should be possible only with validation disabled
                     pcmk__config_err("Ignoring colocation of set %s resource "
@@ -775,28 +781,13 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
                                                  PCMK_XA_WITH_RSC_ROLE);
     const char *attr = crm_element_value(xml_obj, PCMK_XA_NODE_ATTRIBUTE);
 
-    const char *primary_instance = NULL;
-    const char *dependent_instance = NULL;
     pcmk_resource_t *primary = NULL;
     pcmk_resource_t *dependent = NULL;
 
-    primary = pcmk__find_constraint_resource(scheduler->resources, primary_id);
-    dependent = pcmk__find_constraint_resource(scheduler->resources,
+    primary = pcmk__find_constraint_resource(scheduler->priv->resources,
+                                             primary_id);
+    dependent = pcmk__find_constraint_resource(scheduler->priv->resources,
                                                dependent_id);
-
-    // @COMPAT: Deprecated since 2.1.5
-    primary_instance = crm_element_value(xml_obj, PCMK__XA_WITH_RSC_INSTANCE);
-    dependent_instance = crm_element_value(xml_obj, PCMK__XA_RSC_INSTANCE);
-    if (dependent_instance != NULL) {
-        pcmk__warn_once(pcmk__wo_coloc_inst,
-                        "Support for " PCMK__XA_RSC_INSTANCE " is deprecated "
-                        "and will be removed in a future release");
-    }
-    if (primary_instance != NULL) {
-        pcmk__warn_once(pcmk__wo_coloc_inst,
-                        "Support for " PCMK__XA_WITH_RSC_INSTANCE " is "
-                        "deprecated and will be removed in a future release");
-    }
 
     if (dependent == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
@@ -807,38 +798,6 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", id, primary_id);
         return;
-
-    } else if ((dependent_instance != NULL) && !pcmk__is_clone(dependent)) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "is not a clone but instance '%s' was requested",
-                         id, dependent_id, dependent_instance);
-        return;
-
-    } else if ((primary_instance != NULL) && !pcmk__is_clone(primary)) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "is not a clone but instance '%s' was requested",
-                         id, primary_id, primary_instance);
-        return;
-    }
-
-    if (dependent_instance != NULL) {
-        dependent = find_clone_instance(dependent, dependent_instance);
-        if (dependent == NULL) {
-            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                              "does not have an instance '%s'",
-                              id, dependent_id, dependent_instance);
-            return;
-        }
-    }
-
-    if (primary_instance != NULL) {
-        primary = find_clone_instance(primary, primary_instance);
-        if (primary == NULL) {
-            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                              "does not have an instance '%s'",
-                              "'%s'", id, primary_id, primary_instance);
-            return;
-        }
     }
 
     if (pcmk__xe_attr_is_true(xml_obj, PCMK_XA_SYMMETRICAL)) {
@@ -1058,6 +1017,52 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     if (last == NULL) {
         unpack_simple_colocation(xml_obj, id, influence_s, scheduler);
     }
+}
+
+/*!
+ * \internal
+ * \brief Check whether colocation's dependent preferences should be considered
+ *
+ * \param[in] colocation  Colocation constraint
+ * \param[in] rsc         Primary instance (normally this will be
+ *                        colocation->primary, which NULL will be treated as,
+ *                        but for clones or bundles with multiple instances
+ *                        this can be a particular instance)
+ *
+ * \return true if colocation influence should be effective, otherwise false
+ */
+bool
+pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
+                               const pcmk_resource_t *rsc)
+{
+    if (rsc == NULL) {
+        rsc = colocation->primary;
+    }
+
+    /* A bundle replica colocates its remote connection with its container,
+     * using a finite score so that the container can run on Pacemaker Remote
+     * nodes.
+     *
+     * Moving a connection is lightweight and does not interrupt the service,
+     * while moving a container is heavyweight and does interrupt the service,
+     * so don't move a clean, active container based solely on the preferences
+     * of its connection.
+     *
+     * This also avoids problematic scenarios where two containers want to
+     * perpetually swap places.
+     */
+    if (pcmk_is_set(colocation->dependent->flags,
+                    pcmk__rsc_remote_nesting_allowed)
+        && !pcmk_is_set(rsc->flags, pcmk__rsc_failed)
+        && pcmk__list_of_1(rsc->priv->active_nodes)) {
+        return false;
+    }
+
+    /* The dependent in a colocation influences the primary's location
+     * if the PCMK_XA_INFLUENCE option is true or the primary is not yet active.
+     */
+    return pcmk_is_set(colocation->flags, pcmk__coloc_influence)
+           || (rsc->priv->active_nodes == NULL);
 }
 
 /*!
@@ -1414,8 +1419,10 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
  * \param[in,out] dependent   Dependent resource in colocation
  * \param[in]     primary     Primary resource in colocation
  * \param[in]     colocation  Colocation constraint
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
                               const pcmk_resource_t *primary,
                               const pcmk__colocation_t *colocation)
@@ -1424,53 +1431,73 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     const char *primary_value = NULL;
     const char *attr = colocation->node_attribute;
     int score_multiplier = 1;
+    int priority_delta = 0;
     const pcmk_node_t *primary_node = NULL;
     const pcmk_node_t *dependent_node = NULL;
 
-    const pcmk_resource_t *primary_role_rsc = NULL;
-
-    CRM_ASSERT((dependent != NULL) && (primary != NULL) &&
-               (colocation != NULL));
+    CRM_ASSERT((dependent != NULL) && (primary != NULL)
+               && (colocation != NULL));
 
     primary_node = primary->priv->assigned_node;
     dependent_node = dependent->priv->assigned_node;
 
-    if ((primary_node == NULL) || (dependent_node == NULL)) {
-        return;
+    if (dependent_node == NULL) {
+        return 0;
+    }
+
+    if ((primary_node != NULL)
+        && (colocation->primary_role != pcmk_role_unknown)) {
+        /* Colocation applies only if the primary's next role matches.
+         *
+         * If primary_node == NULL, we want to proceed past this block, so that
+         * dependent_node is marked ineligible for promotion.
+         *
+         * @TODO Why ignore a mandatory colocation in this case when we apply
+         * its negation in the mismatched value case?
+         */
+        const pcmk_resource_t *role_rsc = get_resource_for_role(primary);
+
+        if (colocation->primary_role != role_rsc->priv->next_role) {
+            return 0;
+        }
     }
 
     dependent_value = pcmk__colocation_node_attr(dependent_node, attr,
                                                  dependent);
     primary_value = pcmk__colocation_node_attr(primary_node, attr, primary);
 
-    primary_role_rsc = get_resource_for_role(primary);
-
     if (!pcmk__str_eq(dependent_value, primary_value, pcmk__str_casei)) {
         if ((colocation->score == PCMK_SCORE_INFINITY)
             && (colocation->dependent_role == pcmk_role_promoted)) {
-            dependent->priv->priority = -PCMK_SCORE_INFINITY;
+            /* For a mandatory promoted-role colocation, mark the dependent node
+             * ineligible to promote the dependent if its attribute value
+             * doesn't match the primary node's
+             */
+            score_multiplier = -1;
+
+        } else {
+            // Otherwise, ignore the colocation if attribute values don't match
+            return 0;
         }
-        return;
-    }
 
-    if ((colocation->primary_role != pcmk_role_unknown)
-        && (colocation->primary_role != primary_role_rsc->priv->next_role)) {
-        return;
-    }
-
-    if (colocation->dependent_role == pcmk_role_unpromoted) {
+    } else if (colocation->dependent_role == pcmk_role_unpromoted) {
+        /* Node attribute values matched, so we want to avoid promoting the
+         * dependent on this node
+         */
         score_multiplier = -1;
     }
 
-    dependent->priv->priority =
-        pcmk__add_scores(score_multiplier * colocation->score,
-                         dependent->priv->priority);
+    priority_delta = score_multiplier * colocation->score;
+    dependent->priv->priority = pcmk__add_scores(priority_delta,
+                                                 dependent->priv->priority);
     pcmk__rsc_trace(dependent,
-                    "Applied %s to %s promotion priority (now %s after %s %s)",
+                    "Applied %s to %s promotion priority (now %s after %s %d)",
                     colocation->id, dependent->id,
                     pcmk_readable_score(dependent->priv->priority),
                     ((score_multiplier == 1)? "adding" : "subtracting"),
-                    pcmk_readable_score(colocation->score));
+                    colocation->score);
+
+    return priority_delta;
 }
 
 /*!
@@ -1510,7 +1537,7 @@ best_node_score_matching_attr(const pcmk__colocation_t *colocation,
          */
         allowed_nodes_orig = rsc->priv->allowed_nodes;
         rsc->priv->allowed_nodes = pcmk__copy_node_table(allowed_nodes_orig);
-        for (GList *loc_iter = rsc->priv->scheduler->placement_constraints;
+        for (GList *loc_iter = rsc->priv->scheduler->priv->location_constraints;
              loc_iter != NULL; loc_iter = loc_iter->next) {
 
             pcmk__location_t *location = loc_iter->data;

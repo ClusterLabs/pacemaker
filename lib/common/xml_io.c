@@ -207,6 +207,7 @@ pcmk__xml_read(const char *filename)
     }
 
     if (output != NULL) {
+        pcmk__xml_new_private_data((xmlNode *) output);
         xml = xmlDocGetRootElement(output);
         if (xml != NULL) {
             /* @TODO Should we really be stripping out text? This seems like an
@@ -264,6 +265,7 @@ pcmk__xml_parse(const char *input)
                       NULL);
 
     if (output != NULL) {
+        pcmk__xml_new_private_data((xmlNode *) output);
         xml = xmlDocGetRootElement(output);
     }
 

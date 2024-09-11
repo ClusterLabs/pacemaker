@@ -48,11 +48,13 @@ static pcmk__supported_format_t formats[] = {
 
 /* @COMPAT Deprecated since 2.1.8. Use pcmk_list_cluster_options() or
  * crm_attribute --list-options=cluster instead of querying daemon metadata.
+ *
+ * NOTE: pcs (as of at least 0.11.8) uses this
  */
 static int
 controld_metadata(pcmk__output_t *out)
 {
-    return pcmk__daemon_metadata(out, "pacemaker-controld",
+    return pcmk__daemon_metadata(out, PCMK__SERVER_CONTROLD,
                                  "Pacemaker controller options",
                                  "Cluster options used by Pacemaker's "
                                  "controller",
@@ -119,7 +121,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__cli_init_logging("pacemaker-controld", args->verbosity);
+    pcmk__cli_init_logging(PCMK__SERVER_CONTROLD, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker controller");
 
@@ -134,7 +136,8 @@ main(int argc, char **argv)
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_err("pacemaker-controld is already active, aborting startup");
+        crm_crit("Aborting start-up because another controller instance is "
+                 "already active");
         initialize = false;
         goto done;
 
@@ -144,11 +147,11 @@ main(int argc, char **argv)
         old_instance = NULL;
     }
 
-    if (pcmk__daemon_can_write(PE_STATE_DIR, NULL) == FALSE) {
+    if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
         exit_code = CRM_EX_FATAL;
-        crm_err("Terminating due to bad permissions on " PE_STATE_DIR);
+        crm_err("Terminating due to bad permissions on " PCMK_SCHEDULER_INPUT_DIR);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Bad permissions on " PE_STATE_DIR
+                    "Bad permissions on " PCMK_SCHEDULER_INPUT_DIR
                     " (see logs for details)");
         goto done;
 

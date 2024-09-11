@@ -15,11 +15,11 @@ CFLAGS += -DPCMK__TEST_SCHEMA_DIR='"$(abs_builddir)/schemas"'
 # Add "_test" to the end of all test program names to simplify .gitignore.
 
 # These tests share a schema subdirectory
-SHARED_SCHEMA_TESTS =	pcmk__cmp_schemas_by_name_test		\
-			crm_schema_init_test			\
-			pcmk__build_schema_xml_node_test	\
+SHARED_SCHEMA_TESTS =	pcmk__build_schema_xml_node_test	\
+			pcmk__cmp_schemas_by_name_test		\
 			pcmk__get_schema_test 			\
-			pcmk__schema_files_later_than_test
+			pcmk__schema_files_later_than_test	\
+			pcmk__schema_init_test
 
 # This test has its own schema directory
 FIND_X_0_SCHEMA_TEST =	pcmk__find_x_0_schema_test
@@ -39,7 +39,6 @@ $(FIND_X_0_SCHEMA_TEST): setup-find_x_0-schema-dir
 #
 # This directory contains the following:
 #
-# * pacemaker-next.rng   - Used to verify that this sorts before all versions
 # * upgrade-*.xsl        - Required by various schema versions
 # * pacemaker-[0-9]*.rng - We're only pulling in 15 schemas, which is enough
 #                          to get everything through pacemaker-3.0.rng.  This
@@ -51,8 +50,7 @@ $(FIND_X_0_SCHEMA_TEST): setup-find_x_0-schema-dir
 #                          This will glob more than we need, but the extra ones
 #                          won't get in the way.
 
-LINK_FILES =	$(abs_top_builddir)/xml/pacemaker-next.rng	\
-		$(abs_top_builddir)/xml/upgrade-*.xsl
+LINK_FILES =	$(abs_top_builddir)/xml/upgrade-*.xsl
 ROOT_RNGS = 	$(shell ls -1v $(abs_top_builddir)/xml/pacemaker-[0-9]*.rng | head -15)
 INCLUDED_RNGS = $(shell ls -1 $(top_srcdir)/xml/*.rng | grep -v pacemaker-[0-9])
 

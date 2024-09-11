@@ -52,7 +52,7 @@ struct device_search_s {
     /* number of device replies received so far */
     int replies_received;
     /* whether the target is eligible to perform requested action (or off) */
-    bool allow_suicide;
+    bool allow_self;
 
     /* private data to pass to search callback function */
     void *user_data;
@@ -537,8 +537,8 @@ stonith_device_execute(stonith_device_t * device)
     if (pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
                          STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
         if (pcmk__is_fencing_action(cmd->action)) {
-            if (node_does_watchdog_fencing(stonith_our_uname)) {
-                pcmk__panic(__func__);
+            if (node_does_watchdog_fencing(fenced_get_local_node())) {
+                pcmk__panic("Watchdog self-fencing required");
                 goto done;
             }
         } else {
@@ -548,7 +548,7 @@ stonith_device_execute(stonith_device_t * device)
         }
     }
 
-#if SUPPORT_CIBSECRETS
+#if PCMK__ENABLE_CIBSECRETS
     exec_rc = pcmk__substitute_secrets(device->id, device->params);
     if (exec_rc != pcmk_rc_ok) {
         if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_none)) {
@@ -900,10 +900,6 @@ static gboolean
 is_nodeid_required(xmlNode * xml)
 {
     xmlXPathObjectPtr xpath = NULL;
-
-    if (stand_alone) {
-        return FALSE;
-    }
 
     if (!xml) {
         return FALSE;
@@ -1349,6 +1345,8 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
             rv = -ENODEV;
             /* fall through to cleanup & return */
         } else {
+            const char *local_node_name = fenced_get_local_node();
+
             if (pcmk__str_eq(device->agent, STONITH_WATCHDOG_AGENT,
                              pcmk__str_none)) {
                 /* this either has an empty list or the targets
@@ -1358,11 +1356,11 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
                 stonith_watchdog_targets = device->targets;
                 device->targets = NULL;
             }
-            if (node_does_watchdog_fencing(stonith_our_uname)) {
+            if (node_does_watchdog_fencing(local_node_name)) {
                 g_list_free_full(device->targets, free);
-                device->targets = stonith__parse_targets(stonith_our_uname);
+                device->targets = stonith__parse_targets(local_node_name);
                 pcmk__insert_dup(device->params,
-                                 PCMK_STONITH_HOST_LIST, stonith_our_uname);
+                                 PCMK_STONITH_HOST_LIST, local_node_name);
                 /* proceed as with any other stonith-device */
                 break;
             }
@@ -1467,7 +1465,7 @@ count_active_levels(const stonith_topology_t *tp)
     int lpc = 0;
     int count = 0;
 
-    for (lpc = 0; lpc < ST_LEVEL_MAX; lpc++) {
+    for (lpc = 0; lpc < ST__LEVEL_COUNT; lpc++) {
         if (tp->levels[lpc] != NULL) {
             count++;
         }
@@ -1482,7 +1480,7 @@ free_topology_entry(gpointer data)
 
     int lpc = 0;
 
-    for (lpc = 0; lpc < ST_LEVEL_MAX; lpc++) {
+    for (lpc = 0; lpc < ST__LEVEL_COUNT; lpc++) {
         if (tp->levels[lpc] != NULL) {
             g_list_free_full(tp->levels[lpc], free);
         }
@@ -1551,8 +1549,7 @@ unpack_level_kind(const xmlNode *level)
     if (crm_element_value(level, PCMK_XA_TARGET_PATTERN) != NULL) {
         return fenced_target_by_pattern;
     }
-    if (!stand_alone /* if standalone, there's no attribute manager */
-        && (crm_element_value(level, PCMK_XA_TARGET_ATTRIBUTE) != NULL)
+    if ((crm_element_value(level, PCMK_XA_TARGET_ATTRIBUTE) != NULL)
         && (crm_element_value(level, PCMK_XA_TARGET_VALUE) != NULL)) {
         return fenced_target_by_attribute;
     }
@@ -1700,7 +1697,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     }
 
     // Ensure level ID is in allowed range
-    if ((id <= 0) || (id >= ST_LEVEL_MAX)) {
+    if ((id < ST__LEVEL_MIN) || (id > ST__LEVEL_MAX)) {
         crm_warn("Ignoring topology registration for %s with invalid level %d",
                   target, id);
         free(target);
@@ -1787,7 +1784,7 @@ fenced_unregister_level(xmlNode *msg, char **desc,
     }
 
     // Ensure level ID is in allowed range
-    if ((id < 0) || (id >= ST_LEVEL_MAX)) {
+    if ((id < 0) || (id >= ST__LEVEL_COUNT)) {
         crm_warn("Ignoring topology unregistration for %s with invalid level %d",
                   target, id);
         free(target);
@@ -1990,15 +1987,15 @@ search_devices_record_result(struct device_search_s *search, const char *device,
  * \param[in] device         Fence device to check
  * \param[in] action         Fence action to check
  * \param[in] target         Hostname of fence target
- * \param[in] allow_suicide  Whether self-fencing is allowed for this operation
+ * \param[in] allow_self     Whether self-fencing is allowed for this operation
  *
  * \return TRUE if local host is allowed to execute action, FALSE otherwise
  */
 static gboolean
 localhost_is_eligible(const stonith_device_t *device, const char *action,
-                      const char *target, gboolean allow_suicide)
+                      const char *target, gboolean allow_self)
 {
-    gboolean localhost_is_target = pcmk__str_eq(target, stonith_our_uname,
+    gboolean localhost_is_target = pcmk__str_eq(target, fenced_get_local_node(),
                                                 pcmk__str_casei);
 
     if ((device != NULL) && (action != NULL)
@@ -2012,7 +2009,7 @@ localhost_is_eligible(const stonith_device_t *device, const char *action,
             return FALSE;
         }
 
-    } else if (localhost_is_target && !allow_suicide) {
+    } else if (localhost_is_target && !allow_self) {
         crm_trace("'%s' operation does not support self-fencing", action);
         return FALSE;
     }
@@ -2091,7 +2088,7 @@ can_fence_host_with_device(stonith_device_t *dev,
         goto search_report_results;
 
     } else if (!localhost_is_eligible_with_remap(dev, action, target,
-                                                 search->allow_suicide)) {
+                                                 search->allow_self)) {
         check_type = "This node is not allowed to execute action";
         goto search_report_results;
     }
@@ -2183,8 +2180,10 @@ search_devices(gpointer key, gpointer value, gpointer user_data)
 
 #define DEFAULT_QUERY_TIMEOUT 20
 static void
-get_capable_devices(const char *host, const char *action, int timeout, bool suicide, void *user_data,
-                    void (*callback) (GList * devices, void *user_data), uint32_t support_action_only)
+get_capable_devices(const char *host, const char *action, int timeout,
+                    bool allow_self, void *user_data,
+                    void (*callback) (GList * devices, void *user_data),
+                    uint32_t support_action_only)
 {
     struct device_search_s *search;
     guint ndevices = g_hash_table_size(device_list);
@@ -2199,7 +2198,7 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     search->host = pcmk__str_copy(host);
     search->action = pcmk__str_copy(action);
     search->per_device_timeout = timeout;
-    search->allow_suicide = suicide;
+    search->allow_self = allow_self;
     search->callback = callback;
     search->user_data = user_data;
     search->support_action_only = support_action_only;
@@ -2293,13 +2292,13 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
  * \param[in]     action         Fence action
  * \param[in]     device         Fence device
  * \param[in]     target         Fence target
- * \param[in]     allow_suicide  Whether self-fencing is allowed
+ * \param[in]     allow_self     Whether self-fencing is allowed
  */
 static void
 add_disallowed(xmlNode *xml, const char *action, const stonith_device_t *device,
-               const char *target, gboolean allow_suicide)
+               const char *target, gboolean allow_self)
 {
-    if (!localhost_is_eligible(device, action, target, allow_suicide)) {
+    if (!localhost_is_eligible(device, action, target, allow_self)) {
         crm_trace("Action '%s' using %s is disallowed for local host",
                   action, device->id);
         pcmk__xe_set_bool_attr(xml, PCMK__XA_ST_ACTION_DISALLOWED, true);
@@ -2314,18 +2313,18 @@ add_disallowed(xmlNode *xml, const char *action, const stonith_device_t *device,
  * \param[in]     action         Fence action
  * \param[in]     device         Fence device
  * \param[in]     target         Fence target
- * \param[in]     allow_suicide  Whether self-fencing is allowed
+ * \param[in]     allow_self     Whether self-fencing is allowed
  */
 static void
 add_action_reply(xmlNode *xml, const char *action,
                  const stonith_device_t *device, const char *target,
-                 gboolean allow_suicide)
+                 gboolean allow_self)
 {
     xmlNode *child = pcmk__xe_create(xml, PCMK__XE_ST_DEVICE_ACTION);
 
     crm_xml_add(child, PCMK_XA_ID, action);
     add_action_specific_attributes(child, action, device, target);
-    add_disallowed(child, action, device, target, allow_suicide);
+    add_disallowed(child, action, device, target, allow_self);
 }
 
 /*!
@@ -2351,7 +2350,7 @@ stonith_send_reply(const xmlNode *reply, int call_options,
             pcmk__get_node(0, remote_peer, NULL,
                            pcmk__node_search_cluster_member);
 
-        pcmk__cluster_send_message(node, pcmk__cluster_msg_fenced, reply);
+        pcmk__cluster_send_message(node, pcmk_ipc_fenced, reply);
     }
 }
 
@@ -2428,9 +2427,11 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
              * versions will ignore "off" and "on", so they are not a problem.
              */
             add_disallowed(dev, action, device, query->target,
-                           pcmk_is_set(query->call_options, st_opt_allow_suicide));
+                           pcmk_is_set(query->call_options,
+                                       st_opt_allow_self_fencing));
             add_action_reply(dev, PCMK_ACTION_OFF, device, query->target,
-                             pcmk_is_set(query->call_options, st_opt_allow_suicide));
+                             pcmk_is_set(query->call_options,
+                                         st_opt_allow_self_fencing));
             add_action_reply(dev, PCMK_ACTION_ON, device, query->target, FALSE);
         }
 
@@ -2588,7 +2589,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
         pcmk__xe_set_bool_attr(reply, PCMK__XA_ST_OP_MERGED, true);
     }
 
-    if (!stand_alone && pcmk__is_fencing_action(cmd->action)
+    if (pcmk__is_fencing_action(cmd->action)
         && pcmk__str_eq(cmd->origin, cmd->target, pcmk__str_casei)) {
         /* The target was also the originator, so broadcast the result on its
          * behalf (since it will be unable to).
@@ -2597,7 +2598,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
                   cmd->action, cmd->target);
         crm_xml_add(reply, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
         crm_xml_add(reply, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
-        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, reply);
+        pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, reply);
     } else {
         // Reply only to the originator
         stonith_send_reply(reply, cmd->options, cmd->origin, client);
@@ -2605,23 +2606,6 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
 
     crm_log_xml_trace(reply, "Reply");
     pcmk__xml_free(reply);
-
-    if (stand_alone) {
-        /* Do notification with a clean data object */
-        xmlNode *notify_data = pcmk__xe_create(NULL, PCMK__XE_ST_NOTIFY_FENCE);
-
-        stonith__xe_set_result(notify_data, result);
-        crm_xml_add(notify_data, PCMK__XA_ST_TARGET, cmd->target);
-        crm_xml_add(notify_data, PCMK__XA_ST_OP, cmd->op);
-        crm_xml_add(notify_data, PCMK__XA_ST_DELEGATE, "localhost");
-        crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ID, cmd->device);
-        crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
-        crm_xml_add(notify_data, PCMK__XA_ST_ORIGIN, cmd->client);
-
-        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_FENCE, result,
-                                 notify_data);
-        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
-    }
 }
 
 static void
@@ -3012,7 +2996,7 @@ set_fencing_completed(remote_fencing_op_t *op)
 static const char *
 check_alternate_host(const char *target)
 {
-    if (pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(target, fenced_get_local_node(), pcmk__str_casei)) {
         GHashTableIter gIter;
         pcmk__node_status_t *entry = NULL;
 
@@ -3050,7 +3034,8 @@ remove_relay_op(xmlNode * request)
     client_name = crm_element_value(request, PCMK__XA_ST_CLIENTNAME);
 
     /* Delete RELAY operation. */
-    if (relay_op_id && target && pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
+    if ((relay_op_id != NULL) && (target != NULL)
+        && pcmk__str_eq(target, fenced_get_local_node(), pcmk__str_casei)) {
         relay_op = g_hash_table_lookup(stonith_remote_op_list, relay_op_id);
 
         if (relay_op) {
@@ -3198,7 +3183,8 @@ handle_query_request(pcmk__request_t *request)
 
     crm_element_value_int(request->xml, PCMK__XA_ST_TIMEOUT, &timeout);
     get_capable_devices(target, action, timeout,
-                        pcmk_is_set(query->call_options, st_opt_allow_suicide),
+                        pcmk_is_set(query->call_options,
+                                    st_opt_allow_self_fencing),
                         query, stonith_query_capable_device_cb, st_device_supports_none);
     return NULL;
 }
@@ -3259,7 +3245,7 @@ handle_relay_request(pcmk__request_t *request)
 static xmlNode *
 handle_fence_request(pcmk__request_t *request)
 {
-    if ((request->peer != NULL) || stand_alone) {
+    if (request->peer != NULL) {
         fence_locally(request->xml, &request->result);
 
     } else if (pcmk_is_set(request->call_options, st_opt_manual_ack)) {
@@ -3331,8 +3317,7 @@ handle_fence_request(pcmk__request_t *request)
             crm_xml_add(request->xml, PCMK__XA_ST_CLIENTID,
                         request->ipc_client->id);
             crm_xml_add(request->xml, PCMK__XA_ST_REMOTE_OP, op->id);
-            pcmk__cluster_send_message(node, pcmk__cluster_msg_fenced,
-                                       request->xml);
+            pcmk__cluster_send_message(node, pcmk_ipc_fenced, request->xml);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
                              NULL);
 

@@ -33,13 +33,9 @@ typedef struct pcmk_nvpair_s {
 
 GSList *pcmk_prepend_nvpair(GSList *nvpairs, const char *name, const char *value);
 void pcmk_free_nvpairs(GSList *nvpairs);
-GSList *pcmk_sort_nvpairs(GSList *list);
-GSList *pcmk_xml_attrs2nvpairs(const xmlNode *xml);
-void pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml);
 
 xmlNode *crm_create_nvpair_xml(xmlNode *parent, const char *id,
                                const char *name, const char *value);
-void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 void hash2field(gpointer key, gpointer value, gpointer user_data);
 void hash2metafield(gpointer key, gpointer value, gpointer user_data);
 void hash2smartfield(gpointer key, gpointer value, gpointer user_data);

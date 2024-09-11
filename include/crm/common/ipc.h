@@ -27,38 +27,6 @@ extern "C" {
  */
 
 /*
- * Message creation utilities
- *
- * These are used for both IPC messages and cluster layer messages. However,
- * since this is public API, they stay in this header for backward
- * compatibility.
- */
-
-// @COMPAT Make internal when we can break API backward compatibility
-//! \deprecated Do not use
-#define create_reply(request, xml_response_data)    \
-    create_reply_adv(request, xml_response_data, __func__)
-
-// @COMPAT Make internal when we can break API backward compatibility
-//! \deprecated Do not use
-xmlNode *create_reply_adv(const xmlNode *request, xmlNode *xml_response_data,
-                          const char *origin);
-
-// @COMPAT Make internal when we can break API backward compatibility
-//! \deprecated Do not use
-#define create_request(task, xml_data, host_to, sys_to, sys_from, uuid_from) \
-    create_request_adv(task, xml_data, host_to, sys_to, sys_from, uuid_from, \
-                       __func__)
-
-// @COMPAT Make internal when we can break API backward compatibility
-//! \deprecated Do not use
-xmlNode *create_request_adv(const char *task, xmlNode *xml_data,
-                            const char *host_to, const char *sys_to,
-                            const char *sys_from, const char *uuid_from,
-                            const char *origin);
-
-
-/*
  * The library supports two methods of creating IPC connections. The older code
  * allows connecting to any arbitrary IPC name. The newer code only allows
  * connecting to one of the Pacemaker daemons.
@@ -73,8 +41,12 @@ xmlNode *create_request_adv(const char *task, xmlNode *xml_data,
  * Pacemaker daemon IPC
  */
 
+/* @COMPAT This is also used internally for cluster message types, but it's not
+ * worth the hassle of redefining this public API just to change the name.
+ */
 //! Available IPC interfaces
 enum pcmk_ipc_server {
+    pcmk_ipc_unknown,       //!< Unknown or invalid
     pcmk_ipc_attrd,         //!< Attribute manager
     pcmk_ipc_based,         //!< CIB manager
     pcmk_ipc_controld,      //!< Controller
@@ -233,11 +205,6 @@ unsigned int crm_ipc_default_buffer_size(void);
  */
 int crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
                                  pid_t *gotpid, uid_t *gotuid, gid_t *gotgid);
-
-// @COMPAT Make internal when we can break API backward compatibility
-//! \deprecated Do not use
-xmlNode *create_hello_message(const char *uuid, const char *client_name,
-                              const char *major_version, const char *minor_version);
 
 #ifdef __cplusplus
 }

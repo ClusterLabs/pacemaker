@@ -53,6 +53,35 @@ fenced_scheduler_init(void)
 
 /*!
  * \internal
+ * \brief Set the local node name for scheduling purposes
+ *
+ * \param[in] node_name  Name to set as local node name
+ */
+void
+fenced_set_local_node(const char *node_name)
+{
+    CRM_ASSERT(scheduler != NULL);
+
+    scheduler->priv->local_node_name = pcmk__str_copy(node_name);
+}
+
+/*!
+ * \internal
+ * \brief Get the local node name
+ *
+ * \return Local node name
+ */
+const char *
+fenced_get_local_node(void)
+{
+    if (scheduler == NULL) {
+        return NULL;
+    }
+    return scheduler->priv->local_node_name;
+}
+
+/*!
+ * \internal
  * \brief Free all scheduler-related resources
  */
 void
@@ -82,13 +111,13 @@ fenced_scheduler_cleanup(void)
 static pcmk_node_t *
 local_node_allowed_for(const pcmk_resource_t *rsc)
 {
-    if ((rsc != NULL) && (stonith_our_uname != NULL)) {
+    if ((rsc != NULL) && (scheduler->priv->local_node_name != NULL)) {
         GHashTableIter iter;
         pcmk_node_t *node = NULL;
 
         g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-            if (pcmk__str_eq(node->priv->name, stonith_our_uname,
+            if (pcmk__str_eq(node->priv->name, scheduler->priv->local_node_name,
                              pcmk__str_casei)) {
                 return node;
             }
@@ -116,7 +145,6 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     pcmk_node_t *node = NULL;
     const char *name = NULL;
     const char *value = NULL;
-    const char *rclass = NULL;
     const char *agent = NULL;
     const char *rsc_provides = NULL;
     stonith_key_value_t *params = NULL;
@@ -135,8 +163,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         return;
     }
 
-    rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-    if (!pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
         return; // Not a fencing device
     }
 
@@ -221,11 +248,10 @@ fenced_scheduler_run(xmlNode *cib)
         crm_time_free(scheduler->priv->now);
         scheduler->priv->now = NULL;
     }
-    scheduler->localhost = stonith_our_uname;
     pcmk__schedule_actions(cib, pcmk__sched_location_only
-                                |pcmk__sched_no_compat
                                 |pcmk__sched_no_counts, scheduler);
-    g_list_foreach(scheduler->resources, register_if_fencing_device, NULL);
+    g_list_foreach(scheduler->priv->resources, register_if_fencing_device,
+                   NULL);
 
     scheduler->input = NULL; // Wasn't a copy, so don't let API free it
     pe_reset_working_set(scheduler);

@@ -39,7 +39,6 @@ For instance:
      --html-cgi                        Add text needed to use output in a CGI program
      --html-stylesheet=URI             Link to an external CSS stylesheet
      --html-title=TITLE                Page title
-     --text-fancy                      Use more highly formatted output
 
 .. index::
    single: crm_mon

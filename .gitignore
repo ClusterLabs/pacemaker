@@ -121,6 +121,7 @@ configure
 /cts/cts-lab
 /cts/cts-regression
 /cts/cts-scheduler
+/cts/cts-schemas
 /cts/lab/CTS.py
 /cts/support/LSBDummy
 /cts/support/cts-support
@@ -235,19 +236,17 @@ coverity-*
 pacemaker_*.info
 /coverage
 /cppcheck.out
-/cts/scheduler/*.ref
-/cts/scheduler/*.up
-/cts/scheduler/*.up.err
 /cts/scheduler/bug-rh-1097457.log
 /cts/scheduler/bug-rh-1097457.trs
 /cts/scheduler/shadow.*
+/cts/schemas/test-*/ref/*.up*
+/cts/schemas/test-*/ref.err/*.up.err*
 /cts/test-suite.log
+/lib/*/fuzzers/*/*_fuzzer
 /lib/*/tests/*/*.log
 /lib/*/tests/*/*_test
 /lib/*/tests/*/*.trs
 /lib/common/tests/schemas/schemas
-/xml/test-*/*.up
-/xml/test-*/*.up.err
 /test/_test_file.c
 
 # Packaging artifacts

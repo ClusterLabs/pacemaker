@@ -143,11 +143,13 @@ struct pcmk__assignment_methods {
      * \param[in]     primary        Primary resource in colocation
      * \param[in]     colocation     Colocation constraint to apply
      * \param[in]     for_dependent  true if called on behalf of dependent
+     *
+     * \return The score added to the dependent's priority
      */
-    void (*apply_coloc_score)(pcmk_resource_t *dependent,
-                              const pcmk_resource_t *primary,
-                              const pcmk__colocation_t *colocation,
-                              bool for_dependent);
+    int (*apply_coloc_score)(pcmk_resource_t *dependent,
+                             const pcmk_resource_t *primary,
+                             const pcmk__colocation_t *colocation,
+                             bool for_dependent);
 
     /*!
      * \internal
@@ -465,6 +467,10 @@ pcmk_resource_t *pcmk__find_constraint_resource(GList *rsc_list,
                                                 const char *id);
 
 G_GNUC_INTERNAL
+int pcmk__parse_constraint_role(const char *id, const char *role_spec,
+                                enum rsc_role_e *role);
+
+G_GNUC_INTERNAL
 xmlNode *pcmk__expand_tags_in_sets(xmlNode *xml_obj,
                                    const pcmk_scheduler_t *scheduler);
 
@@ -526,9 +532,9 @@ void pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
                                  const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
-void pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
-                                   const pcmk_resource_t *primary,
-                                   const pcmk__colocation_t *colocation);
+int pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
+                                  const pcmk_resource_t *primary,
+                                  const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
 void pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
@@ -575,57 +581,15 @@ GList *pcmk__this_with_colocations(const pcmk_resource_t *rsc);
 G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
                           pcmk_resource_t *dependent, pcmk_resource_t *primary,
-                          const char *dependent_role, const char *primary_role,
-                          uint32_t flags);
+                          const char *dependent_role_spec,
+                          const char *primary_role_spec, uint32_t flags);
 
 G_GNUC_INTERNAL
 void pcmk__block_colocation_dependents(pcmk_action_t *action);
 
-/*!
- * \internal
- * \brief Check whether colocation's dependent preferences should be considered
- *
- * \param[in] colocation  Colocation constraint
- * \param[in] rsc         Primary instance (normally this will be
- *                        colocation->primary, which NULL will be treated as,
- *                        but for clones or bundles with multiple instances
- *                        this can be a particular instance)
- *
- * \return true if colocation influence should be effective, otherwise false
- */
-static inline bool
-pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
-                               const pcmk_resource_t *rsc)
-{
-    if (rsc == NULL) {
-        rsc = colocation->primary;
-    }
-
-    /* A bundle replica colocates its remote connection with its container,
-     * using a finite score so that the container can run on Pacemaker Remote
-     * nodes.
-     *
-     * Moving a connection is lightweight and does not interrupt the service,
-     * while moving a container is heavyweight and does interrupt the service,
-     * so don't move a clean, active container based solely on the preferences
-     * of its connection.
-     *
-     * This also avoids problematic scenarios where two containers want to
-     * perpetually swap places.
-     */
-    if (pcmk_is_set(colocation->dependent->flags,
-                    pcmk__rsc_remote_nesting_allowed)
-        && !pcmk_is_set(rsc->flags, pcmk__rsc_failed)
-        && pcmk__list_of_1(rsc->priv->active_nodes)) {
-        return false;
-    }
-
-    /* The dependent in a colocation influences the primary's location
-     * if the PCMK_XA_INFLUENCE option is true or the primary is not yet active.
-     */
-    return pcmk_is_set(colocation->flags, pcmk__coloc_influence)
-           || (rsc->priv->active_nodes == NULL);
-}
+G_GNUC_INTERNAL
+bool pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
+                                    const pcmk_resource_t *rsc);
 
 
 // Ordering constraints (pcmk_sched_ordering.c)
@@ -714,10 +678,10 @@ void pcmk__update_dependent_with_promotable(const pcmk_resource_t *primary,
                                                 *colocation);
 
 G_GNUC_INTERNAL
-void pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
-                                                pcmk_resource_t *dependent,
-                                                const pcmk__colocation_t
-                                                    *colocation);
+int pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
+                                               pcmk_resource_t *dependent,
+                                               const pcmk__colocation_t
+                                                   *colocation);
 
 
 // Pacemaker Remote nodes (pcmk_sched_remote.c)
@@ -761,10 +725,10 @@ uint32_t pcmk__primitive_action_flags(pcmk_action_t *action,
                                       const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
-void pcmk__primitive_apply_coloc_score(pcmk_resource_t *dependent,
-                                       const pcmk_resource_t *primary,
-                                       const pcmk__colocation_t *colocation,
-                                       bool for_dependent);
+int pcmk__primitive_apply_coloc_score(pcmk_resource_t *dependent,
+                                      const pcmk_resource_t *primary,
+                                      const pcmk__colocation_t *colocation,
+                                      bool for_dependent);
 
 G_GNUC_INTERNAL
 void pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
@@ -805,10 +769,10 @@ G_GNUC_INTERNAL
 void pcmk__group_internal_constraints(pcmk_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__group_apply_coloc_score(pcmk_resource_t *dependent,
-                                   const pcmk_resource_t *primary,
-                                   const pcmk__colocation_t *colocation,
-                                   bool for_dependent);
+int pcmk__group_apply_coloc_score(pcmk_resource_t *dependent,
+                                  const pcmk_resource_t *primary,
+                                  const pcmk__colocation_t *colocation,
+                                  bool for_dependent);
 
 G_GNUC_INTERNAL
 void pcmk__with_group_colocations(const pcmk_resource_t *rsc,
@@ -874,10 +838,10 @@ G_GNUC_INTERNAL
 void pcmk__clone_internal_constraints(pcmk_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
-                                   const pcmk_resource_t *primary,
-                                   const pcmk__colocation_t *colocation,
-                                   bool for_dependent);
+int pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
+                                  const pcmk_resource_t *primary,
+                                  const pcmk__colocation_t *colocation,
+                                  bool for_dependent);
 
 G_GNUC_INTERNAL
 void pcmk__with_clone_colocations(const pcmk_resource_t *rsc,
@@ -927,10 +891,10 @@ G_GNUC_INTERNAL
 void pcmk__bundle_internal_constraints(pcmk_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
-                                    const pcmk_resource_t *primary,
-                                    const pcmk__colocation_t *colocation,
-                                    bool for_dependent);
+int pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
+                                   const pcmk_resource_t *primary,
+                                   const pcmk__colocation_t *colocation,
+                                   bool for_dependent);
 
 G_GNUC_INTERNAL
 void pcmk__with_bundle_colocations(const pcmk_resource_t *rsc,

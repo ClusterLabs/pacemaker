@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -101,8 +101,12 @@ strtoll_errors(void **state)
 {
     long long start, end;
 
-    assert_int_equal(pcmk__parse_ll_range("20000000000000000000-", &start, &end), EOVERFLOW);
-    assert_int_equal(pcmk__parse_ll_range("100-20000000000000000000", &start, &end), EOVERFLOW);
+    assert_int_equal(pcmk__parse_ll_range("20000000000000000000-",
+                                          &start, &end),
+                     ERANGE);
+    assert_int_equal(pcmk__parse_ll_range("100-20000000000000000000",
+                                          &start, &end),
+                     ERANGE);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

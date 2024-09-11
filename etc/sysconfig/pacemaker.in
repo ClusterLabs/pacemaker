@@ -179,13 +179,19 @@
 
 # PCMK_panic_action
 #
-# Pacemaker will panic the local host under certain conditions. By default,
-# this means rebooting the host. This variable can change that behavior: if
-# "crash", trigger a kernel crash (useful if you want a kernel dump to
-# investigate); if "sync-reboot" or "sync-crash", synchronize filesystems
-# before rebooting the host or triggering a kernel crash. The sync values are
-# more likely to preserve log messages, but with the risk that the host may be
-# left active if the synchronization hangs.
+# Pacemaker panics the local node under certain conditions (for example, losing
+# quorum when no-quorum-policy is "suicide", or being notified of the local
+# node's own fencing when fence-reaction is "panic"). This variable determines
+# the panic behavior. Allowed values:
+#
+# reboot   Immediately reboot the host (not a clean reboot)
+# off      Immediately kill power to the host (not a clean shutdown)
+# crash    Trigger a kernel crash if possible, otherwise like reboot
+# sync-reboot, sync-off, sync-crash
+# 	   "sync-" can be put in front of any of the above values to synchronize
+#          filesystems before panicking (making log messages more likely to be
+#          preserved, but with the risk that the host may be left active if the
+#          synchronization hangs)
 #
 # Default: PCMK_panic_action="reboot"
 
@@ -255,30 +261,8 @@
 # for Pacemaker Remote connections, as they are required for the respective
 # functionality.
 #
-# Default: PCMK_tls_priorities="@PCMK_GNUTLS_PRIORITIES@"
+# Default: PCMK_tls_priorities="@PCMK__GNUTLS_PRIORITIES@"
 # Example: PCMK_tls_priorities="SECURE128:+SECURE192:-VERS-ALL:+VERS-TLS1.2"
-
-# PCMK_dh_min_bits (DEPRECATED; Advanced Use Only)
-#
-# Set a lower bound on the bit length of the prime number generated for
-# Diffie-Hellman parameters needed by TLS connections. The default is no
-# minimum.
-#
-# The server (Pacemaker Remote daemon, or CIB manager configured to accept
-# remote clients) will use this value to provide a floor for the value
-# recommended by the GnuTLS library. The library will only accept a limited
-# number of specific values, which vary by library version, so setting these is
-# recommended only when required for compatibility with specific client
-# versions.
-#
-# Clients (connecting cluster nodes or remote CIB commands) will require that
-# the server use a prime of at least this size. This is recommended only when
-# the value must be lowered in order for the client's GnuTLS library to accept
-# a connection to an older server.
-# 
-# This variable is deprecated and will be ignored by Pacemaker 3.0.0 and later.
-#
-# Default: PCMK_dh_min_bits="0" (no minimum)
 
 # PCMK_dh_max_bits (Advanced Use Only)
 #
@@ -339,7 +323,7 @@
 #
 # Specify an alternate location for RNG schemas and XSL transforms.
 #
-# Default: PCMK_schema_directory="@CRM_SCHEMA_DIRECTORY@"
+# Default: PCMK_schema_directory="@PCMK_SCHEMA_DIR@"
 
 # PCMK_remote_schema_directory (Advanced Use Only)
 #
@@ -396,4 +380,4 @@
 # commands, which would otherwise leave a bunch of unremovable files in /tmp.
 #
 # Default: VALGRIND_OPTS=""
-VALGRIND_OPTS="--leak-check=full --trace-children=no --vgdb=no --num-callers=25 --log-file=@CRM_PACEMAKER_DIR@/valgrind-%p --suppressions=@datadir@/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"
+VALGRIND_OPTS="--leak-check=full --trace-children=no --vgdb=no --num-callers=25 --log-file=@PCMK__PERSISTENT_DATA_DIR@/valgrind-%p --suppressions=@datadir@/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"

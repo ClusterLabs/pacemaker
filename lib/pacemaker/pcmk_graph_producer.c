@@ -860,10 +860,9 @@ static xmlNode *
 create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
 {
     int synapse_priority = 0;
-    xmlNode *syn = pcmk__xe_create(scheduler->graph, "synapse");
+    xmlNode *syn = pcmk__xe_create(scheduler->priv->graph, "synapse");
 
-    crm_xml_add_int(syn, PCMK_XA_ID, scheduler->num_synapse);
-    scheduler->num_synapse++;
+    crm_xml_add_int(syn, PCMK_XA_ID, scheduler->priv->synapse_count++);
 
     if (action->rsc != NULL) {
         synapse_priority = action->rsc->priv->priority;
@@ -941,7 +940,7 @@ add_action_to_graph(gpointer data, gpointer user_data)
     }
 }
 
-static int transition_id = -1;
+static int transition_id = 0;
 
 /*!
  * \internal
@@ -955,14 +954,14 @@ pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
                              const char *filename)
 {
     if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_error)
-        || crm_config_error) {
+        || pcmk__config_has_error) {
         crm_err("Calculated transition %d (with errors)%s%s",
                 transition_id,
                 (filename == NULL)? "" : ", saving inputs in ",
                 (filename == NULL)? "" : filename);
 
     } else if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_warning)
-               || crm_config_warning) {
+               || pcmk__config_has_warning) {
         crm_warn("Calculated transition %d (with warnings)%s%s",
                  transition_id,
                  (filename == NULL)? "" : ", saving inputs in ",
@@ -974,7 +973,7 @@ pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
                    (filename == NULL)? "" : ", saving inputs in ",
                    (filename == NULL)? "" : filename);
     }
-    if (crm_config_error) {
+    if (pcmk__config_has_error) {
         crm_notice("Configuration errors found during scheduler processing,"
                    "  please run \"crm_verify -L\" to identify issues");
     }
@@ -1024,38 +1023,38 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     transition_id++;
     crm_trace("Creating transition graph %d", transition_id);
 
-    scheduler->graph = pcmk__xe_create(NULL, PCMK__XE_TRANSITION_GRAPH);
+    scheduler->priv->graph = pcmk__xe_create(NULL, PCMK__XE_TRANSITION_GRAPH);
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_CLUSTER_DELAY);
-    crm_xml_add(scheduler->graph, PCMK_OPT_CLUSTER_DELAY, value);
+    crm_xml_add(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, value);
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
-    crm_xml_add(scheduler->graph, PCMK_OPT_STONITH_TIMEOUT, value);
+    crm_xml_add(scheduler->priv->graph, PCMK_OPT_STONITH_TIMEOUT, value);
 
-    crm_xml_add(scheduler->graph, "failed-stop-offset", "INFINITY");
+    crm_xml_add(scheduler->priv->graph, "failed-stop-offset", "INFINITY");
 
     if (pcmk_is_set(scheduler->flags, pcmk__sched_start_failure_fatal)) {
-        crm_xml_add(scheduler->graph, "failed-start-offset", "INFINITY");
+        crm_xml_add(scheduler->priv->graph, "failed-start-offset", "INFINITY");
     } else {
-        crm_xml_add(scheduler->graph, "failed-start-offset", "1");
+        crm_xml_add(scheduler->priv->graph, "failed-start-offset", "1");
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_BATCH_LIMIT);
-    crm_xml_add(scheduler->graph, PCMK_OPT_BATCH_LIMIT, value);
+    crm_xml_add(scheduler->priv->graph, PCMK_OPT_BATCH_LIMIT, value);
 
-    crm_xml_add_int(scheduler->graph, "transition_id", transition_id);
+    crm_xml_add_int(scheduler->priv->graph, "transition_id", transition_id);
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_MIGRATION_LIMIT);
     if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
-        crm_xml_add(scheduler->graph, PCMK_OPT_MIGRATION_LIMIT, value);
+        crm_xml_add(scheduler->priv->graph, PCMK_OPT_MIGRATION_LIMIT, value);
     }
 
-    if (scheduler->recheck_by > 0) {
+    if (scheduler->priv->recheck_by > 0) {
         char *recheck_epoch = NULL;
 
-        recheck_epoch = crm_strdup_printf("%llu",
-                                          (long long) scheduler->recheck_by);
-        crm_xml_add(scheduler->graph, "recheck-by", recheck_epoch);
+        recheck_epoch = crm_strdup_printf("%llu", (unsigned long long)
+                                          scheduler->priv->recheck_by);
+        crm_xml_add(scheduler->priv->graph, "recheck-by", recheck_epoch);
         free(recheck_epoch);
     }
 
@@ -1065,7 +1064,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
      */
 
     // Add resource actions to graph
-    for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->priv->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pcmk__rsc_trace(rsc, "Processing actions for %s", rsc->id);
@@ -1108,5 +1107,5 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         add_action_to_graph((gpointer) action, (gpointer) scheduler);
     }
 
-    crm_log_xml_trace(scheduler->graph, "graph");
+    crm_log_xml_trace(scheduler->priv->graph, "graph");
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <limits.h>
 
 #include <crm/common/unittest_internal.h>
 
@@ -48,6 +50,22 @@ no_result_variable(void **state)
 }
 
 static void
+out_of_range(void **state)
+{
+    long long result = 0LL;
+    char *very_long = crm_strdup_printf(" %lld0", LLONG_MAX);
+
+    assert_int_equal(pcmk__scan_ll(very_long, &result, 47), ERANGE);
+    assert_true(result == LLONG_MAX);
+
+    very_long[0] = '-';
+    assert_int_equal(pcmk__scan_ll(very_long, &result, 47), ERANGE);
+    assert_true(result == LLONG_MIN);
+
+    free(very_long);
+}
+
+static void
 typical_case(void **state)
 {
     long long result;
@@ -61,4 +79,5 @@ PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(bad_input_string),
                 cmocka_unit_test(trailing_chars),
                 cmocka_unit_test(no_result_variable),
+                cmocka_unit_test(out_of_range),
                 cmocka_unit_test(typical_case))

@@ -461,7 +461,7 @@ generate_params(void)
     if (rc != pcmk_rc_ok) {
         return rc;
     }
-    rc = pcmk_update_configured_schema(&cib_xml_copy, false);
+    rc = pcmk__update_configured_schema(&cib_xml_copy, false);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -472,14 +472,14 @@ generate_params(void)
         crm_crit("Could not allocate scheduler data");
         return ENOMEM;
     }
-    pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_no_counts|pcmk__sched_no_compat);
+    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
     scheduler->input = cib_xml_copy;
     scheduler->priv->now = crm_time_new(NULL);
     cluster_status(scheduler);
 
     // Find resource in CIB
-    rsc = pe_find_resource_with_flags(scheduler->resources, options.rsc_id,
+    rsc = pe_find_resource_with_flags(scheduler->priv->resources,
+                                      options.rsc_id,
                                       pcmk_rsc_match_history
                                       |pcmk_rsc_match_basename);
     if (rsc == NULL) {

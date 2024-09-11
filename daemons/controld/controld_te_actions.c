@@ -54,14 +54,14 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *cmd = NULL;
 
-            if (pcmk__str_eq(controld_globals.our_nodename, node->name,
-                             pcmk__str_casei)) {
+            if (controld_is_local_node(node->name)) {
                 continue;
             }
 
-            cmd = create_request(task, pseudo->xml, node->name,
-                                 CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
-            pcmk__cluster_send_message(node, pcmk__cluster_msg_controld, cmd);
+            cmd = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_TENGINE,
+                                    node->name, CRM_SYSTEM_CRMD, task,
+                                    pseudo->xml);
+            pcmk__cluster_send_message(node, pcmk_ipc_controld, cmd);
             pcmk__xml_free(cmd);
         }
 
@@ -130,13 +130,12 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             const char *mode = crm_element_value(action->xml, PCMK__XA_MODE);
 
             if (pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
-                router_node = controld_globals.our_nodename;
+                router_node = controld_globals.cluster->priv->node_name;
             }
         }
     }
 
-    if (pcmk__str_eq(router_node, controld_globals.our_nodename,
-                     pcmk__str_casei)) {
+    if (controld_is_local_node(router_node)) {
         is_local = TRUE;
     }
 
@@ -166,7 +165,8 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
     }
 
-    cmd = create_request(task, action->xml, router_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
+    cmd = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_TENGINE, router_node,
+                            CRM_SYSTEM_CRMD, task, action->xml);
 
     counter = pcmk__transition_key(controld_globals.transition_graph->id,
                                    action->id, get_target_rc(action),
@@ -175,7 +175,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     node = pcmk__get_node(0, router_node, NULL,
                           pcmk__node_search_cluster_member);
-    rc = pcmk__cluster_send_message(node, pcmk__cluster_msg_controld, cmd);
+    rc = pcmk__cluster_send_message(node, pcmk_ipc_controld, cmd);
     free(counter);
     pcmk__xml_free(cmd);
 
@@ -392,8 +392,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                    controld_globals.te_uuid);
     crm_xml_add(rsc_op, PCMK__XA_TRANSITION_KEY, counter);
 
-    if (pcmk__str_eq(router_node, controld_globals.our_nodename,
-                     pcmk__str_casei)) {
+    if (controld_is_local_node(router_node)) {
         is_local = TRUE;
     }
 
@@ -406,8 +405,8 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                task, task_uuid, (is_local? " locally" : ""), on_node,
                (no_wait? " without waiting" : ""), action->id);
 
-    cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, router_node,
-                         CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
+    cmd = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_TENGINE, router_node,
+                            CRM_SYSTEM_LRMD, CRM_OP_INVOKE_LRM, rsc_op);
 
     if (is_local) {
         /* shortcut local resource commands */
@@ -434,7 +433,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             pcmk__get_node(0, router_node, NULL,
                            pcmk__node_search_cluster_member);
 
-        rc = pcmk__cluster_send_message(node, pcmk__cluster_msg_execd, cmd);
+        rc = pcmk__cluster_send_message(node, pcmk_ipc_execd, cmd);
     }
 
     free(counter);

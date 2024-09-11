@@ -1,0 +1,14 @@
+<cib validate-with="pacemaker-2.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cluster-opts">
+        <nvpair id="cluster-opts-default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="-INFINITY"/>
+        <nvpair id="cluster-opts-default_resource_failure_stickiness" name="default_resource_failure_stickiness" value="0"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

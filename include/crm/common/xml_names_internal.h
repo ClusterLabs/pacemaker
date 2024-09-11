@@ -49,6 +49,7 @@ extern "C" {
 #define PCMK__XE_LRMD_RSC               "lrmd_rsc"
 #define PCMK__XE_LRMD_RSC_OP            "lrmd_rsc_op"
 #define PCMK__XE_MAINTENANCE            "maintenance"
+#define PCMK__XE_MESSAGE                "message"
 #define PCMK__XE_META                   "meta"
 #define PCMK__XE_NACK                   "nack"
 #define PCMK__XE_NODE_STATE             "node_state"
@@ -163,6 +164,7 @@ extern "C" {
 #define PCMK__XA_HIDDEN                 "hidden"
 #define PCMK__XA_HTTP_EQUIV             "http-equiv"
 #define PCMK__XA_IN_CCM                 "in_ccm"
+#define PCMK__XA_IPC_PROTO_VERSION      "ipc-protocol-version"
 #define PCMK__XA_JOIN                   "join"
 #define PCMK__XA_JOIN_ID                "join_id"
 #define PCMK__XA_LINE                   "line"
@@ -280,9 +282,6 @@ extern "C" {
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"
 
-// @COMPAT Deprecated since 2.1.5
-#define PCMK__XA_FIRST_INSTANCE         "first-instance"
-
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XA_ORDERING               "ordering"
 
@@ -297,15 +296,6 @@ extern "C" {
 
 // @COMPAT Deprecated alias for \c PCMK_XA_AUTOMATIC since 1.1.14
 #define PCMK__XA_REQUIRED               "required"
-
-// @COMPAT Deprecated since 2.1.5
-#define PCMK__XA_RSC_INSTANCE           "rsc-instance"
-
-// @COMPAT Deprecated since 2.1.5
-#define PCMK__XA_THEN_INSTANCE          "then-instance"
-
-// @COMPAT Deprecated since 2.1.5
-#define PCMK__XA_WITH_RSC_INSTANCE      "with-rsc-instance"
 
 #ifdef __cplusplus
 }

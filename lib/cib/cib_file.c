@@ -240,7 +240,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);
 
-    // Mirror the logic in prepare_input() in pacemaker-based
+    // Mirror the logic in prepare_input() in the CIB manager
     if ((section != NULL) && pcmk__xe_is(data, PCMK_XE_CIB)) {
 
         data = pcmk_find_cib_element(data, section);
@@ -269,11 +269,6 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
             private->cib_xml = result_cib;
         }
         cib_set_file_flags(private, cib_file_flag_dirty);
-    }
-
-    // Global operation callback (deprecated)
-    if (cib->op_callback != NULL) {
-        cib->op_callback(NULL, call_id, rc, *output);
     }
 
 done:
@@ -423,14 +418,15 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     if (rc == pcmk_ok) {
         crm_debug("Opened connection to local file '%s' for %s",
-                  private->filename, name);
+                  private->filename, pcmk__s(name, "client"));
         cib->state = cib_connected_command;
         cib->type = cib_command;
         register_client(cib);
 
     } else {
         crm_info("Connection to local file '%s' for %s (client %s) failed: %s",
-                 private->filename, name, private->id, pcmk_strerror(rc));
+                 private->filename, pcmk__s(name, "client"), private->id,
+                 pcmk_strerror(rc));
     }
     return rc;
 }
@@ -598,12 +594,6 @@ cib_file_free(cib_t *cib)
 }
 
 static int
-cib_file_inputfd(cib_t *cib)
-{
-    return -EPROTONOSUPPORT;
-}
-
-static int
 cib_file_register_notification(cib_t *cib, const char *callback, int enabled)
 {
     return -EPROTONOSUPPORT;
@@ -647,42 +637,52 @@ cib_file_client_id(const cib_t *cib, const char **async_id,
 cib_t *
 cib_file_new(const char *cib_location)
 {
+    cib_t *cib = NULL;
     cib_file_opaque_t *private = NULL;
-    cib_t *cib = cib_new_variant();
+    char *filename = NULL;
 
+    if (cib_location == NULL) {
+        cib_location = getenv("CIB_file");
+        if (cib_location == NULL) {
+            return NULL; // Shouldn't be possible if we were called internally
+        }
+    }
+
+    cib = cib_new_variant();
     if (cib == NULL) {
         return NULL;
     }
 
-    private = calloc(1, sizeof(cib_file_opaque_t));
-
-    if (private == NULL) {
+    filename = strdup(cib_location);
+    if (filename == NULL) {
         free(cib);
         return NULL;
     }
+
+    private = calloc(1, sizeof(cib_file_opaque_t));
+    if (private == NULL) {
+        free(cib);
+        free(filename);
+        return NULL;
+    }
+
     private->id = crm_generate_uuid();
+    private->filename = filename;
 
     cib->variant = cib_file;
     cib->variant_opaque = private;
 
-    if (cib_location == NULL) {
-        cib_location = getenv("CIB_file");
-        CRM_CHECK(cib_location != NULL, return NULL); // Shouldn't be possible
-    }
     private->flags = 0;
     if (cib_file_is_live(cib_location)) {
         cib_set_file_flags(private, cib_file_flag_live);
         crm_trace("File %s detected as live CIB", cib_location);
     }
-    private->filename = strdup(cib_location);
 
     /* assign variant specific ops */
     cib->delegate_fn = cib_file_perform_op_delegate;
     cib->cmds->signon = cib_file_signon;
     cib->cmds->signoff = cib_file_signoff;
     cib->cmds->free = cib_file_free;
-    cib->cmds->inputfd = cib_file_inputfd; // Deprecated method
-
     cib->cmds->register_notification = cib_file_register_notification;
     cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;
 

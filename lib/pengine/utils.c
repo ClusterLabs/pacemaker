@@ -583,8 +583,11 @@ pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 void
 pe__clear_resource_flags_on_all(pcmk_scheduler_t *scheduler, uint64_t flag)
 {
-    for (GList *lpc = scheduler->resources; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = scheduler->priv->resources;
+         lpc != NULL; lpc = lpc->next) {
+
         pcmk_resource_t *r = (pcmk_resource_t *) lpc->data;
+
         pe__clear_resource_flags_recursive(r, flag);
     }
 }
@@ -672,9 +675,9 @@ pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
                         const char *reason)
 {
     if ((recheck > get_effective_time(scheduler))
-        && ((scheduler->recheck_by == 0)
-            || (scheduler->recheck_by > recheck))) {
-        scheduler->recheck_by = recheck;
+        && ((scheduler->priv->recheck_by == 0)
+            || (scheduler->priv->recheck_by > recheck))) {
+        scheduler->priv->recheck_by = recheck;
         crm_debug("Updated next scheduler recheck to %s for %s",
                   pcmk__trim(ctime(&recheck)), reason);
     }
@@ -689,19 +692,18 @@ pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
  * \param[in]     rule_data     Matching parameters to use when unpacking
  * \param[out]    hash          Where to store extracted name/value pairs
  * \param[in]     always_first  If not NULL, process block with this ID first
- * \param[in]     overwrite     Whether to replace existing values with same name
  * \param[in,out] scheduler     Scheduler data containing \p xml_obj
  */
 void
 pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                            const pe_rule_eval_data_t *rule_data,
                            GHashTable *hash, const char *always_first,
-                           gboolean overwrite, pcmk_scheduler_t *scheduler)
+                           pcmk_scheduler_t *scheduler)
 {
     crm_time_t *next_change = crm_time_new_undefined();
 
     pe_eval_nvpairs(scheduler->input, xml_obj, set_name, rule_data, hash,
-                    always_first, overwrite, next_change);
+                    always_first, FALSE, next_change);
     if (crm_time_is_defined(next_change)) {
         time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
@@ -835,8 +837,8 @@ pe__build_rsc_list(pcmk_scheduler_t *scheduler, const char *s)
         resources = g_list_prepend(resources, strdup("*"));
     } else {
         const uint32_t flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
-        pcmk_resource_t *rsc = pe_find_resource_with_flags(scheduler->resources,
-                                                           s, flags);
+        pcmk_resource_t *rsc =
+            pe_find_resource_with_flags(scheduler->priv->resources, s, flags);
 
         if (rsc) {
             /* A colon in the name we were given means we're being asked to filter
@@ -866,12 +868,13 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
 {
     const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
     const char *rsc_id = rsc->id;
+    const pcmk_scheduler_t *scheduler = rsc->priv->scheduler;
 
     if (pcmk__is_clone(parent)) {
         rsc_id = pe__clone_child_id(parent);
     }
 
-    for (xmlNode *xml_op = pcmk__xe_first_child(rsc->priv->scheduler->failed,
+    for (xmlNode *xml_op = pcmk__xe_first_child(scheduler->priv->failed,
                                                 NULL, NULL, NULL);
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
 

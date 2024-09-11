@@ -85,7 +85,7 @@ typedef struct {
  * \param[in]     node_name           Name of node whose status is desired
  *                                    (\p NULL for DC)
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
- *                                    \p pacemaker-controld API. If 0,
+ *                                    controller API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
  *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
  *                                    be used.
@@ -100,7 +100,7 @@ int pcmk_controller_status(xmlNodePtr *xml, const char *node_name,
  *
  * \param[in,out] xml                 Destination for the result, as an XML tree
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
- *                                    \p pacemaker-controld API. If 0,
+ *                                    controller API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
  *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
  *                                    be used.
@@ -138,7 +138,7 @@ void pcmk_free_injections(pcmk_injections_t *injections);
  *                                    node has quorum
  * \param[in]     show_output         Whether to output the node info
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
- *                                    \p pacemaker-controld API. If 0,
+ *                                    controller API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
  *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
  *                                    be used.
@@ -162,7 +162,7 @@ int pcmk_query_node_info(xmlNodePtr *xml, uint32_t *node_id, char **node_name,
  * \param[out]    node_name           If not \p NULL, where to store the node
  *                                    name
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
- *                                    \p pacemaker-controld API. If 0,
+ *                                    controller API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
  *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
  *                                    be used.
@@ -705,6 +705,7 @@ int pcmk_fence_unregister_level(stonith_t *st, const char *target,
 int pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
                         const char *id, const stonith_key_value_t *params,
                         unsigned int timeout);
+
 #endif
 
 #ifdef __cplusplus

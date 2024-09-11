@@ -299,13 +299,3 @@ Special concerns when writing alert agents:
   configuration errors, but if some user can modify the CIB without having
   |CRM_DAEMON_USER| access to the cluster nodes, it is a potential security
   concern as well, to avoid the possibility of code injection.
-   
-.. note:: **ocf:pacemaker:ClusterMon compatibility**
-
-   The alerts interface is designed to be backward compatible with the external
-   scripts interface used by the ``ocf:pacemaker:ClusterMon`` resource, which
-   is now deprecated. To preserve this compatibility, the environment variables
-   passed to alert agents are available prepended with ``CRM_notify_``
-   as well as ``CRM_alert_``. One break in compatibility is that ``ClusterMon``
-   ran external scripts as the ``root`` user, while alert agents are run as the
-   |CRM_DAEMON_USER| user.

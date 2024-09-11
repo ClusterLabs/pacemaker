@@ -87,7 +87,8 @@ static gboolean
 section_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (pcmk__str_any_of(optarg, PCMK_XE_NODES, "forever", NULL)) {
         pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_perm);
-    } else if (pcmk__str_any_of(optarg, PCMK_XE_STATUS, "reboot", NULL)) {
+    } else if (pcmk__str_any_of(optarg, PCMK_XE_STATUS, PCMK_VALUE_REBOOT,
+                                NULL)) {
         pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_perm);
     } else {
         g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_USAGE, "Unknown value for --lifetime: %s",
@@ -153,8 +154,8 @@ static GOptionEntry command_entries[] = {
       "VALUE" },
 
     { "update-both", 'B', 0, G_OPTION_ARG_CALLBACK, command_cb,
-      "Update attribute's value and time to wait (dampening) in\n"
-      INDENT "pacemaker-attrd. If this causes the value or dampening to change,\n"
+      "Update attribute's value and time to wait (dampening) in the\n"
+      INDENT "attribute manager. If this changes the value or dampening,\n"
       INDENT "the attribute will also be written to the cluster configuration,\n"
       INDENT "so be aware that repeatedly changing the dampening reduces its\n"
       INDENT "effectiveness.\n"
@@ -162,25 +163,25 @@ static GOptionEntry command_entries[] = {
       "VALUE" },
 
     { "update-delay", 'Y', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Update attribute's dampening in pacemaker-attrd. If this causes\n"
-      INDENT "the dampening to change, the attribute will also be written\n"
+      "Update attribute's dampening in the attribute manager. If this\n"
+      INDENT "changes the dampening, the attribute will also be written\n"
       INDENT "to the cluster configuration, so be aware that repeatedly\n"
       INDENT "changing the dampening reduces its effectiveness.\n"
       INDENT "Requires -d/--delay",
       NULL },
 
     { "query", 'Q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Query the attribute's value from pacemaker-attrd",
+      "Query the attribute's value from the attribute manager",
       NULL },
 
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Unset attribute from pacemaker-attrd. At the moment, there is no way\n"
-      INDENT "to remove an attribute. This option will instead set its value\n"
-      INDENT "to the empty string.",
+      "Unset attribute from the attribute manager. At the moment, there is no\n"
+      INDENT "way to remove an attribute. This option will instead set its\n"
+      INDENT "value to the empty string.",
       NULL },
 
     { "refresh", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "(Advanced) Force the pacemaker-attrd daemon to resend all current\n"
+      "(Advanced) Force the attribute manager to resend all current\n"
       INDENT "values to the CIB",
       NULL },
 
@@ -353,8 +354,8 @@ main(int argc, char **argv)
     } else {
         /* @TODO We don't know whether the specified node is a Pacemaker Remote
          * node or not, so we can't set pcmk__node_attr_remote when appropriate.
-         * However, it's not a big problem, because pacemaker-attrd will learn
-         * and remember a node's "remoteness".
+         * However, it's not a big problem, because the attribute manager will
+         * learn and remember a node's "remoteness".
          */
         int rc = send_attrd_update(options.command, options.attr_node,
                                    options.attr_name, options.attr_value,
@@ -384,7 +385,7 @@ done:
 }
 
 /*!
- * \brief Print the attribute values in a pacemaker-attrd XML query reply
+ * \brief Print the attribute values in an attribute manager XML query reply
  *
  * \param[in,out] out    Output object
  * \param[in]     reply  List of attribute name/value pairs
@@ -421,7 +422,7 @@ attrd_event_cb(pcmk_ipc_api_t *attrd_api, enum pcmk_ipc_event event_type,
 }
 
 /*!
- * \brief Submit a query to pacemaker-attrd and print reply
+ * \brief Submit a query to the attribute manager and print reply
  *
  * \param[in,out] out  Output object
  * \param[in]     attr_name  Name of attribute to be affected by request

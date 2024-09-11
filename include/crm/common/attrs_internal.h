@@ -13,7 +13,7 @@
 #include <crm/crm.h>                        // crm_system_name
 #include <crm/common/logging.h>             // LOG_TRACE
 #include <crm/common/scheduler_types.h>     // pcmk_node_t
-#include <crm/common/failcounts_internal.h> // enum pcmk__rsc_node
+#include <crm/common/resources_internal.h>  // enum pcmk__rsc_node
 
 #ifdef __cplusplus
 extern "C" {

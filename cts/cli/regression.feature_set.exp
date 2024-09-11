@@ -1,6 +1,3 @@
-Created new pacemaker configuration
-A new shadow instance was created. To begin using it, enter the following into your shell:
-	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Import the test CIB =#=#=#=
 =#=#=#= Current cib after: Import the test CIB =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="0" have-quorum="1" dc-uuid="1">
@@ -46,7 +43,7 @@ A new shadow instance was created. To begin using it, enter the following into y
   </status>
 </cib>
 =#=#=#= End test: Import the test CIB - OK (0) =#=#=#=
-* Passed: cibadmin       - Import the test CIB
+* Passed: cibadmin              - Import the test CIB
 =#=#=#= Begin test: Complete text output, no mixed status =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -66,8 +63,8 @@ Node List:
 Active Resources:
   * No active resources
 =#=#=#= End test: Complete text output, no mixed status - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output, no mixed status
-=#=#=#= Begin test: XML output, no mixed status =#=#=#=
+* Passed: crm_mon               - Complete text output, no mixed status
+=#=#=#= Begin test: Output, no mixed status (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml">
   <summary>
     <stack type="corosync"/>
@@ -98,8 +95,8 @@ Active Resources:
   <node_history/>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output, no mixed status - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output, no mixed status
+=#=#=#= End test: Output, no mixed status (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output, no mixed status (XML)
 =#=#=#= Begin test: Fake inconsistent feature set =#=#=#=
 =#=#=#= Current cib after: Fake inconsistent feature set =#=#=#=
 <cib epoch="2" num_updates="1" admin_epoch="0" have-quorum="1" dc-uuid="1">
@@ -145,7 +142,7 @@ Active Resources:
   </status>
 </cib>
 =#=#=#= End test: Fake inconsistent feature set - OK (0) =#=#=#=
-* Passed: crm_attribute  - Fake inconsistent feature set
+* Passed: crm_attribute         - Fake inconsistent feature set
 =#=#=#= Begin test: Complete text output, mixed status =#=#=#=
 Cluster Summary:
   * Stack: corosync
@@ -165,8 +162,8 @@ Node List:
 Active Resources:
   * No active resources
 =#=#=#= End test: Complete text output, mixed status - OK (0) =#=#=#=
-* Passed: crm_mon        - Complete text output, mixed status
-=#=#=#= Begin test: XML output, mixed status =#=#=#=
+* Passed: crm_mon               - Complete text output, mixed status
+=#=#=#= Begin test: Output, mixed status (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml">
   <summary>
     <stack type="corosync"/>
@@ -197,5 +194,5 @@ Active Resources:
   <node_history/>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: XML output, mixed status - OK (0) =#=#=#=
-* Passed: crm_mon        - XML output, mixed status
+=#=#=#= End test: Output, mixed status (XML) - OK (0) =#=#=#=
+* Passed: crm_mon               - Output, mixed status (XML)

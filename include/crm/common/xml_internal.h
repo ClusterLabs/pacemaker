@@ -419,7 +419,9 @@ pcmk__xe_next(const xmlNode *child)
 }
 
 xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
+xmlNode *pcmk__xc_create(xmlDoc *doc, const char *content);
 void pcmk__xml_free(xmlNode *xml);
+void pcmk__xml_free_doc(xmlDoc *doc);
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
 xmlNode *pcmk__xe_next_same(const xmlNode *node);
 
@@ -590,6 +592,20 @@ pcmk__map_element_name(const xmlNode *xml)
         return (const char *) xml->name;
     }
 }
+
+/*!
+ * \internal
+ * \brief Check whether a given CIB element was modified in a CIB patchset
+ *
+ * \param[in] patchset  CIB XML patchset
+ * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
+ *                      to \c PCMK_XE_CIB). Supported values include any CIB
+ *                      element supported by \c pcmk__cib_abs_xpath_for().
+ *
+ * \return \c true if \p element was modified, or \c false otherwise
+ */
+bool pcmk__cib_element_in_patchset(const xmlNode *patchset,
+                                   const char *element);
 
 #ifdef __cplusplus
 }

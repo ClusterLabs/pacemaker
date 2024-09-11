@@ -13,6 +13,7 @@
 #include <crm/cib.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/output_internal.h>
+#include <crm/common/servers_internal.h>
 #include <crm/common/strings_internal.h>
 
 #ifdef __cplusplus
@@ -161,7 +162,7 @@ cib_t *cib_new_variant(void);
 static inline bool
 cib__client_triggers_refresh(const char *name)
 {
-    return !crm_is_daemon_name(name)
+    return (pcmk__parse_server(name) == pcmk_ipc_unknown)
            && !pcmk__str_any_of(name,
                                 "attrd_updater",
                                 "crm_attribute",
@@ -172,8 +173,6 @@ cib__client_triggers_refresh(const char *name)
 }
 
 int cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset);
-
-bool cib__element_in_patchset(const xmlNode *patchset, const char *element);
 
 int cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                    bool is_query, const char *section, xmlNode *req,
@@ -291,6 +290,8 @@ cib_callback_client_t* cib__lookup_id (int call_id);
  *       read-only.
  */
 int cib__signon_query(pcmk__output_t *out, cib_t **cib, xmlNode **cib_object);
+
+int cib__signon_attempts(cib_t *cib, enum cib_conn_type type, int attempts);
 
 int cib__clean_up_connection(cib_t **cib);
 

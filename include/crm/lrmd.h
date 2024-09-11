@@ -53,7 +53,6 @@ typedef struct lrmd_key_value_s {
 
 /* *INDENT-OFF* */
 #define DEFAULT_REMOTE_KEY_LOCATION PACEMAKER_CONFIG_DIR "/authkey"
-#define ALT_REMOTE_KEY_LOCATION "/etc/corosync/authkey"
 #define DEFAULT_REMOTE_PORT 3121
 #define DEFAULT_REMOTE_USERNAME "lrmd"
 
@@ -133,22 +132,16 @@ lrmd_key_value_t *lrmd_key_value_add(lrmd_key_value_t * kvp, const char *key, co
 enum lrmd_call_options {
     lrmd_opt_none                   = 0,
 
-    //! Notify only the client that made the request (rather than all clients)
-    lrmd_opt_notify_orig_only       = (1 << 1),
-
     /*!
      * Drop recurring operations initiated by a client when the client
      * disconnects. This option is only valid when registering a resource. When
      * used with a connection to a remote executor, recurring operations will be
      * dropped once all remote connections disconnect.
-     *
-     * @COMPAT This is broken, because these values should be unique bits, and
-     * this value overlaps lrmd_opt_notify_orig_only (0x02). The impact is low
-     * since this value is used only with registration requests and the other
-     * one is used only with execution requests. Regardless, when we can break
-     * API compatibility, this should be changed to (1 << 0) or (1 << 3).
      */
-    lrmd_opt_drop_recurring         = 0x00000003,
+    lrmd_opt_drop_recurring         = (1 << 0),
+
+    //! Notify only the client that made the request (rather than all clients)
+    lrmd_opt_notify_orig_only       = (1 << 1),
 
     //! Send notifications for recurring operations only when the result changes
     lrmd_opt_notify_changes_only    = (1 << 2),

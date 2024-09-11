@@ -12,6 +12,7 @@
 
 #include <glib.h>               // GList
 
+#include <crm_config.h>         // PCMK_OCF_ROOT, PCMK_SCHEDULER_INPUT_DIR, PCMK_SCHEMA_DIR
 #include <crm/common/scores.h>  // PCMK_SCORE_INFINITY
 
 #ifdef __cplusplus
@@ -27,9 +28,21 @@ extern "C" {
  *             release.
  */
 
+//! \deprecated Do not use (will be removed in a future release)
+#define CRM_SYSTEM_STONITHD "stonithd"
+
+//! \deprecated Use PCMK_SCHEMA_DIR instead
+#define CRM_SCHEMA_DIRECTORY PCMK_SCHEMA_DIR
+
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use PCMK_SCORE_INFINITY instead
 #define CRM_SCORE_INFINITY PCMK_SCORE_INFINITY
+
+//! \deprecated Use PCMK_SCHEDULER_INPUT_DIR instead
+#define PE_STATE_DIR PCMK_SCHEDULER_INPUT_DIR
+
+//! \deprecated Use PCMK_OCF_ROOT instead
+#define OCF_ROOT_DIR PCMK_OCF_ROOT
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead

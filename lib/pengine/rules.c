@@ -111,60 +111,54 @@ sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
 static void
 populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
 {
-    const char *name = NULL;
-    const char *value = NULL;
-    const char *old_value = NULL;
-    xmlNode *list = nvpair_list;
-    xmlNode *an_attr = NULL;
-
-    if (pcmk__xe_is(list->children, PCMK__XE_ATTRIBUTES)) {
-        list = list->children;
+    if (pcmk__xe_is(nvpair_list->children, PCMK__XE_ATTRIBUTES)) {
+        nvpair_list = nvpair_list->children;
     }
 
-    for (an_attr = pcmk__xe_first_child(list, NULL, NULL, NULL);
-         an_attr != NULL; an_attr = pcmk__xe_next(an_attr)) {
+    for (xmlNode *nvpair = pcmk__xe_first_child(nvpair_list, PCMK_XE_NVPAIR,
+                                                NULL, NULL);
+         nvpair != NULL; nvpair = pcmk__xe_next_same(nvpair)) {
 
-        if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
-            xmlNode *ref_nvpair = pcmk__xe_resolve_idref(an_attr, NULL);
+        xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, NULL);
+        const char *name = NULL;
+        const char *value = NULL;
+        const char *old_value = NULL;
 
-            name = crm_element_value(an_attr, PCMK_XA_NAME);
-            if ((name == NULL) && (ref_nvpair != NULL)) {
-                name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
+        if (ref_nvpair == NULL) {
+            /* Not possible with schema validation enabled (error already
+             * logged)
+             */
+            continue;
+        }
+
+        name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
+        value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
+        if ((name == NULL) || (value == NULL)) {
+            continue;
+        }
+
+        old_value = g_hash_table_lookup(hash, name);
+
+        if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
+            // @COMPAT Deprecated since 2.1.8
+            pcmk__config_warn("Support for setting meta-attributes (such as "
+                              "%s) to the explicit value '#default' is "
+                              "deprecated and will be removed in a future "
+                              "release", name);
+            if (old_value != NULL) {
+                crm_trace("Letting %s default (removing explicit value \"%s\")",
+                          name, value);
+                g_hash_table_remove(hash, name);
             }
 
-            value = crm_element_value(an_attr, PCMK_XA_VALUE);
-            if ((value == NULL) && (ref_nvpair != NULL)) {
-                value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
-            }
+        } else if (old_value == NULL) {
+            crm_trace("Setting %s=\"%s\"", name, value);
+            pcmk__insert_dup(hash, name, value);
 
-            if (name == NULL || value == NULL) {
-                continue;
-            }
-
-            old_value = g_hash_table_lookup(hash, name);
-
-            if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
-                // @COMPAT Deprecated since 2.1.8
-                pcmk__config_warn("Support for setting meta-attributes (such "
-                                  "as %s) to the explicit value '#default' is "
-                                  "deprecated and will be removed in a future "
-                                  "release", name);
-                if (old_value) {
-                    crm_trace("Letting %s default (removing explicit value \"%s\")",
-                              name, value);
-                    g_hash_table_remove(hash, name);
-                }
-                continue;
-
-            } else if (old_value == NULL) {
-                crm_trace("Setting %s=\"%s\"", name, value);
-                pcmk__insert_dup(hash, name, value);
-
-            } else if (overwrite) {
-                crm_trace("Setting %s=\"%s\" (overwriting old value \"%s\")",
-                          name, value, old_value);
-                pcmk__insert_dup(hash, name, value);
-            }
+        } else if (overwrite) {
+            crm_trace("Setting %s=\"%s\" (overwriting old value \"%s\")",
+                      name, value, old_value);
+            pcmk__insert_dup(hash, name, value);
         }
     }
 }
@@ -175,8 +169,11 @@ unpack_attr_set(gpointer data, gpointer user_data)
     xmlNode *pair = data;
     pcmk__nvpair_unpack_t *unpack_data = user_data;
 
-    if (pcmk__evaluate_rules(pair, &(unpack_data->rule_input),
-                             unpack_data->next_change) != pcmk_rc_ok) {
+    xmlNode *rule_xml = pcmk__xe_first_child(pair, PCMK_XE_RULE, NULL, NULL);
+
+    if ((rule_xml != NULL)
+        && (pcmk_evaluate_rule(rule_xml, &(unpack_data->rule_input),
+                               unpack_data->next_change) != pcmk_rc_ok)) {
         return;
     }
 
@@ -226,7 +223,8 @@ make_pairs(const xmlNode *xml_obj, const char *set_name)
  * \param[in]     rule_data     Matching parameters to use when unpacking
  * \param[out]    hash          Where to store extracted name/value pairs
  * \param[in]     always_first  If not NULL, process block with this ID first
- * \param[in]     overwrite     Whether to replace existing values with same name
+ * \param[in]     overwrite     Whether to replace existing values with same
+ *                              name (all internal callers pass \c FALSE)
  * \param[out]    next_change   If not NULL, set to when evaluation will change
  */
 void
@@ -262,7 +260,8 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
  * \param[in]     node_hash     Node attributes to use when evaluating rules
  * \param[out]    hash          Where to store extracted name/value pairs
  * \param[in]     always_first  If not NULL, process block with this ID first
- * \param[in]     overwrite     Whether to replace existing values with same name
+ * \param[in]     overwrite     Whether to replace existing values with same
+ *                              name (all internal callers pass \c FALSE)
  * \param[in]     now           Time to use when evaluating rules
  * \param[out]    next_change   If not NULL, set to when evaluation will change
  */
@@ -289,32 +288,15 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 
 #include <crm/pengine/rules_compat.h>
 
-static gboolean
-pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
-             crm_time_t *now, crm_time_t *next_change,
-             pe_match_data_t *match_data)
+gboolean
+test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
     pcmk_rule_input_t rule_input = {
         .node_attrs = node_hash,
         .now = now,
     };
 
-    if (match_data != NULL) {
-        rule_input.rsc_params = match_data->params;
-        rule_input.rsc_meta = match_data->meta;
-        if (match_data->re != NULL) {
-            rule_input.rsc_id = match_data->re->string;
-            rule_input.rsc_id_submatches = match_data->re->pmatch;
-            rule_input.rsc_id_nmatches = match_data->re->nregs;
-        }
-    }
-    return pcmk_evaluate_rule(rule, &rule_input, next_change) == pcmk_rc_ok;
-}
-
-gboolean
-test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
-{
-    return pe_test_rule(rule, node_hash, role, now, NULL, NULL);
+    return pcmk_evaluate_rule(rule, &rule_input, NULL) == pcmk_rc_ok;
 }
 
 // LCOV_EXCL_STOP

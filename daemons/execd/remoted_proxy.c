@@ -157,10 +157,6 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
     pcmk__client_t *ipc_client;
     int rc = pcmk_rc_ok;
 
-    /* If the IPC provider is acknowledging our shutdown request,
-     * defuse the short exit timer to give the cluster time to
-     * stop any resources we're running.
-     */
     if (pcmk__str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_ACK, pcmk__str_casei)) {
         handle_shutdown_ack();
         return;

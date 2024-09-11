@@ -450,15 +450,16 @@ cluster_summary(pcmk__output_t *out, va_list args) {
                                                PCMK_XA_UPDATE_ORIGIN);
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
-        out->message(out, "cluster-times",
-                     scheduler->localhost, last_written, user, client, origin);
+        out->message(out, "cluster-times", scheduler->priv->local_node_name,
+                     last_written, user, client, origin);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(scheduler->nodes),
-                     scheduler->ninstances, scheduler->disabled_resources,
-                     scheduler->blocked_resources);
+                     scheduler->priv->ninstances,
+                     scheduler->priv->disabled_resources,
+                     scheduler->priv->blocked_resources);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_options)) {
@@ -525,15 +526,16 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
                                                PCMK_XA_UPDATE_ORIGIN);
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
-        out->message(out, "cluster-times",
-                     scheduler->localhost, last_written, user, client, origin);
+        out->message(out, "cluster-times", scheduler->priv->local_node_name,
+                     last_written, user, client, origin);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(scheduler->nodes),
-                     scheduler->ninstances, scheduler->disabled_resources,
-                     scheduler->blocked_resources);
+                     scheduler->priv->ninstances,
+                     scheduler->priv->disabled_resources,
+                     scheduler->priv->blocked_resources);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_options)) {
@@ -727,7 +729,7 @@ ban_list(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
 
     /* Print each ban */
-    for (gIter = scheduler->placement_constraints;
+    for (gIter = scheduler->priv->location_constraints;
          gIter != NULL; gIter = gIter->next) {
         pcmk__location_t *location = gIter->data;
         const pcmk_resource_t *rsc = location->rsc;
@@ -1004,10 +1006,10 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long int")
+PCMK__OUTPUT_ARGS("maint-mode", "uint64_t")
 static int
 cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
-    unsigned long long flags = va_arg(args, unsigned long long);
+    uint64_t flags = va_arg(args, uint64_t);
 
     if (pcmk_is_set(flags, pcmk__sched_in_maintenance)) {
         pcmk__formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
@@ -1058,7 +1060,8 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
             break;
 
         case pcmk_no_quorum_fence:
-            out->list_item(out, NULL, "No quorum policy: Suicide");
+            out->list_item(out, NULL,
+                           "No quorum policy: Fence nodes in partition");
             break;
     }
 
@@ -1148,7 +1151,8 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
             break;
 
         case pcmk_no_quorum_fence:
-            out->list_item(out, NULL, "No quorum policy: Suicide");
+            out->list_item(out, NULL,
+                           "No quorum policy: Fence nodes in partition");
             break;
     }
 
@@ -1180,7 +1184,7 @@ no_quorum_policy_text(enum pe_quorum_policy policy)
             return PCMK_VALUE_IGNORE;
 
         case pcmk_no_quorum_fence:
-            return PCMK_VALUE_FENCE_LEGACY;
+            return PCMK_VALUE_FENCE;
 
         default:
             return PCMK_VALUE_UNKNOWN;
@@ -1202,9 +1206,11 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
                                                    pcmk__sched_in_maintenance);
     const char *stop_all_resources = pcmk__flag_text(scheduler->flags,
                                                      pcmk__sched_stop_all);
-    char *stonith_timeout_ms_s = pcmk__itoa(scheduler->priv->fence_timeout_ms);
+    char *stonith_timeout_ms_s =
+        crm_strdup_printf("%u", scheduler->priv->fence_timeout_ms);
+
     char *priority_fencing_delay_ms_s =
-        pcmk__itoa(scheduler->priority_fencing_delay * 1000);
+        crm_strdup_printf("%u", scheduler->priv->priority_fencing_ms);
 
     pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_OPTIONS,
                                  PCMK_XA_STONITH_ENABLED, stonith_enabled,
@@ -1668,11 +1674,12 @@ failed_action_list(pcmk__output_t *out, va_list args) {
     xmlNode *xml_op = NULL;
     int rc = pcmk_rc_no_output;
 
-    if (xmlChildElementCount(scheduler->failed) == 0) {
+    if (xmlChildElementCount(scheduler->priv->failed) == 0) {
         return rc;
     }
 
-    for (xml_op = pcmk__xe_first_child(scheduler->failed, NULL, NULL, NULL);
+    for (xml_op = pcmk__xe_first_child(scheduler->priv->failed, NULL, NULL,
+                                       NULL);
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
 
         char *rsc = NULL;
@@ -2204,7 +2211,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
                        PCMK_EXEC_UNKNOWN);
 
-    rsc = pe_find_resource(scheduler->resources, op_rsc);
+    rsc = pe_find_resource(scheduler->priv->resources, op_rsc);
 
     if (rsc) {
         const pcmk_node_t *node = pcmk__current_node(rsc);
@@ -2273,7 +2280,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
                                         PCMK_XA_STATUS, status_s,
                                         NULL);
 
-    rsc = pe_find_resource(scheduler->resources, op_rsc);
+    rsc = pe_find_resource(scheduler->priv->resources, op_rsc);
 
     if (rsc) {
         const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
@@ -2458,8 +2465,17 @@ node_history_list(pcmk__output_t *out, va_list args) {
          rsc_entry != NULL; rsc_entry = pcmk__xe_next_same(rsc_entry)) {
 
         const char *rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
-        pcmk_resource_t *rsc = pe_find_resource(scheduler->resources, rsc_id);
-        const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
+        pcmk_resource_t *rsc = NULL;
+        const pcmk_resource_t *parent = NULL;
+
+        if (rsc_id == NULL) {
+            continue; // Malformed entry
+        }
+
+        rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
+        if (rsc == NULL) {
+            continue; // Resource was removed from configuration
+        }
 
         /* We can't use is_filtered here to filter group resources.  For is_filtered,
          * we have to decide whether to check the parent or not.  If we check the
@@ -2469,6 +2485,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
          *
          * For other resource types, is_filtered is okay.
          */
+        parent = pe__const_top_resource(rsc, false);
         if (pcmk__is_group(parent)) {
             if (!pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
                                    pcmk__str_star_matches)
@@ -2505,7 +2522,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
                 continue;
             }
 
-            rsc = pe_find_resource(scheduler->resources,
+            rsc = pe_find_resource(scheduler->priv->resources,
                                    crm_element_value(rsc_entry, PCMK_XA_ID));
 
             if (rc == pcmk_rc_no_output) {
@@ -3026,7 +3043,7 @@ resource_list(pcmk__output_t *out, va_list args)
      * and brief output was requested, print resource summary */
     if (pcmk_is_set(show_opts, pcmk_show_brief)
         && !pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
-        GList *rscs = pe__filter_rsc_list(scheduler->resources, only_rsc);
+        GList *rscs = pe__filter_rsc_list(scheduler->priv->resources, only_rsc);
 
         PCMK__OUTPUT_SPACER_IF(out, print_spacer);
         print_resource_header(out, show_opts);
@@ -3037,7 +3054,9 @@ resource_list(pcmk__output_t *out, va_list args)
     }
 
     /* For each resource, display it if appropriate */
-    for (rsc_iter = scheduler->resources; rsc_iter != NULL; rsc_iter = rsc_iter->next) {
+    for (rsc_iter = scheduler->priv->resources;
+         rsc_iter != NULL; rsc_iter = rsc_iter->next) {
+
         pcmk_resource_t *rsc = (pcmk_resource_t *) rsc_iter->data;
         int x;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,89 +19,90 @@
 #include <controld_fsa.h>       // enum crmd_fsa_state
 
 typedef struct {
-    // Booleans
-
-    //! Group of \p controld_flags values
+    // Group of \p controld_flags values
     uint32_t flags;
 
 
-    // Controller FSA
+    /* Controller finite state automaton */
 
-    //! FSA state
+    // FSA state
     enum crmd_fsa_state fsa_state;
 
-    //! FSA actions (group of \p A_* flags)
+    // FSA actions (group of \p A_* flags)
     uint64_t fsa_actions;
 
-    //! FSA input register contents (group of \p R_* flags)
+    // FSA input register contents (group of \p R_* flags)
     uint64_t fsa_input_register;
 
-    //! FSA message queue
+    // FSA message queue
     GList *fsa_message_queue;
 
 
-    // CIB
+    /* CIB */
 
-    //! Connection to the CIB
+    // Connection to the CIB
     cib_t *cib_conn;
 
 
-    // Scheduler
+    /* Scheduler */
 
-    //! Reference of the scheduler request being waited on
+    // Reference of the scheduler request being waited on
     char *fsa_pe_ref;
 
 
-    // Transitioner
+    /* Transitioner */
 
-    //! Transitioner UUID
+    // Transitioner UUID
     char *te_uuid;
 
-    //! Graph of transition currently being processed
+    // Graph of transition currently being processed
     pcmk__graph_t *transition_graph;
 
 
-    // Logging
+    /* Logging */
 
-    //! Output object for controller log messages
+    // Output object for controller log messages
     pcmk__output_t *logger_out;
 
 
-    // Other
+    /* Cluster layer */
 
-    //! Cluster name
+    // Cluster name
     char *cluster_name;
 
-    //! Designated controller name
-    char *dc_name;
-
-    //! Designated controller's Pacemaker version
-    char *dc_version;
-
-    //! Local node's node name
-    char *our_nodename;
-
-    //! Local node's UUID
-    char *our_uuid;
-
-    //! Last saved cluster communication layer membership ID
-    unsigned long long membership_id;
+    // Cluster connection
+    pcmk_cluster_t *cluster;
 
     /* @TODO Figure out, document, and clean up the code involving
-     * controld_peer_seq, controld_globals.membership_id, and highest_seq. It's
-     * convoluted with no comments. It has something to do with corosync quorum
-     * notifications and the current ring ID, but it's unclear why we need three
-     * separate variables for it.
+     * controld_globals.membership_id, controld_globals.peer_seq, and
+     * highest_seq. It's convoluted with no comments. It has something to do
+     * with corosync quorum notifications and the current ring ID, but it's
+     * unclear why we need three separate variables for it.
      */
+    // Last saved cluster communication layer membership ID
+    unsigned long long membership_id;
+
     unsigned long long peer_seq;
 
-    //! Max lifetime (in seconds) of a resource's shutdown lock to a node
+
+    /* Other */
+
+    // Designated controller name
+    char *dc_name;
+
+    // Designated controller's Pacemaker version
+    char *dc_version;
+
+    // Local node's UUID
+    char *our_uuid;
+
+    // Max lifetime (in seconds) of a resource's shutdown lock to a node
     guint shutdown_lock_limit;
 
-    //! Node pending timeout
+    // Node pending timeout
     guint node_pending_timeout;
 
-    //! Main event loop
+    // Main event loop
     GMainLoop *mainloop;
 } controld_globals_t;
 
@@ -126,7 +127,7 @@ enum controld_flags {
     controld_has_quorum             = (1 << 3),
 
     //! Panic the local node if it loses quorum
-    controld_no_quorum_suicide      = (1 << 4),
+    controld_no_quorum_panic        = (1 << 4),
 
     //! Lock resources to the local node when it shuts down cleanly
     controld_shutdown_lock_enabled  = (1 << 5),

@@ -342,5 +342,5 @@ attrd_send_message(pcmk__node_status_t *node, xmlNode *data, bool confirm)
     }
 
     attrd_xml_add_writer(data);
-    return pcmk__cluster_send_message(node, pcmk__cluster_msg_attrd, data);
+    return pcmk__cluster_send_message(node, pcmk_ipc_attrd, data);
 }

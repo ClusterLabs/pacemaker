@@ -201,7 +201,8 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
      *   when PID is not 1
      * - Setting to "vars" enables just the loading of environment variables
      *   from /etc/pacemaker/pcmk-init.env, which could be useful for testing or
-     *   containers with a custom PID 1 script that launches pacemaker-remoted.
+     *   containers with a custom PID 1 script that launches the remote
+     *   executor.
      */
     const char *pid1 = PCMK_VALUE_DEFAULT;
 

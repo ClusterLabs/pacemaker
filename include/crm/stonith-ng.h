@@ -39,27 +39,57 @@ enum stonith_state {
     stonith_disconnected,
 };
 
+//! Flags that can be set in call options for API requests
 enum stonith_call_options {
-    st_opt_none            = 0x00000000,
-    st_opt_verbose         = 0x00000001,
-    st_opt_allow_suicide   = 0x00000002,
+    //! No options
+    st_opt_none                 = 0,
 
-    st_opt_manual_ack      = 0x00000008,
-    st_opt_discard_reply   = 0x00000010,
-/*    st_opt_all_replies     = 0x00000020, */
-    st_opt_topology        = 0x00000040,
-    st_opt_scope_local     = 0x00000100,
-    st_opt_cs_nodeid       = 0x00000200,
-    st_opt_sync_call       = 0x00001000,
-    /*! Allow the timeout period for a callback to be adjusted
-     *  based on the time the server reports the operation will take. */
-    st_opt_timeout_updates = 0x00002000,
-    /*! Only report back if operation is a success in callback */
-    st_opt_report_only_success = 0x00004000,
-    /* used where ever apropriate - e.g. cleanup of history */
-    st_opt_cleanup         = 0x000080000,
-    /* used where ever apropriate - e.g. send out a history query to all nodes */
-    st_opt_broadcast       = 0x000100000,
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Unused
+    st_opt_verbose              = (1 << 0),
+#endif
+
+    //! The fencing target is allowed to execute the request
+    st_opt_allow_self_fencing   = (1 << 1),
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use st_opt_allow_self_fencing instead
+    st_opt_allow_suicide        = st_opt_allow_self_fencing,
+#endif
+
+    // Used internally to indicate that request is manual fence confirmation
+    //! \internal Do not use
+    st_opt_manual_ack           = (1 << 3),
+
+    //! Do not return any reply from server
+    st_opt_discard_reply        = (1 << 4),
+
+    // Used internally to indicate that request requires a fencing topology
+    //! \internal Do not use
+    st_opt_topology             = (1 << 6),
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Unused
+    st_opt_scope_local          = (1 << 8),
+#endif
+
+    //! Interpret target as node cluster layer ID instead of name
+    st_opt_cs_nodeid            = (1 << 9),
+
+    //! Wait for request to be completed before returning
+    st_opt_sync_call            = (1 << 12),
+
+    //! Request that server send an update with optimal callback timeout
+    st_opt_timeout_updates      = (1 << 13),
+
+    //! Invoke callback only if request succeeded
+    st_opt_report_only_success  = (1 << 14),
+
+    //! For a fence history request, request that the history be cleared
+    st_opt_cleanup              = (1 << 19),
+
+    //! For a fence history request, broadcast the request to all nodes
+    st_opt_broadcast            = (1 << 20),
 };
 
 /*! Order matters here, do not change values */
@@ -111,13 +141,9 @@ typedef struct stonith_history_s {
 
 typedef struct stonith_s stonith_t;
 
-typedef struct stonith_event_s
-{
+typedef struct stonith_event_s {
     char *id;
-    char *type;     //!< \deprecated Will be removed in future release
-    char *message;  //!< \deprecated Will be removed in future release
     char *operation;
-
     int result;
     char *origin;
     char *target;
@@ -540,14 +566,10 @@ typedef struct stonith_api_operations_s
 
 } stonith_api_operations_t;
 
-struct stonith_s
-{
+struct stonith_s {
     enum stonith_state state;
-
     int call_id;
-    int call_timeout;   //!< \deprecated Unused
     void *st_private;
-
     stonith_api_operations_t *cmds;
 };
 /* *INDENT-ON* */

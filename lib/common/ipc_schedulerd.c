@@ -88,11 +88,20 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         return false;
     }
 
+    value = crm_element_value(reply, PCMK__XA_T);
+    if (pcmk__parse_server(value) != pcmk_ipc_schedulerd) {
+        crm_info("Unrecognizable message from schedulerd: "
+                  "unexpected message type '%s'",
+                  pcmk__s(value, ""));
+        status = CRM_EX_PROTOCOL;
+        goto done;
+    }
+
     value = crm_element_value(reply, PCMK__XA_SUBT);
     if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         crm_info("Unrecognizable message from schedulerd: "
-                  "message type '%s' not '" PCMK__VALUE_RESPONSE "'",
-                  pcmk__s(value, ""));
+                 "message type '%s' not '" PCMK__VALUE_RESPONSE "'",
+                 pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -149,6 +158,7 @@ do_schedulerd_api_call(pcmk_ipc_api_t *api, const char *task, xmlNode *cib, char
     schedulerd_api_private_t *private;
     xmlNode *cmd = NULL;
     int rc;
+    char *sender_system = NULL;
 
     if (!pcmk_ipc_is_connected(api)) {
         return ENOTCONN;
@@ -157,9 +167,11 @@ do_schedulerd_api_call(pcmk_ipc_api_t *api, const char *task, xmlNode *cib, char
     private = api->api_data;
     CRM_ASSERT(private != NULL);
 
-    cmd = create_request(task, cib, NULL, CRM_SYSTEM_PENGINE,
-                         crm_system_name? crm_system_name : "client",
-                         private->client_uuid);
+    sender_system = crm_strdup_printf("%s_%s", private->client_uuid,
+                                      pcmk__s(crm_system_name, "client"));
+    cmd = pcmk__new_request(pcmk_ipc_schedulerd, sender_system, NULL,
+                            CRM_SYSTEM_PENGINE, task, cib);
+    free(sender_system);
 
     if (cmd) {
         rc = pcmk__send_ipc_request(api, cmd);

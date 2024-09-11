@@ -30,7 +30,7 @@ enum ordering_symmetry {
 };
 
 #define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                  \
-        __rsc = pcmk__find_constraint_resource(scheduler->resources,        \
+        __rsc = pcmk__find_constraint_resource(scheduler->priv->resources,  \
                                                __name);                     \
         if (__rsc == NULL) {                                                \
             pcmk__config_err("%s: No resource found for %s", __set, __name);\
@@ -229,22 +229,16 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
  *
  * \param[in] xml            Ordering XML
  * \param[in] resource_attr  XML attribute name for resource ID
- * \param[in] instance_attr  XML attribute name for instance number.
- *                           This option is deprecated and will be removed in a
- *                           future release.
  * \param[in] scheduler      Scheduler data
  *
  * \return Resource corresponding to \p id, or NULL if none
  */
 static pcmk_resource_t *
 get_ordering_resource(const xmlNode *xml, const char *resource_attr,
-                      const char *instance_attr,
                       const pcmk_scheduler_t *scheduler)
 {
-    // @COMPAT: instance_attr and instance_id variables deprecated since 2.1.5
     pcmk_resource_t *rsc = NULL;
     const char *rsc_id = crm_element_value(xml, resource_attr);
-    const char *instance_id = crm_element_value(xml, instance_attr);
 
     if (rsc_id == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without %s",
@@ -252,33 +246,13 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
         return NULL;
     }
 
-    rsc = pcmk__find_constraint_resource(scheduler->resources, rsc_id);
+    rsc = pcmk__find_constraint_resource(scheduler->priv->resources, rsc_id);
     if (rsc == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", pcmk__xe_id(xml), rsc_id);
         return NULL;
     }
 
-    if (instance_id != NULL) {
-        pcmk__warn_once(pcmk__wo_order_inst,
-                        "Support for " PCMK__XA_FIRST_INSTANCE " and "
-                        PCMK__XA_THEN_INSTANCE " is deprecated and will be "
-                        "removed in a future release.");
-
-        if (!pcmk__is_clone(rsc)) {
-            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                             "is not a clone but instance '%s' was requested",
-                             pcmk__xe_id(xml), rsc_id, instance_id);
-            return NULL;
-        }
-        rsc = find_clone_instance(rsc, instance_id);
-        if (rsc == NULL) {
-            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                             "does not have an instance '%s'",
-                             pcmk__xe_id(xml), rsc_id, instance_id);
-            return NULL;
-        }
-    }
     return rsc;
 }
 
@@ -357,7 +331,6 @@ clone_min_ordering(const char *id,
      * considered runnable before allowing the pseudo-action to be runnable.
      */
     clone_min_met->required_runnable_before = clone_min;
-    pcmk__set_action_flags(clone_min_met, pcmk__action_min_runnable);
 
     // Order the actions for each clone instance before the pseudo-action
     for (GList *iter = rsc_first->priv->children;
@@ -453,14 +426,12 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    rsc_first = get_ordering_resource(xml_obj, PCMK_XA_FIRST,
-                                      PCMK__XA_FIRST_INSTANCE, scheduler);
+    rsc_first = get_ordering_resource(xml_obj, PCMK_XA_FIRST, scheduler);
     if (rsc_first == NULL) {
         return;
     }
 
-    rsc_then = get_ordering_resource(xml_obj, PCMK_XA_THEN,
-                                     PCMK__XA_THEN_INSTANCE, scheduler);
+    rsc_then = get_ordering_resource(xml_obj, PCMK_XA_THEN, scheduler);
     if (rsc_then == NULL) {
         return;
     }
@@ -552,7 +523,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
 
     order = pcmk__assert_alloc(1, sizeof(pcmk__action_relation_t));
 
-    order->id = sched->order_id++;
+    order->id = sched->priv->next_ordering_id++;
     order->flags = flags;
     order->rsc1 = first_rsc;
     order->rsc2 = then_rsc;
@@ -578,12 +549,12 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
     }
 
     pcmk__rsc_trace(first_rsc, "Created ordering %d for %s then %s",
-                    (sched->order_id - 1),
+                    (sched->priv->next_ordering_id - 1),
                     pcmk__s(order->task1, "an underspecified action"),
                     pcmk__s(order->task2, "an underspecified action"));
 
-    sched->ordering_constraints = g_list_prepend(sched->ordering_constraints,
-                                                 order);
+    sched->priv->ordering_constraints =
+        g_list_prepend(sched->priv->ordering_constraints, order);
     pcmk__order_migration_equivalents(order);
 }
 
@@ -774,7 +745,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         pcmk_action_t *unordered_action = get_pseudo_op(task, scheduler);
 
         free(task);
-        pcmk__set_action_flags(unordered_action, pcmk__action_min_runnable);
+        unordered_action->required_runnable_before = 1;
 
         for (xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF, NULL,
                                             NULL);
@@ -1439,9 +1410,10 @@ pcmk__apply_orderings(pcmk_scheduler_t *sched)
      * @TODO This is brittle and should be carefully redesigned so that the
      * order of creation doesn't matter, and the reverse becomes unneeded.
      */
-    sched->ordering_constraints = g_list_reverse(sched->ordering_constraints);
+    sched->priv->ordering_constraints =
+        g_list_reverse(sched->priv->ordering_constraints);
 
-    for (GList *iter = sched->ordering_constraints;
+    for (GList *iter = sched->priv->ordering_constraints;
          iter != NULL; iter = iter->next) {
 
         pcmk__action_relation_t *order = iter->data;

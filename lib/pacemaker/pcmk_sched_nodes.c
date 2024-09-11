@@ -45,7 +45,8 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
     if (consider_guest && pcmk__is_guest_or_bundle_node(node)) {
         pcmk_resource_t *guest = node->priv->remote->priv->launcher;
 
-        if (guest->priv->fns->location(guest, NULL, FALSE) == NULL) {
+        if (guest->priv->fns->location(guest, NULL,
+                                       pcmk__rsc_node_assigned) == NULL) {
             return false;
         }
     }
@@ -394,7 +395,7 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
                  pcmk__node_name(node), health);
 
         // Use node health as a location score for each resource on the node
-        for (GList *r = scheduler->resources; r != NULL; r = r->next) {
+        for (GList *r = scheduler->priv->resources; r != NULL; r = r->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) r->data;
 
             bool constrain = true;

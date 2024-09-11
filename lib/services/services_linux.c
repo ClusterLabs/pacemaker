@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,10 +8,6 @@
  */
 
 #include <crm_internal.h>
-
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -453,7 +449,7 @@ add_action_env_vars(const svc_action_t *op)
 
     set_ocf_env("OCF_RA_VERSION_MAJOR", PCMK_OCF_MAJOR_VERSION, NULL);
     set_ocf_env("OCF_RA_VERSION_MINOR", PCMK_OCF_MINOR_VERSION, NULL);
-    set_ocf_env("OCF_ROOT", OCF_ROOT_DIR, NULL);
+    set_ocf_env("OCF_ROOT", PCMK_OCF_ROOT, NULL);
     set_ocf_env("OCF_EXIT_REASON_PREFIX", PCMK_OCF_REASON_PREFIX, NULL);
 
     if (op->rsc) {
@@ -754,11 +750,13 @@ services__generic_error(const svc_action_t *op)
         return PCMK_OCF_UNKNOWN_ERROR;
     }
 
+#if PCMK__ENABLE_LSB
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
         && pcmk__str_eq(op->action, PCMK_ACTION_STATUS, pcmk__str_casei)) {
 
         return PCMK_LSB_STATUS_UNKNOWN;
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
@@ -789,11 +787,13 @@ services__not_installed_error(const svc_action_t *op)
         return PCMK_OCF_UNKNOWN_ERROR;
     }
 
+#if PCMK__ENABLE_LSB
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
         && pcmk__str_eq(op->action, PCMK_ACTION_STATUS, pcmk__str_casei)) {
 
         return PCMK_LSB_STATUS_NOT_INSTALLED;
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
@@ -824,11 +824,13 @@ services__authorization_error(const svc_action_t *op)
         return PCMK_OCF_UNKNOWN_ERROR;
     }
 
+#if PCMK__ENABLE_LSB
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
         && pcmk__str_eq(op->action, PCMK_ACTION_STATUS, pcmk__str_casei)) {
 
         return PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
@@ -860,11 +862,13 @@ services__configuration_error(const svc_action_t *op, bool is_fatal)
         return PCMK_OCF_UNKNOWN_ERROR;
     }
 
+#if PCMK__ENABLE_LSB
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
         && pcmk__str_eq(op->action, PCMK_ACTION_STATUS, pcmk__str_casei)) {
 
         return PCMK_LSB_NOT_CONFIGURED;
     }
+#endif
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
@@ -981,7 +985,7 @@ action_launch_child(svc_action_t *op)
      * exit reason for the parent to parse.
      */
 
-#if SUPPORT_CIBSECRETS
+#if PCMK__ENABLE_CIBSECRETS
     rc = pcmk__substitute_secrets(op->rsc, op->params);
     if (rc != pcmk_rc_ok) {
         if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_casei)) {

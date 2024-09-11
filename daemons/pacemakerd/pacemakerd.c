@@ -131,7 +131,7 @@ pcmk_ignore(int nsig)
 static void
 pcmk_sigquit(int nsig)
 {
-    pcmk__panic(__func__);
+    pcmk__panic("Received SIGQUIT");
 }
 
 static void
@@ -152,12 +152,12 @@ create_pcmk_dirs(void)
     gid_t pcmk_gid = 0;
 
     const char *dirs[] = {
-        CRM_PACEMAKER_DIR, // core/blackbox/scheduler/CIB files
-        CRM_CORE_DIR,      // core files
-        CRM_BLACKBOX_DIR,  // blackbox dumps
-        PE_STATE_DIR,      // scheduler inputs
-        CRM_CONFIG_DIR,    // the Cluster Information Base (CIB)
-        // Don't build CRM_RSCTMP_DIR, pacemaker-execd will do it
+        PCMK__PERSISTENT_DATA_DIR,  // core/blackbox/scheduler/CIB files
+        CRM_CORE_DIR,               // core files
+        CRM_BLACKBOX_DIR,           // blackbox dumps
+        PCMK_SCHEDULER_INPUT_DIR,   // scheduler inputs
+        CRM_CONFIG_DIR,             // the Cluster Information Base (CIB)
+        // Don't build PCMK__OCF_TMP_DIR the executor will do it
         NULL
     };
 
@@ -317,7 +317,7 @@ main(int argc, char **argv)
     }
 
     if (options.shutdown) {
-        pcmk__cli_init_logging("pacemakerd", args->verbosity);
+        pcmk__cli_init_logging(PCMK__SERVER_PACEMAKERD, args->verbosity);
     } else {
         crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     }
@@ -393,7 +393,7 @@ main(int argc, char **argv)
         out = NULL;
     }
 
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
     if (pacemakerd_read_config() == FALSE) {
         crm_exit(CRM_EX_UNAVAILABLE);
     }
@@ -417,7 +417,7 @@ main(int argc, char **argv)
     create_pcmk_dirs();
     pcmk__serve_pacemakerd_ipc(&ipcs, &pacemakerd_ipc_callbacks);
 
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
     /* Allows us to block shutdown */
     if (!cluster_connect_cfg()) {
         exit_code = CRM_EX_PROTOCOL;
@@ -467,7 +467,7 @@ main(int argc, char **argv)
     }
 
     g_main_loop_unref(mainloop);
-#ifdef SUPPORT_COROSYNC
+#if SUPPORT_COROSYNC
     cluster_disconnect_cfg();
 #endif
 

@@ -9,10 +9,6 @@
 
 #include <crm_internal.h>
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
 #include <stdio.h>      // snprintf(), NULL
 #include <string.h>     // strcpy(), strdup()
 #include <sys/types.h>  // size_t
@@ -100,6 +96,33 @@ pcmk_readable_score(int score)
     }
 
     return score_s;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a string represents an infinite value
+ *
+ * \param[in] s  String to check
+ *
+ * \return \c true if \p s is "INFINITY" or "+INFINITY", otherwise \c false
+ */
+bool
+pcmk_str_is_infinity(const char *s) {
+    return pcmk__str_any_of(s, PCMK_VALUE_INFINITY, PCMK_VALUE_PLUS_INFINITY,
+                            NULL);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a string represents an negatively infinite value
+ *
+ * \param[in] s  String to check
+ *
+ * \return \c true if \p s is "-INFINITY", otherwise \c false
+ */
+bool
+pcmk_str_is_minus_infinity(const char *s) {
+    return pcmk__str_eq(s, PCMK_VALUE_MINUS_INFINITY, pcmk__str_none);
 }
 
 /*!

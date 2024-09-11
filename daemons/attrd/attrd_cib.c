@@ -62,11 +62,11 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    if (cib__element_in_patchset(patchset, PCMK_XE_ALERTS)) {
+    if (pcmk__cib_element_in_patchset(patchset, PCMK_XE_ALERTS)) {
         mainloop_set_trigger(attrd_config_read);
     }
 
-    status_changed = cib__element_in_patchset(patchset, PCMK_XE_STATUS);
+    status_changed = pcmk__cib_element_in_patchset(patchset, PCMK_XE_STATUS);
 
     client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTNAME);
     if (!cib__client_triggers_refresh(client_name)) {
@@ -81,7 +81,8 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    if (status_changed || cib__element_in_patchset(patchset, PCMK_XE_NODES)) {
+    if (status_changed
+        || pcmk__cib_element_in_patchset(patchset, PCMK_XE_NODES)) {
         /* An unsafe client modified the PCMK_XE_NODES or PCMK_XE_STATUS
          * section. Write transient attributes to ensure they're up-to-date in
          * the CIB.
@@ -114,7 +115,7 @@ attrd_cib_connect(int max_retry)
         }
         attempts++;
         crm_debug("Connection attempt %d to the CIB manager", attempts);
-        rc = the_cib->cmds->signon(the_cib, PCMK__VALUE_ATTRD, cib_command);
+        rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
     } while ((rc != pcmk_ok) && (attempts < max_retry));
 
@@ -215,10 +216,10 @@ attrd_cib_init(void)
      * this handles the case where the node restarted so quickly that the
      * cluster layer didn't notice.
      *
-     * \todo If pacemaker-attrd respawns after crashing (see PCMK_ENV_RESPAWNED),
-     *       ideally we'd skip this and sync our attributes from the writer.
-     *       However, currently we reject any values for us that the writer has, in
-     *       attrd_peer_update().
+     * \todo If the attribute manager respawns after crashing (see
+     *       PCMK_ENV_RESPAWNED), ideally we'd skip this and sync our attributes
+     *       from the writer. However, currently we reject any values for us
+     *       that the writer has, in attrd_peer_update().
      */
     attrd_cib_erase_transient_attrs(attrd_cluster->priv->node_name);
 

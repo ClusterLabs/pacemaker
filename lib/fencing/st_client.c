@@ -1474,8 +1474,6 @@ event_free(stonith_event_t * event)
     struct event_private *event_private = event->opaque;
 
     free(event->id);
-    free(event->type);
-    free(event->message);
     free(event->operation);
     free(event->origin);
     free(event->action);
@@ -1764,7 +1762,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
         }
     }
 
-#if SUPPORT_CIBSECRETS
+#if PCMK__ENABLE_CIBSECRETS
     rc = pcmk__substitute_secrets(rsc_id, params_table);
     if (rc != pcmk_rc_ok) {
         crm_warn("Could not replace secret parameters for validation of %s: %s",
@@ -1995,7 +1993,7 @@ stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
         int opts = 0;
 
         stonith__set_call_options(opts, name,
-                                  st_opt_sync_call|st_opt_allow_suicide);
+                                  st_opt_sync_call|st_opt_allow_self_fencing);
         if ((uname == NULL) && (nodeid > 0)) {
             stonith__set_call_options(opts, name, st_opt_cs_nodeid);
         }

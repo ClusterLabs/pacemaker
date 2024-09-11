@@ -535,9 +535,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
         return;
     }
 
-    if (succeeded
-        && pcmk__str_eq(event->target, controld_globals.our_nodename,
-                        pcmk__str_casei)) {
+    if (succeeded && controld_is_local_node(event->target)) {
         /* We were notified of our own fencing. Most likely, either fencing was
          * misconfigured, or fabric fencing that doesn't cut cluster
          * communication is in use.
@@ -550,7 +548,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
         crm_crit("We were allegedly just fenced by %s for %s!",
                  executioner, event->origin); // Dumps blackbox if enabled
         if (fence_reaction_panic) {
-            pcmk__panic(__func__);
+            pcmk__panic("Notified of own fencing");
         } else {
             crm_exit(CRM_EX_FATAL);
         }
@@ -631,8 +629,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
              * have one node update the CIB now and, if the new DC is different,
              * have them do so too after the election
              */
-            if (pcmk__str_eq(event->executioner, controld_globals.our_nodename,
-                             pcmk__str_casei)) {
+            if (controld_is_local_node(event->executioner)) {
                 send_stonith_update(NULL, event->target, uuid);
             }
             add_stonith_cleanup(event->target);
@@ -940,7 +937,7 @@ fence_with_delay(const char *target, const char *type, int delay)
                              / 1000);
 
     if (crmd_join_phase_count(controld_join_confirmed) == 1) {
-        stonith__set_call_options(options, target, st_opt_allow_suicide);
+        stonith__set_call_options(options, target, st_opt_allow_self_fencing);
     }
     return stonith_api->cmds->fence_with_delay(stonith_api, options, target,
                                                type, timeout_sec, 0, delay);
@@ -1012,7 +1009,7 @@ bool
 controld_verify_stonith_watchdog_timeout(const char *value)
 {
     long long st_timeout = (value != NULL)? crm_get_msec(value) : 0;
-    const char *our_nodename = controld_globals.our_nodename;
+    const char *our_nodename = controld_globals.cluster->priv->node_name;
 
     if (st_timeout == 0
         || (stonith_api && (stonith_api->state != stonith_disconnected) &&

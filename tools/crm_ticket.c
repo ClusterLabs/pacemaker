@@ -395,8 +395,7 @@ main(int argc, char **argv)
                     "Could not allocate scheduler data: %s", pcmk_rc_str(rc));
         goto done;
     }
-    pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_no_counts|pcmk__sched_no_compat);
+    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {
@@ -405,7 +404,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+    rc = cib__signon_attempts(cib_conn, cib_command, 5);
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {
@@ -431,7 +430,7 @@ main(int argc, char **argv)
         }
     }
 
-    rc = pcmk_update_configured_schema(&cib_xml_copy, false);
+    rc = pcmk__update_configured_schema(&cib_xml_copy, false);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
@@ -564,9 +563,10 @@ main(int argc, char **argv)
 
             if (rc == EACCES) {
                 ticket_revoke_warning(options.ticket_id);
-                exit_code = pcmk_rc2exitc(rc);
+                exit_code = CRM_EX_UNSAFE;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                             "Ticket modification not allowed without --force");
+                goto done;
             }
         } else {
             rc = pcmk__ticket_set_attr(out, cib_conn, scheduler, options.ticket_id,
@@ -582,9 +582,10 @@ main(int argc, char **argv)
                     ticket_revoke_warning(options.ticket_id);
                 }
 
-                exit_code = pcmk_rc2exitc(rc);
+                exit_code = CRM_EX_UNSAFE;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                             "Ticket modification not allowed without --force");
+                goto done;
             }
         }
 

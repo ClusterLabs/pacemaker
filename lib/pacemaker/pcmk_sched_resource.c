@@ -188,7 +188,10 @@ pcmk__rscs_matching_id(const char *id, const pcmk_scheduler_t *scheduler)
     GList *result = NULL;
 
     CRM_CHECK((id != NULL) && (scheduler != NULL), return NULL);
-    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
+
+    for (GList *iter = scheduler->priv->resources;
+         iter != NULL; iter = iter->next) {
+
         result = add_rsc_if_matching(result, (pcmk_resource_t *) iter->data,
                                      id);
     }
@@ -221,7 +224,8 @@ set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
 void
 pcmk__set_assignment_methods(pcmk_scheduler_t *scheduler)
 {
-    g_list_foreach(scheduler->resources, set_assignment_methods_for_rsc, NULL);
+    g_list_foreach(scheduler->priv->resources, set_assignment_methods_for_rsc,
+                   NULL);
 }
 
 /*!
@@ -618,7 +622,7 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (remaining_tries <= 0) {
         pcmk__sched_warn(rsc->priv->scheduler,
                          "%s cannot run on %s due to reaching migration "
-                         "threshold (clean up resource to allow again)"
+                         "threshold (clean up resource to allow again) "
                          QB_XS " failures=%d "
                          PCMK_META_MIGRATION_THRESHOLD "=%d",
                          rsc_to_ban->id, pcmk__node_name(node), fail_count,
@@ -790,7 +794,7 @@ pcmk__sort_resources(pcmk_scheduler_t *scheduler)
     GList *nodes = g_list_copy(scheduler->nodes);
 
     nodes = pcmk__sort_nodes(nodes, NULL);
-    scheduler->resources = g_list_sort_with_data(scheduler->resources,
-                                                 cmp_resources, nodes);
+    scheduler->priv->resources =
+        g_list_sort_with_data(scheduler->priv->resources, cmp_resources, nodes);
     g_list_free(nodes);
 }

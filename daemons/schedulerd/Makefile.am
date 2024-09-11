@@ -39,11 +39,11 @@ pacemaker_schedulerd_SOURCES	+= schedulerd_messages.c
 
 .PHONY: install-exec-local
 install-exec-local:
-	$(INSTALL) -d -m 750 $(DESTDIR)/$(PE_STATE_DIR)
-	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(PE_STATE_DIR)
+	$(INSTALL) -d -m 750 $(DESTDIR)/$(PCMK_SCHEDULER_INPUT_DIR)
+	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(PCMK_SCHEDULER_INPUT_DIR)
 
 .PHONY: uninstall-local
 uninstall-local:
-	-rmdir $(DESTDIR)/$(PE_STATE_DIR)
+	-rmdir $(DESTDIR)/$(PCMK_SCHEDULER_INPUT_DIR)
 
 CLEANFILES = $(man7_MANS)

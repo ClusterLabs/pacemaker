@@ -1018,9 +1018,7 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
         if (scheduler == NULL) {
             rc = ENOMEM;
         } else {
-            pcmk__set_scheduler_flags(scheduler,
-                                      pcmk__sched_no_counts
-                                      |pcmk__sched_no_compat);
+            pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
             scheduler->priv->out = out;
             rc = update_scheduler_input(scheduler, cib_xml_copy);
         }
@@ -1701,7 +1699,7 @@ main(int argc, char **argv)
                         _("Could not create CIB connection"));
             goto done;
         }
-        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+        rc = cib__signon_attempts(cib_conn, cib_command, 5);
         rc = pcmk_legacy2rc(rc);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
@@ -1724,8 +1722,8 @@ main(int argc, char **argv)
 
     // If command requires that resource exist if specified, find it
     if ((find_flags != 0) && (options.rsc_id != NULL)) {
-        rsc = pe_find_resource_with_flags(scheduler->resources, options.rsc_id,
-                                          find_flags);
+        rsc = pe_find_resource_with_flags(scheduler->priv->resources,
+                                          options.rsc_id, find_flags);
         if (rsc == NULL) {
             exit_code = CRM_EX_NOSUCH;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
@@ -1801,7 +1799,8 @@ main(int argc, char **argv)
         }
 
         case cmd_list_instances:
-            rc = out->message(out, "resource-names-list", scheduler->resources);
+            rc = out->message(out, "resource-names-list",
+                              scheduler->priv->resources);
 
             if (rc != pcmk_rc_ok) {
                 rc = ENXIO;
@@ -1881,8 +1880,8 @@ main(int argc, char **argv)
 
         case cmd_cts:
             rc = pcmk_rc_ok;
-            g_list_foreach(scheduler->resources, (GFunc) cli_resource_print_cts,
-                           out);
+            g_list_foreach(scheduler->priv->resources,
+                           (GFunc) cli_resource_print_cts, out);
             cli_resource_print_cts_constraints(scheduler);
             break;
 
@@ -1926,7 +1925,7 @@ main(int argc, char **argv)
                 rc = pcmk_rc_node_unknown;
             } else {
                 rc = out->message(out, "resource-reasons-list",
-                                  scheduler->resources, rsc, node);
+                                  scheduler->priv->resources, rsc, node);
             }
             break;
 
@@ -2025,9 +2024,8 @@ main(int argc, char **argv)
                 };
 
                 params = pcmk__strkey_table(free, free);
-                pe__unpack_dataset_nvpairs(rsc->priv->xml,
-                                           PCMK_XE_UTILIZATION, &rule_data,
-                                           params, NULL, FALSE, scheduler);
+                pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_UTILIZATION,
+                                           &rule_data, params, NULL, scheduler);
 
                 value = g_hash_table_lookup(params, options.prop_name);
             }

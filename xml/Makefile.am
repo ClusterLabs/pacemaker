@@ -16,13 +16,13 @@ noarch_pkgconfig_DATA	= $(builddir)/pacemaker-schemas.pc
 #
 # See README.md for details on updating CIB schema files (API is similar)
 
-# The CIB and crm_mon schemas are installed directly in CRM_SCHEMA_DIRECTORY
+# The CIB and crm_mon schemas are installed directly in PCMK_SCHEMA_DIR
 # for historical reasons, while the API schema is installed in a subdirectory.
-APIdir	= $(CRM_SCHEMA_DIRECTORY)/api
-CIBdir	= $(CRM_SCHEMA_DIRECTORY)
-MONdir	= $(CRM_SCHEMA_DIRECTORY)
+APIdir	= $(PCMK_SCHEMA_DIR)/api
+CIBdir	= $(PCMK_SCHEMA_DIR)
+MONdir	= $(PCMK_SCHEMA_DIR)
 
-basexsltdir		= $(CRM_SCHEMA_DIRECTORY)/base
+basexsltdir		= $(PCMK_SCHEMA_DIR)/base
 dist_basexslt_DATA	= $(srcdir)/base/access-render-2.xsl
 
 # Extract a sorted list of available numeric schema versions
@@ -31,12 +31,11 @@ numeric_versions = $(shell ls -1 $(1) \
 			  | sed -n -e 's/^.*-\([0-9][0-9.]*\).rng$$/\1/p' \
 			  | sort -u -t. -k 1,1n -k 2,2n -k 3,3n)
 
-# @COMPAT: pacemaker-next is deprecated since 2.1.5
 version_pairs = $(join \
 			    $(1),$(addprefix \
 			      -,$(wordlist \
 			        2,$(words $(1)),$(1) \
-			      ) next \
+			      ) \
 			    ) \
 			  )
 
@@ -114,33 +113,26 @@ CIB_base		= cib 			\
 # substitution back and forth, and relative paths for distributed files.
 API_abs_files		= $(foreach base,$(API_base),$(wildcard $(abs_srcdir)/api/$(base)-*.rng))
 CIB_abs_files		= $(foreach base,$(CIB_base),$(wildcard $(abs_srcdir)/$(base).rng $(abs_srcdir)/$(base)-*.rng))
-CIB_abs_xsl		= $(abs_srcdir)/upgrade-1.3.xsl			\
-			  $(abs_srcdir)/upgrade-2.10.xsl		\
-			  $(wildcard $(abs_srcdir)/upgrade-*enter.xsl)	\
-			  $(wildcard $(abs_srcdir)/upgrade-*leave.xsl)
+CIB_abs_xsl		= $(abs_srcdir)/upgrade-1.3-0.xsl		\
+			  $(wildcard $(abs_srcdir)/upgrade-2.10-[0-2].xsl)	\
+			  $(wildcard $(abs_srcdir)/upgrade-3.10-*.xsl)
 MON_abs_files 		= $(abs_srcdir)/crm_mon.rng
 API_files		= $(foreach base,$(API_base),$(wildcard $(srcdir)/api/$(base)-*.rng))
 CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(srcdir)/$(base).rng $(srcdir)/$(base)-*.rng))
-CIB_xsl			= $(srcdir)/upgrade-1.3.xsl			\
-			  $(srcdir)/upgrade-2.10.xsl			\
-			  $(wildcard $(srcdir)/upgrade-*enter.xsl)	\
-			  $(wildcard $(srcdir)/upgrade-*leave.xsl)
+CIB_xsl			= $(srcdir)/upgrade-1.3-0.xsl			\
+			  $(wildcard $(srcdir)/upgrade-2.10-[0-2].xsl)	\
+			  $(wildcard $(srcdir)/upgrade-3.10-*.xsl)
 MON_files 		= $(srcdir)/crm_mon.rng
 
-# Sorted lists of all numeric schema versions
-API_numeric_versions	= $(call numeric_versions,${API_files})
-CIB_numeric_versions	= $(call numeric_versions,${CIB_files})
-MON_numeric_versions 	= $(call numeric_versions,$(wildcard $(srcdir)/api/crm_mon*.rng))
+# Sorted lists of all schema versions
+API_versions	= $(call numeric_versions,${API_files})
+CIB_versions	= $(call numeric_versions,${CIB_files})
+MON_versions 	= $(call numeric_versions,$(wildcard $(srcdir)/api/crm_mon*.rng))
 
 # The highest numeric schema version
-API_max			?= $(lastword $(API_numeric_versions))
-CIB_max			?= $(lastword $(CIB_numeric_versions))
-MON_max 			?= $(lastword $(MON_numeric_versions))
-
-# Sorted lists of all schema versions (including "next")
-# @COMPAT: pacemaker-next is deprecated since 2.1.5
-API_versions		= next $(API_numeric_versions)
-CIB_versions		= next $(CIB_numeric_versions)
+API_max			?= $(lastword $(API_versions))
+CIB_max			?= $(lastword $(CIB_versions))
+MON_max 		?= $(lastword $(MON_versions))
 
 # Build tree locations of static schema files and transforms (for VPATH builds)
 API_build_copies	= $(foreach f,$(API_abs_files),$(subst $(abs_srcdir),$(abs_builddir),$(f)))
@@ -154,7 +146,7 @@ CIB_generated		= pacemaker.rng 					\
 			  versions.rng
 MON_generated 		= crm_mon.rng
 
-CIB_version_pairs	= $(call version_pairs,${CIB_numeric_versions})
+CIB_version_pairs	= $(call version_pairs,${CIB_versions})
 CIB_version_pairs_cnt	= $(words ${CIB_version_pairs})
 CIB_version_pairs_last  = $(call version_pairs_last,${CIB_version_pairs_cnt},${CIB_version_pairs})
 
@@ -171,14 +163,8 @@ EXTRA_DIST		= README.md			\
 			  context-of.xsl		\
 			  rng-helper			\
 			  ocf-meta2man.xsl		\
-			  regression.sh			\
-			  upgrade-2.10-roundtrip.xsl	\
 			  upgrade-detail.xsl		\
-			  xslt_cibtr-2.rng		\
-			  test-2			\
-			  test-2-enter			\
-			  test-2-leave			\
-			  test-2-roundtrip
+			  xslt_cibtr-2.rng
 
 .PHONY: cib-versions
 cib-versions:
@@ -224,9 +210,7 @@ pacemaker-%.rng: $(CIB_build_copies) rng-helper Makefile.am
 
 # Dynamically generated CIB schema listing all pacemaker versions
 #
-# @COMPAT none, pacemaker-0.6, pacemaker-0.7, pacemaker-1.1, and
-# transitional-0.6 are deprecated since 2.1.8, as is validate-with being
-# optional
+# @COMPAT none is deprecated since 2.1.8, as is validate-with being optional
 versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
 	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
@@ -236,10 +220,6 @@ versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_at)echo '      <attribute name="validate-with">' >> $@
 	$(AM_V_at)echo '        <choice>' >> $@
 	$(AM_V_at)echo '          <value>none</value>' >> $@
-	$(AM_V_at)echo '          <value>pacemaker-0.6</value>' >> $@
-	$(AM_V_at)echo '          <value>transitional-0.6</value>' >> $@
-	$(AM_V_at)echo '          <value>pacemaker-0.7</value>' >> $@
-	$(AM_V_at)echo '          <value>pacemaker-1.1</value>' >> $@
 	$(AM_V_at)for rng in $(CIB_versions); do echo "          <value>pacemaker-$$rng</value>" >> $@; done
 	$(AM_V_at)echo '        </choice>' >> $@
 	$(AM_V_at)echo '      </attribute>' >> $@

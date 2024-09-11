@@ -29,7 +29,6 @@ pcmk__parse_cib(pcmk__output_t *out, const char *cib_source, xmlNodePtr *cib_obj
     const char *first = cib_source;
 
     if (cib_source == NULL) {
-        crm_info("Reading XML from: live cluster");
         return cib__signon_query(out, NULL, cib_object);
     }
 
@@ -43,7 +42,7 @@ pcmk__parse_cib(pcmk__output_t *out, const char *cib_source, xmlNodePtr *cib_obj
         *cib_object = pcmk__xml_read(cib_source);
     }
 
-    return (*cib_object == NULL)? ENODATA : pcmk_rc_ok;
+    return (*cib_object == NULL)? pcmk_rc_unpack_error : pcmk_rc_ok;
 }
 
 int
@@ -56,9 +55,15 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     CRM_ASSERT(cib_object != NULL);
 
+    /* Without the CIB element, we can't get a schema to validate against, so
+     * report that separately from validation
+     */
     if (!pcmk__xe_is(*cib_object, PCMK_XE_CIB)) {
-        rc = EBADMSG;
-        out->err(out, "This tool can only check complete configurations (i.e. those starting with <cib>).");
+        out->err(out,
+                 "Input is not a CIB (outermost element is %s not "
+                 PCMK_XE_CIB ")",
+                 pcmk__s((const char *) (*cib_object)->name, "unrecognizable"));
+        rc = pcmk_rc_schema_validation;
         goto verify_done;
     }
 
@@ -69,27 +74,28 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     if (!pcmk__validate_xml(*cib_object, NULL,
                             (xmlRelaxNGValidityErrorFunc) out->err, out)) {
-        crm_config_error = TRUE;
+        pcmk__config_has_error = true;
         rc = pcmk_rc_schema_validation;
         goto verify_done;
     }
 
-    rc = pcmk_update_configured_schema(cib_object, false);
+    rc = pcmk__update_configured_schema(cib_object, false);
     if (rc != pcmk_rc_ok) {
-        crm_config_error = TRUE;
+        pcmk__config_has_error = true;
         out->err(out, "The cluster will NOT be able to use this configuration.\n"
                  "Please manually update the configuration to conform to the %s syntax.",
                  pcmk__highest_schema_name());
         goto verify_done;
     }
 
-    /* Process the configuration to set crm_config_error/crm_config_warning.
+    /* Process the configuration to set pcmk__config_has_error and
+     * pcmk__config_has_warning.
      *
      * @TODO Some parts of the configuration are unpacked only when needed (for
      * example, action configuration), so we aren't necessarily checking those.
      */
     if (*cib_object != NULL) {
-        unsigned long long flags = pcmk__sched_no_counts|pcmk__sched_no_compat;
+        unsigned long long flags = pcmk__sched_no_counts;
 
         if (status == NULL) {
             // No status available, so do minimal checks
@@ -101,15 +107,15 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
          * frees it later. We want the caller of pcmk__verify to retain
          * ownership of the passed-in XML object, hence we pass in a copy
          * to the scheduler.
-         */ 
+         */
         pcmk__schedule_actions(cib_object_copy, flags, scheduler);
     }
 
 verify_done:
-    if (crm_config_error) {
+    if (pcmk__config_has_error) {
         rc = pcmk_rc_schema_validation;
         pcmk__config_err("CIB did not pass schema validation");
-    } else if (crm_config_warning) {
+    } else if (pcmk__config_has_warning) {
         rc = pcmk_rc_schema_validation;
     }
     return rc;
@@ -134,7 +140,7 @@ pcmk_verify(xmlNodePtr *xml, const char *cib_source)
 
     rc = pcmk__parse_cib(out, cib_source, &cib_object);
     if (rc != pcmk_rc_ok) {
-        out->err(out, "Couldn't parse input");
+        out->err(out, "Verification failed: %s", pcmk_rc_str(rc));
         goto done;
     }
 

@@ -334,7 +334,7 @@ profile_file(const char *xml_file, long long repeat,
     xmlNode *cib_object = NULL;
     clock_t start = 0;
     clock_t end;
-    unsigned long long scheduler_flags = pcmk__sched_no_compat;
+    unsigned long long scheduler_flags = pcmk__sched_none;
 
     CRM_ASSERT(out != NULL);
 
@@ -345,7 +345,7 @@ profile_file(const char *xml_file, long long repeat,
         pcmk__xe_create(cib_object, PCMK_XE_STATUS);
     }
 
-    if (pcmk_update_configured_schema(&cib_object, false) != pcmk_rc_ok) {
+    if (pcmk__update_configured_schema(&cib_object, false) != pcmk_rc_ok) {
         pcmk__xml_free(cib_object);
         return;
     }
@@ -761,10 +761,10 @@ pcmk__simulate_transition(pcmk_scheduler_t *scheduler, cib_t *cib,
     }
 
     pcmk__set_graph_functions(&simulation_fns);
-    transition = pcmk__unpack_graph(scheduler->graph, crm_system_name);
+    transition = pcmk__unpack_graph(scheduler->priv->graph, crm_system_name);
     pcmk__log_graph(LOG_DEBUG, transition);
 
-    fake_resource_list = scheduler->resources;
+    fake_resource_list = scheduler->priv->resources;
     do {
         graph_rc = pcmk__execute_graph(transition);
     } while (graph_rc == pcmk__graph_active);
@@ -812,15 +812,6 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     reset(scheduler, input, out, use_date, flags);
     cluster_status(scheduler);
 
-    if ((cib->variant == cib_native)
-        && pcmk_is_set(section_opts, pcmk_section_times)) {
-        if (pcmk__our_nodename == NULL) {
-            // Currently used only in the times section
-            pcmk__query_node_name(out, 0, &pcmk__our_nodename, 0);
-        }
-        scheduler->localhost = pcmk__our_nodename;
-    }
-
     if (!out->is_quiet(out)) {
         const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
 
@@ -828,14 +819,16 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             printed = out->message(out, "maint-mode", scheduler->flags);
         }
 
-        if (scheduler->disabled_resources || scheduler->blocked_resources) {
+        if ((scheduler->priv->disabled_resources > 0)
+            || (scheduler->priv->blocked_resources > 0)) {
+
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             printed = out->info(out,
                                 "%d of %d resource instances DISABLED and "
                                 "%d BLOCKED from further action due to failure",
-                                scheduler->disabled_resources,
-                                scheduler->ninstances,
-                                scheduler->blocked_resources);
+                                scheduler->priv->disabled_resources,
+                                scheduler->priv->ninstances,
+                                scheduler->priv->blocked_resources);
         }
 
         /* Most formatted output headers use caps for each word, but this one
@@ -882,7 +875,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
         pcmk__output_t *logger_out = NULL;
-        unsigned long long scheduler_flags = pcmk__sched_no_compat;
+        unsigned long long scheduler_flags = pcmk__sched_none;
 
         if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
             scheduler_flags |= pcmk__sched_output_scores;
@@ -932,7 +925,8 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         input = NULL;           /* Don't try and free it twice */
 
         if (graph_file != NULL) {
-            rc = pcmk__xml_write_file(scheduler->graph, graph_file, false);
+            rc = pcmk__xml_write_file(scheduler->priv->graph, graph_file,
+                                      false);
             if (rc != pcmk_rc_ok) {
                 rc = pcmk_rc_graph_error;
                 goto simulate_done;

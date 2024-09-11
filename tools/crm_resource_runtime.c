@@ -667,7 +667,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     const char *rsc_provider = NULL;
     const char *rsc_type = NULL;
     bool cib_only = false;
-    pcmk_resource_t *rsc = pe_find_resource(scheduler->resources, rsc_id);
+    pcmk_resource_t *rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
 
     if (rsc == NULL) {
         out->err(out, "Resource %s not found", rsc_id);
@@ -803,8 +803,8 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         interval_ms_s = crm_strdup_printf("%u", interval_ms);
     }
 
-    for (xmlNode *xml_op = pcmk__xe_first_child(scheduler->failed, NULL, NULL,
-                                                NULL);
+    for (xmlNode *xml_op = pcmk__xe_first_child(scheduler->priv->failed, NULL,
+                                                NULL, NULL);
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
 
         failed_id = crm_element_value(xml_op, PCMK__XA_RSC_ID);
@@ -817,7 +817,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         if (rsc_id) {
             pcmk_resource_t *fail_rsc = NULL;
 
-            fail_rsc = pe_find_resource_with_flags(scheduler->resources,
+            fail_rsc = pe_find_resource_with_flags(scheduler->priv->resources,
                                                    failed_id,
                                                    pcmk_rsc_match_history
                                                    |pcmk_rsc_match_anon_basename);
@@ -1230,7 +1230,7 @@ bool resource_is_running_on(pcmk_resource_t *rsc, const char *host)
         return false;
     }
 
-    rsc->priv->fns->location(rsc, &hosts, TRUE);
+    rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
     for (hIter = hosts; host != NULL && hIter != NULL; hIter = hIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) hIter->data;
 
@@ -1325,7 +1325,7 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
 int
 update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
 {
-    int rc = pcmk_update_configured_schema(xml, false);
+    int rc = pcmk__update_configured_schema(xml, false);
 
     if (rc == pcmk_rc_ok) {
         scheduler->input = *xml;
@@ -1381,8 +1381,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
     pcmk__output_t *out = scheduler->priv->out;
 
     pe_reset_working_set(scheduler);
-    pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_no_counts|pcmk__sched_no_compat);
+    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
     rc = update_scheduler_input_to_cib(out, scheduler, cib);
     if (rc != pcmk_rc_ok) {
         return rc;
@@ -1416,8 +1415,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
             goto done;
         }
 
-        pcmk__schedule_actions(scheduler->input,
-                               pcmk__sched_no_counts|pcmk__sched_no_compat,
+        pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
                                scheduler);
 
         prev_quiet = out->is_quiet(out);
@@ -1524,7 +1522,7 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
 
     // Find maximum stop timeout in milliseconds
     for (const GList *item = resources; item != NULL; item = item->next) {
-        pcmk_resource_t *rsc = pe_find_resource(scheduler->resources,
+        pcmk_resource_t *rsc = pe_find_resource(scheduler->priv->resources,
                                                 (const char *) item->data);
         guint delay = max_rsc_stop_timeout(rsc);
 
@@ -1683,8 +1681,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         goto done;
     }
 
-    restart_target_active = get_active_resources(host, scheduler->resources);
-    current_active = get_active_resources(host, scheduler->resources);
+    restart_target_active = get_active_resources(host,
+                                                 scheduler->priv->resources);
+    current_active = get_active_resources(host, scheduler->priv->resources);
 
     dump_list(current_active, "Origin");
 
@@ -1737,7 +1736,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         goto failure;
     }
 
-    target_active = get_active_resources(host, scheduler->resources);
+    target_active = get_active_resources(host, scheduler->priv->resources);
     dump_list(target_active, "Target");
 
     list_delta = pcmk__subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
@@ -1768,7 +1767,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             if (current_active != NULL) {
                 g_list_free_full(current_active, free);
             }
-            current_active = get_active_resources(host, scheduler->resources);
+            current_active = get_active_resources(host,
+                                                  scheduler->priv->resources);
 
             g_list_free(list_delta);
             list_delta = pcmk__subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
@@ -1850,7 +1850,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             if (current_active != NULL) {
                 g_list_free_full(current_active, free);
             }
-            current_active = get_active_resources(NULL, scheduler->resources);
+            current_active = get_active_resources(NULL,
+                                                  scheduler->priv->resources);
 
             g_list_free(list_delta);
             list_delta = pcmk__subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
@@ -2036,8 +2037,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         if (rc != pcmk_rc_ok) {
             break;
         }
-        pcmk__schedule_actions(scheduler->input,
-                               pcmk__sched_no_counts|pcmk__sched_no_compat,
+        pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
                                scheduler);
 
         if (!printed_version_warning) {
@@ -2188,11 +2188,13 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
         return CRM_EX_OSERR;
     }
 
+#if PCMK__ENABLE_SERVICE
     if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei)) {
         class = resources_find_service_class(rsc_type);
     }
-    if (!pcmk__strcase_any_of(class, PCMK_RESOURCE_CLASS_OCF,
-                              PCMK_RESOURCE_CLASS_LSB, NULL)) {
+#endif
+
+    if (!pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_cli_exec)) {
         services__format_result(op, CRM_EX_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
                                 "Manual execution of the %s standard is "
                                 "unsupported", pcmk__s(class, "unspecified"));

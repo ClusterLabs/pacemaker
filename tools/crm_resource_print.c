@@ -32,7 +32,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
         return pcmk_rc_ok;
     }
 
-    // @COMPAT PCMK__XE_LIFETIME is deprecated
+    // @COMPAT Not possible with schema validation enabled
     lifetime = pcmk__xe_first_child(xml_obj, PCMK__XE_LIFETIME, NULL, NULL);
     if (pcmk__evaluate_rules(lifetime, &rule_input, NULL) != pcmk_rc_ok) {
         return pcmk_rc_ok;
@@ -72,7 +72,7 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
     const char *rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
     pcmk_node_t *node = pcmk__current_node(rsc);
 
-    if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
         needs_quorum = FALSE;
     } else {
         // @TODO check requires in resource meta-data and rsc_defaults
@@ -453,7 +453,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
         }
         if (doc != NULL) {
             out->output_xml(out, PCMK_XE_COMMAND, stdout_data);
-            xmlFreeNode(doc);
+            pcmk__xml_free(doc);
         } else {
             out->subprocess_output(out, rc, stdout_data, stderr_data);
         }
@@ -521,7 +521,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
         }
         if (doc != NULL) {
             out->output_xml(out, PCMK_XE_COMMAND, stdout_data);
-            xmlFreeNode(doc);
+            pcmk__xml_free(doc);
         } else {
             out->subprocess_output(out, rc, stdout_data, stderr_data);
         }
@@ -702,7 +702,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
         for (lpc = resources; lpc != NULL; lpc = lpc->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
-            rsc->priv->fns->location(rsc, &hosts, TRUE);
+            rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
 
             if (hosts == NULL) {
                 out->list_item(out, "reason", "Resource %s is not running", rsc->id);
@@ -754,7 +754,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
     } else if ((rsc != NULL) && (host_uname == NULL)) {
         GList *hosts = NULL;
 
-        rsc->priv->fns->location(rsc, &hosts, TRUE);
+        rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
         out->list_item(out, "reason", "Resource %s is %srunning",
                        rsc->id, (hosts? "" : "not "));
         cli_resource_check(out, rsc, NULL);
@@ -789,7 +789,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
             const char *running = NULL;
 
-            rsc->priv->fns->location(rsc, &hosts, TRUE);
+            rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
             running = pcmk__btoa(hosts != NULL);
 
             pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE,
@@ -855,7 +855,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
     } else if ((rsc != NULL) && (host_uname == NULL)) {
         GList *hosts = NULL;
 
-        rsc->priv->fns->location(rsc, &hosts, TRUE);
+        rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
         crm_xml_add(xml_node, PCMK_XA_RUNNING, pcmk__btoa(hosts != NULL));
         cli_resource_check(out, rsc, NULL);
         g_list_free(hosts);

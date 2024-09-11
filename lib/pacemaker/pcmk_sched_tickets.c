@@ -13,6 +13,7 @@
 #include <glib.h>
 
 #include <crm/crm.h>
+#include <crm/common/scheduler.h>
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
@@ -153,30 +154,26 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
 static void
 rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk__ticket_t *ticket,
-               const char *state, const char *loss_policy)
+               const char *role_spec, const char *loss_policy)
 {
     rsc_ticket_t *new_rsc_ticket = NULL;
+    enum rsc_role_e role = pcmk_role_unknown;
 
     if (rsc == NULL) {
         pcmk__config_err("Ignoring ticket '%s' because resource "
                          "does not exist", id);
         return;
     }
-
-    new_rsc_ticket = calloc(1, sizeof(rsc_ticket_t));
-    if (new_rsc_ticket == NULL) {
+    if (pcmk__parse_constraint_role(id, role_spec, &role) != pcmk_rc_ok) {
+        // Not possible with schema validation enabled (error already logged)
         return;
     }
 
-    if (pcmk__str_eq(state, PCMK_ROLE_STARTED,
-                     pcmk__str_null_matches|pcmk__str_casei)) {
-        state = PCMK__ROLE_UNKNOWN;
-    }
-
+    new_rsc_ticket = pcmk__assert_alloc(1, sizeof(rsc_ticket_t));
     new_rsc_ticket->id = id;
     new_rsc_ticket->ticket = ticket;
     new_rsc_ticket->rsc = rsc;
-    new_rsc_ticket->role = pcmk_parse_role(state);
+    new_rsc_ticket->role = role;
 
     if (pcmk__str_eq(loss_policy, PCMK_VALUE_FENCE, pcmk__str_casei)) {
         if (pcmk_is_set(rsc->priv->scheduler->flags,
@@ -234,10 +231,6 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk__ticket_t *ticket,
     rsc->priv->ticket_constraints =
         g_list_append(rsc->priv->ticket_constraints, new_rsc_ticket);
 
-    rsc->priv->scheduler->ticket_constraints =
-        g_list_append(rsc->priv->scheduler->ticket_constraints,
-                      new_rsc_ticket);
-
     if (!pcmk_is_set(new_rsc_ticket->ticket->flags, pcmk__ticket_granted)
         || pcmk_is_set(new_rsc_ticket->ticket->flags, pcmk__ticket_standby)) {
         constraints_for_ticket(rsc, new_rsc_ticket);
@@ -270,7 +263,7 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk__ticket_t *ticket,
 
         pcmk_resource_t *resource = NULL;
 
-        resource = pcmk__find_constraint_resource(scheduler->resources,
+        resource = pcmk__find_constraint_resource(scheduler->priv->resources,
                                                   pcmk__xe_id(xml_rsc));
         if (resource == NULL) {
             pcmk__config_err("%s: No resource found for %s",
@@ -297,16 +290,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     const char *state = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
 
-    // @COMPAT: Deprecated since 2.1.5
-    const char *instance = crm_element_value(xml_obj, PCMK__XA_RSC_INSTANCE);
-
     pcmk_resource_t *rsc = NULL;
-
-    if (instance != NULL) {
-        pcmk__warn_once(pcmk__wo_coloc_inst,
-                        "Support for " PCMK__XA_RSC_INSTANCE " is deprecated "
-                        "and will be removed in a future release");
-    }
 
     CRM_CHECK(xml_obj != NULL, return);
 
@@ -336,29 +320,14 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         pcmk__config_err("Ignoring constraint '%s' without resource", id);
         return;
     } else {
-        rsc = pcmk__find_constraint_resource(scheduler->resources, rsc_id);
+        rsc = pcmk__find_constraint_resource(scheduler->priv->resources,
+                                             rsc_id);
     }
 
     if (rsc == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", id, rsc_id);
         return;
-
-    } else if ((instance != NULL) && !pcmk__is_clone(rsc)) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "is not a clone but instance '%s' was requested",
-                         id, rsc_id, instance);
-        return;
-    }
-
-    if (instance != NULL) {
-        rsc = find_clone_instance(rsc, instance);
-        if (rsc == NULL) {
-            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                              "does not have an instance '%s'",
-                              "'%s'", id, rsc_id, instance);
-            return;
-        }
     }
 
     rsc_ticket_new(id, rsc, ticket, state, loss_policy);

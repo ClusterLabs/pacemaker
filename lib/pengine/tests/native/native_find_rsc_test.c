@@ -43,8 +43,7 @@ setup(void **state) {
         return 1;
     }
 
-    pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_no_counts|pcmk__sched_no_compat);
+    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
     scheduler->input = input;
 
     cluster_status(scheduler);
@@ -55,7 +54,9 @@ setup(void **state) {
     httpd_bundle_0 = pcmk_find_node(scheduler, "httpd-bundle-0");
 
     /* Get references to several resources we use frequently. */
-    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->resources;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "exim-group") == 0) {
@@ -85,7 +86,7 @@ teardown(void **state) {
 
 static void
 bad_args(void **state) {
-    pcmk_resource_t *rsc = g_list_first(scheduler->resources)->data;
+    pcmk_resource_t *rsc = g_list_first(scheduler->priv->resources)->data;
     char *id = rsc->id;
     char *name = NULL;
 
@@ -118,7 +119,9 @@ primitive_rsc(void **state) {
     pcmk_resource_t *dummy = NULL;
 
     /* Find the "dummy" resource, which is the only one with that ID in the set. */
-    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->resources;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "dummy") == 0) {

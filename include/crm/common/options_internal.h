@@ -18,7 +18,7 @@
 #include <glib.h>     // GHashTable
 #include <stdbool.h>  // bool
 
-#include <crm/common/util.h>                // pcmk_parse_interval_spec()
+#include <crm/common/strings.h>             // pcmk_parse_interval_spec()
 #include <crm/common/output_internal.h>     // pcmk__output_t
 
 #ifdef __cplusplus
@@ -132,7 +132,6 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__ENV_CLUSTER_TYPE              "cluster_type"
 #define PCMK__ENV_DEBUG                     "debug"
 #define PCMK__ENV_DH_MAX_BITS               "dh_max_bits"
-#define PCMK__ENV_DH_MIN_BITS               "dh_min_bits"
 #define PCMK__ENV_FAIL_FAST                 "fail_fast"
 #define PCMK__ENV_IPC_BUFFER                "ipc_buffer"
 #define PCMK__ENV_IPC_TYPE                  "ipc_type"
@@ -232,6 +231,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_RSC_MULTIPLE            "rsc-multiple"
 #define PCMK__VALUE_RSC_OK                  "rsc-ok"
 #define PCMK__VALUE_RUNNING                 "running"
+#define PCMK__VALUE_SCHEDULER               "scheduler"
 #define PCMK__VALUE_SHUTDOWN_COMPLETE       "shutdown_complete"
 #define PCMK__VALUE_SHUTTING_DOWN           "shutting_down"
 #define PCMK__VALUE_ST_ASYNC_TIMEOUT_VALUE  "st-async-timeout-value"

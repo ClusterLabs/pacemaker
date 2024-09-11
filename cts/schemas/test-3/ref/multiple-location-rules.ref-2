@@ -1,0 +1,155 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="16" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * There is a location constraint (ban-rsc1) containing a rsc attribute
+           and two top-level rules.
+         * There is a location constraint (allow-rsc1) containing a rsc
+           attribute and one top-level rule.
+         * There is a location constraint (allow-rsc2) containing a rsc
+           attribute and one top-level rule with two nested rules.
+         * There is a location constraint (ban-rsc3-rsc4-node1-node2) containing
+           two resource_set elements (with id attributes), two top-level
+           rules, and two rule elements (with id attributes) within a lifetime
+           element.
+         * There is a location constraint (ban-rsc3-rsc4-node1-node2) containing
+           two resource_set elements (with id-ref attributes), two top-level
+           rules, and two rule elements (with id-ref attributes) within a
+           lifetime element.
+
+         In this situation:
+         * ban-rsc1 should be replaced by two new location constraints, each
+           containing one of the original rules.
+         * allow-rsc1 and allow-rsc2 should be unmodified.
+         * ban-rsc3-rsc4-node1-node2 should be replaced by two new location
+           constraints, each containing one of the original rules. The first of
+           the new constraints should contain the original resource_set and
+           lifetime rule elements, while the second should contain id-refs to
+           them.
+         * ban-rsc3-rsc4-node3-node4 should be replaced by two new location
+           constraints, each containing one of the original rules. Both of the
+           new constraints should contain the original resource_set and lifetime
+           rule elements, which are id-refs to resource sets defined in
+           ban-rsc3-rsc4-node1-node2.
+         * The rules within a lifetime element should be converted to an "or"
+           rule set nested alongside an "and" rule set containing the other
+           top-level rule.
+      -->
+    <crm_config original="1"/>
+    <nodes original="1">
+      <node id="node1" uname="node1" type="member" original="1"/>
+      <node id="node2" uname="node2" type="member" original="1"/>
+      <node id="node3" uname="node3" type="member" original="1"/>
+      <node id="node4" uname="node3" type="member" original="1"/>
+    </nodes>
+    <resources original="1">
+      <primitive id="rsc1" class="ocf" type="Dummy" provider="pacemaker" original="1"/>
+      <primitive id="rsc2" class="ocf" type="Dummy" provider="pacemaker" original="1"/>
+      <primitive id="rsc3" class="ocf" type="Dummy" provider="pacemaker" original="1"/>
+      <primitive id="rsc4" class="ocf" type="Dummy" provider="pacemaker" original="1"/>
+    </resources>
+    <constraints original="1">
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc1-1" rsc="rsc1" original="0">
+        <rule id="ban-rsc1-rule1" score="-INFINITY" original="1">
+          <expression id="ban-rsc1-rule1-expr" attribute="#uname" operation="eq" value="node1" original="1"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc1-2" rsc="rsc1" original="0">
+        <rule id="ban-rsc1-rule2" score="-INFINITY" original="1">
+          <expression id="ban-rsc1-rule2-expr" attribute="#uname" operation="eq" value="node2" original="1"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="allow-rsc1" rsc="rsc1" original="1">
+        <rule id="allow-rsc1-rule" score="INFINITY" original="1">
+          <expression id="allow-rsc1-rule-expr" attribute="#uname" operation="eq" value="node3" original="1"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="allow-rsc2" rsc="rsc2" original="1">
+        <rule id="allow-rsc2-rule" score="INFINITY" boolean-op="or" original="1">
+          <rule id="allow-rsc2-rule-subrule1" original="1">
+            <expression id="allow-rsc2-rule-subrule1-expr" attribute="#uname" operation="eq" value="node1" original="1"/>
+          </rule>
+          <rule id="allow-rsc2-rule-subrule2" original="1">
+            <expression id="allow-rsc2-rule-subrule2-expr" attribute="#uname" operation="eq" value="node2" original="1"/>
+          </rule>
+        </rule>
+      </rsc_location>
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc3-rsc4-node1-node2-1" original="0">
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set1" original="1">
+          <resource_ref id="rsc3" original="1"/>
+        </resource_set>
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set2" original="1">
+          <resource_ref id="rsc4" original="1"/>
+        </resource_set>
+        <rule id="ban-rsc3-rsc4-node1-node2-rule1" score="-INFINITY" original="1">
+          <expression id="ban-rsc3-rsc4-node1-node2-rule1-expr" attribute="#uname" operation="eq" value="node1" original="1"/>
+        </rule>
+        <lifetime original="1">
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule1" original="1">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule1-expr" operation="in_range" start="2004-001" original="1"/>
+          </rule>
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule2" original="1">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule2-expr" operation="in_range" end="2005-001" original="1"/>
+          </rule>
+        </lifetime>
+      </rsc_location>
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc3-rsc4-node1-node2-2" original="0">
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set1" original="0">
+          <resource_ref id="rsc3" original="0"/>
+        </resource_set>
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set2" original="0">
+          <resource_ref id="rsc4" original="0"/>
+        </resource_set>
+        <rule id="ban-rsc3-rsc4-node1-node2-rule2" score="-INFINITY" original="1">
+          <expression id="ban-rsc3-rsc4-node1-node2-rule2-expr" attribute="#uname" operation="eq" value="node2" original="1"/>
+        </rule>
+        <lifetime original="0">
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule1" original="0">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule1-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule2" original="0">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule2-expr" operation="in_range" end="2005-001" original="0"/>
+          </rule>
+        </lifetime>
+      </rsc_location>
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc3-rsc4-node3-node4-1" original="0">
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set1" original="0">
+          <resource_ref id="rsc3" original="0"/>
+        </resource_set>
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set2" original="0">
+          <resource_ref id="rsc4" original="0"/>
+        </resource_set>
+        <rule id="ban-rsc3-rsc4-node3-node4-rule1" score="-INFINITY" original="1">
+          <expression id="ban-rsc3-rsc4-node3-node4-rule1-expr" attribute="#uname" operation="eq" value="node3" original="1"/>
+        </rule>
+        <lifetime original="1">
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule1" original="0">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule1-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule2" original="0">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule2-expr" operation="in_range" end="2005-001" original="0"/>
+          </rule>
+        </lifetime>
+      </rsc_location>
+      <rsc_location id="pcmk__3_10_upgrade-ban-rsc3-rsc4-node3-node4-2" original="0">
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set1" original="0">
+          <resource_ref id="rsc3" original="0"/>
+        </resource_set>
+        <resource_set id="ban-rsc3-rsc4-node1-node2-set2" original="0">
+          <resource_ref id="rsc4" original="0"/>
+        </resource_set>
+        <rule id="ban-rsc3-rsc4-node3-node4-rule2" score="-INFINITY" original="1">
+          <expression id="ban-rsc3-rsc4-node3-node4-rule2-expr" attribute="#uname" operation="eq" value="node4" original="1"/>
+        </rule>
+        <lifetime original="0">
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule1" original="0">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule1-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <rule id="ban-rsc3-rsc4-node1-node2-lifetime-rule2" original="0">
+            <date_expression id="ban-rsc3-rsc4-node1-node2-lifetime-rule2-expr" operation="in_range" end="2005-001" original="0"/>
+          </rule>
+        </lifetime>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status original="1"/>
+</cib>

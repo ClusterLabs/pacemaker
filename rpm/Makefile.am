@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2023 the Pacemaker project contributors
+# Copyright 2003-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -69,7 +69,7 @@ WITH		?= --without doc
 # If $(BUILD_COUNTER) is an existing file, its contents will be used as the
 # spec version in built RPMs, unless $(SPECVERSION) is set to override it,
 # and the next increment will be written back to the file after building.
-BUILD_COUNTER	?= $(shell test -e build.counter && echo build.counter || echo ../build.counter)
+BUILD_COUNTER	?= build.counter
 
 LAST_COUNT      = $(shell test -e "$(BUILD_COUNTER)" && cat "$(BUILD_COUNTER)" || echo 0)
 COUNT           = $(shell expr 1 + $(LAST_COUNT))

@@ -404,7 +404,8 @@ get_bundle_node_host(const pcmk_node_t *node)
         const pcmk_resource_t *container = NULL;
 
         container = node->priv->remote->priv->launcher;
-        return container->priv->fns->location(container, NULL, 0);
+        return container->priv->fns->location(container, NULL,
+                                              pcmk__rsc_node_assigned);
     }
     return node;
 }
@@ -428,7 +429,8 @@ compatible_container(const pcmk_resource_t *dependent,
     struct match_data match_data = { NULL, NULL };
 
     // If dependent is assigned, only check there
-    match_data.node = dependent->priv->fns->location(dependent, NULL, 0);
+    match_data.node = dependent->priv->fns->location(dependent, NULL,
+                                                     pcmk__rsc_node_assigned);
     match_data.node = get_bundle_node_host(match_data.node);
     if (match_data.node != NULL) {
         pe__foreach_const_bundle_replica(bundle, match_replica_container,
@@ -460,6 +462,7 @@ struct coloc_data {
     const pcmk__colocation_t *colocation;
     pcmk_resource_t *dependent;
     GList *container_hosts;
+    int priority_delta;
 };
 
 /*!
@@ -480,13 +483,19 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
     pcmk_resource_t *container = replica->container;
 
     if (coloc_data->colocation->score < PCMK_SCORE_INFINITY) {
-        container->priv->cmds->apply_coloc_score(coloc_data->dependent,
-                                                 container,
-                                                 coloc_data->colocation, false);
+        int priority_delta =
+            container->priv->cmds->apply_coloc_score(coloc_data->dependent,
+                                                     container,
+                                                     coloc_data->colocation,
+                                                     false);
+
+        coloc_data->priority_delta =
+            pcmk__add_scores(coloc_data->priority_delta, priority_delta);
         return true;
     }
 
-    chosen = container->priv->fns->location(container, NULL, 0);
+    chosen = container->priv->fns->location(container, NULL,
+                                            pcmk__rsc_node_assigned);
     if ((chosen == NULL)
         || is_set_recursive(container, pcmk__rsc_blocked, true)) {
         return true;
@@ -519,14 +528,16 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
  * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
                                const pcmk_resource_t *primary,
                                const pcmk__colocation_t *colocation,
                                bool for_dependent)
 {
-    struct coloc_data coloc_data = { colocation, dependent, NULL };
+    struct coloc_data coloc_data = { colocation, dependent, NULL, 0 };
 
     /* This should never be called for the bundle itself as a dependent.
      * Instead, we add its colocation constraints to its containers and bundled
@@ -540,7 +551,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
                         "Skipping applying colocation %s "
                         "because %s is still provisional",
                         colocation->id, primary->id);
-        return;
+        return 0;
     }
     pcmk__rsc_trace(primary, "Applying colocation %s (%s with %s at %s)",
                     colocation->id, dependent->id, primary->id,
@@ -556,11 +567,13 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
         if (primary_container != NULL) { // Success, we found one
             pcmk__rsc_debug(primary, "Pairing %s with %s",
                             dependent->id, primary_container->id);
-            dependent->priv->cmds->apply_coloc_score(dependent,
-                                                     primary_container,
-                                                     colocation, true);
 
-        } else if (colocation->score >= PCMK_SCORE_INFINITY) {
+            return dependent->priv->cmds->apply_coloc_score(dependent,
+                                                            primary_container,
+                                                            colocation, true);
+        }
+
+        if (colocation->score >= PCMK_SCORE_INFINITY) {
             // Failure, and it's fatal
             crm_notice("%s cannot run because there is no compatible "
                        "instance of %s to colocate with",
@@ -572,7 +585,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
                             "%s cannot be colocated with any instance of %s",
                             dependent->id, primary->id);
         }
-        return;
+        return 0;
     }
 
     pe__foreach_const_bundle_replica(primary, replica_apply_coloc_score,
@@ -583,6 +596,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
                                          coloc_data.container_hosts, false);
     }
     g_list_free(coloc_data.container_hosts);
+    return coloc_data.priority_delta;
 }
 
 // Bundle implementation of pcmk__assignment_methods_t:with_this_colocations()
@@ -792,7 +806,7 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
         && pe__bundle_needs_remote_name(replica->remote)) {
 
         /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
-         * run pacemaker-remoted inside, without needing a separate IP for
+         * run the remote executor inside, without needing a separate IP for
          * the container. This is done by configuring the inner remote's
          * connection host as the magic string "#uname", then
          * replacing it with the underlying host when needed.

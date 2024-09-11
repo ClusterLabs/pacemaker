@@ -34,6 +34,7 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
+from pacemaker._cts.corosync import Corosync
 from pacemaker._cts.process import killall, exit_if_proc_running, stdout_from_command
 from pacemaker._cts.test import Test, Tests
 
@@ -85,18 +86,24 @@ class ExecTest(Test):
 
         self.tls = kwargs.get("tls", False)
 
+        # If we are going to run the stonith resource tests, we will need to
+        # launch and track Corosync and pacemaker-fenced.
+        self._corosync = None
+        self._fencer = None
+        self._is_stonith_test = "stonith" in self.name
+
         if self.tls:
             self._daemon_location = "pacemaker-remoted"
         else:
             self._daemon_location = "pacemaker-execd"
+            if self._is_stonith_test:
+                self._corosync = Corosync(self.verbose, self.logdir, "cts-exec")
 
         self._test_tool_location = "cts-exec-helper"
 
-        # We additionally need to keep track of a stonith process.
-        self._stonith_process = None
-
     def _kill_daemons(self):
         killall([
+            "corosync",
             "pacemaker-fenced",
             "lt-pacemaker-fenced",
             "pacemaker-execd",
@@ -107,9 +114,10 @@ class ExecTest(Test):
         ])
 
     def _start_daemons(self):
-        if not self.tls:
+        if self._corosync:
+            self._corosync.start(kill_first=True)
             # pylint: disable=consider-using-with
-            self._stonith_process = subprocess.Popen(["pacemaker-fenced", "-s"])
+            self._fencer = subprocess.Popen(["pacemaker-fenced", "-s"])
 
         cmd = [self._daemon_location, "-l", self.logpath]
         if self.verbose:
@@ -131,12 +139,14 @@ class ExecTest(Test):
                         print(line.strip())
                 print("Daemon Output End")
 
-        if self._stonith_process:
-            self._stonith_process.terminate()
-            self._stonith_process.wait()
+        if self._corosync:
+            self._fencer.terminate()
+            self._fencer.wait()
+            self._corosync.stop()
 
         self._daemon_process = None
-        self._stonith_process = None
+        self._fencer = None
+        self._corosync = None
 
     def add_cmd(self, cmd=None, **kwargs):
         """Add a cts-exec-helper command to be executed as part of this test."""
@@ -158,7 +168,7 @@ class ExecTest(Test):
 
     def run(self):
         """Execute this test."""
-        if self.tls and self.name.count("stonith") != 0:
+        if self.tls and self._is_stonith_test:
             self._result_txt = "SKIPPED - '%s' - disabled when testing pacemaker_remote" % (self.name)
             print(self._result_txt)
             return
@@ -185,6 +195,13 @@ class ExecTests(Tests):
         self._rsc_classes = self._setup_rsc_classes()
 
         print("Testing resource classes %r" % self._rsc_classes)
+
+        if "lsb" in self._rsc_classes:
+            service_agent = "LSBDummy"
+        elif "systemd" in self._rsc_classes:
+            service_agent = "pacemaker-cts-dummyd@3"
+        else:
+            service_agent = "unsupported"
 
         self._common_cmds = {
             "ocf_reg_line": '-c register_rsc -r ocf_test_rsc ' + self._action_timeout + ' -C ocf -P pacemaker -T Dummy',
@@ -226,7 +243,8 @@ class ExecTests(Tests):
             "upstart_cancel_line": '-c cancel -r upstart_test_rsc -a monitor -i 2s ' + self._action_timeout,
             "upstart_cancel_event": '-l "NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:monitor rc:ok op_status:Cancelled" ',
 
-            "service_reg_line": '-c register_rsc -r service_test_rsc ' + self._action_timeout + ' -C service -T LSBDummy',
+            "service_reg_line": '-c register_rsc -r service_test_rsc ' + self._action_timeout
+                                + ' -C service -T %s' % service_agent,
             "service_reg_event": '-l "NEW_EVENT event_type:register rsc_id:service_test_rsc action:none rc:ok op_status:complete"',
             "service_unreg_line": '-c unregister_rsc -r service_test_rsc ' + self._action_timeout,
             "service_unreg_event": '-l "NEW_EVENT event_type:unregister rsc_id:service_test_rsc action:none rc:ok op_status:complete"',
@@ -441,7 +459,7 @@ class ExecTests(Tests):
         # do not use service and systemd at the same time, it is the same resource.
 
         # register start monitor stop unregister resources of each type at the same time
-        test = self.new_test("multi_rsc_start_stop_all",
+        test = self.new_test("multi_rsc_start_stop_all_including_stonith",
                              "Start, monitor, and stop resources of multiple types and classes")
         for rsc in self._rsc_classes:
             test.add_cmd(args=self._build_cmd_str(rsc, "reg"))
@@ -817,15 +835,17 @@ class ExecTests(Tests):
         test.add_cmd(args="-c metadata -P pacemaker -T Stateful", expected_exitcode=ExitStatus.ERROR)
         test.add_cmd(args="-c metadata -C ocf -P pacemaker -T fake_agent", expected_exitcode=ExitStatus.ERROR)
 
-        # get metadata
-        test = self.new_test("get_lsb_metadata", "Retrieve metadata for a resource")
-        test.add_cmd(args="-c metadata -C lsb -T LSBDummy",
-                     stdout_match="resource-agent name='LSBDummy'")
-
         # get stonith metadata
         test = self.new_test("get_stonith_metadata", "Retrieve stonith metadata for a resource")
         test.add_cmd(args="-c metadata -C stonith -P pacemaker -T fence_dummy",
                      stdout_match="resource-agent name=\"fence_dummy\"")
+
+        # get lsb metadata
+        if "lsb" in self._rsc_classes:
+            test = self.new_test("get_lsb_metadata",
+                                 "Retrieve metadata for an LSB resource")
+            test.add_cmd(args="-c metadata -C lsb -T LSBDummy",
+                         stdout_match="resource-agent name='LSBDummy'")
 
         # get metadata
         if "systemd" in self._rsc_classes:
@@ -847,30 +867,30 @@ class ExecTests(Tests):
 
         # Verify agents only exist in their lists
         test = self.new_test("verify_agent_lists", "Verify the agent lists contain the right data.")
-        test.add_cmd(args="-c list_agents ", stdout_match="Stateful")                                          # ocf
-        test.add_cmd(args="-c list_agents -C ocf", stdout_match="Stateful")
-        test.add_cmd(args="-c list_agents -C lsb", stdout_match="", stdout_no_match="Stateful")                # should not exist
-        test.add_cmd(args="-c list_agents -C service", stdout_match="", stdout_no_match="Stateful")            # should not exist
-        test.add_cmd(args="-c list_agents ", stdout_match="LSBDummy")                                          # init.d
-        test.add_cmd(args="-c list_agents -C lsb", stdout_match="LSBDummy")
-        test.add_cmd(args="-c list_agents -C service", stdout_match="LSBDummy")
-        test.add_cmd(args="-c list_agents -C ocf", stdout_match="", stdout_no_match="pacemaker-cts-dummyd@")   # should not exist
 
-        test.add_cmd(args="-c list_agents -C ocf", stdout_match="", stdout_no_match="pacemaker-cts-dummyd@")   # should not exist
-        test.add_cmd(args="-c list_agents -C lsb", stdout_match="", stdout_no_match="fence_dummy")             # should not exist
-        test.add_cmd(args="-c list_agents -C service", stdout_match="", stdout_no_match="fence_dummy")         # should not exist
-        test.add_cmd(args="-c list_agents -C ocf", stdout_match="", stdout_no_match="fence_dummy")             # should not exist
+        if "ocf" in self._rsc_classes:
+            test.add_cmd(args="-c list_agents ", stdout_match="Stateful")
+            test.add_cmd(args="-c list_agents -C ocf", stdout_match="Stateful",
+                         stdout_no_match="pacemaker-cts-dummyd@|fence_dummy")
+
+        if "service" in self._rsc_classes:
+            test.add_cmd(args="-c list_agents -C service", stdout_match="",
+                         stdout_no_match="Stateful|fence_dummy")
+
+        if "lsb" in self._rsc_classes:
+            test.add_cmd(args="-c list_agents", stdout_match="LSBDummy")
+            test.add_cmd(args="-c list_agents -C lsb", stdout_match="LSBDummy",
+                         stdout_no_match="pacemaker-cts-dummyd@|Stateful|fence_dummy")
+            test.add_cmd(args="-c list_agents -C service", stdout_match="LSBDummy")
 
         if "systemd" in self._rsc_classes:
             test.add_cmd(args="-c list_agents ", stdout_match="pacemaker-cts-dummyd@")                         # systemd
-            test.add_cmd(args="-c list_agents -C service", stdout_match="LSBDummy")
             test.add_cmd(args="-c list_agents -C systemd", stdout_match="", stdout_no_match="Stateful")        # should not exist
             test.add_cmd(args="-c list_agents -C systemd", stdout_match="pacemaker-cts-dummyd@")
             test.add_cmd(args="-c list_agents -C systemd", stdout_match="", stdout_no_match="fence_dummy")     # should not exist
 
         if "upstart" in self._rsc_classes:
             test.add_cmd(args="-c list_agents ", stdout_match="pacemaker-cts-dummyd")                          # upstart
-            test.add_cmd(args="-c list_agents -C service", stdout_match="LSBDummy")
             test.add_cmd(args="-c list_agents -C upstart", stdout_match="", stdout_no_match="Stateful")        # should not exist
             test.add_cmd(args="-c list_agents -C upstart", stdout_match="pacemaker-cts-dummyd")
             test.add_cmd(args="-c list_agents -C upstart", stdout_match="", stdout_no_match="fence_dummy")     # should not exist
@@ -923,11 +943,11 @@ def main():
     opts = build_options()
 
     if opts.pacemaker_remote:
-        daemon_name = "pacemaker-remoted"
+        exit_if_proc_running("pacemaker-remoted")
     else:
-        daemon_name = "pacemaker-execd"
-
-    exit_if_proc_running(daemon_name)
+        exit_if_proc_running("corosync")
+        exit_if_proc_running("pacemaker-execd")
+        exit_if_proc_running("pacemaker-fenced")
 
     # Create a temporary directory for log files (the directory will
     # automatically be erased when done)

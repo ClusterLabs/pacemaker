@@ -311,21 +311,22 @@ AC_ARG_WITH([cibsecrets],
 yes_no_try "$with_cibsecrets" "no"
 with_cibsecrets=$?
 
-PCMK_GNUTLS_PRIORITIES="NORMAL"
+PCMK__GNUTLS_PRIORITIES="NORMAL"
 AC_ARG_WITH([gnutls-priorities],
     [AS_HELP_STRING([--with-gnutls-priorities],
         [default GnuTLS cipher priorities @<:@NORMAL@:>@])],
-    [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ]
+    [ test x"$withval" = x"no" || PCMK__GNUTLS_PRIORITIES="$withval" ]
 )
 
 AC_ARG_WITH([concurrent-fencing-default],
-    [AS_HELP_STRING([--with-concurrent-fencing-default],
-        [default value for concurrent-fencing cluster option @<:@false@:>@])],
+    [AS_HELP_STRING([--with-concurrent-fencing-default], m4_normalize([
+        default value for concurrent-fencing cluster option (deprecated)
+        @<:@true@:>@]))],
 )
 AS_CASE([$with_concurrent_fencing_default],
-        [""], [with_concurrent_fencing_default="false"],
-        [false], [],
-        [true], [PCMK_FEATURES="$PCMK_FEATURES default-concurrent-fencing"],
+        [""], [with_concurrent_fencing_default="true"],
+        [true], [],
+        [false], [PCMK_FEATURES="$PCMK_FEATURES concurrent-fencing-default-false"],
         [AC_MSG_ERROR([Invalid value "$with_concurrent_fencing_default" for --with-concurrent-fencing-default])]
 )
 
@@ -393,10 +394,12 @@ AC_ARG_WITH([nagios-metadata-dir],
 
 INITDIR=""
 AC_ARG_WITH([initdir],
-    [AS_HELP_STRING([--with-initdir=DIR],
-        [directory for init (rc) scripts])],
+    [AS_HELP_STRING([--with-initdir=DIR], m4_normalize([
+        directory for lsb resources (init scripts), or "try" to check for
+        common locations, or "no" to disable] @<:@try@:>@))],
     [ INITDIR="$withval" ]
 )
+AS_IF([test x"$INITDIR" = x""], [INITDIR="try"])
 
 systemdsystemunitdir="${systemdsystemunitdir-}"
 AC_ARG_WITH([systemdsystemunitdir],
@@ -440,29 +443,29 @@ dnl /usr/lib rather than libdir because it's determined by the OCF project and
 dnl not Pacemaker. Even if a user wants to install Pacemaker to /usr/local or
 dnl such, the OCF agents will be expected in their usual location. However, we
 dnl do give the user the option to override it.
-PKG_CHECK_VAR([OCF_ROOT_DIR], [resource-agents], [ocfrootdir], [],
-              [OCF_ROOT_DIR="/usr/lib/ocf"])
+PKG_CHECK_VAR([PCMK_OCF_ROOT], [resource-agents], [ocfrootdir], [],
+              [PCMK_OCF_ROOT="/usr/lib/ocf"])
 AC_ARG_WITH([ocfdir],
     [AS_HELP_STRING([--with-ocfdir=DIR], m4_normalize([
         OCF resource agent root directory (advanced option: changing this
         may break other cluster components unless similarly configured)
         @<:@value from resource-agents package if available otherwise
         /usr/lib/ocf@:>@]))],
-    [ OCF_ROOT_DIR="$withval" ]
+    [ PCMK_OCF_ROOT="$withval" ]
 )
 
 dnl Get default from resource-agents if possible
-PKG_CHECK_VAR([OCF_RA_PATH], [resource-agents], [ocfrapath], [],
-              [OCF_RA_PATH="$OCF_ROOT_DIR/resource.d"])
+PKG_CHECK_VAR([PCMK__OCF_RA_PATH], [resource-agents], [ocfrapath], [],
+              [PCMK__OCF_RA_PATH="$PCMK_OCF_ROOT/resource.d"])
 AC_ARG_WITH([ocfrapath],
     [AS_HELP_STRING([--with-ocfrapath=DIR], m4_normalize([
         OCF resource agent directories (colon-separated) to search
         @<:@value from resource-agents package if available otherwise
         OCFDIR/resource.d@:>@]))],
-    [ OCF_RA_PATH="$withval" ]
+    [ PCMK__OCF_RA_PATH="$withval" ]
 )
 
-OCF_RA_INSTALL_DIR="$OCF_ROOT_DIR/resource.d"
+OCF_RA_INSTALL_DIR="$PCMK_OCF_ROOT/resource.d"
 AC_ARG_WITH([ocfrainstalldir],
     [AS_HELP_STRING([--with-ocfrainstalldir=DIR], m4_normalize([
         OCF installation directory for Pacemakers resource agents
@@ -543,8 +546,8 @@ dnl Bash is needed for building man pages and running regression tests.
 dnl We set "BASH_PATH" because "BASH" is already an environment variable.
 REQUIRE_PROG([BASH_PATH], [bash])
 
-AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
-AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
+AC_PATH_PROGS(PCMK__VALGRIND_EXEC, valgrind, /usr/bin/valgrind)
+AC_DEFINE_UNQUOTED(PCMK__VALGRIND_EXEC, "$PCMK__VALGRIND_EXEC", Valgrind command)
 
 
 dnl ==============================================
@@ -632,9 +635,12 @@ dnl ==============================================
 
 AS_IF([test x"$enable_nls" = x"yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
 
-AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT],
-                   ["$with_concurrent_fencing_default"],
-                   [Default value for concurrent-fencing cluster option])
+AS_IF([test x"$with_concurrent_fencing_default" = x"true"],
+      [PCMK__CONCURRENT_FENCING_DEFAULT_TRUE="1"],
+      [PCMK__CONCURRENT_FENCING_DEFAULT_TRUE="0"])
+AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT_TRUE],
+                   [$PCMK__CONCURRENT_FENCING_DEFAULT_TRUE],
+                   [Whether concurrent-fencing cluster option default is true])
 
 AC_DEFINE_UNQUOTED([PCMK__SBD_SYNC_DEFAULT],
                    [$with_sbd_sync_default],
@@ -644,11 +650,11 @@ AC_DEFINE_UNQUOTED([PCMK__RESOURCE_STICKINESS_DEFAULT],
                    [$with_resource_stickiness_default],
                    [Default value for resource-stickiness resource meta-attribute])
 
-AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
+AS_IF([test x"${PCMK__GNUTLS_PRIORITIES}" != x""], [],
       [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
-AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
+AC_DEFINE_UNQUOTED([PCMK__GNUTLS_PRIORITIES], ["$PCMK__GNUTLS_PRIORITIES"],
                    [GnuTLS cipher priorities])
-AC_SUBST(PCMK_GNUTLS_PRIORITIES)
+AC_SUBST(PCMK__GNUTLS_PRIORITIES)
 
 AC_SUBST(BUG_URL)
 AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
@@ -698,24 +704,6 @@ expand_path_option() {
     )
 }
 
-AC_MSG_NOTICE([Sanitizing INITDIR: ${INITDIR}])
-AS_CASE([$INITDIR],
-        [prefix], [INITDIR=$prefix],
-        [""], [
-            AC_MSG_CHECKING([which init (rc) directory to use])
-            for initdir in /etc/init.d /etc/rc.d/init.d /sbin/init.d \
-                /usr/local/etc/rc.d /etc/rc.d
-            do
-                AS_IF([test -d $initdir],
-                      [
-                          INITDIR=$initdir
-                          break
-                      ])
-            done
-            AC_MSG_RESULT([$INITDIR])
-        ])
-AC_SUBST(INITDIR)
-
 dnl Expand values of autoconf-provided directory options
 expand_path_option prefix
 expand_path_option exec_prefix
@@ -737,19 +725,45 @@ AC_DEFUN([AC_DATAROOTDIR_CHECKED])
 
 dnl Expand values of custom directory options
 
+AS_IF([test x"$INITDIR" = x"try"],
+      [
+          AC_MSG_CHECKING([for an init directory])
+          INITDIR=no
+          for initdir in /etc/init.d /etc/rc.d/init.d /sbin/init.d \
+                         /usr/local/etc/rc.d /etc/rc.d ${sysconfdir}/init.d
+          do
+              AS_IF([test -d $initdir],
+                    [
+                        INITDIR=$initdir
+                        break
+                    ])
+          done
+          AC_MSG_RESULT([$INITDIR])
+      ])
+support_lsb=$DISABLED
+AM_CONDITIONAL([BUILD_LSB], [test x"${INITDIR}" != x"no"])
+AM_COND_IF([BUILD_LSB],
+           [
+               support_lsb=$REQUIRED
+               expand_path_option INITDIR
+               PCMK_FEATURES="$PCMK_FEATURES lsb"
+           ],
+           [ INITDIR="" ])
+AC_SUBST(INITDIR)
+AC_DEFINE_UNQUOTED([PCMK__ENABLE_LSB], [$support_lsb],
+                   [Whether to support LSB resource agents])
+AC_DEFINE_UNQUOTED([PCMK__LSB_INIT_DIR], ["$INITDIR"],
+                   [Location for LSB init scripts])
+
 expand_path_option localedir "${datadir}/locale"
 AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"],
                    [Base directory for message catalogs])
 
 AS_IF([test x"${runstatedir}" = x""], [runstatedir="${pcmk_runstatedir}"])
 expand_path_option runstatedir "${localstatedir}/run"
-AC_DEFINE_UNQUOTED([PCMK_RUN_DIR], ["$runstatedir"],
+AC_DEFINE_UNQUOTED([PCMK__RUN_DIR], ["$runstatedir"],
                    [Location for modifiable per-process data])
 AC_SUBST(runstatedir)
-
-expand_path_option INITDIR
-AC_DEFINE_UNQUOTED([PCMK__LSB_INIT_DIR], ["$INITDIR"],
-                   [Location for LSB init scripts])
 
 expand_path_option docdir "${datadir}/doc/${PACKAGE}-${VERSION}"
 AC_SUBST(docdir)
@@ -775,14 +789,14 @@ AC_SUBST(PCMK__FENCE_BINDIR)
 AC_DEFINE_UNQUOTED([PCMK__FENCE_BINDIR], ["$PCMK__FENCE_BINDIR"],
                    [Location for executable fence agents])
 
-expand_path_option OCF_ROOT_DIR
-AC_SUBST(OCF_ROOT_DIR)
-AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
+expand_path_option PCMK_OCF_ROOT
+AC_SUBST(PCMK_OCF_ROOT)
+AC_DEFINE_UNQUOTED([PCMK_OCF_ROOT], ["$PCMK_OCF_ROOT"],
                    [OCF root directory for resource agents and libraries])
 
-expand_path_option OCF_RA_PATH
-AC_SUBST(OCF_RA_PATH)
-AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
+expand_path_option PCMK__OCF_RA_PATH
+AC_SUBST(PCMK__OCF_RA_PATH)
+AC_DEFINE_UNQUOTED([PCMK__OCF_RA_PATH], ["$PCMK__OCF_RA_PATH"],
                    [OCF directories to search for resource agents ])
 
 expand_path_option OCF_RA_INSTALL_DIR
@@ -790,10 +804,10 @@ AC_SUBST(OCF_RA_INSTALL_DIR)
 
 # Derived paths
 
-CRM_SCHEMA_DIRECTORY="${datadir}/pacemaker"
-AC_DEFINE_UNQUOTED([CRM_SCHEMA_DIRECTORY], ["$CRM_SCHEMA_DIRECTORY"],
+PCMK_SCHEMA_DIR="${datadir}/pacemaker"
+AC_DEFINE_UNQUOTED([PCMK_SCHEMA_DIR], ["$PCMK_SCHEMA_DIR"],
                    [Location for the Pacemaker Relax-NG Schema])
-AC_SUBST(CRM_SCHEMA_DIRECTORY)
+AC_SUBST(PCMK_SCHEMA_DIR)
 
 PCMK__REMOTE_SCHEMA_DIR="${localstatedir}/lib/pacemaker/schemas"
 AC_DEFINE_UNQUOTED([PCMK__REMOTE_SCHEMA_DIR], ["$PCMK__REMOTE_SCHEMA_DIR"],
@@ -805,20 +819,20 @@ AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
                    [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
 AC_SUBST(CRM_CORE_DIR)
 
-CRM_PACEMAKER_DIR="${localstatedir}/lib/pacemaker"
-AC_DEFINE_UNQUOTED([CRM_PACEMAKER_DIR], ["$CRM_PACEMAKER_DIR"],
+PCMK__PERSISTENT_DATA_DIR="${localstatedir}/lib/pacemaker"
+AC_DEFINE_UNQUOTED([PCMK__PERSISTENT_DATA_DIR], ["$PCMK__PERSISTENT_DATA_DIR"],
                    [Location to store directory produced by Pacemaker daemons])
-AC_SUBST(CRM_PACEMAKER_DIR)
+AC_SUBST(PCMK__PERSISTENT_DATA_DIR)
 
 CRM_BLACKBOX_DIR="${localstatedir}/lib/pacemaker/blackbox"
 AC_DEFINE_UNQUOTED([CRM_BLACKBOX_DIR], ["$CRM_BLACKBOX_DIR"],
                    [Where to keep blackbox dumps])
 AC_SUBST(CRM_BLACKBOX_DIR)
 
-PE_STATE_DIR="${localstatedir}/lib/pacemaker/pengine"
-AC_DEFINE_UNQUOTED([PE_STATE_DIR], ["$PE_STATE_DIR"],
+PCMK_SCHEDULER_INPUT_DIR="${localstatedir}/lib/pacemaker/pengine"
+AC_DEFINE_UNQUOTED([PCMK_SCHEDULER_INPUT_DIR], ["$PCMK_SCHEDULER_INPUT_DIR"],
                    [Where to keep scheduler outputs])
-AC_SUBST(PE_STATE_DIR)
+AC_SUBST(PCMK_SCHEDULER_INPUT_DIR)
 
 CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
 AC_DEFINE_UNQUOTED([CRM_CONFIG_DIR], ["$CRM_CONFIG_DIR"],
@@ -835,10 +849,10 @@ AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
                    [Where to keep state files and sockets])
 AC_SUBST(CRM_STATE_DIR)
 
-CRM_RSCTMP_DIR="${runstatedir}/resource-agents"
-AC_DEFINE_UNQUOTED([CRM_RSCTMP_DIR], ["$CRM_RSCTMP_DIR"],
+PCMK__OCF_TMP_DIR="${runstatedir}/resource-agents"
+AC_DEFINE_UNQUOTED([PCMK__OCF_TMP_DIR], ["$PCMK__OCF_TMP_DIR"],
                    [Where resource agents should keep state files])
-AC_SUBST(CRM_RSCTMP_DIR)
+AC_SUBST(PCMK__OCF_TMP_DIR)
 
 PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
 AC_DEFINE_UNQUOTED([PACEMAKER_CONFIG_DIR], ["$PACEMAKER_CONFIG_DIR"],
@@ -853,7 +867,7 @@ for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     mandir INITDIR docdir CONFIGDIR localedir
 do
     dirname=`eval echo '${'${j}'}'`
-    AS_IF([test ! -d "$dirname"],
+    AS_IF([test -n "$dirname" && test ! -d "$dirname"],
           [AC_MSG_WARN([$j directory ($dirname) does not exist (yet)])])
 done
 
@@ -1055,6 +1069,9 @@ AS_IF([test x"$ac_cv_lib_c_dlopen" = x"yes"],
 PKG_CHECK_MODULES(LIBXML2, [libxml-2.0 >= 2.9.2],
                   [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
                    LIBS="${LIBS} ${LIBXML2_LIBS}"])
+
+AC_PATH_PROGS(XMLLINT_PATH, xmllint, /usr/bin/xmllint)
+AC_DEFINE_UNQUOTED(XMLLINT_PATH, "$XMLLINT_PATH", xmllint command)
 
 REQUIRE_LIB([xslt], [xsltApplyStylesheet])
 
@@ -1381,7 +1398,6 @@ AS_IF([test $with_profiling -ne $DISABLED],
           AC_MSG_NOTICE([CFLAGS after: $CFLAGS])
       ]
 )
-AC_DEFINE_UNQUOTED([SUPPORT_PROFILING], [$with_profiling], [Support profiling])
 AM_CONDITIONAL([BUILD_PROFILING], [test "$with_profiling" = "$REQUIRED"])
 
 dnl ========================================================================
@@ -1564,6 +1580,20 @@ CLUSTERLIBS=""
 PC_NAME_CLUSTER=""
 
 dnl ========================================================================
+dnl Detect support for "service" alias
+dnl ========================================================================
+
+PCMK__ENABLE_SERVICE=$DISABLED
+AM_COND_IF([BUILD_LSB], [PCMK__ENABLE_SERVICE=$REQUIRED])
+AM_COND_IF([BUILD_SYSTEMD], [PCMK__ENABLE_SERVICE=$REQUIRED])
+AM_COND_IF([BUILD_UPSTART], [PCMK__ENABLE_SERVICE=$REQUIRED])
+AS_IF([test $PCMK__ENABLE_SERVICE -ne $DISABLED],
+      [PCMK_FEATURES="$PCMK_FEATURES service"])
+AC_SUBST(PCMK__ENABLE_SERVICE)
+AC_DEFINE_UNQUOTED([PCMK__ENABLE_SERVICE], [$PCMK__ENABLE_SERVICE],
+                   [Whether "service" is supported as an agent standard])
+
+dnl ========================================================================
 dnl    Cluster stack - Corosync
 dnl ========================================================================
 
@@ -1630,20 +1660,20 @@ AS_IF([test $with_cibsecrets -ne $DISABLED],
       [
           with_cibsecrets=$REQUIRED
           PCMK_FEATURES="$PCMK_FEATURES cibsecrets"
-          LRM_CIBSECRETS_DIR="${localstatedir}/lib/pacemaker/lrm/secrets"
-          AC_DEFINE_UNQUOTED([LRM_CIBSECRETS_DIR], ["$LRM_CIBSECRETS_DIR"],
+          PCMK__CIB_SECRETS_DIR="${localstatedir}/lib/pacemaker/lrm/secrets"
+          AC_DEFINE_UNQUOTED([PCMK__CIB_SECRETS_DIR], ["$PCMK__CIB_SECRETS_DIR"],
                              [Location for CIB secrets])
-          AC_SUBST([LRM_CIBSECRETS_DIR])
+          AC_SUBST([PCMK__CIB_SECRETS_DIR])
       ]
 )
-AC_DEFINE_UNQUOTED([SUPPORT_CIBSECRETS], [$with_cibsecrets], [Support CIB secrets])
+AC_DEFINE_UNQUOTED([PCMK__ENABLE_CIBSECRETS], [$with_cibsecrets], [Support CIB secrets])
 AM_CONDITIONAL([BUILD_CIBSECRETS], [test $with_cibsecrets -eq $REQUIRED])
 
 dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
-PKG_CHECK_MODULES(GNUTLS, [gnutls >= 2.12.0],
+PKG_CHECK_MODULES(GNUTLS, [gnutls >= 3.1.7],
                   [CPPFLAGS="${CPPFLAGS} ${GNUTLS_CFLAGS}"
                    LIBS="${LIBS} ${GNUTLS_LIBS}"])
 
@@ -2011,6 +2041,7 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [cts/cts-lab],
                   [cts/cts-regression],
                   [cts/cts-scheduler],
+                  [cts/cts-schemas],
                   [cts/benchmark/clubench],
                   [cts/support/LSBDummy],
                   [cts/support/cts-support],
@@ -2092,10 +2123,12 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/io/Makefile                        \
                 lib/common/tests/iso8601/Makefile                   \
                 lib/common/tests/lists/Makefile                     \
+                lib/common/tests/messages/Makefile                  \
                 lib/common/tests/nodes/Makefile                     \
                 lib/common/tests/nvpair/Makefile                    \
                 lib/common/tests/options/Makefile                   \
                 lib/common/tests/output/Makefile                    \
+                lib/common/tests/patchset/Makefile                  \
                 lib/common/tests/probes/Makefile                    \
                 lib/common/tests/procfs/Makefile                    \
                 lib/common/tests/resources/Makefile                 \
@@ -2171,7 +2204,9 @@ AC_MSG_NOTICE([  Header files             = ${includedir}])
 AC_MSG_NOTICE([  Arch-independent files   = ${datadir}])
 AC_MSG_NOTICE([  State information        = ${localstatedir}])
 AC_MSG_NOTICE([  System configuration     = ${sysconfdir}])
-AC_MSG_NOTICE([  OCF agents               = ${OCF_ROOT_DIR}])
+AC_MSG_NOTICE([  OCF agents               = ${PCMK_OCF_ROOT}])
+AM_COND_IF([BUILD_LSB],
+           [AC_MSG_NOTICE([  LSB agents               = ${INITDIR}])])
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_NOTICE([  HA user name             = ${CRM_DAEMON_USER}])

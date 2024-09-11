@@ -179,9 +179,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     if (pcmk__is_pacemaker_remote_node(node)) {
-        const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-
-        if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_none)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
             reason = "Pacemaker Remote nodes cannot run stonith agents";
             goto no_probe;
 
@@ -355,8 +353,8 @@ probe_needed_before_action(const pcmk_action_t *probe,
 static void
 add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
 {
-    for (GList *iter = scheduler->ordering_constraints; iter != NULL;
-         iter = iter->next) {
+    for (GList *iter = scheduler->priv->ordering_constraints;
+         iter != NULL; iter = iter->next) {
 
         pcmk__action_relation_t *order = iter->data;
         uint32_t order_flags = pcmk__ar_ordered;
@@ -779,7 +777,8 @@ order_then_probes(pcmk_scheduler_t *scheduler)
      * narrowing use case suggests that this code should remain disabled until
      * someone gets smarter.
      */
-    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->resources;
+         iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pcmk_action_t *start = NULL;
@@ -861,8 +860,8 @@ void
 pcmk__order_probes(pcmk_scheduler_t *scheduler)
 {
     // Add orderings for "probe then X"
-    g_list_foreach(scheduler->resources, add_start_restart_orderings_for_rsc,
-                   NULL);
+    g_list_foreach(scheduler->priv->resources,
+                   add_start_restart_orderings_for_rsc, NULL);
     add_probe_orderings_for_stops(scheduler);
 
     order_then_probes(scheduler);
@@ -901,6 +900,6 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
         }
 
         // Probe each resource in the cluster on this node, as needed
-        pcmk__probe_resource_list(scheduler->resources, node);
+        pcmk__probe_resource_list(scheduler->priv->resources, node);
     }
 }

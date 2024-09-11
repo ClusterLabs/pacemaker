@@ -31,7 +31,7 @@
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get CIB manager metadata - OK (0) =#=#=#=
-* Passed: pacemaker-based - Get CIB manager metadata
+* Passed: pacemaker-based       - Get CIB manager metadata
 =#=#=#= Begin test: Get controller metadata =#=#=#=
 <resource-agent name="pacemaker-controld" version="">
   <version>
@@ -185,7 +185,7 @@
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get controller metadata - OK (0) =#=#=#=
-* Passed: pacemaker-controld - Get controller metadata
+* Passed: pacemaker-controld    - Get controller metadata
 =#=#=#= Begin test: Get fencer metadata =#=#=#=
 <resource-agent name="pacemaker-fenced" version="">
   <version>
@@ -200,12 +200,12 @@
   <parameters>
     <parameter name="pcmk_host_argument">
       <longdesc lang="en">
-        Some devices do not support the standard 'port' parameter or may provide additional ones. Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced. A value of "none" can be used to tell the cluster not to supply any additional parameters.
+        If the fencing agent metadata advertises support for the "port" or "plug" parameter, that will be used as the default, otherwise "none" will be used, which tells the cluster not to supply any additional parameters.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** An alternate parameter to supply instead of 'port'
+        *** Advanced Use Only *** Name of agent parameter that should be set to the fencing target
       </shortdesc>
-      <content type="string" default=""/>
+      <content type="string"/>
     </parameter>
     <parameter name="pcmk_host_map">
       <longdesc lang="en">
@@ -259,7 +259,7 @@
     </parameter>
     <parameter name="pcmk_action_limit">
       <longdesc lang="en">
-        Cluster property concurrent-fencing="true" needs to be configured first. Then use this to specify the maximum number of actions can be performed in parallel on this device. A value of -1 means an unlimited number of actions can be performed in parallel.
+        If the concurrent-fencing cluster property is "true", this specifies the maximum number of actions that can be performed in parallel on this device. A value of -1 means unlimited.
       </longdesc>
       <shortdesc lang="en">
         The maximum number of actions can be performed in parallel on this device
@@ -431,7 +431,7 @@
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get fencer metadata - OK (0) =#=#=#=
-* Passed: pacemaker-fenced - Get fencer metadata
+* Passed: pacemaker-fenced      - Get fencer metadata
 =#=#=#= Begin test: Get scheduler metadata =#=#=#=
 <resource-agent name="pacemaker-schedulerd" version="">
   <version>
@@ -446,7 +446,7 @@
   <parameters>
     <parameter name="no-quorum-policy">
       <longdesc lang="en">
-        What to do when the cluster does not have quorum  Allowed values: stop, freeze, ignore, demote, suicide
+        What to do when the cluster does not have quorum  Allowed values: stop, freeze, ignore, demote, fence, suicide
       </longdesc>
       <shortdesc lang="en">
         What to do when the cluster does not have quorum
@@ -456,6 +456,7 @@
         <option value="freeze"/>
         <option value="ignore"/>
         <option value="demote"/>
+        <option value="fence"/>
         <option value="suicide"/>
       </content>
     </parameter>
@@ -558,7 +559,7 @@
         Allow performing fencing operations in parallel
       </longdesc>
       <shortdesc lang="en">
-        Allow performing fencing operations in parallel
+        *** Deprecated ***
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
@@ -747,4 +748,4 @@
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get scheduler metadata - OK (0) =#=#=#=
-* Passed: pacemaker-schedulerd - Get scheduler metadata
+* Passed: pacemaker-schedulerd  - Get scheduler metadata

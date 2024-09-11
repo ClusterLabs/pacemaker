@@ -833,15 +833,17 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
 
 /*!
  * \internal
- * \brief Add an IPC server to the main loop for the pacemaker-based API
+ * \brief Add an IPC server to the main loop for the CIB manager API
  *
- * \param[out] ipcs_ro   New IPC server for read-only pacemaker-based API
- * \param[out] ipcs_rw   New IPC server for read/write pacemaker-based API
- * \param[out] ipcs_shm  New IPC server for shared-memory pacemaker-based API
+ * \param[out] ipcs_ro   New IPC server for read-only CIB manager API
+ * \param[out] ipcs_rw   New IPC server for read/write CIB manager API
+ * \param[out] ipcs_shm  New IPC server for shared-memory CIB manager API
  * \param[in]  ro_cb     IPC callbacks for read-only API
  * \param[in]  rw_cb     IPC callbacks for read/write and shared-memory APIs
  *
  * \note This function exits fatally if unable to create the servers.
+ * \note There is no actual difference between the three IPC endpoints other
+ *       than their names.
  */
 void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
                            qb_ipcs_service_t **ipcs_rw,
@@ -867,11 +869,11 @@ void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
 
 /*!
  * \internal
- * \brief Destroy IPC servers for pacemaker-based API
+ * \brief Destroy IPC servers for the CIB manager API
  *
- * \param[out] ipcs_ro   IPC server for read-only pacemaker-based API
- * \param[out] ipcs_rw   IPC server for read/write pacemaker-based API
- * \param[out] ipcs_shm  IPC server for shared-memory pacemaker-based API
+ * \param[out] ipcs_ro   IPC server for read-only the CIB manager API
+ * \param[out] ipcs_rw   IPC server for read/write the CIB manager API
+ * \param[out] ipcs_shm  IPC server for shared-memory the CIB manager API
  *
  * \note This is a convenience function for calling qb_ipcs_destroy() for each
  *       argument.
@@ -888,7 +890,7 @@ pcmk__stop_based_ipc(qb_ipcs_service_t *ipcs_ro,
 
 /*!
  * \internal
- * \brief Add an IPC server to the main loop for the pacemaker-controld API
+ * \brief Add an IPC server to the main loop for the controller API
  *
  * \param[in] cb  IPC callbacks
  *
@@ -902,7 +904,7 @@ pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb)
 
 /*!
  * \internal
- * \brief Add an IPC server to the main loop for the pacemaker-attrd API
+ * \brief Add an IPC server to the main loop for the attribute manager API
  *
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in] cb  IPC callbacks
@@ -916,15 +918,16 @@ pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
     *ipcs = mainloop_add_ipc_server(PCMK__VALUE_ATTRD, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        crm_err("Failed to create pacemaker-attrd server: exiting and inhibiting respawn");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        crm_crit("Exiting fatally because unable to serve " PCMK__SERVER_ATTRD
+                 " IPC (verify pacemaker and pacemaker_remote are not both "
+                 "enabled)");
         crm_exit(CRM_EX_FATAL);
     }
 }
 
 /*!
  * \internal
- * \brief Add an IPC server to the main loop for the pacemaker-fenced API
+ * \brief Add an IPC server to the main loop for the fencer API
  *
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
@@ -974,7 +977,7 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
 
 /*!
  * \internal
- * \brief Add an IPC server to the main loop for the pacemaker-schedulerd API
+ * \brief Add an IPC server to the main loop for the scheduler API
  *
  * \param[in] cb  IPC callbacks
  *
@@ -985,32 +988,4 @@ qb_ipcs_service_t *
 pcmk__serve_schedulerd_ipc(struct qb_ipcs_service_handlers *cb)
 {
     return mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_NATIVE, cb);
-}
-
-/*!
- * \brief Check whether string represents a client name used by cluster daemons
- *
- * \param[in] name  String to check
- *
- * \return true if name is standard client name used by daemons, false otherwise
- *
- * \note This is provided by the client, and so cannot be used by itself as a
- *       secure means of authentication.
- */
-bool
-crm_is_daemon_name(const char *name)
-{
-    return pcmk__str_any_of(pcmk__message_name(name),
-                            "attrd",
-                            CRM_SYSTEM_CIB,
-                            CRM_SYSTEM_CRMD,
-                            CRM_SYSTEM_DC,
-                            CRM_SYSTEM_LRMD,
-                            CRM_SYSTEM_MCP,
-                            CRM_SYSTEM_PENGINE,
-                            CRM_SYSTEM_STONITHD,
-                            CRM_SYSTEM_TENGINE,
-                            "pacemaker-remoted",
-                            "stonith-ng",
-                            NULL);
 }

@@ -28,11 +28,11 @@
 
 #ifdef PCMK__COMPILE_REMOTE
 #  define EXECD_TYPE "remote"
-#  define EXECD_NAME "pacemaker-remoted"
+#  define EXECD_NAME PCMK__SERVER_REMOTED
 #  define SUMMARY "resource agent executor daemon for Pacemaker Remote nodes"
 #else
 #  define EXECD_TYPE "local"
-#  define EXECD_NAME "pacemaker-execd"
+#  define EXECD_NAME PCMK__SERVER_EXECD
 #  define SUMMARY "resource agent executor daemon for Pacemaker cluster nodes"
 #endif
 
@@ -52,12 +52,9 @@ static struct {
 #ifdef PCMK__COMPILE_REMOTE
 /* whether shutdown request has been sent */
 static gboolean shutting_down = FALSE;
-
-/* timer for waiting for acknowledgment of shutdown request */
-static guint shutdown_ack_timer = 0;
-
-static gboolean lrmd_exit(gpointer data);
 #endif
+
+static void exit_executor(void);
 
 static void
 stonith_connection_destroy_cb(stonith_t * st, stonith_event_t * e)
@@ -184,7 +181,7 @@ lrmd_client_destroy(pcmk__client_t *client)
      * if there are no more proxied IPC providers
      */
     if (shutting_down && (ipc_proxy_get_provider() == NULL)) {
-        lrmd_exit(NULL);
+        exit_executor();
     }
 #endif
 }
@@ -274,16 +271,14 @@ lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
 /*!
  * \internal
  * \brief Clean up and exit immediately
- *
- * \param[in] data  Ignored
- *
- * \return Doesn't return
- * \note   This can be used as a timer callback.
  */
-static gboolean
-lrmd_exit(gpointer data)
+static void
+exit_executor(void)
 {
-    crm_info("Terminating with %d clients", pcmk__ipc_client_count());
+    const guint nclients = pcmk__ipc_client_count();
+
+    crm_info("Terminating with %d client%s",
+             nclients, pcmk__plural_s(nclients));
     stonith_api_delete(stonith_api);
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
@@ -302,7 +297,6 @@ lrmd_exit(gpointer data)
     }
 
     crm_exit(CRM_EX_OK);
-    return FALSE;
 }
 
 /*!
@@ -332,20 +326,14 @@ lrmd_shutdown(int nsig)
 
         } else {
             /* We requested a shutdown. Now, we need to wait for an
-             * acknowledgement from the proxy host (which ensures the proxy host
-             * supports shutdown requests), then wait for all proxy hosts to
-             * disconnect (which ensures that all resources have been stopped).
+             * acknowledgement from the proxy host, then wait for all proxy
+             * hosts to disconnect (which ensures that all resources have been
+             * stopped).
              */
             shutting_down = TRUE;
 
             /* Stop accepting new proxy connections */
             execd_stop_tls_server();
-
-            /* Older controller versions will never acknowledge our request, so
-             * set a fairly short timeout to exit quickly in that case. If we
-             * get the ack, we'll defuse this timer.
-             */
-            shutdown_ack_timer = g_timeout_add_seconds(20, lrmd_exit, NULL);
 
             /* Currently, we let the OS kill us if the clients don't disconnect
              * in a reasonable time. We could instead set a long timer here
@@ -356,47 +344,42 @@ lrmd_shutdown(int nsig)
         }
     }
 #endif
-    lrmd_exit(NULL);
+    exit_executor();
 }
 
 /*!
  * \internal
- * \brief Defuse short exit timer if shutting down
+ * \brief Log a shutdown acknowledgment
  */
 void
 handle_shutdown_ack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
     if (shutting_down) {
-        crm_info("Received shutdown ack");
-        if (shutdown_ack_timer > 0) {
-            g_source_remove(shutdown_ack_timer);
-            shutdown_ack_timer = 0;
-        }
+        crm_info("IPC proxy provider acknowledged shutdown request");
         return;
     }
 #endif
-    crm_debug("Ignoring unexpected shutdown ack");
+    crm_debug("Ignoring unexpected shutdown acknowledgment "
+              "from IPC proxy provider");
 }
 
 /*!
  * \internal
- * \brief Make short exit timer fire immediately
+ * \brief Handle rejection of shutdown request
  */
 void
 handle_shutdown_nack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
     if (shutting_down) {
-        crm_info("Received shutdown nack");
-        if (shutdown_ack_timer > 0) {
-            g_source_remove(shutdown_ack_timer);
-            shutdown_ack_timer = g_timeout_add(0, lrmd_exit, NULL);
-        }
+        crm_info("Exiting immediately after IPC proxy provider "
+                 "indicated no resources will be stopped");
+        exit_executor();
         return;
     }
 #endif
-    crm_debug("Ignoring unexpected shutdown nack");
+    crm_debug("Ignoring unexpected shutdown rejection from IPC proxy provider");
 }
 
 static GOptionEntry entries[] = {
@@ -533,11 +516,11 @@ main(int argc, char **argv, char **envp)
 
     {
         // Temporary directory for resource agent use (leave owned by root)
-        int rc = pcmk__build_path(CRM_RSCTMP_DIR, 0755);
+        int rc = pcmk__build_path(PCMK__OCF_TMP_DIR, 0755);
 
         if (rc != pcmk_rc_ok) {
             crm_warn("Could not create resource agent temporary directory "
-                     CRM_RSCTMP_DIR ": %s", pcmk_rc_str(rc));
+                     PCMK__OCF_TMP_DIR ": %s", pcmk_rc_str(rc));
         }
     }
 
@@ -561,11 +544,11 @@ main(int argc, char **argv, char **envp)
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker " EXECD_TYPE " executor successfully started and accepting connections");
-    crm_notice("OCF resource agent search path is %s", OCF_RA_PATH);
+    crm_notice("OCF resource agent search path is %s", PCMK__OCF_RA_PATH);
     g_main_loop_run(mainloop);
 
     /* should never get here */
-    lrmd_exit(NULL);
+    exit_executor();
 
 done:
     g_strfreev(options.log_files);

@@ -17,6 +17,7 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/common/scheduler.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/iso8601.h>
@@ -80,6 +81,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
 
         lifetime = pcmk__xe_first_child(xml_obj, PCMK__XE_LIFETIME, NULL, NULL);
         if (lifetime != NULL) {
+            // @COMPAT Not possible with schema validation enabled
             pcmk__config_warn("Support for '" PCMK__XE_LIFETIME "' element "
                               "(in %s) is deprecated and will be dropped "
                               "in a later release", id);
@@ -149,7 +151,7 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
     *tag = NULL;
 
     // Check whether id refers to a resource set template
-    if (g_hash_table_lookup_extended(scheduler->template_rsc_sets, id,
+    if (g_hash_table_lookup_extended(scheduler->priv->templates, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
             crm_notice("No resource is derived from template '%s'", id);
@@ -159,7 +161,7 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
     }
 
     // If not, check whether id refers to a tag
-    if (g_hash_table_lookup_extended(scheduler->tags, id,
+    if (g_hash_table_lookup_extended(scheduler->priv->tags, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
             crm_notice("No resource is tagged with '%s'", id);
@@ -170,6 +172,44 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
 
     pcmk__config_warn("No resource, template, or tag named '%s'", id);
     return false;
+}
+
+/*!
+ * \internal
+ * \brief Parse a role attribute from a constraint
+ *
+ * This is like pcmk_parse_role() except that started is treated as
+ * pcmk_role_unknown (indicating any role), and the return value is
+ * pcmk_rc_unpack_error for invalid specifications.
+ *
+ * \param[in] id         ID of constraint being parsed (for logging only)
+ * \param[in] role_spec  Role specification
+ * \param[in] role       Where to store parsed role
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__parse_constraint_role(const char *id, const char *role_spec,
+                            enum rsc_role_e *role)
+{
+    *role = pcmk_parse_role(role_spec);
+    switch (*role) {
+        case pcmk_role_unknown:
+            if (role_spec != NULL) {
+                pcmk__config_err("Ignoring constraint %s: Invalid role '%s'",
+                                 id, role_spec);
+                return pcmk_rc_unpack_error;
+            }
+            break;
+
+        case pcmk_role_started:
+            *role = pcmk_role_unknown;
+            break;
+
+        default:
+            break;
+    }
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -190,7 +230,7 @@ pcmk__valid_resource_or_tag(const pcmk_scheduler_t *scheduler, const char *id,
                             pcmk_resource_t **rsc, pcmk__idref_t **tag)
 {
     if (rsc != NULL) {
-        *rsc = pcmk__find_constraint_resource(scheduler->resources, id);
+        *rsc = pcmk__find_constraint_resource(scheduler->priv->resources, id);
         if (*rsc != NULL) {
             return true;
         }
@@ -285,17 +325,14 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
                  */
 
                 for (iter = tag->refs; iter != NULL; iter = iter->next) {
-                    const char *obj_ref = iter->data;
-                    xmlNode *new_rsc_ref = NULL;
+                    const char *ref_id = iter->data;
+                    xmlNode *new_ref = pcmk__xe_create(set,
+                                                       PCMK_XE_RESOURCE_REF);
 
-                    new_rsc_ref = xmlNewDocRawNode(set->doc, NULL,
-                                                   (pcmkXmlStr)
-                                                   PCMK_XE_RESOURCE_REF,
-                                                   NULL);
-                    crm_xml_add(new_rsc_ref, PCMK_XA_ID, obj_ref);
-                    xmlAddNextSibling(last_ref, new_rsc_ref);
+                    crm_xml_add(new_ref, PCMK_XA_ID, ref_id);
+                    xmlAddNextSibling(last_ref, new_ref);
 
-                    last_ref = new_rsc_ref;
+                    last_ref = new_ref;
                 }
 
                 any_refs = true;
@@ -428,7 +465,9 @@ void
 pcmk__create_internal_constraints(pcmk_scheduler_t *scheduler)
 {
     crm_trace("Create internal constraints");
-    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->resources;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->priv->cmds->internal_constraints(rsc);

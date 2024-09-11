@@ -83,6 +83,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 
     crm_trace("Processing \"%s\" event", op);
 
+    // @COMPAT Pacemaker Remote clients <3.0.0 may send this
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_IS_PRIMARY, pcmk__str_none)) {
         if (based_is_primary) {
             result = pcmk_ok;
@@ -129,7 +130,7 @@ send_sync_request(const char *host)
     if (host != NULL) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    pcmk__cluster_send_message(peer, pcmk__cluster_msg_based, sync_me);
+    pcmk__cluster_send_message(peer, pcmk_ipc_based, sync_me);
     pcmk__xml_free(sync_me);
 }
 
@@ -235,7 +236,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
             crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
 
-            pcmk__cluster_send_message(NULL, pcmk__cluster_msg_based, up);
+            pcmk__cluster_send_message(NULL, pcmk_ipc_based, up);
 
             pcmk__xml_free(up);
 
@@ -265,8 +266,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
                 crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
                 crm_xml_add_int(up, PCMK__XA_CIB_UPGRADE_RC, rc);
-                if (!pcmk__cluster_send_message(origin, pcmk__cluster_msg_based,
-                                                up)) {
+                if (!pcmk__cluster_send_message(origin, pcmk_ipc_based, up)) {
                     crm_warn("Could not send CIB upgrade result to %s", host);
                 }
                 pcmk__xml_free(up);
@@ -353,7 +353,9 @@ cib_process_replace_svr(const char *op, int options, const char *section, xmlNod
     return rc;
 }
 
-// @COMPAT: Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed
+/* @COMPAT: Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed
+ * (At least external client code <3.0.0 can send it)
+ */
 int
 cib_process_delete_absolute(const char *op, int options, const char *section, xmlNode * req,
                             xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
@@ -439,8 +441,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     if (!all) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    if (!pcmk__cluster_send_message(peer, pcmk__cluster_msg_based,
-                                    replace_request)) {
+    if (!pcmk__cluster_send_message(peer, pcmk_ipc_based, replace_request)) {
         result = -ENOTCONN;
     }
     pcmk__xml_free(replace_request);

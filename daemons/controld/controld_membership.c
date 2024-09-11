@@ -35,8 +35,7 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
     crm_update_peer_join(__func__, node, controld_join_none);
 
     if ((node != NULL) && (node->name != NULL)) {
-        if (pcmk__str_eq(controld_globals.our_nodename, node->name,
-                         pcmk__str_casei)) {
+        if (controld_is_local_node(node->name)) {
             crm_err("We're not part of the cluster anymore");
             register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 
@@ -84,9 +83,10 @@ post_cache_update(int instance)
     /* Membership changed, remind everyone we're here.
      * This will aid detection of duplicate DCs
      */
-    no_op = create_request(CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
-                           AM_I_DC ? CRM_SYSTEM_DC : CRM_SYSTEM_CRMD, NULL);
-    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld, no_op);
+    no_op = pcmk__new_request(pcmk_ipc_controld,
+                              (AM_I_DC? CRM_SYSTEM_DC : CRM_SYSTEM_CRMD), NULL,
+                              CRM_SYSTEM_CRMD, CRM_OP_NOOP, NULL);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_controld, no_op);
     pcmk__xml_free(no_op);
 }
 
@@ -418,8 +418,8 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
 
     } else if (pcmk_all_flags_set(controld_globals.flags,
                                   controld_ever_had_quorum
-                                  |controld_no_quorum_suicide)) {
-        pcmk__panic(__func__);
+                                  |controld_no_quorum_panic)) {
+        pcmk__panic("Quorum lost");
     }
 
     if (AM_I_DC

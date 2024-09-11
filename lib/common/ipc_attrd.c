@@ -7,10 +7,6 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
 #include <crm_internal.h>
 
 #include <stdio.h>
@@ -131,11 +127,11 @@ pcmk__attrd_api_methods(void)
 
 /*!
  * \internal
- * \brief Create a generic pacemaker-attrd operation
+ * \brief Create a generic attribute manager operation
  *
  * \param[in] user_name  If not NULL, ACL user to set for operation
  *
- * \return XML of pacemaker-attrd operation
+ * \return XML of attribute manager operation
  */
 static xmlNode *
 create_attrd_op(const char *user_name)
@@ -154,6 +150,7 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     int rc = pcmk_rc_ok;
     bool created_api = false;
+    enum pcmk_ipc_dispatch dispatch = pcmk_ipc_dispatch_sync;
 
     if (api == NULL) {
         rc = pcmk_new_ipc_api(&api, pcmk_ipc_attrd);
@@ -161,9 +158,11 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
             return rc;
         }
         created_api = true;
+    } else {
+        dispatch = api->dispatch_type;
     }
 
-    rc = pcmk__connect_ipc(api, pcmk_ipc_dispatch_sync, 5);
+    rc = pcmk__connect_ipc(api, dispatch, 5);
     if (rc == pcmk_rc_ok) {
         rc = pcmk__send_ipc_request(api, request);
     }

@@ -12,12 +12,13 @@ include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = pcmk__find_node_in_list_test		\
+		 pcmk__xe_add_node_test			\
+		 pcmk_cib_node_shutdown_test		\
 		 pcmk_foreach_active_resource_test	\
 		 pcmk_node_is_clean_test		\
 		 pcmk_node_is_in_maintenance_test	\
 		 pcmk_node_is_online_test		\
 		 pcmk_node_is_pending_test		\
-		 pcmk_node_is_shutting_down_test	\
-		 pcmk__xe_add_node_test
+		 pcmk_node_is_shutting_down_test
 
 TESTS = $(check_PROGRAMS)

@@ -72,7 +72,7 @@ enum pcmk__alert_keys_e {
 #define PCMK__ALERT_INTERNAL_KEY_MAX 19
 #define PCMK__ALERT_NODE_SEQUENCE "CRM_alert_node_sequence"
 
-extern const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX][3];
+extern const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX];
 
 pcmk__alert_t *pcmk__dup_alert(const pcmk__alert_t *entry);
 pcmk__alert_t *pcmk__alert_new(const char *id, const char *path);

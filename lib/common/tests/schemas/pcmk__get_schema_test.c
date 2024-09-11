@@ -58,7 +58,7 @@ static void
 known_schema(void **state)
 {
     // @COMPAT none is deprecated since 2.1.8
-    assert_schema(NULL, 16); // defaults to "none"
+    assert_schema(NULL, 15); // defaults to "none"
 
     assert_schema("pacemaker-1.0", 0);
     assert_schema("pacemaker-1.2", 1);
@@ -68,14 +68,14 @@ known_schema(void **state)
 }
 
 static void
-case_insensitive(void **state)
+case_sensitive(void **state)
 {
-    assert_schema("PACEMAKER-1.0", 0);
-    assert_schema("pAcEmAkEr-2.0", 3);
-    assert_schema("paceMAKER-3.0", 14);
+    assert_null(pcmk__get_schema("PACEMAKER-1.0"));
+    assert_null(pcmk__get_schema("pAcEmAkEr-2.0"));
+    assert_null(pcmk__get_schema("paceMAKER-3.0"));
 }
 
 PCMK__UNIT_TEST(setup, teardown,
                 cmocka_unit_test(unknown_schema),
                 cmocka_unit_test(known_schema),
-                cmocka_unit_test(case_insensitive));
+                cmocka_unit_test(case_sensitive));

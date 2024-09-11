@@ -1,6 +1,5 @@
 #!@PYTHON@
-""" Command-line interface to Pacemaker's Cluster Test Suite (CTS)
-"""
+"""Command-line interface to Pacemaker's Cluster Test Suite (CTS)."""
 
 # pylint doesn't like the module name "cts-lab" which is an invalid complaint for this file
 # This also disables various other invalid names - it thinks scenario and match are constants
@@ -26,8 +25,7 @@ LogFactory().add_stderr()
 
 
 def sig_handler(signum, _frame):
-    """ Handle the given signal number """
-
+    """Handle the given signal number."""
     LogFactory().log("Interrupted by signal %d" % signum)
 
     if scenario:
@@ -41,8 +39,7 @@ def sig_handler(signum, _frame):
 
 
 def plural_s(n):
-    """ Return a string suffix depending on whether or not n is > 1 """
-
+    """Return a string suffix depending on whether or not n is > 1."""
     if n == 1:
         return ""
 
@@ -78,7 +75,7 @@ if __name__ == '__main__':
 
     audits = audit_list(cm)
 
-    if environment["Listtests"]:
+    if environment["ListTests"]:
         tests = test_list(cm, audits)
         LogFactory().log("Total %d tests" % len(tests))
 
@@ -108,13 +105,13 @@ if __name__ == '__main__':
     # Scenario selection
     if environment["scenario"] == "all-once":
         iters = len(tests)
-        scenario = AllOnce(cm, [ BootCluster(cm, environment) ], audits, tests)
+        scenario = AllOnce(cm, [BootCluster(cm, environment)], audits, tests)
     elif environment["scenario"] == "sequence":
-        scenario = Sequence(cm, [ BootCluster(cm, environment) ], audits, tests)
+        scenario = Sequence(cm, [BootCluster(cm, environment)], audits, tests)
     elif environment["scenario"] == "boot":
-        scenario = Boot(cm, [ LeaveBooted(cm, environment)], audits, [])
+        scenario = Boot(cm, [LeaveBooted(cm, environment)], audits, [])
     else:
-        scenario = RandomTests(cm, [ BootCluster(cm, environment) ], audits, tests)
+        scenario = RandomTests(cm, [BootCluster(cm, environment)], audits, tests)
 
     LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING %r TEST%s" % (iters, plural_s(iters)))
     LogFactory().log("Stack:                  %s (%s)" % (environment["Stack"], environment["Name"]))
@@ -135,3 +132,5 @@ if __name__ == '__main__':
     environment.dump()
     rc = environment.run(scenario, iters)
     sys.exit(rc)
+
+# vim: set filetype=python expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=120:

@@ -1,0 +1,573 @@
+#!@BASH_PATH@
+#
+# Copyright 2018-2024 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+
+# Note on portable usage of sed: GNU/POSIX/*BSD sed have a limited subset of
+# compatible functionality. Do not use the -i option, alternation (\|),
+# \0, or character sequences such as \n or \s.
+
+# Exit immediately if a command fails, with some exceptions (for example, when
+# part of an if or while condition). Treat unset variables as errors during
+# expansion. See bash(1) man page for details.
+set -eu
+
+# If readlink supports -e, use it
+readlink -e / >/dev/null 2>/dev/null
+if [ $? -eq 0 ]; then
+    test_home=$(dirname "$(readlink -e "$0")")
+else
+    test_home=$(dirname "$0")
+fi
+
+suites_dir="$test_home/schemas"
+src_dir=$(dirname "$test_home")
+
+if [ -d "$src_dir/xml" ]; then
+    export PCMK_schema_directory="$src_dir/xml"
+    echo "Using local schemas from: $PCMK_schema_directory"
+else
+    export PCMK_schema_directory=@PCMK_SCHEMA_DIR@
+fi
+
+DIFF="diff -u"
+DIFF_PAGER="less -LRX"
+RNG_VALIDATOR="xmllint --noout --relaxng"
+XSLT_PROCESSOR="xsltproc --nonet"
+
+# Available test suites
+tests="test2to3 test3to4"
+
+#
+# commons
+#
+
+emit_result() {
+    local howmany=${1:?}    # how many errors (0/anything else incl. strings)
+    local subject=${2:?}
+    local prefix=${3-}
+
+    if [ -n "$prefix" ]; then
+        prefix="$prefix: "
+    fi
+
+    if [ "$howmany" = "0" ]; then
+        printf "%s%s finished OK\n" "$prefix" "$subject"
+    else
+        printf "%s%s encountered $howmany errors\n" "$prefix" "$subject"
+    fi
+}
+
+emit_error() {
+    local msg=${1:?}
+    printf "%s\n" "$msg" >&2
+}
+
+# @TODO We can probably drop the log functions. It's unclear why they're needed.
+
+# returns 1 + floor of base 2 logarithm if the argument is between 1 and 255, or
+# 0 the argument is 0
+log2_or_0_return() {
+    local i=${1:?}
+
+    return $(((!(i >> 1) && i) * 1 \
+                + (!(i >> 2) && i & (1 << 1)) * 2 \
+                + (!(i >> 3) && i & (1 << 2)) * 3 \
+                + (!(i >> 4) && i & (1 << 3)) * 4 \
+                + (!(i >> 5) && i & (1 << 4)) * 5 \
+                + (!(i >> 6) && i & (1 << 5)) * 6 \
+                + (!(i >> 7) && i & (1 << 6)) * 7 \
+                + !!(i >> 7) * 7 ))
+}
+
+# rough addition of two base 2 logarithms
+log2_or_0_add() {
+    local op1=${1:?}
+    local op2=${2:?}
+
+    if [ "$op1" -gt "$op2" ]; then
+        return $op1
+    elif [ "$op2" -gt "$op1" ]; then
+        return $op2
+    elif [ "$op1" -gt 0 ]; then
+        return $((op1 + 1))
+    else
+        return $op1
+    fi
+}
+
+#
+# test phases
+#
+
+# stdin: input file per line
+test_cleaner() {
+    local source=""
+    local source_basename=""
+    local source_dir=""
+    local ref_dir=""
+    local ref_err_dir=""
+
+    while read source; do
+        source_basename=$(basename "$source")
+
+        source_dir=$(dirname "$source")
+        ref_dir="${source_dir/%xml/ref}"
+        ref_err_dir="${source_dir/%xml/ref.err}"
+
+        rm -f "$ref_dir/${source_basename%.*}".up* \
+            "$ref_err_dir/${source_basename%.*}".up.err*
+    done
+}
+
+test_explanation() {
+    local template=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -o=*) template="$PCMK_schema_directory/upgrade-${1#-o=}.xsl";;
+        esac
+        shift
+    done
+
+    $XSLT_PROCESSOR "$PCMK_schema_directory/upgrade-detail.xsl" "$template"
+}
+
+cleanup_module_error() {
+    # Work around a libxml2 bug. At least as of libxslt-1.1.41 and
+    # libxml2-2.10.4, if the stylesheet contains a user-defined top-level
+    # element (that is, one with a namespace other than the XSL namespace),
+    # libxslt tries to load the namespace URI as an XML module. If this fails,
+    # libxml2 logs a "module error: failed to open ..." message.
+    #
+    # This appears to be fixed in libxml2 v2.13 with commit ecb4c9fb.
+    sed "/module error/d" "$1" > "$1.new"
+    mv -- "$1.new" "$1"
+}
+
+test_runner_upgrade_one() {
+    local source=${1:?}
+    local input=${2:?}
+    local transform=${3:?}
+    local mode=${4:?}  # extra modes wrt. "referential" outcome, see below
+
+    local transform_num="${transform##*-}"
+    transform_num="${transform_num%.xsl}"
+
+    local source_dir=$(dirname "$source")
+    local ref_dir="${source_dir/%xml/ref}"
+    local ref_err_dir="${source_dir/%xml/ref.err}"
+
+    local source_basename=$(basename "$source")
+    local ref_basename="${source_basename%.*}.ref-$transform_num"
+    local ref_err_basename="${source_basename%.*}.ref.err-$transform_num"
+
+    local ref="$ref_dir/$ref_basename"
+    local ref_err="$ref_err_dir/$ref_err_basename"
+
+    local target="${ref/.ref/.up}"
+    local target_err="${ref_err/.ref.err/.up.err}"
+
+    local proc_rc=0
+    local diff_rc=0
+
+    local answer=""
+
+    if ! [ "$((mode & (1 << 0)))" -ne 0 ] && ! [ -f "$ref_err" ]; then
+        ref_err="/dev/null"
+    fi
+
+    $XSLT_PROCESSOR "$transform" "$input" > "$target" 2> "$target_err"  \
+        || proc_rc=$?
+
+    cleanup_module_error "$target_err"
+
+    if [ "$proc_rc" -ne 0 ]; then
+        echo "$target_err"
+        return "$proc_rc"
+    fi
+
+    if [ "$mode" -ne 0 ]; then
+        if [ "$((mode & (1 << 0)))" -ne 0 ]; then
+            cp -a "$target" "$ref"
+            cp -a "$target_err" "$ref_err"
+        fi
+        if [ "$((mode & (1 << 1)))" -ne 0 ]; then
+            { $DIFF "$input" "$ref" && printf '\n(files match)\n'; }    \
+                | $DIFF_PAGER >&2
+
+            if [ $? -ne 0 ]; then
+                printf "\npager failure\n" >&2
+                return 1
+            fi
+            printf '\nIs comparison OK? ' >&2
+            if read answer </dev/tty; then
+                case "$answer" in
+                    y|yes) ;;
+                    *) echo "Answer not 'y' nor 'yes'" >&2; return 1;;
+                esac
+            else
+                return 1
+            fi
+        fi
+
+    elif [ -f "$ref" ] && [ -e "$ref_err" ]; then
+        _output=$(cat "$ref")
+
+        echo "$_output" | $DIFF - "$target" >&2 || diff_rc=$?
+        if [ "$diff_rc" -eq 0 ]; then
+            $DIFF "$ref_err" "$target_err" >&2 || diff_rc=$?
+        fi
+        if [ "$diff_rc" -ne 0 ]; then
+            emit_error "Outputs differ from referential ones"
+            echo "/dev/null"
+            return 1
+        fi
+    else
+        emit_error "Referential file(s) missing: $ref"
+        echo "/dev/null"
+        return 1
+    fi
+
+    echo "$target"
+}
+
+# stdout: filename of the transformed file
+test_runner_upgrade() {
+    local template=${1:?}
+    local source=${2:?} # filename
+    local mode=${3:?}   # extra modes wrt. "referential" outcome, see below
+
+    local target=""
+    local transform=""
+    local rc=0
+
+    local transforms=$(ls "$PCMK_schema_directory"/upgrade-$template-*.xsl  \
+                        | grep -v "upgrade-$template-common" | sort -n)
+    local input=$(mktemp)
+
+    cp "$source" "$input"
+
+    for transform in $transforms; do
+        target=$(test_runner_upgrade_one "$source" "$input" "$transform"    \
+                    "$mode")
+        rc=$?
+
+        if [ "$rc" -ne 0 ]; then
+            break;
+        fi
+        cp "$target" "$input"
+    done
+
+    rm -f "$input"
+
+    echo "$target"
+    return "$rc"
+}
+
+test_runner_validate() {
+    local schema=${1:?}
+    local target=${2:?} # filename
+
+    if ! $RNG_VALIDATOR "$schema" "$target" 2>/dev/null; then
+        $RNG_VALIDATOR "$schema" "$target"
+    fi
+}
+
+# -o= ... which conventional version to deem as the transform origin
+# -t= ... which conventional version to deem as the transform target
+# -D
+# -G ... see usage
+# stdin: input file per line
+test_runner() {
+    local template=""
+    local schema_o=""
+    local schema_t=""
+    local mode=0
+    local ret=0
+    local origin=""
+    local target=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -o=*) template="${1#-o=}"
+                  schema_o="$PCMK_schema_directory/pacemaker-${1#-o=}.rng";;
+            -t=*) schema_t="$PCMK_schema_directory/pacemaker-${1#-t=}.rng";;
+            -G) mode=$((mode | (1 << 0)));;
+            -D) mode=$((mode | (1 << 1)));;
+        esac
+        shift
+    done
+
+    if [ ! -f "${schema_o:?}" ] || [ ! -f "${schema_t:?}" ]; then
+        emit_error "Origin and/or target schema missing, rerun make"
+        return 1
+    fi
+
+    while read origin; do
+        printf '%-60s' "$origin... "
+
+        # pre-validate
+        if ! test_runner_validate "$schema_o" "$origin"; then
+            ret=$((ret + 1)); echo "E:pre-validate"; continue
+        fi
+
+        # upgrade
+        if ! target=$(test_runner_upgrade "$template" "$origin" "$mode"); then
+            ret=$((ret + 1));
+            if [ -z "$target" ]; then
+                break
+            fi
+
+            echo "E:upgrade"
+            if [ -s "$target" ]; then
+                echo ---
+                cat "$target" || :
+                echo ---
+            fi
+            continue
+        fi
+
+        # post-validate
+        if ! test_runner_validate "$schema_t" "$target"; then
+            ret=$((ret + 1)); echo "E:post-validate"; continue
+        fi
+
+        echo "OK"
+        echo "$origin" | test_cleaner
+    done
+
+    log2_or_0_return "$ret"
+}
+
+#
+# particular test variations
+# -C
+# -X
+# stdin: granular test specification(s) if any
+#
+
+test2to3() {
+    local spec=""
+    local pattern=""
+
+    while read spec; do
+        spec=${spec%.xml}
+        spec=${spec%\*}
+        pattern="$pattern -name ${spec}*.xml -o"
+    done
+
+    if [ -n "$pattern" ]; then
+        pattern="( ${pattern%-o} )"
+    fi
+
+    find "$suites_dir/test-2/xml" -name xml -o -type d -prune    \
+            -o -name '*.xml' $pattern -print \
+        | env LC_ALL=C sort \
+        | { case " $* " in
+                *\ -C\ *) test_cleaner;;
+                *\ -X\ *) test_explanation -o=2.10;;
+                *) test_runner -o=2.10 -t=3.0 "$@" || return $?;;
+            esac; }
+}
+
+#
+# -C
+# -X
+# stdin: granular test specification(s) if any
+#
+
+test3to4() {
+    local spec=""
+    local pattern=""
+
+    while read spec; do
+        spec=${spec%.xml}
+        spec=${spec%\*}
+        pattern="$pattern -name ${spec}*.xml -o"
+    done
+
+    if [ -n "$pattern" ]; then
+        pattern="( ${pattern%-o} )"
+    fi
+
+    find "$suites_dir/test-3/xml" -name xml -o -type d -prune    \
+            -o -name '*.xml' $pattern -print \
+        | env LC_ALL=C sort \
+        | { case " $* " in
+                *\ -C\ *) test_cleaner;;
+                *\ -X\ *) test_explanation -o=3.10;;
+                *) test_runner -o=3.10 -t=4.0 "$@" || return $?;;
+            esac; }
+}
+
+#
+# "framework"
+#
+
+# option-likes ... options to be passed down
+# argument-likes ... drives a test selection
+test_suite() {
+    local pass=""
+    local select=""
+    local select_full=""
+    local spec=""
+    local _test=""
+    local global_ret=0
+    local ret=0
+
+    local test_spec=""
+    local test_specs=""
+
+    local test_full=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -) printf '%s\n' 'waiting for tests specified at stdin...';
+                while read spec; do
+                    select="${spec}@$1"
+                done;;
+            -*) pass="$pass $1";;
+            *) select_full="${select_full}@$1"
+               select="${select}@${1%%/*}";;
+        esac
+        shift
+    done
+
+    # select contains a '@'-delimited list of test suite names from CLI
+    select="${select}@"
+
+    # select_full contains a '@'-delimited list of test names
+    select_full="${select_full}@"
+
+    for _test in ${tests}; do
+        while true; do
+            case "$select" in
+                *@${_test}@*)
+                    # A known test suite _test was found in the list of
+                    # requested test suites select. Strip it out of select.
+                    #
+                    # The purpose of this seems to be to prevent the later
+                    # select_full loop from selecting specific tests from this
+                    # suite, if the user also requested the entire suite.
+
+                    test_specs="${select%%@${_test}@*}@${select#*@${_test}@}"
+
+                    if [ "$test_specs" = "@" ]; then
+                        select=  # nothing left
+                    else
+                        select="$test_specs"
+                    fi
+                    continue
+                    ;;
+                @)
+                    case "$_test" in
+                        test*) break;;
+                    esac  # filter
+                    ;;
+            esac
+
+            if [ -n "$test_specs" ]; then
+                break
+            fi
+            continue 2  # move on to matching with next local test
+        done
+
+        test_specs=
+        while true; do
+            case "$select_full" in
+                *@${_test}/*)
+                    # A test was requested from a known test suite. This does
+                    # not mean the requested test actually exists, but rather
+                    # that it was requested as the form "<known_suite>/...".
+
+                    # Strip extraneous data from test path
+                    test_full="${_test}/${select_full#*@${_test}/}"
+                    test_full="${test_full%%@*}"
+
+                    # Strip the requested test out of select_full
+                    select_full="${select_full%%@${test_full}@*}"\
+"@${select_full#*@${test_full}@}"
+
+                    # Strip the test suite name and slash from the test spec
+                    test_specs="$test_specs ${test_full#*/}"
+                    ;;
+                *)
+                    break
+                    ;;
+            esac
+        done
+
+        # Feed the test specs (if any) as stdin to the respective test suite
+        # function _test()
+        for test_spec in $test_specs; do
+            printf '%s\n' "$test_spec"
+        done | "$_test" $pass || ret=$?
+
+        if [ "$ret" = 0 ]; then
+            emit_result "$ret" "$_test"
+        else
+            emit_result "at least 2^$((ret - 1))" "$_test"
+        fi
+
+        log2_or_0_add "$global_ret" "$ret"
+        global_ret=$?
+    done
+    if [ -n "${select#@}" ]; then
+        emit_error "Non-existing test(s):$(echo "${select}" | tr '@' ' ')"
+        log2_or_0_add "$global_ret" 1 || global_ret=$?
+    fi
+
+    return "$global_ret"
+}
+
+# NOTE: big letters are dedicated for per-test-set behaviour,
+#       small ones for generic/global behaviour
+usage() {
+    printf \
+'%s\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+    "usage: $0 [-{C,D,G,X}]* \\" \
+          "       [-|{${tests## }}*]" \
+    "- when no suites (arguments) provided, \"test*\" ones get used" \
+    "- with '-' suite specification the actual ones grabbed on stdin" \
+    "- use '-C' to only cleanup ephemeral byproducts" \
+    "- use '-D' to review originals vs. \"referential\" outcomes" \
+    "- use '-G' to generate \"referential\" outcomes" \
+    "- use '-X' to show explanatory details about the upgrade" \
+    "- test specification can be granular, e.g. 'test2to3/022'"
+}
+
+main() {
+    local pass=""
+    local bailout=0
+    local ret=0
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h) usage; exit;;
+            -C|-G|-X) bailout=1;;
+        esac
+        pass="$pass $1"
+        shift
+    done
+
+    test_suite $pass || ret=$?
+
+    if [ "$bailout" -eq 0 ]; then
+        test_suite -C $pass >/dev/null || true
+    fi
+
+    if [ "$ret" = 0 ]; then
+        emit_result "$ret" "Overall suite"
+    else
+        emit_result "at least 2^$((ret - 1))" "Overall suite"
+    fi
+
+    return "$ret"
+}
+
+main "$@"

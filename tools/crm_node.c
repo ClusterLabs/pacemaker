@@ -434,7 +434,7 @@ run_controller_mainloop(void)
 static void
 print_node_id(void)
 {
-    uint32_t nodeid;
+    uint32_t nodeid = 0;
     int rc = pcmk__query_node_info(out, &nodeid, NULL, NULL, NULL, NULL, NULL,
                                    false, 0);
 
@@ -549,7 +549,7 @@ remove_from_section(cib_t *cib, const char *element, const char *section,
 
     crm_xml_add(xml, PCMK_XA_UNAME, node_name);
     if (node_id > 0) {
-        pcmk__xe_set_id(xml, "%ld", node_id);
+        crm_xml_add_ll(xml, PCMK_XA_ID, node_id);
     }
 
     rc = cib->cmds->remove(cib, section, xml, cib_transaction);
@@ -579,7 +579,7 @@ purge_node_from_cib(const char *node_name, long node_id)
     if (cib == NULL) {
         return ENOTCONN;
     }
-    rc = cib->cmds->signon(cib, crm_system_name, cib_command);
+    rc = cib__signon_attempts(cib, cib_command, 5);
     if (rc == pcmk_ok) {
         rc = cib->cmds->init_transaction(cib);
     }
@@ -686,10 +686,10 @@ purge_node_from_fencer(const char *node_name, long node_id)
         return rc;
     }
 
-    cmd = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, "stonith-ng",
-                         crm_system_name, NULL);
+    cmd = pcmk__new_request(pcmk_ipc_fenced, crm_system_name, NULL,
+                            PCMK__VALUE_STONITH_NG, CRM_OP_RM_NODE_CACHE, NULL);
     if (node_id > 0) {
-        pcmk__xe_set_id(cmd, "%ld", node_id);
+        crm_xml_add_ll(cmd, PCMK_XA_ID, node_id);
     }
     crm_xml_add(cmd, PCMK_XA_UNAME, node_name);
 

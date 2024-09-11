@@ -215,15 +215,15 @@ static int month_days[13] = {
 /*!
  * \brief Return number of days in given month of given year
  *
- * \param[in]  Ordinal month (1-12)
- * \param[in]  Gregorian year
+ * \param[in] month  Ordinal month (1-12)
+ * \param[in] year   Gregorian year
  *
- * \return Number of days in given month (0 if given month is invalid)
+ * \return Number of days in given month (0 if given month or year is invalid)
  */
 int
 crm_time_days_in_month(int month, int year)
 {
-    if ((month < 1) || (month > 12)) {
+    if ((month < 1) || (month > 12) || (year < 1)) {
         return 0;
     }
     if ((month == 2) && crm_time_leapyear(year)) {
@@ -246,15 +246,30 @@ crm_time_leapyear(int year)
     return is_leap;
 }
 
-static uint32_t
+/*!
+ * \internal
+ * \brief Get ordinal day number of year corresponding to given date
+ *
+ * \param[in] y   Year
+ * \param[in] m   Month (1-12)
+ * \param[in] d   Day of month (1-31)
+ *
+ * \return Day number of year \p y corresponding to month \p m and day \p d,
+ *         or 0 for invalid arguments
+ */
+static int
 get_ordinal_days(uint32_t y, uint32_t m, uint32_t d)
 {
-    int lpc;
+    int result = 0;
 
-    for (lpc = 1; lpc < m; lpc++) {
-        d += crm_time_days_in_month(lpc, y);
+    CRM_CHECK((y > 0) && (y <= INT_MAX) && (m >= 1) && (m <= 12)
+              && (d >= 1) && (d <= 31), return 0);
+
+    result = d;
+    for (int lpc = 1; lpc < m; lpc++) {
+        result += crm_time_days_in_month(lpc, y);
     }
-    return d;
+    return result;
 }
 
 void
@@ -877,10 +892,11 @@ parse_date(const char *date_str)
     const char *time_s = NULL;
     crm_time_t *dt = NULL;
 
-    int year = 0;
-    int month = 0;
-    int week = 0;
-    int day = 0;
+    uint32_t year = 0U;
+    uint32_t month = 0U;
+    uint32_t day = 0U;
+    uint32_t week = 0U;
+
     int rc = 0;
 
     if (pcmk__str_empty(date_str)) {
@@ -913,37 +929,52 @@ parse_date(const char *date_str)
     }
 
     /* YYYY-MM-DD */
-    rc = sscanf(date_str, "%d-%d-%d", &year, &month, &day);
+    rc = sscanf(date_str, "%" SCNu32 "-%" SCNu32 "-%" SCNu32 "",
+                &year, &month, &day);
     if (rc == 1) {
         /* YYYYMMDD */
-        rc = sscanf(date_str, "%4d%2d%2d", &year, &month, &day);
+        rc = sscanf(date_str, "%4" SCNu32 "%2" SCNu32 "%2" SCNu32 "",
+                    &year, &month, &day);
     }
     if (rc == 3) {
-        if (month > 12) {
+        if ((month < 1U) || (month > 12U)) {
             crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%d' is not a valid month", date_str, month);
+                    "because '%" PRIu32 "' is not a valid month",
+                    date_str, month);
             goto invalid;
-        } else if (day > crm_time_days_in_month(month, year)) {
+        } else if ((year < 1U) || (year > INT_MAX)) {
             crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%d' is not a valid day of the month",
+                    "because '%" PRIu32 "' is not a valid year",
+                    date_str, year);
+            goto invalid;
+        } else if ((day < 1) || (day > INT_MAX)
+                   || (day > crm_time_days_in_month(month, year))) {
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%" PRIu32 "' is not a valid day of the month",
                     date_str, day);
             goto invalid;
         } else {
             dt->years = year;
             dt->days = get_ordinal_days(year, month, day);
-            crm_trace("Parsed Gregorian date '%.4d-%.3d' from date string '%s'",
-                      year, dt->days, date_str);
+            crm_trace("Parsed Gregorian date '%.4" PRIu32 "-%.3d' "
+                      "from date string '%s'", year, dt->days, date_str);
         }
         goto parse_time;
     }
 
     /* YYYY-DDD */
-    rc = sscanf(date_str, "%d-%d", &year, &day);
+    rc = sscanf(date_str, "%" SCNu32 "-%" SCNu32, &year, &day);
     if (rc == 2) {
-        if (day > year_days(year)) {
+        if ((year < 1U) || (year > INT_MAX)) {
             crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%d' is not a valid day of the year (max %d)",
-                    date_str, day, year_days(year));
+                    "because '%" PRIu32 "' is not a valid year",
+                    date_str, year);
+            goto invalid;
+        } else if ((day < 1U) || (day > INT_MAX) || (day > year_days(year))) {
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%" PRIu32 "' is not a valid day of year %"
+                    PRIu32 " (1-%d)",
+                    date_str, day, year, year_days(year));
             goto invalid;
         }
         crm_trace("Parsed ordinal year %d and days %d from date string '%s'",
@@ -954,16 +985,18 @@ parse_date(const char *date_str)
     }
 
     /* YYYY-Www-D */
-    rc = sscanf(date_str, "%d-W%d-%d", &year, &week, &day);
+    rc = sscanf(date_str, "%" SCNu32 "-W%" SCNu32 "-%" SCNu32,
+                &year, &week, &day);
     if (rc == 3) {
-        if (week > crm_time_weeks_in_year(year)) {
+        if ((week < 1U) || (week > crm_time_weeks_in_year(year))) {
             crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%d' is not a valid week of the year (max %d)",
-                    date_str, week, crm_time_weeks_in_year(year));
+                    "because '%" PRIu32 "' is not a valid week of year %"
+                    PRIu32 " (1-%d)",
+                    date_str, week, year, crm_time_weeks_in_year(year));
             goto invalid;
-        } else if (day < 1 || day > 7) {
+        } else if ((day < 1U) || (day > 7U)) {
             crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%d' is not a valid day of the week",
+                    "because '%" PRIu32 "' is not a valid day of the week",
                     date_str, day);
             goto invalid;
         } else {
@@ -974,12 +1007,14 @@ parse_date(const char *date_str)
              * Sunday 3 January 2010 is written "2009-W53-7"
              * Saturday 27 September 2008 is written "2008-W37-6"
              *
-             * If 1 January is on a Monday, Tuesday, Wednesday or Thursday, it is in week 01.
-             * If 1 January is on a Friday, Saturday or Sunday, it is in week 52 or 53 of the previous year.
+             * If 1 January is on a Monday, Tuesday, Wednesday or Thursday, it
+             * is in week 1. If 1 January is on a Friday, Saturday or Sunday,
+             * it is in week 52 or 53 of the previous year.
              */
             int jan1 = crm_time_january1_weekday(year);
 
-            crm_trace("Got year %d (Jan 1 = %d), week %d, and day %d from date string '%s'",
+            crm_trace("Parsed year %" PRIu32 " (Jan 1 = %d), week %" PRIu32
+                      ", and day %" PRIu32 " from date string '%s'",
                       year, jan1, week, day, date_str);
 
             dt->years = year;

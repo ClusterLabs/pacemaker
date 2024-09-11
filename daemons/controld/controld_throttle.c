@@ -76,7 +76,7 @@ load2str(enum throttle_state_e mode)
 static char *
 find_cib_loadfile(void)
 {
-    pid_t pid = pcmk__procfs_pid_of("pacemaker-based");
+    pid_t pid = pcmk__procfs_pid_of(PCMK__SERVER_BASED);
 
     return pid? crm_strdup_printf("/proc/%lld/stat", (long long) pid) : NULL;
 }
@@ -367,11 +367,12 @@ throttle_send_command(enum throttle_state_e mode)
                  load2str(mode), load2str(last));
         last = mode;
 
-        xml = create_request(CRM_OP_THROTTLE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+        xml = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
+                                CRM_SYSTEM_CRMD, CRM_OP_THROTTLE, NULL);
         crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MODE, mode);
         crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MAX, throttle_job_max);
 
-        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld, xml);
+        pcmk__cluster_send_message(NULL, pcmk_ipc_controld, xml);
         pcmk__xml_free(xml);
     }
 }

@@ -422,7 +422,7 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
     notify_data = fencing_result2xml(wrapper, op);
     stonith__xe_set_result(notify_data, &op->result);
 
-    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, bcast);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, bcast);
     pcmk__xml_free(bcast);
 
     return;
@@ -603,7 +603,8 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     }
 
     if (pcmk__result_ok(&op->result) || dup
-        || !pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
+        || !pcmk__str_eq(op->originator, fenced_get_local_node(),
+                         pcmk__str_casei)) {
         level = LOG_NOTICE;
     }
     do_crm_log(level, "Operation '%s'%s%s by %s for %s@%s%s: %s (%s%s%s) "
@@ -781,7 +782,7 @@ topology_is_empty(stonith_topology_t *tp)
         return TRUE;
     }
 
-    for (i = 0; i < ST_LEVEL_MAX; i++) {
+    for (i = 0; i < ST__LEVEL_COUNT; i++) {
         if (tp->levels[i] != NULL) {
             return FALSE;
         }
@@ -958,9 +959,9 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
     do {
         op->level++;
 
-    } while (op->level < ST_LEVEL_MAX && tp->levels[op->level] == NULL);
+    } while (op->level < ST__LEVEL_COUNT && tp->levels[op->level] == NULL);
 
-    if (op->level < ST_LEVEL_MAX) {
+    if (op->level < ST__LEVEL_COUNT) {
         crm_trace("Attempting fencing level %d targeting %s (%d devices) "
                   "for client %s@%s (id=%.8s)",
                   op->level, op->target, g_list_length(tp->levels[op->level]),
@@ -1034,7 +1035,7 @@ merge_duplicates(remote_fencing_op_t *op)
             continue;
         }
         if (pcmk__str_eq(other->target, other->originator, pcmk__str_casei)) {
-            crm_trace("%.8s not duplicate of %.8s: suicide for %s",
+            crm_trace("%.8s not duplicate of %.8s: self-fencing for %s",
                       op->id, other->id, other->target);
             continue;
         }
@@ -1198,7 +1199,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     op->originator = crm_element_value_copy(dev, PCMK__XA_ST_ORIGIN);
     if (op->originator == NULL) {
         /* Local or relayed request */
-        op->originator = pcmk__str_copy(stonith_our_uname);
+        op->originator = pcmk__str_copy(fenced_get_local_node());
     }
 
     // Delegate may not be set
@@ -1351,7 +1352,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
         }
     }
 
-    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, query);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, query);
     pcmk__xml_free(query);
 
     query_timeout = op->base_timeout * TIMEOUT_MULTIPLY_FACTOR;
@@ -1621,7 +1622,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
          * Loop3: For each device in a fencing level, see what peer owns it
          *        and what that peer has reported the timeout is for the device.
          */
-        for (i = 0; i < ST_LEVEL_MAX; i++) {
+        for (i = 0; i < ST__LEVEL_COUNT; i++) {
             if (!tp->levels[i]) {
                 continue;
             }
@@ -1724,7 +1725,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
         return;
     }
 
-    if (pcmk__str_eq(client_node, stonith_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(client_node, fenced_get_local_node(), pcmk__str_casei)) {
         // Client is connected to this node, so send update directly to them
         do_stonith_async_timeout_update(client_id, call_id, op_timeout);
         return;
@@ -1739,7 +1740,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
 
     pcmk__cluster_send_message(pcmk__get_node(0, client_node, NULL,
                                               pcmk__node_search_cluster_member),
-                               pcmk__cluster_msg_fenced, update);
+                               pcmk_ipc_fenced, update);
 
     pcmk__xml_free(update);
 
@@ -1896,8 +1897,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * get_op_total_timeout(op, peer);
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
         report_timeout_period(op, op->total_timeout);
-        crm_info("Total timeout set to %ds for peer's fencing targeting %s for %s"
-                 QB_XS "id=%.8s",
+        crm_info("Total timeout set to %ds for peer's fencing targeting %s for %s "
+                 QB_XS " id=%.8s",
                  op->total_timeout, op->target, op->client_name, op->id);
     }
 
@@ -1983,10 +1984,10 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                  come back in between
                - Delicate might be the case where we have watchdog-fencing
                  enabled for a node but the watchdog-fencing-device isn't
-                 explicitly chosen for suicide. Local pe-execution in sbd
-                 may detect the node as unclean and lead to timely suicide.
-                 Otherwise the selection of PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
-                 at least is questionable.
+                 explicitly chosen for self-fencing. Local scheduler execution
+                 in sbd might detect the node as unclean and lead to timely
+                 self-fencing. Otherwise the selection of
+                 PCMK_OPT_STONITH_WATCHDOG_TIMEOUT at least is questionable.
              */
 
             /* coming here we're not waiting for watchdog timeout -
@@ -1994,8 +1995,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
         }
 
-        pcmk__cluster_send_message(peer_node, pcmk__cluster_msg_fenced,
-                                   remote_op);
+        pcmk__cluster_send_message(peer_node, pcmk_ipc_fenced, remote_op);
         peer->tried = TRUE;
         pcmk__xml_free(remote_op);
         return;
@@ -2123,7 +2123,7 @@ all_topology_devices_found(const remote_fencing_op_t *op)
         skip_target = TRUE;
     }
 
-    for (i = 0; i < ST_LEVEL_MAX; i++) {
+    for (i = 0; i < ST__LEVEL_COUNT; i++) {
         for (device = tp->levels[i]; device; device = device->next) {
             match = NULL;
             for (iter = op->query_results; iter && !match; iter = iter->next) {
@@ -2478,7 +2478,8 @@ fenced_process_fencing_reply(xmlNode *msg)
         finalize_op(op, msg, false);
         return;
 
-    } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
+    } else if (!pcmk__str_eq(op->originator, fenced_get_local_node(),
+                             pcmk__str_casei)) {
         /* If this isn't a remote level broadcast, and we are not the
          * originator of the operation, we should not be receiving this msg. */
         crm_err("Received non-broadcast fencing result for operation %.8s "

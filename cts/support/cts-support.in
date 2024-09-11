@@ -39,7 +39,7 @@ DUMMY_DAEMON = "pacemaker-cts-dummyd"
 DUMMY_DAEMON_UNIT = "pacemaker-cts-dummyd@.service"
 
 FENCE_DUMMY = "fence_dummy"
-FENCE_DUMMY_ALIASES = ["auto_unfence", "no_reboot", "no_on"]
+FENCE_DUMMY_ALIASES = ["auto_unfence", "no_reboot", "no_on", "no_nodeid"]
 LSB_DUMMY = "LSBDummy"
 
 
@@ -107,9 +107,10 @@ def cmd_install(src):
         except OSError:
             sys.exit(ExitStatus.ERROR)
 
-    print("Installing %s to %s ..." % (LSB_DUMMY, BuildOptions.INIT_DIR))
-    makedirs_if_missing(BuildOptions.INIT_DIR)
-    install(LSB_DUMMY, BuildOptions.INIT_DIR)
+    if BuildOptions.INIT_DIR is not None:
+        print("Installing %s to %s ..." % (LSB_DUMMY, BuildOptions.INIT_DIR))
+        makedirs_if_missing(BuildOptions.INIT_DIR)
+        install(LSB_DUMMY, BuildOptions.INIT_DIR)
 
 
 def cmd_uninstall():
@@ -236,3 +237,5 @@ if __name__ == "__main__":
 
     if opts.subparser_name == "watch":
         cmd_watch(opts.filename, opts.limit, opts.offset, opts.prefix)
+
+# vim: set filetype=python expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=120:

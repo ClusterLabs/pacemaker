@@ -129,7 +129,7 @@ remote_proxy_free(gpointer data)
 int
 remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 {
-    // Async responses from cib and friends to clients via pacemaker-remoted
+    // Async responses from servers to clients via the remote executor
     xmlNode *xml = NULL;
     uint32_t flags = 0;
     remote_proxy_t *proxy = userdata;
@@ -191,8 +191,8 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
     proxy->session_id = strdup(session_id);
     proxy->lrm = lrmd;
 
-    if (!strcmp(pcmk__message_name(crm_system_name), CRM_SYSTEM_CRMD)
-        && !strcmp(pcmk__message_name(channel), CRM_SYSTEM_CRMD)) {
+    if ((pcmk__parse_server(crm_system_name) == pcmk_ipc_controld)
+        && (pcmk__parse_server(channel) == pcmk_ipc_controld)) {
         // The controller doesn't need to connect to itself
         proxy->is_local = TRUE;
 

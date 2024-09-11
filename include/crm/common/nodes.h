@@ -12,6 +12,7 @@
 
 #include <stdbool.h>                    // bool
 #include <glib.h>                       // gboolean, GList, GHashTable
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/common/scheduler_types.h> // pcmk_resource_t, pcmk_scheduler_t
 
@@ -94,6 +95,8 @@ bool pcmk_node_is_in_maintenance(const pcmk_node_t *node);
 bool pcmk_foreach_active_resource(pcmk_node_t *node,
                                   bool (*fn)(pcmk_resource_t *, void *),
                                   void *user_data);
+
+const char *pcmk_cib_node_shutdown(xmlNode *cib, const char *node);
 
 #ifdef __cplusplus
 }

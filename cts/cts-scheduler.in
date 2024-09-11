@@ -287,6 +287,22 @@ TESTS = [
                       "Consider group dependent when colocating with promoted role"),
         SchedulerTest("primitive-with-unrunnable-group",
                       "Block primitive colocated with group that can't start"),
+        SchedulerTest("coloc-cloned-group-promoted-dependent1",
+                      "Cloned group promoted role with primitive (mandatory)"),
+        SchedulerTest("coloc-cloned-group-promoted-dependent2",
+                      "Cloned group promoted role with primitive (optional)"),
+        SchedulerTest("coloc-optional-promoted-dependent-moves-1",
+                      "Colocation score less than promotion score "
+                      + "difference: move"),
+        SchedulerTest("coloc-optional-promoted-dependent-moves-2",
+                      "Colocation score greater than promotion score "
+                      + "difference: move"),
+        SchedulerTest("coloc-optional-promoted-dependent-stays-1",
+                      "Colocation score greater than promotion score "
+                      + "difference: stay"),
+        SchedulerTest("coloc-optional-promoted-dependent-stays-2",
+                      "Colocation score less than promotion score "
+                      + "difference: stay"),
     ]),
     SchedulerTestGroup([
         SchedulerTest("rsc-sets-seq-true", "Resource Sets - sequential=false"),
@@ -1666,6 +1682,17 @@ class CtsScheduler(object):
                 shutil.rmtree(self.failed_dir)
         return ExitStatus.ERROR
 
+    def find_test(self, name):
+        if platform.architecture()[0] == "64bit":
+            TESTS.extend(TESTS_64BIT)
+
+        for group in TESTS:
+            for test in group.tests:
+                if test.name == name:
+                    return test
+
+        return None
+
     def run(self):
         """ Run test(s) as specified """
 
@@ -1687,7 +1714,21 @@ class CtsScheduler(object):
             self.failed_file.close()
             rc = self._test_results()
         else:
-            rc = self.run_one(self.args.run, "Single shot", self.single_test_args)
+            # Find the test we were asked to run
+            test = self.find_test(self.args.run)
+
+            if test is None:
+                print("No test named %s" % self.args.run)
+                return ExitStatus.INVALID_PARAM
+
+            # If no arguments were given on the command line, default to the ones
+            # contained in the test
+            if self.single_test_args:
+                args = self.single_test_args
+            else:
+                args = test.args
+
+            rc = self.run_one(test.name, test.desc, args)
             self.failed_file.close()
             if self.num_failed > 0:
               print("\nFailures:\nThese have also been written to: " + self.failed_filename + "\n")

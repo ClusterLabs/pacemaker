@@ -209,7 +209,7 @@ typedef struct stonith_topology_s {
     char *target_attribute;
 
     /*! Names of fencing devices at each topology level */
-    GList *levels[ST_LEVEL_MAX];
+    GList *levels[ST__LEVEL_COUNT];
 
 } stonith_topology_t;
 
@@ -291,6 +291,8 @@ void setup_cib(void);
 void fenced_cib_cleanup(void);
 
 int fenced_scheduler_init(void);
+void fenced_set_local_node(const char *node_name);
+const char *fenced_get_local_node(void);
 void fenced_scheduler_cleanup(void);
 void fenced_scheduler_run(xmlNode *cib);
 
@@ -319,8 +321,6 @@ fenced_support_flag(const char *action)
     return st_device_supports_none;
 }
 
-extern char *stonith_our_uname;
-extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
 extern long long stonith_watchdog_timeout_ms;

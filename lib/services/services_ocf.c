@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@
 GList *
 resources_os_list_ocf_providers(void)
 {
-    return get_directory_list(OCF_RA_PATH, FALSE, TRUE);
+    return get_directory_list(PCMK__OCF_RA_PATH, FALSE, TRUE);
 }
 
 static GList *
@@ -64,7 +64,7 @@ resources_os_list_ocf_agents(const char *provider)
     GList *providers = NULL;
 
     if (provider) {
-        return services_os_get_directory_list_provider(OCF_RA_PATH, provider,
+        return services_os_get_directory_list_provider(PCMK__OCF_RA_PATH, provider,
                                                        TRUE, TRUE);
     }
 
@@ -86,7 +86,7 @@ services__ocf_agent_exists(const char *provider, const char *agent)
 {
     gboolean rc = FALSE;
     struct stat st;
-    char *dirs = strdup(OCF_RA_PATH);
+    char *dirs = strdup(PCMK__OCF_RA_PATH);
     char *dir = NULL;
     char *buf = NULL;
 
@@ -122,7 +122,7 @@ services__ocf_agent_exists(const char *provider, const char *agent)
 int
 services__ocf_prepare(svc_action_t *op)
 {
-    char *dirs = strdup(OCF_RA_PATH);
+    char *dirs = strdup(PCMK__OCF_RA_PATH);
     struct stat st;
 
     if (dirs == NULL) {

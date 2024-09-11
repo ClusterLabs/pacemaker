@@ -17,9 +17,9 @@
 #include <glib.h>               // guint, GList, GHashTable
 #include <libxml/tree.h>        // xmlNode
 
-#include <crm/common/util.h>    // crm_strdup_printf()
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
+#include <crm/common/strings.h>  // crm_strdup_printf()
 #include <crm/common/actions_internal.h>
 #include <crm/common/digest_internal.h>
 #include <crm/common/health_internal.h>
@@ -45,13 +45,10 @@ extern "C" {
  */
 extern bool pcmk__is_daemon;
 
-//! Node name of the local node
-extern char *pcmk__our_nodename;
-
 // Number of elements in a statically defined array
 #define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
 
-#if SUPPORT_CIBSECRETS
+#if PCMK__ENABLE_CIBSECRETS
 /* internal CIB utilities (from cib_secrets.c) */
 
 int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
@@ -250,7 +247,7 @@ pcmk__flag_text(uint64_t flag_group, uint64_t flags)
 // miscellaneous utilities (from utils.c)
 
 void pcmk__daemonize(const char *name, const char *pidfile);
-void pcmk__panic(const char *origin);
+void pcmk__panic(const char *reason);
 pid_t pcmk__locate_sbd(void);
 void pcmk__sleep_ms(unsigned int ms);
 

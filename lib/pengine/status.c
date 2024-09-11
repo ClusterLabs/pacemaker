@@ -57,6 +57,7 @@ pe_free_working_set(pcmk_scheduler_t *scheduler)
 {
     if (scheduler != NULL) {
         pe_reset_working_set(scheduler);
+        free(scheduler->priv->local_node_name);
         free(scheduler->priv);
         free(scheduler);
     }
@@ -118,10 +119,10 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     crm_trace("Beginning unpack");
 
-    if (scheduler->failed != NULL) {
-        pcmk__xml_free(scheduler->failed);
+    if (scheduler->priv->failed != NULL) {
+        pcmk__xml_free(scheduler->priv->failed);
     }
-    scheduler->failed = pcmk__xe_create(NULL, "failed-ops");
+    scheduler->priv->failed = pcmk__xe_create(NULL, "failed-ops");
 
     if (scheduler->priv->now == NULL) {
         scheduler->priv->now = crm_time_new(NULL);
@@ -133,12 +134,14 @@ cluster_status(pcmk_scheduler_t * scheduler)
         pcmk__clear_scheduler_flags(scheduler, pcmk__sched_quorate);
     }
 
-    scheduler->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
-                                              scheduler->input, LOG_NEVER);
+    scheduler->priv->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
+                                                    scheduler->input,
+                                                    LOG_NEVER);
     check_for_deprecated_rules(scheduler);
 
-    scheduler->rsc_defaults = get_xpath_object("//" PCMK_XE_RSC_DEFAULTS,
-                                               scheduler->input, LOG_NEVER);
+    scheduler->priv->rsc_defaults = get_xpath_object("//" PCMK_XE_RSC_DEFAULTS,
+                                                     scheduler->input,
+                                                     LOG_NEVER);
 
     section = get_xpath_object("//" PCMK_XE_CRM_CONFIG, scheduler->input,
                                LOG_TRACE);
@@ -162,6 +165,10 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
     unpack_resources(section, scheduler);
 
+    section = get_xpath_object("//" PCMK_XE_FENCING_TOPOLOGY, scheduler->input,
+                               LOG_TRACE);
+    pcmk__unpack_fencing_topology(section, scheduler);
+
     section = get_xpath_object("//" PCMK_XE_TAGS, scheduler->input, LOG_NEVER);
     unpack_tags(section, scheduler);
 
@@ -172,15 +179,26 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
 
     if (!pcmk_is_set(scheduler->flags, pcmk__sched_no_counts)) {
-        for (GList *item = scheduler->resources; item != NULL;
-             item = item->next) {
+        for (GList *item = scheduler->priv->resources;
+             item != NULL; item = item->next) {
+
             pcmk_resource_t *rsc = item->data;
 
             rsc->priv->fns->count(item->data);
         }
         crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
-                  scheduler->ninstances, scheduler->disabled_resources,
-                  scheduler->blocked_resources);
+                  scheduler->priv->ninstances,
+                  scheduler->priv->disabled_resources,
+                  scheduler->priv->blocked_resources);
+    }
+
+    if ((scheduler->priv->local_node_name != NULL)
+        && (pcmk_find_node(scheduler,
+                           scheduler->priv->local_node_name) == NULL)) {
+        crm_info("Creating a fake local node for %s",
+                 scheduler->priv->local_node_name);
+        pe_create_node(scheduler->priv->local_node_name,
+                       scheduler->priv->local_node_name, NULL, 0, scheduler);
     }
 
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_status);
@@ -336,16 +354,16 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         g_hash_table_destroy(scheduler->priv->ticket_constraints);
     }
 
-    if (scheduler->template_rsc_sets) {
-        g_hash_table_destroy(scheduler->template_rsc_sets);
+    if (scheduler->priv->templates != NULL) {
+        g_hash_table_destroy(scheduler->priv->templates);
     }
 
-    if (scheduler->tags) {
-        g_hash_table_destroy(scheduler->tags);
+    if (scheduler->priv->tags != NULL) {
+        g_hash_table_destroy(scheduler->priv->tags);
     }
 
     crm_trace("deleting resources");
-    pe_free_resources(scheduler->resources);
+    pe_free_resources(scheduler->priv->resources);
 
     crm_trace("deleting actions");
     pe_free_actions(scheduler->priv->actions);
@@ -354,18 +372,16 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     pe_free_nodes(scheduler->nodes);
 
     pe__free_param_checks(scheduler);
-    g_list_free(scheduler->stop_needed);
-    pcmk__xml_free(scheduler->graph);
+    g_list_free(scheduler->priv->stop_needed);
     crm_time_free(scheduler->priv->now);
     pcmk__xml_free(scheduler->input);
-    pcmk__xml_free(scheduler->failed);
+    pcmk__xml_free(scheduler->priv->failed);
+    pcmk__xml_free(scheduler->priv->graph);
 
     set_working_set_defaults(scheduler);
 
-    CRM_CHECK(scheduler->ordering_constraints == NULL,;
-        );
-    CRM_CHECK(scheduler->placement_constraints == NULL,;
-        );
+    CRM_LOG_ASSERT((scheduler->priv->location_constraints == NULL)
+                   && (scheduler->priv->ordering_constraints == NULL));
 }
 
 /*!
@@ -381,24 +397,19 @@ pe_reset_working_set(pcmk_scheduler_t *scheduler)
     }
 
     crm_trace("Deleting %d ordering constraints",
-              g_list_length(scheduler->ordering_constraints));
-    pe__free_ordering(scheduler->ordering_constraints);
-    scheduler->ordering_constraints = NULL;
+              g_list_length(scheduler->priv->ordering_constraints));
+    pe__free_ordering(scheduler->priv->ordering_constraints);
+    scheduler->priv->ordering_constraints = NULL;
 
     crm_trace("Deleting %d location constraints",
-              g_list_length(scheduler->placement_constraints));
-    pe__free_location(scheduler->placement_constraints);
-    scheduler->placement_constraints = NULL;
+              g_list_length(scheduler->priv->location_constraints));
+    pe__free_location(scheduler->priv->location_constraints);
+    scheduler->priv->location_constraints = NULL;
 
     crm_trace("Deleting %d colocation constraints",
-              g_list_length(scheduler->colocation_constraints));
-    g_list_free_full(scheduler->colocation_constraints, free);
-    scheduler->colocation_constraints = NULL;
-
-    crm_trace("Deleting %d ticket constraints",
-              g_list_length(scheduler->ticket_constraints));
-    g_list_free_full(scheduler->ticket_constraints, free);
-    scheduler->ticket_constraints = NULL;
+              g_list_length(scheduler->priv->colocation_constraints));
+    g_list_free_full(scheduler->priv->colocation_constraints, free);
+    scheduler->priv->colocation_constraints = NULL;
 
     cleanup_calculations(scheduler);
 }
@@ -409,6 +420,7 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
     // These members must be preserved
     pcmk__scheduler_private_t *priv = scheduler->priv;
     pcmk__output_t *out = priv->out;
+    char *local_node_name = scheduler->priv->local_node_name;
 
     // Wipe the main structs (any other members must have previously been freed)
     memset(scheduler, 0, sizeof(pcmk_scheduler_t));
@@ -417,18 +429,19 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
     // Restore the members to preserve
     scheduler->priv = priv;
     scheduler->priv->out = out;
+    scheduler->priv->local_node_name = local_node_name;
 
     // Set defaults for everything else
-    scheduler->order_id = 1;
-    scheduler->action_id = 1;
+    scheduler->priv->next_ordering_id = 1;
+    scheduler->priv->next_action_id = 1;
     scheduler->no_quorum_policy = pcmk_no_quorum_stop;
     pcmk__set_scheduler_flags(scheduler,
                               pcmk__sched_symmetric_cluster
+#if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
+                              |pcmk__sched_concurrent_fencing
+#endif
                               |pcmk__sched_stop_removed_resources
                               |pcmk__sched_cancel_removed_actions);
-    if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, PCMK_VALUE_TRUE)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk__sched_concurrent_fencing);
-    }
 }
 
 pcmk_resource_t *

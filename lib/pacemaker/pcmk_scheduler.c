@@ -242,37 +242,13 @@ apply_shutdown_locks(pcmk_scheduler_t *scheduler)
     if (!pcmk_is_set(scheduler->flags, pcmk__sched_shutdown_lock)) {
         return;
     }
-    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->resources;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->priv->cmds->shutdown_lock(rsc);
     }
-}
-
-/*!
- * \internal
- * \brief Calculate the number of available nodes in the cluster
- *
- * \param[in,out] scheduler  Scheduler data
- */
-static void
-count_available_nodes(pcmk_scheduler_t *scheduler)
-{
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_no_compat)) {
-        return;
-    }
-
-    // @COMPAT for API backward compatibility only (cluster does not use value)
-    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
-        pcmk_node_t *node = (pcmk_node_t *) iter->data;
-
-        if ((node != NULL) && (node->assign->score >= 0)
-            && node->details->online
-            && (node->priv->variant != pcmk__node_variant_ping)) {
-            scheduler->max_valid_nodes++;
-        }
-    }
-    crm_trace("Online node count: %d", scheduler->max_valid_nodes);
 }
 
 /*
@@ -288,14 +264,15 @@ apply_node_criteria(pcmk_scheduler_t *scheduler)
 {
     crm_trace("Applying node-specific scheduling criteria");
     apply_shutdown_locks(scheduler);
-    count_available_nodes(scheduler);
     pcmk__apply_locations(scheduler);
-    g_list_foreach(scheduler->resources, apply_stickiness, NULL);
+    g_list_foreach(scheduler->priv->resources, apply_stickiness, NULL);
 
     for (GList *node_iter = scheduler->nodes; node_iter != NULL;
          node_iter = node_iter->next) {
-        for (GList *rsc_iter = scheduler->resources; rsc_iter != NULL;
-             rsc_iter = rsc_iter->next) {
+
+        for (GList *rsc_iter = scheduler->priv->resources;
+             rsc_iter != NULL; rsc_iter = rsc_iter->next) {
+
             check_failure_threshold(rsc_iter->data, node_iter->data);
             apply_exclusive_discovery(rsc_iter->data, node_iter->data);
         }
@@ -326,7 +303,9 @@ assign_resources(pcmk_scheduler_t *scheduler)
          * colocation dependencies). If the connection is migrating, always
          * prefer the partial migration target.
          */
-        for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
+        for (iter = scheduler->priv->resources;
+             iter != NULL; iter = iter->next) {
+
             pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
             const pcmk_node_t *target = rsc->priv->partial_migration_target;
 
@@ -339,7 +318,7 @@ assign_resources(pcmk_scheduler_t *scheduler)
     }
 
     /* now do the rest of the resources */
-    for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->priv->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (!pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
@@ -416,12 +395,14 @@ schedule_resource_actions(pcmk_scheduler_t *scheduler)
     }
 
     if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_removed_resources)) {
-        g_list_foreach(scheduler->resources, clear_failcounts_if_orphaned,
+        g_list_foreach(scheduler->priv->resources, clear_failcounts_if_orphaned,
                        NULL);
     }
 
     crm_trace("Scheduling resource actions");
-    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->priv->resources;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->priv->cmds->create_actions(rsc);
@@ -463,7 +444,7 @@ is_managed(const pcmk_resource_t *rsc)
 static bool
 any_managed_resources(const pcmk_scheduler_t *scheduler)
 {
-    for (const GList *iter = scheduler->resources;
+    for (const GList *iter = scheduler->priv->resources;
          iter != NULL; iter = iter->next) {
         if (is_managed((const pcmk_resource_t *) iter->data)) {
             return true;
@@ -678,7 +659,9 @@ log_resource_details(pcmk_scheduler_t *scheduler)
      */
     all = g_list_prepend(all, (gpointer) "*");
 
-    for (GList *item = scheduler->resources; item != NULL; item = item->next) {
+    for (GList *item = scheduler->priv->resources;
+         item != NULL; item = item->next) {
+
         pcmk_resource_t *rsc = (pcmk_resource_t *) item->data;
 
         // Log all resources except inactive orphans
@@ -755,16 +738,10 @@ log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
 static void
 unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
 {
-    const char* localhost_save = NULL;
-
     if (pcmk_is_set(scheduler->flags, pcmk__sched_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
         pcmk__set_scheduler_flags(scheduler, flags);
         return;
-    }
-
-    if (scheduler->localhost) {
-        localhost_save = scheduler->localhost;
     }
 
     CRM_ASSERT(cib != NULL);
@@ -776,10 +753,6 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
      * previously called, whether directly or via pcmk__schedule_actions()).
      */
     set_working_set_defaults(scheduler);
-
-    if (localhost_save) {
-        scheduler->localhost = localhost_save;
-    }
 
     pcmk__set_scheduler_flags(scheduler, flags);
     scheduler->input = cib;
@@ -870,8 +843,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
         return ENOMEM;
     }
 
-    pcmk__set_scheduler_flags(new_scheduler,
-                              pcmk__sched_no_counts|pcmk__sched_no_compat);
+    pcmk__set_scheduler_flags(new_scheduler, pcmk__sched_no_counts);
 
     // Populate the scheduler data
 

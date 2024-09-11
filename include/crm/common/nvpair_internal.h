@@ -27,7 +27,12 @@ typedef struct unpack_data_s {
     const char *first_id;           // Block with this XML ID should sort first
     pcmk_rule_input_t rule_input;   // Data used to evaluate rules
 
-    // Whether each block's values should overwrite any existing ones
+    /* Whether each block's values should overwrite any existing ones
+     *
+     * @COMPAT Only external call paths set this to true. Drop it when we drop
+     * pe_eval_nvpairs() and pe_unpack_nvpairs() after replacing with a new
+     * public API that doesn't overwrite.
+     */
     bool overwrite;
 
     // If not NULL, this will be set to when rule evaluations will change next

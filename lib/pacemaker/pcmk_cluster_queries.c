@@ -448,7 +448,7 @@ poll_until_reply(data_t *data, pcmk_ipc_api_t *api, const char *on_node)
  * \param[in]     node_name           Name of node whose status is desired
  *                                    (\p NULL for DC)
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
- *                                    \p pacemaker-controld API. If 0,
+ *                                    the controller API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
  *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
  *                                    be used.
@@ -518,7 +518,7 @@ pcmk_controller_status(xmlNodePtr *xml, const char *node_name,
  *
  * \param[in,out] out                 Output object
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
- *                                    \p pacemaker-controld API. If 0,
+ *                                    the controller API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
  *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
  *                                    be used.
@@ -586,25 +586,25 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
  *        the controller
  *
  * \param[in,out] out                 Output object
- * \param[in,out] node_id             ID of node whose name to get. If \p NULL
- *                                    or 0, get the local node name. If not
- *                                    \p NULL, store the true node ID here on
+ * \param[in,out] node_id             ID of node whose info to get. If \p NULL
+ *                                    or 0, get the local node's info. If not
+ *                                    \c NULL, store the true node ID here on
  *                                    success.
- * \param[out]    node_name           If not \p NULL, where to store the node
+ * \param[out]    node_name           If not \c NULL, where to store the node
  *                                    name
- * \param[out]    uuid                If not \p NULL, where to store the node
+ * \param[out]    uuid                If not \c NULL, where to store the node
  *                                    UUID
- * \param[out]    state               If not \p NULL, where to store the
+ * \param[out]    state               If not \c NULL, where to store the
  *                                    membership state
- * \param[out]    is_remote           If not \p NULL, where to store whether the
+ * \param[out]    is_remote           If not \c NULL, where to store whether the
  *                                    node is a Pacemaker Remote node
- * \param[out]    have_quorum         If not \p NULL, where to store whether the
+ * \param[out]    have_quorum         If not \c NULL, where to store whether the
  *                                    node has quorum
  * \param[in]     show_output         Whether to show the node info
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
- *                                    \p pacemaker-controld API. If 0,
- *                                    \p pcmk_ipc_dispatch_sync will be used.
- *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
+ *                                    the controller API. If 0,
+ *                                    \c pcmk_ipc_dispatch_sync will be used.
+ *                                    Otherwise, \c pcmk_ipc_dispatch_poll will
  *                                    be used.
  *
  * \return Standard Pacemaker return code
@@ -730,7 +730,7 @@ pcmk_query_node_info(xmlNodePtr *xml, uint32_t *node_id, char **node_name,
  * \note This function sets \p state to \p pcmk_pacemakerd_state_remote and
  *       returns \p pcmk_rc_ok if the IPC connection attempt returns
  *       \p EREMOTEIO. That code indicates that this is a Pacemaker Remote node
- *       with \p pacemaker-remoted running. The node may be connected to the
+ *       with the remote executor running. The node may be connected to the
  *       cluster.
  */
 int

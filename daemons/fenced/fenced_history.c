@@ -55,7 +55,7 @@ stonith_send_broadcast_history(xmlNode *history,
         crm_xml_add(call_data, PCMK__XA_ST_TARGET, target);
     }
 
-    pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, bcast);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, bcast);
 
     pcmk__xml_free(bcast);
 }
@@ -402,7 +402,8 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
         g_hash_table_iter_init(&iter, remote_history);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&op)) {
             if (stonith__op_state_pending(op->state) &&
-                pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
+                pcmk__str_eq(op->originator, fenced_get_local_node(),
+                             pcmk__str_casei)) {
 
                 crm_warn("Failing pending operation %.8s originated by us but "
                          "known only from peer history", op->id);
@@ -522,7 +523,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                                         st_opt_broadcast | st_opt_discard_reply,
                                         NULL);
         } else if (remote_peer &&
-                   !pcmk__str_eq(remote_peer, stonith_our_uname, pcmk__str_casei)) {
+                   !pcmk__str_eq(remote_peer, fenced_get_local_node(),
+                                 pcmk__str_casei)) {
             xmlNode *history = get_xpath_object("//" PCMK__XE_ST_HISTORY, msg,
                                                 LOG_NEVER);
 

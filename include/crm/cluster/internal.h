@@ -16,6 +16,7 @@
 #include <glib.h>           // gboolean
 #include <libxml/tree.h>    // xmlNode
 
+#include <crm/common/ipc.h> // enum crm_ipc_server
 #include <crm/cluster.h>
 
 #if SUPPORT_COROSYNC
@@ -26,25 +27,8 @@
 extern "C" {
 #endif
 
-/*!
- * \internal
- * \enum pcmk__cluster_msg
- * \brief Types of message sent via the cluster layer
- */
-enum pcmk__cluster_msg {
-    pcmk__cluster_msg_unknown,
-    pcmk__cluster_msg_attrd,
-    pcmk__cluster_msg_based,
-    pcmk__cluster_msg_controld,
-    pcmk__cluster_msg_execd,
-    pcmk__cluster_msg_fenced,
-};
-
+// @TODO Replace this with a pcmk__node_status_flags value
 enum crm_proc_flag {
-    /* @COMPAT When pcmk__node_status_t:processes is made internal, we can merge
-     * this into node flags or turn it into a boolean. Until then, in theory
-     * something could depend on these particular numeric values.
-     */
     crm_proc_none       = 0x00000001,
 
     // Cluster layers
@@ -101,13 +85,18 @@ enum pcmk__node_update {
     pcmk__node_update_processes,    //!< Node process group membership updated
 };
 
+typedef struct pcmk__election pcmk__election_t;
+
 //! Implementation of pcmk__cluster_private_t
 struct pcmk__cluster_private {
-    // @TODO Drop and replace with per-daemon cluster-layer ID global variables?
-    uint32_t node_id;               //!< Local node ID at cluster layer
-
-    // @TODO Drop and replace with per-daemon node name global variables?
+    enum pcmk_ipc_server server;    //!< Server this connection is for (if any)
     char *node_name;                //!< Local node name at cluster layer
+    pcmk__election_t *election;     //!< Election state (if election is needed)
+
+    /* @TODO Corosync uses an integer node ID, but cluster layers in the
+     * abstract do not necessarily need to
+     */
+    uint32_t node_id;               //!< Local node ID at cluster layer
 
 #if SUPPORT_COROSYNC
     /* @TODO Make these members a separate struct and use void *cluster_data
@@ -292,9 +281,8 @@ void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
 
-enum pcmk__cluster_msg pcmk__cluster_parse_msg_type(const char *text);
 bool pcmk__cluster_send_message(const pcmk__node_status_t *node,
-                                enum pcmk__cluster_msg service,
+                                enum pcmk_ipc_server service,
                                 const xmlNode *data);
 
 // Membership

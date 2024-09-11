@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="70s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="70s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0">
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="prmIpPostgreSQLDB_monitor_30000" on_node="rh5node2" on_node_uuid="fb62f5f4-015c-466a-8778-7b5c1c5639d6">

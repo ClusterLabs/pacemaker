@@ -10,10 +10,6 @@
 #include "crm/common/results.h"
 #include <crm_internal.h>
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
 #include <regex.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,7 +32,7 @@
  *
  * \return Standard Pacemaker return code (\c pcmk_rc_ok on success,
  *         \c EINVAL on failed string conversion due to invalid input,
- *         or \c EOVERFLOW on arithmetic overflow)
+ *         or \c ERANGE if outside long long range)
  * \note Sets \c errno on error
  */
 static int
@@ -51,7 +47,7 @@ scan_ll(const char *text, long long *result, long long default_value,
     if (text != NULL) {
         local_result = strtoll(text, &local_end_text, 10);
         if (errno == ERANGE) {
-            rc = EOVERFLOW;
+            rc = errno;
             crm_warn("Integer parsed from '%s' was clipped to %lld",
                      text, local_result);
 
@@ -97,14 +93,8 @@ int
 pcmk__scan_ll(const char *text, long long *result, long long default_value)
 {
     long long local_result = default_value;
-    int rc = pcmk_rc_ok;
+    int rc = scan_ll(text, &local_result, default_value, NULL);
 
-    if (text != NULL) {
-        rc = scan_ll(text, &local_result, default_value, NULL);
-        if (rc != pcmk_rc_ok) {
-            local_result = default_value;
-        }
-    }
     if (result != NULL) {
         *result = local_result;
     }
@@ -461,7 +451,8 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
         crm_time_t *period_s = crm_time_parse_duration(input);
 
         if (period_s != NULL) {
-            msec = 1000 * crm_time_get_seconds(period_s);
+            msec = crm_time_get_seconds(period_s);
+            msec = QB_MIN(msec, G_MAXUINT / 1000) * 1000;
             crm_time_free(period_s);
         }
 
@@ -505,8 +496,8 @@ crm_str_to_boolean(const char *s, int *ret)
         return 1;
     }
 
-    if (pcmk__strcase_any_of(s, PCMK_VALUE_FALSE, "off", "no", "n", "0",
-                             NULL)) {
+    if (pcmk__strcase_any_of(s, PCMK_VALUE_FALSE, PCMK_VALUE_OFF, "no", "n",
+                             "0", NULL)) {
         if (ret != NULL) {
             *ret = FALSE;
         }

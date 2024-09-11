@@ -73,10 +73,11 @@ handle_pecalc_request(pcmk__request_t *request)
 
     digest = pcmk__digest_xml(xml_data, false);
     converted = pcmk__xml_copy(NULL, xml_data);
-    if (pcmk_update_configured_schema(&converted, true) != pcmk_rc_ok) {
-        scheduler->graph = pcmk__xe_create(NULL, PCMK__XE_TRANSITION_GRAPH);
-        crm_xml_add_int(scheduler->graph, "transition_id", 0);
-        crm_xml_add_int(scheduler->graph, PCMK_OPT_CLUSTER_DELAY, 0);
+    if (pcmk__update_configured_schema(&converted, true) != pcmk_rc_ok) {
+        scheduler->priv->graph = pcmk__xe_create(NULL,
+                                                 PCMK__XE_TRANSITION_GRAPH);
+        crm_xml_add_int(scheduler->priv->graph, "transition_id", 0);
+        crm_xml_add_int(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, 0);
         process = false;
         free(digest);
 
@@ -92,16 +93,15 @@ handle_pecalc_request(pcmk__request_t *request)
     if (process) {
         pcmk__schedule_actions(converted,
                                pcmk__sched_no_counts
-                               |pcmk__sched_no_compat
                                |pcmk__sched_show_utilization, scheduler);
     }
 
     // Get appropriate index into series[] array
     if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_error)
-        || crm_config_error) {
+        || pcmk__config_has_error) {
         series_id = 0;
     } else if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_warning)
-               || crm_config_warning) {
+               || pcmk__config_has_warning) {
         series_id = 1;
     } else {
         series_id = 2;
@@ -114,7 +114,7 @@ handle_pecalc_request(pcmk__request_t *request)
         series_wrap = series[series_id].wrap;
     }
 
-    if (pcmk__read_series_sequence(PE_STATE_DIR, series[series_id].name,
+    if (pcmk__read_series_sequence(PCMK_SCHEDULER_INPUT_DIR, series[series_id].name,
                                    &seq) != pcmk_rc_ok) {
         // @TODO maybe handle errors better ...
         seq = 0;
@@ -123,7 +123,7 @@ handle_pecalc_request(pcmk__request_t *request)
               series[series_id].name, series_wrap, seq, value);
 
     scheduler->input = NULL;
-    reply = create_reply(msg, scheduler->graph);
+    reply = pcmk__new_reply(msg, scheduler->priv->graph);
 
     if (reply == NULL) {
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
@@ -138,7 +138,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
     } else if (!is_repoke) { // Input changed, save to disk
         free(filename);
-        filename = pcmk__series_filename(PE_STATE_DIR,
+        filename = pcmk__series_filename(PCMK_SCHEDULER_INPUT_DIR,
                                          series[series_id].name, seq, true);
     }
 
@@ -157,7 +157,7 @@ handle_pecalc_request(pcmk__request_t *request)
         crm_xml_add_ll(xml_data, PCMK_XA_EXECUTION_DATE,
                        (long long) execution_date);
         pcmk__xml_write_file(xml_data, filename, true);
-        pcmk__write_series_sequence(PE_STATE_DIR, series[series_id].name,
+        pcmk__write_series_sequence(PCMK_SCHEDULER_INPUT_DIR, series[series_id].name,
                                     ++seq, series_wrap);
     }
 

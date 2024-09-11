@@ -1,5 +1,5 @@
 #
-# Copyright 2023 the Pacemaker project contributors
+# Copyright 2023-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -10,6 +10,7 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 pkgpython_PYTHON = __init__.py 		\
+		   _library.py 		\
 		   exitstatus.py
 
 nodist_pkgpython_PYTHON = buildoptions.py

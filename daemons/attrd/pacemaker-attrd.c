@@ -139,11 +139,11 @@ main(int argc, char **argv)
                stand_alone ? " in standalone mode" : "");
 
     if (ipc_already_running()) {
-        const char *msg = "pacemaker-attrd is already active, aborting startup";
-
         attrd_exit_status = CRM_EX_OK;
-        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status, "%s", msg);
-        crm_err("%s", msg);
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+                    "Aborting start-up because an attribute manager "
+                    "instance is already active");
+        crm_crit("%s", error->message);
         goto done;
     }
 
@@ -195,7 +195,6 @@ main(int argc, char **argv)
     if (initialized) {
         crm_info("Shutting down attribute manager");
 
-        attrd_election_fini();
         attrd_ipc_fini();
         attrd_lrmd_disconnect();
 

@@ -421,11 +421,12 @@ check_file_exists(const char *filename, bool should_exist, GError **error)
     }
 
     if (should_exist && (stat(filename, &buf) < 0)) {
-        // @COMPAT: Use pcmk_rc2exitc(errno)?
-        exit_code = CRM_EX_NOSUCH;
+        int rc = errno;
+
+        exit_code = pcmk_rc2exitc(rc);
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
                     "Could not access shadow instance '%s': %s",
-                    options.instance, strerror(errno));
+                    options.instance, strerror(rc));
         return errno;
     }
 
@@ -455,7 +456,7 @@ connect_real_cib(cib_t **real_cib, GError **error)
         return rc;
     }
 
-    rc = (*real_cib)->cmds->signon(*real_cib, crm_system_name, cib_command);
+    rc = cib__signon_attempts(*real_cib, cib_command, 5);
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);

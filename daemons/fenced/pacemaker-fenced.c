@@ -40,13 +40,11 @@
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
-char *stonith_our_uname = NULL;
 long long stonith_watchdog_timeout_ms = 0;
 GList *stonith_watchdog_targets = NULL;
 
 static GMainLoop *mainloop = NULL;
 
-gboolean stand_alone = FALSE;
 gboolean stonith_shutdown_flag = FALSE;
 
 static qb_ipcs_service_t *ipcs = NULL;
@@ -60,7 +58,7 @@ pcmk__supported_format_t formats[] = {
 };
 
 static struct {
-    bool no_cib_connect;
+    gboolean stand_alone;
     gchar **log_files;
 } options;
 
@@ -112,9 +110,9 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         crm_xml_add(request, PCMK__XA_ST_OP, op);
         crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
         crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
-        crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, stonith_our_uname);
+        crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
-        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, request);
+        pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, request);
         pcmk__xml_free(request);
         return 0;
     }
@@ -137,7 +135,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
     crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
-    crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, stonith_our_uname);
+    crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
     crm_log_xml_trace(request, "ipc-received");
     stonith_command(c, id, flags, request, NULL);
@@ -434,18 +432,6 @@ stonith_cleanup(void)
     free_device_list();
     free_metadata_cache();
     fenced_unregister_handlers();
-
-    free(stonith_our_uname);
-    stonith_our_uname = NULL;
-}
-
-static gboolean
-stand_alone_cpg_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-                   GError **error)
-{
-    stand_alone = FALSE;
-    options.no_cib_connect = true;
-    return TRUE;
 }
 
 struct qb_ipcs_service_handlers ipc_callbacks = {
@@ -481,7 +467,7 @@ st_peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
         crm_debug("Broadcasting our uname because of node %" PRIu32,
                   node->cluster_layer_id);
-        pcmk__cluster_send_message(NULL, pcmk__cluster_msg_fenced, query);
+        pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, query);
 
         pcmk__xml_free(query);
     }
@@ -489,11 +475,13 @@ st_peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
 /* @COMPAT Deprecated since 2.1.8. Use pcmk_list_fence_attrs() or
  * crm_resource --list-options=fencing instead of querying daemon metadata.
+ *
+ * NOTE: pcs (as of at least 0.11.8) uses this
  */
 static int
 fencer_metadata(void)
 {
-    const char *name = "pacemaker-fenced";
+    const char *name = PCMK__SERVER_FENCED;
     const char *desc_short = N_("Instance attributes available for all "
                                 "\"stonith\"-class resources");
     const char *desc_long = N_("Instance attributes available for all "
@@ -505,11 +493,9 @@ fencer_metadata(void)
 }
 
 static GOptionEntry entries[] = {
-    { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
-      N_("Deprecated (will be removed in a future release)"), NULL },
-
-    { "stand-alone-w-cpg", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-      stand_alone_cpg_cb, N_("Intended for use in regression testing only"), NULL },
+    { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+      &options.stand_alone, N_("Intended for use in regression testing only"),
+      NULL },
 
     { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
       &options.log_files, N_("Send logs to the additional named logfile"), NULL },
@@ -596,7 +582,8 @@ main(int argc, char **argv)
         // IPC endpoint already up
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_err("pacemaker-fenced is already active, aborting startup");
+        crm_crit("Aborting start-up because another fencer instance is "
+                 "already active");
         goto done;
     } else {
         // Not up or not authentic, we'll proceed either way
@@ -618,32 +605,25 @@ main(int argc, char **argv)
 
     cluster = pcmk_cluster_new();
 
-    if (!stand_alone) {
 #if SUPPORT_COROSYNC
-        if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-            pcmk_cluster_set_destroy_fn(cluster, stonith_peer_cs_destroy);
-            pcmk_cpg_set_deliver_fn(cluster, stonith_peer_ais_callback);
-            pcmk_cpg_set_confchg_fn(cluster, pcmk__cpg_confchg_cb);
-        }
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
+        pcmk_cluster_set_destroy_fn(cluster, stonith_peer_cs_destroy);
+        pcmk_cpg_set_deliver_fn(cluster, stonith_peer_ais_callback);
+        pcmk_cpg_set_confchg_fn(cluster, pcmk__cpg_confchg_cb);
+    }
 #endif // SUPPORT_COROSYNC
 
-        pcmk__cluster_set_status_callback(&st_peer_update_callback);
+    pcmk__cluster_set_status_callback(&st_peer_update_callback);
 
-        if (pcmk_cluster_connect(cluster) != pcmk_rc_ok) {
-            exit_code = CRM_EX_FATAL;
-            crm_crit("Cannot sign in to the cluster... terminating");
-            goto done;
-        }
-        pcmk__str_update(&stonith_our_uname, cluster->priv->node_name);
+    if (pcmk_cluster_connect(cluster) != pcmk_rc_ok) {
+        exit_code = CRM_EX_FATAL;
+        crm_crit("Cannot sign in to the cluster... terminating");
+        goto done;
+    }
+    fenced_set_local_node(cluster->priv->node_name);
 
-        if (!options.no_cib_connect) {
-            setup_cib();
-        }
-
-    } else {
-        pcmk__str_update(&stonith_our_uname, "localhost");
-        crm_warn("Stand-alone mode is deprecated and will be removed "
-                 "in a future release");
+    if (!options.stand_alone) {
+        setup_cib();
     }
 
     init_device_list();

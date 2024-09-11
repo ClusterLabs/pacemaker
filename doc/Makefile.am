@@ -39,11 +39,11 @@ SUBDIRS		= sphinx
 EXTRA_DIST	= $(DEPRECATED_ORIGINAL)
 
 # toplevel rsync destination for www targets (without trailing slash)
-RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
+RSYNC_DEST      ?= sites.clusterlabs.org:/var/www/html
 
-# recursive, preserve symlinks/permissions/times, verbose, compress,
+# recursive, preserve symlinks, preserve permissions, verbose, compress,
 # don't cross filesystems, sparse, show progress
-RSYNC_OPTS      = -rlptvzxS --progress
+RSYNC_OPTS      = -rlpvzxS --progress
 
 if IS_ASCIIDOC
 ASCIIDOC_HTML_ARGS	= --unsafe --backend=xhtml11
@@ -103,7 +103,8 @@ global-clean:
 .PHONY: manhtml
 manhtml:
 	$(MAKE) $(AM_MAKEFLAGS) -C .. all
-	find .. -name "[a-z]*.[78]" -exec $(MAKE) $(AM_MAKEFLAGS) \{\}.html \;
+	find ../agents ../daemons ../tools -name "[a-z]*.[78]"	\
+		-exec $(MAKE) $(AM_MAKEFLAGS) \{\}.html \;
 
 .PHONY: manhtml-upload
 manhtml-upload: manhtml

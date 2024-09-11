@@ -24,7 +24,8 @@
 
 #include "pacemaker-schedulerd.h"
 
-#define SUMMARY "pacemaker-schedulerd - daemon for calculating a Pacemaker cluster's response to events"
+#define SUMMARY PCMK__SERVER_SCHEDULERD " - daemon for calculating a " \
+                "Pacemaker cluster's response to events"
 
 struct {
     gchar **remainder;
@@ -48,11 +49,13 @@ void pengine_shutdown(int nsig);
 
 /* @COMPAT Deprecated since 2.1.8. Use pcmk_list_cluster_options() or
  * crm_attribute --list-options=cluster instead of querying daemon metadata.
+ *
+ * NOTE: pcs (as of at least 0.11.8) uses this
  */
 static int
 scheduler_metadata(pcmk__output_t *out)
 {
-    return pcmk__daemon_metadata(out, "pacemaker-schedulerd",
+    return pcmk__daemon_metadata(out, PCMK__SERVER_SCHEDULERD,
                                  "Pacemaker scheduler options",
                                  "Cluster options used by Pacemaker's "
                                  "scheduler",
@@ -131,22 +134,24 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__cli_init_logging("pacemaker-schedulerd", args->verbosity);
+    pcmk__cli_init_logging(PCMK__SERVER_SCHEDULERD, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker scheduler");
 
-    if (pcmk__daemon_can_write(PE_STATE_DIR, NULL) == FALSE) {
-        crm_err("Terminating due to bad permissions on " PE_STATE_DIR);
+    if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
+        crm_err("Terminating due to bad permissions on " PCMK_SCHEDULER_INPUT_DIR);
         exit_code = CRM_EX_FATAL;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "ERROR: Bad permissions on %s (see logs for details)", PE_STATE_DIR);
+                    "ERROR: Bad permissions on %s (see logs for details)",
+                    PCMK_SCHEDULER_INPUT_DIR);
         goto done;
     }
 
     ipcs = pcmk__serve_schedulerd_ipc(&ipc_callbacks);
     if (ipcs == NULL) {
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Failed to create pacemaker-schedulerd server: exiting and inhibiting respawn");
+                    "Exiting fatally because unable to serve "
+                    "scheduler server IPC");
         exit_code = CRM_EX_FATAL;
         goto done;
     }

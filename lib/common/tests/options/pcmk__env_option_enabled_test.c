@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@ disabled_null_value(void **state)
 {
     // Return false if option value not found (NULL accomplishes this)
     assert_false(pcmk__env_option_enabled(NULL, NULL));
-    assert_false(pcmk__env_option_enabled("pacemaker-execd", NULL));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, NULL));
 }
 
 static void
@@ -32,7 +32,7 @@ enabled_true_value(void **state)
 
     expect_string(__wrap_getenv, name, "PCMK_env_var");
     will_return(__wrap_getenv, "true");
-    assert_true(pcmk__env_option_enabled("pacemaker-execd", "env_var"));
+    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, "env_var"));
 
     pcmk__mock_getenv = false;
 }
@@ -49,7 +49,7 @@ disabled_false_value(void **state)
 
     expect_string(__wrap_getenv, name, "PCMK_env_var");
     will_return(__wrap_getenv, "false");
-    assert_false(pcmk__env_option_enabled("pacemaker-execd", "env_var"));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, "env_var"));
 
     pcmk__mock_getenv = false;
 }
@@ -61,21 +61,22 @@ enabled_daemon_in_list(void **state)
     pcmk__mock_getenv = true;
 
     expect_string(__wrap_getenv, name, "PCMK_env_var");
-    will_return(__wrap_getenv, "pacemaker-execd");
-    assert_true(pcmk__env_option_enabled("pacemaker-execd", "env_var"));
+    will_return(__wrap_getenv, PCMK__SERVER_EXECD);
+    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, "env_var"));
 
     expect_string(__wrap_getenv, name, "PCMK_env_var");
-    will_return(__wrap_getenv, "pacemaker-execd,pacemaker-fenced");
-    assert_true(pcmk__env_option_enabled("pacemaker-execd", "env_var"));
+    will_return(__wrap_getenv, PCMK__SERVER_EXECD "," PCMK__SERVER_FENCED);
+    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, "env_var"));
 
     expect_string(__wrap_getenv, name, "PCMK_env_var");
-    will_return(__wrap_getenv, "pacemaker-controld,pacemaker-execd");
-    assert_true(pcmk__env_option_enabled("pacemaker-execd", "env_var"));
+    will_return(__wrap_getenv, PCMK__SERVER_CONTROLD "," PCMK__SERVER_EXECD);
+    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, "env_var"));
 
     expect_string(__wrap_getenv, name, "PCMK_env_var");
     will_return(__wrap_getenv,
-                "pacemaker-controld,pacemaker-execd,pacemaker-fenced");
-    assert_true(pcmk__env_option_enabled("pacemaker-execd", "env_var"));
+                PCMK__SERVER_CONTROLD "," PCMK__SERVER_EXECD
+                "," PCMK__SERVER_FENCED);
+    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, "env_var"));
 
     pcmk__mock_getenv = false;
 }
@@ -87,8 +88,8 @@ disabled_daemon_not_in_list(void **state)
     pcmk__mock_getenv = true;
 
     expect_string(__wrap_getenv, name, "PCMK_env_var");
-    will_return(__wrap_getenv, "pacemaker-controld,pacemaker-fenced");
-    assert_false(pcmk__env_option_enabled("pacemaker-execd", "env_var"));
+    will_return(__wrap_getenv, PCMK__SERVER_CONTROLD "," PCMK__SERVER_FENCED);
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, "env_var"));
 
     pcmk__mock_getenv = false;
 }

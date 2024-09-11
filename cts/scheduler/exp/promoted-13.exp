@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0" priority="1000000">
     <action_set>
       <rsc_op id="55" operation="notify" operation_key="drbd0:1_post_notify_demote_0" internal_operation_key="drbd0:0_post_notify_demote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">

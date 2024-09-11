@@ -103,105 +103,6 @@ pcmk_free_nvpairs(GSList *nvpairs)
     g_slist_free_full(nvpairs, pcmk__free_nvpair);
 }
 
-/*!
- * \internal
- * \brief Compare two name/value pairs
- *
- * \param[in] a  First name/value pair to compare
- * \param[in] b  Second name/value pair to compare
- *
- * \return 0 if a == b, 1 if a > b, -1 if a < b
- */
-static gint
-pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
-{
-    int rc = 0;
-    const pcmk_nvpair_t *pair_a = a;
-    const pcmk_nvpair_t *pair_b = b;
-
-    CRM_ASSERT(a != NULL);
-    CRM_ASSERT(pair_a->name != NULL);
-
-    CRM_ASSERT(b != NULL);
-    CRM_ASSERT(pair_b->name != NULL);
-
-    rc = strcmp(pair_a->name, pair_b->name);
-    if (rc < 0) {
-        return -1;
-    } else if (rc > 0) {
-        return 1;
-    }
-    return 0;
-}
-
-/*!
- * \brief Sort a list of name/value pairs
- *
- * \param[in,out] list  List to sort
- *
- * \return New head of list
- */
-GSList *
-pcmk_sort_nvpairs(GSList *list)
-{
-    return g_slist_sort(list, pcmk__compare_nvpair);
-}
-
-/*!
- * \brief Create a list of name/value pairs from an XML node's attributes
- *
- * \param[in]  XML to parse
- *
- * \return New list of name/value pairs
- * \note It is the caller's responsibility to free the list with
- *       \c pcmk_free_nvpairs().
- */
-GSList *
-pcmk_xml_attrs2nvpairs(const xmlNode *xml)
-{
-    GSList *result = NULL;
-
-    for (xmlAttrPtr iter = pcmk__xe_first_attr(xml); iter != NULL;
-         iter = iter->next) {
-
-        result = pcmk_prepend_nvpair(result,
-                                     (const char *) iter->name,
-                                     (const char *) pcmk__xml_attr_value(iter));
-    }
-    return result;
-}
-
-/*!
- * \internal
- * \brief Add an XML attribute corresponding to a name/value pair
- *
- * Suitable for glib list iterators, this function adds a NAME=VALUE
- * XML attribute based on a given name/value pair.
- *
- * \param[in]  data       Name/value pair
- * \param[out] user_data  XML node to add attributes to
- */
-static void
-pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
-{
-    pcmk_nvpair_t *pair = data;
-    xmlNode *parent = user_data;
-
-    crm_xml_add(parent, pair->name, pair->value);
-}
-
-/*!
- * \brief Add XML attributes based on a list of name/value pairs
- *
- * \param[in,out] list  List of name/value pairs
- * \param[in,out] xml   XML node to add attributes to
- */
-void
-pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
-{
-    g_slist_foreach(list, pcmk__nvpair_add_xml_attr, xml);
-}
-
 // convenience function for name=value strings
 
 /*!
@@ -300,6 +201,7 @@ pcmk__format_nvpair(const char *name, const char *value, const char *units)
 const char *
 crm_xml_add(xmlNode *node, const char *name, const char *value)
 {
+    // @TODO Replace with internal function that returns the new attribute
     bool dirty = FALSE;
     xmlAttr *attr = NULL;
 
@@ -324,6 +226,12 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
     }
 
     attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
+
+    /* If the attribute already exists, this does nothing. Attribute values
+     * don't get private data.
+     */
+    pcmk__xml_new_private_data((xmlNode *) attr);
+
     if (dirty) {
         pcmk__mark_xml_attr_dirty(attr);
     }
@@ -817,28 +725,6 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
 }
 
 /*!
- * \brief Add XML nvpair element based on hash table entry
- *
- * Suitable for \c g_hash_table_foreach(), this function takes a hash table key
- * and value, with an XML node passed as the user data, and adds an \c nvpair
- * XML element with the specified name and value.
- *
- * \param[in]     key        Key of hash table entry
- * \param[in]     value      Value of hash table entry
- * \param[in,out] user_data  XML node
- */
-void
-hash2nvpair(gpointer key, gpointer value, gpointer user_data)
-{
-    const char *name = key;
-    const char *s_value = value;
-    xmlNode *xml_node = user_data;
-
-    crm_create_nvpair_xml(xml_node, name, name, s_value);
-    crm_trace("dumped: name=%s value=%s", name, s_value);
-}
-
-/*!
  * \brief Retrieve XML attributes as a hash table
  *
  * Given an XML element, this will look for any \<attributes> element child,
@@ -992,3 +878,80 @@ crm_meta_value(GHashTable *meta, const char *attr_name)
     }
     return NULL;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/nvpair_compat.h>
+
+static gint
+pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
+{
+    int rc = 0;
+    const pcmk_nvpair_t *pair_a = a;
+    const pcmk_nvpair_t *pair_b = b;
+
+    CRM_ASSERT(a != NULL);
+    CRM_ASSERT(pair_a->name != NULL);
+
+    CRM_ASSERT(b != NULL);
+    CRM_ASSERT(pair_b->name != NULL);
+
+    rc = strcmp(pair_a->name, pair_b->name);
+    if (rc < 0) {
+        return -1;
+    } else if (rc > 0) {
+        return 1;
+    }
+    return 0;
+}
+
+GSList *
+pcmk_sort_nvpairs(GSList *list)
+{
+    return g_slist_sort(list, pcmk__compare_nvpair);
+}
+
+GSList *
+pcmk_xml_attrs2nvpairs(const xmlNode *xml)
+{
+    GSList *result = NULL;
+
+    for (xmlAttrPtr iter = pcmk__xe_first_attr(xml); iter != NULL;
+         iter = iter->next) {
+
+        result = pcmk_prepend_nvpair(result,
+                                     (const char *) iter->name,
+                                     (const char *) pcmk__xml_attr_value(iter));
+    }
+    return result;
+}
+
+static void
+pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
+{
+    pcmk_nvpair_t *pair = data;
+    xmlNode *parent = user_data;
+
+    crm_xml_add(parent, pair->name, pair->value);
+}
+
+void
+pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
+{
+    g_slist_foreach(list, pcmk__nvpair_add_xml_attr, xml);
+}
+
+void
+hash2nvpair(gpointer key, gpointer value, gpointer user_data)
+{
+    const char *name = key;
+    const char *s_value = value;
+    xmlNode *xml_node = user_data;
+
+    crm_create_nvpair_xml(xml_node, name, name, s_value);
+    crm_trace("dumped: name=%s value=%s", name, s_value);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

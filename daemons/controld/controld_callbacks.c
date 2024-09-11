@@ -35,8 +35,7 @@ crmd_ha_msg_filter(xmlNode * msg)
         if (pcmk__str_eq(sys_from, CRM_SYSTEM_DC, pcmk__str_casei)) {
             const char *from = crm_element_value(msg, PCMK__XA_SRC);
 
-            if (!pcmk__str_eq(from, controld_globals.our_nodename,
-                              pcmk__str_casei)) {
+            if (!controld_is_local_node(from)) {
                 int level = LOG_INFO;
                 const char *op = crm_element_value(msg, PCMK__XA_CRM_TASK);
 
@@ -133,12 +132,14 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in crmd_ha_msg_filter()
          */
-        xmlNode *query = create_request(CRM_OP_HELLO, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+        xmlNode *query = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
+                                           NULL, CRM_SYSTEM_CRMD, CRM_OP_HELLO,
+                                           NULL);
 
         crm_debug("Sending hello to node %" PRIu32 " so that it learns our "
                   "node name",
                   node->cluster_layer_id);
-        pcmk__cluster_send_message(node, pcmk__cluster_msg_controld, query);
+        pcmk__cluster_send_message(node, pcmk_ipc_controld, query);
 
         pcmk__xml_free(query);
     }
@@ -223,9 +224,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                 return;
             }
 
-            if (!appeared
-                && pcmk__str_eq(node->name, controld_globals.our_nodename,
-                                pcmk__str_casei)) {
+            if (!appeared && controld_is_local_node(node->name)) {
                 /* Did we get evicted? */
                 crm_notice("Our peer connection failed");
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
@@ -325,7 +324,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
         } else if (appeared == FALSE) {
             if ((controld_globals.transition_graph == NULL)
-                || (controld_globals.transition_graph->id == -1)) {
+                || (controld_globals.transition_graph->id <= 0)) {
                 crm_info("Stonith/shutdown of node %s is unknown to the "
                          "current DC", node->name);
             } else {

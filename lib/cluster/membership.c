@@ -9,10 +9,6 @@
 
 #include <crm_internal.h>
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
 #include <inttypes.h>                   // PRIu32
 #include <stdbool.h>                    // bool
 #include <stdio.h>
@@ -1250,7 +1246,7 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
     gboolean is_member;
 
     CRM_CHECK(node != NULL,
-              crm_err("Could not set state for unknown host to %s"
+              crm_err("Could not set state for unknown host to %s "
                       QB_XS " source=%s", state, source);
               return NULL);
 

@@ -34,8 +34,6 @@ enum pcmk__warnings {
     pcmk__wo_neg_threshold  = (1 << 6),
     pcmk__wo_remove_after   = (1 << 7),
     pcmk__wo_ping_node      = (1 << 8),
-    pcmk__wo_order_inst     = (1 << 9),
-    pcmk__wo_coloc_inst     = (1 << 10),
     pcmk__wo_group_order    = (1 << 11),
     pcmk__wo_group_coloc    = (1 << 12),
     pcmk__wo_upstart        = (1 << 13),
@@ -43,7 +41,6 @@ enum pcmk__warnings {
     pcmk__wo_set_ordering   = (1 << 15),
     pcmk__wo_rdisc_enabled  = (1 << 16),
     pcmk__wo_rkt            = (1 << 17),
-    pcmk__wo_location_rules = (1 << 18),
     pcmk__wo_op_attr_expr   = (1 << 19),
     pcmk__wo_instance_defaults  = (1 << 20),
     pcmk__wo_multiple_rules     = (1 << 21),
@@ -77,8 +74,10 @@ enum pcmk__warnings {
         }                                                               \
     } while (0)
 
-typedef void (*pcmk__config_error_func) (void *ctx, const char *msg, ...);
-typedef void (*pcmk__config_warning_func) (void *ctx, const char *msg, ...);
+typedef void (*pcmk__config_error_func) (void *ctx, const char *msg, ...)
+        G_GNUC_PRINTF(2, 3);
+typedef void (*pcmk__config_warning_func) (void *ctx, const char *msg, ...)
+        G_GNUC_PRINTF(2, 3);
 
 extern pcmk__config_error_func pcmk__config_error_handler;
 extern pcmk__config_warning_func pcmk__config_warning_handler;
@@ -89,6 +88,16 @@ extern void *pcmk__config_warning_context;
 void pcmk__set_config_error_handler(pcmk__config_error_func error_handler, void *error_context);
 void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler, void *warning_context);
 
+/* Pacemaker library functions set this when a configuration error is found,
+ * which turns on extra messages at the end of processing.
+ */
+extern bool pcmk__config_has_error;
+
+/* Pacemaker library functions set this when a configuration warning is found,
+ * which turns on extra messages at the end of processing.
+ */
+extern bool pcmk__config_has_warning;
+
 /*!
  * \internal
  * \brief Log an error and make crm_verify return failure status
@@ -96,7 +105,7 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
  * \param[in] fmt...  printf(3)-style format string and arguments
  */
 #define pcmk__config_err(fmt...) do {                               \
-        crm_config_error = TRUE;                                    \
+        pcmk__config_has_error = true;                              \
         if (pcmk__config_error_handler == NULL) {                   \
             crm_err(fmt);                                           \
         } else {                                                    \
@@ -111,7 +120,7 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
  * \param[in] fmt...  printf(3)-style format string and arguments
  */
 #define pcmk__config_warn(fmt...) do {                                      \
-        crm_config_warning = TRUE;                                          \
+        pcmk__config_has_warning = true;                                    \
         if (pcmk__config_warning_handler == NULL) {                         \
             crm_warn(fmt);                                                  \
         } else {                                                            \

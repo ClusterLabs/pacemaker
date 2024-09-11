@@ -34,6 +34,9 @@ extern "C" {
 G_GNUC_INTERNAL
 void pcmk__cluster_set_quorum(bool quorate);
 
+G_GNUC_INTERNAL
+void election_fini(pcmk_cluster_t *cluster);
+
 #if SUPPORT_COROSYNC
 
 G_GNUC_INTERNAL
@@ -69,7 +72,7 @@ uint32_t pcmk__cpg_local_nodeid(cpg_handle_t handle);
 
 G_GNUC_INTERNAL
 bool pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
-                        enum pcmk__cluster_msg dest);
+                        enum pcmk_ipc_server dest);
 
 #endif  // SUPPORT_COROSYNC
 

@@ -607,7 +607,7 @@ create_container_resource(pcmk_resource_t *parent,
                                   data->container_command);
         } else {
             crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
-                                  SBIN_DIR "/pacemaker-remoted");
+                                  SBIN_DIR "/" PCMK__SERVER_REMOTED);
         }
 
         /* TODO: Allow users to specify their own?
@@ -625,7 +625,7 @@ create_container_resource(pcmk_resource_t *parent,
          */
     } else if ((child != NULL) && data->untrusted) {
         crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
-                              CRM_DAEMON_DIR "/pacemaker-execd");
+                              CRM_DAEMON_DIR "/" PCMK__SERVER_EXECD);
         crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
                               CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
 #endif
@@ -690,15 +690,15 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         char *port_s = NULL;
         const char *uname = NULL;
         const char *connect_name = NULL;
+        pcmk_scheduler_t *scheduler = parent->priv->scheduler;
 
-        if (pe_find_resource(parent->priv->scheduler->resources,
-                             id) != NULL) {
+        if (pe_find_resource(scheduler->priv->resources, id) != NULL) {
             free(id);
             // The biggest hammer we have
             id = crm_strdup_printf("pcmk-internal-%s-remote-%d",
                                    replica->child->id, replica->offset);
             //@TODO return error instead of asserting?
-            CRM_ASSERT(pe_find_resource(parent->priv->scheduler->resources,
+            CRM_ASSERT(pe_find_resource(scheduler->priv->resources,
                                         id) == NULL);
         }
 
@@ -735,11 +735,10 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
          * been, if it has a permanent node attribute), and ensure its weight is
          * -INFINITY so no other resources can run on it.
          */
-        node = pcmk_find_node(parent->priv->scheduler, uname);
+        node = pcmk_find_node(scheduler, uname);
         if (node == NULL) {
             node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
-                                  PCMK_VALUE_MINUS_INFINITY,
-                                  parent->priv->scheduler);
+                                  PCMK_VALUE_MINUS_INFINITY, scheduler);
         } else {
             node->assign->score = -PCMK_SCORE_INFINITY;
         }
@@ -762,7 +761,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
          * @TODO Possible alternative: ensure bundles are unpacked before other
          * resources, so the weight is correct before any copies are made.
          */
-        g_list_foreach(parent->priv->scheduler->resources,
+        g_list_foreach(scheduler->priv->resources,
                        (GFunc) disallow_node, (gpointer) uname);
 
         replica->node = pe__copy_node(node);
@@ -787,7 +786,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                                 (gpointer) replica->node->priv->id, copy);
         }
         if (pe__unpack_resource(xml_remote, &replica->remote, parent,
-                                parent->priv->scheduler) != pcmk_rc_ok) {
+                                scheduler) != pcmk_rc_ok) {
             return pcmk_rc_unpack_error;
         }
 
@@ -858,7 +857,7 @@ create_replica_resources(pcmk_resource_t *parent,
          * different node than the one on which the container is active.
          *
          * This makes it possible to have Pacemaker Remote nodes running
-         * containers with pacemaker-remoted inside in order to start
+         * containers with the remote executor inside in order to start
          * services inside those containers.
          */
         pcmk__set_rsc_flags(replica->remote, pcmk__rsc_remote_nesting_allowed);

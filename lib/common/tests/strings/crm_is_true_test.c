@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,7 @@ static void
 is_false(void **state) {
     assert_false(crm_is_true("false"));
     assert_false(crm_is_true("fAlSe"));
-    assert_false(crm_is_true("off"));
+    assert_false(crm_is_true(PCMK_VALUE_OFF));
     assert_false(crm_is_true("OFF"));
     assert_false(crm_is_true("no"));
     assert_false(crm_is_true("No"));

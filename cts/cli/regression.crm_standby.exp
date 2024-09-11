@@ -1,0 +1,45 @@
+=#=#=#= Begin test: Default standby value =#=#=#=
+scope=status name=standby value=off
+=#=#=#= End test: Default standby value - OK (0) =#=#=#=
+* Passed: crm_standby           - Default standby value
+=#=#=#= Begin test: Set standby status =#=#=#=
+=#=#=#= Current cib after: Set standby status =#=#=#=
+<cib epoch="3" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-standby" name="standby" value="true"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Set standby status - OK (0) =#=#=#=
+* Passed: crm_standby           - Set standby status
+=#=#=#= Begin test: Query standby value =#=#=#=
+scope=nodes name=standby value=true
+=#=#=#= End test: Query standby value - OK (0) =#=#=#=
+* Passed: crm_standby           - Query standby value
+=#=#=#= Begin test: Delete standby value =#=#=#=
+Deleted nodes attribute: id=nodes-node1-standby name=standby
+=#=#=#= Current cib after: Delete standby value =#=#=#=
+<cib epoch="4" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1"/>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Delete standby value - OK (0) =#=#=#=
+* Passed: crm_standby           - Delete standby value

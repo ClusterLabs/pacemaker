@@ -120,21 +120,13 @@ typedef struct cib_s cib_t;
 
 typedef struct cib_api_operations_s {
     // NOTE: sbd (as of at least 1.5.2) uses this
+    // @COMPAT At compatibility break, drop name (always use crm_system_name)
     int (*signon) (cib_t *cib, const char *name, enum cib_conn_type type);
-
-    //! \deprecated This method will be removed and should not be used
-    int (*signon_raw) (cib_t *cib, const char *name, enum cib_conn_type type,
-                       int *event_fd);
 
     // NOTE: sbd (as of at least 1.5.2) uses this
     int (*signoff) (cib_t *cib);
 
     int (*free) (cib_t *cib);
-
-    //! \deprecated This method will be removed and should not be used
-    int (*set_op_callback) (cib_t *cib, void (*callback) (const xmlNode *msg,
-                                                          int callid, int rc,
-                                                          xmlNode *output));
 
     // NOTE: sbd (as of at least 1.5.2) uses this
     int (*add_notify_callback) (cib_t *cib, const char *event,
@@ -149,9 +141,6 @@ typedef struct cib_api_operations_s {
     int (*set_connection_dnotify) (cib_t *cib,
                                    void (*dnotify) (gpointer user_data));
 
-    //! \deprecated This method will be removed and should not be used
-    int (*inputfd) (cib_t *cib);
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated This method will be removed and should not be used
     int (*noop) (cib_t *cib, int call_options);
@@ -164,18 +153,6 @@ typedef struct cib_api_operations_s {
 
     int (*query_from) (cib_t *cib, const char *host, const char *section,
                        xmlNode **output_data, int call_options);
-
-    //! \deprecated This method will be removed and should not be used
-    int (*is_master) (cib_t *cib);
-
-    //! \deprecated Use the set_primary() method instead
-    int (*set_master) (cib_t *cib, int call_options);
-
-    //! \deprecated Use the set_secondary() method instead
-    int (*set_slave) (cib_t *cib, int call_options);
-
-    //! \deprecated This method will be removed and should not be used
-    int (*set_slave_all) (cib_t *cib, int call_options);
 
     int (*sync) (cib_t *cib, const char *section, int call_options);
     int (*sync_from) (cib_t *cib, const char *host, const char *section,
@@ -192,22 +169,11 @@ typedef struct cib_api_operations_s {
     int (*modify) (cib_t *cib, const char *section, xmlNode *data,
                    int call_options);
 
-    //! \deprecated Use the \p modify() method instead
-    int (*update) (cib_t *cib, const char *section, xmlNode *data,
-                   int call_options);
-
     int (*replace) (cib_t *cib, const char *section, xmlNode *data,
                     int call_options);
     int (*remove) (cib_t *cib, const char *section, xmlNode *data,
                    int call_options);
     int (*erase) (cib_t *cib, xmlNode **output_data, int call_options);
-
-    //! \deprecated This method does nothing and should not be called
-    int (*delete_absolute) (cib_t *cib, const char *section, xmlNode *data,
-                            int call_options);
-
-    //! \deprecated This method is not implemented and should not be used
-    int (*quit) (cib_t *cib, int call_options);
 
     int (*register_notification) (cib_t *cib, const char *callback,
                                   int enabled);
@@ -275,7 +241,7 @@ typedef struct cib_api_operations_s {
      *   CIB copy)
      * * are not queries
      * * do not involve other nodes
-     * * do not affect the state of pacemaker-based itself
+     * * do not affect the state of the CIB manager itself
      *
      * Currently supported CIB API functions include:
      * * \p bump_epoch()
@@ -354,10 +320,6 @@ struct cib_s {
     void *delegate_fn;
 
     GList *notify_list;
-
-    //! \deprecated This method will be removed in a future release
-    void (*op_callback) (const xmlNode *msg, int call_id, int rc,
-                         xmlNode *output);
 
     // NOTE: sbd (as of at least 1.5.2) uses this
     cib_api_operations_t *cmds;

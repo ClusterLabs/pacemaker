@@ -1,5 +1,5 @@
 # compatible with pacemaker-cib.pc:schemadir
-schemadir=@CRM_SCHEMA_DIRECTORY@
+schemadir=@PCMK_SCHEMA_DIR@
 
 # where machine-friendly API interchange format is formalized as schemas
 schemadir4api=${schemadir}/api

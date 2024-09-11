@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,9 +13,11 @@
 #include <crm/common/agents.h>
 
 static void
-ocf_standard(void **state) {
-    uint32_t expected = pcmk_ra_cap_provider | pcmk_ra_cap_params |
-                        pcmk_ra_cap_unique | pcmk_ra_cap_promotable;
+ocf_standard(void **state)
+{
+    uint32_t expected = pcmk_ra_cap_provider | pcmk_ra_cap_params
+                        | pcmk_ra_cap_unique | pcmk_ra_cap_promotable
+                        | pcmk_ra_cap_cli_exec;
 
     assert_int_equal(pcmk_get_ra_caps("ocf"), expected);
     assert_int_equal(pcmk_get_ra_caps("OCF"), expected);
@@ -36,10 +38,17 @@ service_standard(void **state) {
     assert_int_equal(pcmk_get_ra_caps("SYSTEMD"), pcmk_ra_cap_status);
     assert_int_equal(pcmk_get_ra_caps("service"), pcmk_ra_cap_status);
     assert_int_equal(pcmk_get_ra_caps("SeRvIcE"), pcmk_ra_cap_status);
-    assert_int_equal(pcmk_get_ra_caps("lsb"), pcmk_ra_cap_status);
-    assert_int_equal(pcmk_get_ra_caps("LSB"), pcmk_ra_cap_status);
     assert_int_equal(pcmk_get_ra_caps("upstart"), pcmk_ra_cap_status);
     assert_int_equal(pcmk_get_ra_caps("uPsTaRt"), pcmk_ra_cap_status);
+}
+
+static void
+lsb_standard(void **state)
+{
+    uint32_t expected = pcmk_ra_cap_status | pcmk_ra_cap_cli_exec;
+
+    assert_int_equal(pcmk_get_ra_caps("lsb"), expected);
+    assert_int_equal(pcmk_get_ra_caps("LSB"), expected);
 }
 
 static void
@@ -59,5 +68,6 @@ PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(ocf_standard),
                 cmocka_unit_test(stonith_standard),
                 cmocka_unit_test(service_standard),
+                cmocka_unit_test(lsb_standard),
                 cmocka_unit_test(nagios_standard),
                 cmocka_unit_test(unknown_standard))

@@ -651,7 +651,7 @@ set_type(void)
             options.type = g_strdup(PCMK_XE_CRM_CONFIG);
         }
 
-    } else if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(options.type, PCMK_VALUE_REBOOT, pcmk__str_casei)) {
         options.type = g_strdup(PCMK_XE_STATUS);
 
     } else if (pcmk__str_eq(options.type, "forever", pcmk__str_casei)) {
@@ -818,7 +818,7 @@ main(int argc, char **argv)
     }
 
     the_cib = cib_new();
-    rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+    rc = cib__signon_attempts(the_cib, cib_command, 5);
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {
@@ -937,7 +937,7 @@ main(int argc, char **argv)
         if (options.command == attr_cmd_delete) {
             update = "<none>";
         }
-        crm_info("Update %s=%s sent via pacemaker-attrd",
+        crm_info("Update %s=%s sent to the attribute manager",
                  options.attr_name, update);
 
     } else if (options.command == attr_cmd_delete) {

@@ -63,6 +63,7 @@ gnutls_psk_client_credentials_t psk_cred_s;
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
 static void lrmd_tls_connection_destroy(gpointer userdata);
+static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake);
 
 typedef struct lrmd_private_s {
     uint64_t type;
@@ -91,6 +92,7 @@ typedef struct lrmd_private_s {
     int expected_late_replies;
     GList *pending_notify;
     crm_trigger_t *process_notify;
+    crm_trigger_t *handshake_trigger;
 
     lrmd_event_callback callback;
 
@@ -606,6 +608,10 @@ lrmd_tls_connection_destroy(gpointer userdata)
     if (native->pending_notify) {
         g_list_free_full(native->pending_notify, lrmd_free_xml);
         native->pending_notify = NULL;
+    }
+    if (native->handshake_trigger != NULL) {
+        mainloop_destroy_trigger(native->handshake_trigger);
+        native->handshake_trigger = NULL;
     }
 
     free(native->remote->buffer);
@@ -1241,9 +1247,10 @@ get_remote_key(const char *location, gnutls_datum_t *key)
  * \brief Initialize the Pacemaker Remote authentication key
  *
  * Try loading the Pacemaker Remote authentication key from cache if available,
- * otherwise from these locations, in order of preference: the value of the
- * PCMK_authkey_location environment variable, if set; the Pacemaker default key
- * file location; or (for historical reasons) /etc/corosync/authkey.
+ * otherwise from these locations, in order of preference:
+ *
+ * - The value of the PCMK_authkey_location environment variable, if set
+ * - The Pacemaker default key file location
  *
  * \param[out] key  Where to store key
  *
@@ -1255,12 +1262,7 @@ lrmd__init_remote_key(gnutls_datum_t *key)
     static const char *env_location = NULL;
     static bool need_env = true;
 
-    int env_rc = pcmk_rc_ok;
-    int default_rc = pcmk_rc_ok;
-    int alt_rc = pcmk_rc_ok;
-
-    bool env_is_default = false;
-    bool env_is_fallback = false;
+    int rc = pcmk_rc_ok;
 
     if (need_env) {
         env_location = pcmk__env_option(PCMK__ENV_AUTHKEY_LOCATION);
@@ -1269,87 +1271,25 @@ lrmd__init_remote_key(gnutls_datum_t *key)
 
     // Try location in environment variable, if set
     if (env_location != NULL) {
-        env_rc = get_remote_key(env_location, key);
-        if (env_rc == pcmk_rc_ok) {
+        rc = get_remote_key(env_location, key);
+        if (rc == pcmk_rc_ok) {
             return pcmk_rc_ok;
         }
 
-        env_is_default = !strcmp(env_location, DEFAULT_REMOTE_KEY_LOCATION);
-        env_is_fallback = !strcmp(env_location, ALT_REMOTE_KEY_LOCATION);
-
-        /* @TODO It would be more secure to fail, rather than fall back to the
-         * default, if an explicitly set key location is not readable, and it
-         * would be better to never use the Corosync location as a fallback.
-         * However, that would break any deployments currently working with the
-         * fallbacks.
-         *
-         * @COMPAT Change at 3.0.0
-         */
-    }
-
-    // Try default location, if environment wasn't explicitly set to it
-    if (env_is_default) {
-        default_rc = env_rc;
-    } else {
-        default_rc = get_remote_key(DEFAULT_REMOTE_KEY_LOCATION, key);
-    }
-
-    // Try fallback location, if environment wasn't set to it and default failed
-    // @COMPAT Drop at 3.0.0
-    if (env_is_fallback) {
-        alt_rc = env_rc;
-    } else if (default_rc != pcmk_rc_ok) {
-        alt_rc = get_remote_key(ALT_REMOTE_KEY_LOCATION, key);
-    }
-
-    // We have all results, so log and return
-
-    if ((env_rc != pcmk_rc_ok) && (default_rc != pcmk_rc_ok)
-        && (alt_rc != pcmk_rc_ok)) { // Environment set, everything failed
-
-        crm_warn("Could not read Pacemaker Remote key from %s (%s%s%s%s%s): %s",
-                 env_location,
-                 env_is_default? "" : "or default location ",
-                 env_is_default? "" : DEFAULT_REMOTE_KEY_LOCATION,
-                 !env_is_default && !env_is_fallback? " " : "",
-                 env_is_fallback? "" : "or fallback location ",
-                 env_is_fallback? "" : ALT_REMOTE_KEY_LOCATION,
-                 pcmk_rc_str(env_rc));
+        crm_warn("Could not read Pacemaker Remote key from %s: %s",
+                 env_location, pcmk_rc_str(rc));
         return ENOKEY;
     }
 
-    if (env_rc != pcmk_rc_ok) { // Environment set but failed, using a default
-        crm_warn("Could not read Pacemaker Remote key from %s "
-                 "(using %s location %s instead): %s",
-                 env_location,
-                 (default_rc == pcmk_rc_ok)? "default" : "fallback",
-                 (default_rc == pcmk_rc_ok)? DEFAULT_REMOTE_KEY_LOCATION : ALT_REMOTE_KEY_LOCATION,
-                 pcmk_rc_str(env_rc));
-        crm_warn("This undocumented behavior is deprecated and unsafe and will "
-                 "be removed in a future release");
+    // Try default location, if environment wasn't explicitly set to it
+    rc = get_remote_key(DEFAULT_REMOTE_KEY_LOCATION, key);
+    if (rc == pcmk_rc_ok) {
         return pcmk_rc_ok;
     }
 
-    if (default_rc != pcmk_rc_ok) {
-        if (alt_rc == pcmk_rc_ok) {
-            // Environment variable unset, used alternate location
-            // This gets caught by the default return below, but we additionally
-            // warn on this behavior here.
-            crm_warn("Read Pacemaker Remote key from alternate location %s",
-                     ALT_REMOTE_KEY_LOCATION);
-            crm_warn("This undocumented behavior is deprecated and unsafe and will "
-                     "be removed in a future release");
-        } else {
-            // Environment unset, defaults failed
-            crm_warn("Could not read Pacemaker Remote key from default location %s"
-                     " (or fallback location %s): %s",
-                     DEFAULT_REMOTE_KEY_LOCATION, ALT_REMOTE_KEY_LOCATION,
-                     pcmk_rc_str(default_rc));
-            return ENOKEY;
-        }
-    }
-
-    return pcmk_rc_ok; // Environment variable unset, a default worked
+    crm_warn("Could not read Pacemaker Remote key from default location %s: %s",
+             DEFAULT_REMOTE_KEY_LOCATION, pcmk_rc_str(rc));
+    return ENOKEY;
 }
 
 static void
@@ -1377,6 +1317,34 @@ report_async_connection_result(lrmd_t * lrmd, int rc)
     }
 }
 
+static void
+tls_handshake_failed(lrmd_t *lrmd, int tls_rc, int rc)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    crm_warn("Disconnecting after TLS handshake with "
+             "Pacemaker Remote server %s:%d failed: %s",
+             native->server, native->port,
+             (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
+    report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+
+    gnutls_deinit(*native->remote->tls_session);
+    gnutls_free(native->remote->tls_session);
+    native->remote->tls_session = NULL;
+    lrmd_tls_connection_destroy(lrmd);
+}
+
+static void
+tls_handshake_succeeded(lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
+             native->server, native->port);
+    add_tls_to_mainloop(lrmd, true);
+    report_async_connection_result(lrmd, pcmk_rc2legacy(pcmk_rc_ok));
+}
+
 /*!
  * \internal
  * \brief Perform a TLS client handshake with a Pacemaker Remote server
@@ -1394,15 +1362,9 @@ tls_client_handshake(lrmd_t *lrmd)
                                         &tls_rc);
 
     if (rc != pcmk_rc_ok) {
-        crm_warn("Disconnecting after TLS handshake with "
-                 "Pacemaker Remote server %s:%d failed: %s",
-                 native->server, native->port,
-                 (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
-        gnutls_deinit(*native->remote->tls_session);
-        gnutls_free(native->remote->tls_session);
-        native->remote->tls_session = NULL;
-        lrmd_tls_connection_destroy(lrmd);
+        tls_handshake_failed(lrmd, tls_rc, rc);
     }
+
     return rc;
 }
 
@@ -1448,12 +1410,55 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake)
     return rc;
 }
 
+struct handshake_data_s {
+    lrmd_t *lrmd;
+    time_t start_time;
+    int timeout_sec;
+};
+
+static gboolean
+try_handshake_cb(gpointer user_data)
+{
+    struct handshake_data_s *hs = user_data;
+    lrmd_t *lrmd = hs->lrmd;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    pcmk__remote_t *remote = native->remote;
+
+    int rc = pcmk_rc_ok;
+    int tls_rc = GNUTLS_E_SUCCESS;
+
+    if (time(NULL) >= hs->start_time + hs->timeout_sec) {
+        rc = ETIME;
+
+        tls_handshake_failed(lrmd, GNUTLS_E_TIMEDOUT, rc);
+        free(hs);
+        return 0;
+    }
+
+    rc = pcmk__tls_client_try_handshake(remote, &tls_rc);
+
+    if (rc == pcmk_rc_ok) {
+        tls_handshake_succeeded(lrmd);
+        free(hs);
+        return 0;
+    } else if (rc == EAGAIN) {
+        mainloop_set_trigger(native->handshake_trigger);
+        return 1;
+    } else {
+        rc = EKEYREJECTED;
+        tls_handshake_failed(lrmd, tls_rc, rc);
+        free(hs);
+        return 0;
+    }
+}
+
 static void
 lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
     gnutls_datum_t psk_key = { NULL, 0 };
+    int tls_rc = GNUTLS_E_SUCCESS;
 
     native->async_timer = 0;
 
@@ -1466,9 +1471,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
         return;
     }
 
-    /* The TCP connection was successful, so establish the TLS connection.
-     * @TODO make this async to avoid blocking code in client
-     */
+    /* The TCP connection was successful, so establish the TLS connection. */
 
     native->sock = sock;
 
@@ -1495,15 +1498,32 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
         return;
     }
 
-    if (tls_client_handshake(lrmd) != pcmk_rc_ok) {
-        report_async_connection_result(lrmd, -EKEYREJECTED);
-        return;
-    }
+    /* If the TLS handshake immediately succeeds or fails, we can handle that
+     * now without having to deal with mainloops and retries.  Otherwise, add a
+     * trigger to keep trying until we get a result (or it times out).
+     */
+    rc = pcmk__tls_client_try_handshake(native->remote, &tls_rc);
+    if (rc == EAGAIN) {
+        struct handshake_data_s *hs = NULL;
 
-    crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
-             native->server, native->port);
-    rc = add_tls_to_mainloop(lrmd, true);
-    report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+        if (native->handshake_trigger != NULL) {
+            return;
+        }
+
+        hs = pcmk__assert_alloc(1, sizeof(struct handshake_data_s));
+        hs->lrmd = lrmd;
+        hs->start_time = time(NULL);
+        hs->timeout_sec = TLS_HANDSHAKE_TIMEOUT;
+
+        native->handshake_trigger = mainloop_add_trigger(G_PRIORITY_LOW, try_handshake_cb, hs);
+        mainloop_set_trigger(native->handshake_trigger);
+
+    } else if (rc == pcmk_rc_ok) {
+        tls_handshake_succeeded(lrmd);
+
+    } else {
+        tls_handshake_failed(lrmd, tls_rc, rc);
+    }
 }
 
 static int
@@ -1626,10 +1646,6 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
             break;
         case pcmk__client_tls:
             rc = lrmd_tls_connect_async(lrmd, timeout);
-            if (rc) {
-                /* connection failed, report rc now */
-                report_async_connection_result(lrmd, rc);
-            }
             break;
         default:
             crm_err("Unsupported executor connection type (bug?): %d",

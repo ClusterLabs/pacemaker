@@ -61,7 +61,7 @@ bool pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node);
 char *native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
                        const char *name, pcmk_scheduler_t *scheduler);
 pcmk_node_t *native_location(const pcmk_resource_t *rsc, GList **list,
-                             int current);
+                             uint32_t target);
 void native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                         pcmk_scheduler_t *scheduler, gboolean failed);
 
@@ -242,9 +242,6 @@ gboolean get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role);
 void pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role,
                        const char *why);
 
-pcmk_resource_t *find_clone_instance(const pcmk_resource_t *rsc,
-                                     const char *sub_id);
-
 extern void destroy_ticket(gpointer data);
 pcmk__ticket_t *ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler);
 
@@ -363,7 +360,6 @@ void pe__register_messages(pcmk__output_t *out);
 void pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                                 const pe_rule_eval_data_t *rule_data,
                                 GHashTable *hash, const char *always_first,
-                                gboolean overwrite,
                                 pcmk_scheduler_t *scheduler);
 
 bool pe__resource_is_disabled(const pcmk_resource_t *rsc);

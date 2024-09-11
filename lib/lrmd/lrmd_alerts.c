@@ -27,16 +27,11 @@ static lrmd_key_value_t *
 alert_key2param(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
                 const char *value)
 {
-    const char **key;
-
     if (value == NULL) {
         value = "";
     }
-    for (key = pcmk__alert_keys[name]; *key; key++) {
-        crm_trace("Setting alert key %s = '%s'", *key, value);
-        head = lrmd_key_value_add(head, *key, value);
-    }
-    return head;
+    crm_trace("Setting alert key %s = '%s'", pcmk__alert_keys[name], value);
+    return lrmd_key_value_add(head, pcmk__alert_keys[name], value);
 }
 
 static lrmd_key_value_t *

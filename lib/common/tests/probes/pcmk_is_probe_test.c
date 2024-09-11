@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/probes.h>
 #include <crm/common/unittest_internal.h>
 
 static void

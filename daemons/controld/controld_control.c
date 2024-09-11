@@ -41,14 +41,13 @@ do_ha_control(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     gboolean registered = FALSE;
-    static pcmk_cluster_t *cluster = NULL;
 
-    if (cluster == NULL) {
-        cluster = pcmk_cluster_new();
+    if (controld_globals.cluster == NULL) {
+        controld_globals.cluster = pcmk_cluster_new();
     }
 
     if (action & A_HA_DISCONNECT) {
-        pcmk_cluster_disconnect(cluster);
+        pcmk_cluster_disconnect(controld_globals.cluster);
         crm_info("Disconnected from the cluster");
 
         controld_set_fsa_input_flags(R_HA_DISCONNECTED);
@@ -60,17 +59,14 @@ do_ha_control(long long action,
 
 #if SUPPORT_COROSYNC
         if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-            registered = crm_connect_corosync(cluster);
+            registered = crm_connect_corosync(controld_globals.cluster);
         }
 #endif // SUPPORT_COROSYNC
 
         if (registered) {
-            pcmk__node_status_t *node =
-                pcmk__get_node(cluster->priv->node_id, cluster->priv->node_name,
-                               NULL, pcmk__node_search_cluster_member);
+            pcmk__node_status_t *node = controld_get_local_node_status();
 
-            controld_election_init(cluster->priv->node_name);
-            controld_globals.our_nodename = cluster->priv->node_name;
+            controld_election_init();
 
             free(controld_globals.our_uuid);
             controld_globals.our_uuid =
@@ -123,9 +119,10 @@ do_shutdown_req(long long action,
     //controld_set_fsa_input_flags(R_STAYDOWN);
     crm_info("Sending shutdown request to all peers (DC is %s)",
              pcmk__s(controld_globals.dc_name, "not set"));
-    msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+    msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
+                            CRM_SYSTEM_CRMD, CRM_OP_SHUTDOWN_REQ, NULL);
 
-    if (!pcmk__cluster_send_message(NULL, pcmk__cluster_msg_controld, msg)) {
+    if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
     pcmk__xml_free(msg);
@@ -230,7 +227,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_globals.fsa_message_queue = NULL;
 
     controld_free_node_pending_timers();
-    controld_election_fini();
+    election_reset(controld_globals.cluster); // Stop any election timer
 
     /* Tear down the CIB manager connection, but don't free it yet -- it could
      * be used when we drain the mainloop later.
@@ -254,9 +251,6 @@ crmd_exit(crm_exit_t exit_code)
     controld_free_fsa_timers();
     te_cleanup_stonith_history_sync(NULL, TRUE);
     controld_free_sched_timer();
-
-    free(controld_globals.our_nodename);
-    controld_globals.our_nodename = NULL;
 
     free(controld_globals.our_uuid);
     controld_globals.our_uuid = NULL;
@@ -317,6 +311,9 @@ crmd_exit(crm_exit_t exit_code)
     controld_globals.cib_conn = NULL;
 
     throttle_fini();
+
+    pcmk_cluster_free(controld_globals.cluster);
+    controld_globals.cluster = NULL;
 
     /* Graceful */
     crm_trace("Done preparing for exit with status %d (%s)",
@@ -583,9 +580,10 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     controld_verify_stonith_watchdog_timeout(value);
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
-    if (pcmk__str_eq(value, PCMK_VALUE_FENCE_LEGACY, pcmk__str_casei)
+    if (pcmk__strcase_any_of(value, PCMK_VALUE_FENCE, PCMK_VALUE_FENCE_LEGACY,
+                             NULL)
         && (pcmk__locate_sbd() != 0)) {
-        controld_set_global_flags(controld_no_quorum_suicide);
+        controld_set_global_flags(controld_no_quorum_panic);
     }
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_SHUTDOWN_LOCK);

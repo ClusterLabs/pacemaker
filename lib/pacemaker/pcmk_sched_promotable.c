@@ -183,7 +183,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
         }
     }
 
-    node = rsc->priv->fns->location(rsc, NULL, FALSE);
+    node = rsc->priv->fns->location(rsc, NULL, pcmk__rsc_node_assigned);
     if (node == NULL) {
         pcmk__rsc_trace(rsc, "%s can't be promoted because it won't be active",
                         rsc->id);
@@ -332,7 +332,7 @@ add_promotion_priority_to_node_score(gpointer data, gpointer user_data)
         return;
     }
 
-    chosen = child->priv->fns->location(child, NULL, FALSE);
+    chosen = child->priv->fns->location(child, NULL, pcmk__rsc_node_assigned);
     if (chosen == NULL) {
         pcmk__rsc_trace(clone, "Not adding promotion priority of %s: inactive",
                         child->id);
@@ -350,37 +350,6 @@ add_promotion_priority_to_node_score(gpointer data, gpointer user_data)
                     "(now %d)",
                     child->id, pcmk_readable_score(promotion_priority),
                     pcmk__node_name(node), node->assign->score);
-}
-
-/*!
- * \internal
- * \brief Apply colocation to dependent's node scores if for promoted role
- *
- * \param[in,out] data       Colocation constraint to apply
- * \param[in,out] user_data  Promotable clone that is constraint's dependent
- */
-static void
-apply_coloc_to_dependent(gpointer data, gpointer user_data)
-{
-    pcmk__colocation_t *colocation = data;
-    pcmk_resource_t *clone = user_data;
-    pcmk_resource_t *primary = colocation->primary;
-    uint32_t flags = pcmk__coloc_select_default;
-    float factor = colocation->score / (float) PCMK_SCORE_INFINITY;
-
-    if (colocation->dependent_role != pcmk_role_promoted) {
-        return;
-    }
-    if (colocation->score < PCMK_SCORE_INFINITY) {
-        flags = pcmk__coloc_select_active;
-    }
-    pcmk__rsc_trace(clone, "Applying colocation %s (promoted %s with %s) @%s",
-                    colocation->id, colocation->dependent->id,
-                    colocation->primary->id,
-                    pcmk_readable_score(colocation->score));
-    primary->priv->cmds->add_colocated_node_scores(primary, clone, clone->id,
-                                                   &(clone->priv->allowed_nodes),
-                                                   colocation, factor, flags);
 }
 
 /*!
@@ -428,7 +397,8 @@ set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
     pcmk_resource_t *child = (pcmk_resource_t *) data;
     const pcmk_resource_t *clone = (const pcmk_resource_t *) user_data;
 
-    pcmk_node_t *chosen = child->priv->fns->location(child, NULL, FALSE);
+    pcmk_node_t *chosen = child->priv->fns->location(child, NULL,
+                                                     pcmk__rsc_node_assigned);
 
     if (!pcmk_is_set(child->flags, pcmk__rsc_managed)
         && (child->priv->next_role == pcmk_role_promoted)) {
@@ -502,10 +472,7 @@ sort_promotable_instances(pcmk_resource_t *clone)
     g_list_foreach(clone->priv->children,
                    add_promotion_priority_to_node_score, clone);
 
-    colocations = pcmk__this_with_colocations(clone);
-    g_list_foreach(colocations, apply_coloc_to_dependent, clone);
-    g_list_free(colocations);
-
+    // "this with" colocations were already applied via set_instance_priority()
     colocations = pcmk__with_this_colocations(clone);
     g_list_foreach(colocations, apply_coloc_to_primary, clone);
     g_list_free(colocations);
@@ -890,7 +857,7 @@ set_next_role_unpromoted(void *data, void *user_data)
     pcmk_resource_t *rsc = (pcmk_resource_t *) data;
     GList *assigned = NULL;
 
-    rsc->priv->fns->location(rsc, &assigned, FALSE);
+    rsc->priv->fns->location(rsc, &assigned, pcmk__rsc_node_assigned);
     if (assigned == NULL) {
         pe__set_next_role(rsc, pcmk_role_stopped, "stopped instance");
     } else {
@@ -927,9 +894,11 @@ set_next_role_promoted(void *data, gpointer user_data)
 static void
 show_promotion_score(pcmk_resource_t *instance)
 {
-    pcmk_node_t *chosen = instance->priv->fns->location(instance, NULL, FALSE);
+    pcmk_node_t *chosen = NULL;
     const char *score_s = NULL;
 
+    chosen = instance->priv->fns->location(instance, NULL,
+                                           pcmk__rsc_node_assigned);
     score_s = pcmk_readable_score(instance->priv->promotion_priority);
     if (pcmk_is_set(instance->priv->scheduler->flags,
                     pcmk__sched_output_scores)
@@ -978,7 +947,8 @@ set_instance_priority(gpointer data, gpointer user_data)
     }
 
     // Only an instance that will be active can be promoted
-    chosen = instance->priv->fns->location(instance, &list, FALSE);
+    chosen = instance->priv->fns->location(instance, &list,
+                                           pcmk__rsc_node_assigned);
     if (pcmk__list_of_multiple(list)) {
         pcmk__config_err("Cannot promote non-colocated child %s",
                          instance->id);
@@ -1296,9 +1266,10 @@ pcmk__update_dependent_with_promotable(const pcmk_resource_t *primary,
          iter != NULL; iter = iter->next) {
 
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
-        pcmk_node_t *node = instance->priv->fns->location(instance, NULL,
-                                                          FALSE);
+        pcmk_node_t *node = NULL;
 
+        node = instance->priv->fns->location(instance, NULL,
+                                             pcmk__rsc_node_assigned);
         if (node == NULL) {
             continue;
         }
@@ -1338,8 +1309,10 @@ pcmk__update_dependent_with_promotable(const pcmk_resource_t *primary,
  * \param[in]     primary     Primary resource in the colocation
  * \param[in,out] dependent   Dependent resource in the colocation
  * \param[in]     colocation  Colocation constraint to apply
+ *
+ * \return The score added to the dependent's priority
  */
-void
+int
 pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
                                            pcmk_resource_t *dependent,
                                            const pcmk__colocation_t *colocation)
@@ -1365,13 +1338,17 @@ pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
                         pcmk_readable_score(colocation->score),
                         pcmk_readable_score(new_priority));
         dependent->priv->priority = new_priority;
+        return colocation->score;
+    }
 
-    } else if (colocation->score >= PCMK_SCORE_INFINITY) {
+    if (colocation->score >= PCMK_SCORE_INFINITY) {
         // Mandatory colocation, but primary won't be here
         pcmk__rsc_trace(colocation->primary,
                         "Applying %s (%s with %s) to %s: can't be promoted",
                         colocation->id, colocation->dependent->id,
                         colocation->primary->id, dependent->id);
         dependent->priv->priority = -PCMK_SCORE_INFINITY;
+        return -PCMK_SCORE_INFINITY;
     }
+    return 0;
 }
