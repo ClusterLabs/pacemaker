@@ -287,6 +287,19 @@ pcmk__format_nvpair(const char *name, const char *value, const char *units)
 
 // XML attribute handling
 
+xmlAttr *
+pcmk__xe_set_attr_force(xmlNode *node, const char *name, const char *value)
+{
+    xmlAttr *attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
+
+    /* If the attribute already exists, this does nothing. Attribute values
+     * don't get private data.
+     */
+    pcmk__xml_new_private_data((xmlNode *) attr);
+
+    return attr;
+}
+
 /*!
  * \brief Create an XML attribute with specified name and value
  *
@@ -323,7 +336,7 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
         return NULL;
     }
 
-    attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
+    attr = pcmk__xe_set_attr_force(node, name, value);
     if (dirty) {
         pcmk__mark_xml_attr_dirty(attr);
     }
@@ -1055,7 +1068,7 @@ crm_xml_replace(xmlNode *node, const char *name, const char *value)
         }
     }
 
-    attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
+    attr = pcmk__xe_set_attr_force(node, name, value);
     if (dirty) {
         pcmk__mark_xml_attr_dirty(attr);
     }

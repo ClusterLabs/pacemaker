@@ -252,7 +252,7 @@ pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml) {
     }
 
     if (*xml != NULL) {
-        xmlFreeNode(*xml);
+        free_xml(*xml);
         *xml = NULL;
     }
     pcmk__register_formats(NULL, xml_format);

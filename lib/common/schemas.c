@@ -984,6 +984,9 @@ apply_transformation(const xmlNode *xml, const char *transform,
     xslt = xsltParseStylesheetFile((pcmkXmlStr) xform);
     CRM_CHECK(xslt != NULL, goto cleanup);
 
+    /* Caller allocates private data for final result document. Intermediate
+     * result documents are temporary and don't need private data.
+     */
     res = xsltApplyStylesheet(xslt, xml->doc, NULL);
     CRM_CHECK(res != NULL, goto cleanup);
 
@@ -1086,6 +1089,9 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
     if (final == NULL) {
         return NULL;
     }
+
+    // Final result document from upgrade pipeline needs private data
+    pcmk__xml_new_private_data((xmlNode *) final->doc);
 
     // Ensure result validates with its new schema
     if (!validate_with(final, upgraded_schema, error_handler,

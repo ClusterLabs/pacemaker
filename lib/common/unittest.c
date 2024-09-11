@@ -70,15 +70,41 @@ pcmk__assert_validates(xmlNode *xml)
     free(xmllint_input);
 }
 
+/*!
+ * \internal
+ * \brief Perform setup for a group of unit tests that manipulate XML
+ *
+ * This function is suitable for being passed as the first argument to the
+ * \c PCMK__UNIT_TEST macro.
+ *
+ * \param[in] state  Ignored
+ *
+ * \return 0
+ */
 int
 pcmk__xml_test_setup_group(void **state)
 {
-    /* This needs to be run before we run unit tests that manipulate XML.
-     * Without it, document private data won't get created, which can cause
-     * segmentation faults or assertions in functions related to change
-     * tracking and ACLs. There's no harm in doing this before all tests.
-     */
+    // Load schemas and set libxml2 buffer allocation scheme
     crm_xml_init();
+    return 0;
+}
+
+/*!
+ * \internal
+ * \brief Perform teardown for a group of unit tests that manipulate XML
+ *
+ * This function is suitable for being passed as the second argument to the
+ * \c PCMK__UNIT_TEST macro.
+ *
+ * \param[in] state  Ignored
+ *
+ * \return 0
+ */
+int
+pcmk__xml_test_teardown_group(void **state)
+{
+    // Clean up schemas and libxml2 global memory
+    crm_xml_cleanup();
     return 0;
 }
 

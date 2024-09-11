@@ -396,7 +396,7 @@ Call failed: Permission denied
 =#=#=#= End test: l33t-haxor: Create a resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - l33t-haxor: Create a resource
 =#=#=#= Begin test: niceguy: Query configuration =#=#=#=
-<cib epoch="7" num_updates="0" admin_epoch="0">
+<cib epoch="8" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -468,7 +468,7 @@ crm_attribute: Error performing operation: Permission denied
 =#=#=#= Begin test: niceguy: Set stonith-enabled =#=#=#=
 pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="cib-bootstrap-options-stonith-enabled"
 =#=#=#= Current cib after: niceguy: Set stonith-enabled =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -539,7 +539,7 @@ Call failed: Permission denied
 =#=#=#= End test: niceguy: Create a resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - niceguy: Create a resource
 =#=#=#= Begin test: root: Query configuration =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -605,7 +605,7 @@ Call failed: Permission denied
 * Passed: cibadmin       - root: Query configuration
 =#=#=#= Begin test: root: Set stonith-enabled =#=#=#=
 =#=#=#= Current cib after: root: Set stonith-enabled =#=#=#=
-<cib epoch="9" num_updates="0" admin_epoch="0">
+<cib epoch="10" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -671,7 +671,7 @@ Call failed: Permission denied
 * Passed: crm_attribute  - root: Set stonith-enabled
 =#=#=#= Begin test: root: Create a resource =#=#=#=
 =#=#=#= Current cib after: root: Create a resource =#=#=#=
-<cib epoch="10" num_updates="0" admin_epoch="0">
+<cib epoch="11" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -757,7 +757,7 @@ pcmk__apply_creation_acl 	trace: Creation of <meta_attributes> scaffolding with 
 pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="dummy-meta_attributes-target-role"
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Stopped
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0">
+<cib epoch="12" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -833,7 +833,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Stopped
 =#=#=#= Current cib after: niceguy: Query a resource meta attribute =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0">
+<cib epoch="12" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -909,7 +909,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= Current cib after: niceguy: Remove a resource meta attribute =#=#=#=
-<cib epoch="12" num_updates="0" admin_epoch="0">
+<cib epoch="13" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -984,7 +984,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="dummy-meta_attributes-target-role"
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Started
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
-<cib epoch="13" num_updates="0" admin_epoch="0">
+<cib epoch="14" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1082,7 +1082,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
 </cib>
 =#=#=#= End test: betteridea: Query configuration - explicit deny - OK (0) =#=#=#=
 * Passed: cibadmin       - betteridea: Query configuration - explicit deny
-<cib epoch="14" num_updates="0" admin_epoch="0">
+<cib epoch="15" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1109,7 +1109,7 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - remove acls - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - remove acls
-<cib epoch="14" num_updates="0" admin_epoch="0">
+<cib epoch="15" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1185,7 +1185,7 @@ pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - create resource
-<cib epoch="14" num_updates="0" admin_epoch="0">
+<cib epoch="15" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1259,7 +1259,7 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - modify attribute (deny) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - modify attribute (deny)
-<cib epoch="14" num_updates="0" admin_epoch="0">
+<cib epoch="15" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1333,7 +1333,7 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - delete attribute (deny) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - delete attribute (deny)
-<cib epoch="14" num_updates="0" admin_epoch="0">
+<cib epoch="15" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1407,7 +1407,7 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create attribute (deny) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - niceguy: Replace - create attribute (deny)
-<cib epoch="14" num_updates="0" admin_epoch="0">
+<cib epoch="15" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1478,7 +1478,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: bob: Replace - create attribute (direct allow) =#=#=#=
 =#=#=#= End test: bob: Replace - create attribute (direct allow) - OK (0) =#=#=#=
 * Passed: cibadmin       - bob: Replace - create attribute (direct allow)
-<cib epoch="15" num_updates="0" admin_epoch="0">
+<cib epoch="16" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1549,7 +1549,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: bob: Replace - modify attribute (direct allow) =#=#=#=
 =#=#=#= End test: bob: Replace - modify attribute (direct allow) - OK (0) =#=#=#=
 * Passed: cibadmin       - bob: Replace - modify attribute (direct allow)
-<cib epoch="16" num_updates="0" admin_epoch="0">
+<cib epoch="17" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1616,7 +1616,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: bob: Replace - delete attribute (direct allow) =#=#=#=
 =#=#=#= End test: bob: Replace - delete attribute (direct allow) - OK (0) =#=#=#=
 * Passed: cibadmin       - bob: Replace - delete attribute (direct allow)
-<cib epoch="17" num_updates="0" admin_epoch="0">
+<cib epoch="18" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1683,7 +1683,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: joe: Replace - create attribute (inherited allow) =#=#=#=
 =#=#=#= End test: joe: Replace - create attribute (inherited allow) - OK (0) =#=#=#=
 * Passed: cibadmin       - joe: Replace - create attribute (inherited allow)
-<cib epoch="18" num_updates="0" admin_epoch="0">
+<cib epoch="19" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1750,7 +1750,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: joe: Replace - modify attribute (inherited allow) =#=#=#=
 =#=#=#= End test: joe: Replace - modify attribute (inherited allow) - OK (0) =#=#=#=
 * Passed: cibadmin       - joe: Replace - modify attribute (inherited allow)
-<cib epoch="19" num_updates="0" admin_epoch="0">
+<cib epoch="20" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1817,7 +1817,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: joe: Replace - delete attribute (inherited allow) =#=#=#=
 =#=#=#= End test: joe: Replace - delete attribute (inherited allow) - OK (0) =#=#=#=
 * Passed: cibadmin       - joe: Replace - delete attribute (inherited allow)
-<cib epoch="20" num_updates="0" admin_epoch="0">
+<cib epoch="21" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1884,7 +1884,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: mike: Replace - create attribute (allow overrides deny) =#=#=#=
 =#=#=#= End test: mike: Replace - create attribute (allow overrides deny) - OK (0) =#=#=#=
 * Passed: cibadmin       - mike: Replace - create attribute (allow overrides deny)
-<cib epoch="21" num_updates="0" admin_epoch="0">
+<cib epoch="22" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1951,7 +1951,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: mike: Replace - modify attribute (allow overrides deny) =#=#=#=
 =#=#=#= End test: mike: Replace - modify attribute (allow overrides deny) - OK (0) =#=#=#=
 * Passed: cibadmin       - mike: Replace - modify attribute (allow overrides deny)
-<cib epoch="22" num_updates="0" admin_epoch="0">
+<cib epoch="23" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2018,7 +2018,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: mike: Replace - delete attribute (allow overrides deny) =#=#=#=
 =#=#=#= End test: mike: Replace - delete attribute (allow overrides deny) - OK (0) =#=#=#=
 * Passed: cibadmin       - mike: Replace - delete attribute (allow overrides deny)
-<cib epoch="23" num_updates="0" admin_epoch="0">
+<cib epoch="24" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2087,7 +2087,7 @@ pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib
 Call failed: Permission denied
 =#=#=#= End test: chris: Replace - create attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - chris: Replace - create attribute (deny overrides allow)
-<cib epoch="24" num_updates="0" admin_epoch="0">
+<cib epoch="25" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2156,7 +2156,7 @@ pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib
 Call failed: Permission denied
 =#=#=#= End test: chris: Replace - modify attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - chris: Replace - modify attribute (deny overrides allow)
-<cib epoch="25" num_updates="0" admin_epoch="0">
+<cib epoch="26" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

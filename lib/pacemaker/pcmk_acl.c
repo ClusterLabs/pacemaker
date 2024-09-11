@@ -240,22 +240,18 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
     ret = annotate_with_siblings(target);
 
     if (ret == pcmk_rc_ok) {
-        char *credentials = crm_strdup_printf("ACLs as evaluated for user %s",
-                                              cred);
+        char *content = crm_strdup_printf("ACLs as evaluated for user %s",
+                                          cred);
 
-        comment = xmlNewDocComment(target->doc, (pcmkXmlStr) credentials);
-        free(credentials);
-        if (comment == NULL) {
-            xmlFreeNode(target);
-            return EINVAL;
-        }
+        comment = pcmk__xc_create(target->doc, content);
         xmlAddPrevSibling(xmlDocGetRootElement(target->doc), comment);
         *acl_evaled_doc = target->doc;
-        return pcmk_rc_ok;
+        free(content);
+
     } else {
-        xmlFreeNode(target);
-        return ret; //for now, it should be some kind of error
+        free_xml(target);
     }
+    return ret;
 }
 
 int
@@ -317,11 +313,15 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     }
 
     xmlDocDumpFormatMemory(annotated_doc, &annotated_dump, &dump_size, 1);
+
+    /* res does not need private data: it's temporary and used only with libxslt
+     * functions
+     */
     res = xmlReadDoc(annotated_dump, "on-the-fly-access-render", NULL,
                      XML_PARSE_NONET);
     CRM_ASSERT(res != NULL);
     xmlFree(annotated_dump);
-    xmlFreeDoc(annotated_doc);
+    pcmk__xml_free_doc(annotated_doc);
     annotated_doc = res;
 
     sfile = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_base_xslt,
@@ -365,7 +365,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     res = xsltApplyStylesheetUser(xslt, annotated_doc, NULL,
                                   NULL, NULL, xslt_ctxt);
 
-    xmlFreeDoc(annotated_doc);
+    pcmk__xml_free_doc(annotated_doc);
     annotated_doc = NULL;
     xsltFreeTransformContext(xslt_ctxt);
     xslt_ctxt = NULL;
@@ -383,7 +383,8 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     } else {
         int doc_txt_len;
         int temp = xsltSaveResultToString(doc_txt_ptr, &doc_txt_len, res, xslt);
-        xmlFreeDoc(res);
+
+        pcmk__xml_free_doc(res);
         if (temp != 0) {
             rc = EINVAL;
         }

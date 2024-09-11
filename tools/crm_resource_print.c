@@ -451,7 +451,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
         }
         if (doc != NULL) {
             out->output_xml(out, PCMK_XE_COMMAND, stdout_data);
-            xmlFreeNode(doc);
+            free_xml(doc);
         } else {
             out->subprocess_output(out, rc, stdout_data, stderr_data);
         }
@@ -519,7 +519,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
         }
         if (doc != NULL) {
             out->output_xml(out, PCMK_XE_COMMAND, stdout_data);
-            xmlFreeNode(doc);
+            free_xml(doc);
         } else {
             out->subprocess_output(out, rc, stdout_data, stderr_data);
         }

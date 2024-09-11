@@ -238,7 +238,7 @@ Revised Cluster Status:
 * Passed: crm_simulate   - Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)
 =#=#=#= Begin test: Make resulting CIB valid, although without validate-with attribute =#=#=#=
 =#=#=#= Current cib after: Make resulting CIB valid, although without validate-with attribute =#=#=#=
-<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="none">
+<cib epoch="4" num_updates="1" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -331,7 +331,7 @@ element rsc_order: Relax-NG validity error : Element constraints has extra conte
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 =#=#=#= Current cib after: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
-<cib epoch="41" num_updates="0" admin_epoch="0" validate-with="none">
+<cib epoch="41" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>

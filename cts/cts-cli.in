@@ -3547,8 +3547,7 @@ for t in $tests; do
     # test we also need to compare against the XML output of the crm_mon
     # program. There, these are shown as human readable strings (like the
     # output of the `date` command).
-    sed -e 's|\(<cib.*\) cib-last-written[^/]*/>|\1/>|' \
-        -e 's|\(<cib.*\) cib-last-written[^/]*>|\1>|' \
+    sed -e 's|\(<cib.*\) cib-last-written="[^"]*"|\1|' \
         -e 's/Last updated: .*/Last updated:/' \
         -e 's/Last change: .*/Last change:/' \
         -e 's/(version .*)/(version)/' \
@@ -3562,7 +3561,7 @@ for t in $tests; do
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/@crm_feature_set=[0-9.]*, //'\
         -e 's/\(<change-attr name="crm_feature_set" .* value="\)[0-9.]*"/\1"/' \
-        -e 's/validate-with="[^"]*" //'\
+        -e 's/ validate-with="[^"]*"//'\
         -e 's/\(@validate-with=pacemaker-\)[0-9.]*,/\1X,/' \
         -e 's/\(<change-attr name="validate-with" .* value="pacemaker-\)[0-9.]*"/\1X"/' \
         -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
