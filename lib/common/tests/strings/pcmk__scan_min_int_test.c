@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,7 +16,7 @@ empty_input_string(void **state)
 {
     int result;
 
-    assert_int_equal(pcmk__scan_min_int("", &result, 1), EINVAL);
+    assert_int_equal(pcmk__scan_min_int("", &result, 1), pcmk_rc_bad_input);
     assert_int_equal(result, 1);
 
     assert_int_equal(pcmk__scan_min_int(NULL, &result, 1), pcmk_rc_ok);

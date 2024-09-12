@@ -448,9 +448,23 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Create a new node object in scheduler data
+ *
+ * \param[in]     id         ID of new node
+ * \param[in]     uname      Name of new node
+ * \param[in]     type       Type of new node
+ * \param[in]     score      Score of new node
+ * \param[in,out] scheduler  Scheduler data
+ *
+ * \return Newly created node object
+ * \note The returned object is part of the scheduler data and should not be
+ *       freed separately.
+ */
 pcmk_node_t *
 pe_create_node(const char *id, const char *uname, const char *type,
-               const char *score, pcmk_scheduler_t *scheduler)
+               int score, pcmk_scheduler_t *scheduler)
 {
     enum pcmk__node_variant variant = pcmk__node_variant_cluster;
     pcmk_node_t *new_node = NULL;
@@ -502,7 +516,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     }
 
     crm_trace("Creating node for entry %s/%s", uname, id);
-    new_node->assign->score = char2score(score);
+    new_node->assign->score = score;
     new_node->priv->id = id;
     new_node->priv->name = uname;
     new_node->priv->flags = pcmk__node_probes_allowed;
@@ -623,24 +637,33 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
     const char *id = NULL;
     const char *uname = NULL;
     const char *type = NULL;
-    const char *score = NULL;
 
     for (xml_obj = pcmk__xe_first_child(xml_nodes, NULL, NULL, NULL);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
 
         if (pcmk__xe_is(xml_obj, PCMK_XE_NODE)) {
+            int score = 0;
+            int rc = pcmk__xe_get_score(xml_obj, PCMK_XA_SCORE, &score, 0);
+
             new_node = NULL;
 
             id = crm_element_value(xml_obj, PCMK_XA_ID);
             uname = crm_element_value(xml_obj, PCMK_XA_UNAME);
             type = crm_element_value(xml_obj, PCMK_XA_TYPE);
-            score = crm_element_value(xml_obj, PCMK_XA_SCORE);
             crm_trace("Processing node %s/%s", uname, id);
 
             if (id == NULL) {
                 pcmk__config_err("Ignoring <" PCMK_XE_NODE
                                  "> entry in configuration without id");
                 continue;
+            }
+            if (rc != pcmk_rc_ok) {
+                // Not possible with schema validation enabled
+                pcmk__config_warn("Using 0 as score for node %s "
+                                  "because '%s' is not a valid score: %s",
+                                  pcmk__s(uname, "without name"),
+                                  crm_element_value(xml_obj, PCMK_XA_SCORE),
+                                  pcmk_rc_str(rc));
             }
             new_node = pe_create_node(id, uname, type, score, scheduler);
 
@@ -716,7 +739,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                 crm_trace("Found remote node %s defined by resource %s",
                           new_node_id, pcmk__xe_id(xml_obj));
                 pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
-                               NULL, scheduler);
+                               0, scheduler);
             }
             continue;
         }
@@ -736,7 +759,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                 crm_trace("Found guest node %s in resource %s",
                           new_node_id, pcmk__xe_id(xml_obj));
                 pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
-                               NULL, scheduler);
+                               0, scheduler);
             }
             continue;
         }
@@ -758,7 +781,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                               new_node_id, pcmk__xe_id(xml_obj2),
                               pcmk__xe_id(xml_obj));
                     pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
-                                   NULL, scheduler);
+                                   0, scheduler);
                 }
             }
         }
@@ -1022,9 +1045,15 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
 
     last_granted = g_hash_table_lookup(ticket->state, PCMK_XA_LAST_GRANTED);
     if (last_granted) {
-        long long last_granted_ll;
+        long long last_granted_ll = 0LL;
+        int rc = pcmk__scan_ll(last_granted, &last_granted_ll, 0LL);
 
-        pcmk__scan_ll(last_granted, &last_granted_ll, 0LL);
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Using %lld instead of invalid " PCMK_XA_LAST_GRANTED
+                     " value '%s' in state for ticket %s: %s",
+                     last_granted_ll, last_granted, ticket->id,
+                     pcmk_rc_str(rc));
+        }
         ticket->last_granted = (time_t) last_granted_ll;
     }
 
@@ -1566,6 +1595,7 @@ unpack_node_terminate(const pcmk_node_t *node, const xmlNode *node_state)
 {
     long long value = 0LL;
     int value_i = 0;
+    int rc = pcmk_rc_ok;
     const char *value_s = pcmk__node_attr(node, PCMK_NODE_ATTR_TERMINATE,
                                           NULL, pcmk__rsc_node_current);
 
@@ -1573,11 +1603,13 @@ unpack_node_terminate(const pcmk_node_t *node, const xmlNode *node_state)
     if (crm_str_to_boolean(value_s, &value_i) == 1) {
         return (value_i != 0);
     }
-    if (pcmk__scan_ll(value_s, &value, 0LL) == pcmk_rc_ok) {
+    rc = pcmk__scan_ll(value_s, &value, 0LL);
+    if (rc == pcmk_rc_ok) {
         return (value > 0);
     }
     crm_warn("Ignoring unrecognized value '%s' for " PCMK_NODE_ATTR_TERMINATE
-             "node attribute for %s", value_s, pcmk__node_name(node));
+             "node attribute for %s: %s",
+             value_s, pcmk__node_name(node), pcmk_rc_str(rc));
     return false;
 }
 
@@ -2019,7 +2051,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         crm_debug("Detected orphaned remote node %s", rsc_id);
         node = pcmk_find_node(scheduler, rsc_id);
         if (node == NULL) {
-            node = pe_create_node(rsc_id, rsc_id, PCMK_VALUE_REMOTE, NULL,
+            node = pe_create_node(rsc_id, rsc_id, PCMK_VALUE_REMOTE, 0,
                                   scheduler);
         }
         link_rsc2remotenode(scheduler, rsc);

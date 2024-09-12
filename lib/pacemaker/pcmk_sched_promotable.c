@@ -696,6 +696,8 @@ static int
 promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
                 bool *is_default)
 {
+    int score = 0;
+    int rc = pcmk_rc_ok;
     const char *name = NULL;
     const char *attr_value = NULL;
 
@@ -764,7 +766,14 @@ promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (is_default != NULL) {
         *is_default = false;
     }
-    return char2score(attr_value);
+
+    rc = pcmk_parse_score(attr_value, &score, 0);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Using 0 as promotion score for %s on %s "
+                 "because '%s' is not a valid score",
+                 rsc->id, pcmk__node_name(node), attr_value);
+    }
+    return score;
 }
 
 /*!

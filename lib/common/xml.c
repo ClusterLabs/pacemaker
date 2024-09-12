@@ -536,6 +536,30 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
 
 /*!
  * \internal
+ * \brief Parse an integer score from an XML attribute
+ *
+ * \param[in]  xml            XML element with attribute to parse
+ * \param[in]  name           Name of attribute to parse
+ * \param[out] score          Where to store parsed score (can be NULL to
+ *                            just validate)
+ * \param[in]  default_score  What to return if the attribute value is not
+ *                            present or invalid
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_get_score(const xmlNode *xml, const char *name, int *score,
+                   int default_score)
+{
+    const char *value = NULL;
+
+    CRM_CHECK((xml != NULL) && (name != NULL), return EINVAL);
+    value = crm_element_value(xml, name);
+    return pcmk_parse_score(value, score, default_score);
+}
+
+/*!
+ * \internal
  * \brief Set an XML attribute, expanding \c ++ and \c += where appropriate
  *
  * If \p target already has an attribute named \p name set to an integer value
@@ -548,7 +572,7 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
  * The original attribute value in \p target and the number in an assignment
  * expression in \p value are parsed and added as scores (that is, their values
  * are capped at \c INFINITY and \c -INFINITY). For more details, refer to
- * \c char2score().
+ * \c pcmk_parse_score().
  *
  * For example, suppose \p target has an attribute named \c "X" with value
  * \c "5", and that \p name is \c "X".
@@ -559,7 +583,8 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
  *
  * \param[in,out] target  XML node whose attribute to set
  * \param[in]     name    Name of the attribute to set
- * \param[in]     value   New value of attribute to set
+ * \param[in]     value   New value of attribute to set (if NULL, initial value
+ *                        will be left unchanged)
  *
  * \return Standard Pacemaker return code (specifically, \c EINVAL on invalid
  *         argument, or \c pcmk_rc_ok otherwise)
@@ -572,6 +597,7 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
     CRM_CHECK((target != NULL) && (name != NULL), return EINVAL);
 
     if (value == NULL) {
+        // @TODO Maybe instead delete the attribute or set it to 0
         return pcmk_rc_ok;
     }
 
@@ -590,13 +616,31 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
             && (*v++ == '+')
             && ((*v == '+') || (*v == '='))) {
 
+            int add = 1;
+            int old_value_i = 0;
+            int rc = pcmk_rc_ok;
+
             // If we're expanding ourselves, no previous value was set; use 0
-            int old_value_i = (old_value != value)? char2score(old_value) : 0;
+            if (old_value != value) {
+                rc = pcmk_parse_score(old_value, &old_value_i, 0);
+                if (rc != pcmk_rc_ok) {
+                    // @TODO This is inconsistent with old_value==NULL
+                    crm_trace("Using 0 before incrementing %s because '%s' "
+                              "is not a score", name, old_value);
+                }
+            }
 
             /* value="X++": new value of X is old_value + 1
              * value="X+=Y": new value of X is old_value + Y (for some number Y)
              */
-            int add = (*v == '+')? 1 : char2score(++v);
+            if (*v != '+') {
+                rc = pcmk_parse_score(++v, &add, 0);
+                if (rc != pcmk_rc_ok) {
+                    // @TODO We should probably skip expansion instead
+                    crm_trace("Not incrementing %s because '%s' does not have "
+                              "a valid increment", name, value);
+                }
+            }
 
             crm_xml_add_int(target, name, pcmk__add_scores(old_value_i, add));
             return pcmk_rc_ok;

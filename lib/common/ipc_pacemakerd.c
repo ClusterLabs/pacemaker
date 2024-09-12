@@ -204,8 +204,14 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         long long int ack_status = 0;
-        pcmk__scan_ll(crm_element_value(reply, PCMK_XA_STATUS), &ack_status,
-                      CRM_EX_OK);
+        const char *status = crm_element_value(reply, PCMK_XA_STATUS);
+        int rc = pcmk__scan_ll(status, &ack_status, CRM_EX_OK);
+
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Ack reply from %s has invalid " PCMK_XA_STATUS
+                     " '%s' (bug?)",
+                     pcmk_ipc_name(api, true), pcmk__s(status, ""));
+        }
         return ack_status == CRM_EX_INDETERMINATE;
     }
 

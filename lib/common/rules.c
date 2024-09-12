@@ -266,9 +266,10 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
         if (rc != pcmk_rc_ok) {                                             \
             pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s "     \
                              "as not passing because " PCMK_XE_DURATION     \
-                             " %s attribute %s is invalid",                 \
+                             " %s attribute %s is invalid: %s",             \
                              parent_id, id,                                 \
-                             pcmk__time_component_attr(component));         \
+                             pcmk__time_component_attr(component),          \
+                             pcmk_rc_str(rc));                              \
             crm_time_free(*end);                                            \
             *end = NULL;                                                    \
             return rc;                                                      \

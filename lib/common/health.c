@@ -9,6 +9,11 @@
 
 #include <crm_internal.h>
 
+#include <stdio.h>                          // NULL
+
+#include <crm/common/scheduler.h>           // pcmk_scheduler_t
+#include <crm/common/scheduler_internal.h>  // pcmk_scheduler_t private data
+
 /*!
  * \internal
  * \brief Ensure a health strategy value is allowed
@@ -62,4 +67,31 @@ pcmk__parse_health_strategy(const char *value)
                          value);
         return pcmk__health_strategy_none;
     }
+}
+
+/*!
+ * \internal
+ * \brief Parse a health score from a cluster option value
+ *
+ * \param[in] option     Name of option to parse
+ * \param[in] scheduler  Scheduler data
+ *
+ * \return Integer score parsed from \p option value (or 0 if invalid)
+ */
+int
+pcmk__health_score(const char *option, const pcmk_scheduler_t *scheduler)
+{
+    int score = 0;
+    int rc = pcmk_rc_ok;
+    const char *value = NULL;
+
+    CRM_CHECK((option != NULL) && (scheduler != NULL), return 0);
+
+    value = pcmk__cluster_option(scheduler->priv->options, option);
+    rc = pcmk_parse_score(value, &score, 0);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Using 0 for %s because '%s' is invalid: %s",
+                 option, value, pcmk_rc_str(rc));
+    }
+    return score;
 }

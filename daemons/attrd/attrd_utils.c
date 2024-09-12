@@ -166,20 +166,24 @@ attrd_value_needs_expansion(const char *value)
 int
 attrd_expand_value(const char *value, const char *old_value)
 {
-    int offset = 1;
-    int int_value = char2score(old_value);
+    int increment = 1;
+    int score = 0;
 
-    if (value[plus_plus_len + 1] != '+') {
-        const char *offset_s = value + (plus_plus_len + 2);
-
-        offset = char2score(offset_s);
+    if (pcmk_parse_score(old_value, &score, 0) != pcmk_rc_ok) {
+        return 0; // Original value is not a score
     }
-    int_value += offset;
 
-    if (int_value > PCMK_SCORE_INFINITY) {
-        int_value = PCMK_SCORE_INFINITY;
+    // value++ means increment by one, value+=OFFSET means incremement by OFFSET
+    if ((value[plus_plus_len + 1] != '+')
+        && (pcmk_parse_score(value + plus_plus_len + 2, &increment,
+                             0) != pcmk_rc_ok)) {
+        increment = 0; // Invalid increment
     }
-    return int_value;
+
+    if (increment < 0) {
+        return QB_MAX(score + increment, -PCMK_SCORE_INFINITY);
+    }
+    return QB_MIN(score + increment, PCMK_SCORE_INFINITY);
 }
 
 /*!
