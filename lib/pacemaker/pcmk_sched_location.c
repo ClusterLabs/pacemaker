@@ -135,18 +135,20 @@ score_from_rule(const xmlNode *rule_xml, int *score)
  * \internal
  * \brief Get a rule score from a node attribute
  *
- * \param[in] rule       Rule ID (for logging only)
- * \param[in] attr_name  Name of node attribute with score
- * \param[in] node       Node to get attribute for
- * \param[in] rsc        Resource being located
+ * \param[in]  constraint_id  Location constraint ID (for logging only)
+ * \param[in]  attr_name      Name of node attribute with score
+ * \param[in]  node           Node to get attribute for
+ * \param[in]  rsc            Resource being located
+ * \param[out] score          Where to store parsed score
  *
- * \return Score parsed from value of \p attr_name on \p node (default 0)
+ * \return Standard Pacemaker return code (pcmk_rc_ok if a valid score was
+ *         parsed, ENXIO if the node attribute was unset, and some other value
+ *         if the node attribute value was invalid)
  */
 static int
-score_from_attr(const char *rule, const char *attr_name,
-                const pcmk_node_t *node, const pcmk_resource_t *rsc)
+score_from_attr(const char *constraint_id, const char *attr_name,
+                const pcmk_node_t *node, const pcmk_resource_t *rsc, int *score)
 {
-    int score = 0;
     int rc = pcmk_rc_ok;
     const char *target = NULL;
     const char *score_s = NULL;
@@ -154,14 +156,22 @@ score_from_attr(const char *rule, const char *attr_name,
     target = g_hash_table_lookup(rsc->priv->meta,
                                  PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
     score_s = pcmk__node_attr(node, attr_name, target, pcmk__rsc_node_current);
-
-    rc = pcmk_parse_score(score_s, &score, -PCMK_SCORE_INFINITY);
-    if (rc != pcmk_rc_ok) {
-        crm_warn("Using " PCMK_VALUE_MINUS_INFINITY " as score for rule %s "
-                 "on %s because %s value '%s' is not a valid score",
-                 rule, pcmk__node_name(node), attr_name, score_s);
+    if (pcmk__str_empty(score_s)) {
+        crm_info("Ignoring location %s for %s on %s "
+                 "because it has no node attribute %s",
+                 constraint_id, rsc->id, pcmk__node_name(node), attr_name);
+        return ENXIO;
     }
-    return score;
+
+    rc = pcmk_parse_score(score_s, score, 0);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Ignoring location %s for node %s because node "
+                 "attribute %s value '%s' is not a valid score: %s",
+                 constraint_id, pcmk__node_name(node), attr_name,
+                 score_s, pcmk_rc_str(rc));
+        return rc;
+    }
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -245,7 +255,6 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         return false;
     }
 
-    crm_trace("Processing location constraint rule %s", rule_id);
     location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL);
     CRM_CHECK(location_rule != NULL, return NULL);
 
@@ -255,25 +264,30 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
          iter != NULL; iter = iter->next) {
 
         pcmk_node_t *node = iter->data;
+        pcmk_node_t *local = NULL;
 
         rule_input->node_attrs = node->priv->attrs;
         rule_input->rsc_params = pe_rsc_params(rsc, node,
                                                rsc->priv->scheduler);
 
         if (pcmk_evaluate_rule(rule_xml, rule_input,
-                               next_change) == pcmk_rc_ok) {
-            pcmk_node_t *local = pe__copy_node(node);
-
-            location_rule->nodes = g_list_prepend(location_rule->nodes, local);
-            if (score_attr == NULL) {
-                local->assign->score = score;
-            } else {
-                local->assign->score = score_from_attr(rule_id, score_attr,
-                                                       node, rsc);
-            }
-            crm_trace("%s has score %s after %s", pcmk__node_name(node),
-                      pcmk_readable_score(local->assign->score), rule_id);
+                               next_change) != pcmk_rc_ok) {
+            continue;
         }
+
+        if ((score_attr != NULL)
+            && (score_from_attr(constraint_id, score_attr, node, rsc,
+                                &score) != pcmk_rc_ok)) {
+            continue; // Message already logged
+        }
+
+        local = pe__copy_node(node);
+        location_rule->nodes = g_list_prepend(location_rule->nodes, local);
+        local->assign->score = score;
+        pcmk__rsc_trace(rsc,
+                        "Location %s score for %s on %s is %s via rule %s",
+                        constraint_id, rsc->id, pcmk__node_name(node),
+                        pcmk_readable_score(score), rule_id);
     }
 
     free(local_score_attr);
