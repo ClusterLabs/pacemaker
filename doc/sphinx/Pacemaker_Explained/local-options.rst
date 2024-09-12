@@ -190,10 +190,15 @@ Score addition and subtraction follow these rules:
 Local Options
 #############
 
-Pacemaker supports several host-local configuration options. These options can
-be configured on each node in the main Pacemaker configuration file
-(|PCMK_CONFIG_FILE|) in the format ``<NAME>="<VALUE>"``. They work by setting
-environment variables when Pacemaker daemons start up.
+Most Pacemaker configuration is in the cluster-wide CIB, but some host-local
+configuration options either are needed at startup, before the CIB is read, or
+provide per-host overrides of cluster-wide options.
+
+These options are configured as environment variables set when Pacemaker is
+started, in the format ``<NAME>="<VALUE>"``. These are typically set in a file
+whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
+``/etc/default/pacemaker``; this documentation was generated on a system using
+|PCMK_CONFIG_FILE|).
 
 .. list-table:: **Local Options**
    :class: longtable
@@ -566,30 +571,6 @@ environment variables when Pacemaker daemons start up.
 
        Example:
        ``PCMK_tls_priorities="SECURE128:+SECURE192"``
-
-   * - .. _pcmk_dh_min_bits:
-
-       .. index::
-          pair: node option; PCMK_dh_min_bits
-
-       PCMK_dh_min_bits
-     - :ref:`nonnegative integer <nonnegative_integer>`
-     - 0 (no minimum)
-     - *Advanced Use Only:* Set a lower bound on the bit length of the prime
-       number generated for Diffie-Hellman parameters needed by TLS connections.
-       The default is no minimum.
-
-       The server (Pacemaker Remote daemon, or CIB manager configured to accept
-       remote clients) will use this value to provide a floor for the value
-       recommended by the GnuTLS library. The library will only accept a limited
-       number of specific values, which vary by library version, so setting
-       these is recommended only when required for compatibility with specific
-       client versions.
-
-       Clients (connecting cluster nodes or remote CIB commands) will require
-       that the server use a prime of at least this size. This is recommended
-       only when the value must be lowered in order for the client's GnuTLS
-       library to accept a connection to an older server.
 
    * - .. _pcmk_dh_max_bits:
 
