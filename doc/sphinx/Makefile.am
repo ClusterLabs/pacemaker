@@ -18,8 +18,7 @@ BOOKS		?= Clusters_from_Scratch	\
 		   Pacemaker_Administration	\
 		   Pacemaker_Development	\
 		   Pacemaker_Explained		\
-		   Pacemaker_Python_API 	\
-		   Pacemaker_Remote
+		   Pacemaker_Python_API
 
 # Output formats to generate. Possible values:
 #  html       (multiple HTML files)
@@ -68,14 +67,12 @@ PNGS_GENERATED	= $(SVGS:%.svg=%.png)
 # Original PNG image sources
 PNGS_Clusters_from_Scratch = $(wildcard Clusters_from_Scratch/images/*.png)
 PNGS_Pacemaker_Explained   = $(wildcard Pacemaker_Explained/images/*.png)
-PNGS_Pacemaker_Remote      = $(wildcard Pacemaker_Remote/images/*.png)
 
 STATIC_FILES	= $(wildcard _static/*.css)
 
 EXTRA_DIST	= $(wildcard */*.rst) $(DOTS) $(SVGS)			\
 		  $(PNGS_Clusters_from_Scratch)				\
 		  $(PNGS_Pacemaker_Explained)				\
-		  $(PNGS_Pacemaker_Remote)				\
 		  $(wildcard Pacemaker_Python_API/_templates/*rst) 	\
 		  $(STATIC_FILES)					\
 		  conf.py.in
@@ -100,7 +97,6 @@ DEPS_Pacemaker_Development	=
 DEPS_Pacemaker_Explained	= $(DEPS_intro) 		\
 				  $(PNGS_Pacemaker_Explained)
 DEPS_Pacemaker_Python_API 	= ../../python
-DEPS_Pacemaker_Remote		= $(PNGS_Pacemaker_Remote)
 
 if BUILD_SPHINX_DOCS
 
