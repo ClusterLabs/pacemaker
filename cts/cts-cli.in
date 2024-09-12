@@ -1276,7 +1276,7 @@ class CibadminRegressionTest(RegressionTest):
 
         # Add some stuff to the empty CIB so we know that erasing it did something.
         basic_tests_setup = [
-            """cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1">'""",
+            """cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1"/>'""",
             """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/></cluster_property_set>'""",
             """cibadmin -C -o resources --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'"""
         ]
@@ -1320,10 +1320,10 @@ class CrmAttributeRegressionTest(RegressionTest):
             Test("Configure something before erasing",
                  "crm_attribute -n test_attr -v 5", update_cib=True),
             Test("Test '++' XML attribute update syntax",
-                 """cibadmin -M --score --xml-text='<cib admin_epoch="admin_epoch++">'""",
+                 """cibadmin -M --score --xml-text='<cib admin_epoch="admin_epoch++"/>'""",
                  update_cib=True),
             Test("Test '+=' XML attribute update syntax",
-                 """cibadmin -M --score --xml-text='<cib admin_epoch="admin_epoch+=2">'""",
+                 """cibadmin -M --score --xml-text='<cib admin_epoch="admin_epoch+=2"/>'""",
                  update_cib=True),
             make_test_group("Test '++' nvpair value update syntax",
                             "crm_attribute -n test_attr -v 'value++' --score {fmt}",
@@ -1332,10 +1332,10 @@ class CrmAttributeRegressionTest(RegressionTest):
                             "crm_attribute -n test_attr -v 'value+=2' --score {fmt}",
                             [Test, ValidatingTest], update_cib=True),
             Test("Test '++' XML attribute update syntax (--score not set)",
-                 """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch++">'""",
+                 """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch++"/>'""",
                  update_cib=True),
             Test("Test '+=' XML attribute update syntax (--score not set)",
-                 """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch+=2">'""",
+                 """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch+=2"/>'""",
                  update_cib=True),
             make_test_group("Test '++' nvpair value update syntax (--score not set)",
                             "crm_attribute -n test_attr -v 'value++' {fmt}",
@@ -1504,7 +1504,8 @@ class CrmStandbyRegressionTest(RegressionTest):
         ]
 
         return [
-            ShadowTestGroup(basic_tests, setup="""cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1">'"""),
+            ShadowTestGroup(basic_tests,
+			    setup="""cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1"/>'"""),
         ]
 
 
@@ -1708,7 +1709,7 @@ class CrmResourceRegressionTest(RegressionTest):
                  "crm_resource -r dummy-group --meta -p is-managed -v false",
                  update_cib=True),
             Test("Delete the dummy-group resource group",
-                 "cibadmin -D -o resources --xml-text '<group id=\"dummy-group\">'",
+                 "cibadmin -D -o resources --xml-text '<group id=\"dummy-group\"/>'",
                  update_cib=True),
             Test("Specify a lifetime when moving a resource",
                  "crm_resource -r dummy --move --node node2 --lifetime=PT1H",
@@ -1976,7 +1977,7 @@ class CrmShadowRegressionTest(RegressionTest):
                      """cibadmin --modify --xml-text '<primitive id="dummy" description="desc"/>' && """ \
                      """cibadmin --delete --xml-text '<op_defaults/>' && """ \
                      """cibadmin --create -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>' && """ \
-                     """cibadmin --create -o status --xml-text '<node_state id="3" uname="cluster03" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">'"""
+                     """cibadmin --create -o status --xml-text '<node_state id="3" uname="cluster03" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member"/>'"""
 
         more_tests = [
             # We can't use make_test_group() here because we only want to run

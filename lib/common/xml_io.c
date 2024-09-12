@@ -24,46 +24,6 @@
 #include <crm/common/xml_io.h>
 #include "crmcommon_private.h"
 
-/* @COMPAT XML_PARSE_RECOVER allows some XML errors to be silently worked around
- * by libxml2, which is potentially ambiguous and dangerous. We should drop it
- * when we can break backward compatibility with configurations that might be
- * relying on it (i.e. pacemaker 3.0.0).
- */
-#define PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER    (XML_PARSE_NOBLANKS)
-#define PCMK__XML_PARSE_OPTS_WITH_RECOVER       (XML_PARSE_NOBLANKS \
-                                                 |XML_PARSE_RECOVER)
-
-/*!
- * \internal
- * \brief Read from \c stdin until EOF or error
- *
- * \return Newly allocated string containing the bytes read from \c stdin, or
- *         \c NULL on error
- *
- * \note The caller is responsible for freeing the return value using \c free().
- */
-static char *
-read_stdin(void)
-{
-    char *buf = NULL;
-    size_t length = 0;
-
-    do {
-        buf = pcmk__realloc(buf, length + PCMK__BUFFER_SIZE + 1);
-        length += fread(buf + length, 1, PCMK__BUFFER_SIZE, stdin);
-    } while ((feof(stdin) == 0) && (ferror(stdin) == 0));
-
-    if (ferror(stdin) != 0) {
-        crm_err("Error reading input from stdin");
-        free(buf);
-        buf = NULL;
-    } else {
-        buf[length] = '\0';
-    }
-    clearerr(stdin);
-    return buf;
-}
-
 /*!
  * \internal
  * \brief Decompress a <tt>bzip2</tt>-compressed file into a string buffer
@@ -128,29 +88,6 @@ done:
     return buffer;
 }
 
-// @COMPAT Remove macro at 3.0.0 when we drop XML_PARSE_RECOVER
-/*!
- * \internal
- * \brief Try to parse XML first without and then with recovery enabled
- *
- * \param[out] result  Where to store the resulting XML doc (<tt>xmlDoc **</tt>)
- * \param[in]  fn      XML parser function
- * \param[in]  ...     All arguments for \p fn except the final one (an
- *                     \c xmlParserOption group)
- */
-#define parse_xml_recover(result, fn, ...) do {                             \
-        *result = fn(__VA_ARGS__, PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);    \
-        if (*result == NULL) {                                              \
-            *result = fn(__VA_ARGS__, PCMK__XML_PARSE_OPTS_WITH_RECOVER);   \
-                                                                            \
-            if (*result != NULL) {                                          \
-                crm_warn("Successfully recovered from XML errors "          \
-                         "(note: a future release will treat this as a "    \
-                         "fatal failure)");                                 \
-            }                                                               \
-        }                                                                   \
-    } while (0);
-
 /*!
  * \internal
  * \brief Parse XML from a file
@@ -159,8 +96,7 @@ done:
  *                      \c stdin); if \p filename ends in \c ".bz2", the file
  *                      will be decompressed using \c bzip2
  *
- * \return XML tree parsed from the given file; may be \c NULL or only partial
- *         on error
+ * \return XML tree parsed from the given file on success, otherwise \c NULL
  */
 xmlNode *
 pcmk__xml_read(const char *filename)
@@ -179,31 +115,20 @@ pcmk__xml_read(const char *filename)
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
     if (use_stdin) {
-        /* @COMPAT After dropping XML_PARSE_RECOVER, we can avoid capturing
-         * stdin into a buffer and instead call
-         * xmlCtxtReadFd(ctxt, STDIN_FILENO, NULL, NULL, XML_PARSE_NOBLANKS);
-         *
-         * For now we have to save the input so that we can use it twice.
-         */
-        char *input = read_stdin();
-
-        if (input != NULL) {
-            parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
-                              NULL, NULL);
-            free(input);
-        }
+        output = xmlCtxtReadFd(ctxt, STDIN_FILENO, NULL, NULL,
+                               XML_PARSE_NOBLANKS);
 
     } else if (pcmk__ends_with_ext(filename, ".bz2")) {
         char *input = decompress_file(filename);
 
         if (input != NULL) {
-            parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
-                              NULL, NULL);
+            output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
+                                    XML_PARSE_NOBLANKS);
             free(input);
         }
 
     } else {
-        parse_xml_recover(&output, xmlCtxtReadFile, ctxt, filename, NULL);
+        output = xmlCtxtReadFile(ctxt, filename, NULL, XML_PARSE_NOBLANKS);
     }
 
     if (output != NULL) {
@@ -220,12 +145,11 @@ pcmk__xml_read(const char *filename)
         }
     }
 
-    // @COMPAT At 3.0.0, free xml and return NULL if xml != NULL on error
     last_error = xmlCtxtGetLastError(ctxt);
-    if (last_error != NULL) {
-        if (xml != NULL) {
-            crm_log_xml_info(xml, "Partial");
-        }
+    if ((last_error != NULL) && (xml != NULL)) {
+        crm_log_xml_debug(xml, "partial");
+        pcmk__xml_free(xml);
+        xml = NULL;
     }
 
     xmlFreeParserCtxt(ctxt);
@@ -238,8 +162,7 @@ pcmk__xml_read(const char *filename)
  *
  * \param[in] input  String to parse
  *
- * \return XML tree parsed from the given string; may be \c NULL or only partial
- *         on error
+ * \return XML tree parsed from the given string on success, otherwise \c NULL
  */
 xmlNode *
 pcmk__xml_parse(const char *input)
@@ -261,20 +184,18 @@ pcmk__xml_parse(const char *input)
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
-    parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input, NULL,
-                      NULL);
-
+    output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
+                            XML_PARSE_NOBLANKS);
     if (output != NULL) {
         pcmk__xml_new_private_data((xmlNode *) output);
         xml = xmlDocGetRootElement(output);
     }
 
-    // @COMPAT At 3.0.0, free xml and return NULL if xml != NULL; update doxygen
     last_error = xmlCtxtGetLastError(ctxt);
-    if (last_error != NULL) {
-        if (xml != NULL) {
-            crm_log_xml_info(xml, "Partial");
-        }
+    if ((last_error != NULL) && (xml != NULL)) {
+        crm_log_xml_debug(xml, "partial");
+        pcmk__xml_free(xml);
+        xml = NULL;
     }
 
     xmlFreeParserCtxt(ctxt);

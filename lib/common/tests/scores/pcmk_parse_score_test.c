@@ -101,6 +101,8 @@ outside_limits(void **state)
     assert_score(very_long, pcmk_rc_ok, PCMK_SCORE_INFINITY);
     very_long[0] = '-';
     assert_score(very_long, pcmk_rc_ok, -PCMK_SCORE_INFINITY);
+
+    free(very_long);
 }
 
 static void
