@@ -83,4 +83,8 @@ crm_copy_xml_element(const xmlNode *obj1, xmlNode *obj2, const char *element)
 }
 #endif
 
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/nvpair_compat.h>
+#endif
+
 #endif // PCMK__CRM_COMMON_NVPAIR__H
