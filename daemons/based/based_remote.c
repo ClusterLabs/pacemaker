@@ -668,7 +668,7 @@ authenticate_user(const char *user, const char *passwd)
     }
 
     // @TODO Why do we require these to match?
-    if (!pcmk__str_eq(p_user, user, pcmk__str_casei)) {
+    if (!pcmk__str_eq(p_user, user, pcmk__str_none)) {
         crm_warn("Rejecting remote client for user %s "
                  "because PAM returned different final user name %s",
                  user, p_user);
