@@ -315,9 +315,11 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
                               &event.rsc_deleted);
 
         crm_element_value_epoch(msg, PCMK__XA_LRMD_RUN_TIME, &epoch);
+        // coverity[store_truncates_time_t]
         event.t_run = (unsigned int) epoch;
 
         crm_element_value_epoch(msg, PCMK__XA_LRMD_RCCHANGE_TIME, &epoch);
+        // coverity[store_truncates_time_t]
         event.t_rcchange = (unsigned int) epoch;
 
         crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_TIME, &exec_time);
