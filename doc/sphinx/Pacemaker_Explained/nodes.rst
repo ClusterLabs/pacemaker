@@ -1,8 +1,82 @@
-Cluster Nodes
--------------
+.. index::
+   single: node
 
-Defining a Cluster Node
-_______________________
+Nodes
+-----
+
+Pacemaker supports two basic types of nodes: *cluster nodes* and *Pacemaker
+Remote nodes*.
+
+.. index::
+   single: node; cluster node
+
+Cluster nodes
+_____________
+
+Cluster nodes run Corosync and all Pacemaker components. They may run cluster
+resources, run all Pacemaker command-line tools, execute fencing actions, count
+toward cluster quorum, and serve as the cluster's Designated Controller (DC).
+
+Every cluster must have at least one cluster node. Scalability is limited by
+the cluster layer to around 32 cluster nodes.
+
+.. _pacemaker_remote:
+
+.. index::
+   pair: node; Pacemaker Remote
+
+Pacemaker Remote nodes
+______________________
+
+Pacemaker Remote nodes do not run Corosync or the usual Pacemaker components.
+Instead, they run only the *remote executor* (``pacemaker-remoted``), which
+waits for Pacemaker on a cluster node to give it instructions.
+
+They may run cluster resources and most command-line tools, but cannot perform
+other functions of full cluster nodes such as fencing execution, quorum voting,
+or DC eligibility.
+
+There is no hard limit on the number of Pacemaker Remote nodes.
+
+.. NOTE::
+
+    *Remote* in this document has nothing to do with physical proximity and
+    instead refers to the node not being a member of the underlying Corosync
+    cluster. Pacemaker Remote nodes are subject to the same latency
+    requirements as cluster nodes, which means they are typically in the same
+    data center.
+
+There are three types of Pacemaker Remote nodes:
+
+* A *remote node* boots outside Pacemaker control, and is typically a physical
+  host. The connection to the remote node is managed as a :ref:`special type of
+  resource <remote_nodes>` configured by the user.
+
+* A *guest node* is a virtual machine or container configured to run
+  Pacemaker's remote executor when launched, and is launched and managed by the
+  cluster as a standard resource configured by the user with :ref:`special
+  options <guest_nodes>`.
+
+* A *bundle node* is a guest node created for a container that is launched and
+  managed by the cluster as part of a :ref:`bundle <s-resource-bundle>`
+  resource configured by the user.
+
+.. NOTE::
+
+    It is important to distinguish the various roles a virtual machine can serve
+    in Pacemaker clusters:
+
+    * A virtual machine can run the full cluster stack, in which case it is a
+      cluster node and is not itself managed by the cluster.
+    * A virtual machine can be managed by the cluster as a simple resource,
+      without the cluster having any awareness of the services running within
+      it. The virtual machine is *opaque* to the cluster.
+    * A virtual machine can be a guest node, allowing the cluster to manage
+      both the virtual machine and resources running within it. The virtual
+      machine is *transparent* to the cluster.
+
+Defining a Node
+_______________
 
 Each cluster node will have an entry in the ``nodes`` section containing at
 least an ID and a name. A cluster node's ID is defined by the cluster layer
@@ -14,9 +88,15 @@ least an ID and a name. A cluster node's ID is defined by the cluster layer
 
       <node id="101" uname="pcmk-1"/>
 
-In normal circumstances, the admin should let the cluster populate this
-information automatically from the cluster layer.
+Pacemaker Remote nodes are defined by a resource in the ``resources`` section.
+Remote nodes and guest nodes may optionally have an entry in the ``nodes``
+section, primarily for permanent :ref:`node attributes <node-attributes>`.
 
+Normally, the user should let the cluster populate the ``nodes`` section
+automatically.
+
+.. index::
+   single: node; name
 
 .. _node_name:
 
@@ -24,12 +104,14 @@ Where Pacemaker Gets the Node Name
 ##################################
 
 The name that Pacemaker uses for a node in the configuration does not have to
-be the same as its local hostname. Pacemaker uses the following for a Corosync
+be the same as its local hostname. Pacemaker uses the following for a cluster
 node's name, in order of most preferred first:
 
 * The value of ``name`` in the ``nodelist`` section of ``corosync.conf``
 * The value of ``ring0_addr`` in the ``nodelist`` section of ``corosync.conf``
 * The local hostname (value of ``uname -n``)
+
+A Pacemaker Remote node's name is defined in its resource configuration.
 
 If the cluster is running, the ``crm_node -n`` command will display the local
 node's name as used by the cluster.
