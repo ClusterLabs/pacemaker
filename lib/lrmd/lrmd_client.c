@@ -258,8 +258,11 @@ lrmd_free_event(lrmd_event_data_t *event)
 }
 
 static void
-lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
+lrmd_dispatch_internal(gpointer data, gpointer user_data)
 {
+    xmlNode *msg = data;
+    lrmd_t *lrmd = user_data;
+
     const char *type;
     const char *proxy_session = crm_element_value(msg,
                                                   PCMK__XA_LRMD_IPC_SESSION);
@@ -357,7 +360,7 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     if (native->callback != NULL) {
         xmlNode *msg = pcmk__xml_parse(buffer);
 
-        lrmd_dispatch_internal(lrmd, msg);
+        lrmd_dispatch_internal(msg, lrmd);
         pcmk__xml_free(msg);
     }
     return 0;
@@ -375,6 +378,42 @@ remote_executor_connected(lrmd_t * lrmd)
     lrmd_private_t *native = lrmd->lrmd_private;
 
     return (native->remote->tls_session != NULL);
+}
+
+static void
+handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+    const char *msg_type = NULL;
+
+    msg_type = crm_element_value(xml, PCMK__XA_LRMD_REMOTE_MSG_TYPE);
+    if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
+        lrmd_dispatch_internal(xml, lrmd);
+    } else if (pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
+        if (native->expected_late_replies > 0) {
+            native->expected_late_replies--;
+        } else {
+            int reply_id = 0;
+            crm_element_value_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
+            /* if this happens, we want to know about it */
+            crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
+        }
+    }
+}
+
+static void
+process_pending_notifies(lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->pending_notify == NULL) {
+        return;
+    }
+
+    crm_trace("Processing pending notifies");
+    g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
+    g_list_free_full(native->pending_notify, lrmd_free_xml);
+    native->pending_notify = NULL;
 }
 
 /*!
@@ -404,57 +443,34 @@ lrmd_tls_dispatch(gpointer userdata)
     crm_trace("TLS dispatch triggered");
 
     /* First check if there are any pending notifies to process that came
-     * while we were waiting for replies earlier. */
-    if (native->pending_notify) {
-        GList *iter = NULL;
-
-        crm_trace("Processing pending notifies");
-        for (iter = native->pending_notify; iter; iter = iter->next) {
-            lrmd_dispatch_internal(lrmd, iter->data);
-        }
-        g_list_free_full(native->pending_notify, lrmd_free_xml);
-        native->pending_notify = NULL;
-    }
+     * while we were waiting for replies earlier.
+     */
+    process_pending_notifies(lrmd);
 
     /* Next read the current buffer and see if there are any messages to handle. */
-    switch (pcmk__remote_ready(native->remote, 0)) {
-        case pcmk_rc_ok:
-            rc = pcmk__read_remote_message(native->remote, -1);
-            xml = pcmk__remote_message_xml(native->remote);
-            break;
-        case ETIME:
-            // Nothing to read, check if a full message is already in buffer
-            xml = pcmk__remote_message_xml(native->remote);
-            break;
-        default:
-            rc = ENOTCONN;
-            break;
-    }
-    while (xml) {
-        const char *msg_type = crm_element_value(xml,
-                                                 PCMK__XA_LRMD_REMOTE_MSG_TYPE);
-        if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
-            lrmd_dispatch_internal(lrmd, xml);
-        } else if (pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
-            if (native->expected_late_replies > 0) {
-                native->expected_late_replies--;
-            } else {
-                int reply_id = 0;
-                crm_element_value_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
-                /* if this happens, we want to know about it */
-                crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
-            }
-        }
-        pcmk__xml_free(xml);
-        xml = pcmk__remote_message_xml(native->remote);
+    rc = pcmk__remote_ready(native->remote, 0);
+    if (rc == pcmk_rc_ok) {
+        rc = pcmk__read_remote_message(native->remote, -1);
     }
 
-    if (rc == ENOTCONN) {
+    if (rc != pcmk_rc_ok && rc != ETIME) {
         crm_info("Lost %s executor connection while reading data",
                  (native->remote_nodename? native->remote_nodename : "local"));
         lrmd_tls_disconnect(lrmd);
         return 0;
     }
+
+    /* If rc is ETIME, there was nothing to read but we may already have a
+     * full message in the buffer
+     */
+    xml = pcmk__remote_message_xml(native->remote);
+
+    if (xml == NULL) {
+        return 1;
+    }
+
+    handle_remote_msg(xml, lrmd);
+    pcmk__xml_free(xml);
     return 1;
 }
 
@@ -1337,12 +1353,13 @@ tls_handshake_failed(lrmd_t *lrmd, int tls_rc, int rc)
 static void
 tls_handshake_succeeded(lrmd_t *lrmd)
 {
+    int rc = pcmk_rc_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
 
     crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
              native->server, native->port);
-    add_tls_to_mainloop(lrmd, true);
-    report_async_connection_result(lrmd, pcmk_rc2legacy(pcmk_rc_ok));
+    rc = add_tls_to_mainloop(lrmd, true);
+    report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
 }
 
 /*!
@@ -1529,7 +1546,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 static int
 lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
 {
-    int rc;
+    int rc = pcmk_rc_ok;
     int timer_id = 0;
     lrmd_private_t *native = lrmd->lrmd_private;
 
@@ -1541,16 +1558,16 @@ lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
         crm_warn("Pacemaker Remote connection to %s:%d failed: %s "
                  QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
-        return pcmk_rc2legacy(rc);
+        return rc;
     }
     native->async_timer = timer_id;
-    return pcmk_ok;
+    return rc;
 }
 
 static int
 lrmd_tls_connect(lrmd_t * lrmd, int *fd)
 {
-    int rc;
+    int rc = pcmk_rc_ok;
 
     lrmd_private_t *native = lrmd->lrmd_private;
     gnutls_datum_t psk_key = { NULL, 0 };
@@ -1565,13 +1582,13 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
                  QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         lrmd_tls_connection_destroy(lrmd);
-        return -ENOTCONN;
+        return ENOTCONN;
     }
 
     rc = lrmd__init_remote_key(&psk_key);
     if (rc != pcmk_rc_ok) {
         lrmd_tls_connection_destroy(lrmd);
-        return pcmk_rc2legacy(rc);
+        return rc;
     }
 
     gnutls_psk_allocate_client_credentials(&native->psk_cred_c);
@@ -1583,11 +1600,11 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
                                                         native->psk_cred_c);
     if (native->remote->tls_session == NULL) {
         lrmd_tls_connection_destroy(lrmd);
-        return -EPROTO;
+        return EPROTO;
     }
 
     if (tls_client_handshake(lrmd) != pcmk_rc_ok) {
-        return -EKEYREJECTED;
+        return EKEYREJECTED;
     }
 
     crm_info("Client TLS connection established with Pacemaker Remote server %s:%d", native->server,
@@ -1596,9 +1613,9 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     if (fd) {
         *fd = native->sock;
     } else {
-        add_tls_to_mainloop(lrmd, false);
+        rc = add_tls_to_mainloop(lrmd, false);
     }
-    return pcmk_ok;
+    return rc;
 }
 
 static int
@@ -1613,6 +1630,7 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
             break;
         case pcmk__client_tls:
             rc = lrmd_tls_connect(lrmd, fd);
+            rc = pcmk_rc2legacy(rc);
             break;
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
@@ -1646,6 +1664,7 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
             break;
         case pcmk__client_tls:
             rc = lrmd_tls_connect_async(lrmd, timeout);
+            rc = pcmk_rc2legacy(rc);
             break;
         default:
             crm_err("Unsupported executor connection type (bug?): %d",
