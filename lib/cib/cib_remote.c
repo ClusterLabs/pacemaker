@@ -151,12 +151,6 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         remaining_time = time(NULL) - start_time;
     }
 
-    /* if(IPC_ISRCONN(native->command_channel) == FALSE) { */
-    /*      crm_err("The CIB manager disconnected: %d",  */
-    /*              native->command_channel->ch_status); */
-    /*      cib->state = cib_disconnected; */
-    /* } */
-
     if (rc == ENOTCONN) {
         crm_err("Disconnected while waiting for reply.");
         return -ENOTCONN;
@@ -181,7 +175,6 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         crm_log_xml_debug(op_reply, "passed");
 
     } else {
-/*  } else if(rc == -ETIME) { */
         crm_err("Call failed: %s", pcmk_strerror(rc));
         crm_log_xml_warn(op_reply, "failed");
     }
