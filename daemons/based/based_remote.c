@@ -35,8 +35,6 @@
 
 #include "pacemaker-based.h"
 
-/* #undef HAVE_PAM_PAM_APPL_H */
-
 #include <gnutls/gnutls.h>
 
 #include <pwd.h>
@@ -44,11 +42,9 @@
 #if HAVE_SECURITY_PAM_APPL_H
 #  include <security/pam_appl.h>
 #  define HAVE_PAM 1
-#else
-#  if HAVE_PAM_PAM_APPL_H
-#    include <pam/pam_appl.h>
-#    define HAVE_PAM 1
-#  endif
+#elif HAVE_PAM_PAM_APPL_H
+#  include <pam/pam_appl.h>
+#  define HAVE_PAM 1
 #endif
 
 extern int remote_tls_fd;
@@ -112,7 +108,8 @@ init_remote_listener(int port, gboolean encrypted)
         crm_warn("Starting plain-text listener on port %d", port);
     }
 #ifndef HAVE_PAM
-    crm_warn("PAM is _not_ enabled!");
+    crm_warn("This build does not support remote administrators "
+             "because PAM support is not available");
 #endif
 
     /* create server socket */
@@ -593,8 +590,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
  * \param[in] passwd  Password passed for remote CIB connection
  *
  * \return \c true if the username and password are accepted, otherwise \c false
- * \note This function accepts any username and password when built without PAM
- *       support.
+ * \note This function rejects all credentials when built without PAM support.
  */
 static bool
 authenticate_user(const char *user, const char *passwd)
@@ -673,6 +669,8 @@ bail:
     return pass;
 #else
     // @TODO Implement for non-PAM environments
-    return true;
+    crm_warn("Rejecting remote user %s because this build does not have "
+             "PAM support", user);
+    return false;
 #endif
 }
