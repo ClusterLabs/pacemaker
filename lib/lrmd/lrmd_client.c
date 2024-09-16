@@ -1415,12 +1415,13 @@ tls_handshake_failed(lrmd_t *lrmd, int tls_rc, int rc)
 static void
 tls_handshake_succeeded(lrmd_t *lrmd)
 {
+    int rc = pcmk_rc_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
 
     crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
              native->server, native->port);
-    add_tls_to_mainloop(lrmd, true);
-    report_async_connection_result(lrmd, pcmk_rc2legacy(pcmk_rc_ok));
+    rc = add_tls_to_mainloop(lrmd, true);
+    report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
 }
 #endif
 
