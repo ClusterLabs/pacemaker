@@ -1146,6 +1146,11 @@ AC_CHECK_HEADERS([sys/signalfd.h])
 AC_CHECK_HEADERS([uuid/uuid.h])
 AC_CHECK_HEADERS([security/pam_appl.h pam/pam_appl.h])
 
+AS_IF([test x"$ac_cv_lib_pam_pam_start" = x"yes"],
+      AS_IF([test x"$ac_cv_header_security_pam_appl_h" = x"yes" dnl
+            || test x"$ac_cv_header_pam_pam_appl_h" = x"yes"],
+            [PCMK_FEATURES="$PCMK_FEATURES pam"]))
+
 # Required headers
 REQUIRE_HEADER([arpa/inet.h])
 REQUIRE_HEADER([ctype.h])
