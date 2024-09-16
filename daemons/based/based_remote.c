@@ -65,6 +65,7 @@ debug_log(int level, const char *str)
     fputs(str, stderr);
 }
 
+// @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
 
 int num_clients;
@@ -167,12 +168,9 @@ check_group_membership(const char *usr, const char *grp)
     struct passwd *pwd = NULL;
     struct group *group = NULL;
 
-    CRM_CHECK(usr != NULL, return FALSE);
-    CRM_CHECK(grp != NULL, return FALSE);
-
     pwd = getpwnam(usr);
     if (pwd == NULL) {
-        crm_err("No user named '%s' exists!", usr);
+        crm_notice("Rejecting remote client: '%s' is not a valid user", usr);
         return FALSE;
     }
 
@@ -183,7 +181,7 @@ check_group_membership(const char *usr, const char *grp)
 
     group = getgrnam(grp);
     if (group == NULL) {
-        crm_err("No group named '%s' exists!", grp);
+        crm_err("Rejecting remote client: '%s' is not a valid group", grp);
         return FALSE;
     }
 
@@ -196,8 +194,10 @@ check_group_membership(const char *usr, const char *grp)
         } else if (pcmk__str_eq(usr, member, pcmk__str_none)) {
             return TRUE;
         }
-    };
+    }
 
+    crm_notice("Rejecting remote client: User '%s' is not a member of "
+               "group '%s'", usr, grp);
     return FALSE;
 }
 
@@ -208,43 +208,38 @@ cib_remote_auth(xmlNode * login)
     const char *pass = NULL;
     const char *tmp = NULL;
 
-    crm_log_xml_info(login, "Login: ");
     if (login == NULL) {
         return FALSE;
     }
 
     if (!pcmk__xe_is(login, PCMK__XE_CIB_COMMAND)) {
-        crm_err("Unrecognizable message from remote client");
-        crm_log_xml_info(login, "bad");
+        crm_warn("Rejecting remote client: Unrecognizable message "
+                 "(element '%s' not '" PCMK__XE_CIB_COMMAND "')", login->name);
+        crm_log_xml_debug(login, "bad");
         return FALSE;
     }
 
     tmp = crm_element_value(login, PCMK_XA_OP);
     if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
-        crm_err("Wrong operation: %s", tmp);
+        crm_warn("Rejecting remote client: Unrecognizable message "
+                 "(operation '%s' not 'authenticate')", tmp);
+        crm_log_xml_debug(login, "bad");
         return FALSE;
     }
 
     user = crm_element_value(login, PCMK_XA_USER);
     pass = crm_element_value(login, PCMK__XA_PASSWORD);
-
     if (!user || !pass) {
-        crm_err("missing auth credentials");
+        crm_warn("Rejecting remote client: No %s given",
+                 ((user == NULL)? "username" : "password"));
+        crm_log_xml_debug(login, "bad");
         return FALSE;
     }
 
-    /* Non-root daemons can only validate the password of the
-     * user they're running as
-     */
-    if (check_group_membership(user, CRM_DAEMON_GROUP) == FALSE) {
-        crm_err("User is not a member of the required group");
-        return FALSE;
+    crm_log_xml_debug(login, "auth");
 
-    } else if (!authenticate_user(user, pass)) {
-        return FALSE;
-    }
-
-    return TRUE;
+    return check_group_membership(user, CRM_DAEMON_GROUP)
+           && authenticate_user(user, pass);
 }
 
 static gboolean
@@ -286,18 +281,17 @@ cib_remote_listen(gpointer data)
     memset(&addr, 0, sizeof(addr));
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
     if (csock == -1) {
-        crm_err("Could not accept socket connection: %s", pcmk_rc_str(errno));
+        crm_warn("Could not accept remote connection: %s", pcmk_rc_str(errno));
         return TRUE;
     }
 
     pcmk__sockaddr2str(&addr, ipstr);
-    crm_debug("New %s connection from %s",
-              ((ssock == remote_tls_fd)? "secure" : "clear-text"), ipstr);
 
     rc = pcmk__set_nonblocking(csock);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not set socket non-blocking: %s " QB_XS " rc=%d",
-                pcmk_rc_str(rc), rc);
+        crm_warn("Dropping remote connection from %s because "
+                 "it could not be set to non-blocking: %s",
+                 ipstr, pcmk_rc_str(rc));
         close(csock);
         return TRUE;
     }
@@ -328,8 +322,9 @@ cib_remote_listen(gpointer data)
     new_client->remote->auth_timeout = g_timeout_add(REMOTE_AUTH_TIMEOUT,
                                                      remote_auth_timeout_cb,
                                                      new_client);
-    crm_info("Remote CIB client pending authentication "
-             QB_XS " %p id: %s", new_client, new_client->id);
+    crm_info("%s connection from %s pending authentication for client %s",
+             ((ssock == remote_tls_fd)? "Encrypted" : "Clear-text"),
+             ipstr, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
@@ -437,14 +432,14 @@ cib_remote_msg(gpointer data)
     pcmk__client_t *client = data;
     int rc;
     int timeout = 1000;
+    const char *client_name = pcmk__client_name(client);
 
     if (pcmk_is_set(client->flags, pcmk__client_authenticated)) {
         timeout = -1;
     }
 
     crm_trace("Remote %s message received for client %s",
-              pcmk__client_type_str(PCMK__CLIENT_TYPE(client)),
-              pcmk__client_name(client));
+              pcmk__client_type_str(PCMK__CLIENT_TYPE(client)), client_name);
 
     if ((PCMK__CLIENT_TYPE(client) == pcmk__client_tls)
         && !pcmk_is_set(client->flags, pcmk__client_tls_handshake_complete)) {
@@ -460,7 +455,7 @@ cib_remote_msg(gpointer data)
             return -1;
         }
 
-        crm_debug("TLS handshake with remote CIB client completed");
+        crm_debug("Completed TLS handshake with remote client %s", client_name);
         pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
         if (client->remote->auth_timeout) {
             g_source_remove(client->remote->auth_timeout);
@@ -486,7 +481,6 @@ cib_remote_msg(gpointer data)
             return -1;
         }
 
-        crm_notice("Remote CIB client connection accepted");
         pcmk__set_client_flags(client, pcmk__client_authenticated);
         g_source_remove(client->remote->auth_timeout);
         client->remote->auth_timeout = 0;
@@ -496,6 +490,10 @@ cib_remote_msg(gpointer data)
         if (user) {
             client->user = pcmk__str_copy(user);
         }
+
+        crm_notice("Remote connection accepted for authenticated user %s "
+                   QB_XS " client %s",
+                   pcmk__s(user, ""), client_name);
 
         /* send ACK */
         reg = pcmk__xe_create(NULL, PCMK__XE_CIB_RESULT);
@@ -508,14 +506,15 @@ cib_remote_msg(gpointer data)
 
     command = pcmk__remote_message_xml(client->remote);
     while (command) {
-        crm_trace("Remote client message received");
+        crm_trace("Remote message received from client %s", client_name);
         cib_handle_remote_msg(client, command);
         pcmk__xml_free(command);
         command = pcmk__remote_message_xml(client->remote);
     }
 
     if (rc == ENOTCONN) {
-        crm_trace("Remote CIB client disconnected while reading from it");
+        crm_trace("Remote CIB client %s disconnected while reading from it",
+                  client_name);
         return -1;
     }
 
@@ -621,14 +620,17 @@ authenticate_user(const char *user, const char *passwd)
 
     rc = pam_start(pam_name, user, &p_conv, &pam_h);
     if (rc != PAM_SUCCESS) {
-        crm_err("Could not initialize PAM: %s (%d)", pam_strerror(pam_h, rc), rc);
+        crm_warn("Rejecting remote client for user %s "
+                 "because PAM initialization failed: %s",
+                 user, pam_strerror(pam_h, rc));
         goto bail;
     }
 
     // Check user credentials
-    rc = pam_authenticate(pam_h, 0);
+    rc = pam_authenticate(pam_h, PAM_SILENT);
     if (rc != PAM_SUCCESS) {
-        crm_err("Authentication failed for %s: %s (%d)", user, pam_strerror(pam_h, rc), rc);
+        crm_notice("Access for remote user %s denied: %s",
+                   user, pam_strerror(pam_h, rc));
         goto bail;
     }
 
@@ -638,24 +640,30 @@ authenticate_user(const char *user, const char *passwd)
      */
     rc = pam_get_item(pam_h, PAM_USER, &p_user);
     if (rc != PAM_SUCCESS) {
-        crm_err("Internal PAM error: %s (%d)", pam_strerror(pam_h, rc), rc);
+        crm_warn("Rejecting remote client for user %s "
+                 "because PAM failed to return final user name: %s",
+                 user, pam_strerror(pam_h, rc));
         goto bail;
     }
     if (p_user == NULL) {
-        crm_err("Unknown user authenticated.");
+        crm_warn("Rejecting remote client for user %s "
+                 "because PAM returned no final user name", user);
         goto bail;
     }
 
     // @TODO Why do we require these to match?
     if (!pcmk__str_eq(p_user, user, pcmk__str_casei)) {
-        crm_err("User mismatch: %s vs. %s.", (const char *)p_user, (const char *)user);
+        crm_warn("Rejecting remote client for user %s "
+                 "because PAM returned different final user name %s",
+                 user, p_user);
         goto bail;
     }
 
     // Check user account restrictions (expiration, etc.)
-    rc = pam_acct_mgmt(pam_h, 0);
+    rc = pam_acct_mgmt(pam_h, PAM_SILENT);
     if (rc != PAM_SUCCESS) {
-        crm_err("Access denied: %s (%d)", pam_strerror(pam_h, rc), rc);
+        crm_notice("Access for remote user %s denied: %s",
+                   user, pam_strerror(pam_h, rc));
         goto bail;
     }
     pass = true;
