@@ -68,7 +68,7 @@ debug_log(int level, const char *str)
 #define REMOTE_AUTH_TIMEOUT 10000
 
 int num_clients;
-int authenticate_user(const char *user, const char *passwd);
+static bool authenticate_user(const char *user, const char *passwd);
 static int cib_remote_listen(gpointer data);
 static int cib_remote_msg(gpointer data);
 
@@ -240,8 +240,7 @@ cib_remote_auth(xmlNode * login)
         crm_err("User is not a member of the required group");
         return FALSE;
 
-    } else if (authenticate_user(user, pass) == FALSE) {
-        crm_err("PAM auth failed");
+    } else if (!authenticate_user(user, pass)) {
         return FALSE;
     }
 
@@ -587,25 +586,34 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
 }
 #endif
 
-int
+/*!
+ * \internal
+ * \brief Verify the username and password passed for a remote CIB connection
+ *
+ * \param[in] user    Username passed for remote CIB connection
+ * \param[in] passwd  Password passed for remote CIB connection
+ *
+ * \return \c true if the username and password are accepted, otherwise \c false
+ * \note This function accepts any username and password when built without PAM
+ *       support.
+ */
+static bool
 authenticate_user(const char *user, const char *passwd)
 {
-#ifndef HAVE_PAM
-    gboolean pass = TRUE;
-#else
+#ifdef HAVE_PAM
     int rc = 0;
-    gboolean pass = FALSE;
+    bool pass = false;
     const void *p_user = NULL;
-
     struct pam_conv p_conv;
     struct pam_handle *pam_h = NULL;
+
     static const char *pam_name = NULL;
 
     if (pam_name == NULL) {
         pam_name = getenv("CIB_pam_service");
-    }
-    if (pam_name == NULL) {
-        pam_name = "login";
+        if (pam_name == NULL) {
+            pam_name = "login";
+        }
     }
 
     p_conv.conv = construct_pam_passwd;
@@ -617,40 +625,46 @@ authenticate_user(const char *user, const char *passwd)
         goto bail;
     }
 
+    // Check user credentials
     rc = pam_authenticate(pam_h, 0);
     if (rc != PAM_SUCCESS) {
         crm_err("Authentication failed for %s: %s (%d)", user, pam_strerror(pam_h, rc), rc);
         goto bail;
     }
 
-    /* Make sure we authenticated the user we wanted to authenticate.
-     * Since we also run as non-root, it might be worth pre-checking
-     * the user has the same EID as us, since that the only user we
-     * can authenticate.
+    /* Get the authenticated user name (PAM modules can map the original name to
+     * something else). Since the CIB manager runs as the daemon user (not
+     * root), that is the only user that can be successfully authenticated.
      */
     rc = pam_get_item(pam_h, PAM_USER, &p_user);
     if (rc != PAM_SUCCESS) {
         crm_err("Internal PAM error: %s (%d)", pam_strerror(pam_h, rc), rc);
         goto bail;
-
-    } else if (p_user == NULL) {
+    }
+    if (p_user == NULL) {
         crm_err("Unknown user authenticated.");
         goto bail;
+    }
 
-    } else if (!pcmk__str_eq(p_user, user, pcmk__str_casei)) {
+    // @TODO Why do we require these to match?
+    if (!pcmk__str_eq(p_user, user, pcmk__str_casei)) {
         crm_err("User mismatch: %s vs. %s.", (const char *)p_user, (const char *)user);
         goto bail;
     }
 
+    // Check user account restrictions (expiration, etc.)
     rc = pam_acct_mgmt(pam_h, 0);
     if (rc != PAM_SUCCESS) {
         crm_err("Access denied: %s (%d)", pam_strerror(pam_h, rc), rc);
         goto bail;
     }
-    pass = TRUE;
+    pass = true;
 
-  bail:
+bail:
     pam_end(pam_h, rc);
-#endif
     return pass;
+#else
+    // @TODO Implement for non-PAM environments
+    return true;
+#endif
 }
