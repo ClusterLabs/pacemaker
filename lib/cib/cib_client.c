@@ -600,17 +600,17 @@ cib_new(void)
     const char *value = getenv("CIB_shadow");
     int port;
 
-    if (value && value[0] != 0) {
+    if (!pcmk__str_empty(value)) {
         return cib_shadow_new(value);
     }
 
     value = getenv("CIB_file");
-    if (value) {
+    if (!pcmk__str_empty(value)) {
         return cib_file_new(value);
     }
 
     value = getenv("CIB_port");
-    if (value) {
+    if (!pcmk__str_empty(value)) {
         gboolean encrypted = TRUE;
         const char *server = getenv("CIB_server");
         const char *user = getenv("CIB_user");
@@ -623,22 +623,20 @@ cib_new(void)
          */
         pcmk__scan_port(value, &port);
 
-        value = getenv("CIB_encrypted");
-        if (value && crm_is_true(value) == FALSE) {
-            crm_info("Disabling TLS");
+        if (!crm_is_true(getenv("CIB_encrypted"))) {
             encrypted = FALSE;
         }
 
-        if (user == NULL) {
+        if (pcmk__str_empty(user)) {
             user = CRM_DAEMON_USER;
-            crm_info("Defaulting to user: %s", user);
         }
 
-        if (server == NULL) {
+        if (pcmk__str_empty(server)) {
             server = "localhost";
-            crm_info("Defaulting to localhost");
         }
 
+        crm_debug("Initializing %s remote CIB access to %s:%d as user %s",
+                  (encrypted? "encrypted" : "plain-text"), server, port, user);
         return cib_remote_new(server, user, pass, port, encrypted);
     }
 
