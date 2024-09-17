@@ -542,7 +542,6 @@ static int
 construct_pam_passwd(int num_msg, const struct pam_message **msg,
                      struct pam_response **response, void *data)
 {
-    int count = 0;
     struct pam_response *reply;
     char *string = (char *)data;
 
@@ -551,26 +550,24 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
 
     reply = pcmk__assert_alloc(1, sizeof(struct pam_response));
 
-    for (count = 0; count < num_msg; ++count) {
-        switch (msg[count]->msg_style) {
-            case PAM_TEXT_INFO:
-                crm_info("PAM: %s", msg[count]->msg);
-                break;
-            case PAM_PROMPT_ECHO_OFF:
-            case PAM_PROMPT_ECHO_ON:
-                reply[count].resp_retcode = 0;
-                reply[count].resp = string;     /* We already made a copy */
-                break;
-            case PAM_ERROR_MSG:
-                /* In theory we'd want to print this, but then
-                 * we see the password prompt in the logs
-                 */
-                /* crm_err("PAM error: %s", msg[count]->msg); */
-                break;
-            default:
-                crm_err("Unhandled conversation type: %d", msg[count]->msg_style);
-                goto bail;
-        }
+    switch (msg[0]->msg_style) {
+        case PAM_TEXT_INFO:
+            crm_info("PAM: %s", msg[0]->msg);
+            break;
+        case PAM_PROMPT_ECHO_OFF:
+        case PAM_PROMPT_ECHO_ON:
+            reply[0].resp_retcode = 0;
+            reply[0].resp = string;     /* We already made a copy */
+            break;
+        case PAM_ERROR_MSG:
+            /* In theory we'd want to print this, but then
+             * we see the password prompt in the logs
+             */
+            /* crm_err("PAM error: %s", msg[0]->msg); */
+            break;
+        default:
+            crm_err("Unhandled conversation type: %d", msg[0]->msg_style);
+            goto bail;
     }
 
     *response = reply;
@@ -579,20 +576,18 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
     return PAM_SUCCESS;
 
   bail:
-    for (count = 0; count < num_msg; ++count) {
-        if (reply[count].resp != NULL) {
-            switch (msg[count]->msg_style) {
-                case PAM_PROMPT_ECHO_ON:
-                case PAM_PROMPT_ECHO_OFF:
-                    /* Erase the data - it contained a password */
-                    while (*(reply[count].resp)) {
-                        *(reply[count].resp)++ = '\0';
-                    }
-                    free(reply[count].resp);
-                    break;
-            }
-            reply[count].resp = NULL;
+    if (reply[0].resp != NULL) {
+        switch (msg[0]->msg_style) {
+            case PAM_PROMPT_ECHO_ON:
+            case PAM_PROMPT_ECHO_OFF:
+                /* Erase the data - it contained a password */
+                while (*(reply[0].resp)) {
+                    *(reply[0].resp)++ = '\0';
+                }
+                free(reply[0].resp);
+                break;
         }
+        reply[0].resp = NULL;
     }
     free(reply);
     reply = NULL;
