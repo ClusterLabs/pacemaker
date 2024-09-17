@@ -195,62 +195,112 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     return rc;
 }
 
+struct remote_cb_data_s {
+    cib_t *cib;
+    time_t start_time;
+    int timeout_sec;
+};
+
 static int
 cib_remote_callback_dispatch(gpointer user_data)
 {
+    struct remote_cb_data_s *rd = user_data;
+    cib_t *cib = rd->cib;
     int rc;
-    cib_t *cib = user_data;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
     xmlNode *msg = NULL;
+    const char *type = NULL;
 
-    crm_info("Message on callback channel");
-
-    rc = pcmk__read_remote_message(&private->callback, -1);
-
-    msg = pcmk__remote_message_xml(&private->callback);
-    while (msg) {
-        const char *type = crm_element_value(msg, PCMK__XA_T);
-
-        crm_trace("Activating %s callbacks...", type);
-
-        if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
-            cib_native_callback(cib, msg, 0, 0);
-
-        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
-            g_list_foreach(cib->notify_list, cib_native_notify, msg);
-
-        } else {
-            crm_err("Unknown message type: %s", type);
-        }
-
-        pcmk__xml_free(msg);
-        msg = pcmk__remote_message_xml(&private->callback);
-    }
-
-    if (rc == ENOTCONN) {
+    /* If start_time is 0, we've previously handled a complete message and this
+     * callback is being reused for a new message.  Reset the start_time, giving
+     * this new message timeout_sec from now to complete.
+     */
+    if (rd->start_time == 0) {
+        rd->start_time = time(NULL);
+    } else if (time(NULL) >= rd->start_time + rd->timeout_sec) {
+        free(rd);
+        crm_info("Error reading from remote client: %s", pcmk_rc_str(ETIME));
         return -1;
     }
 
+    rc = pcmk__read_available_remote_data(&private->callback);
+    switch (rc) {
+        case pcmk_rc_ok:
+            /* We have the whole message so process it */
+            break;
+
+        case EAGAIN:
+            /* We haven't read the whole message yet */
+            return 0;
+
+        default:
+            /* Error */
+            crm_info("Error reading from remote client: %s", pcmk_rc_str(rc));
+            free(rd);
+            return -1;
+    }
+
+    crm_info("Message on callback channel");
+
+    msg = pcmk__remote_message_xml(&private->callback);
+    if (msg == NULL) {
+        rd->start_time = 0;
+        return 0;
+    }
+
+    type = crm_element_value(msg, PCMK__XA_T);
+
+    crm_trace("Activating %s callbacks...", type);
+
+    if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
+        cib_native_callback(cib, msg, 0, 0);
+    } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
+        g_list_foreach(cib->notify_list, cib_native_notify, msg);
+    } else {
+        crm_err("Unknown message type: %s", type);
+    }
+
+    pcmk__xml_free(msg);
+
+    rd->start_time = 0;
     return 0;
 }
 
 static int
 cib_remote_command_dispatch(gpointer user_data)
 {
+    struct remote_cb_data_s *rd = user_data;
+    cib_t *cib = rd->cib;
     int rc;
-    cib_t *cib = user_data;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    rc = pcmk__read_remote_message(&private->command, -1);
+    /* See cib_remote_callback_dispatch */
+    if (rd->start_time == 0) {
+        rd->start_time = time(NULL);
+    } else if (time(NULL) >= rd->start_time + rd->timeout_sec) {
+        free(rd);
+        crm_info("Error reading from remote client: %s", pcmk_rc_str(ETIME));
+        return -1;
+    }
+
+    rc = pcmk__read_available_remote_data(&private->command);
+    if (rc == EAGAIN) {
+        /* We haven't read the whole message yet */
+        return 0;
+    }
 
     free(private->command.buffer);
     private->command.buffer = NULL;
     crm_err("received late reply for remote cib connection, discarding");
 
-    if (rc == ENOTCONN) {
+    if (rc != pcmk_rc_ok) {
+        crm_info("Error reading from remote client: %s", pcmk_rc_str(rc));
+        free(rd);
         return -1;
     }
+
+    rd->start_time = 0;
     return 0;
 }
 
@@ -316,6 +366,10 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     xmlNode *login = NULL;
 
     static struct mainloop_fd_callbacks cib_fd_callbacks = { 0, };
+
+    struct remote_cb_data_s *rd = pcmk__assert_alloc(1, sizeof(struct remote_cb_data_s));
+    rd->cib = cib;
+    rd->timeout_sec = 60;
 
     cib_fd_callbacks.dispatch =
         event_channel ? cib_remote_callback_dispatch : cib_remote_command_dispatch;
@@ -413,7 +467,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     crm_trace("remote client connection established");
     connection->source = mainloop_add_fd("cib-remote", G_PRIORITY_HIGH,
-                                         connection->tcp_socket, cib,
+                                         connection->tcp_socket, rd,
                                          &cib_fd_callbacks);
     return rc;
 }
