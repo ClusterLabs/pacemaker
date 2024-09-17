@@ -1781,29 +1781,43 @@ crm_time_add_seconds(crm_time_t *a_time, int extra)
     crm_time_add_days(a_time, days);
 }
 
+#define ydays(t) (crm_time_leapyear((t)->years)? 366 : 365)
+
+/*!
+ * \brief Add days to a date/time
+ *
+ * \param[in,out] a_time  Time to modify
+ * \param[in]     extra   Number of days to add (may be negative to subtract)
+ */
 void
-crm_time_add_days(crm_time_t * a_time, int extra)
+crm_time_add_days(crm_time_t *a_time, int extra)
 {
-    int lower_bound = 1;
-    int ydays = crm_time_leapyear(a_time->years) ? 366 : 365;
+    CRM_ASSERT(a_time != NULL);
 
     crm_trace("Adding %d days to %.4d-%.3d", extra, a_time->years, a_time->days);
 
+    if (extra > 0) {
+        while ((a_time->days + (long long) extra) > ydays(a_time)) {
+            if ((a_time->years + 1LL) > INT_MAX) {
+                a_time->days = ydays(a_time); // Clip to latest we can handle
+                return;
+            }
+            extra -= ydays(a_time);
+            a_time->years++;
+        }
+    } else if (extra < 0) {
+        const int min_days = a_time->duration? 0 : 1;
+
+        while ((a_time->days + (long long) extra) < min_days) {
+            if ((a_time->years - 1) < 1) {
+                a_time->days = 1; // Clip to earliest we can handle (no BCE)
+                return;
+            }
+            a_time->years--;
+            extra += ydays(a_time);
+        }
+    }
     a_time->days += extra;
-    while (a_time->days > ydays) {
-        a_time->years++;
-        a_time->days -= ydays;
-        ydays = crm_time_leapyear(a_time->years) ? 366 : 365;
-    }
-
-    if(a_time->duration) {
-        lower_bound = 0;
-    }
-
-    while (a_time->days < lower_bound) {
-        a_time->years--;
-        a_time->days += crm_time_leapyear(a_time->years) ? 366 : 365;
-    }
 }
 
 void
