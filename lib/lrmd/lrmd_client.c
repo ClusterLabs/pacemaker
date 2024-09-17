@@ -477,6 +477,66 @@ lrmd_tls_dispatch(gpointer userdata)
     return 0;
 }
 
+static int
+lrmd_tls_dispatch_async(gpointer userdata)
+{
+    lrmd_t *lrmd = userdata;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    xmlNode *xml = NULL;
+    int rc = pcmk_rc_ok;
+
+    if (!remote_executor_connected(lrmd)) {
+        crm_trace("TLS dispatch triggered after disconnect");
+        return -1;
+    }
+
+    crm_trace("TLS dispatch triggered");
+
+    /* Read the current buffer and see if there are any messages to handle. */
+    rc = pcmk__remote_ready(native->remote, 0);
+    switch (rc) {
+        case pcmk_rc_ok:
+            break;
+
+        case ETIME:
+            /* No message available to read */
+            return 0;
+
+        default:
+            /* Error */
+            crm_info("Lost %s executor connection while reading data",
+                     (native->remote_nodename? native->remote_nodename : "local"));
+            lrmd_tls_disconnect(lrmd);
+            return -1;
+    }
+
+    rc = pcmk__read_available_remote_data(native->remote);
+    switch (rc) {
+        case pcmk_rc_ok:
+            break;
+
+        case EAGAIN:
+            /* We haven't read the whole message yet */
+            return 0;
+
+        default:
+            /* Error */
+            crm_info("Lost %s executor connection while reading data",
+                     (native->remote_nodename? native->remote_nodename : "local"));
+            lrmd_tls_disconnect(lrmd);
+            return -1;
+    }
+
+    xml = pcmk__remote_message_xml(native->remote);
+    if (xml == NULL) {
+        return 0;
+    }
+
+    handle_remote_msg(xml, lrmd);
+    pcmk__xml_free(xml);
+    return 0;
+}
+
 /* Not used with mainloop */
 int
 lrmd_poll(lrmd_t * lrmd, int timeout)
@@ -1407,7 +1467,7 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake)
                                    native->server, native->port);
 
     struct mainloop_fd_callbacks tls_fd_callbacks = {
-        .dispatch = lrmd_tls_dispatch,
+        .dispatch = lrmd_tls_dispatch_async,
         .destroy = lrmd_tls_connection_destroy,
     };
 
