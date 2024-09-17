@@ -401,19 +401,30 @@ handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
     }
 }
 
-static void
-process_pending_notifies(lrmd_t *lrmd)
+/*!
+ * \internal
+ * \brief Notify trigger handler
+ *
+ * \param[in,out] userdata API connection
+ *
+ * \return Always return G_SOURCE_CONTINUE to leave this trigger handler in the
+ *         mainloop
+ */
+static int
+process_pending_notifies(gpointer userdata)
 {
+    lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
 
     if (native->pending_notify == NULL) {
-        return;
+        return G_SOURCE_CONTINUE;
     }
 
     crm_trace("Processing pending notifies");
     g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
     g_list_free_full(native->pending_notify, lrmd_free_xml);
     native->pending_notify = NULL;
+    return G_SOURCE_CONTINUE;
 }
 
 /*!
@@ -442,12 +453,6 @@ lrmd_tls_dispatch(gpointer userdata)
 
     crm_trace("TLS dispatch triggered");
 
-    /* First check if there are any pending notifies to process that came
-     * while we were waiting for replies earlier.
-     */
-    process_pending_notifies(lrmd);
-
-    /* Next read the current buffer and see if there are any messages to handle. */
     rc = pcmk__remote_ready(native->remote, 0);
     if (rc == pcmk_rc_ok) {
         rc = pcmk__read_remote_message(native->remote, -1);
@@ -1409,7 +1414,7 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake)
     };
 
     native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH,
-                                                  lrmd_tls_dispatch, lrmd);
+                                                  process_pending_notifies, lrmd);
     native->source = mainloop_add_fd(name, G_PRIORITY_HIGH, native->sock, lrmd,
                                      &tls_fd_callbacks);
 
