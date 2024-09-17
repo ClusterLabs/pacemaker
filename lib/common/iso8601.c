@@ -1145,6 +1145,7 @@ crm_time_parse_duration(const char *period_s)
          ++current) {
 
         int an_int = 0, rc;
+        long long result = 0LL;
 
         if (current[0] == 'T') {
             /* A 'T' separates year/month/day from hour/minute/seconds. We don't
@@ -1173,60 +1174,70 @@ crm_time_parse_duration(const char *period_s)
             case 'M':
                 if (!is_time) { // Months
                     diff->months = an_int;
-
-                // Minutes
-                } else if ((diff->seconds + (an_int * 60LL)) > INT_MAX) {
-                    crm_err("'%s' is not a valid ISO 8601 time duration "
-                            "because integer at '%s' is too large",
-                            period_s, current - rc);
-                    goto invalid;
-                } else {
-                    diff->seconds += an_int * 60;
+                } else { // Minutes
+                    result = diff->seconds + an_int * 60LL;
+                    if ((result < INT_MIN) || (result > INT_MAX)) {
+                        crm_err("'%s' is not a valid ISO 8601 time duration "
+                                "because integer at '%s' is too %s",
+                                period_s, current - rc,
+                                ((result > 0)? "large" : "small"));
+                        goto invalid;
+                    } else {
+                        diff->seconds = (int) result;
+                    }
                 }
+
                 break;
 
             case 'W':
-                if ((diff->days + (an_int * 7LL)) > INT_MAX) {
+                result = diff->days + an_int * 7LL;
+                if ((result < INT_MIN) || (result > INT_MAX)) {
                     crm_err("'%s' is not a valid ISO 8601 time duration "
-                            "because integer at '%s' is too large",
-                            period_s, current - rc);
+                            "because integer at '%s' is too %s",
+                            period_s, current - rc,
+                            ((result > 0)? "large" : "small"));
                     goto invalid;
                 } else {
-                    diff->days += an_int * 7;
+                    diff->days = (int) result;
                 }
                 break;
 
             case 'D':
-                if ((diff->days + (long long) an_int) > INT_MAX) {
+                result = diff->days + (long long) an_int;
+                if ((result < INT_MIN) || (result > INT_MAX)) {
                     crm_err("'%s' is not a valid ISO 8601 time duration "
-                            "because integer at '%s' is too large",
-                            period_s, current - rc);
+                            "because integer at '%s' is too %s",
+                            period_s, current - rc,
+                            ((result > 0)? "large" : "small"));
                     goto invalid;
                 } else {
-                    diff->days += an_int;
+                    diff->days = (int) result;
                 }
                 break;
 
             case 'H':
-                if ((diff->seconds + ((long long) an_int * HOUR_SECONDS))
-                    > INT_MAX) {
+                result = diff->seconds + (long long) an_int * HOUR_SECONDS;
+                if ((result < INT_MIN) || (result > INT_MAX)) {
                     crm_err("'%s' is not a valid ISO 8601 time duration "
-                            "because integer at '%s' is too large",
-                            period_s, current - rc);
+                            "because integer at '%s' is too %s",
+                            period_s, current - rc,
+                            ((result > 0)? "large" : "small"));
                     goto invalid;
                 } else {
-                    diff->seconds += an_int * HOUR_SECONDS;
+                    diff->seconds = (int) result;
                 }
                 break;
 
             case 'S':
-                if ((diff->seconds + (long long) an_int) > INT_MAX) {
+                result = diff->seconds + (long long) an_int;
+                if ((result < INT_MIN) || (result > INT_MAX)) {
                     crm_err("'%s' is not a valid ISO 8601 time duration "
-                            "because integer at '%s' is too large",
-                            period_s, current - rc);
+                            "because integer at '%s' is too %s",
+                            period_s, current - rc,
+                            ((result > 0)? "large" : "small"));
                     goto invalid;
                 } else {
-                    diff->seconds += an_int;
+                    diff->seconds = (int) result;
                 }
                 break;
 
