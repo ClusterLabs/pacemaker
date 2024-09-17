@@ -429,14 +429,12 @@ process_pending_notifies(gpointer userdata)
 
 /*!
  * \internal
- * \brief TLS dispatch function (for both trigger and file descriptor sources)
+ * \brief TLS dispatch function for file descriptor sources
  *
  * \param[in,out] userdata  API connection
  *
- * \return Always return a nonnegative value, which as a file descriptor
- *         dispatch function means keep the mainloop source, and as a
- *         trigger dispatch function, 0 means remove the trigger from the
- *         mainloop while 1 means keep it (and job completed)
+ * \return -1 on error to remove the source from the mainloop, or 0 otherwise
+ *         to leave it in the mainloop
  */
 static int
 lrmd_tls_dispatch(gpointer userdata)
@@ -448,7 +446,7 @@ lrmd_tls_dispatch(gpointer userdata)
 
     if (!remote_executor_connected(lrmd)) {
         crm_trace("TLS dispatch triggered after disconnect");
-        return 0;
+        return -1;
     }
 
     crm_trace("TLS dispatch triggered");
@@ -462,7 +460,7 @@ lrmd_tls_dispatch(gpointer userdata)
         crm_info("Lost %s executor connection while reading data",
                  (native->remote_nodename? native->remote_nodename : "local"));
         lrmd_tls_disconnect(lrmd);
-        return 0;
+        return -1;
     }
 
     /* If rc is ETIME, there was nothing to read but we may already have a
@@ -471,12 +469,12 @@ lrmd_tls_dispatch(gpointer userdata)
     xml = pcmk__remote_message_xml(native->remote);
 
     if (xml == NULL) {
-        return 1;
+        return 0;
     }
 
     handle_remote_msg(xml, lrmd);
     pcmk__xml_free(xml);
-    return 1;
+    return 0;
 }
 
 /* Not used with mainloop */
