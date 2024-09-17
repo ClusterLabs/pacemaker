@@ -589,7 +589,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
         return PAM_BUF_ERR;
     }
     (*response)->resp_retcode = 0;
-    (*response)->resp = (char *) data;
+    (*response)->resp = pcmk__str_copy((const char *) data); // Caller will free
     return PAM_SUCCESS;
 }
 #endif
@@ -625,7 +625,7 @@ authenticate_user(const char *user, const char *passwd)
     }
 
     p_conv.conv = construct_pam_passwd;
-    p_conv.appdata_ptr = pcmk__str_copy(passwd);
+    p_conv.appdata_ptr = (void *) passwd;
 
     rc = pam_start(pam_name, user, &p_conv, &pam_h);
     if (rc != PAM_SUCCESS) {
