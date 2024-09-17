@@ -519,61 +519,59 @@ cib_remote_msg(gpointer data)
 }
 
 #ifdef HAVE_PAM
+/*!
+ * \internal
+ * \brief Pass remote user's password to PAM
+ *
+ * \param[in]  num_msg   Number of entries in \p msg
+ * \param[in]  msg       Array of PAM messages
+ * \param[out] response  Where to set response to PAM
+ * \param[in]  data      User data (the password string)
+ *
+ * \return PAM return code (PAM_BUF_ERR for memory errors, PAM_CONV_ERR for all
+ *         other errors, or PAM_SUCCESS on success)
+ * \note See pam_conv(3) for more explanation
+ */
 static int
 construct_pam_passwd(int num_msg, const struct pam_message **msg,
                      struct pam_response **response, void *data)
 {
-    struct pam_response *reply;
-    char *string = (char *)data;
-
-    CRM_CHECK(data, return PAM_CONV_ERR);
-    CRM_CHECK(num_msg == 1, return PAM_CONV_ERR);       /* We only want to handle one message */
-
-    reply = pcmk__assert_alloc(1, sizeof(struct pam_response));
+    /* In theory, multiple messages are allowed, but due to OS compatibility
+     * issues, PAM implementations are recommended to only send one message at a
+     * time. We can require that here for simplicity.
+     */
+    CRM_CHECK((num_msg == 1) && (msg != NULL) && (response != NULL)
+              && (data != NULL), return PAM_CONV_ERR);
 
     switch (msg[0]->msg_style) {
-        case PAM_TEXT_INFO:
-            crm_info("PAM: %s", msg[0]->msg);
-            break;
         case PAM_PROMPT_ECHO_OFF:
         case PAM_PROMPT_ECHO_ON:
-            reply[0].resp_retcode = 0;
-            reply[0].resp = string;     /* We already made a copy */
+            // Password requested
+            break;
+        case PAM_TEXT_INFO:
+            crm_info("PAM: %s", msg[0]->msg);
+            data = NULL;
             break;
         case PAM_ERROR_MSG:
-            /* In theory we'd want to print this, but then
-             * we see the password prompt in the logs
+            /* In theory we should show msg[0]->msg, but that might
+             * contain the password, which we don't want in the logs
              */
-            /* crm_err("PAM error: %s", msg[0]->msg); */
+            crm_err("PAM reported an error");
+            data = NULL;
             break;
         default:
-            crm_err("Unhandled conversation type: %d", msg[0]->msg_style);
-            goto bail;
+            crm_warn("Ignoring PAM message of unrecognized type %d",
+                     msg[0]->msg_style);
+            return PAM_CONV_ERR;
     }
 
-    *response = reply;
-    reply = NULL;
-
+    *response = calloc(1, sizeof(struct pam_response));
+    if (*response == NULL) {
+        return PAM_BUF_ERR;
+    }
+    (*response)->resp_retcode = 0;
+    (*response)->resp = (char *) data;
     return PAM_SUCCESS;
-
-  bail:
-    if (reply[0].resp != NULL) {
-        switch (msg[0]->msg_style) {
-            case PAM_PROMPT_ECHO_ON:
-            case PAM_PROMPT_ECHO_OFF:
-                /* Erase the data - it contained a password */
-                while (*(reply[0].resp)) {
-                    *(reply[0].resp)++ = '\0';
-                }
-                free(reply[0].resp);
-                break;
-        }
-        reply[0].resp = NULL;
-    }
-    free(reply);
-    reply = NULL;
-
-    return PAM_CONV_ERR;
 }
 #endif
 
