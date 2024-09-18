@@ -361,8 +361,6 @@ _____________
    same thing as *promotable*. Certain syntax is supported for backward
    compatibility, but is deprecated and will be removed in a future version:
 
-   * Using a ``master`` tag, instead of a ``clone`` tag with the ``promotable``
-     meta-attribute set to ``true``
    * Using the ``master-max`` meta-attribute instead of ``promoted-max``
    * Using the ``master-node-max`` meta-attribute instead of
      ``promoted-node-max``

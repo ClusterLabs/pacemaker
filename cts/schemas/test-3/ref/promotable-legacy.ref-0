@@ -1,0 +1,58 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-3.10" epoch="8" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * There is one legacy promotable clone resources (rsc1-master) whose
+           instances are primitives.
+         * There is another legacy promotable clone resource (grp1-master) whose
+           instances are groups.
+         * Both legacy promotable clones have an existing meta_attributes
+           element. (This is to test that we prepend, rather than append, a new
+           one.)
+
+         In this situation:
+         * Each master element should be converted to a clone element.
+         * Each newly converted clone element should get a new meta_attributes
+           element prepended with score="INFINITY", containing an nvpair with
+           promotable="true".
+      -->
+    <crm_config original="1"/>
+    <nodes original="1"/>
+    <resources original="1">
+      <master id="rsc1-master" original="1">
+        <primitive id="rsc1" class="ocf" type="Dummy" provider="pacemaker" original="1">
+          <operations original="1">
+            <op name="monitor" interval="10s" timeout="20s" id="rsc1-monitor-interval-10s" original="1"/>
+            <op name="start" interval="0s" timeout="20s" id="rsc1-start-interval-0s" original="1"/>
+            <op name="stop" interval="0s" timeout="20s" id="rsc1-stop-interval-0s" original="1"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="rsc1-master-meta_attributes" original="1">
+          <nvpair id="rsc1-master-meta_attributes-some-attr" name="some-attr" value="some_value" original="1"/>
+        </meta_attributes>
+      </master>
+      <master id="grp1-master" original="1">
+        <group id="grp1" original="1">
+          <primitive id="rsc3" class="ocf" type="Dummy" provider="pacemaker" original="1">
+            <operations original="1">
+              <op name="monitor" interval="10s" timeout="20s" id="rsc3-monitor-interval-10s" original="1"/>
+              <op name="start" interval="0s" timeout="20s" id="rsc3-start-interval-0s" original="1"/>
+              <op name="stop" interval="0s" timeout="20s" id="rsc3-stop-interval-0s" original="1"/>
+            </operations>
+          </primitive>
+          <primitive id="rsc4" class="ocf" type="Dummy" provider="pacemaker" original="1">
+            <operations original="1">
+              <op name="monitor" interval="10s" timeout="20s" id="rsc4-monitor-interval-10s" original="1"/>
+              <op name="start" interval="0s" timeout="20s" id="rsc4-start-interval-0s" original="1"/>
+              <op name="stop" interval="0s" timeout="20s" id="rsc4-stop-interval-0s" original="1"/>
+            </operations>
+          </primitive>
+        </group>
+        <meta_attributes id="grp1-master-meta_attributes" original="1">
+          <nvpair id="grp1-master-meta_attributes-some-attr" name="some-attr" value="some_value" original="1"/>
+        </meta_attributes>
+      </master>
+    </resources>
+    <constraints original="1"/>
+  </configuration>
+  <status original="1"/>
+</cib>
