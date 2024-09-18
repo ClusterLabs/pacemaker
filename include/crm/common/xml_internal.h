@@ -23,7 +23,6 @@
 #include <crm/common/output_internal.h>
 #include <crm/common/xml_idref_internal.h>
 #include <crm/common/xml_io_internal.h>
-#include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
 #include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE
 
 #include <libxml/relaxng.h>
@@ -581,20 +580,6 @@ pcmk__xml_attr_value(const xmlAttr *attr)
 {
     return ((attr == NULL) || (attr->children == NULL))? NULL
            : (const char *) attr->children->content;
-}
-
-// @COMPAT Drop when PCMK__XE_PROMOTABLE_LEGACY is removed
-static inline const char *
-pcmk__map_element_name(const xmlNode *xml)
-{
-    if (xml == NULL) {
-        return NULL;
-    } else if (pcmk__xe_is(xml, PCMK__XE_PROMOTABLE_LEGACY)) {
-        // @COMPAT Not possible with schema validation enabled
-        return PCMK_XE_CLONE;
-    } else {
-        return (const char *) xml->name;
-    }
 }
 
 /*!

@@ -119,8 +119,8 @@ cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
     all = g_list_prepend(all, (gpointer) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
-    out->message(out, pcmk__map_element_name(rsc->priv->xml), show_opts, rsc,
-                 all, all);
+    out->message(out, (const char *) rsc->priv->xml->name, show_opts, rsc, all,
+                 all);
     out->message(out, "resource-config", rsc, !expanded);
     out->end_list(out);
 
