@@ -34,8 +34,7 @@ Configuration Using Higher-level Tools
 ######################################
 
 Most users will benefit from using higher-level tools provided by projects
-separate from Pacemaker. Some of the most commonly used include the crm shell,
-hawk, and pcs. [#]_
+separate from Pacemaker. Popular ones include the crm shell and pcs. [#]_
 
 See those projects' documentation for details on how to configure Pacemaker
 using them.
@@ -184,10 +183,18 @@ to the "Rules" chapter of *Pacemaker Explained*.
 Connecting from a Remote Machine
 ################################
 
-Provided Pacemaker is installed on a machine, it is possible to connect to the
-cluster even if the machine itself is not in the same cluster. To do this, one
-simply sets the following environment variables and runs the same commands as
-when working on a cluster node:
+It is possible to run configuration commands from a machine that is not part of
+the cluster.
+
+For security reasons, this capability is disabled by default. If you wish to
+allow remote access, set the ``remote-tls-port`` (encrypted) or
+``remote-clear-port`` (unencrypted) CIB properties (attributes of the ``cib``
+element). Encrypted communication is keyless, which makes it subject to
+man-in-the-middle attacks, so either option should be used only on protected
+networks.
+
+The administrator's machine simply needs Pacemaker installed. To connect to the
+cluster, set the following environment variables:
 
 * :ref:`CIB_port <CIB_port>` (required)
 * :ref:`CIB_server <CIB_server>`
@@ -195,30 +202,25 @@ when working on a cluster node:
 * :ref:`CIB_passwd <CIB_passwd>`
 * :ref:`CIB_encrypted <CIB_encrypted>`
 
-So, if **c001n01** is an active cluster node and is listening on port 1234
-for connections, and **someuser** is a member of the |CRM_DAEMON_GROUP| group,
-then the following would prompt for **someuser**'s password and return
-the cluster's current configuration:
+Only the Pacemaker daemon user (|CRM_DAEMON_USER|) may be used as ``CIB_user``.
+
+As an example, if **node1** is a cluster node, and the CIB is configured with
+``remote-tls-port`` set to 1234, the administrator could read the current
+cluster configuration using the following commands, and would be prompted for
+the daemon user's password:
 
 .. code-block:: none
 
-   # export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someuser;
+   # export CIB_server=node1; export CIB_port=1234; export CIB_encrypted=true
    # cibadmin -Q
 
-For security reasons, the cluster does not listen for remote connections by
-default.  If you wish to allow remote access, you need to set the
-``remote-tls-port`` (encrypted) or ``remote-clear-port`` (unencrypted) CIB
-properties (i.e., those kept in the ``cib`` tag, like ``num_updates`` and
-``epoch``). Encrypted communication is keyless, which makes it subject to
-man-in-the-middle attacks, and thus either option should be used only on
-protected networks.
+.. note::
 
-.. important::
-
-   The Pacemaker version on the administration host must be the same or greater
-   than the version(s) on the cluster nodes. Otherwise, it may not have the
-   schema files necessary to validate the CIB.
-
+   Pacemaker must have been built with PAM support in order for Pacemaker to
+   authenticate the user credentials. In a build without PAM support, all
+   remote connections are accepted without authentication. You can check for
+   PAM support *(since 2.1.9)* by running ``pacemakerd --features``. If the
+   output contains **pam**, authentication is supported.
 
 .. rubric:: Footnotes
 
