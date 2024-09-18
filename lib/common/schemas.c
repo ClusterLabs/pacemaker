@@ -1062,7 +1062,7 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
     final = apply_transformation(xml, schema->transform, to_logs);
     if (upgrade != xml) {
         free_xml(upgrade);
-        upgrade = NULL;
+        /* upgrade = NULL; */ // Static analysis dislikes this, so be careful
     }
 
     if ((final != NULL) && transform_onleave) {

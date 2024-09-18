@@ -358,8 +358,19 @@ compare_int_fields(xmlNode * left, xmlNode * right, const char *field)
     long long int_elem_l;
     long long int_elem_r;
 
-    pcmk__scan_ll(elem_l, &int_elem_l, -1LL);
-    pcmk__scan_ll(elem_r, &int_elem_r, -1LL);
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__scan_ll(elem_l, &int_elem_l, -1LL);
+    if (rc != pcmk_rc_ok) { // Shouldn't be possible
+        crm_warn("Comparing current CIB %s as -1 "
+                 "because '%s' is not an integer", field, elem_l);
+    }
+
+    rc = pcmk__scan_ll(elem_r, &int_elem_r, -1LL);
+    if (rc != pcmk_rc_ok) { // Shouldn't be possible
+        crm_warn("Comparing joining node's CIB %s as -1 "
+                 "because '%s' is not an integer", field, elem_r);
+    }
 
     if (int_elem_l < int_elem_r) {
         return -1;

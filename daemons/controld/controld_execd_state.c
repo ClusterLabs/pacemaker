@@ -78,7 +78,9 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     event.interval_ms = op->interval_ms;
     lrmd__set_result(&event, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_NOT_CONNECTED,
                      "Action was pending when executor connection was dropped");
+    // coverity[store_truncates_time_t]
     event.t_run = (unsigned int) op->start_time;
+    // coverity[store_truncates_time_t]
     event.t_rcchange = (unsigned int) op->start_time;
 
     event.call_id = op->call_id;

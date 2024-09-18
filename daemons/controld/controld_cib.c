@@ -748,6 +748,7 @@ controld_record_pending_op(const char *node_name, const lrmd_rsc_info_t *rsc,
     }
 
     op->call_id = -1;
+    // coverity[store_truncates_time_t]
     op->t_run = time(NULL);
     op->t_rcchange = op->t_run;
 

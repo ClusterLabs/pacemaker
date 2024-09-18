@@ -735,7 +735,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         node = pcmk_find_node(parent->cluster, uname);
         if (node == NULL) {
             node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
-                                  PCMK_VALUE_MINUS_INFINITY, parent->cluster);
+                                  -PCMK_SCORE_INFINITY, parent->cluster);
         } else {
             node->weight = -PCMK_SCORE_INFINITY;
         }

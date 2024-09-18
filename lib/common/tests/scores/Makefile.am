@@ -13,6 +13,7 @@ include $(top_srcdir)/mk/unittest.mk
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = char2score_test 		\
 		 pcmk__add_scores_test		\
+		 pcmk_parse_score_test		\
 		 pcmk_readable_score_test
 
 TESTS = $(check_PROGRAMS)

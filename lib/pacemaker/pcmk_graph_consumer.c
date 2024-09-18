@@ -860,6 +860,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
                         crm_element_value(action->xml, PCMK_XA_OPERATION),
                         action->interval_ms);
     lrmd__set_result(op, rc, status, exit_reason);
+    // coverity[store_truncates_time_t]
     op->t_run = time(NULL);
     op->t_rcchange = op->t_run;
     op->params = pcmk__strkey_table(free, free);

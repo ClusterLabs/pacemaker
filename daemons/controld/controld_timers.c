@@ -383,6 +383,7 @@ controld_start_recheck_timer(void)
             // We're already past the desired time
             period_ms = 500;
         } else {
+            // coverity[store_truncates_time_t]
             period_ms = (guint) diff_seconds * 1000;
         }
 
