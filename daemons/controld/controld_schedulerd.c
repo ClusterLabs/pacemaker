@@ -494,11 +494,11 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_xml_add_int(output, PCMK_XA_NO_QUORUM_PANIC, 1);
     }
 
-    rc = pcmk_rc2legacy(pcmk_schedulerd_api_graph(schedulerd_api, output, &ref));
-
-    if (rc < 0) {
+    rc = pcmk_schedulerd_api_graph(schedulerd_api, output, &ref);
+    if (rc != pcmk_rc_ok) {
+        free(ref);
         crm_err("Could not contact the scheduler: %s " QB_XS " rc=%d",
-                pcmk_strerror(rc), rc);
+                pcmk_rc_str(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
     } else {
         CRM_ASSERT(ref != NULL);
