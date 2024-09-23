@@ -3,15 +3,13 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to set unrecognized validate-with - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin              - Try to set unrecognized validate-with
 =#=#=#= Begin test: Try to remove validate-with attribute =#=#=#=
-=#=#=#= End test: Try to remove validate-with attribute - OK (0) =#=#=#=
+Call failed: Update does not conform to the configured schema
+=#=#=#= End test: Try to remove validate-with attribute - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin              - Try to remove validate-with attribute
-=#=#=#= Begin test: Reset valid validate-with attribute =#=#=#=
-=#=#=#= End test: Reset valid validate-with attribute - OK (0) =#=#=#=
-* Passed: cibadmin              - Reset valid validate-with attribute
 =#=#=#= Begin test: Try to use rsc_order first-action value disallowed by schema =#=#=#=
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to use rsc_order first-action value disallowed by schema =#=#=#=
-<cib epoch="4" num_updates="2" admin_epoch="0">
+<cib epoch="4" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -30,7 +28,7 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= Begin test: Try to use configuration legal only with schema after configured one =#=#=#=
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to use configuration legal only with schema after configured one =#=#=#=
-<cib epoch="4" num_updates="2" admin_epoch="0">
+<cib epoch="4" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>

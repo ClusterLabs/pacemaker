@@ -2897,10 +2897,7 @@ class ValidityRegressionTest(RegressionTest):
             Test("Try to remove validate-with attribute",
                  "cibadmin -R -p",
                  stdin=StdinCmd("""cibadmin -Q | sed 's#validate-with="[^"]*"##'"""),
-                 expected_rc=ExitStatus.OK),
-            Test("Reset valid validate-with attribute",
-                 "cibadmin -M --xml-text '<cib validate-with=\"pacemaker-1.2\"/>'",
-                 expected_rc=ExitStatus.OK),
+                 expected_rc=ExitStatus.CONFIG),
 
             Test("Try to use rsc_order first-action value disallowed by schema",
                  "cibadmin -M -o constraints --xml-text '<rsc_order "
