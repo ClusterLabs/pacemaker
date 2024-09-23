@@ -132,9 +132,7 @@ configure
 /daemons/execd/pacemaker_remote.service
 /daemons/fenced/fence_legacy
 /daemons/fenced/fence_watchdog
-/daemons/pacemakerd/pacemaker.combined.upstart
 /daemons/pacemakerd/pacemaker.service
-/daemons/pacemakerd/pacemaker.upstart
 /doc/Doxyfile
 /etc/init.d/pacemaker
 /etc/logrotate.d/pacemaker
@@ -153,7 +151,6 @@ configure
 /tools/crm_failcount
 /tools/crm_master
 /tools/crm_mon.service
-/tools/crm_mon.upstart
 /tools/crm_report
 /tools/crm_rule
 /tools/crm_standby
@@ -302,6 +299,8 @@ pacemaker_*.info
 /daemons/fenced/fence_legacy
 /daemons/fenced/fence_watchdog
 /daemons/pacemakerd/pacemaker
+/daemons/pacemakerd/pacemaker.combined.upstart
+/daemons/pacemakerd/pacemaker.upstart
 /depcomp
 /doc/*.build
 /doc/*/en-US/Ap-*.xml
@@ -346,6 +345,7 @@ pacemaker_*.info
 /py-compile
 /scratch
 /tools/cluster-init
+/tools/crm_mon.upstart
 /test-driver
 /xml/assets
 /xml/crm.dtd

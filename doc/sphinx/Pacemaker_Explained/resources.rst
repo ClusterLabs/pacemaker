@@ -38,8 +38,6 @@ more detail below:
 * systemd
 * service
 * stonithd
-* nagios *(deprecated since 2.1.6)*
-* upstart *(deprecated since 2.1.0)*
 
 Support for some standards is controlled by build options and so might not be
 available in any particular build of Pacemaker. The command ``crm_resource
@@ -138,18 +136,15 @@ as it relates to init scripts.
 System Services
 _______________
 
-Since there are various types of system services (``systemd``,
-``upstart``, and ``lsb``), Pacemaker supports a special ``service`` alias which
-intelligently figures out which one applies to a given cluster node.
+Since there is more than one type of system service (``systemd`` and ``lsb``),
+Pacemaker supports a special ``service`` alias which intelligently figures out
+which one applies to a given cluster node.
 
-This is particularly useful when the cluster contains a mix of
-``systemd``, ``upstart``, and ``lsb``.
+This is particularly useful when the cluster contains a mix of ``systemd`` and
+``lsb``.
 
-In order, Pacemaker will try to find the named service as:
-
-* an LSB init script
-* a Systemd unit file
-* an Upstart job
+If the ``service`` standard is specified, Pacemaker will try to find the named
+service as an LSB init script, and if none exists, a systemd unit file.
 
 
 .. index::
@@ -161,87 +156,6 @@ _______
 
 The ``stonith`` standard is used for managing fencing devices, discussed later
 in :ref:`fencing`.
-
-
-.. index::
-   single: Resource; Nagios Plugins
-   single: Nagios Plugins; resources
-
-Nagios Plugins
-______________
-
-Nagios Plugins are a way to monitor services. Pacemaker can use these as
-resources, to react to a change in the service's status.
-
-To use plugins as resources, Pacemaker must have been built with support, and
-OCF-style meta-data for the plugins must be installed on nodes that can run
-them. Meta-data for several common plugins is provided by the
-`nagios-agents-metadata <https://github.com/ClusterLabs/nagios-agents-metadata>`_
-project.
-
-The supported parameters for such a resource are same as the long options of
-the plugin.
-
-Start and monitor actions for plugin resources are implemented as invoking the
-plugin. A plugin result of "OK" (0) is treated as success, a result of "WARN"
-(1) is treated as a successful but degraded service, and any other result is
-considered a failure.
-
-A plugin resource is not going to change its status after recovery by
-restarting the plugin, so using them alone does not make sense with ``on-fail``
-set (or left to default) to ``restart``. Another value could make sense, for
-example, if you want to fence or standby nodes that cannot reach some external
-service.
-
-A more common use case for plugin resources is to configure them with a
-``container`` meta-attribute set to the name of another resource that actually
-makes the service available, such as a virtual machine or container.
-
-With ``container`` set, the plugin resource will automatically be colocated
-with the containing resource and ordered after it, and the containing resource
-will be considered failed if the plugin resource fails. This allows monitoring
-of a service inside a virtual machine or container, with recovery of the
-virtual machine or container if the service fails.
-
-.. warning::
-
-   Nagios support is deprecated in Pacemaker. Support will be dropped entirely
-   at the next major release of Pacemaker.
-
-   For monitoring a service inside a virtual machine or container, the
-   recommended alternative is to configure the virtual machine as a guest node
-   or the container as a :ref:`bundle <s-resource-bundle>`. For other use
-   cases, or when the virtual machine or container image cannot be modified,
-   the recommended alternative is to write a custom OCF agent for the service
-   (which may even call the Nagios plugin as part of its status action).
-
-
-.. index::
-   single: Resource; Upstart
-   single: Upstart; resources
-
-Upstart
-_______
-
-Some Linux distributions previously used `Upstart
-<https://upstart.ubuntu.com/>`_ for system initialization and service
-management. Pacemaker is able to manage services using Upstart if the local
-system supports them and support was enabled when your Pacemaker software was
-built.
-
-The *jobs* that specify how services are managed are usually provided by the
-operating system distribution.
-
-.. important::
-
-   Make sure the host is *not* configured to start any Upstart services at boot
-   that will be controlled by the cluster.
-
-.. warning::
-
-   Upstart support is deprecated in Pacemaker. Upstart is no longer actively
-   maintained, and test platforms for it are no longer readily usable. Support
-   will be dropped entirely at the next major release of Pacemaker.
 
 
 .. _primitive-resource:
@@ -269,9 +183,7 @@ where to find that resource agent and what standards it conforms to.
    |             |    single: resource; property, class                             |
    |             |                                                                  |
    |             | The standard the resource agent conforms to. Allowed values:     |
-   |             | ``lsb``, ``ocf``, ``service``, ``stonith``, ``systemd``,         |
-   |             | ``nagios`` *(deprecated since 2.1.6)*, and ``upstart``           |
-   |             | *(deprecated since 2.1.0)*                                       |
+   |             | ``lsb``, ``ocf``, ``service``, ``stonith``, and ``systemd``      |
    +-------------+------------------------------------------------------------------+
    | description | .. index::                                                       |
    |             |    single: description; resource                                 |
@@ -313,8 +225,8 @@ might produce:
 
 .. note::
 
-   One of the main drawbacks to system services (LSB, systemd or
-   Upstart) resources is that they do not allow any parameters!
+   One of the main drawbacks to system services (lsb and systemd)
+   is that they do not allow parameters
 
 .. topic:: An OCF resource definition
 
@@ -609,8 +521,8 @@ resources were specifically enabled by having their ``is-managed`` set to
 Resource Instance Attributes
 ____________________________
 
-The resource agents of some resource standards (lsb, systemd and upstart *not*
-among them) can be given parameters which determine how they behave and which
+The resource agents of some resource standards (lsb and systemd *not* among
+them) can be given parameters which determine how they behave and which
 instance of a service they control.
 
 If your resource agent supports parameters, you can add them with the

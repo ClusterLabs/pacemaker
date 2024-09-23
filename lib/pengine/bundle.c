@@ -42,13 +42,11 @@ typedef struct {
 enum pe__container_agent {
     PE__CONTAINER_AGENT_UNKNOWN,
     PE__CONTAINER_AGENT_DOCKER,
-    PE__CONTAINER_AGENT_RKT,
     PE__CONTAINER_AGENT_PODMAN,
 };
 
 #define PE__CONTAINER_AGENT_UNKNOWN_S "unknown"
 #define PE__CONTAINER_AGENT_DOCKER_S  "docker"
-#define PE__CONTAINER_AGENT_RKT_S     "rkt"
 #define PE__CONTAINER_AGENT_PODMAN_S  "podman"
 
 typedef struct pe__bundle_variant_data_s {
@@ -303,12 +301,6 @@ allocate_ip(pe__bundle_variant_data_t *data, pcmk__bundle_replica_t *replica,
             }
             break;
 
-        case PE__CONTAINER_AGENT_RKT:
-            g_string_append_printf(buffer, " --hosts-entry=%s=%s-%d",
-                                   replica->ipaddr, data->prefix,
-                                   replica->offset);
-            break;
-
         default: // PE__CONTAINER_AGENT_UNKNOWN
             break;
     }
@@ -412,7 +404,6 @@ container_agent_str(enum pe__container_agent t)
 {
     switch (t) {
         case PE__CONTAINER_AGENT_DOCKER: return PE__CONTAINER_AGENT_DOCKER_S;
-        case PE__CONTAINER_AGENT_RKT:    return PE__CONTAINER_AGENT_RKT_S;
         case PE__CONTAINER_AGENT_PODMAN: return PE__CONTAINER_AGENT_PODMAN_S;
         default: // PE__CONTAINER_AGENT_UNKNOWN
             break;
@@ -433,7 +424,6 @@ create_container_resource(pcmk_resource_t *parent,
     const char *hostname_opt = NULL;
     const char *env_opt = NULL;
     const char *agent_str = NULL;
-    int volid = 0;  // rkt-only
 
     GString *buffer = NULL;
     GString *dbuffer = NULL;
@@ -444,10 +434,6 @@ create_container_resource(pcmk_resource_t *parent,
         case PE__CONTAINER_AGENT_PODMAN:
             hostname_opt = "-h ";
             env_opt = "-e ";
-            break;
-        case PE__CONTAINER_AGENT_RKT:
-            hostname_opt = "--hostname=";
-            env_opt = "--environment=";
             break;
         default:    // PE__CONTAINER_AGENT_UNKNOWN
             return pcmk_rc_unpack_error;
@@ -518,17 +504,6 @@ create_container_resource(pcmk_resource_t *parent,
                     pcmk__g_strcat(buffer, ":", mount->options, NULL);
                 }
                 break;
-            case PE__CONTAINER_AGENT_RKT:
-                g_string_append_printf(buffer,
-                                       " --volume vol%d,kind=host,"
-                                       "source=%s%s%s "
-                                       "--mount volume=vol%d,target=%s",
-                                       volid, pcmk__s(source, mount->source),
-                                       (mount->options != NULL)? "," : "",
-                                       pcmk__s(mount->options, ""),
-                                       volid, mount->target);
-                volid++;
-                break;
             default:
                 break;
         }
@@ -551,18 +526,6 @@ create_container_resource(pcmk_resource_t *parent,
                     // No need to do port mapping if net == host
                     pcmk__g_strcat(buffer,
                                    " -p ", port->source, ":", port->target,
-                                   NULL);
-                }
-                break;
-            case PE__CONTAINER_AGENT_RKT:
-                if (replica->ipaddr != NULL) {
-                    pcmk__g_strcat(buffer,
-                                   " --port=", port->target,
-                                   ":", replica->ipaddr, ":", port->source,
-                                   NULL);
-                } else {
-                    pcmk__g_strcat(buffer,
-                                   " --port=", port->target, ":", port->source,
                                    NULL);
                 }
                 break;
@@ -1007,24 +970,18 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                                    NULL);
     if (xml_obj != NULL) {
         bundle_data->agent_type = PE__CONTAINER_AGENT_DOCKER;
-    } else {
-        xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK__XE_RKT, NULL,
+    }
+
+    if (xml_obj == NULL) {
+        xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_PODMAN, NULL,
                                        NULL);
         if (xml_obj != NULL) {
-            pcmk__warn_once(pcmk__wo_rkt,
-                            "Support for " PCMK__XE_RKT " in bundles "
-                            "(such as %s) is deprecated and will be "
-                            "removed in a future release", rsc->id);
-            bundle_data->agent_type = PE__CONTAINER_AGENT_RKT;
-        } else {
-            xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_PODMAN,
-                                           NULL, NULL);
-            if (xml_obj != NULL) {
-                bundle_data->agent_type = PE__CONTAINER_AGENT_PODMAN;
-            } else {
-                return FALSE;
-            }
+            bundle_data->agent_type = PE__CONTAINER_AGENT_PODMAN;
         }
+    }
+
+    if (xml_obj == NULL) {
+        return FALSE;
     }
 
     // Use 0 for default, minimum, and invalid PCMK_XA_PROMOTED_MAX

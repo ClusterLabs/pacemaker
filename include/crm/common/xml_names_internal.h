@@ -85,9 +85,6 @@ extern "C" {
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XE_FAILED                 "failed"
 
-// @COMPAT Support for rkt is deprecated since 2.1.8
-#define PCMK__XE_RKT                    "rkt"
-
 
 /*
  * XML attribute names used only by internal code

@@ -99,9 +99,6 @@
 ## (so later "official" packages will be considered updates)
 %bcond_with pre_release
 
-## Add option to ship Upstart job files
-%bcond_with upstart_job
-
 ## Add option to turn off hardening of libraries and daemon executables
 %bcond_without hardening
 
@@ -372,8 +369,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : cibsecrets hardening nls pre_release profiling
-                linuxha upstart_job
+  --with(out) : cibsecrets hardening linuxha nls pre_release profiling
 
 %package cli
 License:       GPL-2.0-or-later AND LGPL-2.1-or-later
@@ -612,13 +608,6 @@ pushd python
 %py3_install
 popd
 
-%if %{with upstart_job}
-mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/init
-install -m 644 pacemakerd/pacemaker.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.conf
-install -m 644 pacemakerd/pacemaker.combined.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.combined.conf
-install -m 644 tools/crm_mon.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/crm_mon.conf
-%endif
-
 %if %{defined _unitdir}
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 %endif
@@ -788,21 +777,12 @@ exit 0
 %{ocf_root}/resource.d/pacemaker/controld
 %{ocf_root}/resource.d/pacemaker/remote
 
-%if %{with upstart_job}
-%config(noreplace) %{_sysconfdir}/init/pacemaker.conf
-%config(noreplace) %{_sysconfdir}/init/pacemaker.combined.conf
-%endif
-
 %files cli
 %dir %attr (750, root, %{gname}) %{_sysconfdir}/pacemaker
 %config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 
 %if %{defined _unitdir}
 %{_unitdir}/crm_mon.service
-%endif
-
-%if %{with upstart_job}
-%config(noreplace) %{_sysconfdir}/init/crm_mon.conf
 %endif
 
 %{_sbindir}/attrd_updater
