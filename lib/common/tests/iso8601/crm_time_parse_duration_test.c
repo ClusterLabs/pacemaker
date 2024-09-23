@@ -32,14 +32,6 @@ invalid_arg(void **state)
     assert_null(crm_time_parse_duration("P 3Y6M4DT12H30M5S"));
     assert_null(crm_time_parse_duration("PX3Y6M4DT12H30M5S"));
 
-    // Integer overflow
-    assert_null(crm_time_parse_duration("P2147483648Y6M4DT12H30M5S"));
-    assert_null(crm_time_parse_duration("P3Y2147483648M4DT12H30M5S"));
-    assert_null(crm_time_parse_duration("P3Y6M2147483648DT12H30M5S"));
-    assert_null(crm_time_parse_duration("P3Y6M4DT2147483648H30M5S"));
-    assert_null(crm_time_parse_duration("P3Y6M4DT12H2147483648M5S"));
-    assert_null(crm_time_parse_duration("P3Y6M4DT12H30MP2147483648S"));
-
     // Missing or invalid units
     assert_null(crm_time_parse_duration("P3Y6M4DT12H30M5"));
     assert_null(crm_time_parse_duration("P3Y6M4DT12H30M5X"));
@@ -64,10 +56,35 @@ invalid_arg(void **state)
 }
 
 static void
+overflow(void **state)
+{
+    // Too large
+    assert_null(crm_time_parse_duration("P2147483648Y6M4DT12H30M5S"));
+    assert_null(crm_time_parse_duration("P3Y2147483648M4DT12H30M5S"));
+    assert_null(crm_time_parse_duration("P3Y6M2147483648DT12H30M5S"));
+    assert_null(crm_time_parse_duration("P3Y6M4DT2147483648H30M5S"));
+    assert_null(crm_time_parse_duration("P3Y6M4DT12H2147483648M5S"));
+    assert_null(crm_time_parse_duration("P3Y6M4DT12H30MP2147483648S"));
+
+    // Too small
+    assert_null(crm_time_parse_duration("P-2147483648Y6M4DT12H30M5S"));
+    assert_null(crm_time_parse_duration("P3Y-2147483648M4DT12H30M5S"));
+    assert_null(crm_time_parse_duration("P3Y6M-2147483648DT12H30M5S"));
+    assert_null(crm_time_parse_duration("P3Y6M4DT-2147483648H30M5S"));
+    assert_null(crm_time_parse_duration("P3Y6M4DT12H-2147483648M5S"));
+    assert_null(crm_time_parse_duration("P3Y6M4DT12H30MP-2147483648S"));
+}
+
+static void
 valid_arg(void **state)
 {
     // @TODO Check result value
     assert_non_null(crm_time_parse_duration("P3Y6M4DT12H30M5S"));
+    assert_non_null(crm_time_parse_duration("P3Y6M4DT12H30M-5S"));
+    assert_non_null(crm_time_parse_duration("P3Y6M4DT12H-30M5S"));
+    assert_non_null(crm_time_parse_duration("P3Y6M4DT-12H30M5S"));
+    assert_non_null(crm_time_parse_duration("P3Y6M-4DT12H30M5S"));
+    assert_non_null(crm_time_parse_duration("P3Y-6M4DT12H30M5S"));
     assert_non_null(crm_time_parse_duration("P3Y6M4DT12H30M"));
     assert_non_null(crm_time_parse_duration("P3Y6M4D"));
     assert_non_null(crm_time_parse_duration("P1M"));  // 1 month
@@ -89,4 +106,5 @@ valid_arg(void **state)
 PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(empty_arg),
                 cmocka_unit_test(invalid_arg),
+                cmocka_unit_test(overflow),
                 cmocka_unit_test(valid_arg));

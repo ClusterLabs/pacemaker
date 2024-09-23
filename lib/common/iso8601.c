@@ -1145,6 +1145,7 @@ crm_time_parse_duration(const char *period_s)
          ++current) {
 
         int an_int = 0, rc;
+        long long result = 0LL;
 
         if (current[0] == 'T') {
             /* A 'T' separates year/month/day from hour/minute/seconds. We don't
@@ -1173,60 +1174,70 @@ crm_time_parse_duration(const char *period_s)
             case 'M':
                 if (!is_time) { // Months
                     diff->months = an_int;
-
-                // Minutes
-                } else if ((diff->seconds + (an_int * 60LL)) > INT_MAX) {
-                    crm_err("'%s' is not a valid ISO 8601 time duration "
-                            "because integer at '%s' is too large",
-                            period_s, current - rc);
-                    goto invalid;
-                } else {
-                    diff->seconds += an_int * 60;
+                } else { // Minutes
+                    result = diff->seconds + an_int * 60LL;
+                    if ((result < INT_MIN) || (result > INT_MAX)) {
+                        crm_err("'%s' is not a valid ISO 8601 time duration "
+                                "because integer at '%s' is too %s",
+                                period_s, current - rc,
+                                ((result > 0)? "large" : "small"));
+                        goto invalid;
+                    } else {
+                        diff->seconds = (int) result;
+                    }
                 }
+
                 break;
 
             case 'W':
-                if ((diff->days + (an_int * 7LL)) > INT_MAX) {
+                result = diff->days + an_int * 7LL;
+                if ((result < INT_MIN) || (result > INT_MAX)) {
                     crm_err("'%s' is not a valid ISO 8601 time duration "
-                            "because integer at '%s' is too large",
-                            period_s, current - rc);
+                            "because integer at '%s' is too %s",
+                            period_s, current - rc,
+                            ((result > 0)? "large" : "small"));
                     goto invalid;
                 } else {
-                    diff->days += an_int * 7;
+                    diff->days = (int) result;
                 }
                 break;
 
             case 'D':
-                if ((diff->days + (long long) an_int) > INT_MAX) {
+                result = diff->days + (long long) an_int;
+                if ((result < INT_MIN) || (result > INT_MAX)) {
                     crm_err("'%s' is not a valid ISO 8601 time duration "
-                            "because integer at '%s' is too large",
-                            period_s, current - rc);
+                            "because integer at '%s' is too %s",
+                            period_s, current - rc,
+                            ((result > 0)? "large" : "small"));
                     goto invalid;
                 } else {
-                    diff->days += an_int;
+                    diff->days = (int) result;
                 }
                 break;
 
             case 'H':
-                if ((diff->seconds + ((long long) an_int * HOUR_SECONDS))
-                    > INT_MAX) {
+                result = diff->seconds + (long long) an_int * HOUR_SECONDS;
+                if ((result < INT_MIN) || (result > INT_MAX)) {
                     crm_err("'%s' is not a valid ISO 8601 time duration "
-                            "because integer at '%s' is too large",
-                            period_s, current - rc);
+                            "because integer at '%s' is too %s",
+                            period_s, current - rc,
+                            ((result > 0)? "large" : "small"));
                     goto invalid;
                 } else {
-                    diff->seconds += an_int * HOUR_SECONDS;
+                    diff->seconds = (int) result;
                 }
                 break;
 
             case 'S':
-                if ((diff->seconds + (long long) an_int) > INT_MAX) {
+                result = diff->seconds + (long long) an_int;
+                if ((result < INT_MIN) || (result > INT_MAX)) {
                     crm_err("'%s' is not a valid ISO 8601 time duration "
-                            "because integer at '%s' is too large",
-                            period_s, current - rc);
+                            "because integer at '%s' is too %s",
+                            period_s, current - rc,
+                            ((result > 0)? "large" : "small"));
                     goto invalid;
                 } else {
-                    diff->seconds += an_int;
+                    diff->seconds = (int) result;
                 }
                 break;
 
@@ -1770,29 +1781,43 @@ crm_time_add_seconds(crm_time_t *a_time, int extra)
     crm_time_add_days(a_time, days);
 }
 
+#define ydays(t) (crm_time_leapyear((t)->years)? 366 : 365)
+
+/*!
+ * \brief Add days to a date/time
+ *
+ * \param[in,out] a_time  Time to modify
+ * \param[in]     extra   Number of days to add (may be negative to subtract)
+ */
 void
-crm_time_add_days(crm_time_t * a_time, int extra)
+crm_time_add_days(crm_time_t *a_time, int extra)
 {
-    int lower_bound = 1;
-    int ydays = crm_time_leapyear(a_time->years) ? 366 : 365;
+    CRM_ASSERT(a_time != NULL);
 
     crm_trace("Adding %d days to %.4d-%.3d", extra, a_time->years, a_time->days);
 
+    if (extra > 0) {
+        while ((a_time->days + (long long) extra) > ydays(a_time)) {
+            if ((a_time->years + 1LL) > INT_MAX) {
+                a_time->days = ydays(a_time); // Clip to latest we can handle
+                return;
+            }
+            extra -= ydays(a_time);
+            a_time->years++;
+        }
+    } else if (extra < 0) {
+        const int min_days = a_time->duration? 0 : 1;
+
+        while ((a_time->days + (long long) extra) < min_days) {
+            if ((a_time->years - 1) < 1) {
+                a_time->days = 1; // Clip to earliest we can handle (no BCE)
+                return;
+            }
+            a_time->years--;
+            extra += ydays(a_time);
+        }
+    }
     a_time->days += extra;
-    while (a_time->days > ydays) {
-        a_time->years++;
-        a_time->days -= ydays;
-        ydays = crm_time_leapyear(a_time->years) ? 366 : 365;
-    }
-
-    if(a_time->duration) {
-        lower_bound = 0;
-    }
-
-    while (a_time->days < lower_bound) {
-        a_time->years--;
-        a_time->days += crm_time_leapyear(a_time->years) ? 366 : 365;
-    }
 }
 
 void
@@ -1886,8 +1911,6 @@ ha_get_tm_time(struct tm *target, const crm_time_t *source)
  * @TODO The long-term goal is to come up with a clean, unified design for a
  *       time type (or types) that meets all the various needs, to replace
  *       crm_time_t, pcmk__time_hr_t, and struct timespec (in lrmd_cmd_t).
- *       Using glib's GDateTime is a possibility (if we are willing to require
- *       glib >= 2.26).
  */
 
 pcmk__time_hr_t *
