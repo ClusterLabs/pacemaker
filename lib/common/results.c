@@ -14,6 +14,8 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <qb/qbdefs.h>
 
 #include <crm/common/mainloop.h>
@@ -110,6 +112,116 @@ pcmk__result_bounds(enum pcmk_result_type type, int *lower, int *upper)
             return pcmk_rc_undetermined;
     }
     return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Log a failed assertion
+ *
+ * \param[in] file              File making the assertion
+ * \param[in] function          Function making the assertion
+ * \param[in] line              Line of file making the assertion
+ * \param[in] assert_condition  String representation of assertion
+ */
+static void
+log_assertion_as(const char *file, const char *function, int line,
+                 const char *assert_condition)
+{
+    if (!pcmk__is_daemon) {
+        crm_enable_stderr(TRUE); // Make sure command-line user sees message
+    }
+    crm_err("%s: Triggered fatal assertion at %s:%d : %s",
+            function, file, line, assert_condition);
+}
+
+/* coverity[+kill] */
+/*!
+ * \internal
+ * \brief Log a failed assertion and abort
+ *
+ * \param[in] file              File making the assertion
+ * \param[in] function          Function making the assertion
+ * \param[in] line              Line of file making the assertion
+ * \param[in] assert_condition  String representation of assertion
+ *
+ * \note This does not return
+ */
+static _Noreturn void
+abort_as(const char *file, const char *function, int line,
+         const char *assert_condition)
+{
+    log_assertion_as(file, function, line, assert_condition);
+    abort();
+}
+
+/* coverity[+kill] */
+/*!
+ * \internal
+ * \brief Handle a failed assertion
+ *
+ * When called by a daemon, fork a child that aborts (to dump core), otherwise
+ * abort the current process.
+ *
+ * \param[in] file              File making the assertion
+ * \param[in] function          Function making the assertion
+ * \param[in] line              Line of file making the assertion
+ * \param[in] assert_condition  String representation of assertion
+ */
+static void
+fail_assert_as(const char *file, const char *function, int line,
+               const char *assert_condition)
+{
+    int status = 0;
+    pid_t pid = 0;
+
+    if (!pcmk__is_daemon) {
+        abort_as(file, function, line, assert_condition); // does not return
+    }
+
+    pid = fork();
+    switch (pid) {
+        case -1: // Fork failed
+            crm_warn("%s: Cannot dump core for non-fatal assertion at %s:%d "
+                     ": %s", function, file, line, assert_condition);
+            break;
+
+        case 0: // Child process: just abort to dump core
+            abort();
+            break;
+
+        default: // Parent process: wait for child
+            crm_err("%s: Forked child [%d] to record non-fatal assertion at "
+                    "%s:%d : %s", function, pid, file, line, assert_condition);
+            crm_write_blackbox(SIGTRAP, NULL);
+            do {
+                if (waitpid(pid, &status, 0) == pid) {
+                    return; // Child finished dumping core
+                }
+            } while (errno == EINTR);
+            if (errno == ECHILD) {
+                // crm_mon ignores SIGCHLD
+                crm_trace("Cannot wait on forked child [%d] "
+                          "(SIGCHLD is probably ignored)", pid);
+            } else {
+                crm_err("Cannot wait on forked child [%d]: %s",
+                        pid, pcmk_rc_str(errno));
+            }
+            break;
+    }
+}
+
+/* coverity[+kill] */
+void
+crm_abort(const char *file, const char *function, int line,
+          const char *assert_condition, gboolean do_core, gboolean do_fork)
+{
+    if (!do_fork) {
+        abort_as(file, function, line, assert_condition);
+    } else if (do_core) {
+        fail_assert_as(file, function, line, assert_condition);
+    } else {
+        log_assertion_as(file, function, line, assert_condition);
+    }
 }
 
 // @COMPAT Legacy function return codes

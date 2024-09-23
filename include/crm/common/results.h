@@ -9,6 +9,8 @@
 #ifndef PCMK__CRM_COMMON_RESULTS__H
 #define PCMK__CRM_COMMON_RESULTS__H
 
+#include <glib.h>           // gboolean
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -370,6 +372,10 @@ const char *crm_exit_name(crm_exit_t exit_code);
 const char *crm_exit_str(crm_exit_t exit_code);
 
 _Noreturn crm_exit_t crm_exit(crm_exit_t rc);
+
+/* coverity[+kill] */
+void crm_abort(const char *file, const char *function, int line,
+               const char *condition, gboolean do_core, gboolean do_fork);
 
 static inline const char *
 pcmk_exec_status_str(enum pcmk_exec_status status)

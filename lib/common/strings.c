@@ -7,7 +7,6 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#include "crm/common/results.h"
 #include <crm_internal.h>
 
 #include <regex.h>
