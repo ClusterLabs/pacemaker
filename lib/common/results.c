@@ -146,9 +146,9 @@ log_assertion_as(const char *file, const char *function, int line,
  *
  * \note This does not return
  */
-static _Noreturn void
-abort_as(const char *file, const char *function, int line,
-         const char *assert_condition)
+_Noreturn void
+pcmk__abort_as(const char *file, const char *function, int line,
+               const char *assert_condition)
 {
     log_assertion_as(file, function, line, assert_condition);
     abort();
@@ -175,7 +175,7 @@ fail_assert_as(const char *file, const char *function, int line,
     pid_t pid = 0;
 
     if (!pcmk__is_daemon) {
-        abort_as(file, function, line, assert_condition); // does not return
+        pcmk__abort_as(file, function, line, assert_condition); // No return
     }
 
     pid = fork();
@@ -216,7 +216,7 @@ crm_abort(const char *file, const char *function, int line,
           const char *assert_condition, gboolean do_core, gboolean do_fork)
 {
     if (!do_fork) {
-        abort_as(file, function, line, assert_condition);
+        pcmk__abort_as(file, function, line, assert_condition); // No return
     } else if (do_core) {
         fail_assert_as(file, function, line, assert_condition);
     } else {
