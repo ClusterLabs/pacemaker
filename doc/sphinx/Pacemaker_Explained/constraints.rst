@@ -760,11 +760,11 @@ have an effect in all contexts.
    |             |                  | ``Unpromoted``. For details, see                       |
    |             |                  | :ref:`promotable-clone-constraints`.                   |
    +-------------+------------------+--------------------------------------------------------+
-   | action      | value of         | .. index::                                             |
-   |             | ``first-action`` |    single: resource_set; attribute, action             |
-   |             | in the enclosing |    single: attribute; action (resource_set)            |
-   |             | ordering         |    single: action; resource_set attribute              |
-   |             | constraint       |                                                        |
+   | action      | start            | .. index::                                             |
+   |             |                  |    single: resource_set; attribute, action             |
+   |             |                  |    single: attribute; action (resource_set)            |
+   |             |                  |    single: action; resource_set attribute              |
+   |             |                  |                                                        |
    |             |                  | The action that applies to *all members* of the set.   |
    |             |                  | Meaningful within ``rsc_order``. Allowed values:       |
    |             |                  | ``start``, ``stop``, ``promote``, ``demote``.          |
