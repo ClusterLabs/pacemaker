@@ -77,7 +77,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     int rc = pcmk_err_generic;
     xmlNode *wrapper = NULL;
 
-    CRM_ASSERT(patchset != NULL);
+    pcmk__assert(patchset != NULL);
     *patchset = NULL;
 
     if (msg == NULL) {
@@ -620,7 +620,7 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
 {
     int rc = pcmk_rc_ok;
 
-    CRM_ASSERT((cib != NULL) && (request != NULL));
+    pcmk__assert((cib != NULL) && (request != NULL));
 
     rc = validate_transaction_request(request);
 
@@ -794,9 +794,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     xmlNode *wrapper = NULL;
     xmlNode *diff = NULL;
 
-    CRM_ASSERT(event);
-    CRM_ASSERT(input);
-    CRM_ASSERT(output);
+    pcmk__assert((event != NULL) && (input != NULL) && (output != NULL));
 
     crm_element_value_int(event, PCMK__XA_CIB_RC, &rc);
     wrapper = pcmk__xe_first_child(event, PCMK__XE_CIB_UPDATE_RESULT, NULL,
@@ -845,7 +843,7 @@ cib__signon_query(pcmk__output_t *out, cib_t **cib, xmlNode **cib_object)
     int rc = pcmk_rc_ok;
     cib_t *cib_conn = NULL;
 
-    CRM_ASSERT(cib_object != NULL);
+    pcmk__assert(cib_object != NULL);
 
     if (cib == NULL) {
         cib_conn = cib_new();

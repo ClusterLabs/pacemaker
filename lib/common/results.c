@@ -91,7 +91,7 @@ pcmk_result_get_strings(int code, enum pcmk_result_type type, const char **name,
 int
 pcmk__result_bounds(enum pcmk_result_type type, int *lower, int *upper)
 {
-    CRM_ASSERT((lower != NULL) && (upper != NULL));
+    pcmk__assert((lower != NULL) && (upper != NULL));
 
     switch (type) {
         case pcmk_result_legacy:
@@ -1127,7 +1127,7 @@ pcmk__format_result(pcmk__action_result_t *result, int exit_status,
     if (format != NULL) {
         va_start(ap, format);
         len = vasprintf(&reason, format, ap);
-        CRM_ASSERT(len > 0);
+        pcmk__assert(len > 0);
         va_end(ap);
     }
     free(result->exit_reason);

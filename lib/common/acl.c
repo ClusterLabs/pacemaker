@@ -121,7 +121,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
         if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
             const char *kind = crm_element_value(child, PCMK_XA_KIND);
 
-            CRM_ASSERT(kind != NULL);
+            pcmk__assert(kind != NULL);
             crm_trace("Unpacking <" PCMK_XE_ACL_PERMISSION "> element of "
                       "kind '%s'",
                       kind);
@@ -522,7 +522,7 @@ implicitly_allowed(const xmlNode *xml)
     }
 
     path = pcmk__element_xpath(xml);
-    CRM_ASSERT(path != NULL);
+    pcmk__assert(path != NULL);
 
     if (strstr((const char *) path->str, "/" PCMK_XE_ACLS "/") != NULL) {
         g_string_free(path, TRUE);
@@ -654,9 +654,8 @@ xml_acl_enabled(const xmlNode *xml)
 bool
 pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
 {
-    CRM_ASSERT(xml);
-    CRM_ASSERT(xml->doc);
-    CRM_ASSERT(xml->doc->_private);
+    pcmk__assert((xml != NULL) && (xml->doc != NULL)
+                 && (xml->doc->_private != NULL));
 
     if (pcmk__tracking_xml_changes(xml, false) && xml_acl_enabled(xml)) {
         xmlNode *parent = xml;

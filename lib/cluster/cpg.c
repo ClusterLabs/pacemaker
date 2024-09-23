@@ -466,7 +466,7 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
             goto badmsg;
         }
 
-        CRM_ASSERT(new_size == msg->size);
+        pcmk__assert(new_size == msg->size);
 
         data = uncompressed;
 

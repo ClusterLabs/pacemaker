@@ -262,7 +262,7 @@ cmp_promotable_instance(gconstpointer a, gconstpointer b)
     enum rsc_role_e role1 = pcmk_role_unknown;
     enum rsc_role_e role2 = pcmk_role_unknown;
 
-    CRM_ASSERT((rsc1 != NULL) && (rsc2 != NULL));
+    pcmk__assert((rsc1 != NULL) && (rsc2 != NULL));
 
     // Check promotion priority set by pcmk__set_instance_roles()
     if (rsc1->priv->promotion_priority > rsc2->priv->promotion_priority) {
@@ -341,7 +341,7 @@ add_promotion_priority_to_node_score(gpointer data, gpointer user_data)
 
     node = g_hash_table_lookup(clone->priv->allowed_nodes,
                                chosen->priv->id);
-    CRM_ASSERT(node != NULL);
+    pcmk__assert(node != NULL);
 
     node->assign->score = pcmk__add_scores(promotion_priority,
                                            node->assign->score);
@@ -428,7 +428,7 @@ set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
         node = g_hash_table_lookup(clone->priv->allowed_nodes,
                                    chosen->priv->id);
 
-        CRM_ASSERT(node != NULL);
+        pcmk__assert(node != NULL);
         child->priv->promotion_priority = node->assign->score;
         pcmk__rsc_trace(clone,
                         "Adding scores for %s: "

@@ -124,8 +124,8 @@ rsc_action_item(pcmk__output_t *out, va_list args)
     static int rsc_width = 5;
     static int detail_width = 5;
 
-    CRM_ASSERT(action);
-    CRM_ASSERT(destination != NULL || origin != NULL);
+    pcmk__assert((action != NULL)
+                 && ((destination != NULL) || (origin != NULL)));
 
     if (source == NULL) {
         source = action;
@@ -253,8 +253,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     bool need_role = false;
     xmlNode *xml = NULL;
 
-    CRM_ASSERT(action);
-    CRM_ASSERT(destination != NULL || origin != NULL);
+    pcmk__assert((action != NULL)
+                 && ((destination != NULL) || (origin != NULL)));
 
     if (source == NULL) {
         source = action;
@@ -1083,11 +1083,11 @@ digests_xml(pcmk__output_t *out, va_list args)
         } else if (stop == NULL) {                                          \
             crm_err("%s:%d: No stop action exists for %s",                  \
                     __func__, lineno, rsc->id);                             \
-            CRM_ASSERT(stop != NULL);                                       \
+            pcmk__assert(stop != NULL);                                     \
         } else if (pcmk_is_set(stop->flags, pcmk__action_optional)) {       \
             crm_err("%s:%d: Action %s is still optional",                   \
                     __func__, lineno, stop->uuid);                          \
-            CRM_ASSERT(!pcmk_is_set(stop->flags, pcmk__action_optional));   \
+            pcmk__assert(!pcmk_is_set(stop->flags, pcmk__action_optional)); \
         }                                                                   \
     } while (0)
 

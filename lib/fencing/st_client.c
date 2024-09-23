@@ -1051,7 +1051,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     stonith_t *st = userdata;
     stonith_private_t *private = NULL;
 
-    CRM_ASSERT(st != NULL);
+    pcmk__assert(st != NULL);
     private = st->st_private;
 
     blob.stonith = st;
@@ -1104,7 +1104,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     CRM_CHECK(stonith != NULL, return -EINVAL);
 
     native = stonith->st_private;
-    CRM_ASSERT(native != NULL);
+    pcmk__assert(native != NULL);
 
     crm_debug("Attempting fencer connection by %s with%s mainloop",
               display_name, (stonith_fd? "out" : ""));
@@ -1552,7 +1552,8 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     xmlNode *op_reply = NULL;
     stonith_private_t *native = NULL;
 
-    CRM_ASSERT(stonith && stonith->st_private && op);
+    pcmk__assert((stonith != NULL) && (stonith->st_private != NULL)
+                 && (op != NULL));
     native = stonith->st_private;
 
     if (output_data != NULL) {
@@ -1666,7 +1667,7 @@ stonith_dispatch(stonith_t * st)
     gboolean stay_connected = TRUE;
     stonith_private_t *private = NULL;
 
-    CRM_ASSERT(st != NULL);
+    pcmk__assert(st != NULL);
     private = st->st_private;
 
     while (crm_ipc_ready(private->ipc)) {

@@ -48,7 +48,7 @@ pcmk__new_nvpair(const char *name, const char *value)
 {
     pcmk_nvpair_t *nvpair = NULL;
 
-    CRM_ASSERT(name);
+    pcmk__assert(name);
 
     nvpair = pcmk__assert_alloc(1, sizeof(pcmk_nvpair_t));
 
@@ -864,7 +864,7 @@ crm_meta_name(const char *attr_name)
 {
     char *env_name = NULL;
 
-    CRM_ASSERT(!pcmk__str_empty(attr_name));
+    pcmk__assert(!pcmk__str_empty(attr_name));
 
     env_name = crm_strdup_printf(CRM_META "_%s", attr_name);
     for (char *c = env_name; *c != '\0'; ++c) {
@@ -912,11 +912,8 @@ pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
     const pcmk_nvpair_t *pair_a = a;
     const pcmk_nvpair_t *pair_b = b;
 
-    CRM_ASSERT(a != NULL);
-    CRM_ASSERT(pair_a->name != NULL);
-
-    CRM_ASSERT(b != NULL);
-    CRM_ASSERT(pair_b->name != NULL);
+    pcmk__assert((pair_a != NULL) && (pair_a->name != NULL)
+                 && (pair_b != NULL) && (pair_b->name != NULL));
 
     rc = strcmp(pair_a->name, pair_b->name);
     if (rc < 0) {

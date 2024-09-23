@@ -1302,7 +1302,7 @@ services__execute_file(svc_action_t *op)
             }
 
             action_launch_child(op);
-            CRM_ASSERT(0);  /* action_launch_child is effectively noreturn */
+            pcmk__assert(false); // action_launch_child() should not return
     }
 
     /* Only the parent reaches here */

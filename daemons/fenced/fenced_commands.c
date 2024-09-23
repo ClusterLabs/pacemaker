@@ -428,7 +428,7 @@ fork_cb(int pid, void *user_data)
          */
         cmd->activating_on?cmd->activating_on:cmd->active_on;
 
-    CRM_ASSERT(device);
+    pcmk__assert(device != NULL);
     crm_debug("Operation '%s' [%d]%s%s using %s now running with %ds timeout",
               cmd->action, pid,
               ((cmd->target == NULL)? "" : " targeting "),
@@ -3102,7 +3102,7 @@ handle_register_request(pcmk__request_t *request)
 {
     xmlNode *reply = pcmk__xe_create(NULL, "reply");
 
-    CRM_ASSERT(request->ipc_client != NULL);
+    pcmk__assert(request->ipc_client != NULL);
     crm_xml_add(reply, PCMK__XA_ST_OP, CRM_OP_REGISTER);
     crm_xml_add(reply, PCMK__XA_ST_CLIENTID, request->ipc_client->id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -3195,7 +3195,7 @@ handle_notify_request(pcmk__request_t *request)
 {
     const char *flag_name = NULL;
 
-    CRM_ASSERT(request->ipc_client != NULL);
+    pcmk__assert(request->ipc_client != NULL);
     flag_name = crm_element_value(request->xml, PCMK__XA_ST_NOTIFY_ACTIVATE);
     if (flag_name != NULL) {
         crm_debug("Enabling %s callbacks for client %s",
@@ -3595,7 +3595,7 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
               ((client == NULL)? remote_peer : pcmk__client_name(client)));
 
     if (pcmk_is_set(call_options, st_opt_sync_call)) {
-        CRM_ASSERT(client == NULL || client->request_id == id);
+        pcmk__assert((client == NULL) || (client->request_id == id));
     }
 
     if (is_reply) {

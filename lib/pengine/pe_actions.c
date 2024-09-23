@@ -879,7 +879,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     const pcmk_scheduler_t *scheduler = NULL;
 
     // There's no enum value for unknown or invalid, so assert
-    CRM_ASSERT((rsc != NULL) && (action_name != NULL));
+    pcmk__assert((rsc != NULL) && (action_name != NULL));
     scheduler = rsc->priv->scheduler;
 
     if (value == NULL) {
@@ -1116,7 +1116,7 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 {
     pcmk_action_t *action = NULL;
 
-    CRM_ASSERT((key != NULL) && (task != NULL) && (scheduler != NULL));
+    pcmk__assert((key != NULL) && (task != NULL) && (scheduler != NULL));
 
     action = find_existing_action(key, rsc, on_node, scheduler);
     if (action == NULL) {
@@ -1611,7 +1611,7 @@ void pe_action_set_reason(pcmk_action_t *action, const char *reason,
 void
 pe__clear_resource_history(pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
-    CRM_ASSERT((rsc != NULL) && (node != NULL));
+    pcmk__assert((rsc != NULL) && (node != NULL));
 
     custom_action(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_LRM_DELETE, 0),
                   PCMK_ACTION_LRM_DELETE, node, FALSE, rsc->priv->scheduler);
@@ -1770,7 +1770,7 @@ pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
 {
     pcmk_action_t *action = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (task != NULL));
+    pcmk__assert((rsc != NULL) && (task != NULL));
 
     action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0), task, NULL,
                            optional, rsc->priv->scheduler);
@@ -1793,7 +1793,7 @@ pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
 void
 pe__add_action_expected_result(pcmk_action_t *action, int expected_result)
 {
-    CRM_ASSERT((action != NULL) && (action->meta != NULL));
+    pcmk__assert((action != NULL) && (action->meta != NULL));
 
     g_hash_table_insert(action->meta, pcmk__str_copy(PCMK__META_OP_TARGET_RC),
                         pcmk__itoa(expected_result));

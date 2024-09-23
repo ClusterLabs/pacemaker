@@ -365,7 +365,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
                                      "' or @" PCMK_XA_ROLE "='"
                                      PCMK__ROLE_PROMOTED_LEGACY "'";
 
-    CRM_ASSERT(buf != NULL);
+    pcmk__assert(buf != NULL);
     g_string_truncate(buf, 0);
 
     if (!pcmk__starts_with(cons_id, "cli-ban-")

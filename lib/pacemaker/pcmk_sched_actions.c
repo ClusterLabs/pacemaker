@@ -107,7 +107,7 @@ action_uuid_for_ordering(const char *first_uuid,
     }
 
     // Only non-recurring actions need remapping
-    CRM_ASSERT(parse_op_key(first_uuid, &rid, &first_task_str, &interval_ms));
+    pcmk__assert(parse_op_key(first_uuid, &rid, &first_task_str, &interval_ms));
     if (interval_ms > 0) {
         goto done;
     }
@@ -768,8 +768,7 @@ handle_restart_ordering(pcmk_action_t *first, pcmk_action_t *then,
 {
     const char *reason = NULL;
 
-    CRM_ASSERT(is_primitive_action(first));
-    CRM_ASSERT(is_primitive_action(then));
+    pcmk__assert(is_primitive_action(first) && is_primitive_action(then));
 
     // We need to update the action in two cases:
 
@@ -850,7 +849,7 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
     uint32_t then_flags = 0U;
     uint32_t first_flags = 0U;
 
-    CRM_ASSERT((first != NULL) && (then != NULL) && (scheduler != NULL));
+    pcmk__assert((first != NULL) && (then != NULL) && (scheduler != NULL));
 
     then_flags = then->flags;
     first_flags = first->flags;
@@ -1062,7 +1061,7 @@ pcmk__new_shutdown_action(pcmk_node_t *node)
     char *shutdown_id = NULL;
     pcmk_action_t *shutdown_op = NULL;
 
-    CRM_ASSERT(node != NULL);
+    pcmk__assert(node != NULL);
 
     shutdown_id = crm_strdup_printf("%s-%s", PCMK_ACTION_DO_SHUTDOWN,
                                     node->priv->name);

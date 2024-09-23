@@ -673,7 +673,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
     xmlNode *child = NULL;
     gchar *content = NULL;
 
-    CRM_ASSERT((kind != NULL) && pcmk__is_primitive(rsc));
+    pcmk__assert((kind != NULL) && pcmk__is_primitive(rsc));
 
     if (crm_is_true(g_hash_table_lookup(rsc->priv->meta,
                                         PCMK__META_INTERNAL_RSC))
@@ -722,7 +722,7 @@ pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
 {
     const char *target_role = NULL;
 
-    CRM_ASSERT(pcmk__is_primitive(rsc));
+    pcmk__assert(pcmk__is_primitive(rsc));
 
     if (crm_is_true(g_hash_table_lookup(rsc->priv->meta,
                                         PCMK__META_INTERNAL_RSC))
@@ -776,7 +776,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *locked_to = NULL;
     const char *desc = pe__resource_description(rsc, show_opts);
 
-    CRM_ASSERT(pcmk__is_primitive(rsc));
+    pcmk__assert(pcmk__is_primitive(rsc));
 
     if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return pcmk_rc_no_output;
@@ -815,7 +815,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
                                   NULL);
     free(nodes_running_on);
 
-    CRM_ASSERT(rc == pcmk_rc_ok);
+    pcmk__assert(rc == pcmk_rc_ok);
 
     for (GList *gIter = rsc->priv->active_nodes;
          gIter != NULL; gIter = gIter->next) {
@@ -828,7 +828,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
                                       PCMK_XA_ID, node->priv->id,
                                       PCMK_XA_CACHED, cached,
                                       NULL);
-        CRM_ASSERT(rc == pcmk_rc_ok);
+        pcmk__assert(rc == pcmk_rc_ok);
     }
 
     pcmk__output_xml_pop_parent(out);
@@ -851,7 +851,7 @@ pe__resource_html(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    CRM_ASSERT(pcmk__is_primitive(rsc));
+    pcmk__assert(pcmk__is_primitive(rsc));
 
     if (node == NULL) {
         // This is set only if a non-probe action is pending on this node
@@ -872,7 +872,7 @@ pe__resource_text(pcmk__output_t *out, va_list args)
 
     const pcmk_node_t *node = pcmk__current_node(rsc);
 
-    CRM_ASSERT(pcmk__is_primitive(rsc));
+    pcmk__assert(pcmk__is_primitive(rsc));
 
     if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return pcmk_rc_no_output;
@@ -1174,6 +1174,6 @@ pe__native_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
 unsigned int
 pe__primitive_max_per_node(const pcmk_resource_t *rsc)
 {
-    CRM_ASSERT(pcmk__is_primitive(rsc));
+    pcmk__assert(pcmk__is_primitive(rsc));
     return 1U;
 }

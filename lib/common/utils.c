@@ -152,7 +152,7 @@ version_helper(const char *text, const char **end_text)
 {
     int atoi_result = -1;
 
-    CRM_ASSERT(end_text != NULL);
+    pcmk__assert(end_text != NULL);
 
     errno = 0;
 

@@ -251,7 +251,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     xmlNode *offer = NULL;
     pcmk__node_status_t *member = (pcmk__node_status_t *) value;
 
-    CRM_ASSERT(member != NULL);
+    pcmk__assert(member != NULL);
     if (!pcmk__cluster_is_node_active(member)) {
         crm_info("Not making join-%d offer to inactive node %s",
                  current_join_id, pcmk__s(member->name, "with unknown name"));

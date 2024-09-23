@@ -60,7 +60,7 @@ fenced_scheduler_init(void)
 void
 fenced_set_local_node(const char *node_name)
 {
-    CRM_ASSERT(scheduler != NULL);
+    pcmk__assert(scheduler != NULL);
 
     scheduler->priv->local_node_name = pcmk__str_copy(node_name);
 }
@@ -229,7 +229,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     xml = create_device_registration_xml(rsc_id, st_namespace_any, agent,
                                          params, rsc_provides);
     stonith_key_value_freeall(params, 1, 1);
-    CRM_ASSERT(stonith_device_register(xml, TRUE) == pcmk_ok);
+    pcmk__assert(stonith_device_register(xml, TRUE) == pcmk_ok);
     pcmk__xml_free(xml);
 }
 

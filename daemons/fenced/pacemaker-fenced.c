@@ -128,7 +128,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
               " from client %s", flags, call_options, id, pcmk__client_name(c));
 
     if (pcmk_is_set(call_options, st_opt_sync_call)) {
-        CRM_ASSERT(flags & crm_ipc_client_response);
+        pcmk__assert(pcmk_is_set(flags, crm_ipc_client_response));
         CRM_LOG_ASSERT(c->request_id == 0);     /* This means the client has two synchronous events in-flight */
         c->request_id = id;     /* Reply only to the last one */
     }

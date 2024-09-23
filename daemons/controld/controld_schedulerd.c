@@ -501,7 +501,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                 pcmk_rc_str(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
     } else {
-        CRM_ASSERT(ref != NULL);
+        pcmk__assert(ref != NULL);
         controld_expect_sched_reply(ref);
         crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, "
                   "quorate=%s",

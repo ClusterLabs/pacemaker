@@ -194,7 +194,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
     int rc = pcmk_rc_ok;
     char *local_end_text = NULL;
 
-    CRM_ASSERT(result != NULL);
+    pcmk__assert(result != NULL);
     *result = PCMK__PARSE_DBL_DEFAULT;
 
     text = (text != NULL) ? text : default_text;
@@ -702,7 +702,7 @@ pcmk__strkey_table(GDestroyNotify key_destroy_func,
 void
 pcmk__insert_dup(GHashTable *table, const char *name, const char *value)
 {
-    CRM_ASSERT((table != NULL) && (name != NULL));
+    pcmk__assert((table != NULL) && (name != NULL));
 
     g_hash_table_insert(table, pcmk__str_copy(name), pcmk__str_copy(value));
 }
@@ -796,7 +796,7 @@ void
 pcmk__add_separated_word(GString **list, size_t init_size, const char *word,
                          const char *separator)
 {
-    CRM_ASSERT(list != NULL);
+    pcmk__assert(list != NULL);
 
     if (pcmk__str_empty(word)) {
         return;
@@ -895,8 +895,8 @@ crm_strdup_printf(char const *format, ...)
     char *string = NULL;
 
     va_start(ap, format);
-    len = vasprintf (&string, format, ap);
-    CRM_ASSERT(len > 0);
+    len = vasprintf(&string, format, ap);
+    pcmk__assert(len > 0);
     va_end(ap);
     return string;
 }
@@ -907,7 +907,7 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     char *remainder = NULL;
     int rc = pcmk_rc_ok;
 
-    CRM_ASSERT(start != NULL && end != NULL);
+    pcmk__assert((start != NULL) && (end != NULL));
 
     *start = PCMK__PARSE_INT_DEFAULT;
     *end = PCMK__PARSE_INT_DEFAULT;
@@ -1078,7 +1078,7 @@ pcmk__str_any_of(const char *s, ...)
 int
 pcmk__numeric_strcasecmp(const char *s1, const char *s2)
 {
-    CRM_ASSERT((s1 != NULL) && (s2 != NULL));
+    pcmk__assert((s1 != NULL) && (s2 != NULL));
 
     while (*s1 && *s2) {
         if (isdigit(*s1) && isdigit(*s2)) {
@@ -1298,7 +1298,7 @@ pcmk__g_strcat(GString *buffer, ...)
 {
     va_list ap;
 
-    CRM_ASSERT(buffer != NULL);
+    pcmk__assert(buffer != NULL);
     va_start(ap, buffer);
 
     while (true) {

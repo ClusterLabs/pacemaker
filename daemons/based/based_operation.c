@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2023 the Pacemaker project contributors
+ * Copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -51,7 +51,7 @@ based_get_op_function(const cib__operation_t *operation)
 {
     enum cib__op_type type = operation->type;
 
-    CRM_ASSERT(type >= 0);
+    pcmk__assert(type >= 0);
 
     if (type >= PCMK__NELEM(cib_op_functions)) {
         return NULL;

@@ -300,7 +300,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xmlChar *annotated_dump;
     int dump_size;
 
-    CRM_ASSERT(how != pcmk__acl_render_none);
+    pcmk__assert(how != pcmk__acl_render_none);
 
     // Color is the default render mode for terminals; text is default otherwise
     if (how == pcmk__acl_render_default) {
@@ -318,7 +318,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
      */
     res = xmlReadDoc(annotated_dump, "on-the-fly-access-render", NULL,
                      XML_PARSE_NONET);
-    CRM_ASSERT(res != NULL);
+    pcmk__assert(res != NULL);
     xmlFree(annotated_dump);
     pcmk__xml_free_doc(annotated_doc);
     annotated_doc = res;
@@ -327,7 +327,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
                                     "access-render-2");
     parser_ctxt = xmlNewParserCtxt();
 
-    CRM_ASSERT(sfile != NULL);
+    pcmk__assert(sfile != NULL);
     pcmk__mem_assert(parser_ctxt);
 
     xslt_doc = xmlCtxtReadFile(parser_ctxt, sfile, NULL, XML_PARSE_NONET);
