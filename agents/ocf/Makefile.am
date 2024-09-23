@@ -47,7 +47,7 @@ validate: all
 	@cat "$(RNG)" >/dev/null 2>/dev/null || { echo "Must specify valid RNG" && false; }
 	@[ -x "$(OCF_ROOT)/lib/heartbeat" ] || { echo "Must specify valid OCF_ROOT" && false; }
 	@for AGENT in $(dist_ocf_SCRIPTS) $(ocf_SCRIPTS); do		\
-		echo -e "\n\n## $$AGENT:";				\
+		echo -n -e "* $$AGENT ";				\
 		OCF_ROOT="$(OCF_ROOT)" "$(builddir)/$$AGENT" meta-data	\
 			| xmllint --noout --relaxng $(RNG) - || break;	\
 	done
