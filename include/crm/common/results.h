@@ -41,12 +41,6 @@ extern "C" {
 # endif
 #endif
 
-#define CRM_ASSERT(expr) do {                                                \
-        if (!(expr)) {                                                       \
-            crm_abort(__FILE__, __func__, __LINE__, #expr, TRUE, FALSE);     \
-        }                                                                    \
-    } while(0)
-
 /*
  * Function return codes
  *
@@ -400,6 +394,10 @@ pcmk_exec_status_str(enum pcmk_exec_status status)
 
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/results_compat.h>
 #endif
 
 #endif
