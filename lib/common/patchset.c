@@ -276,12 +276,12 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         PCMK_XA_NUM_UPDATES,
     };
 
-    CRM_ASSERT(target);
+    pcmk__assert(target != NULL);
     if (!xml_document_dirty(target)) {
         return NULL;
     }
 
-    CRM_ASSERT(target->doc);
+    pcmk__assert(target->doc != NULL);
     docpriv = target->doc->_private;
 
     patchset = pcmk__xe_create(NULL, PCMK_XE_DIFF);
@@ -1273,7 +1273,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                     p++; // Skip ourselves
                 }
 
-                CRM_ASSERT(match->parent != NULL);
+                pcmk__assert(match->parent != NULL);
                 match_child = match->parent->children;
 
                 while ((match_child != NULL)
@@ -1291,7 +1291,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                     xmlAddPrevSibling(match_child, match);
 
                 } else {
-                    CRM_ASSERT(match->parent->last != NULL);
+                    pcmk__assert(match->parent->last != NULL);
                     xmlAddNextSibling(match->parent->last, match);
                 }
 

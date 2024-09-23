@@ -880,10 +880,10 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
     setlocale(LC_ALL, "");
 
     // Tell gettext where to find Pacemaker message catalogs
-    CRM_ASSERT(bindtextdomain(PACKAGE, PCMK__LOCALE_DIR) != NULL);
+    pcmk__assert(bindtextdomain(PACKAGE, PCMK__LOCALE_DIR) != NULL);
 
     // Tell gettext to use the Pacemaker message catalogs
-    CRM_ASSERT(textdomain(PACKAGE) != NULL);
+    pcmk__assert(textdomain(PACKAGE) != NULL);
 
     // Tell gettext that the translated strings are stored in UTF-8
     bind_textdomain_codeset(PACKAGE, "UTF-8");

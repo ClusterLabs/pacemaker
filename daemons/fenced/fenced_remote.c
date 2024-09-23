@@ -948,7 +948,7 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         return empty_ok? pcmk_rc_ok : ENODEV;
     }
 
-    CRM_ASSERT(tp->levels != NULL);
+    pcmk__assert(tp->levels != NULL);
 
     stonith__set_call_options(op->call_options, op->id, st_opt_topology);
 

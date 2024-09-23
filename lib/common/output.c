@@ -65,7 +65,7 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
 {
     pcmk__output_factory_t create = NULL;
 
-    CRM_ASSERT(formatters != NULL && out != NULL);
+    pcmk__assert((formatters != NULL) && (out != NULL));
 
     /* If no name was given, just try "text".  It's up to each tool to register
      * what it supports so this also may not be valid.
@@ -130,7 +130,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
 {
     char *name_copy = NULL;
 
-    CRM_ASSERT(create != NULL && !pcmk__str_empty(name));
+    pcmk__assert((create != NULL) && !pcmk__str_empty(name));
 
     name_copy = strdup(name);
     if (name_copy == NULL) {
@@ -176,7 +176,7 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
     int rc = pcmk_rc_ok;
     pcmk__message_fn_t fn;
 
-    CRM_ASSERT(out != NULL && !pcmk__str_empty(message_id));
+    pcmk__assert((out != NULL) && !pcmk__str_empty(message_id));
 
     fn = g_hash_table_lookup(out->messages, message_id);
     if (fn == NULL) {
@@ -194,9 +194,9 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
 
 void
 pcmk__register_message(pcmk__output_t *out, const char *message_id,
-                       pcmk__message_fn_t fn) {
-    CRM_ASSERT(out != NULL && !pcmk__str_empty(message_id) && fn != NULL);
-
+                       pcmk__message_fn_t fn)
+{
+    pcmk__assert((out != NULL) && !pcmk__str_empty(message_id) && (fn != NULL));
     g_hash_table_replace(out->messages, pcmk__str_copy(message_id), fn);
 }
 

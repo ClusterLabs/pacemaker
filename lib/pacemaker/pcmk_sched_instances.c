@@ -200,9 +200,9 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
     GHashTable *colocated_scores1 = NULL;
     GHashTable *colocated_scores2 = NULL;
 
-    CRM_ASSERT((instance1 != NULL) && (instance1->parent != NULL)
-               && (instance2 != NULL) && (instance2->parent != NULL)
-               && (current_node1 != NULL) && (current_node2 != NULL));
+    pcmk__assert((instance1 != NULL) && (instance1->parent != NULL)
+                 && (instance2 != NULL) && (instance2->parent != NULL)
+                 && (current_node1 != NULL) && (current_node2 != NULL));
 
     // Create node tables initialized with each node
     colocated_scores1 = new_node_table(current_node1);
@@ -302,7 +302,7 @@ pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
     char *div1 = NULL;
     char *div2 = NULL;
 
-    CRM_ASSERT((instance1 != NULL) && (instance2 != NULL));
+    pcmk__assert((instance1 != NULL) && (instance2 != NULL));
 
     // Clone numbers are after a colon, bundle numbers after a dash
     div1 = strrchr(instance1->id, ':');
@@ -313,7 +313,7 @@ pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
     if (div2 == NULL) {
         div2 = strrchr(instance2->id, '-');
     }
-    CRM_ASSERT((div1 != NULL) && (div2 != NULL));
+    pcmk__assert((div1 != NULL) && (div2 != NULL));
 
     return (gint) (strtol(div1 + 1, NULL, 10) - strtol(div2 + 1, NULL, 10));
 }
@@ -358,7 +358,7 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     const pcmk_resource_t *instance1 = (const pcmk_resource_t *) a;
     const pcmk_resource_t *instance2 = (const pcmk_resource_t *) b;
 
-    CRM_ASSERT((instance1 != NULL) && (instance2 != NULL));
+    pcmk__assert((instance1 != NULL) && (instance2 != NULL));
 
     node1 = instance1->fns->active_node(instance1, &nnodes1, NULL);
     node2 = instance2->fns->active_node(instance2, &nnodes2, NULL);
@@ -1578,7 +1578,7 @@ pcmk__instance_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                                       uint32_t filter, uint32_t type,
                                       pcmk_scheduler_t *scheduler)
 {
-    CRM_ASSERT((first != NULL) && (then != NULL) && (scheduler != NULL));
+    pcmk__assert((first != NULL) && (then != NULL) && (scheduler != NULL));
 
     if (then->rsc == NULL) {
         return pcmk__updated_none;

@@ -241,7 +241,7 @@ init_node_pending_timer(const crm_node_t *node, guint timeout)
     node_pending_timer->id = g_timeout_add_seconds(timeout,
                                                    node_pending_timer_popped,
                                                    key);
-    CRM_ASSERT(node_pending_timer->id != 0);
+    pcmk__assert(node_pending_timer->id != 0);
 }
 
 static void
@@ -408,7 +408,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
 
     } else if(change == NULL) {
         GString *local_path = pcmk__element_xpath(reason);
-        CRM_ASSERT(local_path != NULL);
+        pcmk__assert(local_path != NULL);
 
         do_crm_log(level, "Transition %d aborted by %s.%s: %s "
                    CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",

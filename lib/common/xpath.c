@@ -310,7 +310,7 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
     start++;
 
     end = strstr(start, "\'");
-    CRM_ASSERT(end);
+    pcmk__assert(end != NULL);
     retval = strndup(start, end-start);
 
     free(patt);

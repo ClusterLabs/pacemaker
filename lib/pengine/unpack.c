@@ -1990,9 +1990,9 @@ clone_strip(const char *last_rsc_id)
     const char *end = pe_base_name_end(last_rsc_id);
     char *basename = NULL;
 
-    CRM_ASSERT(end);
+    pcmk__assert(end != NULL);
     basename = strndup(last_rsc_id, end - last_rsc_id + 1);
-    CRM_ASSERT(basename);
+    pcmk__assert(basename != NULL);
     return basename;
 }
 
@@ -2013,7 +2013,7 @@ clone_zero(const char *last_rsc_id)
     size_t base_name_len = end - last_rsc_id + 1;
     char *zero = NULL;
 
-    CRM_ASSERT(end);
+    pcmk__assert(end != NULL);
     zero = pcmk__assert_alloc(base_name_len + 3, sizeof(char));
     memcpy(zero, last_rsc_id, base_name_len);
     zero[base_name_len] = ':';
@@ -2113,7 +2113,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     pcmk_resource_t *inactive_instance = NULL;
     gboolean skip_inactive = FALSE;
 
-    CRM_ASSERT(pcmk__is_anonymous_clone(parent));
+    pcmk__assert(pcmk__is_anonymous_clone(parent));
 
     // Check for active (or partially active, for cloned groups) instance
     pcmk__rsc_trace(parent, "Looking for %s on %s in %s",
@@ -2277,7 +2277,7 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
 
             rsc = find_anonymous_clone(scheduler, node, parent, base);
             free(base);
-            CRM_ASSERT(rsc != NULL);
+            pcmk__assert(rsc != NULL);
         }
     }
 
@@ -2326,7 +2326,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
     char *reason = NULL;
     enum action_fail_response save_on_fail = pcmk_on_fail_ignore;
 
-    CRM_ASSERT(rsc);
+    pcmk__assert(rsc);
     pcmk__rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
                     rsc->id, pcmk_role_text(rsc->role), pcmk__node_name(node),
                     pcmk_on_fail_text(on_fail));
@@ -2602,7 +2602,7 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
     const char *status = NULL;
     GList *gIter = sorted_op_list;
 
-    CRM_ASSERT(rsc);
+    pcmk__assert(rsc != NULL);
     pcmk__rsc_trace(rsc, "%s: Start index %d, stop index = %d",
                     rsc->id, start_index, stop_index);
 
@@ -2799,7 +2799,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
             rsc = process_orphan_resource(lrm_resource, node, scheduler);
         }
     }
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
 
     // Check whether the resource is "shutdown-locked" to this node
     if (pcmk_is_set(scheduler->flags, pcmk_sched_shutdown_lock)) {

@@ -126,7 +126,7 @@ pcmk_foreach_active_resource(pcmk_node_t *node,
 void
 pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
 {
-    CRM_ASSERT(xml != NULL);
+    pcmk__assert(xml != NULL);
 
     if (node != NULL) {
         crm_xml_add(xml, PCMK__XA_ATTR_HOST, node);

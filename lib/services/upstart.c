@@ -223,7 +223,7 @@ upstart_job_listall(void)
                                        BUS_PATH, // object to call on
                                        UPSTART_06_API, // interface to call on
                                        method); // method name
-    CRM_ASSERT(msg != NULL);
+    pcmk__assert(msg != NULL);
 
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, DBUS_TIMEOUT_USE_DEFAULT);
     dbus_message_unref(msg);
@@ -302,7 +302,7 @@ get_first_instance(const gchar * job, int timeout)
                                        job, // object to call on
                                        UPSTART_JOB_IFACE, // interface to call on
                                        method); // method name
-    CRM_ASSERT(msg != NULL);
+    pcmk__assert(msg != NULL);
 
     dbus_message_append_args(msg, DBUS_TYPE_INVALID);
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, timeout);
@@ -538,7 +538,7 @@ services__execute_upstart(svc_action_t *op)
     DBusMessage *reply = NULL;
     DBusMessageIter iter, array_iter;
 
-    CRM_ASSERT(op != NULL);
+    pcmk__assert(op != NULL);
 
     if ((op->action == NULL) || (op->agent == NULL)) {
         services__set_result(op, PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR_FATAL,
@@ -639,7 +639,7 @@ services__execute_upstart(svc_action_t *op)
                                        job, // object to call on
                                        UPSTART_JOB_IFACE, // interface to call on
                                        action); // method name
-    CRM_ASSERT(msg != NULL);
+    pcmk__assert(msg != NULL);
 
     dbus_message_iter_init_append (msg, &iter);
     CRM_LOG_ASSERT(dbus_message_iter_open_container(&iter,

@@ -398,7 +398,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     GList *iter = NULL;
     pcmk__colocation_t *colocation = NULL;
 
-    CRM_ASSERT(pcmk__is_primitive(rsc));
+    pcmk__assert(pcmk__is_primitive(rsc));
 
     // Never assign a child without parent being assigned first
     if ((rsc->parent != NULL)
@@ -699,7 +699,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     unsigned int num_clean_active = 0;
     const char *next_role_source = NULL;
 
-    CRM_ASSERT(pcmk__is_primitive(rsc));
+    pcmk__assert(pcmk__is_primitive(rsc));
 
     next_role_source = set_default_next_role(rsc);
     pcmk__rsc_trace(rsc,
@@ -914,7 +914,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
     bool check_unfencing = false;
     bool check_utilization = false;
 
-    CRM_ASSERT(pcmk__is_primitive(rsc));
+    pcmk__assert(pcmk__is_primitive(rsc));
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         pcmk__rsc_trace(rsc,
@@ -1102,8 +1102,8 @@ pcmk__primitive_apply_coloc_score(pcmk_resource_t *dependent,
 {
     enum pcmk__coloc_affects filter_results;
 
-    CRM_ASSERT((dependent != NULL) && (primary != NULL)
-               && (colocation != NULL));
+    pcmk__assert((dependent != NULL) && (primary != NULL)
+                 && (colocation != NULL));
 
     if (for_dependent) {
         // Always process on behalf of primary resource
@@ -1140,7 +1140,7 @@ void
 pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
                                  const pcmk_resource_t *orig_rsc, GList **list)
 {
-    CRM_ASSERT(pcmk__is_primitive(rsc) && (list != NULL));
+    pcmk__assert(pcmk__is_primitive(rsc) && (list != NULL));
 
     if (rsc == orig_rsc) {
         /* For the resource itself, add all of its own colocations and relevant
@@ -1169,7 +1169,7 @@ void
 pcmk__primitive_with_colocations(const pcmk_resource_t *rsc,
                                  const pcmk_resource_t *orig_rsc, GList **list)
 {
-    CRM_ASSERT(pcmk__is_primitive(rsc) && (list != NULL));
+    pcmk__assert(pcmk__is_primitive(rsc) && (list != NULL));
 
     if (rsc == orig_rsc) {
         /* For the resource itself, add all of its own colocations and relevant
@@ -1203,7 +1203,7 @@ pcmk__primitive_with_colocations(const pcmk_resource_t *rsc,
 uint32_t
 pcmk__primitive_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 {
-    CRM_ASSERT(action != NULL);
+    pcmk__assert(action != NULL);
     return (uint32_t) action->flags;
 }
 
@@ -1324,7 +1324,7 @@ start_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     pcmk_action_t *start = NULL;
 
-    CRM_ASSERT(node != NULL);
+    pcmk__assert(node != NULL);
 
     pcmk__rsc_trace(rsc, "Scheduling %s start of %s on %s (score %d)",
                     (optional? "optional" : "required"), rsc->id,
@@ -1364,7 +1364,7 @@ promote_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
     GList *action_list = NULL;
     bool runnable = true;
 
-    CRM_ASSERT(node != NULL);
+    pcmk__assert(node != NULL);
 
     // Any start must be runnable for promotion to be runnable
     action_list = pe__resource_actions(rsc, node, PCMK_ACTION_START, true);
@@ -1444,7 +1444,7 @@ demote_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 static void
 assert_role_error(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
-    CRM_ASSERT(false);
+    pcmk__assert(false);
 }
 
 /*!
@@ -1505,7 +1505,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     char *value = NULL;
     const pcmk_resource_t *parent = NULL;
 
-    CRM_ASSERT(pcmk__is_primitive(rsc) && (xml != NULL));
+    pcmk__assert(pcmk__is_primitive(rsc) && (xml != NULL));
 
     /* Clone instance numbers get set internally as meta-attributes, and are
      * needed in the transition graph (for example, to tell unique clone
@@ -1553,8 +1553,8 @@ pcmk__primitive_add_utilization(const pcmk_resource_t *rsc,
                                 const pcmk_resource_t *orig_rsc,
                                 GList *all_rscs, GHashTable *utilization)
 {
-    CRM_ASSERT(pcmk__is_primitive(rsc)
-               && (orig_rsc != NULL) && (utilization != NULL));
+    pcmk__assert(pcmk__is_primitive(rsc) && (orig_rsc != NULL)
+                 && (utilization != NULL));
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return;
@@ -1620,7 +1620,7 @@ void
 pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 {
 
-    CRM_ASSERT(pcmk__is_primitive(rsc));
+    pcmk__assert(pcmk__is_primitive(rsc));
 
     // Fence devices and remote connections can't be locked
     if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)

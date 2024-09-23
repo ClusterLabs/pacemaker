@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -362,7 +362,7 @@ pcmk__force_args(GOptionContext *context, GError **error, const char *format, ..
 
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
-    CRM_ASSERT(len > 0);
+    pcmk__assert(len > 0);
     va_end(ap);
 
     if (!g_shell_parse_argv(buf, NULL, &extra_args, error)) {

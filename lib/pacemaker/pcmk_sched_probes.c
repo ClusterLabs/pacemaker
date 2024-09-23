@@ -162,7 +162,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     pcmk_resource_t *top = uber_parent(rsc);
     const char *reason = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (node != NULL));
+    pcmk__assert((rsc != NULL) && (node != NULL));
 
     if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_probe_resources)) {
         reason = "start-up probes are disabled";
@@ -795,7 +795,7 @@ order_then_probes(pcmk_scheduler_t *scheduler)
                     crm_trace("Testing '%s then %s' for %s",
                               first->uuid, before->action->uuid, start->uuid);
 
-                    CRM_ASSERT(before->action->rsc != NULL);
+                    pcmk__assert(before->action->rsc != NULL);
                     first_rsc = before->action->rsc;
                     break;
                 }

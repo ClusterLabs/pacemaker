@@ -212,14 +212,11 @@ static pcmk__graph_functions_t *graph_fns = NULL;
 void
 pcmk__set_graph_functions(pcmk__graph_functions_t *fns)
 {
+
+    pcmk__assert((fns != NULL) && (fns->rsc != NULL) && (fns->cluster != NULL)
+                 && (fns->pseudo != NULL) && (fns->fence != NULL));
     crm_debug("Setting custom functions for executing transition graphs");
     graph_fns = fns;
-
-    CRM_ASSERT(graph_fns != NULL);
-    CRM_ASSERT(graph_fns->rsc != NULL);
-    CRM_ASSERT(graph_fns->cluster != NULL);
-    CRM_ASSERT(graph_fns->pseudo != NULL);
-    CRM_ASSERT(graph_fns->fence != NULL);
 }
 
 /*!

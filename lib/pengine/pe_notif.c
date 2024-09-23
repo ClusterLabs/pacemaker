@@ -371,7 +371,7 @@ new_post_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
 {
     pcmk_action_t *notify = NULL;
 
-    CRM_ASSERT(n_data != NULL);
+    pcmk__assert(n_data != NULL);
 
     // Create the "post-" notify action for specified instance
     notify = new_notify_action(rsc, node, n_data->post, n_data->post_done,

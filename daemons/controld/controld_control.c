@@ -388,7 +388,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
                        CRM_EX_INDETERMINATE);
 
-    CRM_ASSERT(client->user != NULL);
+    pcmk__assert(client->user != NULL);
     pcmk__update_acl_user(msg, PCMK__XA_CRM_USER, client->user);
 
     crm_xml_add(msg, PCMK__XA_CRM_SYS_FROM, client->id);

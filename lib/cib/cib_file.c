@@ -170,7 +170,7 @@ file_get_op_function(const cib__operation_t *operation)
 {
     enum cib__op_type type = operation->type;
 
-    CRM_ASSERT(type >= 0);
+    pcmk__assert(type >= 0);
 
     if (type >= PCMK__NELEM(cib_op_functions)) {
         return NULL;
@@ -762,7 +762,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     char *local_sigfile = NULL;
     xmlNode *local_root = NULL;
 
-    CRM_ASSERT(filename != NULL);
+    pcmk__assert(filename != NULL);
     if (root) {
         *root = NULL;
     }
@@ -998,7 +998,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
 
     /* Calculate CIB digest */
     digest = calculate_on_disk_digest(cib_root);
-    CRM_ASSERT(digest != NULL);
+    pcmk__assert(digest != NULL);
     crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
              (admin_epoch ? admin_epoch : "0"), (epoch ? epoch : "0"), digest);
 
@@ -1031,7 +1031,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     crm_info("Reading cluster configuration file %s (digest: %s)",
              tmp_cib, tmp_digest);
     rc = cib_file_read_and_verify(tmp_cib, tmp_digest, NULL);
-    CRM_ASSERT(rc == 0);
+    pcmk__assert(rc == 0);
 
     /* Rename temporary files to live, and sync directory changes to media */
     crm_debug("Activating %s", tmp_cib);

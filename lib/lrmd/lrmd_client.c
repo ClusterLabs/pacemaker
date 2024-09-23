@@ -527,7 +527,7 @@ lrmd_dispatch(lrmd_t * lrmd)
 {
     lrmd_private_t *private = NULL;
 
-    CRM_ASSERT(lrmd != NULL);
+    pcmk__assert(lrmd != NULL);
 
     private = lrmd->lrmd_private;
     switch (private->type) {
@@ -1136,7 +1136,7 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
 static void
 copy_gnutls_datum(gnutls_datum_t *dest, gnutls_datum_t *source)
 {
-    CRM_ASSERT((dest != NULL) && (source != NULL) && (source->data != NULL));
+    pcmk__assert((dest != NULL) && (source != NULL) && (source->data != NULL));
 
     dest->data = gnutls_malloc(source->size);
     pcmk__mem_assert(dest->data);
@@ -1186,7 +1186,7 @@ read_gnutls_key(const char *location, gnutls_datum_t *key)
         if (key->size == buf_len) {
             buf_len = key->size + KEY_READ_LEN;
             key->data = gnutls_realloc(key->data, buf_len);
-            CRM_ASSERT(key->data);
+            pcmk__assert(key->data);
         }
         key->data[key->size++] = (unsigned char) next;
     }
@@ -2497,7 +2497,7 @@ lrmd_api_new(void)
 {
     lrmd_t *api = NULL;
 
-    CRM_ASSERT(lrmd__new(&api, NULL, NULL, 0) == pcmk_rc_ok);
+    pcmk__assert(lrmd__new(&api, NULL, NULL, 0) == pcmk_rc_ok);
     return api;
 }
 
@@ -2506,7 +2506,7 @@ lrmd_remote_api_new(const char *nodename, const char *server, int port)
 {
     lrmd_t *api = NULL;
 
-    CRM_ASSERT(lrmd__new(&api, nodename, server, port) == pcmk_rc_ok);
+    pcmk__assert(lrmd__new(&api, nodename, server, port) == pcmk_rc_ok);
     return api;
 }
 

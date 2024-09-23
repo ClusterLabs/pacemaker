@@ -508,7 +508,7 @@ crm_duration_as_string(const crm_time_t *dt, int usec, bool show_usec,
 {
     size_t offset = 0;
 
-    CRM_ASSERT(valid_sec_usec(dt->seconds, usec));
+    pcmk__assert(valid_sec_usec(dt->seconds, usec));
 
     if (dt->years) {
         offset += snprintf(result + offset, DATE_MAX - offset, "%4d year%s ",
@@ -598,7 +598,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
         return;
     }
 
-    CRM_ASSERT(valid_sec_usec(dt->seconds, usec));
+    pcmk__assert(valid_sec_usec(dt->seconds, usec));
 
     /* Simple cases: as duration, seconds, or seconds since epoch.
      * These never depend on time zone.
@@ -1792,7 +1792,7 @@ crm_time_add_seconds(crm_time_t *a_time, int extra)
 void
 crm_time_add_days(crm_time_t *a_time, int extra)
 {
-    CRM_ASSERT(a_time != NULL);
+    pcmk__assert(a_time != NULL);
 
     crm_trace("Adding %d days to %.4d-%.3d", extra, a_time->years, a_time->days);
 
@@ -1940,7 +1940,7 @@ pcmk__time_hr_convert(pcmk__time_hr_t *target, const crm_time_t *dt)
 void
 pcmk__time_set_hr_dt(crm_time_t *target, const pcmk__time_hr_t *hr_dt)
 {
-    CRM_ASSERT((hr_dt) && (target));
+    pcmk__assert((target != NULL) && (hr_dt != NULL));
     *target = (crm_time_t) {
         .years = hr_dt->years,
         .months = hr_dt->months,

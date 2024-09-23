@@ -196,7 +196,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
                                          st_namespace_any, agent, params,
                                          rsc_provides);
     stonith_key_value_freeall(params, 1, 1);
-    CRM_ASSERT(stonith_device_register(xml, TRUE) == pcmk_ok);
+    pcmk__assert(stonith_device_register(xml, TRUE) == pcmk_ok);
     free_xml(xml);
 }
 

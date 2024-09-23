@@ -119,7 +119,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
 
     if (type == NULL) {
         crm_err("Cannot create new_message, no message type in original message");
-        CRM_ASSERT(type != NULL);
+        pcmk__assert(type != NULL);
         return NULL;
     }
 

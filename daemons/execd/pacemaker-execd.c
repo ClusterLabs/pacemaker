@@ -115,7 +115,7 @@ lrmd_ipc_created(qb_ipcs_connection_t * c)
     pcmk__client_t *new_client = pcmk__find_client(c);
 
     crm_trace("Connection %p", c);
-    CRM_ASSERT(new_client != NULL);
+    pcmk__assert(new_client != NULL);
     /* Now that the connection is offically established, alert
      * the other clients a new connection exists. */
 

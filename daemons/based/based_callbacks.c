@@ -960,7 +960,7 @@ forward_request(xmlNode *request)
 static gboolean
 send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gboolean broadcast)
 {
-    CRM_ASSERT(msg != NULL);
+    pcmk__assert(msg != NULL);
 
     if (broadcast) {
         /* @COMPAT: Legacy code
@@ -999,7 +999,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         crm_xml_add(msg, PCMK__XA_CIB_USER, CRM_DAEMON_USER);
 
         if (format == 1) {
-            CRM_ASSERT(digest != NULL);
+            pcmk__assert(digest != NULL);
         }
 
         wrapper = pcmk__xe_create(msg, PCMK__XE_CIB_UPDATE_DIFF);
@@ -1389,7 +1389,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     static mainloop_timer_t *digest_timer = NULL;
 
-    CRM_ASSERT(cib_status == pcmk_ok);
+    pcmk__assert(cib_status == pcmk_ok);
 
     if(digest_timer == NULL) {
         digest_timer = mainloop_timer_add("digester", 5000, FALSE, cib_digester_cb, NULL);
@@ -1516,7 +1516,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         mainloop_timer_start(digest_timer);
 
     } else if (rc == -pcmk_err_schema_validation) {
-        CRM_ASSERT(result_cib != the_cib);
+        pcmk__assert(result_cib != the_cib);
 
         if (output != NULL) {
             crm_log_xml_info(output, "cib:output");

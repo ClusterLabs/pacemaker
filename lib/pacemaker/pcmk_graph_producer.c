@@ -308,7 +308,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
         }
 
     } else {
-        CRM_ASSERT(action->rsc->clone_name == NULL);
+        pcmk__assert(action->rsc->clone_name == NULL);
         crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->id);
     }
 
@@ -978,7 +978,7 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
 {
     GList *iter = NULL;
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
     pcmk__rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
 
     // First add the resource's own actions

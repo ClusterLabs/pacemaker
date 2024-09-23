@@ -1291,7 +1291,7 @@ pe__count_common(pcmk_resource_t *rsc)
 void
 pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role, const char *why)
 {
-    CRM_ASSERT((rsc != NULL) && (why != NULL));
+    pcmk__assert((rsc != NULL) && (why != NULL));
     if (rsc->next_role != role) {
         pcmk__rsc_trace(rsc, "Resetting next role for %s from %s to %s (%s)",
                         rsc->id, pcmk_role_text(rsc->next_role),

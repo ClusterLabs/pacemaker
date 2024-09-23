@@ -90,7 +90,7 @@ pe__copy_node(const pcmk_node_t *this_node)
 {
     pcmk_node_t *new_node = NULL;
 
-    CRM_ASSERT(this_node != NULL);
+    pcmk__assert(this_node != NULL);
 
     new_node = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
 
@@ -473,7 +473,7 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
               lh_action->uuid, rh_action->uuid);
 
     /* Ensure we never create a dependency on ourselves... it's happened */
-    CRM_ASSERT(lh_action != rh_action);
+    pcmk__assert(lh_action != rh_action);
 
     /* Filter dups, otherwise update_action_states() has too much work to do */
     gIter = lh_action->actions_after;

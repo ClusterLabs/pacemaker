@@ -858,7 +858,7 @@ services_add_inflight_op(svc_action_t * op)
         return;
     }
 
-    CRM_ASSERT(op->synchronous == FALSE);
+    pcmk__assert(op->synchronous == FALSE);
 
     /* keep track of ops that are in-flight to avoid collisions in the same namespace */
     if (op->rsc) {
@@ -1366,7 +1366,7 @@ services__format_result(svc_action_t *action, int agent_status,
     if (format != NULL) {
         va_start(ap, format);
         len = vasprintf(&reason, format, ap);
-        CRM_ASSERT(len > 0);
+        pcmk__assert(len > 0);
         va_end(ap);
     }
     free(action->opaque->exit_reason);

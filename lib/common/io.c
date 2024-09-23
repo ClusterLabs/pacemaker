@@ -121,7 +121,7 @@ char *
 pcmk__series_filename(const char *directory, const char *series, int sequence,
                       bool bzip)
 {
-    CRM_ASSERT((directory != NULL) && (series != NULL));
+    pcmk__assert((directory != NULL) && (series != NULL));
     return crm_strdup_printf("%s/%s-%d.%s", directory, series, sequence,
                              (bzip? "bz2" : "raw"));
 }
@@ -333,7 +333,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
     const char *target = NULL;
 
     // Caller must supply directory
-    CRM_ASSERT(dir != NULL);
+    pcmk__assert(dir != NULL);
 
     // If file is given, check whether it exists as a regular file
     if (file != NULL) {
@@ -633,12 +633,12 @@ pcmk__close_fds_in_child(bool all)
 char *
 pcmk__full_path(const char *filename, const char *dirname)
 {
-    CRM_ASSERT(filename != NULL);
+    pcmk__assert(filename != NULL);
 
     if (filename[0] == '/') {
         return pcmk__str_copy(filename);
     }
-    CRM_ASSERT(dirname != NULL);
+    pcmk__assert(dirname != NULL);
     return crm_strdup_printf("%s/%s", dirname, filename);
 }
 

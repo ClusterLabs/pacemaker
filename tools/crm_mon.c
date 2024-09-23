@@ -1614,7 +1614,7 @@ main(int argc, char **argv)
     /* If we had a valid format for pcmk__output_new(), output_format should be
      * set by now.
      */
-    CRM_ASSERT(output_format != mon_output_unset);
+    pcmk__assert(output_format != mon_output_unset);
 
     if (output_format == mon_output_plain) {
         pcmk__output_text_set_fancy(out, true);
@@ -1975,8 +1975,8 @@ crm_diff_update_element_v2(xmlNode *change, void *userdata)
 
     } else if(name == NULL) {
         crm_debug("No result for %s operation to %s", op, xpath);
-        CRM_ASSERT(pcmk__str_any_of(op, PCMK_VALUE_MOVE, PCMK_VALUE_DELETE,
-                                    NULL));
+        pcmk__assert(pcmk__str_any_of(op, PCMK_VALUE_MOVE, PCMK_VALUE_DELETE,
+                                      NULL));
 
     } else if (strcmp(name, PCMK_XE_CIB) == 0) {
         pcmk__xe_foreach_child(pcmk__xe_first_child(match, PCMK_XE_STATUS, NULL,

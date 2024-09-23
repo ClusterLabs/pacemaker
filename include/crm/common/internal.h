@@ -315,7 +315,7 @@ pcmk__realloc(void *ptr, size_t size)
     void *new_ptr;
 
     // realloc(p, 0) can replace free(p) but this wrapper can't
-    CRM_ASSERT(size > 0);
+    pcmk__assert(size > 0);
 
     new_ptr = realloc(ptr, size);
     if (new_ptr == NULL) {

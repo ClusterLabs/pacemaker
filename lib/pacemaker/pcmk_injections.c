@@ -325,7 +325,7 @@ done:
         return NULL; // not reached, but makes static analysis happy
     }
 
-    CRM_ASSERT(rc == pcmk_ok);
+    pcmk__assert(rc == pcmk_ok);
     return cib_object;
 }
 
@@ -594,7 +594,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     rprovider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
 
     cib_node = pcmk__inject_node(cib, node, NULL);
-    CRM_ASSERT(cib_node != NULL);
+    pcmk__assert(cib_node != NULL);
 
     pcmk__inject_failcount(out, cib, cib_node, resource, task, interval_ms,
                            outcome);
@@ -602,18 +602,18 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     cib_resource = pcmk__inject_resource_history(out, cib_node,
                                                  resource, resource,
                                                  rclass, rtype, rprovider);
-    CRM_ASSERT(cib_resource != NULL);
+    pcmk__assert(cib_resource != NULL);
 
     op = create_op(cib_resource, task, interval_ms, outcome);
-    CRM_ASSERT(op != NULL);
+    pcmk__assert(op != NULL);
 
     cib_op = pcmk__inject_action_result(cib_resource, op, 0);
-    CRM_ASSERT(cib_op != NULL);
+    pcmk__assert(cib_op != NULL);
     lrmd_free_event(op);
 
     rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node,
                            cib_sync_call|cib_scope_local);
-    CRM_ASSERT(rc == pcmk_ok);
+    pcmk__assert(rc == pcmk_ok);
 
 done:
     free(task);
@@ -647,7 +647,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         crm_xml_add(top, PCMK_XA_HAVE_QUORUM, injections->quorum);
 
         rc = cib->cmds->modify(cib, NULL, top, cib_sync_call|cib_scope_local);
-        CRM_ASSERT(rc == pcmk_ok);
+        pcmk__assert(rc == pcmk_ok);
     }
 
     if (injections->watchdog != NULL) {
@@ -655,7 +655,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
                                    PCMK_XE_CRM_CONFIG, NULL, NULL, NULL,
                                    NULL, PCMK_OPT_HAVE_WATCHDOG,
                                    injections->watchdog, NULL, NULL);
-        CRM_ASSERT(rc == pcmk_rc_ok);
+        pcmk__assert(rc == pcmk_rc_ok);
     }
 
     for (iter = injections->node_up; iter != NULL; iter = iter->next) {
@@ -664,11 +664,11 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         out->message(out, "inject-modify-node", "Online", node);
 
         cib_node = pcmk__inject_node_state_change(cib, node, true);
-        CRM_ASSERT(cib_node != NULL);
+        pcmk__assert(cib_node != NULL);
 
         rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node,
                                cib_sync_call|cib_scope_local);
-        CRM_ASSERT(rc == pcmk_ok);
+        pcmk__assert(rc == pcmk_ok);
         free_xml(cib_node);
     }
 
@@ -679,11 +679,11 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         out->message(out, "inject-modify-node", "Offline", node);
 
         cib_node = pcmk__inject_node_state_change(cib, node, false);
-        CRM_ASSERT(cib_node != NULL);
+        pcmk__assert(cib_node != NULL);
 
         rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node,
                                cib_sync_call|cib_scope_local);
-        CRM_ASSERT(rc == pcmk_ok);
+        pcmk__assert(rc == pcmk_ok);
         free_xml(cib_node);
 
         xpath = crm_strdup_printf("//" PCMK__XE_NODE_STATE
@@ -710,11 +710,11 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
 
         cib_node = pcmk__inject_node_state_change(cib, node, true);
         crm_xml_add(cib_node, PCMK__XA_IN_CCM, PCMK_VALUE_FALSE);
-        CRM_ASSERT(cib_node != NULL);
+        pcmk__assert(cib_node != NULL);
 
         rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node,
                                cib_sync_call|cib_scope_local);
-        CRM_ASSERT(rc == pcmk_ok);
+        pcmk__assert(rc == pcmk_ok);
         free_xml(cib_node);
     }
 
@@ -724,7 +724,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         out->message(out, "inject-modify-ticket", "Granting", ticket_id);
 
         rc = set_ticket_state_attr(out, ticket_id, PCMK__XA_GRANTED, true, cib);
-        CRM_ASSERT(rc == pcmk_rc_ok);
+        pcmk__assert(rc == pcmk_rc_ok);
     }
 
     for (iter = injections->ticket_revoke; iter != NULL; iter = iter->next) {
@@ -734,7 +734,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
 
         rc = set_ticket_state_attr(out, ticket_id, PCMK__XA_GRANTED, false,
                                    cib);
-        CRM_ASSERT(rc == pcmk_rc_ok);
+        pcmk__assert(rc == pcmk_rc_ok);
     }
 
     for (iter = injections->ticket_standby; iter != NULL; iter = iter->next) {
@@ -743,7 +743,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         out->message(out, "inject-modify-ticket", "Standby", ticket_id);
 
         rc = set_ticket_state_attr(out, ticket_id, PCMK_XA_STANDBY, true, cib);
-        CRM_ASSERT(rc == pcmk_rc_ok);
+        pcmk__assert(rc == pcmk_rc_ok);
     }
 
     for (iter = injections->ticket_activate; iter != NULL; iter = iter->next) {
@@ -752,7 +752,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         out->message(out, "inject-modify-ticket", "Activating", ticket_id);
 
         rc = set_ticket_state_attr(out, ticket_id, PCMK_XA_STANDBY, false, cib);
-        CRM_ASSERT(rc == pcmk_rc_ok);
+        pcmk__assert(rc == pcmk_rc_ok);
     }
 
     for (iter = injections->op_inject; iter != NULL; iter = iter->next) {

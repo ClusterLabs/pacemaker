@@ -171,7 +171,7 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
 
         default:
             // Add support for other enum pcmk__rsc_node values if needed
-            CRM_ASSERT(false);
+            pcmk__assert(false);
             break;
     }
 

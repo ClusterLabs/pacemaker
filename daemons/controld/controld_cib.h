@@ -71,7 +71,7 @@ int controld_delete_resource_history(const char *rsc_id, const char *node,
 #  define fsa_register_cib_callback(id, data, fn) do {                      \
     cib_t *cib_conn = controld_globals.cib_conn;                            \
                                                                             \
-    CRM_ASSERT(cib_conn != NULL);                                           \
+    pcmk__assert(cib_conn != NULL);                                         \
     cib_conn->cmds->register_callback_full(cib_conn, id, cib_op_timeout(),  \
                                            FALSE, data, #fn, fn, free);     \
     } while(0)

@@ -80,8 +80,8 @@ create_action_name(const pcmk_action_t *action, bool verbose)
             const char *n_task = g_hash_table_lookup(action->meta,
                                                      "notify_key_operation");
 
-            CRM_ASSERT(n_type != NULL);
-            CRM_ASSERT(n_task != NULL);
+            pcmk__assert(n_type != NULL);
+            pcmk__assert(n_task != NULL);
             key = pcmk__notify_key(clone_name, n_type, n_task);
         } else {
             key = pcmk__op_key(clone_name, task, interval_ms);
@@ -336,7 +336,7 @@ profile_file(const char *xml_file, long long repeat,
     clock_t end;
     unsigned long long scheduler_flags = pcmk_sched_no_compat;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     cib_object = pcmk__xml_read(xml_file);
     start = clock();
@@ -387,7 +387,7 @@ pcmk__profile_dir(const char *dir, long long repeat,
 
     int file_num = scandir(dir, &namelist, 0, alphasort);
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     if (file_num > 0) {
         struct stat prop;
@@ -438,7 +438,7 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
     pcmk__output_t *out = scheduler->priv;
     time_t original_date = 0;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     crm_element_value_epoch(scheduler->input, PCMK_XA_EXECUTION_DATE,
                             &original_date);
@@ -566,7 +566,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     pcmk__scan_min_int(target_rc_s, &target_outcome, 0);
 
-    CRM_ASSERT(fake_cib->cmds->query(fake_cib, NULL, NULL,
+    pcmk__assert(fake_cib->cmds->query(fake_cib, NULL, NULL,
                                      cib_sync_call|cib_scope_local) == pcmk_ok);
 
     // Ensure the action node is in the CIB
@@ -574,7 +574,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     cib_node = pcmk__inject_node(fake_cib, node,
                                  ((router_node == NULL)? uuid: node));
     free(uuid);
-    CRM_ASSERT(cib_node != NULL);
+    pcmk__assert(cib_node != NULL);
 
     // Add a history entry for the action
     cib_resource = pcmk__inject_resource_history(out, cib_node, resource,
@@ -646,7 +646,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     lrmd_free_event(op);
     rc = fake_cib->cmds->modify(fake_cib, PCMK_XE_STATUS, cib_node,
                                 cib_sync_call|cib_scope_local);
-    CRM_ASSERT(rc == pcmk_ok);
+    pcmk__assert(rc == pcmk_ok);
 
   done:
     free(node);
@@ -704,11 +704,11 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         xmlNode *cib_node = pcmk__inject_node_state_change(fake_cib, target,
                                                            false);
 
-        CRM_ASSERT(cib_node != NULL);
+        pcmk__assert(cib_node != NULL);
         crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
         rc = fake_cib->cmds->replace(fake_cib, PCMK_XE_STATUS, cib_node,
                                      cib_sync_call|cib_scope_local);
-        CRM_ASSERT(rc == pcmk_ok);
+        pcmk__assert(rc == pcmk_ok);
 
         // Simulate controller clearing node's resource history and attributes
         pcmk__g_strcat(xpath,
@@ -783,7 +783,7 @@ pcmk__simulate_transition(pcmk_scheduler_t *scheduler, cib_t *cib,
         int rc = fake_cib->cmds->query(fake_cib, NULL, &cib_object,
                                        cib_sync_call|cib_scope_local);
 
-        CRM_ASSERT(rc == pcmk_ok);
+        pcmk__assert(rc == pcmk_ok);
         pe_reset_working_set(scheduler);
         scheduler->input = cib_object;
         out->end_list(out);

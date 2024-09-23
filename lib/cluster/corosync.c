@@ -52,7 +52,7 @@ static gboolean (*quorum_app_callback)(unsigned long long seq,
 char *
 pcmk__corosync_uuid(const crm_node_t *node)
 {
-    CRM_ASSERT(pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync);
+    pcmk__assert(pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync);
 
     if (node != NULL) {
         if (node->id > 0) {

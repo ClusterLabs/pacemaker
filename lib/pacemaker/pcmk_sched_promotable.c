@@ -258,7 +258,7 @@ cmp_promotable_instance(gconstpointer a, gconstpointer b)
     enum rsc_role_e role1 = pcmk_role_unknown;
     enum rsc_role_e role2 = pcmk_role_unknown;
 
-    CRM_ASSERT((rsc1 != NULL) && (rsc2 != NULL));
+    pcmk__assert((rsc1 != NULL) && (rsc2 != NULL));
 
     // Check sort index set by pcmk__set_instance_roles()
     if (rsc1->sort_index > rsc2->sort_index) {
@@ -330,7 +330,7 @@ add_sort_index_to_node_score(gpointer data, gpointer user_data)
     }
 
     node = g_hash_table_lookup(clone->allowed_nodes, chosen->details->id);
-    CRM_ASSERT(node != NULL);
+    pcmk__assert(node != NULL);
 
     node->weight = pcmk__add_scores(child->sort_index, node->weight);
     pcmk__rsc_trace(clone,
@@ -410,7 +410,7 @@ set_sort_index_to_node_score(gpointer data, gpointer user_data)
         const pcmk_node_t *node = g_hash_table_lookup(clone->allowed_nodes,
                                                       chosen->details->id);
 
-        CRM_ASSERT(node != NULL);
+        pcmk__assert(node != NULL);
         child->sort_index = node->weight;
         pcmk__rsc_trace(clone,
                         "Adding scores for %s: final sort index for %s is %d",

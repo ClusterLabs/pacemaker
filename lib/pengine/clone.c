@@ -48,7 +48,7 @@ typedef struct clone_variant_data_s {
 } clone_variant_data_t;
 
 #define get_clone_variant_data(data, rsc)                               \
-    CRM_ASSERT(pcmk__is_clone(rsc) && (rsc->variant_opaque != NULL));   \
+    pcmk__assert(pcmk__is_clone(rsc) && (rsc->variant_opaque != NULL)); \
     data = (clone_variant_data_t *) rsc->variant_opaque;
 
 /*!
@@ -276,7 +276,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     }
 /*  child_rsc->globally_unique = rsc->globally_unique; */
 
-    CRM_ASSERT(child_rsc);
+    pcmk__assert(child_rsc != NULL);
     clone_data->total_clones += 1;
     pcmk__rsc_trace(child_rsc, "Setting clone attributes for: %s",
                     child_rsc->id);
@@ -911,7 +911,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                                           PCMK_XA_TARGET_ROLE, target_role,
                                           PCMK_XA_DESCRIPTION, desc,
                                           NULL);
-            CRM_ASSERT(rc == pcmk_rc_ok);
+            pcmk__assert(rc == pcmk_rc_ok);
         }
 
         out->message(out, (const char *) child_rsc->xml->name, show_opts,
@@ -1231,7 +1231,7 @@ clone_free(pcmk_resource_t * rsc)
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
-        CRM_ASSERT(child_rsc);
+        pcmk__assert(child_rsc);
         pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
         free_xml(child_rsc->xml);
         child_rsc->xml = NULL;
@@ -1244,10 +1244,10 @@ clone_free(pcmk_resource_t * rsc)
     g_list_free(rsc->children);
 
     if (clone_data) {
-        CRM_ASSERT(clone_data->demote_notify == NULL);
-        CRM_ASSERT(clone_data->stop_notify == NULL);
-        CRM_ASSERT(clone_data->start_notify == NULL);
-        CRM_ASSERT(clone_data->promote_notify == NULL);
+        pcmk__assert((clone_data->demote_notify == NULL)
+                     && (clone_data->stop_notify == NULL)
+                     && (clone_data->start_notify == NULL)
+                     && (clone_data->promote_notify == NULL));
     }
 
     common_free(rsc);
@@ -1389,7 +1389,7 @@ pe__clone_flag_is_set(const pcmk_resource_t *clone, uint32_t flags)
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, clone);
-    CRM_ASSERT(clone_data != NULL);
+    pcmk__assert(clone_data != NULL);
 
     return pcmk_all_flags_set(clone_data->flags, flags);
 }

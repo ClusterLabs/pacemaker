@@ -752,7 +752,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
         localhost_save = scheduler->localhost;
     }
 
-    CRM_ASSERT(cib != NULL);
+    pcmk__assert(cib != NULL);
     crm_trace("Calculating cluster status");
 
     /* This will zero the entire struct without freeing anything first, so

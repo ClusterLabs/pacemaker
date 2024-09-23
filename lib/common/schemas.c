@@ -83,7 +83,7 @@ get_highest_schema(void)
      */
     GList *entry = pcmk__get_schema("pacemaker-next");
 
-    CRM_ASSERT((entry != NULL) && (entry->prev != NULL));
+    pcmk__assert((entry != NULL) && (entry->prev != NULL));
     return entry->prev;
 }
 
@@ -356,7 +356,7 @@ wrap_libxslt(bool finalize)
 
     /* security framework preferences */
     if (!finalize) {
-        CRM_ASSERT(secprefs == NULL);
+        pcmk__assert(secprefs == NULL);
         secprefs = xsltNewSecurityPrefs();
         ret = xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_WRITE_FILE,
                                    xsltSecurityForbid)
@@ -1033,7 +1033,7 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
     xmlNode *final = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = NULL;
 
-    CRM_ASSERT((schema != NULL) && (upgraded_schema != NULL));
+    pcmk__assert((schema != NULL) && (upgraded_schema != NULL));
 
     if (to_logs) {
         error_handler = (xmlRelaxNGValidityErrorFunc) xml_log;
@@ -1068,7 +1068,7 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
     if ((final != NULL) && transform_onleave) {
         upgrade = final;
         /* following condition ensured in add_schema_by_version */
-        CRM_ASSERT(schema->transform_enter != NULL);
+        pcmk__assert(schema->transform_enter != NULL);
         transform_leave = strdup(schema->transform_enter);
         /* enter -> leave */
         memcpy(strrchr(transform_leave, '-') + 1, "leave", sizeof("leave") - 1);
@@ -1370,7 +1370,7 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
         pcmk__schema_t *none_schema = NULL;
 
         entry = pcmk__get_schema(PCMK_VALUE_NONE);
-        CRM_ASSERT((entry != NULL) && (entry->data != NULL));
+        pcmk__assert((entry != NULL) && (entry->data != NULL));
 
         none_schema = entry->data;
         if (!to_logs && (orig_version >= none_schema->schema_index)) {
