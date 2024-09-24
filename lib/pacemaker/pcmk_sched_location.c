@@ -173,7 +173,6 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                               PCMK_XA_BOOLEAN_OP " value '%s', using default "
                               "'" PCMK_VALUE_AND "'",
                               rule_id, boolean);
-            combine = pcmk__combine_and;
             break;
     }
 
