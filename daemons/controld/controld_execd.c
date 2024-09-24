@@ -1418,7 +1418,7 @@ do_lrm_invoke(long long action,
     }
     pcmk__assert(lrm_state != NULL);
 
-    user_name = pcmk__update_acl_user(input->msg, PCMK__XA_CRM_USER, NULL);
+    user_name = pcmk__update_acl_user(input->msg, NULL);
     crm_op = crm_element_value(input->msg, PCMK__XA_CRM_TASK);
     from_sys = crm_element_value(input->msg, PCMK__XA_CRM_SYS_FROM);
     if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {

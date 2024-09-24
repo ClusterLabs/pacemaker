@@ -360,7 +360,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     crm_xml_add(op_request, PCMK__XA_CIB_CLIENTNAME, cib_client->name);
 
     CRM_LOG_ASSERT(cib_client->user != NULL);
-    pcmk__update_acl_user(op_request, PCMK__XA_CIB_USER, cib_client->user);
+    pcmk__update_acl_user(op_request, cib_client->user);
 
     cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
     pcmk__xml_free(op_request);
