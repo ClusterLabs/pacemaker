@@ -2221,7 +2221,7 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
     int verified = 0;
     device_properties_t *props =
         pcmk__assert_alloc(1, sizeof(device_properties_t));
-    int flags = st_device_supports_on; /* Old nodes that don't set the flag assume they support the on action */
+    int rc = pcmk_rc_ok;
 
     /* Add a new entry to this peer's devices list */
     g_hash_table_insert(peer->devices, pcmk__str_copy(device), props);
@@ -2234,8 +2234,14 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
         props->verified = TRUE;
     }
 
-    crm_element_value_int(xml, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS, &flags);
-    props->device_support_flags = flags;
+    // Nodes <2.1.5 won't set this, so assume unfencing in that case
+    rc = pcmk__xe_get_flags(xml, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS,
+                            &(props->device_support_flags),
+                            st_device_supports_on);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Couldn't determine device support for %s "
+                 "(assuming unfencing): %s", device, pcmk_rc_str(rc));
+    }
 
     /* Parse action-specific device properties */
     parse_action_specific(xml, peer->host, device, op_requested_action(op),
