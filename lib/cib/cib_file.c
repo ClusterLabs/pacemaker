@@ -217,7 +217,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     cib__op_fn_t op_function = NULL;
 
     int call_id = 0;
-    int call_options = cib_none;
+    uint32_t call_options = cib_none;
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
     xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
@@ -236,7 +236,11 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     op_function = file_get_op_function(operation);
 
     crm_element_value_int(request, PCMK__XA_CIB_CALLID, &call_id);
-    crm_element_value_int(request, PCMK__XA_CIB_CALLOPT, &call_options);
+    rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
+                            cib_none);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+    }
 
     read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);
 
