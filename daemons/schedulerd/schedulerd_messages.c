@@ -63,7 +63,7 @@ handle_pecalc_request(pcmk__request_t *request)
     static char *last_digest = NULL;
     static char *filename = NULL;
 
-    unsigned int seq;
+    unsigned int seq = 0U;
     int series_id = 0;
     int series_wrap = 0;
     char *digest = NULL;
@@ -123,7 +123,7 @@ handle_pecalc_request(pcmk__request_t *request)
     if (pcmk__read_series_sequence(PE_STATE_DIR, series[series_id].name,
                                    &seq) != pcmk_rc_ok) {
         // @TODO maybe handle errors better ...
-        seq = 0;
+        seq = 0U;
     }
     crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
               series[series_id].name, series_wrap, seq, value);

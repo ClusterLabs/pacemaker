@@ -118,11 +118,11 @@ pcmk__real_path(const char *path, char **resolved_path)
  * \note The caller is responsible for freeing the return value.
  */
 char *
-pcmk__series_filename(const char *directory, const char *series, int sequence,
-                      bool bzip)
+pcmk__series_filename(const char *directory, const char *series,
+                      unsigned int sequence, bool bzip)
 {
     pcmk__assert((directory != NULL) && (series != NULL));
-    return crm_strdup_printf("%s/%s-%d.%s", directory, series, sequence,
+    return crm_strdup_printf("%s/%s-%u.%s", directory, series, sequence,
                              (bzip? "bz2" : "raw"));
 }
 

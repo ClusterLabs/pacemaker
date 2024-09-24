@@ -818,7 +818,7 @@ static int
 cib_file_backup(const char *cib_dirname, const char *cib_filename)
 {
     int rc = 0;
-    unsigned int seq;
+    unsigned int seq = 0U;
     char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);
     char *cib_digest = crm_strdup_printf("%s.sig", cib_path);
     char *backup_path;
@@ -828,7 +828,7 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
     if (pcmk__read_series_sequence(cib_dirname, CIB_SERIES,
                                    &seq) != pcmk_rc_ok) {
         // @TODO maybe handle errors better ...
-        seq = 0;
+        seq = 0U;
     }
     backup_path = pcmk__series_filename(cib_dirname, CIB_SERIES, seq,
                                         CIB_SERIES_BZIP);
