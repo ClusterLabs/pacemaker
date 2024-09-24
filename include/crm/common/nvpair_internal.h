@@ -61,6 +61,8 @@ typedef struct unpack_data_s {
     } while (0)
 
 int pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t);
+int pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
+                       uint32_t default_value);
 
 #ifdef __cplusplus
 }
