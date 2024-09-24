@@ -1151,7 +1151,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, request,
                                     LOG_NEVER);
-    int call_options = 0;
+    int rc = pcmk_rc_ok;
     const char *operation = NULL;
 
     init_stonith_remote_op_hash_table(&stonith_remote_op_list);
@@ -1223,8 +1223,13 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     // @TODO Figure out how to avoid copying XML here
     op->request = pcmk__xml_copy(NULL, request);
-    crm_element_value_int(request, PCMK__XA_ST_CALLOPT, &call_options);
-    op->call_options = call_options;
+
+    rc = pcmk__xe_get_flags(request, PCMK__XA_ST_CALLOPT, &(op->call_options),
+                            0U);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Couldn't parse options from request %s: %s",
+                 op->id, pcmk_rc_str(rc));
+    }
 
     crm_element_value_int(request, PCMK__XA_ST_CALLID, &(op->client_callid));
 
