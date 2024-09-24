@@ -1222,7 +1222,7 @@ services__execute_file(svc_action_t *op)
     int stdin_fd[2] = {-1, -1};
     int rc;
     struct stat st;
-    struct sigchld_data_s data;
+    struct sigchld_data_s data = { .ignored = false };
 
     // Catch common failure conditions early
     if (stat(op->opaque->exec, &st) != 0) {
