@@ -10,6 +10,8 @@
 #include <crm_internal.h>
 
 #include <stdio.h>
+#include <stdint.h>         // UINT32_MAX
+#include <inttypes.h>       // PRIu32
 #include <sys/types.h>
 #include <string.h>
 #include <ctype.h>
@@ -513,6 +515,57 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
         }
     }
     return -1;
+}
+
+/*!
+ * \brief Retrieve a flag group from an XML attribute value
+ *
+ * This is like \c crm_element_value() except getting the value as a 32-bit
+ * unsigned integer.
+ *
+ * \param[in]  xml            XML node to check
+ * \param[in]  name           Attribute name to check (must not be NULL)
+ * \param[out] dest           Where to store flags (may be NULL to just
+ *                            validate type)
+ * \param[in]  default_value  What to use for missing or invalid value
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
+                   uint32_t default_value)
+{
+    const char *value = NULL;
+    long long value_ll = 0LL;
+    int rc = pcmk_rc_ok;
+
+    if (dest != NULL) {
+        *dest = default_value;
+    }
+
+    if (name == NULL) {
+        return EINVAL;
+    }
+    if (xml == NULL) {
+        return pcmk_rc_ok;
+    }
+    value = crm_element_value(xml, name);
+    if (value == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    rc = pcmk__scan_ll(value, &value_ll, default_value);
+    if ((value_ll < 0) || (value_ll > UINT32_MAX)) {
+        value_ll = default_value;
+        if (rc == pcmk_rc_ok) {
+            rc = pcmk_rc_bad_input;
+        }
+    }
+
+    if (dest != NULL) {
+        *dest = (uint32_t) value_ll;
+    }
+    return rc;
 }
 
 /*!
