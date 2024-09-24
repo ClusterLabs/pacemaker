@@ -471,7 +471,9 @@ pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
 {
     svc_action_t *op = user_data;
     char *buffer = crm_strdup_printf("%s=%s\n", (char *)key, (char *) value);
-    int ret, total = 0, len = strlen(buffer);
+    size_t len = strlen(buffer);
+    size_t total = 0;
+    ssize_t ret = 0;
 
     do {
         errno = 0;
@@ -479,7 +481,6 @@ pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
         if (ret > 0) {
             total += ret;
         }
-
     } while ((errno == EINTR) && (total < len));
     free(buffer);
 }
