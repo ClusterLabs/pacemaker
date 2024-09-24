@@ -268,6 +268,7 @@ def sanitize_output(s):
         (r' last-rc-change=[\'"][-+A-Za-z0-9: ]*[\'"],?', r''),
         (r'\(parse_date@.*\.c:[0-9]+\)', r'parse_date'),
         (r'\((pcmk__.*)@.*\.c:[0-9]+\)', r'\1'),
+        (r'.*Relax-NG validity error : ', r''),
         (r'request=".*(crm_?[a-zA-Z0-9]+) ', r'request="\1 '),
         (r'request=".*iso8601', r'request="iso8601'),
         (r' start="[0-9][-+: 0-9]*Z*"', r' start=""'),
