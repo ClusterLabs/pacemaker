@@ -18,7 +18,14 @@ INCLUDE_FILES="$(find "${SRCDIR}/include/" "${SRCDIR}/lib/" -name \*.h \
                       -a \! -name config.h            \
                       -a \! -name gettext.h)"
 
-TESTFILE="$(mktemp "${TMPDIR:-/tmp}/test-headers-XXXXXXXXXX.c")"
+# *BSD mktemp supports X's only at end of name
+TESTFILE="$(mktemp "${TMPDIR:-/tmp}/test-headers-XXXXXXXXXX")"
+if [ $? -ne 0 ]; then
+    echo "Could not create temporary file"
+    exit 1
+fi
+mv "$TESTFILE" "${TESTFILE}.c"
+TESTFILE="${TESTFILE}.c"
 
 for i in $INCLUDE_FILES
 do
