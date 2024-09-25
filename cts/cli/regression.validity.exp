@@ -1,3 +1,7 @@
+=#=#=#= Begin test: Try to set unrecognized validate-with =#=#=#=
+Call failed: Update does not conform to the configured schema
+=#=#=#= End test: Try to set unrecognized validate-with - Invalid configuration (78) =#=#=#=
+* Passed: cibadmin              - Try to set unrecognized validate-with
 =#=#=#= Begin test: Try to make resulting CIB invalid (enum violation) =#=#=#=
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid (enum violation) =#=#=#=
@@ -17,25 +21,6 @@ Call failed: Update does not conform to the configured schema
 </cib>
 =#=#=#= End test: Try to make resulting CIB invalid (enum violation) - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin              - Try to make resulting CIB invalid (enum violation)
-=#=#=#= Begin test: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
-Call failed: Update does not conform to the configured schema
-=#=#=#= Current cib after: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
-  <configuration>
-    <crm_config/>
-    <nodes/>
-    <resources>
-      <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
-      <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
-    </resources>
-    <constraints>
-      <rsc_order id="ord_1-2" first="dummy1" first-action="start" then="dummy2"/>
-    </constraints>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= End test: Try to make resulting CIB invalid (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
-* Passed: cibadmin              - Try to make resulting CIB invalid (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=

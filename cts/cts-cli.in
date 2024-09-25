@@ -2887,11 +2887,13 @@ class ValidityRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         basic_tests = [
+            # sanitize_output() strips out validate-with, so there's no point in
+            # outputting the CIB after tests that modify it
+            Test("Try to set unrecognized validate-with",
+                 "cibadmin -M --xml-text '<cib validate-with=\"pacemaker-9999.0\"/>'",
+                 expected_rc=ExitStatus.CONFIG),
             Test("Try to make resulting CIB invalid (enum violation)",
                  """cibadmin -M -o constraints --xml-text '<rsc_order id="ord_1-2" first="dummy1" first-action="break" then="dummy2"/>'""",
-                 expected_rc=ExitStatus.CONFIG, update_cib=True),
-            Test("Try to make resulting CIB invalid (unrecognized validate-with)",
-                 "cibadmin -M --xml-text '<cib validate-with=\"pacemaker-9999.0\"/>'",
                  expected_rc=ExitStatus.CONFIG, update_cib=True),
             Test("Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1)",
                  "cibadmin -C -o configuration --xml-text '<tags/>'",
