@@ -1,0 +1,23 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="8" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * There are three bundle resource with masters attributes (one with
+           each type of container).
+
+         In this situation, the masters attribute should be replaced with a
+         promoted-max attribute with the same value.
+      -->
+    <crm_config original="1"/>
+    <nodes original="1"/>
+    <resources original="1">
+      <bundle id="bundle1" original="1">
+        <docker image="alpine:latest" promoted-max="2" run-command="sleep 60" original="1"/>
+      </bundle>
+      <bundle id="bundle2" original="1">
+        <podman image="alpine:latest" promoted-max="2" run-command="sleep 60" original="1"/>
+      </bundle>
+    </resources>
+    <constraints original="1"/>
+  </configuration>
+  <status original="1"/>
+</cib>
