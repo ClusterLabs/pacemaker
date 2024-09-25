@@ -2,10 +2,16 @@
 Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to set unrecognized validate-with - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin              - Try to set unrecognized validate-with
+=#=#=#= Begin test: Try to remove validate-with attribute =#=#=#=
+=#=#=#= End test: Try to remove validate-with attribute - OK (0) =#=#=#=
+* Passed: cibadmin              - Try to remove validate-with attribute
+=#=#=#= Begin test: Reset valid validate-with attribute =#=#=#=
+=#=#=#= End test: Reset valid validate-with attribute - OK (0) =#=#=#=
+* Passed: cibadmin              - Reset valid validate-with attribute
 =#=#=#= Begin test: Try to make resulting CIB invalid (enum violation) =#=#=#=
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid (enum violation) =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib epoch="4" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -24,7 +30,7 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib epoch="4" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -40,27 +46,7 @@ Call failed: Update does not conform to the configured schema
 </cib>
 =#=#=#= End test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin              - Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1)
-=#=#=#= Begin test: Make resulting CIB valid, although without validate-with attribute =#=#=#=
-=#=#=#= Current cib after: Make resulting CIB valid, although without validate-with attribute =#=#=#=
-<cib epoch="4" num_updates="1" admin_epoch="0">
-  <configuration>
-    <crm_config/>
-    <nodes/>
-    <resources>
-      <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
-      <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
-    </resources>
-    <constraints>
-      <rsc_order id="ord_1-2" first="dummy1" first-action="start" then="dummy2"/>
-    </constraints>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= End test: Make resulting CIB valid, although without validate-with attribute - OK (0) =#=#=#=
-* Passed: cibadmin              - Make resulting CIB valid, although without validate-with attribute
 =#=#=#= Begin test: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
 Invalid attribute first-action for element rsc_order
 Element constraints has extra content: rsc_order
 Invalid attribute first-action for element rsc_order
