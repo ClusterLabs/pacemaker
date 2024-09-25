@@ -8,9 +8,9 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= Begin test: Reset valid validate-with attribute =#=#=#=
 =#=#=#= End test: Reset valid validate-with attribute - OK (0) =#=#=#=
 * Passed: cibadmin              - Reset valid validate-with attribute
-=#=#=#= Begin test: Try to make resulting CIB invalid (enum violation) =#=#=#=
+=#=#=#= Begin test: Try to use rsc_order first-action value disallowed by schema =#=#=#=
 Call failed: Update does not conform to the configured schema
-=#=#=#= Current cib after: Try to make resulting CIB invalid (enum violation) =#=#=#=
+=#=#=#= Current cib after: Try to use rsc_order first-action value disallowed by schema =#=#=#=
 <cib epoch="4" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config/>
@@ -25,11 +25,11 @@ Call failed: Update does not conform to the configured schema
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Try to make resulting CIB invalid (enum violation) - Invalid configuration (78) =#=#=#=
-* Passed: cibadmin              - Try to make resulting CIB invalid (enum violation)
-=#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
+=#=#=#= End test: Try to use rsc_order first-action value disallowed by schema - Invalid configuration (78) =#=#=#=
+* Passed: cibadmin              - Try to use rsc_order first-action value disallowed by schema
+=#=#=#= Begin test: Try to use configuration legal only with schema after configured one =#=#=#=
 Call failed: Update does not conform to the configured schema
-=#=#=#= Current cib after: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
+=#=#=#= Current cib after: Try to use configuration legal only with schema after configured one =#=#=#=
 <cib epoch="4" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config/>
@@ -44,61 +44,14 @@ Call failed: Update does not conform to the configured schema
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) - Invalid configuration (78) =#=#=#=
-* Passed: cibadmin              - Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1)
-=#=#=#= Begin test: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-=#=#=#= Current cib after: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
-<cib epoch="41" num_updates="0" admin_epoch="0">
+=#=#=#= End test: Try to use configuration legal only with schema after configured one - Invalid configuration (78) =#=#=#=
+* Passed: cibadmin              - Try to use configuration legal only with schema after configured one
+=#=#=#= Begin test: Disable schema validation =#=#=#=
+=#=#=#= End test: Disable schema validation - OK (0) =#=#=#=
+* Passed: cibadmin              - Disable schema validation
+=#=#=#= Begin test: Set invalid rsc_order first-action value (schema validation disabled) =#=#=#=
+=#=#=#= Current cib after: Set invalid rsc_order first-action value (schema validation disabled) =#=#=#=
+<cib epoch="5" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -112,65 +65,15 @@ Element constraints has extra content: rsc_order
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Make resulting CIB invalid, and without validate-with attribute - OK (0) =#=#=#=
-* Passed: cibadmin              - Make resulting CIB invalid, and without validate-with attribute
-=#=#=#= Begin test: Run crm_simulate with invalid CIB, also without validate-with attribute =#=#=#=
+=#=#=#= End test: Set invalid rsc_order first-action value (schema validation disabled) - OK (0) =#=#=#=
+* Passed: cibadmin              - Set invalid rsc_order first-action value (schema validation disabled)
+=#=#=#= Begin test: Run crm_simulate with invalid rsc_order first-action (schema validation disabled) =#=#=#=
 Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
-Invalid attribute first-action for element rsc_order
-Element constraints has extra content: rsc_order
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+invert_action 	warning: Unknown action 'break' specified in order constraint
+invert_action 	warning: Unknown action 'break' specified in order constraint
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
@@ -187,5 +90,5 @@ Revised Cluster Status:
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped
     * dummy2	(ocf:pacemaker:Dummy):	 Stopped
-=#=#=#= End test: Run crm_simulate with invalid CIB, also without validate-with attribute - OK (0) =#=#=#=
-* Passed: crm_simulate          - Run crm_simulate with invalid CIB, also without validate-with attribute
+=#=#=#= End test: Run crm_simulate with invalid rsc_order first-action (schema validation disabled) - OK (0) =#=#=#=
+* Passed: crm_simulate          - Run crm_simulate with invalid rsc_order first-action (schema validation disabled)
