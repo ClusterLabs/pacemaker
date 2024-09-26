@@ -1346,6 +1346,8 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
             pcmk__insert_dup(stonith_op->meta, PCMK__META_DIGESTS_SECURE,
                              digests_secure->str);
             g_string_free(digests_secure, TRUE);
+
+            g_list_free(matches);
         }
 
     } else {
