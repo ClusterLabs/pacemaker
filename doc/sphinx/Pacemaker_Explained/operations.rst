@@ -270,6 +270,23 @@ who want to know when an administrator manually starts a service by mistake).
    :ref:`clone <s-resource-clone>` resources.
 
 
+Custom Recurring Operations
+###########################
+
+Typically, only ``monitor`` operations should be configured as recurring.
+However, it is possible to implement a custom action name in an OCF agent and
+then configure that as a recurring operation.
+
+This could be useful, for example, to run a report, rotate a log, or clean
+temporary files related to a particular service.
+
+Failures of custom recurring operations will be ignored by the cluster and will
+not be reported in cluster status *(since 3.0.0; previously, they would be
+treated like failed monitors)*. A fail count and last failure timestamp will be
+recorded as transient node attributes, and those node attributes will be erased
+by the ``crm_resource --cleanup`` command.
+
+
 .. _s-operation-defaults:
 
 Setting Global Defaults for Operations
