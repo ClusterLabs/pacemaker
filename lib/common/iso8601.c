@@ -1415,7 +1415,8 @@ ha_set_tm_time(crm_time_t *target, const struct tm *source)
 
     if (source->tm_year > 0) {
         /* years since 1900 */
-        target->years = 1900 + source->tm_year;
+        target->years = 1900;
+        crm_time_add_years(target, source->tm_year);
     }
 
     if (source->tm_yday >= 0) {
@@ -1511,7 +1512,7 @@ crm_time_add(const crm_time_t *dt, const crm_time_t *value)
         return NULL;
     }
 
-    answer->years += utc->years;
+    crm_time_add_years(answer, utc->years);
     crm_time_add_months(answer, utc->months);
     crm_time_add_days(answer, utc->days);
     crm_time_add_seconds(answer, utc->seconds);
@@ -1664,7 +1665,7 @@ crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
     }
     answer->duration = TRUE;
 
-    answer->years -= utc->years;
+    crm_time_add_years(answer, -utc->years);
     if(utc->months != 0) {
         crm_time_add_months(answer, -utc->months);
     }
@@ -1692,7 +1693,7 @@ crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
     }
 
     answer = pcmk_copy_time(dt);
-    answer->years -= utc->years;
+    crm_time_add_years(answer, -utc->years);
     if(utc->months != 0) {
         crm_time_add_months(answer, -utc->months);
     }
@@ -1884,7 +1885,15 @@ crm_time_add_weeks(crm_time_t * a_time, int extra)
 void
 crm_time_add_years(crm_time_t * a_time, int extra)
 {
-    a_time->years += extra;
+    pcmk__assert(a_time != NULL);
+
+    if ((extra > 0) && ((a_time->years + (long long) extra) > INT_MAX)) {
+        a_time->years = INT_MAX;
+    } else if ((extra < 0) && ((a_time->years + (long long) extra) < 1)) {
+        a_time->years = 1; // Clip to earliest we can handle (no BCE)
+    } else {
+        a_time->years += extra;
+    }
 }
 
 static void
