@@ -2038,6 +2038,7 @@ node_variant_text(enum pcmk__node_variant variant)
         case pcmk__node_variant_remote:
             return PCMK_VALUE_REMOTE;
         case pcmk__node_variant_ping:
+            // @COMPAT Not possible with schema validation enabled
             return PCMK__VALUE_PING;
         default:
             return PCMK_VALUE_UNKNOWN;

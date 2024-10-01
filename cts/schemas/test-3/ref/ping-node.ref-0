@@ -1,0 +1,24 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-3.10" epoch="2" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * There are three nodes:
+           * node1: member
+           * node2: ping
+           * node3: remote
+
+         In this situation, the ping node should be changed to a member node
+         with all resources banned from it and probes disabled. Resources should
+         be banned via a location constraint with rsc-pattern=".*",
+         node="node2", score="-INFINITY", and resource-discovery="never".
+      -->
+    <crm_config original="1"/>
+    <nodes original="1">
+      <node id="node1-id" uname="node1" type="member" original="1"/>
+      <node id="node2-id" uname="node2" type="ping" original="1"/>
+      <node id="node3-id" uname="node3" type="remote" original="1"/>
+    </nodes>
+    <resources original="1"/>
+    <constraints original="1"/>
+  </configuration>
+  <status original="1"/>
+</cib>

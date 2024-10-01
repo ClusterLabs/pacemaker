@@ -16,9 +16,6 @@
               <choice>
                 <value>member</value>
                 <value>remote</value>
-
-                <!-- @COMPAT ping nodes are deprecated since 2.1.3 -->
-                <value>ping</value>
               </choice>
             </attribute>
           </optional>
