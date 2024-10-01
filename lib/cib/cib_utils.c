@@ -467,6 +467,10 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
     if (*config_changed && !pcmk_is_set(call_options, cib_no_mtime)) {
         const char *schema = crm_element_value(scratch, PCMK_XA_VALIDATE_WITH);
 
+        if (schema == NULL) {
+            rc = -pcmk_err_cib_corrupt;
+        }
+
         pcmk__xe_add_last_written(scratch);
         pcmk__warn_if_schema_deprecated(schema);
 
@@ -501,11 +505,6 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
     crm_trace("Perform validation: %s", pcmk__btoa(check_schema));
     if ((rc == pcmk_ok) && check_schema
         && !pcmk__configured_schema_validates(scratch)) {
-        const char *current_schema = crm_element_value(scratch,
-                                                       PCMK_XA_VALIDATE_WITH);
-
-        crm_warn("Updated CIB does not validate against %s schema",
-                 pcmk__s(current_schema, "unspecified"));
         rc = -pcmk_err_schema_validation;
     }
 
