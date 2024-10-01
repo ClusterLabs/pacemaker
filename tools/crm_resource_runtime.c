@@ -1331,7 +1331,7 @@ update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
         scheduler->input = *xml;
         scheduler->priv->now = crm_time_new(NULL);
     }
-    return pcmk_rc_ok;
+    return rc;
 }
 
 /*!
