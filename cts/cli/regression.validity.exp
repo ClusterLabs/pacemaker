@@ -21,77 +21,77 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to make resulting CIB invalid (enum violation) - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid (enum violation)
 =#=#=#= Begin test: Run crm_simulate with invalid CIB (enum violation) =#=#=#=
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-1.2 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-1.3 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-2.0 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-2.1 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-2.2 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-2.3 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-2.4 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-2.5 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-2.6 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-2.7 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-2.8 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-2.9 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-2.10 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.0 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.1 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.2 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.3 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.4 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.5 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.6 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.7 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.8 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.9 does not validate
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.10 does not validate
 Cannot upgrade configuration (claiming pacemaker-1.2 schema) to at least pacemaker-3.0 because it does not validate with any schema from pacemaker-1.2 to the latest
 =#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Invalid configuration (78) =#=#=#=
@@ -116,55 +116,55 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to make resulting CIB invalid (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid (unrecognized validate-with)
 =#=#=#= Begin test: Run crm_simulate with invalid CIB (unrecognized validate-with) =#=#=#=
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-1.0 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-1.2 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-1.3 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-2.0 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-2.1 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-2.2 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-2.3 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-2.4 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-2.5 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-2.6 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-2.7 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-2.8 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-2.9 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-2.10 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.0 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.1 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.2 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.3 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.4 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.5 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.6 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.7 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.8 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.9 does not validate
-element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.10 does not validate
 Cannot upgrade configuration (claiming pacemaker-9999.0 schema) to at least pacemaker-3.0 because it does not validate with any schema from the first to the latest
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
@@ -189,7 +189,7 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1)
 =#=#=#= Begin test: Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1) =#=#=#=
-element tags: Relax-NG validity error : Element configuration has extra content: tags
+Element configuration has extra content: tags
 pcmk__update_schema 	debug: Schema pacemaker-1.2 does not validate
 pcmk__update_schema 	debug: Schema pacemaker-1.3 validates
 pcmk__update_schema 	debug: Schema pacemaker-2.0 validates
@@ -278,58 +278,58 @@ Revised Cluster Status:
 =#=#=#= End test: Run crm_simulate with valid CIB, but without validate-with attribute - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with valid CIB, but without validate-with attribute
 =#=#=#= Begin test: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 =#=#=#= Current cib after: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
 <cib epoch="41" num_updates="0" admin_epoch="0">
   <configuration>
@@ -349,58 +349,58 @@ element rsc_order: Relax-NG validity error : Element constraints has extra conte
 * Passed: cibadmin       - Make resulting CIB invalid, and without validate-with attribute
 =#=#=#= Begin test: Run crm_simulate with invalid CIB, also without validate-with attribute =#=#=#=
 Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
-validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
+Invalid attribute first-action for element rsc_order
+Element constraints has extra content: rsc_order
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
