@@ -105,9 +105,13 @@ itself, allowing for more sophistication down the road.
 
 ### General Procedure
 
-1. Copy the most recent version of `${base}-*.rng` to `${base}-${X}.${Y}.rng`,
-   such that the new file name increments the highest number of any schema file,
-   not just the file being edited.
+1. Run `make -C xml schemas SCHEMAS="${base}" NEW_VERSION="${X}.${Y}"` to copy
+   the most recent version of `${base}` to a higher version than the highest
+   version of any schema file.
+   Multiple `SCHEMAS` can be entered (space-separated), and `${Y}` will be
+   automatically increased if `NEW_VERSION` is omitted.
+   Run `make -C xml schemas` to list all versions of the schemas, schema-list
+   for easy copy/paste, and usage info.
 2. Commit the copy, e.g. `"Low: xml: clone ${base} schema in preparation for
    changes"`. This way, the actual change will be obvious in the commit history.
 3. Modify `${base}-${X}.${Y}.rng` as required.

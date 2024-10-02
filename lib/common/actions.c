@@ -194,8 +194,7 @@ pcmk__on_fail_text(enum pcmk__on_fail on_fail)
 char *
 pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms)
 {
-    CRM_ASSERT(rsc_id != NULL);
-    CRM_ASSERT(op_type != NULL);
+    pcmk__assert((rsc_id != NULL) && (op_type != NULL));
     return crm_strdup_printf(PCMK__OP_FMT, rsc_id, op_type, interval_ms);
 }
 
@@ -581,6 +580,7 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
 bool
 pcmk__is_fencing_action(const char *action)
 {
+    // @COMPAT PCMK__ACTION_POWEROFF is disallowed by schema
     return pcmk__str_any_of(action, PCMK_ACTION_OFF, PCMK_ACTION_REBOOT,
                             PCMK__ACTION_POWEROFF, NULL);
 }

@@ -47,7 +47,11 @@ unsigned int crm_trace_nonlog = 0;
 bool pcmk__is_daemon = false;
 
 static unsigned int crm_log_priority = LOG_NOTICE;
-static GLogFunc glib_log_default = NULL;
+static guint pcmk__log_id = 0;
+static guint pcmk__glib_log_id = 0;
+static guint pcmk__gio_log_id = 0;
+static guint pcmk__gmodule_log_id = 0;
+static guint pcmk__gthread_log_id = 0;
 static pcmk__output_t *logger_out = NULL;
 
 pcmk__config_error_func pcmk__config_error_handler = NULL;
@@ -129,9 +133,20 @@ crm_trigger_blackbox(int nsig)
 void
 crm_log_deinit(void)
 {
-    if (glib_log_default != NULL) {
-        g_log_set_default_handler(glib_log_default, NULL);
+    if (pcmk__log_id == 0) {
+        return;
     }
+
+    g_log_remove_handler(G_LOG_DOMAIN, pcmk__log_id);
+    pcmk__log_id = 0;
+    g_log_remove_handler("GLib", pcmk__glib_log_id);
+    pcmk__glib_log_id = 0;
+    g_log_remove_handler("GLib-GIO", pcmk__gio_log_id);
+    pcmk__gio_log_id = 0;
+    g_log_remove_handler("GModule", pcmk__gmodule_log_id);
+    pcmk__gmodule_log_id = 0;
+    g_log_remove_handler("GThread", pcmk__gthread_log_id);
+    pcmk__gthread_log_id = 0;
 }
 
 #define FMT_MAX 256
@@ -815,6 +830,7 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
     pid_t pid = getpid();
     const char *nodename = "localhost";
     static bool have_logging = false;
+    GLogLevelFlags log_levels;
 
     if (have_logging) {
         return;
@@ -830,11 +846,21 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
 
-    /* Redirect messages from glib functions to our handler */
-    glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
+    /* Add a log handler for messages from our log domain at any log level. */
+    log_levels = G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION;
+    pcmk__log_id = g_log_set_handler(G_LOG_DOMAIN, log_levels, crm_glib_handler, NULL);
+    /* Add a log handler for messages from the GLib domains at any log level. */
+    pcmk__glib_log_id = g_log_set_handler("GLib", log_levels, crm_glib_handler, NULL);
+    pcmk__gio_log_id = g_log_set_handler("GLib-GIO", log_levels, crm_glib_handler, NULL);
+    pcmk__gmodule_log_id = g_log_set_handler("GModule", log_levels, crm_glib_handler, NULL);
+    pcmk__gthread_log_id = g_log_set_handler("GThread", log_levels, crm_glib_handler, NULL);
 
-    /* and for good measure... - this enum is a bit field (!) */
-    g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
+    /* glib should not abort for any messages from the Pacemaker domain, but
+     * other domains are still free to specify their own behavior.  However,
+     * note that G_LOG_LEVEL_ERROR is always fatal regardless of what we do
+     * here.
+     */
+    g_log_set_fatal_mask(G_LOG_DOMAIN, 0);
 
     /* Set crm_system_name, which is used as the logging name. It may also
      * be used for other purposes such as an IPC client name.
@@ -879,10 +905,10 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
     setlocale(LC_ALL, "");
 
     // Tell gettext where to find Pacemaker message catalogs
-    CRM_ASSERT(bindtextdomain(PACKAGE, PCMK__LOCALE_DIR) != NULL);
+    pcmk__assert(bindtextdomain(PACKAGE, PCMK__LOCALE_DIR) != NULL);
 
     // Tell gettext to use the Pacemaker message catalogs
-    CRM_ASSERT(textdomain(PACKAGE) != NULL);
+    pcmk__assert(textdomain(PACKAGE) != NULL);
 
     // Tell gettext that the translated strings are stored in UTF-8
     bind_textdomain_codeset(PACKAGE, "UTF-8");

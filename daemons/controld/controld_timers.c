@@ -11,6 +11,7 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include <glib.h>
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -118,7 +119,7 @@ controld_start_timer(fsa_timer_t *timer)
 {
     if (timer->source_id == 0 && timer->period_ms > 0) {
         timer->source_id = g_timeout_add(timer->period_ms, timer->callback, (void *)timer);
-        CRM_ASSERT(timer->source_id != 0);
+        pcmk__assert(timer->source_id != 0);
         crm_debug("Started %s (inject %s if pops after %ums, source=%d)",
                   get_timer_desc(timer), fsa_input2string(timer->fsa_input),
                   timer->period_ms, timer->source_id);
@@ -383,7 +384,7 @@ controld_start_recheck_timer(void)
             // We're already past the desired time
             period_ms = 500;
         } else {
-            period_ms = (guint) diff_seconds * 1000;
+            period_ms = (guint) QB_MIN(G_MAXUINT, diff_seconds * 1000LL);
         }
 
         // Use "recheck by" only if it's sooner than interval from CIB

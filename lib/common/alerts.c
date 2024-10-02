@@ -53,7 +53,7 @@ pcmk__alert_new(const char *id, const char *path)
 {
     pcmk__alert_t *entry = pcmk__assert_alloc(1, sizeof(pcmk__alert_t));
 
-    CRM_ASSERT((id != NULL) && (path != NULL));
+    pcmk__assert((id != NULL) && (path != NULL));
     entry->id = pcmk__str_copy(id);
     entry->path = pcmk__str_copy(path);
     entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
@@ -106,8 +106,8 @@ void
 pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,
                     const char *value)
 {
-    CRM_ASSERT((table != NULL) && (name >= 0)
-               && (name < PCMK__ALERT_INTERNAL_KEY_MAX));
+    pcmk__assert((table != NULL) && (name >= 0)
+                 && (name < PCMK__ALERT_INTERNAL_KEY_MAX));
     if (value == NULL) {
         crm_trace("Removing alert key %s", pcmk__alert_keys[name]);
         g_hash_table_remove(table, pcmk__alert_keys[name]);
@@ -122,8 +122,8 @@ void
 pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
                         int value)
 {
-    CRM_ASSERT((table != NULL) && (name >= 0)
-               && (name < PCMK__ALERT_INTERNAL_KEY_MAX));
+    pcmk__assert((table != NULL) && (name >= 0)
+                 && (name < PCMK__ALERT_INTERNAL_KEY_MAX));
     crm_trace("Inserting alert key %s = %d", pcmk__alert_keys[name], value);
     g_hash_table_insert(table, pcmk__str_copy(pcmk__alert_keys[name]),
                         pcmk__itoa(value));

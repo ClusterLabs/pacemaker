@@ -251,7 +251,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     xmlNode *offer = NULL;
     pcmk__node_status_t *member = (pcmk__node_status_t *) value;
 
-    CRM_ASSERT(member != NULL);
+    pcmk__assert(member != NULL);
     if (!pcmk__cluster_is_node_active(member)) {
         crm_info("Not making join-%d offer to inactive node %s",
                  current_join_id, pcmk__s(member->name, "with unknown name"));
@@ -408,8 +408,19 @@ compare_int_fields(xmlNode * left, xmlNode * right, const char *field)
     long long int_elem_l;
     long long int_elem_r;
 
-    pcmk__scan_ll(elem_l, &int_elem_l, -1LL);
-    pcmk__scan_ll(elem_r, &int_elem_r, -1LL);
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__scan_ll(elem_l, &int_elem_l, -1LL);
+    if (rc != pcmk_rc_ok) { // Shouldn't be possible
+        crm_warn("Comparing current CIB %s as -1 "
+                 "because '%s' is not an integer", field, elem_l);
+    }
+
+    rc = pcmk__scan_ll(elem_r, &int_elem_r, -1LL);
+    if (rc != pcmk_rc_ok) { // Shouldn't be possible
+        crm_warn("Comparing joining node's CIB %s as -1 "
+                 "because '%s' is not an integer", field, elem_r);
+    }
 
     if (int_elem_l < int_elem_r) {
         return -1;
@@ -528,9 +539,10 @@ do_dc_join_filter_offer(long long action,
 
         if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with first CIB "
-                    "generation) due to unknown schema version %s "
-                    QB_XS " ref=%s",
-                    join_id, join_from, pcmk__s(validation, "(missing)"), ref);
+                    "generation) due to %s schema version %s " QB_XS " ref=%s",
+                    join_id, join_from,
+                    ((validation == NULL)? "missing" : "unknown"),
+                    pcmk__s(validation, ""), ref);
             ack_nack_bool = FALSE;
 
         } else {
@@ -548,10 +560,11 @@ do_dc_join_filter_offer(long long action,
 
         if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with better CIB "
-                    "generation than current best from %s) due to unknown "
+                    "generation than current best from %s) due to %s "
                     "schema version %s " QB_XS " ref=%s",
                     join_id, join_from, max_generation_from,
-                    pcmk__s(validation, "(missing)"), ref);
+                    ((validation == NULL)? "missing" : "unknown"),
+                    pcmk__s(validation, ""), ref);
             ack_nack_bool = FALSE;
 
         } else {

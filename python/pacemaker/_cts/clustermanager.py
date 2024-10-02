@@ -877,7 +877,7 @@ class ClusterManager(UserDict):
         rsc_xml = """ '<resources>
                 <primitive class=\"ocf\" id=\"%s\" provider=\"pacemaker\" type=\"Dummy\">
                     <operations>
-                        <op id=\"%s-interval-10s\" interval=\"10s\" name=\"monitor\"/
+                        <op id=\"%s-interval-10s\" interval=\"10s\" name=\"monitor\"/>
                     </operations>
                 </primitive>
             </resources>'""" % (rid, rid)

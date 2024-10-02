@@ -80,7 +80,7 @@ typedef struct async_command_s {
     int id;
     int pid;
     int fd_stdout;
-    int options;
+    uint32_t options;
     int default_timeout; /* seconds */
     int timeout; /* seconds */
 
@@ -340,6 +340,7 @@ create_async_command(xmlNode *msg)
 {
     xmlNode *op = NULL;
     async_command_t *cmd = NULL;
+    int rc = pcmk_rc_ok;
 
     if (msg == NULL) {
         return NULL;
@@ -362,10 +363,15 @@ create_async_command(xmlNode *msg)
     }
 
     crm_element_value_int(msg, PCMK__XA_ST_CALLID, &(cmd->id));
-    crm_element_value_int(msg, PCMK__XA_ST_CALLOPT, &(cmd->options));
     crm_element_value_int(msg, PCMK__XA_ST_DELAY, &(cmd->start_delay));
     crm_element_value_int(msg, PCMK__XA_ST_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
+
+    rc = pcmk__xe_get_flags(msg, PCMK__XA_ST_CALLOPT, &(cmd->options),
+                            st_opt_none);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+    }
 
     cmd->origin = crm_element_value_copy(msg, PCMK__XA_SRC);
     cmd->remote_op_id = crm_element_value_copy(msg, PCMK__XA_ST_REMOTE_OP);
@@ -428,7 +434,7 @@ fork_cb(int pid, void *user_data)
          */
         cmd->activating_on?cmd->activating_on:cmd->active_on;
 
-    CRM_ASSERT(device);
+    pcmk__assert(device != NULL);
     crm_debug("Operation '%s' [%d]%s%s using %s now running with %ds timeout",
               cmd->action, pid,
               ((cmd->target == NULL)? "" : " targeting "),
@@ -3102,7 +3108,7 @@ handle_register_request(pcmk__request_t *request)
 {
     xmlNode *reply = pcmk__xe_create(NULL, "reply");
 
-    CRM_ASSERT(request->ipc_client != NULL);
+    pcmk__assert(request->ipc_client != NULL);
     crm_xml_add(reply, PCMK__XA_ST_OP, CRM_OP_REGISTER);
     crm_xml_add(reply, PCMK__XA_ST_CLIENTID, request->ipc_client->id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -3195,7 +3201,7 @@ handle_notify_request(pcmk__request_t *request)
 {
     const char *flag_name = NULL;
 
-    CRM_ASSERT(request->ipc_client != NULL);
+    pcmk__assert(request->ipc_client != NULL);
     flag_name = crm_element_value(request->xml, PCMK__XA_ST_NOTIFY_ACTIVATE);
     if (flag_name != NULL) {
         crm_debug("Enabling %s callbacks for client %s",
@@ -3578,7 +3584,8 @@ void
 stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
                 xmlNode *message, const char *remote_peer)
 {
-    int call_options = st_opt_none;
+    uint32_t call_options = st_opt_none;
+    int rc = pcmk_rc_ok;
     bool is_reply = false;
 
     CRM_CHECK(message != NULL, return);
@@ -3586,7 +3593,13 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
     if (get_xpath_object("//" PCMK__XE_ST_REPLY, message, LOG_NEVER) != NULL) {
         is_reply = true;
     }
-    crm_element_value_int(message, PCMK__XA_ST_CALLOPT, &call_options);
+
+    rc = pcmk__xe_get_flags(message, PCMK__XA_ST_CALLOPT, &call_options,
+                            st_opt_none);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Couldn't parse options from message: %s", pcmk_rc_str(rc));
+    }
+
     crm_debug("Processing %ssynchronous %s %s %u from %s %s",
               pcmk_is_set(call_options, st_opt_sync_call)? "" : "a",
               crm_element_value(message, PCMK__XA_ST_OP),
@@ -3595,7 +3608,7 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
               ((client == NULL)? remote_peer : pcmk__client_name(client)));
 
     if (pcmk_is_set(call_options, st_opt_sync_call)) {
-        CRM_ASSERT(client == NULL || client->request_id == id);
+        pcmk__assert((client == NULL) || (client->request_id == id));
     }
 
     if (is_reply) {

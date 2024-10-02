@@ -23,7 +23,6 @@
           <ref name="element-template"/>
           <ref name="element-group"/>
           <ref name="element-clone"/>
-          <ref name="element-master"/>
           <ref name="element-bundle"/>
         </choice>
       </zeroOrMore>
@@ -83,36 +82,7 @@
               <attribute name="replicas-per-host"><data type="integer"/></attribute>
             </optional>
             <optional>
-              <choice>
-                <attribute name="masters"><data type="integer"/></attribute>
-                <attribute name="promoted-max"><data type="integer"/></attribute>
-              </choice>
-            </optional>
-            <optional>
-              <attribute name="run-command"> <text/></attribute>
-            </optional>
-            <optional>
-              <attribute name="network"><text/></attribute>
-            </optional>
-            <optional>
-              <attribute name="options"><text/></attribute>
-            </optional>
-          </element>
-
-          <!-- @COMPAT rkt containers in bundles are deprecated since 2.1.8 -->
-          <element name="rkt">
-            <attribute name="image"><text/></attribute>
-            <optional>
-              <attribute name="replicas"><data type="integer"/></attribute>
-            </optional>
-            <optional>
-              <attribute name="replicas-per-host"><data type="integer"/></attribute>
-            </optional>
-            <optional>
-              <choice>
-                <attribute name="masters"><data type="integer"/></attribute>
-                <attribute name="promoted-max"><data type="integer"/></attribute>
-              </choice>
+              <attribute name="promoted-max"><data type="integer"/></attribute>
             </optional>
             <optional>
               <attribute name="run-command"> <text/></attribute>
@@ -133,10 +103,7 @@
               <attribute name="replicas-per-host"><data type="integer"/></attribute>
             </optional>
             <optional>
-              <choice>
-                <attribute name="masters"><data type="integer"/></attribute>
-                <attribute name="promoted-max"><data type="integer"/></attribute>
-              </choice>
+              <attribute name="promoted-max"><data type="integer"/></attribute>
             </optional>
             <optional>
               <attribute name="run-command"> <text/></attribute>
@@ -227,22 +194,6 @@
 
   <define name="element-clone">
     <element name="clone">
-      <attribute name="id"><data type="ID"/></attribute>
-      <optional>
-        <attribute name="description"><text/></attribute>
-      </optional>
-      <interleave>
-        <ref name="element-resource-extra"/>
-        <choice>
-          <ref name="element-primitive"/>
-          <ref name="element-group"/>
-        </choice>
-      </interleave>
-    </element>
-  </define>
-
-  <define name="element-master">
-    <element name="master">
       <attribute name="id"><data type="ID"/></attribute>
       <optional>
         <attribute name="description"><text/></attribute>
@@ -381,12 +332,6 @@
           <value>stonith</value>
           <value>service</value>
           <value>systemd</value>
-
-          <!-- @COMPAT upstart resources are deprecated since 2.1.0 -->
-          <value>upstart</value>
-
-          <!-- @COMPAT nagios resources are deprecated since 2.1.6 -->
-          <value>nagios</value>
         </choice>
       </attribute>
     </choice>

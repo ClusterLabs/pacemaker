@@ -35,8 +35,6 @@
 
 #include "pacemaker-based.h"
 
-/* #undef HAVE_PAM_PAM_APPL_H */
-
 #include <gnutls/gnutls.h>
 
 #include <pwd.h>
@@ -44,11 +42,9 @@
 #if HAVE_SECURITY_PAM_APPL_H
 #  include <security/pam_appl.h>
 #  define HAVE_PAM 1
-#else
-#  if HAVE_PAM_PAM_APPL_H
-#    include <pam/pam_appl.h>
-#    define HAVE_PAM 1
-#  endif
+#elif HAVE_PAM_PAM_APPL_H
+#  include <pam/pam_appl.h>
+#  define HAVE_PAM 1
 #endif
 
 extern int remote_tls_fd;
@@ -65,10 +61,11 @@ debug_log(int level, const char *str)
     fputs(str, stderr);
 }
 
+// @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
 
 int num_clients;
-int authenticate_user(const char *user, const char *passwd);
+static bool authenticate_user(const char *user, const char *passwd);
 static int cib_remote_listen(gpointer data);
 static int cib_remote_msg(gpointer data);
 
@@ -111,7 +108,8 @@ init_remote_listener(int port, gboolean encrypted)
         crm_warn("Starting plain-text listener on port %d", port);
     }
 #ifndef HAVE_PAM
-    crm_warn("PAM is _not_ enabled!");
+    crm_warn("This build does not support remote administrators "
+             "because PAM support is not available");
 #endif
 
     /* create server socket */
@@ -167,12 +165,9 @@ check_group_membership(const char *usr, const char *grp)
     struct passwd *pwd = NULL;
     struct group *group = NULL;
 
-    CRM_CHECK(usr != NULL, return FALSE);
-    CRM_CHECK(grp != NULL, return FALSE);
-
     pwd = getpwnam(usr);
     if (pwd == NULL) {
-        crm_err("No user named '%s' exists!", usr);
+        crm_notice("Rejecting remote client: '%s' is not a valid user", usr);
         return FALSE;
     }
 
@@ -183,7 +178,7 @@ check_group_membership(const char *usr, const char *grp)
 
     group = getgrnam(grp);
     if (group == NULL) {
-        crm_err("No group named '%s' exists!", grp);
+        crm_err("Rejecting remote client: '%s' is not a valid group", grp);
         return FALSE;
     }
 
@@ -196,8 +191,10 @@ check_group_membership(const char *usr, const char *grp)
         } else if (pcmk__str_eq(usr, member, pcmk__str_none)) {
             return TRUE;
         }
-    };
+    }
 
+    crm_notice("Rejecting remote client: User '%s' is not a member of "
+               "group '%s'", usr, grp);
     return FALSE;
 }
 
@@ -208,44 +205,38 @@ cib_remote_auth(xmlNode * login)
     const char *pass = NULL;
     const char *tmp = NULL;
 
-    crm_log_xml_info(login, "Login: ");
     if (login == NULL) {
         return FALSE;
     }
 
     if (!pcmk__xe_is(login, PCMK__XE_CIB_COMMAND)) {
-        crm_err("Unrecognizable message from remote client");
-        crm_log_xml_info(login, "bad");
+        crm_warn("Rejecting remote client: Unrecognizable message "
+                 "(element '%s' not '" PCMK__XE_CIB_COMMAND "')", login->name);
+        crm_log_xml_debug(login, "bad");
         return FALSE;
     }
 
     tmp = crm_element_value(login, PCMK_XA_OP);
     if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
-        crm_err("Wrong operation: %s", tmp);
+        crm_warn("Rejecting remote client: Unrecognizable message "
+                 "(operation '%s' not 'authenticate')", tmp);
+        crm_log_xml_debug(login, "bad");
         return FALSE;
     }
 
     user = crm_element_value(login, PCMK_XA_USER);
     pass = crm_element_value(login, PCMK__XA_PASSWORD);
-
     if (!user || !pass) {
-        crm_err("missing auth credentials");
+        crm_warn("Rejecting remote client: No %s given",
+                 ((user == NULL)? "username" : "password"));
+        crm_log_xml_debug(login, "bad");
         return FALSE;
     }
 
-    /* Non-root daemons can only validate the password of the
-     * user they're running as
-     */
-    if (check_group_membership(user, CRM_DAEMON_GROUP) == FALSE) {
-        crm_err("User is not a member of the required group");
-        return FALSE;
+    crm_log_xml_debug(login, "auth");
 
-    } else if (authenticate_user(user, pass) == FALSE) {
-        crm_err("PAM auth failed");
-        return FALSE;
-    }
-
-    return TRUE;
+    return check_group_membership(user, CRM_DAEMON_GROUP)
+           && authenticate_user(user, pass);
 }
 
 static gboolean
@@ -287,18 +278,17 @@ cib_remote_listen(gpointer data)
     memset(&addr, 0, sizeof(addr));
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
     if (csock == -1) {
-        crm_err("Could not accept socket connection: %s", pcmk_rc_str(errno));
+        crm_warn("Could not accept remote connection: %s", pcmk_rc_str(errno));
         return TRUE;
     }
 
     pcmk__sockaddr2str(&addr, ipstr);
-    crm_debug("New %s connection from %s",
-              ((ssock == remote_tls_fd)? "secure" : "clear-text"), ipstr);
 
     rc = pcmk__set_nonblocking(csock);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not set socket non-blocking: %s " QB_XS " rc=%d",
-                pcmk_rc_str(rc), rc);
+        crm_warn("Dropping remote connection from %s because "
+                 "it could not be set to non-blocking: %s",
+                 ipstr, pcmk_rc_str(rc));
         close(csock);
         return TRUE;
     }
@@ -329,8 +319,9 @@ cib_remote_listen(gpointer data)
     new_client->remote->auth_timeout = g_timeout_add(REMOTE_AUTH_TIMEOUT,
                                                      remote_auth_timeout_cb,
                                                      new_client);
-    crm_info("Remote CIB client pending authentication "
-             QB_XS " %p id: %s", new_client, new_client->id);
+    crm_info("%s connection from %s pending authentication for client %s",
+             ((ssock == remote_tls_fd)? "Encrypted" : "Clear-text"),
+             ipstr, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
@@ -438,14 +429,14 @@ cib_remote_msg(gpointer data)
     pcmk__client_t *client = data;
     int rc;
     int timeout = 1000;
+    const char *client_name = pcmk__client_name(client);
 
     if (pcmk_is_set(client->flags, pcmk__client_authenticated)) {
         timeout = -1;
     }
 
     crm_trace("Remote %s message received for client %s",
-              pcmk__client_type_str(PCMK__CLIENT_TYPE(client)),
-              pcmk__client_name(client));
+              pcmk__client_type_str(PCMK__CLIENT_TYPE(client)), client_name);
 
     if ((PCMK__CLIENT_TYPE(client) == pcmk__client_tls)
         && !pcmk_is_set(client->flags, pcmk__client_tls_handshake_complete)) {
@@ -461,7 +452,7 @@ cib_remote_msg(gpointer data)
             return -1;
         }
 
-        crm_debug("TLS handshake with remote CIB client completed");
+        crm_debug("Completed TLS handshake with remote client %s", client_name);
         pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
         if (client->remote->auth_timeout) {
             g_source_remove(client->remote->auth_timeout);
@@ -487,7 +478,6 @@ cib_remote_msg(gpointer data)
             return -1;
         }
 
-        crm_notice("Remote CIB client connection accepted");
         pcmk__set_client_flags(client, pcmk__client_authenticated);
         g_source_remove(client->remote->auth_timeout);
         client->remote->auth_timeout = 0;
@@ -497,6 +487,10 @@ cib_remote_msg(gpointer data)
         if (user) {
             client->user = pcmk__str_copy(user);
         }
+
+        crm_notice("Remote connection accepted for authenticated user %s "
+                   QB_XS " client %s",
+                   pcmk__s(user, ""), client_name);
 
         /* send ACK */
         reg = pcmk__xe_create(NULL, PCMK__XE_CIB_RESULT);
@@ -509,14 +503,15 @@ cib_remote_msg(gpointer data)
 
     command = pcmk__remote_message_xml(client->remote);
     while (command) {
-        crm_trace("Remote client message received");
+        crm_trace("Remote message received from client %s", client_name);
         cib_handle_remote_msg(client, command);
         pcmk__xml_free(command);
         command = pcmk__remote_message_xml(client->remote);
     }
 
     if (rc == ENOTCONN) {
-        crm_trace("Remote CIB client disconnected while reading from it");
+        crm_trace("Remote CIB client %s disconnected while reading from it",
+                  client_name);
         return -1;
     }
 
@@ -524,133 +519,151 @@ cib_remote_msg(gpointer data)
 }
 
 #ifdef HAVE_PAM
+/*!
+ * \internal
+ * \brief Pass remote user's password to PAM
+ *
+ * \param[in]  num_msg   Number of entries in \p msg
+ * \param[in]  msg       Array of PAM messages
+ * \param[out] response  Where to set response to PAM
+ * \param[in]  data      User data (the password string)
+ *
+ * \return PAM return code (PAM_BUF_ERR for memory errors, PAM_CONV_ERR for all
+ *         other errors, or PAM_SUCCESS on success)
+ * \note See pam_conv(3) for more explanation
+ */
 static int
 construct_pam_passwd(int num_msg, const struct pam_message **msg,
                      struct pam_response **response, void *data)
 {
-    int count = 0;
-    struct pam_response *reply;
-    char *string = (char *)data;
+    /* In theory, multiple messages are allowed, but due to OS compatibility
+     * issues, PAM implementations are recommended to only send one message at a
+     * time. We can require that here for simplicity.
+     */
+    CRM_CHECK((num_msg == 1) && (msg != NULL) && (response != NULL)
+              && (data != NULL), return PAM_CONV_ERR);
 
-    CRM_CHECK(data, return PAM_CONV_ERR);
-    CRM_CHECK(num_msg == 1, return PAM_CONV_ERR);       /* We only want to handle one message */
-
-    reply = pcmk__assert_alloc(1, sizeof(struct pam_response));
-
-    for (count = 0; count < num_msg; ++count) {
-        switch (msg[count]->msg_style) {
-            case PAM_TEXT_INFO:
-                crm_info("PAM: %s", msg[count]->msg);
-                break;
-            case PAM_PROMPT_ECHO_OFF:
-            case PAM_PROMPT_ECHO_ON:
-                reply[count].resp_retcode = 0;
-                reply[count].resp = string;     /* We already made a copy */
-                break;
-            case PAM_ERROR_MSG:
-                /* In theory we'd want to print this, but then
-                 * we see the password prompt in the logs
-                 */
-                /* crm_err("PAM error: %s", msg[count]->msg); */
-                break;
-            default:
-                crm_err("Unhandled conversation type: %d", msg[count]->msg_style);
-                goto bail;
-        }
+    switch (msg[0]->msg_style) {
+        case PAM_PROMPT_ECHO_OFF:
+        case PAM_PROMPT_ECHO_ON:
+            // Password requested
+            break;
+        case PAM_TEXT_INFO:
+            crm_info("PAM: %s", msg[0]->msg);
+            data = NULL;
+            break;
+        case PAM_ERROR_MSG:
+            /* In theory we should show msg[0]->msg, but that might
+             * contain the password, which we don't want in the logs
+             */
+            crm_err("PAM reported an error");
+            data = NULL;
+            break;
+        default:
+            crm_warn("Ignoring PAM message of unrecognized type %d",
+                     msg[0]->msg_style);
+            return PAM_CONV_ERR;
     }
 
-    *response = reply;
-    reply = NULL;
-
+    *response = calloc(1, sizeof(struct pam_response));
+    if (*response == NULL) {
+        return PAM_BUF_ERR;
+    }
+    (*response)->resp_retcode = 0;
+    (*response)->resp = pcmk__str_copy((const char *) data); // Caller will free
     return PAM_SUCCESS;
-
-  bail:
-    for (count = 0; count < num_msg; ++count) {
-        if (reply[count].resp != NULL) {
-            switch (msg[count]->msg_style) {
-                case PAM_PROMPT_ECHO_ON:
-                case PAM_PROMPT_ECHO_OFF:
-                    /* Erase the data - it contained a password */
-                    while (*(reply[count].resp)) {
-                        *(reply[count].resp)++ = '\0';
-                    }
-                    free(reply[count].resp);
-                    break;
-            }
-            reply[count].resp = NULL;
-        }
-    }
-    free(reply);
-    reply = NULL;
-
-    return PAM_CONV_ERR;
 }
 #endif
 
-int
+/*!
+ * \internal
+ * \brief Verify the username and password passed for a remote CIB connection
+ *
+ * \param[in] user    Username passed for remote CIB connection
+ * \param[in] passwd  Password passed for remote CIB connection
+ *
+ * \return \c true if the username and password are accepted, otherwise \c false
+ * \note This function rejects all credentials when built without PAM support.
+ */
+static bool
 authenticate_user(const char *user, const char *passwd)
 {
-#ifndef HAVE_PAM
-    gboolean pass = TRUE;
-#else
+#ifdef HAVE_PAM
     int rc = 0;
-    gboolean pass = FALSE;
+    bool pass = false;
     const void *p_user = NULL;
-
     struct pam_conv p_conv;
     struct pam_handle *pam_h = NULL;
+
     static const char *pam_name = NULL;
 
     if (pam_name == NULL) {
         pam_name = getenv("CIB_pam_service");
-    }
-    if (pam_name == NULL) {
-        pam_name = "login";
+        if (pam_name == NULL) {
+            pam_name = "login";
+        }
     }
 
     p_conv.conv = construct_pam_passwd;
-    p_conv.appdata_ptr = pcmk__str_copy(passwd);
+    p_conv.appdata_ptr = (void *) passwd;
 
     rc = pam_start(pam_name, user, &p_conv, &pam_h);
     if (rc != PAM_SUCCESS) {
-        crm_err("Could not initialize PAM: %s (%d)", pam_strerror(pam_h, rc), rc);
+        crm_warn("Rejecting remote client for user %s "
+                 "because PAM initialization failed: %s",
+                 user, pam_strerror(pam_h, rc));
         goto bail;
     }
 
-    rc = pam_authenticate(pam_h, 0);
+    // Check user credentials
+    rc = pam_authenticate(pam_h, PAM_SILENT);
     if (rc != PAM_SUCCESS) {
-        crm_err("Authentication failed for %s: %s (%d)", user, pam_strerror(pam_h, rc), rc);
+        crm_notice("Access for remote user %s denied: %s",
+                   user, pam_strerror(pam_h, rc));
         goto bail;
     }
 
-    /* Make sure we authenticated the user we wanted to authenticate.
-     * Since we also run as non-root, it might be worth pre-checking
-     * the user has the same EID as us, since that the only user we
-     * can authenticate.
+    /* Get the authenticated user name (PAM modules can map the original name to
+     * something else). Since the CIB manager runs as the daemon user (not
+     * root), that is the only user that can be successfully authenticated.
      */
     rc = pam_get_item(pam_h, PAM_USER, &p_user);
     if (rc != PAM_SUCCESS) {
-        crm_err("Internal PAM error: %s (%d)", pam_strerror(pam_h, rc), rc);
+        crm_warn("Rejecting remote client for user %s "
+                 "because PAM failed to return final user name: %s",
+                 user, pam_strerror(pam_h, rc));
         goto bail;
-
-    } else if (p_user == NULL) {
-        crm_err("Unknown user authenticated.");
-        goto bail;
-
-    } else if (!pcmk__str_eq(p_user, user, pcmk__str_casei)) {
-        crm_err("User mismatch: %s vs. %s.", (const char *)p_user, (const char *)user);
+    }
+    if (p_user == NULL) {
+        crm_warn("Rejecting remote client for user %s "
+                 "because PAM returned no final user name", user);
         goto bail;
     }
 
-    rc = pam_acct_mgmt(pam_h, 0);
+    // @TODO Why do we require these to match?
+    if (!pcmk__str_eq(p_user, user, pcmk__str_none)) {
+        crm_warn("Rejecting remote client for user %s "
+                 "because PAM returned different final user name %s",
+                 user, p_user);
+        goto bail;
+    }
+
+    // Check user account restrictions (expiration, etc.)
+    rc = pam_acct_mgmt(pam_h, PAM_SILENT);
     if (rc != PAM_SUCCESS) {
-        crm_err("Access denied: %s (%d)", pam_strerror(pam_h, rc), rc);
+        crm_notice("Access for remote user %s denied: %s",
+                   user, pam_strerror(pam_h, rc));
         goto bail;
     }
-    pass = TRUE;
+    pass = true;
 
-  bail:
+bail:
     pam_end(pam_h, rc);
-#endif
     return pass;
+#else
+    // @TODO Implement for non-PAM environments
+    crm_warn("Rejecting remote user %s because this build does not have "
+             "PAM support", user);
+    return false;
+#endif
 }

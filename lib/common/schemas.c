@@ -83,7 +83,7 @@ get_highest_schema(void)
      */
     GList *entry = pcmk__get_schema("none");
 
-    CRM_ASSERT((entry != NULL) && (entry->prev != NULL));
+    pcmk__assert((entry != NULL) && (entry->prev != NULL));
     return entry->prev;
 }
 
@@ -248,7 +248,7 @@ wrap_libxslt(bool finalize)
 
     /* security framework preferences */
     if (!finalize) {
-        CRM_ASSERT(secprefs == NULL);
+        pcmk__assert(secprefs == NULL);
         secprefs = xsltNewSecurityPrefs();
         ret = xsltSetSecurityPrefs(secprefs, XSLT_SECPREF_WRITE_FILE,
                                    xsltSecurityForbid)
@@ -634,9 +634,8 @@ pcmk__schema_cleanup(void)
 GList *
 pcmk__get_schema(const char *name)
 {
-    // @COMPAT Not specifying a schema name is deprecated since 2.1.8
     if (name == NULL) {
-        name = PCMK_VALUE_NONE;
+        return NULL;
     }
     for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
         pcmk__schema_t *schema = iter->data;
@@ -740,27 +739,11 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     }
     pcmk__warn_if_schema_deprecated(validation);
 
-    // @COMPAT Not specifying a schema name is deprecated since 2.1.8
-    if (validation == NULL) {
-        bool valid = false;
-
-        for (entry = known_schemas; entry != NULL; entry = entry->next) {
-            schema = entry->data;
-            if (validate_with(xml_blob, schema, NULL, NULL)) {
-                valid = true;
-                crm_xml_add(xml_blob, PCMK_XA_VALIDATE_WITH, schema->name);
-                crm_info("XML validated against %s", schema->name);
-            }
-        }
-        return valid;
-    }
-
     entry = pcmk__get_schema(validation);
     if (entry == NULL) {
-        pcmk__config_err("Cannot validate CIB with " PCMK_XA_VALIDATE_WITH
-                         " set to an unknown schema such as '%s' (manually"
-                         " edit to use a known schema)",
-                         validation);
+        pcmk__config_err("Cannot validate CIB with %s " PCMK_XA_VALIDATE_WITH
+                         " (manually edit to use a known schema)",
+                         ((validation == NULL)? "missing" : "unknown"));
         return false;
     }
 
@@ -999,7 +982,7 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
     xmlNode *new_xml = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = NULL;
 
-    CRM_ASSERT((schema != NULL) && (upgraded_schema != NULL));
+    pcmk__assert((schema != NULL) && (upgraded_schema != NULL));
 
     if (to_logs) {
         error_handler = (xmlRelaxNGValidityErrorFunc) xml_log;
@@ -1056,9 +1039,6 @@ get_configured_schema(const xmlNode *xml)
     const char *schema_name = crm_element_value(xml, PCMK_XA_VALIDATE_WITH);
 
     pcmk__warn_if_schema_deprecated(schema_name);
-    if (schema_name == NULL) {
-        return NULL;
-    }
     return pcmk__get_schema(schema_name);
 }
 
@@ -1107,13 +1087,11 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
 
     entry = get_configured_schema(*xml);
     if (entry == NULL) {
-        // @COMPAT Not specifying a schema name is deprecated since 2.1.8
-        entry = known_schemas;
-    } else {
-        original_schema = entry->data;
-        if (original_schema->schema_index >= max_schema_index) {
-            return pcmk_rc_ok;
-        }
+        return pcmk_rc_cib_corrupt;
+    }
+    original_schema = entry->data;
+    if (original_schema->schema_index >= max_schema_index) {
+        return pcmk_rc_ok;
     }
 
     for (; entry != NULL; entry = entry->next) {
@@ -1165,14 +1143,12 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
         }
     }
 
-    if (best_schema != NULL) {
-        if ((original_schema == NULL)
-            || (best_schema->schema_index > original_schema->schema_index)) {
-            crm_info("%s the configuration schema to %s",
-                     (transform? "Transformed" : "Upgraded"),
-                     best_schema->name);
-            crm_xml_add(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
-        }
+    if ((best_schema != NULL)
+        && (best_schema->schema_index > original_schema->schema_index)) {
+        crm_info("%s the configuration schema to %s",
+                 (transform? "Transformed" : "Upgraded"),
+                 best_schema->name);
+        crm_xml_add(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
     }
     return rc;
 }
@@ -1195,29 +1171,21 @@ pcmk_update_configured_schema(xmlNode **xml)
 int
 pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
 {
-    int rc = pcmk_rc_ok;
-    char *original_schema_name = NULL;
-
-    // @COMPAT Not specifying a schema name is deprecated since 2.1.8
-    const char *effective_original_name = "the first";
-
-    int orig_version = -1;
     pcmk__schema_t *x_0_schema = pcmk__find_x_0_schema()->data;
+    pcmk__schema_t *original_schema = NULL;
     GList *entry = NULL;
 
-    CRM_CHECK(xml != NULL, return EINVAL);
-
-    original_schema_name = crm_element_value_copy(*xml, PCMK_XA_VALIDATE_WITH);
-    pcmk__warn_if_schema_deprecated(original_schema_name);
-    entry = pcmk__get_schema(original_schema_name);
-    if (entry != NULL) {
-        pcmk__schema_t *original_schema = entry->data;
-
-        effective_original_name = original_schema->name;
-        orig_version = original_schema->schema_index;
+    if (xml == NULL) {
+        return EINVAL;
     }
 
-    if (orig_version < x_0_schema->schema_index) {
+    entry = get_configured_schema(*xml);
+    if (entry == NULL) {
+        return pcmk_rc_cib_corrupt;
+    }
+
+    original_schema = entry->data;
+    if (original_schema->schema_index < x_0_schema->schema_index) {
         // Current configuration schema is not acceptable, try to update
         xmlNode *converted = NULL;
         const char *new_schema_name = NULL;
@@ -1236,23 +1204,23 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
             || (schema->schema_index < x_0_schema->schema_index)) {
             // Updated configuration schema is still not acceptable
 
-            if ((orig_version == -1) || (schema == NULL)
-                || (schema->schema_index < orig_version)) {
+            if ((schema == NULL)
+                || (schema->schema_index < original_schema->schema_index)) {
                 // We couldn't validate any schema at all
                 if (to_logs) {
                     pcmk__config_err("Cannot upgrade configuration (claiming "
                                      "%s schema) to at least %s because it "
                                      "does not validate with any schema from "
                                      "%s to the latest",
-                                     pcmk__s(original_schema_name, "no"),
-                                     x_0_schema->name, effective_original_name);
+                                     original_schema->name,
+                                     x_0_schema->name, original_schema->name);
                 } else {
                     fprintf(stderr, "Cannot upgrade configuration (claiming "
                                     "%s schema) to at least %s because it "
                                     "does not validate with any schema from "
                                     "%s to the latest\n",
-                                    pcmk__s(original_schema_name, "no"),
-                                    x_0_schema->name, effective_original_name);
+                                    original_schema->name,
+                                    x_0_schema->name, original_schema->name);
                 }
             } else {
                 // We updated configuration successfully, but still too low
@@ -1260,22 +1228,20 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
                     pcmk__config_err("Cannot upgrade configuration (claiming "
                                      "%s schema) to at least %s because it "
                                      "would not upgrade past %s",
-                                     pcmk__s(original_schema_name, "no"),
-                                     x_0_schema->name,
+                                     original_schema->name, x_0_schema->name,
                                      pcmk__s(new_schema_name, "unspecified version"));
                 } else {
                     fprintf(stderr, "Cannot upgrade configuration (claiming "
                                     "%s schema) to at least %s because it "
                                     "would not upgrade past %s\n",
-                                    pcmk__s(original_schema_name, "no"),
-                                    x_0_schema->name,
+                                    original_schema->name, x_0_schema->name,
                                     pcmk__s(new_schema_name, "unspecified version"));
                 }
             }
 
             pcmk__xml_free(converted);
             converted = NULL;
-            rc = pcmk_rc_transform_failed;
+            return pcmk_rc_transform_failed;
 
         } else {
             // Updated configuration schema is acceptable
@@ -1287,26 +1253,24 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
                     pcmk__config_warn("Configuration with %s schema was "
                                       "internally upgraded to acceptable (but "
                                       "not most recent) %s",
-                                      pcmk__s(original_schema_name, "no"),
-                                      schema->name);
+                                      original_schema->name, schema->name);
                 }
             } else if (to_logs) {
                 crm_info("Configuration with %s schema was internally "
                          "upgraded to latest version %s",
-                         pcmk__s(original_schema_name, "no"),
-                         schema->name);
+                         original_schema->name, schema->name);
             }
         }
 
-    } else {
-        // @COMPAT the none schema is deprecated since 2.1.8
+    } else if (!to_logs) {
         pcmk__schema_t *none_schema = NULL;
 
         entry = pcmk__get_schema(PCMK_VALUE_NONE);
-        CRM_ASSERT((entry != NULL) && (entry->data != NULL));
+        pcmk__assert((entry != NULL) && (entry->data != NULL));
 
         none_schema = entry->data;
-        if (!to_logs && (orig_version >= none_schema->schema_index)) {
+        if (original_schema->schema_index >= none_schema->schema_index) {
+            // @COMPAT the none schema is deprecated since 2.1.8
             fprintf(stderr, "Schema validation of configuration is "
                             "disabled (support for " PCMK_XA_VALIDATE_WITH
                             " set to \"" PCMK_VALUE_NONE "\" is deprecated"
@@ -1314,8 +1278,7 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
         }
     }
 
-    free(original_schema_name);
-    return rc;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -1515,12 +1478,14 @@ pcmk__remote_schema_dir(void)
 void
 pcmk__warn_if_schema_deprecated(const char *schema)
 {
-    if (pcmk__str_eq(schema, PCMK_VALUE_NONE,
-                     pcmk__str_none|pcmk__str_null_matches)) {
+    /* @COMPAT Disabling validation is deprecated since 2.1.8, but
+     * resource-agents' ocf-shellfuncs (at least as of 4.15.1) uses it
+     */
+    if (pcmk__str_eq(schema, PCMK_VALUE_NONE, pcmk__str_none)) {
         pcmk__config_warn("Support for " PCMK_XA_VALIDATE_WITH "='%s' is "
                           "deprecated and will be removed in a future release "
                           "without the possibility of upgrades (manually edit "
-                          "to use a supported schema)", pcmk__s(schema, ""));
+                          "to use a supported schema)", schema);
     }
 }
 

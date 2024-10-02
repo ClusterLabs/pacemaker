@@ -83,8 +83,9 @@ get_ordering_type(const xmlNode *xml_obj)
 
         if (score) {
             // @COMPAT deprecated informally since 1.0.7, formally since 2.0.1
-            int score_i = char2score(score);
+            int score_i = 0;
 
+            (void) pcmk_parse_score(score, &score_i, 0);
             if (score_i == 0) {
                 kind_e = pe_order_kind_optional;
             }
@@ -1295,7 +1296,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
     pcmk_action_t *first_action = order->action1;
     pcmk_resource_t *then_rsc = order->rsc2;
 
-    CRM_ASSERT(first_rsc != NULL);
+    pcmk__assert(first_rsc != NULL);
     pcmk__rsc_trace(first_rsc, "Applying ordering constraint %d (first: %s)",
                     order->id, first_rsc->id);
 

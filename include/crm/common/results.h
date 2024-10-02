@@ -9,6 +9,8 @@
 #ifndef PCMK__CRM_COMMON_RESULTS__H
 #define PCMK__CRM_COMMON_RESULTS__H
 
+#include <glib.h>           // gboolean
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,12 +40,6 @@ extern "C" {
 #  define _Noreturn
 # endif
 #endif
-
-#define CRM_ASSERT(expr) do {                                                \
-        if (!(expr)) {                                                       \
-            crm_abort(__FILE__, __func__, __LINE__, #expr, TRUE, FALSE);     \
-        }                                                                    \
-    } while(0)
 
 /*
  * Function return codes
@@ -371,6 +367,10 @@ const char *crm_exit_str(crm_exit_t exit_code);
 
 _Noreturn crm_exit_t crm_exit(crm_exit_t rc);
 
+/* coverity[+kill] */
+void crm_abort(const char *file, const char *function, int line,
+               const char *condition, gboolean do_core, gboolean do_fork);
+
 static inline const char *
 pcmk_exec_status_str(enum pcmk_exec_status status)
 {
@@ -394,6 +394,10 @@ pcmk_exec_status_str(enum pcmk_exec_status status)
 
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/results_compat.h>
 #endif
 
 #endif

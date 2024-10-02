@@ -85,17 +85,6 @@ extern "C" {
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XE_FAILED                 "failed"
 
-// @COMPAT Deprecated since 1.0.8 (commit 4cb100f)
-#define PCMK__XE_LIFETIME               "lifetime"
-
-/* @COMPAT Deprecated since 2.0.0; alias for <clone> with PCMK_META_PROMOTABLE
- * set to "true"
- */
-#define PCMK__XE_PROMOTABLE_LEGACY      "master"
-
-// @COMPAT Support for rkt is deprecated since 2.1.8
-#define PCMK__XE_RKT                    "rkt"
-
 
 /*
  * XML attribute names used only by internal code
@@ -284,9 +273,6 @@ extern "C" {
 
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XA_ORDERING               "ordering"
-
-// @COMPAT Deprecated alias for PCMK_XA_PROMOTED_MAX since 2.0.0
-#define PCMK__XA_PROMOTED_MAX_LEGACY    "masters"
 
 // @COMPAT Deprecated alias for PCMK_XA_PROMOTED_ONLY since 2.0.0
 #define PCMK__XA_PROMOTED_ONLY_LEGACY   "master_only"

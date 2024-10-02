@@ -18,51 +18,71 @@ int pcmk__score_green = 0;
 int pcmk__score_yellow = 0;
 
 /*!
- * \brief Get the integer value of a score string
+ * \brief Parse an integer score from a string
  *
- * Given a string representation of a score, return the integer equivalent.
- * This accepts infinity strings as well as red, yellow, and green, and
- * bounds the result to +/-INFINITY.
+ * Parse an integer score from a string. This accepts infinity strings as well
+ * as red, yellow, and green, and bounds the result to +/-INFINITY.
  *
- * \param[in] score  Score as string
+ * \param[in]  score_s        Score as string
+ * \param[out] score          Where to store integer value corresponding to
+ *                            \p score_s (may be NULL to only check validity)
+ * \param[in]  default_score  Value to use if \p score_s is NULL or invalid
  *
- * \return Integer value corresponding to \p score
+ * \return Standard Pacemaker return code
  */
 int
-char2score(const char *score)
+pcmk_parse_score(const char *score_s, int *score, int default_score)
 {
-    if (score == NULL) {
-        return 0;
+    int rc = pcmk_rc_ok;
+    int local_score = 0;
 
-    } else if (pcmk_str_is_minus_infinity(score)) {
-        return -PCMK_SCORE_INFINITY;
+    // Ensure default score is in bounds
+    default_score = QB_MIN(default_score, PCMK_SCORE_INFINITY);
+    default_score = QB_MAX(default_score, -PCMK_SCORE_INFINITY);
+    local_score = default_score;
 
-    } else if (pcmk_str_is_infinity(score)) {
-        return PCMK_SCORE_INFINITY;
+    if (score_s == NULL) {
 
-    } else if (pcmk__str_eq(score, PCMK_VALUE_RED, pcmk__str_casei)) {
-        return pcmk__score_red;
+    } else if (pcmk_str_is_minus_infinity(score_s)) {
+        local_score = -PCMK_SCORE_INFINITY;
 
-    } else if (pcmk__str_eq(score, PCMK_VALUE_YELLOW, pcmk__str_casei)) {
-        return pcmk__score_yellow;
+    } else if (pcmk_str_is_infinity(score_s)) {
+        local_score = PCMK_SCORE_INFINITY;
 
-    } else if (pcmk__str_eq(score, PCMK_VALUE_GREEN, pcmk__str_casei)) {
-        return pcmk__score_green;
+    } else if (pcmk__str_eq(score_s, PCMK_VALUE_RED, pcmk__str_casei)) {
+        local_score = pcmk__score_red;
+
+    } else if (pcmk__str_eq(score_s, PCMK_VALUE_YELLOW, pcmk__str_casei)) {
+        local_score = pcmk__score_yellow;
+
+    } else if (pcmk__str_eq(score_s, PCMK_VALUE_GREEN, pcmk__str_casei)) {
+        local_score = pcmk__score_green;
 
     } else {
-        long long score_ll;
+        long long score_ll = 0LL;
 
-        pcmk__scan_ll(score, &score_ll, 0LL);
-        if (score_ll > PCMK_SCORE_INFINITY) {
-            return PCMK_SCORE_INFINITY;
+        rc = pcmk__scan_ll(score_s, &score_ll, default_score);
+        if (rc == ERANGE) {
+            rc = pcmk_rc_ok;
+        }
+        if (rc != pcmk_rc_ok) {
+            local_score = default_score;
+
+        } else if (score_ll > PCMK_SCORE_INFINITY) {
+            local_score = PCMK_SCORE_INFINITY;
 
         } else if (score_ll < -PCMK_SCORE_INFINITY) {
-            return -PCMK_SCORE_INFINITY;
+            local_score = -PCMK_SCORE_INFINITY;
 
         } else {
-            return (int) score_ll;
+            local_score = (int) score_ll;
         }
     }
+
+    if (score != NULL) {
+        *score = local_score;
+    }
+    return rc;
 }
 
 /*!
@@ -161,3 +181,20 @@ pcmk__add_scores(int score1, int score2)
 
     return result;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/scores_compat.h>
+
+int
+char2score(const char *score)
+{
+    int result = 0;
+
+    (void) pcmk_parse_score(score, &result, 0);
+    return result;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

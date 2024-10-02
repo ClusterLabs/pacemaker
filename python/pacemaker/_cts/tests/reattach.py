@@ -79,7 +79,7 @@ class Reattach(CTSTest):
     def _enable_incompatible_rscs(self, node):
         """Re-enable resources that were incompatible with this test."""
         self.debug("Re-enable incompatible resources")
-        xml = """<meta_attributes id="cts-lab-Reattach-meta">"""
+        xml = """<meta_attributes id="cts-lab-Reattach-meta"/>"""
         return self._rsh(node, """cibadmin --delete --xml-text '%s'""" % xml)
 
     def _reprobe(self, node):

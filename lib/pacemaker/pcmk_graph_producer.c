@@ -313,7 +313,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
         }
 
     } else {
-        CRM_ASSERT(action->rsc->priv->history_id == NULL);
+        pcmk__assert(action->rsc->priv->history_id == NULL);
         crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->id);
     }
 
@@ -990,7 +990,7 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
 {
     GList *iter = NULL;
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
 
     pcmk__rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
 
@@ -1019,6 +1019,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     const char *value = NULL;
     long long limit = 0LL;
     GHashTable *config_hash = scheduler->priv->options;
+    int rc = pcmk_rc_ok;
 
     transition_id++;
     crm_trace("Creating transition graph %d", transition_id);
@@ -1045,7 +1046,11 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     crm_xml_add_int(scheduler->priv->graph, "transition_id", transition_id);
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_MIGRATION_LIMIT);
-    if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
+    rc = pcmk__scan_ll(value, &limit, 0LL);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Ignoring invalid value '%s' for " PCMK_OPT_MIGRATION_LIMIT
+                 ": %s", value, pcmk_rc_str(rc));
+    } else if (limit > 0) {
         crm_xml_add(scheduler->priv->graph, PCMK_OPT_MIGRATION_LIMIT, value);
     }
 

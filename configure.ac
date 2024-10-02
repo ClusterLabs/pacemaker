@@ -238,13 +238,6 @@ AC_ARG_ENABLE([systemd],
 yes_no_try "$enable_systemd" "try"
 enable_systemd=$?
 
-AC_ARG_ENABLE([upstart],
-    [AS_HELP_STRING([--enable-upstart],
-        [enable support for managing resources via Upstart (deprecated) @<:@try@:>@])]
-)
-yes_no_try "$enable_upstart" "try"
-enable_upstart=$?
-
 dnl --enable-* options: features inherent to Pacemaker
 
 # AM_GNU_GETTEXT calls AM_NLS which defines the nls option, but it defaults
@@ -372,25 +365,7 @@ AC_ARG_WITH([corosync-conf],
     [ PCMK__COROSYNC_CONF="$withval" ]
 )
 
-AC_ARG_WITH([nagios],
-    [AS_HELP_STRING([--with-nagios], [support nagios resources (deprecated)])]
-)
-yes_no_try "$with_nagios" "try"
-with_nagios=$?
-
 dnl --with-* options: directory locations
-
-AC_ARG_WITH([nagios-plugin-dir],
-    [AS_HELP_STRING([--with-nagios-plugin-dir=DIR],
-        [directory for nagios plugins (deprecated) @<:@LIBEXECDIR/nagios/plugins@:>@])],
-    [ NAGIOS_PLUGIN_DIR="$withval" ]
-)
-
-AC_ARG_WITH([nagios-metadata-dir],
-    [AS_HELP_STRING([--with-nagios-metadata-dir=DIR],
-        [directory for nagios plugins metadata (deprecated) @<:@DATADIR/nagios/plugins-metadata@:>@])],
-    [ NAGIOS_METADATA_DIR="$withval" ]
-)
 
 INITDIR=""
 AC_ARG_WITH([initdir],
@@ -1104,6 +1079,11 @@ AC_CHECK_HEADERS([sys/signalfd.h])
 AC_CHECK_HEADERS([uuid/uuid.h])
 AC_CHECK_HEADERS([security/pam_appl.h pam/pam_appl.h])
 
+AS_IF([test x"$ac_cv_lib_pam_pam_start" = x"yes"],
+      AS_IF([test x"$ac_cv_header_security_pam_appl_h" = x"yes" dnl
+            || test x"$ac_cv_header_pam_pam_appl_h" = x"yes"],
+            [PCMK_FEATURES="$PCMK_FEATURES pam"]))
+
 # Required headers
 REQUIRE_HEADER([arpa/inet.h])
 REQUIRE_HEADER([ctype.h])
@@ -1431,9 +1411,9 @@ AC_CHECK_HEADERS([stonith/stonith.h],
 AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test x"$ac_cv_header_stonith_stonith_h" = x"yes"])
 
 
-dnl ===============================================
-dnl Detect DBus, systemd, and Upstart support
-dnl ===============================================
+dnl ===============================
+dnl Detect DBus and systemd support
+dnl ===============================
 
 HAVE_dbus=0
 PC_NAME_DBUS=""
@@ -1444,7 +1424,6 @@ PKG_CHECK_MODULES([DBUS],[dbus-1 >= 1.5.12],
                       CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"
                   ],[])
 AC_DEFINE_UNQUOTED(HAVE_DBUS, $HAVE_dbus, Support dbus)
-AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
 AC_SUBST(PC_NAME_DBUS)
 
 check_systemdsystemunitdir() {
@@ -1506,75 +1485,6 @@ AC_DEFINE_UNQUOTED([SUPPORT_SYSTEMD], [$enable_systemd],
 AM_CONDITIONAL([BUILD_SYSTEMD], [test $enable_systemd = $REQUIRED])
 AC_SUBST(SUPPORT_SYSTEMD)
 
-AS_CASE([$enable_upstart],
-        [$REQUIRED], [
-            AS_IF([test $HAVE_dbus = 0],
-                  [AC_MSG_FAILURE([Cannot support Upstart resources without DBus])])
-        ],
-        [$OPTIONAL], [
-            AS_IF([test $HAVE_dbus = 0], [enable_upstart=$DISABLED],
-                  [
-                      AC_MSG_CHECKING([for Upstart version (using dbus-send)])
-                      ret=$({ dbus-send --system --print-reply \
-                                  --dest=com.ubuntu.Upstart \
-                                  /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
-                                  string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
-                              || echo "version unavailable"; } | tail -n1)
-                      # sanitize output a bit (interested just in value, not type),
-                      # ret is intentionally unenquoted so as to normalize whitespace
-                      ret=$(echo ${ret} | cut -d' ' -f2-)
-                      AC_MSG_RESULT([${ret}])
-                      AS_IF([test x"$ret" != x"unavailable" \
-                             || initctl --version 2>/dev/null | grep -q upstart],
-                            [enable_upstart=$REQUIRED],
-                            [enable_upstart=$DISABLED]
-                      )
-                  ])
-        ],
-)
-AC_MSG_CHECKING([whether to enable support for managing resources via Upstart])
-AS_IF([test $enable_upstart -eq $DISABLED], [AC_MSG_RESULT([no])],
-      [
-          AC_MSG_RESULT([yes])
-          PCMK_FEATURES="$PCMK_FEATURES upstart"
-      ]
-)
-AC_DEFINE_UNQUOTED([SUPPORT_UPSTART], [$enable_upstart],
-                   [Support Upstart resources])
-AM_CONDITIONAL([BUILD_UPSTART], [test $enable_upstart -eq $REQUIRED])
-AC_SUBST(SUPPORT_UPSTART)
-
-
-dnl ========================================================================
-dnl Detect Nagios support
-dnl ========================================================================
-
-AS_CASE([$with_nagios],
-        [$REQUIRED], [
-            AS_IF([test x"$ac_cv_have_decl_CLOCK_MONOTONIC" = x"no"],
-                  [AC_MSG_FAILURE([Cannot support nagios resources without monotonic clock])])
-        ],
-        [$OPTIONAL], [
-            AS_IF([test x"$ac_cv_have_decl_CLOCK_MONOTONIC" = x"no"],
-                  [with_nagios=$DISABLED], [with_nagios=$REQUIRED])
-        ]
-)
-AS_IF([test $with_nagios -eq $REQUIRED], [PCMK_FEATURES="$PCMK_FEATURES nagios"])
-AC_DEFINE_UNQUOTED([SUPPORT_NAGIOS], [$with_nagios], [Support nagios plugins])
-AM_CONDITIONAL([BUILD_NAGIOS], [test $with_nagios -eq $REQUIRED])
-
-AS_IF([test x"$NAGIOS_PLUGIN_DIR" = x""],
-      [NAGIOS_PLUGIN_DIR="${libexecdir}/nagios/plugins"])
-
-AC_DEFINE_UNQUOTED(NAGIOS_PLUGIN_DIR, "$NAGIOS_PLUGIN_DIR", Directory for nagios plugins)
-AC_SUBST(NAGIOS_PLUGIN_DIR)
-
-AS_IF([test x"$NAGIOS_METADATA_DIR" = x""],
-      [NAGIOS_METADATA_DIR="${datadir}/nagios/plugins-metadata"])
-
-AC_DEFINE_UNQUOTED(NAGIOS_METADATA_DIR, "$NAGIOS_METADATA_DIR", Directory for nagios plugins metadata)
-AC_SUBST(NAGIOS_METADATA_DIR)
-
 STACKS=""
 CLUSTERLIBS=""
 PC_NAME_CLUSTER=""
@@ -1586,7 +1496,6 @@ dnl ========================================================================
 PCMK__ENABLE_SERVICE=$DISABLED
 AM_COND_IF([BUILD_LSB], [PCMK__ENABLE_SERVICE=$REQUIRED])
 AM_COND_IF([BUILD_SYSTEMD], [PCMK__ENABLE_SERVICE=$REQUIRED])
-AM_COND_IF([BUILD_UPSTART], [PCMK__ENABLE_SERVICE=$REQUIRED])
 AS_IF([test $PCMK__ENABLE_SERVICE -ne $DISABLED],
       [PCMK_FEATURES="$PCMK_FEATURES service"])
 AC_SUBST(PCMK__ENABLE_SERVICE)
@@ -2085,9 +1994,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/execd/pacemaker_remote.service              \
                 daemons/fenced/Makefile                             \
                 daemons/pacemakerd/Makefile                         \
-                daemons/pacemakerd/pacemaker.combined.upstart       \
                 daemons/pacemakerd/pacemaker.service                \
-                daemons/pacemakerd/pacemaker.upstart                \
                 daemons/schedulerd/Makefile                         \
                 devel/Makefile                                      \
                 doc/Doxyfile                                        \
@@ -2176,7 +2083,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 tests/Makefile                                      \
                 tools/Makefile                                      \
                 tools/crm_mon.service                               \
-                tools/crm_mon.upstart                               \
                 tools/report.collector                              \
                 tools/report.common                                 \
                 xml/Makefile                                        \

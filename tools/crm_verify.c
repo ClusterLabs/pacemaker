@@ -129,7 +129,7 @@ output_config_error(void *ctx, const char *msg, ...)
     pcmk__output_t *out = ctx;
 
     va_start(ap, msg);
-    CRM_ASSERT(vasprintf(&buf, msg, ap) > 0);
+    pcmk__assert(vasprintf(&buf, msg, ap) > 0);
     if (options.verbosity > 0) {
         out->err(out, "error: %s", buf);
     }
@@ -153,7 +153,7 @@ output_config_warning(void *ctx, const char *msg, ...)
     pcmk__output_t *out = ctx;
 
     va_start(ap, msg);
-    CRM_ASSERT(vasprintf(&buf, msg, ap) > 0);
+    pcmk__assert(vasprintf(&buf, msg, ap) > 0);
     if (options.verbosity > 0) {
         out->err(out, "warning: %s", buf);
     }

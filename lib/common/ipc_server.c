@@ -333,23 +333,42 @@ pcmk__free_client(pcmk__client_t *c)
  * \brief Raise IPC eviction threshold for a client, if allowed
  *
  * \param[in,out] client     Client to modify
- * \param[in]     qmax       New threshold (as non-NULL string)
- *
- * \return true if change was allowed, false otherwise
+ * \param[in]     qmax       New threshold
  */
-bool
+void
 pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
 {
-    if (pcmk_is_set(client->flags, pcmk__client_privileged)) {
-        long long qmax_ll;
+    int rc = pcmk_rc_ok;
+    long long qmax_ll = 0LL;
+    unsigned int orig_value = 0U;
 
-        if ((pcmk__scan_ll(qmax, &qmax_ll, 0LL) == pcmk_rc_ok)
-            && (qmax_ll > 0LL) && (qmax_ll <= UINT_MAX)) {
-            client->queue_max = (unsigned int) qmax_ll;
-            return true;
+    CRM_CHECK(client != NULL, return);
+
+    orig_value = client->queue_max;
+
+    if (pcmk_is_set(client->flags, pcmk__client_privileged)) {
+        rc = pcmk__scan_ll(qmax, &qmax_ll, 0LL);
+        if (rc == pcmk_rc_ok) {
+            if ((qmax_ll <= 0LL) || (qmax_ll > UINT_MAX)) {
+                rc = ERANGE;
+            } else {
+                client->queue_max = (unsigned int) qmax_ll;
+            }
         }
+    } else {
+        rc = EACCES;
     }
-    return false;
+
+    if (rc != pcmk_rc_ok) {
+        crm_info("Could not set IPC threshold for client %s[%u] to %s: %s",
+                  pcmk__client_name(client), client->pid,
+                  pcmk__s(qmax, "default"), pcmk_rc_str(rc));
+
+    } else if (client->queue_max != orig_value) {
+        crm_debug("IPC threshold for client %s[%u] is now %u (was %u)",
+                  pcmk__client_name(client), client->pid,
+                  client->queue_max, orig_value);
+    }
 }
 
 int
@@ -422,7 +441,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         }
     }
 
-    CRM_ASSERT(text[header->size_uncompressed - 1] == 0);
+    pcmk__assert(text[header->size_uncompressed - 1] == 0);
 
     xml = pcmk__xml_parse(text);
     crm_log_xml_trace(xml, "[IPC received]");
@@ -651,7 +670,7 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     header->qb.id = (int32_t)request;    /* Replying to a specific request */
 
     *result = iov;
-    CRM_ASSERT(header->qb.size > 0);
+    pcmk__assert(header->qb.size > 0);
     if (bytes != NULL) {
         *bytes = header->qb.size;
     }

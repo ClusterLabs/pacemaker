@@ -161,10 +161,12 @@
 
 # PCMK_node_action_limit
 #
-# Specify the maximum number of jobs that can be scheduled on this node. If set,
-# this overrides the node-action-limit cluster property for this node.
+# If set, this overrides the node-action-limit cluster option for this node to
+# specify the maximum number of jobs that can be scheduled on this node (or 0
+# to use twice the number of CPU cores).
 #
-# Default: PCMK_node_action_limit=""
+# Default: unset
+# Example: PCMK_node_action_limit="1"
 
 
 ## Crash Handling

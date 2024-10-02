@@ -382,7 +382,7 @@ stonith_recurring_op_helper(gpointer data)
 
     rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
     /* take it out of recurring_ops list, and put it in the pending ops
      * to be executed */
     rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
@@ -905,22 +905,6 @@ action_complete(svc_action_t * action)
     }
 #endif
 
-#if SUPPORT_NAGIOS
-    if (rsc && pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        if (action_matches(cmd, PCMK_ACTION_MONITOR, 0)
-            && pcmk__result_ok(&(cmd->result))) {
-            /* Successfully executed --version for the nagios plugin */
-            cmd->result.exit_status = PCMK_OCF_NOT_RUNNING;
-
-        } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)
-                   && !pcmk__result_ok(&(cmd->result))) {
-#ifdef PCMK__TIME_USE_CGT
-            goagain = true;
-#endif
-        }
-    }
-#endif
-
 #ifdef PCMK__TIME_USE_CGT
     if (goagain) {
         int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
@@ -1306,22 +1290,10 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     svc_action_t *action = NULL;
     GHashTable *params_copy = NULL;
 
-    CRM_ASSERT(rsc);
-    CRM_ASSERT(cmd);
+    pcmk__assert((rsc != NULL) && (cmd != NULL));
 
     crm_trace("Creating action, resource:%s action:%s class:%s provider:%s agent:%s",
               rsc->rsc_id, cmd->action, rsc->class, rsc->provider, rsc->type);
-
-#if SUPPORT_NAGIOS
-    /* Recurring operations are cancelled anyway for a stop operation */
-    if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)
-        && pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
-
-        cmd->result.exit_status = PCMK_OCF_OK;
-        cmd_finalize(cmd, rsc);
-        return;
-    }
-#endif
 
     params_copy = pcmk__str_table_dup(cmd->params);
 

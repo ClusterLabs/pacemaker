@@ -620,7 +620,7 @@ synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *
         /* if lrm_state not given assume local */
         lrm_state = controld_get_executor_state(NULL, false);
     }
-    CRM_ASSERT(lrm_state != NULL);
+    pcmk__assert(lrm_state != NULL);
 
     op.type = lrmd_event_exec_complete;
     op.rsc_id = rsc_id;
@@ -818,7 +818,7 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
 {
     remote_ra_data_t *ra_data = NULL;
 
-    CRM_ASSERT(lrm_state);
+    pcmk__assert(lrm_state != NULL);
     ra_data = lrm_state->remote_ra_data;
 
     if (!pcmk_is_set(ra_data->status, takeover_complete)) {

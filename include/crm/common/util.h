@@ -44,10 +44,6 @@ int crm_default_remote_port(void);
 
 int compare_version(const char *version1, const char *version2);
 
-/* coverity[+kill] */
-void crm_abort(const char *file, const char *function, int line,
-               const char *condition, gboolean do_core, gboolean do_fork);
-
 /*!
  * \brief Check whether any of specified flags are set in a flag group
  *

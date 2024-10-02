@@ -48,6 +48,7 @@ assert_schema(const char *name, int expected_index)
 static void
 unknown_schema(void **state)
 {
+    assert_null(pcmk__get_schema(NULL));
     assert_null(pcmk__get_schema(""));
     assert_null(pcmk__get_schema("blahblah"));
     assert_null(pcmk__get_schema("pacemaker-2.47"));
@@ -57,9 +58,6 @@ unknown_schema(void **state)
 static void
 known_schema(void **state)
 {
-    // @COMPAT none is deprecated since 2.1.8
-    assert_schema(NULL, 15); // defaults to "none"
-
     assert_schema("pacemaker-1.0", 0);
     assert_schema("pacemaker-1.2", 1);
     assert_schema("pacemaker-2.0", 3);

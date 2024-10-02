@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2022 the Pacemaker project contributors
+ * Copyright 2014-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -416,7 +416,7 @@ pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection,
     DBusMessage *reply = NULL;
     DBusPendingCall* pending = NULL;
 
-    CRM_ASSERT(dbus_message_get_type (msg) == DBUS_MESSAGE_TYPE_METHOD_CALL);
+    pcmk__assert(dbus_message_get_type(msg) == DBUS_MESSAGE_TYPE_METHOD_CALL);
     method = dbus_message_get_member (msg);
 
     /* Ensure caller can reliably check whether error is set */
@@ -480,8 +480,8 @@ pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
     const char *method = NULL;
     DBusPendingCall* pending = NULL;
 
-    CRM_ASSERT(done);
-    CRM_ASSERT(dbus_message_get_type(msg) == DBUS_MESSAGE_TYPE_METHOD_CALL);
+    pcmk__assert(done != NULL);
+    pcmk__assert(dbus_message_get_type(msg) == DBUS_MESSAGE_TYPE_METHOD_CALL);
     method = dbus_message_get_member(msg);
 
     if (timeout <= 0) {

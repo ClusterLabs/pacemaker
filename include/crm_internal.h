@@ -24,6 +24,8 @@
 #define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_42
 #define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_42
 
+#define G_LOG_DOMAIN "Pacemaker"
+
 #include <glib.h>
 #include <stdbool.h>
 #include <libxml/tree.h>

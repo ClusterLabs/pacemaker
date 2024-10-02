@@ -90,11 +90,6 @@ get_resource_type(const char *name)
     } else if (pcmk__str_eq(name, PCMK_XE_CLONE, pcmk__str_casei)) {
         return pcmk__rsc_variant_clone;
 
-    } else if (pcmk__str_eq(name, PCMK__XE_PROMOTABLE_LEGACY,
-                            pcmk__str_casei)) {
-        // @COMPAT deprecated since 2.0.0
-        return pcmk__rsc_variant_clone;
-
     } else if (pcmk__str_eq(name, PCMK_XE_BUNDLE, pcmk__str_casei)) {
         return pcmk__rsc_variant_bundle;
     }
@@ -427,31 +422,6 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     return TRUE;
 }
 
-static bool
-detect_promotable(pcmk_resource_t *rsc)
-{
-    const char *promotable = g_hash_table_lookup(rsc->priv->meta,
-                                                 PCMK_META_PROMOTABLE);
-
-    if (crm_is_true(promotable)) {
-        return TRUE;
-    }
-
-    // @COMPAT deprecated since 2.0.0
-    if (pcmk__xe_is(rsc->priv->xml, PCMK__XE_PROMOTABLE_LEGACY)) {
-        pcmk__warn_once(pcmk__wo_master_element,
-                        "Support for <" PCMK__XE_PROMOTABLE_LEGACY "> (such "
-                        "as in %s) is deprecated and will be removed in a "
-                        "future release. Use <" PCMK_XE_CLONE "> with a "
-                        PCMK_META_PROMOTABLE " meta-attribute instead.",
-                        rsc->id);
-        pcmk__insert_dup(rsc->priv->meta, PCMK_META_PROMOTABLE,
-                         PCMK_VALUE_TRUE);
-        return TRUE;
-    }
-    return FALSE;
-}
-
 /*!
  * \internal
  * \brief Check whether a clone or instance being unpacked is globally unique
@@ -621,22 +591,90 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
                     (is_default? " (default)" : ""));
 }
 
+/*!
+ * \internal
+ * \brief Parse resource priority from meta-attribute
+ *
+ * \param[in,out] rsc  Resource being unpacked
+ */
 static void
-warn_about_deprecated_classes(pcmk_resource_t *rsc)
+unpack_priority(pcmk_resource_t *rsc)
 {
-    const char *std = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+    const char *value = g_hash_table_lookup(rsc->priv->meta,
+                                            PCMK_META_PRIORITY);
+    int rc = pcmk_parse_score(value, &(rsc->priv->priority), 0);
 
-    if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_none)) {
-        pcmk__warn_once(pcmk__wo_upstart,
-                        "Support for Upstart resources (such as %s) is "
-                        "deprecated and will be removed in a future release",
-                        rsc->id);
+    if (rc != pcmk_rc_ok) {
+        pcmk__config_warn("Using default (0) for resource %s "
+                          PCMK_META_PRIORITY
+                          " because '%s' is not a valid value: %s",
+                          rsc->id, value, pcmk_rc_str(rc));
+    }
+}
 
-    } else if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_none)) {
-        pcmk__warn_once(pcmk__wo_nagios,
-                        "Support for Nagios resources (such as %s) is "
-                        "deprecated and will be removed in a future release",
-                        rsc->id);
+/*!
+ * \internal
+ * \brief Parse resource stickiness from meta-attribute
+ *
+ * \param[in,out] rsc  Resource being unpacked
+ */
+static void
+unpack_stickiness(pcmk_resource_t *rsc)
+{
+    const char *value = g_hash_table_lookup(rsc->priv->meta,
+                                            PCMK_META_RESOURCE_STICKINESS);
+
+    if (pcmk__str_eq(value, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
+        // @COMPAT Deprecated since 2.1.8
+        pcmk__config_warn("Support for setting "
+                          PCMK_META_RESOURCE_STICKINESS
+                          " to the explicit value '" PCMK_VALUE_DEFAULT
+                          "' is deprecated and will be removed in a "
+                          "future release (just leave it unset)");
+    } else {
+        int rc = pcmk_parse_score(value, &(rsc->priv->stickiness), 0);
+
+        if (rc != pcmk_rc_ok) {
+            pcmk__config_warn("Using default (0) for resource %s "
+                              PCMK_META_RESOURCE_STICKINESS
+                              " because '%s' is not a valid value: %s",
+                              rsc->id, value, pcmk_rc_str(rc));
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Parse resource migration threshold from meta-attribute
+ *
+ * \param[in,out] rsc  Resource being unpacked
+ */
+static void
+unpack_migration_threshold(pcmk_resource_t *rsc)
+{
+    const char *value = g_hash_table_lookup(rsc->priv->meta,
+                                            PCMK_META_MIGRATION_THRESHOLD);
+
+    if (pcmk__str_eq(value, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
+        // @COMPAT Deprecated since 2.1.8
+        pcmk__config_warn("Support for setting "
+                          PCMK_META_MIGRATION_THRESHOLD
+                          " to the explicit value '" PCMK_VALUE_DEFAULT
+                          "' is deprecated and will be removed in a "
+                          "future release (just leave it unset)");
+        rsc->priv->ban_after_failures = PCMK_SCORE_INFINITY;
+    } else {
+        int rc = pcmk_parse_score(value, &(rsc->priv->ban_after_failures),
+                                  PCMK_SCORE_INFINITY);
+
+        if ((rc != pcmk_rc_ok) || (rsc->priv->ban_after_failures < 0)) {
+            pcmk__config_warn("Using default (" PCMK_VALUE_INFINITY
+                              ") for resource %s meta-attribute "
+                              PCMK_META_MIGRATION_THRESHOLD
+                              " because '%s' is not a valid value: %s",
+                              rsc->id, value, pcmk_rc_str(rc));
+            rsc->priv->ban_after_failures = PCMK_SCORE_INFINITY;
+        }
     }
 }
 
@@ -757,8 +795,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         (*rsc)->id = strdup(id);
     }
 
-    warn_about_deprecated_classes(*rsc);
-
     rsc_private->fns = &resource_class_functions[rsc_private->variant];
 
     get_meta_attributes(rsc_private->meta, *rsc, NULL, scheduler);
@@ -773,10 +809,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     rsc_private->orig_role = pcmk_role_stopped;
     rsc_private->next_role = pcmk_role_unknown;
 
-    rsc_private->ban_after_failures = PCMK_SCORE_INFINITY;
-
-    value = g_hash_table_lookup(rsc_private->meta, PCMK_META_PRIORITY);
-    rsc_private->priority = char2score(value);
+    unpack_priority(*rsc);
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {
@@ -840,7 +873,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         if (detect_unique(*rsc)) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_unique);
         }
-        if (detect_promotable(*rsc)) {
+        if (crm_is_true(g_hash_table_lookup((*rsc)->priv->meta,
+                                            PCMK_META_PROMOTABLE))) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_promotable);
         }
     } else {
@@ -897,45 +931,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                         (*rsc)->id);
     }
 
-    value = g_hash_table_lookup(rsc_private->meta,
-                                PCMK_META_RESOURCE_STICKINESS);
-    if (value != NULL) {
-        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-            // @COMPAT Deprecated since 2.1.8
-            pcmk__config_warn("Support for setting "
-                              PCMK_META_RESOURCE_STICKINESS
-                              " to the explicit value '" PCMK_VALUE_DEFAULT
-                              "' is deprecated and will be removed in a "
-                              "future release (just leave it unset)");
-        } else {
-            rsc_private->stickiness = char2score(value);
-        }
-    }
-
-    value = g_hash_table_lookup(rsc_private->meta,
-                                PCMK_META_MIGRATION_THRESHOLD);
-    if (value != NULL) {
-        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-            // @COMPAT Deprecated since 2.1.8
-            pcmk__config_warn("Support for setting "
-                              PCMK_META_MIGRATION_THRESHOLD
-                              " to the explicit value '" PCMK_VALUE_DEFAULT
-                              "' is deprecated and will be removed in a "
-                              "future release (just leave it unset)");
-        } else {
-            rsc_private->ban_after_failures = char2score(value);
-            if (rsc_private->ban_after_failures < 0) {
-                /* @COMPAT We use 1 here to preserve previous behavior, but this
-                 * should probably use the default (INFINITY) or 0 (to disable)
-                 * instead.
-                 */
-                pcmk__warn_once(pcmk__wo_neg_threshold,
-                                PCMK_META_MIGRATION_THRESHOLD
-                                " must be non-negative, using 1 instead");
-                rsc_private->ban_after_failures = 1;
-            }
-        }
-    }
+    unpack_stickiness(*rsc);
+    unpack_migration_threshold(*rsc);
 
     if (pcmk__str_eq(crm_element_value(rsc_private->xml, PCMK_XA_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
@@ -1282,7 +1279,7 @@ pe__count_common(pcmk_resource_t *rsc)
 void
 pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role, const char *why)
 {
-    CRM_ASSERT((rsc != NULL) && (why != NULL));
+    pcmk__assert((rsc != NULL) && (why != NULL));
     if (rsc->priv->next_role != role) {
         pcmk__rsc_trace(rsc, "Resetting next role for %s from %s to %s (%s)",
                         rsc->id, pcmk_role_text(rsc->priv->next_role),

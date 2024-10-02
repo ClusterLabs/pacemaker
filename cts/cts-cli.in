@@ -253,6 +253,8 @@ def sanitize_output(s):
         (r"""-X '.*'""", r"""-X '...'"""),
         (r' api-version="[^"]*"', r' api-version="X"'),
         (r'\(apply_upgrade@.*\.c:[0-9]+\)', r'apply_upgrade'),
+        (r'\(invert_action@.*\.c:[0-9]+\)', r'invert_action'),
+        (r'\(pcmk__update_schema@.*\.c:[0-9]+\)', r'pcmk__update_schema'),
         (r'(<change-attr name="crm_feature_set" .* value=")[0-9.]*"', r'\1"'),
         (r'(<change-attr name="validate-with" .* value="pacemaker-)[0-9.]+"', r'\1X"'),
         (r'(<cib.*) cib-last-written="[^"]*"', r'\1'),
@@ -268,6 +270,7 @@ def sanitize_output(s):
         (r' last-rc-change=[\'"][-+A-Za-z0-9: ]*[\'"],?', r''),
         (r'\(parse_date@.*\.c:[0-9]+\)', r'parse_date'),
         (r'\((pcmk__.*)@.*\.c:[0-9]+\)', r'\1'),
+        (r'.*Relax-NG validity error : ', r''),
         (r'request=".*(crm_?[a-zA-Z0-9]+) ', r'request="\1 '),
         (r'request=".*iso8601', r'request="iso8601'),
         (r' start="[0-9][-+: 0-9]*Z*"', r' start=""'),
@@ -1276,7 +1279,7 @@ class CibadminRegressionTest(RegressionTest):
 
         # Add some stuff to the empty CIB so we know that erasing it did something.
         basic_tests_setup = [
-            """cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1">'""",
+            """cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1"/>'""",
             """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/></cluster_property_set>'""",
             """cibadmin -C -o resources --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'"""
         ]
@@ -1320,10 +1323,10 @@ class CrmAttributeRegressionTest(RegressionTest):
             Test("Configure something before erasing",
                  "crm_attribute -n test_attr -v 5", update_cib=True),
             Test("Test '++' XML attribute update syntax",
-                 """cibadmin -M --score --xml-text='<cib admin_epoch="admin_epoch++">'""",
+                 """cibadmin -M --score --xml-text='<cib admin_epoch="admin_epoch++"/>'""",
                  update_cib=True),
             Test("Test '+=' XML attribute update syntax",
-                 """cibadmin -M --score --xml-text='<cib admin_epoch="admin_epoch+=2">'""",
+                 """cibadmin -M --score --xml-text='<cib admin_epoch="admin_epoch+=2"/>'""",
                  update_cib=True),
             make_test_group("Test '++' nvpair value update syntax",
                             "crm_attribute -n test_attr -v 'value++' --score {fmt}",
@@ -1332,10 +1335,10 @@ class CrmAttributeRegressionTest(RegressionTest):
                             "crm_attribute -n test_attr -v 'value+=2' --score {fmt}",
                             [Test, ValidatingTest], update_cib=True),
             Test("Test '++' XML attribute update syntax (--score not set)",
-                 """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch++">'""",
+                 """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch++"/>'""",
                  update_cib=True),
             Test("Test '+=' XML attribute update syntax (--score not set)",
-                 """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch+=2">'""",
+                 """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch+=2"/>'""",
                  update_cib=True),
             make_test_group("Test '++' nvpair value update syntax (--score not set)",
                             "crm_attribute -n test_attr -v 'value++' {fmt}",
@@ -1504,7 +1507,8 @@ class CrmStandbyRegressionTest(RegressionTest):
         ]
 
         return [
-            ShadowTestGroup(basic_tests, setup="""cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1">'"""),
+            ShadowTestGroup(basic_tests,
+			    setup="""cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1"/>'"""),
         ]
 
 
@@ -1708,7 +1712,7 @@ class CrmResourceRegressionTest(RegressionTest):
                  "crm_resource -r dummy-group --meta -p is-managed -v false",
                  update_cib=True),
             Test("Delete the dummy-group resource group",
-                 "cibadmin -D -o resources --xml-text '<group id=\"dummy-group\">'",
+                 "cibadmin -D -o resources --xml-text '<group id=\"dummy-group\"/>'",
                  update_cib=True),
             Test("Specify a lifetime when moving a resource",
                  "crm_resource -r dummy --move --node node2 --lifetime=PT1H",
@@ -1976,7 +1980,7 @@ class CrmShadowRegressionTest(RegressionTest):
                      """cibadmin --modify --xml-text '<primitive id="dummy" description="desc"/>' && """ \
                      """cibadmin --delete --xml-text '<op_defaults/>' && """ \
                      """cibadmin --create -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>' && """ \
-                     """cibadmin --create -o status --xml-text '<node_state id="3" uname="cluster03" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">'"""
+                     """cibadmin --create -o status --xml-text '<node_state id="3" uname="cluster03" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member"/>'"""
 
         more_tests = [
             # We can't use make_test_group() here because we only want to run
@@ -2885,48 +2889,36 @@ class ValidityRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         basic_tests = [
-            Test("Try to make resulting CIB invalid (enum violation)",
-                 """cibadmin -M -o constraints --xml-text '<rsc_order id="ord_1-2" first="dummy1" first-action="break" then="dummy2"/>'""",
-                 expected_rc=ExitStatus.CONFIG, update_cib=True),
-            Test("Run crm_simulate with invalid CIB (enum violation)",
-                 "crm_simulate -p -S",
-                 stdin=StdinCmd("""cibadmin -Q | sed 's#"start"#"break"#'"""),
-                 expected_rc=ExitStatus.CONFIG),
-            Test("Try to make resulting CIB invalid (unrecognized validate-with)",
+            # sanitize_output() strips out validate-with, so there's no point in
+            # outputting the CIB after tests that modify it
+            Test("Try to set unrecognized validate-with",
                  "cibadmin -M --xml-text '<cib validate-with=\"pacemaker-9999.0\"/>'",
-                 expected_rc=ExitStatus.CONFIG, update_cib=True),
-            Test("Run crm_simulate with invalid CIB (unrecognized validate-with)",
-                 "crm_simulate -p -S",
-                 stdin=StdinCmd("""cibadmin -Q | sed 's#"pacemaker-1.2"#"pacemaker-9999.0"#'"""),
                  expected_rc=ExitStatus.CONFIG),
-            Test("Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1)",
+            Test("Try to remove validate-with attribute",
+                 "cibadmin -R -p",
+                 stdin=StdinCmd("""cibadmin -Q | sed 's#validate-with="[^"]*"##'"""),
+                 expected_rc=ExitStatus.CONFIG),
+
+            Test("Try to use rsc_order first-action value disallowed by schema",
+                 "cibadmin -M -o constraints --xml-text '<rsc_order "
+                 "id=\"ord_1-2\" first=\"dummy1\" first-action=\"break\" "
+                 "then=\"dummy2\"/>'",
+                 expected_rc=ExitStatus.CONFIG, update_cib=True),
+            Test("Try to use configuration legal only with schema after configured one",
                  "cibadmin -C -o configuration --xml-text '<tags/>'",
                  expected_rc=ExitStatus.CONFIG, update_cib=True),
-            Test("Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)",
-                 "crm_simulate -p -S",
-                 stdin=StdinCmd("cibadmin -Q | sed 's#</configuration>#<tags/></configuration>#'")),
-            Test("Make resulting CIB valid, although without validate-with attribute",
-                 "cibadmin -p -R",
-                 stdin=StdinCmd("""cibadmin -Q | sed 's#[ 	][ 	]*validate-with="[^"]*"##'"""),
-                 update_cib=True),
-            Test("Run crm_simulate with valid CIB, but without validate-with attribute",
-                 "crm_simulate -p -S",
-                 stdin=StdinCmd("cibadmin -Q")),
-            # this will just disable validation and accept the config, outputting
-            # validation errors
-            Test("Make resulting CIB invalid, and without validate-with attribute",
-                 "cibadmin -p -R",
-                 stdin=StdinCmd("""cibadmin -Q | """
-                                """sed -e 's#[ 	][ 	]*validate-with="[^"]*"##' """
-                                """    -e 's#\\([ 	][ 	]*epoch="[^"]*\\)"#\\10"#' """
-                                """    -e 's#"start"#"break"#'"""),
-                 update_cib=True),
-            Test("Run crm_simulate with invalid CIB, also without validate-with attribute",
-                 "crm_simulate -p -S",
-                 stdin=StdinCmd("""cibadmin -Q | """
-                                """sed -e 's#[ 	][ 	]*validate-with="[^"]*"##' """
-                                """    -e 's#\\([ 	][ 	]*epoch="[^"]*\\)"#\\10"#' """
-                                """    -e 's#"start"#"break"#'""")),
+            Test("Disable schema validation",
+                 "cibadmin -M --xml-text '<cib validate-with=\"none\"/>'",
+                 expected_rc=ExitStatus.OK),
+            Test("Set invalid rsc_order first-action value (schema validation disabled)",
+                 "cibadmin -M -o constraints --xml-text '<rsc_order "
+                 "id=\"ord_1-2\" first=\"dummy1\" first-action=\"break\" "
+                 "then=\"dummy2\"/>'",
+                 expected_rc=ExitStatus.OK, update_cib=True),
+            Test("Run crm_simulate with invalid rsc_order first-action "
+                 "(schema validation disabled)",
+                 "crm_simulate -SL",
+                 expected_rc=ExitStatus.OK),
         ]
 
         basic_tests_setup = [
@@ -2938,7 +2930,7 @@ class ValidityRegressionTest(RegressionTest):
         return [
             ShadowTestGroup(basic_tests, validate_with="pacemaker-1.2",
                             setup=basic_tests_setup,
-                            env={"PCMK_trace_functions": "apply_upgrade,pcmk__update_schema"}),
+                            env={"PCMK_trace_functions": "apply_upgrade,pcmk__update_schema,invert_action"}),
         ]
 
 

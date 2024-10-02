@@ -667,7 +667,7 @@ log_resource_details(pcmk_scheduler_t *scheduler)
         // Log all resources except inactive orphans
         if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)
             || (rsc->priv->orig_role != pcmk_role_stopped)) {
-            out->message(out, pcmk__map_element_name(rsc->priv->xml), 0UL,
+            out->message(out, (const char *) rsc->priv->xml->name, 0UL,
                          rsc, all, all);
         }
     }
@@ -744,7 +744,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    CRM_ASSERT(cib != NULL);
+    pcmk__assert(cib != NULL);
     crm_trace("Calculating cluster status");
 
     /* This will zero the entire struct without freeing anything first, so

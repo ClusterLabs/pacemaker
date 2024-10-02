@@ -34,7 +34,6 @@ extern "C" {
 #define PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED  "resource-discovery-enabled"
 
 enum pcmk__node_variant { // Possible node types
-    pcmk__node_variant_ping     = 0,    // deprecated
     pcmk__node_variant_cluster  = 1,    // Cluster layer node
     pcmk__node_variant_remote   = 2,    // Pacemaker Remote node
 };

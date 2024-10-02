@@ -127,6 +127,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
+        // @COMPAT crmd-integration-timeout is disallowed by the schema
         PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout",
             PCMK_VALUE_DURATION, NULL,
         "3min", pcmk__valid_interval_spec,
@@ -136,6 +137,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
+        // @COMPAT crmd-finalization-timeout is disallowed by the schema
         PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, "crmd-finalization-timeout",
             PCMK_VALUE_DURATION, NULL,
         "30min", pcmk__valid_interval_spec,
@@ -145,6 +147,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
+        // @COMPAT crmd-transition-delay is disallowed by the schema
         PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", PCMK_VALUE_DURATION,
             NULL,
         "0s", pcmk__valid_interval_spec,
@@ -243,6 +246,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "potentially leading to data loss and/or service unavailability."),
     },
     {
+        // @COMPAT PCMK__ACTION_POWEROFF is disallowed by schema
         PCMK_OPT_STONITH_ACTION, NULL, PCMK_VALUE_SELECT,
             PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF ", " PCMK__ACTION_POWEROFF,
         PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
@@ -457,6 +461,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
+        // @COMPAT Disallowed by schema
         PCMK__OPT_REMOVE_AFTER_STOP, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_deprecated,
@@ -1346,7 +1351,7 @@ cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
 {
     const char *value = NULL;
 
-    CRM_ASSERT((option != NULL) && (option->name != NULL));
+    pcmk__assert((option != NULL) && (option->name != NULL));
 
     if (table != NULL) {
         value = g_hash_table_lookup(table, option->name);

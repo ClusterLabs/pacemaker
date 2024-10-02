@@ -137,7 +137,7 @@ struct qb_ipcs_service_handlers ipc_rw_callbacks = {
  */
 static xmlNode *
 create_cib_reply(const char *op, const char *call_id, const char *client_id,
-                 int call_options, int rc, xmlNode *call_data)
+                 uint32_t call_options, int rc, xmlNode *call_data)
 {
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_CIB_REPLY);
 
@@ -222,9 +222,14 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
                            pcmk__client_t *cib_client, gboolean privileged)
 {
     const char *op = crm_element_value(op_request, PCMK__XA_CIB_OP);
-    int call_options = cib_none;
+    uint32_t call_options = cib_none;
+    int rc = pcmk_rc_ok;
 
-    crm_element_value_int(op_request, PCMK__XA_CIB_CALLOPT, &call_options);
+    rc = pcmk__xe_get_flags(op_request, PCMK__XA_CIB_CALLOPT, &call_options,
+                            cib_none);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+    }
 
     /* Requests with cib_transaction set should not be sent to based directly
      * (outside of a commit-transaction request)
@@ -298,12 +303,19 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
 {
     uint32_t id = 0;
     uint32_t flags = 0;
-    int call_options = 0;
+    uint32_t call_options = cib_none;
     pcmk__client_t *cib_client = pcmk__find_client(c);
     xmlNode *op_request = pcmk__client_data2xml(cib_client, data, &id, &flags);
 
     if (op_request) {
-        crm_element_value_int(op_request, PCMK__XA_CIB_CALLOPT, &call_options);
+        int rc = pcmk_rc_ok;
+
+        rc = pcmk__xe_get_flags(op_request, PCMK__XA_CIB_CALLOPT, &call_options,
+                                cib_none);
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Couldn't parse options from request: %s",
+                     pcmk_rc_str(rc));
+        }
     }
 
     if (op_request == NULL) {
@@ -341,11 +353,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     if (pcmk_is_set(cib_client->flags, cib_is_daemon)) {
         const char *qmax = cib_config_lookup(PCMK_OPT_CLUSTER_IPC_LIMIT);
 
-        if (pcmk__set_client_queue_max(cib_client, qmax)) {
-            crm_trace("IPC threshold for client %s[%u] is now %u",
-                      pcmk__client_name(cib_client), cib_client->pid,
-                      cib_client->queue_max);
-        }
+        pcmk__set_client_queue_max(cib_client, qmax);
     }
 
     crm_xml_add(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
@@ -409,8 +417,11 @@ process_ping_reply(xmlNode *reply)
 
     } else {
         long long seq_ll;
+        int rc = pcmk__scan_ll(seq_s, &seq_ll, 0LL);
 
-        if (pcmk__scan_ll(seq_s, &seq_ll, 0LL) != pcmk_rc_ok) {
+        if (rc != pcmk_rc_ok) {
+            crm_debug("Ignoring ping reply with invalid " PCMK__XA_CIB_PING_ID
+                      " '%s': %s", seq_s, pcmk_rc_str(rc));
             return;
         }
         seq = (uint64_t) seq_ll;
@@ -474,7 +485,7 @@ process_ping_reply(xmlNode *reply)
 
 static void
 parse_local_options(const pcmk__client_t *cib_client,
-                    const cib__operation_t *operation, int call_options,
+                    const cib__operation_t *operation,
                     const char *host, const char *op, gboolean *local_notify,
                     gboolean *needs_reply, gboolean *process,
                     gboolean *needs_forward)
@@ -748,7 +759,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
                     const pcmk__client_t *cib_client)
 {
     // @TODO: Break into multiple smaller functions
-    int call_options = 0;
+    uint32_t call_options = cib_none;
 
     gboolean process = TRUE;        // Whether to process request locally now
     gboolean is_update = TRUE;      // Whether request would modify CIB
@@ -772,7 +783,11 @@ cib_process_request(xmlNode *request, gboolean privileged,
     const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
 
-    crm_element_value_int(request, PCMK__XA_CIB_CALLOPT, &call_options);
+    rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
+                            cib_none);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+    }
 
     if ((host != NULL) && (*host == '\0')) {
         host = NULL;
@@ -804,7 +819,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
     }
 
     if (cib_client != NULL) {
-        parse_local_options(cib_client, operation, call_options, host, op,
+        parse_local_options(cib_client, operation, host, op,
                             &local_notify, &needs_reply, &process,
                             &needs_forward);
 
@@ -1025,7 +1040,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     xmlNode *output = NULL;
     xmlNode *result_cib = NULL;
 
-    int call_options = 0;
+    uint32_t call_options = cib_none;
 
     const char *op = NULL;
     const char *section = NULL;
@@ -1042,7 +1057,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     static mainloop_timer_t *digest_timer = NULL;
 
-    CRM_ASSERT(cib_status == pcmk_ok);
+    pcmk__assert(cib_status == pcmk_ok);
 
     if(digest_timer == NULL) {
         digest_timer = mainloop_timer_add("digester", 5000, FALSE, cib_digester_cb, NULL);
@@ -1053,7 +1068,11 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     /* Start processing the request... */
     op = crm_element_value(request, PCMK__XA_CIB_OP);
-    crm_element_value_int(request, PCMK__XA_CIB_CALLOPT, &call_options);
+    rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
+                            cib_none);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+    }
 
     if (!privileged && pcmk_is_set(operation->flags, cib__op_attr_privileged)) {
         rc = -EACCES;
@@ -1151,7 +1170,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         mainloop_timer_start(digest_timer);
 
     } else if (rc == -pcmk_err_schema_validation) {
-        CRM_ASSERT(result_cib != the_cib);
+        pcmk__assert(result_cib != the_cib);
 
         if (output != NULL) {
             crm_log_xml_info(output, "cib:output");

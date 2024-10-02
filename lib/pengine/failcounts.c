@@ -288,8 +288,17 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
 
     // If this is a matching fail count attribute, update fail count
     if (regexec(&(fc_data->failcount_re), (const char *) key, 0, NULL, 0) == 0) {
-        fc_data->failcount = pcmk__add_scores(fc_data->failcount,
-                                              char2score(value));
+        int score = 0;
+        int rc = pcmk_parse_score(value, &score, 0);
+
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Ignoring %s for %s "
+                     "because '%s' is not a valid fail count: %s",
+                     (const char *) key, pcmk__node_name(fc_data->node),
+                     value, pcmk_rc_str(rc));
+            return;
+        }
+        fc_data->failcount = pcmk__add_scores(fc_data->failcount, score);
         pcmk__rsc_trace(fc_data->rsc, "Added %s (%s) to %s fail count (now %s)",
                         (const char *) key, (const char *) value,
                         fc_data->rsc->id,
@@ -301,11 +310,14 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
     if (regexec(&(fc_data->lastfailure_re), (const char *) key, 0, NULL,
                 0) == 0) {
         long long last_ll;
+        int rc = pcmk__scan_ll(value, &last_ll, 0LL);
 
-        if (pcmk__scan_ll(value, &last_ll, 0LL) == pcmk_rc_ok) {
-            fc_data->last_failure = (time_t) QB_MAX(fc_data->last_failure,
-                                                    last_ll);
+        if (rc != pcmk_rc_ok) {
+            crm_info("Ignoring invalid value '%s' for %s: %s",
+                     (const char *) value, (const char *) key, pcmk_rc_str(rc));
+            return;
         }
+        fc_data->last_failure = (time_t) QB_MAX(fc_data->last_failure, last_ll);
     }
 }
 

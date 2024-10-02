@@ -23,7 +23,6 @@
 #include <crm/common/output_internal.h>
 #include <crm/common/xml_idref_internal.h>
 #include <crm/common/xml_io_internal.h>
-#include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
 #include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE
 
 #include <libxml/relaxng.h>
@@ -447,6 +446,9 @@ enum pcmk__xa_flags {
     pcmk__xaf_score_update  = (1U << 1),
 };
 
+int pcmk__xe_get_score(const xmlNode *xml, const char *name, int *score,
+                       int default_score);
+
 int pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags);
 void pcmk__xe_sort_attrs(xmlNode *xml);
 
@@ -578,19 +580,6 @@ pcmk__xml_attr_value(const xmlAttr *attr)
 {
     return ((attr == NULL) || (attr->children == NULL))? NULL
            : (const char *) attr->children->content;
-}
-
-// @COMPAT Drop when PCMK__XE_PROMOTABLE_LEGACY is removed
-static inline const char *
-pcmk__map_element_name(const xmlNode *xml)
-{
-    if (xml == NULL) {
-        return NULL;
-    } else if (pcmk__xe_is(xml, PCMK__XE_PROMOTABLE_LEGACY)) {
-        return PCMK_XE_CLONE;
-    } else {
-        return (const char *) xml->name;
-    }
 }
 
 /*!

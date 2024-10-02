@@ -15,15 +15,47 @@
     </start>
   </include>
 
+  <!--
+   Disallow cluster property name-value pairs for which support was recently
+   dropped. The idea is to prevent a user from adding the option under the
+   belief that it will still affect behavior. Sometime in the future, re-allow
+   these as custom properties or values.
+   -->
   <define name="cluster_property_set.nvpair.unsupported">
     <choice>
       <group>
         <attribute name="name">
-          <data type="string"/>
+          <data type="string">
+            <except>
+              <choice>
+                <value>crmd-finalization-timeout</value>
+                <value>crmd-integration-timeout</value>
+                <value>crmd-transition-delay</value>
+                <value>remove-after-stop</value>
+                <value>stonith-action</value>
+              </choice>
+            </except>
+          </data>
         </attribute>
         <optional>
           <attribute name="value"><text/></attribute>
         </optional>
+      </group>
+
+      <!-- stonith-action is allowed with value other than "poweroff" -->
+      <group>
+        <attribute name="name">
+          <value type="string">stonith-action</value>
+        </attribute>
+        <attribute name="value">
+          <data type="string">
+            <except>
+              <choice>
+                <value>poweroff</value>
+              </choice>
+            </except>
+          </data>
+        </attribute>
       </group>
     </choice>
   </define>

@@ -23,10 +23,10 @@
 #define ATTR_MISSING "end"
 #define REFERENCE_XML "<date_expression id=\"id1\" "            \
                       ATTR_PRESENT "=\"" REFERENCE_ISO8601 "\"" \
-                      " operation=\"gt\">"
+                      " operation=\"gt\"/>"
 #define BAD_XML       "<date_expression id=\"id1\" "            \
                       ATTR_PRESENT "=\"not_a_time\""            \
-                      " operation=\"gt\">"
+                      " operation=\"gt\"/>"
 
 static void
 null_invalid(void **state)

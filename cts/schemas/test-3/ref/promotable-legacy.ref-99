@@ -1,0 +1,64 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="8" num_updates="0" admin_epoch="0">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * There is one legacy promotable clone resources (rsc1-master) whose
+           instances are primitives.
+         * There is another legacy promotable clone resource (grp1-master) whose
+           instances are groups.
+         * Both legacy promotable clones have an existing meta_attributes
+           element. (This is to test that we prepend, rather than append, a new
+           one.)
+
+         In this situation:
+         * Each master element should be converted to a clone element.
+         * Each newly converted clone element should get a new meta_attributes
+           element prepended with score="INFINITY", containing an nvpair with
+           promotable="true".
+      -->
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <clone id="rsc1-master">
+        <meta_attributes id="pcmk__3_10_upgrade-promotable-legacy-rsc1-master-meta_attributes" score="INFINITY">
+          <nvpair id="pcmk__3_10_upgrade-promotable-legacy-rsc1-master-meta_attributes-promotable" name="promotable" value="true"/>
+        </meta_attributes>
+        <primitive id="rsc1" class="ocf" type="Dummy" provider="pacemaker">
+          <operations>
+            <op name="monitor" interval="10s" timeout="20s" id="rsc1-monitor-interval-10s"/>
+            <op name="start" interval="0s" timeout="20s" id="rsc1-start-interval-0s"/>
+            <op name="stop" interval="0s" timeout="20s" id="rsc1-stop-interval-0s"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="rsc1-master-meta_attributes">
+          <nvpair id="rsc1-master-meta_attributes-some-attr" name="some-attr" value="some_value"/>
+        </meta_attributes>
+      </clone>
+      <clone id="grp1-master">
+        <meta_attributes id="pcmk__3_10_upgrade-promotable-legacy-grp1-master-meta_attributes" score="INFINITY">
+          <nvpair id="pcmk__3_10_upgrade-promotable-legacy-grp1-master-meta_attributes-promotable" name="promotable" value="true"/>
+        </meta_attributes>
+        <group id="grp1">
+          <primitive id="rsc3" class="ocf" type="Dummy" provider="pacemaker">
+            <operations>
+              <op name="monitor" interval="10s" timeout="20s" id="rsc3-monitor-interval-10s"/>
+              <op name="start" interval="0s" timeout="20s" id="rsc3-start-interval-0s"/>
+              <op name="stop" interval="0s" timeout="20s" id="rsc3-stop-interval-0s"/>
+            </operations>
+          </primitive>
+          <primitive id="rsc4" class="ocf" type="Dummy" provider="pacemaker">
+            <operations>
+              <op name="monitor" interval="10s" timeout="20s" id="rsc4-monitor-interval-10s"/>
+              <op name="start" interval="0s" timeout="20s" id="rsc4-start-interval-0s"/>
+              <op name="stop" interval="0s" timeout="20s" id="rsc4-stop-interval-0s"/>
+            </operations>
+          </primitive>
+        </group>
+        <meta_attributes id="grp1-master-meta_attributes">
+          <nvpair id="grp1-master-meta_attributes-some-attr" name="some-attr" value="some_value"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

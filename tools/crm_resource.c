@@ -1592,7 +1592,7 @@ main(int argc, char **argv)
             len++;
         }
 
-        CRM_ASSERT(len > 0);
+        pcmk__assert(len > 0);
 
         /* Add 1 for the strv[0] string below, and add another 1 for the NULL
          * at the end of the array so g_strjoinv knows when to stop.

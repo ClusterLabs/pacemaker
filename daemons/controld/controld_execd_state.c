@@ -547,7 +547,8 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         /* This is for the controller, which we are, so don't try
          * to send to ourselves over IPC -- do it directly.
          */
-        int flags = 0;
+        uint32_t flags = 0U;
+        int rc = pcmk_rc_ok;
         xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_LRMD_IPC_MSG,
                                                 NULL, NULL);
         xmlNode *request = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
@@ -576,8 +577,12 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
         crmd_proxy_dispatch(session, request);
 
-        crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags);
-        if (flags & crm_ipc_client_response) {
+        rc = pcmk__xe_get_flags(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags, 0U);
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Couldn't parse controller flags from remote request: %s",
+                     pcmk_rc_str(rc));
+        }
+        if (pcmk_is_set(flags, crm_ipc_client_response)) {
             int msg_id = 0;
             xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_ACK);
 

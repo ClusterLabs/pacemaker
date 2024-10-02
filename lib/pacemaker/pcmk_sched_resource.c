@@ -328,7 +328,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
     pcmk_node_t *current = NULL;
     pcmk__output_t *out = NULL;
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
 
     out = rsc->priv->scheduler->priv->out;
     if (rsc->priv->children != NULL) {
@@ -418,7 +418,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     bool changed = false;
     pcmk_scheduler_t *scheduler = NULL;
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
     scheduler = rsc->priv->scheduler;
 
     if (rsc->priv->children != NULL) {

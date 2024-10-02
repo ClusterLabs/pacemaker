@@ -30,11 +30,11 @@ const char *str1 =
     "  <!-- This is a B node -->\n"
     "  <nodeB attrA=\"123\" " PCMK_XA_ID "=\"4\">\n"
     "    content\n"
-    "  </nodeA>\n"
+    "  </nodeB>\n"
     "  <!-- This is a B node -->\n"
     "  <nodeB attrB=\"ABC\" " PCMK_XA_ID "=\"5\">\n"
     "    content\n"
-    "  </nodeA>\n"
+    "  </nodeB>\n"
     "</xml>";
 
 static void

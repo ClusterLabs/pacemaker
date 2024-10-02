@@ -37,7 +37,7 @@ struct pcmk__election {
 static void
 election_complete(pcmk_cluster_t *cluster)
 {
-    CRM_ASSERT((cluster != NULL) && (cluster->priv->election != NULL));
+    pcmk__assert((cluster != NULL) && (cluster->priv->election != NULL));
     cluster->priv->election->state = election_won;
     if (cluster->priv->election->cb != NULL) {
         cluster->priv->election->cb(cluster);
@@ -478,7 +478,7 @@ parse_election_message(const xmlNode *message, struct vote *vote)
 static void
 record_vote(pcmk_cluster_t *cluster, struct vote *vote)
 {
-    CRM_ASSERT((vote->from != NULL) && (vote->op != NULL));
+    pcmk__assert((vote->from != NULL) && (vote->op != NULL));
 
     if (cluster->priv->election->voted == NULL) {
         cluster->priv->election->voted = pcmk__strkey_table(free, free);

@@ -10,7 +10,9 @@
 #ifndef PCMK__CRM_COMMON_HEALTH_INTERNAL__H
 #define PCMK__CRM_COMMON_HEALTH_INTERNAL__H
 
-#include <stdbool.h>
+#include <stdbool.h>                    // bool
+
+#include <crm/common/scheduler_types.h> // pcmk_scheduler_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,6 +36,8 @@ enum pcmk__health_strategy {
 bool pcmk__validate_health_strategy(const char *value);
 
 enum pcmk__health_strategy pcmk__parse_health_strategy(const char *value);
+
+int pcmk__health_score(const char *option, const pcmk_scheduler_t *scheduler);
 
 #ifdef __cplusplus
 }

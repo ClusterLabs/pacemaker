@@ -190,10 +190,15 @@ Score addition and subtraction follow these rules:
 Local Options
 #############
 
-Pacemaker supports several host-local configuration options. These options can
-be configured on each node in the main Pacemaker configuration file
-(|PCMK_CONFIG_FILE|) in the format ``<NAME>="<VALUE>"``. They work by setting
-environment variables when Pacemaker daemons start up.
+Most Pacemaker configuration is in the cluster-wide CIB, but some host-local
+configuration options either are needed at startup, before the CIB is read, or
+provide per-host overrides of cluster-wide options.
+
+These options are configured as environment variables set when Pacemaker is
+started, in the format ``<NAME>="<VALUE>"``. These are typically set in a file
+whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
+``/etc/default/pacemaker``; this documentation was generated on a system using
+|PCMK_CONFIG_FILE|).
 
 .. list-table:: **Local Options**
    :class: longtable
@@ -443,9 +448,10 @@ environment variables when Pacemaker daemons start up.
        PCMK_node_action_limit
      - :ref:`nonnegative integer <nonnegative_integer>`
      -
-     - Specify the maximum number of jobs that can be scheduled on this node. If
-       set, this overrides the :ref:`node-action-limit <node_action_limit>`
-       cluster option on this node.
+     - If set, this overrides the :ref:`node-action-limit <node_action_limit>`
+       cluster option on this node to specify the maximum number of jobs that
+       can be scheduled on this node (or 0 to use twice the number of CPU
+       cores).
 
    * - .. _pcmk_fail_fast:
 
@@ -484,10 +490,11 @@ environment variables when Pacemaker daemons start up.
      - :ref:`text <text>`
      - |PCMK_AUTHKEY_FILE|
      - Use the contents of this file as the authorization key to use with
-       Pacemaker Remote connections. This file must be readable by Pacemaker
-       daemons (that is, it must allow read permissions to either the
-       |CRM_DAEMON_USER| user or the |CRM_DAEMON_GROUP| group), and its contents
-       must be identical on all nodes.
+       :ref:`Pacemaker Remote <pacemaker_remote>` connections. This file must
+       be readable by Pacemaker daemons (that is, it must allow read
+       permissions to either the |CRM_DAEMON_USER| user or the
+       |CRM_DAEMON_GROUP| group), and its contents must be identical on all
+       nodes.
 
    * - .. _pcmk_remote_address:
 
@@ -497,12 +504,13 @@ environment variables when Pacemaker daemons start up.
        PCMK_remote_address
      - :ref:`text <text>`
      -
-     - By default, if the Pacemaker Remote service is run on the local node, it
-       will listen for connections on all IP addresses. This may be set to one
-       address to listen on instead, as a resolvable hostname or as a numeric
-       IPv4 or IPv6 address. When resolving names or listening on all addresses,
-       IPv6 will be preferred if available. When listening on an IPv6 address,
-       IPv4 clients will be supported via IPv4-mapped IPv6 addresses.
+     - By default, if the :ref:`Pacemaker Remote <pacemaker_remote>` service is
+       run on the local node, it will listen for connections on all IP
+       addresses. This may be set to one address to listen on instead, as a
+       resolvable hostname or as a numeric IPv4 or IPv6 address. When resolving
+       names or listening on all addresses, IPv6 will be preferred if
+       available. When listening on an IPv6 address, IPv4 clients will be
+       supported via IPv4-mapped IPv6 addresses.
 
        Example: ``PCMK_remote_address="192.0.2.1"``
 
@@ -514,8 +522,8 @@ environment variables when Pacemaker daemons start up.
        PCMK_remote_port
      - :ref:`port <port>`
      - 3121
-     - Use this TCP port number for Pacemaker Remote node connections. This
-       value must be the same on all nodes.
+     - Use this TCP port number for :ref:`Pacemaker Remote <pacemaker_remote>`
+       node connections. This value must be the same on all nodes.
 
    * - .. _pcmk_remote_pid1:
 
@@ -526,10 +534,10 @@ environment variables when Pacemaker daemons start up.
      - :ref:`enumeration <enumeration>`
      - default
      - *Advanced Use Only:* When a bundle resource's ``run-command`` option is
-       left to default, Pacemaker Remote runs as PID 1 in the bundle's
-       containers. When it does so, it loads environment variables from the
-       container's |PCMK_INIT_ENV_FILE| and performs the PID 1 responsibility of
-       reaping dead subprocesses.
+       left to default, :ref:`Pacemaker Remote <pacemaker_remote>` runs as PID
+       1 in the bundle's containers. When it does so, it loads environment
+       variables from the container's |PCMK_INIT_ENV_FILE| and performs the PID
+       1 responsibility of reaping dead subprocesses.
 
        This option controls whether those actions are performed when Pacemaker
        Remote is not running as PID 1. It is intended primarily for developer
@@ -554,8 +562,8 @@ environment variables when Pacemaker daemons start up.
      - :ref:`text <text>`
      - |PCMK__GNUTLS_PRIORITIES|
      - *Advanced Use Only:* These GnuTLS cipher priorities will be used for TLS
-       connections (whether for Pacemaker Remote connections or remote CIB
-       access, when enabled). See:
+       connections (whether for :ref:`Pacemaker Remote <pacemaker_remote>`
+       connections or remote CIB access, when enabled). See:
 
          https://gnutls.org/manual/html_node/Priority-Strings.html
 
@@ -565,30 +573,6 @@ environment variables when Pacemaker daemons start up.
 
        Example:
        ``PCMK_tls_priorities="SECURE128:+SECURE192"``
-
-   * - .. _pcmk_dh_min_bits:
-
-       .. index::
-          pair: node option; PCMK_dh_min_bits
-
-       PCMK_dh_min_bits
-     - :ref:`nonnegative integer <nonnegative_integer>`
-     - 0 (no minimum)
-     - *Advanced Use Only:* Set a lower bound on the bit length of the prime
-       number generated for Diffie-Hellman parameters needed by TLS connections.
-       The default is no minimum.
-
-       The server (Pacemaker Remote daemon, or CIB manager configured to accept
-       remote clients) will use this value to provide a floor for the value
-       recommended by the GnuTLS library. The library will only accept a limited
-       number of specific values, which vary by library version, so setting
-       these is recommended only when required for compatibility with specific
-       client versions.
-
-       Clients (connecting cluster nodes or remote CIB commands) will require
-       that the server use a prime of at least this size. This is recommended
-       only when the value must be lowered in order for the client's GnuTLS
-       library to accept a connection to an older server.
 
    * - .. _pcmk_dh_max_bits:
 
@@ -602,12 +586,12 @@ environment variables when Pacemaker daemons start up.
        number generated for Diffie-Hellman parameters needed by TLS connections.
        The default is no maximum.
 
-       The server (Pacemaker Remote daemon, or CIB manager configured to accept
-       remote clients) will use this value to provide a ceiling for the value
-       recommended by the GnuTLS library. The library will only accept a limited
-       number of specific values, which vary by library version, so setting
-       these is recommended only when required for compatibility with specific
-       client versions.
+       The server (:ref:`Pacemaker Remote <pacemaker_remote>` daemon, or CIB
+       manager configured to accept remote clients) will use this value to
+       provide a ceiling for the value recommended by the GnuTLS library. The
+       library will only accept a limited number of specific values, which vary
+       by library version, so setting these is recommended only when required
+       for compatibility with specific client versions.
 
        Clients do not use ``PCMK_dh_max_bits``.
 
@@ -672,9 +656,9 @@ environment variables when Pacemaker daemons start up.
        PCMK_remote_schema_directory
      - :ref:`text <text>`
      - |PCMK__REMOTE_SCHEMA_DIR|
-     - *Advanced Use Only:* Specify an alternate location on Pacemaker Remote
-       nodes for storing newer RNG schemas and XSL transforms fetched from
-       the cluster.
+     - *Advanced Use Only:* Specify an alternate location on
+       :ref:`Pacemaker Remote <pacemaker_remote>` nodes for storing newer RNG
+       schemas and XSL transforms fetched from the cluster.
 
    * - .. _pcmk_valgrind_enabled:
 

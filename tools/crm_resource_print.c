@@ -22,19 +22,9 @@ print_constraint(xmlNode *xml_obj, void *userdata)
 {
     pcmk_scheduler_t *scheduler = (pcmk_scheduler_t *) userdata;
     pcmk__output_t *out = scheduler->priv->out;
-    xmlNode *lifetime = NULL;
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
-    pcmk_rule_input_t rule_input = {
-        .now = scheduler->priv->now,
-    };
 
     if (id == NULL) {
-        return pcmk_rc_ok;
-    }
-
-    // @COMPAT Not possible with schema validation enabled
-    lifetime = pcmk__xe_first_child(xml_obj, PCMK__XE_LIFETIME, NULL, NULL);
-    if (pcmk__evaluate_rules(lifetime, &rule_input, NULL) != pcmk_rc_ok) {
         return pcmk_rc_ok;
     }
 
@@ -129,8 +119,8 @@ cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
     all = g_list_prepend(all, (gpointer) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
-    out->message(out, pcmk__map_element_name(rsc->priv->xml), show_opts, rsc,
-                 all, all);
+    out->message(out, (const char *) rsc->priv->xml->name, show_opts, rsc, all,
+                 all);
     out->message(out, "resource-config", rsc, !expanded);
     out->end_list(out);
 

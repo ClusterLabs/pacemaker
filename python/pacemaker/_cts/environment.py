@@ -375,7 +375,7 @@ class Environment:
                           help="Generate a sample configuration")
         grp3.add_argument("--choose",
                           metavar="NAME",
-                          help="Run only the named test")
+                          help="Run only the named tests, separated by whitespace")
         grp3.add_argument("--fencing", "--stonith",
                           choices=["1", "0", "yes", "no", "lha", "openstack", "rhcs", "rhevm", "scsi", "ssh", "virt", "xvm"],
                           default="1",
@@ -538,7 +538,8 @@ class Environment:
 
         if args.choose:
             self["scenario"] = "sequence"
-            self["tests"].append(args.choose)
+            self["tests"].extend(args.choose.split())
+            self["iterations"] = len(self["tests"])
 
         if args.fencing:
             if args.fencing in ["0", "no"]:

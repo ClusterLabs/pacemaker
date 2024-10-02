@@ -30,16 +30,8 @@
 #include "services_lsb.h"
 #endif
 
-#if SUPPORT_UPSTART
-#  include <upstart.h>
-#endif
-
 #if SUPPORT_SYSTEMD
 #  include <systemd.h>
-#endif
-
-#if SUPPORT_NAGIOS
-#  include <services_nagios.h>
 #endif
 
 /* TODO: Develop a rollover strategy */
@@ -63,9 +55,9 @@ static void handle_blocked_ops(void);
  *
  * \return Service class if found, NULL otherwise
  *
- * \note The priority is LSB, then systemd, then upstart. It would be preferable
- *       to put systemd first, but LSB merely requires a file existence check,
- *       while systemd requires contacting D-Bus.
+ * \note The priority is LSB then systemd. It would be preferable to put systemd
+ *       first, but LSB merely requires a file existence check, while systemd
+ *       requires contacting DBus.
  */
 const char *
 resources_find_service_class(const char *agent)
@@ -82,11 +74,6 @@ resources_find_service_class(const char *agent)
     }
 #endif
 
-#if SUPPORT_UPSTART
-    if (upstart_job_exists(agent)) {
-        return PCMK_RESOURCE_CLASS_UPSTART;
-    }
-#endif
     return NULL;
 }
 
@@ -100,18 +87,18 @@ init_recurring_actions(void)
 
 /*!
  * \internal
- * \brief Check whether op is in-flight systemd or upstart op
+ * \brief Check whether op is in-flight systemd op
  *
  * \param[in] op  Operation to check
  *
- * \return TRUE if op is in-flight systemd or upstart op
+ * \return TRUE if op is in-flight systemd op
  */
 static inline gboolean
-inflight_systemd_or_upstart(const svc_action_t *op)
+inflight_systemd(const svc_action_t *op)
 {
-    return pcmk__strcase_any_of(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD,
-                           PCMK_RESOURCE_CLASS_UPSTART, NULL) &&
-           g_list_find(inflight_ops, op) != NULL;
+    return pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD,
+                        pcmk__str_casei)
+           && (g_list_find(inflight_ops, op) != NULL);
 }
 
 /*!
@@ -145,8 +132,6 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
             default_standard = PCMK_RESOURCE_CLASS_LSB;
 #elif SUPPORT_SYSTEMD
             default_standard = PCMK_RESOURCE_CLASS_SYSTEMD;
-#elif SUPPORT_UPSTART
-            default_standard = PCMK_RESOURCE_CLASS_UPSTART;
 #else
 #error No standards supported for service alias (configure script bug)
 #endif
@@ -326,14 +311,6 @@ services__create_resource_action(const char *name, const char *standard,
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         rc = services__systemd_prepare(op);
 #endif
-#if SUPPORT_UPSTART
-    } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0) {
-        rc = services__upstart_prepare(op);
-#endif
-#if SUPPORT_NAGIOS
-    } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
-        rc = services__nagios_prepare(op);
-#endif
     } else {
         crm_info("Unknown resource standard: %s", op->standard);
         rc = ENOENT;
@@ -450,10 +427,9 @@ services_alert_create(const char *id, const char *exec, int timeout,
  * \return pcmk_ok on success, -errno otherwise
  *
  * \note This will have no effect unless the process executing the action runs
- *       as root, and the action is not a systemd or upstart action.
- *       We could implement this for systemd by adding User= and Group= to
- *       [Service] in the override file, but that seems more likely to cause
- *       problems than be useful.
+ *       as root and the action is not a systemd action. We could implement this
+ *       for systemd by adding User= and Group= to [Service] in the override
+ *       file, but that seems more likely to cause problems than be useful.
  */
 int
 services_action_user(svc_action_t *op, const char *user)
@@ -570,18 +546,6 @@ services_result2ocf(const char *standard, const char *action, int exit_status)
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD,
                             pcmk__str_casei)) {
         return services__systemd2ocf(exit_status);
-#endif
-
-#if SUPPORT_UPSTART
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART,
-                            pcmk__str_casei)) {
-        return services__upstart2ocf(exit_status);
-#endif
-
-#if SUPPORT_NAGIOS
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS,
-                            pcmk__str_casei)) {
-        return services__nagios2ocf(exit_status);
 #endif
 
 #if PCMK__ENABLE_LSB
@@ -713,8 +677,8 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     }
 
 #if HAVE_DBUS
-    // In-flight systemd and upstart ops don't have a pid
-    if (inflight_systemd_or_upstart(op)) {
+    // In-flight systemd ops don't have a pid
+    if (inflight_systemd(op)) {
         inflight_ops = g_list_remove(inflight_ops, op);
 
         /* This will cause any result that comes in later to be discarded, so we
@@ -759,7 +723,7 @@ services_action_kick(const char *name, const char *action, guint interval_ms)
     }
 
 
-    if (op->pid || inflight_systemd_or_upstart(op)) {
+    if (op->pid || inflight_systemd(op)) {
         return TRUE;
     } else {
         if (op->opaque->repeat_timer) {
@@ -830,13 +794,6 @@ handle_duplicate_recurring(svc_action_t *op)
 static int
 execute_action(svc_action_t *op)
 {
-#if SUPPORT_UPSTART
-    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_UPSTART,
-                     pcmk__str_casei)) {
-        return services__execute_upstart(op);
-    }
-#endif
-
 #if SUPPORT_SYSTEMD
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD,
                      pcmk__str_casei)) {
@@ -854,7 +811,7 @@ services_add_inflight_op(svc_action_t * op)
         return;
     }
 
-    CRM_ASSERT(op->synchronous == FALSE);
+    pcmk__assert(op->synchronous == FALSE);
 
     /* keep track of ops that are in-flight to avoid collisions in the same namespace */
     if (op->rsc) {
@@ -1026,13 +983,6 @@ execute_metadata_action(svc_action_t *op)
     }
 #endif
 
-#if SUPPORT_NAGIOS
-    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return pcmk_legacy2rc(services__get_nagios_metadata(op->agent,
-                                                            &op->stdout_data));
-    }
-#endif
-
     return execute_action(op);
 }
 
@@ -1104,30 +1054,6 @@ resources_list_standards(void)
     }
 #endif
 
-#if SUPPORT_UPSTART
-    {
-        GList *agents = upstart_job_listall();
-
-        if (agents != NULL) {
-            standards = g_list_append(standards,
-                                      strdup(PCMK_RESOURCE_CLASS_UPSTART));
-            g_list_free_full(agents, free);
-        }
-    }
-#endif
-
-#if SUPPORT_NAGIOS
-    {
-        GList *agents = services__list_nagios_agents();
-
-        if (agents != NULL) {
-            standards = g_list_append(standards,
-                                      strdup(PCMK_RESOURCE_CLASS_NAGIOS));
-            g_list_free_full(agents, free);
-        }
-    }
-#endif
-
     return standards;
 }
 
@@ -1174,14 +1100,6 @@ resources_list_agents(const char *standard, const char *provider)
         }
 #endif
 
-#if SUPPORT_UPSTART
-        tmp1 = result;
-        tmp2 = upstart_job_listall();
-        if (tmp2) {
-            result = g_list_concat(tmp1, tmp2);
-        }
-#endif
-
         return result;
 
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
@@ -1193,14 +1111,6 @@ resources_list_agents(const char *standard, const char *provider)
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         return systemd_unit_listall();
-#endif
-#if SUPPORT_UPSTART
-    } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_UPSTART) == 0) {
-        return upstart_job_listall();
-#endif
-#if SUPPORT_NAGIOS
-    } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
-        return services__list_nagios_agents();
 #endif
     }
 
@@ -1261,12 +1171,6 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
             goto done;
         }
 #endif
-#if SUPPORT_UPSTART
-        if (upstart_job_exists(agent)) {
-            rc = TRUE;
-            goto done;
-        }
-#endif
         rc = FALSE;
         goto done;
     }
@@ -1283,16 +1187,6 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 #if SUPPORT_SYSTEMD
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
         rc = systemd_unit_exists(agent);
-#endif
-
-#if SUPPORT_UPSTART
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_casei)) {
-        rc = upstart_job_exists(agent);
-#endif
-
-#if SUPPORT_NAGIOS
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        rc = services__nagios_agent_exists(agent);
 #endif
 
     } else {
@@ -1362,7 +1256,7 @@ services__format_result(svc_action_t *action, int agent_status,
     if (format != NULL) {
         va_start(ap, format);
         len = vasprintf(&reason, format, ap);
-        CRM_ASSERT(len > 0);
+        pcmk__assert(len > 0);
         va_end(ap);
     }
     free(action->opaque->exit_reason);

@@ -1,5 +1,5 @@
 #
-# Copyright 2022-2023 the Pacemaker project contributors
+# Copyright 2022-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -10,7 +10,6 @@
 include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
-AM_CPPFLAGS += -I$(top_srcdir)
 LDADD += $(top_builddir)/lib/pengine/libpe_status_test.la
 
 AM_TESTS_ENVIRONMENT += PCMK_CTS_CLI_DIR=$(top_srcdir)/cts/cli

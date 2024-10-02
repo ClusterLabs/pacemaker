@@ -31,12 +31,14 @@ header_HEADERS = acl.h 			\
 		 probes.h 		\
 		 resources.h		\
 		 results.h 		\
+		 results_compat.h 	\
 		 roles.h		\
 		 rules.h		\
 		 scheduler.h		\
 		 scheduler_types.h	\
 		 schemas.h		\
 		 scores.h		\
+		 scores_compat.h	\
 		 strings.h		\
 		 util.h 		\
 		 util_compat.h 		\

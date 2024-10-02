@@ -11,8 +11,8 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = char2score_test 			\
-		 pcmk__add_scores_test			\
+check_PROGRAMS = pcmk__add_scores_test			\
+		 pcmk_parse_score_test			\
 		 pcmk_readable_score_test		\
 		 pcmk_str_is_infinity_test		\
 		 pcmk_str_is_minus_infinity_test

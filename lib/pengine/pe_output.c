@@ -568,7 +568,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     const char *node_id = NULL;
     int name_len;
 
-    CRM_ASSERT((node != NULL) && (node->priv->name != NULL));
+    pcmk__assert((node != NULL) && (node->priv->name != NULL));
 
     /* Host is displayed only if this is a guest node and detail is requested */
     if (print_detail && pcmk__is_guest_or_bundle_node(node)) {
@@ -624,10 +624,10 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
     xmlNodePtr xml_node = NULL;
     va_list pairs;
 
-    CRM_ASSERT(tag_name != NULL);
+    pcmk__assert(tag_name != NULL);
 
     xml_node = pcmk__output_xml_peek_parent(out);
-    CRM_ASSERT(xml_node != NULL);
+    pcmk__assert(xml_node != NULL);
     xml_node = pcmk__xe_create(xml_node, tag_name);
 
     va_start(pairs, tag_name);
@@ -1427,7 +1427,7 @@ failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
         pcmk__str_update(&task, "unknown action");
         interval_ms = 0;
     }
-    CRM_ASSERT((rsc_id != NULL) && (task != NULL));
+    pcmk__assert((rsc_id != NULL) && (task != NULL));
 
     str = g_string_sized_new(256); // Should be sufficient for most messages
 
@@ -1834,7 +1834,7 @@ node_html(pcmk__output_t *out, va_list args) {
                 PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources");
 
                 show_opts |= pcmk_show_rsc_only;
-                out->message(out, pcmk__map_element_name(rsc->priv->xml),
+                out->message(out, (const char *) rsc->priv->xml->name,
                              show_opts, rsc, only_node, only_rsc);
             }
 
@@ -1974,7 +1974,7 @@ node_text(pcmk__output_t *out, va_list args) {
                     pcmk_resource_t *rsc = (pcmk_resource_t *) gIter2->data;
 
                     show_opts |= pcmk_show_rsc_only;
-                    out->message(out, pcmk__map_element_name(rsc->priv->xml),
+                    out->message(out, (const char *) rsc->priv->xml->name,
                                  show_opts, rsc, only_node, only_rsc);
                 }
 
@@ -2026,7 +2026,6 @@ health_text(int health)
  *
  * \retval \c PCMK_VALUE_MEMBER if \p node_type is \c pcmk__node_variant_cluster
  * \retval \c PCMK_VALUE_REMOTE if \p node_type is \c pcmk__node_variant_remote
- * \retval \c PCMK__VALUE_PING if \p node_type is \c pcmk__node_variant_ping
  * \retval \c PCMK_VALUE_UNKNOWN otherwise
  */
 static const char *
@@ -2037,8 +2036,6 @@ node_variant_text(enum pcmk__node_variant variant)
             return PCMK_VALUE_MEMBER;
         case pcmk__node_variant_remote:
             return PCMK_VALUE_REMOTE;
-        case pcmk__node_variant_ping:
-            return PCMK__VALUE_PING;
         default:
             return PCMK_VALUE_UNKNOWN;
     }
@@ -2095,7 +2092,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                       NULL);
 
         free(resources_running);
-        CRM_ASSERT(rc == pcmk_rc_ok);
+        pcmk__assert(rc == pcmk_rc_ok);
 
         if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
@@ -2110,7 +2107,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                 pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
                 show_opts |= pcmk_show_rsc_only;
-                out->message(out, pcmk__map_element_name(rsc->priv->xml),
+                out->message(out, (const char *) rsc->priv->xml->name,
                              show_opts, rsc, only_node, only_rsc);
             }
         }
@@ -3096,7 +3093,7 @@ resource_list(pcmk__output_t *out, va_list args)
         }
 
         /* Print this resource */
-        x = out->message(out, pcmk__map_element_name(rsc->priv->xml),
+        x = out->message(out, (const char *) rsc->priv->xml->name,
                          show_opts, rsc, only_node, only_rsc);
         if (x == pcmk_rc_ok) {
             rc = pcmk_rc_ok;
@@ -3274,7 +3271,7 @@ ticket_default(pcmk__output_t *out, va_list args) {
                 char *epoch_str = NULL;
                 long long time_ll;
 
-                pcmk__scan_ll(value, &time_ll, 0);
+                (void) pcmk__scan_ll(value, &time_ll, 0);
                 epoch_str = pcmk__epoch2str((const time_t *) &time_ll, 0);
                 pcmk__g_strcat(detail_str, epoch_str, NULL);
                 free(epoch_str);

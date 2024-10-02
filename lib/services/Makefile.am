@@ -6,10 +6,7 @@
 # This source code is licensed under the GNU Lesser General Public License
 # version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
 #
-
-MAINTAINERCLEANFILES = Makefile.in
-
-AM_CPPFLAGS			= -I$(top_srcdir)/include
+include $(top_srcdir)/mk/common.mk
 
 lib_LTLIBRARIES			= libcrmservice.la
 noinst_HEADERS			= $(wildcard *.h)
@@ -30,15 +27,7 @@ libcrmservice_la_SOURCES	+= services_ocf.c
 if BUILD_LSB
 libcrmservice_la_SOURCES	+= services_lsb.c
 endif
-if BUILD_DBUS
-libcrmservice_la_SOURCES	+= dbus.c
-endif
-if BUILD_UPSTART
-libcrmservice_la_SOURCES	+= upstart.c
-endif
 if BUILD_SYSTEMD
+libcrmservice_la_SOURCES	+= dbus.c
 libcrmservice_la_SOURCES	+= systemd.c
-endif
-if BUILD_NAGIOS
-libcrmservice_la_SOURCES	+= services_nagios.c
 endif

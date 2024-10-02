@@ -361,8 +361,6 @@ _____________
    same thing as *promotable*. Certain syntax is supported for backward
    compatibility, but is deprecated and will be removed in a future version:
 
-   * Using a ``master`` tag, instead of a ``clone`` tag with the ``promotable``
-     meta-attribute set to ``true``
    * Using the ``master-max`` meta-attribute instead of ``promoted-max``
    * Using the ``master-node-max`` meta-attribute instead of
      ``promoted-node-max``
@@ -640,7 +638,6 @@ ways:
    single: resource; bundle
    pair: container; Docker
    pair: container; podman
-   pair: container; rkt
    
 .. _s-resource-bundle:
 
@@ -651,9 +648,8 @@ Pacemaker supports a special syntax for launching a service inside a
 `container <https://en.wikipedia.org/wiki/Operating-system-level_virtualization>`_
 with any infrastructure it requires: the *bundle*.
    
-Pacemaker bundles support `Docker <https://www.docker.com/>`_,
-`podman <https://podman.io/>`_ *(since 2.0.1)*, and
-`rkt <https://coreos.com/rkt/>`_ container technologies. [#]_
+Pacemaker bundles support `Docker <https://www.docker.com/>`_ and
+`podman <https://podman.io/>`_ *(since 2.0.1)* container technologies. [#]_
    
 .. topic:: A bundle for a containerized web server
 
@@ -687,13 +683,13 @@ Bundle Prerequisites
 ____________________
    
 Before configuring a bundle in Pacemaker, the user must install the appropriate
-container launch technology (Docker, podman, or rkt), and supply a fully
-configured container image, on every node allowed to run the bundle.
+container launch technology (Docker or podman), and supply a fully configured
+container image, on every node allowed to run the bundle.
 
-Pacemaker will create an implicit resource of type **ocf:heartbeat:docker**,
-**ocf:heartbeat:podman**, or **ocf:heartbeat:rkt** to manage a bundle's
-container. The user must ensure that the appropriate resource agent is
-installed on every node allowed to run the bundle.
+Pacemaker will create an implicit resource of type **ocf:heartbeat:docker** or
+**ocf:heartbeat:podman** to manage a bundle's container. The user must ensure
+that the appropriate resource agent is installed on every node allowed to run
+the bundle.
 
 .. index::
    pair: XML element; bundle
@@ -725,17 +721,16 @@ _________________
    +-------------+------------------------------------------------------------------+
 
 
-A bundle must contain exactly one ``docker``, ``podman``, or ``rkt`` element.
+A bundle must contain exactly one ``docker`` or ``podman`` element.
 
 .. index::
    pair: XML element; docker
    pair: XML element; podman
-   pair: XML element; rkt
    
 Bundle Container Properties
 ___________________________
    
-.. table:: **XML attributes of a docker, podman, or rkt Element**
+.. table:: **XML attributes of a docker or podman Element**
    :class: longtable
    :widths: 2 3 4
    
@@ -749,9 +744,6 @@ ___________________________
    |                   |                                    |    single: podman; attribute, image               |
    |                   |                                    |    single: attribute; image (podman)              |
    |                   |                                    |    single: image; podman attribute                |
-   |                   |                                    |    single: rkt; attribute, image                  |
-   |                   |                                    |    single: attribute; image (rkt)                 |
-   |                   |                                    |    single: image; rkt attribute                   |
    |                   |                                    |                                                   |
    |                   |                                    | Container image tag (required)                    |
    +-------------------+------------------------------------+---------------------------------------------------+
@@ -762,9 +754,6 @@ ___________________________
    |                   |                                    |    single: podman; attribute, replicas            |
    |                   |                                    |    single: attribute; replicas (podman)           |
    |                   |                                    |    single: replicas; podman attribute             |
-   |                   |                                    |    single: rkt; attribute, replicas               |
-   |                   |                                    |    single: attribute; replicas (rkt)              |
-   |                   |                                    |    single: replicas; rkt attribute                |
    |                   |                                    |                                                   |
    |                   |                                    | A positive integer specifying the number of       |
    |                   |                                    | container instances to launch                     |
@@ -776,9 +765,6 @@ ___________________________
    |                   |                                    |    single: podman; attribute, replicas-per-host   |
    |                   |                                    |    single: attribute; replicas-per-host (podman)  |
    |                   |                                    |    single: replicas-per-host; podman attribute    |
-   |                   |                                    |    single: rkt; attribute, replicas-per-host      |
-   |                   |                                    |    single: attribute; replicas-per-host (rkt)     |
-   |                   |                                    |    single: replicas-per-host; rkt attribute       |
    |                   |                                    |                                                   |
    |                   |                                    | A positive integer specifying the number of       |
    |                   |                                    | container instances allowed to run on a           |
@@ -791,9 +777,6 @@ ___________________________
    |                   |                                    |    single: podman; attribute, promoted-max        |
    |                   |                                    |    single: attribute; promoted-max (podman)       |
    |                   |                                    |    single: promoted-max; podman attribute         |
-   |                   |                                    |    single: rkt; attribute, promoted-max           |
-   |                   |                                    |    single: attribute; promoted-max (rkt)          |
-   |                   |                                    |    single: promoted-max; rkt attribute            |
    |                   |                                    |                                                   |
    |                   |                                    | A non-negative integer that, if positive,         |
    |                   |                                    | indicates that the containerized service          |
@@ -808,14 +791,10 @@ ___________________________
    |                   |                                    |    single: podman; attribute, network             |
    |                   |                                    |    single: attribute; network (podman)            |
    |                   |                                    |    single: network; podman attribute              |
-   |                   |                                    |    single: rkt; attribute, network                |
-   |                   |                                    |    single: attribute; network (rkt)               |
-   |                   |                                    |    single: network; rkt attribute                 |
    |                   |                                    |                                                   |
    |                   |                                    | If specified, this will be passed to the          |
-   |                   |                                    | ``docker run``, ``podman run``, or                |
-   |                   |                                    | ``rkt run`` command as the network setting        |
-   |                   |                                    | for the container.                                |
+   |                   |                                    | ``docker run`` or ``podman run`` command as the   |
+   |                   |                                    | network setting for the container.                |
    +-------------------+------------------------------------+---------------------------------------------------+
    | run-command       | ``/usr/sbin/pacemaker-remoted`` if | .. index::                                        |
    |                   | bundle contains a **primitive**,   |    single: docker; attribute, run-command         |
@@ -824,9 +803,6 @@ ___________________________
    |                   |                                    |    single: podman; attribute, run-command         |
    |                   |                                    |    single: attribute; run-command (podman)        |
    |                   |                                    |    single: run-command; podman attribute          |
-   |                   |                                    |    single: rkt; attribute, run-command            |
-   |                   |                                    |    single: attribute; run-command (rkt)           |
-   |                   |                                    |    single: run-command; rkt attribute             |
    |                   |                                    |                                                   |
    |                   |                                    | This command will be run inside the container     |
    |                   |                                    | when launching it ("PID 1"). If the bundle        |
@@ -841,13 +817,9 @@ ___________________________
    |                   |                                    |    single: podman; attribute, options             |
    |                   |                                    |    single: attribute; options (podman)            |
    |                   |                                    |    single: options; podman attribute              |
-   |                   |                                    |    single: rkt; attribute, options                |
-   |                   |                                    |    single: attribute; options (rkt)               |
-   |                   |                                    |    single: options; rkt attribute                 |
    |                   |                                    |                                                   |
    |                   |                                    | Extra command-line options to pass to the         |
-   |                   |                                    | ``docker run``, ``podman run``, or ``rkt run``    |
-   |                   |                                    | command                                           |
+   |                   |                                    | ``docker run`` or ``podman run`` command          |
    +-------------------+------------------------------------+---------------------------------------------------+
    
 .. note::

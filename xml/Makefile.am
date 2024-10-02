@@ -210,26 +210,47 @@ pacemaker-%.rng: $(CIB_build_copies) rng-helper Makefile.am
 
 # Dynamically generated CIB schema listing all pacemaker versions
 #
-# @COMPAT none is deprecated since 2.1.8, as is validate-with being optional
+# @COMPAT "none" is deprecated since 2.1.8
 versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
 	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
 	$(AM_V_at)echo '  <start>' >> $@
 	$(AM_V_at)echo '   <interleave>' >> $@
-	$(AM_V_at)echo '    <optional>' >> $@
-	$(AM_V_at)echo '      <attribute name="validate-with">' >> $@
-	$(AM_V_at)echo '        <choice>' >> $@
-	$(AM_V_at)echo '          <value>none</value>' >> $@
-	$(AM_V_at)for rng in $(CIB_versions); do echo "          <value>pacemaker-$$rng</value>" >> $@; done
-	$(AM_V_at)echo '        </choice>' >> $@
-	$(AM_V_at)echo '      </attribute>' >> $@
-	$(AM_V_at)echo '    </optional>' >> $@
+	$(AM_V_at)echo '    <attribute name="validate-with">' >> $@
+	$(AM_V_at)echo '      <choice>' >> $@
+	$(AM_V_at)echo '        <value>none</value>' >> $@
+	$(AM_V_at)for rng in $(CIB_versions); do echo "        <value>pacemaker-$$rng</value>" >> $@; done
+	$(AM_V_at)echo '      </choice>' >> $@
+	$(AM_V_at)echo '    </attribute>' >> $@
 	$(AM_V_at)echo '    <attribute name="admin_epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
 	$(AM_V_at)echo '    <attribute name="epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
 	$(AM_V_at)echo '    <attribute name="num_updates"><data type="nonNegativeInteger"/></attribute>' >> $@
 	$(AM_V_at)echo '   </interleave>' >> $@
 	$(AM_V_at)echo '  </start>' >> $@
 	$(AM_V_SCHEMA)echo '</grammar>' >> $@
+
+schemas:
+	@if [ -z "$$SCHEMAS" ]; then \
+		ls *.rng; \
+		ls *.rng | sort -V | awk 'gsub("-[0-9.]+.rng", ""){if (last != $$0) {print; last=$$0} }'; \
+		printf "\nusage: make schemas SCHEMAS=\"<schema1 schema2 ...>\" [NEW_VERSION=\"<new-version>\"]\n \
+			\nNot specifying NEW_VERSION will increase the last field of the newest version of the schema(s).\n"; \
+	else \
+		if [ -z "$$NEW_VERSION" ]; then \
+			OLD_VERSION=$$(ls *[0-9].rng | awk -F'-' 'gsub(".rng$$", "") {print $$NF}' | sort -Vu | tail -1); \
+			lf=$$(echo "$$OLD_VERSION" | awk -F"." '{print $$NF}'); \
+			! echo "$$lf" | grep -q "^[[:digit:]]\+$$" && echo "Unable to detect version. Use NEW_VERSION= to specify version." && exit 1; \
+			lf=$$((lf+1)); \
+			NEW_VERSION=$$(echo "$$OLD_VERSION" | sed "s/[0-9]\+$$/$$lf/"); \
+		fi; \
+		for schema in $$SCHEMAS; do \
+			old_schema=$$(ls $$schema-[0-9]*.rng | sort -V | tail -1); \
+			new_schema=$$schema-$$NEW_VERSION.rng; \
+			echo "Copying $$old_schema to $$new_schema"; \
+			cp -n "$$old_schema" "$$new_schema"; \
+		done \
+	fi
+
 
 .PHONY: diff
 diff: rng-helper

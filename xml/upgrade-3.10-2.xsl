@@ -10,10 +10,21 @@
  Guarantees after this transformation:
  * Within a given nvset, there is at most one nvpair with a given name. If there
    were duplicates prior to this transformation, only the first one is kept.
+ * There are no ping nodes. If a node was a ping node prior to this
+   transformation, it is now a member (cluster) node with all resources banned
+   and probes disabled.
+ * There are no legacy promotable clone resources. If a resource was a legacy
+   promotable clone prior to this transformation, it is now a standard
+   promotable clone (that is, a clone with the meta-attribute "promotable" set
+   to "true").
  * There is at most one top-level rule within a location constraint. If a
    location constraint had N top-level rules (N > 1) prior to this
    transformation, it is now converted to N location constraints, each with a
    single top-level rule.
+
+ Anything that matches all resource types should be placed in a later
+ transformation, so that it can ignore the possibility of legacy promotable
+ clone resources.
  -->
 
 <xsl:stylesheet version="1.0"
@@ -109,7 +120,98 @@
 </xsl:template>
 
 
+<!-- Nodes -->
+
+<!--
+ Transform ping nodes to cluster (member) nodes. The constraints template bans
+ all resources from the newly transformed nodes.
+-->
+<xsl:template match="node[@type = 'ping']">
+    <xsl:copy>
+        <xsl:apply-templates select="@*"/>
+        <xsl:attribute name="type">member</xsl:attribute>
+        <xsl:apply-templates select="node()"/>
+    </xsl:copy>
+</xsl:template>
+
+
+<!-- Resources -->
+
+<!--
+ Convert master resources to clones with promotable meta-attribute set to "true"
+ -->
+<xsl:template match="master">
+    <xsl:element name="clone">
+        <xsl:apply-templates select="@*"/>
+
+        <!--
+         Prepend new meta_attributes element that takes precedence over all
+         others, with promotable="true"
+        -->
+        <xsl:element name="meta_attributes">
+            <xsl:variable name="meta_id"
+                          select="concat($upgrade_prefix, 'promotable-legacy-',
+                                         @id, '-meta_attributes')"/>
+
+            <xsl:attribute name="id">
+                <xsl:value-of select="$meta_id"/>
+            </xsl:attribute>
+
+            <!-- Override any manually configured meta-attributes -->
+            <xsl:attribute name="score">INFINITY</xsl:attribute>
+
+            <xsl:element name="nvpair">
+                <xsl:attribute name="id">
+                    <xsl:value-of select="concat($meta_id, '-promotable')"/>
+                </xsl:attribute>
+                <xsl:attribute name="name">promotable</xsl:attribute>
+                <xsl:attribute name="value">true</xsl:attribute>
+            </xsl:element>
+        </xsl:element>
+
+        <!-- Keep all existing children -->
+        <xsl:apply-templates select="node()"/>
+    </xsl:element>
+</xsl:template>
+
+<!--
+ Rename a bundle container's masters attribute to promoted-max. (This is the
+ only place the schema allows a masters attribute.)
+ -->
+<xsl:template match="@masters">
+    <xsl:attribute name="promoted-max">
+        <xsl:value-of select="."/>
+    </xsl:attribute>
+</xsl:template>
+
+
 <!-- Constraints -->
+
+<xsl:template match="constraints">
+    <xsl:copy>
+        <!-- Existing contents -->
+        <xsl:apply-templates select="@*|node()"/>
+
+        <!--
+         Ban all resources from each ping node (converted to a cluster node via
+         another template)
+         -->
+        <xsl:for-each select="//node[@type = 'ping']">
+            <xsl:element name="rsc_location">
+                <xsl:attribute name="id">
+                    <xsl:value-of select="concat($upgrade_prefix,
+                                                 'ping-node-ban-', @uname)"/>
+                </xsl:attribute>
+                <xsl:attribute name="rsc-pattern">.*</xsl:attribute>
+                <xsl:attribute name="node">
+                    <xsl:value-of select="@uname"/>
+                </xsl:attribute>
+                <xsl:attribute name="score">-INFINITY</xsl:attribute>
+                <xsl:attribute name="resource-discovery">never</xsl:attribute>
+            </xsl:element>
+        </xsl:for-each>
+    </xsl:copy>
+</xsl:template>
 
 <!--
  If a location constraint contains multiple top-level rules, replace it with

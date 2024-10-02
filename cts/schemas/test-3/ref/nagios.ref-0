@@ -1,0 +1,188 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-3.10" epoch="8" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * There is an nagios template and an ocf template.
+         * There are nagios and ocf primitives, defined either inline or by
+           reference to the corresponding template.
+         * There is a group with only nagios primitives and a group with both
+           nagios and ocf primitives.
+         * There is a cloned nagios resource and a cloned ocf resource.
+         * There is a cloned group containing only nagios primitives and a
+           cloned group containing both nagios and ocf primitives.
+         * There is a bundle containing an nagios primitive.
+         * There are various constraints, many of which reference nagios
+           resources.
+
+         In this situation:
+         * The nagios templates and primitives should be dropped, while the ocf
+           ones should be kept.
+         * Groups and clones that would become empty should be dropped.
+         * Groups containing ocf primitives should be kept; only their nagios
+           members should be dropped.
+         * The bundle should be kept so that its container remains managed; its
+           primitive should be dropped.
+         * Constraints with attributes referencing nagios resources should be
+           dropped.
+         * Resource sets containing only references to nagios resources should
+           be dropped.
+         * Constraints with resource sets should be dropped if all of their
+           resource sets should be dropped.
+      -->
+    <crm_config original="1"/>
+    <nodes original="1"/>
+    <resources original="1">
+      <template id="template_drop" class="nagios" type="Dummy" original="1"/>
+      <template id="template_keep" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+      <primitive id="primitive1_drop" class="nagios" type="Dummy" original="1"/>
+      <primitive id="primitive2_keep" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+      <primitive id="primitive3_drop" template="template_drop" original="1"/>
+      <primitive id="primitive4_keep" template="template_keep" original="1"/>
+      <group id="grp1_drop" original="1">
+        <primitive id="grp1_rsc1_drop" class="nagios" type="Dummy" original="1"/>
+        <primitive id="grp1_rsc2_drop" template="template_drop" original="1"/>
+      </group>
+      <group id="grp2_keep" original="1">
+        <primitive id="grp2_rsc1_drop" class="nagios" type="Dummy" original="1"/>
+        <primitive id="grp2_rsc2_keep" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+        <primitive id="grp2_rsc3_drop" template="template_drop" original="1"/>
+        <primitive id="grp2_rsc4_keep" template="template_keep" original="1"/>
+      </group>
+      <clone id="clone1_drop" original="1">
+        <primitive id="clone1_rsc_drop" class="nagios" type="Dummy" original="1"/>
+      </clone>
+      <clone id="clone2_keep" original="1">
+        <primitive id="clone2_rsc_keep" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+      </clone>
+      <clone id="clone3_drop" original="1">
+        <group id="clone3_grp_drop" original="1">
+          <primitive id="clone3_grp_rsc1_drop" class="nagios" type="Dummy" original="1"/>
+          <primitive id="clone3_grp_rsc2_drop" template="template_drop" original="1"/>
+        </group>
+      </clone>
+      <clone id="clone4_keep" original="1">
+        <group id="clone4_grp_keep" original="1">
+          <primitive id="clone4_grp_rsc1_drop" class="nagios" type="Dummy" original="1"/>
+          <primitive id="clone4_grp_rsc2_keep" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+          <primitive id="clone4_grp_rsc3_drop" template="template_drop" original="1"/>
+          <primitive id="clone4_grp_rsc4_keep" template="template_keep" original="1"/>
+        </group>
+      </clone>
+      <bundle id="bundle_keep" original="1">
+        <podman image="image" original="1"/>
+        <primitive id="bundle_rsc_drop" class="nagios" type="Dummy" original="1"/>
+      </bundle>
+    </resources>
+    <constraints original="1">
+      <rsc_location id="location1_drop" rsc="primitive1_drop" node="node1" score="INFINITY" original="1"/>
+      <rsc_location id="location2_keep" rsc="primitive2_keep" node="node1" score="INFINITY" original="1"/>
+      <rsc_location id="location3_drop" node="node1" score="INFINITY" original="1">
+        <resource_set id="location3_drop-set" original="1">
+          <resource_ref id="grp1_drop" original="1"/>
+          <resource_ref id="clone1_drop" original="1"/>
+        </resource_set>
+      </rsc_location>
+      <rsc_location id="location4_keep" node="node1" score="INFINITY" original="1">
+        <resource_set id="location4_keep-set" original="1">
+          <resource_ref id="clone2_keep" original="1"/>
+          <resource_ref id="clone3_drop" original="1"/>
+          <resource_ref id="clone4_keep" original="1"/>
+        </resource_set>
+      </rsc_location>
+      <rsc_location id="location5_keep" node="node1" score="INFINITY" original="1">
+        <resource_set id="location5_keep-set_drop" original="1">
+          <resource_ref id="grp1_drop" original="1"/>
+          <resource_ref id="clone1_drop" original="1"/>
+        </resource_set>
+        <resource_set id="location5_keep-set_keep" original="1">
+          <resource_ref id="clone2_keep" original="1"/>
+          <resource_ref id="clone3_drop" original="1"/>
+          <resource_ref id="clone4_keep" original="1"/>
+        </resource_set>
+      </rsc_location>
+      <rsc_location id="location6_keep" rsc-pattern="primitive1_drop" node="node1" score="INFINITY" original="1"/>
+      <rsc_colocation id="colocation1_drop" rsc="primitive1_drop" with-rsc="primitive2_keep" original="1"/>
+      <rsc_colocation id="colocation2_drop" rsc="primitive2_keep" with-rsc="primitive1_drop" original="1"/>
+      <rsc_colocation id="colocation3_drop" rsc="primitive3_drop" with-rsc="primitive1_drop" original="1"/>
+      <rsc_colocation id="colocation4_keep" rsc="primitive4_keep" with-rsc="primitive2_keep" original="1"/>
+      <rsc_colocation id="colocation5_drop" original="1">
+        <resource_set id="colocation5_drop-set" original="1">
+          <resource_ref id="grp1_drop" original="1"/>
+          <resource_ref id="clone1_drop" original="1"/>
+        </resource_set>
+      </rsc_colocation>
+      <rsc_colocation id="colocation6_keep" original="1">
+        <resource_set id="colocation6_keep-set" original="1">
+          <resource_ref id="clone2_keep" original="1"/>
+          <resource_ref id="clone3_drop" original="1"/>
+          <resource_ref id="clone4_keep" original="1"/>
+        </resource_set>
+      </rsc_colocation>
+      <rsc_colocation id="colocation7_keep" original="1">
+        <resource_set id="colocation7_keep-set_drop" original="1">
+          <resource_ref id="grp1_drop" original="1"/>
+          <resource_ref id="clone1_drop" original="1"/>
+        </resource_set>
+        <resource_set id="colocation7_keep-set_keep" original="1">
+          <resource_ref id="clone2_keep" original="1"/>
+          <resource_ref id="clone3_drop" original="1"/>
+          <resource_ref id="clone4_keep" original="1"/>
+        </resource_set>
+      </rsc_colocation>
+      <rsc_order id="order1_drop" first="primitive1_drop" then="primitive2_keep" original="1"/>
+      <rsc_order id="order2_drop" first="primitive2_keep" then="primitive1_drop" original="1"/>
+      <rsc_order id="order3_drop" first="primitive3_drop" then="primitive1_drop" original="1"/>
+      <rsc_order id="order4_keep" first="primitive4_keep" then="primitive2_keep" original="1"/>
+      <rsc_order id="order5_drop" original="1">
+        <resource_set id="order5_drop-set" original="1">
+          <resource_ref id="grp1_drop" original="1"/>
+          <resource_ref id="clone1_drop" original="1"/>
+        </resource_set>
+      </rsc_order>
+      <rsc_order id="order6_keep" original="1">
+        <resource_set id="order6_keep-set" original="1">
+          <resource_ref id="clone2_keep" original="1"/>
+          <resource_ref id="clone3_drop" original="1"/>
+          <resource_ref id="clone4_keep" original="1"/>
+        </resource_set>
+      </rsc_order>
+      <rsc_order id="order7_keep" original="1">
+        <resource_set id="order7_keep-set_drop" original="1">
+          <resource_ref id="grp1_drop" original="1"/>
+          <resource_ref id="clone1_drop" original="1"/>
+        </resource_set>
+        <resource_set id="order7_keep-set_keep" original="1">
+          <resource_ref id="clone2_keep" original="1"/>
+          <resource_ref id="clone3_drop" original="1"/>
+          <resource_ref id="clone4_keep" original="1"/>
+        </resource_set>
+      </rsc_order>
+      <rsc_ticket id="ticket1_drop" rsc="primitive1_drop" ticket="ticket1" original="1"/>
+      <rsc_ticket id="ticket2_keep" rsc="primitive2_keep" ticket="ticket1" original="1"/>
+      <rsc_ticket id="ticket3_drop" ticket="ticket1" original="1">
+        <resource_set id="ticket3_drop-set" original="1">
+          <resource_ref id="grp1_drop" original="1"/>
+          <resource_ref id="clone1_drop" original="1"/>
+        </resource_set>
+      </rsc_ticket>
+      <rsc_ticket id="ticket4_keep" ticket="ticket1" original="1">
+        <resource_set id="ticket4_keep-set" original="1">
+          <resource_ref id="clone2_keep" original="1"/>
+          <resource_ref id="clone3_drop" original="1"/>
+          <resource_ref id="clone4_keep" original="1"/>
+        </resource_set>
+      </rsc_ticket>
+      <rsc_ticket id="ticket5_keep" ticket="ticket1" original="1">
+        <resource_set id="ticket5_keep-set_drop" original="1">
+          <resource_ref id="grp1_drop" original="1"/>
+          <resource_ref id="clone1_drop" original="1"/>
+        </resource_set>
+        <resource_set id="ticket5_keep-set_keep" original="1">
+          <resource_ref id="clone2_keep" original="1"/>
+          <resource_ref id="clone3_drop" original="1"/>
+          <resource_ref id="clone4_keep" original="1"/>
+        </resource_set>
+      </rsc_ticket>
+    </constraints>
+  </configuration>
+  <status original="1"/>
+</cib>
