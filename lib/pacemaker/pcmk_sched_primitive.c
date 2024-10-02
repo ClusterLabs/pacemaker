@@ -1325,11 +1325,6 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
             pcmk__clear_action_flags(stop, pcmk__action_runnable);
         }
 
-        if (pcmk_is_set(rsc->priv->scheduler->flags,
-                        pcmk__sched_remove_after_stop)) {
-            pcmk__schedule_cleanup(rsc, current, optional);
-        }
-
         if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_unfencing)) {
             pcmk_action_t *unfence = pe_fence_op(current, PCMK_ACTION_ON, true,
                                                  NULL, false,

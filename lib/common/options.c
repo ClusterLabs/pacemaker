@@ -127,9 +127,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        // @COMPAT crmd-integration-timeout is disallowed by the schema
-        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout",
-            PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
         "3min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
@@ -137,9 +135,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        // @COMPAT crmd-finalization-timeout is disallowed by the schema
-        PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, "crmd-finalization-timeout",
-            PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
         "30min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
@@ -147,9 +143,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        // @COMPAT crmd-transition-delay is disallowed by the schema
-        PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", PCMK_VALUE_DURATION,
-            NULL,
+        PCMK_OPT_TRANSITION_DELAY, NULL, PCMK_VALUE_DURATION, NULL,
         "0s", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("Enabling this option will slow down cluster recovery under all "
@@ -246,13 +240,11 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "potentially leading to data loss and/or service unavailability."),
     },
     {
-        // @COMPAT PCMK__ACTION_POWEROFF is disallowed by schema
         PCMK_OPT_STONITH_ACTION, NULL, PCMK_VALUE_SELECT,
-            PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF ", " PCMK__ACTION_POWEROFF,
+            PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF,
         PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         pcmk__opt_schedulerd,
-        N_("Action to send to fence device when a node needs to be fenced "
-            "(\"poweroff\" is a deprecated alias for \"off\")"),
+        N_("Action to send to fence device when a node needs to be fenced"),
         NULL,
     },
     {
@@ -459,15 +451,6 @@ static const pcmk__cluster_option_t cluster_options[] = {
         N_("Whether to cancel recurring actions removed from the "
             "configuration"),
         NULL,
-    },
-    {
-        // @COMPAT Disallowed by schema
-        PCMK__OPT_REMOVE_AFTER_STOP, NULL, PCMK_VALUE_BOOLEAN, NULL,
-        PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd|pcmk__opt_deprecated,
-        N_("Whether to remove stopped resources from the executor"),
-        N_("Values other than default are poorly tested and potentially "
-            "dangerous."),
     },
 
     // Storing inputs
