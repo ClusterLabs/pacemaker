@@ -11,7 +11,7 @@ include $(top_srcdir)/mk/common.mk
 lib_LTLIBRARIES			= libcrmservice.la
 noinst_HEADERS			= $(wildcard *.h)
 
-libcrmservice_la_LDFLAGS	= -version-info 32:1:4
+libcrmservice_la_LDFLAGS	= -version-info 32:2:4
 libcrmservice_la_CFLAGS		=
 
 libcrmservice_la_CFLAGS		+= $(CFLAGS_HARDENED_LIB)
