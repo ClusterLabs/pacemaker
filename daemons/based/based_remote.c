@@ -428,12 +428,7 @@ cib_remote_msg(gpointer data)
     xmlNode *command = NULL;
     pcmk__client_t *client = data;
     int rc;
-    int timeout = 1000;
     const char *client_name = pcmk__client_name(client);
-
-    if (pcmk_is_set(client->flags, pcmk__client_authenticated)) {
-        timeout = -1;
-    }
 
     crm_trace("Remote %s message received for client %s",
               pcmk__client_type_str(PCMK__CLIENT_TYPE(client)), client_name);
@@ -465,7 +460,20 @@ cib_remote_msg(gpointer data)
         return 0;
     }
 
-    rc = pcmk__read_remote_message(client->remote, timeout);
+    rc = pcmk__read_available_remote_data(client->remote);
+    switch (rc) {
+        case pcmk_rc_ok:
+            break;
+
+        case EAGAIN:
+            /* We haven't read the whole message yet */
+            return 0;
+
+        default:
+            /* Error */
+            crm_trace("Error reading from remote client: %s", pcmk_rc_str(rc));
+            return -1;
+    }
 
     /* must pass auth before we will process anything else */
     if (!pcmk_is_set(client->flags, pcmk__client_authenticated)) {
@@ -507,12 +515,6 @@ cib_remote_msg(gpointer data)
         cib_handle_remote_msg(client, command);
         pcmk__xml_free(command);
         command = pcmk__remote_message_xml(client->remote);
-    }
-
-    if (rc == ENOTCONN) {
-        crm_trace("Remote CIB client %s disconnected while reading from it",
-                  client_name);
-        return -1;
     }
 
     return 0;
