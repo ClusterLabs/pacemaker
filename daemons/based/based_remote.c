@@ -510,11 +510,10 @@ cib_remote_msg(gpointer data)
     }
 
     command = pcmk__remote_message_xml(client->remote);
-    while (command) {
+    if (command != NULL) {
         crm_trace("Remote message received from client %s", client_name);
         cib_handle_remote_msg(client, command);
         pcmk__xml_free(command);
-        command = pcmk__remote_message_xml(client->remote);
     }
 
     return 0;
