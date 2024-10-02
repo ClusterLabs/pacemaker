@@ -7,7 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-MAINTAINERCLEANFILES	= Makefile.in
+include $(top_srcdir)/mk/common.mk
 
 headerdir=$(pkgincludedir)/crm
 

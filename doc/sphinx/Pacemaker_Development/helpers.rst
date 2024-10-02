@@ -224,12 +224,19 @@ is no ``lib/common/tests/acls`` directory.
 
      check_PROGRAMS = pcmk_acl_required_test
 
-* Double check that ``$(top_srcdir)/mk/tap.mk`` and ``$(top_srcdir)/mk/unittest.mk``
-  are included in the ``Makefile.am``.  These files contain all the flags necessary
-  for most unit tests.  If necessary, individual settings can be overridden like so:
+* Double check that the following includes are at the top of ``Makefile.am``:
 
   .. code-block:: none
 
+     include $(top_srcdir)/mk/common.mk
+     include $(top_srcdir)/mk/tap.mk
+     include $(top_srcdir)/mk/unittest.mk
+
+* If necessary, settings from those includes can be overridden like so:
+
+  .. code-block:: none
+
+     AM_TESTS_ENVIRONMENT += PCMK_CTS_CLI_DIR=$(top_srcdir)/cts/cli
      AM_CPPFLAGS += -I$(top_srcdir)
      LDADD += $(top_builddir)/lib/pengine/libpe_status_test.la
 
