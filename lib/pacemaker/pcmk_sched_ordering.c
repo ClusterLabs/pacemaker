@@ -1320,7 +1320,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
     pcmk_action_t *first_action = order->action1;
     pcmk_resource_t *then_rsc = order->rsc2;
 
-    CRM_ASSERT(first_rsc != NULL);
+    pcmk__assert(first_rsc != NULL);
     pcmk__rsc_trace(first_rsc, "Applying ordering constraint %d (first: %s)",
                     order->id, first_rsc->id);
 

@@ -235,7 +235,8 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
         remote_proxy_end_session(proxy);
 
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei)) {
-        int flags = 0;
+        uint32_t flags = 0U;
+        int rc = pcmk_rc_ok;
         const char *name = crm_element_value(msg, PCMK__XA_LRMD_IPC_CLIENT);
 
         xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_LRMD_IPC_MSG,
@@ -259,10 +260,15 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             return;
         }
         proxy->last_request_id = 0;
-        crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags);
         crm_xml_add(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
 
-        CRM_ASSERT(node_name);
+        rc = pcmk__xe_get_flags(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags, 0U);
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Couldn't parse controller flags from remote request: %s",
+                     pcmk_rc_str(rc));
+        }
+
+        pcmk__assert(node_name != NULL);
         pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER, node_name);
 
         if (pcmk_is_set(flags, crm_ipc_proxied)) {

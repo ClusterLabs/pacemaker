@@ -192,8 +192,8 @@ services__get_nagios_metadata(const char *type, char **output)
     length = ftell(file_strm);
     fseek(file_strm, 0L, start);
 
-    CRM_ASSERT(length >= 0);
-    CRM_ASSERT(start == ftell(file_strm));
+    pcmk__assert(length >= 0);
+    pcmk__assert(start == ftell(file_strm));
 
     if (length <= 0) {
         crm_info("%s was not valid", metadata_file);

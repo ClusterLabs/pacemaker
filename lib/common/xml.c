@@ -163,7 +163,7 @@ mark_xml_dirty_created(xmlNode *xml, void *user_data)
 static void
 mark_xml_tree_dirty_created(xmlNode *xml)
 {
-    CRM_ASSERT(xml != NULL);
+    pcmk__assert(xml != NULL);
 
     if (!pcmk__tracking_xml_changes(xml, false)) {
         // Tracking is disabled for entire document
@@ -193,7 +193,7 @@ static void
 reset_xml_private_data(xml_doc_private_t *docpriv)
 {
     if (docpriv != NULL) {
-        CRM_ASSERT(docpriv->check == PCMK__XML_DOC_PRIVATE_MAGIC);
+        pcmk__assert(docpriv->check == PCMK__XML_DOC_PRIVATE_MAGIC);
 
         free(docpriv->user);
         docpriv->user = NULL;
@@ -303,7 +303,7 @@ free_private_data(xmlNode *node, void *user_data)
     } else {
         xml_node_private_t *nodepriv = node->_private;
 
-        CRM_ASSERT(nodepriv->check == PCMK__XML_NODE_PRIVATE_MAGIC);
+        pcmk__assert(nodepriv->check == PCMK__XML_NODE_PRIVATE_MAGIC);
 
         for (xmlAttr *iter = pcmk__xe_first_attr(node); iter != NULL;
              iter = iter->next) {
@@ -771,7 +771,7 @@ pcmk__xe_create(xmlNode *parent, const char *name)
 {
     xmlNode *node = NULL;
 
-    CRM_ASSERT(!pcmk__str_empty(name));
+    pcmk__assert(!pcmk__str_empty(name));
 
     if (parent == NULL) {
         xmlDoc *doc = pcmk__xml_new_doc();
@@ -865,7 +865,7 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
                 content = va_arg(ap, const char *);
 
             } else {
-                CRM_ASSERT(vasprintf(&buf, format, ap) >= 0);
+                pcmk__assert(vasprintf(&buf, format, ap) >= 0);
                 content = buf;
             }
             va_end(ap);
@@ -983,7 +983,7 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
         xmlDoc *doc = NULL;
 
         // The copy will be the root element of a new document
-        CRM_ASSERT(src->type == XML_ELEMENT_NODE);
+        pcmk__assert(src->type == XML_ELEMENT_NODE);
 
         doc = pcmk__xml_new_doc();
         copy = xmlDocCopyNode(src, doc, 1);
@@ -1094,7 +1094,7 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
     va_start(ap, format);
     len = vasprintf(&id, format, ap);
     va_end(ap);
-    CRM_ASSERT(len > 0);
+    pcmk__assert(len > 0);
 
     crm_xml_sanitize_id(id);
     crm_xml_add(xml, PCMK_XA_ID, id);
@@ -1167,7 +1167,7 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
                 break;
 
             default:    // Invalid enum value
-                CRM_ASSERT(false);
+                pcmk__assert(false);
                 break;
         }
 
@@ -1286,7 +1286,7 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
                 break;
 
             default:    // Invalid enum value
-                CRM_ASSERT(false);
+                pcmk__assert(false);
                 break;
         }
 
@@ -1893,7 +1893,7 @@ replace_node(xmlNode *old, xmlNode *new)
     old = xmlReplaceNode(old, new);
 
     // old == NULL means memory allocation error
-    CRM_ASSERT(old != NULL);
+    pcmk__assert(old != NULL);
 
     // May be unnecessary but avoids slight changes to some test outputs
     pcmk__xml_tree_foreach(new, reset_xml_node_flags, NULL);
@@ -2309,7 +2309,7 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
 {
     xmlNode *children = (xml? xml->children : NULL);
 
-    CRM_ASSERT(handler != NULL);
+    pcmk__assert(handler != NULL);
 
     for (xmlNode *node = children; node != NULL; node = node->next) {
         if ((node->type == XML_ELEMENT_NODE)

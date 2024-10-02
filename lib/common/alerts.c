@@ -96,7 +96,7 @@ pcmk__alert_new(const char *id, const char *path)
 {
     pcmk__alert_t *entry = pcmk__assert_alloc(1, sizeof(pcmk__alert_t));
 
-    CRM_ASSERT((id != NULL) && (path != NULL));
+    pcmk__assert((id != NULL) && (path != NULL));
     entry->id = pcmk__str_copy(id);
     entry->path = pcmk__str_copy(path);
     entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;

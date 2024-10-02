@@ -28,7 +28,7 @@ te_start_action_timer(const pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     action->timer = g_timeout_add(action->timeout + graph->network_delay,
                                   action_timer_callback, (void *) action);
-    CRM_ASSERT(action->timer != 0);
+    pcmk__assert(action->timer != 0);
 }
 
 /*!
@@ -367,8 +367,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     const char *router_node = NULL;
     const char *task_uuid = NULL;
 
-    CRM_ASSERT(action != NULL);
-    CRM_ASSERT(action->xml != NULL);
+    pcmk__assert((action != NULL) && (action->xml != NULL));
 
     pcmk__clear_graph_action_flags(action, pcmk__graph_action_executed);
     on_node = crm_element_value(action->xml, PCMK__META_ON_NODE);

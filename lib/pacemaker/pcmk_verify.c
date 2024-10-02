@@ -54,7 +54,7 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     xmlNode *status = NULL;
     xmlNode *cib_object_copy = NULL;
 
-    CRM_ASSERT(cib_object != NULL);
+    pcmk__assert(cib_object != NULL);
 
     if (!pcmk__xe_is(*cib_object, PCMK_XE_CIB)) {
         rc = EBADMSG;

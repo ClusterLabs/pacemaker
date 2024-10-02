@@ -113,7 +113,7 @@ destroy_node_tables(gpointer data)
 void
 pcmk__copy_node_tables(const pcmk_resource_t *rsc, GHashTable **copy)
 {
-    CRM_ASSERT((rsc != NULL) && (copy != NULL));
+    pcmk__assert((rsc != NULL) && (copy != NULL));
 
     if (*copy == NULL) {
         *copy = pcmk__strkey_table(NULL, destroy_node_tables);
@@ -144,7 +144,7 @@ pcmk__copy_node_tables(const pcmk_resource_t *rsc, GHashTable **copy)
 void
 pcmk__restore_node_tables(pcmk_resource_t *rsc, GHashTable *backup)
 {
-    CRM_ASSERT((rsc != NULL) && (backup != NULL));
+    pcmk__assert((rsc != NULL) && (backup != NULL));
 
     g_hash_table_destroy(rsc->allowed_nodes);
 

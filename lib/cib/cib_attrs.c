@@ -349,7 +349,7 @@ cib__get_node_attrs(pcmk__output_t *out, cib_t *cib, const char *section,
 {
     int rc = pcmk_rc_ok;
 
-    CRM_ASSERT(result != NULL);
+    pcmk__assert(result != NULL);
     CRM_CHECK(section != NULL, return EINVAL);
 
     *result = NULL;
@@ -632,7 +632,7 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
     xmlNode *xml_search = NULL;
     char *host_lowercase = NULL;
 
-    CRM_ASSERT(uname != NULL);
+    pcmk__assert(uname != NULL);
 
     host_lowercase = g_ascii_strdown(uname, -1);
 
@@ -679,8 +679,8 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     xmlNode *fragment = NULL;
     const char *child_name = NULL;
 
-    CRM_ASSERT(uname != NULL);
-    CRM_ASSERT(uuid != NULL);
+    pcmk__assert(uname != NULL);
+    pcmk__assert(uuid != NULL);
 
     rc = the_cib->cmds->query(the_cib, PCMK_XE_NODES, &fragment,
                               cib_sync_call | cib_scope_local);

@@ -61,7 +61,7 @@ static bool
 curses_init(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     /* If curses_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
@@ -86,7 +86,7 @@ curses_init(pcmk__output_t *out) {
 
 static void
 curses_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     echo();
     nocbreak();
@@ -95,7 +95,7 @@ curses_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **co
 
 static void
 curses_reset(pcmk__output_t *out) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     curses_free_priv(out);
     curses_init(out);
@@ -104,7 +104,7 @@ curses_reset(pcmk__output_t *out) {
 static void
 curses_subprocess_output(pcmk__output_t *out, int exit_status,
                          const char *proc_stdout, const char *proc_stderr) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     if (proc_stdout != NULL) {
         printw("%s\n", proc_stdout);
@@ -124,7 +124,7 @@ curses_subprocess_output(pcmk__output_t *out, int exit_status,
  */
 static void
 curses_ver(pcmk__output_t *out, bool extended) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 }
 
 G_GNUC_PRINTF(2, 3)
@@ -132,7 +132,7 @@ static void
 curses_error(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     /* Informational output does not get indented, to separate it from other
      * potentially indented list output.
@@ -154,7 +154,7 @@ static int
 curses_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -177,7 +177,7 @@ curses_info(pcmk__output_t *out, const char *format, ...) {
 
 static void
 curses_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
     curses_indented_printf(out, "%s", buf);
 }
 
@@ -189,7 +189,7 @@ curses_begin_list(pcmk__output_t *out, const char *singular_noun, const char *pl
     curses_list_data_t *new_list = NULL;
     va_list ap;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     /* Empty formats can be used to create a new level of indentation, but without
@@ -218,7 +218,7 @@ static void
 curses_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
     va_list ap;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     va_start(ap, format);
 
@@ -240,11 +240,11 @@ curses_increment_list(pcmk__output_t *out) {
     private_data_t *priv = NULL;
     gpointer tail;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     tail = g_queue_peek_tail(priv->parent_q);
-    CRM_ASSERT(tail != NULL);
+    pcmk__assert(tail != NULL);
     ((curses_list_data_t *) tail)->len++;
 }
 
@@ -253,7 +253,7 @@ curses_end_list(pcmk__output_t *out) {
     private_data_t *priv = NULL;
     curses_list_data_t *node = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     node = g_queue_pop_tail(priv->parent_q);
@@ -271,19 +271,19 @@ curses_end_list(pcmk__output_t *out) {
 
 static bool
 curses_is_quiet(pcmk__output_t *out) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
     return out->quiet;
 }
 
 static void
 curses_spacer(pcmk__output_t *out) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
     addch('\n');
 }
 
 static void
 curses_progress(pcmk__output_t *out, bool end) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     if (end) {
         printw(".\n");
@@ -297,7 +297,7 @@ curses_prompt(const char *prompt, bool do_echo, char **dest)
 {
     int rc = OK;
 
-    CRM_ASSERT(prompt != NULL && dest != NULL);
+    pcmk__assert((prompt != NULL) && (dest != NULL));
 
     /* This is backwards from the text version of this function on purpose.  We
      * disable echo by default in curses_init, so we need to enable it here if
@@ -397,7 +397,7 @@ curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     int level = 0;
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
 
     priv = out->priv;
 

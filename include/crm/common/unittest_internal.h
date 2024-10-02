@@ -91,15 +91,16 @@ void pcmk__test_init_logging(const char *name, const char *filename);
 
 /*!
  * \internal
- * \brief Assert that a statement aborts through CRM_ASSERT().
+ * \brief Assert that a statement aborts through pcmk__assert().
  *
  * \param[in] stmt  Statement to execute; can be an expression.
  *
  * A cmocka-like assert macro for use in unit testing. This one verifies that a
- * statement aborts through CRM_ASSERT(), erroring out if that is not the case.
+ * statement aborts through pcmk__assert(), erroring out if that is not the
+ * case.
  *
  * This macro works by running the statement in a forked child process with core
- * dumps disabled (CRM_ASSERT() calls \c abort(), which will write out a core
+ * dumps disabled (pcmk__assert() calls \c abort(), which will write out a core
  * dump). The parent waits for the child to exit and checks why. If the child
  * received a \c SIGABRT, the test passes. For all other cases, the test fails.
  *
@@ -135,8 +136,8 @@ void pcmk__test_init_logging(const char *name, const char *filename);
  * \internal
  * \brief Assert that a statement aborts
  *
- * This is exactly the same as pcmk__assert_asserts (CRM_ASSERT() is implemented
- * with abort()), but given a different name for clarity.
+ * This is exactly the same as pcmk__assert_asserts (pcmk__assert() is
+ * implemented with abort()), but given a different name for clarity.
  */
 #define pcmk__assert_aborts(stmt) pcmk__assert_asserts(stmt)
 

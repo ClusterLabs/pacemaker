@@ -111,7 +111,7 @@ pe__sum_node_health_scores(const pcmk_node_t *node, int base_health)
 {
     struct health_sum health_sum = { node, base_health, };
 
-    CRM_ASSERT(node != NULL);
+    pcmk__assert(node != NULL);
     g_hash_table_foreach(node->details->attrs, add_node_health_value,
                          &health_sum);
     return health_sum.sum;
@@ -136,7 +136,7 @@ pe__node_health(pcmk_node_t *node)
     int score = 0;
     int rc = 1;
 
-    CRM_ASSERT(node != NULL);
+    pcmk__assert(node != NULL);
 
     strategy = pe__health_strategy(node->details->data_set);
     if (strategy == pcmk__health_strategy_none) {

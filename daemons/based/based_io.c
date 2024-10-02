@@ -354,7 +354,7 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
     if (new_cib) {
         xmlNode *saved_cib = the_cib;
 
-        CRM_ASSERT(new_cib != saved_cib);
+        pcmk__assert(new_cib != saved_cib);
         the_cib = new_cib;
         free_xml(saved_cib);
         if (cib_writes_enabled && cib_status == pcmk_ok && to_disk) {

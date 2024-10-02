@@ -88,10 +88,10 @@ get_remote_node_state(const pcmk_node_t *node)
     const pcmk_resource_t *remote_rsc = NULL;
     const pcmk_node_t *cluster_node = NULL;
 
-    CRM_ASSERT(node != NULL);
+    pcmk__assert(node != NULL);
 
     remote_rsc = node->details->remote_rsc;
-    CRM_ASSERT(remote_rsc != NULL);
+    pcmk__assert(remote_rsc != NULL);
 
     cluster_node = pcmk__current_node(remote_rsc);
 
@@ -177,10 +177,10 @@ apply_remote_ordering(pcmk_action_t *action)
         return;
     }
 
-    CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
+    pcmk__assert(pcmk__is_pacemaker_remote_node(action->node));
 
     remote_rsc = action->node->details->remote_rsc;
-    CRM_ASSERT(remote_rsc != NULL);
+    pcmk__assert(remote_rsc != NULL);
 
     crm_trace("Order %s action %s relative to %s%s (state: %s)",
               action->task, action->uuid,
@@ -308,15 +308,15 @@ apply_container_ordering(pcmk_action_t *action)
     pcmk_resource_t *container = NULL;
     enum action_tasks task = pcmk_parse_action(action->task);
 
-    CRM_ASSERT(action->rsc != NULL);
-    CRM_ASSERT(action->node != NULL);
-    CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
+    pcmk__assert(action->rsc != NULL);
+    pcmk__assert(action->node != NULL);
+    pcmk__assert(pcmk__is_pacemaker_remote_node(action->node));
 
     remote_rsc = action->node->details->remote_rsc;
-    CRM_ASSERT(remote_rsc != NULL);
+    pcmk__assert(remote_rsc != NULL);
 
     container = remote_rsc->container;
-    CRM_ASSERT(container != NULL);
+    pcmk__assert(container != NULL);
 
     if (pcmk_is_set(container->flags, pcmk_rsc_failed)) {
         pe_fence_node(action->rsc->cluster, action->node, "container failed",
@@ -555,7 +555,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         return NULL;
     }
 
-    CRM_ASSERT(action->node->details->remote_rsc != NULL);
+    pcmk__assert(action->node->details->remote_rsc != NULL);
 
     began_on = pcmk__current_node(action->node->details->remote_rsc);
     ended_on = action->node->details->remote_rsc->allocated_to;

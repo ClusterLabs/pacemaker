@@ -17,7 +17,7 @@
 int pcmk__real_path(const char *path, char **resolved_path);
 
 char *pcmk__series_filename(const char *directory, const char *series,
-                            int sequence, bool bzip);
+                            unsigned int sequence, bool bzip);
 int pcmk__read_series_sequence(const char *directory, const char *series,
                                unsigned int *seq);
 void pcmk__write_series_sequence(const char *directory, const char *series,

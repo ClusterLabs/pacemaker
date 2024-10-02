@@ -195,8 +195,7 @@ pcmk_on_fail_text(enum action_fail_response on_fail)
 char *
 pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms)
 {
-    CRM_ASSERT(rsc_id != NULL);
-    CRM_ASSERT(op_type != NULL);
+    pcmk__assert((rsc_id != NULL) && (op_type != NULL));
     return crm_strdup_printf(PCMK__OP_FMT, rsc_id, op_type, interval_ms);
 }
 

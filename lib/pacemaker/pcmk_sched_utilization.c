@@ -8,6 +8,9 @@
  */
 
 #include <crm_internal.h>
+
+#include <limits.h>                 // INT_MIN, INT_MAX
+
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 
@@ -143,18 +146,18 @@ struct calculate_data {
 static void
 update_utilization_value(gpointer key, gpointer value, gpointer user_data)
 {
-    int result = 0;
-    const char *current = NULL;
     struct calculate_data *data = user_data;
+    const char *current = g_hash_table_lookup(data->current_utilization, key);
+    long long result = utilization_value(current)
+                       + (data->plus? 1LL : -1LL) * utilization_value(value);
 
-    current = g_hash_table_lookup(data->current_utilization, key);
-    if (data->plus) {
-        result = utilization_value(current) + utilization_value(value);
-    } else if (current) {
-        result = utilization_value(current) - utilization_value(value);
+    if (result < INT_MIN) {
+        result = INT_MIN;
+    } else if (result > INT_MAX) {
+        result = INT_MAX;
     }
     g_hash_table_replace(data->current_utilization,
-                         strdup(key), pcmk__itoa(result));
+                         strdup(key), pcmk__itoa((int) result));
 }
 
 /*!

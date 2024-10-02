@@ -1353,7 +1353,7 @@ cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
 {
     const char *value = NULL;
 
-    CRM_ASSERT((option != NULL) && (option->name != NULL));
+    pcmk__assert((option != NULL) && (option->name != NULL));
 
     if (table != NULL) {
         value = g_hash_table_lookup(table, option->name);

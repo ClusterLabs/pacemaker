@@ -143,7 +143,7 @@ static const cib__operation_t cib_ops[] = {
 int
 cib__get_operation(const char *op, const cib__operation_t **operation)
 {
-    CRM_ASSERT((op != NULL) && (operation != NULL));
+    pcmk__assert((op != NULL) && (operation != NULL));
 
     if (operation_table == NULL) {
         operation_table = pcmk__strkey_table(NULL, NULL);
@@ -696,7 +696,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
     xmlXPathObject *xpathObj = NULL;
     int format = 1;
 
-    CRM_ASSERT(diff != NULL);
+    pcmk__assert(diff != NULL);
 
     if (*diff == NULL && last != NULL && next != NULL) {
         *diff = pcmk__diff_v1_xml_object(last, next, false);

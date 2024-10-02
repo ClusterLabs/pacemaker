@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,7 +20,7 @@ pcmk__list_alternatives(pcmk__output_t *out, const char *agent_spec)
     lrmd_t *lrmd_conn = NULL;
     lrmd_list_t *list = NULL;
 
-    CRM_ASSERT(out != NULL && agent_spec != NULL);
+    pcmk__assert((out != NULL) && (agent_spec != NULL));
 
     rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
     if (rc != pcmk_rc_ok) {
@@ -81,7 +81,7 @@ pcmk__list_agents(pcmk__output_t *out, char *agent_spec)
     lrmd_t *lrmd_conn = NULL;
     lrmd_list_t *list = NULL;
 
-    CRM_ASSERT(out != NULL && agent_spec != NULL);
+    pcmk__assert((out != NULL) && (agent_spec != NULL));
 
     rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
     if (rc != pcmk_rc_ok) {
@@ -142,7 +142,7 @@ pcmk__list_providers(pcmk__output_t *out, const char *agent_spec)
     lrmd_t *lrmd_conn = NULL;
     lrmd_list_t *list = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
     if (rc != pcmk_rc_ok) {
@@ -198,7 +198,7 @@ pcmk__list_standards(pcmk__output_t *out)
     lrmd_t *lrmd_conn = NULL;
     lrmd_list_t *list = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
     if (rc != pcmk_rc_ok) {

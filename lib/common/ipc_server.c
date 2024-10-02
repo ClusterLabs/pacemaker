@@ -443,7 +443,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         }
     }
 
-    CRM_ASSERT(text[header->size_uncompressed - 1] == 0);
+    pcmk__assert(text[header->size_uncompressed - 1] == 0);
 
     xml = pcmk__xml_parse(text);
     crm_log_xml_trace(xml, "[IPC received]");
@@ -672,7 +672,7 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     header->qb.id = (int32_t)request;    /* Replying to a specific request */
 
     *result = iov;
-    CRM_ASSERT(header->qb.size > 0);
+    pcmk__assert(header->qb.size > 0);
     if (bytes != NULL) {
         *bytes = header->qb.size;
     }

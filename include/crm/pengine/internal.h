@@ -165,7 +165,7 @@ pcmk_node_t *pe__find_active_requires(const pcmk_resource_t *rsc,
 GHashTable *pe__node_list2table(const GList *list);
 
 pcmk_action_t *get_pseudo_op(const char *name, pcmk_scheduler_t *scheduler);
-gboolean order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
+gboolean order_actions(pcmk_action_t *first, pcmk_action_t *then,
                        uint32_t flags);
 
 void pe__show_node_scores_as(const char *file, const char *function,

@@ -155,7 +155,7 @@ do_schedulerd_api_call(pcmk_ipc_api_t *api, const char *task, xmlNode *cib, char
     }
 
     private = api->api_data;
-    CRM_ASSERT(private != NULL);
+    pcmk__assert(private != NULL);
 
     cmd = create_request(task, cib, NULL, CRM_SYSTEM_PENGINE,
                          crm_system_name? crm_system_name : "client",

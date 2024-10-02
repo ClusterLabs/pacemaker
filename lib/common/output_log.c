@@ -82,7 +82,7 @@ static bool
 log_init(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     /* If log_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
@@ -109,10 +109,10 @@ log_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 
 static void
 log_reset(pcmk__output_t *out) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     out->dest = freopen(NULL, "w", out->dest);
-    CRM_ASSERT(out->dest != NULL);
+    pcmk__assert(out->dest != NULL);
 
     log_free_priv(out);
     log_init(out);
@@ -122,7 +122,7 @@ static void
 log_version(pcmk__output_t *out, bool extended) {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     if (extended) {
@@ -142,7 +142,7 @@ log_err(pcmk__output_t *out, const char *format, ...)
     va_list ap;
     private_data_t *priv = NULL;
 
-    CRM_ASSERT((out != NULL) && (out->priv != NULL));
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     /* Error output does not get indented, to separate it from other
@@ -158,7 +158,7 @@ log_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     xmlNodePtr node = NULL;
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     node = pcmk__xe_create(NULL, name);
@@ -176,12 +176,12 @@ log_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
     char* buffer = NULL;
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     va_start(ap, format);
     len = vasprintf(&buffer, format, ap);
-    CRM_ASSERT(len >= 0);
+    pcmk__assert(len >= 0);
     va_end(ap);
 
     /* Don't skip empty prefixes,
@@ -204,7 +204,7 @@ log_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     int offset = 0;
     char* buffer = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     for (GList* gIter = priv->prefixes->head; gIter; gIter = gIter->next) {
@@ -217,7 +217,7 @@ log_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
 
     va_start(ap, format);
     len = vasprintf(&buffer, format, ap);
-    CRM_ASSERT(len >= 0);
+    pcmk__assert(len >= 0);
     va_end(ap);
 
     if (strcmp(buffer, "") != 0) { /* We don't want empty messages */
@@ -242,13 +242,13 @@ static void
 log_end_list(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     if (priv->prefixes == NULL) {
       return;
     }
-    CRM_ASSERT(priv->prefixes->tail != NULL);
+    pcmk__assert(priv->prefixes->tail != NULL);
 
     free((char *)priv->prefixes->tail->data);
     g_queue_pop_tail(priv->prefixes);
@@ -261,7 +261,7 @@ log_info(pcmk__output_t *out, const char *format, ...)
     va_list ap;
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     /* Informational output does not get indented, to separate it from other
@@ -281,7 +281,7 @@ log_transient(pcmk__output_t *out, const char *format, ...)
     va_list ap;
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     va_start(ap, format);
@@ -362,12 +362,12 @@ pcmk__mk_log_output(char **argv) {
 uint8_t
 pcmk__output_get_log_level(const pcmk__output_t *out)
 {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     if (pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
         private_data_t *priv = out->priv;
 
-        CRM_ASSERT(priv != NULL);
+        pcmk__assert(priv != NULL);
         return priv->log_level;
     }
     return 0;
@@ -389,12 +389,12 @@ pcmk__output_get_log_level(const pcmk__output_t *out)
 void
 pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level)
 {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     if (pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
         private_data_t *priv = out->priv;
 
-        CRM_ASSERT(priv != NULL);
+        pcmk__assert(priv != NULL);
         priv->log_level = log_level;
     }
 }
@@ -419,12 +419,12 @@ void
 pcmk__output_set_log_filter(pcmk__output_t *out, const char *file,
                             const char *function, uint32_t line, uint32_t tags)
 {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     if (pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
         private_data_t *priv = out->priv;
 
-        CRM_ASSERT(priv != NULL);
+        pcmk__assert(priv != NULL);
         priv->file = file;
         priv->function = function;
         priv->line = line;

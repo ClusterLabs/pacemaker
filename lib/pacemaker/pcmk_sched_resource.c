@@ -320,7 +320,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
     pcmk_node_t *current = NULL;
     pcmk__output_t *out = NULL;
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
 
     out = rsc->cluster->priv;
     if (rsc->children != NULL) {
@@ -406,7 +406,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
 {
     bool changed = false;
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
 
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {

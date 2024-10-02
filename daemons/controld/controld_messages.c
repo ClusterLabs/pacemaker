@@ -267,7 +267,7 @@ fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type, const char 
     } else if (fsa_data->data_type != a_type) {
         crm_crit("%s: Message data was the wrong type! %d vs. requested=%d.  Origin: %s",
                  caller, fsa_data->data_type, a_type, fsa_data->origin);
-        CRM_ASSERT(fsa_data->data_type == a_type);
+        pcmk__assert(fsa_data->data_type == a_type);
     } else {
         ret_val = fsa_data->data;
     }

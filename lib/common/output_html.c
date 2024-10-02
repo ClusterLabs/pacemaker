@@ -96,7 +96,7 @@ static bool
 html_init(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     /* If html_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
@@ -138,7 +138,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     htmlNodePtr charset_node = NULL;
     xmlNode *child_node = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     priv = out->priv;
 
@@ -212,10 +212,10 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
 static void
 html_reset(pcmk__output_t *out) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     out->dest = freopen(NULL, "w", out->dest);
-    CRM_ASSERT(out->dest != NULL);
+    pcmk__assert(out->dest != NULL);
 
     html_free_priv(out);
     html_init(out);
@@ -226,7 +226,7 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
                        const char *proc_stdout, const char *proc_stderr) {
     char *rc_buf = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     rc_buf = crm_strdup_printf("Return code: %d", exit_status);
 
@@ -249,7 +249,7 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
 
 static void
 html_version(pcmk__output_t *out, bool extended) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     pcmk__output_create_xml_text_node(out, "h2", "Version Information");
     pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL,
@@ -273,12 +273,12 @@ html_err(pcmk__output_t *out, const char *format, ...) {
     char *buf = NULL;
     va_list ap;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
-    CRM_ASSERT(len >= 0);
+    pcmk__assert(len >= 0);
     va_end(ap);
 
     priv->errors = g_slist_append(priv->errors, buf);
@@ -294,7 +294,7 @@ static void
 html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     htmlNodePtr node = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     node = pcmk__output_create_html_node(out, "pre", NULL, NULL, buf);
     crm_xml_add(node, PCMK_XA_LANG, "xml");
@@ -308,7 +308,7 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
     private_data_t *priv = NULL;
     xmlNodePtr node = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     /* If we are already in a list (the queue depth is always at least
@@ -328,7 +328,7 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
         va_start(ap, format);
         len = vasprintf(&buf, format, ap);
         va_end(ap);
-        CRM_ASSERT(len >= 0);
+        pcmk__assert(len >= 0);
 
         if (q_len > 2) {
             pcmk__output_create_xml_text_node(out, "h3", buf);
@@ -351,11 +351,11 @@ html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     char *buf = NULL;
     int len;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
-    CRM_ASSERT(len >= 0);
+    pcmk__assert(len >= 0);
     va_end(ap);
 
     item_node = pcmk__output_create_xml_text_node(out, "li", buf);
@@ -375,7 +375,7 @@ static void
 html_end_list(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     /* Remove the <ul> tag, but do not free this result - it's still
@@ -397,7 +397,7 @@ html_is_quiet(pcmk__output_t *out) {
 
 static void
 html_spacer(pcmk__output_t *out) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
     pcmk__output_create_xml_node(out, "br", NULL);
 }
 
@@ -450,7 +450,7 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
                               const char *class_name, const char *text) {
     htmlNodePtr node = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
     CRM_CHECK(pcmk__str_eq(out->fmt_name, "html", pcmk__str_none), return NULL);
 
     node = pcmk__output_create_xml_text_node(out, element_name, text);

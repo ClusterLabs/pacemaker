@@ -489,7 +489,7 @@ parse_election_message(const election_t *e, const xmlNode *message,
 static void
 record_vote(election_t *e, struct vote *vote)
 {
-    CRM_ASSERT(e && vote && vote->from && vote->op);
+    pcmk__assert(e && vote && vote->from && vote->op);
 
     if (e->voted == NULL) {
         e->voted = pcmk__strkey_table(free, free);

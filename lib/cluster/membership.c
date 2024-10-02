@@ -262,7 +262,7 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
     if (node == NULL) {
         /* Node is not in cache, so add a new entry for it */
         node = pcmk__cluster_lookup_remote_node(remote);
-        CRM_ASSERT(node);
+        pcmk__assert(node != NULL);
         if (state) {
             pcmk__update_peer_state(__func__, node, state, 0);
         }
@@ -657,7 +657,7 @@ search_cluster_member_cache(unsigned int id, const char *uname,
     crm_node_t *by_id = NULL;
     crm_node_t *by_name = NULL;
 
-    CRM_ASSERT(id > 0 || uname != NULL);
+    pcmk__assert((id > 0) || (uname != NULL));
 
     pcmk__cluster_init_node_caches();
 
@@ -766,7 +766,7 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
 {
     crm_node_t *node = NULL;
 
-    CRM_ASSERT(id > 0 || uname != NULL);
+    pcmk__assert((id > 0) || (uname != NULL));
 
     pcmk__cluster_init_node_caches();
 
@@ -893,7 +893,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
     crm_node_t *node = NULL;
     char *uname_lookup = NULL;
 
-    CRM_ASSERT(id > 0 || uname != NULL);
+    pcmk__assert((id > 0) || (uname != NULL));
 
     pcmk__cluster_init_node_caches();
 

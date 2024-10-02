@@ -65,13 +65,13 @@ cmp_colocation_priority(const pcmk__colocation_t *colocation1,
     if (dependent) {
         rsc1 = colocation1->dependent;
         rsc2 = colocation2->dependent;
-        CRM_ASSERT(colocation1->primary != NULL);
+        pcmk__assert(colocation1->primary != NULL);
     } else {
         rsc1 = colocation1->primary;
         rsc2 = colocation2->primary;
-        CRM_ASSERT(colocation1->dependent != NULL);
+        pcmk__assert(colocation1->dependent != NULL);
     }
-    CRM_ASSERT((rsc1 != NULL) && (rsc2 != NULL));
+    pcmk__assert((rsc1 != NULL) && (rsc2 != NULL));
 
     if (rsc1->priority > rsc2->priority) {
         return -1;
@@ -173,7 +173,7 @@ void
 pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation,
                     const pcmk_resource_t *rsc)
 {
-    CRM_ASSERT((list != NULL) && (colocation != NULL) && (rsc != NULL));
+    pcmk__assert((list != NULL) && (colocation != NULL) && (rsc != NULL));
 
     pcmk__rsc_trace(rsc,
                     "Adding colocation %s (%s with %s using %s @%s) to "
@@ -200,7 +200,7 @@ void
 pcmk__add_this_with_list(GList **list, GList *addition,
                          const pcmk_resource_t *rsc)
 {
-    CRM_ASSERT((list != NULL) && (rsc != NULL));
+    pcmk__assert((list != NULL) && (rsc != NULL));
 
     pcmk__if_tracing(
         {}, // Always add each colocation individually if tracing
@@ -233,7 +233,7 @@ void
 pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation,
                     const pcmk_resource_t *rsc)
 {
-    CRM_ASSERT((list != NULL) && (colocation != NULL) && (rsc != NULL));
+    pcmk__assert((list != NULL) && (colocation != NULL) && (rsc != NULL));
 
     pcmk__rsc_trace(rsc,
                     "Adding colocation %s (%s with %s using %s @%s) to "
@@ -260,7 +260,7 @@ void
 pcmk__add_with_this_list(GList **list, GList *addition,
                          const pcmk_resource_t *rsc)
 {
-    CRM_ASSERT((list != NULL) && (rsc != NULL));
+    pcmk__assert((list != NULL) && (rsc != NULL));
 
     pcmk__if_tracing(
         {}, // Always add each colocation individually if tracing
@@ -549,7 +549,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 }
                 other = pcmk__find_constraint_resource(scheduler->resources,
                                                        xml_rsc_id);
-                CRM_ASSERT(other != NULL); // We already processed it
+                pcmk__assert(other != NULL); // We already processed it
                 pcmk__new_colocation(set_id, NULL, local_score,
                                      resource, other, role, role, flags);
             }
@@ -1133,7 +1133,7 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
         return; // Only unrunnable starts and promotes block dependents
     }
 
-    CRM_ASSERT(action->rsc != NULL); // Start and promote are resource actions
+    pcmk__assert(action->rsc != NULL); // Start and promote are resource actions
 
     /* If this resource is part of a collective resource, dependents are blocked
      * only if all instances of the collective are unrunnable, so check the
@@ -1250,8 +1250,8 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
     const pcmk_resource_t *dependent_role_rsc = NULL;
     const pcmk_resource_t *primary_role_rsc = NULL;
 
-    CRM_ASSERT((dependent != NULL) && (primary != NULL)
-               && (colocation != NULL));
+    pcmk__assert((dependent != NULL) && (primary != NULL)
+                 && (colocation != NULL));
 
     if (!preview && pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
         // Primary resource has not been assigned yet, so we can't do anything
@@ -1463,8 +1463,8 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     int score_multiplier = 1;
     int priority_delta = 0;
 
-    CRM_ASSERT((dependent != NULL) && (primary != NULL)
-               && (colocation != NULL));
+    pcmk__assert((dependent != NULL) && (primary != NULL)
+                 && (colocation != NULL));
 
     if (dependent->allocated_to == NULL) {
         return 0;
@@ -1804,9 +1804,9 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
 {
     GHashTable *work = NULL;
 
-    CRM_ASSERT((source_rsc != NULL) && (nodes != NULL)
-               && ((colocation != NULL)
-                   || ((target_rsc == NULL) && (*nodes == NULL))));
+    pcmk__assert((source_rsc != NULL) && (nodes != NULL)
+                 && ((colocation != NULL)
+                     || ((target_rsc == NULL) && (*nodes == NULL))));
 
     if (log_id == NULL) {
         log_id = source_rsc->id;
@@ -1971,8 +1971,8 @@ pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
     GHashTableIter iter;
     pcmk_node_t *dependent_node = NULL;
 
-    CRM_ASSERT((dependent != NULL) && (primary != NULL)
-               && (colocation != NULL));
+    pcmk__assert((dependent != NULL) && (primary != NULL)
+                 && (colocation != NULL));
 
     g_hash_table_iter_init(&iter, dependent->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &dependent_node)) {

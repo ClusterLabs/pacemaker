@@ -650,7 +650,7 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
     char *key = NULL;
     char *interval_ms_s = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (task != NULL) && (node != NULL));
+    pcmk__assert((rsc != NULL) && (task != NULL) && (node != NULL));
 
     key = pcmk__op_key(rsc->id, task, interval_ms);
 

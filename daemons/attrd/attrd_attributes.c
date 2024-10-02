@@ -225,7 +225,7 @@ attrd_set_id(const attribute_t *attr, const char *node_state_id)
 {
     char *set_id = NULL;
 
-    CRM_ASSERT((attr != NULL) && (node_state_id != NULL));
+    pcmk__assert((attr != NULL) && (node_state_id != NULL));
 
     if (attr->set_id == NULL) {
         /* @COMPAT This should really take the set type into account. Currently

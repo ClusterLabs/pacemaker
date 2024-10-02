@@ -16,6 +16,15 @@ extern const size_t pcmk__n_rc;
 
 int pcmk__result_bounds(enum pcmk_result_type, int *lower, int *upper);
 
+_Noreturn void pcmk__abort_as(const char *file, const char *function, int line,
+                              const char *assert_condition);
+
+#define pcmk__assert(expr) do {                                     \
+        if (!(expr)) {                                              \
+            pcmk__abort_as(__FILE__, __func__, __LINE__, #expr);    \
+        }                                                           \
+    } while(0)
+
 /*!
  * \internal
  * \brief Abort without dumping core if a pointer is \c NULL

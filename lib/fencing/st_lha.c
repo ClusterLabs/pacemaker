@@ -167,7 +167,7 @@ stonith_plugin(int priority, const char *format, ...)
 
     len = vasprintf (&string, format, ap);
     va_end(ap);
-    CRM_ASSERT(len > 0);
+    pcmk__assert(len > 0);
 
     do_crm_log_alias(priority, __FILE__, __func__, __LINE__, "%s", string);
 

@@ -173,7 +173,6 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                               PCMK_XA_BOOLEAN_OP " value '%s', using default "
                               "'" PCMK_VALUE_AND "'",
                               rule_id, boolean);
-            combine = pcmk__combine_and;
             break;
     }
 
@@ -673,7 +672,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 {
     bool need_role = false;
 
-    CRM_ASSERT((rsc != NULL) && (location != NULL));
+    pcmk__assert((rsc != NULL) && (location != NULL));
 
     // If a role was specified, ensure constraint is applicable
     need_role = (location->role_filter > pcmk_role_unknown);

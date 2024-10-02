@@ -382,7 +382,7 @@ stonith_recurring_op_helper(gpointer data)
 
     rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
     /* take it out of recurring_ops list, and put it in the pending ops
      * to be executed */
     rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
@@ -1306,8 +1306,7 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     svc_action_t *action = NULL;
     GHashTable *params_copy = NULL;
 
-    CRM_ASSERT(rsc);
-    CRM_ASSERT(cmd);
+    pcmk__assert((rsc != NULL) && (cmd != NULL));
 
     crm_trace("Creating action, resource:%s action:%s class:%s provider:%s agent:%s",
               rsc->rsc_id, cmd->action, rsc->class, rsc->provider, rsc->type);

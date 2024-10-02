@@ -495,7 +495,7 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
         return;
     }
 
-    CRM_ASSERT(buffer != NULL);
+    pcmk__assert(buffer != NULL);
     CRM_CHECK(depth >= 0, depth = 0);
 
     switch(data->type) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -283,14 +283,20 @@ close_pipe(int fildes[])
     }
 }
 
+#define out_type(is_stderr) ((is_stderr)? "stderr" : "stdout")
+
+// Maximum number of bytes of stdout or stderr we'll accept
+#define MAX_OUTPUT (10 * 1024 * 1024)
+
 static gboolean
 svc_read_output(int fd, svc_action_t * op, bool is_stderr)
 {
     char *data = NULL;
-    int rc = 0, len = 0;
+    ssize_t rc = 0;
+    size_t len = 0;
+    size_t discarded = 0;
     char buf[500];
     static const size_t buf_read_len = sizeof(buf) - 1;
-
 
     if (fd < 0) {
         crm_trace("No fd for %s", op->id);
@@ -300,34 +306,45 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
     if (is_stderr && op->stderr_data) {
         len = strlen(op->stderr_data);
         data = op->stderr_data;
-        crm_trace("Reading %s stderr into offset %d", op->id, len);
+        crm_trace("Reading %s stderr into offset %lld",
+                  op->id, (long long) len);
 
     } else if (is_stderr == FALSE && op->stdout_data) {
         len = strlen(op->stdout_data);
         data = op->stdout_data;
-        crm_trace("Reading %s stdout into offset %d", op->id, len);
+        crm_trace("Reading %s stdout into offset %lld",
+                  op->id, (long long) len);
 
     } else {
-        crm_trace("Reading %s %s into offset %d", op->id, is_stderr?"stderr":"stdout", len);
+        crm_trace("Reading %s %s", op->id, out_type(is_stderr));
     }
 
     do {
+        errno = 0;
         rc = read(fd, buf, buf_read_len);
         if (rc > 0) {
-            buf[rc] = 0;
-            crm_trace("Got %d chars: %.80s", rc, buf);
-            data = pcmk__realloc(data, len + rc + 1);
-            len += sprintf(data + len, "%s", buf);
+            if (len < MAX_OUTPUT) {
+                buf[rc] = 0;
+                crm_trace("Received %lld bytes of %s %s: %.80s",
+                          (long long) rc, op->id, out_type(is_stderr), buf);
+                data = pcmk__realloc(data, len + rc + 1);
+                strcpy(data + len, buf);
+                len += rc;
+            } else {
+                discarded += rc;
+            }
 
-        } else if (errno != EINTR) {
-            /* error or EOF
-             * Cleanup happens in pipe_done()
-             */
-            rc = FALSE;
+        } else if (errno != EINTR) { // Fatal error or EOF
+            rc = 0;
             break;
         }
+    } while ((rc == buf_read_len) || (rc < 0));
 
-    } while (rc == buf_read_len || rc < 0);
+    if (discarded > 0) {
+        crm_warn("Truncated %s %s to %lld bytes (discarded %lld)",
+                 op->id, out_type(is_stderr), (long long) len,
+                 (long long) discarded);
+    }
 
     if (is_stderr) {
         op->stderr_data = data;
@@ -335,7 +352,7 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
         op->stdout_data = data;
     }
 
-    return rc;
+    return rc != 0;
 }
 
 static int
@@ -475,7 +492,9 @@ pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
 {
     svc_action_t *op = user_data;
     char *buffer = crm_strdup_printf("%s=%s\n", (char *)key, (char *) value);
-    int ret, total = 0, len = strlen(buffer);
+    size_t len = strlen(buffer);
+    size_t total = 0;
+    ssize_t ret = 0;
 
     do {
         errno = 0;
@@ -483,7 +502,6 @@ pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
         if (ret > 0) {
             total += ret;
         }
-
     } while ((errno == EINTR) && (total < len));
     free(buffer);
 }
@@ -1222,7 +1240,7 @@ services__execute_file(svc_action_t *op)
     int stdin_fd[2] = {-1, -1};
     int rc;
     struct stat st;
-    struct sigchld_data_s data;
+    struct sigchld_data_s data = { .ignored = false };
 
     // Catch common failure conditions early
     if (stat(op->opaque->exec, &st) != 0) {
@@ -1330,7 +1348,7 @@ services__execute_file(svc_action_t *op)
             }
 
             action_launch_child(op);
-            CRM_ASSERT(0);  /* action_launch_child is effectively noreturn */
+            pcmk__assert(false); // action_launch_child() should not return
     }
 
     /* Only the parent reaches here */

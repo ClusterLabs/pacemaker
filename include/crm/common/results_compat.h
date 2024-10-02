@@ -25,6 +25,12 @@ extern "C" {
  *             release.
  */
 
+#define CRM_ASSERT(expr) do {                                                \
+        if (!(expr)) {                                                       \
+            crm_abort(__FILE__, __func__, __LINE__, #expr, TRUE, FALSE);     \
+        }                                                                    \
+    } while(0)
+
 //! \deprecated Do not use
 const char *bz2_strerror(int rc);
 
