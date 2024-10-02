@@ -249,7 +249,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
     if (is_remote) {
         attrd_set_value_flags(v, attrd_value_remote);
-        CRM_ASSERT(pcmk__cluster_lookup_remote_node(host) != NULL);
+        pcmk__assert(pcmk__cluster_lookup_remote_node(host) != NULL);
     }
 
     // Check whether the value changed

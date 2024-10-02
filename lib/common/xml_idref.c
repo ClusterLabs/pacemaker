@@ -33,7 +33,7 @@ pcmk__add_idref(GHashTable *table, const char *id, const char *referrer)
 {
     pcmk__idref_t *idref = NULL;
 
-    CRM_ASSERT((table != NULL) && (id != NULL) && (referrer != NULL));
+    pcmk__assert((table != NULL) && (id != NULL) && (referrer != NULL));
 
     idref = g_hash_table_lookup(table, id);
     if (idref == NULL) {

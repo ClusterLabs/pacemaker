@@ -134,8 +134,8 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     /* We should have ensured this with the xpath query above, but double-
      * checking can't hurt.
      */
-    CRM_ASSERT(match != NULL);
-    CRM_ASSERT(pcmk__condition_type(match) == pcmk__condition_datetime);
+    pcmk__assert((match != NULL)
+                 && (pcmk__condition_type(match) == pcmk__condition_datetime));
 
     rc = pcmk__evaluate_date_expression(match, scheduler->priv->now, NULL);
     if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_within_range)) {
@@ -167,7 +167,7 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
     pcmk_scheduler_t *scheduler = NULL;
     int rc = pcmk_rc_ok;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     if (rule_ids == NULL) {
         // Trivial case; every rule specified is in effect

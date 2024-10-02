@@ -185,7 +185,7 @@ mainloop_add_trigger(int priority, int (*dispatch) (gpointer user_data),
 {
     GSource *source = NULL;
 
-    CRM_ASSERT(sizeof(crm_trigger_t) > sizeof(GSource));
+    pcmk__assert(sizeof(crm_trigger_t) > sizeof(GSource));
     source = g_source_new(&crm_trigger_funcs, sizeof(crm_trigger_t));
 
     return mainloop_setup_trigger(source, priority, dispatch, userdata);
@@ -375,11 +375,11 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
         return FALSE;
     }
 
-    CRM_ASSERT(sizeof(crm_signal_t) > sizeof(GSource));
+    pcmk__assert(sizeof(crm_signal_t) > sizeof(GSource));
     source = g_source_new(&crm_signal_funcs, sizeof(crm_signal_t));
 
     crm_signals[sig] = (crm_signal_t *) mainloop_setup_trigger(source, priority, NULL, NULL);
-    CRM_ASSERT(crm_signals[sig] != NULL);
+    pcmk__assert(crm_signals[sig] != NULL);
 
     crm_signals[sig]->handler = dispatch;
     crm_signals[sig]->signal = sig;
@@ -446,7 +446,7 @@ gio_read_socket(GIOChannel * gio, GIOCondition condition, gpointer data)
 
     /* if this assert get's hit, then there is a race condition between
      * when we destroy a fd and when mainloop actually gives it up */
-    CRM_ASSERT(adaptor->is_used > 0);
+    pcmk__assert(adaptor->is_used > 0);
 
     return (adaptor->fn(fd, condition, adaptor->data) == 0);
 }
@@ -457,7 +457,7 @@ gio_poll_destroy(gpointer data)
     struct gio_to_qb_poll *adaptor = (struct gio_to_qb_poll *)data;
 
     adaptor->is_used--;
-    CRM_ASSERT(adaptor->is_used >= 0);
+    pcmk__assert(adaptor->is_used >= 0);
 
     if (adaptor->is_used == 0) {
         crm_trace("Marking adaptor %p unused", adaptor);
@@ -714,7 +714,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
     gboolean rc = G_SOURCE_CONTINUE;
     mainloop_io_t *client = data;
 
-    CRM_ASSERT(client->fd == g_io_channel_unix_get_fd(gio));
+    pcmk__assert(client->fd == g_io_channel_unix_get_fd(gio));
 
     if (condition & G_IO_IN) {
         if (client->ipc) {
@@ -1291,7 +1291,7 @@ mainloop_timer_cb(gpointer user_data)
     bool repeat = FALSE;
     struct mainloop_timer_s *t = user_data;
 
-    CRM_ASSERT(t != NULL);
+    pcmk__assert(t != NULL);
 
     id = t->id;
     t->id = 0; /* Ensure it's unset during callbacks so that

@@ -582,7 +582,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
     } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
         pcmk__xe_remove_attr(rsc->priv->xml, attr_name);
-        CRM_ASSERT(cib != NULL);
+        pcmk__assert(cib != NULL);
         rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->priv->xml,
                                 cib_options);
         rc = pcmk_legacy2rc(rc);
@@ -632,7 +632,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         xml_obj = crm_create_nvpair_xml(NULL, rsc_attr_id, attr_name, NULL);
         crm_log_xml_debug(xml_obj, "Delete");
 
-        CRM_ASSERT(cib);
+        pcmk__assert(cib != NULL);
         rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, xml_obj, cib_options);
         rc = pcmk_legacy2rc(rc);
 

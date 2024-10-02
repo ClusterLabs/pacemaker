@@ -224,7 +224,7 @@ pcmk__xml_show(pcmk__output_t *out, const char *prefix, const xmlNode *data,
     int rc = pcmk_rc_no_output;
     GString *buffer = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
     CRM_CHECK(depth >= 0, depth = 0);
 
     if (data == NULL) {
@@ -365,9 +365,7 @@ pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml)
     int rc = pcmk_rc_no_output;
     int temp_rc = pcmk_rc_no_output;
 
-    CRM_ASSERT(out != NULL);
-    CRM_ASSERT(xml != NULL);
-    CRM_ASSERT(xml->doc != NULL);
+    pcmk__assert((out != NULL) && (xml != NULL) && (xml->doc != NULL));
 
     docpriv = xml->doc->_private;
     if (!pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {

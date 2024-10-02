@@ -90,7 +90,7 @@ pe__copy_node(const pcmk_node_t *this_node)
 {
     pcmk_node_t *new_node = NULL;
 
-    CRM_ASSERT(this_node != NULL);
+    pcmk__assert(this_node != NULL);
 
     new_node = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
     new_node->assign = pcmk__assert_alloc(1,
@@ -460,8 +460,7 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 }
 
 gboolean
-order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
-              uint32_t flags)
+order_actions(pcmk_action_t *first, pcmk_action_t *then, uint32_t flags)
 {
     GList *gIter = NULL;
     pcmk__related_action_t *wrapper = NULL;
@@ -471,40 +470,40 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
         return FALSE;
     }
 
-    if (lh_action == NULL || rh_action == NULL) {
+    if ((first == NULL) || (then == NULL)) {
         return FALSE;
     }
 
     crm_trace("Creating action wrappers for ordering: %s then %s",
-              lh_action->uuid, rh_action->uuid);
+              first->uuid, then->uuid);
 
     /* Ensure we never create a dependency on ourselves... it's happened */
-    CRM_ASSERT(lh_action != rh_action);
+    pcmk__assert(first != then);
 
     /* Filter dups, otherwise update_action_states() has too much work to do */
-    gIter = lh_action->actions_after;
+    gIter = first->actions_after;
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__related_action_t *after = gIter->data;
 
-        if ((after->action == rh_action)
+        if ((after->action == then)
             && pcmk_any_flags_set(after->flags, flags)) {
             return FALSE;
         }
     }
 
     wrapper = pcmk__assert_alloc(1, sizeof(pcmk__related_action_t));
-    wrapper->action = rh_action;
+    wrapper->action = then;
     wrapper->flags = flags;
-    list = lh_action->actions_after;
+    list = first->actions_after;
     list = g_list_prepend(list, wrapper);
-    lh_action->actions_after = list;
+    first->actions_after = list;
 
     wrapper = pcmk__assert_alloc(1, sizeof(pcmk__related_action_t));
-    wrapper->action = lh_action;
+    wrapper->action = first;
     wrapper->flags = flags;
-    list = rh_action->actions_before;
+    list = then->actions_before;
     list = g_list_prepend(list, wrapper);
-    rh_action->actions_before = list;
+    then->actions_before = list;
     return TRUE;
 }
 

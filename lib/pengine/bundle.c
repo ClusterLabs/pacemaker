@@ -77,8 +77,8 @@ typedef struct pe__bundle_variant_data_s {
 } pe__bundle_variant_data_t;
 
 #define get_bundle_variant_data(data, rsc) do { \
-        CRM_ASSERT(pcmk__is_bundle(rsc));       \
-        data = rsc->priv->variant_opaque;    \
+        pcmk__assert(pcmk__is_bundle(rsc));     \
+        data = rsc->priv->variant_opaque;       \
     } while (0)
 
 /*!
@@ -661,8 +661,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             id = crm_strdup_printf("pcmk-internal-%s-remote-%d",
                                    replica->child->id, replica->offset);
             //@TODO return error instead of asserting?
-            CRM_ASSERT(pe_find_resource(scheduler->priv->resources,
-                                        id) == NULL);
+            pcmk__assert(pe_find_resource(scheduler->priv->resources,
+                                          id) == NULL);
         }
 
         /* REMOTE_CONTAINER_HACK: Using "#uname" as the server name when the
@@ -959,7 +959,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     pe__bundle_variant_data_t *bundle_data = NULL;
     bool need_log_mount = TRUE;
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     bundle_data = pcmk__assert_alloc(1, sizeof(pe__bundle_variant_data_t));
@@ -1366,14 +1366,15 @@ pcmk_resource_t *
 pe__find_bundle_replica(const pcmk_resource_t *bundle, const pcmk_node_t *node)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
-    CRM_ASSERT(bundle && node);
+
+    pcmk__assert((bundle != NULL) && (node != NULL));
 
     get_bundle_variant_data(bundle_data, bundle);
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pcmk__bundle_replica_t *replica = gIter->data;
 
-        CRM_ASSERT(replica && replica->node);
+        pcmk__assert((replica != NULL) && (replica->node != NULL));
         if (pcmk__same_node(replica->node, node)) {
             return replica->child;
         }
@@ -1398,7 +1399,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
     const char *desc = NULL;
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
     get_bundle_variant_data(bundle_data, rsc);
 
     if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
@@ -1417,7 +1418,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         char *id = NULL;
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
-        CRM_ASSERT(replica);
+        pcmk__assert(replica != NULL);
 
         if (pcmk__rsc_filtered_by_node(container, only_node)) {
             continue;
@@ -1462,7 +1463,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                                           PCMK_XA_FAILED, failed,
                                           PCMK_XA_DESCRIPTION, desc,
                                           NULL);
-            CRM_ASSERT(rc == pcmk_rc_ok);
+            pcmk__assert(rc == pcmk_rc_ok);
         }
 
         id = pcmk__itoa(replica->offset);
@@ -1470,7 +1471,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                                       PCMK_XA_ID, id,
                                       NULL);
         free(id);
-        CRM_ASSERT(rc == pcmk_rc_ok);
+        pcmk__assert(rc == pcmk_rc_ok);
 
         if (print_ip) {
             out->message(out, (const char *) ip->priv->xml->name, show_opts,
@@ -1567,7 +1568,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
     get_bundle_variant_data(bundle_data, rsc);
 
     desc = pe__resource_description(rsc, show_opts);
@@ -1587,7 +1588,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
         pcmk_resource_t *remote = replica->remote;
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
-        CRM_ASSERT(replica);
+        pcmk__assert(replica != NULL);
 
         if (pcmk__rsc_filtered_by_node(container, only_node)) {
             continue;
@@ -1712,7 +1713,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
     desc = pe__resource_description(rsc, show_opts);
 
-    CRM_ASSERT(rsc != NULL);
+    pcmk__assert(rsc != NULL);
     get_bundle_variant_data(bundle_data, rsc);
 
     if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
@@ -1730,7 +1731,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         pcmk_resource_t *remote = replica->remote;
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
-        CRM_ASSERT(replica);
+        pcmk__assert(replica != NULL);
 
         if (pcmk__rsc_filtered_by_node(container, only_node)) {
             continue;
@@ -2085,6 +2086,6 @@ pe__bundle_max_per_node(const pcmk_resource_t *rsc)
     pe__bundle_variant_data_t *bundle_data = NULL;
 
     get_bundle_variant_data(bundle_data, rsc);
-    CRM_ASSERT(bundle_data->nreplicas_per_host >= 0);
+    pcmk__assert(bundle_data->nreplicas_per_host >= 0);
     return (unsigned int) bundle_data->nreplicas_per_host;
 }

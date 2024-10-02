@@ -30,7 +30,7 @@ pcmk__xc_create(xmlDoc *doc, const char *content)
     xmlNode *node = NULL;
 
     // Pacemaker typically assumes every xmlNode has a doc
-    CRM_ASSERT(doc != NULL);
+    pcmk__assert(doc != NULL);
 
     node = xmlNewDocComment(doc, (pcmkXmlStr) content);
     pcmk__mem_assert(node);

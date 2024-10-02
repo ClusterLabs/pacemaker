@@ -143,7 +143,7 @@ static const cib__operation_t cib_ops[] = {
 int
 cib__get_operation(const char *op, const cib__operation_t **operation)
 {
-    CRM_ASSERT((op != NULL) && (operation != NULL));
+    pcmk__assert((op != NULL) && (operation != NULL));
 
     if (operation_table == NULL) {
         operation_table = pcmk__strkey_table(NULL, NULL);

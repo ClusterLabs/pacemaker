@@ -322,7 +322,8 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
 {
     int rc = 0;
 
-    CRM_ASSERT(client && client->remote && client->remote->tls_session);
+    pcmk__assert((client != NULL) && (client->remote != NULL)
+                 && (client->remote->tls_session != NULL));
 
     do {
         rc = gnutls_handshake(*client->remote->tls_session);
@@ -548,7 +549,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
             return NULL;
         }
 
-        CRM_ASSERT(size_u == header->payload_uncompressed);
+        pcmk__assert(size_u == header->payload_uncompressed);
 
         memcpy(uncompressed, remote->buffer, header->payload_offset);       /* Preserve the header */
         remote->buffer_size = header->payload_offset + size_u;

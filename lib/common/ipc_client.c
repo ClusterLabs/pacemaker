@@ -1095,7 +1095,7 @@ crm_ipc_ready(crm_ipc_t *client)
 {
     int rc;
 
-    CRM_ASSERT(client != NULL);
+    pcmk__assert(client != NULL);
 
     if (!crm_ipc_connected(client)) {
         return -ENOTCONN;
@@ -1133,15 +1133,7 @@ crm_ipc_decompress(crm_ipc_t * client)
             return rc;
         }
 
-        /*
-         * This assert no longer holds true.  For an identical msg, some clients may
-         * require compression, and others may not. If that same msg (event) is sent
-         * to multiple clients, it could result in some clients receiving a compressed
-         * msg even though compression was not explicitly required for them.
-         *
-         * CRM_ASSERT((header->size_uncompressed + sizeof(pcmk__ipc_header_t)) >= ipc_buffer_max);
-         */
-        CRM_ASSERT(size_u == header->size_uncompressed);
+        pcmk__assert(size_u == header->size_uncompressed);
 
         memcpy(uncompressed, client->buffer, sizeof(pcmk__ipc_header_t));       /* Preserve the header */
         header = (pcmk__ipc_header_t *)(void*)uncompressed;
@@ -1151,7 +1143,8 @@ crm_ipc_decompress(crm_ipc_t * client)
         client->buffer = uncompressed;
     }
 
-    CRM_ASSERT(client->buffer[sizeof(pcmk__ipc_header_t) + header->size_uncompressed - 1] == 0);
+    pcmk__assert(client->buffer[sizeof(pcmk__ipc_header_t)
+                                + header->size_uncompressed - 1] == 0);
     return pcmk_rc_ok;
 }
 
@@ -1160,9 +1153,8 @@ crm_ipc_read(crm_ipc_t * client)
 {
     pcmk__ipc_header_t *header = NULL;
 
-    CRM_ASSERT(client != NULL);
-    CRM_ASSERT(client->ipc != NULL);
-    CRM_ASSERT(client->buffer != NULL);
+    pcmk__assert((client != NULL) && (client->ipc != NULL)
+                 && (client->buffer != NULL));
 
     client->buffer[0] = 0;
     client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer,
@@ -1207,7 +1199,7 @@ crm_ipc_read(crm_ipc_t * client)
 const char *
 crm_ipc_buffer(crm_ipc_t * client)
 {
-    CRM_ASSERT(client != NULL);
+    pcmk__assert(client != NULL);
     return client->buffer + sizeof(pcmk__ipc_header_t);
 }
 
@@ -1216,7 +1208,7 @@ crm_ipc_buffer_flags(crm_ipc_t * client)
 {
     pcmk__ipc_header_t *header = NULL;
 
-    CRM_ASSERT(client != NULL);
+    pcmk__assert(client != NULL);
     if (client->buffer == NULL) {
         return 0;
     }
@@ -1228,7 +1220,7 @@ crm_ipc_buffer_flags(crm_ipc_t * client)
 const char *
 crm_ipc_name(crm_ipc_t * client)
 {
-    CRM_ASSERT(client != NULL);
+    pcmk__assert(client != NULL);
     return client->server_name;
 }
 
@@ -1269,7 +1261,7 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
 
                 crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
                 crm_log_xml_notice(bad, "ImpossibleReply");
-                CRM_ASSERT(hdr->qb.id <= request_id);
+                pcmk__assert(hdr->qb.id <= request_id);
             }
         } else if (!crm_ipc_connected(client)) {
             crm_err("%s IPC provider disconnected while waiting for message %d",

@@ -45,7 +45,7 @@ void cleanup_calculations(pcmk_scheduler_t *scheduler);
 // NOTE: sbd (as of at least 1.5.2) uses this
 void pe_reset_working_set(pcmk_scheduler_t *scheduler);
 
-pcmk_resource_t *pe_find_resource(GList *rsc_list, const char *id_rh);
+pcmk_resource_t *pe_find_resource(GList *rsc_list, const char *id);
 pcmk_resource_t *pe_find_resource_with_flags(GList *rsc_list, const char *id,
                                              enum pe_find flags);
 pcmk_node_t *pe_find_node_id(const GList *node_list, const char *id);

@@ -284,7 +284,7 @@ systemd_daemon_reload(int timeout)
     DBusMessage *msg = systemd_new_method("Reload");
 
     reload_count++;
-    CRM_ASSERT(msg != NULL);
+    pcmk__assert(msg != NULL);
     systemd_send(msg, systemd_daemon_reload_complete,
                  GUINT_TO_POINTER(reload_count), timeout);
     dbus_message_unref(msg);
@@ -457,7 +457,7 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
      * </method>
      */
     msg = systemd_new_method("LoadUnit");
-    CRM_ASSERT(msg != NULL);
+    pcmk__assert(msg != NULL);
 
     // Add the (expanded) unit name as the argument
     name = systemd_service_name(arg_name,
@@ -1005,7 +1005,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
               ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""));
 
     msg = systemd_new_method(method);
-    CRM_ASSERT(msg != NULL);
+    pcmk__assert(msg != NULL);
 
     /* (ss) */
     {
@@ -1079,7 +1079,7 @@ systemd_timeout_callback(gpointer p)
 int
 services__execute_systemd(svc_action_t *op)
 {
-    CRM_ASSERT(op != NULL);
+    pcmk__assert(op != NULL);
 
     if ((op->action == NULL) || (op->agent == NULL)) {
         services__set_result(op, PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR_FATAL,

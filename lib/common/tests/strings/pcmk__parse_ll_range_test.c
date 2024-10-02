@@ -7,7 +7,6 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
-#include "crm/common/results.h"
 #include <crm_internal.h>
 
 #include <crm/common/unittest_internal.h>

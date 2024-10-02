@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2023 the Pacemaker project contributors
+ * Copyright 2005-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/iso8601.h>
-#include <crm/common/util.h>  /* CRM_ASSERT */
+#include <crm/common/util.h>
 #include <unistd.h>
 
 #define SUMMARY "Display and parse ISO 8601 dates and times"

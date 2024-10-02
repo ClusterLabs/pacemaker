@@ -92,7 +92,7 @@ has_root_node(pcmk__output_t *out)
 {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     priv = out->priv;
     return priv != NULL && priv->root != NULL;
@@ -152,7 +152,7 @@ static bool
 xml_init(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     /* If xml_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
@@ -185,7 +185,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     private_data_t *priv = NULL;
     xmlNodePtr node;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
     priv = out->priv;
 
     if (priv == NULL) {
@@ -233,10 +233,10 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 
 static void
 xml_reset(pcmk__output_t *out) {
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     out->dest = freopen(NULL, "w", out->dest);
-    CRM_ASSERT(out->dest != NULL);
+    pcmk__assert(out->dest != NULL);
 
     xml_free_priv(out);
     xml_init(out);
@@ -248,7 +248,7 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
     xmlNodePtr node, child_node;
     char *rc_as_str = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     rc_as_str = pcmk__itoa(exit_status);
 
@@ -275,7 +275,7 @@ static void
 xml_version(pcmk__output_t *out, bool extended) {
     const char *author = "Andrew Beekhof and the Pacemaker project "
                          "contributors";
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     pcmk__output_create_xml_node(out, PCMK_XE_VERSION,
                                  PCMK_XA_PROGRAM, "Pacemaker",
@@ -294,14 +294,14 @@ xml_err(pcmk__output_t *out, const char *format, ...) {
     char *buf = NULL;
     va_list ap;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     add_root_node(out);
 
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
-    CRM_ASSERT(len > 0);
+    pcmk__assert(len > 0);
     va_end(ap);
 
     priv->errors = g_slist_append(priv->errors, buf);
@@ -318,7 +318,7 @@ xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     xmlNodePtr parent = NULL;
     xmlNodePtr cdata_node = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     parent = pcmk__output_create_xml_node(out, name, NULL);
     if (parent == NULL) {
@@ -338,12 +338,12 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
     int len;
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
-    CRM_ASSERT(len >= 0);
+    pcmk__assert(len >= 0);
     va_end(ap);
 
     for (const subst_t *s = substitutions; s->from != NULL; s++) {
@@ -377,11 +377,11 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     char *buf = NULL;
     int len;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
-    CRM_ASSERT(len >= 0);
+    pcmk__assert(len >= 0);
     va_end(ap);
 
     item_node = pcmk__output_create_xml_text_node(out, PCMK_XE_ITEM, buf);
@@ -402,7 +402,7 @@ static void
 xml_end_list(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
     if (priv->list_element) {
@@ -479,7 +479,7 @@ pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name, ...) {
     va_list args;
     xmlNodePtr node = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     node = pcmk__output_create_xml_node(out, name, NULL);
@@ -497,8 +497,7 @@ pcmk__output_xml_add_node_copy(pcmk__output_t *out, xmlNodePtr node) {
     private_data_t *priv = NULL;
     xmlNodePtr parent = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
-    CRM_ASSERT(node != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL) && (node != NULL));
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return);
 
     add_root_node(out);
@@ -518,7 +517,7 @@ pcmk__output_create_xml_node(pcmk__output_t *out, const char *name, ...) {
     private_data_t *priv = NULL;
     va_list args;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     add_root_node(out);
@@ -537,7 +536,7 @@ xmlNodePtr
 pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const char *content) {
     xmlNodePtr node = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     node = pcmk__output_create_xml_node(out, name, NULL);
@@ -549,8 +548,7 @@ void
 pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr parent) {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
-    CRM_ASSERT(parent != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL) && (parent != NULL));
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return);
 
     add_root_node(out);
@@ -564,14 +562,14 @@ void
 pcmk__output_xml_pop_parent(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return);
 
     add_root_node(out);
 
     priv = out->priv;
 
-    CRM_ASSERT(g_queue_get_length(priv->parent_q) > 0);
+    pcmk__assert(g_queue_get_length(priv->parent_q) > 0);
     /* Do not free this result - it's still part of the document */
     g_queue_pop_tail(priv->parent_q);
 }
@@ -580,7 +578,7 @@ xmlNodePtr
 pcmk__output_xml_peek_parent(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
+    pcmk__assert((out != NULL) && (out->priv != NULL));
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     add_root_node(out);
@@ -596,13 +594,13 @@ pcmk__output_get_legacy_xml(pcmk__output_t *out)
 {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     if (!pcmk__str_eq(out->fmt_name, "xml", pcmk__str_none)) {
         return false;
     }
 
-    CRM_ASSERT(out->priv != NULL);
+    pcmk__assert(out->priv != NULL);
 
     priv = out->priv;
     return priv->legacy_xml;
@@ -613,13 +611,13 @@ pcmk__output_set_legacy_xml(pcmk__output_t *out)
 {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     if (!pcmk__str_eq(out->fmt_name, "xml", pcmk__str_none)) {
         return;
     }
 
-    CRM_ASSERT(out->priv != NULL);
+    pcmk__assert(out->priv != NULL);
 
     priv = out->priv;
     priv->legacy_xml = true;
@@ -630,13 +628,13 @@ pcmk__output_enable_list_element(pcmk__output_t *out)
 {
     private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL);
+    pcmk__assert(out != NULL);
 
     if (!pcmk__str_eq(out->fmt_name, "xml", pcmk__str_none)) {
         return;
     }
 
-    CRM_ASSERT(out->priv != NULL);
+    pcmk__assert(out->priv != NULL);
 
     priv = out->priv;
     priv->list_element = true;

@@ -288,7 +288,8 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
         } else if (strstr(xpath, "/" PCMK_XE_RESOURCES)
                    || strstr(xpath, "/" PCMK_XE_CONSTRAINTS)
                    || strstr(xpath, "/" PCMK_XE_RSC_DEFAULTS)) {
-            shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
+            shortpath = strrchr(xpath, '/');
+            pcmk__assert(shortpath != NULL);
             reason = crm_strdup_printf("%s %s", op, shortpath+1);
             break;
         }
@@ -356,7 +357,7 @@ fenced_query_cib(void)
     rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     if (rc == pcmk_rc_ok) {
-        CRM_ASSERT(local_cib != NULL);
+        pcmk__assert(local_cib != NULL);
     } else {
         crm_err("Couldn't retrieve the CIB: %s " QB_XS " rc=%d",
                 pcmk_rc_str(rc), rc);

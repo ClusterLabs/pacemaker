@@ -367,7 +367,7 @@ pcmk__fence_guest(pcmk_node_t *node)
      */
     const char *fence_action = PCMK_ACTION_OFF;
 
-    CRM_ASSERT(node != NULL);
+    pcmk__assert(node != NULL);
 
     /* Check whether guest's launcher has any explicit stop or start (the stop
      * may be implied by fencing of the guest's host).

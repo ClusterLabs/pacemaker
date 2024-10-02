@@ -694,7 +694,7 @@ pcmk_query_node_info(xmlNodePtr *xml, uint32_t *node_id, char **node_name,
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    CRM_ASSERT(node_name != NULL);
+    pcmk__assert(node_name != NULL);
 
     rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {

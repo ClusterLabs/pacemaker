@@ -99,7 +99,7 @@ controld_disconnect_cib_manager(void)
 {
     cib_t *cib_conn = controld_globals.cib_conn;
 
-    CRM_ASSERT(cib_conn != NULL);
+    pcmk__assert(cib_conn != NULL);
 
     crm_debug("Disconnecting from the CIB manager");
 
@@ -131,7 +131,7 @@ do_cib_control(long long action,
 
     int rc = pcmk_ok;
 
-    CRM_ASSERT(cib_conn != NULL);
+    pcmk__assert(cib_conn != NULL);
 
     if (pcmk_is_set(action, A_CIB_STOP)) {
         if ((cib_conn->state != cib_disconnected)
@@ -334,7 +334,7 @@ controld_node_state_deletion_strings(const char *uname,
             break;
         default:
             // We called this function incorrectly
-            CRM_ASSERT(false);
+            pcmk__assert(false);
             break;
     }
 
@@ -360,7 +360,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
     char *desc = NULL;
     int cib_rc = pcmk_ok;
 
-    CRM_ASSERT((uname != NULL) && (cib != NULL));
+    pcmk__assert((uname != NULL) && (cib != NULL));
 
     controld_node_state_deletion_strings(uname, section, &xpath, &desc);
 
@@ -817,7 +817,7 @@ controld_update_cib(const char *section, xmlNode *data, int options,
     cib_t *cib = controld_globals.cib_conn;
     int cib_rc = -ENOTCONN;
 
-    CRM_ASSERT(data != NULL);
+    pcmk__assert(data != NULL);
 
     if (cib != NULL) {
         cib_rc = cib->cmds->modify(cib, section, data, options);

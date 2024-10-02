@@ -307,7 +307,7 @@ do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *ta
     }
 
     private = api->api_data;
-    CRM_ASSERT(private != NULL);
+    pcmk__assert(private != NULL);
 
     sender_system = crm_strdup_printf("%s_%s", private->client_uuid,
                                       pcmk__ipc_sys_name(ipc_name, "client"));

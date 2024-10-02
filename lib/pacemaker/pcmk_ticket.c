@@ -81,7 +81,7 @@ pcmk__get_ticket_state(cib_t *cib, const char *ticket_id, xmlNode **state)
     xmlNode *xml_search = NULL;
     char *xpath = NULL;
 
-    CRM_ASSERT(cib!= NULL && state != NULL);
+    pcmk__assert((cib != NULL) && (state != NULL));
     *state = NULL;
 
     if (ticket_id != NULL) {
@@ -117,10 +117,10 @@ pcmk__ticket_constraints(pcmk__output_t *out, cib_t *cib, const char *ticket_id)
     const char *xpath_base = NULL;
     char *xpath = NULL;
 
-    CRM_ASSERT(out != NULL && cib != NULL);
+    pcmk__assert((out != NULL) && (cib != NULL));
 
     xpath_base = pcmk_cib_xpath_for(PCMK_XE_CONSTRAINTS);
-    CRM_ASSERT(xpath_base != NULL);
+    pcmk__assert(xpath_base != NULL);
 
     if (ticket_id != NULL) {
         xpath = crm_strdup_printf("%s/" PCMK_XE_RSC_TICKET "[@" PCMK_XA_TICKET "=\"%s\"]",
@@ -183,7 +183,7 @@ pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler
     int rc = pcmk_rc_ok;
     xmlNode *state = NULL;
 
-    CRM_ASSERT(cib != NULL && scheduler != NULL);
+    pcmk__assert((cib != NULL) && (scheduler != NULL));
 
     if (ticket_id == NULL) {
         return EINVAL;
@@ -266,7 +266,7 @@ pcmk__ticket_get_attr(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
     const char *attr_value = NULL;
     pcmk__ticket_t *ticket = NULL;
 
-    CRM_ASSERT(out != NULL && scheduler != NULL);
+    pcmk__assert((out != NULL) && (scheduler != NULL));
 
     if (ticket_id == NULL || attr_name == NULL) {
         return EINVAL;
@@ -317,7 +317,7 @@ pcmk__ticket_info(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
 {
     int rc = pcmk_rc_ok;
 
-    CRM_ASSERT(out != NULL && scheduler != NULL);
+    pcmk__assert((out != NULL) && (scheduler != NULL));
 
     if (ticket_id != NULL) {
         GHashTable *tickets = NULL;
@@ -379,7 +379,7 @@ pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *sche
     xmlNode *xml_top = NULL;
     int rc = pcmk_rc_ok;
 
-    CRM_ASSERT(out != NULL && cib != NULL && scheduler != NULL);
+    pcmk__assert((out != NULL) && (cib != NULL) && (scheduler != NULL));
 
     if (ticket_id == NULL) {
         return EINVAL;
@@ -451,7 +451,7 @@ pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *schedul
     xmlNode *xml_top = NULL;
     int rc = pcmk_rc_ok;
 
-    CRM_ASSERT(out != NULL && cib != NULL && scheduler != NULL);
+    pcmk__assert((out != NULL) && (cib != NULL) && (scheduler != NULL));
 
     if (ticket_id == NULL) {
         return EINVAL;
@@ -518,7 +518,7 @@ pcmk__ticket_state(pcmk__output_t *out, cib_t *cib, const char *ticket_id)
     xmlNode *state_xml = NULL;
     int rc = pcmk_rc_ok;
 
-    CRM_ASSERT(out != NULL && cib != NULL);
+    pcmk__assert((out != NULL) && (cib != NULL));
 
     rc = pcmk__get_ticket_state(cib, ticket_id, &state_xml);
 

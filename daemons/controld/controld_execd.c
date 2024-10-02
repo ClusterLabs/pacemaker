@@ -298,7 +298,7 @@ lrm_op_callback(lrmd_event_data_t * op)
                 lrm_state_t *lrm_state =
                     controld_get_executor_state(op_node_name(op), false);
 
-                CRM_ASSERT(lrm_state != NULL);
+                pcmk__assert(lrm_state != NULL);
                 process_lrm_event(lrm_state, op, NULL, NULL);
             }
             break;
@@ -1416,7 +1416,7 @@ do_lrm_invoke(long long action,
                                 "Local node has no connection to remote");
         return;
     }
-    CRM_ASSERT(lrm_state != NULL);
+    pcmk__assert(lrm_state != NULL);
 
     user_name = pcmk__update_acl_user(input->msg, PCMK__XA_CRM_USER, NULL);
     crm_op = crm_element_value(input->msg, PCMK__XA_CRM_TASK);
@@ -1586,7 +1586,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
 
     const char *transition = NULL;
 
-    CRM_ASSERT(rsc_id && operation);
+    pcmk__assert((rsc_id != NULL) && (operation != NULL));
 
     op = lrmd_new_event(rsc_id, operation, 0);
     op->type = lrmd_event_exec_complete;
@@ -1721,7 +1721,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     CRM_CHECK(op != NULL, return);
     if (op->rsc_id == NULL) {
         // op->rsc_id is a (const char *) but lrmd_free_event() frees it
-        CRM_ASSERT(rsc_id != NULL);
+        pcmk__assert(rsc_id != NULL);
         op->rsc_id = pcmk__str_copy(rsc_id);
     }
     if (to_sys == NULL) {

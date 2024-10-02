@@ -170,7 +170,7 @@ file_get_op_function(const cib__operation_t *operation)
 {
     enum cib__op_type type = operation->type;
 
-    CRM_ASSERT(type >= 0);
+    pcmk__assert(type >= 0);
 
     if (type >= PCMK__NELEM(cib_op_functions)) {
         return NULL;
@@ -217,7 +217,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     cib__op_fn_t op_function = NULL;
 
     int call_id = 0;
-    int call_options = cib_none;
+    uint32_t call_options = cib_none;
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
     xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
@@ -236,7 +236,11 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     op_function = file_get_op_function(operation);
 
     crm_element_value_int(request, PCMK__XA_CIB_CALLID, &call_id);
-    crm_element_value_int(request, PCMK__XA_CIB_CALLOPT, &call_options);
+    rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
+                            cib_none);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+    }
 
     read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);
 
@@ -747,7 +751,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     char *local_sigfile = NULL;
     xmlNode *local_root = NULL;
 
-    CRM_ASSERT(filename != NULL);
+    pcmk__assert(filename != NULL);
     if (root) {
         *root = NULL;
     }
@@ -803,7 +807,7 @@ static int
 cib_file_backup(const char *cib_dirname, const char *cib_filename)
 {
     int rc = 0;
-    unsigned int seq;
+    unsigned int seq = 0U;
     char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);
     char *cib_digest = crm_strdup_printf("%s.sig", cib_path);
     char *backup_path;
@@ -813,7 +817,7 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
     if (pcmk__read_series_sequence(cib_dirname, CIB_SERIES,
                                    &seq) != pcmk_rc_ok) {
         // @TODO maybe handle errors better ...
-        seq = 0;
+        seq = 0U;
     }
     backup_path = pcmk__series_filename(cib_dirname, CIB_SERIES, seq,
                                         CIB_SERIES_BZIP);
@@ -983,7 +987,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
 
     /* Calculate CIB digest */
     digest = pcmk__digest_on_disk_cib(cib_root);
-    CRM_ASSERT(digest != NULL);
+    pcmk__assert(digest != NULL);
     crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
              (admin_epoch ? admin_epoch : "0"), (epoch ? epoch : "0"), digest);
 
@@ -1016,7 +1020,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     crm_info("Reading cluster configuration file %s (digest: %s)",
              tmp_cib, tmp_digest);
     rc = cib_file_read_and_verify(tmp_cib, tmp_digest, NULL);
-    CRM_ASSERT(rc == 0);
+    pcmk__assert(rc == 0);
 
     /* Rename temporary files to live, and sync directory changes to media */
     crm_debug("Activating %s", tmp_cib);

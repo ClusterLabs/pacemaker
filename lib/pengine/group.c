@@ -307,7 +307,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
                                           PCMK_XA_DESCRIPTION, desc,
                                           NULL);
             free(count);
-            CRM_ASSERT(rc == pcmk_rc_ok);
+            pcmk__assert(rc == pcmk_rc_ok);
         }
 
         out->message(out, (const char *) child_rsc->priv->xml->name,
@@ -391,7 +391,7 @@ group_free(pcmk_resource_t * rsc)
 
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
-        CRM_ASSERT(child_rsc);
+        pcmk__assert(child_rsc != NULL);
         pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
         child_rsc->priv->fns->free(child_rsc);
     }
@@ -466,6 +466,6 @@ pe__group_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
 unsigned int
 pe__group_max_per_node(const pcmk_resource_t *rsc)
 {
-    CRM_ASSERT(pcmk__is_group(rsc));
+    pcmk__assert(pcmk__is_group(rsc));
     return 1U;
 }

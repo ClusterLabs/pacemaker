@@ -436,7 +436,7 @@ process_graph_event(xmlNode *event, const char *event_node)
     const char *magic = NULL;
     const char *uname = NULL;
 
-    CRM_ASSERT(event != NULL);
+    pcmk__assert(event != NULL);
 
 /*
 <lrm_rsc_op id="rsc_east-05_last_0" operation_key="rsc_east-05_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" transition-magic="0:7;9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" call-id="17" rc-code="7" op-status="0" interval="0" last-rc-change="1355361636" exec-time="128" queue-time="0" op-digest="c81f5f40b1c9e859c992e800b1aa6972"/>

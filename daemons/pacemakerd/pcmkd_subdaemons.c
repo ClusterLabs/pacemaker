@@ -464,7 +464,7 @@ start_child(pcmk_child_t * child)
     }
 
     child->pid = fork();
-    CRM_ASSERT(child->pid != -1);
+    pcmk__assert(child->pid != -1);
 
     if (child->pid > 0) {
         /* parent */

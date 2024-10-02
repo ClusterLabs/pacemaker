@@ -409,9 +409,17 @@ behave and can be easily set using the ``--meta`` option of the
        failure-timeout
      - :ref:`duration <duration>`
      - 0
-     - How many seconds to wait before acting as if the failure had not
-       occurred, and potentially allowing the resource back to the node on which
-       it failed. A value of 0 indicates that this feature is disabled.
+     - Ignore previously failed resource actions after this much time has
+       passed without new failures (potentially allowing the resource back to
+       the node on which it failed, if it previously reached its
+       ``migration-threshold`` there). A value of 0 indicates that failures do
+       not expire. **WARNING:** If this value is low, and pending cluster
+       activity prevents the cluster from responding to a failure within that
+       time, then the failure will be ignored completely and will not cause
+       recovery of the resource, even if a recurring action continues to report
+       failure. It should be at least greater than the longest :ref:`action
+       timeout <op_timeout>` for all resources in the cluster. A value in hours
+       or days is reasonable.
 
    * - .. _meta_multiple_active:
        
