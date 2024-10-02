@@ -7,9 +7,8 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/python.mk
-
-MAINTAINERCLEANFILES    = Makefile.in
 
 # Commands intended to be run only via other commands
 halibdir		= $(CRM_DAEMON_DIR)

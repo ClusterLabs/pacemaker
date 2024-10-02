@@ -7,9 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-AM_CPPFLAGS = -I$(top_builddir)/include		\
-	      -I$(top_srcdir)/include		\
-	      -I$(top_srcdir)/lib/common
+AM_CPPFLAGS += -I$(top_srcdir)/lib/common
 
 AM_CFLAGS = -DPCMK__UNIT_TESTING
 # Add -fno-builtin and -fno-inline to allow mocking realloc.

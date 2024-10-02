@@ -1,5 +1,5 @@
 #
-# Copyright 2019-2023 the Pacemaker project contributors
+# Copyright 2019-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -9,6 +9,7 @@
 
 # Define release-related variables
 include $(abs_srcdir)/../mk/release.mk
+include $(top_srcdir)/mk/common.mk
 
 noinst_SCRIPTS		= bumplibs
 EXTRA_DIST		= README

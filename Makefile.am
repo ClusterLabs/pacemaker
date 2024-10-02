@@ -7,6 +7,8 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+include $(top_srcdir)/mk/common.mk
+
 # This directory must be same as in configure.ac's AC_CONFIG_MACRO_DIR
 ACLOCAL_AMFLAGS		= -I m4
 
@@ -22,8 +24,7 @@ EXTRA_DIST		= CONTRIBUTING.md		\
 
 DISTCLEANFILES		= config.status
 
-MAINTAINERCLEANFILES	= Makefile.in	\
-			  aclocal.m4	\
+MAINTAINERCLEANFILES	+= aclocal.m4	\
 			  config.guess	\
 			  config.sub	\
 			  configure	\

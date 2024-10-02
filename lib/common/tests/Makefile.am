@@ -7,6 +7,8 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+include $(top_srcdir)/mk/common.mk
+
 SUBDIRS = \
 	acl		\
 	actions		\

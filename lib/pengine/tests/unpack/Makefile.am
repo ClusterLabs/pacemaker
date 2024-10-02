@@ -1,5 +1,5 @@
 #
-# Copyright 2022 the Pacemaker project contributors
+# Copyright 2022-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -7,6 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
