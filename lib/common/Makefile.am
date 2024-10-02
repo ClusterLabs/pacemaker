@@ -8,9 +8,6 @@
 #
 include $(top_srcdir)/mk/common.mk
 
-AM_CPPFLAGS += -I$(top_builddir)/lib/gnu \
-	       -I$(top_srcdir)/lib/gnu
-
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la
 check_LTLIBRARIES = libcrmcommon_test.la
