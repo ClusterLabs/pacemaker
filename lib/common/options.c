@@ -272,18 +272,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "SBD without requiring a fencing resource explicitly configured."),
     },
     {
-        /* @COMPAT Currently, unparsable values default to -1 (auto-calculate),
-         * while missing values default to 0 (disable). All values are accepted
-         * (unless the controller finds that the value conflicts with the
-         * SBD_WATCHDOG_TIMEOUT).
-         *
-         * At a compatibility break: properly validate as a timeout, let
-         * either negative values or a particular string like "auto" mean auto-
-         * calculate, and use 0 as the single default for when the option either
-         * is unset or fails to validate.
-         */
-        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, PCMK_VALUE_TIMEOUT, NULL,
-        "0", NULL,
+        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
+        "0", pcmk__valid_interval_spec,
         pcmk__opt_controld,
         N_("How long before nodes can be assumed to be safely down when "
            "watchdog-based self-fencing via SBD is in use"),
@@ -292,16 +282,11 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "time. This does not require a fencing resource to be explicitly "
            "configured, though a fence_watchdog resource can be configured, to "
            "limit use to specific nodes. If this is set to 0 (the default), "
-           "the cluster will never assume watchdog-based self-fencing. If this "
-           "is set to a negative value, the cluster will use twice the local "
-           "value of the `SBD_WATCHDOG_TIMEOUT` environment variable if that "
-           "is positive, or otherwise treat this as 0. WARNING: When used, "
-           "this timeout must be larger than `SBD_WATCHDOG_TIMEOUT` on all "
-           "nodes that use watchdog-based SBD, and Pacemaker will refuse to "
-           "start on any of those nodes where this is not true for the local "
-           "value or SBD is not active. When this is set to a negative value, "
-           "`SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes "
-           "that use SBD, otherwise data corruption or loss could occur."),
+           "the cluster will never assume watchdog-based self-fencing. "
+           "WARNING: When used, this timeout must be larger than "
+           "`SBD_WATCHDOG_TIMEOUT` on all nodes that use watchdog-based SBD, "
+           "and Pacemaker will refuse to start on any of those nodes where "
+           "this is not true for the local value or SBD is not active."),
     },
     {
         PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, PCMK_VALUE_SCORE, NULL,

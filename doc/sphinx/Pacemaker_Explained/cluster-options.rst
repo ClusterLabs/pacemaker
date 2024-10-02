@@ -572,7 +572,7 @@ values, by running the ``man pacemaker-schedulerd`` and
           pair: cluster option; stonith-watchdog-timeout
       
        stonith-watchdog-timeout
-     - :ref:`timeout <timeout>`
+     - :ref:`duration <duration>`
      - 0
      - If nonzero, and the cluster detects ``have-watchdog`` as ``true``, then
        watchdog-based self-fencing will be performed via SBD when fencing is
@@ -588,16 +588,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        If this is set to 0 (the default), the cluster will never assume
        watchdog-based self-fencing.
 
-       If this is set to a negative value, the cluster will use twice the local
-       value of the ``SBD_WATCHDOG_TIMEOUT`` environment variable if that is
-       positive, or otherwise treat this as 0.
-       
        **Warning:** When used, this timeout must be larger than
        ``SBD_WATCHDOG_TIMEOUT`` on all nodes that use watchdog-based SBD, and
        Pacemaker will refuse to start on any of those nodes where this is not
-       true for the local value or SBD is not active. When this is set to a
-       negative value, ``SBD_WATCHDOG_TIMEOUT`` must be set to the same value
-       on all nodes that use SBD, otherwise data corruption or loss could occur.
+       true for the local value or SBD is not active.
        
    * - .. _concurrent-fencing:
       
