@@ -272,6 +272,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     scheduler->priv->fence_action =
         pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_ACTION);
     if (!strcmp(scheduler->priv->fence_action, PCMK__ACTION_POWEROFF)) {
+        // @COMPAT Not possible with schema validation enabled
         pcmk__warn_once(pcmk__wo_poweroff,
                         "Support for " PCMK_OPT_STONITH_ACTION " of "
                         "'" PCMK__ACTION_POWEROFF "' is deprecated and will be "
@@ -381,6 +382,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     value = pcmk__cluster_option(config_hash, PCMK__OPT_REMOVE_AFTER_STOP);
     if (value != NULL) {
+        // @COMPAT Not possible with schema validation enabled
         if (crm_is_true(value)) {
             pcmk__set_scheduler_flags(scheduler, pcmk__sched_remove_after_stop);
             pcmk__warn_once(pcmk__wo_remove_after,

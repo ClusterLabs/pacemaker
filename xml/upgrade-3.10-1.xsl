@@ -15,6 +15,15 @@
    "cib-bootstrap-options" always sorts first relative to its siblings.
  * Each nvpair has a value attribute. If an nvpair did not have a value
    attribute prior to this transformation, it is dropped.
+ * The crmd-finalization-timeout cluster property has been renamed to
+   "join-finalization-timeout".
+ * The crmd-integration-timeout cluster property has been renamed to
+   "join-integration-timeout".
+ * The crmd-transition-delay cluster property has been renamed to
+   "transition-delay".
+ * The remove-after-stop cluster property is not present.
+ * The stonith-action cluster property is set to "off" if it was previously set
+   to "poweroff".
 
  nvset elements include the following:
  * cluster_property_set
@@ -113,5 +122,35 @@
 
 <!-- Drop any nvpair that does not have a value attribute -->
 <xsl:template match="nvpair[not(@value)]"/>
+
+
+<!-- Cluster properties -->
+
+<!-- Rename crmd-finalization-timeout property to join-finalization-timeout -->
+<xsl:template match="cluster_property_set
+                     /nvpair[@name = 'crmd-finalization-timeout']/@name">
+    <xsl:attribute name="name">join-finalization-timeout</xsl:attribute>
+</xsl:template>
+
+<!-- Rename crmd-integration-timeout property to join-integration-timeout -->
+<xsl:template match="cluster_property_set
+                     /nvpair[@name = 'crmd-integration-timeout']/@name">
+    <xsl:attribute name="name">join-integration-timeout</xsl:attribute>
+</xsl:template>
+
+<!-- Rename crmd-transition-delay property to transition-delay -->
+<xsl:template match="cluster_property_set
+                     /nvpair[@name = 'crmd-transition-delay']/@name">
+    <xsl:attribute name="name">transition-delay</xsl:attribute>
+</xsl:template>
+
+<!-- Drop remove-after-stop property -->
+<xsl:template match="cluster_property_set/nvpair[@name = 'remove-after-stop']"/>
+
+<!-- Replace stonith-action="poweroff" with stonith-action="off" -->
+<xsl:template match="cluster_property_set/nvpair[@name = 'stonith-action']
+                     /@value[. = 'poweroff']">
+    <xsl:attribute name="value">off</xsl:attribute>
+</xsl:template>
 
 </xsl:stylesheet>
