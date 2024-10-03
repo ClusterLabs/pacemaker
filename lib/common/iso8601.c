@@ -1765,18 +1765,23 @@ crm_time_compare(const crm_time_t *a, const crm_time_t *b)
 void
 crm_time_add_seconds(crm_time_t *a_time, int extra)
 {
-    int days = 0;
+    int days = extra / DAY_SECONDS;
 
-    crm_trace("Adding %d seconds to %d (max=%d)",
-              extra, a_time->seconds, DAY_SECONDS);
-    a_time->seconds += extra;
-    days = a_time->seconds / DAY_SECONDS;
-    a_time->seconds %= DAY_SECONDS;
+    pcmk__assert(a_time != NULL);
 
-    // Don't have negative seconds
-    if (a_time->seconds < 0) {
-        a_time->seconds += DAY_SECONDS;
+    crm_trace("Adding %d seconds (including %d whole day%s) to %d",
+              extra, days, pcmk__plural_s(days), a_time->seconds);
+
+    a_time->seconds += extra % DAY_SECONDS;
+
+    // Check whether the addition crossed a day boundary
+    if (a_time->seconds > DAY_SECONDS) {
+        ++days;
+        a_time->seconds -= DAY_SECONDS;
+
+    } else if (a_time->seconds < 0) {
         --days;
+        a_time->seconds += DAY_SECONDS;
     }
 
     crm_time_add_days(a_time, days);
