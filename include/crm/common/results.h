@@ -375,11 +375,11 @@ static inline const char *
 pcmk_exec_status_str(enum pcmk_exec_status status)
 {
     switch (status) {
-        case PCMK_EXEC_PENDING:         return "pending";
-        case PCMK_EXEC_DONE:            return "complete";
+        case PCMK_EXEC_PENDING:         return "Pending";
+        case PCMK_EXEC_DONE:            return "Done";
         case PCMK_EXEC_CANCELLED:       return "Cancelled";
-        case PCMK_EXEC_TIMEOUT:         return "Timed Out";
-        case PCMK_EXEC_NOT_SUPPORTED:   return "NOT SUPPORTED";
+        case PCMK_EXEC_TIMEOUT:         return "Timed out";
+        case PCMK_EXEC_NOT_SUPPORTED:   return "Unsupported";
         case PCMK_EXEC_ERROR:           return "Error";
         case PCMK_EXEC_ERROR_HARD:      return "Hard error";
         case PCMK_EXEC_ERROR_FATAL:     return "Fatal error";
@@ -388,7 +388,7 @@ pcmk_exec_status_str(enum pcmk_exec_status status)
         case PCMK_EXEC_INVALID:         return "Cannot execute now";
         case PCMK_EXEC_NO_FENCE_DEVICE: return "No fence device";
         case PCMK_EXEC_NO_SECRETS:      return "CIB secrets unavailable";
-        default:                        return "UNKNOWN!";
+        default:                        return "Unrecognized status (bug?)";
     }
 }
 

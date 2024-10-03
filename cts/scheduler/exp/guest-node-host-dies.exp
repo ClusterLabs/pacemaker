@@ -610,7 +610,7 @@
   <synapse id="37">
     <action_set>
       <pseudo_event id="40" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2">
-        <attributes CRM_meta_master_lxc_ms="5" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="lxc2"/>
         </downed>
@@ -625,7 +625,7 @@
   <synapse id="38">
     <action_set>
       <pseudo_event id="39" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1">
-        <attributes CRM_meta_master_lxc_ms="10" CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="lxc1"/>
         </downed>
@@ -640,7 +640,7 @@
   <synapse id="39">
     <action_set>
       <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1">
-        <attributes CRM_meta_connected="1" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_shutdown="0" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="1"/>
           <node id="lxc2"/>

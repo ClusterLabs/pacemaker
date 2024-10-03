@@ -1630,7 +1630,7 @@
   <synapse id="90">
     <action_set>
       <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2">
-        <attributes CRM_meta_master_bundled="5" CRM_meta_on_node="stateful-bundle-2" CRM_meta_on_node_uuid="stateful-bundle-2" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="stateful-bundle-2" CRM_meta_on_node_uuid="stateful-bundle-2" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="stateful-bundle-2"/>
         </downed>
@@ -1645,7 +1645,7 @@
   <synapse id="91">
     <action_set>
       <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0">
-        <attributes CRM_meta_master_bundled="10" CRM_meta_on_node="stateful-bundle-0" CRM_meta_on_node_uuid="stateful-bundle-0" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="stateful-bundle-0" CRM_meta_on_node_uuid="stateful-bundle-0" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="stateful-bundle-0"/>
         </downed>
@@ -1660,7 +1660,7 @@
   <synapse id="92">
     <action_set>
       <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2">
-        <attributes CRM_meta_master_lxc_ms="10" CRM_meta_master_rsc1="5" CRM_meta_master_rsc2="5" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="lxc2"/>
         </downed>
@@ -1791,7 +1791,7 @@
   <synapse id="101">
     <action_set>
       <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2">
-        <attributes CRM_meta_master_rsc1="5" CRM_meta_master_rsc2="10" CRM_meta_on_node="remote-rhel7-2" CRM_meta_on_node_uuid="remote-rhel7-2" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="remote-rhel7-2" CRM_meta_on_node_uuid="remote-rhel7-2" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="remote-rhel7-2"/>
         </downed>
@@ -1802,7 +1802,7 @@
   <synapse id="102">
     <action_set>
       <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4">
-        <attributes CRM_meta_master_rsc1="10" CRM_meta_master_rsc2="10" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="4"/>
           <node id="stateful-bundle-2"/>

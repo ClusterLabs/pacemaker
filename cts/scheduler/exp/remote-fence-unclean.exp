@@ -164,7 +164,7 @@
   <synapse id="12">
     <action_set>
       <crm_event id="5" operation="stonith" operation_key="stonith-remote1-reboot" on_node="remote1" on_node_uuid="remote1">
-        <attributes CRM_meta_on_node="remote1" CRM_meta_on_node_uuid="remote1" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="remote1" CRM_meta_on_node_uuid="remote1" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="remote1"/>
         </downed>

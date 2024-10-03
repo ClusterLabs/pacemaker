@@ -774,26 +774,13 @@ create_shadow_from_cib(pcmk__output_t *out, bool reset, GError **error)
 
     if (!options.force) {
         if (reset) {
-            /* @COMPAT: Reset is dangerous to the shadow file, but to preserve
-             * compatibility we can't require --force unless there's a mismatch.
-             * At a compatibility break, call set_danger_error() with for_shadow
-             * and show_mismatch set to true.
-             */
-            const char *local = getenv("CIB_shadow");
+            const char *reason = "The reset command overwrites the active "
+                                 "shadow configuration";
 
-            if (!pcmk__str_eq(local, options.instance, pcmk__str_null_matches)) {
-                exit_code = CRM_EX_USAGE;
-                g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                            "The supplied shadow instance (%s) is not the same "
-                            "as the active one (%s).\n"
-                            "To prevent accidental destruction of the shadow "
-                            "file, the --force flag is required in order to "
-                            "proceed.",
-                            options.instance, local);
-                goto done;
-            }
+            exit_code = CRM_EX_USAGE;
+            set_danger_error(reason, true, true, error);
+            goto done;
         }
-
         if (check_file_exists(filename, reset, error) != pcmk_rc_ok) {
             goto done;
         }
@@ -1132,7 +1119,7 @@ static GOptionEntry command_entries[] = {
 
     { "reset", 'r', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
       "Recreate named shadow copy from the active cluster configuration",
-      "name" },
+      "name. Required: --force." },
 
     { "switch", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Switch to the named shadow copy", "name" },

@@ -1592,7 +1592,7 @@
   <synapse id="113">
     <action_set>
       <pseudo_event id="220" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0">
-        <attributes CRM_meta_master_redis="1" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_stonith_action="off" />
+        <attributes CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_stonith_action="off" />
         <downed>
           <node id="redis-bundle-0"/>
         </downed>
@@ -1607,7 +1607,7 @@
   <synapse id="114">
     <action_set>
       <pseudo_event id="215" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0">
-        <attributes CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_rmq_node_attr_last_known_rabbitmq="rabbit@controller-0" CRM_meta_stonith_action="off" />
+        <attributes CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_stonith_action="off" />
         <downed>
           <node id="rabbitmq-bundle-0"/>
         </downed>
@@ -1854,7 +1854,7 @@
   <synapse id="134">
     <action_set>
       <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1">
-        <attributes CRM_meta_cinder_volume_role="true" CRM_meta_galera_role="true" CRM_meta_haproxy_role="true" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_rabbitmq_role="true" CRM_meta_redis_role="true" CRM_meta_rmq_node_attr_last_known_rabbitmq="rabbit@controller-0" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="1"/>
           <node id="redis-bundle-0"/>

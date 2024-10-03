@@ -1418,7 +1418,7 @@ do_lrm_invoke(long long action,
     }
     pcmk__assert(lrm_state != NULL);
 
-    user_name = pcmk__update_acl_user(input->msg, PCMK__XA_CRM_USER, NULL);
+    user_name = pcmk__update_acl_user(input->msg, NULL);
     crm_op = crm_element_value(input->msg, PCMK__XA_CRM_TASK);
     from_sys = crm_element_value(input->msg, PCMK__XA_CRM_SYS_FROM);
     if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
@@ -2132,7 +2132,7 @@ log_executor_event(const lrmd_event_data_t *op, const char *op_key,
     switch (op->op_status) {
         case PCMK_EXEC_DONE:
             log_level = LOG_NOTICE;
-            pcmk__g_strcat(str, ": ", services_ocf_exitcode_str(op->rc), NULL);
+            pcmk__g_strcat(str, ": ", crm_exit_str((crm_exit_t) op->rc), NULL);
             break;
 
         case PCMK_EXEC_TIMEOUT:

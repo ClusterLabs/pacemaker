@@ -646,7 +646,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
               "(%d) status=%s (%d)",
               (op->op_type? op->op_type : ""), (op->op_type? " " : ""),
               lrmd_event_type2str(op->type), op->remote_nodename,
-              services_ocf_exitcode_str(op->rc), op->rc,
+              crm_exit_str((crm_exit_t) op->rc), op->rc,
               pcmk_exec_status_str(op->op_status), op->op_status);
 
     lrm_state = controld_get_executor_state(op->remote_nodename, false);

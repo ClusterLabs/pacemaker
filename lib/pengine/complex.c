@@ -162,6 +162,15 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
     return ;
 
 }
+
+/*
+ * \brief Get fully evaluated resource meta-attributes
+ *
+ * \param[in,out] meta_hash  Where to store evaluated meta-attributes
+ * \param[in]     rsc        Resource to get meta-attributes for
+ * \param[in]     node       Ignored
+ * \param[in,out] scheduler  Scheduler data
+ */
 void
 get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
                     pcmk_node_t *node, pcmk_scheduler_t *scheduler)
@@ -179,14 +188,6 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
         .rsc_data = &rsc_rule_data,
         .op_data = NULL
     };
-
-    if (node) {
-        /* @COMPAT Support for node attribute expressions in rules for
-         * meta-attributes is deprecated. When we can break behavioral backward
-         * compatibility, drop this block.
-         */
-        rule_data.node_hash = node->priv->attrs;
-    }
 
     for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->priv->xml);
          a != NULL; a = a->next) {

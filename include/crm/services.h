@@ -357,39 +357,12 @@ gboolean services_alert_async(svc_action_t *action,
 enum ocf_exitcode services_result2ocf(const char *standard, const char *action,
                                       int exit_status);
 
-    static inline const char *services_ocf_exitcode_str(enum ocf_exitcode code) {
-        switch (code) {
-            case PCMK_OCF_OK:
-                return "ok";
-            case PCMK_OCF_UNKNOWN_ERROR:
-                return "error";
-            case PCMK_OCF_INVALID_PARAM:
-                return "invalid parameter";
-            case PCMK_OCF_UNIMPLEMENT_FEATURE:
-                return "unimplemented feature";
-            case PCMK_OCF_INSUFFICIENT_PRIV:
-                return "insufficient privileges";
-            case PCMK_OCF_NOT_INSTALLED:
-                return "not installed";
-            case PCMK_OCF_NOT_CONFIGURED:
-                return "not configured";
-            case PCMK_OCF_NOT_RUNNING:
-                return "not running";
-            case PCMK_OCF_RUNNING_PROMOTED:
-                return "promoted";
-            case PCMK_OCF_FAILED_PROMOTED:
-                return "promoted (failed)";
-            case PCMK_OCF_DEGRADED:
-                return "OCF_DEGRADED";
-            case PCMK_OCF_DEGRADED_PROMOTED:
-                return "promoted (degraded)";
-            default:
-                return "unknown";
-        }
-    }
-
 #  ifdef __cplusplus
 }
 #  endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/services_compat.h>
+#endif
 
 #endif                          /* __PCMK_SERVICES__ */

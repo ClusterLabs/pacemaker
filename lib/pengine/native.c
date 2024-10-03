@@ -557,8 +557,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 
             pcmk__scan_min_int(crm_element_value(probe_op, PCMK__XA_RC_CODE),
                                &rc, 0);
-            pcmk__g_strcat(outstr, " (", services_ocf_exitcode_str(rc), ") ",
-                           NULL);
+            pcmk__g_strcat(outstr, " (", crm_exit_str(rc), ") ", NULL);
         }
     }
 

@@ -543,7 +543,7 @@
   <synapse id="40">
     <action_set>
       <crm_event id="1" operation="stonith" operation_key="stonith-controller-1-reboot" on_node="controller-1" on_node_uuid="2">
-        <attributes CRM_meta_cinder_volume_role="true" CRM_meta_haproxy_role="true" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_redis_role="true" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="2"/>
         </downed>

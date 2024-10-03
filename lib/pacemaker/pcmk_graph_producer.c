@@ -372,17 +372,6 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
         }
 
         pcmk__add_guest_meta_to_xml(args_xml, action);
-
-    } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)
-               && (action->node != NULL)) {
-        /* Pass the node's attributes as meta-attributes.
-         *
-         * @TODO: Determine whether it is still necessary to do this. It was
-         * added in 33d99707, probably for the libfence-based implementation in
-         * c9a90bd, which is no longer used.
-         */
-        g_hash_table_foreach(action->node->priv->attrs, hash2metafield,
-                             args_xml);
     }
 
     pcmk__xe_sort_attrs(args_xml);

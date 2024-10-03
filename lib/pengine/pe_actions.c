@@ -698,13 +698,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     };
 
     pe_rule_eval_data_t rule_data = {
-        /* @COMPAT Support for node attribute expressions in operation
-         * meta-attributes (whether in the operation configuration or operation
-         * defaults) is deprecated. When we can break behavioral backward
-         * compatibility, drop this line.
+        /* Node attributes are not set because node expressions are not allowed
+         * for meta-attributes
          */
-        .node_hash = (node == NULL)? NULL : node->priv->attrs,
-
         .now = rsc->priv->scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,

@@ -862,7 +862,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                                                              PCMK__XA_RC_CODE),
                                            &rc, 0);
                         g_hash_table_insert(stopped, strdup(node->priv->name),
-                                            crm_strdup_printf("Stopped (%s)", services_ocf_exitcode_str(rc)));
+                                            crm_strdup_printf("Stopped (%s)",
+                                                              crm_exit_str(rc)));
                     } else {
                         pcmk__insert_dup(stopped, node->priv->name, state);
                     }

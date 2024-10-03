@@ -3646,7 +3646,7 @@ unpack_rsc_op_failure(struct action_history *history,
         && (history->exit_status == PCMK_OCF_NOT_INSTALLED)) {
         crm_trace("Unexpected result (%s%s%s) was recorded for "
                   "%s of %s on %s at %s " QB_XS " exit-status=%d id=%s",
-                  services_ocf_exitcode_str(history->exit_status),
+                  crm_exit_str(history->exit_status),
                   (pcmk__str_empty(history->exit_reason)? "" : ": "),
                   pcmk__s(history->exit_reason, ""),
                   (is_probe? "probe" : history->task), history->rsc->id,
@@ -3656,7 +3656,7 @@ unpack_rsc_op_failure(struct action_history *history,
         pcmk__sched_warn(scheduler,
                          "Unexpected result (%s%s%s) was recorded for %s of "
                          "%s on %s at %s " QB_XS " exit-status=%d id=%s",
-                         services_ocf_exitcode_str(history->exit_status),
+                         crm_exit_str(history->exit_status),
                          (pcmk__str_empty(history->exit_reason)? "" : ": "),
                          pcmk__s(history->exit_reason, ""),
                          (is_probe? "probe" : history->task), history->rsc->id,
@@ -3776,7 +3776,7 @@ block_if_unrecoverable(struct action_history *history)
                     QB_XS " rc=%d id=%s",
                     history->rsc->id, history->task,
                     pcmk__node_name(history->node),
-                    services_ocf_exitcode_str(history->exit_status),
+                    crm_exit_str(history->exit_status),
                     (pcmk__str_empty(history->exit_reason)? "" : ": "),
                     pcmk__s(history->exit_reason, ""),
                     last_change_s, history->exit_status, history->id);
@@ -3907,9 +3907,9 @@ remap_operation(struct action_history *history,
                         "%s on %s: expected %d (%s), got %d (%s%s%s)",
                         history->key, pcmk__node_name(history->node),
                         history->expected_exit_status,
-                        services_ocf_exitcode_str(history->expected_exit_status),
+                        crm_exit_str(history->expected_exit_status),
                         history->exit_status,
-                        services_ocf_exitcode_str(history->exit_status),
+                        crm_exit_str(history->exit_status),
                         (pcmk__str_empty(history->exit_reason)? "" : ": "),
                         pcmk__s(history->exit_reason, ""));
     }
@@ -4424,22 +4424,11 @@ update_resource_state(struct action_history *history, int exit_status,
 static inline bool
 can_affect_state(struct action_history *history)
 {
-#if 0
-    /* @COMPAT It might be better to parse only actions we know we're interested
-     * in, rather than exclude a couple we don't. However that would be a
-     * behavioral change that should be done at a major or minor series release.
-     * Currently, unknown operations can affect whether a resource is considered
-     * active and/or failed.
-     */
      return pcmk__str_any_of(history->task, PCMK_ACTION_MONITOR,
                              PCMK_ACTION_START, PCMK_ACTION_STOP,
                              PCMK_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
                              PCMK_ACTION_MIGRATE_TO, PCMK_ACTION_MIGRATE_FROM,
                              "asyncmon", NULL);
-#else
-     return !pcmk__str_any_of(history->task, PCMK_ACTION_NOTIFY,
-                              PCMK_ACTION_META_DATA, NULL);
-#endif
 }
 
 /*!
@@ -4566,7 +4555,7 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
     }
 
     crm_notice("Treating probe result '%s' for %s on %s as 'not running'",
-               services_ocf_exitcode_str(orig_exit_status), history->rsc->id,
+               crm_exit_str(orig_exit_status), history->rsc->id,
                pcmk__node_name(history->node));
     update_resource_state(history, history->expected_exit_status, last_failure,
                           on_fail);
@@ -4845,7 +4834,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
         crm_warn("Pretending failed %s (%s%s%s) of %s on %s at %s succeeded "
                  QB_XS " %s",
-                 history.task, services_ocf_exitcode_str(history.exit_status),
+                 history.task, crm_exit_str(history.exit_status),
                  (pcmk__str_empty(history.exit_reason)? "" : ": "),
                  pcmk__s(history.exit_reason, ""), rsc->id,
                  pcmk__node_name(node), last_change_s, history.id);
@@ -4877,7 +4866,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                        "Preventing %s from restarting on %s because "
                        "of hard failure (%s%s%s) " QB_XS " %s",
                        parent->id, pcmk__node_name(node),
-                       services_ocf_exitcode_str(history.exit_status),
+                       crm_exit_str(history.exit_status),
                        (pcmk__str_empty(history.exit_reason)? "" : ": "),
                        pcmk__s(history.exit_reason, ""), history.id);
             resource_location(parent, node, -PCMK_SCORE_INFINITY,
@@ -4887,8 +4876,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
             pcmk__sched_err(rsc->priv->scheduler,
                             "Preventing %s from restarting anywhere because "
                             "of fatal failure (%s%s%s) " QB_XS " %s",
-                            parent->id,
-                            services_ocf_exitcode_str(history.exit_status),
+                            parent->id, crm_exit_str(history.exit_status),
                             (pcmk__str_empty(history.exit_reason)? "" : ": "),
                             pcmk__s(history.exit_reason, ""), history.id);
             resource_location(parent, NULL, -PCMK_SCORE_INFINITY,

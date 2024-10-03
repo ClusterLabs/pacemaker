@@ -3937,33 +3937,33 @@ Set 'prim7' option: id=prim7-meta_attributes-target-role set=prim7-meta_attribut
 =#=#=#= End test: Show resource digests with overrides - OK (0) =#=#=#=
 * Passed: crm_resource          - Show resource digests with overrides
 =#=#=#= Begin test: Show resource operations =#=#=#=
-rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node4, call=136, rc=7, exec=28ms): complete
-Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node4, call=5, rc=7, exec=2ms): complete
-rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node2, call=101, rc=7, exec=45ms): complete
-Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node2, call=5, rc=7, exec=4ms): complete
-Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node3, call=5, rc=7, exec=24ms): complete
-rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node5, call=99, rc=193, exec=27ms): pending
-Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node5, call=5, rc=7, exec=14ms): complete
-rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_start_0 (node=node1, call=104, rc=0, exec=22ms): complete
-rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_10000 (node=node1, call=106, rc=0, exec=20ms): complete
-Fencing	(stonith:fence_xvm):	 Started: Fencing_start_0 (node=node1, call=10, rc=0, exec=59ms): complete
-Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_120000 (node=node1, call=12, rc=0, exec=70ms): complete
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node4, call=136, rc=7, exec=28ms): Done
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node4, call=5, rc=7, exec=2ms): Done
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node2, call=101, rc=7, exec=45ms): Done
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node2, call=5, rc=7, exec=4ms): Done
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node3, call=5, rc=7, exec=24ms): Done
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node5, call=99, rc=193, exec=27ms): Pending
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node5, call=5, rc=7, exec=14ms): Done
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_start_0 (node=node1, call=104, rc=0, exec=22ms): Done
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_10000 (node=node1, call=106, rc=0, exec=20ms): Done
+Fencing	(stonith:fence_xvm):	 Started: Fencing_start_0 (node=node1, call=10, rc=0, exec=59ms): Done
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_120000 (node=node1, call=12, rc=0, exec=70ms): Done
 =#=#=#= End test: Show resource operations - OK (0) =#=#=#=
 * Passed: crm_resource          - Show resource operations
 =#=#=#= Begin test: Show resource operations (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource --list-operations --output-as=xml">
   <operations>
-    <operation op="rsc1_monitor_0" node="node4" call="136" rc="7" status="complete" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="28"/>
-    <operation op="Fencing_monitor_0" node="node4" call="5" rc="7" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="2"/>
-    <operation op="rsc1_monitor_0" node="node2" call="101" rc="7" status="complete" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="45"/>
-    <operation op="Fencing_monitor_0" node="node2" call="5" rc="7" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="4"/>
-    <operation op="Fencing_monitor_0" node="node3" call="5" rc="7" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="24"/>
-    <operation op="rsc1_monitor_0" node="node5" call="99" rc="193" status="pending" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="27"/>
-    <operation op="Fencing_monitor_0" node="node5" call="5" rc="7" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="14"/>
-    <operation op="rsc1_start_0" node="node1" call="104" rc="0" status="complete" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="22"/>
-    <operation op="rsc1_monitor_10000" node="node1" call="106" rc="0" status="complete" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="20"/>
-    <operation op="Fencing_start_0" node="node1" call="10" rc="0" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="59"/>
-    <operation op="Fencing_monitor_120000" node="node1" call="12" rc="0" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="70"/>
+    <operation op="rsc1_monitor_0" node="node4" call="136" rc="7" status="Done" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="28"/>
+    <operation op="Fencing_monitor_0" node="node4" call="5" rc="7" status="Done" rsc="Fencing" agent="stonith::fence_xvm" exec-time="2"/>
+    <operation op="rsc1_monitor_0" node="node2" call="101" rc="7" status="Done" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="45"/>
+    <operation op="Fencing_monitor_0" node="node2" call="5" rc="7" status="Done" rsc="Fencing" agent="stonith::fence_xvm" exec-time="4"/>
+    <operation op="Fencing_monitor_0" node="node3" call="5" rc="7" status="Done" rsc="Fencing" agent="stonith::fence_xvm" exec-time="24"/>
+    <operation op="rsc1_monitor_0" node="node5" call="99" rc="193" status="Pending" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="27"/>
+    <operation op="Fencing_monitor_0" node="node5" call="5" rc="7" status="Done" rsc="Fencing" agent="stonith::fence_xvm" exec-time="14"/>
+    <operation op="rsc1_start_0" node="node1" call="104" rc="0" status="Done" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="22"/>
+    <operation op="rsc1_monitor_10000" node="node1" call="106" rc="0" status="Done" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="20"/>
+    <operation op="Fencing_start_0" node="node1" call="10" rc="0" status="Done" rsc="Fencing" agent="stonith::fence_xvm" exec-time="59"/>
+    <operation op="Fencing_monitor_120000" node="node1" call="12" rc="0" status="Done" rsc="Fencing" agent="stonith::fence_xvm" exec-time="70"/>
   </operations>
   <status code="0" message="OK"/>
 </pacemaker-result>

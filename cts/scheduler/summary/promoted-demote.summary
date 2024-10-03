@@ -7,13 +7,13 @@ Current cluster status:
     * cyrus_master	(ocf:heartbeat:cyrus-imap):	 Stopped
     * cyrus_syslogd	(ocf:heartbeat:syslogd):	 Stopped
     * cyrus_filesys	(ocf:heartbeat:Filesystem):	 Stopped
-    * cyrus_volgroup	(ocf:heartbeat:VolGroup):	 Stopped (not installed) 
+    * cyrus_volgroup	(ocf:heartbeat:VolGroup):	 Stopped (Not installed) 
     * Clone Set: cyrus_drbd [cyrus_drbd_node] (promotable):
       * Promoted: [ cxa1 ]
       * Unpromoted: [ cxb1 ]
     * named_address	(ocf:heartbeat:IPaddr2):	 Started cxa1
     * named_filesys	(ocf:heartbeat:Filesystem):	 Stopped
-    * named_volgroup	(ocf:heartbeat:VolGroup):	 Stopped (not installed) 
+    * named_volgroup	(ocf:heartbeat:VolGroup):	 Stopped (Not installed) 
     * named_daemon	(ocf:heartbeat:recursor):	 Stopped
     * named_syslogd	(ocf:heartbeat:syslogd):	 Stopped
     * Clone Set: named_drbd [named_drbd_node] (promotable):
@@ -52,13 +52,13 @@ Revised Cluster Status:
     * cyrus_master	(ocf:heartbeat:cyrus-imap):	 Stopped
     * cyrus_syslogd	(ocf:heartbeat:syslogd):	 Stopped
     * cyrus_filesys	(ocf:heartbeat:Filesystem):	 Stopped
-    * cyrus_volgroup	(ocf:heartbeat:VolGroup):	 Stopped (not installed) 
+    * cyrus_volgroup	(ocf:heartbeat:VolGroup):	 Stopped (Not installed) 
     * Clone Set: cyrus_drbd [cyrus_drbd_node] (promotable):
       * Promoted: [ cxa1 ]
       * Unpromoted: [ cxb1 ]
     * named_address	(ocf:heartbeat:IPaddr2):	 Started cxb1
     * named_filesys	(ocf:heartbeat:Filesystem):	 Stopped
-    * named_volgroup	(ocf:heartbeat:VolGroup):	 Stopped (not installed) 
+    * named_volgroup	(ocf:heartbeat:VolGroup):	 Stopped (Not installed) 
     * named_daemon	(ocf:heartbeat:recursor):	 Stopped
     * named_syslogd	(ocf:heartbeat:syslogd):	 Stopped
     * Clone Set: named_drbd [named_drbd_node] (promotable):

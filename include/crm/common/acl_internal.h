@@ -22,8 +22,7 @@ extern "C" {
 /* internal ACL-related utilities */
 
 char *pcmk__uid2username(uid_t uid);
-const char *pcmk__update_acl_user(xmlNode *request, const char *field,
-                                  const char *peer_user);
+const char *pcmk__update_acl_user(xmlNode *request, const char *peer_user);
 
 static inline bool
 pcmk__is_privileged(const char *user)
