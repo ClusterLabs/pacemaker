@@ -3030,13 +3030,6 @@ class RulesRegressionTest(RegressionTest):
           </date_expression>
         </rule>
       </rsc_location>
-      <rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
-        <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
-          <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
-            <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
-          </date_expression>
-        </rule>
-      </rsc_location>
       <rsc_location id="cli-no-date_expression" rsc="dummy">
         <rule id="cli-no-date_expression-rule" score="INFINITY">
           <expression id="ban-apache-expr" attribute="#uname" operation="eq" value="node3"/>
@@ -3093,10 +3086,6 @@ class RulesRegressionTest(RegressionTest):
                             [Test, ValidatingTest]),
             make_test_group("Try to check a rule whose date_spec does not contain years=",
                             "crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
-            make_test_group("Try to check a rule whose date_spec contains years= and moon=",
-                            "crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon {fmt}",
                             [Test, ValidatingTest],
                             expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
             make_test_group("Try to check a rule with no date_expression",

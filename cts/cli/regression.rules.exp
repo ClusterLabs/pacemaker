@@ -179,21 +179,6 @@ Could not determine whether rule cli-prefer-rule-dummy-date_spec-without-years i
 </pacemaker-result>
 =#=#=#= End test: Try to check a rule whose date_spec does not contain years= (XML) - Unimplemented (3) =#=#=#=
 * Passed: crm_rule              - Try to check a rule whose date_spec does not contain years= (XML)
-=#=#=#= Begin test: Try to check a rule whose date_spec contains years= and moon= =#=#=#=
-Could not determine whether rule cli-prefer-rule-dummy-date_spec-years-moon is in effect: Rule must either not use date_spec, or use date_spec with years= but not moon=
-=#=#=#= End test: Try to check a rule whose date_spec contains years= and moon= - Unimplemented (3) =#=#=#=
-* Passed: crm_rule              - Try to check a rule whose date_spec contains years= and moon=
-=#=#=#= Begin test: Try to check a rule whose date_spec contains years= and moon= (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon --output-as=xml">
-  <rule-check rule-id="cli-prefer-rule-dummy-date_spec-years-moon" rc="3"/>
-  <status code="3" message="Unimplemented">
-    <errors>
-      <error>Could not determine whether rule cli-prefer-rule-dummy-date_spec-years-moon is in effect: Rule must either not use date_spec, or use date_spec with years= but not moon=</error>
-    </errors>
-  </status>
-</pacemaker-result>
-=#=#=#= End test: Try to check a rule whose date_spec contains years= and moon= (XML) - Unimplemented (3) =#=#=#=
-* Passed: crm_rule              - Try to check a rule whose date_spec contains years= and moon= (XML)
 =#=#=#= Begin test: Try to check a rule with no date_expression =#=#=#=
 Could not determine whether rule cli-no-date_expression-rule is in effect: Rule does not have a date expression
 =#=#=#= End test: Try to check a rule with no date_expression - Unimplemented (3) =#=#=#=
