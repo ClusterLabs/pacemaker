@@ -31,7 +31,6 @@
         <operations>
           <op id="template1_monitor_20000" interval="20s" name="monitor">
             <meta_attributes id="template1_monitor_20000-meta_attributes">
-              <nvpair id="template_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="true"/>
               <nvpair id="template_monitor_20000-meta_attributes-other" name="other" value="true"/>
             </meta_attributes>
           </op>
@@ -41,7 +40,6 @@
         <operations>
           <op id="rsc1_monitor_20000" interval="20s" name="monitor">
             <meta_attributes id="rsc1_monitor_20000-meta_attributes">
-              <nvpair id="rsc1_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="false"/>
               <nvpair id="rsc1_monitor_20000-meta_attributes-other" name="other" value="false"/>
             </meta_attributes>
           </op>
@@ -61,7 +59,6 @@
           <operations>
             <op id="rsc2_monitor_20000" interval="20s" name="monitor">
               <meta_attributes id="rsc2_monitor_20000-meta_attributes">
-                <nvpair id="rsc2_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="true"/>
                 <nvpair id="rsc2_monitor_20000-meta_attributes-other" name="other" value="true"/>
               </meta_attributes>
             </op>
@@ -73,7 +70,6 @@
           <operations>
             <op id="rsc3_monitor_20000" interval="20s" name="monitor">
               <meta_attributes id="rsc3_monitor_20000-meta_attributes">
-                <nvpair id="rsc3_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="false"/>
                 <nvpair id="rsc3_monitor_20000-meta_attributes-other" name="other" value="false"/>
               </meta_attributes>
             </op>
@@ -86,7 +82,6 @@
             <operations>
               <op id="rsc4_monitor_20000" interval="20s" name="monitor">
                 <meta_attributes id="rsc4_monitor_20000-meta_attributes">
-                  <nvpair id="rsc4_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="true"/>
                   <nvpair id="rsc4_monitor_20000-meta_attributes-other" name="other" value="true"/>
                 </meta_attributes>
               </op>
@@ -100,7 +95,6 @@
           <operations>
             <op id="rsc5_monitor_20000" interval="20s" name="monitor">
               <meta_attributes id="rsc5_monitor_20000-meta_attributes">
-                <nvpair id="rsc5_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="false"/>
                 <nvpair id="rsc5_monitor_20000-meta_attributes-other" name="other" value="false"/>
               </meta_attributes>
             </op>
@@ -111,7 +105,6 @@
     <constraints/>
     <op_defaults>
       <meta_attributes id="op_defaults-meta_attributes">
-        <nvpair id="op_defaults-meta_attributes-role_after_failure" name="role_after_failure" value="true"/>
         <nvpair id="op_defaults-meta_attributes-other" name="other" value="true"/>
       </meta_attributes>
     </op_defaults>
