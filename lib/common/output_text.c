@@ -147,7 +147,6 @@ G_GNUC_PRINTF(2, 3)
 static void
 text_err(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
-    int len = 0;
 
     pcmk__assert(out != NULL);
 
@@ -156,8 +155,7 @@ text_err(pcmk__output_t *out, const char *format, ...) {
     /* Informational output does not get indented, to separate it from other
      * potentially indented list output.
      */
-    len = vfprintf(stderr, format, ap);
-    pcmk__assert(len >= 0);
+    vfprintf(stderr, format, ap);
     va_end(ap);
 
     /* Add a newline. */
@@ -168,7 +166,6 @@ G_GNUC_PRINTF(2, 3)
 static int
 text_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
-    int len = 0;
 
     pcmk__assert(out != NULL);
 
@@ -181,8 +178,7 @@ text_info(pcmk__output_t *out, const char *format, ...) {
     /* Informational output does not get indented, to separate it from other
      * potentially indented list output.
      */
-    len = vfprintf(out->dest, format, ap);
-    pcmk__assert(len >= 0);
+    vfprintf(out->dest, format, ap);
     va_end(ap);
 
     /* Add a newline. */
@@ -411,13 +407,9 @@ pcmk__output_text_set_fancy(pcmk__output_t *out, bool enabled)
 G_GNUC_PRINTF(2, 0)
 void
 pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
-    int len = 0;
-
     pcmk__assert(out != NULL);
     CRM_CHECK(pcmk__str_eq(out->fmt_name, "text", pcmk__str_none), return);
-
-    len = vfprintf(out->dest, format, args);
-    pcmk__assert(len >= 0);
+    vfprintf(out->dest, format, args);
 }
 
 G_GNUC_PRINTF(2, 3)
