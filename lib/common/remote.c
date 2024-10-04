@@ -628,6 +628,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         crm_err("Couldn't parse: '%.120s'", remote->buffer + header->payload_offset);
     }
 
+    crm_log_xml_trace(xml, "[remote msg]");
     return xml;
 }
 
