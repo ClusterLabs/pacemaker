@@ -284,6 +284,8 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
 
         if (target != NULL) {
             node = target;
+        } else if (node == NULL) {
+            node = "localhost";
         }
     }
 
