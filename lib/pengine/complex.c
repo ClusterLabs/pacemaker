@@ -882,23 +882,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_unique);
     }
 
-    // @COMPAT Deprecated meta-attribute
-    value = g_hash_table_lookup(rsc_private->meta, PCMK__META_RESTART_TYPE);
-    if (pcmk__str_eq(value, PCMK_VALUE_RESTART, pcmk__str_casei)) {
-        // @COMPAT Not possible with schema validation enabled
-        rsc_private->restart_type = pcmk__restart_restart;
-        pcmk__rsc_trace(*rsc, "%s dependency restart handling: restart",
-                        (*rsc)->id);
-        pcmk__warn_once(pcmk__wo_restart_type,
-                        "Support for " PCMK__META_RESTART_TYPE " is deprecated "
-                        "and will be removed in a future release");
-
-    } else {
-        rsc_private->restart_type = pcmk__restart_ignore;
-        pcmk__rsc_trace(*rsc, "%s dependency restart handling: ignore",
-                        (*rsc)->id);
-    }
-
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_MULTIPLE_ACTIVE);
     if (pcmk__str_eq(value, PCMK_VALUE_STOP_ONLY, pcmk__str_casei)) {
         rsc_private->multiply_active_policy = pcmk__multiply_active_stop;

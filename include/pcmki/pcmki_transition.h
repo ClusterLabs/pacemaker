@@ -65,9 +65,6 @@ enum pcmk__graph_action_flags {
     pcmk__graph_action_executed      = (1 << 1),     /* sent to the CRM */
     pcmk__graph_action_confirmed     = (1 << 2),
     pcmk__graph_action_failed        = (1 << 3),
-
-    //! \deprecated Will be removed in a future release
-    pcmk__graph_action_can_fail      = (1 << 4),
 };
 
 typedef struct {

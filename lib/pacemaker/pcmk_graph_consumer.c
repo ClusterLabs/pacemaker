@@ -243,9 +243,7 @@ should_fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             break;
 
-        } else if (pcmk_is_set(prereq->flags, pcmk__graph_action_failed)
-                   && !pcmk_is_set(prereq->flags,
-                                   pcmk__graph_action_can_fail)) {
+        } else if (pcmk_is_set(prereq->flags, pcmk__graph_action_failed)) {
             crm_trace("Input %d for synapse %d confirmed but failed",
                       prereq->id, synapse->id);
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
@@ -595,23 +593,6 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
     if (pcmk__guint_from_hash(action->params, CRM_META "_" PCMK_META_INTERVAL,
                               0, &(action->interval_ms)) != pcmk_rc_ok) {
         action->interval_ms = 0;
-    }
-
-    value = crm_meta_value(action->params, PCMK__META_CAN_FAIL);
-    if (value != NULL) {
-        // @COMPAT Not possible with schema validation enabled
-        int can_fail = 0;
-
-        if ((crm_str_to_boolean(value, &can_fail) > 0) && (can_fail > 0)) {
-            pcmk__set_graph_action_flags(action, pcmk__graph_action_can_fail);
-        } else {
-            pcmk__clear_graph_action_flags(action, pcmk__graph_action_can_fail);
-        }
-
-        if (pcmk_is_set(action->flags, pcmk__graph_action_can_fail)) {
-            crm_warn("Support for the " PCMK__META_CAN_FAIL " meta-attribute "
-                     "is deprecated and will be removed in a future release");
-        }
     }
 
     crm_trace("Action %d has timer set to %dms", action->id, action->timeout);
