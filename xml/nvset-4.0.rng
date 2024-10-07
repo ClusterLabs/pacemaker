@@ -78,31 +78,31 @@
   </define>
 
   <define name="element-nvset">
-   <choice>
-   <attribute name="id-ref"><data type="IDREF"/></attribute>
-   <group>
-    <attribute name="id"><data type="ID"/></attribute>
-    <interleave>
-      <optional>
-        <ref name="element-nvset.rule"/>
-      </optional>
-      <zeroOrMore>
-        <element name="nvpair">
-          <choice>
-            <attribute name="id-ref"><data type="IDREF"/></attribute>
-            <group>
-              <attribute name="id"><data type="ID"/></attribute>
-              <ref name="element-nvset.name-value"/>
-            </group>
-          </choice>
-        </element>
-      </zeroOrMore>
-      <optional>
-        <externalRef href="score.rng"/>
-      </optional>
-    </interleave>
-   </group>
-   </choice>
+    <choice>
+      <attribute name="id-ref"><data type="IDREF"/></attribute>
+      <group>
+        <attribute name="id"><data type="ID"/></attribute>
+        <optional>
+          <externalRef href="score.rng"/>
+        </optional>
+        <interleave>
+          <optional>
+            <ref name="element-nvset.rule"/>
+          </optional>
+          <zeroOrMore>
+            <element name="nvpair">
+              <choice>
+                <attribute name="id-ref"><data type="IDREF"/></attribute>
+                <group>
+                  <attribute name="id"><data type="ID"/></attribute>
+                  <ref name="element-nvset.name-value"/>
+                </group>
+              </choice>
+            </element>
+          </zeroOrMore>
+        </interleave>
+      </group>
+    </choice>
   </define>
 
 </grammar>

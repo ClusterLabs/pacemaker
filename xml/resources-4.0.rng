@@ -31,18 +31,18 @@
 
   <define name="element-primitive">
     <element name="primitive">
+      <attribute name="id"><data type="ID"/></attribute>
+      <choice>
+        <group>
+          <ref name="element-resource-class"/>
+          <attribute name="type"><text/></attribute>
+        </group>
+        <attribute name="template"><data type="IDREF"/></attribute>
+      </choice>
+      <optional>
+        <attribute name="description"><text/></attribute>
+      </optional>
       <interleave>
-        <attribute name="id"><data type="ID"/></attribute>
-        <choice>
-          <group>
-            <ref name="element-resource-class"/>
-            <attribute name="type"><text/></attribute>
-          </group>
-          <attribute name="template"><data type="IDREF"/></attribute>
-        </choice>
-        <optional>
-          <attribute name="description"><text/></attribute>
-        </optional>
         <ref name="element-resource-extra.primitive-template"/>
         <ref name="element-operations"/>
       </interleave>
@@ -51,13 +51,13 @@
 
   <define name="element-template">
     <element name="template">
+      <attribute name="id"><data type="ID"/></attribute>
+      <ref name="element-resource-class"/>
+      <attribute name="type"><text/></attribute>
+      <optional>
+        <attribute name="description"><text/></attribute>
+      </optional>
       <interleave>
-        <attribute name="id"><data type="ID"/></attribute>
-        <ref name="element-resource-class"/>
-        <attribute name="type"><text/></attribute>
-        <optional>
-          <attribute name="description"><text/></attribute>
-        </optional>
         <ref name="element-resource-extra.primitive-template"/>
         <ref name="element-operations"/>
       </interleave>
@@ -66,11 +66,11 @@
 
   <define name="element-bundle">
     <element name="bundle">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="description"><text/></attribute>
+      </optional>
       <interleave>
-        <attribute name="id"><data type="ID"/></attribute>
-        <optional>
-          <attribute name="description"><text/></attribute>
-        </optional>
         <ref name="element-resource-extra"/>
         <choice>
           <element name="docker">
