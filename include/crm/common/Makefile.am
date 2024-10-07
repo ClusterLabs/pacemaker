@@ -44,6 +44,8 @@ header_HEADERS = acl.h 			\
 		 util_compat.h 		\
 		 xml.h 			\
 		 xml_compat.h		\
+		 xml_element.h		\
+		 xml_element_compat.h	\
 		 xml_io.h		\
 		 xml_names.h
 

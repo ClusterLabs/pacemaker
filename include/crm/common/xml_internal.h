@@ -17,13 +17,17 @@
 #include <stdlib.h>
 #include <stdint.h>   // uint32_t
 #include <stdio.h>
-#include <string.h>
 
 #include <crm/crm.h>  /* transitively imports qblog.h */
 #include <crm/common/output_internal.h>
+#include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE
+
+// This file is a wrapper for other xml_*_internal.h headers
+#include <crm/common/xml_comment_internal.h>
+#include <crm/common/xml_element_internal.h>
 #include <crm/common/xml_idref_internal.h>
 #include <crm/common/xml_io_internal.h>
-#include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE
+#include <crm/common/xml_names_internal.h>
 
 #include <libxml/relaxng.h>
 
@@ -198,20 +202,6 @@ enum pcmk__xml_artefact_ns {
 };
 
 void pcmk__strip_xml_text(xmlNode *xml);
-const char *pcmk__xe_add_last_written(xmlNode *xe);
-
-xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
-                              const char *attr_n, const char *attr_v);
-
-
-void pcmk__xe_remove_attr(xmlNode *element, const char *name);
-bool pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data);
-void pcmk__xe_remove_matching_attrs(xmlNode *element,
-                                    bool (*match)(xmlAttrPtr, void *),
-                                    void *user_data);
-int pcmk__xe_delete_match(xmlNode *xml, xmlNode *search);
-int pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace);
-int pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags);
 
 GString *pcmk__element_xpath(const xmlNode *xml);
 
@@ -322,36 +312,6 @@ char *pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns,
 
 /*!
  * \internal
- * \brief Retrieve the value of the \c PCMK_XA_ID XML attribute
- *
- * \param[in] xml  XML element to check
- *
- * \return Value of the \c PCMK_XA_ID attribute (may be \c NULL)
- */
-static inline const char *
-pcmk__xe_id(const xmlNode *xml)
-{
-    return crm_element_value(xml, PCMK_XA_ID);
-}
-
-/*!
- * \internal
- * \brief Check whether an XML element is of a particular type
- *
- * \param[in] xml   XML element to compare
- * \param[in] name  XML element name to compare
- *
- * \return \c true if \p xml is of type \p name, otherwise \c false
- */
-static inline bool
-pcmk__xe_is(const xmlNode *xml, const char *name)
-{
-    return (xml != NULL) && (xml->name != NULL) && (name != NULL)
-           && (strcmp((const char *) xml->name, name) == 0);
-}
-
-/*!
- * \internal
  * \brief Return first non-text child node of an XML node
  *
  * \param[in] parent  XML node to check
@@ -388,33 +348,9 @@ pcmk__xml_next(const xmlNode *child)
     return next;
 }
 
-/*!
- * \internal
- * \brief Return next non-text sibling element of an XML element
- *
- * \param[in] child  XML element to check
- *
- * \return Next sibling element of \p child (or NULL if none)
- */
-static inline xmlNode *
-pcmk__xe_next(const xmlNode *child)
-{
-    xmlNode *next = child? child->next : NULL;
-
-    while (next && (next->type != XML_ELEMENT_NODE)) {
-        next = next->next;
-    }
-    return next;
-}
-
-xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
 void pcmk__xml_free(xmlNode *xml);
 void pcmk__xml_free_doc(xmlDoc *doc);
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
-xmlNode *pcmk__xe_next_same(const xmlNode *node);
-
-void pcmk__xe_set_content(xmlNode *node, const char *format, ...)
-    G_GNUC_PRINTF(2, 3);
 
 /*!
  * \internal
@@ -435,54 +371,7 @@ enum pcmk__xa_flags {
     pcmk__xaf_score_update  = (1U << 1),
 };
 
-int pcmk__xe_get_score(const xmlNode *xml, const char *name, int *score,
-                       int default_score);
-
-int pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags);
-void pcmk__xe_sort_attrs(xmlNode *xml);
-
 void pcmk__xml_sanitize_id(char *id);
-void pcmk__xe_set_id(xmlNode *xml, const char *format, ...)
-    G_GNUC_PRINTF(2, 3);
-
-/*!
- * \internal
- * \brief Like pcmk__xe_set_props, but takes a va_list instead of
- *        arguments directly.
- *
- * \param[in,out] node   XML to add attributes to
- * \param[in]     pairs  NULL-terminated list of name/value pairs to add
- */
-void
-pcmk__xe_set_propv(xmlNodePtr node, va_list pairs);
-
-/*!
- * \internal
- * \brief Add a NULL-terminated list of name/value pairs to the given
- *        XML node as properties.
- *
- * \param[in,out] node XML node to add properties to
- * \param[in]     ...  NULL-terminated list of name/value pairs
- *
- * \note A NULL name terminates the arguments; a NULL value will be skipped.
- */
-void
-pcmk__xe_set_props(xmlNodePtr node, ...)
-G_GNUC_NULL_TERMINATED;
-
-/*!
- * \internal
- * \brief Get first attribute of an XML element
- *
- * \param[in] xe  XML element to check
- *
- * \return First attribute of \p xe (or NULL if \p xe is NULL or has none)
- */
-static inline xmlAttr *
-pcmk__xe_first_attr(const xmlNode *xe)
-{
-    return (xe == NULL)? NULL : xe->properties;
-}
 
 /*!
  * \internal
@@ -535,31 +424,6 @@ enum xml_private_flags {
 };
 
 void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
-
-/*!
- * \internal
- * \brief Iterate over child elements of \p xml
- *
- * This function iterates over the children of \p xml, performing the
- * callback function \p handler on each node.  If the callback returns
- * a value other than pcmk_rc_ok, the iteration stops and the value is
- * returned.  It is therefore possible that not all children will be
- * visited.
- *
- * \param[in,out] xml                 The starting XML node.  Can be NULL.
- * \param[in]     child_element_name  The name that the node must match in order
- *                                    for \p handler to be run.  If NULL, all
- *                                    child elements will match.
- * \param[in]     handler             The callback function.
- * \param[in,out] userdata            User data to pass to the callback function.
- *                                    Can be NULL.
- *
- * \return Standard Pacemaker return code
- */
-int
-pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
-                       int (*handler)(xmlNode *xml, void *userdata),
-                       void *userdata);
 
 bool pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
                             void *user_data);
