@@ -47,6 +47,8 @@ typedef struct cib_remote_opaque_s {
     pcmk__remote_t command;
     pcmk__remote_t callback;
     pcmk__output_t *out;
+    time_t start_time;
+    int timeout_sec;
 } cib_remote_opaque_t;
 
 static int
@@ -203,35 +205,60 @@ cib_remote_callback_dispatch(gpointer user_data)
     cib_remote_opaque_t *private = cib->variant_opaque;
 
     xmlNode *msg = NULL;
+    const char *type = NULL;
 
-    crm_info("Message on callback channel");
+    /* If start time is 0, we've previously handled a complete message and this
+     * connection is being reused for a new message.  Reset the start_time,
+     * giving this new message timeout_sec from now to complete.
+     */
+    if (private->start_time == 0) {
+        private->start_time = time(NULL);
+    }
 
-    rc = pcmk__read_remote_message(&private->callback, -1);
+    rc = pcmk__read_available_remote_data(&private->callback);
+    switch (rc) {
+        case pcmk_rc_ok:
+            /* We have the whole message so process it */
+            break;
+
+        case EAGAIN:
+            /* Have we timed out? */
+            if (time(NULL) >= private->start_time + private->timeout_sec) {
+                crm_info("Error reading from CIB manager connection: %s",
+                         pcmk_rc_str(ETIME));
+                return -1;
+            }
+
+            /* We haven't read the whole message yet */
+            return 0;
+
+        default:
+            /* Error */
+            crm_info("Error reading from CIB manager connection: %s",
+                     pcmk_rc_str(rc));
+            return -1;
+    }
 
     msg = pcmk__remote_message_xml(&private->callback);
-    while (msg) {
-        const char *type = crm_element_value(msg, PCMK__XA_T);
-
-        crm_trace("Activating %s callbacks...", type);
-
-        if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
-            cib_native_callback(cib, msg, 0, 0);
-
-        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
-            g_list_foreach(cib->notify_list, cib_native_notify, msg);
-
-        } else {
-            crm_err("Unknown message type: %s", type);
-        }
-
-        pcmk__xml_free(msg);
-        msg = pcmk__remote_message_xml(&private->callback);
+    if (msg == NULL) {
+        private->start_time = 0;
+        return 0;
     }
 
-    if (rc == ENOTCONN) {
-        return -1;
+    type = crm_element_value(msg, PCMK__XA_T);
+
+    crm_trace("Activating %s callbacks...", type);
+
+    if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
+        cib_native_callback(cib, msg, 0, 0);
+    } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
+        g_list_foreach(cib->notify_list, cib_native_notify, msg);
+    } else {
+        crm_err("Unknown message type: %s", type);
     }
 
+    pcmk__xml_free(msg);
+    private->start_time = 0;
     return 0;
 }
 
@@ -242,15 +269,35 @@ cib_remote_command_dispatch(gpointer user_data)
     cib_t *cib = user_data;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    rc = pcmk__read_remote_message(&private->command, -1);
+    /* See cib_remote_callback_dispatch */
+    if (private->start_time == 0) {
+        private->start_time = time(NULL);
+    }
+
+    rc = pcmk__read_available_remote_data(&private->command);
+    if (rc == EAGAIN) {
+        /* Have we timed out? */
+        if (time(NULL) >= private->start_time + private->timeout_sec) {
+            crm_info("Error reading from CIB manager connection: %s",
+                     pcmk_rc_str(ETIME));
+            return -1;
+        }
+
+        /* We haven't read the whole message yet */
+        return 0;
+    }
 
     free(private->command.buffer);
     private->command.buffer = NULL;
     crm_err("received late reply for remote cib connection, discarding");
 
-    if (rc == ENOTCONN) {
+    if (rc != pcmk_rc_ok) {
+        crm_info("Error reading from CIB manager connection: %s",
+                 pcmk_rc_str(rc));
         return -1;
     }
+
+    private->start_time = 0;
     return 0;
 }
 
@@ -412,6 +459,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     crm_trace("remote client connection established");
+    private->timeout_sec = 60;
     connection->source = mainloop_add_fd("cib-remote", G_PRIORITY_HIGH,
                                          connection->tcp_socket, cib,
                                          &cib_fd_callbacks);
