@@ -43,7 +43,8 @@ of the following types:
           pair: type; duration
 
        duration
-     - A time duration, specified either like a :ref:`timeout <timeout>` or an
+     - A nonnegative time duration, specified either like a
+       :ref:`timeout <timeout>` or an
        `ISO 8601 duration <https://en.wikipedia.org/wiki/ISO_8601#Durations>`_.
        A duration may be up to approximately 49 days but is intended for much
        smaller time periods.
