@@ -1011,7 +1011,6 @@ enum rsc_role_e
 pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
                          enum pcmk__on_fail on_fail, GHashTable *meta)
 {
-    const char *value = NULL;
     enum rsc_role_e role = pcmk_role_unknown;
 
     // Set default for role after failure specially in certain circumstances
@@ -1028,22 +1027,6 @@ pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
 
         default:
             break;
-    }
-
-    // @COMPAT Check for explicitly configured role (deprecated)
-    value = g_hash_table_lookup(meta, PCMK__META_ROLE_AFTER_FAILURE);
-    if (value != NULL) {
-        pcmk__warn_once(pcmk__wo_role_after,
-                        "Support for " PCMK__META_ROLE_AFTER_FAILURE " is "
-                        "deprecated and will be removed in a future release");
-        if (role == pcmk_role_unknown) {
-            role = pcmk_parse_role(value);
-            if (role == pcmk_role_unknown) {
-                pcmk__config_err("Ignoring invalid value %s for "
-                                 PCMK__META_ROLE_AFTER_FAILURE,
-                                 value);
-            }
-        }
     }
 
     if (role == pcmk_role_unknown) {
