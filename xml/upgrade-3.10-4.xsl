@@ -12,6 +12,9 @@
    to this transformation, they have been dropped.
  * There are no bundle resources based on rkt containers. If there were any
    prior to this transformation, they have been dropped.
+ * The restart-type resource meta-attribute is not present.
+ * The can_fail operation meta-attribute is not present.
+ * The role_after_failure operation meta-attribute is not present.
  -->
 
 <xsl:stylesheet version="1.0"
@@ -99,6 +102,24 @@
 
 <!-- Drop rkt bundles -->
 <xsl:template match="bundle[rkt]"/>
+
+<!-- Drop restart-type resource meta-attribute -->
+<xsl:template match="template/meta_attributes/nvpair[@name = 'restart-type']
+                     |primitive/meta_attributes/nvpair[@name = 'restart-type']
+                     |group/meta_attributes/nvpair[@name = 'restart-type']
+                     |clone/meta_attributes/nvpair[@name = 'restart-type']
+                     |bundle/meta_attributes/nvpair[@name = 'restart-type']
+                     |rsc_defaults/meta_attributes/nvpair
+                         [@name = 'restart-type']"/>
+
+<!-- Drop can_fail operation meta-attribute -->
+<xsl:template match="op/meta_attributes/nvpair[@name = 'can_fail']
+                     |op_defaults/meta_attributes/nvpair[@name = 'can_fail']"/>
+
+<!-- Drop role_after_failure operation meta-attribute -->
+<xsl:template match="op/meta_attributes/nvpair[@name = 'role_after_failure']
+                     |op_defaults/meta_attributes/nvpair
+                         [@name = 'role_after_failure']"/>
 
 
 <!-- Constraints -->

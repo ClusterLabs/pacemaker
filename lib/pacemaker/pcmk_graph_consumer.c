@@ -599,6 +599,7 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
 
     value = crm_meta_value(action->params, PCMK__META_CAN_FAIL);
     if (value != NULL) {
+        // @COMPAT Not possible with schema validation enabled
         int can_fail = 0;
 
         if ((crm_str_to_boolean(value, &can_fail) > 0) && (can_fail > 0)) {

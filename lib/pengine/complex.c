@@ -885,6 +885,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     // @COMPAT Deprecated meta-attribute
     value = g_hash_table_lookup(rsc_private->meta, PCMK__META_RESTART_TYPE);
     if (pcmk__str_eq(value, PCMK_VALUE_RESTART, pcmk__str_casei)) {
+        // @COMPAT Not possible with schema validation enabled
         rsc_private->restart_type = pcmk__restart_restart;
         pcmk__rsc_trace(*rsc, "%s dependency restart handling: restart",
                         (*rsc)->id);
