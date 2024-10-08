@@ -1159,8 +1159,8 @@ pcmk__xe_set_id(xmlNode *node, const char *format, ...)
  *
  * \param[in,out] xml  XML node to free
  */
-static void
-free_xml_node(xmlNode *xml)
+void
+pcmk__xml_free_node(xmlNode *xml)
 {
     pcmk__xml_free_private_data(xml);
     xmlUnlinkNode(xml);
@@ -1241,7 +1241,7 @@ free_xml_with_position(xmlNode *node, int position)
             pcmk__set_xml_doc_flag(node, pcmk__xf_dirty);
         }
     }
-    free_xml_node(node);
+    pcmk__xml_free_node(node);
 }
 
 /*!
@@ -1316,7 +1316,7 @@ pcmk__strip_xml_text(xmlNode *xml)
 
         switch (iter->type) {
             case XML_TEXT_NODE:
-                free_xml_node(iter);
+                pcmk__xml_free_node(iter);
                 break;
 
             case XML_ELEMENT_NODE:
@@ -2133,7 +2133,7 @@ replace_node(xmlNode *old, xmlNode *new)
         pcmk__apply_acl(new);
     }
     xml_calculate_changes(old, new);
-    free_xml_node(old);
+    pcmk__xml_free_node(old);
 }
 
 /*!
@@ -2544,7 +2544,7 @@ crm_xml_cleanup(void)
 void
 pcmk_free_xml_subtree(xmlNode *xml)
 {
-    free_xml_node(xml);
+    pcmk__xml_free_node(xml);
 }
 
 void
