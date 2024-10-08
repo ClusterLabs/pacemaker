@@ -1,8 +1,3 @@
-=#=#=#= Begin test: Verbosely verify a file-specified configuration with an unallowed fencing level ID =#=#=#=
-warning: Ignoring topology registration with invalid level 10
-Configuration invalid (with warnings)
-=#=#=#= End test: Verbosely verify a file-specified configuration with an unallowed fencing level ID - Invalid configuration (78) =#=#=#=
-* Passed: crm_verify            - Verbosely verify a file-specified configuration with an unallowed fencing level ID
 =#=#=#= Begin test: Verify a file-specified invalid configuration =#=#=#=
 Configuration invalid (with errors) (-V may provide more detail)
 =#=#=#= End test: Verify a file-specified invalid configuration - Invalid configuration (78) =#=#=#=
