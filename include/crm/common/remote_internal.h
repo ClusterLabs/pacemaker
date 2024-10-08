@@ -21,6 +21,7 @@ typedef struct pcmk__remote_s pcmk__remote_t;
 
 int pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg);
 int pcmk__remote_ready(const pcmk__remote_t *remote, int timeout_ms);
+int pcmk__read_available_remote_data(pcmk__remote_t *remote);
 int pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms);
 xmlNode *pcmk__remote_message_xml(pcmk__remote_t *remote);
 int pcmk__connect_remote(const char *host, int port, int timeout_ms,
