@@ -26,7 +26,11 @@
           <attribute name="target-value"><text/></attribute>
         </group>
       </choice>
-      <attribute name="index"><data type="positiveInteger"/></attribute>
+      <attribute name="index">
+        <data type="positiveInteger">
+          <param name="maxInclusive">9</param>
+        </data>
+      </attribute>
       <attribute name="devices">
         <data type="string">
           <param name="pattern">([a-zA-Z0-9_\.\-]+)(,[a-zA-Z0-9_\.\-]+)*</param>

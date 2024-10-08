@@ -27,6 +27,8 @@
  * The remove-after-stop cluster property is not present.
  * The stonith-action cluster property is set to "off" if it was previously set
    to "poweroff".
+ * There are no fencing levels with index greater than 9. If there were any
+   prior to this transformation, they are dropped.
 
  nvset elements include the following:
  * cluster_property_set
@@ -161,5 +163,11 @@
                      /@value[. = 'poweroff']">
     <xsl:attribute name="value">off</xsl:attribute>
 </xsl:template>
+
+
+<!-- Fencing topology -->
+
+<!-- Drop fencing levels with index greater than 9 -->
+<xsl:template match="fencing-level[number(@index) > 9]"/>
 
 </xsl:stylesheet>
