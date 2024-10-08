@@ -189,16 +189,6 @@ int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
 #define PCMK__XP_REMOTE_NODE_STATUS                                 \
     "//" PCMK_XE_CIB "//" PCMK_XE_STATUS "//" PCMK__XE_NODE_STATE   \
     "[@" PCMK_XA_REMOTE_NODE "='" PCMK_VALUE_TRUE "']"
-/*!
- * \internal
- * \brief Serialize XML (using libxml) into provided descriptor
- *
- * \param[in] fd  File descriptor to (piece-wise) write to
- * \param[in] cur XML subtree to proceed
- * 
- * \return a standard Pacemaker return code
- */
-int pcmk__xml2fd(int fd, xmlNode *cur);
 
 enum pcmk__xml_artefact_ns {
     pcmk__xml_artefact_ns_legacy_rng = 1,
@@ -418,7 +408,6 @@ pcmk__xe_next(const xmlNode *child)
 }
 
 xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
-xmlNode *pcmk__xc_create(xmlDoc *doc, const char *content);
 void pcmk__xml_free(xmlNode *xml);
 void pcmk__xml_free_doc(xmlDoc *doc);
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
