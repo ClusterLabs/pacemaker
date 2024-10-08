@@ -88,6 +88,9 @@ typedef struct xml_doc_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
+bool pcmk__xml_reset_node_flags(xmlNode *xml, void *user_data);
+
+G_GNUC_INTERNAL
 void pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags);
 
 G_GNUC_INTERNAL
