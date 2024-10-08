@@ -2718,6 +2718,11 @@ class AclsRegressionTest(RegressionTest):
             Test("root: Create a resource",
                  """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
                  update_cib=True, env={"CIB_user": "root"}),
+
+            # For use with later tests
+            Test("root: Create another resource (with description)",
+                 """cibadmin -C -o resources --xml-text '<primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>'""",
+                 update_cib=True, env={"CIB_user": "root"}),
         ]
 
         deny_cib_2_tests = [
@@ -2771,7 +2776,7 @@ class AclsRegressionTest(RegressionTest):
                         expected_rc=ExitStatus.INSUFFICIENT_PRIV),
                 AclTest("niceguy: Replace - delete attribute (deny)",
                         "cibadmin --replace -p",
-                        setup="""cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'""",
+                        setup="""cibadmin --replace --xml-text '<primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy"/>'""",
                         expected_rc=ExitStatus.INSUFFICIENT_PRIV),
                 AclTest("niceguy: Replace - create attribute (deny)",
                         "cibadmin --replace -p",

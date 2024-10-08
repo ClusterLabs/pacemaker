@@ -37,9 +37,7 @@
             </except>
           </data>
         </attribute>
-        <optional>
-          <attribute name="value"><text/></attribute>
-        </optional>
+        <attribute name="value"><text/></attribute>
       </group>
 
       <!-- stonith-action is allowed with value other than "poweroff" -->
