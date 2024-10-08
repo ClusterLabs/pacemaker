@@ -215,17 +215,17 @@ versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
 	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
 	$(AM_V_at)echo '  <start>' >> $@
-	$(AM_V_at)echo '   <interleave>' >> $@
-	$(AM_V_at)echo '    <attribute name="validate-with">' >> $@
-	$(AM_V_at)echo '      <choice>' >> $@
-	$(AM_V_at)echo '        <value>none</value>' >> $@
-	$(AM_V_at)for rng in $(CIB_versions); do echo "        <value>pacemaker-$$rng</value>" >> $@; done
-	$(AM_V_at)echo '      </choice>' >> $@
-	$(AM_V_at)echo '    </attribute>' >> $@
-	$(AM_V_at)echo '    <attribute name="admin_epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
-	$(AM_V_at)echo '    <attribute name="epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
-	$(AM_V_at)echo '    <attribute name="num_updates"><data type="nonNegativeInteger"/></attribute>' >> $@
-	$(AM_V_at)echo '   </interleave>' >> $@
+	$(AM_V_at)echo '    <group>' >> $@
+	$(AM_V_at)echo '      <attribute name="validate-with">' >> $@
+	$(AM_V_at)echo '        <choice>' >> $@
+	$(AM_V_at)echo '          <value>none</value>' >> $@
+	$(AM_V_at)for rng in $(CIB_versions); do echo "          <value>pacemaker-$$rng</value>" >> $@; done
+	$(AM_V_at)echo '        </choice>' >> $@
+	$(AM_V_at)echo '      </attribute>' >> $@
+	$(AM_V_at)echo '      <attribute name="admin_epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
+	$(AM_V_at)echo '      <attribute name="epoch"><data type="nonNegativeInteger"/></attribute>' >> $@
+	$(AM_V_at)echo '      <attribute name="num_updates"><data type="nonNegativeInteger"/></attribute>' >> $@
+	$(AM_V_at)echo '    </group>' >> $@
 	$(AM_V_at)echo '  </start>' >> $@
 	$(AM_V_SCHEMA)echo '</grammar>' >> $@
 

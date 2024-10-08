@@ -311,6 +311,7 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
 // LCOV_EXCL_START
 
 #include <crm/common/xml_compat.h>
+#include <crm/common/xml_element_compat.h>
 
 char *
 calculate_on_disk_digest(xmlNode *input)

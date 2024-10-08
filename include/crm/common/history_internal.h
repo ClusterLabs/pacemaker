@@ -15,6 +15,7 @@
 
 #include <crm/common/xml.h>         // crm_element_value()
 #include <crm/common/internal.h>    // pcmk__str_empty()
+#include <crm/common/xml_element_internal.h>    // pcmk__xe_id()
 #include <crm/common/xml_names_internal.h>  // PCMK__XA_OPERATION_KEY
 
 #ifdef __cplusplus
