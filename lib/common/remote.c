@@ -713,8 +713,8 @@ pcmk__remote_ready(const pcmk__remote_t *remote, int timeout_ms)
  * \note This function will return when the socket read buffer is empty or an
  *       error is encountered.
  */
-static int
-read_available_remote_data(pcmk__remote_t *remote)
+int
+pcmk__read_available_remote_data(pcmk__remote_t *remote)
 {
     int rc = pcmk_rc_ok;
     size_t read_len = sizeof(struct remote_header_v0);
@@ -849,7 +849,7 @@ pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms)
                       CRM_XS " rc=%d", pcmk_rc_str(rc), rc);
 
         } else {
-            rc = read_available_remote_data(remote);
+            rc = pcmk__read_available_remote_data(remote);
             if (rc == pcmk_rc_ok) {
                 return rc;
             } else if (rc == EAGAIN) {
