@@ -1,0 +1,30 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="2" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * There are fencing levels with the following index values:
+           * 1
+           * 5
+           * 9
+           * 10
+
+         In this situation, the fencing level with index="10" should be dropped.
+         All others should remain.
+
+         A fencing level's index must be a positive integer between 1 and 9,
+         inclusive. Prior to schema version 4.0, the schema already required an
+         index value to be a positive integer, so there is no need to test or
+         transform values that are not positive integers.
+      -->
+    <crm_config original="1"/>
+    <nodes original="1"/>
+    <resources original="1"/>
+    <constraints original="1"/>
+    <fencing-topology original="1">
+      <fencing-level id="node1-level-1" target="node1" index="1" devices="dev-1" original="1"/>
+      <fencing-level id="node1-level-5" target="node1" index="5" devices="dev-5" original="1"/>
+      <fencing-level id="node1-level-9" target="node1" index="9" devices="dev-9" original="1"/>
+      <fencing-level id="node1-level-10" target="node1" index="10" devices="dev-10" original="1"/>
+    </fencing-topology>
+  </configuration>
+  <status original="1"/>
+</cib>
