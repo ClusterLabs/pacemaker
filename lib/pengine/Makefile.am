@@ -21,7 +21,7 @@ check_LTLIBRARIES 	= libpe_status_test.la
 
 noinst_HEADERS		= pe_status_private.h
 
-libpe_rules_la_LDFLAGS	= -version-info 30:2:4
+libpe_rules_la_LDFLAGS	= -version-info 30:3:4
 
 libpe_rules_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -32,7 +32,7 @@ libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 libpe_rules_la_SOURCES	= rules.c
 libpe_rules_la_SOURCES	+= rules_alerts.c
 
-libpe_status_la_LDFLAGS	= -version-info 35:1:7
+libpe_status_la_LDFLAGS	= -version-info 35:2:7
 
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

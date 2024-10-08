@@ -453,14 +453,10 @@ start_child(pcmk_child_t * child)
         use_valgrind = FALSE;
     }
 
-    if (child->uid) {
-        if (crm_user_lookup(child->uid, &uid, &gid) < 0) {
-            crm_err("Invalid user (%s) for subdaemon %s: not found",
-                    child->uid, name);
-            return EACCES;
-        }
-        crm_info("Using uid %lu and group %lu for subdaemon %s",
-                 (unsigned long) uid, (unsigned long) gid, name);
+    if ((child->uid != 0) && (crm_user_lookup(child->uid, &uid, &gid) < 0)) {
+        crm_err("Invalid user (%s) for subdaemon %s: not found",
+                child->uid, name);
+        return EACCES;
     }
 
     child->pid = fork();
@@ -470,8 +466,10 @@ start_child(pcmk_child_t * child)
         /* parent */
         mainloop_child_add(child->pid, 0, name, child, pcmk_child_exit);
 
-        crm_info("Forked process %lld for subdaemon %s%s",
-                 (long long) child->pid, name,
+        crm_info("Forked process %lld using user %lu (%s) and group %lu "
+                 "for subdaemon %s%s",
+                 (long long) child->pid, (unsigned long) uid,
+                 pcmk__s(child->uid, "root"), (unsigned long) gid, name,
                  use_valgrind ? " (valgrind enabled: " PCMK__VALGRIND_EXEC ")" : "");
         return pcmk_rc_ok;
 

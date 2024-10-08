@@ -13,6 +13,7 @@ include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = crm_time_add_days_test			\
+		 crm_time_add_seconds_test		\
 		 crm_time_add_years_test		\
 		 crm_time_parse_duration_test		\
 		 pcmk__add_time_from_xml_test		\
