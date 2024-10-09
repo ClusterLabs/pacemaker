@@ -1,0 +1,33 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="16" num_updates="0" admin_epoch="0">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * There is a rule containing a date_spec with every possible attribute
+           specified, including phase of the moon.
+         * There is a rule containing a date_spec with only phase of the moon
+           specified.
+
+         In this situation, the moon attribute should be deleted from the
+         date_spec of each rule. No other attributes should change.
+      -->
+    <crm_config>
+      <cluster_property_set id="cluster-properties1">
+        <rule id="cluster-properties1-rule">
+          <date_expression id="cluster-properties1-rule-expr" operation="date_spec">
+            <date_spec id="cluster-properties1-rule-expr-date_spec" seconds="0-59" minutes="0-59" hours="0-23" monthdays="1-31" weekdays="1-7" yeardays="1-366" months="1-12" weeks="1-53" years="2024" weekyears="2024"/>
+          </date_expression>
+        </rule>
+      </cluster_property_set>
+      <cluster_property_set id="cluster-properties2">
+        <rule id="cluster-properties2-rule">
+          <date_expression id="cluster-properties2-rule-expr" operation="date_spec">
+            <date_spec id="cluster-properties2-rule-expr-date_spec"/>
+          </date_expression>
+        </rule>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

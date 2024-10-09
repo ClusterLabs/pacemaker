@@ -242,6 +242,7 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     // Moon phase (deprecated)
     ranges[10].value = phase_of_the_moon(now);
     if (crm_element_value(date_spec, PCMK__XA_MOON) != NULL) {
+        // @COMPAT Not possible with schema validation enabled
         pcmk__config_warn("Support for '" PCMK__XA_MOON "' in "
                           PCMK_XE_DATE_SPEC " elements (such as %s) is "
                           "deprecated and will be removed in a future release "
