@@ -114,13 +114,8 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
     GHashTable *table = user_data;
 
     CRM_CHECK((key != NULL) && (table != NULL), return);
-    if (pcmk__str_eq((const char *) value, "#default", pcmk__str_casei)) {
-        // @COMPAT Deprecated since 2.1.8
-        pcmk__config_warn("Support for setting meta-attributes (such as %s) to "
-                          "the explicit value '#default' is deprecated and "
-                          "will be removed in a future release",
-                          (const char *) key);
-    } else if ((value != NULL) && (g_hash_table_lookup(table, key) == NULL)) {
+
+    if ((value != NULL) && (g_hash_table_lookup(table, key) == NULL)) {
         pcmk__insert_dup(table, (const char *) key, (const char *) value);
     }
 }
@@ -624,23 +619,13 @@ unpack_stickiness(pcmk_resource_t *rsc)
 {
     const char *value = g_hash_table_lookup(rsc->priv->meta,
                                             PCMK_META_RESOURCE_STICKINESS);
+    int rc = pcmk_parse_score(value, &(rsc->priv->stickiness), 0);
 
-    if (pcmk__str_eq(value, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
-        // @COMPAT Deprecated since 2.1.8
-        pcmk__config_warn("Support for setting "
+    if (rc != pcmk_rc_ok) {
+        pcmk__config_warn("Using default (0) for resource %s "
                           PCMK_META_RESOURCE_STICKINESS
-                          " to the explicit value '" PCMK_VALUE_DEFAULT
-                          "' is deprecated and will be removed in a "
-                          "future release (just leave it unset)");
-    } else {
-        int rc = pcmk_parse_score(value, &(rsc->priv->stickiness), 0);
-
-        if (rc != pcmk_rc_ok) {
-            pcmk__config_warn("Using default (0) for resource %s "
-                              PCMK_META_RESOURCE_STICKINESS
-                              " because '%s' is not a valid value: %s",
-                              rsc->id, value, pcmk_rc_str(rc));
-        }
+                          " because '%s' is not a valid value: %s",
+                          rsc->id, value, pcmk_rc_str(rc));
     }
 }
 
@@ -655,27 +640,16 @@ unpack_migration_threshold(pcmk_resource_t *rsc)
 {
     const char *value = g_hash_table_lookup(rsc->priv->meta,
                                             PCMK_META_MIGRATION_THRESHOLD);
+    int rc = pcmk_parse_score(value, &(rsc->priv->ban_after_failures),
+                              PCMK_SCORE_INFINITY);
 
-    if (pcmk__str_eq(value, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
-        // @COMPAT Deprecated since 2.1.8
-        pcmk__config_warn("Support for setting "
+    if ((rc != pcmk_rc_ok) || (rsc->priv->ban_after_failures < 0)) {
+        pcmk__config_warn("Using default (" PCMK_VALUE_INFINITY ") for "
+                          "resource %s meta-attribute "
                           PCMK_META_MIGRATION_THRESHOLD
-                          " to the explicit value '" PCMK_VALUE_DEFAULT
-                          "' is deprecated and will be removed in a "
-                          "future release (just leave it unset)");
+                          " because '%s' is not a valid value: %s",
+                          rsc->id, value, pcmk_rc_str(rc));
         rsc->priv->ban_after_failures = PCMK_SCORE_INFINITY;
-    } else {
-        int rc = pcmk_parse_score(value, &(rsc->priv->ban_after_failures),
-                                  PCMK_SCORE_INFINITY);
-
-        if ((rc != pcmk_rc_ok) || (rsc->priv->ban_after_failures < 0)) {
-            pcmk__config_warn("Using default (" PCMK_VALUE_INFINITY
-                              ") for resource %s meta-attribute "
-                              PCMK_META_MIGRATION_THRESHOLD
-                              " because '%s' is not a valid value: %s",
-                              rsc->id, value, pcmk_rc_str(rc));
-            rsc->priv->ban_after_failures = PCMK_SCORE_INFINITY;
-        }
     }
 }
 
@@ -847,13 +821,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_IS_MANAGED);
     if (value != NULL) {
-        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-            // @COMPAT Deprecated since 2.1.8
-            pcmk__config_warn("Support for setting " PCMK_META_IS_MANAGED
-                              " to the explicit value '" PCMK_VALUE_DEFAULT
-                              "' is deprecated and will be removed in a "
-                              "future release (just leave it unset)");
-        } else if (crm_is_true(value)) {
+        if (crm_is_true(value)) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);
         } else {
             pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);

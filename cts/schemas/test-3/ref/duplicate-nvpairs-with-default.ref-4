@@ -10,7 +10,8 @@
 
          In this situation:
          * If the last nvpair with a given name in a given nvset has value
-           "#default", keep only that one.
+           "#default", keep only that one. (A later transformation will drop
+           it in a behavior-preserving manner.)
          * Otherwise, keep only the first nvpair with a given name in a given
            nvset after the last one with that name and value "#default".
       -->
@@ -37,11 +38,9 @@
         </meta_attributes>
         <utilization id="rsc1-utilization1" original="1">
           <nvpair id="rsc1-utilization1-other-option" name="other-option" value="valueX" original="1"/>
-          <nvpair id="rsc1-utilization1-option5" name="option" value="#default" original="1"/>
         </utilization>
         <utilization id="rsc1-utilization2" original="1">
           <nvpair id="rsc1-utilization1-other-option" name="other-option" value="valueX" original="0"/>
-          <nvpair id="rsc1-utilization1-option5" name="option" value="#default" original="0"/>
         </utilization>
       </primitive>
     </resources>

@@ -10,7 +10,8 @@
 
          In this situation:
          * If the last nvpair with a given name in a given nvset has value
-           "#default", keep only that one.
+           "#default", keep only that one. (A later transformation will drop
+           it in a behavior-preserving manner.)
          * Otherwise, keep only the first nvpair with a given name in a given
            nvset after the last one with that name and value "#default".
       -->

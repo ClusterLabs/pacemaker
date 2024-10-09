@@ -1,0 +1,389 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-3.10" epoch="8" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * There are the following resources:
+           * A template
+           * A primitive outside of any collective resource
+           * A group containing a single member
+           * A cloned primitive
+           * A cloned group containing a single member
+           * A bundle containing a primitive
+         * There is a rsc_defaults element.
+         * Each resource (including nested resources) and the rsc_defaults
+           element have a meta_attributes element containing at least an nvpair
+           with name="is-managed" and value="default".
+         * Most meta_attributes blocks have rules, but a few do not (called out
+           in comments).
+         * There are nvpairs with name="is-managed" and value="default" in
+           cluster_property_set, instance_attributes, and utilization blocks.
+         * There is an nvpair with name="is-managed" and value="default" in a
+           meta_attributes block within an op element.
+         * There is one meta_attributes nvpair with name="some-option" and
+           value="default".
+
+         In this situation:
+         * All "is-managed" nvpairs with value "default" in a resource or
+           rsc_defaults meta_attributes block should be dropped.
+         * The "is-managed" nvpairs outside of resource and rsc_defaults
+           meta_attributes blocks should be unchanged. This includes the nvpair
+           in an op meta_attributes block.
+         * If an "is-managed" nvpair with value != "default" is preceded by an
+           nvpair with the same name and value = "default" in an earlier block:
+           * If the earlier block has no rule, the non-default nvpair should be
+             dropped, since it could never be applied.
+           * Otherwise, the non-default nvpair should be moved to a new
+             meta_attributes block with the same score as its current one, with
+             a compound "and" rule. The compound rule should reference the
+             existing rule and the negations of the rules in the earlier blocks.
+         * The nvpair with name != "is-managed" should be unchanged.
+
+         This test is not exhaustive but covers a fair number of permutations.
+         The main purpose is to ensure this transformation affects all the
+         correct elements ("is-managed" nvpairs within resource and rsc_defaults
+         meta_attributes blocks) and ONLY those.
+      -->
+    <crm_config original="1">
+      <cluster_property_set id="cib-bootstrap-options" original="1">
+        <nvpair id="cib-bootstrap-options-is-managed" name="is-managed" value="default" original="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes original="1"/>
+    <resources original="1">
+      <template class="ocf" id="template1" provider="pacemaker" type="Dummy" original="1">
+        <meta_attributes id="template1-meta_attributes" original="1">
+          <nvpair id="template1-meta_attributes-is-managed" name="is-managed" value="default" original="1"/>
+          <nvpair id="template1-meta_attributes-some-option" name="some-option" value="default" original="1"/>
+        </meta_attributes>
+      </template>
+      <primitive class="ocf" id="rsc1" provider="pacemaker" type="Dummy" original="1">
+        <operations original="1">
+          <op id="rsc1_monitor_20000" interval="20s" name="monitor" original="1">
+            <meta_attributes id="rsc1_monitor_20000-meta_attributes" original="1">
+              <nvpair id="rsc1_monitor_20000-meta_attributes-is-managed" name="is-managed" value="default" original="1"/>
+            </meta_attributes>
+          </op>
+        </operations>
+        <instance_attributes id="rsc1-instance_attributes" original="1">
+          <nvpair id="rsc1-instance_attributes-is-managed" name="is-managed" value="default" original="1"/>
+        </instance_attributes>
+        <utilization id="rsc1-utilization" original="1">
+          <nvpair id="rsc1-utilization-is-managed" name="is-managed" value="default" original="1"/>
+        </utilization>
+        <!-- true, default, true, true, default -->
+        <meta_attributes id="rsc1-meta_attributes1" original="1">
+          <rule id="rsc1-meta_attributes1-rule" original="1">
+            <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="1"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes1-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="rsc1-meta_attributes2" original="1">
+          <rule id="rsc1-meta_attributes2-rule" original="1">
+            <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="1"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes2-is-managed" name="is-managed" value="default" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="rsc1-meta_attributes3" original="1">
+          <rule id="rsc1-meta_attributes3-rule" original="1">
+            <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="1"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes3-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="rsc1-meta_attributes4" original="1">
+          <rule id="rsc1-meta_attributes4-rule" original="1">
+            <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="1"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes4-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="rsc1-meta_attributes5" original="1">
+          <rule id="rsc1-meta_attributes5-rule" original="1">
+            <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="1"/>
+          </rule>
+          <nvpair id="rsc1-meta_attributes5-is-managed" name="is-managed" value="default" original="1"/>
+        </meta_attributes>
+      </primitive>
+      <group id="grp1" original="1">
+        <primitive class="ocf" id="rsc2" provider="pacemaker" type="Dummy" original="1">
+          <!-- true, default, true, true, default -->
+          <meta_attributes id="rsc2-meta_attributes1" original="1">
+            <rule id="rsc1-meta_attributes1-rule" original="0">
+              <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc2-meta_attributes1-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc2-meta_attributes2" original="1">
+            <!-- No rule for first "default" nvpair -->
+            <nvpair id="rsc2-meta_attributes2-is-managed" name="is-managed" value="default" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc2-meta_attributes3" original="1">
+            <rule id="rsc1-meta_attributes3-rule" original="0">
+              <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc2-meta_attributes3-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc2-meta_attributes4" original="1">
+            <rule id="rsc1-meta_attributes4-rule" original="0">
+              <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc2-meta_attributes4-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc2-meta_attributes5" original="1">
+            <rule id="rsc1-meta_attributes5-rule" original="0">
+              <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc2-meta_attributes5-is-managed" name="is-managed" value="default" original="1"/>
+          </meta_attributes>
+        </primitive>
+        <!-- true, default, true, true, default -->
+        <meta_attributes id="grp1-meta_attributes1" original="1">
+          <rule id="rsc1-meta_attributes1-rule" original="0">
+            <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <nvpair id="grp1-meta_attributes1-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="grp1-meta_attributes2" original="1">
+          <!-- No rule for first "default" nvpair -->
+          <nvpair id="grp1-meta_attributes2-is-managed" name="is-managed" value="default" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="grp1-meta_attributes3" original="1">
+          <!-- No rule for first non-"default" nvpair after first "default" -->
+          <nvpair id="grp1-meta_attributes3-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="grp1-meta_attributes4" original="1">
+          <rule id="rsc1-meta_attributes4-rule" original="0">
+            <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <nvpair id="grp1-meta_attributes4-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="grp1-meta_attributes5" original="1">
+          <rule id="rsc1-meta_attributes5-rule" original="0">
+            <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <nvpair id="grp1-meta_attributes5-is-managed" name="is-managed" value="default" original="1"/>
+        </meta_attributes>
+      </group>
+      <clone id="clone1" original="1">
+        <primitive class="ocf" id="rsc3" provider="pacemaker" type="Dummy" original="1">
+          <!-- true, default, true, true, default -->
+          <meta_attributes id="rsc3-meta_attributes1" original="1">
+            <rule id="rsc1-meta_attributes1-rule" original="0">
+              <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc3-meta_attributes1-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc3-meta_attributes2" original="1">
+            <rule id="rsc1-meta_attributes2-rule" original="0">
+              <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc3-meta_attributes2-is-managed" name="is-managed" value="default" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc3-meta_attributes3" original="1">
+            <rule id="rsc1-meta_attributes3-rule" original="0">
+              <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc3-meta_attributes3-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc3-meta_attributes4" original="1">
+            <rule id="rsc1-meta_attributes4-rule" original="0">
+              <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc3-meta_attributes4-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc3-meta_attributes5" original="1">
+            <!-- No rule for last "default" nvpair -->
+            <nvpair id="rsc3-meta_attributes5-is-managed" name="is-managed" value="default" original="1"/>
+          </meta_attributes>
+        </primitive>
+        <!-- true, default, true, true, default -->
+        <!-- No rule for any block -->
+        <meta_attributes id="clone1-meta_attributes1" original="1">
+          <nvpair id="clone1-meta_attributes1-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="clone1-meta_attributes2" original="1">
+          <nvpair id="clone1-meta_attributes2-is-managed" name="is-managed" value="default" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="clone1-meta_attributes3" original="1">
+          <nvpair id="clone1-meta_attributes3-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="clone1-meta_attributes4" original="1">
+          <nvpair id="clone1-meta_attributes4-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="clone1-meta_attributes5" original="1">
+          <nvpair id="clone1-meta_attributes5-is-managed" name="is-managed" value="default" original="1"/>
+        </meta_attributes>
+      </clone>
+      <clone id="clone2" original="1">
+        <group id="grp2" original="1">
+          <primitive class="ocf" id="rsc4" provider="pacemaker" type="Dummy" original="1">
+            <!-- true, true, true, default, default -->
+            <meta_attributes id="rsc4-meta_attributes1" original="1">
+              <rule id="rsc1-meta_attributes1-rule" original="0">
+                <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <nvpair id="rsc4-meta_attributes1-is-managed" name="is-managed" value="true" original="1"/>
+            </meta_attributes>
+            <meta_attributes id="rsc4-meta_attributes2" original="1">
+              <rule id="rsc1-meta_attributes2-rule" original="0">
+                <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <nvpair id="rsc4-meta_attributes2-is-managed" name="is-managed" value="true" original="1"/>
+            </meta_attributes>
+            <meta_attributes id="rsc4-meta_attributes3" original="1">
+              <rule id="rsc1-meta_attributes3-rule" original="0">
+                <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <nvpair id="rsc4-meta_attributes3-is-managed" name="is-managed" value="true" original="1"/>
+            </meta_attributes>
+            <meta_attributes id="rsc4-meta_attributes4" original="1">
+              <rule id="rsc1-meta_attributes4-rule" original="0">
+                <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <nvpair id="rsc4-meta_attributes4-is-managed" name="is-managed" value="default" original="1"/>
+            </meta_attributes>
+            <meta_attributes id="rsc4-meta_attributes5" original="1">
+              <rule id="rsc1-meta_attributes5-rule" original="0">
+                <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
+              </rule>
+              <nvpair id="rsc4-meta_attributes5-is-managed" name="is-managed" value="default" original="1"/>
+            </meta_attributes>
+          </primitive>
+          <!-- default, default, true, true, true -->
+          <meta_attributes id="grp2-meta_attributes1" original="1">
+            <rule id="rsc1-meta_attributes1-rule" original="0">
+              <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="grp2-meta_attributes1-is-managed" name="is-managed" value="default" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="grp2-meta_attributes2" original="1">
+            <rule id="rsc1-meta_attributes2-rule" original="0">
+              <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="grp2-meta_attributes2-is-managed" name="is-managed" value="default" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="grp2-meta_attributes3" original="1">
+            <rule id="rsc1-meta_attributes3-rule" original="0">
+              <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="grp2-meta_attributes3-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="grp2-meta_attributes4" original="1">
+            <rule id="rsc1-meta_attributes4-rule" original="0">
+              <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="grp2-meta_attributes4-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="grp2-meta_attributes5" original="1">
+            <rule id="rsc1-meta_attributes5-rule" original="0">
+              <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="grp2-meta_attributes5-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+        </group>
+        <!-- default, true, default, true, true -->
+        <meta_attributes id="clone2-meta_attributes1" original="1">
+          <rule id="rsc1-meta_attributes1-rule" original="0">
+            <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <nvpair id="clone2-meta_attributes1-is-managed" name="is-managed" value="default" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="clone2-meta_attributes2" original="1">
+          <rule id="rsc1-meta_attributes2-rule" original="0">
+            <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <nvpair id="clone2-meta_attributes2-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="clone2-meta_attributes3" original="1">
+          <rule id="rsc1-meta_attributes3-rule" original="0">
+            <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <nvpair id="clone2-meta_attributes3-is-managed" name="is-managed" value="default" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="clone2-meta_attributes4" original="1">
+          <rule id="rsc1-meta_attributes4-rule" original="0">
+            <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <nvpair id="clone2-meta_attributes4-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+        <meta_attributes id="clone2-meta_attributes5" original="1">
+          <rule id="rsc1-meta_attributes5-rule" original="0">
+            <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
+          </rule>
+          <nvpair id="clone2-meta_attributes5-is-managed" name="is-managed" value="true" original="1"/>
+        </meta_attributes>
+      </clone>
+      <bundle id="bundle1" original="1">
+        <podman image="localhost/pcmktest:http" replicas="3" original="1"/>
+        <primitive class="ocf" id="rsc5" provider="heartbeat" type="apache" original="1">
+          <!-- default, true, true, default, true -->
+          <meta_attributes id="rsc5-meta_attributes1" original="1">
+            <rule id="rsc1-meta_attributes1-rule" original="0">
+              <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc5-meta_attributes1-is-managed" name="is-managed" value="default" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc5-meta_attributes2" original="1">
+            <rule id="rsc1-meta_attributes2-rule" original="0">
+              <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc5-meta_attributes2-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc5-meta_attributes3" original="1">
+            <rule id="rsc1-meta_attributes3-rule" original="0">
+              <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc5-meta_attributes3-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc5-meta_attributes4" original="1">
+            <rule id="rsc1-meta_attributes4-rule" original="0">
+              <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc5-meta_attributes4-is-managed" name="is-managed" value="default" original="1"/>
+          </meta_attributes>
+          <meta_attributes id="rsc5-meta_attributes5" original="1">
+            <rule id="rsc1-meta_attributes5-rule" original="0">
+              <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
+            </rule>
+            <nvpair id="rsc5-meta_attributes5-is-managed" name="is-managed" value="true" original="1"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="bundle1-meta_attributes" original="1">
+          <nvpair id="bundle1-meta_attributes-is-managed" name="is-managed" value="default" original="1"/>
+        </meta_attributes>
+      </bundle>
+    </resources>
+    <constraints original="1"/>
+    <rsc_defaults original="1">
+      <!-- default, true, true, true, default -->
+      <meta_attributes id="rsc_defaults-meta_attributes1" original="1">
+        <rule id="rsc1-meta_attributes1-rule" original="0">
+          <date_expression id="rsc1-meta_attributes1-rule-expr" operation="in_range" start="2004-001" original="0"/>
+        </rule>
+        <nvpair id="rsc_defaults-meta_attributes1-is-managed" name="is-managed" value="default" original="1"/>
+      </meta_attributes>
+      <meta_attributes id="rsc_defaults-meta_attributes2" original="1">
+        <rule id="rsc1-meta_attributes2-rule" original="0">
+          <date_expression id="rsc1-meta_attributes2-rule-expr" operation="in_range" start="2004-001" original="0"/>
+        </rule>
+        <nvpair id="rsc_defaults-meta_attributes2-is-managed" name="is-managed" value="true" original="1"/>
+      </meta_attributes>
+      <meta_attributes id="rsc_defaults-meta_attributes3" original="1">
+        <rule id="rsc1-meta_attributes3-rule" original="0">
+          <date_expression id="rsc1-meta_attributes3-rule-expr" operation="in_range" start="2004-001" original="0"/>
+        </rule>
+        <nvpair id="rsc_defaults-meta_attributes3-is-managed" name="is-managed" value="true" original="1"/>
+      </meta_attributes>
+      <meta_attributes id="rsc_defaults-meta_attributes4" original="1">
+        <rule id="rsc1-meta_attributes4-rule" original="0">
+          <date_expression id="rsc1-meta_attributes4-rule-expr" operation="in_range" start="2004-001" original="0"/>
+        </rule>
+        <nvpair id="rsc_defaults-meta_attributes4-is-managed" name="is-managed" value="true" original="1"/>
+      </meta_attributes>
+      <meta_attributes id="rsc_defaults-meta_attributes5" original="1">
+        <rule id="rsc1-meta_attributes5-rule" original="0">
+          <date_expression id="rsc1-meta_attributes5-rule-expr" operation="in_range" start="2004-001" original="0"/>
+        </rule>
+        <nvpair id="rsc_defaults-meta_attributes5-is-managed" name="is-managed" value="default" original="1"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status original="1"/>
+</cib>
