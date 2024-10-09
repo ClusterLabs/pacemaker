@@ -1007,21 +1007,17 @@ AC_SUBST([GETOPT_PATH])
 dnl ===============================================
 dnl Libraries
 dnl ===============================================
-AC_CHECK_LIB(socket, socket)                    dnl -lsocket
-AC_CHECK_LIB(c, dlopen)                         dnl if dlopen is in libc...
-AC_CHECK_LIB(dl, dlopen)                        dnl -ldl (for Linux)
-AC_CHECK_LIB(rt, sched_getscheduler)            dnl -lrt (for Tru64)
-AC_CHECK_LIB(gnugetopt, getopt_long)            dnl -lgnugetopt ( if available )
-AC_CHECK_LIB(pam, pam_start)                    dnl -lpam (if available)
+AC_SEARCH_LIBS([socket], [socket])              dnl -lsocket
+AC_SEARCH_LIBS([sched_getscheduler], [rt],      dnl -lrt (for some old platforms)
+               [test "$ac_cv_search_sched_getscheduler" = "none required" || PC_LIBS_RT="$ac_cv_search_sched_getscheduler"])
+AC_SEARCH_LIBS([dlopen], [dl])                  dnl -ldl (for Linux)
+AC_SEARCH_LIBS([pam_start], [pam])              dnl -lpam (if available)
 
 PKG_CHECK_MODULES([UUID], [uuid],
                   [CPPFLAGS="${CPPFLAGS} ${UUID_CFLAGS}"
                    LIBS="${LIBS} ${UUID_LIBS}"])
 
-AC_CHECK_FUNCS([sched_setscheduler])
-AS_IF([test x"$ac_cv_func_sched_setscheduler" != x"yes"],
-      [PC_LIBS_RT=""],
-      [PC_LIBS_RT="-lrt"])
+REQUIRE_FUNC([sched_setscheduler])
 AC_SUBST(PC_LIBS_RT)
 
 # Require minimum glib version
@@ -1404,8 +1400,8 @@ AS_IF([test x"$cross_compiling" != x"yes"],
       [CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"])
 AC_CHECK_HEADERS([stonith/stonith.h],
                  [
-                     AC_CHECK_LIB([pils], [PILLoadPlugin])
-                     AC_CHECK_LIB([plumb], [G_main_add_IPC_Channel])
+                     AC_SEARCH_LIBS([PILLoadPlugin], [pils])
+                     AC_SEARCH_LIBS([G_main_add_IPC_Channel], [plumb])
                      PCMK_FEATURES="$PCMK_FEATURES lha"
                  ])
 AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test x"$ac_cv_header_stonith_stonith_h" = x"yes"])
