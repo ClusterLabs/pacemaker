@@ -27,6 +27,7 @@
  * The remove-after-stop cluster property is not present.
  * The stonith-action cluster property is set to "off" if it was previously set
    to "poweroff".
+ * The "collocated" and "ordered" group meta-attributes are not present.
  * There are no fencing levels with index greater than 9. If there were any
    prior to this transformation, they are dropped.
 
@@ -163,6 +164,13 @@
                      /@value[. = 'poweroff']">
     <xsl:attribute name="value">off</xsl:attribute>
 </xsl:template>
+
+
+<!-- Resources -->
+
+<!-- Drop group meta-attributes "collocated" and "ordered" -->
+<xsl:template match="group/meta_attributes
+                     /nvpair[(@name = 'collocated') or (@name = 'ordered')]"/>
 
 
 <!-- Fencing topology -->

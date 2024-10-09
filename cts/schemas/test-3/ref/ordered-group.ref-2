@@ -20,7 +20,6 @@
         <primitive id="grp1_rsc1" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
         <primitive id="grp1_rsc2" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
         <meta_attributes id="grp1-meta_attributes" original="1">
-          <nvpair id="grp1-meta_attributes-ordered" name="ordered" value="false" original="1"/>
           <nvpair id="grp1-meta_attributes-other" name="other" value="true" original="1"/>
         </meta_attributes>
       </group>
@@ -30,7 +29,6 @@
           <primitive id="grp2_rsc2" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
           <meta_attributes id="grp2-meta_attributes" original="1">
             <nvpair id="grp2-meta_attributes-other" name="other" value="false" original="1"/>
-            <nvpair id="grp2-meta_attributes-ordered" name="ordered" value="true" original="1"/>
           </meta_attributes>
         </group>
       </clone>

@@ -49,6 +49,35 @@
   </define>
 
   <!--
+   These meta-attributes are allowed with value other than "default" and
+   "#default" (the latter disallowed for all nvpairs)
+   -->
+  <define name="rsc_meta_attributes.nvpair.unsupported.default">
+    <group>
+      <attribute name="name">
+        <choice>
+          <value type="string">is-managed</value>
+          <value type="string">migration-threshold</value>
+          <value type="string">resource-stickiness</value>
+          <value type="string">target-role</value>
+        </choice>
+      </attribute>
+      <optional>
+        <attribute name="value">
+          <data type="string">
+            <except>
+              <choice>
+                <value>default</value>
+                <value>#default</value>
+              </choice>
+            </except>
+          </data>
+        </attribute>
+      </optional>
+    </group>
+  </define>
+
+  <!--
    Disallow resource meta-attribute name-value pairs for which support was
    recently dropped. The idea is to prevent a user from adding the option under
    the belief that it will still affect behavior. Sometime in the future,
@@ -72,33 +101,31 @@
         </attribute>
         <ref name="element-nvset.value"/>
       </group>
+      <ref name="rsc_meta_attributes.nvpair.unsupported.default"/>
+    </choice>
+  </define>
 
-      <!--
-       These meta-attributes are allowed with value other than "default" and
-       "#default" (the latter disallowed for all nvpairs)
-       -->
+  <define name="rsc_group_meta_attributes.nvpair.unsupported">
+    <choice>
       <group>
         <attribute name="name">
-          <choice>
-            <value type="string">is-managed</value>
-            <value type="string">migration-threshold</value>
-            <value type="string">resource-stickiness</value>
-            <value type="string">target-role</value>
-          </choice>
+          <data type="string">
+            <except>
+              <choice>
+                <value>collocated</value>
+                <value>is-managed</value>
+                <value>migration-threshold</value>
+                <value>ordered</value>
+                <value>resource-stickiness</value>
+                <value>restart-type</value>
+                <value>target-role</value>
+              </choice>
+            </except>
+          </data>
         </attribute>
-        <optional>
-          <attribute name="value">
-            <data type="string">
-              <except>
-                <choice>
-                  <value>default</value>
-                  <value>#default</value>
-                </choice>
-              </except>
-            </data>
-          </attribute>
-        </optional>
+        <ref name="element-nvset.value"/>
       </group>
+      <ref name="rsc_meta_attributes.nvpair.unsupported.default"/>
     </choice>
   </define>
 
