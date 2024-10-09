@@ -183,6 +183,26 @@ async_fence_helper(gpointer user_data)
     return TRUE;
 }
 
+static int
+setup_fencing(stonith_t **st)
+{
+    int rc = pcmk_rc_ok;
+
+    *st = stonith_api_new();
+    if (*st == NULL) {
+        return ENOMEM;
+    }
+
+    rc = (*st)->cmds->connect(*st, crm_system_name, NULL);
+    if (rc < 0) {
+        rc = pcmk_legacy2rc(rc);
+        stonith_api_delete(*st);
+        *st = NULL;
+    }
+
+    return rc;
+}
+
 int
 pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
                       const char *name, unsigned int timeout,
