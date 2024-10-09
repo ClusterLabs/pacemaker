@@ -1,0 +1,42 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="16" num_updates="0" admin_epoch="0">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * There are two resource groups: one standalone and one cloned.
+         * Each group has the "collocated" and "other" meta-attributes set.
+         * There is a primitive resource with the "collocated" meta-attribute
+           set.
+
+         In this situation, the "collocated" meta-attributes should be dropped
+         from groups. All other meta-attributes should remain.
+      -->
+    <crm_config/>
+    <nodes/>
+    <resources>
+      <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="rsc1-meta_attributes">
+          <nvpair id="rsc1-meta_attributes-collocated" name="collocated" value="false"/>
+        </meta_attributes>
+      </primitive>
+      <group id="grp1">
+        <primitive id="grp1_rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="grp1_rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <meta_attributes id="grp1-meta_attributes">
+          <nvpair id="grp1-meta_attributes-collocated" name="collocated" value="false"/>
+          <nvpair id="grp1-meta_attributes-other" name="other" value="true"/>
+        </meta_attributes>
+      </group>
+      <clone id="grp2-clone">
+        <group id="grp2">
+          <primitive id="grp2_rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
+          <primitive id="grp2_rsc2" class="ocf" provider="pacemaker" type="Dummy"/>
+          <meta_attributes id="grp2-meta_attributes">
+            <nvpair id="grp2-meta_attributes-other" name="other" value="false"/>
+            <nvpair id="grp2-meta_attributes-collocated" name="collocated" value="true"/>
+          </meta_attributes>
+        </group>
+      </clone>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
