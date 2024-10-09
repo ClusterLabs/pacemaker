@@ -660,6 +660,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
     int rc;
     xmlNode *reply = NULL;
     enum crm_ipc_flags flags = crm_ipc_flags_none;
+    time_t timeout;
 
     if ((api == NULL) || (api->ipc == NULL) || (request == NULL)) {
         return EINVAL;
@@ -676,6 +677,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
 
     // The 0 here means a default timeout of 5 seconds
     rc = crm_ipc_send(api->ipc, request, flags, 0, &reply);
+    timeout = time(NULL) + 5;
 
     if (rc < 0) {
         return pcmk_legacy2rc(rc);
@@ -693,6 +695,11 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
             rc = crm_ipc_read(api->ipc);
 
             if (rc == -EAGAIN) {
+                /* 'crmadmin --dc_lookup' would stuck if called when the dc is offine.
+                 * so let's give it 5 seconds.
+                 */
+                if (timeout < time(NULL))
+                    break;
                 continue;
             } else if (rc == -ENOMSG || rc == pcmk_ok) {
                 return pcmk_rc_ok;
