@@ -1131,6 +1131,9 @@ G_GNUC_INTERNAL
 int pcmk__setup_output_cib_sched(pcmk__output_t **out, cib_t **cib,
                                  pcmk_scheduler_t **scheduler, xmlNode **xml);
 
+G_GNUC_INTERNAL
+int pcmk__setup_output_fencing(pcmk__output_t **out, stonith_t **st, xmlNode **xml);
+
 #ifdef __cplusplus
 }
 #endif
