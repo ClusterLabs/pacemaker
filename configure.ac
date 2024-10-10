@@ -1255,45 +1255,20 @@ dnl ncurses takes precedence.
 dnl
 AC_CHECK_HEADERS([curses.h curses/curses.h ncurses.h ncurses/ncurses.h])
 
-dnl Although n-library is preferred, only look for it if the n-header was found.
-CURSESLIBS=''
-PC_NAME_CURSES=""
-PC_LIBS_CURSES=""
-AS_IF([test x"$ac_cv_header_ncurses_h" = x"yes"], [
-    AC_CHECK_LIB(ncurses, printw,
-                 [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
-    CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
-    PC_NAME_CURSES="ncurses"
-])
-
-AS_IF([test x"$ac_cv_header_ncurses_ncurses_h" = x"yes"], [
-    AC_CHECK_LIB(ncurses, printw,
-                 [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
-    CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
-    PC_NAME_CURSES="ncurses"
-])
-
-dnl Only look for non-n-library if there was no n-library.
-AS_IF([test x"$CURSESLIBS" = x"" && test x"$ac_cv_header_curses_h" = x"yes"], [
-    AC_CHECK_LIB(curses, printw,
-                 [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
-    PC_LIBS_CURSES="$CURSESLIBS"
-])
-
-dnl Only look for non-n-library if there was no n-library.
-AS_IF([test x"$CURSESLIBS" = x"" && test x"$ac_cv_header_curses_curses_h" = x"yes"], [
-    AC_CHECK_LIB(curses, printw,
-                 [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
-    PC_LIBS_CURSES="$CURSESLIBS"
-])
-
-AS_IF([test x"$CURSESLIBS" != x""],
-      [PCMK_FEATURES="$PCMK_FEATURES ncurses"])
+save_LIBS="$LIBS"
+found_curses=0
+CURSES_LIBS=""
+LIBS=""
+AC_SEARCH_LIBS([printw], [ncurses curses],
+               [test "$ac_cv_search_printw" = "none required" || CURSES_LIBS="$LIBS"
+                found_curses=1],
+               [found_curses=0])
+LIBS="$save_LIBS"
 
 dnl Check for printw() prototype compatibility
-AS_IF([test x"$CURSESLIBS" != x"" && cc_supports_flag -Wcast-qual], [
-    ac_save_LIBS=$LIBS
-    LIBS="$CURSESLIBS"
+AS_IF([test $found_curses -eq 1 && cc_supports_flag -Wcast-qual], [
+    ac_save_LIBS="$LIBS"
+    LIBS="$CURSES_LIBS"
 
     # avoid broken test because of hardened build environment in Fedora 23+
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
@@ -1311,12 +1286,18 @@ AS_IF([test x"$CURSESLIBS" != x"" && cc_supports_flag -Wcast-qual], [
 #  include <ncurses/ncurses.h>
 #elif defined(HAVE_CURSES_H)
 #  include <curses.h>
+#elif defined(HAVE_CURSES_CURSES_H)
+#  include <curses/curses.h>
 #endif
                          ],
                          [printw((const char *)"Test");]
         )],
-        [AC_MSG_RESULT([yes])],
+        [AC_MSG_RESULT([yes])
+         PCMK_FEATURES="$PCMK_FEATURES ncurses"
+        ],
         [
+            found_curses=0
+            CURSES_LIBS=""
             AC_MSG_RESULT([no])
             AC_MSG_WARN(m4_normalize([Disabling curses because the printw()
                                       function of your (n)curses library is old.
@@ -1325,18 +1306,15 @@ AS_IF([test x"$CURSESLIBS" != x"" && cc_supports_flag -Wcast-qual], [
                                       recommended, available from
                                       https://invisible-island.net/ncurses/)
                                      ]))
-            AC_DEFINE([HAVE_INCOMPATIBLE_PRINTW], [1],
-                      [Define to 1 if curses library has incompatible printw()])
         ]
     )
 
-    LIBS=$ac_save_LIBS
+    LIBS="$ac_save_LIBS"
     cc_restore_flags
 ])
 
-AC_SUBST(CURSESLIBS)
-AC_SUBST(PC_NAME_CURSES)
-AC_SUBST(PC_LIBS_CURSES)
+AC_DEFINE_UNQUOTED([PCMK__ENABLE_CURSES], [$found_curses], [have ncurses library])
+AC_SUBST(CURSES_LIBS)
 
 dnl ========================================================================
 dnl    Profiling and GProf
