@@ -1011,7 +1011,12 @@ AC_SEARCH_LIBS([socket], [socket])              dnl -lsocket
 AC_SEARCH_LIBS([sched_getscheduler], [rt],      dnl -lrt (for some old platforms)
                [test "$ac_cv_search_sched_getscheduler" = "none required" || PC_LIBS_RT="$ac_cv_search_sched_getscheduler"])
 AC_SEARCH_LIBS([dlopen], [dl])                  dnl -ldl (for Linux)
-AC_SEARCH_LIBS([pam_start], [pam])              dnl -lpam (if available)
+
+save_LIBS=$LIBS
+AC_SEARCH_LIBS([pam_start], [pam],              dnl -lpam (if available)
+               [test "$ac_cv_search_pam_start" = "none required" || PAMLIBS="$LIBS"])
+AC_SUBST(PAMLIBS)
+LIBS=$save_LIBS
 
 PKG_CHECK_MODULES([UUID], [uuid],
                   [CPPFLAGS="${CPPFLAGS} ${UUID_CFLAGS}"
