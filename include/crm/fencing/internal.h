@@ -171,6 +171,27 @@ stonith__op_state_pending(enum op_state state)
 gboolean stonith__watchdog_fencing_enabled_for_node(const char *node);
 gboolean stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node);
 
+/*!
+ * \internal
+ * \brief Validate a fencing configuration
+ *
+ * \param[in,out] st            Fencer connection to use
+ * \param[in]     call_options  Group of enum stonith_call_options
+ * \param[in]     rsc_id        Resource to validate
+ * \param[in]     namespace_s   Type of fence agent to search for
+ * \param[in]     agent         Fence agent to validate
+ * \param[in,out] params        Fence device configuration parameters
+ * \param[in]     timeout_sec   How long to wait for operation to complete
+ * \param[in,out] output        If non-NULL, where to store any agent output
+ * \param[in,out] error_output  If non-NULL, where to store agent error output
+ *
+ * \return Standard Pacemaker return code
+ */
+int stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
+                      const char *namespace_s, const char *agent,
+                      GHashTable *params, const char *host_arg, int timeout_sec,
+                      char **output, char **error_output);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1730,41 +1730,33 @@ stonith_api_delete(stonith_t * stonith)
     }
 }
 
-static int
-stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
-                     const char *namespace_s, const char *agent,
-                     const stonith_key_value_t *params, int timeout_sec,
-                     char **output, char **error_output)
+static gboolean
+is_stonith_param(gpointer key, gpointer value, gpointer user_data)
 {
-    /* Validation should be done directly via the agent, so we can get it from
-     * stonith_admin when the cluster is not running, which is important for
-     * higher-level tools.
-     */
+    return pcmk_stonith_param(key);
+}
 
-    int rc = pcmk_ok;
+int
+stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
+                  const char *namespace_s, const char *agent,
+                  GHashTable *params, const char *host_arg, int timeout_sec,
+                  char **output, char **error_output)
+{
+    int rc = pcmk_rc_ok;
 
     /* Use a dummy node name in case the agent requires a target. We assume the
      * actual target doesn't matter for validation purposes (if in practice,
      * that is incorrect, we will need to allow the caller to pass the target).
      */
     const char *target = "node1";
-    const char *host_arg = NULL;
 
-    GHashTable *params_table = pcmk__strkey_table(free, free);
-
-    // Convert parameter list to a hash table
-    for (; params; params = params->next) {
-        if (pcmk__str_eq(params->key, PCMK_STONITH_HOST_ARGUMENT,
-                         pcmk__str_none)) {
-            host_arg = params->value;
-        }
-        if (!pcmk_stonith_param(params->key)) {
-            pcmk__insert_dup(params_table, params->key, params->value);
-        }
+    if (params != NULL) {
+        /* Remove special stonith params from the table before doing anything else */
+        g_hash_table_foreach_remove(params, is_stonith_param, NULL);
     }
 
 #if PCMK__ENABLE_CIBSECRETS
-    rc = pcmk__substitute_secrets(rsc_id, params_table);
+    rc = pcmk__substitute_secrets(rsc_id, params);
     if (rc != pcmk_rc_ok) {
         crm_warn("Could not replace secret parameters for validation of %s: %s",
                  agent, pcmk_rc_str(rc));
@@ -1786,21 +1778,23 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     switch (stonith_get_namespace(agent, namespace_s)) {
         case st_namespace_rhcs:
             rc = stonith__rhcs_validate(st, call_options, target, agent,
-                                        params_table, host_arg, timeout_sec,
+                                        params, host_arg, timeout_sec,
                                         output, error_output);
+            rc = pcmk_legacy2rc(rc);
             break;
 
 #if HAVE_STONITH_STONITH_H
         case st_namespace_lha:
             rc = stonith__lha_validate(st, call_options, target, agent,
-                                       params_table, timeout_sec, output,
+                                       params, timeout_sec, output,
                                        error_output);
+            rc = pcmk_legacy2rc(rc);
             break;
 #endif
 
         case st_namespace_invalid:
             errno = ENOENT;
-            rc = -errno;
+            rc = errno;
 
             if (error_output) {
                 *error_output = crm_strdup_printf("Agent %s not found", agent);
@@ -1812,7 +1806,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
 
         default:
             errno = EOPNOTSUPP;
-            rc = -errno;
+            rc = errno;
 
             if (error_output) {
                 *error_output = crm_strdup_printf("Agent %s does not support validation",
@@ -1823,6 +1817,40 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
 
             break;
     }
+
+    return rc;
+}
+
+static int
+stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
+                     const char *namespace_s, const char *agent,
+                     const stonith_key_value_t *params, int timeout_sec,
+                     char **output, char **error_output)
+{
+    /* Validation should be done directly via the agent, so we can get it from
+     * stonith_admin when the cluster is not running, which is important for
+     * higher-level tools.
+     */
+
+    int rc = pcmk_ok;
+    const char *host_arg = NULL;
+
+    GHashTable *params_table = pcmk__strkey_table(free, free);
+
+    // Convert parameter list to a hash table
+    for (; params; params = params->next) {
+        if (pcmk__str_eq(params->key, PCMK_STONITH_HOST_ARGUMENT, pcmk__str_none)) {
+            host_arg = params->value;
+        }
+
+        if (!pcmk_stonith_param(params->key)) {
+            pcmk__insert_dup(params_table, params->key, params->value);
+        }
+    }
+
+    rc = stonith__validate(st, call_options, rsc_id, namespace_s, agent,
+                           params_table, host_arg, timeout_sec, output,
+                           error_output);
 
     g_hash_table_destroy(params_table);
     return rc;
