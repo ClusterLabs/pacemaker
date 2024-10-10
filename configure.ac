@@ -1254,40 +1254,12 @@ dnl ncurses takes precedence.
 dnl
 AC_CHECK_HEADERS([curses.h curses/curses.h ncurses.h ncurses/ncurses.h])
 
-dnl Although n-library is preferred, only look for it if the n-header was found.
-CURSESLIBS=''
-PC_NAME_CURSES=""
-PC_LIBS_CURSES=""
-AS_IF([test x"$ac_cv_header_ncurses_h" = x"yes"], [
-    AC_CHECK_LIB(ncurses, printw,
-                 [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
-    CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
-    PC_NAME_CURSES="ncurses"
-])
-
-AS_IF([test x"$ac_cv_header_ncurses_ncurses_h" = x"yes"], [
-    AC_CHECK_LIB(ncurses, printw,
-                 [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
-    CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
-    PC_NAME_CURSES="ncurses"
-])
-
-dnl Only look for non-n-library if there was no n-library.
-AS_IF([test x"$CURSESLIBS" = x"" && test x"$ac_cv_header_curses_h" = x"yes"], [
-    AC_CHECK_LIB(curses, printw,
-                 [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
-    PC_LIBS_CURSES="$CURSESLIBS"
-])
-
-dnl Only look for non-n-library if there was no n-library.
-AS_IF([test x"$CURSESLIBS" = x"" && test x"$ac_cv_header_curses_curses_h" = x"yes"], [
-    AC_CHECK_LIB(curses, printw,
-                 [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
-    PC_LIBS_CURSES="$CURSESLIBS"
-])
-
-AS_IF([test x"$CURSESLIBS" != x""],
-      [PCMK_FEATURES="$PCMK_FEATURES ncurses"])
+save_LIBS=$LIBS
+AC_SEARCH_LIBS([printw], [ncurses curses],
+               [AC_DEFINE(HAVE_LIBNCURSES, 1, have ncurses library)
+                test "$ac_cv_search_printw" = "none required" || CURSESLIBS="$LIBS"
+                PCMK_FEATURES="$PCMK_FEATURES ncurses"])
+LIBS=$save_LIBS
 
 dnl Check for printw() prototype compatibility
 AS_IF([test x"$CURSESLIBS" != x"" && cc_supports_flag -Wcast-qual], [
@@ -1334,8 +1306,6 @@ AS_IF([test x"$CURSESLIBS" != x"" && cc_supports_flag -Wcast-qual], [
 ])
 
 AC_SUBST(CURSESLIBS)
-AC_SUBST(PC_NAME_CURSES)
-AC_SUBST(PC_LIBS_CURSES)
 
 dnl ========================================================================
 dnl    Profiling and GProf
