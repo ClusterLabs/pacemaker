@@ -31,6 +31,7 @@ extern "C" {
 #  include <stdbool.h>  // bool
 #  include <stdint.h>   // uint32_t
 #  include <time.h>     // time_t
+#  include <glib.h>     // GHashTable
 
 /* *INDENT-OFF* */
 enum stonith_state {
@@ -707,6 +708,11 @@ bool stonith_agent_exists(const char *agent, int timeout);
  * \param[in] action  Fence action
  */
 const char *stonith_action_str(const char *action);
+
+int stonith_validate(stonith_t *st, int call_options, const char *rsc_id,
+                     const char *namespace_s, const char *agent,
+                     GHashTable *params, const char *host_arg, int timeout_sec,
+                     char **output, char **error_output);
 
 #ifdef __cplusplus
 }
