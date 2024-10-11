@@ -136,7 +136,7 @@ class Corosync:
         if self.verbose:
             print("Starting corosync")
 
-        with subprocess.Popen("corosync", stdout=subprocess.PIPE) as test:
+        with subprocess.Popen("corosync", stdout=subprocess.PIPE, stderr=subprocess.PIPE) as test:
             test.wait()
 
         # Wait for corosync to be ready before returning
