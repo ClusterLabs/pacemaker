@@ -1017,18 +1017,11 @@ AC_SEARCH_LIBS([dlopen], [dl],
 AC_SUBST(DL_LIBS)
 LIBS="$save_LIBS"
 
-AC_CHECK_LIB(rt, sched_getscheduler)            dnl -lrt (for Tru64)
 AC_CHECK_LIB(pam, pam_start)                    dnl -lpam (if available)
 
 PKG_CHECK_MODULES([UUID], [uuid],
                   [CPPFLAGS="${CPPFLAGS} ${UUID_CFLAGS}"
                    LIBS="${LIBS} ${UUID_LIBS}"])
-
-AC_CHECK_FUNCS([sched_setscheduler])
-AS_IF([test x"$ac_cv_func_sched_setscheduler" != x"yes"],
-      [PC_LIBS_RT=""],
-      [PC_LIBS_RT="-lrt"])
-AC_SUBST(PC_LIBS_RT)
 
 # Require minimum glib version
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.42.0],
@@ -1186,6 +1179,7 @@ dnl ========================================================================
 REQUIRE_FUNC([alphasort])
 REQUIRE_FUNC([getopt])
 REQUIRE_FUNC([scandir])
+REQUIRE_FUNC([sched_getscheduler])
 REQUIRE_FUNC([setenv])
 REQUIRE_FUNC([strndup])
 REQUIRE_FUNC([strnlen])
