@@ -1,9 +1,19 @@
-* Thu Oct 03 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9
+* Mon Oct 14 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9-rc2
+- 11 commits with 10 files changed, 298 insertions(+), 68 deletions(-)
+
+- Fixes since Pacemaker-2.1.9-rc1
+  + tools: crm_resource did not return error if schema upgrade failed
+    (regression introduced in 2.1.8)
+  + libcrmcommon: avoid potential overflow when adding seconds
+  + libcib: remote CIB administration now cannot block server
+  + tools: don't assert if stdout or stderr is closed by caller
+
+* Thu Oct 03 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9-rc1
 - 134 commits with 245 files changed, 3919 insertions(+), 2142 deletions(-)
 
 - Features added since Pacemaker-2.1.8
   + CIB: allow no-quorum-policy "fence" and deprecate "suicide"
-  + build: support building with latest libxml2
+  + build: support building with libxml2 2.13.0 or newer
 
 - Fixes since Pacemaker-2.1.8
   + CIB: detect newly created alerts section (regression introduced in 2.1.7)
@@ -11,7 +21,7 @@
   + executor: don't block during TLS handshakes
   + executor: discard any agent output after about 10MiB
   + scheduler: avoid memory leak when checking for unfencing-capable devices
-  + libcrmcommon: check for overflow when parsing and manipulting date/times
+  + libcrmcommon: check for overflow when parsing and manipulating date/times
   + tools: properly handle resources removed from configuration when
     displaying node history in crm_mon
 
