@@ -1007,11 +1007,17 @@ AC_SUBST([GETOPT_PATH])
 dnl ===============================================
 dnl Libraries
 dnl ===============================================
-AC_CHECK_LIB(socket, socket)                    dnl -lsocket
-AC_CHECK_LIB(c, dlopen)                         dnl if dlopen is in libc...
-AC_CHECK_LIB(dl, dlopen)                        dnl -ldl (for Linux)
+AC_SEARCH_LIBS([socket], [socket])
+
+save_LIBS="$LIBS"
+DL_LIBS=""
+LIBS=""
+AC_SEARCH_LIBS([dlopen], [dl],
+               [test "$ac_cv_search_dlopen" = "none required" || DL_LIBS="$LIBS"])
+AC_SUBST(DL_LIBS)
+LIBS="$save_LIBS"
+
 AC_CHECK_LIB(rt, sched_getscheduler)            dnl -lrt (for Tru64)
-AC_CHECK_LIB(gnugetopt, getopt_long)            dnl -lgnugetopt ( if available )
 AC_CHECK_LIB(pam, pam_start)                    dnl -lpam (if available)
 
 PKG_CHECK_MODULES([UUID], [uuid],
@@ -1031,15 +1037,6 @@ PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.42.0],
 
 # Check whether high-resolution sleep function is available
 AC_CHECK_FUNCS([nanosleep usleep])
-
-#
-# Where is dlopen?
-#
-AS_IF([test x"$ac_cv_lib_c_dlopen" = x"yes"],
-      [LIBADD_DL=""],
-      [test x"$ac_cv_lib_dl_dlopen" = x"yes"],
-      [LIBADD_DL=-ldl],
-      [LIBADD_DL=${lt_cv_dlopen_libs}])
 
 PKG_CHECK_MODULES(LIBXML2, [libxml-2.0 >= 2.9.2],
                   [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"

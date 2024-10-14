@@ -11,4 +11,4 @@ Requires.private: glib-2.0 libxml-2.0
 Conflicts:
 Cflags:           -I${includedir}
 Libs:             -L${libdir} -l${sub}
-Libs.private:
+Libs.private:     @DL_LIBS@
