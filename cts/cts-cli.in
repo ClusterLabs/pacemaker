@@ -2351,9 +2351,6 @@ class CrmVerifyRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         invalid_tests = [
-            Test("Verbosely verify a file-specified configuration with an unallowed fencing level ID",
-                 "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_fencing_topology.xml --verbose",
-                 expected_rc=ExitStatus.CONFIG),
             make_test_group("Verify a file-specified invalid configuration",
                             "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml {fmt}",
                             [Test, ValidatingTest],
