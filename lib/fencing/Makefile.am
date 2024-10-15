@@ -21,7 +21,7 @@ libstonithd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
 libstonithd_la_LIBADD = $(top_builddir)/lib/services/libcrmservice.la
 libstonithd_la_LIBADD += $(top_builddir)/lib/common/libcrmcommon.la
-libstonithd_la_LIBADD += @DL_LIBS@
+libstonithd_la_LIBADD += @DL_LIBS@ @STONITH_LIBS@
 
 ## Library sources (*must* use += format for bumplibs)
 libstonithd_la_SOURCES	= st_actions.c

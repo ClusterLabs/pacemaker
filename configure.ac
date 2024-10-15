@@ -1379,8 +1379,18 @@ AS_IF([test x"$cross_compiling" != x"yes"],
       [CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"])
 AC_CHECK_HEADERS([stonith/stonith.h],
                  [
-                     AC_CHECK_LIB([pils], [PILLoadPlugin])
-                     AC_CHECK_LIB([plumb], [G_main_add_IPC_Channel])
+                     save_LIBS="$LIBS"
+                     STONITH_LIBS=""
+                     LIBS=""
+                     AC_SEARCH_LIBS([PILLoadPlugin], [pils],
+                                    [test "$ac_cv_search_PILLoadPlugin" = "none required" || STONITH_LIBS="$LIBS"])
+
+                     LIBS=""
+                     AC_SEARCH_LIBS([G_main_add_IPC_Channel], [plumb],
+                                    [test "$ac_cv_search_G_main_add_IPC_Channel" = "none required" || STONITH_LIBS="$STONITH_LIBS $LIBS"])
+                     AC_SUBST(STONITH_LIBS)
+                     LIBS="$save_LIBS"
+
                      PCMK_FEATURES="$PCMK_FEATURES lha"
                  ])
 AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test x"$ac_cv_header_stonith_stonith_h" = x"yes"])
