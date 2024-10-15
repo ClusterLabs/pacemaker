@@ -25,7 +25,7 @@ pacemaker_based_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 pacemaker_based_LDADD = $(top_builddir)/lib/cluster/libcrmcluster.la
 pacemaker_based_LDADD += $(top_builddir)/lib/cib/libcib.la
 pacemaker_based_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
-pacemaker_based_LDADD += $(CLUSTERLIBS)
+pacemaker_based_LDADD += $(CLUSTERLIBS) $(PAM_LIBS)
 
 pacemaker_based_SOURCES	= pacemaker-based.c 	\
 			  based_callbacks.c 	\

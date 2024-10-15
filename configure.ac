@@ -1017,7 +1017,13 @@ AC_SEARCH_LIBS([dlopen], [dl],
 AC_SUBST(DL_LIBS)
 LIBS="$save_LIBS"
 
-AC_CHECK_LIB(pam, pam_start)                    dnl -lpam (if available)
+save_LIBS="$LIBS"
+PAM_LIBS=""
+LIBS=""
+AC_SEARCH_LIBS([pam_start], [pam],
+               [test "$ac_cv_search_pam_start" = "none required" || PAM_LIBS="$LIBS"])
+AC_SUBST(PAM_LIBS)
+LIBS="$save_LIBS"
 
 PKG_CHECK_MODULES([UUID], [uuid],
                   [CPPFLAGS="${CPPFLAGS} ${UUID_CFLAGS}"
