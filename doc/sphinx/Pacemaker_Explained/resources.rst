@@ -37,7 +37,7 @@ more detail below:
 * lsb
 * systemd
 * service
-* stonithd
+* stonith
 
 Support for some standards is controlled by build options and so might not be
 available in any particular build of Pacemaker. The command ``crm_resource
