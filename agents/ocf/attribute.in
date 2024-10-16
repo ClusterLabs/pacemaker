@@ -22,7 +22,7 @@ Expects to have a fully populated OCF RA-compliant environment set."
 # Ensure certain variables are set and not empty
 : ${HA_VARRUN:="@runstatedir@"}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
-: ${OCF_RESOURCE_INSTANCE:="undef"}
+: ${OCF_RESOURCE_INSTANCE:="RESOURCENAME"}
 
 DEFAULT_STATE_FILE="${HA_VARRUN%%/}/opa-${OCF_RESOURCE_INSTANCE}.state"
 if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
