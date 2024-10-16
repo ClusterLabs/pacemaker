@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:attribute resource agent
 #
-# Copyright 2016-2023 the Pacemaker project contributors
+# Copyright 2016-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -20,7 +20,7 @@ Expects to have a fully populated OCF RA-compliant environment set."
 : ${__OCF_ACTION:="$1"}
 
 # Ensure certain variables are set and not empty
-: ${HA_VARRUN:="/var/run"}
+: ${HA_VARRUN:="@runstatedir@"}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 : ${OCF_RESOURCE_INSTANCE:="undef"}
 
