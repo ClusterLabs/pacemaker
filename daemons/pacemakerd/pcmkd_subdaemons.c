@@ -18,6 +18,7 @@
 #include <grp.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -453,7 +454,7 @@ start_child(pcmk_child_t * child)
         use_valgrind = FALSE;
     }
 
-    if ((child->uid != 0) && (crm_user_lookup(child->uid, &uid, &gid) < 0)) {
+    if ((child->uid != NULL) && (crm_user_lookup(child->uid, &uid, &gid) < 0)) {
         crm_err("Invalid user (%s) for subdaemon %s: not found",
                 child->uid, name);
         return EACCES;
