@@ -35,15 +35,13 @@ libcrmcommon_la_LDFLAGS	= -version-info 47:1:13
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libcrmcommon_la_LIBADD = @LIBADD_DL@
-
 # If configured with --with-profiling or --with-coverage, BUILD_PROFILING will
 # be set and -fno-builtin will be added to the CFLAGS.  However, libcrmcommon
 # uses the fabs() function which is normally supplied by gcc as one of its
 # builtins.  Therefore we need to explicitly link against libm here or the
 # tests won't link.
 if BUILD_PROFILING
-libcrmcommon_la_LIBADD	+= -lm
+libcrmcommon_la_LIBADD	= -lm
 endif
 
 ## Library sources (*must* use += format for bumplibs)

@@ -22,7 +22,7 @@
 
 #include "crm_mon.h"
 
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
 
 typedef struct curses_list_data_s {
     unsigned int len;
@@ -488,7 +488,7 @@ static pcmk__message_entry_t fmt_functions[] = {
 
 void
 crm_mon_register_messages(pcmk__output_t *out) {
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
     pcmk__register_messages(out, fmt_functions);
 #endif
 }

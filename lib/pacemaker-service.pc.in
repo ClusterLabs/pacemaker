@@ -14,4 +14,3 @@ Requires.private: libxml-2.0 @PC_NAME_DBUS@
 Conflicts:
 Cflags:           -I${includedir}
 Libs:             -L${libdir} -l${sub}
-Libs.private:     @PC_LIBS_RT@
