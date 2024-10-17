@@ -37,6 +37,4 @@ am__v_BOOK_1 =
 MAINTAINERCLEANFILES	= Makefile.in
 
 AM_CPPFLAGS		= -I$(top_builddir)/include 	\
-			  -I$(top_srcdir)/include 	\
-			  -I$(top_builddir)/libltdl 	\
-			  -I$(top_srcdir)/libltdl
+			  -I$(top_srcdir)/include
