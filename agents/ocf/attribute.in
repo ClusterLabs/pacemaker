@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:attribute resource agent
 #
-# Copyright 2016-2023 the Pacemaker project contributors
+# Copyright 2016-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -14,15 +14,16 @@ USAGE="Usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-d
 
 Expects to have a fully populated OCF RA-compliant environment set."
 
-# Load OCF helper functions
+# If the OCF helper funtions aren't available, we can still show metadata.
 : ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
-. "${OCF_FUNCTIONS}"
+[ -r "${OCF_FUNCTIONS}" ] && . "${OCF_FUNCTIONS}"
+
 : ${__OCF_ACTION:="$1"}
 
 # Ensure certain variables are set and not empty
-: ${HA_VARRUN:="/var/run"}
+: ${HA_VARRUN:="@runstatedir@"}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
-: ${OCF_RESOURCE_INSTANCE:="undef"}
+: ${OCF_RESOURCE_INSTANCE:="RESOURCENAME"}
 
 DEFAULT_STATE_FILE="${HA_VARRUN%%/}/opa-${OCF_RESOURCE_INSTANCE}.state"
 if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then

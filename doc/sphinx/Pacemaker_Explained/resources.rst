@@ -40,7 +40,7 @@ more detail below:
 * lsb
 * systemd
 * service
-* stonithd
+* stonith
 * nagios *(deprecated since 2.1.6)*
 * upstart *(deprecated since 2.1.0)*
 

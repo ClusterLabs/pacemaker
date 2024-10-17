@@ -38,6 +38,7 @@ struct {
     char *ipc_name;
     gboolean bash_export;
 } options = {
+    .timeout = 30000, // Default to 30 seconds
     .optarg = NULL,
     .ipc_name = NULL,
     .bash_export = FALSE
@@ -80,9 +81,10 @@ static GOptionEntry command_options[] = {
 
 static GOptionEntry additional_options[] = {
     { "timeout", 't', 0, G_OPTION_ARG_CALLBACK, command_cb,
-      "Time  to wait before declaring the operation"
-      "\n                             failed",
-      "TIMESPEC"
+      "Time to wait before declaring the operation"
+      "\n                             "
+      "failed (default 30s; use 0 to disable timeout)",
+      "DURATION"
     },
     { "bash-export", 'B', 0, G_OPTION_ARG_NONE, &options.bash_export,
       "Display nodes as shell commands of the form 'export uname=uuid'"
@@ -131,16 +133,17 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
+#define DESC \
+    "Notes:\n\n"                                                              \
+    "DURATION in any command line option can be specified as an integer\n"    \
+    "number of seconds, an integer plus units (ms, msec, us, usec, s, sec,\n" \
+    "m, min, h, or hr), or an ISO 8601 period specification.\n\n"             \
+    "Report bugs to " PCMK__BUG_URL
+
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
-
-    const char *description = "Notes:\n\n"
-                              "Time Specification:\n\n"
-                              "The TIMESPEC in any command line option can be specified in many different\n"
-                              "formats.  It can be just an integer number of seconds, a number plus units\n"
-                              "(ms/msec/us/usec/s/sec/m/min/h/hr), or an ISO 8601 period specification.\n\n"
-                              "Report bugs to " PCMK__BUG_URL;
 
     GOptionEntry extra_prog_entries[] = {
         { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
@@ -151,7 +154,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     };
 
     context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
-    g_option_context_set_description(context, description);
+    g_option_context_set_description(context, DESC);
 
     /* Add the -q option, which cannot be part of the globally supported options
      * because some tools use that flag for something else.

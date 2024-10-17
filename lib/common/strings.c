@@ -482,7 +482,7 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
         msec = crm_get_msec(input);
     }
 
-    if (msec == PCMK__PARSE_INT_DEFAULT) {
+    if (msec < 0) {
         crm_warn("Using 0 instead of invalid interval specification '%s'",
                  input);
         msec = 0;
