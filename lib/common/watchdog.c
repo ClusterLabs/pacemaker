@@ -227,13 +227,21 @@ pcmk__locate_sbd(void)
     return sbd_pid;
 }
 
-long
+guint
 pcmk__get_sbd_watchdog_timeout(void)
 {
-    static long sbd_timeout = -2;
+    static guint sbd_timeout = 0;
+    static bool have_timeout = false;
 
-    if (sbd_timeout == -2) {
-        sbd_timeout = crm_get_msec(getenv("SBD_WATCHDOG_TIMEOUT"));
+    if (have_timeout == false) {
+        char *env = getenv("SBD_WATCHDOG_TIMEOUT");
+
+        if (((env != NULL) && (env[0] == 'P')) ||
+            (pcmk_parse_interval_spec(env, &sbd_timeout) != pcmk_rc_ok)) {
+            crm_warn("SBD-daemon doesn't allow '%s' for "
+                     "SBD_WATCHDOG_TIMEOUT", env?env:"");
+        }
+        have_timeout = true;
     }
     return sbd_timeout;
 }
@@ -261,29 +269,12 @@ pcmk__get_sbd_sync_resource_startup(void)
     return sync_resource_startup != 0;
 }
 
-long
-pcmk__auto_stonith_watchdog_timeout(void)
-{
-    long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
-
-    return (sbd_timeout <= 0)? 0 : (2 * sbd_timeout);
-}
-
 bool
 pcmk__valid_stonith_watchdog_timeout(const char *value)
 {
-    /* @COMPAT At a compatibility break, accept either negative values or a
-     * specific string like "auto" (but not both) to mean "auto-calculate the
-     * timeout." Reject other values that aren't parsable as timeouts.
-     */
-    long st_timeout = value? crm_get_msec(value) : 0;
+    guint st_timeout = 0;
 
-    if (st_timeout < 0) {
-        st_timeout = pcmk__auto_stonith_watchdog_timeout();
-        crm_debug("Using calculated value %ld for "
-                  PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " (%s)",
-                  st_timeout, value);
-    }
+    pcmk_parse_interval_spec(value, &st_timeout);
 
     if (st_timeout == 0) {
         crm_debug("Watchdog may be enabled but "
@@ -298,8 +289,14 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
         return false;
 
     } else {
-        long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
+        guint sbd_timeout = pcmk__get_sbd_watchdog_timeout();
 
+        if (sbd_timeout == 0) {
+            crm_emerg("Shutting down: Can't get valid watchdog setting of "
+                      "SBD-daemon");
+            crm_exit(CRM_EX_FATAL);
+            return false;
+        }
         if (st_timeout < sbd_timeout) {
             crm_emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
                       " (%s) too short (must be >%ldms)",
