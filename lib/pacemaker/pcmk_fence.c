@@ -617,23 +617,21 @@ pcmk_fence_unregister_level(xmlNodePtr *xml, const char *target, int fence_level
 
 int
 pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
-                     const char *id, const stonith_key_value_t *params,
-                     unsigned int timeout)
+                     const char *id, GHashTable *params, unsigned int timeout)
 {
     char *output = NULL;
     char *error_output = NULL;
     int rc;
 
-    rc  = st->cmds->validate(st, st_opt_sync_call, id, NULL, agent, params,
-                             timeout/1000, &output, &error_output);
+    rc  = stonith__validate(st, st_opt_sync_call, id, NULL, agent, params,
+                            timeout/1000, &output, &error_output);
     out->message(out, "validate", agent, id, output, error_output, rc);
     return pcmk_legacy2rc(rc);
 }
 
 int
 pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
-                    const char *id, const stonith_key_value_t *params,
-                    unsigned int timeout)
+                    const char *id, GHashTable *params, unsigned int timeout)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;

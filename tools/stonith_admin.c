@@ -49,7 +49,7 @@ struct {
     gboolean registered;
     gboolean validate_cfg;
     GList *devices;
-    stonith_key_value_t *params;
+    GHashTable *params;
     int fence_level;
     int timeout ;
     long long tolerance_ms;
@@ -249,7 +249,12 @@ add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GEr
         retval = FALSE;
     } else {
         crm_info("Got: '%s'='%s'", optarg, env);
-        options.params = stonith_key_value_add(options.params, optarg, env);
+
+        if (options.params != NULL) {
+            options.params = pcmk__strkey_table(free, free);
+        }
+
+        pcmk__insert_dup(options.params, optarg, env);
     }
 
     free(key);
@@ -293,7 +298,12 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
         retval = FALSE;
     } else {
         crm_info("Got: '%s'='%s'", name, value);
-        options.params = stonith_key_value_add(options.params, name, value);
+
+        if (options.params == NULL) {
+            options.params = pcmk__strkey_table(free, free);
+        }
+
+        pcmk__insert_dup(options.params, name, value);
     }
 
     free(name);
@@ -584,15 +594,29 @@ main(int argc, char **argv)
 
             break;
 
-        case 'R':
+        case 'R': {
+            /* register_device wants a stonith_key_value_t instead of a GHashTable */
+            stonith_key_value_t *params = NULL;
+            GHashTableIter iter;
+            gpointer key, val;
+
+            if (options.params != NULL) {
+                g_hash_table_iter_init(&iter, options.params);
+                while (g_hash_table_iter_next(&iter, &key, &val)) {
+                    params = stonith_key_value_add(params, key, val);
+                }
+            }
             rc = st->cmds->register_device(st, st_opts, device, NULL, options.agent,
-                                           options.params);
+                                           params);
+            stonith_key_value_freeall(params, 1, 1);
+
             rc = pcmk_legacy2rc(rc);
             if (rc != pcmk_rc_ok) {
                 out->err(out, "Can't register device %s using agent %s: %s",
                          device, options.agent, pcmk_rc_str(rc));
             }
             break;
+        }
 
         case 'D':
             rc = st->cmds->remove_device(st, st_opts, device);
@@ -681,7 +705,10 @@ main(int argc, char **argv)
     pcmk__unregister_formats();
     free(name);
     g_list_free_full(options.devices, free);
-    stonith_key_value_freeall(options.params, 1, 1);
+
+    if (options.params != NULL) {
+        g_hash_table_destroy(options.params);
+    }
 
     if (st != NULL) {
         st->cmds->disconnect(st);
