@@ -591,12 +591,11 @@ int pcmk_fence_history(xmlNodePtr *xml, const char *target, unsigned int timeout
  *
  * \param[in,out] xml      The destination for the result, as an XML tree (if
  *                         not NULL, previous contents will be freed and lost)
- * \param[in,out] st       A connection to the fencer API
  * \param[in]     timeout  How long to wait for operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout);
+int pcmk_fence_installed(xmlNodePtr *xml, unsigned int timeout);
 
 /*!
  * \brief When was a device last fenced?
