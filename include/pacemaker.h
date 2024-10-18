@@ -642,14 +642,12 @@ int pcmk_fence_metadata(xmlNodePtr *xml, const char *agent, unsigned int timeout
  *
  * \param[in,out] xml      The destination for the result, as an XML tree (if
  *                         not NULL, previous contents will be freed and lost)
- * \param[in,out] st       A connection to the fencer API
  * \param[in]     target   If not NULL, return only devices that can fence this
  * \param[in]     timeout  How long to wait for operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, const char *target,
-                          unsigned int timeout);
+int pcmk_fence_registered(xmlNodePtr *xml, const char *target, unsigned int timeout);
 
 /*!
  * \brief Register a fencing topology level
