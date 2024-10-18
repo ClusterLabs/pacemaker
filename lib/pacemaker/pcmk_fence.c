@@ -20,6 +20,8 @@
 #include <pacemaker.h>
 #include <pacemaker-internal.h>
 
+#include "libpacemaker_private.h"
+
 static const int st_opts = st_opt_sync_call|st_opt_allow_self_fencing;
 
 static GMainLoop *mainloop = NULL;
@@ -313,25 +315,26 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
 }
 
 int
-pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, const char *target,
-                   unsigned int timeout, bool quiet, int verbose,
-                   bool broadcast, bool cleanup)
+pcmk_fence_history(xmlNodePtr *xml, const char *target, unsigned int timeout,
+                   bool quiet, int verbose, bool broadcast, bool cleanup)
 {
+    stonith_t *st = NULL;
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__xml_output_new(&out, xml);
+    rc = pcmk__setup_output_fencing(&out, &st, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
-
-    stonith__register_messages(out);
 
     out->quiet = quiet;
 
     rc = pcmk__fence_history(out, st, target, timeout, verbose, broadcast,
                              cleanup);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+
+    st->cmds->disconnect(st);
+    stonith_api_delete(st);
     return rc;
 }
 
