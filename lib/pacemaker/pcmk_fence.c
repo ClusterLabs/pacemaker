@@ -249,7 +249,8 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
                     unsigned int timeout, int verbose, bool broadcast,
                     bool cleanup)
 {
-    stonith_history_t *history = NULL, *hp, *latest = NULL;
+    stonith_history_t *history = NULL;
+    stonith_history_t *latest = NULL;
     int rc = pcmk_rc_ok;
     int opts = 0;
 
@@ -257,20 +258,25 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
         out->info(out, "cleaning up fencing-history%s%s",
                   target ? " for node " : "", target ? target : "");
     }
+
     if (broadcast) {
         out->info(out, "gather fencing-history from all nodes");
     }
 
     stonith__set_call_options(opts, target, st_opts);
+
     if (cleanup) {
         stonith__set_call_options(opts, target, st_opt_cleanup);
     }
+
     if (broadcast) {
         stonith__set_call_options(opts, target, st_opt_broadcast);
     }
+
     if (pcmk__str_eq(target, "*", pcmk__str_none)) {
         target = NULL;
     }
+
     rc = st->cmds->history(st, opts, target, &history, (timeout / 1000));
 
     if (cleanup) {
@@ -282,7 +288,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
     out->begin_list(out, "event", "events", "Fencing history");
 
     history = stonith__sort_history(history);
-    for (hp = history; hp; hp = hp->next) {
+    for (stonith_history_t *hp = history; hp != NULL; hp = hp->next) {
         if (hp->state == st_done) {
             latest = hp;
         }
