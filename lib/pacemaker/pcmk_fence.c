@@ -610,9 +610,21 @@ pcmk__fence_unregister_level(stonith_t *st, const char *target, int fence_level)
 }
 
 int
-pcmk_fence_unregister_level(stonith_t *st, const char *target, int fence_level)
+pcmk_fence_unregister_level(const char *target, int fence_level)
 {
-    return pcmk__fence_unregister_level(st, target, fence_level);
+    stonith_t* st = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = setup_fencing(&st);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    rc = pcmk__fence_unregister_level(st, target, fence_level);
+
+    st->cmds->disconnect(st);
+    stonith_api_delete(st);
+    return rc;
 }
 
 int
