@@ -596,9 +596,23 @@ pcmk__fence_unregister_level(stonith_t *st, const char *target, int fence_level)
 }
 
 int
-pcmk_fence_unregister_level(stonith_t *st, const char *target, int fence_level)
+pcmk_fence_unregister_level(xmlNodePtr *xml, const char *target, int fence_level)
 {
-    return pcmk__fence_unregister_level(st, target, fence_level);
+    stonith_t* st = NULL;
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__setup_output_fencing(&out, &st, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    rc = pcmk__fence_unregister_level(st, target, fence_level);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+
+    st->cmds->disconnect(st);
+    stonith_api_delete(st);
+    return rc;
 }
 
 int

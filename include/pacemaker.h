@@ -668,7 +668,8 @@ int pcmk_fence_register_level(xmlNodePtr *xml, const char *target, int fence_lev
 /*!
  * \brief Unregister a fencing topology level
  *
- * \param[in,out] st           A connection to the fencer API
+ * \param[in,out] xml          The destination for the result, as an XML tree (if
+ *                             not NULL, previous contents will be freed and lost)
  * \param[in]     target       What fencing level targets (as "name=value" to
  *                             target by given node attribute, or "@pattern" to
  *                             target by node name pattern, or a node name)
@@ -676,8 +677,7 @@ int pcmk_fence_register_level(xmlNodePtr *xml, const char *target, int fence_lev
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_unregister_level(stonith_t *st, const char *target,
-                                int fence_level);
+int pcmk_fence_unregister_level(xmlNodePtr *xml, const char *target, int fence_level);
 
 /*!
  * \brief Validate a fence device configuration
