@@ -684,7 +684,6 @@ int pcmk_fence_unregister_level(xmlNodePtr *xml, const char *target, int fence_l
  *
  * \param[in,out] xml      The destination for the result, as an XML tree (if
  *                         not NULL, previous contents will be freed and lost)
- * \param[in,out] st       A connection to the fencer API
  * \param[in]     agent    The agent to validate (for example, "fence_xvm")
  * \param[in]     id       Fence device ID (may be NULL)
  * \param[in]     params   Fence device configuration parameters
@@ -692,8 +691,8 @@ int pcmk_fence_unregister_level(xmlNodePtr *xml, const char *target, int fence_l
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
-                        const char *id, GHashTable *params, unsigned int timeout);
+int pcmk_fence_validate(xmlNodePtr *xml, const char *agent, const char *id,
+                        GHashTable *params, unsigned int timeout);
 
 #ifdef __cplusplus
 }

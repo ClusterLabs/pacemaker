@@ -630,21 +630,23 @@ pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
 }
 
 int
-pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
-                    const char *id, GHashTable *params, unsigned int timeout)
+pcmk_fence_validate(xmlNodePtr *xml, const char *agent, const char *id,
+                    GHashTable *params, unsigned int timeout)
 {
+    stonith_t *st = NULL;
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__xml_output_new(&out, xml);
+    rc = pcmk__setup_output_fencing(&out, &st, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
 
-    stonith__register_messages(out);
-
     rc = pcmk__fence_validate(out, st, agent, id, params, timeout);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+
+    st->cmds->disconnect(st);
+    stonith_api_delete(st);
     return rc;
 }
 
