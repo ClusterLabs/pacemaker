@@ -240,12 +240,23 @@ pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
 }
 
 int
-pcmk_request_fencing(stonith_t *st, const char *target, const char *action,
-                     const char *name, unsigned int timeout,
-                     unsigned int tolerance, int delay, char **reason)
+pcmk_request_fencing(const char *target, const char *action, const char *name,
+                     unsigned int timeout, unsigned int tolerance, int delay,
+                     char **reason)
 {
-    return pcmk__request_fencing(st, target, action, name, timeout, tolerance,
-                                 delay, reason);
+    stonith_t *st = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = setup_fencing(&st);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    rc = pcmk__request_fencing(st, target, action, name, timeout, tolerance,
+                               delay, reason);
+    st->cmds->disconnect(st);
+    stonith_api_delete(st);
+    return rc;
 }
 
 int

@@ -545,7 +545,6 @@ int pcmk_ticket_state(xmlNodePtr *xml, const char *ticket_id);
 /*!
  * \brief Ask the cluster to perform fencing
  *
- * \param[in,out] st        A connection to the fencer API
  * \param[in]     target    The node that should be fenced
  * \param[in]     action    The fencing action (on, off, reboot) to perform
  * \param[in]     name      Who requested the fence action?
@@ -563,9 +562,9 @@ int pcmk_ticket_state(xmlNodePtr *xml, const char *ticket_id);
  * \note If \p reason is not NULL, the caller is responsible for freeing its
  *       returned value.
  */
-int pcmk_request_fencing(stonith_t *st, const char *target, const char *action,
-                         const char *name, unsigned int timeout,
-                         unsigned int tolerance, int delay, char **reason);
+int pcmk_request_fencing(const char *target, const char *action, const char *name,
+                         unsigned int timeout, unsigned int tolerance, int delay,
+                         char **reason);
 
 /*!
  * \brief List the fencing operations that have occurred for a specific node
