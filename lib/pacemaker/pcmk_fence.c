@@ -488,21 +488,22 @@ pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, const char *agent,
 }
 
 int
-pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, const char *agent,
-                    unsigned int timeout)
+pcmk_fence_metadata(xmlNodePtr *xml, const char *agent, unsigned int timeout)
 {
+    stonith_t *st = NULL;
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__xml_output_new(&out, xml);
+    rc = pcmk__setup_output_fencing(&out, &st, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
 
-    stonith__register_messages(out);
-
     rc = pcmk__fence_metadata(out, st, agent, timeout);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+
+    st->cmds->disconnect(st);
+    stonith_api_delete(st);
     return rc;
 }
 
