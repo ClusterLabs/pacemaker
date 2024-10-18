@@ -1733,8 +1733,8 @@ stonith_api_delete(stonith_t * stonith)
 int
 stonith_validate(stonith_t *st, int call_options, const char *rsc_id,
                  const char *namespace_s, const char *agent,
-                 GHashTable *params, const char *host_arg, int timeout_sec,
-                 char **output, char **error_output)
+                 GHashTable *params, int timeout_sec, char **output,
+                 char **error_output)
 {
     int rc = pcmk_rc_ok;
 
@@ -1743,6 +1743,21 @@ stonith_validate(stonith_t *st, int call_options, const char *rsc_id,
      * that is incorrect, we will need to allow the caller to pass the target).
      */
     const char *target = "node1";
+    const char *host_arg = NULL;
+    gpointer key, val;
+    GHashTableIter iter;
+
+    if (params != NULL) {
+        g_hash_table_iter_init(&iter, params);
+        while (g_hash_table_iter_next(&iter, &key, &val)) {
+            if (!pcmk__str_eq((const char *) key, PCMK_STONITH_HOST_ARGUMENT, pcmk__str_none)) {
+                continue;
+            }
+
+            host_arg = (const char *) val;
+            break;
+        }
+    }
 
 #if PCMK__ENABLE_CIBSECRETS
     rc = pcmk__substitute_secrets(rsc_id, params);
@@ -1822,24 +1837,18 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
      */
 
     int rc = pcmk_ok;
-    const char *host_arg = NULL;
 
     GHashTable *params_table = pcmk__strkey_table(free, free);
 
     // Convert parameter list to a hash table
     for (; params; params = params->next) {
-        if (pcmk__str_eq(params->key, PCMK_STONITH_HOST_ARGUMENT, pcmk__str_none)) {
-            host_arg = params->value;
-        }
-
         if (!pcmk_stonith_param(params->key)) {
             pcmk__insert_dup(params_table, params->key, params->value);
         }
     }
 
     rc = stonith_validate(st, call_options, rsc_id, namespace_s, agent,
-                          params_table, host_arg, timeout_sec, output,
-                          error_output);
+                          params_table, timeout_sec, output, error_output);
 
     g_hash_table_destroy(params_table);
     return rc;
