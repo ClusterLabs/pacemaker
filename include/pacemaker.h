@@ -573,7 +573,6 @@ int pcmk_request_fencing(const char *target, const char *action, const char *nam
  *       contents lost.
  *
  * \param[in,out] xml       The destination for the result, as an XML tree
- * \param[in,out] st        A connection to the fencer API
  * \param[in]     target    The node to get history for
  * \param[in]     timeout   How long to wait for operation to complete (in ms)
  * \param[in]     quiet     Suppress most output
@@ -583,9 +582,8 @@ int pcmk_request_fencing(const char *target, const char *action, const char *nam
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, const char *target,
-                       unsigned int timeout, bool quiet, int verbose,
-                       bool broadcast, bool cleanup);
+int pcmk_fence_history(xmlNodePtr *xml, const char *target, unsigned int timeout,
+                       bool quiet, int verbose, bool broadcast, bool cleanup);
 
 /*!
  * \brief List all installed fence agents
