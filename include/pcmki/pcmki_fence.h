@@ -235,8 +235,7 @@ int pcmk__fence_unregister_level(stonith_t *st, const char *target,
  * \return Standard Pacemaker return code
  */
 int pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
-                         const char *id, const stonith_key_value_t *params,
-                         unsigned int timeout);
+                         const char *id, GHashTable *params, unsigned int timeout);
 
 /*!
  * \brief Fetch fencing history, optionally reducing it
