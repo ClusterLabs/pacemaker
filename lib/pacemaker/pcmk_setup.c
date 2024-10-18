@@ -12,6 +12,7 @@
 #include <crm/common/output.h>
 #include <crm/common/results.h>
 #include <crm/common/scheduler.h>
+#include <crm/fencing/internal.h>
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 
@@ -74,5 +75,47 @@ pcmk__setup_output_cib_sched(pcmk__output_t **out, cib_t **cib,
     }
 
     pcmk__register_lib_messages(*out);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Set up a pcmk__output_t and stonith_t for use in implementing
+ *        public/private API function pairs
+ *
+ * \param[in,out] out       Where to store a \c pcmk__output_t object
+ * \param[in,out] st        Where to store a \c stonith_t object
+ * \param[in,out] xml       Where to write any result XML
+ *
+ * \note The \p st argument will only be valid if there are no errors in this
+ *       function.  However, \p out will always be valid unless there are
+ *       errors setting it up so that other errors may still be reported.
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__setup_output_fencing(pcmk__output_t **out, stonith_t **st, xmlNode **xml)
+{
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__xml_output_new(out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    *st = stonith_api_new();
+    if (*st == NULL) {
+        return ENOMEM;
+    }
+
+    rc = (*st)->cmds->connect(*st, crm_system_name, NULL);
+    if (rc < 0) {
+        rc = pcmk_legacy2rc(rc);
+        stonith_api_delete(*st);
+        return rc;
+    }
+
+    pcmk__register_lib_messages(*out);
+    stonith__register_messages(*out);
     return rc;
 }
