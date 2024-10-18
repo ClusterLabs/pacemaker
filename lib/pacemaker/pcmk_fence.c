@@ -586,10 +586,21 @@ pcmk__fence_register_level(stonith_t *st, const char *target, int fence_level,
 }
 
 int
-pcmk_fence_register_level(stonith_t *st, const char *target, int fence_level,
-                          GList *devices)
+pcmk_fence_register_level(const char *target, int fence_level, GList *devices)
 {
-    return pcmk__fence_register_level(st, target, fence_level, devices);
+    stonith_t* st = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = setup_fencing(&st);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    rc = pcmk__fence_register_level(st, target, fence_level, devices);
+
+    st->cmds->disconnect(st);
+    stonith_api_delete(st);
+    return rc;
 }
 
 int
