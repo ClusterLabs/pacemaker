@@ -220,12 +220,26 @@ pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
 }
 
 int
-pcmk_request_fencing(stonith_t *st, const char *target, const char *action,
+pcmk_request_fencing(xmlNodePtr *xml, const char *target, const char *action,
                      const char *name, unsigned int timeout,
                      unsigned int tolerance, int delay, char **reason)
 {
-    return pcmk__request_fencing(st, target, action, name, timeout, tolerance,
-                                 delay, reason);
+    stonith_t *st = NULL;
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__setup_output_fencing(&out, &st, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    rc = pcmk__request_fencing(st, target, action, name, timeout, tolerance,
+                               delay, reason);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+
+    st->cmds->disconnect(st);
+    stonith_api_delete(st);
+    return rc;
 }
 
 int
