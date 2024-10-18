@@ -188,13 +188,12 @@ int pcmk__fence_registered(pcmk__output_t *out, stonith_t *st,
  * \param[in,out] st          A connection to the fencer API
  * \param[in]     target      The object to register a fencing level for
  * \param[in]     fence_level Index number of level to add
- * \param[in]     devices     Devices to use in level
+ * \param[in]     devices     Devices to use in level as a list of char *
  *
  * \return Standard Pacemaker return code
  */
 int pcmk__fence_register_level(stonith_t *st, const char *target,
-                               int fence_level,
-                               const stonith_key_value_t *devices);
+                               int fence_level, GList *devices);
 
 /*!
  * \brief Unregister a fencing level for specific node, node regex, or attribute
