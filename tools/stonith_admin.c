@@ -48,7 +48,7 @@ struct {
     gboolean metadata;
     gboolean registered;
     gboolean validate_cfg;
-    stonith_key_value_t *devices;
+    GList *devices;
     stonith_key_value_t *params;
     int fence_level;
     int timeout ;
@@ -258,7 +258,7 @@ add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GEr
 
 gboolean
 add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.devices = stonith_key_value_add(options.devices, NULL, optarg);
+    options.devices = g_list_append(options.devices, pcmk__str_copy(optarg));
     return TRUE;
 }
 
@@ -655,7 +655,11 @@ main(int argc, char **argv)
             break;
 
         case 'K':
-            device = options.devices ? options.devices->key : NULL;
+            device = NULL;
+            if (options.devices != NULL) {
+                device = g_list_nth_data(options.devices, 0);
+            }
+
             rc = pcmk__fence_validate(out, st, options.agent, device, options.params,
                                         options.timeout*1000);
             break;
@@ -676,6 +680,7 @@ main(int argc, char **argv)
     }
     pcmk__unregister_formats();
     free(name);
+    g_list_free_full(options.devices, free);
     stonith_key_value_freeall(options.params, 1, 1);
 
     if (st != NULL) {

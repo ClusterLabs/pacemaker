@@ -38,8 +38,8 @@ static struct {
 } async_fence_data = { NULL, };
 
 static int
-handle_level(stonith_t *st, const char *target, int fence_level,
-             const stonith_key_value_t *devices, bool added)
+handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
+             bool added)
 {
     const char *node = NULL;
     const char *pattern = NULL;
@@ -65,9 +65,15 @@ handle_level(stonith_t *st, const char *target, int fence_level,
 
     /* Register or unregister level as appropriate */
     if (added) {
-        rc = st->cmds->register_level_full(st, st_opts, node, pattern,
-                                           name, value, fence_level,
-                                           devices);
+        stonith_key_value_t *kvs = NULL;
+
+        for (GList *iter = devices; iter != NULL; iter = iter->next) {
+            kvs = stonith_key_value_add(kvs, NULL, iter->data);
+        }
+
+        rc = st->cmds->register_level_full(st, st_opts, node, pattern, name,
+                                           value, fence_level, kvs);
+        stonith_key_value_freeall(kvs, 0, 1);
     } else {
         rc = st->cmds->remove_level_full(st, st_opts, node, pattern,
                                          name, value, fence_level);
@@ -557,14 +563,14 @@ pcmk_fence_registered(xmlNodePtr *xml, const char *target, unsigned int timeout)
 
 int
 pcmk__fence_register_level(stonith_t *st, const char *target, int fence_level,
-                           const stonith_key_value_t *devices)
+                           GList *devices)
 {
     return handle_level(st, target, fence_level, devices, true);
 }
 
 int
 pcmk_fence_register_level(stonith_t *st, const char *target, int fence_level,
-                          const stonith_key_value_t *devices)
+                          GList *devices)
 {
     return pcmk__fence_register_level(st, target, fence_level, devices);
 }

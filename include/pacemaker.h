@@ -657,13 +657,12 @@ int pcmk_fence_registered(xmlNodePtr *xml, const char *target, unsigned int time
  *                             target by given node attribute, or "@pattern" to
  *                             target by node name pattern, or a node name)
  * \param[in]     fence_level  Index number of level to add
- * \param[in]     devices      Devices to use in level
+ * \param[in]     devices      Devices to use in level as a list of char *
  *
  * \return Standard Pacemaker return code
  */
 int pcmk_fence_register_level(stonith_t *st, const char *target,
-                              int fence_level,
-                              const stonith_key_value_t *devices);
+                              int fence_level, GList *devices);
 
 /*!
  * \brief Unregister a fencing topology level
