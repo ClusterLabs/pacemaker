@@ -189,8 +189,8 @@ gboolean stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const cha
  */
 int stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
                       const char *namespace_s, const char *agent,
-                      GHashTable *params, const char *host_arg, int timeout_sec,
-                      char **output, char **error_output);
+                      GHashTable *params, int timeout_sec, char **output,
+                      char **error_output);
 
 #ifdef __cplusplus
 }
