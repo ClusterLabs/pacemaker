@@ -186,7 +186,7 @@ If not specified, the default from the table below is used.
      - Operation results are always recorded when the operation completes
        (successful or not). If this is ``true``, operations will also be
        recorded when initiated, so that status output can indicate that the
-       operation is in progress.
+       operation is in progress. *(deprecated since 3.0.0)*
 
 .. note::
 
