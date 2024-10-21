@@ -1,3 +1,11 @@
+* Mon Oct 21 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9-rc3
+- 9 commits with 5 files changed, 47 insertions(+), 21 deletions(-)
+
+- Fixes since Pacemaker-2.1.9-rc2
+  + tools: crmadmin -D/--dc_lookup no longer hangs when there is no DC
+  + tools: restore crmadmin default timeout to 30 seconds instead of none
+           (regression introduced in 2.1.5)
+
 * Mon Oct 14 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9-rc2
 - 11 commits with 10 files changed, 298 insertions(+), 68 deletions(-)
 
