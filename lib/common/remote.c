@@ -663,7 +663,6 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
     int rc = pcmk_rc_ok;
     size_t read_len = sizeof(struct remote_header_v0);
     struct remote_header_v0 *header = localized_remote_header(remote);
-    bool received = false;
     ssize_t read_rc;
 
     if(header) {
@@ -679,7 +678,7 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
         remote->buffer = pcmk__realloc(remote->buffer, remote->buffer_size + 1);
     }
 
-    if (!received && remote->tls_session) {
+    if (remote->tls_session) {
         read_rc = gnutls_record_recv(*(remote->tls_session),
                                      remote->buffer + remote->buffer_offset,
                                      remote->buffer_size - remote->buffer_offset);
@@ -692,20 +691,14 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
                       gnutls_strerror(read_rc), (long long) read_rc);
             rc = EIO;
         }
-        received = true;
-    }
-
-    if (!received && remote->tcp_socket) {
+    } else if (remote->tcp_socket) {
         read_rc = read(remote->tcp_socket,
                        remote->buffer + remote->buffer_offset,
                        remote->buffer_size - remote->buffer_offset);
         if (read_rc < 0) {
             rc = errno;
         }
-        received = true;
-    }
-
-    if (!received) {
+    } else {
         crm_err("Remote connection type undetermined (bug?)");
         return ESOCKTNOSUPPORT;
     }
