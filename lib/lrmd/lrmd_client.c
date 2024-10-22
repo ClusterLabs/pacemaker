@@ -401,31 +401,40 @@ handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
     }
 }
 
-static void
-process_pending_notifies(lrmd_t *lrmd)
+/*!
+ * \internal
+ * \brief Notify trigger handler
+ *
+ * \param[in,out] userdata API connection
+ *
+ * \return Always return G_SOURCE_CONTINUE to leave this trigger handler in the
+ *         mainloop
+ */
+static int
+process_pending_notifies(gpointer userdata)
 {
+    lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
 
     if (native->pending_notify == NULL) {
-        return;
+        return G_SOURCE_CONTINUE;
     }
 
     crm_trace("Processing pending notifies");
     g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
     g_list_free_full(native->pending_notify, lrmd_free_xml);
     native->pending_notify = NULL;
+    return G_SOURCE_CONTINUE;
 }
 
 /*!
  * \internal
- * \brief TLS dispatch function (for both trigger and file descriptor sources)
+ * \brief TLS dispatch function for file descriptor sources
  *
  * \param[in,out] userdata  API connection
  *
- * \return Always return a nonnegative value, which as a file descriptor
- *         dispatch function means keep the mainloop source, and as a
- *         trigger dispatch function, 0 means remove the trigger from the
- *         mainloop while 1 means keep it (and job completed)
+ * \return -1 on error to remove the source from the mainloop, or 0 otherwise
+ *         to leave it in the mainloop
  */
 static int
 lrmd_tls_dispatch(gpointer userdata)
@@ -437,17 +446,11 @@ lrmd_tls_dispatch(gpointer userdata)
 
     if (!remote_executor_connected(lrmd)) {
         crm_trace("TLS dispatch triggered after disconnect");
-        return 0;
+        return -1;
     }
 
     crm_trace("TLS dispatch triggered");
 
-    /* First check if there are any pending notifies to process that came
-     * while we were waiting for replies earlier.
-     */
-    process_pending_notifies(lrmd);
-
-    /* Next read the current buffer and see if there are any messages to handle. */
     rc = pcmk__remote_ready(native->remote, 0);
     if (rc == pcmk_rc_ok) {
         rc = pcmk__read_remote_message(native->remote, -1);
@@ -457,7 +460,7 @@ lrmd_tls_dispatch(gpointer userdata)
         crm_info("Lost %s executor connection while reading data",
                  (native->remote_nodename? native->remote_nodename : "local"));
         lrmd_tls_disconnect(lrmd);
-        return 0;
+        return -1;
     }
 
     /* If rc is ETIME, there was nothing to read but we may already have a
@@ -466,12 +469,12 @@ lrmd_tls_dispatch(gpointer userdata)
     xml = pcmk__remote_message_xml(native->remote);
 
     if (xml == NULL) {
-        return 1;
+        return 0;
     }
 
     handle_remote_msg(xml, lrmd);
     pcmk__xml_free(xml);
-    return 1;
+    return 0;
 }
 
 /* Not used with mainloop */
@@ -1409,7 +1412,7 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake)
     };
 
     native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH,
-                                                  lrmd_tls_dispatch, lrmd);
+                                                  process_pending_notifies, lrmd);
     native->source = mainloop_add_fd(name, G_PRIORITY_HIGH, native->sock, lrmd,
                                      &tls_fd_callbacks);
 
