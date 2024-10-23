@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2023 the Pacemaker project contributors
+# Copyright 2003-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,21 +22,9 @@ BOOK_FORMATS		?= html 	\
 mibdir		= $(datadir)/snmp/mibs
 dist_mib_DATA	= PCMK-MIB.txt
 
-# Deprecated plaintext documents (dynamically converted to HTML)
-DEPRECATED_ORIGINAL	= crm_fencing.txt
-DEPRECATED_GENERATED	=
-if BUILD_ASCIIDOC
-DEPRECATED_GENERATED	+= $(DEPRECATED_ORIGINAL:%.txt=%.html)
-endif
-DEPRECATED_ALL		= $(DEPRECATED_ORIGINAL) \
-			  $(DEPRECATED_GENERATED)
-
-doc_DATA		= $(DEPRECATED_ALL)
 noinst_SCRIPTS		= abi-check
 
 SUBDIRS		= sphinx
-
-EXTRA_DIST	= $(DEPRECATED_ORIGINAL)
 
 # toplevel rsync destination for www targets (without trailing slash)
 RSYNC_DEST      ?= sites.clusterlabs.org:/var/www/html
@@ -59,19 +47,8 @@ endif
 # For Makefile debugging
 .PHONY: vars
 vars:
-	@echo DEPRECATED_ORIGINAL=\'$(DEPRECATED_ORIGINAL)\'
-	@echo DEPRECATED_GENERATED=\'$(DEPRECATED_GENERATED)\'
 	@echo LAST_RELEASE=\'$(LAST_RELEASE)\'
 	@echo TAG=\'$(TAG)\'
-
-
-.PHONY: deprecated-upload
-deprecated-upload: $(DEPRECATED_ALL)
-	rsync $(RSYNC_OPTS) $(DEPRECATED_ALL) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
-
-.PHONY: deprecated-clean
-deprecated-clean:
-	-rm -f $(DEPRECATED_GENERATED)
 
 
 # Annotated source code as HTML
@@ -158,10 +135,10 @@ books-upload:
 
 # All online documentation (except ABI compatibility, which is run separately)
 .PHONY: www
-www: clean-local deprecated-upload manhtml-upload global-upload doxygen-upload books-upload
+www: clean-local manhtml-upload global-upload doxygen-upload books-upload
 
 .PHONY: clean-local
-clean-local: global-clean manhtml-clean doxygen-clean abi-clean deprecated-clean
+clean-local: global-clean manhtml-clean doxygen-clean abi-clean
 
 # "make check" will cause "make all" to be run, which means docs will get built
 # as a part of running tests if they haven't already.  That seems unnecessary, so
