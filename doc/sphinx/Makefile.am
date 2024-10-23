@@ -40,7 +40,7 @@ PAPER          ?= letterpaper
 SPHINXFLAGS	?=
 
 # toplevel rsync destination for www targets (without trailing slash)
-RSYNC_DEST	?= root@www.clusterlabs.org:/var/www/html
+RSYNC_DEST	?= sites.clusterlabs.org:/var/www/html
 
 # End of useful overrides
 
@@ -83,7 +83,7 @@ RSYNC_OPTS      = -rlptvzxS --progress
 
 PACKAGE_SERIES=$(shell echo "$(VERSION)" | awk -F. '{ print $$1"."$$2 }')
 
-BOOK_RSYNC_DEST	= $(RSYNC_DEST)/$(PACKAGE)/doc/$(PACKAGE_SERIES)
+BOOK_RSYNC_DEST	= $(RSYNC_DEST)/projects/$(PACKAGE)/doc/$(PACKAGE_SERIES)
 
 BOOK		= none
 
@@ -171,7 +171,7 @@ if BUILD_SPHINX_DOCS
 			"$(BOOK_RSYNC_DEST)/$$book/";			\
 	done
 	@rsync $(RSYNC_OPTS) "$(builddir)/build-$(PACKAGE_SERIES).txt"	\
-		"$(RSYNC_DEST)/$(PACKAGE)/doc"
+		"$(RSYNC_DEST)/projects/$(PACKAGE)/doc"
 endif
 
 .PHONY: vars

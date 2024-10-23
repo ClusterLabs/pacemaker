@@ -64,7 +64,7 @@ global:
 
 .PHONY: global-upload
 global-upload: global
-	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/$(PACKAGE)/global/$(TAG)/"
+	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/projects/$(PACKAGE)/global/$(TAG)/"
 
 .PHONY: global-clean
 global-clean:
@@ -72,6 +72,8 @@ global-clean:
 
 
 # Man pages as HTML
+
+MANPAGE_DIRS = ../agents ../daemons ../tools
 
 %.8.html: %.8
 	groff -mandoc `man -w ./$<` -T html > $@
@@ -82,17 +84,17 @@ global-clean:
 .PHONY: manhtml
 manhtml:
 	$(MAKE) $(AM_MAKEFLAGS) -C .. all
-	find ../agents ../daemons ../tools -name "[a-z]*.[78]"	\
+	find $(MANPAGE_DIRS) daemons ../tools -name "[a-z]*.[78]"	\
 		-exec $(MAKE) $(AM_MAKEFLAGS) \{\}.html \;
 
 .PHONY: manhtml-upload
 manhtml-upload: manhtml
-	find .. -name "[a-z]*.[78].html" -exec \
-		rsync $(RSYNC_OPTS) \{\} "$(RSYNC_DEST)/$(PACKAGE)/man/" \;
+	find $(MANPAGE_DIRS) -name "[a-z]*.[78].html" -exec \
+		rsync $(RSYNC_OPTS) \{\} "$(RSYNC_DEST)/projects/$(PACKAGE)/man/" \;
 
 .PHONY: manhtml-clean
 manhtml-clean:
-	-find .. -name "[a-z]*.[78].html" -exec rm \{\} \;
+	-find $(MANPAGE_DIRS) -name "[a-z]*.[78].html" -exec rm \{\} \;
 
 
 # API documentation as HTML
@@ -103,7 +105,7 @@ doxygen: Doxyfile
 
 .PHONY: doxygen-upload
 doxygen-upload: doxygen
-	rsync $(RSYNC_OPTS) api/html/ "$(RSYNC_DEST)/$(PACKAGE)/doxygen/$(TAG)/"
+	rsync $(RSYNC_OPTS) api/html/ "$(RSYNC_DEST)/projects/$(PACKAGE)/doxygen/$(TAG)/"
 
 .PHONY: doxygen-clean
 doxygen-clean:
