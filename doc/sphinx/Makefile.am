@@ -8,8 +8,9 @@
 #
 include $(top_srcdir)/mk/common.mk
 
-# Define release-related variables
+# Define release- and upload-related variables
 include $(top_srcdir)/mk/release.mk
+include $(top_srcdir)/mk/uploads.mk
 
 # Things you might want to override on the command line
 
@@ -38,9 +39,6 @@ PAPER          ?= letterpaper
 
 # Additional options for sphinx-build
 SPHINXFLAGS	?=
-
-# toplevel rsync destination for www targets (without trailing slash)
-RSYNC_DEST	?= sites.clusterlabs.org:/var/www/html
 
 # End of useful overrides
 
@@ -77,13 +75,9 @@ EXTRA_DIST	= $(wildcard */*.rst) $(DOTS) $(SVGS)			\
 		  $(STATIC_FILES)					\
 		  conf.py.in
 
-# recursive, preserve symlinks/permissions/times, verbose, compress,
-# don't cross filesystems, sparse, show progress
-RSYNC_OPTS      = -rlptvzxS --progress
-
 PACKAGE_SERIES=$(shell echo "$(VERSION)" | awk -F. '{ print $$1"."$$2 }')
 
-BOOK_RSYNC_DEST	= $(RSYNC_DEST)/projects/$(PACKAGE)/doc/$(PACKAGE_SERIES)
+BOOK_RSYNC_DEST	= $(RSYNC_PACKAGE_DEST)/doc/$(PACKAGE_SERIES)
 
 BOOK		= none
 
@@ -171,7 +165,7 @@ if BUILD_SPHINX_DOCS
 			"$(BOOK_RSYNC_DEST)/$$book/";			\
 	done
 	@rsync $(RSYNC_OPTS) "$(builddir)/build-$(PACKAGE_SERIES).txt"	\
-		"$(RSYNC_DEST)/projects/$(PACKAGE)/doc"
+		"$(RSYNC_PACKAGE_DEST)/doc"
 endif
 
 .PHONY: vars
@@ -180,6 +174,7 @@ vars:
 	@echo "PAPER='$(PAPER)'"
 	@echo "SPHINXFLAGS='$(SPHINXFLAGS)'"
 	@echo "RSYNC_DEST='$(RSYNC_DEST)'"
+	@echo "RSYNC_PACKAGE_DEST='$(RSYNC_PACKAGE_DEST)'"
 	@echo "VERSION='$(VERSION)'"
 	@echo "PACKAGE_SERIES='$(PACKAGE_SERIES)'"
 

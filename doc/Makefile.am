@@ -8,8 +8,9 @@
 #
 include $(top_srcdir)/mk/common.mk
 
-# Define release-related variables
+# Define release- and upload-related variables
 include $(top_srcdir)/mk/release.mk
+include $(top_srcdir)/mk/uploads.mk
 
 # What formats to use for book uploads (i.e. "make www";
 # use BOOK_FORMATS in sphinx subdirectory to change local builds)
@@ -28,13 +29,6 @@ SUBDIRS		= sphinx
 
 EXTRA_DIST	= clusterlabs-logo-55x55.png
 
-# toplevel rsync destination for www targets (without trailing slash)
-RSYNC_DEST      ?= sites.clusterlabs.org:/var/www/html
-
-# recursive, preserve symlinks, preserve permissions, verbose, compress,
-# don't cross filesystems, sparse, show progress
-RSYNC_OPTS      = -rlpvzxS --progress
-
 if IS_ASCIIDOC
 ASCIIDOC_HTML_ARGS	= --unsafe --backend=xhtml11
 ASCIIDOC_DBOOK_ARGS	= -b docbook -d book
@@ -51,6 +45,8 @@ endif
 vars:
 	@echo LAST_RELEASE=\'$(LAST_RELEASE)\'
 	@echo TAG=\'$(TAG)\'
+	@echo RSYNC_DEST=\'$(RSYNC_DEST)\'
+	@echo RSYNC_PACKAGE_DEST=\'$(RSYNC_PACKAGE_DEST)\'
 
 
 # Annotated source code as HTML
@@ -64,7 +60,7 @@ global:
 
 .PHONY: global-upload
 global-upload: global
-	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/projects/$(PACKAGE)/global/$(TAG)/"
+	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_PACKAGE_DEST)/global/$(TAG)/"
 
 .PHONY: global-clean
 global-clean:
@@ -90,7 +86,7 @@ manhtml:
 .PHONY: manhtml-upload
 manhtml-upload: manhtml
 	find $(MANPAGE_DIRS) -name "[a-z]*.[78].html" -exec \
-		rsync $(RSYNC_OPTS) \{\} "$(RSYNC_DEST)/projects/$(PACKAGE)/man/" \;
+		rsync $(RSYNC_OPTS) \{\} "$(RSYNC_PACKAGE_DEST)/man/" \;
 
 .PHONY: manhtml-clean
 manhtml-clean:
@@ -105,7 +101,7 @@ doxygen: Doxyfile
 
 .PHONY: doxygen-upload
 doxygen-upload: doxygen
-	rsync $(RSYNC_OPTS) api/html/ "$(RSYNC_DEST)/projects/$(PACKAGE)/doxygen/$(TAG)/"
+	rsync $(RSYNC_OPTS) api/html/ "$(RSYNC_PACKAGE_DEST)/doxygen/$(TAG)/"
 
 .PHONY: doxygen-clean
 doxygen-clean:
@@ -120,7 +116,8 @@ abi: abi-check
 
 .PHONY: abi-www
 abi-www:
-	export RSYNC_DEST=$(RSYNC_DEST); ./abi-check -u $(PACKAGE) $(LAST_RELEASE) $(TAG)
+	export RSYNC_PACKAGE_DEST=$(RSYNC_PACKAGE_DEST);	\
+		./abi-check -u $(PACKAGE) $(LAST_RELEASE) $(TAG)
 
 .PHONY: abi-clean
 abi-clean:
