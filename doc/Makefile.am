@@ -26,6 +26,8 @@ noinst_SCRIPTS		= abi-check
 
 SUBDIRS		= sphinx
 
+EXTRA_DIST	= clusterlabs-logo-55x55.png
+
 # toplevel rsync destination for www targets (without trailing slash)
 RSYNC_DEST      ?= sites.clusterlabs.org:/var/www/html
 
