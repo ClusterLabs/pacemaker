@@ -536,20 +536,21 @@ write_attribute(attribute_t *a, bool ignore_delay)
     /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
-        const char *uuid = NULL;
+        const char *node_xml_id = NULL;
 
+        // Try to get the XML ID used for the node in the CIB
         if (pcmk_is_set(v->flags, attrd_value_remote)) {
-            /* If this is a Pacemaker Remote node, the node's UUID is the same
-             * as its name, which we already have.
-             */
-            uuid = v->nodename;
+            // A Pacemaker Remote node's XML ID is the same as its name
+            node_xml_id = v->nodename;
 
         } else {
-            // This will create a cluster node cache entry if none exists
+            /* Get cluster node XML IDs from the peer caches.
+             * This will create a cluster node cache entry if none exists.
+             */
             crm_node_t *peer = pcmk__get_node(v->nodeid, v->nodename, NULL,
                                               pcmk__node_search_any);
 
-            uuid = peer->uuid;
+            node_xml_id = peer->uuid;
 
             // Remember peer's node ID if we're just now learning it
             if ((peer->id != 0) && (v->nodeid == 0)) {
@@ -565,27 +566,27 @@ write_attribute(attribute_t *a, bool ignore_delay)
         }
 
         // Defer write if this is a cluster node that's never been seen
-        if (uuid == NULL) {
+        if (node_xml_id == NULL) {
             attrd_set_attr_flags(a, attrd_attr_uuid_missing);
-            crm_notice("Cannot update %s[%s]='%s' now because node's UUID is "
-                       "unknown (will retry if learned)",
+            crm_notice("Cannot write %s[%s]='%s' to CIB because node's XML ID "
+                       "is unknown (will retry if learned)",
                        a->id, v->nodename, v->current);
             continue;
         }
 
         // Update this value as part of the CIB transaction we're building
-        rc = add_attr_update(a, v->current, uuid);
+        rc = add_attr_update(a, v->current, node_xml_id);
         if (rc != pcmk_rc_ok) {
-            crm_err("Failed to update %s[%s]='%s': %s "
-                    CRM_XS " node uuid=%s id=%" PRIu32,
+            crm_err("Couldn't add %s[%s]='%s' to CIB transaction: %s "
+                    CRM_XS " node XML ID %s",
                     a->id, v->nodename, v->current, pcmk_rc_str(rc),
-                    uuid, v->nodeid);
+                    node_xml_id);
             continue;
         }
 
-        crm_debug("Writing %s[%s]=%s (node-state-id=%s node-id=%" PRIu32 ")",
+        crm_debug("Added %s[%s]=%s to CIB transaction (node XML ID %s)",
                   a->id, v->nodename, pcmk__s(v->current, "(unset)"),
-                  uuid, v->nodeid);
+                  node_xml_id);
         cib_updates++;
 
         /* Preservation of the attribute to transmit alert */
