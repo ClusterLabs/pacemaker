@@ -550,7 +550,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
             crm_node_t *peer = pcmk__get_node(v->nodeid, v->nodename, NULL,
                                               pcmk__node_search_any);
 
-            node_xml_id = peer->uuid;
+            node_xml_id = pcmk__cluster_node_uuid(peer);
 
             // Remember peer's node ID if we're just now learning it
             if ((peer->id != 0) && (v->nodeid == 0)) {
