@@ -90,7 +90,7 @@ least an ID and a name. A cluster node's ID is defined by the cluster layer
 
 Pacemaker Remote nodes are defined by a resource in the ``resources`` section.
 Remote nodes and guest nodes may optionally have an entry in the ``nodes``
-section, primarily for permanent :ref:`node attributes <node-attributes>`.
+section, primarily for permanent :ref:`node attributes <node_attributes>`.
 
 Normally, the user should let the cluster populate the ``nodes`` section
 automatically.
@@ -226,8 +226,6 @@ The ``--type nodes`` indicates that this is a permanent node attribute;
       </pacemaker-result>
 
 
-.. _special_node_attributes:
-
 Special node attributes
 #######################
 
@@ -238,9 +236,7 @@ special attributes. Some special attributes do not start with ``#``, for
 historical reasons.
 
 Certain special attributes are set automatically by the cluster, should never
-be modified directly, and can be used only within :ref:`rules`; these are
-listed under
-:ref:`built-in node attributes <node-attribute-expressions-special>`.
+be modified directly, and can be used only within :ref:`rules`.
 
 For true/false values, the cluster considers a value of "1", "y", "yes", "on",
 or "true" (case-insensitively) to be true, "0", "n", "no", "off", "false", or

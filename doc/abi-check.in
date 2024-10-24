@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2011-2023 the Pacemaker project contributors
+# Copyright 2011-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,8 +16,8 @@
 # upload it to the website.
 #
 
-# Top-level rsync destination for www targets (without trailing slash)
-: ${RSYNC_DEST:=root@www.clusterlabs.org:/var/www/html}
+# Top-level rsync destination for package's file uploads (without trailing slash)
+: ${RSYNC_PACKAGE_DEST:=sites.clusterlabs.org:/var/www/html/projects/$(PACKAGE)}
 
 # If the argument is of form x.y.z, print Pacemaker-x.y.z,
 # otherwise print the argument (presumably a commit ID) directly
@@ -159,6 +159,6 @@ if [ $# -eq 2 ]; then
 
     COMPAT_REPORT="compat_reports/${PACKAGE}/${V1}_to_${V2}"
     if [ $UPLOAD -eq 1 ] && [ -d "$COMPAT_REPORT" ]; then
-        rsync -azxlSD --progress "$COMPAT_REPORT" "${RSYNC_DEST}/${PACKAGE}/abi/"
+        rsync -azxlSD --progress "$COMPAT_REPORT" "${RSYNC_PACKAGE_DEST}/abi/"
     fi
 fi

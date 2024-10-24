@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2023 the Pacemaker project contributors
+# Copyright 2003-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -8,8 +8,9 @@
 #
 include $(top_srcdir)/mk/common.mk
 
-# Define release-related variables
+# Define release- and upload-related variables
 include $(top_srcdir)/mk/release.mk
+include $(top_srcdir)/mk/uploads.mk
 
 # What formats to use for book uploads (i.e. "make www";
 # use BOOK_FORMATS in sphinx subdirectory to change local builds)
@@ -22,28 +23,11 @@ BOOK_FORMATS		?= html 	\
 mibdir		= $(datadir)/snmp/mibs
 dist_mib_DATA	= PCMK-MIB.txt
 
-# Deprecated plaintext documents (dynamically converted to HTML)
-DEPRECATED_ORIGINAL	= crm_fencing.txt
-DEPRECATED_GENERATED	=
-if BUILD_ASCIIDOC
-DEPRECATED_GENERATED	+= $(DEPRECATED_ORIGINAL:%.txt=%.html)
-endif
-DEPRECATED_ALL		= $(DEPRECATED_ORIGINAL) \
-			  $(DEPRECATED_GENERATED)
-
-doc_DATA		= $(DEPRECATED_ALL)
 noinst_SCRIPTS		= abi-check
 
 SUBDIRS		= sphinx
 
-EXTRA_DIST	= $(DEPRECATED_ORIGINAL)
-
-# toplevel rsync destination for www targets (without trailing slash)
-RSYNC_DEST      ?= sites.clusterlabs.org:/var/www/html
-
-# recursive, preserve symlinks, preserve permissions, verbose, compress,
-# don't cross filesystems, sparse, show progress
-RSYNC_OPTS      = -rlpvzxS --progress
+EXTRA_DIST	= clusterlabs-logo-55x55.png
 
 if IS_ASCIIDOC
 ASCIIDOC_HTML_ARGS	= --unsafe --backend=xhtml11
@@ -59,19 +43,10 @@ endif
 # For Makefile debugging
 .PHONY: vars
 vars:
-	@echo DEPRECATED_ORIGINAL=\'$(DEPRECATED_ORIGINAL)\'
-	@echo DEPRECATED_GENERATED=\'$(DEPRECATED_GENERATED)\'
 	@echo LAST_RELEASE=\'$(LAST_RELEASE)\'
 	@echo TAG=\'$(TAG)\'
-
-
-.PHONY: deprecated-upload
-deprecated-upload: $(DEPRECATED_ALL)
-	rsync $(RSYNC_OPTS) $(DEPRECATED_ALL) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
-
-.PHONY: deprecated-clean
-deprecated-clean:
-	-rm -f $(DEPRECATED_GENERATED)
+	@echo RSYNC_DEST=\'$(RSYNC_DEST)\'
+	@echo RSYNC_PACKAGE_DEST=\'$(RSYNC_PACKAGE_DEST)\'
 
 
 # Annotated source code as HTML
@@ -85,7 +60,7 @@ global:
 
 .PHONY: global-upload
 global-upload: global
-	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_DEST)/$(PACKAGE)/global/$(TAG)/"
+	rsync $(RSYNC_OPTS) HTML/ "$(RSYNC_PACKAGE_DEST)/global/$(TAG)/"
 
 .PHONY: global-clean
 global-clean:
@@ -93,6 +68,8 @@ global-clean:
 
 
 # Man pages as HTML
+
+MANPAGE_DIRS = ../agents ../daemons ../tools
 
 %.8.html: %.8
 	groff -mandoc `man -w ./$<` -T html > $@
@@ -103,17 +80,17 @@ global-clean:
 .PHONY: manhtml
 manhtml:
 	$(MAKE) $(AM_MAKEFLAGS) -C .. all
-	find ../agents ../daemons ../tools -name "[a-z]*.[78]"	\
+	find $(MANPAGE_DIRS) daemons ../tools -name "[a-z]*.[78]"	\
 		-exec $(MAKE) $(AM_MAKEFLAGS) \{\}.html \;
 
 .PHONY: manhtml-upload
 manhtml-upload: manhtml
-	find .. -name "[a-z]*.[78].html" -exec \
-		rsync $(RSYNC_OPTS) \{\} "$(RSYNC_DEST)/$(PACKAGE)/man/" \;
+	find $(MANPAGE_DIRS) -name "[a-z]*.[78].html" -exec \
+		rsync $(RSYNC_OPTS) \{\} "$(RSYNC_PACKAGE_DEST)/man/" \;
 
 .PHONY: manhtml-clean
 manhtml-clean:
-	-find .. -name "[a-z]*.[78].html" -exec rm \{\} \;
+	-find $(MANPAGE_DIRS) -name "[a-z]*.[78].html" -exec rm \{\} \;
 
 
 # API documentation as HTML
@@ -124,7 +101,7 @@ doxygen: Doxyfile
 
 .PHONY: doxygen-upload
 doxygen-upload: doxygen
-	rsync $(RSYNC_OPTS) api/html/ "$(RSYNC_DEST)/$(PACKAGE)/doxygen/$(TAG)/"
+	rsync $(RSYNC_OPTS) api/html/ "$(RSYNC_PACKAGE_DEST)/doxygen/$(TAG)/"
 
 .PHONY: doxygen-clean
 doxygen-clean:
@@ -139,7 +116,8 @@ abi: abi-check
 
 .PHONY: abi-www
 abi-www:
-	export RSYNC_DEST=$(RSYNC_DEST); ./abi-check -u $(PACKAGE) $(LAST_RELEASE) $(TAG)
+	export RSYNC_PACKAGE_DEST=$(RSYNC_PACKAGE_DEST);	\
+		./abi-check -u $(PACKAGE) $(LAST_RELEASE) $(TAG)
 
 .PHONY: abi-clean
 abi-clean:
@@ -158,10 +136,10 @@ books-upload:
 
 # All online documentation (except ABI compatibility, which is run separately)
 .PHONY: www
-www: clean-local deprecated-upload manhtml-upload global-upload doxygen-upload books-upload
+www: clean-local manhtml-upload global-upload doxygen-upload books-upload
 
 .PHONY: clean-local
-clean-local: global-clean manhtml-clean doxygen-clean abi-clean deprecated-clean
+clean-local: global-clean manhtml-clean doxygen-clean abi-clean
 
 # "make check" will cause "make all" to be run, which means docs will get built
 # as a part of running tests if they haven't already.  That seems unnecessary, so
