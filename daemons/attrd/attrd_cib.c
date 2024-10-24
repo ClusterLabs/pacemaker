@@ -545,6 +545,12 @@ write_attribute(attribute_t *a, bool ignore_delay)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
         const char *node_xml_id = NULL;
 
+        // Private attributes (or any in standalone mode) are not written to CIB
+        if (stand_alone || pcmk_is_set(a->flags, attrd_attr_is_private)) {
+            private_updates++;
+            continue;
+        }
+
         // Try to get the XML ID used for the node in the CIB
         if (pcmk_is_set(v->flags, attrd_value_remote)) {
             // A Pacemaker Remote node's XML ID is the same as its name
@@ -566,12 +572,6 @@ write_attribute(attribute_t *a, bool ignore_delay)
                           peer->cluster_layer_id, v->nodename);
                 v->nodeid = peer->cluster_layer_id;
             }
-        }
-
-        /* If this is a private attribute, no update needs to be sent */
-        if (stand_alone || pcmk_is_set(a->flags, attrd_attr_is_private)) {
-            private_updates++;
-            continue;
         }
 
         // Defer write if this is a cluster node that's never been seen
