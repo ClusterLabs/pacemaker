@@ -143,13 +143,12 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
     crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set_id);
     crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
     pcmk__xe_add_node(xml, v->nodename, v->nodeid);
-    if (pcmk_is_set(v->flags, attrd_value_remote)) {
-        crm_xml_add_int(xml, PCMK__XA_ATTR_IS_REMOTE, 1);
-    }
     crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
     crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING, a->timeout_ms / 1000);
     crm_xml_add_int(xml, PCMK__XA_ATTR_IS_PRIVATE,
                     pcmk_is_set(a->flags, attrd_attr_is_private));
+    crm_xml_add_int(xml, PCMK__XA_ATTR_IS_REMOTE,
+                    pcmk_is_set(v->flags, attrd_value_remote));
     crm_xml_add_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE, force_write);
 
     return xml;
