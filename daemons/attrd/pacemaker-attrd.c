@@ -207,6 +207,8 @@ main(int argc, char **argv)
         g_hash_table_destroy(attributes);
     }
 
+    attrd_cleanup_xml_ids();
+
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 

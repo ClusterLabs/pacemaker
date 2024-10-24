@@ -222,6 +222,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     int is_remote = 0;
     bool changed = false;
     attribute_value_t *v = NULL;
+    const char *prev_xml_id = NULL;
     const char *node_xml_id = crm_element_value(xml, PCMK__XA_ATTR_HOST_ID);
 
     // Create entry for value if not already existing
@@ -236,8 +237,9 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     /* If update doesn't contain the node XML ID, fall back to any previously
      * known value (for logging)
      */
+    prev_xml_id = attrd_get_node_xml_id(v->nodename);
     if (node_xml_id == NULL) {
-        node_xml_id = v->node_xml_id;
+        node_xml_id = prev_xml_id;
     }
 
     // If value is for a Pacemaker Remote node, remember that
@@ -317,11 +319,11 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
 
     // Remember node's XML ID if we're just learning it
     if ((node_xml_id != NULL)
-        && !pcmk__str_eq(node_xml_id, v->node_xml_id, pcmk__str_none)) {
+        && !pcmk__str_eq(node_xml_id, prev_xml_id, pcmk__str_none)) {
         crm_trace("Learned %s[%s] node XML ID is %s (was %s)",
                   a->id, v->nodename, node_xml_id,
-                  pcmk__s(v->node_xml_id, "unknown"));
-        pcmk__str_update(&(v->node_xml_id), node_xml_id);
+                  pcmk__s(prev_xml_id, "unknown"));
+        attrd_set_node_xml_id(v->nodename, node_xml_id);
         if (attrd_election_won()) {
             // In case we couldn't write a value missing the XML ID before
             attrd_write_attributes(attrd_write_changed);
@@ -540,6 +542,7 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
 
     if (uncache) {
         pcmk__purge_node_from_cache(host, 0);
+        attrd_forget_node_xml_id(host);
     }
 }
 

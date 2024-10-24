@@ -150,7 +150,7 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
      * cluster IDs, we will have to drop support for rolling upgrades from
      * versions before those.
      */
-    crm_xml_add(xml, PCMK__XA_ATTR_HOST_ID, v->node_xml_id);
+    crm_xml_add(xml, PCMK__XA_ATTR_HOST_ID, attrd_get_node_xml_id(v->nodename));
 
     crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
     crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING,
