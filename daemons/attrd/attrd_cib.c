@@ -558,7 +558,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
                                                        NULL,
                                                        pcmk__node_search_any);
 
-            node_xml_id = peer->xml_id;
+            node_xml_id = pcmk__cluster_node_uuid(peer);
 
             // Remember peer's node ID if we're just now learning it
             if ((peer->cluster_layer_id != 0) && (v->nodeid == 0)) {
