@@ -232,6 +232,7 @@ attrd_free_attribute_value(gpointer data)
     free(v->nodename);
     free(v->current);
     free(v->requested);
+    free(v->node_xml_id);
     free(v);
 }
 

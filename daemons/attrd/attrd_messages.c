@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <inttypes.h>   // PRIu32
 #include <glib.h>
 
 #include <crm/common/messages_internal.h>
@@ -314,8 +315,9 @@ attrd_broadcast_protocol(void)
     crm_xml_add(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
     crm_xml_add_int(attrd_op, PCMK__XA_ATTR_IS_PRIVATE, 1);
-    pcmk__xe_add_node(attrd_op, attrd_cluster->priv->node_name,
-                      attrd_cluster->priv->node_id);
+    crm_xml_add(attrd_op, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
+    crm_xml_add(attrd_op, PCMK__XA_ATTR_HOST_ID,
+                attrd_cluster->priv->node_xml_id);
 
     crm_debug("Broadcasting attrd protocol version %s for node %s",
               ATTRD_PROTOCOL_VERSION, attrd_cluster->priv->node_name);

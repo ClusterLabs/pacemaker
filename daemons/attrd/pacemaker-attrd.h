@@ -99,7 +99,7 @@ extern crm_trigger_t *attrd_config_read;
 
 void attrd_lrmd_disconnect(void);
 gboolean attrd_read_options(gpointer user_data);
-int attrd_send_attribute_alert(const char *node, int nodeid,
+int attrd_send_attribute_alert(const char *node, const char *node_xml_id,
                                const char *attr, const char *value);
 
 // Elections
@@ -155,7 +155,7 @@ typedef struct attribute_value_s {
     char *nodename;     // Node that this value is for
     char *current;      // Attribute value
     char *requested;    // Value specified in pending CIB write, if any
-    uint32_t nodeid;    // Cluster node ID of node that this value is for
+    char *node_xml_id;  // XML ID used for node in CIB
     uint32_t flags;     // Group of attrd_value_flags
 } attribute_value_t;
 
