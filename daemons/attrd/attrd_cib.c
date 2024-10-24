@@ -442,11 +442,14 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
     g_hash_table_iter_init(&vIter, t);
 
     while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
-        rc = attrd_send_attribute_alert(at->nodename, at->node_xml_id,
+        const char *node_xml_id = attrd_get_node_xml_id(at->nodename);
+
+        rc = attrd_send_attribute_alert(at->nodename, node_xml_id,
                                         a->id, at->current);
         crm_trace("Sent alerts for %s[%s]=%s with node XML ID %s "
                   "(%s agents failed)",
-                  a->id, at->nodename, at->current, at->node_xml_id,
+                  a->id, at->nodename, at->current,
+                  pcmk__s(node_xml_id, "unknown"),
                   ((rc == 0)? "no" : ((rc == -1)? "some" : "all")));
     }
 }
@@ -456,7 +459,6 @@ set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
 {
     attribute_value_t *a_v = pcmk__assert_alloc(1, sizeof(attribute_value_t));
 
-    a_v->node_xml_id = pcmk__str_copy(v->node_xml_id);
     a_v->nodename = pcmk__str_copy(v->nodename);
     a_v->current = pcmk__str_copy(v->current);
 
@@ -547,6 +549,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
         const char *node_xml_id = NULL;
+        const char *prev_xml_id = NULL;
 
         if (!should_write) {
             private_updates++;
@@ -559,18 +562,20 @@ write_attribute(attribute_t *a, bool ignore_delay)
          * a fallback.
          */
 
+        prev_xml_id = attrd_get_node_xml_id(v->nodename);
+
         if (pcmk_is_set(v->flags, attrd_value_remote)) {
             // A Pacemaker Remote node's XML ID is the same as its name
             node_xml_id = v->nodename;
 
         } else {
             // This creates a cluster node cache entry if none exists
-            crm_node_t *peer = pcmk__get_node(0, v->nodename, v->node_xml_id,
+            crm_node_t *peer = pcmk__get_node(0, v->nodename, prev_xml_id,
                                               pcmk__node_search_any);
 
             node_xml_id = pcmk__cluster_get_xml_id(peer);
             if (node_xml_id == NULL) {
-                node_xml_id = v->node_xml_id;
+                node_xml_id = prev_xml_id;
             }
         }
 
@@ -583,15 +588,11 @@ write_attribute(attribute_t *a, bool ignore_delay)
             continue;
         }
 
-        /* Remember the XML ID and let peers know it (in case one of them
-         * becomes the writer later)
-         */
-        if (!pcmk__str_eq(v->node_xml_id, node_xml_id, pcmk__str_none)) {
+        if (!pcmk__str_eq(prev_xml_id, node_xml_id, pcmk__str_none)) {
             crm_trace("Setting %s[%s] node XML ID to %s (was %s)",
                       a->id, v->nodename, node_xml_id,
-                      pcmk__s(v->node_xml_id, "unknown"));
-            pcmk__str_update(&(v->node_xml_id), node_xml_id);
-            attrd_broadcast_value(a, v);
+                      pcmk__s(prev_xml_id, "unknown"));
+            attrd_set_node_xml_id(v->nodename, node_xml_id);
         }
 
         // Update this value as part of the CIB transaction we're building
