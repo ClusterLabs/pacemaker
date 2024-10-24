@@ -948,7 +948,6 @@ action_launch_child(svc_action_t *op)
      * scripts when SIGPIPE is ignored by the environment. */
     signal(SIGPIPE, SIG_DFL);
 
-#if defined(HAVE_SCHED_SETSCHEDULER)
     if (sched_getscheduler(0) != SCHED_OTHER) {
         struct sched_param sp;
 
@@ -959,7 +958,7 @@ action_launch_child(svc_action_t *op)
             crm_info("Could not reset scheduling policy for %s", op->id);
         }
     }
-#endif
+
     if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
         crm_info("Could not reset process priority for %s", op->id);
     }

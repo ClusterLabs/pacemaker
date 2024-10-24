@@ -97,7 +97,7 @@ crm_mon_LDADD += $(top_builddir)/lib/pengine/libpe_status.la
 crm_mon_LDADD += $(top_builddir)/lib/fencing/libstonithd.la
 crm_mon_LDADD += $(top_builddir)/lib/cib/libcib.la
 crm_mon_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
-crm_mon_LDADD += $(CURSESLIBS)
+crm_mon_LDADD += $(CURSES_LIBS)
 
 crm_verify_SOURCES	= crm_verify.c
 crm_verify_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
