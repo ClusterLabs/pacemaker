@@ -9,12 +9,42 @@ import re
 import time
 import threading
 
-from dateutil.parser import isoparser
-
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.errors import OutputNotFoundError
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
+
+# dateutil >=2.7.0 provides isoparser, but we support older versions
+try:
+    from dateutil.parser import isoparser
+except ImportError:
+    import datetime
+    import subprocess
+    from pacemaker._cts.process import pipe_communicate
+
+    class isoparser():
+        """Mimic isoparser.isoparse() when not available"""
+
+        def isoparse(self, timestamp):
+            """Mimic isoparser.isoparse() when not available"""
+
+            with subprocess.Popen(["iso8601", "--output-as", "xml", "-d", timestamp],
+                                  stdout=subprocess.PIPE) as result:
+
+                output = pipe_communicate(result)
+                if result.returncode != 0:
+                    raise RuntimeError("Unable to run iso8601 command")
+                match = re.search(r".*<date>\s*(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)Z",
+                                  output)
+                if match is None:
+                    raise RuntimeError("Unable to parse iso8601 command output")
+                return datetime.datetime(int(match.group(1)),
+                                         int(match.group(2)),
+                                         int(match.group(3)),
+                                         int(match.group(4)),
+                                         int(match.group(5)),
+                                         int(match.group(6)))
+
 
 LOG_WATCHER_BIN = "%s/cts-log-watcher" % BuildOptions.DAEMON_DIR
 
