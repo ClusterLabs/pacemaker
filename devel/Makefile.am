@@ -171,7 +171,7 @@ GLIB_INCL_DEF_CFLAGS = $(shell echo $(GLIB_CFLAGS) 		\
 # Use CPPCHECK_ARGS to pass extra cppcheck options, e.g.:
 # --enable={warning,style,performance,portability,information,all}
 # --inconclusive --std=posix
-# -DBUILD_PUBLIC_LIBPACEMAKER -DDEFAULT_CONCURRENT_FENCING_TRUE
+# -DDEFAULT_CONCURRENT_FENCING_TRUE
 CPPCHECK_ARGS ?=
 
 CPPCHECK_DIRS = replace lib daemons tools

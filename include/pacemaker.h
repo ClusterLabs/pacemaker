@@ -542,12 +542,10 @@ int pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *att
  */
 int pcmk_ticket_state(xmlNodePtr *xml, const char *ticket_id);
 
-#ifdef BUILD_PUBLIC_LIBPACEMAKER
-
 /*!
  * \brief Ask the cluster to perform fencing
  *
- * \param[in,out] st        A connection to the fencer API
+ * \param[in,out] xml       The destination for the result, as an XML tree
  * \param[in]     target    The node that should be fenced
  * \param[in]     action    The fencing action (on, off, reboot) to perform
  * \param[in]     name      Who requested the fence action?
@@ -565,7 +563,7 @@ int pcmk_ticket_state(xmlNodePtr *xml, const char *ticket_id);
  * \note If \p reason is not NULL, the caller is responsible for freeing its
  *       returned value.
  */
-int pcmk_request_fencing(stonith_t *st, const char *target, const char *action,
+int pcmk_request_fencing(xmlNodePtr *xml, const char *target, const char *action,
                          const char *name, unsigned int timeout,
                          unsigned int tolerance, int delay, char **reason);
 
@@ -576,7 +574,6 @@ int pcmk_request_fencing(stonith_t *st, const char *target, const char *action,
  *       contents lost.
  *
  * \param[in,out] xml       The destination for the result, as an XML tree
- * \param[in,out] st        A connection to the fencer API
  * \param[in]     target    The node to get history for
  * \param[in]     timeout   How long to wait for operation to complete (in ms)
  * \param[in]     quiet     Suppress most output
@@ -586,21 +583,19 @@ int pcmk_request_fencing(stonith_t *st, const char *target, const char *action,
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, const char *target,
-                       unsigned int timeout, bool quiet, int verbose,
-                       bool broadcast, bool cleanup);
+int pcmk_fence_history(xmlNodePtr *xml, const char *target, unsigned int timeout,
+                       bool quiet, int verbose, bool broadcast, bool cleanup);
 
 /*!
  * \brief List all installed fence agents
  *
  * \param[in,out] xml      The destination for the result, as an XML tree (if
  *                         not NULL, previous contents will be freed and lost)
- * \param[in,out] st       A connection to the fencer API
  * \param[in]     timeout  How long to wait for operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout);
+int pcmk_fence_installed(xmlNodePtr *xml, unsigned int timeout);
 
 /*!
  * \brief When was a device last fenced?
@@ -619,14 +614,13 @@ int pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid);
  *
  * \param[in,out] xml        The destination for the result, as an XML tree (if
  *                           not NULL, previous contents will be freed and lost)
- * \param[in,out] st         A connection to the fencer API
  * \param[in]     device_id  Resource ID of fence device to check
  * \param[in]     timeout    How long to wait for operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st,
-                            const char *device_id, unsigned int timeout);
+int pcmk_fence_list_targets(xmlNodePtr *xml, const char *device_id,
+                            unsigned int timeout);
 
 /*!
  * \brief Get metadata for a fence agent
@@ -636,49 +630,46 @@ int pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st,
  *
  * \param[in,out] xml      The destination for the result, as an XML tree (if
  *                         not NULL, previous contents will be freed and lost)
- * \param[in,out] st       A connection to the fencer API
  * \param[in]     agent    The fence agent to get metadata for
  * \param[in]     timeout  How long to wait for operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, const char *agent,
-                        unsigned int timeout);
+int pcmk_fence_metadata(xmlNodePtr *xml, const char *agent, unsigned int timeout);
 
 /*!
  * \brief List registered fence devices
  *
  * \param[in,out] xml      The destination for the result, as an XML tree (if
  *                         not NULL, previous contents will be freed and lost)
- * \param[in,out] st       A connection to the fencer API
  * \param[in]     target   If not NULL, return only devices that can fence this
  * \param[in]     timeout  How long to wait for operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, const char *target,
-                          unsigned int timeout);
+int pcmk_fence_registered(xmlNodePtr *xml, const char *target, unsigned int timeout);
 
 /*!
  * \brief Register a fencing topology level
  *
- * \param[in,out] st           A connection to the fencer API
+ * \param[in,out] xml          The destination for the result, as an XML tree (if
+ *                             not NULL, previous contents will be freed and lost)
  * \param[in]     target       What fencing level targets (as "name=value" to
  *                             target by given node attribute, or "@pattern" to
  *                             target by node name pattern, or a node name)
  * \param[in]     fence_level  Index number of level to add
- * \param[in]     devices      Devices to use in level
+ * \param[in]     devices      Devices to use in level as a list of char *
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_register_level(stonith_t *st, const char *target,
-                              int fence_level,
-                              const stonith_key_value_t *devices);
+int pcmk_fence_register_level(xmlNodePtr *xml, const char *target, int fence_level,
+                              GList *devices);
 
 /*!
  * \brief Unregister a fencing topology level
  *
- * \param[in,out] st           A connection to the fencer API
+ * \param[in,out] xml          The destination for the result, as an XML tree (if
+ *                             not NULL, previous contents will be freed and lost)
  * \param[in]     target       What fencing level targets (as "name=value" to
  *                             target by given node attribute, or "@pattern" to
  *                             target by node name pattern, or a node name)
@@ -686,15 +677,13 @@ int pcmk_fence_register_level(stonith_t *st, const char *target,
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_unregister_level(stonith_t *st, const char *target,
-                                int fence_level);
+int pcmk_fence_unregister_level(xmlNodePtr *xml, const char *target, int fence_level);
 
 /*!
  * \brief Validate a fence device configuration
  *
  * \param[in,out] xml      The destination for the result, as an XML tree (if
  *                         not NULL, previous contents will be freed and lost)
- * \param[in,out] st       A connection to the fencer API
  * \param[in]     agent    The agent to validate (for example, "fence_xvm")
  * \param[in]     id       Fence device ID (may be NULL)
  * \param[in]     params   Fence device configuration parameters
@@ -702,11 +691,8 @@ int pcmk_fence_unregister_level(stonith_t *st, const char *target,
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
-                        const char *id, const stonith_key_value_t *params,
-                        unsigned int timeout);
-
-#endif
+int pcmk_fence_validate(xmlNodePtr *xml, const char *agent, const char *id,
+                        GHashTable *params, unsigned int timeout);
 
 #ifdef __cplusplus
 }
