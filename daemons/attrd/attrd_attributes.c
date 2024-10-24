@@ -142,7 +142,16 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
     crm_xml_add(xml, PCMK__XA_ATTR_SET_TYPE, a->set_type);
     crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set_id);
     crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
-    pcmk__xe_add_node(xml, v->nodename, v->nodeid);
+    crm_xml_add(xml, PCMK__XA_ATTR_HOST, v->nodename);
+
+    /* @COMPAT Prior to 2.1.10 and 3.0.1, the node's cluster ID was added
+     * instead of its XML ID. For Corosync and Pacemaker Remote nodes, those are
+     * the same, but if we ever support node XML IDs that differ from their
+     * cluster IDs, we will have to drop support for rolling upgrades from
+     * versions before those.
+     */
+    crm_xml_add(xml, PCMK__XA_ATTR_HOST_ID, v->node_xml_id);
+
     crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
     crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING, a->timeout_ms / 1000);
     crm_xml_add_int(xml, PCMK__XA_ATTR_IS_PRIVATE,

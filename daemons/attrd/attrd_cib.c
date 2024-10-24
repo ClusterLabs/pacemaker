@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <errno.h>
-#include <inttypes.h>   // PRIu32
 #include <stdbool.h>
 #include <stdlib.h>
 #include <glib.h>
@@ -443,10 +442,12 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
     g_hash_table_iter_init(&vIter, t);
 
     while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
-        rc = attrd_send_attribute_alert(at->nodename, at->nodeid,
+        rc = attrd_send_attribute_alert(at->nodename, at->node_xml_id,
                                         a->id, at->current);
-        crm_trace("Sent alerts for %s[%s]=%s: nodeid=%d rc=%d",
-                  a->id, at->nodename, at->current, at->nodeid, rc);
+        crm_trace("Sent alerts for %s[%s]=%s with node XML ID %s "
+                  "(%s agents failed)",
+                  a->id, at->nodename, at->current, at->node_xml_id,
+                  ((rc == 0)? "no" : ((rc == -1)? "some" : "all")));
     }
 }
 
@@ -455,7 +456,7 @@ set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
 {
     attribute_value_t *a_v = pcmk__assert_alloc(1, sizeof(attribute_value_t));
 
-    a_v->nodeid = v->nodeid;
+    a_v->node_xml_id = pcmk__str_copy(v->node_xml_id);
     a_v->nodename = pcmk__str_copy(v->nodename);
     a_v->current = pcmk__str_copy(v->current);
 
@@ -544,24 +545,24 @@ write_attribute(attribute_t *a, bool ignore_delay)
             continue;
         }
 
-        // Try to get the XML ID used for the node in the CIB
+        /* We need the node's CIB XML ID to write out its attributes, so look
+         * for it now. Check the node caches first, even if the ID was
+         * previously known (in case it changed), but use any previous value as
+         * a fallback.
+         */
+
         if (pcmk_is_set(v->flags, attrd_value_remote)) {
             // A Pacemaker Remote node's XML ID is the same as its name
             node_xml_id = v->nodename;
 
         } else {
-            /* Get cluster node XML IDs from the peer caches.
-             * This will create a cluster node cache entry if none exists.
-             */
-            crm_node_t *peer = pcmk__get_node(v->nodeid, v->nodename, NULL,
+            // This creates a cluster node cache entry if none exists
+            crm_node_t *peer = pcmk__get_node(0, v->nodename, v->node_xml_id,
                                               pcmk__node_search_any);
 
             node_xml_id = pcmk__cluster_get_xml_id(peer);
-
-            // Remember peer's node ID if we're just now learning it
-            if ((peer->id != 0) && (v->nodeid == 0)) {
-                crm_trace("Learned ID %u for node %s", peer->id, v->nodename);
-                v->nodeid = peer->id;
+            if (node_xml_id == NULL) {
+                node_xml_id = v->node_xml_id;
             }
         }
 
@@ -572,6 +573,17 @@ write_attribute(attribute_t *a, bool ignore_delay)
                        "is unknown (will retry if learned)",
                        a->id, v->nodename, v->current);
             continue;
+        }
+
+        /* Remember the XML ID and let peers know it (in case one of them
+         * becomes the writer later)
+         */
+        if (!pcmk__str_eq(v->node_xml_id, node_xml_id, pcmk__str_none)) {
+            crm_trace("Setting %s[%s] node XML ID to %s (was %s)",
+                      a->id, v->nodename, node_xml_id,
+                      pcmk__s(v->node_xml_id, "unknown"));
+            pcmk__str_update(&(v->node_xml_id), node_xml_id);
+            attrd_broadcast_value(a, v);
         }
 
         // Update this value as part of the CIB transaction we're building
