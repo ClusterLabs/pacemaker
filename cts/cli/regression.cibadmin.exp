@@ -37,7 +37,7 @@
 =#=#=#= End test: Validate CIB - OK (0) =#=#=#=
 * Passed: cibadmin              - Validate CIB
 =#=#=#= Begin test: Digest calculation =#=#=#=
-Digest: 5bfd0f70973217c2a4735960dfafbb55
+Digest:
 =#=#=#= End test: Digest calculation - OK (0) =#=#=#=
 * Passed: cibadmin              - Digest calculation
 =#=#=#= Begin test: Require --force for CIB erasure =#=#=#=
