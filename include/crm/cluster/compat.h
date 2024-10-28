@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -59,11 +59,7 @@ int crm_terminate_member(int nodeid, const char *uname, void *unused);
 int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
                                      int *connection);
 
-/*!
- * \deprecated Use
- *             <tt>crm_xml_add(xml, attr, pcmk__cluster_node_uuid(node))</tt>
- *             instead
- */
+//! \deprecated Do not use
 void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
 
 #if SUPPORT_COROSYNC

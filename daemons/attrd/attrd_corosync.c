@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -217,7 +217,7 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
                                             pcmk__node_search_cluster_member);
 
     crm_trace("Learned %s has XML ID %s",
-              known_peer->uname, pcmk__cluster_node_uuid(known_peer));
+              known_peer->uname, pcmk__cluster_get_xml_id(known_peer));
     if (attrd_election_won()) {
         attrd_write_attributes(attrd_write_changed);
     }
