@@ -131,7 +131,7 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
 
     /* It's theoretically possible that the node was added to the cluster peer
      * cache before it was known to be a Pacemaker Remote node. Remove that
-     * entry unless it has a node ID, which means the name actually is
+     * entry unless it has an XML ID, which means the name actually is
      * associated with a cluster node. (@TODO return an error in that case?)
      */
     node = pcmk__search_node_caches(0, node_name, NULL,
@@ -685,8 +685,11 @@ search_cluster_member_cache(unsigned int id, const char *uname,
     } else if (uuid != NULL) {
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
-                crm_trace("UUID match: %s = %p", node->uuid, node);
+            const char *this_xml_id = pcmk__cluster_get_xml_id(node);
+
+            if (pcmk__str_eq(uuid, this_xml_id, pcmk__str_none)) {
+                crm_trace("Found cluster node cache entry by XML ID %s",
+                          this_xml_id);
                 by_id = node;
                 break;
             }
@@ -1347,7 +1350,8 @@ find_cib_cluster_node(const char *id, const char *uname)
     if (id) {
         g_hash_table_iter_init(&iter, cluster_node_cib_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if(strcasecmp(node->uuid, id) == 0) {
+            if (pcmk__str_eq(id, pcmk__cluster_get_xml_id(node),
+                             pcmk__str_none)) {
                 crm_trace("ID match: %s= %p", id, node);
                 by_id = node;
                 break;
@@ -1383,7 +1387,7 @@ find_cib_cluster_node(const char *id, const char *uname)
          * Return by_id. */
 
     } else if (id && by_name->uuid
-               && pcmk__str_eq(id, by_name->uuid, pcmk__str_casei)) {
+               && pcmk__str_eq(id, by_name->uuid, pcmk__str_none)) {
         /* Multiple nodes have the same id in the CIB.
          * Return by_name. */
         node = by_name;

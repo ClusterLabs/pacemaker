@@ -310,7 +310,8 @@ election_vote(election_t *e)
     vote = create_request(CRM_OP_VOTE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
     e->count++;
-    crm_xml_add(vote, PCMK__XA_ELECTION_OWNER, our_node->uuid);
+    crm_xml_add(vote, PCMK__XA_ELECTION_OWNER,
+                pcmk__cluster_get_xml_id(our_node));
     crm_xml_add_int(vote, PCMK__XA_ELECTION_ID, e->count);
 
     // Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is actually microseconds
@@ -549,8 +550,8 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
     our_node = pcmk__get_node(0, e->uname, NULL,
                               pcmk__node_search_cluster_member);
     we_are_owner = (our_node != NULL)
-                   && pcmk__str_eq(our_node->uuid, vote.election_owner,
-                                   pcmk__str_none);
+                   && pcmk__str_eq(pcmk__cluster_get_xml_id(our_node),
+                                   vote.election_owner, pcmk__str_none);
 
     if (!can_win) {
         reason = "Not eligible";
