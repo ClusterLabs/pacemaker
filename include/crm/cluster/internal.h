@@ -309,6 +309,7 @@ void pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name);
 void pcmk__cluster_forget_remote_node(const char *node_name);
 pcmk__node_status_t *pcmk__search_node_caches(unsigned int id,
                                               const char *uname,
+                                              const char *xml_id,
                                               uint32_t flags);
 void pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id);
 

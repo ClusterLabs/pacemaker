@@ -156,7 +156,7 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
      * entry unless it has a node ID, which means the name actually is
      * associated with a cluster node. (@TODO return an error in that case?)
      */
-    node = pcmk__search_node_caches(0, node_name,
+    node = pcmk__search_node_caches(0, node_name, NULL,
                                     pcmk__node_search_cluster_member);
     if ((node != NULL) && (node->xml_id == NULL)) {
         /* node_name could be a pointer into the cache entry being removed, so
@@ -791,36 +791,47 @@ search_cluster_member_cache(unsigned int id, const char *uname,
  * \internal
  * \brief Search caches for a node (cluster or Pacemaker Remote)
  *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- * \param[in] flags  Group of enum pcmk__node_search_flags
+ * \param[in] id      If not 0, cluster node ID to search for
+ * \param[in] uname   If not NULL, node name to search for
+ * \param[in] xml_id  If not NULL, CIB XML ID of node to search for
+ * \param[in] flags   Group of enum pcmk__node_search_flags
  *
  * \return Node cache entry if found, otherwise NULL
  */
 pcmk__node_status_t *
-pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
+pcmk__search_node_caches(unsigned int id, const char *uname,
+                         const char *xml_id, uint32_t flags)
 {
     pcmk__node_status_t *node = NULL;
 
-    pcmk__assert((id > 0) || (uname != NULL));
+    pcmk__assert((id > 0) || (uname != NULL) || (xml_id != NULL));
 
     pcmk__cluster_init_node_caches();
 
-    if ((uname != NULL) && pcmk_is_set(flags, pcmk__node_search_remote)) {
-        node = g_hash_table_lookup(pcmk__remote_peer_cache, uname);
+    if (pcmk_is_set(flags, pcmk__node_search_remote)) {
+        if (uname != NULL) {
+            node = g_hash_table_lookup(pcmk__remote_peer_cache, uname);
+        } else if (xml_id != NULL) {
+            node = g_hash_table_lookup(pcmk__remote_peer_cache, xml_id);
+        }
     }
 
     if ((node == NULL)
         && pcmk_is_set(flags, pcmk__node_search_cluster_member)) {
 
-        node = search_cluster_member_cache(id, uname, NULL);
+        node = search_cluster_member_cache(id, uname, xml_id);
     }
 
     if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_cluster_cib)) {
-        char *id_str = (id == 0)? NULL : crm_strdup_printf("%u", id);
+        if (xml_id != NULL) {
+            node = find_cib_cluster_node(xml_id, uname);
+        } else {
+            // Assumes XML ID is node ID as string (as with Corosync)
+            char *id_str = (id == 0)? NULL : crm_strdup_printf("%u", id);
 
-        node = find_cib_cluster_node(id_str, uname);
-        free(id_str);
+            node = find_cib_cluster_node(id_str, uname);
+            free(id_str);
+        }
     }
 
     return node;

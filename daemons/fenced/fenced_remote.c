@@ -1245,7 +1245,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         pcmk__node_status_t *node = NULL;
 
         pcmk__scan_min_int(op->target, &nodeid, 0);
-        node = pcmk__search_node_caches(nodeid, NULL,
+        node = pcmk__search_node_caches(nodeid, NULL, NULL,
                                         pcmk__node_search_any
                                         |pcmk__node_search_cluster_cib);
 
