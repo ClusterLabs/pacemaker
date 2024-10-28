@@ -625,7 +625,7 @@ node_left(const char *cpg_group_name, int event_counter,
           size_t member_list_entries)
 {
     crm_node_t *peer =
-        pcmk__search_node_caches(cpg_peer->nodeid, NULL,
+        pcmk__search_node_caches(cpg_peer->nodeid, NULL, NULL,
                                  pcmk__node_search_cluster_member);
     const struct cpg_address **rival = NULL;
 
