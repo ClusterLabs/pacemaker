@@ -69,7 +69,7 @@ do_ha_control(long long action,
 
             free(controld_globals.our_uuid);
             controld_globals.our_uuid =
-                pcmk__str_copy(pcmk__cluster_node_uuid(node));
+                pcmk__str_copy(pcmk__cluster_get_xml_id(node));
 
             if (controld_globals.our_uuid == NULL) {
                 crm_err("Could not obtain local uuid");

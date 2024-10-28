@@ -1000,7 +1000,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *xml_id,
     }
 
     if ((xml_id == NULL) && (node->xml_id == NULL)) {
-        xml_id = pcmk__cluster_node_uuid(node);
+        xml_id = pcmk__cluster_get_xml_id(node);
         if (xml_id == NULL) {
             crm_debug("Cannot obtain an XML ID for node %s[%u] at this time",
                       node->name, id);

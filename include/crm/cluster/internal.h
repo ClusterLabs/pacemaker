@@ -260,7 +260,7 @@ char *pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id,
 
 #  endif
 
-const char *pcmk__cluster_node_uuid(pcmk__node_status_t *node);
+const char *pcmk__cluster_get_xml_id(pcmk__node_status_t *node);
 char *pcmk__cluster_node_name(uint32_t nodeid);
 const char *pcmk__cluster_local_node_name(void);
 const char *pcmk__node_name_from_uuid(const char *uuid);
