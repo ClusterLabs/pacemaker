@@ -112,6 +112,7 @@ $(BOOKS:%=%/conf.py): conf.py.in
 	$(AM_V_at)-$(MKDIR_P) "$(@:%/conf.py=%)"
 	$(AM_V_GEN)sed								\
 		-e 's/%VERSION%/$(VERSION)/g'					\
+		-e 's/%PACKAGE_SERIES%/$(PACKAGE_SERIES)/g'			\
 		-e 's/%BOOK_ID%/$(@:%/conf.py=%)/g'				\
 		-e 's/%BOOK_TITLE%/$(subst _, ,$(@:%/conf.py=%))/g'		\
 		-e 's#%SRC_DIR%#$(abs_srcdir)#g'				\
