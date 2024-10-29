@@ -166,7 +166,7 @@ if BUILD_SPHINX_DOCS
 			"$(BOOK_RSYNC_DEST)/$$book/";			\
 	done
 	@rsync $(RSYNC_OPTS) "$(builddir)/build-$(PACKAGE_SERIES).txt"	\
-		"$(RSYNC_PACKAGE_DEST)/doc"
+		"$(RSYNC_PACKAGE_DEST)/doc/"
 endif
 
 .PHONY: vars
