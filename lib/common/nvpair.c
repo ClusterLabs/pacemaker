@@ -27,8 +27,9 @@
  * This file isolates handling of various kinds of name/value pairs:
  *
  * - pcmk_nvpair_t data type
+ * - name=value strings
  * - XML nvpair elements (<nvpair id=ID name=NAME value=VALUE>)
- * - Meta-attributes (for resources and actions)
+ * - Instance attributes and meta-attributes (for resources and actions)
  */
 
 // pcmk_nvpair_t handling
@@ -104,7 +105,8 @@ pcmk_free_nvpairs(GSList *nvpairs)
     g_slist_free_full(nvpairs, pcmk__free_nvpair);
 }
 
-// convenience function for name=value strings
+
+// name=value string handling
 
 /*!
  * \internal
@@ -440,6 +442,64 @@ crm_meta_value(GHashTable *meta, const char *attr_name)
         return value;
     }
     return NULL;
+}
+
+gint
+pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
+{
+    const xmlNode *pair_a = a;
+    const xmlNode *pair_b = b;
+    const pcmk__nvpair_unpack_t *unpack_data = user_data;
+
+    int score_a = 0;
+    int score_b = 0;
+    int rc = pcmk_rc_ok;
+
+    if (a == NULL && b == NULL) {
+        return 0;
+    } else if (a == NULL) {
+        return 1;
+    } else if (b == NULL) {
+        return -1;
+    }
+
+    if (pcmk__str_eq(pcmk__xe_id(pair_a), unpack_data->first_id,
+                     pcmk__str_none)) {
+        return -1;
+
+    } else if (pcmk__str_eq(pcmk__xe_id(pair_b), unpack_data->first_id,
+                            pcmk__str_none)) {
+        return 1;
+    }
+
+    rc = pcmk__xe_get_score(pair_a, PCMK_XA_SCORE, &score_a, 0);
+    if (rc != pcmk_rc_ok) { // Not possible with schema validation enabled
+        pcmk__config_warn("Using 0 as %s score because '%s' "
+                          "is not a valid score: %s",
+                          pcmk__xe_id(pair_a),
+                          crm_element_value(pair_a, PCMK_XA_SCORE),
+                          pcmk_rc_str(rc));
+    }
+
+    rc = pcmk__xe_get_score(pair_b, PCMK_XA_SCORE, &score_b, 0);
+    if (rc != pcmk_rc_ok) { // Not possible with schema validation enabled
+        pcmk__config_warn("Using 0 as %s score because '%s' "
+                          "is not a valid score: %s",
+                          pcmk__xe_id(pair_b),
+                          crm_element_value(pair_b, PCMK_XA_SCORE),
+                          pcmk_rc_str(rc));
+    }
+
+    /* If we're overwriting values, we want lowest score first, so the highest
+     * score is processed last; if we're not overwriting values, we want highest
+     * score first, so nothing else overwrites it.
+     */
+    if (score_a < score_b) {
+        return unpack_data->overwrite? -1 : 1;
+    } else if (score_a > score_b) {
+        return unpack_data->overwrite? 1 : -1;
+    }
+    return 0;
 }
 
 // Deprecated functions kept only for backward API compatibility
