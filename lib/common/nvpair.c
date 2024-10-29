@@ -494,13 +494,15 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
      * from having the same ID, so we can ignore handling that case
      * specifically)
      */
-    if (pcmk__str_eq(pcmk__xe_id(pair_a), unpack_data->first_id,
-                     pcmk__str_none)) {
-        return a_is_higher;
+    if (unpack_data->first_id != NULL) {
+        if (pcmk__str_eq(pcmk__xe_id(pair_a), unpack_data->first_id,
+                         pcmk__str_none)) {
+            return a_is_higher;
 
-    } else if (pcmk__str_eq(pcmk__xe_id(pair_b), unpack_data->first_id,
-                            pcmk__str_none)) {
-        return b_is_higher;
+        } else if (pcmk__str_eq(pcmk__xe_id(pair_b), unpack_data->first_id,
+                                pcmk__str_none)) {
+            return b_is_higher;
+        }
     }
 
     // Otherwise, check the scores
