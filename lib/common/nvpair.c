@@ -444,6 +444,22 @@ crm_meta_value(GHashTable *meta, const char *attr_name)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Compare processing order of two XML blocks of name/value pairs
+ *
+ * \param[in] a          First XML block to compare
+ * \param[in] b          Second XML block to compare
+ * \param[in] user_data  pcmk__nvpair_unpack_t with first_id (whether a
+ *                       particular XML ID should have priority) and overwrite
+ *                       (whether later-processed blocks will overwrite values
+ *                       from earlier ones) set as desired; must be non-NULL
+ *
+ * \return Standard comparison return code (a negative value if \p a should sort
+ *         first, a positive value if \p b should sort first, and 0 if they
+ *         should sort equally)
+ * \note This is suitable for use as a GList sorting function.
+ */
 gint
 pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
 {
@@ -463,14 +479,21 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
     const gint a_is_higher = unpack_data->overwrite? 1 : -1;
     const gint b_is_higher = -a_is_higher;
 
-    if (a == NULL && b == NULL) {
-        return 0;
-    } else if (a == NULL) {
-        return b_is_higher;
+    /* NULL values have lowest priority, regardless of the other's score
+     * (it won't be possible in practice anyway, this is just a failsafe)
+     */
+    if (a == NULL) {
+        return (b == NULL)? 0 : b_is_higher;
+
     } else if (b == NULL) {
         return a_is_higher;
     }
 
+    /* A particular XML ID can be specified as having highest priority
+     * regardless of score (schema validation, if enabled, prevents two blocks
+     * from having the same ID, so we can ignore handling that case
+     * specifically)
+     */
     if (pcmk__str_eq(pcmk__xe_id(pair_a), unpack_data->first_id,
                      pcmk__str_none)) {
         return a_is_higher;
@@ -479,6 +502,8 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
                             pcmk__str_none)) {
         return b_is_higher;
     }
+
+    // Otherwise, check the scores
 
     rc = pcmk__xe_get_score(pair_a, PCMK_XA_SCORE, &score_a, 0);
     if (rc != pcmk_rc_ok) { // Not possible with schema validation enabled
@@ -500,6 +525,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
 
     if (score_a < score_b) {
         return b_is_higher;
+
     } else if (score_a > score_b) {
         return a_is_higher;
     }
