@@ -455,21 +455,29 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
     int score_b = 0;
     int rc = pcmk_rc_ok;
 
+    /* If we're overwriting values, we want to process blocks from
+     * lowest priority to highest, so higher-priority values overwrite
+     * lower-priority ones. If we're not overwriting values, we want to process
+     * from highest priority to lowest.
+     */
+    const gint a_is_higher = unpack_data->overwrite? 1 : -1;
+    const gint b_is_higher = -a_is_higher;
+
     if (a == NULL && b == NULL) {
         return 0;
     } else if (a == NULL) {
-        return 1;
+        return b_is_higher;
     } else if (b == NULL) {
-        return -1;
+        return a_is_higher;
     }
 
     if (pcmk__str_eq(pcmk__xe_id(pair_a), unpack_data->first_id,
                      pcmk__str_none)) {
-        return -1;
+        return a_is_higher;
 
     } else if (pcmk__str_eq(pcmk__xe_id(pair_b), unpack_data->first_id,
                             pcmk__str_none)) {
-        return 1;
+        return b_is_higher;
     }
 
     rc = pcmk__xe_get_score(pair_a, PCMK_XA_SCORE, &score_a, 0);
@@ -490,14 +498,10 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
                           pcmk_rc_str(rc));
     }
 
-    /* If we're overwriting values, we want lowest score first, so the highest
-     * score is processed last; if we're not overwriting values, we want highest
-     * score first, so nothing else overwrites it.
-     */
     if (score_a < score_b) {
-        return unpack_data->overwrite? -1 : 1;
+        return b_is_higher;
     } else if (score_a > score_b) {
-        return unpack_data->overwrite? 1 : -1;
+        return a_is_higher;
     }
     return 0;
 }
