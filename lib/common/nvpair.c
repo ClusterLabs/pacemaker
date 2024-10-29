@@ -453,7 +453,7 @@ crm_meta_value(GHashTable *meta, const char *attr_name)
  * \param[in] user_data  pcmk__nvpair_unpack_t with first_id (whether a
  *                       particular XML ID should have priority) and overwrite
  *                       (whether later-processed blocks will overwrite values
- *                       from earlier ones) set as desired; must be non-NULL
+ *                       from earlier ones) set as desired
  *
  * \return Standard comparison return code (a negative value if \p a should sort
  *         first, a positive value if \p b should sort first, and 0 if they
@@ -476,7 +476,8 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
      * lower-priority ones. If we're not overwriting values, we want to process
      * from highest priority to lowest.
      */
-    const gint a_is_higher = unpack_data->overwrite? 1 : -1;
+    const gint a_is_higher = ((unpack_data != NULL)
+                              && unpack_data->overwrite)? 1 : -1;
     const gint b_is_higher = -a_is_higher;
 
     /* NULL values have lowest priority, regardless of the other's score
@@ -494,7 +495,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
      * from having the same ID, so we can ignore handling that case
      * specifically)
      */
-    if (unpack_data->first_id != NULL) {
+    if ((unpack_data != NULL) && (unpack_data->first_id != NULL)) {
         if (pcmk__str_eq(pcmk__xe_id(pair_a), unpack_data->first_id,
                          pcmk__str_none)) {
             return a_is_higher;
