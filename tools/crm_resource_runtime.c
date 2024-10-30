@@ -1689,8 +1689,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         /* Stop the clone or bundle instance by banning it from the host */
         out->quiet = true;
         rc = cli_resource_ban(out, lookup_id, host, move_lifetime, cib,
-                              cib_sync_call, promoted_role_only,
-                              PCMK_ROLE_PROMOTED);
+                              promoted_role_only, PCMK_ROLE_PROMOTED);
     } else {
         xmlNode *xml_search = NULL;
 
@@ -2416,8 +2415,8 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
         /* Ban the original location if possible */
         if(current) {
             (void)cli_resource_ban(out, rsc_id, current->priv->name,
-                                   move_lifetime, cib, cib_sync_call,
-                                   promoted_role_only, PCMK_ROLE_PROMOTED);
+                                   move_lifetime, cib, promoted_role_only,
+                                   PCMK_ROLE_PROMOTED);
         } else if(count > 1) {
             out->info(out, "Resource '%s' is currently %s in %d locations. "
                       "One may now move to %s",

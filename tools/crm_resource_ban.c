@@ -59,7 +59,7 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
 // \return Standard Pacemaker return code
 int
 cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
-                 const char *move_lifetime, cib_t * cib_conn, int cib_options,
+                 const char *move_lifetime, cib_t *cib_conn,
                  gboolean promoted_role_only, const char *promoted_role)
 {
     char *later_s = NULL;
@@ -122,7 +122,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 
     crm_log_xml_notice(fragment, "Modify");
     rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
-                                cib_options);
+                                cib_sync_call);
     rc = pcmk_legacy2rc(rc);
 
     pcmk__xml_free(fragment);
@@ -133,8 +133,8 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
         && (strcmp(promoted_role, PCMK_ROLE_PROMOTED) == 0)) {
 
         int banrc = cli_resource_ban(out, rsc_id, host, move_lifetime,
-                              cib_conn, cib_options, promoted_role_only,
-                              PCMK__ROLE_PROMOTED_LEGACY);
+                                     cib_conn, promoted_role_only,
+                                     PCMK__ROLE_PROMOTED_LEGACY);
         if (banrc == pcmk_rc_ok) {
             rc = banrc;
         }

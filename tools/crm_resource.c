@@ -858,7 +858,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     if (nactive == 1) {
         rc = cli_resource_ban(out, options.rsc_id, current->priv->name,
-                              move_lifetime, cib_conn, cib_sync_call,
+                              move_lifetime, cib_conn,
                               options.promoted_role_only, PCMK_ROLE_PROMOTED);
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
@@ -878,7 +878,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
 
         if(count == 1 && current) {
             rc = cli_resource_ban(out, options.rsc_id, current->priv->name,
-                                  move_lifetime, cib_conn, cib_sync_call,
+                                  move_lifetime, cib_conn,
                                   options.promoted_role_only,
                                   PCMK_ROLE_PROMOTED);
 
@@ -1958,7 +1958,7 @@ main(int argc, char **argv)
             } else {
                 rc = cli_resource_ban(out, options.rsc_id, node->priv->name,
                                       options.move_lifetime, cib_conn,
-                                      cib_sync_call, options.promoted_role_only,
+                                      options.promoted_role_only,
                                       PCMK_ROLE_PROMOTED);
             }
 
