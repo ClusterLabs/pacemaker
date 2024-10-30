@@ -562,7 +562,7 @@ int
 cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
-                              cib_t *cib, int cib_options, gboolean force)
+                              cib_t *cib, gboolean force)
 {
     pcmk__output_t *out = rsc->priv->scheduler->priv->out;
     int rc = pcmk_rc_ok;
@@ -584,7 +584,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         pcmk__xe_remove_attr(rsc->priv->xml, attr_name);
         pcmk__assert(cib != NULL);
         rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->priv->xml,
-                                cib_options);
+                                cib_sync_call);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Deleted attribute: %s", attr_name);
@@ -633,7 +633,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         crm_log_xml_debug(xml_obj, "Delete");
 
         pcmk__assert(cib != NULL);
-        rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, xml_obj, cib_options);
+        rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, xml_obj, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
 
         if (rc == pcmk_rc_ok) {
@@ -1798,8 +1798,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     } else {
         rc = cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
-                                           PCMK_META_TARGET_ROLE, cib,
-                                           cib_sync_call, force);
+                                           PCMK_META_TARGET_ROLE, cib, force);
     }
 
     if(rc != pcmk_rc_ok) {
@@ -1881,8 +1880,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     } else {
         cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
-                                      PCMK_META_TARGET_ROLE, cib, cib_sync_call,
-                                      force);
+                                      PCMK_META_TARGET_ROLE, cib, force);
     }
 
 done:

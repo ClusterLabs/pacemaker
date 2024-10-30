@@ -2062,7 +2062,7 @@ main(int argc, char **argv)
                                                options.attr_set_type,
                                                options.prop_id,
                                                options.prop_name, cib_conn,
-                                               cib_sync_call, options.force);
+                                               options.force);
             break;
 
         case cmd_cleanup:
