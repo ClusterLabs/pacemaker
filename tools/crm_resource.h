@@ -71,7 +71,7 @@ int cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 int cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes,
                        cib_t *cib_conn, bool clear_ban_constraints,
                        gboolean force);
-int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
+int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn,
                                    const char *rsc, const char *node, gboolean promoted_role_only);
 
 /* print */

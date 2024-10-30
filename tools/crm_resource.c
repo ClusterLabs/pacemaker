@@ -946,8 +946,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 
     if (options.clear_expired) {
         rc = cli_resource_clear_all_expired(scheduler->input, cib_conn,
-                                            cib_sync_call, options.rsc_id,
-                                            options.host_uname,
+                                            options.rsc_id, options.host_uname,
                                             options.promoted_role_only);
 
     } else if (options.host_uname) {

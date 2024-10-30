@@ -435,8 +435,8 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
-                               const char *rsc, const char *node, gboolean promoted_role_only)
+cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
+                               const char *node, gboolean promoted_role_only)
 {
     GString *buf = NULL;
     xmlXPathObject *xpathObj = NULL;
@@ -491,7 +491,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
             crm_log_xml_info(fragment, "Delete");
 
             rc = cib_conn->cmds->remove(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
-                                        cib_options);
+                                        cib_sync_call);
             rc = pcmk_legacy2rc(rc);
 
             if (rc != pcmk_rc_ok) {
