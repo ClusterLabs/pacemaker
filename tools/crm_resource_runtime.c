@@ -2401,8 +2401,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
 
     /* Record an explicit preference for 'dest' */
     rc = cli_resource_prefer(out, rsc_id, dest->priv->name, move_lifetime,
-                             cib, cib_sync_call, promoted_role_only,
-                             PCMK_ROLE_PROMOTED);
+                             cib, promoted_role_only, PCMK_ROLE_PROMOTED);
 
     crm_trace("%s%s now prefers %s%s",
               rsc->id, (promoted_role_only? " (promoted)" : ""),
