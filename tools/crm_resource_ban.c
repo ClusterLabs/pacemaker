@@ -245,8 +245,8 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
  * \return Standard Pacemaker return code
  */
 static int
-resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_conn,
-                            int cib_options)
+resource_clear_node_in_expr(const char *rsc_id, const char *host,
+                            cib_t *cib_conn)
 {
     int rc = pcmk_rc_ok;
     char *xpath_string = NULL;
@@ -262,7 +262,8 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_co
 
     xpath_string = crm_strdup_printf(XPATH_FMT, rsc_id, rsc_id, host);
 
-    rc = cib_conn->cmds->remove(cib_conn, xpath_string, NULL, cib_xpath | cib_options);
+    rc = cib_conn->cmds->remove(cib_conn, xpath_string, NULL,
+                                cib_xpath|cib_sync_call);
     if (rc == -ENXIO) {
         rc = pcmk_rc_ok;
     } else {
@@ -276,7 +277,7 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_co
 // \return Standard Pacemaker return code
 static int
 resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * cib_conn,
-                                int cib_options, bool clear_ban_constraints, gboolean force)
+                                bool clear_ban_constraints, gboolean force)
 {
     int rc = pcmk_rc_ok;
     xmlNode *fragment = NULL;
@@ -297,7 +298,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
 
     crm_log_xml_info(fragment, "Delete");
     rc = cib_conn->cmds->remove(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
-                                cib_options);
+                                cib_sync_call);
     if (rc == -ENXIO) {
         rc = pcmk_rc_ok;
     } else {
@@ -311,7 +312,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
 // \return Standard Pacemaker return code
 int
 cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes, cib_t * cib_conn,
-                   int cib_options, bool clear_ban_constraints, gboolean force)
+                   bool clear_ban_constraints, gboolean force)
 {
     int rc = pcmk_rc_ok;
 
@@ -320,7 +321,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes, cib_t 
     }
 
     if (host) {
-        rc = resource_clear_node_in_expr(rsc_id, host, cib_conn, cib_options);
+        rc = resource_clear_node_in_expr(rsc_id, host, cib_conn);
 
         /* rc does not tell us whether the previous operation did anything, only
          * whether it failed or not.  Thus, as long as it did not fail, we need
@@ -328,8 +329,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes, cib_t 
          */
         if (rc == pcmk_rc_ok) {
             rc = resource_clear_node_in_location(rsc_id, host, cib_conn,
-                                                 cib_options, clear_ban_constraints,
-                                                 force);
+                                                 clear_ban_constraints, force);
         }
 
     } else {
@@ -342,8 +342,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes, cib_t 
             pcmk_node_t *target = n->data;
 
             rc = cli_resource_clear(rsc_id, target->priv->name, NULL,
-                                    cib_conn, cib_options, clear_ban_constraints,
-                                    force);
+                                    cib_conn, clear_ban_constraints, force);
             if (rc != pcmk_rc_ok) {
                 break;
             }

@@ -960,11 +960,11 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
             return rc;
         }
         rc = cli_resource_clear(options.rsc_id, dest->priv->name, NULL,
-                                cib_conn, cib_sync_call, true, options.force);
+                                cib_conn, true, options.force);
 
     } else {
         rc = cli_resource_clear(options.rsc_id, NULL, scheduler->nodes,
-                                cib_conn, cib_sync_call, true, options.force);
+                                cib_conn, true, options.force);
     }
 
     if (!out->is_quiet(out)) {

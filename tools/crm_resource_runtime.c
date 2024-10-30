@@ -1786,8 +1786,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     }
 
     if (stop_via_ban) {
-        rc = cli_resource_clear(lookup_id, host, NULL, cib, cib_sync_call, true,
-                                force);
+        rc = cli_resource_clear(lookup_id, host, NULL, cib, true, force);
 
     } else if (orig_target_role) {
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
@@ -1872,8 +1871,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
   failure:
     if (stop_via_ban) {
-        cli_resource_clear(lookup_id, host, NULL, cib, cib_sync_call, true,
-                           force);
+        cli_resource_clear(lookup_id, host, NULL, cib, true, force);
     } else if (orig_target_role) {
         cli_resource_update_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
@@ -2392,12 +2390,11 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     }
 
     /* Clear any previous prefer constraints across all nodes. */
-    cli_resource_clear(rsc_id, NULL, scheduler->nodes, cib, cib_sync_call,
-                       false, force);
+    cli_resource_clear(rsc_id, NULL, scheduler->nodes, cib, false, force);
 
     /* Clear any previous ban constraints on 'dest'. */
-    cli_resource_clear(rsc_id, dest->priv->name, scheduler->nodes, cib,
-                       cib_sync_call, TRUE, force);
+    cli_resource_clear(rsc_id, dest->priv->name, scheduler->nodes, cib, true,
+                       force);
 
     /* Record an explicit preference for 'dest' */
     rc = cli_resource_prefer(out, rsc_id, dest->priv->name, move_lifetime,
