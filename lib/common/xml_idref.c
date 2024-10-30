@@ -113,3 +113,35 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
     free(xpath);
     return result;
 }
+
+/*!
+ * \internal
+ * \brief Get list of resolved ID references for child elements of given element
+ *
+ * \param[in]     xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]     set_name      If not NULL, only get blocks of this element
+ *
+ * \return List of XML blocks of name/value pairs
+ */
+GList *
+pcmk__xe_dereference_children(const xmlNode *xml_obj, const char *set_name)
+{
+    GList *unsorted = NULL;
+
+    if (xml_obj == NULL) {
+        return NULL;
+    }
+    for (xmlNode *attr_set = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
+         attr_set != NULL; attr_set = pcmk__xe_next(attr_set, NULL)) {
+
+        if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
+            xmlNode *expanded_attr_set = pcmk__xe_resolve_idref(attr_set, NULL);
+
+            if (expanded_attr_set == NULL) {
+                continue; // Not possible with schema validation enabled
+            }
+            unsorted = g_list_prepend(unsorted, expanded_attr_set);
+        }
+    }
+    return unsorted;
+}

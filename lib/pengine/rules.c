@@ -137,38 +137,6 @@ unpack_attr_set(gpointer data, gpointer user_data)
 }
 
 /*!
- * \internal
- * \brief Create a sorted list of nvpair blocks
- *
- * \param[in]     xml_obj       XML element containing blocks of nvpair elements
- * \param[in]     set_name      If not NULL, only get blocks of this element
- *
- * \return List of XML blocks of name/value pairs
- */
-static GList *
-make_pairs(const xmlNode *xml_obj, const char *set_name)
-{
-    GList *unsorted = NULL;
-
-    if (xml_obj == NULL) {
-        return NULL;
-    }
-    for (xmlNode *attr_set = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
-         attr_set != NULL; attr_set = pcmk__xe_next(attr_set, NULL)) {
-
-        if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
-            xmlNode *expanded_attr_set = pcmk__xe_resolve_idref(attr_set, NULL);
-
-            if (expanded_attr_set == NULL) {
-                continue; // Not possible with schema validation enabled
-            }
-            unsorted = g_list_prepend(unsorted, expanded_attr_set);
-        }
-    }
-    return unsorted;
-}
-
-/*!
  * \brief Extract nvpair blocks contained by an XML element into a hash table
  *
  * \param[in,out] top           Ignored
@@ -187,7 +155,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 const char *always_first, gboolean overwrite,
                 crm_time_t *next_change)
 {
-    GList *pairs = make_pairs(xml_obj, set_name);
+    GList *pairs = pcmk__xe_dereference_children(xml_obj, set_name);
 
     if (pairs) {
         pcmk__nvpair_unpack_t data = {
