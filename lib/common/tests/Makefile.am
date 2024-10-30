@@ -36,6 +36,7 @@ SUBDIRS = \
 	strings		\
 	utils		\
 	xml 		\
+	xml_element 	\
 	xpath
 
 if SUPPORT_PROCFS
