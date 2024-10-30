@@ -1939,8 +1939,7 @@ main(int argc, char **argv)
             } else {
                 rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
                                        options.move_lifetime, cib_conn,
-                                       cib_sync_call, scheduler,
-                                       options.promoted_role_only,
+                                       scheduler, options.promoted_role_only,
                                        options.force);
             }
 

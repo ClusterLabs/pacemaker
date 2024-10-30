@@ -2317,8 +2317,8 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 int
 cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                   const char *host_name, const char *move_lifetime, cib_t *cib,
-                  int cib_options, pcmk_scheduler_t *scheduler,
-                  gboolean promoted_role_only, gboolean force)
+                  pcmk_scheduler_t *scheduler, gboolean promoted_role_only,
+                  gboolean force)
 {
     pcmk__output_t *out = scheduler->priv->out;
     int rc = pcmk_rc_ok;
@@ -2393,16 +2393,16 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     }
 
     /* Clear any previous prefer constraints across all nodes. */
-    cli_resource_clear(rsc_id, NULL, scheduler->nodes, cib, cib_options, false,
-                       force);
+    cli_resource_clear(rsc_id, NULL, scheduler->nodes, cib, cib_sync_call,
+                       false, force);
 
     /* Clear any previous ban constraints on 'dest'. */
     cli_resource_clear(rsc_id, dest->priv->name, scheduler->nodes, cib,
-                       cib_options, TRUE, force);
+                       cib_sync_call, TRUE, force);
 
     /* Record an explicit preference for 'dest' */
     rc = cli_resource_prefer(out, rsc_id, dest->priv->name, move_lifetime,
-                             cib, cib_options, promoted_role_only,
+                             cib, cib_sync_call, promoted_role_only,
                              PCMK_ROLE_PROMOTED);
 
     crm_trace("%s%s now prefers %s%s",
@@ -2416,7 +2416,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
         /* Ban the original location if possible */
         if(current) {
             (void)cli_resource_ban(out, rsc_id, current->priv->name,
-                                   move_lifetime, cib, cib_options,
+                                   move_lifetime, cib, cib_sync_call,
                                    promoted_role_only, PCMK_ROLE_PROMOTED);
         } else if(count > 1) {
             out->info(out, "Resource '%s' is currently %s in %d locations. "
