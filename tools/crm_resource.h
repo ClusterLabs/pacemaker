@@ -98,7 +98,7 @@ int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                     pcmk_scheduler_t *scheduler);
 int cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                          const pcmk_node_t *node, const char *move_lifetime,
-                         guint timeout_ms, cib_t *cib, int cib_options,
+                         guint timeout_ms, cib_t *cib,
                          gboolean promoted_role_only, gboolean force);
 int cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                       const char *host_name, const char *move_lifetime,

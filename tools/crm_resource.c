@@ -1840,7 +1840,7 @@ main(int argc, char **argv)
              */
             rc = cli_resource_restart(out, rsc, node, options.move_lifetime,
                                       options.timeout_ms, cib_conn,
-                                      cib_sync_call, options.promoted_role_only,
+                                      options.promoted_role_only,
                                       options.force);
             break;
 

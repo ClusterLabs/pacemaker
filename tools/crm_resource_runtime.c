@@ -1555,8 +1555,6 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
  *                                    used; if 0, it will be calculated based on
  *                                    the resource timeout)
  * \param[in,out] cib                 Connection to the CIB manager
- * \param[in]     cib_options         Group of enum cib_call_options flags to
- *                                    use with CIB calls
  * \param[in]     promoted_role_only  If true, limit to promoted instances
  * \param[in]     force               If true, apply only to requested instance
  *                                    if part of a collective resource
@@ -1566,8 +1564,8 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
 int
 cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const char *move_lifetime,
-                     guint timeout_ms, cib_t *cib, int cib_options,
-                     gboolean promoted_role_only, gboolean force)
+                     guint timeout_ms, cib_t *cib, gboolean promoted_role_only,
+                     gboolean force)
 {
     int rc = pcmk_rc_ok;
     int lpc = 0;
@@ -1691,7 +1689,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         /* Stop the clone or bundle instance by banning it from the host */
         out->quiet = true;
         rc = cli_resource_ban(out, lookup_id, host, move_lifetime, cib,
-                              cib_options, promoted_role_only,
+                              cib_sync_call, promoted_role_only,
                               PCMK_ROLE_PROMOTED);
     } else {
         xmlNode *xml_search = NULL;
@@ -1789,7 +1787,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     }
 
     if (stop_via_ban) {
-        rc = cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
+        rc = cli_resource_clear(lookup_id, host, NULL, cib, cib_sync_call, true,
+                                force);
 
     } else if (orig_target_role) {
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
@@ -1802,7 +1801,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         rc = cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE, cib,
-                                           cib_options, force);
+                                           cib_sync_call, force);
     }
 
     if(rc != pcmk_rc_ok) {
@@ -1874,7 +1873,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
   failure:
     if (stop_via_ban) {
-        cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
+        cli_resource_clear(lookup_id, host, NULL, cib, cib_sync_call, true,
+                           force);
     } else if (orig_target_role) {
         cli_resource_update_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
@@ -1884,7 +1884,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     } else {
         cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
-                                      PCMK_META_TARGET_ROLE, cib, cib_options,
+                                      PCMK_META_TARGET_ROLE, cib, cib_sync_call,
                                       force);
     }
 
