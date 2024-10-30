@@ -91,6 +91,7 @@ typedef struct pcmk__election pcmk__election_t;
 struct pcmk__cluster_private {
     enum pcmk_ipc_server server;    //!< Server this connection is for (if any)
     char *node_name;                //!< Local node name at cluster layer
+    char *node_xml_id;              //!< Local node XML ID in CIB
     pcmk__election_t *election;     //!< Election state (if election is needed)
 
     /* @TODO Corosync uses an integer node ID, but cluster layers in the
