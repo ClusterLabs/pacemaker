@@ -2479,7 +2479,7 @@ ticket_constraints_default(pcmk__output_t *out, va_list args)
             out->output_xml(out, PCMK_XE_CONSTRAINT, buf->str);
             g_string_free(buf, TRUE);
 
-            child = pcmk__xe_next(child);
+            child = pcmk__xe_next(child, NULL);
         } while (child != NULL);
     } else {
         GString *buf = g_string_sized_new(1024);

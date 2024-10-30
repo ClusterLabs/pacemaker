@@ -1348,7 +1348,7 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
 
     // Evaluate each condition
     for (xmlNode *condition = pcmk__xe_first_child(rule, NULL, NULL, NULL);
-         condition != NULL; condition = pcmk__xe_next(condition)) {
+         condition != NULL; condition = pcmk__xe_next(condition, NULL)) {
 
         empty = false;
         if (pcmk__evaluate_condition(condition, rule_input,

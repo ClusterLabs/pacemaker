@@ -638,11 +638,12 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
 
     for (action_set = pcmk__xe_first_child(xml_synapse, "action_set", NULL,
                                            NULL);
-         action_set != NULL; action_set = pcmk__xe_next_same(action_set)) {
+         action_set != NULL;
+         action_set = pcmk__xe_next(action_set, "action_set")) {
 
         for (xmlNode *action = pcmk__xe_first_child(action_set, NULL, NULL,
                                                     NULL);
-             action != NULL; action = pcmk__xe_next(action)) {
+             action != NULL; action = pcmk__xe_next(action, NULL)) {
 
             pcmk__graph_action_t *new_action = unpack_action(new_synapse,
                                                              action);
@@ -663,15 +664,15 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
 
     for (xmlNode *inputs = pcmk__xe_first_child(xml_synapse, "inputs", NULL,
                                                 NULL);
-         inputs != NULL; inputs = pcmk__xe_next_same(inputs)) {
+         inputs != NULL; inputs = pcmk__xe_next(inputs, "inputs")) {
 
         for (xmlNode *trigger = pcmk__xe_first_child(inputs, "trigger", NULL,
                                                      NULL);
-             trigger != NULL; trigger = pcmk__xe_next_same(trigger)) {
+             trigger != NULL; trigger = pcmk__xe_next(trigger, "trigger")) {
 
             for (xmlNode *input = pcmk__xe_first_child(trigger, NULL, NULL,
                                                        NULL);
-                 input != NULL; input = pcmk__xe_next(input)) {
+                 input != NULL; input = pcmk__xe_next(input, NULL)) {
 
                 pcmk__graph_action_t *new_input = unpack_action(new_synapse,
                                                                 input);
@@ -781,7 +782,8 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
     for (const xmlNode *synapse_xml = pcmk__xe_first_child(xml_graph,
                                                            "synapse", NULL,
                                                            NULL);
-         synapse_xml != NULL; synapse_xml = pcmk__xe_next_same(synapse_xml)) {
+         synapse_xml != NULL;
+         synapse_xml = pcmk__xe_next(synapse_xml, "synapse")) {
 
         pcmk__graph_synapse_t *new_synapse = unpack_synapse(new_graph,
                                                             synapse_xml);
@@ -849,7 +851,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
     }
 
     for (xmlNode *xop = pcmk__xe_first_child(resource, NULL, NULL, NULL);
-         xop != NULL; xop = pcmk__xe_next(xop)) {
+         xop != NULL; xop = pcmk__xe_next(xop, NULL)) {
 
         int tmp = 0;
 

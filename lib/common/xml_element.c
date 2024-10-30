@@ -56,7 +56,7 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
         parent_name = (const char *) parent->name;
     }
 
-    for (; child != NULL; child = pcmk__xe_next(child)) {
+    for (; child != NULL; child = pcmk__xe_next(child, NULL)) {
         const char *value = NULL;
 
         if ((node_name != NULL) && !pcmk__xe_is(child, node_name)) {
@@ -89,6 +89,28 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
     } else {
         crm_trace("XML child node <%s> not found in %s",
                   node_name, parent_name);
+    }
+    return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Return next sibling element of an XML element
+ *
+ * \param[in] xml           XML element to check
+ * \param[in] element_name  If not NULL, get next sibling with this element name
+ *
+ * \return Next desired sibling of \p xml (or NULL if none)
+ */
+xmlNode *
+pcmk__xe_next(const xmlNode *xml, const char *element_name)
+{
+    for (xmlNode *next = (xml == NULL)? NULL : xml->next;
+         next != NULL; next = next->next) {
+        if ((next->type == XML_ELEMENT_NODE)
+            && ((element_name == NULL) || pcmk__xe_is(next, element_name))) {
+            return next;
+        }
     }
     return NULL;
 }
@@ -698,7 +720,7 @@ pcmk__xe_delete_match(xmlNode *xml, xmlNode *search)
     CRM_CHECK((xml != NULL) && (search != NULL), return EINVAL);
 
     for (xml = pcmk__xe_first_child(xml, NULL, NULL, NULL); xml != NULL;
-         xml = pcmk__xe_next(xml)) {
+         xml = pcmk__xe_next(xml, NULL)) {
 
         if (!pcmk__xml_tree_foreach(xml, delete_xe_if_matching, search)) {
             // Found and deleted an element
@@ -818,7 +840,7 @@ pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
     CRM_CHECK((xml != NULL) && (replace != NULL), return EINVAL);
 
     for (xml = pcmk__xe_first_child(xml, NULL, NULL, NULL); xml != NULL;
-         xml = pcmk__xe_next(xml)) {
+         xml = pcmk__xe_next(xml, NULL)) {
 
         if (!pcmk__xml_tree_foreach(xml, replace_xe_if_matching, replace)) {
             // Found and replaced an element
@@ -924,27 +946,6 @@ pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags)
 
     // No match found in this subtree
     return ENXIO;
-}
-
-/*!
- * \internal
- * \brief Get next sibling XML element with the same name as a given element
- *
- * \param[in] node  XML element to start from
- *
- * \return Next sibling XML element with same name
- */
-xmlNode *
-pcmk__xe_next_same(const xmlNode *node)
-{
-    for (xmlNode *match = pcmk__xe_next(node); match != NULL;
-         match = pcmk__xe_next(match)) {
-
-        if (pcmk__xe_is(match, (const char *) node->name)) {
-            return match;
-        }
-    }
-    return NULL;
 }
 
 void
@@ -1592,7 +1593,7 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     pcmk_free_nvpairs(nvpairs);
 
     for (child = pcmk__xe_first_child(input, NULL, NULL, NULL); child != NULL;
-         child = pcmk__xe_next(child)) {
+         child = pcmk__xe_next(child, NULL)) {
 
         if (recursive) {
             sorted_xml(child, result, recursive);

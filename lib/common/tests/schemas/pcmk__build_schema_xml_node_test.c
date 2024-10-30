@@ -93,7 +93,7 @@ single_schema(void **state)
                             crm_element_value(file_node, PCMK_XA_PATH));
         assert_int_equal(pcmk__xml_first_child(file_node)->type, XML_CDATA_SECTION_NODE);
 
-        file_node = pcmk__xe_next(file_node);
+        file_node = pcmk__xe_next(file_node, NULL);
         i++;
     }
 
@@ -129,11 +129,11 @@ multiple_schemas(void **state)
                             crm_element_value(file_node, PCMK_XA_PATH));
         assert_int_equal(pcmk__xml_first_child(file_node)->type, XML_CDATA_SECTION_NODE);
 
-        file_node = pcmk__xe_next(file_node);
+        file_node = pcmk__xe_next(file_node, NULL);
         i++;
     }
 
-    schema_node = pcmk__xe_next(schema_node);
+    schema_node = pcmk__xe_next(schema_node, NULL);
     assert_string_equal("pacemaker-2.1",
                         crm_element_value(schema_node, PCMK_XA_VERSION));
 
@@ -145,7 +145,7 @@ multiple_schemas(void **state)
                             crm_element_value(file_node, PCMK_XA_PATH));
         assert_int_equal(pcmk__xml_first_child(file_node)->type, XML_CDATA_SECTION_NODE);
 
-        file_node = pcmk__xe_next(file_node);
+        file_node = pcmk__xe_next(file_node, NULL);
         i++;
     }
 

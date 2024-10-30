@@ -74,27 +74,8 @@ pcmk__xe_is(const xmlNode *xml, const char *name)
            && (strcmp((const char *) xml->name, name) == 0);
 }
 
-/*!
- * \internal
- * \brief Return next non-text sibling element of an XML element
- *
- * \param[in] child  XML element to check
- *
- * \return Next sibling element of \p child (or NULL if none)
- */
-static inline xmlNode *
-pcmk__xe_next(const xmlNode *child)
-{
-    xmlNode *next = child? child->next : NULL;
-
-    while (next && (next->type != XML_ELEMENT_NODE)) {
-        next = next->next;
-    }
-    return next;
-}
-
 xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
-xmlNode *pcmk__xe_next_same(const xmlNode *node);
+xmlNode *pcmk__xe_next(const xmlNode *node, const char *element_name);
 
 void pcmk__xe_set_content(xmlNode *node, const char *format, ...)
     G_GNUC_PRINTF(2, 3);

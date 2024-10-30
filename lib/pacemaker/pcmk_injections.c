@@ -195,7 +195,7 @@ create_op(const xmlNode *cib_resource, const char *task, guint interval_ms,
     // Use a call ID higher than any existing history entries
     op->call_id = 0;
     for (xop = pcmk__xe_first_child(cib_resource, NULL, NULL, NULL);
-         xop != NULL; xop = pcmk__xe_next(xop)) {
+         xop != NULL; xop = pcmk__xe_next(xop, NULL)) {
 
         int tmp = 0;
 

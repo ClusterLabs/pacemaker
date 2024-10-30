@@ -146,7 +146,7 @@ get_operation_list(xmlNode *rsc_entry) {
     xmlNode *rsc_op = NULL;
 
     for (rsc_op = pcmk__xe_first_child(rsc_entry, NULL, NULL, NULL);
-         rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op)) {
+         rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op, NULL)) {
 
         const char *task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = crm_element_value(rsc_op,
@@ -1679,7 +1679,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
 
     for (xml_op = pcmk__xe_first_child(scheduler->priv->failed, NULL, NULL,
                                        NULL);
-         xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
+         xml_op != NULL; xml_op = pcmk__xe_next(xml_op, NULL)) {
 
         char *rsc = NULL;
 
@@ -2458,7 +2458,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
     /* Print history of each of the node's resources */
     for (rsc_entry = pcmk__xe_first_child(lrm_rsc, PCMK__XE_LRM_RESOURCE, NULL,
                                           NULL);
-         rsc_entry != NULL; rsc_entry = pcmk__xe_next_same(rsc_entry)) {
+         rsc_entry != NULL;
+         rsc_entry = pcmk__xe_next(rsc_entry, PCMK__XE_LRM_RESOURCE)) {
 
         const char *rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
         pcmk_resource_t *rsc = NULL;
@@ -2721,7 +2722,8 @@ node_summary(pcmk__output_t *out, va_list args) {
 
     for (node_state = pcmk__xe_first_child(cib_status, PCMK__XE_NODE_STATE,
                                            NULL, NULL);
-         node_state != NULL; node_state = pcmk__xe_next_same(node_state)) {
+         node_state != NULL;
+         node_state = pcmk__xe_next(node_state, PCMK__XE_NODE_STATE)) {
 
         pcmk_node_t *node = pe_find_node_id(scheduler->nodes,
                                             pcmk__xe_id(node_state));

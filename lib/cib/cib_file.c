@@ -1063,7 +1063,8 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
     for (xmlNode *request = pcmk__xe_first_child(transaction,
                                                  PCMK__XE_CIB_COMMAND, NULL,
                                                  NULL);
-         request != NULL; request = pcmk__xe_next_same(request)) {
+         request != NULL;
+         request = pcmk__xe_next(request, PCMK__XE_CIB_COMMAND)) {
 
         xmlNode *output = NULL;
         const char *op = crm_element_value(request, PCMK__XA_CIB_OP);

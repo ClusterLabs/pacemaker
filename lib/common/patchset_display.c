@@ -84,7 +84,7 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
 
     for (const xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL,
                                                       NULL);
-         change != NULL; change = pcmk__xe_next(change)) {
+         change != NULL; change = pcmk__xe_next(change, NULL)) {
 
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);
         const char *xpath = crm_element_value(change, PCMK_XA_PATH);
@@ -129,7 +129,7 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
 
             for (const xmlNode *child = pcmk__xe_first_child(clist, NULL, NULL,
                                                              NULL);
-                 child != NULL; child = pcmk__xe_next(child)) {
+                 child != NULL; child = pcmk__xe_next(child, NULL)) {
 
                 const char *name = crm_element_value(child, PCMK_XA_NAME);
 

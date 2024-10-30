@@ -71,7 +71,7 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
 
     for (xmlNode *nvpair = pcmk__xe_first_child(nvpair_list, PCMK_XE_NVPAIR,
                                                 NULL, NULL);
-         nvpair != NULL; nvpair = pcmk__xe_next_same(nvpair)) {
+         nvpair != NULL; nvpair = pcmk__xe_next(nvpair, PCMK_XE_NVPAIR)) {
 
         xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, NULL);
         const char *name = NULL;
@@ -154,7 +154,7 @@ make_pairs(const xmlNode *xml_obj, const char *set_name)
         return NULL;
     }
     for (xmlNode *attr_set = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
-         attr_set != NULL; attr_set = pcmk__xe_next(attr_set)) {
+         attr_set != NULL; attr_set = pcmk__xe_next(attr_set, NULL)) {
 
         if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
             xmlNode *expanded_attr_set = pcmk__xe_resolve_idref(attr_set, NULL);

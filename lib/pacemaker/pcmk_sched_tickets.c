@@ -259,7 +259,8 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk__ticket_t *ticket,
 
     for (xmlNode *xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF,
                                                  NULL, NULL);
-         xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
+         xml_rsc != NULL;
+         xml_rsc = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF)) {
 
         pcmk_resource_t *resource = NULL;
 
@@ -465,7 +466,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     }
 
     for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
-         set != NULL; set = pcmk__xe_next_same(set)) {
+         set != NULL; set = pcmk__xe_next(set, PCMK_XE_RESOURCE_SET)) {
 
         const char *loss_policy = NULL;
 

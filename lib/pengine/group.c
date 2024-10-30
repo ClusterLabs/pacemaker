@@ -204,7 +204,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     for (xml_native_rsc = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
          xml_native_rsc != NULL;
-         xml_native_rsc = pcmk__xe_next(xml_native_rsc)) {
+         xml_native_rsc = pcmk__xe_next(xml_native_rsc, NULL)) {
 
         if (pcmk__xe_is(xml_native_rsc, PCMK_XE_PRIMITIVE)) {
             pcmk_resource_t *new_rsc = NULL;
