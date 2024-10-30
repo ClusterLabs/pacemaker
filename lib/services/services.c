@@ -275,7 +275,7 @@ services__create_resource_action(const char *name, const char *standard,
     op->sequence = ++operations;
 
     // Take ownership of params
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_params)) {
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_params) || pcmk_is_set(ra_caps, pcmk_ra_cap_status)) {
         op->params = params;
     } else if (params != NULL) {
         g_hash_table_destroy(params);
@@ -309,6 +309,16 @@ services__create_resource_action(const char *name, const char *standard,
 #endif
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
+        if (pcmk__strcase_any_of(action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) && (interval_ms > 0)) {
+     	    if (pcmk__str_eq(g_hash_table_lookup(op->params, PCMK_XA_USE_MONITOR_PENDING_TIMEOUT), "true", pcmk__str_casei)) {
+	        if (interval_ms > timeout) {
+	     		    crm_warn("If monitor-pending-timeout is set to true and the interval is longer than the monitor timeout, "
+		                     "two consecutive monitor deactivations will be treated as an error. "
+	                             "We recommend setting a shorter interval to ensure that "
+	                             "multiple consecutive deactivations before the timeout are treated as an error.");
+                }
+            }
+        }
         rc = services__systemd_prepare(op);
 #endif
     } else {

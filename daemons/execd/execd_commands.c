@@ -901,6 +901,28 @@ action_complete(svc_action_t * action)
                     }
                 }
             }
+        } else if (pcmk__strcase_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) && 
+		  (cmd->interval_ms > 0)) { 
+            /* For monitors other than follow up monitors, if "use-monitor-pending-timeout"       */
+            /* is enabled and the pending state continues from the time of the first notification */
+            /* until the timeout, it will be treated as a timeout.                                */
+            if (pcmk__str_eq(g_hash_table_lookup(cmd->params, PCMK_XA_USE_MONITOR_PENDING_TIMEOUT), "true", pcmk__str_casei)) {
+                if ((cmd->result.execution_status == PCMK_EXEC_PENDING) &&
+                    (cmd->last_notify_op_status == PCMK_EXEC_PENDING)) {
+                    int time_left = time(NULL) - (cmd->epoch_rcchange + (cmd->timeout_orig/1000));
+
+                    if (time_left >= 0) {
+                        crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout (first pending notification=%s timeout=%ds)",
+                            cmd->rsc_id, cmd->action,
+                            cmd->result.exit_status, pcmk__trim(ctime(&cmd->epoch_rcchange)), cmd->timeout_orig);
+                        pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+                             PCMK_EXEC_TIMEOUT,
+                             "Investigate reason for timeout, and adjust "
+                             "configured operation timeout if necessary");
+                        cmd_original_times(cmd);
+                    }
+                }
+            }
         }
     }
 #endif

@@ -454,6 +454,7 @@ extern "C" {
 #define PCMK_XA_XPATH                       "xpath"
 #define PCMK_XA_YEARDAYS                    "yeardays"
 #define PCMK_XA_YEARS                       "years"
+#define PCMK_XA_USE_MONITOR_PENDING_TIMEOUT   "use-monitor-pending-timeout"
 
 
 #ifdef __cplusplus
