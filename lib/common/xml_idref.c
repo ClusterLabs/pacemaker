@@ -118,30 +118,29 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
  * \internal
  * \brief Get list of resolved ID references for child elements of given element
  *
- * \param[in]     xml_obj       XML element containing blocks of nvpair elements
- * \param[in]     set_name      If not NULL, only get blocks of this element
+ * \param[in] xml           XML element to get list for
+ * \param[in] element_name  If not NULL, list only children of this element type
  *
- * \return List of XML blocks of name/value pairs
+ * \return Unordered list of XML elements corresponding to child elements of
+ *         \p xml with any ID references resolved to the referenced elements
  */
 GList *
-pcmk__xe_dereference_children(const xmlNode *xml_obj, const char *set_name)
+pcmk__xe_dereference_children(const xmlNode *xml, const char *element_name)
 {
-    GList *unsorted = NULL;
+    GList *result = NULL;
 
-    if (xml_obj == NULL) {
+    if (xml == NULL) {
         return NULL;
     }
-    for (xmlNode *attr_set = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
-         attr_set != NULL; attr_set = pcmk__xe_next(attr_set, NULL)) {
+    for (xmlNode *child = pcmk__xe_first_child(xml, element_name, NULL, NULL);
+         child != NULL; child = pcmk__xe_next(child, element_name)) {
 
-        if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
-            xmlNode *expanded_attr_set = pcmk__xe_resolve_idref(attr_set, NULL);
+        xmlNode *resolved = pcmk__xe_resolve_idref(child, NULL);
 
-            if (expanded_attr_set == NULL) {
-                continue; // Not possible with schema validation enabled
-            }
-            unsorted = g_list_prepend(unsorted, expanded_attr_set);
+        if (resolved == NULL) {
+            continue; // Not possible with schema validation enabled
         }
+        result = g_list_prepend(result, resolved);
     }
-    return unsorted;
+    return result;
 }
