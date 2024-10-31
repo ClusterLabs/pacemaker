@@ -66,6 +66,7 @@ API_request_base	= command-output	\
 			  crm_ticket 		\
 			  crmadmin		\
 			  digests		\
+			  iso8601		\
 			  pacemakerd 		\
 			  stonith_admin		\
 			  version

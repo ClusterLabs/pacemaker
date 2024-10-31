@@ -78,6 +78,20 @@ crm_time_parse_duration 	error: 'P1YM/2019-02-20 00:00:00Z' is not a valid ISO 8
 iso8601: Invalid interval specified: P1YM/2019-02-20 00:00:00Z
 =#=#=#= End test: Invalid period - [P1YM/2019-02-20 00:00:00Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [P1YM/2019-02-20 00:00:00Z]
+=#=#=#= Begin test: '2005-040/2005-043' period =#=#=#=
+Period: 2005-02-09 00:00:00Z to 2005-02-12 00:00:00Z
+=#=#=#= End test: '2005-040/2005-043' period - OK (0) =#=#=#=
+* Passed: iso8601        - '2005-040/2005-043' period
+=#=#=#= Begin test: '2005-040/2005-043' period (XML) =#=#=#=
+<pacemaker-result api-version="X" request="iso8601 -p 2005-040/2005-043 --output-as=xml">
+  <period>
+    <start>2005-02-09 00:00:00Z</start>
+    <end>2005-02-12 00:00:00Z</end>
+  </period>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: '2005-040/2005-043' period (XML) - OK (0) =#=#=#=
+* Passed: iso8601        - '2005-040/2005-043' period (XML)
 =#=#=#= Begin test: 2014-01-01 00:30:00 - 1 Hour =#=#=#=
 Date: 2014-01-01 00:30:00Z
 Duration: -3600 seconds (1 hour)
@@ -324,6 +338,13 @@ Date: 2040-W01-1 00:00:00Z
 Date: 2009-W53-7 00:00:00Z
 =#=#=#= End test: 2009-W53-07 - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-W53-07
+=#=#=#= Begin test: 2009-W53-07 (XML) =#=#=#=
+<pacemaker-result api-version="X" request="iso8601 -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z' --output-as=xml">
+  <date>2009-W53-7 00:00:00Z</date>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: 2009-W53-07 (XML) - OK (0) =#=#=#=
+* Passed: iso8601        - 2009-W53-07 (XML)
 =#=#=#= Begin test: epoch + 2 Years 5 Months 6 Minutes =#=#=#=
 Date: 1970-01-01 00:00:00Z
 Duration:    2 years  5 months 360 seconds (6 minutes)
@@ -354,9 +375,27 @@ Duration: -1 months
 Duration ends at: 2009-02-28 01:00:00 +01:00
 =#=#=#= End test: 2009-03-31 - 1 Month - OK (0) =#=#=#=
 * Passed: iso8601        - 2009-03-31 - 1 Month
+=#=#=#= Begin test: 2009-03-31 - 1 Month (XML) =#=#=#=
+<pacemaker-result api-version="X" request="iso8601 -d '2009-03-31 01:00:00 +01:00' -D P-1M -E '2009-02-28 00:00:00Z' --output-as=xml">
+  <date>2009-03-31 00:00:00Z</date>
+  <duration>-1 months </duration>
+  <duration_ends>2009-02-28 01:00:00 +01:00</duration_ends>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: 2009-03-31 - 1 Month (XML) - OK (0) =#=#=#=
+* Passed: iso8601        - 2009-03-31 - 1 Month (XML)
 =#=#=#= Begin test: 2038-01-01 + 3 Months =#=#=#=
 Date: 2038-01-01 00:00:00Z
 Duration:  3 months 
 Duration ends at: 2038-04-01 00:00:00Z
 =#=#=#= End test: 2038-01-01 + 3 Months - OK (0) =#=#=#=
 * Passed: iso8601        - 2038-01-01 + 3 Months
+=#=#=#= Begin test: 2038-01-01 + 3 Months (XML) =#=#=#=
+<pacemaker-result api-version="X" request="iso8601 -d '2038-01-01 00:00:00Z' -D P3M -E '2038-04-01 00:00:00Z' --output-as=xml">
+  <date>2038-01-01 00:00:00Z</date>
+  <duration> 3 months </duration>
+  <duration_ends>2038-04-01 00:00:00Z</duration_ends>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: 2038-01-01 + 3 Months (XML) - OK (0) =#=#=#=
+* Passed: iso8601        - 2038-01-01 + 3 Months (XML)

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-iso8601"/>
+    </start>
+
+    <define name="element-iso8601">
+        <zeroOrMore>
+            <choice>
+                <element name="date"> <text /> </element>
+                <element name="duration"> <text /> </element>
+                <element name="duration_ends"> <text /> </element>
+                <element name="period">
+                    <element name="start"> <text /> </element>
+                    <element name="end"> <text /> </element>
+                </element>
+            </choice>
+        </zeroOrMore>
+    </define>
+</grammar>
