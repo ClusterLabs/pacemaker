@@ -1440,13 +1440,14 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
 
     pe_reset_working_set(scheduler);
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
-    rc = update_scheduler_input(out, scheduler, cib, cib_xml_orig);
-    if (rc != pcmk_rc_ok) {
-        return rc;
-    }
 
     if(simulate) {
         bool prev_quiet = false;
+
+        rc = update_scheduler_input(out, scheduler, cib, NULL);
+        if (rc != pcmk_rc_ok) {
+            goto done;
+        }
 
         pid = pcmk__getpid_s();
         shadow_cib = cib_shadow_new(pid);
@@ -1481,9 +1482,18 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
         pcmk__simulate_transition(scheduler, shadow_cib, NULL);
         out->quiet = prev_quiet;
 
-        rc = update_dataset(shadow_cib, scheduler, NULL, false);
+        rc = update_dataset(shadow_cib, scheduler, cib_xml_orig, false);
 
     } else {
+        xmlNode *xml = NULL;
+
+        rc = update_scheduler_input(out, scheduler, cib, &xml);
+        if (rc != pcmk_rc_ok) {
+            goto done;
+        }
+
+        pcmk__xml_free(*cib_xml_orig);
+        *cib_xml_orig = xml;
         cluster_status(scheduler);
     }
 
@@ -1636,6 +1646,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     char *rsc_id = NULL;
     char *lookup_id = NULL;
     char *orig_target_role = NULL;
+    xmlNode *cib_xml_orig = NULL;
 
     GList *list_delta = NULL;
     GList *target_active = NULL;
@@ -1730,7 +1741,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     }
 
     scheduler->priv->out = out;
-    rc = update_dataset(cib, scheduler, NULL, false);
+    rc = update_dataset(cib, scheduler, &cib_xml_orig, false);
 
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not get new resource list: %s (%d)", pcmk_rc_str(rc), rc);
@@ -1769,7 +1780,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
                                            PCMK_ACTION_STOPPED, FALSE, cib,
-                                           NULL, force);
+                                           cib_xml_orig, force);
     }
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not set " PCMK_META_TARGET_ROLE " for %s: %s (%d)",
@@ -1785,7 +1796,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         goto done;
     }
 
-    rc = update_dataset(cib, scheduler, NULL, true);
+    rc = update_dataset(cib, scheduler, &cib_xml_orig, true);
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not determine which resources would be stopped");
         goto failure;
@@ -1813,7 +1824,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                 timeout -= sleep_interval;
                 crm_trace("%us remaining", timeout);
             }
-            rc = update_dataset(cib, scheduler, NULL, false);
+            rc = update_dataset(cib, scheduler, &cib_xml_orig, false);
             if(rc != pcmk_rc_ok) {
                 out->err(out, "Could not determine which resources were stopped");
                 goto failure;
@@ -1850,14 +1861,15 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
-                                           orig_target_role, FALSE, cib, NULL,
-                                           force);
+                                           orig_target_role, FALSE, cib,
+                                           cib_xml_orig, force);
         free(orig_target_role);
         orig_target_role = NULL;
     } else {
         rc = cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
-                                           PCMK_META_TARGET_ROLE, cib, NULL, force);
+                                           PCMK_META_TARGET_ROLE, cib,
+                                           cib_xml_orig, force);
     }
 
     if(rc != pcmk_rc_ok) {
@@ -1893,7 +1905,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                 crm_trace("%ds remaining", timeout);
             }
 
-            rc = update_dataset(cib, scheduler, NULL, false);
+            rc = update_dataset(cib, scheduler, &cib_xml_orig, false);
             if(rc != pcmk_rc_ok) {
                 out->err(out, "Could not determine which resources were started");
                 goto failure;
@@ -1934,12 +1946,13 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         cli_resource_update_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
                                       PCMK_META_TARGET_ROLE, orig_target_role,
-                                      FALSE, cib, NULL, force);
+                                      FALSE, cib, cib_xml_orig, force);
         free(orig_target_role);
     } else {
         cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
-                                      PCMK_META_TARGET_ROLE, cib, NULL, force);
+                                      PCMK_META_TARGET_ROLE, cib, cib_xml_orig,
+                                      force);
     }
 
 done:
