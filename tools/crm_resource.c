@@ -94,7 +94,6 @@ struct {
     gchar *prop_value;            // --parameter-value (attribute value)
     guint timeout_ms;             // Parsed from --timeout value
     char *agent_spec;             // Standard and/or provider and/or agent
-    gchar *xml_file;              // Value of (deprecated) --xml-file
     int check_level;              // Optional value of --validate or --force-check
 
     // Resource configuration specified via command-line arguments
@@ -776,9 +775,6 @@ static GOptionEntry addl_entries[] = {
       "Force the action to be performed. See help for individual commands for\n"
       INDENT "additional behavior.",
       NULL },
-    { "xml-file", 'x', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_FILENAME, &options.xml_file,
-      NULL,
-      "FILE" },
     { "host-uname", 'H', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.host_uname,
       NULL,
       "HOST" },
@@ -1002,15 +998,8 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
 {
     int rc = pcmk_rc_ok;
 
-    if (options.xml_file != NULL) {
-        *cib_xml_copy = pcmk__xml_read(options.xml_file);
-        if (*cib_xml_copy == NULL) {
-            rc = pcmk_rc_cib_corrupt;
-        }
-    } else {
-        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_sync_call);
-        rc = pcmk_legacy2rc(rc);
-    }
+    rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
         scheduler = pe_new_working_set();
@@ -2158,7 +2147,6 @@ done:
     free(options.v_agent);
     free(options.v_class);
     free(options.v_provider);
-    g_free(options.xml_file);
     g_strfreev(options.remainder);
 
     if (options.override_params != NULL) {
