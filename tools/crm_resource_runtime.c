@@ -562,7 +562,7 @@ int
 cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
-                              cib_t *cib, int cib_options, gboolean force)
+                              cib_t *cib, gboolean force)
 {
     pcmk__output_t *out = rsc->priv->scheduler->priv->out;
     int rc = pcmk_rc_ok;
@@ -584,7 +584,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         pcmk__xe_remove_attr(rsc->priv->xml, attr_name);
         pcmk__assert(cib != NULL);
         rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->priv->xml,
-                                cib_options);
+                                cib_sync_call);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Deleted attribute: %s", attr_name);
@@ -633,7 +633,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         crm_log_xml_debug(xml_obj, "Delete");
 
         pcmk__assert(cib != NULL);
-        rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, xml_obj, cib_options);
+        rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, xml_obj, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
 
         if (rc == pcmk_rc_ok) {
@@ -1319,8 +1319,8 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  * \param[in,out] xml        XML to use as input
  *
  * \return Standard Pacemaker return code
- * \note On success, caller is responsible for freeing memory allocated for
- *       scheduler->priv->now.
+ * \note On success, \p scheduler takes ownership of \p xml, and the caller is
+ *       responsible for freeing memory allocated for \c scheduler->priv->now.
  */
 int
 update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
@@ -1555,8 +1555,6 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
  *                                    used; if 0, it will be calculated based on
  *                                    the resource timeout)
  * \param[in,out] cib                 Connection to the CIB manager
- * \param[in]     cib_options         Group of enum cib_call_options flags to
- *                                    use with CIB calls
  * \param[in]     promoted_role_only  If true, limit to promoted instances
  * \param[in]     force               If true, apply only to requested instance
  *                                    if part of a collective resource
@@ -1566,8 +1564,8 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
 int
 cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const char *move_lifetime,
-                     guint timeout_ms, cib_t *cib, int cib_options,
-                     gboolean promoted_role_only, gboolean force)
+                     guint timeout_ms, cib_t *cib, gboolean promoted_role_only,
+                     gboolean force)
 {
     int rc = pcmk_rc_ok;
     int lpc = 0;
@@ -1691,8 +1689,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         /* Stop the clone or bundle instance by banning it from the host */
         out->quiet = true;
         rc = cli_resource_ban(out, lookup_id, host, move_lifetime, cib,
-                              cib_options, promoted_role_only,
-                              PCMK_ROLE_PROMOTED);
+                              promoted_role_only, PCMK_ROLE_PROMOTED);
     } else {
         xmlNode *xml_search = NULL;
 
@@ -1789,7 +1786,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     }
 
     if (stop_via_ban) {
-        rc = cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
+        rc = cli_resource_clear(lookup_id, host, NULL, cib, true, force);
 
     } else if (orig_target_role) {
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
@@ -1801,8 +1798,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     } else {
         rc = cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
-                                           PCMK_META_TARGET_ROLE, cib,
-                                           cib_options, force);
+                                           PCMK_META_TARGET_ROLE, cib, force);
     }
 
     if(rc != pcmk_rc_ok) {
@@ -1874,7 +1870,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
   failure:
     if (stop_via_ban) {
-        cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
+        cli_resource_clear(lookup_id, host, NULL, cib, true, force);
     } else if (orig_target_role) {
         cli_resource_update_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
@@ -1884,8 +1880,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     } else {
         cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
-                                      PCMK_META_TARGET_ROLE, cib, cib_options,
-                                      force);
+                                      PCMK_META_TARGET_ROLE, cib, force);
     }
 
 done:
@@ -2317,8 +2312,8 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 int
 cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                   const char *host_name, const char *move_lifetime, cib_t *cib,
-                  int cib_options, pcmk_scheduler_t *scheduler,
-                  gboolean promoted_role_only, gboolean force)
+                  pcmk_scheduler_t *scheduler, gboolean promoted_role_only,
+                  gboolean force)
 {
     pcmk__output_t *out = scheduler->priv->out;
     int rc = pcmk_rc_ok;
@@ -2393,17 +2388,15 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     }
 
     /* Clear any previous prefer constraints across all nodes. */
-    cli_resource_clear(rsc_id, NULL, scheduler->nodes, cib, cib_options, false,
-                       force);
+    cli_resource_clear(rsc_id, NULL, scheduler->nodes, cib, false, force);
 
     /* Clear any previous ban constraints on 'dest'. */
-    cli_resource_clear(rsc_id, dest->priv->name, scheduler->nodes, cib,
-                       cib_options, TRUE, force);
+    cli_resource_clear(rsc_id, dest->priv->name, scheduler->nodes, cib, true,
+                       force);
 
     /* Record an explicit preference for 'dest' */
     rc = cli_resource_prefer(out, rsc_id, dest->priv->name, move_lifetime,
-                             cib, cib_options, promoted_role_only,
-                             PCMK_ROLE_PROMOTED);
+                             cib, promoted_role_only, PCMK_ROLE_PROMOTED);
 
     crm_trace("%s%s now prefers %s%s",
               rsc->id, (promoted_role_only? " (promoted)" : ""),
@@ -2416,8 +2409,8 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
         /* Ban the original location if possible */
         if(current) {
             (void)cli_resource_ban(out, rsc_id, current->priv->name,
-                                   move_lifetime, cib, cib_options,
-                                   promoted_role_only, PCMK_ROLE_PROMOTED);
+                                   move_lifetime, cib, promoted_role_only,
+                                   PCMK_ROLE_PROMOTED);
         } else if(count > 1) {
             out->info(out, "Resource '%s' is currently %s in %d locations. "
                       "One may now move to %s",

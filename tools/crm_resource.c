@@ -48,7 +48,6 @@ enum rsc_command {
     cmd_execute_agent,
     cmd_fail,
     cmd_get_param,
-    cmd_get_property,
     cmd_list_active_ops,
     cmd_list_agents,
     cmd_list_all_ops,
@@ -66,7 +65,6 @@ enum rsc_command {
     cmd_refresh,
     cmd_restart,
     cmd_set_param,
-    cmd_set_property,
     cmd_wait,
     cmd_why,
 };
@@ -94,7 +92,6 @@ struct {
     gchar *prop_value;            // --parameter-value (attribute value)
     guint timeout_ms;             // Parsed from --timeout value
     char *agent_spec;             // Standard and/or provider and/or agent
-    gchar *xml_file;              // Value of (deprecated) --xml-file
     int check_level;              // Optional value of --validate or --force-check
 
     // Resource configuration specified via command-line arguments
@@ -383,10 +380,6 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.rsc_cmd = cmd_get_param;
         pcmk__str_update(&options.prop_name, optarg);
 
-    } else if (pcmk__str_any_of(option_name, "-G", "--get-property", NULL)) {
-        options.rsc_cmd = cmd_get_property;
-        pcmk__str_update(&options.prop_name, optarg);
-
     } else if (pcmk__str_any_of(option_name, "-O", "--list-operations", NULL)) {
         options.rsc_cmd = cmd_list_active_ops;
 
@@ -445,10 +438,6 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
     } else if (pcmk__str_any_of(option_name, "-p", "--set-parameter", NULL)) {
         options.rsc_cmd = cmd_set_param;
-        pcmk__str_update(&options.prop_name, optarg);
-
-    } else if (pcmk__str_any_of(option_name, "-S", "--set-property", NULL)) {
-        options.rsc_cmd = cmd_set_property;
         pcmk__str_update(&options.prop_name, optarg);
 
     } else if (pcmk__str_eq(option_name, "--wait", pcmk__str_none)) {
@@ -522,11 +511,6 @@ static GOptionEntry query_entries[] = {
       "Display named parameter for resource (use instance attribute\n"
       INDENT "unless --element, --meta, or --utilization is specified)",
       "PARAM" },
-    { "get-property", 'G', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK,
-          command_cb,
-      "Display named property of resource ('class', 'type', or 'provider') "
-      "(requires --resource)",
-      "PROPERTY" },
     { "locate", 'W', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Show node(s) currently running resource",
       NULL },
@@ -588,11 +572,6 @@ static GOptionEntry command_entries[] = {
       "Delete named parameter for resource. Use instance attribute\n"
       INDENT "unless --element, --meta or, --utilization is specified.",
       "PARAM" },
-    { "set-property", 'S', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK,
-          command_cb,
-      "Set named property of resource ('class', 'type', or 'provider') "
-      "(requires -r, -t, -v)",
-      "PROPERTY" },
 
     { NULL }
 };
@@ -776,9 +755,8 @@ static GOptionEntry addl_entries[] = {
       "Force the action to be performed. See help for individual commands for\n"
       INDENT "additional behavior.",
       NULL },
-    { "xml-file", 'x', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_FILENAME, &options.xml_file,
-      NULL,
-      "FILE" },
+
+    // @COMPAT Used in resource-agents prior to v4.2.0
     { "host-uname", 'H', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.host_uname,
       NULL,
       "HOST" },
@@ -858,7 +836,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     if (nactive == 1) {
         rc = cli_resource_ban(out, options.rsc_id, current->priv->name,
-                              move_lifetime, cib_conn, cib_sync_call,
+                              move_lifetime, cib_conn,
                               options.promoted_role_only, PCMK_ROLE_PROMOTED);
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
@@ -878,7 +856,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
 
         if(count == 1 && current) {
             rc = cli_resource_ban(out, options.rsc_id, current->priv->name,
-                                  move_lifetime, cib_conn, cib_sync_call,
+                                  move_lifetime, cib_conn,
                                   options.promoted_role_only,
                                   PCMK_ROLE_PROMOTED);
 
@@ -931,7 +909,7 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 }
 
 static int
-clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
+clear_constraints(pcmk__output_t *out)
 {
     GList *before = NULL;
     GList *after = NULL;
@@ -946,8 +924,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 
     if (options.clear_expired) {
         rc = cli_resource_clear_all_expired(scheduler->input, cib_conn,
-                                            cib_sync_call, options.rsc_id,
-                                            options.host_uname,
+                                            options.rsc_id, options.host_uname,
                                             options.promoted_role_only);
 
     } else if (options.host_uname) {
@@ -960,27 +937,28 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
             return rc;
         }
         rc = cli_resource_clear(options.rsc_id, dest->priv->name, NULL,
-                                cib_conn, cib_sync_call, true, options.force);
+                                cib_conn, true, options.force);
 
     } else {
         rc = cli_resource_clear(options.rsc_id, NULL, scheduler->nodes,
-                                cib_conn, cib_sync_call, true, options.force);
+                                cib_conn, true, options.force);
     }
 
     if (!out->is_quiet(out)) {
-        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_sync_call);
+        xmlNode *cib_xml = NULL;
+
+        rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
 
         if (rc != pcmk_rc_ok) {
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         _("Could not get modified CIB: %s\n"), pcmk_rc_str(rc));
             g_list_free(before);
-            pcmk__xml_free(*cib_xml_copy);
-            *cib_xml_copy = NULL;
+            pcmk__xml_free(cib_xml);
             return rc;
         }
 
-        scheduler->input = *cib_xml_copy;
+        scheduler->input = cib_xml;
         cluster_status(scheduler);
 
         after = build_constraint_list(scheduler->input);
@@ -999,19 +977,13 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 }
 
 static int
-initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
+initialize_scheduler_data(void)
 {
+    xmlNode *cib_xml = NULL;
     int rc = pcmk_rc_ok;
 
-    if (options.xml_file != NULL) {
-        *cib_xml_copy = pcmk__xml_read(options.xml_file);
-        if (*cib_xml_copy == NULL) {
-            rc = pcmk_rc_cib_corrupt;
-        }
-    } else {
-        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_sync_call);
-        rc = pcmk_legacy2rc(rc);
-    }
+    rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
         scheduler = pe_new_working_set();
@@ -1020,13 +992,12 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
         } else {
             pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
             scheduler->priv->out = out;
-            rc = update_scheduler_input(scheduler, cib_xml_copy);
+            rc = update_scheduler_input(scheduler, &cib_xml);
         }
     }
 
     if (rc != pcmk_rc_ok) {
-        pcmk__xml_free(*cib_xml_copy);
-        *cib_xml_copy = NULL;
+        pcmk__xml_free(cib_xml);
         return rc;
     }
 
@@ -1120,39 +1091,6 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
     if (rc == pcmk_rc_ok) {
         start_mainloop(controld_api);
     }
-}
-
-static int
-set_property(void)
-{
-    int rc = pcmk_rc_ok;
-    xmlNode *msg_data = NULL;
-
-    if (pcmk__str_empty(options.rsc_type)) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    _("Must specify -t with resource type"));
-        rc = ENXIO;
-        return rc;
-
-    } else if (pcmk__str_empty(options.prop_value)) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    _("Must supply -v with new value"));
-        rc = ENXIO;
-        return rc;
-    }
-
-    CRM_LOG_ASSERT(options.prop_name != NULL);
-
-    msg_data = pcmk__xe_create(NULL, options.rsc_type);
-    crm_xml_add(msg_data, PCMK_XA_ID, options.rsc_id);
-    crm_xml_add(msg_data, options.prop_name, options.prop_value);
-
-    rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_RESOURCES, msg_data,
-                                cib_sync_call);
-    rc = pcmk_legacy2rc(rc);
-    pcmk__xml_free(msg_data);
-
-    return rc;
 }
 
 static int
@@ -1271,11 +1209,9 @@ get_find_flags(void)
 
         case cmd_delete_param:
         case cmd_get_param:
-        case cmd_get_property:
         case cmd_query_xml_raw:
         case cmd_query_xml:
         case cmd_set_param:
-        case cmd_set_property:
             return pcmk_rsc_match_history|pcmk_rsc_match_basename;
 
         default:
@@ -1507,7 +1443,6 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
-    xmlNode *cib_xml_copy = NULL;
     pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
     uint32_t find_flags = 0;
@@ -1628,7 +1563,6 @@ main(int argc, char **argv)
              * argument.
              */
             case cmd_get_param:
-            case cmd_get_property:
             case cmd_list_instances:
             case cmd_list_standards:
                 pcmk__output_enable_list_element(out);
@@ -1711,7 +1645,7 @@ main(int argc, char **argv)
 
     // Populate scheduler data from XML file if specified or CIB query otherwise
     if (is_scheduler_required()) {
-        rc = initialize_scheduler_data(&cib_xml_copy);
+        rc = initialize_scheduler_data();
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             goto done;
@@ -1840,7 +1774,7 @@ main(int argc, char **argv)
              */
             rc = cli_resource_restart(out, rsc, node, options.move_lifetime,
                                       options.timeout_ms, cib_conn,
-                                      cib_sync_call, options.promoted_role_only,
+                                      options.promoted_role_only,
                                       options.force);
             break;
 
@@ -1930,7 +1864,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_clear:
-            rc = clear_constraints(out, &cib_xml_copy);
+            rc = clear_constraints(out);
             break;
 
         case cmd_move:
@@ -1939,8 +1873,7 @@ main(int argc, char **argv)
             } else {
                 rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
                                        options.move_lifetime, cib_conn,
-                                       cib_sync_call, scheduler,
-                                       options.promoted_role_only,
+                                       scheduler, options.promoted_role_only,
                                        options.force);
             }
 
@@ -1959,7 +1892,7 @@ main(int argc, char **argv)
             } else {
                 rc = cli_resource_ban(out, options.rsc_id, node->priv->name,
                                       options.move_lifetime, cib_conn,
-                                      cib_sync_call, options.promoted_role_only,
+                                      options.promoted_role_only,
                                       PCMK_ROLE_PROMOTED);
             }
 
@@ -1968,18 +1901,6 @@ main(int argc, char **argv)
                 goto done;
             }
 
-            break;
-
-        case cmd_get_property:
-            rc = out->message(out, "property-list", rsc, options.prop_name);
-            if (rc == pcmk_rc_no_output) {
-                rc = ENXIO;
-            }
-
-            break;
-
-        case cmd_set_property:
-            rc = set_property();
             break;
 
         case cmd_get_param: {
@@ -2064,7 +1985,7 @@ main(int argc, char **argv)
                                                options.attr_set_type,
                                                options.prop_id,
                                                options.prop_name, cib_conn,
-                                               cib_sync_call, options.force);
+                                               options.force);
             break;
 
         case cmd_cleanup:
@@ -2160,7 +2081,6 @@ done:
     free(options.v_agent);
     free(options.v_class);
     free(options.v_provider);
-    g_free(options.xml_file);
     g_strfreev(options.remainder);
 
     if (options.override_params != NULL) {

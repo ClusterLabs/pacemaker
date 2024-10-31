@@ -63,14 +63,15 @@ resource_checks_t *cli_check_resource(pcmk_resource_t *rsc, char *role_s,
 
 /* ban */
 int cli_resource_prefer(pcmk__output_t *out, const char *rsc_id, const char *host,
-                        const char *move_lifetime, cib_t * cib_conn, int cib_options,
+                        const char *move_lifetime, cib_t *cib_conn,
                         gboolean promoted_role_only, const char *promoted_role);
 int cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
-                     const char *move_lifetime, cib_t *cib_conn, int cib_options,
+                     const char *move_lifetime, cib_t *cib_conn,
                      gboolean promoted_role_only, const char *promoted_role);
 int cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes,
-                       cib_t * cib_conn, int cib_options, bool clear_ban_constraints, gboolean force);
-int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
+                       cib_t *cib_conn, bool clear_ban_constraints,
+                       gboolean force);
+int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn,
                                    const char *rsc, const char *node, gboolean promoted_role_only);
 
 /* print */
@@ -98,11 +99,11 @@ int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                     pcmk_scheduler_t *scheduler);
 int cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                          const pcmk_node_t *node, const char *move_lifetime,
-                         guint timeout_ms, cib_t *cib, int cib_options,
+                         guint timeout_ms, cib_t *cib,
                          gboolean promoted_role_only, gboolean force);
 int cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                       const char *host_name, const char *move_lifetime,
-                      cib_t *cib, int cib_options, pcmk_scheduler_t *scheduler,
+                      cib_t *cib, pcmk_scheduler_t *scheduler,
                       gboolean promoted_role_only, gboolean force);
 crm_exit_t cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                             const char *rsc_class, const char *rsc_prov,
@@ -128,7 +129,7 @@ int cli_resource_delete_attribute(pcmk_resource_t *rsc,
                                   const char *requested_name,
                                   const char *attr_set, const char *attr_set_type,
                                   const char *attr_id, const char *attr_name,
-                                  cib_t *cib, int cib_options, gboolean force);
+                                  cib_t *cib, gboolean force);
 
 int update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml);
 int wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib);

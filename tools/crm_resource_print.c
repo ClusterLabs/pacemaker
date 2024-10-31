@@ -360,38 +360,6 @@ override_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("property-list", "pcmk_resource_t *", "const char *")
-static int
-property_list_default(pcmk__output_t *out, va_list args) {
-    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
-    const char *attr = va_arg(args, char *);
-
-    const char *value = crm_element_value(rsc->priv->xml, attr);
-
-    if (value != NULL) {
-        out->begin_list(out, NULL, NULL, "Properties");
-        out->list_item(out, attr, "%s", value);
-        out->end_list(out);
-    }
-
-    return pcmk_rc_ok;
-}
-
-PCMK__OUTPUT_ARGS("property-list", "pcmk_resource_t *", "const char *")
-static int
-property_list_text(pcmk__output_t *out, va_list args) {
-    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
-    const char *attr = va_arg(args, const char *);
-
-    const char *value = crm_element_value(rsc->priv->xml, attr);
-
-    if (value != NULL) {
-        pcmk__formatted_printf(out, "%s\n", value);
-    }
-
-    return pcmk_rc_ok;
-}
-
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
                   "crm_exit_t", "int", "const char *", "const char *", "const char *")
@@ -896,8 +864,6 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "attribute-list", "text", attribute_list_text },
     { "override", "default", override_default },
     { "override", "xml", override_xml },
-    { "property-list", "default", property_list_default },
-    { "property-list", "text", property_list_text },
     { "resource-agent-action", "default", resource_agent_action_default },
     { "resource-agent-action", "xml", resource_agent_action_xml },
     { "resource-check-list", "default", resource_check_list_default },

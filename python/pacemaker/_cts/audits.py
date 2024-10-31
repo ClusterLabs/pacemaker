@@ -491,7 +491,8 @@ class PrimitiveAudit(ClusterAudit):
             self.debug("No nodes active - skipping %s" % self.name)
             return False
 
-        (_, lines) = self._cm.rsh(self._target, "crm_resource -c", verbose=1)
+        (_, lines) = self._cm.rsh(self._target, "crm_resource --list-cts",
+                                  verbose=1)
 
         for line in lines:
             if re.search("^Resource", line):
@@ -650,7 +651,9 @@ class ColocationAudit(PrimitiveAudit):
 
     def _crm_location(self, resource):
         """Return a list of cluster nodes where a given resource is running."""
-        (rc, lines) = self._cm.rsh(self._target, "crm_resource -W -r %s -Q" % resource, verbose=1)
+        (rc, lines) = self._cm.rsh(self._target,
+                                   "crm_resource --locate -r %s -Q" % resource,
+                                   verbose=1)
         hosts = []
 
         if rc == 0:
