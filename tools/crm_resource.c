@@ -979,25 +979,17 @@ clear_constraints(pcmk__output_t *out)
 static int
 initialize_scheduler_data(void)
 {
-    xmlNode *cib_xml = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
-    rc = pcmk_legacy2rc(rc);
-
-    if (rc == pcmk_rc_ok) {
-        scheduler = pe_new_working_set();
-        if (scheduler == NULL) {
-            rc = ENOMEM;
-        } else {
-            pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
-            scheduler->priv->out = out;
-            rc = update_scheduler_input(scheduler, &cib_xml);
-        }
+    scheduler = pe_new_working_set();
+    if (scheduler == NULL) {
+        return ENOMEM;
     }
 
+    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
+    scheduler->priv->out = out;
+    rc = update_scheduler_input(out, scheduler, cib_conn);
     if (rc != pcmk_rc_ok) {
-        pcmk__xml_free(cib_xml);
         return rc;
     }
 

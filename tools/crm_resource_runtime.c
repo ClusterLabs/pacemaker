@@ -1311,62 +1311,45 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
 
 /*!
  * \internal
- * \brief Upgrade XML to latest schema version and use it as scheduler input
+ * \brief Update scheduler XML input based on a CIB query and the current time
  *
- * This also updates the scheduler timestamp to the current time.
+ * The CIB XML is upgraded to the latest schema version.
  *
+ * \param[in,out] out        Output object
  * \param[in,out] scheduler  Scheduler data to update
- * \param[in,out] xml        XML to use as input
+ * \param[in]     cib        Connection to the CIB manager
  *
  * \return Standard Pacemaker return code
- * \note On success, \p scheduler takes ownership of \p xml, and the caller is
- *       responsible for freeing memory allocated for \c scheduler->priv->now.
  */
 int
-update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
+update_scheduler_input(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
+                       cib_t *cib)
 {
-    int rc = pcmk__update_configured_schema(xml, false);
-
-    if (rc == pcmk_rc_ok) {
-        scheduler->input = *xml;
-        scheduler->priv->now = crm_time_new(NULL);
-    }
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Update scheduler XML input based on a CIB query
- *
- * \param[in] scheduler  Scheduler data to initialize
- * \param[in] cib        Connection to the CIB manager
- *
- * \return Standard Pacemaker return code
- * \note On success, caller is responsible for freeing memory allocated for
- *       scheduler->input and scheduler->priv->now.
- */
-static int
-update_scheduler_input_to_cib(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
-                              cib_t *cib)
-{
-    xmlNode *cib_xml_copy = NULL;
+    xmlNode *cib_xml = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = cib->cmds->query(cib, NULL, &cib_xml_copy, cib_sync_call);
+    pcmk__assert((out != NULL) && (scheduler != NULL)
+                 && (scheduler->input == NULL) && (scheduler->priv->now == NULL)
+                 && (cib != NULL));
+
+    rc = cib->cmds->query(cib, NULL, &cib_xml, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
-
     if (rc != pcmk_rc_ok) {
-        out->err(out, "Could not obtain the current CIB: %s (%d)", pcmk_rc_str(rc), rc);
-        return rc;
-    }
-    rc = update_scheduler_input(scheduler, &cib_xml_copy);
-    if (rc != pcmk_rc_ok) {
-        out->err(out, "Could not upgrade the current CIB XML");
-        pcmk__xml_free(cib_xml_copy);
+        out->err(out, "Could not obtain the current CIB: %s", pcmk_rc_str(rc));
         return rc;
     }
 
-    return rc;
+    rc = pcmk__update_configured_schema(&cib_xml, false);
+    if (rc != pcmk_rc_ok) {
+        out->err(out, "Could not upgrade the current CIB XML: %s",
+                 pcmk_rc_str(rc));
+        pcmk__xml_free(cib_xml);
+        return rc;
+    }
+
+    scheduler->input = cib_xml;
+    scheduler->priv->now = crm_time_new(NULL);
+    return pcmk_rc_ok;
 }
 
 // \return Standard Pacemaker return code
@@ -1382,7 +1365,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
 
     pe_reset_working_set(scheduler);
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
-    rc = update_scheduler_input_to_cib(out, scheduler, cib);
+    rc = update_scheduler_input(out, scheduler, cib);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -2028,7 +2011,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
 
         /* Get latest transition graph */
         pe_reset_working_set(scheduler);
-        rc = update_scheduler_input_to_cib(out, scheduler, cib);
+        rc = update_scheduler_input(out, scheduler, cib);
         if (rc != pcmk_rc_ok) {
             break;
         }
