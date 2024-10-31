@@ -48,7 +48,6 @@ enum rsc_command {
     cmd_execute_agent,
     cmd_fail,
     cmd_get_param,
-    cmd_get_property,
     cmd_list_active_ops,
     cmd_list_agents,
     cmd_list_all_ops,
@@ -382,10 +381,6 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.rsc_cmd = cmd_get_param;
         pcmk__str_update(&options.prop_name, optarg);
 
-    } else if (pcmk__str_any_of(option_name, "-G", "--get-property", NULL)) {
-        options.rsc_cmd = cmd_get_property;
-        pcmk__str_update(&options.prop_name, optarg);
-
     } else if (pcmk__str_any_of(option_name, "-O", "--list-operations", NULL)) {
         options.rsc_cmd = cmd_list_active_ops;
 
@@ -521,11 +516,6 @@ static GOptionEntry query_entries[] = {
       "Display named parameter for resource (use instance attribute\n"
       INDENT "unless --element, --meta, or --utilization is specified)",
       "PARAM" },
-    { "get-property", 'G', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK,
-          command_cb,
-      "Display named property of resource ('class', 'type', or 'provider') "
-      "(requires --resource)",
-      "PROPERTY" },
     { "locate", 'W', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Show node(s) currently running resource",
       NULL },
@@ -1261,7 +1251,6 @@ get_find_flags(void)
 
         case cmd_delete_param:
         case cmd_get_param:
-        case cmd_get_property:
         case cmd_query_xml_raw:
         case cmd_query_xml:
         case cmd_set_param:
@@ -1618,7 +1607,6 @@ main(int argc, char **argv)
              * argument.
              */
             case cmd_get_param:
-            case cmd_get_property:
             case cmd_list_instances:
             case cmd_list_standards:
                 pcmk__output_enable_list_element(out);
@@ -1955,14 +1943,6 @@ main(int argc, char **argv)
             if (rc == EINVAL) {
                 exit_code = CRM_EX_USAGE;
                 goto done;
-            }
-
-            break;
-
-        case cmd_get_property:
-            rc = out->message(out, "property-list", rsc, options.prop_name);
-            if (rc == pcmk_rc_no_output) {
-                rc = ENXIO;
             }
 
             break;
