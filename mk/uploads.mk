@@ -14,6 +14,6 @@ RSYNC_DEST      ?= sites.clusterlabs.org:/var/www/html
 
 RSYNC_PACKAGE_DEST	= $(RSYNC_DEST)/projects/$(PACKAGE)
 
-# recursive, preserve symlinks, preserve permissions, verbose, compress,
-# don't cross filesystems, sparse, show progress
-RSYNC_OPTS      = -rlpvzxS --progress
+# recursive, preserve symlinks, verbose, compress, don't cross filesystems,
+# sparse, show progress
+RSYNC_OPTS      = -rlvzxS --progress
