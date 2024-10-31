@@ -1,3 +1,39 @@
+* Thu Oct 31 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9
+- 169 commits with 252 files changed, 4498 insertions(+), 2259 deletions(-)
+
+- Features added since Pacemaker-2.1.8
+  + build: support building with libxml2 2.13.0 or newer
+  + CIB: new no-quorum-policy value "fence" replaces now-deprecated "suicide"
+  + tools: iso8601 supports standard --output-as/--output-to arguments
+
+- Fixes since Pacemaker-2.1.8
+  + tools: restore crmadmin default timeout to 30 seconds instead of none
+           (regression introduced in 2.1.5)
+  + tools: crm_resource did not return error if schema upgrade failed
+    (regression introduced in 2.1.8)
+  + CIB: detect newly created alerts section (regression introduced in 2.1.7)
+  + CIB: treat empty environment variables (CIB_file etc.) same as unset
+  + CIB: remote CIB administration now cannot block server
+  + executor: don't block during TLS handshakes
+  + executor: discard any agent output after about 10MiB
+  + scheduler: avoid memory leak when checking for unfencing-capable devices
+  + libcrmcommon: check for overflow when parsing and manipulating date/times
+  + tools: properly handle resources removed from configuration when
+    displaying node history in crm_mon
+  + tools: crmadmin -D/--dc_lookup no longer hangs when there is no DC
+  + tools: don't assert if stdout or stderr is closed by caller
+
+- Public API changes since Pacemaker-2.1.8
+  + libcrmcommon: add enum pcmk_ra_caps value pcmk_ra_cap_cli_exec
+  + libcrmcommon: add pcmk_cib_node_shutdown()
+  + libcrmcommon: add pcmk_parse_score()
+  + libcrmcommon: deprecate CRM_ASSERT()
+  + libcrmcommon: deprecate PCMK_VALUE_FENCE_LEGACY defined constant
+  + libstonithd: add enum stonith_call_options value st_opt_allow_self_fencing
+  + libstonithd: deprecate enum stonith_call_options value st_opt_allow_suicide
+  + libstonithd: deprecate enum stonith_call_options value st_opt_scope_local
+  + libstonithd: deprecate enum stonith_call_options value st_opt_verbose
+
 * Thu Aug 08 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8
 - 2559 commits with 511 files changed, 46898 insertions(+), 23417 deletions(-)
 
