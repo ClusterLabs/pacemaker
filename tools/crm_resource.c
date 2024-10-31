@@ -775,6 +775,8 @@ static GOptionEntry addl_entries[] = {
       "Force the action to be performed. See help for individual commands for\n"
       INDENT "additional behavior.",
       NULL },
+
+    // @COMPAT Used in resource-agents prior to v4.2.0
     { "host-uname", 'H', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.host_uname,
       NULL,
       "HOST" },
