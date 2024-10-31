@@ -1319,8 +1319,8 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  * \param[in,out] xml        XML to use as input
  *
  * \return Standard Pacemaker return code
- * \note On success, caller is responsible for freeing memory allocated for
- *       scheduler->priv->now.
+ * \note On success, \p scheduler takes ownership of \p xml, and the caller is
+ *       responsible for freeing memory allocated for \c scheduler->priv->now.
  */
 int
 update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)

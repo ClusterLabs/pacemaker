@@ -909,7 +909,7 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 }
 
 static int
-clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
+clear_constraints(pcmk__output_t *out)
 {
     GList *before = NULL;
     GList *after = NULL;
@@ -945,19 +945,20 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
     }
 
     if (!out->is_quiet(out)) {
-        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_sync_call);
+        xmlNode *cib_xml = NULL;
+
+        rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
 
         if (rc != pcmk_rc_ok) {
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         _("Could not get modified CIB: %s\n"), pcmk_rc_str(rc));
             g_list_free(before);
-            pcmk__xml_free(*cib_xml_copy);
-            *cib_xml_copy = NULL;
+            pcmk__xml_free(cib_xml);
             return rc;
         }
 
-        scheduler->input = *cib_xml_copy;
+        scheduler->input = cib_xml;
         cluster_status(scheduler);
 
         after = build_constraint_list(scheduler->input);
@@ -976,11 +977,12 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 }
 
 static int
-initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
+initialize_scheduler_data(void)
 {
+    xmlNode *cib_xml = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_sync_call);
+    rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
@@ -990,13 +992,12 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
         } else {
             pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
             scheduler->priv->out = out;
-            rc = update_scheduler_input(scheduler, cib_xml_copy);
+            rc = update_scheduler_input(scheduler, &cib_xml);
         }
     }
 
     if (rc != pcmk_rc_ok) {
-        pcmk__xml_free(*cib_xml_copy);
-        *cib_xml_copy = NULL;
+        pcmk__xml_free(cib_xml);
         return rc;
     }
 
@@ -1442,7 +1443,6 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
-    xmlNode *cib_xml_copy = NULL;
     pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
     uint32_t find_flags = 0;
@@ -1645,7 +1645,7 @@ main(int argc, char **argv)
 
     // Populate scheduler data from XML file if specified or CIB query otherwise
     if (is_scheduler_required()) {
-        rc = initialize_scheduler_data(&cib_xml_copy);
+        rc = initialize_scheduler_data();
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             goto done;
@@ -1864,7 +1864,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_clear:
-            rc = clear_constraints(out, &cib_xml_copy);
+            rc = clear_constraints(out);
             break;
 
         case cmd_move:
