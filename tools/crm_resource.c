@@ -65,7 +65,6 @@ enum rsc_command {
     cmd_refresh,
     cmd_restart,
     cmd_set_param,
-    cmd_set_property,
     cmd_wait,
     cmd_why,
 };
@@ -441,10 +440,6 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.rsc_cmd = cmd_set_param;
         pcmk__str_update(&options.prop_name, optarg);
 
-    } else if (pcmk__str_any_of(option_name, "-S", "--set-property", NULL)) {
-        options.rsc_cmd = cmd_set_property;
-        pcmk__str_update(&options.prop_name, optarg);
-
     } else if (pcmk__str_eq(option_name, "--wait", pcmk__str_none)) {
         options.rsc_cmd = cmd_wait;
 
@@ -577,11 +572,6 @@ static GOptionEntry command_entries[] = {
       "Delete named parameter for resource. Use instance attribute\n"
       INDENT "unless --element, --meta or, --utilization is specified.",
       "PARAM" },
-    { "set-property", 'S', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK,
-          command_cb,
-      "Set named property of resource ('class', 'type', or 'provider') "
-      "(requires -r, -t, -v)",
-      "PROPERTY" },
 
     { NULL }
 };
@@ -1103,39 +1093,6 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 }
 
 static int
-set_property(void)
-{
-    int rc = pcmk_rc_ok;
-    xmlNode *msg_data = NULL;
-
-    if (pcmk__str_empty(options.rsc_type)) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    _("Must specify -t with resource type"));
-        rc = ENXIO;
-        return rc;
-
-    } else if (pcmk__str_empty(options.prop_value)) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    _("Must supply -v with new value"));
-        rc = ENXIO;
-        return rc;
-    }
-
-    CRM_LOG_ASSERT(options.prop_name != NULL);
-
-    msg_data = pcmk__xe_create(NULL, options.rsc_type);
-    crm_xml_add(msg_data, PCMK_XA_ID, options.rsc_id);
-    crm_xml_add(msg_data, options.prop_name, options.prop_value);
-
-    rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_RESOURCES, msg_data,
-                                cib_sync_call);
-    rc = pcmk_legacy2rc(rc);
-    pcmk__xml_free(msg_data);
-
-    return rc;
-}
-
-static int
 show_metadata(pcmk__output_t *out, const char *agent_spec)
 {
     int rc = pcmk_rc_ok;
@@ -1254,7 +1211,6 @@ get_find_flags(void)
         case cmd_query_xml_raw:
         case cmd_query_xml:
         case cmd_set_param:
-        case cmd_set_property:
             return pcmk_rsc_match_history|pcmk_rsc_match_basename;
 
         default:
@@ -1945,10 +1901,6 @@ main(int argc, char **argv)
                 goto done;
             }
 
-            break;
-
-        case cmd_set_property:
-            rc = set_property();
             break;
 
         case cmd_get_param: {
