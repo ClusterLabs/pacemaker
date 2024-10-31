@@ -145,8 +145,9 @@ get_operation_list(xmlNode *rsc_entry) {
     GList *op_list = NULL;
     xmlNode *rsc_op = NULL;
 
-    for (rsc_op = pcmk__xe_first_child(rsc_entry, NULL, NULL, NULL);
-         rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op, NULL)) {
+    for (rsc_op = pcmk__xe_first_child(rsc_entry, PCMK__XE_LRM_RSC_OP, NULL,
+                                       NULL);
+         rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op, PCMK__XE_LRM_RSC_OP)) {
 
         const char *task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = crm_element_value(rsc_op,
@@ -169,9 +170,7 @@ get_operation_list(xmlNode *rsc_entry) {
             continue;
         }
 
-        if (pcmk__xe_is(rsc_op, PCMK__XE_LRM_RSC_OP)) {
-            op_list = g_list_append(op_list, rsc_op);
-        }
+        op_list = g_list_append(op_list, rsc_op);
     }
 
     op_list = g_list_sort(op_list, sort_op_by_callid);

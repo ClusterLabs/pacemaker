@@ -525,12 +525,10 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
     const char *remote_allow_migrate=NULL;
     const char *is_managed = NULL;
 
-    for (attr_set = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
-         attr_set != NULL; attr_set = pcmk__xe_next(attr_set, NULL)) {
-
-        if (!pcmk__xe_is(attr_set, PCMK_XE_META_ATTRIBUTES)) {
-            continue;
-        }
+    for (attr_set = pcmk__xe_first_child(xml_obj, PCMK_XE_META_ATTRIBUTES,
+                                         NULL, NULL);
+         attr_set != NULL;
+         attr_set = pcmk__xe_next(attr_set, PCMK_XE_META_ATTRIBUTES)) {
 
         for (attr = pcmk__xe_first_child(attr_set, NULL, NULL, NULL);
              attr != NULL; attr = pcmk__xe_next(attr, NULL)) {
@@ -608,46 +606,44 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
     const char *uname = NULL;
     const char *type = NULL;
 
-    for (xml_obj = pcmk__xe_first_child(xml_nodes, NULL, NULL, NULL);
-         xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj, NULL)) {
+    for (xml_obj = pcmk__xe_first_child(xml_nodes, PCMK_XE_NODE, NULL, NULL);
+         xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj, PCMK_XE_NODE)) {
 
-        if (pcmk__xe_is(xml_obj, PCMK_XE_NODE)) {
-            int score = 0;
-            int rc = pcmk__xe_get_score(xml_obj, PCMK_XA_SCORE, &score, 0);
+        int score = 0;
+        int rc = pcmk__xe_get_score(xml_obj, PCMK_XA_SCORE, &score, 0);
 
-            new_node = NULL;
+        new_node = NULL;
 
-            id = crm_element_value(xml_obj, PCMK_XA_ID);
-            uname = crm_element_value(xml_obj, PCMK_XA_UNAME);
-            type = crm_element_value(xml_obj, PCMK_XA_TYPE);
-            crm_trace("Processing node %s/%s", uname, id);
+        id = crm_element_value(xml_obj, PCMK_XA_ID);
+        uname = crm_element_value(xml_obj, PCMK_XA_UNAME);
+        type = crm_element_value(xml_obj, PCMK_XA_TYPE);
+        crm_trace("Processing node %s/%s", uname, id);
 
-            if (id == NULL) {
-                pcmk__config_err("Ignoring <" PCMK_XE_NODE
-                                 "> entry in configuration without id");
-                continue;
-            }
-            if (rc != pcmk_rc_ok) {
-                // Not possible with schema validation enabled
-                pcmk__config_warn("Using 0 as score for node %s "
-                                  "because '%s' is not a valid score: %s",
-                                  pcmk__s(uname, "without name"),
-                                  crm_element_value(xml_obj, PCMK_XA_SCORE),
-                                  pcmk_rc_str(rc));
-            }
-            new_node = pe_create_node(id, uname, type, score, scheduler);
-
-            if (new_node == NULL) {
-                return FALSE;
-            }
-
-            handle_startup_fencing(scheduler, new_node);
-
-            add_node_attrs(xml_obj, new_node, FALSE, scheduler);
-
-            crm_trace("Done with node %s",
-                      crm_element_value(xml_obj, PCMK_XA_UNAME));
+        if (id == NULL) {
+            pcmk__config_err("Ignoring <" PCMK_XE_NODE
+                             "> entry in configuration without id");
+            continue;
         }
+        if (rc != pcmk_rc_ok) {
+            // Not possible with schema validation enabled
+            pcmk__config_warn("Using 0 as score for node %s "
+                              "because '%s' is not a valid score: %s",
+                              pcmk__s(uname, "without name"),
+                              crm_element_value(xml_obj, PCMK_XA_SCORE),
+                              pcmk_rc_str(rc));
+        }
+        new_node = pe_create_node(id, uname, type, score, scheduler);
+
+        if (new_node == NULL) {
+            return FALSE;
+        }
+
+        handle_startup_fencing(scheduler, new_node);
+
+        add_node_attrs(xml_obj, new_node, FALSE, scheduler);
+
+        crm_trace("Done with node %s",
+                  crm_element_value(xml_obj, PCMK_XA_UNAME));
     }
 
     return TRUE;
@@ -932,15 +928,11 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
 
     scheduler->priv->tags = pcmk__strkey_table(free, pcmk__free_idref);
 
-    for (xml_tag = pcmk__xe_first_child(xml_tags, NULL, NULL, NULL);
-         xml_tag != NULL; xml_tag = pcmk__xe_next(xml_tag, NULL)) {
+    for (xml_tag = pcmk__xe_first_child(xml_tags, PCMK_XE_TAG, NULL, NULL);
+         xml_tag != NULL; xml_tag = pcmk__xe_next(xml_tag, PCMK_XE_TAG)) {
 
         xmlNode *xml_obj_ref = NULL;
         const char *tag_id = pcmk__xe_id(xml_tag);
-
-        if (!pcmk__xe_is(xml_tag, PCMK_XE_TAG)) {
-            continue;
-        }
 
         if (tag_id == NULL) {
             pcmk__config_err("Ignoring <%s> without " PCMK_XA_ID,
@@ -948,15 +940,12 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        for (xml_obj_ref = pcmk__xe_first_child(xml_tag, NULL, NULL, NULL);
+        for (xml_obj_ref = pcmk__xe_first_child(xml_tag, PCMK_XE_OBJ_REF,
+                                                NULL, NULL);
              xml_obj_ref != NULL;
-             xml_obj_ref = pcmk__xe_next(xml_obj_ref, NULL)) {
+             xml_obj_ref = pcmk__xe_next(xml_obj_ref, PCMK_XE_OBJ_REF)) {
 
             const char *obj_ref = pcmk__xe_id(xml_obj_ref);
-
-            if (!pcmk__xe_is(xml_obj_ref, PCMK_XE_OBJ_REF)) {
-                continue;
-            }
 
             if (obj_ref == NULL) {
                 pcmk__config_err("Ignoring <%s> for tag '%s' without " PCMK_XA_ID,
@@ -1053,15 +1042,13 @@ unpack_tickets_state(xmlNode *xml_tickets, pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_obj = NULL;
 
-    for (xml_obj = pcmk__xe_first_child(xml_tickets, NULL, NULL, NULL);
-         xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj, NULL)) {
+    for (xml_obj = pcmk__xe_first_child(xml_tickets, PCMK__XE_TICKET_STATE,
+                                        NULL, NULL);
+         xml_obj != NULL;
+         xml_obj = pcmk__xe_next(xml_obj, PCMK__XE_TICKET_STATE)) {
 
-        if (!pcmk__xe_is(xml_obj, PCMK__XE_TICKET_STATE)) {
-            continue;
-        }
         unpack_ticket_state(xml_obj, scheduler);
     }
-
     return TRUE;
 }
 
@@ -2838,18 +2825,16 @@ static void
 handle_removed_launched_resources(const xmlNode *lrm_rsc_list,
                                   pcmk_scheduler_t *scheduler)
 {
-    for (const xmlNode *rsc_entry = pcmk__xe_first_child(lrm_rsc_list, NULL,
+    for (const xmlNode *rsc_entry = pcmk__xe_first_child(lrm_rsc_list,
+                                                         PCMK__XE_LRM_RESOURCE,
                                                          NULL, NULL);
-         rsc_entry != NULL; rsc_entry = pcmk__xe_next(rsc_entry, NULL)) {
+         rsc_entry != NULL;
+         rsc_entry = pcmk__xe_next(rsc_entry, PCMK__XE_LRM_RESOURCE)) {
 
         pcmk_resource_t *rsc;
         pcmk_resource_t *launcher = NULL;
         const char *rsc_id;
         const char *launcher_id = NULL;
-
-        if (!pcmk__xe_is(rsc_entry, PCMK__XE_LRM_RESOURCE)) {
-            continue;
-        }
 
         launcher_id = crm_element_value(rsc_entry, PCMK__META_CONTAINER);
         rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
@@ -5009,14 +4994,13 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
     op_list = NULL;
     sorted_op_list = NULL;
 
-    for (rsc_op = pcmk__xe_first_child(rsc_entry, NULL, NULL, NULL);
-         rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op, NULL)) {
+    for (rsc_op = pcmk__xe_first_child(rsc_entry, PCMK__XE_LRM_RSC_OP, NULL,
+                                       NULL);
+         rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op, PCMK__XE_LRM_RSC_OP)) {
 
-        if (pcmk__xe_is(rsc_op, PCMK__XE_LRM_RSC_OP)) {
-            crm_xml_add(rsc_op, PCMK_XA_RESOURCE, rsc);
-            crm_xml_add(rsc_op, PCMK_XA_UNAME, node);
-            op_list = g_list_prepend(op_list, rsc_op);
-        }
+        crm_xml_add(rsc_op, PCMK_XA_RESOURCE, rsc);
+        crm_xml_add(rsc_op, PCMK_XA_UNAME, node);
+        op_list = g_list_prepend(op_list, rsc_op);
     }
 
     if (op_list == NULL) {
@@ -5072,56 +5056,55 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
 
     CRM_CHECK(status != NULL, return NULL);
 
-    for (node_state = pcmk__xe_first_child(status, NULL, NULL, NULL);
-         node_state != NULL; node_state = pcmk__xe_next(node_state, NULL)) {
-
-        if (pcmk__xe_is(node_state, PCMK__XE_NODE_STATE)) {
-            const char *uname = crm_element_value(node_state, PCMK_XA_UNAME);
-
-            if (node != NULL && !pcmk__str_eq(uname, node, pcmk__str_casei)) {
-                continue;
-            }
-
-            this_node = pcmk_find_node(scheduler, uname);
-            if(this_node == NULL) {
-                CRM_LOG_ASSERT(this_node != NULL);
-                continue;
-
-            } else if (pcmk__is_pacemaker_remote_node(this_node)) {
-                determine_remote_online_status(scheduler, this_node);
-
-            } else {
-                determine_online_status(node_state, this_node, scheduler);
-            }
-
-            if (this_node->details->online
-                || pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
-                /* offline nodes run no resources...
-                 * unless stonith is enabled in which case we need to
-                 *   make sure rsc start events happen after the stonith
-                 */
-                xmlNode *lrm_rsc = NULL;
-
-                tmp = pcmk__xe_first_child(node_state, PCMK__XE_LRM, NULL,
+    for (node_state = pcmk__xe_first_child(status, PCMK__XE_NODE_STATE, NULL,
                                            NULL);
-                tmp = pcmk__xe_first_child(tmp, PCMK__XE_LRM_RESOURCES, NULL,
-                                           NULL);
+         node_state != NULL;
+         node_state = pcmk__xe_next(node_state, PCMK__XE_NODE_STATE)) {
 
-                for (lrm_rsc = pcmk__xe_first_child(tmp, NULL, NULL, NULL);
-                     lrm_rsc != NULL; lrm_rsc = pcmk__xe_next(lrm_rsc, NULL)) {
+        const char *uname = crm_element_value(node_state, PCMK_XA_UNAME);
 
-                    if (pcmk__xe_is(lrm_rsc, PCMK__XE_LRM_RESOURCE)) {
-                        const char *rsc_id = crm_element_value(lrm_rsc,
-                                                               PCMK_XA_ID);
+        if (node != NULL && !pcmk__str_eq(uname, node, pcmk__str_casei)) {
+            continue;
+        }
 
-                        if (rsc != NULL && !pcmk__str_eq(rsc_id, rsc, pcmk__str_casei)) {
-                            continue;
-                        }
+        this_node = pcmk_find_node(scheduler, uname);
+        if(this_node == NULL) {
+            CRM_LOG_ASSERT(this_node != NULL);
+            continue;
 
-                        intermediate = extract_operations(uname, rsc_id, lrm_rsc, active_filter);
-                        output = g_list_concat(output, intermediate);
-                    }
+        } else if (pcmk__is_pacemaker_remote_node(this_node)) {
+            determine_remote_online_status(scheduler, this_node);
+
+        } else {
+            determine_online_status(node_state, this_node, scheduler);
+        }
+
+        if (this_node->details->online
+            || pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+            /* offline nodes run no resources...
+             * unless stonith is enabled in which case we need to
+             *   make sure rsc start events happen after the stonith
+             */
+            xmlNode *lrm_rsc = NULL;
+
+            tmp = pcmk__xe_first_child(node_state, PCMK__XE_LRM, NULL,
+                                       NULL);
+            tmp = pcmk__xe_first_child(tmp, PCMK__XE_LRM_RESOURCES, NULL,
+                                       NULL);
+
+            for (lrm_rsc = pcmk__xe_first_child(tmp, PCMK__XE_LRM_RESOURCE,
+                                                NULL, NULL);
+                 lrm_rsc != NULL;
+                 lrm_rsc = pcmk__xe_next(lrm_rsc, PCMK__XE_LRM_RESOURCE)) {
+
+                const char *rsc_id = crm_element_value(lrm_rsc, PCMK_XA_ID);
+
+                if (rsc != NULL && !pcmk__str_eq(rsc_id, rsc, pcmk__str_casei)) {
+                    continue;
                 }
+
+                intermediate = extract_operations(uname, rsc_id, lrm_rsc, active_filter);
+                output = g_list_concat(output, intermediate);
             }
         }
     }
