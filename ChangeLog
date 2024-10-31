@@ -1,37 +1,27 @@
-* Mon Oct 21 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9-rc3
-- 9 commits with 5 files changed, 47 insertions(+), 21 deletions(-)
-
-- Fixes since Pacemaker-2.1.9-rc2
-  + tools: crmadmin -D/--dc_lookup no longer hangs when there is no DC
-  + tools: restore crmadmin default timeout to 30 seconds instead of none
-           (regression introduced in 2.1.5)
-
-* Mon Oct 14 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9-rc2
-- 11 commits with 10 files changed, 298 insertions(+), 68 deletions(-)
-
-- Fixes since Pacemaker-2.1.9-rc1
-  + tools: crm_resource did not return error if schema upgrade failed
-    (regression introduced in 2.1.8)
-  + libcrmcommon: avoid potential overflow when adding seconds
-  + libcib: remote CIB administration now cannot block server
-  + tools: don't assert if stdout or stderr is closed by caller
-
-* Thu Oct 03 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9-rc1
-- 134 commits with 245 files changed, 3919 insertions(+), 2142 deletions(-)
+* Thu Oct 31 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9
+- 169 commits with 252 files changed, 4498 insertions(+), 2259 deletions(-)
 
 - Features added since Pacemaker-2.1.8
-  + CIB: allow no-quorum-policy "fence" and deprecate "suicide"
   + build: support building with libxml2 2.13.0 or newer
+  + CIB: new no-quorum-policy value "fence" replaces now-deprecated "suicide"
+  + tools: iso8601 supports standard --output-as/--output-to arguments
 
 - Fixes since Pacemaker-2.1.8
+  + tools: restore crmadmin default timeout to 30 seconds instead of none
+           (regression introduced in 2.1.5)
+  + tools: crm_resource did not return error if schema upgrade failed
+    (regression introduced in 2.1.8)
   + CIB: detect newly created alerts section (regression introduced in 2.1.7)
   + CIB: treat empty environment variables (CIB_file etc.) same as unset
+  + CIB: remote CIB administration now cannot block server
   + executor: don't block during TLS handshakes
   + executor: discard any agent output after about 10MiB
   + scheduler: avoid memory leak when checking for unfencing-capable devices
   + libcrmcommon: check for overflow when parsing and manipulating date/times
   + tools: properly handle resources removed from configuration when
     displaying node history in crm_mon
+  + tools: crmadmin -D/--dc_lookup no longer hangs when there is no DC
+  + tools: don't assert if stdout or stderr is closed by caller
 
 - Public API changes since Pacemaker-2.1.8
   + libcrmcommon: add enum pcmk_ra_caps value pcmk_ra_cap_cli_exec
