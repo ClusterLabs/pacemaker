@@ -960,11 +960,20 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
     return TRUE;
 }
 
-/* The ticket state section:
- * "/cib/status/tickets/ticket_state" */
-static gboolean
-unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
+/*!
+ * \internal
+ * \brief Unpack a ticket state entry
+ *
+ * \param[in]     xml_ticket  XML ticket state to unpack
+ * \param[in,out] userdata    Scheduler data
+ *
+ * \return pcmk_rc_ok (to always continue unpacking further entries)
+ */
+static int
+unpack_ticket_state(xmlNode *xml_ticket, void *userdata)
 {
+    pcmk_scheduler_t *scheduler = userdata;
+
     const char *ticket_id = NULL;
     const char *granted = NULL;
     const char *last_granted = NULL;
@@ -975,7 +984,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
 
     ticket_id = pcmk__xe_id(xml_ticket);
     if (pcmk__str_empty(ticket_id)) {
-        return FALSE;
+        return pcmk_rc_ok;
     }
 
     crm_trace("Processing ticket state for %s", ticket_id);
@@ -985,7 +994,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
     if (ticket == NULL) {
         ticket = ticket_new(ticket_id, scheduler);
         if (ticket == NULL) {
-            return FALSE;
+            return pcmk_rc_ok;
         }
     }
 
@@ -1034,22 +1043,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
 
     crm_trace("Done with ticket state for %s", ticket_id);
 
-    return TRUE;
-}
-
-static gboolean
-unpack_tickets_state(xmlNode *xml_tickets, pcmk_scheduler_t *scheduler)
-{
-    xmlNode *xml_obj = NULL;
-
-    for (xml_obj = pcmk__xe_first_child(xml_tickets, PCMK__XE_TICKET_STATE,
-                                        NULL, NULL);
-         xml_obj != NULL;
-         xml_obj = pcmk__xe_next(xml_obj, PCMK__XE_TICKET_STATE)) {
-
-        unpack_ticket_state(xml_obj, scheduler);
-    }
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 static void
@@ -1406,7 +1400,8 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
          state = pcmk__xe_next(state, NULL)) {
 
         if (pcmk__xe_is(state, PCMK_XE_TICKETS)) {
-            unpack_tickets_state((xmlNode *) state, scheduler);
+            pcmk__xe_foreach_child(state, PCMK__XE_TICKET_STATE,
+                                   unpack_ticket_state, scheduler);
 
         } else if (pcmk__xe_is(state, PCMK__XE_NODE_STATE)) {
             unpack_node_state(state, scheduler);
