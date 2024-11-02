@@ -404,6 +404,7 @@ CRM_EX_ERROR - Error occurred
   111: Requested item is not yet in effect
   112: Could not determine status
   113: Not applicable under current conditions
+  114: DC is not yet elected
   124: Timeout occurred
   190: Service is active but might fail soon
   191: Service is promoted but might fail soon
@@ -451,6 +452,7 @@ CRM_EX_ERROR - Error occurred
   <result-code code="111" description="Requested item is not yet in effect"/>
   <result-code code="112" description="Could not determine status"/>
   <result-code code="113" description="Not applicable under current conditions"/>
+  <result-code code="114" description="DC is not yet elected"/>
   <result-code code="124" description="Timeout occurred"/>
   <result-code code="190" description="Service is active but might fail soon"/>
   <result-code code="191" description="Service is promoted but might fail soon"/>
@@ -499,6 +501,7 @@ CRM_EX_ERROR - Error occurred
   111: CRM_EX_NOT_YET_IN_EFFECT    Requested item is not yet in effect
   112: CRM_EX_INDETERMINATE        Could not determine status
   113: CRM_EX_UNSATISFIED          Not applicable under current conditions
+  114: CRM_EX_NO_DC                DC is not yet elected
   124: CRM_EX_TIMEOUT              Timeout occurred
   190: CRM_EX_DEGRADED             Service is active but might fail soon
   191: CRM_EX_DEGRADED_PROMOTED    Service is promoted but might fail soon
@@ -546,6 +549,7 @@ CRM_EX_ERROR - Error occurred
   <result-code code="111" name="CRM_EX_NOT_YET_IN_EFFECT" description="Requested item is not yet in effect"/>
   <result-code code="112" name="CRM_EX_INDETERMINATE" description="Could not determine status"/>
   <result-code code="113" name="CRM_EX_UNSATISFIED" description="Not applicable under current conditions"/>
+  <result-code code="114" name="CRM_EX_NO_DC" description="DC is not yet elected"/>
   <result-code code="124" name="CRM_EX_TIMEOUT" description="Timeout occurred"/>
   <result-code code="190" name="CRM_EX_DEGRADED" description="Service is active but might fail soon"/>
   <result-code code="191" name="CRM_EX_DEGRADED_PROMOTED" description="Service is promoted but might fail soon"/>
