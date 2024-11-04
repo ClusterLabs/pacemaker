@@ -1,12 +1,14 @@
 # Pacemaker-2.1.9 (31 Oct 2024)
 - 169 commits with 252 files changed, 4498 insertions(+), 2259 deletions(-)
 
-- Features added since Pacemaker-2.1.8
+## Features added since Pacemaker-2.1.8
+
   + build: support building with libxml2 2.13.0 or newer
   + CIB: new no-quorum-policy value "fence" replaces now-deprecated "suicide"
   + tools: iso8601 supports standard --output-as/--output-to arguments
 
-- Fixes since Pacemaker-2.1.8
+## Fixes since Pacemaker-2.1.8
+
   + tools: restore crmadmin default timeout to 30 seconds instead of none
            (regression introduced in 2.1.5)
   + tools: crm_resource did not return error if schema upgrade failed
@@ -23,7 +25,8 @@
   + tools: crmadmin -D/--dc_lookup no longer hangs when there is no DC
   + tools: don't assert if stdout or stderr is closed by caller
 
-- Public API changes since Pacemaker-2.1.8
+## Public API changes since Pacemaker-2.1.8
+
   + libcrmcommon: add enum pcmk_ra_caps value pcmk_ra_cap_cli_exec
   + libcrmcommon: add pcmk_cib_node_shutdown()
   + libcrmcommon: add pcmk_parse_score()
@@ -37,7 +40,8 @@
 # Pacemaker-2.1.8 (08 Aug 2024)
 - 2559 commits with 511 files changed, 46898 insertions(+), 23417 deletions(-)
 
-- Features added since Pacemaker-2.1.7
+## Features added since Pacemaker-2.1.7
+
   + local options: support PCMK_panic_action="off" or "sync-off"
   + local options: deprecate PCMK_dh_min_bits environment variable
   + CIB: deprecate omitting validate-with from the CIB or setting it to "none"
@@ -67,7 +71,8 @@
     (using such expansions without --score is now deprecated)
   + tools: crm_ticket supports standard --output-as/--output-to arguments
 
-- Fixes since Pacemaker-2.1.7
+## Fixes since Pacemaker-2.1.7
+
   + tools: restore the (deprecated) ability to automatically correct malformed
     XML passed via standard input (regression introduced in 2.1.7)
   + tools: crm_verify distinguishes configuration warnings and errors
@@ -128,7 +133,8 @@
     possibility of 100% CPU usage (seen when run via sudo with use_pty
     configured)
 
-- Public API changes since Pacemaker-2.1.7
+## Public API changes since Pacemaker-2.1.7
+
   + libcib: add cib_score_update cib_call_options value
   + libcib: deprecate functions cib_get_generation(), cib_metadata(),
     cib_pref(), query_node_uname(), and set_standby()
@@ -519,7 +525,8 @@
 # Pacemaker-2.1.7 (19 Dec 2023)
 - 1388 commits with 358 files changed, 23771 insertions(+), 17219 deletions(-)
 
-- Features added since Pacemaker-2.1.6
+## Features added since Pacemaker-2.1.6
+
   + build: allow building with libxml2 2.12.0 and greater
   + CIB: deprecate "ordering" attribute of "resource_set"
   + CIB: new cluster option "node-pending-timeout" (defaulting to 0, meaning
@@ -534,7 +541,8 @@
   + tools: crm_node supports standard --output-as/--output-to arguments
   + tests: CTSlab.py was renamed to cts-lab
 
-- Fixes since Pacemaker-2.1.6
+## Fixes since Pacemaker-2.1.6
+
   + logging: restore ability to enable XML trace logs by file and function
     (regression introduced in 2.1.6)
   + scheduler: avoid double free with disabled recurring actions
@@ -571,7 +579,8 @@
   + tools: crm_resource now properly detects which promoted role name to use
     in ban and move constraints
 
-- Public API changes since Pacemaker-2.1.6 (all API/ABI backward-compatible)
+## Public API changes since Pacemaker-2.1.6 (all API/ABI backward-compatible)
+
   + libcib: cib_t now supports transactions via new cib_api_operations_t
     methods, new cib_transaction value in enum cib_call_options, and new
     cib_t transaction and user members
@@ -952,7 +961,8 @@
 # Pacemaker-2.1.6 (24 May 2023)
 - 1124 commits with 402 files changed, 25220 insertions(+), 14751 deletions(-)
 
-- Features added since Pacemaker-2.1.5
+## Features added since Pacemaker-2.1.5
+
   + CIB: deprecate "moon" in date_spec elements in rules
   + CIB: deprecate support for Nagios resources
   + CIB: utilization attributes may be set as transient
@@ -987,7 +997,8 @@
            (including when --output-as=xml is used)
   + tools: crm_shadow supports standard --output-as/--output-to arguments
 
-- Fixes since Pacemaker-2.1.5
+## Fixes since Pacemaker-2.1.5
+
   + pacemakerd: -S should wait for cluster to shut down before returning
                 (regression introduced in 2.1.1)
   + Pacemaker Remote: remote nodes wait for all-clear from cluster before
@@ -1043,7 +1054,8 @@
   + tools: crm_shadow --commit now works with CIB_file
   + tools: crm_simulate failure injection avoids crash if node name is unknown
 
-- Public API changes since Pacemaker-2.1.5
+## Public API changes since Pacemaker-2.1.5
+
   + Python: New "pacemaker" Python module (packaged as python3-pacemaker in
             RPMs built with "make rpm") contains supported public API with
             BuildOptions and ExitStatus classes
@@ -1103,7 +1115,8 @@
 # Pacemaker-2.1.5 (7 Dec 2022)
 - 1287 commits with 447 files changed, 33546 insertions(+), 21518 deletions(-)
 
-- Features added since Pacemaker-2.1.4
+## Features added since Pacemaker-2.1.4
+
   + CIB: access control lists (ACLs) for groups are supported
   + CIB: ACL target and group XML supports "name" attribute to specify a name
          that is not a unique XML ID
@@ -1134,7 +1147,8 @@
            --stack) and --force (to show constraints for a group member
            instead of the group)
 
-- Fixes since Pacemaker-2.1.4
+## Fixes since Pacemaker-2.1.4
+
   + tools: crm_error does not print spurious output when given a negative
            return code argument (regression introduced in 2.0.4)
   + tools: avoid crash if crm_resource is given extraneous arguments
@@ -1187,7 +1201,8 @@
   + tools: crm_resource correctly detects if a resource is unmanaged
            or disabled even if there are multiple settings using rules
 
-- Public API changes since Pacemaker-2.1.4
+## Public API changes since Pacemaker-2.1.4
+
   + libcib: add cib_api_operations_t:set_primary
   + libcib: add cib_api_operations_t:set_secondary
   + libcib: deprecate cib_api_operations_t:delete_absolute()
@@ -1288,7 +1303,8 @@
 # Pacemaker-2.1.4 (13 Jun 2022)
 - 17 commits with 9 files changed, 52 insertions(+), 18 deletions(-)
 
-- Fixes since Pacemaker-2.1.3
+## Fixes since Pacemaker-2.1.3
+
   + fencing: get target-by-attribute working again (regression in 2.1.3)
   + fencing: avoid use-after-free when processing self-fencing requests
              with topology (regression in 2.1.3)
@@ -1300,7 +1316,8 @@
 # Pacemaker-2.1.3 (1 Jun 2022)
 - 814 commits with 332 files changed, 23435 insertions(+), 12137 deletions(-)
 
-- Features added since Pacemaker-2.1.2
+## Features added since Pacemaker-2.1.2
+
   + Internal failures of resource actions (such as an OCF agent not being
     found) are shown with a detailed exit reason in logs, crm_mon output, etc.
   + Support for CIB <node> entries with type="ping" is deprecated (this was an
@@ -1333,7 +1350,8 @@
   + resource agents: HealthSMART supports OCF 1.1 standard and new
                      OCF_RESKEY_dampen and OCF_RESKEY_smartctl parameters
 
-- Fixes since Pacemaker-2.1.2
+## Fixes since Pacemaker-2.1.2
+
   + build: avoid circular library dependency (regression introduced in 2.1.0)
   + systemd: if pacemakerd exits immediately after starting, wait 1 second
              before trying to respawn, and allow 5 attempts
@@ -1362,7 +1380,8 @@
            whose node name in the cluster differs from their local hostname
   + tools: prevent possible crm_resource crashes if multiple commands specified
 
-- Public API changes since Pacemaker-2.1.2
+## Public API changes since Pacemaker-2.1.2
+
   + libcrmcommon: pcmk_ipc_api_t supports scheduler IPC
   + libpacemaker: add pcmk_status() (equivalent to crm_mon)
   + libcib: deprecate get_object_parent()
@@ -1388,7 +1407,8 @@
 # Pacemaker-2.1.2 (23 Nov 2021)
 - 462 commits with 223 files changed, 16518 insertions(+), 11743 deletions(-)
 
-- Features added since Pacemaker-2.1.1
+## Features added since Pacemaker-2.1.1
+
   + build: when built with --with-initdir, Pacemaker uses the value to find
            LSB resources (in addition to being where Pacemaker's own
            init scripts are installed)
@@ -1403,7 +1423,8 @@
   + tools: crm_mon failed action display is more human-friendly by default
   + tools: crm_resource --force-* now outputs exit reasons if available
 
-- Fixes since Pacemaker-2.1.1
+## Fixes since Pacemaker-2.1.1
+
   + pkg-config: return correct value for ocfdir (regression introduced in 2.1.0)
   + tools: fix crm_mon --hide-headers and related options
            (regression introduced in 2.0.4)
@@ -1416,7 +1437,8 @@
   + fencing: mark state as done if remapped "on" times out
   + tools: map LSB status to OCF correctly with crm_resource --force-check
 
-- Public API changes since Pacemaker-2.1.1
+## Public API changes since Pacemaker-2.1.1
+
   + libcrmcommon: deprecate PCMK_OCF_EXEC_ERROR
   + libcrmcommon: deprecate PCMK_OCF_PENDING
   + libcrmcommon: deprecate PCMK_OCF_SIGNAL
@@ -1446,7 +1468,8 @@
 # Pacemaker-2.1.1 (09 Sep 2021)
 - 231 commits with 102 files changed, 4912 insertions(+), 3428 deletions(-)
 
-- Features added since Pacemaker-2.1.0
+## Features added since Pacemaker-2.1.0
+
   + enhanced support for OCF Resource Agent API 1.1 standard
     + ocf:pacemaker:attribute and ocf:pacemaker:ping agents now support 1.1
     + tools: crm_resource passes output format to agents so they will use it if
@@ -1458,7 +1481,8 @@
   + pacemakerd: support --output-as/--output-to options including XML output
                 with interactive options such as --features
 
-- Fixes since Pacemaker-2.1.0
+## Fixes since Pacemaker-2.1.0
+
   + pacemaker-attrd: avoid repeated unfencing of remote nodes when DC joined
                      cluster after remote was up
   + controller: ensure newly joining node learns the node names of non-DCs
@@ -1489,7 +1513,8 @@
   + tools: crm_mon XML output should show members of cloned groups
   + libcrmcommon: correctly handle case-sensitive XML IDs
 
-- Public API changes since Pacemaker-2.1.0
+## Public API changes since Pacemaker-2.1.0
+
   + libcrmcommon: add pcmk_section_e type
   + libcrmcommon: add pcmk_show_opt_e type
   + libcrmcommon: add pcmk_pacemakerd_api_shutdown()
@@ -1498,7 +1523,8 @@
 # Pacemaker-2.1.0 (08 Jun 2021)
 - 849 commits with 327 files changed, 22089 insertions(+), 12633 deletions(-)
 
-- Features added since Pacemaker-2.0.5
+## Features added since Pacemaker-2.0.5
+
   + support for OCF Resource Agent API 1.1 standard
     - allow Promoted and Unpromoted role names in CIB (in addition to Master
       and Slave, which are deprecated), and use new role names in output,
@@ -1569,7 +1595,8 @@
   + documentation has dependency on python3-sphinx instead of publican, and is
     generated beneath doc/sphinx
 
-- Fixes since Pacemaker-2.0.5
+## Fixes since Pacemaker-2.0.5
+
   + controller: always refresh agent meta-data after start, in case agent was
                 updated (regression introduced in 1.1.18)
   + tools: avoid crash when running crm_mon in daemonized mode with CGI output
@@ -1705,7 +1732,8 @@
 # Pacemaker-2.0.5 (02 Dec 2020)
 - 534 commits with 286 files changed, 23133 insertions(+), 14626 deletions(-)
 
-- Features added since Pacemaker-2.0.4
+## Features added since Pacemaker-2.0.4
+
   + configuration: Add type="integer" to rule elements, allowing for
                    specifying 64-bit integers and specifying
                    double-precision floating point numbers when
@@ -1723,18 +1751,22 @@
   + tools: Add -P to crmadmin to show pacemakerd status.
   + tools: In cibsecret, read value to set from input (or stdin) if not specified.
 
-- Fixes for regressions introduced in Pacemaker-2.0.4
+## Fixes for regressions introduced in Pacemaker-2.0.4
+
   + tools: Add the node name back to bundle instances in crm_mon.
   + tools: get stonith_admin --list-targets working again
 
-- Fixes for regressions introduced in Pacemaker-2.0.3
+## Fixes for regressions introduced in Pacemaker-2.0.3
+
   + tools: Fix adding HTTP headers to crm_mon in daemon mode.
   + tools: Show expected score of ping attributes in crm_mon XML output
 
-- Fixes for regressions introduced in Pacemaker-2.0.1
+## Fixes for regressions introduced in Pacemaker-2.0.1
+
   + scheduler: require pre-/post-start notifications correctly.
 
-- Changes since Pacemaker-2.0.4
+## Changes since Pacemaker-2.0.4
+
   + Prevent the bypassing of ACLs by direct IPC (CVE-2020-25654)
   + build: Fix a build issue on Fedora s390x.
   + build: Fix python2 vs. python3 packaging problems on openSUSE Tumbleweed
@@ -1777,7 +1809,8 @@
 # Pacemaker-2.0.4 (15 Jun 2020)
 - 515 commits with 269 files changed, 22560 insertions(+), 13726 deletions(-)
 
-- Features added since Pacemaker-2.0.3
+## Features added since Pacemaker-2.0.3
+
   + build: Add support for glib-based unit tests.
   + controller: add new feature 'shutdown-locks'
         Optionally allow a gracefully shutdown node to have the resources
@@ -1798,11 +1831,13 @@
   + tools: Allow more fine grained filtering of fence-history in crm_mon.
   + tools: Allow crm_rule to check some date_specs.
 
-- Fixes for regressions introduced in Pacemaker-2.0.0
+## Fixes for regressions introduced in Pacemaker-2.0.0
+
   + tools: ensure that getting the local node name using crm_node
            always works from Pacemaker Remote node command line
 
-- Changes since Pacemaker-2.0.3
+## Changes since Pacemaker-2.0.3
+
   + build: improve checking headers for C++ fitness
   + build: restore build on latest OpenSUSE
   + fencing: Report an error getting history in output instead of empty history
@@ -1849,7 +1884,8 @@
 # Pacemaker-2.0.3 (25 Nov 2019)
 - 601 commits with 227 files changed, 17862 insertions(+), 10471 deletions(-)
 
-- Features added since Pacemaker-2.0.2
+## Features added since Pacemaker-2.0.2
+
   + controller: new 'fence-reaction' cluster option specifies whether local node
                 should 'stop' or 'panic' if notified of own fencing
   + controller: more cluster properties support ISO 8601 time specifications
@@ -1863,7 +1899,8 @@
   + tools: new pcmk_simtimes tool compares crm_simulate profiling output
   + agents: SysInfo supports K, T, and P units in addition to Kb and G
 
-- Changes since Pacemaker-2.0.2
+## Changes since Pacemaker-2.0.2
+
   + fencer: do not block concurrent fencing actions on a device
             (regression since 2.0.2)
   + all: avoid Year 2038 issues
@@ -1902,14 +1939,16 @@
 # Pacemaker-2.0.2 (04 Jun 2019)
 - 288 commits with 225 files changed, 28494 insertions(+), 24465 deletions(-)
 
-- Features added since Pacemaker-2.0.1
+## Features added since Pacemaker-2.0.1
+
   + tools: crm_resource --validate can get resource parameters from command line
   + tools: crm_resource --clear prints out any cleared constraints
   + tools: new crm_rule tool for checking rule expiration (experimental)
   + tools: stonith_admin supports XML output for machine parsing (experimental)
   + resources: new HealthIOWait resource agent for node health tracking
 
-- Changes since Pacemaker-2.0.1
+## Changes since Pacemaker-2.0.1
+
   + Important security fixes for CVE-2018-16878, CVE-2018-16877, CVE-2019-3885
   + build: crm_report bug report URL is now configurable at build time
   + build: private libpengine/libtransitioner libraries combined as libpacemaker
@@ -1926,7 +1965,8 @@
 # Pacemaker-2.0.1 (4 Mar 2019)
 - 592 commits with 173 files changed, 9268 insertions(+), 5344 deletions(-)
 
-- Features added since Pacemaker-2.0.0
+## Features added since Pacemaker-2.0.0
+
   + Pacemaker bundles support podman for container management
   + fencing: SBD may be used in a cluster that has guest nodes or bundles
   + fencing: fencing history is synchronized among all nodes
@@ -1935,7 +1975,8 @@
   + tools: crm_resource --clear supports new --expired option
   + Pacemaker Remote: new options to restrict TLS Diffie-Hellman prime length
 
-- Changes since Pacemaker-2.0.0
+## Changes since Pacemaker-2.0.0
+
   + scheduler: clone notifications could be scheduled for a stopped
     Pacemaker Remote node and block all further cluster actions
     (regression since 2.0.0)
@@ -2022,7 +2063,8 @@
     pre-1.0 XML configuration schemas, pre-1.1.6 ticket state entries, and
     pre-1.1.7 failed recurring operation history entries)
 
-- Features added since Pacemaker-1.1.18
+## Features added since Pacemaker-1.1.18
+
   + The pacemaker daemons have been renamed to make logs more intuitive
     and easier to search
   + The default location of the Pacemaker detail log is now
@@ -2067,7 +2109,8 @@
   + libcrmcluster: prefer corosync name over ring0_addr
   + xml: allow local "kind" in resource_set within rsc_order
 
-- Changes since Pacemaker-1.1.18
+## Changes since Pacemaker-1.1.18
+
   + Restore systemd unit dependency on DBus (regression in 1.1.17)
   + CIB: handle mixed-case node names when modifying attributes (regression in 1.1.17)
   + scheduler: avoid crash when logging ignored failure timeout (regression in 1.1.17)
@@ -2117,7 +2160,8 @@
 # Pacemaker-1.1.18 (14 Nov 2017)
 - 644 commits with 167 files changed, 9753 insertions(+), 5596 deletions(-)
 
-- Features added since Pacemaker-1.1.17
+## Features added since Pacemaker-1.1.17
+
   + warnings are now logged when using legacy syntax to be removed in 2.0
   + agents: ifspeed agent is now installed when building
   + agents: ifspeed agent can optionally detect interface name from IP address
@@ -2131,7 +2175,8 @@
   + stonith-ng: support new fencing resource parameter pcmk_delay_base
   + tools: new crm_resource option --why explains why resources are stopped
 
-- Changes since Pacemaker-1.1.17
+## Changes since Pacemaker-1.1.17
+
   + many documentation improvements
   + agents: ifspeed properly calculates speed of hfi1 interfaces
   + agents: ClusterMon now interprets "update" less than 1000 as seconds
@@ -2186,7 +2231,8 @@
 # Pacemaker-1.1.17 (06 Jul 2017)
 - 539 commits with 177 files changed, 11525 insertions(+), 5036 deletions(-)
 
-- Features added since Pacemaker-1.1.16
+## Features added since Pacemaker-1.1.16
+
   + New "bundle" resource type for Docker container use cases (experimental)
   + New "PCMK_node_start_state" environment variable to start node in standby
   + New "value-source" rule expression attribute in location constraints to
@@ -2207,7 +2253,8 @@
   + tools: "crm_resource --cleanup" and "crm_failcount" can now take
     --operation and --interval options to operate on a single operation type
 
-- Changes since Pacemaker-1.1.16
+## Changes since Pacemaker-1.1.16
+
   + Fix multiple memory issues (leaks, use-after-free) in libraries
   + pengine: unmanaging a guest node resource puts guest in maintenance mode
   + cib: broadcasts of cib changes should always pass ACL checks
@@ -2255,7 +2302,8 @@
 # Pacemaker-1.1.16 (30 Nov 2016)
 - 382 commits with 145 files changed, 7200 insertions(+), 5621 deletions(-)
 
-- Features added since Pacemaker-1.1.15
+## Features added since Pacemaker-1.1.15
+
   + Location constraints may use rsc-pattern, with submatches expanded
   + node-health-base available with node-health-strategy=progressive
   + new Pacemaker Development document for working on pacemaker code base
@@ -2263,7 +2311,8 @@
   + resources: add resource agent for managing a node attribute
   + systemd: include socket units when listing all systemd agents
 
-- Changes since Pacemaker-1.1.15
+## Changes since Pacemaker-1.1.15
+
   + Important security fix for CVE-2016-7035
   + Logging is now synchronous when blackboxes are enabled
   + All python code except CTS is now compatible with python 2.6+ and 3.2+
@@ -2305,7 +2354,8 @@
 # Pacemaker-1.1.15 (21 Jun 2016)
 - 533 commits with 219 files changed, 6659 insertions(+), 3989 deletions(-)
 
-- Features added since Pacemaker-1.1.14
+## Features added since Pacemaker-1.1.14
+
   + Event-driven alerts allow scripts to be called after significant events
   + build: Some files moved from pacemaker package to pacemaker-cli for cleaner pacemaker-remote dependencies
   + build: ./configure --with-configdir argument for /etc/sysconfig, /etc/default, etc.
@@ -2318,7 +2368,8 @@
   + tools: attrd_updater --update-both/--update-delay options allow changing dampening value
   + tools: allow stonith_admin -H '*' to show history for all nodes
 
-- Changes since Pacemaker-1.1.14
+## Changes since Pacemaker-1.1.14
+
   + Fix multiple memory issues (leaks, use-after-free) in daemons, libraries and tools
   + Make various log messages more user-friendly
   + Improve FreeBSD and Hurd support
@@ -2352,7 +2403,8 @@
 # Pacemaker-1.1.14 (14 Jan 2016)
 - 724 commits with 179 files changed, 13142 insertions(+), 7695 deletions(-)
 
-- Features added since Pacemaker-1.1.13
+## Features added since Pacemaker-1.1.13
+
   + crm_resource: Indicate common reasons why a resource may not start after a cleanup
   + crm_resource: New --force-promote and --force-demote options for debugging
   + fencing: Support targeting fencing topologies by node name pattern or node attribute
@@ -2364,7 +2416,8 @@
   + remote: Resources that create guest nodes can be included in a group resource
   + remote: reconnect_interval option for remote nodes to delay reconnect after fence
 
-- Changes since Pacemaker-1.1.13
+## Changes since Pacemaker-1.1.13
+
   + improve support for building on FreeBSD and Debian
   + fix multiple memory issues (leaks, use-after-free, double free, use-of-NULL) in components and tools
   + cib: Do not terminate due to badly behaving clients
@@ -2419,7 +2472,8 @@
 # Pacemaker-1.1.13 (24 Jun 2015)
 - 750 commits with 156 files changed, 11323 insertions(+), 3725 deletions(-)
 
-- Features added since Pacemaker-1.1.12
+## Features added since Pacemaker-1.1.12
+
   + Allow fail-counts to be removed en-mass when the new attrd is in operation
   + attrd supports private attributes (not written to CIB)
   + crmd: Ensure a watchdog device is in use if stonith-watchdog-timeout is configured
@@ -2442,7 +2496,8 @@
   + tools: attrd_updater supports --query and --all options
   + tools: attrd_updater: Allow attributes to be set for other nodes
 
-- Changes since Pacemaker-1.1.12
+## Changes since Pacemaker-1.1.12
+
   + pengine: exclusive discovery implies rsc is only allowed on exclusive subset of nodes
   + acl: Correctly implement the 'reference' acl directive
   + acl: Do not delay evaluation of added nodes in some situations
@@ -2631,7 +2686,8 @@
 # Pacemaker-1.1.12 (22 Jul 2014)
 - 795 commits with 195 files changed, 13772 insertions(+), 6176 deletions(-)
 
-- Features added since Pacemaker-1.1.11
+## Features added since Pacemaker-1.1.11
+
   + Changes to the ACL schema to support nodes and unix groups
   + cib: Check ACLs prior to making the update instead of parsing the diff afterwards
   + cib: Default ACL support to on
@@ -2659,7 +2715,8 @@
   + xml: Enable resource sets in location constraints for 1.2 schema
   + xml: Support resources that require unfencing
 
-- Changes since Pacemaker-1.1.11
+## Changes since Pacemaker-1.1.11
+
   + acl: Authenticate pacemaker-remote requests with the node name as the client
   + acl: Read access must be explicitly granted
   + attrd: Ensure attribute dampening is always observed
@@ -2814,7 +2871,8 @@
 # Pacemaker-1.1.11 (13 Feb 2014)
 - 462 commits with 147 files changed, 6810 insertions(+), 4057 deletions(-)
 
-- Features added since Pacemaker-1.1.10
+## Features added since Pacemaker-1.1.10
+
 
   + attrd: A truly atomic version of attrd for use where CPG is used for cluster communication
   + cib: Allow values to be added/updated and removed in a single update
@@ -2836,7 +2894,8 @@
   + pengine: Distinguish between the agent being missing and something the agent needs being missing
   + remote: Properly version the remote connection protocol
 
-- Changes since Pacemaker-1.1.10
+## Changes since Pacemaker-1.1.10
+
 
   + Bug rhbz#1011618 - Consistently use 'Slave' as the role for unpromoted master/slave resources
   + Bug rhbz#1057697 - Use native DBus library for systemd and upstart support to avoid problematic use of threads
@@ -2912,7 +2971,8 @@
 # Pacemaker-1.1.10 (26 Jul 2013)
 - 602 commits with 143 files changed, 8162 insertions(+), 5159 deletions(-)
 
-- Features added since Pacemaker-1.1.9
+## Features added since Pacemaker-1.1.9
+
   + Core: Convert all exit codes to positive errno values
   + crm_error: Add the ability to list and print error symbols
   + crm_resource: Allow individual resources to be reprobed
@@ -2924,7 +2984,8 @@
   + Turn off auto-respawning of systemd services when the cluster starts them
   + Bug cl#5128 - pengine: Support maintenance mode for a single node
 
-- Changes since Pacemaker-1.1.9
+## Changes since Pacemaker-1.1.9
+
   + crmd: cib: stonithd: Memory leaks resolved and improved use of glib reference counting
   + attrd: Fixes deleted attributes during dc election
   + Bug cf#5153 - Correctly display clone failcounts in crm_mon
@@ -2986,7 +3047,9 @@
 
 # Pacemaker-1.1.9 (08 Mar 2013)
 - 731 commits with 1301 files changed, 92909 insertions(+), 57455 deletions(-)
-- Features added in Pacemaker-1.1.9
+
+## Features added in Pacemaker-1.1.9
+
   + corosync: Allow cman and corosync 2.0 nodes to use a name other than uname()
   + corosync: Use queues to avoid blocking when sending CPG messages
   + ipc: Compress messages that exceed the configured IPC message limit
@@ -2999,7 +3062,8 @@
   + pengine: Support for resource container
   + pengine: Support resources that require unfencing before start
 
-- Changes since Pacemaker-1.1.8
+## Changes since Pacemaker-1.1.8
+
   + attrd: Correctly handle deletion of non-existant attributes
   + Bug cl#5135 - Improved detection of the active cluster type
   + Bug rhbz#913093 - Use crm_node instead of uname
@@ -3088,7 +3152,8 @@
 - The crm shell has become a separate project and no longer included with Pacemaker
 - All daemons/tools now have a unified set of error codes based on errno.h (see crm_error)
 
-- Changes since Pacemaker-1.1.7
+## Changes since Pacemaker-1.1.7
+
   + Core: Bug cl#5032 - Rewrite the iso8601 date handling code
   + Core: Correctly extract the version details from a diff
   + Core: Log blackbox contents, if enabled, when an error occurs
@@ -3161,7 +3226,8 @@
 # Pacemaker-1.1.7 (28 Mar 2012)
 - 513 commits with 1171 files changed, 90472 insertions(+), 19368 deletions(-)
 
-- Changes since Pacemaker-1.1.6.1
+## Changes since Pacemaker-1.1.6.1
+
   + ais: Prepare for corosync versions using IPC from libqb
   + cib: Correctly shutdown in the presence of peers without relying on timers
   + cib: Don't halt disk writes if the previous digest is missing
@@ -3247,7 +3313,8 @@
 # Pacemaker-1.1.6 (31 Aug 2011)
 - 376 commits with 1761 files changed, 36259 insertions(+), 140578 deletions(-)
 
-- Changes since Pacemaker-1.1.5
+## Changes since Pacemaker-1.1.5
+
   + ais: check for retryable errors when dispatching AIS messages
   + ais: Correctly disconnect from Corosync and Cman based clusters
   + ais: Followup to previous patch - Ensure we drain the corosync queue of messages when Glib tells us there is input
@@ -3327,7 +3394,8 @@
 # Pacemaker-1.1.5 (11 Feb 2011)
 - 184 commits with 605 files changed, 46103 insertions(+), 26417 deletions(-)
 
-- Changes since Pacemaker-1.1.4
+## Changes since Pacemaker-1.1.4
+
   + Add the ability to delegate sub-sections of the cluster to non-root users via ACLs
     Needs to be enabled at compile time, not enabled by default.
   + ais: Bug lf#2550 - Report failed processes immediately
@@ -3362,7 +3430,8 @@
 # Pacemaker-1.1.4 (20 Oct 2010)
 - 169 commits with 772 files changed, 56172 insertions(+), 39309 deletions(-)
 
-- Changes since Pacemaker-1.1.3
+## Changes since Pacemaker-1.1.3
+
   + Italian translation of Clusters from Scratch
   + Significant performance enhancements to the Policy Engine and CIB
   + cib: Bug lf#2506 - Don't remove client's when notifications fail, they might just be too big
@@ -3422,7 +3491,8 @@
 # Pacemaker-1.1.3 (21 Sep 2010)
 - 352 commits with 481 files changed, 14130 insertions(+), 11156 deletions(-)
 
-- Changes since Pacemaker-1.1.2.1
+## Changes since Pacemaker-1.1.2.1
+
   + ais: Bug lf#2401 - Improved processing when the peer crmd processes join/leave
   + ais: Correct the logic for conecting to plugin based clusters
   + ais: Do not supply a process list in mcp-mode
@@ -3531,7 +3601,9 @@
 
 # Pacemaker-1.1.2 (12 May 2010)
 - 339 commits with 708 files changed, 37918 insertions(+), 10584 deletions(-)
-- Changes since Pacemaker-1.1.1
+
+## Changes since Pacemaker-1.1.1
+
   + ais: Do not count votes from offline nodes and calculate current votes before sending quorum data
   + ais: Ensure the list of active processes sent to clients is always up-to-date
   + ais: Look for the correct conf variable for turning on file logging
@@ -3581,7 +3653,9 @@
 
 # Pacemaker-1.0.7 (18 Jan 2010)
 - 193 commits with 220 files changed, 15933 insertions(+), 8782 deletions(-)
-- Changes since 1.0.5-4
+
+## Changes since 1.0.5-4
+
   + pengine: Bug 2213 - Ensure groups process location constraints so that clone-node-max works for cloned groups
   + pengine: Bug lf#2153 - non-clones should not restart when clones stop/start on other nodes
   + pengine: Bug lf#2209 - Clone ordering should be able to prevent startup of dependent clones
@@ -3747,7 +3821,9 @@
 
 # Pacemaker-1.0.4 (04 Jun 2009)
 - 209 commits with 266 files changed, 12010 insertions(+), 8276 deletions(-)
-- Changes since Pacemaker-1.0.3
+
+## Changes since Pacemaker-1.0.3
+
   + (bnc#488291): ais: do not rely on byte endianness on ptr cast
   + (bnc#507255): Tools: crm: delete rsc/op_defaults (these meta_attributes are killing me)
   + (bnc#507255): Tools: crm: import properly rsc/op_defaults
@@ -3798,7 +3874,9 @@
 
 # Pacemaker-1.0.3 (08 Apr 2009)
 - 383 commits with 329 files changed, 15471 insertions(+), 15119 deletions(-)
-- Changes since Pacemaker-1.0.2
+
+## Changes since Pacemaker-1.0.2
+
   + Added tag SLE11-HAE-GMC for changeset 9196be9830c2
   + ais plugin: Fix quorum calculation (bnc#487003)
   + ais: Another memory fix leak in error path
@@ -3915,7 +3993,9 @@
 
 # Pacemaker-1.0.2 (16 Feb 2009)
 - 441 commits with 639 files changed, 20871 insertions(+), 21594 deletions(-)
-- Changes since Pacemaker-1.0.1
+
+## Changes since Pacemaker-1.0.1
+
   + (bnc#450815): Tools: crm cli: do not generate id for the operations tag
   + ais: Add support for the new AIS IPC layer
   + ais: Always set header.error to the correct default: SA_AIS_OK
@@ -4064,7 +4144,9 @@
 
 # Pacemaker-1.0.1 (18 Nov 2008)
 - 170 commits with 816 files changed, 7633 insertions(+), 6286 deletions(-)
-- Changes since Pacemaker-1.0.1
+
+## Changes since Pacemaker-1.0.1
+
   + ais: Allow the crmd to get callbacks whenever a node state changes
   + ais: Create an option for starting the mgmtd daemon automatically
   + ais: Ensure HA_RSCTMP exists for use by resource agents
@@ -4125,7 +4207,9 @@
 
 # Pacemaker-1.0.0 (16 Oct 2008)
 - 261 commits with 3021 files changed, 244985 insertions(+), 111596 deletions(-)
-- Changes since f805e1b30103
+
+## Changes since f805e1b30103
+
   + add the crm cli program
   + ais: Move the service id definition to a common location and make sure it is always used
   + build: rename hb2openais.sh to .in and replace paths with vars
@@ -4189,7 +4273,9 @@
 
 # Pacemaker-0.7.3 (22 Sep 2008)
 - 133 commits with 89 files changed, 7492 insertions(+), 1125 deletions(-)
-- Changes since f805e1b30103
+
+## Changes since f805e1b30103
+
   + Tools: add the crm cli program
   + Core: cl_malloc and friends were removed from Heartbeat
   + Core: Only call xmlCleanupParser() if we parsed anything.  Doing so unconditionally seems to cause a segfault
@@ -4218,7 +4304,9 @@
 
 # Pacemaker-0.7.1 (20 Aug 2008)
 - 184 commits with 513 files changed, 43408 insertions(+), 43783 deletions(-)
-- Changes since 0.7.0-19
+
+## Changes since 0.7.0-19
+
   + Fix compilation when GNUTLS isn't found
   + admin: Fix use-after-free in crm_mon
   + Build: Remove testing code that prevented heartbeat-only builds
@@ -4273,7 +4361,9 @@
 
 # Pacemaker-0.7.0-19 (18 Jul 2008)
 - 108 commits with 216 files changed, 4632 insertions(+), 4173 deletions(-)
-- Changes added since unstable-0.7
+
+## Changes added since unstable-0.7
+
   + admin: Fix use-after-free in crm_mon
   + ais: Change the tag for the ais plugin to "pacemaker" (used in openais.conf)
   + ais: Log terminated processes as an error
@@ -4298,7 +4388,9 @@
 
 # Pacemaker-0.7.0 (25 Jun 2008)
 - 439 commits with 676 files changed, 41310 insertions(+), 52071 deletions(-)
-- Changes added since stable-0.6
+
+## Changes added since stable-0.6
+
   + A new tool for setting up and invoking CTS
   + Admin: All tools now use --node (-N) for specifying node unames
   + Admin: All tools now use --xml-file (-x) and --xml-text (-X) for specifying where to find XML blobs
@@ -4365,7 +4457,9 @@
 
 # Pacemaker-0.6.5 (19 Jun 2008)
 - 48 commits with 37 files changed, 1204 insertions(+), 234 deletions(-)
-- Changes since Pacemaker-0.6.4
+
+## Changes since Pacemaker-0.6.4
+
   + Admin: Repair the ability to delete failcounts
   + ais: Audit IPC handling between the AIS plugin and CRM processes
   + ais: Have the plugin create needed /var/lib directories
@@ -4387,7 +4481,9 @@
 
 # Pacemaker-0.6.4 (22 May 2008)
 - 55 commits with 199 files changed, 7103 insertions(+), 12378 deletions(-)
-- Changes since Pacemaker-0.6.3
+
+## Changes since Pacemaker-0.6.3
+
   + crmd: Bug LF:1881 LF:1882 - Overhaul the logic for operation cancelation and deletion
   + crmd: Bug LF:1894 - Make sure cancelled recurring operations are cleaned out from the CIB
   + pengine: Bug N:387749 - Colocation with clones causes unnecessary clone instance shuffling
@@ -4403,7 +4499,9 @@
 
 # Pacemaker-0.6.3 (23 Apr 2008)
 - 117 commits with 354 files changed, 19094 insertions(+), 11338 deletions(-)
-- Changes since Pacemaker-0.6.2
+
+## Changes since Pacemaker-0.6.2
+
   + Admin: Bug LF:1848 - crm_resource - Pass set name and id to delete_resource_attr() in the correct order
   + Build: SNMP has been moved to the management/pygui project
   + crmd: Bug LF1837 - Unmanaged resources prevent crmd from shutting down
@@ -4450,7 +4548,9 @@
 
 # Pacemaker-0.6.2 (14 Feb 2008)
 - 11 commits with 7 files changed, 58 insertions(+), 18 deletions(-)
-- Changes since Pacemaker-0.6.1
+
+## Changes since Pacemaker-0.6.1
+
   + haresources2cib.py: set default-action-timeout to the default (20s)
   + haresources2cib.py: update ra parameters lists
   + Medium: SNMP: Allow the snmp subagent to be built (patch from MATSUDA, Daiki)
@@ -4458,7 +4558,9 @@
 
 # Pacemaker-0.6.1 (12 Feb 2008)
 - 25 commits with 37 files changed, 1323 insertions(+), 227 deletions(-)
-- Changes since Pacemaker-0.6.0
+
+## Changes since Pacemaker-0.6.0
+
   + CIB: Ensure changes to top-level attributes (like admin_epoch) cause a disk write
   + CIB: Ensure the archived file hits the disk before returning
   + CIB: Repair the ability to do 'atomic increment' updates (value="value++")
@@ -4499,7 +4601,9 @@
     + Heartbeat #1750 - ipc_bufpool_update: magic number in head does not match
     + OpenAIS   #1793 - Assertion failure in memb_state_gather_enter()
     + OpenAIS   #1796 - Cluster message corruption
-- Changes since Heartbeat-2.1.2-24
+
+## Changes since Heartbeat-2.1.2-24
+
   + Add OpenAIS support
   + Admin: crm_uuid - Look in the right place for Heartbeat UUID files
   + admin: Exit and indicate a problem if the crmd exits while crmadmin is performing a query
