@@ -770,7 +770,7 @@ exit 0
 
 %license licenses/GPLv2
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
@@ -839,7 +839,7 @@ exit 0
 
 %license licenses/GPLv2
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/blackbox
@@ -858,13 +858,13 @@ exit 0
 %{_libdir}/libstonithd.so.*
 %license licenses/LGPLv2.1
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files cluster-libs
 %{_libdir}/libcrmcluster.so.*
 %license licenses/LGPLv2.1
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files -n %{python_name}-%{name}
 %{python3_sitelib}/pacemaker/
@@ -872,7 +872,7 @@ exit 0
 %exclude %{python3_sitelib}/pacemaker/_cts/
 %license licenses/LGPLv2.1
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files remote
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
@@ -890,7 +890,7 @@ exit 0
 %{_mandir}/man8/pacemaker-remoted.*
 %license licenses/GPLv2
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files doc
 %doc %{pcmk_docdir}
@@ -904,7 +904,7 @@ exit 0
 
 %license licenses/GPLv2
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files -n %{pkgname_pcmk_libs}-devel
 %{_includedir}/pacemaker
@@ -920,7 +920,7 @@ exit 0
 %{_libdir}/pkgconfig/*pacemaker*.pc
 %license licenses/LGPLv2.1
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files schemas
 %license licenses/GPLv2
@@ -934,4 +934,4 @@ exit 0
 %changelog
 
 * PACKAGE_DATE ClusterLabs <admin@clusterlabs.org> PACKAGE_VERSION
- - See included ChangeLog file for details
+ - See included ChangeLog.md file for details

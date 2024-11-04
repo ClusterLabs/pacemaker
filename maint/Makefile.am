@@ -73,7 +73,7 @@ changelog: require_last_release
 	@printf "%s\n\n%s\n"						\
 		"$$($(MAKE) $(AM_MAKEFLAGS) changes			\
 			| grep -v 'make\(\[[0-9]*\]\)\?:')"		\
-		"$$(cat ../ChangeLog)" > ../ChangeLog
+		"$$(cat ../ChangeLog.md)" > ../ChangeLog.md
 
 .PHONY: authors
 authors: require_last_release
