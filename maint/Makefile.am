@@ -8,7 +8,7 @@
 #
 
 # Define release-related variables
-include $(abs_srcdir)/../mk/release.mk
+include $(top_srcdir)/mk/release.mk
 include $(top_srcdir)/mk/common.mk
 
 noinst_SCRIPTS		= bumplibs
@@ -37,11 +37,8 @@ require_last_release:
 
 .PHONY: summary
 summary: require_last_release
-	@printf "* %s %s <%s> %s\n" "$$(date +'%a %b %d %Y')"		\
-		"$$("$(GIT)" config user.name)"				\
-		"$$("$(GIT)" config user.email)"			\
-		"$(NEXT_RELEASE)"
-	@printf "\055 %d commits with%s\n"				\
+	@printf "# Pacemaker-%s (%s)\n* %d commits with%s\n"		\
+		"$(NEXT_RELEASE)" "$$(date +'%d %b %Y')"		\
 		"$$("$(GIT)" log --pretty=oneline --no-merges		\
 			$(LAST_RELEASE)..HEAD | wc -l)"			\
 		"$$("$(GIT)" diff $(LAST_RELEASE)..HEAD --shortstat	\
@@ -49,24 +46,29 @@ summary: require_last_release
 
 .PHONY: changes
 changes: summary
-	@printf "\n- Features added since $(LAST_RELEASE)\n"
+	@printf "\n## Features added since $(LAST_RELEASE)\n\n"
 	@"$(GIT)" log --pretty=format:'%s' --no-merges			\
 		--abbrev-commit $(LAST_RELEASE)..HEAD			\
-		| sed -n -e 's/^ *Feature: */  + /p' | sort -uf
-	@printf "\n- Fixes since $(LAST_RELEASE)\n"
+		| sed -n -e 's/^ *Feature: */* /p' | sort -uf		\
+		| sed -e 's/^\( *[-+*] \)\([^:]*:\)\(.*\)$$/\1**\2**\3/'	\
+		      -e 's/\([ (]\)\([A-Za-z0-9]*_[^ ,]*\)/\1`\2`/g'
+	@printf "\n## Fixes since $(LAST_RELEASE)\n\n"
 	@"$(GIT)" log --pretty=format:'%s' --no-merges			\
 		--abbrev-commit $(LAST_RELEASE)..HEAD			\
-		| sed -n -e 's/^ *\(Fix\|High\|Bug\): */  + /p' | sed	\
-		-e 's/\(cib\|pacemaker-based\|based\):/CIB:/'		\
-		-e 's/\(lrmd\|pacemaker-execd\|execd\):/executor:/'	\
-		-e 's/\(crmd\|pacemaker-controld\|controld\):/controller:/'		\
-		-e 's/\(Fencing\|stonithd?\|pacemaker-fenced\|fenced\):/fencing:/'	\
-		-e 's/\(PE\|pengine\|pacemaker-schedulerd\|schedulerd\):/scheduler:/'	\
-		| sort -uf
-	@printf "\n- Public API changes since $(LAST_RELEASE)\n"
+		| sed -n -e 's/^ *\(Fix\|High\|Bug\): */* /p'		\
+		| sed -e 's/\(\(pacemaker-\)?based\):/CIB:/'		\
+		      -e 's/\(\(pacemaker-\)?execd\):/executor:/'	\
+		      -e 's/\(\(pacemaker-\)?controld\):/controller:/'	\
+		      -e 's/\(\(pacemaker-\)?fenced\):/fencing:/'	\
+		| sort -uf						\
+		| sed -e 's/^\( *[-+*] \)\([^:]*:\)\(.*\)$$/\1**\2**\3/'	\
+		      -e 's/\([ (]\)\([A-Za-z0-9]*_[^ ,]*\)/\1`\2`/g'
+	@printf "\n## Public API changes since $(LAST_RELEASE)\n\n"
 	@"$(GIT)" log --pretty=format:'%s' --no-merges			\
 		--abbrev-commit $(LAST_RELEASE)..HEAD			\
-		| sed -n -e 's/^ *API: */  + /p' | sort -uf
+		| sed -n -e 's/^ *API: */* /p' | sort -uf		\
+		| sed -e 's/^\( *[-+*] \)\([^:]*:\)\(.*\)$$/\1**\2**\3/'	\
+		      -e 's/\([ (]\)\([A-Za-z0-9]*_[^ ,]*\)/\1`\2`/g'
 
 .PHONY: changelog
 changelog: require_last_release
