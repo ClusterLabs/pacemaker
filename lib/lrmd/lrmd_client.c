@@ -878,15 +878,15 @@ lrmd_api_is_connected(lrmd_t * lrmd)
  *                              standard vs. pacemaker remote);
  *                              also propagated to the command XML
  * \param[in]     call_options  Call options to pass to server when sending
- * \param[in]     expect_reply  If TRUE, wait for a reply from the server;
- *                              must be TRUE for IPC (as opposed to TLS) clients
+ * \param[in]     expect_reply  If true, wait for a reply from the server;
+ *                              must be true for IPC (as opposed to TLS) clients
  *
  * \return pcmk_ok on success, -errno on error
  */
 static int
 lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
                   xmlNode **output_data, int timeout,
-                  enum lrmd_call_options options, gboolean expect_reply)
+                  enum lrmd_call_options options, bool expect_reply)
 {
     int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -1786,7 +1786,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     crm_xml_add(data, PCMK__XA_LRMD_CLASS, class);
     crm_xml_add(data, PCMK__XA_LRMD_PROVIDER, provider);
     crm_xml_add(data, PCMK__XA_LRMD_TYPE, type);
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_REG, data, NULL, 0, options, TRUE);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_REG, data, NULL, 0, options, true);
     pcmk__xml_free(data);
 
     return rc;
@@ -1800,7 +1800,7 @@ lrmd_api_unregister_rsc(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_option
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_UNREG, data, NULL, 0, options, TRUE);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_UNREG, data, NULL, 0, options, true);
     pcmk__xml_free(data);
 
     return rc;
@@ -1851,7 +1851,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options, TRUE);
+    lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options, true);
     pcmk__xml_free(data);
 
     if (!output) {
@@ -1908,7 +1908,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
         crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     }
     rc = lrmd_send_command(lrmd, LRMD_OP_GET_RECURRING, data, &output_xml,
-                           timeout_ms, options, TRUE);
+                           timeout_ms, options, true);
     if (data) {
         pcmk__xml_free(data);
     }
@@ -2104,7 +2104,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
         hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
     }
 
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, TRUE);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, true);
     pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
@@ -2131,7 +2131,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout,
-                           lrmd_opt_notify_orig_only, TRUE);
+                           lrmd_opt_notify_orig_only, true);
     pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
@@ -2149,7 +2149,7 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ACTION, action);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     crm_xml_add_ms(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, TRUE);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, true);
     pcmk__xml_free(data);
     return rc;
 }
