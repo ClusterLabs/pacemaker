@@ -1,4 +1,4 @@
-* Thu Oct 31 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9
+# Pacemaker-2.1.9 (31 Oct 2024)
 - 169 commits with 252 files changed, 4498 insertions(+), 2259 deletions(-)
 
 - Features added since Pacemaker-2.1.8
@@ -34,7 +34,7 @@
   + libstonithd: deprecate enum stonith_call_options value st_opt_scope_local
   + libstonithd: deprecate enum stonith_call_options value st_opt_verbose
 
-* Thu Aug 08 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8
+# Pacemaker-2.1.8 (08 Aug 2024)
 - 2559 commits with 511 files changed, 46898 insertions(+), 23417 deletions(-)
 
 - Features added since Pacemaker-2.1.7
@@ -516,7 +516,7 @@
     T_STONITH_NOTIFY_FENCE, T_STONITH_NOTIFY_HISTORY, and
     T_STONITH_NOTIFY_HISTORY_SYNCED
 
-* Tue Dec 19 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7
+# Pacemaker-2.1.7 (19 Dec 2023)
 - 1388 commits with 358 files changed, 23771 insertions(+), 17219 deletions(-)
 
 - Features added since Pacemaker-2.1.6
@@ -949,7 +949,7 @@
   + libpe_status: deprecate pe_rsc_stop_unexpected
   + libpe_status: deprecate pe_rsc_unique
 
-* Wed May 24 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.6
+# Pacemaker-2.1.6 (24 May 2023)
 - 1124 commits with 402 files changed, 25220 insertions(+), 14751 deletions(-)
 
 - Features added since Pacemaker-2.1.5
@@ -1100,7 +1100,7 @@
   + libpe_status: first argument to pe_find_node_id() is now const
   + libpe_status: first argument to resource_object_functions_t:is_filtered() is now const
 
-* Wed Dec 7 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.5
+# Pacemaker-2.1.5 (7 Dec 2022)
 - 1287 commits with 447 files changed, 33546 insertions(+), 21518 deletions(-)
 
 - Features added since Pacemaker-2.1.4
@@ -1285,9 +1285,8 @@
   + libstonithd: params argument to stonith_api_operations_t:validate() is now
                  const
 
-* Mon Jun 13 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.4
-- Changesets: 17
-- Diff: 9 files changed, 52 insertions(+), 18 deletions(-)
+# Pacemaker-2.1.4 (13 Jun 2022)
+- 17 commits with 9 files changed, 52 insertions(+), 18 deletions(-)
 
 - Fixes since Pacemaker-2.1.3
   + fencing: get target-by-attribute working again (regression in 2.1.3)
@@ -1298,9 +1297,8 @@
   + fencing: delegate shouldn't matter when checking equivalent fencing
   + tools: fix CSS syntax error in crm_mon --output-as=html
 
-* Wed Jun 1 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.3
-- Changesets: 814
-- Diff: 332 files changed, 23435 insertions(+), 12137 deletions(-)
+# Pacemaker-2.1.3 (1 Jun 2022)
+- 814 commits with 332 files changed, 23435 insertions(+), 12137 deletions(-)
 
 - Features added since Pacemaker-2.1.2
   + Internal failures of resource actions (such as an OCF agent not being
@@ -1387,9 +1385,8 @@
   + libstonithd: stonith_api_del_notification() with NULL second argument
                  removes all notifications
 
-* Tue Nov 23 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.2
-- Changesets: 462
-- Diff: 223 files changed, 16518 insertions(+), 11743 deletions(-)
+# Pacemaker-2.1.2 (23 Nov 2021)
+- 462 commits with 223 files changed, 16518 insertions(+), 11743 deletions(-)
 
 - Features added since Pacemaker-2.1.1
   + build: when built with --with-initdir, Pacemaker uses the value to find
@@ -1446,10 +1443,8 @@
   + libstonithd: add opaque member to stonith_event_t
   + libstonithd: add opaque member to stonith_callback_data_t
 
-* Thu Sep 09 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.1
-- Changesets: 231
-- Diff:
- 102 files changed, 4912 insertions(+), 3428 deletions(-)
+# Pacemaker-2.1.1 (09 Sep 2021)
+- 231 commits with 102 files changed, 4912 insertions(+), 3428 deletions(-)
 
 - Features added since Pacemaker-2.1.0
   + enhanced support for OCF Resource Agent API 1.1 standard
@@ -1500,9 +1495,8 @@
   + libcrmcommon: add pcmk_pacemakerd_api_shutdown()
   + libpe_status: deprecate enum pe_print_options
 
-* Tue Jun 08 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.0
-- Changesets: 849
-- Diff: 327 files changed, 22089 insertions(+), 12633 deletions(-)
+# Pacemaker-2.1.0 (08 Jun 2021)
+- 849 commits with 327 files changed, 22089 insertions(+), 12633 deletions(-)
 
 - Features added since Pacemaker-2.0.5
   + support for OCF Resource Agent API 1.1 standard
@@ -1708,9 +1702,8 @@
   + libpe_status: deprecate RSC_ROLE_SLAVE_S string constant
   + libpe_status: ignore ->parameter() resource object function's create argument
 
-* Wed Dec 02 2020 Chris Lumens <clumens@redhat.com> Pacemaker-2.0.5
-- Changesets: 534
-- Diff: 286 files changed, 23133 insertions(+), 14626 deletions(-)
+# Pacemaker-2.0.5 (02 Dec 2020)
+- 534 commits with 286 files changed, 23133 insertions(+), 14626 deletions(-)
 
 - Features added since Pacemaker-2.0.4
   + configuration: Add type="integer" to rule elements, allowing for
@@ -1781,9 +1774,8 @@
   + tools: Use bash in cibsecret
   + xml: Mark new crm_mon attributes as optional in schema
 
-* Mon Jun 15 2020 Klaus Wenninger <klaus.wenninger@aon.at> Pacemaker-2.0.4
-- Changesets: 515
-- Diff: 269 files changed, 22560 insertions(+), 13726 deletions(-)
+# Pacemaker-2.0.4 (15 Jun 2020)
+- 515 commits with 269 files changed, 22560 insertions(+), 13726 deletions(-)
 
 - Features added since Pacemaker-2.0.3
   + build: Add support for glib-based unit tests.
@@ -1854,9 +1846,8 @@
   + fencing: avoid possible use-of-NULL when parsing metadata
   + fencing: Remove dangling 'pending' for completed DC fencing. (CLBZ#5401)
 
-* Mon Nov 25 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.3
-- Changesets: 601
-- Diff: 227 files changed, 17862 insertions(+), 10471 deletions(-)
+# Pacemaker-2.0.3 (25 Nov 2019)
+- 601 commits with 227 files changed, 17862 insertions(+), 10471 deletions(-)
 
 - Features added since Pacemaker-2.0.2
   + controller: new 'fence-reaction' cluster option specifies whether local node
@@ -1908,9 +1899,8 @@
   + agents: calculate #health_disk correctly in SysInfo
   + agents: handle run-as-user properly in ClusterMon
 
-* Tue Jun 04 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.2
-- Changesets: 288
-- Diff: 225 files changed, 28494 insertions(+), 24465 deletions(-)
+# Pacemaker-2.0.2 (04 Jun 2019)
+- 288 commits with 225 files changed, 28494 insertions(+), 24465 deletions(-)
 
 - Features added since Pacemaker-2.0.1
   + tools: crm_resource --validate can get resource parameters from command line
@@ -1933,9 +1923,8 @@
   + libstonithd: handle more than 64KB output from fence agents
 
 
-* Mon Mar 4 2019 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.1
-- Changesets: 592
-- Diff: 173 files changed, 9268 insertions(+), 5344 deletions(-)
+# Pacemaker-2.0.1 (4 Mar 2019)
+- 592 commits with 173 files changed, 9268 insertions(+), 5344 deletions(-)
 
 - Features added since Pacemaker-2.0.0
   + Pacemaker bundles support podman for container management
@@ -2006,9 +1995,8 @@
   + tools: crm_simulate resource history uses same name as live cluster would
 
 
-* Fri Jul 6 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0
-- Changesets: 885
-- Diff:       549 files changed, 89865 insertions(+), 95100 deletions(-)
+# Pacemaker-2.0.0 (6 Jul 2018)
+- 885 commits with 549 files changed, 89865 insertions(+), 95100 deletions(-)
 
 - Deprecated features removed since Pacemaker-1.1.18
   + All of these have newer forms, and the cluster will automatically convert
@@ -2126,10 +2114,8 @@
   https://projects.clusterlabs.org/w/projects/pacemaker/pacemaker_2.0_changes/
 
 
-* Tue Nov 14 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18
-- Update source tarball to revision: a9fbd15
-- Changesets: 644
-- Diff:       167 files changed, 9753 insertions(+), 5596 deletions(-)
+# Pacemaker-1.1.18 (14 Nov 2017)
+- 644 commits with 167 files changed, 9753 insertions(+), 5596 deletions(-)
 
 - Features added since Pacemaker-1.1.17
   + warnings are now logged when using legacy syntax to be removed in 2.0
@@ -2197,10 +2183,8 @@
   + libcrmservice: parse long description correctly for LSB meta-data
 
 
-* Thu Jul 06 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17
-- Update source tarball to revision: 301bc44
-- Changesets: 539
-- Diff:       177 files changed, 11525 insertions(+), 5036 deletions(-)
+# Pacemaker-1.1.17 (06 Jul 2017)
+- 539 commits with 177 files changed, 11525 insertions(+), 5036 deletions(-)
 
 - Features added since Pacemaker-1.1.16
   + New "bundle" resource type for Docker container use cases (experimental)
@@ -2268,10 +2252,8 @@
   + tools: properly ignore version with crm_diff --no-version
 
 
-* Wed Nov 30 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.16
-- Update source tarball to revision: 76876b3
-- Changesets: 382
-- Diff:       145 files changed, 7200 insertions(+), 5621 deletions(-)
+# Pacemaker-1.1.16 (30 Nov 2016)
+- 382 commits with 145 files changed, 7200 insertions(+), 5621 deletions(-)
 
 - Features added since Pacemaker-1.1.15
   + Location constraints may use rsc-pattern, with submatches expanded
@@ -2320,10 +2302,8 @@
   + tools: avoid matching other process with same PID in ClusterMon
 
 
-* Tue Jun 21 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.15
-- Update source tarball to revision: 32fa6a5
-- Changesets: 533
-- Diff:       219 files changed, 6659 insertions(+), 3989 deletions(-)
+# Pacemaker-1.1.15 (21 Jun 2016)
+- 533 commits with 219 files changed, 6659 insertions(+), 3989 deletions(-)
 
 - Features added since Pacemaker-1.1.14
   + Event-driven alerts allow scripts to be called after significant events
@@ -2369,10 +2349,8 @@
   + tools: crm_resource --restart handles groups, target-roles and moving resources better
 
 
-* Thu Jan 14 2016 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.14
-- Update source tarball to revision: f0b585a
-- Changesets: 724
-- Diff:        179 files changed, 13142 insertions(+), 7695 deletions(-)
+# Pacemaker-1.1.14 (14 Jan 2016)
+- 724 commits with 179 files changed, 13142 insertions(+), 7695 deletions(-)
 
 - Features added since Pacemaker-1.1.13
   + crm_resource: Indicate common reasons why a resource may not start after a cleanup
@@ -2438,10 +2416,8 @@
   + upstart: Ensure pending structs are correctly unreferenced
 
 
-* Wed Jun 24 2015 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.13
-- Update source tarball to revision: 2a1847e
-- Changesets: 750
-- Diff:       156 files changed, 11323 insertions(+), 3725 deletions(-)
+# Pacemaker-1.1.13 (24 Jun 2015)
+- 750 commits with 156 files changed, 11323 insertions(+), 3725 deletions(-)
 
 - Features added since Pacemaker-1.1.12
   + Allow fail-counts to be removed en-mass when the new attrd is in operation
@@ -2652,10 +2628,8 @@
   + xml: Prevent potential use-of-NULL
 
 
-* Tue Jul 22 2014 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.12
-- Update source tarball to revision: 93a037d
-- Changesets: 795
-- Diff:       195 files changed, 13772 insertions(+), 6176 deletions(-)
+# Pacemaker-1.1.12 (22 Jul 2014)
+- 795 commits with 195 files changed, 13772 insertions(+), 6176 deletions(-)
 
 - Features added since Pacemaker-1.1.11
   + Changes to the ACL schema to support nodes and unix groups
@@ -2837,10 +2811,8 @@
   + xml: Update xml validation to allow '<node type=remote />'
 
 
-* Thu Feb 13 2014 David Vossel <davidvossel@gmail.com> Pacemaker-1.1.11
-- Update source tarball to revision: 33f9d09
-- Changesets: 462
-- Diff:       147 files changed, 6810 insertions(+), 4057 deletions(-)
+# Pacemaker-1.1.11 (13 Feb 2014)
+- 462 commits with 147 files changed, 6810 insertions(+), 4057 deletions(-)
 
 - Features added since Pacemaker-1.1.10
 
@@ -2937,10 +2909,8 @@
   + services: Fixes segfault associated with cancelling in-flight recurring operations.
   + services: Reset the scheduling policy and priority for lrmd's children without replying on SCHED_RESET_ON_FORK
 
-* Fri Jul 26 2013 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.10
-- Update source tarball to revision: ab2e209
-- Changesets: 602
-- Diff:       143 files changed, 8162 insertions(+), 5159 deletions(-)
+# Pacemaker-1.1.10 (26 Jul 2013)
+- 602 commits with 143 files changed, 8162 insertions(+), 5159 deletions(-)
 
 - Features added since Pacemaker-1.1.9
   + Core: Convert all exit codes to positive errno values
@@ -3014,12 +2984,8 @@
   + xml: Check for and replace non-printing characters with their octal equivalent while exporting xml text
   + xml: Prevent lockups by setting a more reliable buffer allocation strategy
 
-* Fri Mar 08 2013 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.9
-- Update source tarball to revision: 7e42d77
-- Statistics:
-  Changesets: 731
-  Diff:       1301 files changed, 92909 insertions(+), 57455 deletions(-)
-
+# Pacemaker-1.1.9 (08 Mar 2013)
+- 731 commits with 1301 files changed, 92909 insertions(+), 57455 deletions(-)
 - Features added in Pacemaker-1.1.9
   + corosync: Allow cman and corosync 2.0 nodes to use a name other than uname()
   + corosync: Use queues to avoid blocking when sending CPG messages
@@ -3113,12 +3079,8 @@
   + systemd: Gracefully handle unexpected DBus return types
   + Replace the use of the insecure mktemp(3) with mkstemp(3)
 
-* Thu Sep 20 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.8
-
-- Update source tarball to revision: 1a5341f
-- Statistics:
-  Changesets: 1019
-  Diff:       2107 files changed, 117258 insertions(+), 73606 deletions(-)
+# Pacemaker-1.1.8 (20 Sep 2012)
+- 1019 commits with 2107 files changed, 117258 insertions(+), 73606 deletions(-)
 
 - All APIs have been cleaned up and reduced to essentials
 - Pacemaker now includes a replacement lrmd that supports systemd and upstart agents
@@ -3196,11 +3158,8 @@
   + Tools: crm_shadow - Bug cl#5062 - Correctly set argv[0] when forking a shell process
   + Tools: crm_report: Always include system logs (if we can find them)
 
-* Wed Mar 28 2012 Andrew Beekhof <andrew@beekhof.net> Pacemaker-1.1.7
-- Update source tarball to revision: bc7ff2c
-- Statistics:
-  Changesets: 513
-  Diff:       1171 files changed, 90472 insertions(+), 19368 deletions(-)
+# Pacemaker-1.1.7 (28 Mar 2012)
+- 513 commits with 1171 files changed, 90472 insertions(+), 19368 deletions(-)
 
 - Changes since Pacemaker-1.1.6.1
   + ais: Prepare for corosync versions using IPC from libqb
@@ -3285,11 +3244,8 @@
   + Tools: Implement crm_node functionality for native corosync
   + Fix a number of potential problems reported by coverity
 
-* Wed Aug 31 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.6
-- Update source tarball to revision: 676e5f25aa46 tip
-- Statistics:
-  Changesets: 376
-  Diff:       1761 files changed, 36259 insertions(+), 140578 deletions(-)
+# Pacemaker-1.1.6 (31 Aug 2011)
+- 376 commits with 1761 files changed, 36259 insertions(+), 140578 deletions(-)
 
 - Changes since Pacemaker-1.1.5
   + ais: check for retryable errors when dispatching AIS messages
@@ -3368,11 +3324,8 @@
   + Tools: crm_report - Repair the ability to extract data from the local machine
   + Tools: crm_report - Report on all detected backtraces
 
-* Fri Feb 11 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.5
-- Update source tarball to revision: baad6636a053
-- Statistics:
-  Changesets: 184
-  Diff:       605 files changed, 46103 insertions(+), 26417 deletions(-)
+# Pacemaker-1.1.5 (11 Feb 2011)
+- 184 commits with 605 files changed, 46103 insertions(+), 26417 deletions(-)
 
 - Changes since Pacemaker-1.1.4
   + Add the ability to delegate sub-sections of the cluster to non-root users via ACLs
@@ -3406,11 +3359,8 @@
   + tools: Bug lf#2527 - Prevent use-of-NULL in crm_simulate
   + Tools: Prevent crm_resource commands from being lost due to the use of cib_scope_local
 
-* Wed Oct 20 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.4
-- Update source tarball to revision: 75406c3eb2c1 tip
-- Statistics:
-  Changesets: 169
-  Diff:       772 files changed, 56172 insertions(+), 39309 deletions(-)
+# Pacemaker-1.1.4 (20 Oct 2010)
+- 169 commits with 772 files changed, 56172 insertions(+), 39309 deletions(-)
 
 - Changes since Pacemaker-1.1.3
   + Italian translation of Clusters from Scratch
@@ -3469,11 +3419,8 @@
   + Stonith: Fix two memory leaks
   + Tools: crm_shadow - Avoid replacing the entire configuration (including status)
 
-* Tue Sep 21 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.3
-- Update source tarball to revision: e3bb31c56244 tip
-- Statistics:
-  Changesets: 352
-  Diff:       481 files changed, 14130 insertions(+), 11156 deletions(-)
+# Pacemaker-1.1.3 (21 Sep 2010)
+- 352 commits with 481 files changed, 14130 insertions(+), 11156 deletions(-)
 
 - Changes since Pacemaker-1.1.2.1
   + ais: Bug lf#2401 - Improved processing when the peer crmd processes join/leave
@@ -3582,11 +3529,8 @@
   + Tools: Fix recently introduced use-of-NULL
   + Tools: Fix use-after-free defects from coverity
 
-* Wed May 12 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.2
-- Update source tarball to revision: c25c972a25cc tip
-- Statistics:
-  Changesets: 339
-  Diff:       708 files changed, 37918 insertions(+), 10584 deletions(-)
+# Pacemaker-1.1.2 (12 May 2010)
+- 339 commits with 708 files changed, 37918 insertions(+), 10584 deletions(-)
 - Changes since Pacemaker-1.1.1
   + ais: Do not count votes from offline nodes and calculate current votes before sending quorum data
   + ais: Ensure the list of active processes sent to clients is always up-to-date
@@ -3626,21 +3570,17 @@
   + Shell: new configure filter command
   + Tools: crm_mon - fix memory leaks exposed by valgrind
 
-* Tue Feb 16 2010 Andrew Beekhof <andrew@beekhof.net> - 1.1.1
+# Pacemaker-1.1.1 (16 Feb 2010)
 - First public release of Pacemaker 1.1
 - Package reference documentation in a doc subpackage
 - Move cts into a subpackage so that it can be easily consumed by others
-- Update source tarball to revision: 17d9cd4ee29f
-  + New stonith daemon that supports global notifications
-  + Service placement influenced by the physical resources
-  + A new tool for simulating failures and the cluster’s reaction to them
-  + Ability to serialize an otherwise unrelated a set of resource actions (eg. Xen migrations)
+- New stonith daemon that supports global notifications
+- Service placement influenced by the physical resources
+- A new tool for simulating failures and the cluster’s reaction to them
+- Ability to serialize an otherwise unrelated a set of resource actions (eg. Xen migrations)
 
-* Mon Jan 18 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7
-- Update source tarball to revision: 2eed906f43e9 (stable-1.0) tip
-- Statistics:
-      Changesets:      193
-      Diff:            220 files changed, 15933 insertions(+), 8782 deletions(-)
+# Pacemaker-1.0.7 (18 Jan 2010)
+- 193 commits with 220 files changed, 15933 insertions(+), 8782 deletions(-)
 - Changes since 1.0.5-4
   + pengine: Bug 2213 - Ensure groups process location constraints so that clone-node-max works for cloned groups
   + pengine: Bug lf#2153 - non-clones should not restart when clones stop/start on other nodes
@@ -3705,7 +3645,7 @@
   + Medium: xml: Bug bnc#552713 - Treat node unames as text fields not IDs
   + Medium: xml: Bug lf#2215 - Create an always-true expression for empty rules when upgrading from 0.6
 
-* Thu Oct 29 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-4
+# Pacemaker-1.0.5-4 (29 Oct 2009)
 - Include the fixes from CoroSync integration testing
 - Move the resource templates - they are not documentation
 - Ensure documentation is placed in a standard location
@@ -3723,7 +3663,7 @@
   + cib: Prevent use-after-free for remote plaintext connections
   + crmd: Bug lf#2201 - Prevent use-of-NULL when running heartbeat
 
-* Wed Oct 13 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-3
+# Pacemaker-1.0.5-3 (13 Oct 2009)
 - Update the tarball from upstream to version 38cd629e5c3c
   + Core: Bug lf#2169 - Allow dtd/schema validation to be disabled
   + pengine: Bug lf#2106 - Not all anonymous clone children are restarted after configuration change
@@ -3747,10 +3687,10 @@
   + Medium: ais: Include version details in plugin name
   + Medium: crmd: Requery the resource metadata after every start operation
 
-* Fri Aug 21 2009 Tomas Mraz <tmraz@redhat.com> - 1.0.5-2.1
+# Pacemaker-1.0.5-2.1 (21 Aug 2009)
 - rebuilt with new openssl
 
-* Wed Aug 19 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-2
+# Pacemaker-1.0.5-2 (19 Aug 2009)
 - Add versioned perl dependency as specified by
     https://fedoraproject.org/wiki/Packaging/Perl#Packages_that_link_to_libperl
 - No longer remove RPATH data, it prevents us finding libperl.so and no other
@@ -3759,7 +3699,7 @@
 - Conditionally add heartbeat-devel and corosynclib-devel to the -devel requirements
   depending on which stacks are supported
 
-* Mon Aug 17 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5
+# Pacemaker-1.0.5 (17 Aug 2009)
 - Add dependency on resource-agents
 - Use the version of the configure macro that supplies --prefix, --libdir, etc
 - Update the tarball from upstream to version 462f1569a437 (Pacemaker 1.0.5 final)
@@ -3767,17 +3707,17 @@
   + Medium: Extra: New node connectivity RA that uses system ping and attrd_updater
   + Medium: crmd: Note that dc-deadtime can be used to mask the brokeness of some switches
 
-* Tue Aug 11 2009 Ville Skyttä <ville.skytta@iki.fi> - 1.0.5-0.7.c9120a53a6ae.hg
+# Tue Aug 11 2009 Ville Skyttä <ville.skytta@iki.fi> - 1.0.5-0.7.c9120a53a6ae.hg
 - Use bzipped upstream tarball.
 
-* Wed Jul  29 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-0.6.c9120a53a6ae.hg
+# Wed Jul  29 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-0.6.c9120a53a6ae.hg
 - Add back missing build auto* dependencies
 - Minor cleanups to the install directive
 
-* Tue Jul  28 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-0.5.c9120a53a6ae.hg
+# Tue Jul  28 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-0.5.c9120a53a6ae.hg
 - Add a leading zero to the revision when alphatag is used
 
-* Tue Jul  28 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-0.4.c9120a53a6ae.hg
+# Tue Jul  28 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-0.4.c9120a53a6ae.hg
 - Incorporate the feedback from the cluster-glue review
 - Realistically, the version is a 1.0.5 pre-release
 - Use the global directive instead of define for variables
@@ -3785,7 +3725,7 @@
 - Use the _configure macro
 - Fix install dependencies
 
-* Fri Jul  24 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.4-3
+# Pacemaker-1.0.4-3 Fri Jul  24 2009 Andrew Beekhof <andrew@beekhof.net> -
 - Initial Fedora checkin
 - Include an AUTHORS and license file in each package
 - Change the library package name to pacemaker-libs to be more
@@ -3799,17 +3739,14 @@
   + Medium: Tools: crm_resource - Prevent use-of-NULL by requiring a resource name for the -A and -a options
   + Medium: pengine: Prevent use-of-NULL in find_first_action()
 
-* Tue Jul 14 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.4-2
+# Pacemaker-1.0.4-2 (14 Jul 2009)
 - Reference authors from the project AUTHORS file instead of listing in description
 - Change Source0 to reference the Mercurial repo
 - Cleaned up the summaries and descriptions
 - Incorporate the results of Fedora package self-review
 
-* Thu Jun 04 2009 Andrew Beekhof <abeekhof@suse.de> - 1.0.4
-- Update source tarball to revision: 1d87d3e0fc7f (stable-1.0)
-- Statistics:
-    Changesets:      209
-    Diff:            266 files changed, 12010 insertions(+), 8276 deletions(-)
+# Pacemaker-1.0.4 (04 Jun 2009)
+- 209 commits with 266 files changed, 12010 insertions(+), 8276 deletions(-)
 - Changes since Pacemaker-1.0.3
   + (bnc#488291): ais: do not rely on byte endianness on ptr cast
   + (bnc#507255): Tools: crm: delete rsc/op_defaults (these meta_attributes are killing me)
@@ -3859,11 +3796,8 @@
   + Medium: Tools: Include stack information in crm_mon output
   + Medium: Tools: Two new options (--stack,--constraints) to crm_resource for querying how a resource is configured
 
-* Wed Apr 08 2009 Andrew Beekhof <abeekhof@suse.de> - 1.0.3
-- Update source tarball to revision: b133b3f19797 (stable-1.0) tip
-- Statistics:
-    Changesets:      383
-    Diff:            329 files changed, 15471 insertions(+), 15119 deletions(-)
+# Pacemaker-1.0.3 (08 Apr 2009)
+- 383 commits with 329 files changed, 15471 insertions(+), 15119 deletions(-)
 - Changes since Pacemaker-1.0.2
   + Added tag SLE11-HAE-GMC for changeset 9196be9830c2
   + ais plugin: Fix quorum calculation (bnc#487003)
@@ -3979,11 +3913,8 @@
   + Medium: Tools: pingd - Avoid using various clplumbing functions as they seem to leak
   + Medium: Tools: Reduce pingd logging
 
-* Mon Feb 16 2009 Andrew Beekhof <abeekhof@suse.de> - 1.0.2
-- Update source tarball to revision: d232d19daeb9 (stable-1.0) tip
-- Statistics:
-    Changesets:      441
-    Diff:            639 files changed, 20871 insertions(+), 21594 deletions(-)
+# Pacemaker-1.0.2 (16 Feb 2009)
+- 441 commits with 639 files changed, 20871 insertions(+), 21594 deletions(-)
 - Changes since Pacemaker-1.0.1
   + (bnc#450815): Tools: crm cli: do not generate id for the operations tag
   + ais: Add support for the new AIS IPC layer
@@ -4131,11 +4062,8 @@
   + Medium: Tools: pingd - fix the command line switches
   + Medium: Tools: Rename ccm_tool to crm_node
 
-* Tue Nov 18 2008 Andrew Beekhof <abeekhof@suse.de> - 1.0.1
-- Update source tarball to revision: 6fc5ce8302ab (stable-1.0) tip
-- Statistics:
-    Changesets:      170
-    Diff:            816 files changed, 7633 insertions(+), 6286 deletions(-)
+# Pacemaker-1.0.1 (18 Nov 2008)
+- 170 commits with 816 files changed, 7633 insertions(+), 6286 deletions(-)
 - Changes since Pacemaker-1.0.1
   + ais: Allow the crmd to get callbacks whenever a node state changes
   + ais: Create an option for starting the mgmtd daemon automatically
@@ -4195,11 +4123,8 @@
   + Medium: Tools: crm_verify - check that we are being asked to validate a complete config
   + Medium: xml: Relax the restriction on the contents of rsc_locaiton.node
 
-* Thu Oct 16 2008 Andrew Beekhof <abeekhof@suse.de> - 1.0.0
-- Update source tarball to revision: 388654dfef8f tip
-- Statistics:
-    Changesets:      261
-    Diff:            3021 files changed, 244985 insertions(+), 111596 deletions(-)
+# Pacemaker-1.0.0 (16 Oct 2008)
+- 261 commits with 3021 files changed, 244985 insertions(+), 111596 deletions(-)
 - Changes since f805e1b30103
   + add the crm cli program
   + ais: Move the service id definition to a common location and make sure it is always used
@@ -4262,11 +4187,8 @@
   + Medium: tools: crm_shadow - Allow the admin to start with an empty CIB (and no cluster connection)
   + Medium: xml: pacemaker-0.7 is now an alias for the 1.0 schema
 
-* Mon Sep 22 2008 Andrew Beekhof <abeekhof@suse.de> - 0.7.3
-- Update source tarball to revision: 33e677ab7764+ tip
-- Statistics:
-    Changesets:      133
-    Diff:            89 files changed, 7492 insertions(+), 1125 deletions(-)
+# Pacemaker-0.7.3 (22 Sep 2008)
+- 133 commits with 89 files changed, 7492 insertions(+), 1125 deletions(-)
 - Changes since f805e1b30103
   + Tools: add the crm cli program
   + Core: cl_malloc and friends were removed from Heartbeat
@@ -4294,11 +4216,8 @@
   + Medium: stonithd: exit with better code on empty host list
   + Medium: xml: pacemaker-0.7 is now an alias for the 1.0 schema
 
-* Wed Aug 20 2008 Andrew Beekhof <abeekhof@suse.de> - 0.7.1
-- Update source tarball to revision: f805e1b30103+ tip
-- Statistics:
-    Changesets:      184
-    Diff:            513 files changed, 43408 insertions(+), 43783 deletions(-)
+# Pacemaker-0.7.1 (20 Aug 2008)
+- 184 commits with 513 files changed, 43408 insertions(+), 43783 deletions(-)
 - Changes since 0.7.0-19
   + Fix compilation when GNUTLS isn't found
   + admin: Fix use-after-free in crm_mon
@@ -4352,11 +4271,8 @@
   + Medium: Tools: cib_shadow - On create, spawn a new shell with CIB_shadow and PS1 set accordingly
   + Medium: Tools: Rename cib_shadow to crm_shadow
 
-* Fri Jul 18 2008 Andrew Beekhof <abeekhof@suse.de> - 0.7.0-19
-- Update source tarball to revision: 007c3a1c50f5 (unstable) tip
-- Statistics:
-    Changesets:      108
-    Diff:            216 files changed, 4632 insertions(+), 4173 deletions(-)
+# Pacemaker-0.7.0-19 (18 Jul 2008)
+- 108 commits with 216 files changed, 4632 insertions(+), 4173 deletions(-)
 - Changes added since unstable-0.7
   + admin: Fix use-after-free in crm_mon
   + ais: Change the tag for the ais plugin to "pacemaker" (used in openais.conf)
@@ -4380,11 +4296,8 @@
   + Medium: Fix memory leaks when resetting the name of an XML object
   + Medium: pengine: Prefer the current location if it is one of a group of nodes with the same (highest) score
 
-* Wed Jun 25 2008 Andrew Beekhof <abeekhof@suse.de> - 0.7.0
-- Update source tarball to revision: bde0c7db74fb tip
-- Statistics:
-    Changesets:      439
-    Diff:            676 files changed, 41310 insertions(+), 52071 deletions(-)
+# Pacemaker-0.7.0 (25 Jun 2008)
+- 439 commits with 676 files changed, 41310 insertions(+), 52071 deletions(-)
 - Changes added since stable-0.6
   + A new tool for setting up and invoking CTS
   + Admin: All tools now use --node (-N) for specifying node unames
@@ -4450,11 +4363,8 @@
   + Medium: Tools: pingd - Implement a stack-independent version of pingd
   + Medium: xml: Ship an xslt for upgrading from 0.6 to 0.7
 
-* Thu Jun 19 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.5
-- Update source tarball to revision: b9fe723d1ac5 tip
-- Statistics:
-    Changesets:      48
-    Diff:            37 files changed, 1204 insertions(+), 234 deletions(-)
+# Pacemaker-0.6.5 (19 Jun 2008)
+- 48 commits with 37 files changed, 1204 insertions(+), 234 deletions(-)
 - Changes since Pacemaker-0.6.4
   + Admin: Repair the ability to delete failcounts
   + ais: Audit IPC handling between the AIS plugin and CRM processes
@@ -4475,11 +4385,8 @@
   + Medium: pengine: Prevent a possible use of NULL in sort_clone_instance()
   + Medium: tengine: Include target rc in the transition key - used to correctly determin operation failure
 
-* Thu May 22 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.4
-- Update source tarball to revision: 226d8e356924 tip
-- Statistics:
-    Changesets:       55
-    Diff:             199 files changed, 7103 insertions(+), 12378 deletions(-)
+# Pacemaker-0.6.4 (22 May 2008)
+- 55 commits with 199 files changed, 7103 insertions(+), 12378 deletions(-)
 - Changes since Pacemaker-0.6.3
   + crmd: Bug LF:1881 LF:1882 - Overhaul the logic for operation cancelation and deletion
   + crmd: Bug LF:1894 - Make sure cancelled recurring operations are cleaned out from the CIB
@@ -4494,11 +4401,8 @@
   + Medium: pengine: Implement master and clone colocation by exlcuding nodes rather than setting ones score to INFINITY (similar to cs: 756afc42dc51)
   + Medium: tengine: Bug LF:1875 - Correctly find actions to cancel when their node leaves the cluster
 
-* Wed Apr 23 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.3
-- Update source tarball to revision: fd8904c9bc67 tip
-- Statistics:
-    Changesets:      117
-    Diff:            354 files changed, 19094 insertions(+), 11338 deletions(-)
+# Pacemaker-0.6.3 (23 Apr 2008)
+- 117 commits with 354 files changed, 19094 insertions(+), 11338 deletions(-)
 - Changes since Pacemaker-0.6.2
   + Admin: Bug LF:1848 - crm_resource - Pass set name and id to delete_resource_attr() in the correct order
   + Build: SNMP has been moved to the management/pygui project
@@ -4544,22 +4448,16 @@
   + Medium: tengine: Bug LF:1859 - Do not abort graphs due to our own failcount updates
   + Medium: tengine: Bug LF:1859 - Prevent the TE from interupting itself
 
-* Thu Feb 14 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.2
-- Update source tarball to revision: 28b1a8c1868b tip
-- Statistics:
-    Changesets:    11
-    Diff:          7 files changed, 58 insertions(+), 18 deletions(-)
+# Pacemaker-0.6.2 (14 Feb 2008)
+- 11 commits with 7 files changed, 58 insertions(+), 18 deletions(-)
 - Changes since Pacemaker-0.6.1
   + haresources2cib.py: set default-action-timeout to the default (20s)
   + haresources2cib.py: update ra parameters lists
   + Medium: SNMP: Allow the snmp subagent to be built (patch from MATSUDA, Daiki)
   + Medium: Tools: Make sure the autoconf variables in haresources2cib are expanded
 
-* Tue Feb 12 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.1
-- Update source tarball to revision: e7152d1be933 tip
-- Statistics:
-    Changesets:    25
-    Diff:          37 files changed, 1323 insertions(+), 227 deletions(-)
+# Pacemaker-0.6.1 (12 Feb 2008)
+- 25 commits with 37 files changed, 1323 insertions(+), 227 deletions(-)
 - Changes since Pacemaker-0.6.0
   + CIB: Ensure changes to top-level attributes (like admin_epoch) cause a disk write
   + CIB: Ensure the archived file hits the disk before returning
@@ -4571,16 +4469,13 @@
   + Medium: pengine: Bug 1820 - Allow the first resource in a group to be migrated
   + Medium: pengine: Bug 1820 - Check the colocation dependencies of resources to be migrated
 
-* Mon Jan 14 2008 Andrew Beekhof <abeekhof@suse.de> - 0.6.0
+# Pacemaker-0.6.0 (14 Jan 2008)
+- 347 commits with 2272 files changed, 132508 insertions(+), 305991 deletions(-)
 - This is the first release of the Pacemaker Cluster Resource Manager formerly part of Heartbeat.
 - For those looking for the GUI, mgmtd, CIM or TSA components, they are now found in
   the new pacemaker-pygui project.  Build dependencies prevent them from being
   included in Heartbeat (since the built-in CRM is no longer supported) and,
   being non-core components, are not included with Pacemaker.
-- Update source tarball to revision: c94b92d550cf
-- Statistics:
-    Changesets:      347
-    Diff:            2272 files changed, 132508 insertions(+), 305991 deletions(-)
 - Test hardware:
     + 6-node vmware cluster (sles10-sp1/256MB/vmware stonith) on a single host (opensuse10.3/2GB/2.66GHz Quad Core2)
     + 7-node EMC Centera cluster (sles10/512MB/2GHz Xeon/ssh stonith)
