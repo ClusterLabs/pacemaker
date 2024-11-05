@@ -2034,6 +2034,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/xml/Makefile                       \
                 lib/common/tests/xml_comment/Makefile               \
                 lib/common/tests/xml_element/Makefile               \
+                lib/common/tests/xml_idref/Makefile                 \
                 lib/common/tests/xpath/Makefile                     \
                 lib/fencing/Makefile                                \
                 lib/libpacemaker.pc                                 \
