@@ -102,6 +102,9 @@ typedef struct lrmd_private_s {
     char *peer_version;
 } lrmd_private_t;
 
+static int process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native);
+static void report_async_connection_result(lrmd_t * lrmd, int rc);
+
 static lrmd_list_t *
 lrmd_list_add(lrmd_list_t * head, const char *value)
 {
@@ -390,8 +393,18 @@ handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
     if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
         lrmd_dispatch_internal(xml, lrmd);
     } else if (pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
+        const char *op = crm_element_value(xml, PCMK__XA_LRMD_OP);
+
         if (native->expected_late_replies > 0) {
             native->expected_late_replies--;
+
+            /* The register op message we get as a response to lrmd_handshake_async
+             * is a reply, so we have to handle that here.
+             */
+            if (pcmk__str_eq(op, "register", pcmk__str_casei)) {
+                int rc = process_lrmd_handshake_reply(xml, native);
+                report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+            }
         } else {
             int reply_id = 0;
             crm_element_value_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
@@ -1084,6 +1097,25 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
 }
 
 static int
+lrmd_handshake_async(lrmd_t * lrmd, const char *name)
+{
+    int rc = pcmk_rc_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
+
+    rc = send_remote_message(lrmd, hello);
+
+    if (rc == pcmk_rc_ok) {
+        native->expected_late_replies++;
+    } else {
+        lrmd_api_disconnect(lrmd);
+    }
+
+    pcmk__xml_free(hello);
+    return rc;
+}
+
+static int
 lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
 {
     int rc = pcmk_ok;
@@ -1376,7 +1408,13 @@ tls_handshake_succeeded(lrmd_t *lrmd)
     crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
              native->server, native->port);
     rc = add_tls_to_mainloop(lrmd, true);
-    report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+
+    /* If add_tls_to_mainloop failed, report that right now.  Otherwise, we have
+     * to wait until we read the async reply to report anything.
+     */
+    if (rc != pcmk_rc_ok) {
+        report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+    }
 }
 
 /*!
@@ -1437,7 +1475,7 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake)
      * that name in this function instead of generating one anyway.
      */
     if (do_api_handshake) {
-        rc = lrmd_handshake(lrmd, name);
+        rc = lrmd_handshake_async(lrmd, name);
     }
     free(name);
     return rc;
