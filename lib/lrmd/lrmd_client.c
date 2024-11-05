@@ -989,12 +989,9 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
     return (rc < 0)? pcmk_legacy2rc(rc) : pcmk_rc_ok;
 }
 
-static int
-lrmd_handshake(lrmd_t * lrmd, const char *name)
+static xmlNode *
+lrmd_handshake_hello_msg(const char *name, bool is_proxy)
 {
-    int rc = pcmk_ok;
-    lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *reply = NULL;
     xmlNode *hello = pcmk__xe_create(NULL, PCMK__XE_LRMD_COMMAND);
 
     crm_xml_add(hello, PCMK__XA_T, PCMK__VALUE_LRMD);
@@ -1003,9 +1000,20 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     crm_xml_add(hello, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
 
     /* advertise that we are a proxy provider */
-    if (native->proxy_callback) {
+    if (is_proxy) {
         pcmk__xe_set_bool_attr(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
     }
+
+    return hello;
+}
+
+static int
+lrmd_handshake(lrmd_t * lrmd, const char *name)
+{
+    int rc = pcmk_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    xmlNode *reply = NULL;
+    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
 
     rc = lrmd_send_xml(lrmd, hello, -1, &reply);
 
