@@ -10,7 +10,8 @@
 #ifndef PCMK__CRM_COMMON_NVPAIR_INTERNAL__H
 #define PCMK__CRM_COMMON_NVPAIR_INTERNAL__H
 
-#include <glib.h>                           // gboolean
+#include <stdbool.h>                        // bool
+#include <glib.h>                           // gboolean, gpointer, GHashTable
 #include <libxml/tree.h>                    // xmlNode
 
 #include <crm/common/rules.h>               // pcmk_rule_input_t
@@ -41,6 +42,8 @@ typedef struct unpack_data_s {
 
 gint pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b,
                              gpointer user_data);
+
+void pcmk__unpack_nvpair_block(gpointer data, gpointer user_data);
 
 /*!
  * \internal
