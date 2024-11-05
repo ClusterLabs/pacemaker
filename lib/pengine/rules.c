@@ -62,59 +62,58 @@ map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
     }
 }
 
-static void
-populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
+/*!
+ * \internal
+ * \brief Unpack a single nvpair XML element into a hash table
+ *
+ * \param[in]     nvpair    XML nvpair element to unpack
+ * \param[in,out] userdata  Unpack data
+ *
+ * \return pcmk_rc_ok (to always proceed to next nvpair)
+ */
+static int
+unpack_nvpair(xmlNode *nvpair, void *userdata)
 {
-    if (pcmk__xe_is(nvpair_list->children, PCMK__XE_ATTRIBUTES)) {
-        nvpair_list = nvpair_list->children;
+    pcmk__nvpair_unpack_t *unpack_data = userdata;
+
+    const char *name = NULL;
+    const char *value = NULL;
+    const char *old_value = NULL;
+    const xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, NULL);
+
+    if (ref_nvpair == NULL) {
+        /* Not possible with schema validation enabled (error already
+         * logged)
+         */
+        return pcmk_rc_ok;
     }
 
-    for (xmlNode *nvpair = pcmk__xe_first_child(nvpair_list, PCMK_XE_NVPAIR,
-                                                NULL, NULL);
-         nvpair != NULL; nvpair = pcmk__xe_next(nvpair, PCMK_XE_NVPAIR)) {
-
-        xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, NULL);
-        const char *name = NULL;
-        const char *value = NULL;
-        const char *old_value = NULL;
-
-        if (ref_nvpair == NULL) {
-            /* Not possible with schema validation enabled (error already
-             * logged)
-             */
-            continue;
-        }
-
-        name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
-        value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
-        if ((name == NULL) || (value == NULL)) {
-            continue;
-        }
-
-        old_value = g_hash_table_lookup(hash, name);
-
-        if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
-            // @COMPAT Deprecated since 2.1.8
-            pcmk__config_warn("Support for setting meta-attributes (such as "
-                              "%s) to the explicit value '#default' is "
-                              "deprecated and will be removed in a future "
-                              "release", name);
-            if (old_value != NULL) {
-                crm_trace("Letting %s default (removing explicit value \"%s\")",
-                          name, value);
-                g_hash_table_remove(hash, name);
-            }
-
-        } else if (old_value == NULL) {
-            crm_trace("Setting %s=\"%s\"", name, value);
-            pcmk__insert_dup(hash, name, value);
-
-        } else if (overwrite) {
-            crm_trace("Setting %s=\"%s\" (overwriting old value \"%s\")",
-                      name, value, old_value);
-            pcmk__insert_dup(hash, name, value);
-        }
+    name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
+    value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
+    if ((name == NULL) || (value == NULL)) {
+        return pcmk_rc_ok; // Not possible with schema validation enabled
     }
+
+    old_value = g_hash_table_lookup(unpack_data->values, name);
+
+    if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
+        // @COMPAT Deprecated since 2.1.8
+        pcmk__config_warn("Support for setting meta-attributes (such as "
+                          "%s) to the explicit value '#default' is "
+                          "deprecated and will be removed in a future "
+                          "release", name);
+        if (old_value != NULL) {
+            crm_trace("Letting %s default (removing explicit value \"%s\")",
+                      name, value);
+            g_hash_table_remove(unpack_data->values, name);
+        }
+
+    } else if ((old_value == NULL) || unpack_data->overwrite) {
+        crm_trace("Setting %s=\"%s\" (was %s)",
+                  name, value, pcmk__s(old_value, "unset"));
+        pcmk__insert_dup(unpack_data->values, name, value);
+    }
+    return pcmk_rc_ok;
 }
 
 static void
@@ -133,7 +132,10 @@ unpack_attr_set(gpointer data, gpointer user_data)
 
     crm_trace("Adding name/value pairs from %s %s overwrite",
               pcmk__xe_id(pair), (unpack_data->overwrite? "with" : "without"));
-    populate_hash(pair, unpack_data->values, unpack_data->overwrite);
+    if (pcmk__xe_is(pair->children, PCMK__XE_ATTRIBUTES)) {
+        pair = pair->children;
+    }
+    pcmk__xe_foreach_child(pair, PCMK_XE_NVPAIR, unpack_nvpair, unpack_data);
 }
 
 /*!
