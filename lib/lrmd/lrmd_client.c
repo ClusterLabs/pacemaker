@@ -63,7 +63,7 @@ gnutls_psk_client_credentials_t psk_cred_s;
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
 static void lrmd_tls_connection_destroy(gpointer userdata);
-static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake);
+static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake);
 
 typedef struct lrmd_private_s {
     uint64_t type;
@@ -1391,13 +1391,13 @@ tls_client_handshake(lrmd_t *lrmd)
  * \internal
  * \brief Add trigger and file descriptor mainloop sources for TLS
  *
- * \param[in,out] lrmd          API connection with established TLS session
- * \param[in]     do_handshake  Whether to perform executor handshake
+ * \param[in,out] lrmd              API connection with established TLS session
+ * \param[in]     do_api_handshake  Whether to perform executor handshake
  *
  * \return Standard Pacemaker return code
  */
 static int
-add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake)
+add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
     int rc = pcmk_rc_ok;
@@ -1421,7 +1421,7 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake)
      * @TODO Keep track of the caller-provided name. Perhaps we should be using
      * that name in this function instead of generating one anyway.
      */
-    if (do_handshake) {
+    if (do_api_handshake) {
         rc = lrmd_handshake(lrmd, name);
         rc = pcmk_legacy2rc(rc);
     }
