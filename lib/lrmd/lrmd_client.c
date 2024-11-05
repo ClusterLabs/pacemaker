@@ -1010,7 +1010,7 @@ lrmd_handshake_hello_msg(const char *name, bool is_proxy)
 static int
 lrmd_handshake(lrmd_t * lrmd, const char *name)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
     xmlNode *reply = NULL;
     xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
@@ -1019,10 +1019,10 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
 
     if (rc < 0) {
         crm_perror(LOG_DEBUG, "Couldn't complete registration with the executor API: %d", rc);
-        rc = -ECOMM;
+        rc = ECOMM;
     } else if (reply == NULL) {
         crm_err("Did not receive registration reply");
-        rc = -EPROTO;
+        rc = EPROTO;
     } else {
         const char *version = crm_element_value(reply,
                                                 PCMK__XA_LRMD_PROTOCOL_VERSION);
@@ -1033,6 +1033,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         long long uptime = -1;
 
         crm_element_value_int(reply, PCMK__XA_LRMD_RC, &rc);
+        rc = pcmk_legacy2rc(rc);
 
         /* The remote executor may add its uptime to the XML reply, which is
          * useful in handling transient attributes when the connection to the
@@ -1046,33 +1047,33 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
             native->remote->start_state = strdup(start_state);
         }
 
-        if (rc == -EPROTO) {
+        if (rc == EPROTO) {
             crm_err("Executor protocol version mismatch between client (%s) and server (%s)",
                 LRMD_PROTOCOL_VERSION, version);
             crm_log_xml_err(reply, "Protocol Error");
-
         } else if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
             crm_err("Invalid registration message: %s", msg_type);
             crm_log_xml_err(reply, "Bad reply");
-            rc = -EPROTO;
+            rc = EPROTO;
         } else if (tmp_ticket == NULL) {
             crm_err("No registration token provided");
             crm_log_xml_err(reply, "Bad reply");
-            rc = -EPROTO;
+            rc = EPROTO;
         } else {
             crm_trace("Obtained registration token: %s", tmp_ticket);
             native->token = strdup(tmp_ticket);
             native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
-            rc = pcmk_ok;
+            rc = pcmk_rc_ok;
         }
     }
 
     pcmk__xml_free(reply);
     pcmk__xml_free(hello);
 
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         lrmd_api_disconnect(lrmd);
     }
+
     return rc;
 }
 
@@ -1431,7 +1432,6 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake)
      */
     if (do_api_handshake) {
         rc = lrmd_handshake(lrmd, name);
-        rc = pcmk_legacy2rc(rc);
     }
     free(name);
     return rc;
@@ -1650,6 +1650,7 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
 
     if (rc == pcmk_ok) {
         rc = lrmd_handshake(lrmd, name);
+        rc = pcmk_rc2legacy(rc);
     }
 
     return rc;
