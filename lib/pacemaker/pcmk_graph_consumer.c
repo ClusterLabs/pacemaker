@@ -662,9 +662,9 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
 
     crm_trace("Unpacking synapse %s inputs", pcmk__xe_id(xml_synapse));
 
-    for (xmlNode *inputs = pcmk__xe_first_child(xml_synapse, "inputs", NULL,
-                                                NULL);
-         inputs != NULL; inputs = pcmk__xe_next(inputs, "inputs")) {
+    for (xmlNode *inputs = pcmk__xe_first_child(xml_synapse, PCMK__XE_INPUTS,
+                                                NULL, NULL);
+         inputs != NULL; inputs = pcmk__xe_next(inputs, PCMK__XE_INPUTS)) {
 
         for (xmlNode *trigger = pcmk__xe_first_child(inputs, "trigger", NULL,
                                                      NULL);

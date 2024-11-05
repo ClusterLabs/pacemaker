@@ -36,6 +36,7 @@ extern "C" {
 #define PCMK__XE_EXIT_NOTIFICATION      "exit-notification"
 #define PCMK__XE_FAILED_UPDATE          "failed_update"
 #define PCMK__XE_GENERATION_TUPLE       "generation_tuple"
+#define PCMK__XE_INPUTS                 "inputs"
 #define PCMK__XE_LRM                    "lrm"
 #define PCMK__XE_LRM_RESOURCE           "lrm_resource"
 #define PCMK__XE_LRM_RESOURCES          "lrm_resources"
