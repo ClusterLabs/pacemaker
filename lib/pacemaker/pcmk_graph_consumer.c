@@ -666,9 +666,10 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
                                                 NULL, NULL);
          inputs != NULL; inputs = pcmk__xe_next(inputs, PCMK__XE_INPUTS)) {
 
-        for (xmlNode *trigger = pcmk__xe_first_child(inputs, "trigger", NULL,
-                                                     NULL);
-             trigger != NULL; trigger = pcmk__xe_next(trigger, "trigger")) {
+        for (xmlNode *trigger = pcmk__xe_first_child(inputs, PCMK__XE_TRIGGER,
+                                                     NULL, NULL);
+             trigger != NULL;
+             trigger = pcmk__xe_next(trigger, PCMK__XE_TRIGGER)) {
 
             for (xmlNode *input = pcmk__xe_first_child(trigger, NULL, NULL,
                                                        NULL);

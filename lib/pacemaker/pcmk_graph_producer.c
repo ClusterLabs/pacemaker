@@ -921,7 +921,7 @@ add_action_to_graph(gpointer data, gpointer user_data)
         pcmk__related_action_t *input = lpc->data;
 
         if (should_add_input_to_graph(action, input)) {
-            xmlNode *input_xml = pcmk__xe_create(in, "trigger");
+            xmlNode *input_xml = pcmk__xe_create(in, PCMK__XE_TRIGGER);
 
             input->graphed = true;
             create_graph_action(input_xml, input->action, true, scheduler);
