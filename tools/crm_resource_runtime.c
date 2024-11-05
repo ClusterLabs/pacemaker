@@ -568,21 +568,16 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
     int rc = pcmk_rc_ok;
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
 
+    pcmk__assert(cib != NULL);
+
     if ((attr_id == NULL) && !force) {
         find_resource_attr(out, cib, PCMK_XA_ID,
                            pe__const_top_resource(rsc, false)->id, NULL,
                            NULL, NULL, attr_name, NULL);
     }
 
-    if (pcmk__str_eq(attr_set_type, PCMK_XE_META_ATTRIBUTES, pcmk__str_casei)) {
-        resources = find_matching_attr_resources(out, rsc, requested_name,
-                                                 attr_set, attr_set_type,
-                                                 attr_id, attr_name, cib,
-                                                 "delete", force);
-
-    } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
+    if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
         pcmk__xe_remove_attr(rsc->priv->xml, attr_name);
-        pcmk__assert(cib != NULL);
         rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->priv->xml,
                                 cib_sync_call);
         rc = pcmk_legacy2rc(rc);
@@ -590,7 +585,13 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
             out->info(out, "Deleted attribute: %s", attr_name);
         }
         return rc;
+    }
 
+    if (pcmk__str_eq(attr_set_type, PCMK_XE_META_ATTRIBUTES, pcmk__str_none)) {
+        resources = find_matching_attr_resources(out, rsc, requested_name,
+                                                 attr_set, attr_set_type,
+                                                 attr_id, attr_name, cib,
+                                                 "delete", force);
     } else {
         resources = g_list_append(resources, rsc);
     }
@@ -632,7 +633,6 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         xml_obj = crm_create_nvpair_xml(NULL, rsc_attr_id, attr_name, NULL);
         crm_log_xml_debug(xml_obj, "Delete");
 
-        pcmk__assert(cib != NULL);
         rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, xml_obj, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
 
