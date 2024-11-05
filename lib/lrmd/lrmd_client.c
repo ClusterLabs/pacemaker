@@ -902,8 +902,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
         return -EINVAL;
     }
 
-    CRM_CHECK(native->token != NULL,;
-        );
+    CRM_LOG_ASSERT(native->token != NULL);
     crm_trace("Sending %s op to executor", op);
 
     op_msg = lrmd_create_op(native->token, op, data, timeout, options);
@@ -923,7 +922,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
         crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%d): %d", op, timeout, rc);
         goto done;
 
-    } else if(op_reply == NULL) {
+    } else if (op_reply == NULL) {
         rc = -ENOMSG;
         goto done;
     }
