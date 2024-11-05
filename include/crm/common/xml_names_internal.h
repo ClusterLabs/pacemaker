@@ -73,6 +73,7 @@ extern "C" {
 #define PCMK__XE_ST_NOTIFY_FENCE        "st_notify_fence"
 #define PCMK__XE_ST_REPLY               "st-reply"
 #define PCMK__XE_STONITH_COMMAND        "stonith_command"
+#define PCMK__XE_SYNAPSE                "synapse"
 #define PCMK__XE_TICKET_STATE           "ticket_state"
 #define PCMK__XE_TRANSIENT_ATTRIBUTES   "transient_attributes"
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"

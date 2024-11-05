@@ -781,10 +781,10 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
 
     // Unpack each child <synapse> element
     for (const xmlNode *synapse_xml = pcmk__xe_first_child(xml_graph,
-                                                           "synapse", NULL,
-                                                           NULL);
+                                                           PCMK__XE_SYNAPSE,
+                                                           NULL, NULL);
          synapse_xml != NULL;
-         synapse_xml = pcmk__xe_next(synapse_xml, "synapse")) {
+         synapse_xml = pcmk__xe_next(synapse_xml, PCMK__XE_SYNAPSE)) {
 
         pcmk__graph_synapse_t *new_synapse = unpack_synapse(new_graph,
                                                             synapse_xml);
