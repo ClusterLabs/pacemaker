@@ -1008,6 +1008,52 @@ lrmd_handshake_hello_msg(const char *name, bool is_proxy)
 }
 
 static int
+process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
+{
+    int rc = pcmk_rc_ok;
+    const char *version = crm_element_value(reply, PCMK__XA_LRMD_PROTOCOL_VERSION);
+    const char *msg_type = crm_element_value(reply, PCMK__XA_LRMD_OP);
+    const char *tmp_ticket = crm_element_value(reply, PCMK__XA_LRMD_CLIENTID);
+    const char *start_state = crm_element_value(reply, PCMK__XA_NODE_START_STATE);
+    long long uptime = -1;
+
+    crm_element_value_int(reply, PCMK__XA_LRMD_RC, &rc);
+    rc = pcmk_legacy2rc(rc);
+
+    /* The remote executor may add its uptime to the XML reply, which is useful
+     * in handling transient attributes when the connection to the remote node
+     * unexpectedly drops.  If no parameter is given, just default to -1.
+     */
+    crm_element_value_ll(reply, PCMK__XA_UPTIME, &uptime);
+    native->remote->uptime = uptime;
+
+    if (start_state) {
+        native->remote->start_state = strdup(start_state);
+    }
+
+    if (rc == EPROTO) {
+        crm_err("Executor protocol version mismatch between client (%s) and server (%s)",
+                LRMD_PROTOCOL_VERSION, version);
+        crm_log_xml_err(reply, "Protocol Error");
+    } else if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+        crm_err("Invalid registration message: %s", msg_type);
+        crm_log_xml_err(reply, "Bad reply");
+        rc = EPROTO;
+    } else if (tmp_ticket == NULL) {
+        crm_err("No registration token provided");
+        crm_log_xml_err(reply, "Bad reply");
+        rc = EPROTO;
+    } else {
+        crm_trace("Obtained registration token: %s", tmp_ticket);
+        native->token = strdup(tmp_ticket);
+        native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
+        rc = pcmk_rc_ok;
+    }
+
+    return rc;
+}
+
+static int
 lrmd_handshake(lrmd_t * lrmd, const char *name)
 {
     int rc = pcmk_rc_ok;
@@ -1024,47 +1070,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         crm_err("Did not receive registration reply");
         rc = EPROTO;
     } else {
-        const char *version = crm_element_value(reply,
-                                                PCMK__XA_LRMD_PROTOCOL_VERSION);
-        const char *msg_type = crm_element_value(reply, PCMK__XA_LRMD_OP);
-        const char *tmp_ticket = crm_element_value(reply,
-                                                   PCMK__XA_LRMD_CLIENTID);
-        const char *start_state = crm_element_value(reply, PCMK__XA_NODE_START_STATE);
-        long long uptime = -1;
-
-        crm_element_value_int(reply, PCMK__XA_LRMD_RC, &rc);
-        rc = pcmk_legacy2rc(rc);
-
-        /* The remote executor may add its uptime to the XML reply, which is
-         * useful in handling transient attributes when the connection to the
-         * remote node unexpectedly drops.  If no parameter is given, just
-         * default to -1.
-         */
-        crm_element_value_ll(reply, PCMK__XA_UPTIME, &uptime);
-        native->remote->uptime = uptime;
-
-        if (start_state) {
-            native->remote->start_state = strdup(start_state);
-        }
-
-        if (rc == EPROTO) {
-            crm_err("Executor protocol version mismatch between client (%s) and server (%s)",
-                LRMD_PROTOCOL_VERSION, version);
-            crm_log_xml_err(reply, "Protocol Error");
-        } else if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-            crm_err("Invalid registration message: %s", msg_type);
-            crm_log_xml_err(reply, "Bad reply");
-            rc = EPROTO;
-        } else if (tmp_ticket == NULL) {
-            crm_err("No registration token provided");
-            crm_log_xml_err(reply, "Bad reply");
-            rc = EPROTO;
-        } else {
-            crm_trace("Obtained registration token: %s", tmp_ticket);
-            native->token = strdup(tmp_ticket);
-            native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
-            rc = pcmk_rc_ok;
-        }
+        rc = process_lrmd_handshake_reply(reply, native);
     }
 
     pcmk__xml_free(reply);
