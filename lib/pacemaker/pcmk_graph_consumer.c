@@ -636,10 +636,10 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
     crm_trace("Unpacking synapse %s action sets",
               crm_element_value(xml_synapse, PCMK_XA_ID));
 
-    for (action_set = pcmk__xe_first_child(xml_synapse, "action_set", NULL,
-                                           NULL);
+    for (action_set = pcmk__xe_first_child(xml_synapse, PCMK__XE_ACTION_SET,
+                                           NULL, NULL);
          action_set != NULL;
-         action_set = pcmk__xe_next(action_set, "action_set")) {
+         action_set = pcmk__xe_next(action_set, PCMK__XE_ACTION_SET)) {
 
         for (xmlNode *action = pcmk__xe_first_child(action_set, NULL, NULL,
                                                     NULL);

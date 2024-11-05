@@ -19,6 +19,7 @@ extern "C" {
  */
 
 #define PCMK__XE_ACK                    "ack"
+#define PCMK__XE_ACTION_SET             "action_set"
 #define PCMK__XE_ATTRIBUTES             "attributes"
 #define PCMK__XE_CIB_CALLBACK           "cib-callback"
 #define PCMK__XE_CIB_CALLDATA           "cib_calldata"

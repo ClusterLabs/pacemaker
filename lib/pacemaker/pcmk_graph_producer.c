@@ -912,7 +912,7 @@ add_action_to_graph(gpointer data, gpointer user_data)
               ((action->node == NULL)? "" : action->node->priv->name));
 
     syn = create_graph_synapse(action, scheduler);
-    set = pcmk__xe_create(syn, "action_set");
+    set = pcmk__xe_create(syn, PCMK__XE_ACTION_SET);
     in = pcmk__xe_create(syn, "inputs");
 
     create_graph_action(set, action, false, scheduler);
