@@ -13,7 +13,10 @@
 #include <sys/time.h>     // struct timeval
 #include <glib.h>         // gpointer, gboolean, guint, GHashTable
 #include <libxml/tree.h>  // xmlNode
+
 #include <crm/crm.h>
+#include <crm/common/iso8601.h> // crm_time_t
+#include <crm/common/rules.h>   // pcmk_rule_input_t
 
 
 #ifdef __cplusplus
@@ -40,6 +43,11 @@ void hash2field(gpointer key, gpointer value, gpointer user_data);
 void hash2metafield(gpointer key, gpointer value, gpointer user_data);
 void hash2smartfield(gpointer key, gpointer value, gpointer user_data);
 GHashTable *xml2list(const xmlNode *parent);
+
+void pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
+                               const char *first_id,
+                               const pcmk_rule_input_t *rule_input,
+                               GHashTable *values, crm_time_t *next_change);
 
 char *crm_meta_name(const char *field);
 const char *crm_meta_value(GHashTable *hash, const char *field);
