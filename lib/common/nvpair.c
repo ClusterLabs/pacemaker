@@ -478,6 +478,46 @@ pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
     pcmk__xe_foreach_child(pair, PCMK_XE_NVPAIR, unpack_nvpair, unpack_data);
 }
 
+/*!
+ * \brief Unpack nvpair blocks contained by an XML element into a hash table,
+ *        evaluated for any rules
+ *
+ * \param[in]  xml           XML element containing blocks of nvpair elements
+ * \param[in]  element_name  If not NULL, only unpack blocks of this element
+ * \param[in]  first_id      If not NULL, process block with this ID first
+ * \param[in]  rule_input    Values used to evaluate rule criteria
+ * \param[out] values        Where to store extracted name/value pairs
+ * \param[out] next_change   If not NULL, set to when evaluation will next
+ *                           change, if sooner than its current value
+ */
+void
+pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
+                          const char *first_id,
+                          const pcmk_rule_input_t *rule_input,
+                          GHashTable *values, crm_time_t *next_change)
+{
+    GList *blocks = pcmk__xe_dereference_children(xml, element_name);
+
+    if (blocks != NULL) {
+        pcmk__nvpair_unpack_t data = {
+            .values = values,
+            .first_id = first_id,
+            .rule_input = {
+                .now = NULL,
+            },
+            .overwrite = false,
+            .next_change = next_change,
+        };
+
+        if (rule_input != NULL) {
+            data.rule_input = *rule_input;
+        }
+        blocks = g_list_sort_with_data(blocks, pcmk__cmp_nvpair_blocks, &data);
+        g_list_foreach(blocks, pcmk__unpack_nvpair_block, &data);
+        g_list_free(blocks);
+    }
+}
+
 
 // Meta-attribute handling
 
