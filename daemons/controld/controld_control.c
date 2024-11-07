@@ -530,6 +530,9 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     crm_time_t *now = crm_time_new(NULL);
     xmlNode *crmconfig = NULL;
     xmlNode *alerts = NULL;
+    pcmk_rule_input_t rule_input = {
+        .now = now,
+    };
 
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
@@ -559,9 +562,9 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     crm_debug("Call %d : Parsing CIB options", call_id);
     config_hash = pcmk__strkey_table(free, free);
-    pe_unpack_nvpairs(crmconfig, crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
-                      config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, FALSE, now,
-                      NULL);
+    pcmk_unpack_nvpair_blocks(crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET,
+                              PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
+                              config_hash, NULL);
 
     // Validate all options, and use defaults if not already present in hash
     pcmk__validate_cluster_options(config_hash);

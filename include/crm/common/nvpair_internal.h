@@ -31,8 +31,7 @@ typedef struct unpack_data_s {
     /* Whether each block's values should overwrite any existing ones
      *
      * @COMPAT Only external call paths set this to true. Drop it when we drop
-     * pe_eval_nvpairs() and pe_unpack_nvpairs() after replacing with a new
-     * public API that doesn't overwrite.
+     * pe_eval_nvpairs() and pe_unpack_nvpairs().
      */
     bool overwrite;
 

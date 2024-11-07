@@ -739,9 +739,13 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 
     config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
     if (config) {
-        pe_unpack_nvpairs(NULL, config, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
-                          options, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, FALSE, now,
-                          NULL);
+        pcmk_rule_input_t rule_input = {
+            .now = now,
+        };
+
+        pcmk_unpack_nvpair_blocks(config, PCMK_XE_CLUSTER_PROPERTY_SET,
+                                  PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
+                                  options, NULL);
     }
 
     pcmk__validate_cluster_options(options);
