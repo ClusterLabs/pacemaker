@@ -83,7 +83,7 @@ void pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,
                          const char *value);
 void pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
                              int value);
-GList *pe_unpack_alerts(const xmlNode *alerts);
+GList *pcmk__unpack_alerts(const xmlNode *alerts);
 void pe_free_alert_list(GList *alert_list);
 
 static inline const char *
