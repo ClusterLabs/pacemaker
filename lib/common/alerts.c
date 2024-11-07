@@ -129,19 +129,21 @@ pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
                         pcmk__itoa(value));
 }
 
+#define READABLE_DEFAULT pcmk__readable_interval(PCMK__ALERT_DEFAULT_TIMEOUT_MS)
+
 /*!
  * \internal
- * \brief Unpack an alert's or alert recipient's meta attributes
+ * \brief Unpack options for an alert or alert recipient from its
+ *        meta-attributes in the CIB XML configuration
  *
- * \param[in,out] basenode     Alert or recipient XML
+ * \param[in,out] xml          Alert or recipient XML
  * \param[in,out] entry        Where to store unpacked values
  * \param[in,out] max_timeout  Max timeout of all alerts and recipients thus far
  *
  * \return Standard Pacemaker return code
  */
 static int
-get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
-                        guint *max_timeout)
+unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
 {
     GHashTable *config_hash = pcmk__strkey_table(free, free);
     crm_time_t *now = crm_time_new(NULL);
@@ -152,8 +154,8 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
         .now = now,
     };
 
-    pcmk_unpack_nvpair_blocks(basenode, PCMK_XE_META_ATTRIBUTES, NULL,
-                              &rule_input, config_hash, NULL);
+    pcmk_unpack_nvpair_blocks(xml, PCMK_XE_META_ATTRIBUTES, NULL, &rule_input,
+                              config_hash, NULL);
     crm_time_free(now);
 
     value = g_hash_table_lookup(config_hash, PCMK_META_ENABLED);
@@ -164,31 +166,30 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
     }
 
     value = g_hash_table_lookup(config_hash, PCMK_META_TIMEOUT);
-    if (value) {
+    if (value != NULL) {
         long long timeout_ms = crm_get_msec(value);
 
         entry->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
         if (entry->timeout <= 0) {
             if (entry->timeout == 0) {
-                crm_trace("Alert %s uses default timeout of %dmsec",
-                          entry->id, PCMK__ALERT_DEFAULT_TIMEOUT_MS);
+                crm_trace("Alert %s uses default timeout (%s)",
+                          entry->id, READABLE_DEFAULT);
             } else {
-                pcmk__config_warn("Alert %s has invalid timeout value '%s', "
-                                  "using default (%d ms)",
-                                  entry->id, value,
-                                  PCMK__ALERT_DEFAULT_TIMEOUT_MS);
+                pcmk__config_warn("Using default timeout (%s) for alert %s "
+                                  "because '%s' is not a valid timeout",
+                                  entry->id, value, READABLE_DEFAULT);
             }
             entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
         } else {
-            crm_trace("Alert %s uses timeout of %dmsec",
-                      entry->id, entry->timeout);
+            crm_trace("Alert %s uses timeout of %s",
+                      entry->id, pcmk__readable_interval(entry->timeout));
         }
         if (entry->timeout > *max_timeout) {
             *max_timeout = entry->timeout;
         }
     }
     value = g_hash_table_lookup(config_hash, PCMK_META_TIMESTAMP_FORMAT);
-    if (value) {
+    if (value != NULL) {
         /* hard to do any checks here as merely anything can
          * can be a valid time-format-string
          */
@@ -310,7 +311,7 @@ unpack_alert(xmlNode *alert, pcmk__alert_t *entry, guint *max_timeout)
     int rc = pcmk_rc_ok;
 
     get_envvars_from_cib(alert, entry);
-    rc = get_meta_attrs_from_cib(alert, entry, max_timeout);
+    rc = unpack_alert_options(alert, entry, max_timeout);
     if (rc == pcmk_rc_ok) {
         unpack_alert_filter(alert, entry);
     }
