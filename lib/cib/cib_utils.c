@@ -22,7 +22,6 @@
 #include <crm/common/cib_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
-#include <crm/pengine/rules.h>
 
 gboolean
 cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)

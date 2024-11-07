@@ -11,7 +11,6 @@
 
 #include <stdint.h>
 
-#include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <pe_status_private.h>

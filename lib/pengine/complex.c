@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 
-#include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>

@@ -18,7 +18,7 @@
 #include <crm/common/roles.h>           // enum rsc_role_e
 
 #include <crm/common/xml.h>
-#include <crm/pengine/rules.h>          // pcmk_rule_input_t, etc.
+#include <crm/common/rules.h>           // pcmk_rule_input_t, etc.
 #include <crm/common/nvpair_internal.h> // pcmk__nvpair_unpack_t, etc.
 
 CRM_TRACE_INIT_DATA(pe_rules);
