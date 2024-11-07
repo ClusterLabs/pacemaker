@@ -15,6 +15,15 @@
 #  include <crm/common/iso8601.h>
 #  include <crm/common/scheduler.h>
 
+/**
+ * \file
+ * \brief Deprecated Pacemaker shared API for scheduler and rules
+ * \ingroup pengine
+ * \deprecated Do not include this header directly. The APIs in this
+ *             header, and the header itself, will be removed in a future
+ *             release.
+ */
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/pengine/common_compat.h>
 #endif
