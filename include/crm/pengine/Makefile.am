@@ -14,6 +14,7 @@ headerdir=$(pkgincludedir)/crm/pengine
 noinst_HEADERS		= internal.h 			\
 			  $(wildcard *_internal.h)
 header_HEADERS		= common.h 		\
+			  common_compat.h 	\
 			  complex.h 		\
 			  pe_types.h 		\
 			  rules.h 		\
