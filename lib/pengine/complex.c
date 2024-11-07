@@ -127,7 +127,7 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 
 static void
 expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
-                             pe_rule_eval_data_t *rule_data,
+                             const pcmk_rule_input_t *rule_input,
                              GHashTable *meta_hash, pcmk_scheduler_t *scheduler)
 {
     GHashTable *parent_orig_meta = pcmk__strkey_table(free, free);
@@ -145,7 +145,7 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
     while(p != NULL) {
         /* A hash table for comparison is generated, including the id-ref. */
         pe__unpack_dataset_nvpairs(p->priv->xml, PCMK_XE_META_ATTRIBUTES,
-                                   rule_data, parent_orig_meta, NULL,
+                                   rule_input, parent_orig_meta, NULL,
                                    scheduler);
         p = p->priv->parent;
     }
@@ -175,18 +175,11 @@ void
 get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
                     pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
-    pe_rsc_eval_data_t rsc_rule_data = {
-        .standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS),
-        .provider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER),
-        .agent = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE)
-    };
-
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
+    const pcmk_rule_input_t rule_input = {
         .now = scheduler->priv->now,
-        .match_data = NULL,
-        .rsc_data = &rsc_rule_data,
-        .op_data = NULL
+        .rsc_standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS),
+        .rsc_provider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER),
+        .rsc_agent = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE)
     };
 
     for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->priv->xml);
@@ -199,19 +192,19 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
     }
 
     pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_META_ATTRIBUTES,
-                               &rule_data, meta_hash, NULL, scheduler);
+                               &rule_input, meta_hash, NULL, scheduler);
 
     /* Set the PCMK_XE_META_ATTRIBUTES explicitly set in the parent resource to
      * the hash table of the child resource. If it is already explicitly set as
      * a child, it will not be overwritten.
      */
     if (rsc->priv->parent != NULL) {
-        expand_parents_fixed_nvpairs(rsc, &rule_data, meta_hash, scheduler);
+        expand_parents_fixed_nvpairs(rsc, &rule_input, meta_hash, scheduler);
     }
 
     /* check the defaults */
     pe__unpack_dataset_nvpairs(scheduler->priv->rsc_defaults,
-                               PCMK_XE_META_ATTRIBUTES, &rule_data, meta_hash,
+                               PCMK_XE_META_ATTRIBUTES, &rule_input, meta_hash,
                                NULL, scheduler);
 
     /* If there is PCMK_XE_META_ATTRIBUTES that the parent resource has not
@@ -236,25 +229,21 @@ void
 get_rsc_attributes(GHashTable *instance_attrs, const pcmk_resource_t *rsc,
                    const pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
+    pcmk_rule_input_t rule_input = {
         .now = NULL,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
     };
 
     CRM_CHECK((instance_attrs != NULL) && (rsc != NULL) && (scheduler != NULL),
               return);
 
-    rule_data.now = scheduler->priv->now;
+    rule_input.now = scheduler->priv->now;
     if (node != NULL) {
-        rule_data.node_hash = node->priv->attrs;
+        rule_input.node_attrs = node->priv->attrs;
     }
 
     // Evaluate resource's own values, then its ancestors' values
     pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_INSTANCE_ATTRIBUTES,
-                               &rule_data, instance_attrs, NULL, scheduler);
+                               &rule_input, instance_attrs, NULL, scheduler);
     if (rsc->priv->parent != NULL) {
         get_rsc_attributes(instance_attrs, rsc->priv->parent, node, scheduler);
     }
@@ -708,12 +697,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     bool remote_node = false;
     pcmk__resource_private_t *rsc_private = NULL;
 
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
+    pcmk_rule_input_t rule_input = {
         .now = NULL,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
     };
 
     CRM_CHECK(rsc != NULL, return EINVAL);
@@ -721,7 +706,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
               *rsc = NULL;
               return EINVAL);
 
-    rule_data.now = scheduler->priv->now;
+    rule_input.now = scheduler->priv->now;
 
     crm_log_xml_trace(xml_obj, "[raw XML]");
 
@@ -983,7 +968,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                     pcmk_is_set((*rsc)->flags, pcmk__rsc_notify)? "required" : "not required");
 
     pe__unpack_dataset_nvpairs(rsc_private->xml, PCMK_XE_UTILIZATION,
-                               &rule_data, rsc_private->utilization, NULL,
+                               &rule_input, rsc_private->utilization, NULL,
                                scheduler);
 
     if (expanded_xml) {
