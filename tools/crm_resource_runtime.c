@@ -257,6 +257,27 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Get a resource's XML by resource ID from a given CIB XML tree
+ *
+ * \param[in] cib_xml  CIB XML to search
+ * \param[in] rsc      Resource whose XML to get
+ *
+ * \return Subtree of \p cib_xml belonging to \p rsc, or \c NULL if not found
+ */
+static xmlNode *
+get_cib_rsc(xmlNode *cib_xml, const pcmk_resource_t *rsc)
+{
+    char *xpath = crm_strdup_printf("%s//*[@" PCMK_XA_ID "='%s']",
+                                    pcmk_cib_xpath_for(PCMK_XE_RESOURCES),
+                                    pcmk__xe_id(rsc->priv->xml));
+    xmlNode *rsc_xml = get_xpath_object(xpath, cib_xml, LOG_ERR);
+
+    free(xpath);
+    return rsc_xml;
+}
+
 static int
 update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
                          cib_t *cib, const char *attr_name, const char *attr_value)
@@ -562,7 +583,7 @@ int
 cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
-                              cib_t *cib, gboolean force)
+                              cib_t *cib, xmlNode *cib_xml_orig, gboolean force)
 {
     pcmk__output_t *out = rsc->priv->scheduler->priv->out;
     int rc = pcmk_rc_ok;
@@ -577,9 +598,17 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
     }
 
     if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        pcmk__xe_remove_attr(rsc->priv->xml, attr_name);
-        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->priv->xml,
-                                cib_sync_call);
+        xmlNode *rsc_xml = rsc->priv->xml;
+
+        if (cib_xml_orig != NULL) {
+            rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
+            if (rsc_xml == NULL) {
+                return ENXIO;
+            }
+        }
+
+        pcmk__xe_remove_attr(rsc_xml, attr_name);
+        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc_xml, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Deleted attribute: %s", attr_name);
@@ -605,6 +634,10 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
         rsc = (pcmk_resource_t *) iter->data;
 
+        /* @TODO Search the original CIB in find_resource_attr() for
+         * future-proofing, to ensure that we're getting IDs of nvpairs that
+         * exist in the CIB.
+         */
         lookup_id = clone_strip(rsc->id);
         rc = find_resource_attr(out, cib, PCMK_XA_ID, lookup_id, attr_set_type,
                                 attr_set, attr_id, attr_name, &xml_search);
@@ -649,6 +682,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         pcmk__xml_free(xml_obj);
         free(found_attr_id);
     }
+
     g_list_free(resources);
     return rc;
 }
@@ -1801,7 +1835,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     } else {
         rc = cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
-                                           PCMK_META_TARGET_ROLE, cib, force);
+                                           PCMK_META_TARGET_ROLE, cib, NULL, force);
     }
 
     if(rc != pcmk_rc_ok) {
@@ -1883,7 +1917,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     } else {
         cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
-                                      PCMK_META_TARGET_ROLE, cib, force);
+                                      PCMK_META_TARGET_ROLE, cib, NULL, force);
     }
 
 done:

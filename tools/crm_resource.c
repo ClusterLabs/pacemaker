@@ -1435,6 +1435,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
+    xmlNode *cib_xml_orig = NULL;
     pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
     uint32_t find_flags = 0;
@@ -1637,7 +1638,7 @@ main(int argc, char **argv)
 
     // Populate scheduler data from XML file if specified or CIB query otherwise
     if (is_scheduler_required()) {
-        rc = initialize_scheduler_data(NULL);
+        rc = initialize_scheduler_data(&cib_xml_orig);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             goto done;
@@ -1977,7 +1978,7 @@ main(int argc, char **argv)
                                                options.attr_set_type,
                                                options.prop_id,
                                                options.prop_name, cib_conn,
-                                               options.force);
+                                               cib_xml_orig, options.force);
             break;
 
         case cmd_cleanup:
@@ -2058,6 +2059,8 @@ done:
                         _("Error performing operation: %s"), crm_exit_str(exit_code));
         }
     }
+
+    pcmk__xml_free(cib_xml_orig);
 
     g_free(options.host_uname);
     g_free(options.interval_spec);
