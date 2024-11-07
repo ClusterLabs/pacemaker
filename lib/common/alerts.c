@@ -245,11 +245,18 @@ unpack_alert_parameters(const xmlNode *xml, pcmk__alert_t *entry)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create filters for an alert or alert recipient based on its
+ *        configuration in CIB XML
+ *
+ * \param[in]     xml    Alert or recipient XML
+ * \param[in,out] entry  Alert entry to create filters for
+ */
 static void
-unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
+unpack_alert_filter(xmlNode *xml, pcmk__alert_t *entry)
 {
-    xmlNode *select = pcmk__xe_first_child(basenode, PCMK_XE_SELECT, NULL,
-                                           NULL);
+    xmlNode *select = pcmk__xe_first_child(xml, PCMK_XE_SELECT, NULL, NULL);
     xmlNode *event_type = NULL;
     uint32_t flags = pcmk__alert_none;
 
