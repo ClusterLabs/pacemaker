@@ -10,9 +10,11 @@
 #ifndef PCMK__CRM_COMMON_ALERTS_INTERNAL__H
 #define PCMK__CRM_COMMON_ALERTS_INTERNAL__H
 
-#include <glib.h>
 #include <stdbool.h>
-#include <stdint.h>
+#include <stdint.h>         // uint32_t
+
+#include <glib.h>           // GList, GHashTable
+#include <libxml/tree.h>    // xmlNode
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,6 +83,8 @@ void pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,
                          const char *value);
 void pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
                              int value);
+GList *pe_unpack_alerts(const xmlNode *alerts);
+void pe_free_alert_list(GList *alert_list);
 
 static inline const char *
 pcmk__alert_flag2text(enum pcmk__alert_flags flag)

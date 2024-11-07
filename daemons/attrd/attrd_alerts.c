@@ -15,7 +15,6 @@
 #include <crm/common/alerts_internal.h>
 #include <crm/common/cib_internal.h>
 #include <crm/common/xml.h>
-#include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_internal.h>
 #include "pacemaker-attrd.h"
 
