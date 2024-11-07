@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_PENGINE_COMMON_COMPAT__H
 #define PCMK__CRM_PENGINE_COMMON_COMPAT__H
 
+#include <regex.h>                  // regmatch_t
 #include <glib.h>                   // guint, GHashTable
 
 #include <crm/common/iso8601.h>     // crm_time_t
@@ -30,6 +31,12 @@ extern "C" {
 
 //!@{
 //! \deprecated Use pcmk_rule_input_t instead
+
+typedef struct pe_re_match_data {
+    char *string;
+    int nregs;
+    regmatch_t *pmatch;
+} pe_re_match_data_t;
 
 typedef struct pe_match_data {
     pe_re_match_data_t *re;
