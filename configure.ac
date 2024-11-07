@@ -229,8 +229,9 @@ AC_ARG_ENABLE([hardening],
 yes_no_try "$enable_hardening" "try"
 enable_hardening=$?
 
-dnl --enable-* options: features
+dnl --enable-* options: features within Pacemaker
 
+dnl @COMPAT This should be --with-systemd
 AC_ARG_ENABLE([systemd],
     [AS_HELP_STRING([--enable-systemd],
         [enable support for managing resources via systemd @<:@try@:>@])]
@@ -238,7 +239,14 @@ AC_ARG_ENABLE([systemd],
 yes_no_try "$enable_systemd" "try"
 enable_systemd=$?
 
-dnl --enable-* options: features inherent to Pacemaker
+AC_ARG_ENABLE([deprecated-libs],
+    [AS_HELP_STRING([--enable-deprecated-libs],
+        [Build and install deprecated C libraries @<:@yes@:>@])]
+)
+yes_no_try "$enable_deprecated_libs" "yes"
+enable_deprecated_libs=$?
+AM_CONDITIONAL([BUILD_DEPRECATED_LIBS],
+               [test $enable_deprecated_libs -ne $DISABLED])
 
 # AM_GNU_GETTEXT calls AM_NLS which defines the nls option, but it defaults
 # to enabled. We override the definition of AM_NLS to flip the default and mark
@@ -255,7 +263,7 @@ AC_DEFUN([AM_NLS],
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.18])
 
-dnl --with-* options: external software support, and custom locations
+dnl --with-* options: external software support, and custom values
 
 dnl This argument is defined via an M4 macro so default can be a variable
 AC_DEFUN([VERSION_ARG],
@@ -295,8 +303,7 @@ AC_ARG_WITH([bug-url],
 AS_IF([test x"${BUG_URL}" = x""],
       [BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"])
 
-dnl --with-* options: features
-
+dnl @COMPAT This should be --enable-cibsecrets option
 AC_ARG_WITH([cibsecrets],
     [AS_HELP_STRING([--with-cibsecrets],
         [support separate file for CIB secrets @<:@no@:>@])]
