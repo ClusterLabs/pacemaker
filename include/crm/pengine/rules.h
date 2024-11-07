@@ -16,19 +16,6 @@
 #  include <crm/common/scheduler.h>
 #  include <crm/pengine/common.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
-                     const pe_rule_eval_data_t *rule_data, GHashTable *hash,
-                     const char *always_first, gboolean overwrite,
-                     crm_time_t *next_change);
-
-#ifdef __cplusplus
-}
-#endif
-
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/pengine/rules_compat.h>
 #endif

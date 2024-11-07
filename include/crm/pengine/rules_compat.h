@@ -10,10 +10,11 @@
 #ifndef PCMK__CRM_PENGINE_RULES_COMPAT__H
 #  define PCMK__CRM_PENGINE_RULES_COMPAT__H
 
-#include <glib.h>
-#include <libxml/tree.h>        // xmlNode
-#include <crm/common/iso8601.h> // crm_time_t
-#include <crm/pengine/pe_types.h>
+#include <glib.h>                   // gboolean, GHashTable
+#include <libxml/tree.h>            // xmlNode
+#include <crm/common/iso8601.h>     // crm_time_t
+#include <crm/common/roles.h>       // enum rsc_role_e
+#include <crm/pengine/common.h>     // pe_rule_eval_data_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,6 +40,12 @@ void pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj,
                        GHashTable *hash, const char *always_first,
                        gboolean overwrite, crm_time_t *now,
                        crm_time_t *next_change);
+
+//! \deprecated Use pcmk_unpack_nvpair_blocks() instead
+void pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
+                     const pe_rule_eval_data_t *rule_data, GHashTable *hash,
+                     const char *always_first, gboolean overwrite,
+                     crm_time_t *next_change);
 
 #ifdef __cplusplus
 }
