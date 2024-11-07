@@ -31,12 +31,6 @@ typedef struct pe_match_data {
     GHashTable *meta;
 } pe_match_data_t;
 
-typedef struct pe_rsc_eval_data {
-    const char *standard;
-    const char *provider;
-    const char *agent;
-} pe_rsc_eval_data_t;
-
 #ifdef __cplusplus
 }
 #endif

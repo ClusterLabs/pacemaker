@@ -31,6 +31,12 @@ extern "C" {
 //!@{
 //! \deprecated Use pcmk_rule_input_t instead
 
+typedef struct pe_rsc_eval_data {
+    const char *standard;
+    const char *provider;
+    const char *agent;
+} pe_rsc_eval_data_t;
+
 typedef struct pe_op_eval_data {
     const char *op_name;
     guint interval;
