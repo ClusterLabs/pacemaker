@@ -26,6 +26,7 @@ CRM_TRACE_INIT_DATA(pe_rules);
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
+#include <crm/pengine/common_compat.h>
 #include <crm/pengine/rules_compat.h>
 
 gboolean

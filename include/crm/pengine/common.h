@@ -42,17 +42,12 @@ typedef struct pe_op_eval_data {
     guint interval;
 } pe_op_eval_data_t;
 
-typedef struct pe_rule_eval_data {
-    GHashTable *node_hash;          // Only used with g_hash_table_lookup()
-    enum rsc_role_e role;           //!< \deprecated Ignored
-    crm_time_t *now;                // @COMPAT could be const
-    pe_match_data_t *match_data;    // @COMPAT could be const
-    pe_rsc_eval_data_t *rsc_data;   // @COMPAT could be const
-    pe_op_eval_data_t *op_data;     // @COMPAT could be const
-} pe_rule_eval_data_t;
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/pengine/common_compat.h>
 #endif
 
 #endif
