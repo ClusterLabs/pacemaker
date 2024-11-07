@@ -203,16 +203,24 @@ done:
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Unpack agent parameters for an alert or alert recipient into an
+ *        environment variable list based on its CIB XML configuration
+ *
+ * \param[in]     xml    Alert or recipient XML
+ * \param[in,out] entry  Alert entry to create environment variables for
+ */
 static void
-get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
+unpack_alert_parameters(const xmlNode *xml, pcmk__alert_t *entry)
 {
     xmlNode *child;
 
-    if ((basenode == NULL) || (entry == NULL)) {
+    if ((xml == NULL) || (entry == NULL)) {
         return;
     }
 
-    child = pcmk__xe_first_child(basenode, PCMK_XE_INSTANCE_ATTRIBUTES, NULL,
+    child = pcmk__xe_first_child(xml, PCMK_XE_INSTANCE_ATTRIBUTES, NULL,
                                  NULL);
     if (child == NULL) {
         return;
@@ -310,7 +318,7 @@ unpack_alert(xmlNode *alert, pcmk__alert_t *entry, guint *max_timeout)
 {
     int rc = pcmk_rc_ok;
 
-    get_envvars_from_cib(alert, entry);
+    unpack_alert_parameters(alert, entry);
     rc = unpack_alert_options(alert, entry, max_timeout);
     if (rc == pcmk_rc_ok) {
         unpack_alert_filter(alert, entry);
