@@ -429,9 +429,9 @@ pcmk__unpack_alerts(const xmlNode *alerts)
  * \param[in,out] alert_list  Alert list to free
  */
 void
-pe_free_alert_list(GList *alert_list)
+pcmk__free_alerts(GList *alert_list)
 {
-    if (alert_list) {
+    if (alert_list != NULL) {
         g_list_free_full(alert_list, (GDestroyNotify) pcmk__free_alert);
     }
 }
