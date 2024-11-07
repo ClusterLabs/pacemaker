@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_PENGINE_COMMON_COMPAT__H
 #define PCMK__CRM_PENGINE_COMMON_COMPAT__H
 
-#include <glib.h>                   // GHashTable
+#include <glib.h>                   // guint, GHashTable
 
 #include <crm/common/iso8601.h>     // crm_time_t
 #include <crm/common/roles.h>       // enum rsc_role_e
@@ -30,6 +30,11 @@ extern "C" {
 
 //!@{
 //! \deprecated Use pcmk_rule_input_t instead
+
+typedef struct pe_op_eval_data {
+    const char *op_name;
+    guint interval;
+} pe_op_eval_data_t;
 
 typedef struct pe_rule_eval_data {
     GHashTable *node_hash;
