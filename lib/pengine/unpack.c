@@ -20,7 +20,6 @@
 #include <crm/common/xml_internal.h>
 
 #include <crm/common/util.h>
-#include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 #include <pe_status_private.h>
 
