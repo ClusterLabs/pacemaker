@@ -977,7 +977,7 @@ clear_constraints(pcmk__output_t *out)
 }
 
 static int
-initialize_scheduler_data(void)
+initialize_scheduler_data(xmlNode **cib_xml_orig)
 {
     int rc = pcmk_rc_ok;
 
@@ -988,7 +988,7 @@ initialize_scheduler_data(void)
 
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
     scheduler->priv->out = out;
-    rc = update_scheduler_input(out, scheduler, cib_conn);
+    rc = update_scheduler_input(out, scheduler, cib_conn, cib_xml_orig);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -1637,7 +1637,7 @@ main(int argc, char **argv)
 
     // Populate scheduler data from XML file if specified or CIB query otherwise
     if (is_scheduler_required()) {
-        rc = initialize_scheduler_data();
+        rc = initialize_scheduler_data(NULL);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             goto done;

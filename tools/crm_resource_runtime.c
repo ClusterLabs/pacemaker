@@ -1315,46 +1315,66 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  *
  * The CIB XML is upgraded to the latest schema version.
  *
- * \param[in,out] out        Output object
- * \param[in,out] scheduler  Scheduler data to update
- * \param[in]     cib        Connection to the CIB manager
+ * \param[in,out] out           Output object
+ * \param[in,out] scheduler     Scheduler data to update
+ * \param[in]     cib           Connection to the CIB manager
+ * \param[out]    cib_xml_orig  Where to store CIB XML before any schema
+ *                              upgrades (can be \c NULL)
  *
  * \return Standard Pacemaker return code
  */
 int
 update_scheduler_input(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
-                       cib_t *cib)
+                       cib_t *cib, xmlNode **cib_xml_orig)
 {
-    xmlNode *cib_xml = NULL;
+    xmlNode *queried_xml = NULL;
+    xmlNode *updated_xml = NULL;
     int rc = pcmk_rc_ok;
 
     pcmk__assert((out != NULL) && (scheduler != NULL)
                  && (scheduler->input == NULL) && (scheduler->priv->now == NULL)
-                 && (cib != NULL));
+                 && (cib != NULL)
+                 && ((cib_xml_orig == NULL) || (*cib_xml_orig == NULL)));
 
-    rc = cib->cmds->query(cib, NULL, &cib_xml, cib_sync_call);
+    rc = cib->cmds->query(cib, NULL, &queried_xml, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Could not obtain the current CIB: %s", pcmk_rc_str(rc));
-        return rc;
+        goto done;
     }
 
-    rc = pcmk__update_configured_schema(&cib_xml, false);
+    if (cib_xml_orig != NULL) {
+        updated_xml = pcmk__xml_copy(NULL, queried_xml);
+    } else {
+        // No need to preserve the pre-upgrade CIB, so don't make a copy
+        updated_xml = queried_xml;
+        queried_xml = NULL;
+    }
+
+    rc = pcmk__update_configured_schema(&updated_xml, false);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Could not upgrade the current CIB XML: %s",
                  pcmk_rc_str(rc));
-        pcmk__xml_free(cib_xml);
-        return rc;
+        pcmk__xml_free(updated_xml);
+        goto done;
     }
 
-    scheduler->input = cib_xml;
+    scheduler->input = updated_xml;
     scheduler->priv->now = crm_time_new(NULL);
-    return pcmk_rc_ok;
+
+done:
+    if ((rc == pcmk_rc_ok) && (cib_xml_orig != NULL)) {
+        *cib_xml_orig = queried_xml;
+    } else {
+        pcmk__xml_free(queried_xml);
+    }
+    return rc;
 }
 
 // \return Standard Pacemaker return code
 static int
-update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
+update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
+               bool simulate)
 {
     char *pid = NULL;
     char *shadow_file = NULL;
@@ -1365,7 +1385,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
 
     pe_reset_working_set(scheduler);
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
-    rc = update_scheduler_input(out, scheduler, cib);
+    rc = update_scheduler_input(out, scheduler, cib, cib_xml_orig);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -1406,7 +1426,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
         pcmk__simulate_transition(scheduler, shadow_cib, NULL);
         out->quiet = prev_quiet;
 
-        rc = update_dataset(shadow_cib, scheduler, false);
+        rc = update_dataset(shadow_cib, scheduler, NULL, false);
 
     } else {
         cluster_status(scheduler);
@@ -1655,7 +1675,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     }
 
     scheduler->priv->out = out;
-    rc = update_dataset(cib, scheduler, false);
+    rc = update_dataset(cib, scheduler, NULL, false);
 
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not get new resource list: %s (%d)", pcmk_rc_str(rc), rc);
@@ -1710,7 +1730,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         goto done;
     }
 
-    rc = update_dataset(cib, scheduler, true);
+    rc = update_dataset(cib, scheduler, NULL, true);
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not determine which resources would be stopped");
         goto failure;
@@ -1738,7 +1758,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                 timeout -= sleep_interval;
                 crm_trace("%us remaining", timeout);
             }
-            rc = update_dataset(cib, scheduler, FALSE);
+            rc = update_dataset(cib, scheduler, NULL, false);
             if(rc != pcmk_rc_ok) {
                 out->err(out, "Could not determine which resources were stopped");
                 goto failure;
@@ -1817,7 +1837,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                 crm_trace("%ds remaining", timeout);
             }
 
-            rc = update_dataset(cib, scheduler, false);
+            rc = update_dataset(cib, scheduler, NULL, false);
             if(rc != pcmk_rc_ok) {
                 out->err(out, "Could not determine which resources were started");
                 goto failure;
@@ -2011,7 +2031,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
 
         /* Get latest transition graph */
         pe_reset_working_set(scheduler);
-        rc = update_scheduler_input(out, scheduler, cib);
+        rc = update_scheduler_input(out, scheduler, cib, NULL);
         if (rc != pcmk_rc_ok) {
             break;
         }
