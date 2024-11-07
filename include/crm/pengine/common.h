@@ -25,12 +25,6 @@ typedef struct pe_re_match_data {
     regmatch_t *pmatch;
 } pe_re_match_data_t;
 
-typedef struct pe_match_data {
-    pe_re_match_data_t *re;
-    GHashTable *params;
-    GHashTable *meta;
-} pe_match_data_t;
-
 #ifdef __cplusplus
 }
 #endif

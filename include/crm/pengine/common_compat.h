@@ -31,6 +31,12 @@ extern "C" {
 //!@{
 //! \deprecated Use pcmk_rule_input_t instead
 
+typedef struct pe_match_data {
+    pe_re_match_data_t *re;
+    GHashTable *params;
+    GHashTable *meta;
+} pe_match_data_t;
+
 typedef struct pe_rsc_eval_data {
     const char *standard;
     const char *provider;
