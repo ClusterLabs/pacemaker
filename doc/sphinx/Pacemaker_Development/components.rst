@@ -279,8 +279,8 @@ queryable by the `stonith_api_operations_t:history()` method. `crm_mon` and
 .. index::
    single: scheduler
    single: pacemaker-schedulerd
+   single: libcrmcommon
    single: libpe_status
-   single: libpe_rules
    single: libpacemaker
 
 Scheduler
@@ -288,8 +288,8 @@ Scheduler
 
 ``pacemaker-schedulerd`` is the Pacemaker daemon that runs the Pacemaker
 scheduler for the controller, but "the scheduler" in general refers to related
-library code in ``libpe_status`` and ``libpe_rules`` (``lib/pengine/*.c``), and
-some of ``libpacemaker`` (``lib/pacemaker/pcmk_sched_*.c``).
+library code in various files in ``libcrmcommon``, ``libpe_status``, and
+``libpacemaker``.
 
 The purpose of the scheduler is to take a CIB as input and generate a
 transition graph (list of actions that need to be taken) as output.
