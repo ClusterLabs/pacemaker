@@ -80,7 +80,7 @@ MANPAGE_DIRS = ../agents ../daemons ../tools
 .PHONY: manhtml
 manhtml:
 	$(MAKE) $(AM_MAKEFLAGS) -C .. all
-	find $(MANPAGE_DIRS) daemons ../tools -name "[a-z]*.[78]"	\
+	find $(MANPAGE_DIRS) -name "[a-z]*.[78]"	\
 		-exec $(MAKE) $(AM_MAKEFLAGS) \{\}.html \;
 
 .PHONY: manhtml-upload

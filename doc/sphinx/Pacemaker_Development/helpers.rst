@@ -364,7 +364,7 @@ __________
 In addition to the `assertions provided by <https://api.cmocka.org/group__cmocka__asserts.html>`_,
 ``unittest_internal.h`` also provides ``pcmk__assert_asserts``.  This macro takes an
 expression and verifies that the expression aborts due to a failed call to
-``CRM_ASSERT`` or some other similar function.  It can be used like so:
+``pcmk__assert()`` or some other similar function.  It can be used like so:
 
 .. code-block:: c
 
@@ -378,7 +378,7 @@ expression and verifies that the expression aborts due to a failed call to
    }
 
 Here, ``pcmk__parse_ll_range`` expects non-NULL for its second and third
-arguments.  If one of those arguments is NULL, ``CRM_ASSERT`` will fail and
+arguments.  If one of those arguments is NULL, ``pcmk__assert()`` will fail and
 the program will abort.  ``pcmk__assert_asserts`` checks that the code would
 abort and the test passes.  If the code does not abort, the test fails.
 

@@ -236,7 +236,9 @@ special attributes. Some special attributes do not start with ``#``, for
 historical reasons.
 
 Certain special attributes are set automatically by the cluster, should never
-be modified directly, and can be used only within :ref:`rules`.
+be modified directly, and can be used only within :ref:`rules`; these are
+listed under
+:ref:`built-in node attributes <node-attribute-expressions-special>`.
 
 For true/false values, the cluster considers a value of "1", "y", "yes", "on",
 or "true" (case-insensitively) to be true, "0", "n", "no", "off", "false", or
