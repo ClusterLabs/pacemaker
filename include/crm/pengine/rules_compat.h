@@ -14,7 +14,7 @@
 #include <libxml/tree.h>            // xmlNode
 #include <crm/common/iso8601.h>     // crm_time_t
 #include <crm/common/roles.h>       // enum rsc_role_e
-#include <crm/pengine/common.h>     // pe_rule_eval_data_t
+#include <crm/pengine/common_compat.h>  // pe_rule_eval_data_t
 
 #ifdef __cplusplus
 extern "C" {

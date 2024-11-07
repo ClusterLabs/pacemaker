@@ -17,7 +17,6 @@
 #  include <glib.h>                 // gboolean, guint, GList, GHashTable
 #  include <crm/common/iso8601.h>
 #  include <crm/common/scheduler.h>
-#  include <crm/pengine/common.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,6 +33,7 @@ extern "C" {
 #endif
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/pengine/common.h>
 #include <crm/pengine/pe_types_compat.h>
 #endif
 
