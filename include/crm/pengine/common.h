@@ -37,11 +37,6 @@ typedef struct pe_rsc_eval_data {
     const char *agent;
 } pe_rsc_eval_data_t;
 
-typedef struct pe_op_eval_data {
-    const char *op_name;
-    guint interval;
-} pe_op_eval_data_t;
-
 #ifdef __cplusplus
 }
 #endif
