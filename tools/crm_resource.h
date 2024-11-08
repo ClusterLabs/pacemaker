@@ -124,7 +124,8 @@ int cli_resource_update_attribute(pcmk_resource_t *rsc,
                                   const char *attr_set, const char *attr_set_type,
                                   const char *attr_id, const char *attr_name,
                                   const char *attr_value, gboolean recursive,
-                                  cib_t *cib, gboolean force);
+                                  cib_t *cib, xmlNode *cib_xml_orig,
+                                  gboolean force);
 int cli_resource_delete_attribute(pcmk_resource_t *rsc,
                                   const char *requested_name,
                                   const char *attr_set, const char *attr_set_type,

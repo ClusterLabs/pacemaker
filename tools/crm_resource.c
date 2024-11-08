@@ -1968,7 +1968,7 @@ main(int argc, char **argv)
                                                options.prop_name,
                                                options.prop_value,
                                                options.recursive, cib_conn,
-                                               options.force);
+                                               cib_xml_orig, options.force);
             break;
 
         case cmd_delete_param:

@@ -280,18 +280,22 @@ get_cib_rsc(xmlNode *cib_xml, const pcmk_resource_t *rsc)
 
 static int
 update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
-                         cib_t *cib, const char *attr_name, const char *attr_value)
+                         cib_t *cib, xmlNode *cib_xml_orig,
+                         const char *attr_name, const char *attr_value)
 {
     int rc = pcmk_rc_ok;
+    xmlNode *rsc_xml = rsc->priv->xml;
 
-    if (cib == NULL) {
-        return ENOTCONN;
+    if (cib_xml_orig != NULL) {
+        rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
+        if (rsc_xml == NULL) {
+            return ENXIO;
+        }
     }
 
-    crm_xml_add(rsc->priv->xml, attr_name, attr_value);
+    crm_xml_add(rsc_xml, attr_name, attr_value);
 
-    rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->priv->xml,
-                            cib_sync_call);
+    rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc_xml, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     if (rc == pcmk_rc_ok) {
         out->info(out, "Set attribute: " PCMK_XA_NAME "=%s value=%s",
@@ -387,7 +391,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                  const char *attr_set, const char *attr_set_type,
                  const char *attr_id, const char *attr_name,
                  const char *attr_value, gboolean recursive, cib_t *cib,
-                 gboolean force, GList **results)
+                 xmlNode *cib_xml_orig, gboolean force, GList **results)
 {
     pcmk__output_t *out = rsc->priv->scheduler->priv->out;
     int rc = pcmk_rc_ok;
@@ -408,12 +412,14 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
     }
 
     for (GList *iter = resources; iter != NULL; iter = iter->next) {
+        // @TODO Functionize loop body to simplify freeing allocated memory
         char *lookup_id = NULL;
         char *local_attr_set = NULL;
         char *found_attr_id = NULL;
         const char *rsc_attr_id = attr_id;
         const char *rsc_attr_set = attr_set;
 
+        xmlNode *rsc_xml = rsc->priv->xml;
         xmlNode *xml_top = NULL;
         xmlNode *xml_obj = NULL;
         xmlNode *xml_search = NULL;
@@ -444,9 +450,23 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                     rsc_attr_id = found_attr_id;
                 }
 
-                xml_top = pcmk__xe_create(NULL,
-                                          (const char *)
-                                          rsc->priv->xml->name);
+                if (cib_xml_orig != NULL) {
+                    rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
+                    if (rsc_xml == NULL) {
+                        /* @TODO Warn and continue through the rest of the
+                         * resources and return the error at the end? This
+                         * should never happen, but if it does, then we could
+                         * have a partial update.
+                         */
+                        free(lookup_id);
+                        free(found_attr_id);
+                        pcmk__xml_free(xml_search);
+                        g_list_free(resources);
+                        return ENXIO;
+                    }
+                }
+
+                xml_top = pcmk__xe_create(NULL, (const char *) rsc_xml->name);
                 crm_xml_add(xml_top, PCMK_XA_ID, lookup_id);
 
                 xml_obj = pcmk__xe_create(xml_top, attr_set_type);
@@ -524,7 +544,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                           attr_name, attr_value, cons->dependent->id);
                 update_attribute(cons->dependent, cons->dependent->id, NULL,
                                  attr_set_type, NULL, attr_name, attr_value,
-                                 recursive, cib, force, results);
+                                 recursive, cib, cib_xml_orig, force, results);
             }
         }
     }
@@ -539,7 +559,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
                               const char *attr_value, gboolean recursive,
-                              cib_t *cib, gboolean force)
+                              cib_t *cib, xmlNode *cib_xml_orig, gboolean force)
 {
     static bool need_init = true;
     int rc = pcmk_rc_ok;
@@ -551,7 +571,8 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
      * instance, <primitive class="ocf">) there's really not much we need to do.
      */
     if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        return update_element_attribute(out, rsc, cib, attr_name, attr_value);
+        return update_element_attribute(out, rsc, cib, cib_xml_orig, attr_name,
+                                        attr_value);
     }
 
     /* One time initialization - clear flags so we can detect loops */
@@ -564,7 +585,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
     rc = update_attribute(rsc, requested_name, attr_set, attr_set_type,
                           attr_id, attr_name, attr_value, recursive, cib,
-                          force, &results);
+                          cib_xml_orig, force, &results);
 
     if (rc == pcmk_rc_ok) {
         if (results == NULL) {
@@ -1748,7 +1769,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
                                            PCMK_ACTION_STOPPED, FALSE, cib,
-                                           force);
+                                           NULL, force);
     }
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not set " PCMK_META_TARGET_ROLE " for %s: %s (%d)",
@@ -1829,7 +1850,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
-                                           orig_target_role, FALSE, cib, force);
+                                           orig_target_role, FALSE, cib, NULL,
+                                           force);
         free(orig_target_role);
         orig_target_role = NULL;
     } else {
@@ -1912,7 +1934,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         cli_resource_update_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
                                       PCMK_META_TARGET_ROLE, orig_target_role,
-                                      FALSE, cib, force);
+                                      FALSE, cib, NULL, force);
         free(orig_target_role);
     } else {
         cli_resource_delete_attribute(rsc, rsc_id, NULL,
