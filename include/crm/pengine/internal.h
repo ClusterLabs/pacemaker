@@ -128,7 +128,6 @@ void pe__count_bundle(pcmk_resource_t *rsc);
 void common_free(pcmk_resource_t *rsc);
 
 pcmk_node_t *pe__copy_node(const pcmk_node_t *this_node);
-time_t get_effective_time(pcmk_scheduler_t *scheduler);
 
 /* Failure handling utilities (from failcounts.c) */
 

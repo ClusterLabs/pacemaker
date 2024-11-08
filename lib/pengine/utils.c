@@ -397,21 +397,6 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
     }
 }
 
-time_t
-get_effective_time(pcmk_scheduler_t *scheduler)
-{
-    if(scheduler) {
-        if (scheduler->priv->now == NULL) {
-            crm_trace("Recording a new 'now'");
-            scheduler->priv->now = crm_time_new(NULL);
-        }
-        return crm_time_get_seconds_since_epoch(scheduler->priv->now);
-    }
-
-    crm_trace("Defaulting to 'now'");
-    return time(NULL);
-}
-
 gboolean
 get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 {
@@ -674,7 +659,7 @@ void
 pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
                         const char *reason)
 {
-    if ((recheck > get_effective_time(scheduler))
+    if ((recheck > pcmk__scheduler_epoch_time(scheduler))
         && ((scheduler->priv->recheck_by == 0)
             || (scheduler->priv->recheck_by > recheck))) {
         scheduler->priv->recheck_by = recheck;

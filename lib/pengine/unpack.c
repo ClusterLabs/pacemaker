@@ -1484,7 +1484,7 @@ unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
          * avoid fencing is that effective time minus this value is less than
          * the pending node timeout.
          */
-        return member? (long long) get_effective_time(scheduler) : 0LL;
+        return member? (long long) pcmk__scheduler_epoch_time(scheduler) : 0LL;
 
     } else {
         long long when_member = 0LL;
@@ -1630,7 +1630,7 @@ pending_too_long(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         time_t timeout = when_member
                          + pcmk__timeout_ms2s(scheduler->priv->node_pending_ms);
 
-        if (get_effective_time(node->priv->scheduler) >= timeout) {
+        if (pcmk__scheduler_epoch_time(node->priv->scheduler) >= timeout) {
             return true; // Node has timed out
         }
 
@@ -2682,7 +2682,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                                  &lock_time) == pcmk_ok) && (lock_time != 0)) {
 
         if ((scheduler->priv->shutdown_lock_ms > 0U)
-            && (get_effective_time(scheduler)
+            && (pcmk__scheduler_epoch_time(scheduler)
                 > (lock_time + pcmk__timeout_ms2s(scheduler->priv->shutdown_lock_ms)))) {
             pcmk__rsc_info(rsc, "Shutdown lock for %s on %s expired",
                            rsc->id, pcmk__node_name(node));
@@ -4154,7 +4154,7 @@ check_operation_expiry(struct action_history *history)
          * timestamp
          */
 
-        time_t now = get_effective_time(scheduler);
+        time_t now = pcmk__scheduler_epoch_time(scheduler);
         time_t last_failure = 0;
 
         // Is this particular operation history older than the failure timeout?

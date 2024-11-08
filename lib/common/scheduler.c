@@ -104,3 +104,25 @@ pcmk_find_node(const pcmk_scheduler_t *scheduler, const char *node_name)
     }
     return pcmk__find_node_in_list(scheduler->nodes, node_name);
 }
+
+/*!
+ * \internal
+ * \brief Get scheduler data's "now" in epoch time
+ *
+ * \param[in,out] scheduler  Scheduler data
+ *
+ * \return Scheduler data's "now" as seconds since epoch (defaulting to current
+ *         time)
+ */
+time_t
+pcmk__scheduler_epoch_time(pcmk_scheduler_t *scheduler)
+{
+    if (scheduler == NULL) {
+        return time(NULL);
+    }
+    if (scheduler->priv->now == NULL) {
+        crm_trace("Scheduler 'now' set to current time");
+        scheduler->priv->now = crm_time_new(NULL);
+    }
+    return crm_time_get_seconds_since_epoch(scheduler->priv->now);
+}

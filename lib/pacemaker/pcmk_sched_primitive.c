@@ -1623,7 +1623,10 @@ shutdown_time(pcmk_node_t *node)
                      shutdown, pcmk__node_name(node), pcmk_rc_str(rc));
         }
     }
-    return (result == 0)? get_effective_time(node->priv->scheduler) : result;
+    if (result == 0) {
+        result = pcmk__scheduler_epoch_time(node->priv->scheduler);
+    }
+    return result;
 }
 
 /*!
