@@ -43,7 +43,7 @@ pe_new_working_set(void)
         free(scheduler);
         return NULL;
     }
-    set_working_set_defaults(scheduler);
+    pcmk__set_scheduler_defaults(scheduler);
     return scheduler;
 }
 
@@ -432,21 +432,7 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
     scheduler->priv->local_node_name = local_node_name;
 
     // Set defaults for everything else
-    scheduler->priv->next_ordering_id = 1;
-    scheduler->priv->next_action_id = 1;
-    scheduler->no_quorum_policy = pcmk_no_quorum_stop;
-#if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
-    pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_symmetric_cluster
-                              |pcmk__sched_concurrent_fencing
-                              |pcmk__sched_stop_removed_resources
-                              |pcmk__sched_cancel_removed_actions);
-#else
-    pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_symmetric_cluster
-                              |pcmk__sched_stop_removed_resources
-                              |pcmk__sched_cancel_removed_actions);
-#endif
+    pcmk__set_scheduler_defaults(scheduler);
 }
 
 pcmk_resource_t *

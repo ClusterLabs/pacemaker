@@ -18,13 +18,20 @@
 #include "mock_private.h"
 
 static void
-check_defaults(void **state) {
-    uint32_t flags;
-    pcmk_scheduler_t *scheduler = pcmk__assert_alloc(1,
-                                                     sizeof(pcmk_scheduler_t));
+null_scheduler(void **state)
+{
+    pcmk__assert_asserts(pcmk__set_scheduler_defaults(NULL));
+}
 
+static void
+check_defaults(void **state)
+{
+    uint32_t flags = 0U;
+    pcmk_scheduler_t *scheduler = NULL;
+
+    scheduler = pcmk__assert_alloc(1, sizeof(pcmk_scheduler_t));
     scheduler->priv = pcmk__assert_alloc(1, sizeof(pcmk__scheduler_private_t));
-    set_working_set_defaults(scheduler);
+    pcmk__set_scheduler_defaults(scheduler);
 
     flags = pcmk__sched_symmetric_cluster
 #if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
@@ -39,12 +46,10 @@ check_defaults(void **state) {
     assert_int_equal(scheduler->no_quorum_policy, pcmk_no_quorum_stop);
     assert_int_equal(scheduler->flags, flags);
 
-    /* Avoid calling pe_free_working_set here so we don't artificially
-     * inflate the coverage numbers.
-     */
     free(scheduler->priv);
     free(scheduler);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(null_scheduler),
                 cmocka_unit_test(check_defaults))

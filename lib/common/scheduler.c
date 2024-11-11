@@ -20,6 +20,36 @@ uint32_t pcmk__warnings = 0;
 
 /*!
  * \internal
+ * \brief Set non-zero default values in scheduler data
+ *
+ * \param[in,out] scheduler  Scheduler data to modify
+ *
+ * \note Values that default to NULL or 0 will remain unchanged
+ */
+void
+pcmk__set_scheduler_defaults(pcmk_scheduler_t *scheduler)
+{
+    pcmk__assert(scheduler != NULL);
+    scheduler->flags = 0U;
+#if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
+    pcmk__set_scheduler_flags(scheduler,
+                              pcmk__sched_symmetric_cluster
+                              |pcmk__sched_concurrent_fencing
+                              |pcmk__sched_stop_removed_resources
+                              |pcmk__sched_cancel_removed_actions);
+#else
+    pcmk__set_scheduler_flags(scheduler,
+                              pcmk__sched_symmetric_cluster
+                              |pcmk__sched_stop_removed_resources
+                              |pcmk__sched_cancel_removed_actions);
+#endif
+    scheduler->no_quorum_policy = pcmk_no_quorum_stop;
+    scheduler->priv->next_action_id = 1;
+    scheduler->priv->next_ordering_id = 1;
+}
+
+/*!
+ * \internal
  * \brief Get the Designated Controller node from scheduler data
  *
  * \param[in] scheduler  Scheduler data

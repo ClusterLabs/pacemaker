@@ -26,12 +26,13 @@ calloc_fails(void **state) {
 }
 
 static void
-calloc_succeeds(void **state) {
+calloc_succeeds(void **state)
+{
     pcmk_scheduler_t *scheduler = pe_new_working_set();
 
-    /* Nothing else to test about this function, as all it does is call
-     * set_working_set_defaults which is also a public function and should
-     * get its own unit test.
+    /* We only need to test that the return value is non-NULL, as all the
+     * function does is call pcmk__set_scheduler_defaults(), which should have
+     * its own unit test.
      */
     assert_non_null(scheduler);
 

@@ -279,6 +279,7 @@ extern uint32_t pcmk__warnings;
             (scheduler)->flags, (flags_to_clear), #flags_to_clear);         \
     } while (0)
 
+void pcmk__set_scheduler_defaults(pcmk_scheduler_t *scheduler);
 time_t pcmk__scheduler_epoch_time(pcmk_scheduler_t *scheduler);
 
 #ifdef __cplusplus

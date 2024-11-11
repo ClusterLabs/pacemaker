@@ -16,7 +16,6 @@ LDADD += $(top_builddir)/lib/pengine/libpe_status_test.la
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = pe_find_node_any_test 		\
 		 pe_find_node_id_test 		\
-		 pe_new_working_set_test 	\
-		 set_working_set_defaults_test
+		 pe_new_working_set_test
 
 TESTS = $(check_PROGRAMS)
