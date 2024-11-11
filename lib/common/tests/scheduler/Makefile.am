@@ -13,6 +13,7 @@ include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = pcmk__set_scheduler_defaults_test	\
+		 pcmk__update_recheck_time_test		\
 		 pcmk_get_dc_test			\
 		 pcmk_get_no_quorum_policy_test		\
 		 pcmk_has_quorum_test			\
