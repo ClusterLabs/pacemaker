@@ -49,6 +49,116 @@ pcmk__set_scheduler_defaults(pcmk_scheduler_t *scheduler)
 }
 
 /*!
+ * \brief Reset scheduler data to defaults
+ *
+ * Free scheduler data except the local node name and output object, and reset
+ * all other values to defaults, so the data is suitable for rerunning status
+ *
+ * \param[in,out] scheduler  Scheduler data to reset
+ */
+void
+pcmk_reset_scheduler(pcmk_scheduler_t *scheduler)
+{
+    if (scheduler == NULL) {
+        return;
+    }
+
+    /* Be careful about the order of freeing members. Many contain references to
+     * other members that will become dangling if those members are freed first.
+     * For example, the node name and ID of Pacemaker Remote nodes are pointers
+     * into resource objects. Ensure that earlier-freed members are not needed
+     * by any of the free functions for later-freed members.
+     */
+
+    scheduler->dc_node = NULL;
+
+    g_list_free_full(scheduler->nodes, pcmk__free_node);
+    scheduler->nodes = NULL;
+
+    // Do not reset local_node_name or out
+
+    crm_time_free(scheduler->priv->now);
+    scheduler->priv->now = NULL;
+
+    if (scheduler->priv->options != NULL) {
+        g_hash_table_destroy(scheduler->priv->options);
+        scheduler->priv->options = NULL;
+    }
+
+    scheduler->priv->fence_action = NULL;
+    scheduler->priv->fence_timeout_ms = 0U;
+    scheduler->priv->priority_fencing_ms = 0U;
+    scheduler->priv->shutdown_lock_ms = 0U;
+    scheduler->priv->node_pending_ms = 0U;
+    scheduler->priv->placement_strategy = NULL;
+    scheduler->priv->rsc_defaults = NULL;
+    scheduler->priv->op_defaults = NULL;
+
+    g_list_free_full(scheduler->priv->resources, pcmk__free_resource);
+    scheduler->priv->resources = NULL;
+
+    if (scheduler->priv->templates != NULL) {
+        g_hash_table_destroy(scheduler->priv->templates);
+        scheduler->priv->templates = NULL;
+    }
+    if (scheduler->priv->tags != NULL) {
+        g_hash_table_destroy(scheduler->priv->tags);
+        scheduler->priv->tags = NULL;
+    }
+
+    g_list_free_full(scheduler->priv->actions, pcmk__free_action);
+    scheduler->priv->actions = NULL;
+
+    if (scheduler->priv->singletons != NULL) {
+        g_hash_table_destroy(scheduler->priv->singletons);
+        scheduler->priv->singletons = NULL;
+    }
+
+    pcmk__xml_free(scheduler->priv->failed);
+    scheduler->priv->failed = NULL;
+
+    pcmk__free_param_checks(scheduler);
+
+    g_list_free(scheduler->priv->stop_needed);
+    scheduler->priv->stop_needed = NULL;
+
+    g_list_free_full(scheduler->priv->location_constraints,
+                     pcmk__free_location);
+    scheduler->priv->location_constraints = NULL;
+
+    g_list_free_full(scheduler->priv->colocation_constraints, free);
+    scheduler->priv->colocation_constraints = NULL;
+
+    g_list_free_full(scheduler->priv->ordering_constraints,
+                     pcmk__free_action_relation);
+    scheduler->priv->ordering_constraints = NULL;
+
+    if (scheduler->priv->ticket_constraints != NULL) {
+        g_hash_table_destroy(scheduler->priv->ticket_constraints);
+        scheduler->priv->ticket_constraints = NULL;
+    }
+
+    scheduler->priv->ninstances = 0;
+    scheduler->priv->blocked_resources = 0;
+    scheduler->priv->disabled_resources = 0;
+    scheduler->priv->recheck_by = 0;
+
+    pcmk__xml_free(scheduler->priv->graph);
+    scheduler->priv->graph = NULL;
+
+    scheduler->priv->synapse_count = 0;
+
+    pcmk__xml_free(scheduler->input);
+    scheduler->input = NULL;
+
+    pcmk__set_scheduler_defaults(scheduler);
+
+    /* @TODO We should probably reset pcmk__config_has_warning and
+     * pcmk__config_has_error as well
+     */
+}
+
+/*!
  * \internal
  * \brief Get the Designated Controller node from scheduler data
  *
