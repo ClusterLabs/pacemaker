@@ -286,11 +286,9 @@ update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
     int rc = pcmk_rc_ok;
     xmlNode *rsc_xml = rsc->priv->xml;
 
-    if (cib_xml_orig != NULL) {
-        rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
-        if (rsc_xml == NULL) {
-            return ENXIO;
-        }
+    rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
+    if (rsc_xml == NULL) {
+        return ENXIO;
     }
 
     crm_xml_add(rsc_xml, attr_name, attr_value);
@@ -450,20 +448,18 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                     rsc_attr_id = found_attr_id;
                 }
 
-                if (cib_xml_orig != NULL) {
-                    rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
-                    if (rsc_xml == NULL) {
-                        /* @TODO Warn and continue through the rest of the
-                         * resources and return the error at the end? This
-                         * should never happen, but if it does, then we could
-                         * have a partial update.
-                         */
-                        free(lookup_id);
-                        free(found_attr_id);
-                        pcmk__xml_free(xml_search);
-                        g_list_free(resources);
-                        return ENXIO;
-                    }
+                rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
+                if (rsc_xml == NULL) {
+                    /* @TODO Warn and continue through the rest of the resources
+                     * and return the error at the end? This should never
+                     * happen, but if it does, then we could have a partial
+                     * update.
+                     */
+                    free(lookup_id);
+                    free(found_attr_id);
+                    pcmk__xml_free(xml_search);
+                    g_list_free(resources);
+                    return ENXIO;
                 }
 
                 xml_top = pcmk__xe_create(NULL, (const char *) rsc_xml->name);
@@ -567,6 +563,8 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
     GList *results = NULL;
     pcmk__output_t *out = rsc->priv->scheduler->priv->out;
 
+    pcmk__assert(cib_xml_orig != NULL);
+
     /* If we were asked to update the attribute in a resource element (for
      * instance, <primitive class="ocf">) there's really not much we need to do.
      */
@@ -610,7 +608,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
     int rc = pcmk_rc_ok;
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
 
-    pcmk__assert(cib != NULL);
+    pcmk__assert((cib != NULL) && (cib_xml_orig != NULL));
 
     if ((attr_id == NULL) && !force) {
         find_resource_attr(out, cib, PCMK_XA_ID,
@@ -621,11 +619,9 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
     if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
         xmlNode *rsc_xml = rsc->priv->xml;
 
-        if (cib_xml_orig != NULL) {
-            rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
-            if (rsc_xml == NULL) {
-                return ENXIO;
-            }
+        rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
+        if (rsc_xml == NULL) {
+            return ENXIO;
         }
 
         pcmk__xe_remove_attr(rsc_xml, attr_name);
