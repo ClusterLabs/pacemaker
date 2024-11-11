@@ -27,8 +27,9 @@
  * This file isolates handling of various kinds of name/value pairs:
  *
  * - pcmk_nvpair_t data type
+ * - name=value strings
  * - XML nvpair elements (<nvpair id=ID name=NAME value=VALUE>)
- * - Meta-attributes (for resources and actions)
+ * - Instance attributes and meta-attributes (for resources and actions)
  */
 
 // pcmk_nvpair_t handling
@@ -104,7 +105,8 @@ pcmk_free_nvpairs(GSList *nvpairs)
     g_slist_free_full(nvpairs, pcmk__free_nvpair);
 }
 
-// convenience function for name=value strings
+
+// name=value string handling
 
 /*!
  * \internal
@@ -440,6 +442,97 @@ crm_meta_value(GHashTable *meta, const char *attr_name)
         return value;
     }
     return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Compare processing order of two XML blocks of name/value pairs
+ *
+ * \param[in] a          First XML block to compare
+ * \param[in] b          Second XML block to compare
+ * \param[in] user_data  pcmk__nvpair_unpack_t with first_id (whether a
+ *                       particular XML ID should have priority) and overwrite
+ *                       (whether later-processed blocks will overwrite values
+ *                       from earlier ones) set as desired
+ *
+ * \return Standard comparison return code (a negative value if \p a should sort
+ *         first, a positive value if \p b should sort first, and 0 if they
+ *         should sort equally)
+ * \note This is suitable for use as a GList sorting function.
+ */
+gint
+pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
+{
+    const xmlNode *pair_a = a;
+    const xmlNode *pair_b = b;
+    const pcmk__nvpair_unpack_t *unpack_data = user_data;
+
+    int score_a = 0;
+    int score_b = 0;
+    int rc = pcmk_rc_ok;
+
+    /* If we're overwriting values, we want to process blocks from
+     * lowest priority to highest, so higher-priority values overwrite
+     * lower-priority ones. If we're not overwriting values, we want to process
+     * from highest priority to lowest.
+     */
+    const gint a_is_higher = ((unpack_data != NULL)
+                              && unpack_data->overwrite)? 1 : -1;
+    const gint b_is_higher = -a_is_higher;
+
+    /* NULL values have lowest priority, regardless of the other's score
+     * (it won't be possible in practice anyway, this is just a failsafe)
+     */
+    if (a == NULL) {
+        return (b == NULL)? 0 : b_is_higher;
+
+    } else if (b == NULL) {
+        return a_is_higher;
+    }
+
+    /* A particular XML ID can be specified as having highest priority
+     * regardless of score (schema validation, if enabled, prevents two blocks
+     * from having the same ID, so we can ignore handling that case
+     * specifically)
+     */
+    if ((unpack_data != NULL) && (unpack_data->first_id != NULL)) {
+        if (pcmk__str_eq(pcmk__xe_id(pair_a), unpack_data->first_id,
+                         pcmk__str_none)) {
+            return a_is_higher;
+
+        } else if (pcmk__str_eq(pcmk__xe_id(pair_b), unpack_data->first_id,
+                                pcmk__str_none)) {
+            return b_is_higher;
+        }
+    }
+
+    // Otherwise, check the scores
+
+    rc = pcmk__xe_get_score(pair_a, PCMK_XA_SCORE, &score_a, 0);
+    if (rc != pcmk_rc_ok) { // Not possible with schema validation enabled
+        pcmk__config_warn("Using 0 as %s score because '%s' "
+                          "is not a valid score: %s",
+                          pcmk__xe_id(pair_a),
+                          crm_element_value(pair_a, PCMK_XA_SCORE),
+                          pcmk_rc_str(rc));
+    }
+
+    rc = pcmk__xe_get_score(pair_b, PCMK_XA_SCORE, &score_b, 0);
+    if (rc != pcmk_rc_ok) { // Not possible with schema validation enabled
+        pcmk__config_warn("Using 0 as %s score because '%s' "
+                          "is not a valid score: %s",
+                          pcmk__xe_id(pair_b),
+                          crm_element_value(pair_b, PCMK_XA_SCORE),
+                          pcmk_rc_str(rc));
+    }
+
+    if (score_a < score_b) {
+        return b_is_higher;
+
+    } else if (score_a > score_b) {
+        return a_is_higher;
+    }
+    return 0;
 }
 
 // Deprecated functions kept only for backward API compatibility

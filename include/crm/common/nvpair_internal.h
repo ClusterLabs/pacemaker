@@ -39,6 +39,9 @@ typedef struct unpack_data_s {
     crm_time_t *next_change;
 } pcmk__nvpair_unpack_t;
 
+gint pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b,
+                             gpointer user_data);
+
 /*!
  * \internal
  * \brief Insert a meta-attribute into a hash table
