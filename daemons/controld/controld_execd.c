@@ -1480,10 +1480,10 @@ do_lrm_invoke(long long action,
             /* Delete of malformed or nonexistent resource
              * (deleting something that does not exist is a success)
              */
-            crm_notice("Not registering resource '%s' for a %s event "
-                       QB_XS " get-rc=%d (%s) transition-key=%s",
-                       pcmk__xe_id(xml_rsc), operation,
-                       rc, pcmk_strerror(rc), pcmk__xe_id(input->xml));
+            crm_debug("Not registering resource '%s' for a %s event "
+                      QB_XS " get-rc=%d (%s) transition-key=%s",
+                      pcmk__xe_id(xml_rsc), operation,
+                      rc, pcmk_strerror(rc), pcmk__xe_id(input->xml));
             delete_rsc_entry(lrm_state, input, pcmk__xe_id(xml_rsc), NULL,
                              pcmk_ok, user_name, true);
             return;
