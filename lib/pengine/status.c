@@ -20,17 +20,6 @@
 #include <crm/pengine/internal.h>
 #include <pe_status_private.h>
 
-/*!
- * \brief Free scheduler data
- *
- * \param[in,out] scheduler  Scheduler data to free
- */
-void
-pe_free_working_set(pcmk_scheduler_t *scheduler)
-{
-    pcmk_free_scheduler(scheduler);
-}
-
 #define XPATH_DEPRECATED_RULES                          \
     "//" PCMK_XE_OP_DEFAULTS "//" PCMK_XE_EXPRESSION    \
     "|//" PCMK_XE_OP "//" PCMK_XE_EXPRESSION
@@ -337,6 +326,12 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
 
     // Set defaults for everything else
     pcmk__set_scheduler_defaults(scheduler);
+}
+
+void
+pe_free_working_set(pcmk_scheduler_t *scheduler)
+{
+    pcmk_free_scheduler(scheduler);
 }
 
 pcmk_node_t *
