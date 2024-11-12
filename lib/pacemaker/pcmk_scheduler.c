@@ -386,8 +386,8 @@ static void
 schedule_resource_actions(pcmk_scheduler_t *scheduler)
 {
     // Process deferred action checks
-    pe__foreach_param_check(scheduler, check_params);
-    pe__free_param_checks(scheduler);
+    pcmk__foreach_param_check(scheduler, check_params);
+    pcmk__free_param_checks(scheduler);
 
     if (pcmk_is_set(scheduler->flags, pcmk__sched_probe_resources)) {
         crm_trace("Scheduling probes");

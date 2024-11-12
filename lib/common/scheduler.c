@@ -11,7 +11,7 @@
 
 #include <stdint.h>             // uint32_t
 #include <errno.h>              // EINVAL
-#include <glib.h>               // gboolean, FALSE
+#include <glib.h>               // gboolean, FALSE, etc.
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/common/scheduler.h>
@@ -155,4 +155,88 @@ pcmk__scheduler_epoch_time(pcmk_scheduler_t *scheduler)
         scheduler->priv->now = crm_time_new(NULL);
     }
     return crm_time_get_seconds_since_epoch(scheduler->priv->now);
+}
+
+/* Fail count clearing for parameter changes normally happens when unpacking
+ * history, before resources are unpacked. However, for bundles using the
+ * REMOTE_CONTAINER_HACK, we can't check the conditions until after unpacking
+ * the bundle, so those parameter checks are deferred using the APIs below.
+ */
+
+// History entry to be checked later for fail count clearing
+struct param_check {
+    const xmlNode *rsc_history; // History entry XML
+    pcmk_resource_t *rsc;       // Resource corresponding to history entry
+    pcmk_node_t *node;          // Node corresponding to history entry
+    enum pcmk__check_parameters check_type; // What needs checking
+};
+
+/*!
+ * \internal
+ * \brief Add a deferred parameter check
+ *
+ * \param[in]     rsc_history  Resource history XML to check later
+ * \param[in]     rsc          Resource that history is for
+ * \param[in]     node         Node that history is for
+ * \param[in]     flag         What needs to be checked later
+ * \param[in,out] scheduler    Scheduler data
+ */
+void
+pcmk__add_param_check(const xmlNode *rsc_history, pcmk_resource_t *rsc,
+                      pcmk_node_t *node, enum pcmk__check_parameters flag,
+                      pcmk_scheduler_t *scheduler)
+{
+    struct param_check *param_check = NULL;
+
+    CRM_CHECK((rsc_history != NULL) && (rsc != NULL) && (node != NULL)
+              && (scheduler != NULL), return);
+
+    crm_trace("Deferring checks of %s until after assignment",
+              pcmk__xe_id(rsc_history));
+    param_check = pcmk__assert_alloc(1, sizeof(struct param_check));
+    param_check->rsc_history = rsc_history;
+    param_check->rsc = rsc;
+    param_check->node = node;
+    param_check->check_type = flag;
+    scheduler->priv->param_check = g_list_prepend(scheduler->priv->param_check,
+                                                  param_check);
+}
+
+/*!
+ * \internal
+ * \brief Call a function for each deferred parameter check
+ *
+ * \param[in,out] scheduler  Scheduler data
+ * \param[in]     cb         Function to be called
+ */
+void
+pcmk__foreach_param_check(pcmk_scheduler_t *scheduler,
+                          void (*cb)(pcmk_resource_t*, pcmk_node_t*,
+                                     const xmlNode*,
+                                     enum pcmk__check_parameters))
+{
+    CRM_CHECK((scheduler != NULL) && (cb != NULL), return);
+
+    for (GList *item = scheduler->priv->param_check;
+         item != NULL; item = item->next) {
+        struct param_check *param_check = item->data;
+
+        cb(param_check->rsc, param_check->node, param_check->rsc_history,
+           param_check->check_type);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Free all deferred parameter checks
+ *
+ * \param[in,out] scheduler  Scheduler data
+ */
+void
+pcmk__free_param_checks(pcmk_scheduler_t *scheduler)
+{
+    if ((scheduler != NULL) && (scheduler->priv->param_check != NULL)) {
+        g_list_free_full(scheduler->priv->param_check, free);
+        scheduler->priv->param_check = NULL;
+    }
 }

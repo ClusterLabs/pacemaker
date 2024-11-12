@@ -335,14 +335,6 @@ const char *pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
                                        const char *field);
 bool pe__is_universal_clone(const pcmk_resource_t *rsc,
                             const pcmk_scheduler_t *scheduler);
-void pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
-                         pcmk_node_t *node, enum pcmk__check_parameters,
-                         pcmk_scheduler_t *scheduler);
-void pe__foreach_param_check(pcmk_scheduler_t *scheduler,
-                             void (*cb)(pcmk_resource_t*, pcmk_node_t*,
-                                        const xmlNode*,
-                                        enum pcmk__check_parameters));
-void pe__free_param_checks(pcmk_scheduler_t *scheduler);
 
 bool pe__shutdown_requested(const pcmk_node_t *node);
 void pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,

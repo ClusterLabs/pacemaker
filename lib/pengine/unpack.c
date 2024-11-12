@@ -4023,8 +4023,8 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
              * substitute addr parameters for the REMOTE_CONTAINER_HACK.
              * When that's needed, defer the check until later.
              */
-            pe__add_param_check(xml_op, rsc, node, pcmk__check_last_failure,
-                                rsc->priv->scheduler);
+            pcmk__add_param_check(xml_op, rsc, node, pcmk__check_last_failure,
+                                  rsc->priv->scheduler);
 
         } else {
             pcmk__op_digest_t *digest_data = NULL;
