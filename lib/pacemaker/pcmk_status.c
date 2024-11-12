@@ -102,7 +102,7 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
                                                fence_history);
     }
 
-    pe_reset_working_set(scheduler);
+    pcmk_reset_scheduler(scheduler);
     scheduler->input = cib_copy;
     cluster_status(scheduler);
 

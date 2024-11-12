@@ -370,7 +370,7 @@ profile_file(const char *xml_file, long long repeat,
         scheduler->input = input;
         set_effective_date(scheduler, false, use_date);
         pcmk__schedule_actions(input, scheduler_flags, scheduler);
-        pe_reset_working_set(scheduler);
+        pcmk_reset_scheduler(scheduler);
     }
 
     end = clock();
@@ -795,7 +795,7 @@ pcmk__simulate_transition(pcmk_scheduler_t *scheduler, cib_t *cib,
                                        cib_sync_call);
 
         pcmk__assert(rc == pcmk_ok);
-        pe_reset_working_set(scheduler);
+        pcmk_reset_scheduler(scheduler);
         scheduler->input = cib_object;
         out->end_list(out);
     }

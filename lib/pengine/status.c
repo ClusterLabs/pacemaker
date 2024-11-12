@@ -56,7 +56,7 @@ void
 pe_free_working_set(pcmk_scheduler_t *scheduler)
 {
     if (scheduler != NULL) {
-        pe_reset_working_set(scheduler);
+        pcmk_reset_scheduler(scheduler);
         free(scheduler->priv->local_node_name);
         free(scheduler->priv);
         free(scheduler);
@@ -211,7 +211,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
  * \param[in,out] scheduler  Scheduler data to reset
  *
  * \deprecated This function is deprecated as part of the API;
- *             pe_reset_working_set() should be used instead.
+ *             pcmk_reset_scheduler() should be used instead.
  */
 void
 cleanup_calculations(pcmk_scheduler_t *scheduler)
@@ -262,38 +262,6 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
 
     CRM_LOG_ASSERT((scheduler->priv->location_constraints == NULL)
                    && (scheduler->priv->ordering_constraints == NULL));
-}
-
-/*!
- * \brief Reset scheduler data to default state without freeing it
- *
- * \param[in,out] scheduler  Scheduler data to reset
- */
-void
-pe_reset_working_set(pcmk_scheduler_t *scheduler)
-{
-    if (scheduler == NULL) {
-        return;
-    }
-
-    crm_trace("Deleting %d ordering constraints",
-              g_list_length(scheduler->priv->ordering_constraints));
-    g_list_free_full(scheduler->priv->ordering_constraints,
-                     pcmk__free_action_relation);
-    scheduler->priv->ordering_constraints = NULL;
-
-    crm_trace("Deleting %d location constraints",
-              g_list_length(scheduler->priv->location_constraints));
-    g_list_free_full(scheduler->priv->location_constraints,
-                     pcmk__free_location);
-    scheduler->priv->location_constraints = NULL;
-
-    crm_trace("Deleting %d colocation constraints",
-              g_list_length(scheduler->priv->colocation_constraints));
-    g_list_free_full(scheduler->priv->colocation_constraints, free);
-    scheduler->priv->colocation_constraints = NULL;
-
-    cleanup_calculations(scheduler);
 }
 
 void
@@ -396,14 +364,15 @@ pe_find_node_id(const GList *nodes, const char *id)
 
 #include <crm/pengine/status_compat.h>
 
-/*!
- * \brief Find a node by name in a list of nodes
- *
- * \param[in] nodes      List of nodes (as pcmk_node_t*)
- * \param[in] node_name  Name of node to find
- *
- * \return Node from \p nodes that matches \p node_name if any, otherwise NULL
- */
+void
+pe_reset_working_set(pcmk_scheduler_t *scheduler)
+{
+    if (scheduler == NULL) {
+        return;
+    }
+    pcmk_reset_scheduler(scheduler);
+}
+
 pcmk_node_t *
 pe_find_node(const GList *nodes, const char *node_name)
 {

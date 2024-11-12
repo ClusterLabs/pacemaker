@@ -250,5 +250,5 @@ fenced_scheduler_run(xmlNode *cib)
                    NULL);
 
     scheduler->input = NULL; // Wasn't a copy, so don't let API free it
-    pe_reset_working_set(scheduler);
+    pcmk_reset_scheduler(scheduler);
 }

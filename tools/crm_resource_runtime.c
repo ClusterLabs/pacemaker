@@ -1435,7 +1435,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
 
     pcmk__output_t *out = scheduler->priv->out;
 
-    pe_reset_working_set(scheduler);
+    pcmk_reset_scheduler(scheduler);
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
 
     if(simulate) {
@@ -2096,7 +2096,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         }
 
         /* Get latest transition graph */
-        pe_reset_working_set(scheduler);
+        pcmk_reset_scheduler(scheduler);
         rc = update_scheduler_input(out, scheduler, cib, NULL);
         if (rc != pcmk_rc_ok) {
             break;
