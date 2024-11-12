@@ -28,6 +28,10 @@ extern "C" {
  */
 
 // NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Use pcmk_new_scheduler() instead
+pcmk_scheduler_t *pe_new_working_set(void);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_reset_scheduler() instead
 void pe_reset_working_set(pcmk_scheduler_t *scheduler);
 

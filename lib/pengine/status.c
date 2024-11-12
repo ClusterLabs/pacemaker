@@ -21,22 +21,6 @@
 #include <pe_status_private.h>
 
 /*!
- * \brief Create a new object to hold scheduler data
- *
- * \return New, initialized scheduler data on success, else NULL (and set errno)
- * \note Only pcmk_scheduler_t objects created with this function (as opposed
- *       to statically declared or directly allocated) should be used with the
- *       functions in this library, to allow for future extensions to the
- *       data type. The caller is responsible for freeing the memory with
- *       pe_free_working_set() when the instance is no longer needed.
- */
-pcmk_scheduler_t *
-pe_new_working_set(void)
-{
-    return pcmk_new_scheduler();
-}
-
-/*!
  * \brief Free scheduler data
  *
  * \param[in,out] scheduler  Scheduler data to free
@@ -272,6 +256,12 @@ pe_find_node_id(const GList *nodes, const char *id)
 // LCOV_EXCL_START
 
 #include <crm/pengine/status_compat.h>
+
+pcmk_scheduler_t *
+pe_new_working_set(void)
+{
+    return pcmk_new_scheduler();
+}
 
 void
 pe_reset_working_set(pcmk_scheduler_t *scheduler)
