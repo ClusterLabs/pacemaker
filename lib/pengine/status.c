@@ -220,48 +220,6 @@ pe_free_actions(GList *actions)
 }
 
 static void
-pe_free_nodes(GList *nodes)
-{
-    for (GList *iterator = nodes; iterator != NULL; iterator = iterator->next) {
-        pcmk_node_t *node = (pcmk_node_t *) iterator->data;
-
-        // Shouldn't be possible, but to be safe ...
-        if (node == NULL) {
-            continue;
-        }
-        if (node->details == NULL) {
-            free(node);
-            continue;
-        }
-
-        /* This is called after freeing resources, which means that we can't
-         * use node->private->name for Pacemaker Remote nodes.
-         */
-        crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
-                  "(guest or remote)" : pcmk__node_name(node)));
-
-        if (node->priv->attrs != NULL) {
-            g_hash_table_destroy(node->priv->attrs);
-        }
-        if (node->priv->utilization != NULL) {
-            g_hash_table_destroy(node->priv->utilization);
-        }
-        if (node->priv->digest_cache != NULL) {
-            g_hash_table_destroy(node->priv->digest_cache);
-        }
-        g_list_free(node->details->running_rsc);
-        g_list_free(node->priv->assigned_resources);
-        free(node->priv);
-        free(node->details);
-        free(node->assign);
-        free(node);
-    }
-    if (nodes != NULL) {
-        g_list_free(nodes);
-    }
-}
-
-static void
 pe__free_ordering(GList *constraints)
 {
     GList *iterator = constraints;
@@ -342,7 +300,8 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     pe_free_actions(scheduler->priv->actions);
 
     crm_trace("deleting nodes");
-    pe_free_nodes(scheduler->nodes);
+    g_list_free_full(scheduler->nodes, pcmk__free_node);
+    scheduler->nodes = NULL;
 
     pcmk__free_param_checks(scheduler);
     g_list_free(scheduler->priv->stop_needed);

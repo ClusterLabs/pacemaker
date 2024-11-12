@@ -14,6 +14,48 @@
 
 /*!
  * \internal
+ * \brief Free a node object
+ *
+ * \param[in,out] user_data  Node object to free
+ */
+void
+pcmk__free_node(gpointer user_data)
+{
+    pcmk_node_t *node = user_data;
+
+    if (node == NULL) {
+        return;
+    }
+    if (node->details == NULL) {
+        free(node);
+        return;
+    }
+
+    /* This may be called after freeing resources, which means that we can't
+     * use node->private->name for Pacemaker Remote nodes.
+     */
+    crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
+              "(guest or remote)" : pcmk__node_name(node)));
+
+    if (node->priv->attrs != NULL) {
+        g_hash_table_destroy(node->priv->attrs);
+    }
+    if (node->priv->utilization != NULL) {
+        g_hash_table_destroy(node->priv->utilization);
+    }
+    if (node->priv->digest_cache != NULL) {
+        g_hash_table_destroy(node->priv->digest_cache);
+    }
+    g_list_free(node->details->running_rsc);
+    g_list_free(node->priv->assigned_resources);
+    free(node->priv);
+    free(node->details);
+    free(node->assign);
+    free(node);
+}
+
+/*!
+ * \internal
  * \brief Free a copy of a node object
  *
  * \param[in] data  Node copy (created by pe__copy_node()) to free
