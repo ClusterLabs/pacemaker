@@ -1967,7 +1967,7 @@ done:
     }
     free(rsc_id);
     free(lookup_id);
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     return rc;
 }
 
@@ -2130,7 +2130,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
     } while (actions_are_pending(scheduler->priv->actions)
              || pending_unknown_state_resources);
 
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     free(xpath);
     return rc;
 }

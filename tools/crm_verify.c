@@ -270,7 +270,7 @@ main(int argc, char **argv)
         out->err(out, "Configuration invalid%s%s", failure_type, verbose_hint);
     }
 
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
 
   done:
     g_strfreev(processed_args);

@@ -165,7 +165,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
 done:
     pcmk__xml_free(converted);
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
 
     return reply;
 }

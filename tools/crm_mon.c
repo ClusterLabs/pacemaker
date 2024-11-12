@@ -2127,7 +2127,7 @@ clean_up(crm_exit_t exit_code)
 
     g_strfreev(processed_args);
 
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
 
     /* (2) If this is abnormal termination and we're in curses mode, shut down
      * curses first.  Any messages displayed to the screen before curses is shut

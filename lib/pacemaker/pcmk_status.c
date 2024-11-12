@@ -276,7 +276,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     }
 
 done:
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     stonith_api_delete(stonith);
     pcmk__xml_free(current_cib);
     return pcmk_rc_ok;

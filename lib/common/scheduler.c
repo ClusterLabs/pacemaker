@@ -26,7 +26,7 @@ uint32_t pcmk__warnings = 0;
  *       to statically declared or directly allocated) should be used with the
  *       functions in this library, to allow for future extensions to the
  *       data type. The caller is responsible for freeing the memory with
- *       pe_free_working_set() when the instance is no longer needed.
+ *       pcmk_free_scheduler() when the instance is no longer needed.
  */
 pcmk_scheduler_t *
 pcmk_new_scheduler(void)
@@ -183,6 +183,22 @@ pcmk_reset_scheduler(pcmk_scheduler_t *scheduler)
     /* @TODO We should probably reset pcmk__config_has_warning and
      * pcmk__config_has_error as well
      */
+}
+
+/*!
+ * \brief Free scheduler data
+ *
+ * \param[in,out] scheduler  Scheduler data to free
+ */
+void
+pcmk_free_scheduler(pcmk_scheduler_t *scheduler)
+{
+    if (scheduler != NULL) {
+        pcmk_reset_scheduler(scheduler);
+        free(scheduler->priv->local_node_name);
+        free(scheduler->priv);
+        free(scheduler);
+    }
 }
 
 /*!

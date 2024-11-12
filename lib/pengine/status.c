@@ -28,12 +28,7 @@
 void
 pe_free_working_set(pcmk_scheduler_t *scheduler)
 {
-    if (scheduler != NULL) {
-        pcmk_reset_scheduler(scheduler);
-        free(scheduler->priv->local_node_name);
-        free(scheduler->priv);
-        free(scheduler);
-    }
+    pcmk_free_scheduler(scheduler);
 }
 
 #define XPATH_DEPRECATED_RULES                          \

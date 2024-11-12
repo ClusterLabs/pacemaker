@@ -77,8 +77,9 @@ setup(void **state) {
 }
 
 static int
-teardown(void **state) {
-    pe_free_working_set(scheduler);
+teardown(void **state)
+{
+    pcmk_free_scheduler(scheduler);
     pcmk__xml_cleanup();
     return 0;
 }

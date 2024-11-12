@@ -844,7 +844,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
         new_scheduler->input = pcmk__xml_copy(NULL, input);
         if (new_scheduler->input == NULL) {
             out->err(out, "Failed to copy input XML");
-            pe_free_working_set(new_scheduler);
+            pcmk_free_scheduler(new_scheduler);
             return ENOMEM;
         }
 
@@ -852,7 +852,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
         int rc = cib__signon_query(out, NULL, &(new_scheduler->input));
 
         if (rc != pcmk_rc_ok) {
-            pe_free_working_set(new_scheduler);
+            pcmk_free_scheduler(new_scheduler);
             return rc;
         }
     }

@@ -561,7 +561,7 @@ main(int argc, char **argv)
     g_strfreev(processed_args);
 
     if (scheduler != NULL) {
-        pe_free_working_set(scheduler);
+        pcmk_free_scheduler(scheduler);
     }
 
     fflush(stderr);

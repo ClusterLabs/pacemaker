@@ -185,7 +185,7 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
         }
     }
 
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     return rc;
 }
 

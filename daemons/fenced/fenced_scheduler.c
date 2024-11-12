@@ -95,7 +95,7 @@ fenced_scheduler_cleanup(void)
             pcmk__output_free(logger);
             scheduler->priv->out = NULL;
         }
-        pe_free_working_set(scheduler);
+        pcmk_free_scheduler(scheduler);
         scheduler = NULL;
     }
 }

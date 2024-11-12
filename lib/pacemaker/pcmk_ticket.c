@@ -253,7 +253,7 @@ done:
     }
 
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     return rc;
 }
 
@@ -307,7 +307,7 @@ pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
 
 done:
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     return rc;
 }
 
@@ -367,7 +367,7 @@ pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id)
 
 done:
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     return rc;
 }
 
@@ -439,7 +439,7 @@ done:
     }
 
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     return rc;
 }
 
@@ -508,7 +508,7 @@ done:
     }
 
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     return rc;
 }
 

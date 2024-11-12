@@ -170,7 +170,7 @@ bye(crm_exit_t ec)
         mainloop = NULL;
     }
 
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     scheduler = NULL;
     crm_exit(ec);
     return ec;
