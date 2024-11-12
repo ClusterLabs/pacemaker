@@ -20,14 +20,15 @@ try:
 except ImportError:
     import datetime
     import subprocess
+    # pylint: disable=ungrouped-imports
     from pacemaker._cts.process import pipe_communicate
 
+    # pylint: disable=invalid-name
     class isoparser():
-        """Mimic isoparser.isoparse() when not available"""
+        """Mimic isoparser.isoparse when not available."""
 
         def isoparse(self, timestamp):
-            """Mimic isoparser.isoparse() when not available"""
-
+            """Mimic isoparser.isoparse when not available."""
             with subprocess.Popen(["iso8601", "--output-as", "xml", "-d", timestamp],
                                   stdout=subprocess.PIPE) as result:
 
