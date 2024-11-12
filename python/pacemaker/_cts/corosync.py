@@ -5,7 +5,9 @@ __copyright__ = "Copyright 2009-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 import os
+import shutil
 import subprocess
+import tempfile
 import time
 
 from pacemaker.buildoptions import BuildOptions
@@ -57,16 +59,29 @@ def corosync_log_file(cfgfile):
 
 
 def generate_corosync_cfg(logdir, cluster_name, node_name):
-    """Generate the corosync config file, if it does not already exist."""
+    """
+    Generate a corosync config file.
+
+    If there's a corosync config file already installed on the system, move
+    it to a temporary location and return that temporary name.  Otherwise,
+    return None.
+    """
+    retval = None
+
     if corosync_cfg_exists():
-        return False
+        # pylint: disable=consider-using-with
+        f = tempfile.NamedTemporaryFile(delete=True)
+        f.close()
+        shutil.move(BuildOptions.COROSYNC_CONFIG_FILE, f.name)
+
+        retval = f.name
 
     logfile = os.path.join(logdir, "corosync.log")
 
     with open(BuildOptions.COROSYNC_CONFIG_FILE, "w", encoding="utf-8") as corosync_cfg:
         corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (cluster_name, node_name, logfile))
 
-    return True
+    return retval
 
 
 def localname():
@@ -96,7 +111,7 @@ class Corosync:
         self.logdir = logdir
         self.cluster_name = cluster_name
 
-        self._generated_cfg_file = False
+        self._existing_cfg_file = None
 
     def _ready(self, logfile, timeout=10):
         """Return whether corosync is ready."""
@@ -129,8 +144,8 @@ class Corosync:
         if kill_first:
             killall(["corosync"])
 
-        self._generated_cfg_file = generate_corosync_cfg(self.logdir,
-                                                         self.cluster_name, localname())
+        self._existing_cfg_file = generate_corosync_cfg(self.logdir,
+                                                        self.cluster_name, localname())
         logfile = corosync_log_file(BuildOptions.COROSYNC_CONFIG_FILE)
 
         if self.verbose:
@@ -146,10 +161,6 @@ class Corosync:
         """Stop the corosync process."""
         killall(["corosync"])
 
-        # If we did not write out the corosync config file, don't do anything else.
-        if not self._generated_cfg_file:
-            return
-
         if self.verbose:
             print("Corosync output")
 
@@ -159,3 +170,7 @@ class Corosync:
                     print(line.strip())
 
         os.remove(BuildOptions.COROSYNC_CONFIG_FILE)
+
+        # If there was a previous corosync config file, move it back into place
+        if self._existing_cfg_file:
+            shutil.move(self._existing_cfg_file, BuildOptions.COROSYNC_CONFIG_FILE)
