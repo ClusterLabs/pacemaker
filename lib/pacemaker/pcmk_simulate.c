@@ -871,7 +871,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             goto simulate_done;
         }
 
-        cleanup_calculations(scheduler);
+        pcmk_reset_scheduler(scheduler);
         reset(scheduler, input, out, use_date, flags);
         cluster_status(scheduler);
     }

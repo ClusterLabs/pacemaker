@@ -205,65 +205,6 @@ cluster_status(pcmk_scheduler_t * scheduler)
     return TRUE;
 }
 
-/*!
- * \brief Reset scheduler data to defaults without freeing it or constraints
- *
- * \param[in,out] scheduler  Scheduler data to reset
- *
- * \deprecated This function is deprecated as part of the API;
- *             pcmk_reset_scheduler() should be used instead.
- */
-void
-cleanup_calculations(pcmk_scheduler_t *scheduler)
-{
-    if (scheduler == NULL) {
-        return;
-    }
-
-    pcmk__clear_scheduler_flags(scheduler, pcmk__sched_have_status);
-    if (scheduler->priv->options != NULL) {
-        g_hash_table_destroy(scheduler->priv->options);
-    }
-
-    if (scheduler->priv->singletons != NULL) {
-        g_hash_table_destroy(scheduler->priv->singletons);
-    }
-
-    if (scheduler->priv->ticket_constraints != NULL) {
-        g_hash_table_destroy(scheduler->priv->ticket_constraints);
-    }
-
-    if (scheduler->priv->templates != NULL) {
-        g_hash_table_destroy(scheduler->priv->templates);
-    }
-
-    if (scheduler->priv->tags != NULL) {
-        g_hash_table_destroy(scheduler->priv->tags);
-    }
-
-    crm_trace("deleting resources");
-    g_list_free_full(scheduler->priv->resources, pcmk__free_resource);
-
-    crm_trace("deleting actions");
-    g_list_free_full(scheduler->priv->actions, pcmk__free_action);
-
-    crm_trace("deleting nodes");
-    g_list_free_full(scheduler->nodes, pcmk__free_node);
-    scheduler->nodes = NULL;
-
-    pcmk__free_param_checks(scheduler);
-    g_list_free(scheduler->priv->stop_needed);
-    crm_time_free(scheduler->priv->now);
-    pcmk__xml_free(scheduler->input);
-    pcmk__xml_free(scheduler->priv->failed);
-    pcmk__xml_free(scheduler->priv->graph);
-
-    set_working_set_defaults(scheduler);
-
-    CRM_LOG_ASSERT((scheduler->priv->location_constraints == NULL)
-                   && (scheduler->priv->ordering_constraints == NULL));
-}
-
 void
 set_working_set_defaults(pcmk_scheduler_t *scheduler)
 {
@@ -371,6 +312,57 @@ pe_reset_working_set(pcmk_scheduler_t *scheduler)
         return;
     }
     pcmk_reset_scheduler(scheduler);
+}
+
+void
+cleanup_calculations(pcmk_scheduler_t *scheduler)
+{
+    if (scheduler == NULL) {
+        return;
+    }
+
+    pcmk__clear_scheduler_flags(scheduler, pcmk__sched_have_status);
+    if (scheduler->priv->options != NULL) {
+        g_hash_table_destroy(scheduler->priv->options);
+    }
+
+    if (scheduler->priv->singletons != NULL) {
+        g_hash_table_destroy(scheduler->priv->singletons);
+    }
+
+    if (scheduler->priv->ticket_constraints != NULL) {
+        g_hash_table_destroy(scheduler->priv->ticket_constraints);
+    }
+
+    if (scheduler->priv->templates != NULL) {
+        g_hash_table_destroy(scheduler->priv->templates);
+    }
+
+    if (scheduler->priv->tags != NULL) {
+        g_hash_table_destroy(scheduler->priv->tags);
+    }
+
+    crm_trace("deleting resources");
+    g_list_free_full(scheduler->priv->resources, pcmk__free_resource);
+
+    crm_trace("deleting actions");
+    g_list_free_full(scheduler->priv->actions, pcmk__free_action);
+
+    crm_trace("deleting nodes");
+    g_list_free_full(scheduler->nodes, pcmk__free_node);
+    scheduler->nodes = NULL;
+
+    pcmk__free_param_checks(scheduler);
+    g_list_free(scheduler->priv->stop_needed);
+    crm_time_free(scheduler->priv->now);
+    pcmk__xml_free(scheduler->input);
+    pcmk__xml_free(scheduler->priv->failed);
+    pcmk__xml_free(scheduler->priv->graph);
+
+    set_working_set_defaults(scheduler);
+
+    CRM_LOG_ASSERT((scheduler->priv->location_constraints == NULL)
+                   && (scheduler->priv->ordering_constraints == NULL));
 }
 
 pcmk_node_t *

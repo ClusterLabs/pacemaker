@@ -39,7 +39,6 @@ pcmk_scheduler_t *pe_new_working_set(void);
 void pe_free_working_set(pcmk_scheduler_t *scheduler);
 
 void set_working_set_defaults(pcmk_scheduler_t *scheduler);
-void cleanup_calculations(pcmk_scheduler_t *scheduler);
 
 pcmk_resource_t *pe_find_resource(GList *rsc_list, const char *id);
 pcmk_resource_t *pe_find_resource_with_flags(GList *rsc_list, const char *id,
