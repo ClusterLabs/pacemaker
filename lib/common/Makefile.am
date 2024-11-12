@@ -47,6 +47,7 @@ endif
 ## Library sources (*must* use += format for bumplibs)
 libcrmcommon_la_SOURCES	=
 libcrmcommon_la_SOURCES	+= acl.c
+libcrmcommon_la_SOURCES	+= action_relation.c
 libcrmcommon_la_SOURCES	+= actions.c
 libcrmcommon_la_SOURCES	+= agents.c
 libcrmcommon_la_SOURCES	+= alerts.c

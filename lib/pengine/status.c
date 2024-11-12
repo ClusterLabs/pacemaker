@@ -220,25 +220,6 @@ pe_free_actions(GList *actions)
 }
 
 static void
-pe__free_ordering(GList *constraints)
-{
-    GList *iterator = constraints;
-
-    while (iterator != NULL) {
-        pcmk__action_relation_t *order = iterator->data;
-
-        iterator = iterator->next;
-
-        free(order->task1);
-        free(order->task2);
-        free(order);
-    }
-    if (constraints != NULL) {
-        g_list_free(constraints);
-    }
-}
-
-static void
 pe__free_location(GList *constraints)
 {
     GList *iterator = constraints;
@@ -330,7 +311,8 @@ pe_reset_working_set(pcmk_scheduler_t *scheduler)
 
     crm_trace("Deleting %d ordering constraints",
               g_list_length(scheduler->priv->ordering_constraints));
-    pe__free_ordering(scheduler->priv->ordering_constraints);
+    g_list_free_full(scheduler->priv->ordering_constraints,
+                     pcmk__free_action_relation);
     scheduler->priv->ordering_constraints = NULL;
 
     crm_trace("Deleting %d location constraints",
