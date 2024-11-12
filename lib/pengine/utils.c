@@ -649,27 +649,6 @@ pe__shutdown_requested(const pcmk_node_t *node)
 
 /*!
  * \internal
- * \brief Update "recheck by" time in scheduler data
- *
- * \param[in]     recheck    Epoch time when recheck should happen
- * \param[in,out] scheduler  Scheduler data
- * \param[in]     reason     What time is being updated for (for logs)
- */
-void
-pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
-                        const char *reason)
-{
-    if ((recheck > pcmk__scheduler_epoch_time(scheduler))
-        && ((scheduler->priv->recheck_by == 0)
-            || (scheduler->priv->recheck_by > recheck))) {
-        scheduler->priv->recheck_by = recheck;
-        crm_debug("Updated next scheduler recheck to %s for %s",
-                  pcmk__trim(ctime(&recheck)), reason);
-    }
-}
-
-/*!
- * \internal
  * \brief Extract nvpair blocks contained by a CIB XML element into a hash table
  *
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
@@ -706,7 +685,7 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
     if (crm_time_is_defined(next_change)) {
         time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
-        pe__update_recheck_time(recheck, scheduler, "rule evaluation");
+        pcmk__update_recheck_time(recheck, scheduler, "rule evaluation");
     }
     crm_time_free(next_change);
 }

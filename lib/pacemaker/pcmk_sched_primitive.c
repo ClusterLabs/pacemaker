@@ -1707,8 +1707,8 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
         pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
                        rsc->id, pcmk__node_name(rsc->priv->lock_node),
                        (long long) lock_expiration);
-        pe__update_recheck_time(++lock_expiration, scheduler,
-                                "shutdown lock expiration");
+        pcmk__update_recheck_time(++lock_expiration, scheduler,
+                                  "shutdown lock expiration");
     } else {
         pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown",
                        rsc->id, pcmk__node_name(rsc->priv->lock_node));

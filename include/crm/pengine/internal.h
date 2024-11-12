@@ -335,8 +335,6 @@ bool pe__is_universal_clone(const pcmk_resource_t *rsc,
                             const pcmk_scheduler_t *scheduler);
 
 bool pe__shutdown_requested(const pcmk_node_t *node);
-void pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
-                             const char *reason);
 
 /*!
  * \internal

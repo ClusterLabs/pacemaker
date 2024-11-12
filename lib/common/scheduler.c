@@ -310,6 +310,30 @@ pcmk__scheduler_epoch_time(pcmk_scheduler_t *scheduler)
     return crm_time_get_seconds_since_epoch(scheduler->priv->now);
 }
 
+/*!
+ * \internal
+ * \brief Update "recheck by" time in scheduler data
+ *
+ * \param[in]     recheck    Epoch time when recheck should happen
+ * \param[in,out] scheduler  Scheduler data
+ * \param[in]     reason     What time is being updated for (for logs)
+ */
+void
+pcmk__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
+                          const char *reason)
+{
+    pcmk__assert(scheduler != NULL);
+
+    if ((recheck > pcmk__scheduler_epoch_time(scheduler))
+        && ((scheduler->priv->recheck_by == 0)
+            || (scheduler->priv->recheck_by > recheck))) {
+        scheduler->priv->recheck_by = recheck;
+        crm_debug("Updated next scheduler recheck to %s for %s",
+                  pcmk__trim(ctime(&recheck)),
+                  pcmk__s(reason, "some reason"));
+    }
+}
+
 /* Fail count clearing for parameter changes normally happens when unpacking
  * history, before resources are unpacked. However, for bundles using the
  * REMOTE_CONTAINER_HACK, we can't check the conditions until after unpacking

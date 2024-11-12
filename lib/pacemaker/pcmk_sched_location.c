@@ -383,8 +383,8 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         if (crm_time_is_defined(next_change)) {
             time_t t = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
-            pe__update_recheck_time(t, rsc->priv->scheduler,
-                                    "location rule evaluation");
+            pcmk__update_recheck_time(t, rsc->priv->scheduler,
+                                      "location rule evaluation");
         }
         crm_time_free(next_change);
     }

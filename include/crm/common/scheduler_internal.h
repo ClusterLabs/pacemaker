@@ -281,6 +281,8 @@ extern uint32_t pcmk__warnings;
 
 void pcmk__set_scheduler_defaults(pcmk_scheduler_t *scheduler);
 time_t pcmk__scheduler_epoch_time(pcmk_scheduler_t *scheduler);
+void pcmk__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
+                               const char *reason);
 
 void pcmk__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
                            pcmk_node_t *node, enum pcmk__check_parameters,
