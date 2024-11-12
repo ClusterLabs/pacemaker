@@ -239,7 +239,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
  *
  * \param[in]     action_xml  XML of action's configuration in CIB (if any)
  * \param[in,out] node_attrs  Table of node attributes (for rule evaluation)
- * \param[in,out] scheduler   Cluster working set (for rule evaluation)
+ * \param[in,out] scheduler   Scheduler data (for rule evaluation)
  *
  * \return Newly allocated hash table of action-specific instance parameters
  */
