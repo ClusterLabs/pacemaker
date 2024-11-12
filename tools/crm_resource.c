@@ -977,27 +977,19 @@ clear_constraints(pcmk__output_t *out)
 }
 
 static int
-initialize_scheduler_data(void)
+initialize_scheduler_data(xmlNode **cib_xml_orig)
 {
-    xmlNode *cib_xml = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
-    rc = pcmk_legacy2rc(rc);
-
-    if (rc == pcmk_rc_ok) {
-        scheduler = pe_new_working_set();
-        if (scheduler == NULL) {
-            rc = ENOMEM;
-        } else {
-            pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
-            scheduler->priv->out = out;
-            rc = update_scheduler_input(scheduler, &cib_xml);
-        }
+    scheduler = pe_new_working_set();
+    if (scheduler == NULL) {
+        return ENOMEM;
     }
 
+    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
+    scheduler->priv->out = out;
+    rc = update_scheduler_input(out, scheduler, cib_conn, cib_xml_orig);
     if (rc != pcmk_rc_ok) {
-        pcmk__xml_free(cib_xml);
         return rc;
     }
 
@@ -1443,6 +1435,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
+    xmlNode *cib_xml_orig = NULL;
     pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
     uint32_t find_flags = 0;
@@ -1645,7 +1638,7 @@ main(int argc, char **argv)
 
     // Populate scheduler data from XML file if specified or CIB query otherwise
     if (is_scheduler_required()) {
-        rc = initialize_scheduler_data();
+        rc = initialize_scheduler_data(&cib_xml_orig);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             goto done;
@@ -1975,7 +1968,7 @@ main(int argc, char **argv)
                                                options.prop_name,
                                                options.prop_value,
                                                options.recursive, cib_conn,
-                                               options.force);
+                                               cib_xml_orig, options.force);
             break;
 
         case cmd_delete_param:
@@ -1985,7 +1978,7 @@ main(int argc, char **argv)
                                                options.attr_set_type,
                                                options.prop_id,
                                                options.prop_name, cib_conn,
-                                               options.force);
+                                               cib_xml_orig, options.force);
             break;
 
         case cmd_cleanup:
@@ -2066,6 +2059,8 @@ done:
                         _("Error performing operation: %s"), crm_exit_str(exit_code));
         }
     }
+
+    pcmk__xml_free(cib_xml_orig);
 
     g_free(options.host_uname);
     g_free(options.interval_spec);

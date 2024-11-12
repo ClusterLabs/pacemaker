@@ -124,14 +124,17 @@ int cli_resource_update_attribute(pcmk_resource_t *rsc,
                                   const char *attr_set, const char *attr_set_type,
                                   const char *attr_id, const char *attr_name,
                                   const char *attr_value, gboolean recursive,
-                                  cib_t *cib, gboolean force);
+                                  cib_t *cib, xmlNode *cib_xml_orig,
+                                  gboolean force);
 int cli_resource_delete_attribute(pcmk_resource_t *rsc,
                                   const char *requested_name,
                                   const char *attr_set, const char *attr_set_type,
                                   const char *attr_id, const char *attr_name,
-                                  cib_t *cib, gboolean force);
+                                  cib_t *cib, xmlNode *cib_xml_orig,
+                                  gboolean force);
 
-int update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml);
+int update_scheduler_input(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
+                           cib_t *cib, xmlNode **cib_xml_orig);
 int wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib);
 
 bool resource_is_running_on(pcmk_resource_t *rsc, const char *host);
