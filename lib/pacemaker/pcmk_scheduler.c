@@ -743,17 +743,9 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
         pcmk__set_scheduler_flags(scheduler, flags);
         return;
     }
-
     pcmk__assert(cib != NULL);
     crm_trace("Calculating cluster status");
-
-    /* This will zero the entire struct without freeing anything first, so
-     * callers should never call pcmk__schedule_actions() with a populated data
-     * set unless pcmk__sched_have_status is set (i.e. cluster_status() was
-     * previously called, whether directly or via pcmk__schedule_actions()).
-     */
-    set_working_set_defaults(scheduler);
-
+    pcmk_reset_scheduler(scheduler);
     pcmk__set_scheduler_flags(scheduler, flags);
     scheduler->input = cib;
     cluster_status(scheduler); // Sets pcmk__sched_have_status

@@ -34,6 +34,9 @@ void pe_reset_working_set(pcmk_scheduler_t *scheduler);
 //! \deprecated Use pcmk_reset_scheduler() instead
 void cleanup_calculations(pcmk_scheduler_t *scheduler);
 
+//! \deprecated Use pcmk_reset_scheduler() instead
+void set_working_set_defaults(pcmk_scheduler_t *scheduler);
+
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_find_node() with scheduler object instead
 pcmk_node_t *pe_find_node(const GList *node_list, const char *node_name);

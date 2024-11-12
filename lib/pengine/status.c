@@ -205,27 +205,6 @@ cluster_status(pcmk_scheduler_t * scheduler)
     return TRUE;
 }
 
-void
-set_working_set_defaults(pcmk_scheduler_t *scheduler)
-{
-    // These members must be preserved
-    pcmk__scheduler_private_t *priv = scheduler->priv;
-    pcmk__output_t *out = priv->out;
-    char *local_node_name = scheduler->priv->local_node_name;
-
-    // Wipe the main structs (any other members must have previously been freed)
-    memset(scheduler, 0, sizeof(pcmk_scheduler_t));
-    memset(priv, 0, sizeof(pcmk__scheduler_private_t));
-
-    // Restore the members to preserve
-    scheduler->priv = priv;
-    scheduler->priv->out = out;
-    scheduler->priv->local_node_name = local_node_name;
-
-    // Set defaults for everything else
-    pcmk__set_scheduler_defaults(scheduler);
-}
-
 pcmk_resource_t *
 pe_find_resource(GList *rsc_list, const char *id)
 {
@@ -363,6 +342,27 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
 
     CRM_LOG_ASSERT((scheduler->priv->location_constraints == NULL)
                    && (scheduler->priv->ordering_constraints == NULL));
+}
+
+void
+set_working_set_defaults(pcmk_scheduler_t *scheduler)
+{
+    // These members must be preserved
+    pcmk__scheduler_private_t *priv = scheduler->priv;
+    pcmk__output_t *out = priv->out;
+    char *local_node_name = scheduler->priv->local_node_name;
+
+    // Wipe the main structs (any other members must have previously been freed)
+    memset(scheduler, 0, sizeof(pcmk_scheduler_t));
+    memset(priv, 0, sizeof(pcmk__scheduler_private_t));
+
+    // Restore the members to preserve
+    scheduler->priv = priv;
+    scheduler->priv->out = out;
+    scheduler->priv->local_node_name = local_node_name;
+
+    // Set defaults for everything else
+    pcmk__set_scheduler_defaults(scheduler);
 }
 
 pcmk_node_t *
