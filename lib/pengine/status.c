@@ -205,20 +205,6 @@ cluster_status(pcmk_scheduler_t * scheduler)
     return TRUE;
 }
 
-static void
-pe_free_actions(GList *actions)
-{
-    GList *iterator = actions;
-
-    while (iterator != NULL) {
-        pe_free_action(iterator->data);
-        iterator = iterator->next;
-    }
-    if (actions != NULL) {
-        g_list_free(actions);
-    }
-}
-
 /*!
  * \brief Reset scheduler data to defaults without freeing it or constraints
  *
@@ -259,7 +245,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     g_list_free_full(scheduler->priv->resources, pcmk__free_resource);
 
     crm_trace("deleting actions");
-    pe_free_actions(scheduler->priv->actions);
+    g_list_free_full(scheduler->priv->actions, pcmk__free_action);
 
     crm_trace("deleting nodes");
     g_list_free_full(scheduler->nodes, pcmk__free_node);

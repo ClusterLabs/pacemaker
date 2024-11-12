@@ -230,8 +230,6 @@ GList *find_actions_exact(GList *input, const char *key,
 GList *pe__resource_actions(const pcmk_resource_t *rsc, const pcmk_node_t *node,
                             const char *task, bool require_node);
 
-extern void pe_free_action(pcmk_action_t *action);
-
 void resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
                        const char *tag, pcmk_scheduler_t *scheduler);
 

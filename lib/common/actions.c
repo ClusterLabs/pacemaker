@@ -180,6 +180,36 @@ pcmk__on_fail_text(enum pcmk__on_fail on_fail)
 }
 
 /*!
+ * \internal
+ * \brief Free an action object
+ *
+ * \param[in,out] user_data  Action object to free
+ */
+void
+pcmk__free_action(gpointer user_data)
+{
+    pcmk_action_t *action = user_data;
+
+    if (action == NULL) {
+        return;
+    }
+    g_list_free_full(action->actions_before, free);
+    g_list_free_full(action->actions_after, free);
+    if (action->extra != NULL) {
+        g_hash_table_destroy(action->extra);
+    }
+    if (action->meta != NULL) {
+        g_hash_table_destroy(action->meta);
+    }
+    pcmk__free_node_copy(action->node);
+    free(action->cancel_task);
+    free(action->reason);
+    free(action->task);
+    free(action->uuid);
+    free(action);
+}
+
+/*!
  * \brief Generate an operation key (RESOURCE_ACTION_INTERVAL)
  *
  * \param[in] rsc_id       ID of resource being operated on

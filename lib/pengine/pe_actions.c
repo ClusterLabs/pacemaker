@@ -168,7 +168,7 @@ pcmk__find_action_config(const pcmk_resource_t *rsc, const char *action_name,
  *
  * \return Newly allocated action
  * \note This function takes ownership of \p key. It is the caller's
- *       responsibility to free the return value with pe_free_action().
+ *       responsibility to free the return value using pcmk__free_action().
  */
 static pcmk_action_t *
 new_action(char *key, const char *task, pcmk_resource_t *rsc,
@@ -1343,28 +1343,6 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
     }
 
     return stonith_op;
-}
-
-void
-pe_free_action(pcmk_action_t *action)
-{
-    if (action == NULL) {
-        return;
-    }
-    g_list_free_full(action->actions_before, free);
-    g_list_free_full(action->actions_after, free);
-    if (action->extra) {
-        g_hash_table_destroy(action->extra);
-    }
-    if (action->meta) {
-        g_hash_table_destroy(action->meta);
-    }
-    pcmk__free_node_copy(action->node);
-    free(action->cancel_task);
-    free(action->reason);
-    free(action->task);
-    free(action->uuid);
-    free(action);
 }
 
 enum pcmk__action_type
