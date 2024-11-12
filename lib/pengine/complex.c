@@ -947,7 +947,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                         "default" : pcmk_role_text(rsc_private->next_role));
 
     if (rsc_private->fns->unpack(*rsc, scheduler) == FALSE) {
-        rsc_private->fns->free(*rsc);
+        pcmk__free_resource(*rsc);
         *rsc = NULL;
         return pcmk_rc_unpack_error;
     }
@@ -972,7 +972,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     if (expanded_xml) {
         if (add_template_rsc(xml_obj, scheduler) == FALSE) {
-            rsc_private->fns->free(*rsc);
+            pcmk__free_resource(*rsc);
             *rsc = NULL;
             return pcmk_rc_unpack_error;
         }

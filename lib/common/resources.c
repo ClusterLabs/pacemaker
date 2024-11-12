@@ -17,6 +17,22 @@
 
 /*!
  * \internal
+ * \brief Free a resource object
+ *
+ * \param[in,out] user_data  Resource object to free
+ */
+void
+pcmk__free_resource(gpointer user_data)
+{
+    pcmk_resource_t *rsc = user_data;
+
+    if (rsc != NULL) {
+        rsc->priv->fns->free(rsc);
+    }
+}
+
+/*!
+ * \internal
  * \brief Get a resource's ID
  *
  * \param[in] rsc  Resource to check

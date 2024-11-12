@@ -205,33 +205,6 @@ cluster_status(pcmk_scheduler_t * scheduler)
     return TRUE;
 }
 
-/*!
- * \internal
- * \brief Free a list of pcmk_resource_t
- *
- * \param[in,out] resources  List to free
- *
- * \note When the scheduler's resource list is freed, that includes the original
- *       storage for the uname and id of any Pacemaker Remote nodes in the
- *       scheduler's node list, so take care not to use those afterward.
- * \todo Refactor pcmk_node_t to strdup() the node name.
- */
-static void
-pe_free_resources(GList *resources)
-{
-    pcmk_resource_t *rsc = NULL;
-    GList *iterator = resources;
-
-    while (iterator != NULL) {
-        rsc = (pcmk_resource_t *) iterator->data;
-        iterator = iterator->next;
-        rsc->priv->fns->free(rsc);
-    }
-    if (resources != NULL) {
-        g_list_free(resources);
-    }
-}
-
 static void
 pe_free_actions(GList *actions)
 {
@@ -261,7 +234,7 @@ pe_free_nodes(GList *nodes)
             continue;
         }
 
-        /* This is called after pe_free_resources(), which means that we can't
+        /* This is called after freeing resources, which means that we can't
          * use node->private->name for Pacemaker Remote nodes.
          */
         crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
@@ -363,7 +336,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
     }
 
     crm_trace("deleting resources");
-    pe_free_resources(scheduler->priv->resources);
+    g_list_free_full(scheduler->priv->resources, pcmk__free_resource);
 
     crm_trace("deleting actions");
     pe_free_actions(scheduler->priv->actions);
