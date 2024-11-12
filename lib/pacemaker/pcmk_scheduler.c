@@ -830,7 +830,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
     // Allows for cleaner syntax than dereferencing the scheduler argument
     pcmk_scheduler_t *new_scheduler = NULL;
 
-    new_scheduler = pe_new_working_set();
+    new_scheduler = pcmk_new_scheduler();
     if (new_scheduler == NULL) {
         return ENOMEM;
     }

@@ -510,7 +510,7 @@ main(int argc, char **argv)
         options.flags |= pcmk_sim_verbose;
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         rc = ENOMEM;
         g_set_error(&error, PCMK__RC_ERROR, rc,

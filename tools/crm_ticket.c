@@ -386,7 +386,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         rc = errno;
         exit_code = pcmk_rc2exitc(rc);

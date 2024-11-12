@@ -467,7 +467,7 @@ generate_params(void)
     }
 
     // Calculate cluster status
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         crm_crit("Could not allocate scheduler data");
         return ENOMEM;

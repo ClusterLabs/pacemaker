@@ -37,7 +37,7 @@ fenced_scheduler_init(void)
         return rc;
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         pcmk__output_free(logger);
         return ENOMEM;

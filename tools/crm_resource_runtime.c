@@ -1730,7 +1730,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
       - Allow a --no-deps option (aka. --force-restart)
     */
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         rc = errno;
         out->err(out, "Could not allocate scheduler data: %s", pcmk_rc_str(rc));
@@ -2067,7 +2067,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         expire_time += pcmk__timeout_ms2s(timeout_ms + 999);
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         return ENOMEM;
     }

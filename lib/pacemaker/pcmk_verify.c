@@ -144,7 +144,7 @@ pcmk_verify(xmlNodePtr *xml, const char *cib_source)
         goto done;
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         rc = errno;
         out->err(out, "Couldn't allocate scheduler data: %s", pcmk_rc_str(rc));

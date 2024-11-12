@@ -16,6 +16,7 @@ check_PROGRAMS = pcmk__set_scheduler_defaults_test	\
 		 pcmk_get_dc_test			\
 		 pcmk_get_no_quorum_policy_test		\
 		 pcmk_has_quorum_test			\
+		 pcmk_new_scheduler_test		\
 		 pcmk_set_scheduler_cib_test
 
 TESTS = $(check_PROGRAMS)

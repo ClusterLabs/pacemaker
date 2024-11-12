@@ -99,6 +99,7 @@ struct pcmk__scheduler {
     pcmk__scheduler_private_t *priv;    //!< \internal For Pacemaker use only
 };
 
+pcmk_scheduler_t *pcmk_new_scheduler(void);
 void pcmk_reset_scheduler(pcmk_scheduler_t *scheduler);
 
 pcmk_node_t *pcmk_get_dc(const pcmk_scheduler_t *scheduler);

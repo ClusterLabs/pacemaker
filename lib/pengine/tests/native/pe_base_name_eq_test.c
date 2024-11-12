@@ -36,8 +36,7 @@ setup(void **state) {
         return 1;
     }
 
-    scheduler = pe_new_working_set();
-
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         return 1;
     }

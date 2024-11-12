@@ -1599,7 +1599,7 @@ main(int argc, char **argv)
         one_shot();
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = out;
     if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {

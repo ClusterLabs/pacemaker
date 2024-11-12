@@ -258,7 +258,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
         goto done;
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = out;
 

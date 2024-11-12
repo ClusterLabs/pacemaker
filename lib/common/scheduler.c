@@ -19,6 +19,33 @@
 uint32_t pcmk__warnings = 0;
 
 /*!
+ * \brief Create a new object to hold scheduler data
+ *
+ * \return New, initialized scheduler data, or NULL on memory error
+ * \note Only pcmk_scheduler_t objects created with this function (as opposed
+ *       to statically declared or directly allocated) should be used with the
+ *       functions in this library, to allow for future extensions to the
+ *       data type. The caller is responsible for freeing the memory with
+ *       pe_free_working_set() when the instance is no longer needed.
+ */
+pcmk_scheduler_t *
+pcmk_new_scheduler(void)
+{
+    pcmk_scheduler_t *scheduler = calloc(1, sizeof(pcmk_scheduler_t));
+
+    if (scheduler == NULL) {
+        return NULL;
+    }
+    scheduler->priv = calloc(1, sizeof(pcmk__scheduler_private_t));
+    if (scheduler->priv == NULL) {
+        free(scheduler);
+        return NULL;
+    }
+    pcmk__set_scheduler_defaults(scheduler);
+    return scheduler;
+}
+
+/*!
  * \internal
  * \brief Set non-zero default values in scheduler data
  *

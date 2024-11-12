@@ -25,7 +25,7 @@ static GHashTable *schedulerd_handlers = NULL;
 static pcmk_scheduler_t *
 init_working_set(void)
 {
-    pcmk_scheduler_t *scheduler = pe_new_working_set();
+    pcmk_scheduler_t *scheduler = pcmk_new_scheduler();
 
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = logger_out;

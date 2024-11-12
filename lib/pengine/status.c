@@ -33,18 +33,7 @@
 pcmk_scheduler_t *
 pe_new_working_set(void)
 {
-    pcmk_scheduler_t *scheduler = calloc(1, sizeof(pcmk_scheduler_t));
-
-    if (scheduler == NULL) {
-        return NULL;
-    }
-    scheduler->priv = calloc(1, sizeof(pcmk__scheduler_private_t));
-    if (scheduler->priv == NULL) {
-        free(scheduler);
-        return NULL;
-    }
-    pcmk__set_scheduler_defaults(scheduler);
-    return scheduler;
+    return pcmk_new_scheduler();
 }
 
 /*!

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,12 +15,13 @@
 #include "mock_private.h"
 
 static void
-calloc_fails(void **state) {
+calloc_fails(void **state)
+{
     pcmk__mock_calloc = true;   // calloc() will return NULL
 
     expect_value(__wrap_calloc, nmemb, 1);
     expect_value(__wrap_calloc, size, sizeof(pcmk_scheduler_t));
-    assert_null(pe_new_working_set());
+    assert_null(pcmk_new_scheduler());
 
     pcmk__mock_calloc = false;  // Use real calloc()
 }
@@ -28,17 +29,16 @@ calloc_fails(void **state) {
 static void
 calloc_succeeds(void **state)
 {
-    pcmk_scheduler_t *scheduler = pe_new_working_set();
+    pcmk_scheduler_t *scheduler = pcmk_new_scheduler();
 
-    /* We only need to test that the return value is non-NULL, as all the
-     * function does is call pcmk__set_scheduler_defaults(), which should have
-     * its own unit test.
+    /* We only need to test that the allocated memory is non-NULL, as all the
+     * function does otherwise is call pcmk__set_scheduler_defaults(), which
+     * should have its own unit test.
      */
     assert_non_null(scheduler);
+    assert_non_null(scheduler->priv);
 
-    /* Avoid calling pe_free_working_set here so we don't artificially
-     * inflate the coverage numbers.
-     */
+    free(scheduler->priv);
     free(scheduler);
 }
 
