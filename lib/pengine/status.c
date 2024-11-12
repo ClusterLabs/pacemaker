@@ -219,25 +219,6 @@ pe_free_actions(GList *actions)
     }
 }
 
-static void
-pe__free_location(GList *constraints)
-{
-    GList *iterator = constraints;
-
-    while (iterator != NULL) {
-        pcmk__location_t *cons = iterator->data;
-
-        iterator = iterator->next;
-
-        g_list_free_full(cons->nodes, pcmk__free_node_copy);
-        free(cons->id);
-        free(cons);
-    }
-    if (constraints != NULL) {
-        g_list_free(constraints);
-    }
-}
-
 /*!
  * \brief Reset scheduler data to defaults without freeing it or constraints
  *
@@ -317,7 +298,8 @@ pe_reset_working_set(pcmk_scheduler_t *scheduler)
 
     crm_trace("Deleting %d location constraints",
               g_list_length(scheduler->priv->location_constraints));
-    pe__free_location(scheduler->priv->location_constraints);
+    g_list_free_full(scheduler->priv->location_constraints,
+                     pcmk__free_location);
     scheduler->priv->location_constraints = NULL;
 
     crm_trace("Deleting %d colocation constraints",

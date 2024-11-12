@@ -69,6 +69,7 @@ libcrmcommon_la_SOURCES	+= ipc_schedulerd.c
 libcrmcommon_la_SOURCES	+= ipc_server.c
 libcrmcommon_la_SOURCES	+= iso8601.c
 libcrmcommon_la_SOURCES	+= lists.c
+libcrmcommon_la_SOURCES	+= location.c
 libcrmcommon_la_SOURCES	+= logging.c
 libcrmcommon_la_SOURCES	+= mainloop.c
 libcrmcommon_la_SOURCES	+= messages.c
