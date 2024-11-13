@@ -150,24 +150,20 @@ get_operation_list(xmlNode *rsc_entry) {
          rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op, PCMK__XE_LRM_RSC_OP)) {
 
         const char *task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
-        const char *interval_ms_s = crm_element_value(rsc_op,
-                                                      PCMK_META_INTERVAL);
-        const char *op_rc = crm_element_value(rsc_op, PCMK__XA_RC_CODE);
-        int op_rc_i;
 
-        pcmk__scan_min_int(op_rc, &op_rc_i, 0);
+        if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
+            continue; // Ignore notify actions
+        } else {
+            int exit_status;
 
-        /* Display 0-interval monitors as "probe" */
-        if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)
-            && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
-            task = "probe";
-        }
-
-        /* Ignore notifies and some probes */
-        if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_none)
-            || (pcmk__str_eq(task, "probe", pcmk__str_none)
-                && (op_rc_i == CRM_EX_NOT_RUNNING))) {
-            continue;
+            pcmk__scan_min_int(crm_element_value(rsc_op, PCMK__XA_RC_CODE),
+                               &exit_status, 0);
+            if ((exit_status == CRM_EX_NOT_RUNNING)
+                && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_none)
+                && pcmk__str_eq(crm_element_value(rsc_op, PCMK_META_INTERVAL),
+                                "0", pcmk__str_null_matches)) {
+                continue; // Ignore probes that found the resource not running
+            }
         }
 
         op_list = g_list_append(op_list, rsc_op);
