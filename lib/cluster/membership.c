@@ -914,17 +914,17 @@ remove_conflicting_peer(pcmk__node_status_t *node)
  * is guaranteed not to be \c NULL. A new cache entry is created if one does not
  * already exist.
  *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
- *                   node ID to search for
- * \param[in] flags  Group of enum pcmk__node_search_flags
+ * \param[in] id      If not 0, cluster node ID to search for
+ * \param[in] uname   If not NULL, node name to search for
+ * \param[in] xml_id  If not NULL while \p id is 0, search for this CIB XML ID
+ *                    instead of a cluster ID
+ * \param[in] flags   Group of enum pcmk__node_search_flags
  *
  * \return (Possibly newly created) cluster node cache entry
  */
 /* coverity[-alloc] Memory is referenced in one or both hashtables */
 pcmk__node_status_t *
-pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
+pcmk__get_node(unsigned int id, const char *uname, const char *xml_id,
                uint32_t flags)
 {
     pcmk__node_status_t *node = NULL;
@@ -946,7 +946,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
         return NULL;
     }
 
-    node = search_cluster_member_cache(id, uname, uuid);
+    node = search_cluster_member_cache(id, uname, xml_id);
 
     /* if uname wasn't provided, and find_peer did not turn up a uname based on id.
      * we need to do a lookup of the node name using the id in the cluster membership. */
@@ -960,7 +960,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
 
         /* try to turn up the node one more time now that we know the uname. */
         if (node == NULL) {
-            node = search_cluster_member_cache(id, uname, uuid);
+            node = search_cluster_member_cache(id, uname, xml_id);
         }
     }
 
@@ -988,16 +988,13 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
         update_peer_uname(node, uname);
     }
 
-    if (node->xml_id == NULL) {
-        if (uuid == NULL) {
-            uuid = pcmk__cluster_node_uuid(node);
-        }
-
-        if (uuid) {
-            crm_info("Node %u has uuid %s", id, uuid);
-
+    if ((xml_id == NULL) && (node->xml_id == NULL)) {
+        xml_id = pcmk__cluster_node_uuid(node);
+        if (xml_id == NULL) {
+            crm_debug("Cannot obtain an XML ID for node %s[%u] at this time",
+                      node->name, id);
         } else {
-            crm_info("Cannot obtain a UUID for node %u/%s", id, node->name);
+            crm_info("Node %s[%u] has XML ID %s", node->name, id, xml_id);
         }
     }
 

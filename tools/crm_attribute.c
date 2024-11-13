@@ -327,6 +327,7 @@ static GOptionEntry deprecated_entries[] = {
       NULL, NULL
     },
 
+    // NOTE: resource-agents <4.2.0 (2018-10-24) uses this option
     { "attr-name", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, attr_name_cb,
       NULL, NULL
     },
@@ -339,10 +340,12 @@ static GOptionEntry deprecated_entries[] = {
       NULL, NULL
     },
 
+    // NOTE: resource-agents <4.2.0 (2018-10-24) uses this option
     { "get-value", 0, G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, value_cb,
       NULL, NULL
     },
 
+    // NOTE: resource-agents <4.2.0 (2018-10-24) uses this option
     { "node-uname", 'U', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.dest_uname,
       NULL, NULL
     },
@@ -717,6 +720,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
           "Print only the value on stdout",
           NULL },
 
+        // NOTE: resource-agents <4.2.0 (2018-10-24) uses -Q
         { "quiet", 'Q', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &(args->quiet),
           NULL, NULL
         },

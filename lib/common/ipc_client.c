@@ -949,40 +949,6 @@ pcmk__connect_generic_ipc(crm_ipc_t *ipc)
     return pcmk_rc_ok;
 }
 
-/*!
- * \brief Establish an IPC connection to a Pacemaker component
- *
- * \param[in,out] client  Connection instance obtained from crm_ipc_new()
- *
- * \return true on success, false otherwise (in which case errno will be set;
- *         specifically, in case of discovering the remote side is not
- *         authentic, its value is set to ECONNABORTED).
- */
-bool
-crm_ipc_connect(crm_ipc_t *client)
-{
-    int rc = pcmk__connect_generic_ipc(client);
-
-    if (rc == pcmk_rc_ok) {
-        return true;
-    }
-    if ((client != NULL) && (client->ipc == NULL)) {
-        errno = (rc > 0)? rc : ENOTCONN;
-        crm_debug("Could not establish %s IPC connection: %s (%d)",
-                  client->server_name, pcmk_rc_str(errno), errno);
-    } else if (rc == pcmk_rc_ipc_unauthorized) {
-        crm_err("%s IPC provider authentication failed",
-                (client == NULL)? "Pacemaker" : client->server_name);
-        errno = ECONNABORTED;
-    } else {
-        crm_perror(LOG_ERR,
-                   "Could not verify authenticity of %s IPC provider",
-                   (client == NULL)? "Pacemaker" : client->server_name);
-        errno = ENOTCONN;
-    }
-    return false;
-}
-
 void
 crm_ipc_close(crm_ipc_t * client)
 {
@@ -1678,3 +1644,35 @@ bail:
     }
     return rc;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/ipc_client_compat.h>
+
+bool
+crm_ipc_connect(crm_ipc_t *client)
+{
+    int rc = pcmk__connect_generic_ipc(client);
+
+    if (rc == pcmk_rc_ok) {
+        return true;
+    }
+    if ((client != NULL) && (client->ipc == NULL)) {
+        errno = (rc > 0)? rc : ENOTCONN;
+        crm_debug("Could not establish %s IPC connection: %s (%d)",
+                  client->server_name, pcmk_rc_str(errno), errno);
+    } else if (rc == pcmk_rc_ipc_unauthorized) {
+        crm_err("%s IPC provider authentication failed",
+                (client == NULL)? "Pacemaker" : client->server_name);
+        errno = ECONNABORTED;
+    } else {
+        crm_err("Could not verify authenticity of %s IPC provider",
+                (client == NULL)? "Pacemaker" : client->server_name);
+        errno = ENOTCONN;
+    }
+    return false;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

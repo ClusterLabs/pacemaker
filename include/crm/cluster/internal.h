@@ -315,7 +315,7 @@ void pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id);
 void pcmk__refresh_node_caches_from_cib(xmlNode *cib);
 
 pcmk__node_status_t *pcmk__get_node(unsigned int id, const char *uname,
-                                    const char *uuid, uint32_t flags);
+                                    const char *xml_id, uint32_t flags);
 
 #ifdef __cplusplus
 }

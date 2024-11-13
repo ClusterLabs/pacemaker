@@ -164,7 +164,6 @@ stonith_get_namespace(const char *agent, const char *namespace_s)
     }
 #endif
 
-    crm_err("Unknown fence agent: %s", agent);
     return st_namespace_invalid;
 }
 
