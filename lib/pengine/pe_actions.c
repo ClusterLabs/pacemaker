@@ -554,7 +554,7 @@ unpack_interval_origin(const char *value, const xmlNode *xml_obj,
                        long long *start_delay)
 {
     long long result = 0;
-    guint interval_sec = interval_ms / 1000;
+    guint interval_sec = pcmk__timeout_ms2s(interval_ms);
     crm_time_t *origin = NULL;
 
     // Ignore unspecified values and non-recurring operations
@@ -1237,7 +1237,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         return 0;
     }
 
-    return (int) (scheduler->priv->priority_fencing_ms / 1000U);
+    return pcmk__timeout_ms2s(scheduler->priv->priority_fencing_ms);
 }
 
 pcmk_action_t *

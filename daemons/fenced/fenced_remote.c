@@ -1505,7 +1505,8 @@ valid_fencing_timeout(int specified_timeout, bool action_specific,
     }
 
     timeout = (int) QB_MIN(QB_MAX(specified_timeout,
-                                  stonith_watchdog_timeout_ms / 1000), INT_MAX);
+                                  pcmk__timeout_ms2s(stonith_watchdog_timeout_ms)),
+                           INT_MAX);
 
     if (timeout > specified_timeout) {
         if (action_specific) {
@@ -1659,7 +1660,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                    if didn't get a reply
                  */
                 if (!found && is_watchdog_fencing(op, device_list->data)) {
-                    total_timeout += stonith_watchdog_timeout_ms / 1000;
+                    total_timeout += pcmk__timeout_ms2s(stonith_watchdog_timeout_ms);
                 }
             }                   /* End Loop2: iterate through devices at a specific level */
         }                       /*End Loop1: iterate through fencing levels */

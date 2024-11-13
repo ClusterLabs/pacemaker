@@ -1218,7 +1218,7 @@ static inline int
 execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
     int rc = stonith_api->cmds->monitor(stonith_api, 0, cmd->rsc_id,
-                                        cmd->timeout / 1000);
+                                        pcmk__timeout_ms2s(cmd->timeout));
 
     rc = stonith_api->cmds->register_callback(stonith_api, rc, 0, 0, cmd,
                                               "lrmd_stonith_callback",

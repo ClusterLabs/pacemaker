@@ -838,7 +838,7 @@ check_connect_finished(gpointer userdata)
     if (rc < 0) { // select() error
         rc = errno;
         if ((rc == EINPROGRESS) || (rc == EAGAIN)) {
-            if ((time(NULL) - cb_data->start) < (cb_data->timeout_ms / 1000)) {
+            if ((time(NULL) - cb_data->start) < pcmk__timeout_ms2s(cb_data->timeout_ms)) {
                 return TRUE; // There is time left, so reschedule timer
             } else {
                 rc = ETIMEDOUT;
@@ -848,7 +848,7 @@ check_connect_finished(gpointer userdata)
                   cb_data->sock, pcmk_rc_str(rc), rc);
 
     } else if (rc == 0) { // select() timeout
-        if ((time(NULL) - cb_data->start) < (cb_data->timeout_ms / 1000)) {
+        if ((time(NULL) - cb_data->start) < pcmk__timeout_ms2s(cb_data->timeout_ms)) {
             return TRUE; // There is time left, so reschedule timer
         }
         crm_debug("Timed out while waiting for socket %d connection success",

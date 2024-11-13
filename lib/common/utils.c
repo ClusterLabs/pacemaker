@@ -390,7 +390,10 @@ pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data)
     pcmk__assert(interval_ms != 0 && fn != NULL);
 
     if (interval_ms % 1000 == 0) {
-        return g_timeout_add_seconds(interval_ms / 1000, fn, data);
+        /* In case interval_ms is 0, the call to pcmk__timeout_ms2s ensures
+         * an interval of one second.
+         */
+        return g_timeout_add_seconds(pcmk__timeout_ms2s(interval_ms), fn, data);
     } else {
         return g_timeout_add(interval_ms, fn, data);
     }
