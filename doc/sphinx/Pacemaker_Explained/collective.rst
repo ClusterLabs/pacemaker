@@ -252,11 +252,11 @@ _____________
    +-------------------+-----------------+-------------------------------------------------------+
    | Field             | Default         | Description                                           |
    +===================+=================+=======================================================+
-   | globally-unique   | true if         |  .. index::                                           |
+   | globally-unique   | **true** if     |  .. index::                                           |
    |                   | clone-node-max  |     single: clone; option, globally-unique            |
    |                   | is greater than |     single: option; globally-unique (clone)           |
    |                   | 1, otherwise    |     single: globally-unique; clone option             |
-   |                   | false           |                                                       |
+   |                   | **false**       |                                                       |
    |                   |                 | If **true**, each clone instance performs a           |
    |                   |                 | distinct function, such that a single node can run    |
    |                   |                 | more than one instance at the same time               |
@@ -351,7 +351,7 @@ _____________
    |                   |                 |                                                       |
    |                   |                 | If the clone is promotable and globally unique, this  |
    |                   |                 | is the number of instances that can be promoted at    |
-   |                   |                 | one time on a single node (up to `clone-node-max`)    |
+   |                   |                 | one time on a single node (up to ``clone-node-max``)  |
    +-------------------+-----------------+-------------------------------------------------------+
    
 .. note:: **Deprecated Terminology**
