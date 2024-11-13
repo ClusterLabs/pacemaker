@@ -5094,7 +5094,8 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
 
                 const char *rsc_id = crm_element_value(lrm_rsc, PCMK_XA_ID);
 
-                if (rsc != NULL && !pcmk__str_eq(rsc_id, rsc, pcmk__str_casei)) {
+                if ((rsc != NULL)
+                    && !pcmk__str_eq(rsc_id, rsc, pcmk__str_none)) {
                     continue;
                 }
 

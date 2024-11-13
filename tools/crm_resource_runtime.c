@@ -821,7 +821,8 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
                                                    failed_id,
                                                    pcmk_rsc_match_history
                                                    |pcmk_rsc_match_anon_basename);
-            if (!fail_rsc || !pcmk__str_eq(rsc_id, fail_rsc->id, pcmk__str_casei)) {
+            if ((fail_rsc == NULL)
+                || !pcmk__str_eq(rsc_id, fail_rsc->id, pcmk__str_none)) {
                 continue;
             }
         }
