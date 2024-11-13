@@ -207,6 +207,7 @@ void pcmk__daemonize(const char *name, const char *pidfile);
 void pcmk__panic(const char *reason);
 pid_t pcmk__locate_sbd(void);
 void pcmk__sleep_ms(unsigned int ms);
+guint pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data);
 
 extern int pcmk__score_red;
 extern int pcmk__score_green;
