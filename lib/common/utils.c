@@ -396,6 +396,36 @@ pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Convert milliseconds to seconds
+ *
+ * \param[in] timeout_ms The interval, in ms
+ *
+ * \return If \p timeout_ms is 0, return 0.  Otherwise, return the number of
+ *         seconds, rounded to the nearest integer, with a minimum of 1.
+ */
+guint
+pcmk__timeout_ms2s(guint timeout_ms)
+{
+    guint quot, rem;
+
+    if (timeout_ms == 0) {
+        return 0;
+    } else if (timeout_ms < 1000) {
+        return 1;
+    }
+
+    quot = timeout_ms / 1000;
+    rem = timeout_ms % 1000;
+
+    if (rem >= 500) {
+        quot += 1;
+    }
+
+    return quot;
+}
+
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
