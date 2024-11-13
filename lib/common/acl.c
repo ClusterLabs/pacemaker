@@ -786,12 +786,14 @@ pcmk__uid2username(uid_t uid)
  * given), and returns it.
  *
  * \param[in,out] request    XML request to update
+ * \param[in]     field      Alternate name for ACL user name XML attribute
  * \param[in]     peer_user  User name as known from IPC connection
  *
  * \return ACL user name actually used
  */
 const char *
-pcmk__update_acl_user(xmlNode *request, const char *peer_user)
+pcmk__update_acl_user(xmlNode *request, const char *field,
+                      const char *peer_user)
 {
     static const char *effective_user = NULL;
     const char *requested_user = NULL;
@@ -806,6 +808,14 @@ pcmk__update_acl_user(xmlNode *request, const char *peer_user)
     }
 
     requested_user = crm_element_value(request, PCMK__XA_ACL_TARGET);
+    if (requested_user == NULL) {
+        /* @COMPAT rolling upgrades <=1.1.11
+         *
+         * field is checked for backward compatibility with older versions that
+         * did not use PCMK__XA_ACL_TARGET.
+         */
+        requested_user = crm_element_value(request, field);
+    }
 
     if (!pcmk__is_privileged(effective_user)) {
         /* We're not running as a privileged user, set or overwrite any existing
@@ -841,6 +851,10 @@ pcmk__update_acl_user(xmlNode *request, const char *peer_user)
     // This requires pointer comparison, not string comparison
     if (user != crm_element_value(request, PCMK__XA_ACL_TARGET)) {
         crm_xml_add(request, PCMK__XA_ACL_TARGET, user);
+    }
+
+    if (field != NULL && user != crm_element_value(request, field)) {
+        crm_xml_add(request, field, user);
     }
 
     return requested_user;
