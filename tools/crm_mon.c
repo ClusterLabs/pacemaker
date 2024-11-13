@@ -1615,8 +1615,8 @@ main(int argc, char **argv)
 
         if (rc != pcmk_rc_ok) {
             if ((rc == ENOTCONN) || (rc == ECONNREFUSED)) {
-                out->transient(out, "Connection failed. Retrying in %ums...",
-                               options.reconnect_ms);
+                out->transient(out, "Connection failed. Retrying in %s...",
+                               pcmk__readable_interval(options.reconnect_ms));
             }
 
             // Give some time to view all output even if we won't retry
