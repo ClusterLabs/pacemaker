@@ -316,9 +316,9 @@ cib_remote_listen(gpointer data)
     }
 
     // Require the client to authenticate within this time
-    new_client->remote->auth_timeout = g_timeout_add(REMOTE_AUTH_TIMEOUT,
-                                                     remote_auth_timeout_cb,
-                                                     new_client);
+    new_client->remote->auth_timeout = pcmk__create_timer(REMOTE_AUTH_TIMEOUT,
+                                                          remote_auth_timeout_cb,
+                                                          new_client);
     crm_info("%s connection from %s pending authentication for client %s",
              ((ssock == remote_tls_fd)? "Encrypted" : "Clear-text"),
              ipstr, new_client->id);
@@ -454,9 +454,9 @@ cib_remote_msg(gpointer data)
         }
 
         // Require the client to authenticate within this time
-        client->remote->auth_timeout = g_timeout_add(REMOTE_AUTH_TIMEOUT,
-                                                     remote_auth_timeout_cb,
-                                                     client);
+        client->remote->auth_timeout = pcmk__create_timer(REMOTE_AUTH_TIMEOUT,
+                                                          remote_auth_timeout_cb,
+                                                          client);
         return 0;
     }
 

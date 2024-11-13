@@ -48,7 +48,7 @@ enum pcmk__fence_history {
  * \return Standard Pacemaker return code
  * \note If \p reason is not NULL, the caller is responsible for freeing its
  *       returned value.
- * \todo delay is eventually used with g_timeout_add() and should be guint
+ * \todo delay is eventually used with pcmk__create_timer() and should be guint
  */
 int pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
                           const char *name, unsigned int timeout,

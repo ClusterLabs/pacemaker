@@ -1096,7 +1096,7 @@ child_timeout_callback(gpointer p)
     child->timeout = TRUE;
     crm_debug("%s process (PID %d) timed out", child->desc, (int)child->pid);
 
-    child->timerid = g_timeout_add(5000, child_timeout_callback, child);
+    child->timerid = pcmk__create_timer(5000, child_timeout_callback, child);
     return FALSE;
 }
 
@@ -1262,7 +1262,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *pr
     child->desc = pcmk__str_copy(desc);
 
     if (timeout) {
-        child->timerid = g_timeout_add(timeout, child_timeout_callback, child);
+        child->timerid = pcmk__create_timer(timeout, child_timeout_callback, child);
     }
 
     child_list = g_list_append(child_list, child);
@@ -1273,7 +1273,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *pr
          * We do not want it to be possible to both add a child pid
          * to mainloop, and have the pid's exit callback invoked within
          * the same callstack. */
-        g_timeout_add(1, child_signal_init, NULL);
+        pcmk__create_timer(1, child_signal_init, NULL);
     }
 }
 
@@ -1330,7 +1330,7 @@ mainloop_timer_start(mainloop_timer_t *t)
     mainloop_timer_stop(t);
     if(t && t->period_ms > 0) {
         crm_trace("Starting timer %s", t->name);
-        t->id = g_timeout_add(t->period_ms, mainloop_timer_cb, t);
+        t->id = pcmk__create_timer(t->period_ms, mainloop_timer_cb, t);
     }
 }
 
@@ -1451,7 +1451,7 @@ pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(guint))
     if (ctx) {
         time_t start_time = time(NULL);
 
-        timer = g_timeout_add(timer_ms, drain_timeout_cb, &timeout_popped);
+        timer = pcmk__create_timer(timer_ms, drain_timeout_cb, &timeout_popped);
         while (!timeout_popped
                && check(timer_ms - (time(NULL) - start_time) * 1000)) {
             g_main_context_iteration(ctx, TRUE);

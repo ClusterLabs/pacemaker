@@ -239,9 +239,9 @@ lrmd_remote_listen(gpointer data)
     new_client->remote->tls_session = session;
 
     // Require the client to authenticate within this time
-    new_client->remote->auth_timeout = g_timeout_add(LRMD_REMOTE_AUTH_TIMEOUT,
-                                                     lrmd_auth_timeout_cb,
-                                                     new_client);
+    new_client->remote->auth_timeout = pcmk__create_timer(LRMD_REMOTE_AUTH_TIMEOUT,
+                                                          lrmd_auth_timeout_cb,
+                                                          new_client);
     crm_info("Remote client pending authentication "
              QB_XS " %p id: %s", new_client, new_client->id);
 

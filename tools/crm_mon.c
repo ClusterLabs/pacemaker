@@ -761,8 +761,8 @@ reconnect_after_timeout(gpointer data)
     out->message(out, "crm-mon-disconnected",
                  "Latest connection attempt failed", pcmkd_state);
 
-    reconnect_timer = g_timeout_add(options.reconnect_ms,
-                                    reconnect_after_timeout, NULL);
+    reconnect_timer = pcmk__create_timer(options.reconnect_ms,
+                                         reconnect_after_timeout, NULL);
     return G_SOURCE_REMOVE;
 }
 
@@ -806,8 +806,8 @@ mon_cib_connection_destroy(gpointer user_data)
 
     if (cib) {
         cib->cmds->signoff(cib);
-        reconnect_timer = g_timeout_add(options.reconnect_ms,
-                                        reconnect_after_timeout, NULL);
+        reconnect_timer = pcmk__create_timer(options.reconnect_ms,
+                                             reconnect_after_timeout, NULL);
     }
 }
 

@@ -711,7 +711,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
                    device->id, cmd->start_delay, cmd->timeout,
                    requested_delay, delay_base, delay_max);
         cmd->delay_id =
-            g_timeout_add_seconds(cmd->start_delay, start_delay_helper, cmd);
+            pcmk__create_timer(cmd->start_delay * 1000, start_delay_helper, cmd);
     }
 }
 

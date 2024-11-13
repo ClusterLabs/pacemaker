@@ -281,7 +281,7 @@ start_test(gpointer user_data)
     lrmd_conn->cmds->set_callback(lrmd_conn, read_events);
 
     if (options.timeout) {
-        g_timeout_add(options.timeout, timeout_err, NULL);
+        pcmk__create_timer(options.timeout, timeout_err, NULL);
     }
 
     if (!options.api_call) {

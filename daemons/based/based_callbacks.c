@@ -1277,7 +1277,7 @@ initiate_exit(void)
     pcmk__cluster_send_message(NULL, pcmk_ipc_based, leaving);
     pcmk__xml_free(leaving);
 
-    g_timeout_add(EXIT_ESCALATION_MS, cib_force_exit, NULL);
+    pcmk__create_timer(EXIT_ESCALATION_MS, cib_force_exit, NULL);
 }
 
 void

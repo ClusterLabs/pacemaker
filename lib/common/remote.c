@@ -968,7 +968,7 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
      */
     crm_trace("Scheduling check in %dms for whether connect to fd %d finished",
               interval, sock);
-    timer = g_timeout_add(interval, check_connect_finished, cb_data);
+    timer = pcmk__create_timer(interval, check_connect_finished, cb_data);
     if (timer_id) {
         *timer_id = timer;
     }
