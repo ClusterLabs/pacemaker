@@ -809,10 +809,13 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
 
     requested_user = crm_element_value(request, PCMK__XA_ACL_TARGET);
     if (requested_user == NULL) {
-        /* @COMPAT rolling upgrades <=1.1.11
+        /* Currently, different XML attribute names are used for the ACL user in
+         * different contexts (PCMK__XA_ATTR_USER, PCMK__XA_CIB_USER, etc.).
+         * The caller may specify that name as the field argument.
          *
-         * field is checked for backward compatibility with older versions that
-         * did not use PCMK__XA_ACL_TARGET.
+         * @TODO Standardize on PCMK__XA_ACL_TARGET and eventually drop the
+         * others once rolling upgrades from versions older than that are no
+         * longer supported.
          */
         requested_user = crm_element_value(request, field);
     }
