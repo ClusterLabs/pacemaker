@@ -969,8 +969,8 @@ Assertion Logging
 _________________
 
 ``pcmk__assert(expr)``
-  If ``expr`` is false, this will call <code>crm_err()</code> with a "Triggered
-  fatal assertion" message (with details), then abort execution. This should be
+  If ``expr`` is false, this will call ``crm_err()`` with a "Triggered fatal
+  assertion" message (with details), then abort execution. This should be
   used for logic errors that should be impossible (such as a NULL function
   argument where not accepted) and environmental errors that can't be handled
   gracefully (for example, memory allocation failures, though returning

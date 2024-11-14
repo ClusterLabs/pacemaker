@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2024-05-22 09:04-0500\n"
+"POT-Creation-Date: 2024-11-14 10:45-0600\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -20,55 +20,52 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: daemons/fenced/pacemaker-fenced.c:498
+#: daemons/fenced/pacemaker-fenced.c:492
 msgid "Instance attributes available for all \"stonith\"-class resources"
 msgstr " 可用于所有stonith类资源的实例属性"
 
-#: daemons/fenced/pacemaker-fenced.c:500
+#: daemons/fenced/pacemaker-fenced.c:494
+#, fuzzy
 msgid ""
 "Instance attributes available for all \"stonith\"-class resources and used "
-"by Pacemaker's fence daemon, formerly known as stonithd"
+"by Pacemaker's fence daemon"
 msgstr ""
 " 可用于所有stonith类资源的实例属性，并由Pacemaker的fence守护程序使用（以前称"
 "为stonithd)"
 
-#: daemons/fenced/pacemaker-fenced.c:511
-msgid "Deprecated (will be removed in a future release)"
-msgstr "已弃用(将在未来版本中删除)"
-
-#: daemons/fenced/pacemaker-fenced.c:514
+#: daemons/fenced/pacemaker-fenced.c:504
 msgid "Intended for use in regression testing only"
 msgstr "仅适用于回归测试"
 
-#: daemons/fenced/pacemaker-fenced.c:517
+#: daemons/fenced/pacemaker-fenced.c:508
 msgid "Send logs to the additional named logfile"
 msgstr "将日志发送到其他命名日志文件"
 
-#: lib/common/options.c:57
+#: lib/common/options.c:53
 msgid "Pacemaker version on cluster node elected Designated Controller (DC)"
 msgstr "集群选定的控制器节点(DC)的 Pacemaker 版本"
 
-#: lib/common/options.c:59
+#: lib/common/options.c:55
 #, fuzzy
 msgid ""
 "Includes a hash which identifies the exact revision the code was built from. "
 "Used for diagnostic purposes."
 msgstr "它包含一个标识所构建代码修订版本的哈希值. 其可用于诊断."
 
-#: lib/common/options.c:66
+#: lib/common/options.c:62
 #, fuzzy
 msgid "The messaging layer on which Pacemaker is currently running"
 msgstr "Pacemaker 当前运行的消息传递层"
 
-#: lib/common/options.c:67
+#: lib/common/options.c:63
 msgid "Used for informational and diagnostic purposes."
 msgstr "用于提供信息和诊断."
 
-#: lib/common/options.c:73
+#: lib/common/options.c:69
 msgid "An arbitrary name for the cluster"
 msgstr "任意的集群名称"
 
-#: lib/common/options.c:74
+#: lib/common/options.c:70
 msgid ""
 "This optional value is mostly for users' convenience as desired in "
 "administration, but may also be used in Pacemaker configuration rules via "
@@ -78,23 +75,23 @@ msgstr ""
 "该可选值主要是为了方便用户根据管理的需要使用, 可以通过 #cluster-name 节点属性"
 "在 Pacemaker 配置规则中使用, 以及被更高级的工具和资源代理使用."
 
-#: lib/common/options.c:83
+#: lib/common/options.c:79
 msgid "How long to wait for a response from other nodes during start-up"
 msgstr "启动过程中等待其他节点响应的时间"
 
-#: lib/common/options.c:84
+#: lib/common/options.c:80
 msgid ""
 "The optimal value will depend on the speed and load of your network and the "
 "type of switches used."
 msgstr "其最佳值将取决于您的网络速度和负载以及使用的交换机类型."
 
-#: lib/common/options.c:91
+#: lib/common/options.c:87
 msgid ""
 "Polling interval to recheck cluster state and evaluate rules with date "
 "specifications"
 msgstr "重新检查集群状态及评估日期规范规则的轮询间隔"
 
-#: lib/common/options.c:93
+#: lib/common/options.c:89
 #, fuzzy
 msgid ""
 "Pacemaker is primarily event-driven, and looks ahead to know when to recheck "
@@ -111,11 +108,11 @@ msgstr ""
 "陷提供故障保护. 如果值为0, 将禁用轮询. 如果值为正数, 则设置以秒为单位的时间间"
 "隔, 除非指定了其它单位 (例如, \"5min\")."
 
-#: lib/common/options.c:107
+#: lib/common/options.c:103
 msgid "How a cluster node should react if notified of its own fencing"
 msgstr "集群节点在收到针对自己的 fence 操作结果通知时应如何反应"
 
-#: lib/common/options.c:108
+#: lib/common/options.c:104
 #, fuzzy
 msgid ""
 "A cluster node may receive notification of a \"succeeded\" fencing that "
@@ -129,7 +126,7 @@ msgstr ""
 "试立即停止 pacemaker 并保持停止状态,或者使用 \"panic\" 尝试立即重新启动本地节"
 "点，如果失败则返回执行 stop."
 
-#: lib/common/options.c:119
+#: lib/common/options.c:115
 msgid ""
 "Declare an election failed if it is not decided within this much time. If "
 "you need to adjust this value, it probably indicates the presence of a bug."
@@ -137,7 +134,7 @@ msgstr ""
 "如果集群在本项设置时间内没有作出决定则宣布选举失败. 这可能表明当前存在错误, "
 "您需要调整该值."
 
-#: lib/common/options.c:128
+#: lib/common/options.c:124
 msgid ""
 "Exit immediately if shutdown does not complete within this much time. If you "
 "need to adjust this value, it probably indicates the presence of a bug."
@@ -145,19 +142,19 @@ msgstr ""
 "如果在这段时间内关机仍未完成, pacemaker 将立即退出. 这可能表明当前存在错误, "
 "您需要调整该值."
 
-#: lib/common/options.c:138 lib/common/options.c:147
+#: lib/common/options.c:133 lib/common/options.c:141
 msgid ""
 "If you need to adjust this value, it probably indicates the presence of a "
 "bug."
 msgstr "这可能表明当前存在错误, 您需要调整该值."
 
-#: lib/common/options.c:156
+#: lib/common/options.c:149
 #, fuzzy
 msgid ""
 "Enabling this option will slow down cluster recovery under all conditions"
 msgstr "启用此选项将在所有情况下减慢集群恢复的速度"
 
-#: lib/common/options.c:158
+#: lib/common/options.c:151
 msgid ""
 "Delay cluster recovery for this much time to allow for additional events to "
 "occur. Useful if your configuration is sensitive to the order in which ping "
@@ -166,15 +163,15 @@ msgstr ""
 "集群恢复将被推迟指定的时间间隔, 以等待更多事件发生. 如果您的配置对 ping 更新"
 "到达的顺序很敏感, 则可以使用此选项."
 
-#: lib/common/options.c:168
+#: lib/common/options.c:162
 msgid "What to do when the cluster does not have quorum"
 msgstr "当集群没有达到必需票数时该如何做"
 
-#: lib/common/options.c:175
+#: lib/common/options.c:169
 msgid "Whether to lock resources to a cleanly shut down node"
 msgstr "是否锁定资源到完全关闭的节点"
 
-#: lib/common/options.c:176
+#: lib/common/options.c:170
 msgid ""
 "When true, resources active on a node when it is cleanly shut down are kept "
 "\"locked\" to that node (not allowed to run elsewhere) until they start "
@@ -189,11 +186,11 @@ msgstr ""
 "克隆和捆绑实例以及可提升克隆的提升角色目前不会被锁定, 尽管可能在未来的发行版"
 "中添加支持. "
 
-#: lib/common/options.c:189
+#: lib/common/options.c:183
 msgid "Do not lock resources to a cleanly shut down node longer than this"
 msgstr "资源会被锁定到完全关闭的节点的最长时间"
 
-#: lib/common/options.c:191
+#: lib/common/options.c:185
 msgid ""
 "If shutdown-lock is true and this is set to a nonzero time duration, "
 "shutdown locks will expire after this much time has passed since the "
@@ -202,27 +199,27 @@ msgstr ""
 "如果 shutdown-lock 为 true, 并且将此选项设置为非零时间间隔, 则自关闭操作执行"
 "经过此时间后，shutdown lock 将过期, 即使该节点尚未重新加入也是如此. "
 
-#: lib/common/options.c:200
+#: lib/common/options.c:194
 msgid "Enable Access Control Lists (ACLs) for the CIB"
 msgstr "为 CIB 启用访问控制列表 (ACL) "
 
-#: lib/common/options.c:207
+#: lib/common/options.c:201
 msgid "Whether resources can run on any node by default"
 msgstr "默认情况下资源是否可以在任何节点上运行"
 
-#: lib/common/options.c:214
+#: lib/common/options.c:208
 msgid ""
 "Whether the cluster should refrain from monitoring, starting, and stopping "
 "resources"
 msgstr "集群是否应避免监视, 启动和停止资源"
 
-#: lib/common/options.c:222
+#: lib/common/options.c:216
 msgid ""
 "Whether a start failure should prevent a resource from being recovered on "
 "the same node"
 msgstr "资源启动失败是否应阻止在同一节点上恢复该资源"
 
-#: lib/common/options.c:224
+#: lib/common/options.c:218
 msgid ""
 "When true, the cluster will immediately ban a resource from a node if it "
 "fails to start there. When false, the cluster will instead check the "
@@ -231,16 +228,16 @@ msgstr ""
 "当为true, 如果资源启动失败, 集群将立即禁止节点启动该资源, 当为false, 集群将检"
 "查资源的失败次数是否超过了其 migration-threshold. "
 
-#: lib/common/options.c:232
+#: lib/common/options.c:226
 msgid "Whether the cluster should check for active resources during start-up"
 msgstr "集群是否在启动期间检查活动的资源"
 
-#: lib/common/options.c:242
+#: lib/common/options.c:236
 #, fuzzy
 msgid "Whether nodes may be fenced as part of recovery"
 msgstr "节点是否可以被 fence 作为集群恢复的一部分"
 
-#: lib/common/options.c:243
+#: lib/common/options.c:237
 msgid ""
 "If false, unresponsive nodes are immediately assumed to be harmless, and "
 "resources that were active on them may be recovered elsewhere. This can "
@@ -251,24 +248,23 @@ msgstr ""
 "动的资源. 这可能会导致 \"split-brain\" 情况, 从而可能导致数据丢失和(或)服务不"
 "可用. "
 
-#: lib/common/options.c:253
-msgid ""
-"Action to send to fence device when a node needs to be fenced (\"poweroff\" "
-"is a deprecated alias for \"off\")"
+#: lib/common/options.c:247
+#, fuzzy
+msgid "Action to send to fence device when a node needs to be fenced"
 msgstr ""
 "当节点需要被 fence 时, 向 fence 设备发送的操作 (\"poweroff\" 作为 \"off\" 的"
 "别名已被弃用)"
 
-#: lib/common/options.c:261
+#: lib/common/options.c:254
 msgid ""
 "How long to wait for on, off, and reboot fence actions to complete by default"
 msgstr "默认情况下, 等待 on, off, 和 reboot fence 操作完成的时间"
 
-#: lib/common/options.c:269
+#: lib/common/options.c:262
 msgid "Whether watchdog integration is enabled"
 msgstr "是否启用 watchdog 集成设置"
 
-#: lib/common/options.c:270
+#: lib/common/options.c:263
 msgid ""
 "This is set automatically by the cluster according to whether SBD is "
 "detected to be in use. User-configured values are ignored. The value `true` "
@@ -282,7 +278,7 @@ msgstr ""
 "义. 在这种情况下, 如果需要fence, 将通过 SBD 执行基于 watchdog 的自我 fence, "
 "而不需要明确配置 fence 资源."
 
-#: lib/common/options.c:291
+#: lib/common/options.c:284
 #, fuzzy
 msgid ""
 "How long before nodes can be assumed to be safely down when watchdog-based "
@@ -291,7 +287,7 @@ msgstr ""
 "当基于 watchdog 的自我 fence 机制通过SBD 被执行时, 节点被认为安全下线的等待时"
 "间有多长"
 
-#: lib/common/options.c:293
+#: lib/common/options.c:286
 #, fuzzy
 msgid ""
 "If this is set to a positive value, lost nodes are assumed to achieve self-"
@@ -319,22 +315,22 @@ msgstr ""
 "启动. 当设为负值时所有使用 SBD 的节点上 `SBD_WATCHDOG_TIMEOUT` 的值必须设置为"
 "相同的值, 否则可能导致数据损坏或丢失."
 
-#: lib/common/options.c:313
+#: lib/common/options.c:306
 msgid ""
 "How many times fencing can fail before it will no longer be immediately re-"
 "attempted on a target"
 msgstr "fence 操作失败多少次会停止立即尝试"
 
-#: lib/common/options.c:321
+#: lib/common/options.c:319
 msgid "Allow performing fencing operations in parallel"
 msgstr "允许并行执行 fencing 操作"
 
-#: lib/common/options.c:328
+#: lib/common/options.c:326
 #, fuzzy
 msgid "Whether to fence unseen nodes at start-up"
 msgstr "*** 仅高级使用 *** 是否在启动时fence不可见节点"
 
-#: lib/common/options.c:329
+#: lib/common/options.c:327
 #, fuzzy
 msgid ""
 "Setting this to false may lead to a \"split-brain\" situation, potentially "
@@ -343,13 +339,13 @@ msgstr ""
 "将此设置为 false 可能会导致 \"split-brain\" 的情况，可能导致数据丢失和(或)服"
 "务不可用。"
 
-#: lib/common/options.c:336
+#: lib/common/options.c:334
 msgid ""
 "Apply fencing delay targeting the lost nodes with the highest total resource "
 "priority"
 msgstr "针对具有最高总资源优先级的丢失节点应用fencing延迟"
 
-#: lib/common/options.c:338
+#: lib/common/options.c:336
 msgid ""
 "Apply specified delay for the fencings that are targeting the lost nodes "
 "with the highest total resource priority in case we don't have the majority "
@@ -369,13 +365,13 @@ msgstr ""
 "加到此延迟。为了安全, 这个延迟应该明显大于 pcmk_delay_base/max 的最大设置值，"
 "例如两倍。默认情况下，优先级fencing延迟已禁用。"
 
-#: lib/common/options.c:355
+#: lib/common/options.c:353
 msgid ""
 "How long to wait for a node that has joined the cluster to join the "
 "controller process group"
 msgstr "等待已加入集群的节点加入控制器进程组的时间"
 
-#: lib/common/options.c:357
+#: lib/common/options.c:355
 msgid ""
 "Fence nodes that do not join the controller process group within this much "
 "time after joining the cluster, to allow the cluster to continue managing "
@@ -386,11 +382,11 @@ msgstr ""
 "资源。值为0表示永远不 fence 待定节点。将值设置为2h表示2小时后 fence 待定节"
 "点。"
 
-#: lib/common/options.c:367
+#: lib/common/options.c:365
 msgid "Maximum time for node-to-node communication"
 msgstr "最大节点间通信时间"
 
-#: lib/common/options.c:368
+#: lib/common/options.c:366
 msgid ""
 "The node elected Designated Controller (DC) will consider an action failed "
 "if it does not get a response from the node executing the action within this "
@@ -401,29 +397,29 @@ msgstr ""
 "响应，则会被选为指定控制器（DC）的节点认定为失败。\"正确\" 值将取决于速度和您"
 "的网络和集群节点的负载。"
 
-#: lib/common/options.c:380
+#: lib/common/options.c:378
 msgid "Maximum amount of system load that should be used by cluster nodes"
 msgstr "集群节点应该使用的最大系统负载量"
 
-#: lib/common/options.c:382
+#: lib/common/options.c:380
 msgid ""
 "The cluster will slow down its recovery process when the amount of system "
 "resources used (currently CPU) approaches this limit"
 msgstr "当使用的系统资源量（当前指 CPU）接近此限制时, 集群将减慢其恢复过程"
 
-#: lib/common/options.c:389
+#: lib/common/options.c:387
 msgid ""
 "Maximum number of jobs that can be scheduled per node (defaults to 2x cores)"
 msgstr "每个节点可以调度的最大作业数（默认为2x内核数）"
 
-#: lib/common/options.c:397
+#: lib/common/options.c:395
 #, fuzzy
 msgid ""
 "Maximum number of jobs that the cluster may execute in parallel across all "
 "nodes"
 msgstr "集群可以在所有节点上并发执行的最大作业数"
 
-#: lib/common/options.c:399
+#: lib/common/options.c:397
 msgid ""
 "The \"correct\" value will depend on the speed and load of your network and "
 "cluster nodes. If set to 0, the cluster will impose a dynamically calculated "
@@ -432,17 +428,17 @@ msgstr ""
 "\"正确\" 值将取决于速度和您的网络与集群节点的负载。如果设置为0，当任何节点具"
 "有高负载时，集群将施加一个动态计算的限制。"
 
-#: lib/common/options.c:408
+#: lib/common/options.c:406
 msgid ""
 "The number of live migration actions that the cluster is allowed to execute "
 "in parallel on a node (-1 means no limit)"
 msgstr "允许集群在一个节点上并行执行的实时迁移操作的数量(-1表示没有限制)"
 
-#: lib/common/options.c:427
+#: lib/common/options.c:425
 msgid "Maximum IPC message backlog before disconnecting a cluster daemon"
 msgstr "断开集群守护程序之前的最大IPC消息积压"
 
-#: lib/common/options.c:428
+#: lib/common/options.c:426
 msgid ""
 "Raise this if log has \"Evicting client\" messages for cluster daemon PIDs "
 "(a good value is the number of resources in the cluster multiplied by the "
@@ -451,113 +447,97 @@ msgstr ""
 "如果日志中有针对集群守护程序PID的消息“Evicting client”，（则建议将值设为集群"
 "中的资源数量乘以节点数量）"
 
-#: lib/common/options.c:438
+#: lib/common/options.c:436
 #, fuzzy
 msgid "Whether the cluster should stop all active resources"
 msgstr "集群是否在启动期间检查运行资源"
 
-#: lib/common/options.c:445
+#: lib/common/options.c:443
 msgid "Whether to stop resources that were removed from the configuration"
 msgstr "是否停止配置已被删除的资源"
 
-#: lib/common/options.c:453
+#: lib/common/options.c:451
 msgid "Whether to cancel recurring actions removed from the configuration"
 msgstr "是否取消配置已被删除的的重复操作"
 
 #: lib/common/options.c:461
-#, fuzzy
-msgid "Whether to remove stopped resources from the executor"
-msgstr "是否从pacemaker-execd 守护进程中清除已停止的资源"
-
-#: lib/common/options.c:462
-#, fuzzy
-msgid "Values other than default are poorly tested and potentially dangerous."
-msgstr "非默认值未经过充分的测试，有潜在的风险。该选项将在未来的版本中删除。"
-
-#: lib/common/options.c:471
 msgid "The number of scheduler inputs resulting in errors to save"
 msgstr "保存导致错误的调度程序输入的数量"
 
-#: lib/common/options.c:472 lib/common/options.c:479 lib/common/options.c:486
+#: lib/common/options.c:462 lib/common/options.c:469 lib/common/options.c:476
 msgid "Zero to disable, -1 to store unlimited."
 msgstr "零表示禁用，-1表示存储不受限制。"
 
-#: lib/common/options.c:478
+#: lib/common/options.c:468
 msgid "The number of scheduler inputs resulting in warnings to save"
 msgstr "保存导致警告的调度程序输入的数量"
 
-#: lib/common/options.c:485
+#: lib/common/options.c:475
 msgid "The number of scheduler inputs without errors or warnings to save"
 msgstr "保存没有错误或警告的调度程序输入的数量"
 
-#: lib/common/options.c:497
+#: lib/common/options.c:487
 #, fuzzy
 msgid "How cluster should react to node health attributes"
 msgstr "集群节点对节点健康属性如何反应"
 
-#: lib/common/options.c:498
+#: lib/common/options.c:488
 msgid ""
 "Requires external entities to create node attributes (named with the prefix "
 "\"#health\") with values \"red\", \"yellow\", or \"green\"."
 msgstr ""
 "需要外部实体创建具有“red”,“yellow”或“green”值的节点属性(前缀为“#health”)"
 
-#: lib/common/options.c:506
+#: lib/common/options.c:496
 msgid "Base health score assigned to a node"
 msgstr "分配给节点的基本健康分数"
 
-#: lib/common/options.c:507
+#: lib/common/options.c:497
 msgid "Only used when \"node-health-strategy\" is set to \"progressive\"."
 msgstr "仅在“node-health-strategy”设置为“progressive”时使用。"
 
-#: lib/common/options.c:514
+#: lib/common/options.c:504
 msgid "The score to use for a node health attribute whose value is \"green\""
 msgstr "为节点健康属性值为“green”所使用的分数"
 
-#: lib/common/options.c:516 lib/common/options.c:525 lib/common/options.c:534
+#: lib/common/options.c:506 lib/common/options.c:515 lib/common/options.c:524
 msgid ""
 "Only used when \"node-health-strategy\" is set to \"custom\" or \"progressive"
 "\"."
 msgstr "仅在“node-health-strategy”设置为“custom”或“progressive”时使用。"
 
-#: lib/common/options.c:523
+#: lib/common/options.c:513
 msgid "The score to use for a node health attribute whose value is \"yellow\""
 msgstr "为节点健康属性值为“yellow”所使用的分数"
 
-#: lib/common/options.c:532
+#: lib/common/options.c:522
 msgid "The score to use for a node health attribute whose value is \"red\""
 msgstr "为节点健康属性值为“red”所使用的分数"
 
-#: lib/common/options.c:545
+#: lib/common/options.c:535
 #, fuzzy
 msgid "How the cluster should allocate resources to nodes"
 msgstr "集群应该如何分配资源到节点"
 
-#: lib/common/options.c:563
-#, fuzzy
-msgid "An alternate parameter to supply instead of 'port'"
-msgstr "用于替代 'port' 的其它参数"
-
-#: lib/common/options.c:564
-#, fuzzy
-msgid ""
-"Some devices do not support the standard 'port' parameter or may provide "
-"additional ones. Use this to specify an alternate, device-specific, "
-"parameter that should indicate the machine to be fenced. A value of \"none\" "
-"can be used to tell the cluster not to supply any additional parameters."
+#: lib/common/options.c:553
+msgid "Name of agent parameter that should be set to the fencing target"
 msgstr ""
-"一些设备不支持标准的 'port' 参数, 或者可能会提供其它的参数. 使用此选项可指定"
-"一个替代的, 该设备专用的参数, 该参数应该指出需要 fence 的机器. 可以使用 "
-"\"none\" 值用于告诉集群不要提供任何其它的参数. "
 
-#: lib/common/options.c:574
+#: lib/common/options.c:554
+msgid ""
+"If the fencing agent metadata advertises support for the \"port\" or \"plug"
+"\" parameter, that will be used as the default, otherwise \"none\" will be "
+"used, which tells the cluster not to supply any additional parameters."
+msgstr ""
+
+#: lib/common/options.c:563
 #, fuzzy
 msgid ""
 "A mapping of node names to port numbers for devices that do not support node "
 "names."
 msgstr "为不支持主机名的设备提供主机名到端口号的映射. "
 
-#: lib/common/options.c:576
+#: lib/common/options.c:565
 #, fuzzy
 msgid ""
 "For example, \"node1:1;node2:2,3\" would tell the cluster to use port 1 for "
@@ -566,11 +546,11 @@ msgstr ""
 "例如, \"node1:1;node2:2,3\" 将会告诉集群对node1使用端口1, 对node2使用端口2和"
 "3."
 
-#: lib/common/options.c:583
+#: lib/common/options.c:572
 msgid "Nodes targeted by this device"
 msgstr "此设备针对的节点"
 
-#: lib/common/options.c:584
+#: lib/common/options.c:573
 #, fuzzy
 msgid ""
 "Comma-separated list of nodes that can be targeted by this device (for "
@@ -580,12 +560,12 @@ msgstr ""
 "此设备可以针对的节点列表，节点之间用逗号分隔（例如，node1,node2, node3）.如果"
 "pcmk_host_list=\"static-list\")"
 
-#: lib/common/options.c:594
+#: lib/common/options.c:583
 #, fuzzy
 msgid "How to determine which nodes can be targeted by the device"
 msgstr "如何确定设备可以针对哪些节点"
 
-#: lib/common/options.c:595
+#: lib/common/options.c:584
 #, fuzzy
 msgid ""
 "Use \"dynamic-list\" to query the device via the 'list' command; \"static-"
@@ -603,13 +583,13 @@ msgstr ""
 "如果设备支持列表操作，则为\"dynamic-list\"；如果设备支持状态操作，则为"
 "\"status\"；否则为\"none\""
 
-#: lib/common/options.c:608
+#: lib/common/options.c:597
 msgid ""
 "Enable a delay of no more than the time specified before executing fencing "
 "actions."
 msgstr "在执行 fence 操作前启用不超过指定时间的延迟"
 
-#: lib/common/options.c:610
+#: lib/common/options.c:599
 msgid ""
 "Enable a delay of no more than the time specified before executing fencing "
 "actions. Pacemaker derives the overall delay by taking the value of "
@@ -619,11 +599,11 @@ msgstr ""
 "在执行 fence 操作前启用不超过指定时间的延迟. Pacemaker通过获取 "
 "pcmk_delay_base 的值并添加随机延迟值来得出总延迟, 并且确保总和不超过此最大值."
 
-#: lib/common/options.c:619
+#: lib/common/options.c:608
 msgid "Enable a base delay for fencing actions and specify base delay value."
 msgstr "为 fence 操作启用一个指定的基础延迟. "
 
-#: lib/common/options.c:621
+#: lib/common/options.c:610
 #, fuzzy
 msgid ""
 "This enables a static delay for fencing actions, which can help avoid "
@@ -640,28 +620,27 @@ msgstr ""
 "点 (如果为每个目标节点都配置了单独的设备的情况下, 这很有用) 或设置成一个节点"
 "映射形式 (例如，\"node1:1s;node2:5\") 从而为每个目标节点设置不同值. "
 
-#: lib/common/options.c:634
+#: lib/common/options.c:623
 msgid ""
 "The maximum number of actions can be performed in parallel on this device"
 msgstr "可以在该设备上并发执行的最多操作数量"
 
-#: lib/common/options.c:636
+#: lib/common/options.c:625
 #, fuzzy
 msgid ""
-"Cluster property concurrent-fencing=\"true\" needs to be configured first. "
-"Then use this to specify the maximum number of actions can be performed in "
-"parallel on this device. A value of -1 means an unlimited number of actions "
-"can be performed in parallel."
+"If the concurrent-fencing cluster property is \"true\", this specifies the "
+"maximum number of actions that can be performed in parallel on this device. "
+"A value of -1 means unlimited."
 msgstr ""
 "需要先配置集群属性 concurrent-fencing=\"true\". 然后使用此参数指定可以在该设"
 "备上并发执行的最多操作数量. -1 表示可以并行执行无限数量的操作. "
 
-#: lib/common/options.c:646
+#: lib/common/options.c:633
 #, fuzzy
 msgid "An alternate command to run instead of 'reboot'"
 msgstr "运行替代命令，而不是'reboot'"
 
-#: lib/common/options.c:647
+#: lib/common/options.c:634
 #, fuzzy
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
@@ -671,14 +650,14 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令，使用此选项可以指定一个该设备特定的"
 "替代命令，用来实现'reboot'操作。"
 
-#: lib/common/options.c:655
+#: lib/common/options.c:642
 #, fuzzy
 msgid ""
 "Specify an alternate timeout to use for 'reboot' actions instead of stonith-"
 "timeout"
 msgstr "指定用于'reboot' 操作的替代超时，而不是stonith-timeout"
 
-#: lib/common/options.c:657
+#: lib/common/options.c:644
 #, fuzzy
 msgid ""
 "Some devices need much more/less time to complete than normal. Use this to "
@@ -687,14 +666,14 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'reboot'操作的该设备特定的替代超时。"
 
-#: lib/common/options.c:665
+#: lib/common/options.c:652
 #, fuzzy
 msgid ""
 "The maximum number of times to try the 'reboot' command within the timeout "
 "period"
 msgstr "在超时前重试'reboot'命令的最大次数"
 
-#: lib/common/options.c:667
+#: lib/common/options.c:654
 #, fuzzy
 msgid ""
 "Some devices do not support multiple connections. Operations may \"fail\" if "
@@ -707,12 +686,12 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'reboot' 操作的次数."
 
-#: lib/common/options.c:677
+#: lib/common/options.c:664
 #, fuzzy
 msgid "An alternate command to run instead of 'off'"
 msgstr "运行替代命令，而不是'off'"
 
-#: lib/common/options.c:678
+#: lib/common/options.c:665
 #, fuzzy
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
@@ -722,14 +701,14 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令,使用此选项可指定一个该设备专用的替代"
 "命令，用来实现'off'操作。"
 
-#: lib/common/options.c:686
+#: lib/common/options.c:673
 #, fuzzy
 msgid ""
 "Specify an alternate timeout to use for 'off' actions instead of stonith-"
 "timeout"
 msgstr "指定用于off 操作的替代超时，而不是stonith-timeout"
 
-#: lib/common/options.c:688
+#: lib/common/options.c:675
 #, fuzzy
 msgid ""
 "Some devices need much more/less time to complete than normal. Use this to "
@@ -738,14 +717,14 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'off'操作的该设备特定的替代超时。"
 
-#: lib/common/options.c:696
+#: lib/common/options.c:683
 #, fuzzy
 msgid ""
 "The maximum number of times to try the 'off' command within the timeout "
 "period"
 msgstr "在超时前重试'off'命令的最大次数"
 
-#: lib/common/options.c:698
+#: lib/common/options.c:685
 #, fuzzy
 msgid ""
 "Some devices do not support multiple connections. Operations may \"fail\" if "
@@ -758,12 +737,12 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'off' 操作的次数."
 
-#: lib/common/options.c:708
+#: lib/common/options.c:695
 #, fuzzy
 msgid "An alternate command to run instead of 'on'"
 msgstr "仅高级使用：运行替代命令，而不是'on'"
 
-#: lib/common/options.c:709
+#: lib/common/options.c:696
 #, fuzzy
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
@@ -773,14 +752,14 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令，使用此选项可指定一个该设备特定的替"
 "代命令，用来实现'on'操作。"
 
-#: lib/common/options.c:717
+#: lib/common/options.c:704
 #, fuzzy
 msgid ""
 "Specify an alternate timeout to use for 'on' actions instead of stonith-"
 "timeout"
 msgstr "指定用于on 操作的替代超时，而不是stonith-timeout"
 
-#: lib/common/options.c:719
+#: lib/common/options.c:706
 #, fuzzy
 msgid ""
 "Some devices need much more/less time to complete than normal. Use this to "
@@ -789,13 +768,13 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'on'操作的该设备特定的替代超时。"
 
-#: lib/common/options.c:727
+#: lib/common/options.c:714
 #, fuzzy
 msgid ""
 "The maximum number of times to try the 'on' command within the timeout period"
 msgstr "在超时前重试'on'命令的最大次数"
 
-#: lib/common/options.c:729
+#: lib/common/options.c:716
 #, fuzzy
 msgid ""
 "Some devices do not support multiple connections. Operations may \"fail\" if "
@@ -808,12 +787,12 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'on' 操作的次数."
 
-#: lib/common/options.c:739
+#: lib/common/options.c:726
 #, fuzzy
 msgid "An alternate command to run instead of 'list'"
 msgstr "运行替代命令，而不是'list'"
 
-#: lib/common/options.c:740
+#: lib/common/options.c:727
 #, fuzzy
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
@@ -823,14 +802,14 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令，使用此选项可指定一个该设备特定的替"
 "代命令，用来实现'list'操作。"
 
-#: lib/common/options.c:748
+#: lib/common/options.c:735
 #, fuzzy
 msgid ""
 "Specify an alternate timeout to use for 'list' actions instead of stonith-"
 "timeout"
 msgstr "指定用于list 操作的替代超时，而不是stonith-timeout"
 
-#: lib/common/options.c:750
+#: lib/common/options.c:737
 #, fuzzy
 msgid ""
 "Some devices need much more/less time to complete than normal. Use this to "
@@ -839,14 +818,14 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'list'操作的该设备特定的替代超时。"
 
-#: lib/common/options.c:758
+#: lib/common/options.c:745
 #, fuzzy
 msgid ""
 "The maximum number of times to try the 'list' command within the timeout "
 "period"
 msgstr "在超时前重试'list'命令的最大次数"
 
-#: lib/common/options.c:760
+#: lib/common/options.c:747
 #, fuzzy
 msgid ""
 "Some devices do not support multiple connections. Operations may \"fail\" if "
@@ -859,12 +838,12 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'list' 操作的次数."
 
-#: lib/common/options.c:770
+#: lib/common/options.c:757
 #, fuzzy
 msgid "An alternate command to run instead of 'monitor'"
 msgstr "运行替代命令，而不是'monitor'"
 
-#: lib/common/options.c:771
+#: lib/common/options.c:758
 #, fuzzy
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
@@ -874,14 +853,14 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令，使用此选项可指定一个该设备特定的替"
 "代命令，用来实现'monitor'操作。"
 
-#: lib/common/options.c:779
+#: lib/common/options.c:766
 #, fuzzy
 msgid ""
 "Specify an alternate timeout to use for 'monitor' actions instead of stonith-"
 "timeout"
 msgstr "指定用于monitor 操作的替代超时，而不是stonith-timeout"
 
-#: lib/common/options.c:781
+#: lib/common/options.c:768
 #, fuzzy
 msgid ""
 "Some devices need much more/less time to complete than normal. Use this to "
@@ -890,14 +869,14 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'monitor'操作的该设备特定的替代超时。"
 
-#: lib/common/options.c:789
+#: lib/common/options.c:776
 #, fuzzy
 msgid ""
 "The maximum number of times to try the 'monitor' command within the timeout "
 "period"
 msgstr "在超时前重试'monitor'命令的最大次数"
 
-#: lib/common/options.c:791
+#: lib/common/options.c:778
 #, fuzzy
 msgid ""
 "Some devices do not support multiple connections. Operations may \"fail\" if "
@@ -910,12 +889,12 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'monitor' 操作的次数."
 
-#: lib/common/options.c:801
+#: lib/common/options.c:788
 #, fuzzy
 msgid "An alternate command to run instead of 'status'"
 msgstr "运行替代命令，而不是'status'"
 
-#: lib/common/options.c:802
+#: lib/common/options.c:789
 #, fuzzy
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
@@ -925,14 +904,14 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令，使用此选项可指定一个该设备特定的替"
 "代命令，用来实现'status'操作。"
 
-#: lib/common/options.c:810
+#: lib/common/options.c:797
 #, fuzzy
 msgid ""
 "Specify an alternate timeout to use for 'status' actions instead of stonith-"
 "timeout"
 msgstr "指定用于status 操作的替代超时，而不是stonith-timeout"
 
-#: lib/common/options.c:812
+#: lib/common/options.c:799
 #, fuzzy
 msgid ""
 "Some devices need much more/less time to complete than normal. Use this to "
@@ -941,14 +920,14 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'status'操作的该设备特定的替代超时"
 
-#: lib/common/options.c:820
+#: lib/common/options.c:807
 #, fuzzy
 msgid ""
 "The maximum number of times to try the 'status' command within the timeout "
 "period"
 msgstr "仅高级使用：在超时前重试'status'命令的最大次数"
 
-#: lib/common/options.c:822
+#: lib/common/options.c:809
 #, fuzzy
 msgid ""
 "Some devices do not support multiple connections. Operations may \"fail\" if "
@@ -961,33 +940,33 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'status' 操作的次数."
 
-#: lib/common/options.c:843
+#: lib/common/options.c:830
 msgid "Resource assignment priority"
 msgstr ""
 
-#: lib/common/options.c:844
+#: lib/common/options.c:831
 msgid ""
 "If not all resources can be active, the cluster will stop lower-priority "
 "resources in order to keep higher-priority ones active."
 msgstr ""
 
-#: lib/common/options.c:852
+#: lib/common/options.c:839
 msgid "Default value for influence in colocation constraints"
 msgstr ""
 
-#: lib/common/options.c:853
+#: lib/common/options.c:840
 msgid ""
 "Use this value as the default for influence in all colocation constraints "
 "involving this resource, as well as in the implicit colocation constraints "
 "created if this resource is in a group."
 msgstr ""
 
-#: lib/common/options.c:863
+#: lib/common/options.c:850
 #, fuzzy
 msgid "State the cluster should attempt to keep this resource in"
 msgstr "集群是否在启动期间检查运行资源"
 
-#: lib/common/options.c:864
+#: lib/common/options.c:851
 msgid ""
 "\"Stopped\" forces the resource to be stopped. \"Started\" allows the "
 "resource to be started (and in the case of promotable clone resources, "
@@ -996,12 +975,12 @@ msgid ""
 "is equivalent to \"Started\"."
 msgstr ""
 
-#: lib/common/options.c:875
+#: lib/common/options.c:862
 #, fuzzy
 msgid "Whether the cluster is allowed to actively change the resource's state"
 msgstr "集群是否在启动期间检查运行资源"
 
-#: lib/common/options.c:877
+#: lib/common/options.c:864
 msgid ""
 "If false, the cluster will not start, stop, promote, or demote the resource "
 "on any node. Recurring actions for the resource are unaffected. If true, a "
@@ -1009,12 +988,12 @@ msgid ""
 "attribute, or the maintenance resource meta-attribute overrides this."
 msgstr ""
 
-#: lib/common/options.c:887
+#: lib/common/options.c:874
 msgid ""
 "If true, the cluster will not schedule any actions involving the resource"
 msgstr ""
 
-#: lib/common/options.c:889
+#: lib/common/options.c:876
 msgid ""
 "If true, the cluster will not start, stop, promote, or demote the resource "
 "on any node, and will pause any recurring monitors (except those specifying "
@@ -1022,11 +1001,11 @@ msgid ""
 "cluster option or maintenance node attribute overrides this."
 msgstr ""
 
-#: lib/common/options.c:899
+#: lib/common/options.c:886
 msgid "Score to add to the current node when a resource is already active"
 msgstr ""
 
-#: lib/common/options.c:901
+#: lib/common/options.c:888
 msgid ""
 "Score to add to the current node when a resource is already active. This "
 "allows running resources to stay where they are, even if they would be "
@@ -1034,11 +1013,11 @@ msgid ""
 "default is 1 for individual clone instances, and 0 for all other resources."
 msgstr ""
 
-#: lib/common/options.c:914
+#: lib/common/options.c:901
 msgid "Conditions under which the resource can be started"
 msgstr ""
 
-#: lib/common/options.c:915
+#: lib/common/options.c:902
 msgid ""
 "Conditions under which the resource can be started. \"nothing\" means the "
 "cluster can always start this resource. \"quorum\" means the cluster can "
@@ -1053,13 +1032,13 @@ msgid ""
 "enabled cluster option is true; otherwise, \"quorum\"."
 msgstr ""
 
-#: lib/common/options.c:936
+#: lib/common/options.c:923
 msgid ""
 "Number of failures on a node before the resource becomes ineligible to run "
 "there."
 msgstr ""
 
-#: lib/common/options.c:938
+#: lib/common/options.c:925
 msgid ""
 "Number of failures that may occur for this resource on a node, before that "
 "node is marked ineligible to host this resource. A value of 0 indicates that "
@@ -1071,11 +1050,11 @@ msgid ""
 "cluster property is set to false."
 msgstr ""
 
-#: lib/common/options.c:952
+#: lib/common/options.c:939
 msgid "Number of seconds before acting as if a failure had not occurred"
 msgstr ""
 
-#: lib/common/options.c:953
+#: lib/common/options.c:940
 msgid ""
 "Number of seconds after a failed action for this resource before acting as "
 "if the failure had not occurred, and potentially allowing the resource back "
@@ -1083,12 +1062,12 @@ msgid ""
 "disabled."
 msgstr ""
 
-#: lib/common/options.c:964
+#: lib/common/options.c:951
 msgid ""
 "What to do if the cluster finds the resource active on more than one node"
 msgstr ""
 
-#: lib/common/options.c:966
+#: lib/common/options.c:953
 msgid ""
 "What to do if the cluster finds the resource active on more than one node. "
 "\"block\" means to mark the resource as unmanaged. \"stop_only\" means to "
@@ -1102,32 +1081,32 @@ msgid ""
 "that any resources ordered after this one will still need to be restarted.)"
 msgstr ""
 
-#: lib/common/options.c:985
+#: lib/common/options.c:972
 #, fuzzy
 msgid ""
 "Whether the cluster should try to \"live migrate\" this resource when it "
 "needs to be moved"
 msgstr "集群是否在启动期间检查运行资源"
 
-#: lib/common/options.c:987
+#: lib/common/options.c:974
 msgid ""
 "Whether the cluster should try to \"live migrate\" this resource when it "
 "needs to be moved. The default is true for ocf:pacemaker:remote resources, "
 "and false otherwise."
 msgstr ""
 
-#: lib/common/options.c:996
+#: lib/common/options.c:983
 msgid ""
 "Whether the resource should be allowed to run on a node even if the node's "
 "health score would otherwise prevent it"
 msgstr ""
 
-#: lib/common/options.c:1004
+#: lib/common/options.c:991
 #, fuzzy
 msgid "Where to check user-defined node attributes"
 msgstr "*** 仅高级使用 *** 是否在启动时fence不可见节点"
 
-#: lib/common/options.c:1005
+#: lib/common/options.c:992
 msgid ""
 "Whether to check user-defined node attributes on the physical host where a "
 "container is running or on the local node. This is usually set for a bundle "
@@ -1137,13 +1116,13 @@ msgid ""
 "local node (for a bundled primitive resource, this is the bundle node)."
 msgstr ""
 
-#: lib/common/options.c:1018
+#: lib/common/options.c:1005
 msgid ""
 "Name of the Pacemaker Remote guest node this resource is associated with, if "
 "any"
 msgstr ""
 
-#: lib/common/options.c:1020
+#: lib/common/options.c:1007
 msgid ""
 "Name of the Pacemaker Remote guest node this resource is associated with, if "
 "any. If specified, this both enables the resource as a guest node and "
@@ -1152,13 +1131,13 @@ msgid ""
 "This value cannot overlap with any resource or node IDs."
 msgstr ""
 
-#: lib/common/options.c:1032
+#: lib/common/options.c:1019
 msgid ""
 "If remote-node is specified, the IP address or hostname used to connect to "
 "the guest via Pacemaker Remote"
 msgstr ""
 
-#: lib/common/options.c:1034
+#: lib/common/options.c:1021
 msgid ""
 "If remote-node is specified, the IP address or hostname used to connect to "
 "the guest via Pacemaker Remote. The Pacemaker Remote daemon on the guest "
@@ -1166,26 +1145,26 @@ msgid ""
 "value of the remote-node meta-attribute."
 msgstr ""
 
-#: lib/common/options.c:1044
+#: lib/common/options.c:1031
 msgid ""
 "If remote-node is specified, port on the guest used for its Pacemaker Remote "
 "connection"
 msgstr ""
 
-#: lib/common/options.c:1046
+#: lib/common/options.c:1033
 msgid ""
 "If remote-node is specified, the port on the guest used for its Pacemaker "
 "Remote connection. The Pacemaker Remote daemon on the guest must be "
 "configured to listen on this port."
 msgstr ""
 
-#: lib/common/options.c:1054
+#: lib/common/options.c:1041
 msgid ""
 "If remote-node is specified, how long before a pending Pacemaker Remote "
 "guest connection times out."
 msgstr ""
 
-#: lib/common/options.c:1062
+#: lib/common/options.c:1049
 msgid ""
 "If remote-node is specified, this acts as the allow-migrate meta-attribute "
 "for the implicit remote connection resource (ocf:pacemaker:remote)."
@@ -1219,17 +1198,17 @@ msgstr "输出选项"
 msgid "Show output help"
 msgstr "显示输出帮助"
 
-#: tools/crm_resource.c:204
+#: tools/crm_resource.c:201
 #, c-format
 msgid "Aborting because no messages received in %d seconds"
 msgstr "中止，因为在%d秒内没有接收到消息"
 
-#: tools/crm_resource.c:374
+#: tools/crm_resource.c:371
 #, c-format
 msgid "Invalid check level setting: %s"
 msgstr "无效的检查级别设置：%s"
 
-#: tools/crm_resource.c:891
+#: tools/crm_resource.c:866
 #, c-format
 msgid ""
 "Resource '%s' not moved: active in %d locations (promoted in %d).\n"
@@ -1241,7 +1220,7 @@ msgstr ""
 "若要阻止'%s'在特定位置运行，请指定一个节点。若要防止'%s'在指定位置升级，指定"
 "一个节点并使用--promoted选项"
 
-#: tools/crm_resource.c:902
+#: tools/crm_resource.c:877
 #, c-format
 msgid ""
 "Resource '%s' not moved: active in %d locations.\n"
@@ -1250,140 +1229,171 @@ msgstr ""
 "资源%s未移动:在%d个位置运行\n"
 "若要防止'%s'运行在特定位置，指定一个节点"
 
-#: tools/crm_resource.c:979
+#: tools/crm_resource.c:955
 #, c-format
 msgid "Could not get modified CIB: %s\n"
 msgstr "无法获得修改的CIB：%s\n"
 
-#: tools/crm_resource.c:1077
+#: tools/crm_resource.c:1035
 #, c-format
 msgid "No cluster connection to Pacemaker Remote node %s detected"
 msgstr "未检测到至pacemaker远程节点%s的集群连接"
 
-#: tools/crm_resource.c:1138
-msgid "Must specify -t with resource type"
-msgstr "需要使用-t指定资源类型"
-
-#: tools/crm_resource.c:1144
-msgid "Must supply -v with new value"
-msgstr "必须使用-v指定新值"
-
-#: tools/crm_resource.c:1176
+#: tools/crm_resource.c:1101
 msgid "Could not create executor connection"
 msgstr "无法创建到pacemaker-execd守护进程的连接"
 
-#: tools/crm_resource.c:1201
+#: tools/crm_resource.c:1126
 #, fuzzy, c-format
 msgid "Metadata query for %s failed: %s"
 msgstr "，查询%s的元数据失败: %s\n"
 
-#: tools/crm_resource.c:1207
+#: tools/crm_resource.c:1132
 #, c-format
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"
 
-#: tools/crm_resource.c:1220
+#: tools/crm_resource.c:1145
 msgid "--resource cannot be used with --class, --agent, and --provider"
 msgstr "--resource 不能与 --class, --agent, --provider一起使用"
 
-#: tools/crm_resource.c:1225
+#: tools/crm_resource.c:1150
 msgid ""
 "--class, --agent, and --provider can only be used with --validate and --"
 "force-*"
 msgstr "--class, --agent和--provider只能被用于--validate和--force-*"
 
-#: tools/crm_resource.c:1234
+#: tools/crm_resource.c:1159
 msgid "stonith does not support providers"
 msgstr "stonith 不支持提供者"
 
-#: tools/crm_resource.c:1238
+#: tools/crm_resource.c:1163
 #, c-format
 msgid "%s is not a known stonith agent"
 msgstr "%s 不是一个已知stonith代理"
 
-#: tools/crm_resource.c:1243
+#: tools/crm_resource.c:1168
 #, c-format
 msgid "%s:%s:%s is not a known resource"
 msgstr "%s:%s:%s 不是一个已知资源"
 
-#: tools/crm_resource.c:1551
+#: tools/crm_resource.c:1467
 #, c-format
 msgid "Error creating output format %s: %s"
 msgstr "创建输出格式错误 %s:%s"
 
-#: tools/crm_resource.c:1572
+#: tools/crm_resource.c:1488
 msgid "--expired requires --clear or -U"
 msgstr "--expired需要和--clear或-U一起使用"
 
-#: tools/crm_resource.c:1589
+#: tools/crm_resource.c:1505
 #, c-format
 msgid "Error parsing '%s' as a name=value pair"
 msgstr "'%s'解析错误，格式为name=value"
 
-#: tools/crm_resource.c:1688
+#: tools/crm_resource.c:1597
+msgid "--option must be used with --validate and without -r"
+msgstr ""
+
+#: tools/crm_resource.c:1606
 msgid "Must supply a resource id with -r"
 msgstr "必须使用-r指定资源id"
 
-#: tools/crm_resource.c:1694
+#: tools/crm_resource.c:1612
 msgid "Must supply a node name with -N"
 msgstr "必须使用-N指定节点名称"
 
-#: tools/crm_resource.c:1708
+#: tools/crm_resource.c:1626
 msgid "Could not create CIB connection"
 msgstr "无法创建到CIB的连接"
 
-#: tools/crm_resource.c:1716
+#: tools/crm_resource.c:1634
 #, c-format
 msgid "Could not connect to the CIB: %s"
 msgstr "不能连接到CIB：%s"
 
-#: tools/crm_resource.c:1739
+#: tools/crm_resource.c:1657
 #, c-format
 msgid "Resource '%s' not found"
 msgstr "没有发现'%s'资源"
 
-#: tools/crm_resource.c:1751
+#: tools/crm_resource.c:1670
 #, c-format
 msgid "Cannot operate on clone resource instance '%s'"
 msgstr "不能操作克隆资源实例'%s'"
 
-#: tools/crm_resource.c:1763
+#: tools/crm_resource.c:1682
 #, c-format
 msgid "Node '%s' not found"
 msgstr "没有发现%s节点"
 
-#: tools/crm_resource.c:1774
+#: tools/crm_resource.c:1693
 #, c-format
 msgid "Error connecting to the controller: %s"
 msgstr "连接到控制器错误：%s"
 
-#: tools/crm_resource.c:1783
+#: tools/crm_resource.c:1702
 #, fuzzy, c-format
 msgid "Error connecting to %s: %s"
 msgstr "连接到控制器错误：%s"
 
-#: tools/crm_resource.c:2052
+#: tools/crm_resource.c:1959
 msgid "You need to supply a value with the -v option"
 msgstr "需要使用-v选项提供一个值"
 
-#: tools/crm_resource.c:2106
+#: tools/crm_resource.c:2012
 msgid "You need to specify a resource type with -t"
 msgstr "需要使用-t指定资源类型"
 
-#: tools/crm_resource.c:2113
+#: tools/crm_resource.c:2019
 #, fuzzy, c-format
 msgid "Could not delete resource %s: %s"
 msgstr "无法删除资源：%s：%s"
 
-#: tools/crm_resource.c:2123
+#: tools/crm_resource.c:2029
 #, c-format
 msgid "Unimplemented command: %d"
 msgstr "无效的命令：%d"
 
-#: tools/crm_resource.c:2153
+#: tools/crm_resource.c:2059
 #, c-format
 msgid "Error performing operation: %s"
 msgstr "执行操作错误：%s"
+
+#~ msgid "Deprecated (will be removed in a future release)"
+#~ msgstr "已弃用(将在未来版本中删除)"
+
+#, fuzzy
+#~ msgid "Whether to remove stopped resources from the executor"
+#~ msgstr "是否从pacemaker-execd 守护进程中清除已停止的资源"
+
+#, fuzzy
+#~ msgid ""
+#~ "Values other than default are poorly tested and potentially dangerous."
+#~ msgstr ""
+#~ "非默认值未经过充分的测试，有潜在的风险。该选项将在未来的版本中删除。"
+
+#, fuzzy
+#~ msgid "An alternate parameter to supply instead of 'port'"
+#~ msgstr "用于替代 'port' 的其它参数"
+
+#, fuzzy
+#~ msgid ""
+#~ "Some devices do not support the standard 'port' parameter or may provide "
+#~ "additional ones. Use this to specify an alternate, device-specific, "
+#~ "parameter that should indicate the machine to be fenced. A value of \"none"
+#~ "\" can be used to tell the cluster not to supply any additional "
+#~ "parameters."
+#~ msgstr ""
+#~ "一些设备不支持标准的 'port' 参数, 或者可能会提供其它的参数. 使用此选项可指"
+#~ "定一个替代的, 该设备专用的参数, 该参数应该指出需要 fence 的机器. 可以使用 "
+#~ "\"none\" 值用于告诉集群不要提供任何其它的参数. "
+
+#~ msgid "Must specify -t with resource type"
+#~ msgstr "需要使用-t指定资源类型"
+
+#~ msgid "Must supply -v with new value"
+#~ msgstr "必须使用-v指定新值"
 
 #, fuzzy
 #~ msgid "For example, \"node1,node2,node3\"."

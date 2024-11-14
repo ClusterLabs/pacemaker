@@ -361,10 +361,11 @@ instead of using NULL.
 Assertions
 __________
 
-In addition to the `assertions provided by <https://api.cmocka.org/group__cmocka__asserts.html>`_,
-``unittest_internal.h`` also provides ``pcmk__assert_asserts``.  This macro takes an
-expression and verifies that the expression aborts due to a failed call to
-``pcmk__assert()`` or some other similar function.  It can be used like so:
+In addition to the `assertions provided by cmocka
+<https://api.cmocka.org/group__cmocka__asserts.html>`_, ``unittest_internal.h``
+also provides ``pcmk__assert_asserts``. This macro takes an expression and
+verifies that the expression aborts due to a failed call to ``pcmk__assert()``
+or some other similar function.  It can be used like so:
 
 .. code-block:: c
 
