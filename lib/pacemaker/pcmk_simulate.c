@@ -362,6 +362,7 @@ profile_file(const char *xml_file, long long repeat,
     }
 
     for (int i = 0; i < repeat; ++i) {
+        int rc;
         xmlNode *input = cib_object;
 
         if (repeat > 1) {
@@ -369,8 +370,12 @@ profile_file(const char *xml_file, long long repeat,
         }
         scheduler->input = input;
         set_effective_date(scheduler, false, use_date);
-        pcmk__schedule_actions(input, scheduler_flags, scheduler);
+        rc = pcmk__schedule_actions(input, scheduler_flags, scheduler);
         pe_reset_working_set(scheduler);
+
+        if (rc != pcmk_rc_ok) {
+            break;
+        }
     }
 
     end = clock();
@@ -920,6 +925,11 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             scheduler->priv->out = logger_out;
         }
 
+        /* Likewise here - pcmk__schedule_actions only returns an error if
+         * cluster_status did, and there's nothing that could have changed since
+         * the first call to cause new errors here.  So we don't need to check
+         * this return value either.
+         */
         pcmk__schedule_actions(input, scheduler_flags, scheduler);
 
         if (logger_out == NULL) {
