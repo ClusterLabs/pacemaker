@@ -342,6 +342,54 @@ static GOptionEntry source_entries[] = {
     { NULL }
 };
 
+/*!
+ * \internal
+ * \brief Output a configuration error
+ *
+ * \param[in] ctx  Output object
+ * \param[in] msg  printf(3)-style format string
+ * \param[in] ...  Format string arguments
+ */
+G_GNUC_PRINTF(2, 3)
+static void
+output_config_error(void *ctx, const char *msg, ...)
+{
+    va_list ap;
+    char *buf = NULL;
+    pcmk__output_t *out = ctx;
+
+    va_start(ap, msg);
+    pcmk__assert(vasprintf(&buf, msg, ap) > 0);
+    if (!out->is_quiet(out)) {
+        out->err(out, "error: %s", buf);
+    }
+    va_end(ap);
+}
+
+/*!
+ * \internal
+ * \brief Output a configuration warning
+ *
+ * \param[in] ctx  Output object
+ * \param[in] msg  printf(3)-style format string
+ * \param[in] ...  Format string arguments
+ */
+G_GNUC_PRINTF(2, 3)
+static void
+output_config_warning(void *ctx, const char *msg, ...)
+{
+    va_list ap;
+    char *buf = NULL;
+    pcmk__output_t *out = ctx;
+
+    va_start(ap, msg);
+    pcmk__assert(vasprintf(&buf, msg, ap) > 0);
+    if (!out->is_quiet(out)) {
+        out->err(out, "warning: %s", buf);
+    }
+    va_end(ap);
+}
+
 static int
 setup_input(pcmk__output_t *out, const char *input, const char *output,
             GError **error)
@@ -500,6 +548,9 @@ main(int argc, char **argv)
     pcmk__register_lib_messages(out);
 
     out->quiet = args->quiet;
+
+    pcmk__set_config_error_handler(output_config_error, out);
+    pcmk__set_config_warning_handler(output_config_warning, out);
 
     if (args->version) {
         out->version(out, false);
