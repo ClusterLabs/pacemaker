@@ -734,14 +734,16 @@ log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
  * \param[in,out] cib        CIB XML to unpack (may be NULL if already unpacked)
  * \param[in]     flags      Scheduler flags to set in addition to defaults
  * \param[in,out] scheduler  Scheduler data
+ *
+ * \return Standard Pacemaker return code
  */
-static void
+static int
 unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
 {
     if (pcmk_is_set(scheduler->flags, pcmk__sched_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
         pcmk__set_scheduler_flags(scheduler, flags);
-        return;
+        return pcmk_rc_ok;
     }
 
     pcmk__assert(cib != NULL);
@@ -756,7 +758,8 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
 
     pcmk__set_scheduler_flags(scheduler, flags);
     scheduler->input = cib;
-    pcmk_unpack_scheduler_input(scheduler); // Sets pcmk__sched_have_status
+    // Sets pcmk__sched_have_status
+    return pcmk_unpack_scheduler_input(scheduler);
 }
 
 /*!
@@ -766,17 +769,24 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
  * \param[in,out] cib        CIB XML to use as scheduler input
  * \param[in]     flags      Scheduler flags to set in addition to defaults
  * \param[in,out] scheduler  Scheduler data
+ *
+ * \return Standard Pacemaker return code
  */
-void
+int
 pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
                        pcmk_scheduler_t *scheduler)
 {
-    unpack_cib(cib, flags, scheduler);
+    int rc = unpack_cib(cib, flags, scheduler);
+
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
     pcmk__set_assignment_methods(scheduler);
     pcmk__apply_node_health(scheduler);
     pcmk__unpack_constraints(scheduler);
     if (pcmk_is_set(scheduler->flags, pcmk__sched_validate_only)) {
-        return;
+        return pcmk_rc_ok;
     }
 
     if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)
@@ -787,7 +797,7 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
     apply_node_criteria(scheduler);
 
     if (pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
-        return;
+        return pcmk_rc_ok;
     }
 
     pcmk__create_internal_constraints(scheduler);
@@ -808,6 +818,8 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
     if (get_crm_log_level() == LOG_TRACE) {
         log_unrunnable_actions(scheduler);
     }
+
+    return pcmk_rc_ok;
 }
 
 /*!
