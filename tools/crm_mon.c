@@ -237,6 +237,59 @@ static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
 static void refresh_after_event(gboolean data_updated, gboolean enforce);
 
+struct output_config_ctx {
+    pcmk__output_t *out;
+    bool quiet;
+};
+
+/*!
+ * \internal
+ * \brief Output a configuration error
+ *
+ * \param[in] ctx  Output object
+ * \param[in] msg  printf(3)-style format string
+ * \param[in] ...  Format string arguments
+ */
+G_GNUC_PRINTF(2, 3)
+static void
+output_config_error(void *ctx, const char *msg, ...)
+{
+    va_list ap;
+    char *buf = NULL;
+    struct output_config_ctx *occ = ctx;
+
+    va_start(ap, msg);
+    pcmk__assert(vasprintf(&buf, msg, ap) > 0);
+    if (!occ->quiet) {
+        occ->out->err(occ->out, "error: %s", buf);
+    }
+    va_end(ap);
+}
+
+/*!
+ * \internal
+ * \brief Output a configuration warning
+ *
+ * \param[in] ctx  Output object
+ * \param[in] msg  printf(3)-style format string
+ * \param[in] ...  Format string arguments
+ */
+G_GNUC_PRINTF(2, 3)
+static void
+output_config_warning(void *ctx, const char *msg, ...)
+{
+    va_list ap;
+    char *buf = NULL;
+    struct output_config_ctx *occ = ctx;
+
+    va_start(ap, msg);
+    pcmk__assert(vasprintf(&buf, msg, ap) > 0);
+    if (!occ->quiet) {
+        occ->out->err(occ->out, "warning: %s", buf);
+    }
+    va_end(ap);
+}
+
 static uint32_t
 all_includes(mon_output_format_t fmt) {
     if ((fmt == mon_output_plain) || (fmt == mon_output_console)) {
@@ -1408,6 +1461,7 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
+    struct output_config_ctx *ctx = NULL;
     GOptionGroup *output_group = NULL;
 
     args = pcmk__new_common_args(SUMMARY);
@@ -1577,6 +1631,13 @@ main(int argc, char **argv)
         return clean_up(CRM_EX_OK);
     }
 
+    ctx = pcmk__assert_alloc(1, sizeof(struct output_config_ctx));
+    ctx->out = out;
+    ctx->quiet = args->quiet;
+
+    pcmk__set_config_error_handler(output_config_error, ctx);
+    pcmk__set_config_warning_handler(output_config_warning, ctx);
+
     if (output_format == mon_output_xml) {
         show_opts |= pcmk_show_inactive_rscs | pcmk_show_timing;
     }
@@ -1664,6 +1725,7 @@ main(int argc, char **argv)
 
     crm_info("Exiting %s", crm_system_name);
 
+    free(ctx);
     return clean_up(CRM_EX_OK);
 }
 
