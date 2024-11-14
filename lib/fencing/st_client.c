@@ -726,7 +726,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
                                           LOG_NEVER);
 
         for (op = pcmk__xe_first_child(reply, NULL, NULL, NULL); op != NULL;
-             op = pcmk__xe_next(op)) {
+             op = pcmk__xe_next(op, NULL)) {
             stonith_history_t *kvp;
             long long completed;
             long long completed_nsec = 0L;

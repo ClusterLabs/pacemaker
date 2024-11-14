@@ -889,7 +889,7 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
 
     for (xmlNode *xml_op = pcmk__xe_first_child(scheduler->priv->failed,
                                                 NULL, NULL, NULL);
-         xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
+         xml_op != NULL; xml_op = pcmk__xe_next(xml_op, NULL)) {
 
         const char *value = NULL;
         char *op_id = NULL;

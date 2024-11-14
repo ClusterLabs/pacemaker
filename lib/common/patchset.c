@@ -853,7 +853,7 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
 
     for (const xmlNode *change = pcmk__xe_first_child(patchset, PCMK_XE_CHANGE,
                                                       NULL, NULL);
-         change != NULL; change = pcmk__xe_next_same(change)) {
+         change != NULL; change = pcmk__xe_next(change, PCMK_XE_CHANGE)) {
 
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);
         const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);

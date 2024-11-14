@@ -94,7 +94,7 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
 {
     for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
                                                    PCMK_XE_OP, NULL, NULL);
-         operation != NULL; operation = pcmk__xe_next_same(operation)) {
+         operation != NULL; operation = pcmk__xe_next(operation, PCMK_XE_OP)) {
 
         bool enabled = false;
         const char *config_name = NULL;
@@ -460,7 +460,8 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
          */
         for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
                                                        PCMK_XE_OP, NULL, NULL);
-             operation != NULL; operation = pcmk__xe_next_same(operation)) {
+             operation != NULL;
+             operation = pcmk__xe_next(operation, PCMK_XE_OP)) {
 
             bool enabled = false;
             const char *promote_on_fail = NULL;
@@ -629,7 +630,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
 
     for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
                                                    PCMK_XE_OP, NULL, NULL);
-         operation != NULL; operation = pcmk__xe_next_same(operation)) {
+         operation != NULL; operation = pcmk__xe_next(operation, PCMK_XE_OP)) {
 
         bool enabled = false;
         guint interval_ms = 0U;

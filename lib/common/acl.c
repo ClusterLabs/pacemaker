@@ -116,7 +116,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 {
     for (const xmlNode *child = pcmk__xe_first_child(acl_entry, NULL, NULL,
                                                      NULL);
-         child != NULL; child = pcmk__xe_next(child)) {
+         child != NULL; child = pcmk__xe_next(child, NULL)) {
 
         if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
             const char *kind = crm_element_value(child, PCMK_XA_KIND);
@@ -150,7 +150,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 
             for (xmlNode *role = pcmk__xe_first_child(acl_top, NULL, NULL,
                                                       NULL);
-                 role != NULL; role = pcmk__xe_next(role)) {
+                 role != NULL; role = pcmk__xe_next(role, NULL)) {
 
                 const char *role_id = NULL;
 
@@ -292,7 +292,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
             xmlNode *child = NULL;
 
             for (child = pcmk__xe_first_child(acls, NULL, NULL, NULL);
-                 child != NULL; child = pcmk__xe_next(child)) {
+                 child != NULL; child = pcmk__xe_next(child, NULL)) {
 
                 if (pcmk__xe_is(child, PCMK_XE_ACL_TARGET)) {
                     const char *id = crm_element_value(child, PCMK_XA_NAME);

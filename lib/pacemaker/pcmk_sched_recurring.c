@@ -65,7 +65,7 @@ is_op_dup(const pcmk_resource_t *rsc, const char *name, guint interval_ms)
 
     for (xmlNode *op = pcmk__xe_first_child(rsc->priv->ops_xml, PCMK_XE_OP,
                                             NULL, NULL);
-         op != NULL; op = pcmk__xe_next_same(op)) {
+         op != NULL; op = pcmk__xe_next(op, PCMK_XE_OP)) {
 
         // Check whether action name and interval match
         if (!pcmk__str_eq(crm_element_value(op, PCMK_XA_NAME), name,
@@ -620,7 +620,7 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
 
     for (xmlNode *op = pcmk__xe_first_child(rsc->priv->ops_xml, PCMK_XE_OP,
                                             NULL, NULL);
-         op != NULL; op = pcmk__xe_next_same(op)) {
+         op != NULL; op = pcmk__xe_next(op, PCMK_XE_OP)) {
 
         struct op_history op_history = { NULL, };
 

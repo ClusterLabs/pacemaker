@@ -496,7 +496,7 @@ attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
 
     // Process each attribute update in the sync response
     for (xmlNode *child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
-         child != NULL; child = pcmk__xe_next(child)) {
+         child != NULL; child = pcmk__xe_next(child, NULL)) {
 
         attrd_peer_update(peer, child,
                           crm_element_value(child, PCMK__XA_ATTR_HOST), true);
@@ -584,7 +584,7 @@ attrd_peer_update(const pcmk__node_status_t *peer, xmlNode *xml,
     CRM_CHECK((peer != NULL) && (xml != NULL), return);
     if (xml->children != NULL) {
         for (xmlNode *child = pcmk__xe_first_child(xml, PCMK_XE_OP, NULL, NULL);
-             child != NULL; child = pcmk__xe_next_same(child)) {
+             child != NULL; child = pcmk__xe_next(child, PCMK_XE_OP)) {
 
             pcmk__xe_copy_attrs(child, xml, pcmk__xaf_no_overwrite);
             attrd_peer_update_one(peer, child, filter);

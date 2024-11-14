@@ -32,7 +32,7 @@ static void
 process_lrm_resource_diff(xmlNode *lrm_resource, const char *node)
 {
     for (xmlNode *rsc_op = pcmk__xe_first_child(lrm_resource, NULL, NULL, NULL);
-         rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op)) {
+         rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op, NULL)) {
         process_graph_event(rsc_op, node);
     }
     if (shutdown_lock_cleared(lrm_resource)) {
@@ -81,7 +81,7 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
     }
 
     for (rsc = pcmk__xe_first_child(xml, NULL, NULL, NULL); rsc != NULL;
-         rsc = pcmk__xe_next(rsc)) {
+         rsc = pcmk__xe_next(rsc, NULL)) {
         crm_trace("Processing %s", pcmk__xe_id(rsc));
         process_lrm_resource_diff(rsc, node);
     }
@@ -206,7 +206,7 @@ process_status_diff(xmlNode *status, xmlNode *change, const char *op,
                     const char *xpath)
 {
     for (xmlNode *state = pcmk__xe_first_child(status, NULL, NULL, NULL);
-         state != NULL; state = pcmk__xe_next(state)) {
+         state != NULL; state = pcmk__xe_next(state, NULL)) {
 
         process_node_state_diff(state, change, op, xpath);
     }

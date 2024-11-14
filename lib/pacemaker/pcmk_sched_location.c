@@ -562,7 +562,8 @@ unpack_location_set(xmlNode *location, xmlNode *set,
     local_score = crm_element_value(set, PCMK_XA_SCORE);
 
     for (xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF, NULL, NULL);
-         xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
+         xml_rsc != NULL;
+         xml_rsc = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF)) {
 
         resource = pcmk__find_constraint_resource(scheduler->priv->resources,
                                                   pcmk__xe_id(xml_rsc));
@@ -598,7 +599,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     }
 
     for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
-         set != NULL; set = pcmk__xe_next_same(set)) {
+         set != NULL; set = pcmk__xe_next(set, PCMK_XE_RESOURCE_SET)) {
 
         any_sets = true;
         set = pcmk__xe_resolve_idref(set, scheduler->input);
