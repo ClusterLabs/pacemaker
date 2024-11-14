@@ -475,7 +475,7 @@ delay_next_flush(pcmk__client_t *c, unsigned int queue_len)
     /* Delay a maximum of 1.5 seconds */
     guint delay = (queue_len < 5)? (1000 + 100 * queue_len) : 1500;
 
-    c->event_timer = g_timeout_add(delay, crm_ipcs_flush_events_cb, c);
+    c->event_timer = pcmk__create_timer(delay, crm_ipcs_flush_events_cb, c);
 }
 
 /*!

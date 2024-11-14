@@ -250,7 +250,7 @@ start_mainloop(pcmk_ipc_api_t *capi)
                   count, pcmk__plural_alt(count, "reply", "replies"));
         exit_code = CRM_EX_DISCONNECT; // For unexpected disconnects
         mainloop = g_main_loop_new(NULL, FALSE);
-        g_timeout_add(MESSAGE_TIMEOUT_S * 1000, resource_ipc_timeout, NULL);
+        pcmk__create_timer(MESSAGE_TIMEOUT_S * 1000, resource_ipc_timeout, NULL);
         g_main_loop_run(mainloop);
     }
 }

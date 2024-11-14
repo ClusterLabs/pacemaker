@@ -1195,7 +1195,7 @@ static int
 internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
                        ssize_t *bytes)
 {
-    time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
+    time_t timeout = time(NULL) + 1 + pcmk__timeout_ms2s(ms_timeout);
     int rc = pcmk_rc_ok;
 
     /* get the reply */
@@ -1330,7 +1330,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
 
     if ((ms_timeout > 0) || !pcmk_is_set(flags, crm_ipc_client_response)) {
 
-        time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
+        time_t timeout = time(NULL) + 1 + pcmk__timeout_ms2s(ms_timeout);
 
         do {
             /* @TODO Is this check really needed? Won't qb_ipcc_sendv() return

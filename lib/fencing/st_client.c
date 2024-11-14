@@ -1023,7 +1023,8 @@ set_callback_timeout(stonith_callback_client_t * callback, stonith_t * stonith, 
         g_source_remove(async_timer->ref);
     }
     async_timer->ref =
-        g_timeout_add(async_timer->timeout, stonith_async_timeout_handler, async_timer);
+        pcmk__create_timer(async_timer->timeout, stonith_async_timeout_handler,
+                           async_timer);
 }
 
 static void

@@ -398,11 +398,13 @@ stonith_recurring_op_helper(gpointer data)
 static inline void
 start_recurring_timer(lrmd_cmd_t *cmd)
 {
-    if (cmd && (cmd->interval_ms > 0)) {
-        cmd->stonith_recurring_id = g_timeout_add(cmd->interval_ms,
-                                                  stonith_recurring_op_helper,
-                                                  cmd);
+    if (!cmd || (cmd->interval_ms <= 0)) {
+        return;
     }
+
+    cmd->stonith_recurring_id = pcmk__create_timer(cmd->interval_ms,
+                                                   stonith_recurring_op_helper,
+                                                   cmd);
 }
 
 static gboolean
@@ -532,7 +534,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     mainloop_set_trigger(rsc->work);
 
     if (cmd->start_delay) {
-        cmd->delay_id = g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
+        cmd->delay_id = pcmk__create_timer(cmd->start_delay, start_delay_helper, cmd);
     }
 }
 
@@ -1216,7 +1218,7 @@ static inline int
 execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
     int rc = stonith_api->cmds->monitor(stonith_api, 0, cmd->rsc_id,
-                                        cmd->timeout / 1000);
+                                        pcmk__timeout_ms2s(cmd->timeout));
 
     rc = stonith_api->cmds->register_callback(stonith_api, rc, 0, 0, cmd,
                                               "lrmd_stonith_callback",

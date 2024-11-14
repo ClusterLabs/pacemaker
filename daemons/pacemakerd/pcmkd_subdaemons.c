@@ -45,7 +45,7 @@ typedef struct pcmk_child_s {
     uint32_t flags;
 } pcmk_child_t;
 
-#define PCMK_PROCESS_CHECK_INTERVAL 1
+#define PCMK_PROCESS_CHECK_INTERVAL 1000    /* 1s */
 #define PCMK_PROCESS_CHECK_RETRIES  5
 #define SHUTDOWN_ESCALATION_PERIOD  180000  /* 3m */
 
@@ -372,8 +372,8 @@ pcmk_shutdown_worker(gpointer user_data)
                 child->flags &= ~child_respawn;
                 stop_child(child, SIGTERM);
                 if (phase < PCMK_CHILD_CONTROLD) {
-                    g_timeout_add(SHUTDOWN_ESCALATION_PERIOD,
-                                  escalate_shutdown, child);
+                    pcmk__create_timer(SHUTDOWN_ESCALATION_PERIOD,
+                                       escalate_shutdown, child);
                 }
 
             } else if (now >= next_log) {
@@ -793,8 +793,8 @@ find_and_track_existing_processes(void)
         pcmk_children[i].respawn_count = 0;  /* restore pristine state */
     }
 
-    g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL, check_next_subdaemon,
-                          NULL);
+    pcmk__create_timer(PCMK_PROCESS_CHECK_INTERVAL, check_next_subdaemon,
+                       NULL);
     return pcmk_rc_ok;
 }
 

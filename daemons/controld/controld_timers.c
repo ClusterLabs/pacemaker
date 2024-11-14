@@ -118,7 +118,7 @@ static void
 controld_start_timer(fsa_timer_t *timer)
 {
     if (timer->source_id == 0 && timer->period_ms > 0) {
-        timer->source_id = g_timeout_add(timer->period_ms, timer->callback, (void *)timer);
+        timer->source_id = pcmk__create_timer(timer->period_ms, timer->callback, timer);
         pcmk__assert(timer->source_id != 0);
         crm_debug("Started %s (inject %s if pops after %ums, source=%d)",
                   get_timer_desc(timer), fsa_input2string(timer->fsa_input),

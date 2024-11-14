@@ -171,8 +171,8 @@ async_fence_helper(gpointer user_data)
                                          st_opt_allow_self_fencing,
                                          async_fence_data.target,
                                          async_fence_data.action,
-                                         async_fence_data.timeout/1000,
-                                         async_fence_data.tolerance/1000,
+                                         pcmk__timeout_ms2s(async_fence_data.timeout),
+                                         pcmk__timeout_ms2s(async_fence_data.tolerance),
                                          async_fence_data.delay);
 
     if (call_id < 0) {
@@ -182,7 +182,7 @@ async_fence_helper(gpointer user_data)
         return TRUE;
     }
 
-    timeout = async_fence_data.timeout / 1000;
+    timeout = pcmk__timeout_ms2s(async_fence_data.timeout);
     if (async_fence_data.delay > 0) {
         timeout += async_fence_data.delay;
     }
@@ -283,7 +283,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
         target = NULL;
     }
 
-    rc = st->cmds->history(st, opts, target, &history, (timeout / 1000));
+    rc = st->cmds->history(st, opts, target, &history, pcmk__timeout_ms2s(timeout));
 
     if (cleanup) {
         // Cleanup doesn't return a history list
@@ -357,7 +357,7 @@ pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout)
     int rc = pcmk_rc_ok;
 
     rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices,
-                               (timeout / 1000));
+                               pcmk__timeout_ms2s(timeout));
     // rc is a negative error code or a positive number of agents
     if (rc < 0) {
         return pcmk_legacy2rc(rc);
@@ -438,7 +438,7 @@ pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st,
     char *lists = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = st->cmds->list(st, st_opts, device_id, &lists, timeout/1000);
+    rc = st->cmds->list(st, st_opts, device_id, &lists, pcmk__timeout_ms2s(timeout));
     if (rc != pcmk_rc_ok) {
         return pcmk_legacy2rc(rc);
     }
@@ -482,7 +482,7 @@ pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, const char *agent,
 {
     char *buffer = NULL;
     int rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer,
-                                timeout/1000);
+                                pcmk__timeout_ms2s(timeout));
 
     if (rc != pcmk_rc_ok) {
         return pcmk_legacy2rc(rc);
@@ -520,7 +520,7 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, const char *target,
     stonith_key_value_t *devices = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = st->cmds->query(st, st_opts, target, &devices, timeout/1000);
+    rc = st->cmds->query(st, st_opts, target, &devices, pcmk__timeout_ms2s(timeout));
     /* query returns a negative error code or a positive number of results. */
     if (rc < 0) {
         return pcmk_legacy2rc(rc);
@@ -624,7 +624,7 @@ pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
     int rc;
 
     rc  = stonith__validate(st, st_opt_sync_call, id, NULL, agent, params,
-                            timeout/1000, &output, &error_output);
+                            pcmk__timeout_ms2s(timeout), &output, &error_output);
     out->message(out, "validate", agent, id, output, error_output, rc);
     return pcmk_legacy2rc(rc);
 }

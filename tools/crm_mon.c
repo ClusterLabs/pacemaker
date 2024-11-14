@@ -761,8 +761,8 @@ reconnect_after_timeout(gpointer data)
     out->message(out, "crm-mon-disconnected",
                  "Latest connection attempt failed", pcmkd_state);
 
-    reconnect_timer = g_timeout_add(options.reconnect_ms,
-                                    reconnect_after_timeout, NULL);
+    reconnect_timer = pcmk__create_timer(options.reconnect_ms,
+                                         reconnect_after_timeout, NULL);
     return G_SOURCE_REMOVE;
 }
 
@@ -806,8 +806,8 @@ mon_cib_connection_destroy(gpointer user_data)
 
     if (cib) {
         cib->cmds->signoff(cib);
-        reconnect_timer = g_timeout_add(options.reconnect_ms,
-                                        reconnect_after_timeout, NULL);
+        reconnect_timer = pcmk__create_timer(options.reconnect_ms,
+                                             reconnect_after_timeout, NULL);
     }
 }
 
@@ -1582,7 +1582,7 @@ main(int argc, char **argv)
     }
 
     if ((output_format == mon_output_html) && (out->dest != stdout)) {
-        char *content = pcmk__itoa(options.reconnect_ms / 1000);
+        char *content = pcmk__itoa(pcmk__timeout_ms2s(options.reconnect_ms));
 
         pcmk__html_add_header(PCMK__XE_META,
                               PCMK__XA_HTTP_EQUIV, PCMK__VALUE_REFRESH,
@@ -2073,7 +2073,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
     setup_fencer_connection();
 
     if (enforce ||
-        ((now - last_refresh) > (options.reconnect_ms / 1000)) ||
+        ((now - last_refresh) > pcmk__timeout_ms2s(options.reconnect_ms)) ||
         updates >= 10) {
         mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
         mainloop_timer_stop(refresh_timer);

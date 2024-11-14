@@ -1599,7 +1599,7 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
         }
     }
 
-    return (max_delay / 1000U) + 5U;
+    return pcmk__timeout_ms2s(max_delay) + 5;
 }
 
 #define waiting_for_starts(d, r, h) ((d != NULL) || \
@@ -1637,7 +1637,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     int before = 0;
     guint step_timeout_s = 0;
     guint sleep_interval = 2U;
-    guint timeout = timeout_ms / 1000U;
+    guint timeout = pcmk__timeout_ms2s(timeout_ms);
 
     bool stop_via_ban = false;
     char *rsc_id = NULL;
@@ -2064,7 +2064,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
     if (timeout_ms == 0) {
         expire_time += WAIT_DEFAULT_TIMEOUT_S;
     } else {
-        expire_time += (timeout_ms + 999) / 1000;
+        expire_time += pcmk__timeout_ms2s(timeout_ms + 999);
     }
 
     scheduler = pe_new_working_set();

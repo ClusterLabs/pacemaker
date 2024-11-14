@@ -1633,7 +1633,7 @@ pending_too_long(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         // There is a timeout on pending nodes, and node is pending
 
         time_t timeout = when_member
-                         + (scheduler->priv->node_pending_ms / 1000U);
+                         + pcmk__timeout_ms2s(scheduler->priv->node_pending_ms);
 
         if (get_effective_time(node->priv->scheduler) >= timeout) {
             return true; // Node has timed out
@@ -2688,7 +2688,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 
         if ((scheduler->priv->shutdown_lock_ms > 0U)
             && (get_effective_time(scheduler)
-                > (lock_time + (scheduler->priv->shutdown_lock_ms / 1000U)))) {
+                > (lock_time + pcmk__timeout_ms2s(scheduler->priv->shutdown_lock_ms)))) {
             pcmk__rsc_info(rsc, "Shutdown lock for %s on %s expired",
                            rsc->id, pcmk__node_name(node));
             pe__clear_resource_history(rsc, node);
@@ -4140,7 +4140,7 @@ check_operation_expiry(struct action_history *history)
     int unexpired_fail_count = 0;
     const char *clear_reason = NULL;
     const guint expiration_sec =
-        history->rsc->priv->failure_expiration_ms / 1000;
+        pcmk__timeout_ms2s(history->rsc->priv->failure_expiration_ms);
     pcmk_scheduler_t *scheduler = history->rsc->priv->scheduler;
 
     if (history->execution_status == PCMK_EXEC_NOT_INSTALLED) {

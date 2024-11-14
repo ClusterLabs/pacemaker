@@ -161,7 +161,7 @@ abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
     abort_timer.priority = abort_priority;
     abort_timer.action = abort_action;
     abort_timer.text = abort_text;
-    abort_timer.id = g_timeout_add(delay_ms, abort_timer_popped, &abort_timer);
+    abort_timer.id = pcmk__create_timer(delay_ms, abort_timer_popped, &abort_timer);
 }
 
 static void
@@ -238,9 +238,9 @@ init_node_pending_timer(const pcmk__node_status_t *node, guint timeout)
 
     g_hash_table_replace(node_pending_timers, key, node_pending_timer);
 
-    node_pending_timer->id = g_timeout_add_seconds(timeout,
-                                                   node_pending_timer_popped,
-                                                   key);
+    node_pending_timer->id = pcmk__create_timer(timeout * 1000,
+                                                node_pending_timer_popped,
+                                                key);
     pcmk__assert(node_pending_timer->id != 0);
 }
 

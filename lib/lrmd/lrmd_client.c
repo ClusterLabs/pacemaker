@@ -2547,7 +2547,7 @@ lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_STONITH) == 0) {
         return stonith__metadata_async(rsc->type,
-                                       PCMK_DEFAULT_ACTION_TIMEOUT_MS / 1000,
+                                       pcmk__timeout_ms2s(PCMK_DEFAULT_ACTION_TIMEOUT_MS),
                                        callback, user_data);
     }
 
