@@ -43,7 +43,8 @@ of the following types:
           pair: type; duration
 
        duration
-     - A time duration, specified either like a :ref:`timeout <timeout>` or an
+     - A nonnegative time duration, specified either like a
+       :ref:`timeout <timeout>` or an
        `ISO 8601 duration <https://en.wikipedia.org/wiki/ISO_8601#Durations>`_.
        A duration may be up to approximately 49 days but is intended for much
        smaller time periods.
@@ -191,7 +192,7 @@ Local Options
 #############
 
 Most Pacemaker configuration is in the cluster-wide CIB, but some host-local
-configuration options either are needed at startup, before the CIB is read, or
+configuration options either are needed at startup (before the CIB is read) or
 provide per-host overrides of cluster-wide options.
 
 These options are configured as environment variables set when Pacemaker is
@@ -561,11 +562,10 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
        PCMK_tls_priorities
      - :ref:`text <text>`
      - |PCMK__GNUTLS_PRIORITIES|
-     - *Advanced Use Only:* These GnuTLS cipher priorities will be used for TLS
-       connections (whether for :ref:`Pacemaker Remote <pacemaker_remote>`
-       connections or remote CIB access, when enabled). See:
-
-         https://gnutls.org/manual/html_node/Priority-Strings.html
+     - *Advanced Use Only:* These `GnuTLS cipher priorities
+       <https://gnutls.org/manual/html_node/Priority-Strings.html>`_ will be
+       used for TLS connections (whether for :ref:`Pacemaker Remote
+       <pacemaker_remote>` connections or remote CIB access, when enabled).
 
        Pacemaker will append ``":+ANON-DH"`` for remote CIB access and
        ``":+DHE-PSK:+PSK"`` for Pacemaker Remote connections, as they are

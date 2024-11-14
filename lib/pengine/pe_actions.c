@@ -94,7 +94,7 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
 {
     for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
                                                    PCMK_XE_OP, NULL, NULL);
-         operation != NULL; operation = pcmk__xe_next_same(operation)) {
+         operation != NULL; operation = pcmk__xe_next(operation, PCMK_XE_OP)) {
 
         bool enabled = false;
         const char *config_name = NULL;
@@ -460,7 +460,8 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
          */
         for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
                                                        PCMK_XE_OP, NULL, NULL);
-             operation != NULL; operation = pcmk__xe_next_same(operation)) {
+             operation != NULL;
+             operation = pcmk__xe_next(operation, PCMK_XE_OP)) {
 
             bool enabled = false;
             const char *promote_on_fail = NULL;
@@ -554,7 +555,7 @@ unpack_interval_origin(const char *value, const xmlNode *xml_obj,
                        long long *start_delay)
 {
     long long result = 0;
-    guint interval_sec = interval_ms / 1000;
+    guint interval_sec = pcmk__timeout_ms2s(interval_ms);
     crm_time_t *origin = NULL;
 
     // Ignore unspecified values and non-recurring operations
@@ -629,7 +630,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
 
     for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
                                                    PCMK_XE_OP, NULL, NULL);
-         operation != NULL; operation = pcmk__xe_next_same(operation)) {
+         operation != NULL; operation = pcmk__xe_next(operation, PCMK_XE_OP)) {
 
         bool enabled = false;
         guint interval_ms = 0U;
@@ -698,13 +699,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     };
 
     pe_rule_eval_data_t rule_data = {
-        /* @COMPAT Support for node attribute expressions in operation
-         * meta-attributes (whether in the operation configuration or operation
-         * defaults) is deprecated. When we can break behavioral backward
-         * compatibility, drop this line.
+        /* Node attributes are not set because node expressions are not allowed
+         * for meta-attributes
          */
-        .node_hash = (node == NULL)? NULL : node->priv->attrs,
-
         .now = rsc->priv->scheduler->priv->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
@@ -1015,7 +1012,6 @@ enum rsc_role_e
 pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
                          enum pcmk__on_fail on_fail, GHashTable *meta)
 {
-    const char *value = NULL;
     enum rsc_role_e role = pcmk_role_unknown;
 
     // Set default for role after failure specially in certain circumstances
@@ -1032,22 +1028,6 @@ pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
 
         default:
             break;
-    }
-
-    // @COMPAT Check for explicitly configured role (deprecated)
-    value = g_hash_table_lookup(meta, PCMK__META_ROLE_AFTER_FAILURE);
-    if (value != NULL) {
-        pcmk__warn_once(pcmk__wo_role_after,
-                        "Support for " PCMK__META_ROLE_AFTER_FAILURE " is "
-                        "deprecated and will be removed in a future release");
-        if (role == pcmk_role_unknown) {
-            role = pcmk_parse_role(value);
-            if (role == pcmk_role_unknown) {
-                pcmk__config_err("Ignoring invalid value %s for "
-                                 PCMK__META_ROLE_AFTER_FAILURE,
-                                 value);
-            }
-        }
     }
 
     if (role == pcmk_role_unknown) {
@@ -1258,7 +1238,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         return 0;
     }
 
-    return (int) (scheduler->priv->priority_fencing_ms / 1000U);
+    return pcmk__timeout_ms2s(scheduler->priv->priority_fencing_ms);
 }
 
 pcmk_action_t *

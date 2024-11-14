@@ -7,8 +7,9 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-MAINTAINERCLEANFILES    = Makefile.in \
-			  config.h.in
+include $(top_srcdir)/mk/common.mk
+
+MAINTAINERCLEANFILES += config.h.in
 
 noinst_HEADERS	        = config.h 		\
 			  crm_internal.h	\

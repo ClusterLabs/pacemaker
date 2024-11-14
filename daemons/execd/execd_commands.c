@@ -398,11 +398,13 @@ stonith_recurring_op_helper(gpointer data)
 static inline void
 start_recurring_timer(lrmd_cmd_t *cmd)
 {
-    if (cmd && (cmd->interval_ms > 0)) {
-        cmd->stonith_recurring_id = g_timeout_add(cmd->interval_ms,
-                                                  stonith_recurring_op_helper,
-                                                  cmd);
+    if (!cmd || (cmd->interval_ms <= 0)) {
+        return;
     }
+
+    cmd->stonith_recurring_id = pcmk__create_timer(cmd->interval_ms,
+                                                   stonith_recurring_op_helper,
+                                                   cmd);
 }
 
 static gboolean
@@ -532,7 +534,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     mainloop_set_trigger(rsc->work);
 
     if (cmd->start_delay) {
-        cmd->delay_id = g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
+        cmd->delay_id = pcmk__create_timer(cmd->start_delay, start_delay_helper, cmd);
     }
 }
 
@@ -884,7 +886,7 @@ action_complete(svc_action_t * action)
                 crm_debug("%s systemd %s is now complete (elapsed=%dms, "
                           "remaining=%dms): %s (%d)",
                           cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
-                          services_ocf_exitcode_str(cmd->result.exit_status),
+                          crm_exit_str(cmd->result.exit_status),
                           cmd->result.exit_status);
                 cmd_original_times(cmd);
 
@@ -929,11 +931,13 @@ action_complete(svc_action_t * action)
                          cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
 
             } else {
-                crm_notice("%s %s failed '%s' (%d): re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                crm_notice("%s %s failed: %s: Re-scheduling (remaining "
+                           "timeout %s) " QB_XS
+                           " exitstatus=%d elapsed=%dms start_delay=%dms)",
                            cmd->rsc_id, cmd->action,
-                           services_ocf_exitcode_str(cmd->result.exit_status),
-                           cmd->result.exit_status, time_sum, timeout_left,
-                           delay);
+                           crm_exit_str(cmd->result.exit_status),
+                           pcmk__readable_interval(timeout_left),
+                           cmd->result.exit_status, time_sum, delay);
             }
 
             cmd_reset(cmd);
@@ -1214,7 +1218,7 @@ static inline int
 execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
     int rc = stonith_api->cmds->monitor(stonith_api, 0, cmd->rsc_id,
-                                        cmd->timeout / 1000);
+                                        pcmk__timeout_ms2s(cmd->timeout));
 
     rc = stonith_api->cmds->register_callback(stonith_api, rc, 0, 0, cmd,
                                               "lrmd_stonith_callback",

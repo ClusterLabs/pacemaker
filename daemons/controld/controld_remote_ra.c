@@ -646,7 +646,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
               "(%d) status=%s (%d)",
               (op->op_type? op->op_type : ""), (op->op_type? " " : ""),
               lrmd_event_type2str(op->type), op->remote_nodename,
-              services_ocf_exitcode_str(op->rc), op->rc,
+              crm_exit_str((crm_exit_t) op->rc), op->rc,
               pcmk_exec_status_str(op->op_status), op->op_status);
 
     lrm_state = controld_get_executor_state(op->remote_nodename, false);
@@ -734,7 +734,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
             } else if (cmd->remaining_timeout > 3000) {
                 crm_trace("rescheduling start, remaining timeout %d", cmd->remaining_timeout);
-                g_timeout_add(1000, retry_start_cmd_cb, lrm_state);
+                pcmk__create_timer(1000, retry_start_cmd_cb, lrm_state);
                 return;
 
             } else {
@@ -779,8 +779,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         /* success, keep rescheduling if interval is present. */
         if (cmd->interval_ms && !pcmk_is_set(cmd->status, cmd_cancel)) {
             ra_data->recurring_cmds = g_list_append(ra_data->recurring_cmds, cmd);
-            cmd->interval_id = g_timeout_add(cmd->interval_ms,
-                                             recurring_helper, cmd);
+            cmd->interval_id = pcmk__create_timer(cmd->interval_ms,
+                                                  recurring_helper, cmd);
             cmd = NULL;         /* prevent free */
         }
         cmd_handled = TRUE;
@@ -942,7 +942,7 @@ handle_remote_ra_exec(gpointer user_data)
                 crm_debug("Poked Pacemaker Remote at node %s, waiting for async response",
                           cmd->rsc_id);
                 ra_data->cur_cmd = cmd;
-                cmd->monitor_timeout_id = g_timeout_add(cmd->timeout, monitor_timeout_cb, cmd);
+                cmd->monitor_timeout_id = pcmk__create_timer(cmd->timeout, monitor_timeout_cb, cmd);
                 return TRUE;
             }
             report_remote_ra_result(cmd);
@@ -956,7 +956,9 @@ handle_remote_ra_exec(gpointer user_data)
                  * cleared which will require all the resources running in the remote-node
                  * to be explicitly re-detected via probe actions.  If the takeover does occur
                  * successfully, then we can leave the status section intact. */
-                cmd->takeover_timeout_id = g_timeout_add((cmd->timeout/2), connection_takeover_timeout_cb, cmd);
+                cmd->takeover_timeout_id = pcmk__create_timer((cmd->timeout/2),
+                                                              connection_takeover_timeout_cb,
+                                                              cmd);
                 ra_data->cur_cmd = cmd;
                 return TRUE;
             }
@@ -1299,7 +1301,7 @@ controld_execute_remote_agent(const lrm_state_t *lrm_state, const char *rsc_id,
     cmd->call_id = generate_callid();
 
     if (cmd->start_delay) {
-        cmd->delay_id = g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
+        cmd->delay_id = pcmk__create_timer(cmd->start_delay, start_delay_helper, cmd);
     }
 
     ra_data->cmds = g_list_append(ra_data->cmds, cmd);
@@ -1432,7 +1434,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
 
         for (node = pcmk__xe_first_child(getXpathResult(search, 0),
                                          PCMK_XE_NODE, NULL, NULL);
-             node != NULL; node = pcmk__xe_next_same(node)) {
+             node != NULL; node = pcmk__xe_next(node, PCMK_XE_NODE)) {
 
             lrm_state_t *lrm_state = NULL;
             const char *id = pcmk__xe_id(node);

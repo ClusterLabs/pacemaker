@@ -215,7 +215,6 @@ TESTS = [
         SchedulerTest("rule-int-parse-fail-default-str-no-match",
                       "Integer rule values fail to parse, default to string "
                       "comparison: no match"),
-        SchedulerTest("timeout-by-node", "Start timeout varies by node"),
     ]),
     SchedulerTestGroup([
         SchedulerTest("order1", "Order start 1"),

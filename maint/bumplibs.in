@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2012-2023 the Pacemaker project contributors
+# Copyright 2012-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,16 +11,18 @@
 # List regular expressions (not globs) that match all of a library's public API
 # headers. Any files ending in "internal.h" will be excluded from matches.
 declare -A HEADERS
-HEADERS[cib]="include/crm/cib.h include/crm/cib/.*.h"
-HEADERS[crmcommon]="include/crm/crm.h
+HEADERS[cib]="include/crm/cib.*.h
+              include/crm/cib/.*.h"
+HEADERS[crmcluster]="include/crm/cluster.h
+                     include/crm/cluster/.*.h"
+HEADERS[crmcommon]="include/crm/crm.*.h
                     include/crm/msg_xml.h
                     include/crm/common/.*.h"
-HEADERS[crmcluster]="include/crm/cluster.h include/crm/cluster/.*.h"
 HEADERS[crmservice]="include/crm/services.*.h"
 HEADERS[lrmd]="include/crm/lrmd.*.h"
 HEADERS[pacemaker]="include/pacemaker.*.h"
 HEADERS[pe_rules]="include/crm/pengine/ru.*.h"
-HEADERS[pe_status]="include/crm/pengine/[^r].*.h include/crm/pengine/r[^u].*.h"
+HEADERS[pe_status]="include/crm/pengine/.*.h"
 HEADERS[stonithd]="include/crm/stonith-ng.h include/crm/fencing/.*.h"
 
 yesno() {

@@ -133,7 +133,7 @@
   <synapse id="10">
     <action_set>
       <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1">
-        <attributes CRM_meta_compute_instanceha_role="true" CRM_meta_digests_all="stonith-fence_compute-fence-nova:fence_compute:ad312d85623cdb0a792e6fbd5e91a820," CRM_meta_digests_secure="stonith-fence_compute-fence-nova:fence_compute:caf046d0a0953a2e7d15bbbde1371880," CRM_meta_on_node="overcloud-novacompute-1" CRM_meta_on_node_uuid="overcloud-novacompute-1" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_digests_all="stonith-fence_compute-fence-nova:fence_compute:ad312d85623cdb0a792e6fbd5e91a820," CRM_meta_digests_secure="stonith-fence_compute-fence-nova:fence_compute:caf046d0a0953a2e7d15bbbde1371880," CRM_meta_on_node="overcloud-novacompute-1" CRM_meta_on_node_uuid="overcloud-novacompute-1" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="overcloud-novacompute-1"/>
         </downed>

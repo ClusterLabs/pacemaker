@@ -202,23 +202,22 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     clone_id = crm_element_value(rsc->priv->xml, PCMK__META_CLONE);
 
-    for (xml_native_rsc = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
+    for (xml_native_rsc = pcmk__xe_first_child(xml_obj, PCMK_XE_PRIMITIVE,
+                                               NULL, NULL);
          xml_native_rsc != NULL;
-         xml_native_rsc = pcmk__xe_next(xml_native_rsc)) {
+         xml_native_rsc = pcmk__xe_next(xml_native_rsc, PCMK_XE_PRIMITIVE)) {
 
-        if (pcmk__xe_is(xml_native_rsc, PCMK_XE_PRIMITIVE)) {
-            pcmk_resource_t *new_rsc = NULL;
+        pcmk_resource_t *new_rsc = NULL;
 
-            crm_xml_add(xml_native_rsc, PCMK__META_CLONE, clone_id);
-            if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
-                                    scheduler) != pcmk_rc_ok) {
-                continue;
-            }
-
-            rsc->priv->children = g_list_append(rsc->priv->children, new_rsc);
-            group_data->last_child = new_rsc;
-            pcmk__rsc_trace(rsc, "Added %s member %s", rsc->id, new_rsc->id);
+        crm_xml_add(xml_native_rsc, PCMK__META_CLONE, clone_id);
+        if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
+                                scheduler) != pcmk_rc_ok) {
+            continue;
         }
+
+        rsc->priv->children = g_list_append(rsc->priv->children, new_rsc);
+        group_data->last_child = new_rsc;
+        pcmk__rsc_trace(rsc, "Added %s member %s", rsc->id, new_rsc->id);
     }
 
     if (rsc->priv->children == NULL) {

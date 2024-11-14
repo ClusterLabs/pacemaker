@@ -7,7 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-MAINTAINERCLEANFILES = Makefile.in
+include $(top_srcdir)/mk/common.mk
 
 headerdir=$(pkgincludedir)/crm/common
 
@@ -16,6 +16,7 @@ header_HEADERS = acl.h 			\
 		 agents.h 		\
 		 cib.h 			\
 		 ipc.h 			\
+		 ipc_client_compat.h 	\
 		 ipc_controld.h 	\
 		 ipc_pacemakerd.h 	\
 		 ipc_schedulerd.h 	\
@@ -44,6 +45,8 @@ header_HEADERS = acl.h 			\
 		 util_compat.h 		\
 		 xml.h 			\
 		 xml_compat.h		\
+		 xml_element.h		\
+		 xml_element_compat.h	\
 		 xml_io.h		\
 		 xml_names.h
 

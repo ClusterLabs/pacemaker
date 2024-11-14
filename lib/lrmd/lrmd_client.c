@@ -63,7 +63,7 @@ gnutls_psk_client_credentials_t psk_cred_s;
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
 static void lrmd_tls_connection_destroy(gpointer userdata);
-static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake);
+static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake);
 
 typedef struct lrmd_private_s {
     uint64_t type;
@@ -101,6 +101,9 @@ typedef struct lrmd_private_s {
     void *proxy_callback_userdata;
     char *peer_version;
 } lrmd_private_t;
+
+static int process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native);
+static void report_async_connection_result(lrmd_t * lrmd, int rc);
 
 static lrmd_list_t *
 lrmd_list_add(lrmd_list_t * head, const char *value)
@@ -390,8 +393,18 @@ handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
     if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
         lrmd_dispatch_internal(xml, lrmd);
     } else if (pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
+        const char *op = crm_element_value(xml, PCMK__XA_LRMD_OP);
+
         if (native->expected_late_replies > 0) {
             native->expected_late_replies--;
+
+            /* The register op message we get as a response to lrmd_handshake_async
+             * is a reply, so we have to handle that here.
+             */
+            if (pcmk__str_eq(op, "register", pcmk__str_casei)) {
+                int rc = process_lrmd_handshake_reply(xml, native);
+                report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+            }
         } else {
             int reply_id = 0;
             crm_element_value_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
@@ -401,31 +414,40 @@ handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
     }
 }
 
-static void
-process_pending_notifies(lrmd_t *lrmd)
+/*!
+ * \internal
+ * \brief Notify trigger handler
+ *
+ * \param[in,out] userdata API connection
+ *
+ * \return Always return G_SOURCE_CONTINUE to leave this trigger handler in the
+ *         mainloop
+ */
+static int
+process_pending_notifies(gpointer userdata)
 {
+    lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
 
     if (native->pending_notify == NULL) {
-        return;
+        return G_SOURCE_CONTINUE;
     }
 
     crm_trace("Processing pending notifies");
     g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
     g_list_free_full(native->pending_notify, lrmd_free_xml);
     native->pending_notify = NULL;
+    return G_SOURCE_CONTINUE;
 }
 
 /*!
  * \internal
- * \brief TLS dispatch function (for both trigger and file descriptor sources)
+ * \brief TLS dispatch function for file descriptor sources
  *
  * \param[in,out] userdata  API connection
  *
- * \return Always return a nonnegative value, which as a file descriptor
- *         dispatch function means keep the mainloop source, and as a
- *         trigger dispatch function, 0 means remove the trigger from the
- *         mainloop while 1 means keep it (and job completed)
+ * \return -1 on error to remove the source from the mainloop, or 0 otherwise
+ *         to leave it in the mainloop
  */
 static int
 lrmd_tls_dispatch(gpointer userdata)
@@ -437,17 +459,11 @@ lrmd_tls_dispatch(gpointer userdata)
 
     if (!remote_executor_connected(lrmd)) {
         crm_trace("TLS dispatch triggered after disconnect");
-        return 0;
+        return -1;
     }
 
     crm_trace("TLS dispatch triggered");
 
-    /* First check if there are any pending notifies to process that came
-     * while we were waiting for replies earlier.
-     */
-    process_pending_notifies(lrmd);
-
-    /* Next read the current buffer and see if there are any messages to handle. */
     rc = pcmk__remote_ready(native->remote, 0);
     if (rc == pcmk_rc_ok) {
         rc = pcmk__read_remote_message(native->remote, -1);
@@ -457,7 +473,7 @@ lrmd_tls_dispatch(gpointer userdata)
         crm_info("Lost %s executor connection while reading data",
                  (native->remote_nodename? native->remote_nodename : "local"));
         lrmd_tls_disconnect(lrmd);
-        return 0;
+        return -1;
     }
 
     /* If rc is ETIME, there was nothing to read but we may already have a
@@ -466,12 +482,12 @@ lrmd_tls_dispatch(gpointer userdata)
     xml = pcmk__remote_message_xml(native->remote);
 
     if (xml == NULL) {
-        return 1;
+        return 0;
     }
 
     handle_remote_msg(xml, lrmd);
     pcmk__xml_free(xml);
-    return 1;
+    return 0;
 }
 
 /* Not used with mainloop */
@@ -875,15 +891,15 @@ lrmd_api_is_connected(lrmd_t * lrmd)
  *                              standard vs. pacemaker remote);
  *                              also propagated to the command XML
  * \param[in]     call_options  Call options to pass to server when sending
- * \param[in]     expect_reply  If TRUE, wait for a reply from the server;
- *                              must be TRUE for IPC (as opposed to TLS) clients
+ * \param[in]     expect_reply  If true, wait for a reply from the server;
+ *                              must be true for IPC (as opposed to TLS) clients
  *
  * \return pcmk_ok on success, -errno on error
  */
 static int
 lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
                   xmlNode **output_data, int timeout,
-                  enum lrmd_call_options options, gboolean expect_reply)
+                  enum lrmd_call_options options, bool expect_reply)
 {
     int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -899,8 +915,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
         return -EINVAL;
     }
 
-    CRM_CHECK(native->token != NULL,;
-        );
+    CRM_LOG_ASSERT(native->token != NULL);
     crm_trace("Sending %s op to executor", op);
 
     op_msg = lrmd_create_op(native->token, op, data, timeout, options);
@@ -920,7 +935,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
         crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%d): %d", op, timeout, rc);
         goto done;
 
-    } else if(op_reply == NULL) {
+    } else if (op_reply == NULL) {
         rc = -ENOMSG;
         goto done;
     }
@@ -987,12 +1002,9 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
     return (rc < 0)? pcmk_legacy2rc(rc) : pcmk_rc_ok;
 }
 
-static int
-lrmd_handshake(lrmd_t * lrmd, const char *name)
+static xmlNode *
+lrmd_handshake_hello_msg(const char *name, bool is_proxy)
 {
-    int rc = pcmk_ok;
-    lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *reply = NULL;
     xmlNode *hello = pcmk__xe_create(NULL, PCMK__XE_LRMD_COMMAND);
 
     crm_xml_add(hello, PCMK__XA_T, PCMK__VALUE_LRMD);
@@ -1001,68 +1013,105 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     crm_xml_add(hello, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
 
     /* advertise that we are a proxy provider */
-    if (native->proxy_callback) {
+    if (is_proxy) {
         pcmk__xe_set_bool_attr(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
     }
+
+    return hello;
+}
+
+static int
+process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
+{
+    int rc = pcmk_rc_ok;
+    const char *version = crm_element_value(reply, PCMK__XA_LRMD_PROTOCOL_VERSION);
+    const char *msg_type = crm_element_value(reply, PCMK__XA_LRMD_OP);
+    const char *tmp_ticket = crm_element_value(reply, PCMK__XA_LRMD_CLIENTID);
+    const char *start_state = crm_element_value(reply, PCMK__XA_NODE_START_STATE);
+    long long uptime = -1;
+
+    crm_element_value_int(reply, PCMK__XA_LRMD_RC, &rc);
+    rc = pcmk_legacy2rc(rc);
+
+    /* The remote executor may add its uptime to the XML reply, which is useful
+     * in handling transient attributes when the connection to the remote node
+     * unexpectedly drops.  If no parameter is given, just default to -1.
+     */
+    crm_element_value_ll(reply, PCMK__XA_UPTIME, &uptime);
+    native->remote->uptime = uptime;
+
+    if (start_state) {
+        native->remote->start_state = strdup(start_state);
+    }
+
+    if (rc == EPROTO) {
+        crm_err("Executor protocol version mismatch between client (%s) and server (%s)",
+                LRMD_PROTOCOL_VERSION, version);
+        crm_log_xml_err(reply, "Protocol Error");
+    } else if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+        crm_err("Invalid registration message: %s", msg_type);
+        crm_log_xml_err(reply, "Bad reply");
+        rc = EPROTO;
+    } else if (tmp_ticket == NULL) {
+        crm_err("No registration token provided");
+        crm_log_xml_err(reply, "Bad reply");
+        rc = EPROTO;
+    } else {
+        crm_trace("Obtained registration token: %s", tmp_ticket);
+        native->token = strdup(tmp_ticket);
+        native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
+        rc = pcmk_rc_ok;
+    }
+
+    return rc;
+}
+
+static int
+lrmd_handshake(lrmd_t * lrmd, const char *name)
+{
+    int rc = pcmk_rc_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    xmlNode *reply = NULL;
+    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
 
     rc = lrmd_send_xml(lrmd, hello, -1, &reply);
 
     if (rc < 0) {
         crm_perror(LOG_DEBUG, "Couldn't complete registration with the executor API: %d", rc);
-        rc = -ECOMM;
+        rc = ECOMM;
     } else if (reply == NULL) {
         crm_err("Did not receive registration reply");
-        rc = -EPROTO;
+        rc = EPROTO;
     } else {
-        const char *version = crm_element_value(reply,
-                                                PCMK__XA_LRMD_PROTOCOL_VERSION);
-        const char *msg_type = crm_element_value(reply, PCMK__XA_LRMD_OP);
-        const char *tmp_ticket = crm_element_value(reply,
-                                                   PCMK__XA_LRMD_CLIENTID);
-        const char *start_state = crm_element_value(reply, PCMK__XA_NODE_START_STATE);
-        long long uptime = -1;
-
-        crm_element_value_int(reply, PCMK__XA_LRMD_RC, &rc);
-
-        /* The remote executor may add its uptime to the XML reply, which is
-         * useful in handling transient attributes when the connection to the
-         * remote node unexpectedly drops.  If no parameter is given, just
-         * default to -1.
-         */
-        crm_element_value_ll(reply, PCMK__XA_UPTIME, &uptime);
-        native->remote->uptime = uptime;
-
-        if (start_state) {
-            native->remote->start_state = strdup(start_state);
-        }
-
-        if (rc == -EPROTO) {
-            crm_err("Executor protocol version mismatch between client (%s) and server (%s)",
-                LRMD_PROTOCOL_VERSION, version);
-            crm_log_xml_err(reply, "Protocol Error");
-
-        } else if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-            crm_err("Invalid registration message: %s", msg_type);
-            crm_log_xml_err(reply, "Bad reply");
-            rc = -EPROTO;
-        } else if (tmp_ticket == NULL) {
-            crm_err("No registration token provided");
-            crm_log_xml_err(reply, "Bad reply");
-            rc = -EPROTO;
-        } else {
-            crm_trace("Obtained registration token: %s", tmp_ticket);
-            native->token = strdup(tmp_ticket);
-            native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
-            rc = pcmk_ok;
-        }
+        rc = process_lrmd_handshake_reply(reply, native);
     }
 
     pcmk__xml_free(reply);
     pcmk__xml_free(hello);
 
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         lrmd_api_disconnect(lrmd);
     }
+
+    return rc;
+}
+
+static int
+lrmd_handshake_async(lrmd_t * lrmd, const char *name)
+{
+    int rc = pcmk_rc_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
+
+    rc = send_remote_message(lrmd, hello);
+
+    if (rc == pcmk_rc_ok) {
+        native->expected_late_replies++;
+    } else {
+        lrmd_api_disconnect(lrmd);
+    }
+
+    pcmk__xml_free(hello);
     return rc;
 }
 
@@ -1359,7 +1408,13 @@ tls_handshake_succeeded(lrmd_t *lrmd)
     crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
              native->server, native->port);
     rc = add_tls_to_mainloop(lrmd, true);
-    report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+
+    /* If add_tls_to_mainloop failed, report that right now.  Otherwise, we have
+     * to wait until we read the async reply to report anything.
+     */
+    if (rc != pcmk_rc_ok) {
+        report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+    }
 }
 
 /*!
@@ -1389,13 +1444,13 @@ tls_client_handshake(lrmd_t *lrmd)
  * \internal
  * \brief Add trigger and file descriptor mainloop sources for TLS
  *
- * \param[in,out] lrmd          API connection with established TLS session
- * \param[in]     do_handshake  Whether to perform executor handshake
+ * \param[in,out] lrmd              API connection with established TLS session
+ * \param[in]     do_api_handshake  Whether to perform executor handshake
  *
  * \return Standard Pacemaker return code
  */
 static int
-add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake)
+add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
     int rc = pcmk_rc_ok;
@@ -1409,7 +1464,7 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake)
     };
 
     native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH,
-                                                  lrmd_tls_dispatch, lrmd);
+                                                  process_pending_notifies, lrmd);
     native->source = mainloop_add_fd(name, G_PRIORITY_HIGH, native->sock, lrmd,
                                      &tls_fd_callbacks);
 
@@ -1419,9 +1474,8 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake)
      * @TODO Keep track of the caller-provided name. Perhaps we should be using
      * that name in this function instead of generating one anyway.
      */
-    if (do_handshake) {
-        rc = lrmd_handshake(lrmd, name);
-        rc = pcmk_legacy2rc(rc);
+    if (do_api_handshake) {
+        rc = lrmd_handshake_async(lrmd, name);
     }
     free(name);
     return rc;
@@ -1640,6 +1694,7 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
 
     if (rc == pcmk_ok) {
         rc = lrmd_handshake(lrmd, name);
+        rc = pcmk_rc2legacy(rc);
     }
 
     return rc;
@@ -1783,7 +1838,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     crm_xml_add(data, PCMK__XA_LRMD_CLASS, class);
     crm_xml_add(data, PCMK__XA_LRMD_PROVIDER, provider);
     crm_xml_add(data, PCMK__XA_LRMD_TYPE, type);
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_REG, data, NULL, 0, options, TRUE);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_REG, data, NULL, 0, options, true);
     pcmk__xml_free(data);
 
     return rc;
@@ -1797,7 +1852,7 @@ lrmd_api_unregister_rsc(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_option
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_UNREG, data, NULL, 0, options, TRUE);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_UNREG, data, NULL, 0, options, true);
     pcmk__xml_free(data);
 
     return rc;
@@ -1848,7 +1903,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options, TRUE);
+    lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options, true);
     pcmk__xml_free(data);
 
     if (!output) {
@@ -1905,7 +1960,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
         crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     }
     rc = lrmd_send_command(lrmd, LRMD_OP_GET_RECURRING, data, &output_xml,
-                           timeout_ms, options, TRUE);
+                           timeout_ms, options, true);
     if (data) {
         pcmk__xml_free(data);
     }
@@ -1918,7 +1973,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
                                                        PCMK__XE_LRMD_RSC, NULL,
                                                        NULL);
          (rsc_xml != NULL) && (rc == pcmk_ok);
-         rsc_xml = pcmk__xe_next_same(rsc_xml)) {
+         rsc_xml = pcmk__xe_next(rsc_xml, PCMK__XE_LRMD_RSC)) {
 
         rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
         if (rsc_id == NULL) {
@@ -1928,7 +1983,8 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
         for (const xmlNode *op_xml = pcmk__xe_first_child(rsc_xml,
                                                           PCMK__XE_LRMD_RSC_OP,
                                                           NULL, NULL);
-             op_xml != NULL; op_xml = pcmk__xe_next_same(op_xml)) {
+             op_xml != NULL;
+             op_xml = pcmk__xe_next(op_xml, PCMK__XE_LRMD_RSC_OP)) {
 
             lrmd_op_info_t *op_info = calloc(1, sizeof(lrmd_op_info_t));
 
@@ -2101,7 +2157,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
         hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
     }
 
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, TRUE);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, true);
     pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
@@ -2128,7 +2184,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout,
-                           lrmd_opt_notify_orig_only, TRUE);
+                           lrmd_opt_notify_orig_only, true);
     pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
@@ -2146,7 +2202,7 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ACTION, action);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     crm_xml_add_ms(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, TRUE);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, true);
     pcmk__xml_free(data);
     return rc;
 }
@@ -2491,7 +2547,7 @@ lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_STONITH) == 0) {
         return stonith__metadata_async(rsc->type,
-                                       PCMK_DEFAULT_ACTION_TIMEOUT_MS / 1000,
+                                       pcmk__timeout_ms2s(PCMK_DEFAULT_ACTION_TIMEOUT_MS),
                                        callback, user_data);
     }
 

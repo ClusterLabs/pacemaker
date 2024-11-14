@@ -26,8 +26,8 @@ static void te_update_job_count(pcmk__graph_action_t *action, int offset);
 static void
 te_start_action_timer(const pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    action->timer = g_timeout_add(action->timeout + graph->network_delay,
-                                  action_timer_callback, (void *) action);
+    action->timer = pcmk__create_timer(action->timeout + graph->network_delay,
+                                       action_timer_callback, action);
     pcmk__assert(action->timer != 0);
 }
 

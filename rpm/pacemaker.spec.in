@@ -15,10 +15,10 @@
 %global gname haclient
 
 ## Where to install Pacemaker documentation
-%if 0%{?suse_version} > 0
+%if 0%{?suse_version}
 %global pcmk_docdir %{_docdir}/%{name}-%{version}
 %else
-%if 0%{?rhel} > 7
+%if 0%{?rhel}
 %global pcmk_docdir %{_docdir}/%{name}-doc
 %else
 %global pcmk_docdir %{_docdir}/%{name}
@@ -45,7 +45,7 @@
 
 ## Since git v2.11, the extent of abbreviation is autoscaled by default
 ## (used to be constant of 7), so we need to convey it for non-tags, too.
-%if (0%{?fedora} >= 26) || (0%{?rhel} >= 9)
+%if 0%{?fedora} || (0%{?rhel} >= 9)
 %global commit_abbrev 9
 %else
 %global commit_abbrev 7
@@ -56,7 +56,7 @@
 # "rpmbuild --without <feature>" can enable and disable specific features
 
 ## Add option for Linux-HA (stonith/external) fencing agent support
-%if 0%{?suse_version} > 0
+%if 0%{?suse_version}
 %bcond_without linuxha
 %else
 %bcond_with linuxha
@@ -102,13 +102,6 @@
 ## Add option to turn off hardening of libraries and daemon executables
 %bcond_without hardening
 
-## Add option to enable (or disable, on RHEL 8) links for legacy daemon names
-%if 0%{?rhel} && 0%{?rhel} <= 8
-%bcond_without legacy_links
-%else
-%bcond_with legacy_links
-%endif
-
 # Define globals for convenient use later
 
 ## Workaround to use parentheses in other globals
@@ -146,35 +139,15 @@
 %endif
 %endif
 
-## Whether this platform defaults to using systemd as an init system
-## (needs to be evaluated prior to BuildRequires being enumerated and
-## installed as it's intended to conditionally select some of these, and
-## for that there are only few indicators with varying reliability:
-## - presence of systemd-defined macros (when building in a full-fledged
-##   environment, which is not the case with ordinary mock-based builds)
-## - systemd-aware rpm as manifested with the presence of particular
-##   macro (rpm itself will trivially always be present when building)
-## - existence of /usr/lib/os-release file, which is something heavily
-##   propagated by systemd project
-## - when not good enough, there's always a possibility to check
-##   particular distro-specific macros (incl. version comparison)
-%define systemd_native (%{?_unitdir:1}%{!?_unitdir:0}%{nil \
-  } || %{?__transaction_systemd_inhibit:1}%{!?__transaction_systemd_inhibit:0}%{nil \
-  } || %(test -f /usr/lib/os-release; test $? -ne 0; echo $?))
-
-%if 0%{?fedora} > 20 || 0%{?rhel} > 7
+%if 0%{?fedora} || 0%{?rhel}
 ## Base GnuTLS cipher priorities (presumably only the initial, required keyword)
 ## overridable with "rpmbuild --define 'pcmk_gnutls_priorities PRIORITY-SPEC'"
 %define gnutls_priorities %{?pcmk_gnutls_priorities}%{!?pcmk_gnutls_priorities:@SYSTEM}
 %endif
 
-%if 0%{?fedora} > 22 || 0%{?rhel} > 7
-%global supports_recommends 1
-%endif
-
 ## Different distros name certain packages differently
 ## (note: corosync libraries also differ, but all provide corosync-devel)
-%if 0%{?suse_version} > 0
+%if 0%{?suse_version}
 %global pkgname_bzip2_devel libbz2-devel
 %global pkgname_docbook_xsl docbook-xsl-stylesheets
 %global pkgname_gettext gettext-tools
@@ -197,16 +170,6 @@
 %endif
 
 ## Distro-specific configuration choices
-
-### Use 2.0-style output when other distro packages don't support current output
-%if ( 0%{?fedora} && 0%{?fedora} <=35 ) || ( 0%{?rhel} && 0%{?rhel} <= 8 )
-%global compat20 --enable-compat-2.0
-%endif
-
-### Default concurrent-fencing to true when distro prefers that
-%if 0%{?rhel} >= 7
-%global concurrent_fencing --with-concurrent-fencing-default=true
-%endif
 
 ### Default resource-stickiness to 1 when distro prefers that
 %if 0%{?fedora} >= 35 || 0%{?rhel} >= 9
@@ -261,12 +224,7 @@ Name:          pacemaker
 Summary:       Scalable High-Availability cluster resource manager
 Version:       %{pcmkversion}
 Release:       %{pcmk_release}%{?dist}
-%if %{defined _unitdir}
 License:       GPL-2.0-or-later AND LGPL-2.1-or-later
-%else
-# initscript is Revised BSD
-License:       GPL-2.0-or-later AND LGPL-2.1-or-later AND BSD-3-Clause
-%endif
 Url:           https://www.clusterlabs.org/
 
 # Example: https://codeload.github.com/ClusterLabs/pacemaker/tar.gz/e91769e
@@ -284,10 +242,6 @@ Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 %if %{with linuxha}
 Requires:      %{python_name}-%{name} = %{version}-%{release}
-%endif
-%if !%{defined _unitdir}
-Requires:      %{pkgname_procps}
-Requires:      psmisc
 %endif
 %{?systemd_requires}
 
@@ -318,6 +272,7 @@ BuildRequires: sed
 BuildRequires: pkgconfig(glib-2.0) >= 2.42
 BuildRequires: pkgconfig(gnutls) >= 3.1.7
 BuildRequires: pkgconfig(libxml-2.0) >= 2.9.2
+BuildRequires: pkgconfig(systemd)
 BuildRequires: libxslt-devel
 BuildRequires: pkgconfig(uuid)
 BuildRequires: %{pkgname_bzip2_devel}
@@ -333,10 +288,6 @@ BuildRequires: %{pkgname_gettext} >= 0.18
 # Required for "make check"
 BuildRequires: libcmocka-devel >= 1.1.0
 BuildRequires: %{python_name}-psutil
-
-%if %{systemd_native}
-BuildRequires: pkgconfig(systemd)
-%endif
 
 Requires:      corosync >= 2.0.0
 BuildRequires: corosync-devel >= 2.0.0
@@ -375,12 +326,10 @@ Available rpmbuild rebuild options:
 License:       GPL-2.0-or-later AND LGPL-2.1-or-later
 Summary:       Command line tools for controlling Pacemaker clusters
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
-%if 0%{?supports_recommends}
 Recommends:    pcmk-cluster-manager = %{version}-%{release}
 # For crm_report
 Recommends:    tar
 Recommends:    bzip2
-%endif
 Requires:      perl-TimeDate
 Requires:      %{pkgname_procps}
 Requires:      psmisc
@@ -401,11 +350,6 @@ Requires(pre): %{pkgname_shadow_utils}
 Requires:      %{name}-schemas = %{version}-%{release}
 # sbd 1.4.0+ supports the libpe_status API for pe_working_set_t
 Conflicts:     sbd < 1.4.0
-%if ( 0%{?fedora} && 0%{?fedora} <=35 ) || ( 0%{?rhel} && 0%{?rhel} <= 8 )
-Conflicts:     pcs >= 0.11
-%else
-Conflicts:     pcs < 0.11
-%endif
 
 %description -n %{pkgname_pcmk_libs}
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -441,21 +385,13 @@ The %{python_name}-%{name} package contains a Python library that can be used
 to interface with Pacemaker.
 
 %package remote
-%if %{defined _unitdir}
 License:       GPL-2.0-or-later AND LGPL-2.1-or-later
-%else
-# initscript is Revised BSD
-License:       GPL-2.0-or-later AND LGPL-2.1-or-later AND BSD-3-Clause
-%endif
 Summary:       Pacemaker remote executor daemon for non-cluster nodes
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      resource-agents
-%if !%{defined _unitdir}
 Requires:      %{pkgname_procps}
-%endif
-# -remote can be fully independent of systemd
-%{?systemd_ordering}%{!?systemd_ordering:%{?systemd_requires}}
+%{?systemd_requires}
 Provides:      pcmk-cluster-manager = %{version}-%{release}
 Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 
@@ -502,11 +438,8 @@ Requires:      psmisc
 Requires:      %{python_name}-psutil
 BuildArch:     noarch
 
-# systemd Python bindings are a separate package in some distros
-%if %{defined systemd_requires}
-%if 0%{?fedora} > 22 || 0%{?rhel} > 7
+%if 0%{?fedora} || 0%{?rhel}
 Requires:      %{python_name}-systemd
-%endif
 %endif
 
 %description   cts
@@ -539,7 +472,7 @@ manager.
 
 %build
 
-export systemdsystemunitdir=%{?_unitdir}%{!?_unitdir:no}
+export systemdsystemunitdir=%{_unitdir}
 
 %if %{with hardening}
 # prefer distro-provided hardening flags in case they are defined
@@ -558,7 +491,6 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
 %{configure}                                                                    \
         PYTHON=%{python_path}                                                   \
         %{!?with_hardening:    --disable-hardening}                             \
-        %{?with_legacy_links:  --enable-legacy-links}                           \
         %{?with_profiling:     --with-profiling}                                \
         %{?with_cibsecrets:    --with-cibsecrets}                               \
         %{?with_nls:           --enable-nls}                                    \
@@ -566,17 +498,14 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
         %{?bug_url:            --with-bug-url=%{bug_url}}                       \
         %{?ocf_root:           --with-ocfdir=%{ocf_root}}                       \
-        %{?concurrent_fencing}                                                  \
         %{?resource_stickiness}                                                 \
-        %{?compat20}                                                            \
         --disable-static                                                        \
         --with-initdir=%{_initrddir}                                            \
         --with-runstatedir=%{_rundir}                                           \
         --localstatedir=%{_var}                                                 \
         --with-version=%{version}-%{release}
 
-%if 0%{?suse_version} >= 1200
-# Fedora handles rpath removal automagically
+%if 0%{?suse_version}
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 %endif
@@ -608,9 +537,7 @@ pushd python
 %py3_install
 popd
 
-%if %{defined _unitdir}
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
-%endif
 
 %if %{with nls}
 %find_lang %{name}
@@ -620,30 +547,15 @@ mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
 %post
-%if %{defined _unitdir}
 %systemd_post pacemaker.service
-%else
-/sbin/chkconfig --add pacemaker || :
-%endif
 
 %preun
-%if %{defined _unitdir}
 %systemd_preun pacemaker.service
-%else
-/sbin/service pacemaker stop >/dev/null 2>&1 || :
-if [ "$1" -eq 0 ]; then
-    # Package removal, not upgrade
-    /sbin/chkconfig --del pacemaker || :
-fi
-%endif
 
 %postun
-%if %{defined _unitdir}
 %systemd_postun_with_restart pacemaker.service
-%endif
 
 %pre remote
-%if %{defined _unitdir}
 # Stop the service before anything is touched, and remember to restart
 # it as one of the last actions (compared to using systemd_postun_with_restart,
 # this avoids suicide when sbd is in use)
@@ -655,28 +567,14 @@ if [ $? -eq 0 ] ; then
 else
     rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
 fi
-%endif
 
 %post remote
-%if %{defined _unitdir}
 %systemd_post pacemaker_remote.service
-%else
-/sbin/chkconfig --add pacemaker_remote || :
-%endif
 
 %preun remote
-%if %{defined _unitdir}
 %systemd_preun pacemaker_remote.service
-%else
-/sbin/service pacemaker_remote stop >/dev/null 2>&1 || :
-if [ "$1" -eq 0 ]; then
-    # Package removal, not upgrade
-    /sbin/chkconfig --del pacemaker_remote || :
-fi
-%endif
 
 %postun remote
-%if %{defined _unitdir}
 # This next line is a no-op, because we stopped the service earlier, but
 # we leave it here because it allows us to revert to the standard behavior
 # in the future if desired
@@ -685,20 +583,15 @@ fi
 if [ "$1" -eq 0 ] ; then
     rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
 fi
-%endif
 
 %posttrans remote
-%if %{defined _unitdir}
 if [ -e %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote ] ; then
     systemctl start pacemaker_remote >/dev/null 2>&1
     rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
 fi
-%endif
 
 %post cli
-%if %{defined _unitdir}
 %systemd_post crm_mon.service
-%endif
 if [ "$1" -eq 2 ]; then
     # Package upgrade, not initial install:
     # Move any pre-2.0 logs to new location to ensure they get rotated
@@ -708,14 +601,10 @@ if [ "$1" -eq 2 ]; then
 fi
 
 %preun cli
-%if %{defined _unitdir}
 %systemd_preun crm_mon.service
-%endif
 
 %postun cli
-%if %{defined _unitdir}
 %systemd_postun_with_restart crm_mon.service
-%endif
 
 %pre -n %{pkgname_pcmk_libs}
 getent group %{gname} >/dev/null || groupadd -r %{gname} -g %{hacluster_id}
@@ -738,12 +627,7 @@ exit 0
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
 %config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %{_sbindir}/pacemakerd
-
-%if %{defined _unitdir}
 %{_unitdir}/pacemaker.service
-%else
-%{_initrddir}/pacemaker
-%endif
 
 %exclude %{_libexecdir}/pacemaker/cts-support
 %exclude %{_sbindir}/pacemaker-remoted
@@ -770,7 +654,7 @@ exit 0
 
 %license licenses/GPLv2
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
@@ -781,9 +665,7 @@ exit 0
 %dir %attr (750, root, %{gname}) %{_sysconfdir}/pacemaker
 %config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 
-%if %{defined _unitdir}
 %{_unitdir}/crm_mon.service
-%endif
 
 %{_sbindir}/attrd_updater
 %{_sbindir}/cibadmin
@@ -839,7 +721,7 @@ exit 0
 
 %license licenses/GPLv2
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/blackbox
@@ -858,13 +740,13 @@ exit 0
 %{_libdir}/libstonithd.so.*
 %license licenses/LGPLv2.1
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files cluster-libs
 %{_libdir}/libcrmcluster.so.*
 %license licenses/LGPLv2.1
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files -n %{python_name}-%{name}
 %{python3_sitelib}/pacemaker/
@@ -872,25 +754,21 @@ exit 0
 %exclude %{python3_sitelib}/pacemaker/_cts/
 %license licenses/LGPLv2.1
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files remote
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
-%if %{defined _unitdir}
 # state directory is shared between the subpackets
 # let rpm take care of removing it once it isn't
 # referenced anymore and empty
 %ghost %dir %{_localstatedir}/lib/rpm-state/%{name}
 %{_unitdir}/pacemaker_remote.service
-%else
-%{_initrddir}/pacemaker_remote
-%endif
 
 %{_sbindir}/pacemaker-remoted
 %{_mandir}/man8/pacemaker-remoted.*
 %license licenses/GPLv2
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files doc
 %doc %{pcmk_docdir}
@@ -904,7 +782,7 @@ exit 0
 
 %license licenses/GPLv2
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files -n %{pkgname_pcmk_libs}-devel
 %{_includedir}/pacemaker
@@ -920,7 +798,7 @@ exit 0
 %{_libdir}/pkgconfig/*pacemaker*.pc
 %license licenses/LGPLv2.1
 %doc COPYING
-%doc ChangeLog
+%doc ChangeLog.md
 
 %files schemas
 %license licenses/GPLv2
@@ -934,4 +812,4 @@ exit 0
 %changelog
 
 * PACKAGE_DATE ClusterLabs <admin@clusterlabs.org> PACKAGE_VERSION
- - See included ChangeLog file for details
+ - See included ChangeLog.md file for details

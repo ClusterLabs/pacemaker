@@ -48,8 +48,8 @@ struct {
     gboolean metadata;
     gboolean registered;
     gboolean validate_cfg;
-    stonith_key_value_t *devices;
-    stonith_key_value_t *params;
+    GList *devices;
+    GHashTable *params;
     int fence_level;
     int timeout ;
     long long tolerance_ms;
@@ -249,7 +249,12 @@ add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GEr
         retval = FALSE;
     } else {
         crm_info("Got: '%s'='%s'", optarg, env);
-        options.params = stonith_key_value_add(options.params, optarg, env);
+
+        if (options.params != NULL) {
+            options.params = pcmk__strkey_table(free, free);
+        }
+
+        pcmk__insert_dup(options.params, optarg, env);
     }
 
     free(key);
@@ -258,7 +263,7 @@ add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GEr
 
 gboolean
 add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.devices = stonith_key_value_add(options.devices, NULL, optarg);
+    options.devices = g_list_append(options.devices, pcmk__str_copy(optarg));
     return TRUE;
 }
 
@@ -293,7 +298,12 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
         retval = FALSE;
     } else {
         crm_info("Got: '%s'='%s'", name, value);
-        options.params = stonith_key_value_add(options.params, name, value);
+
+        if (options.params == NULL) {
+            options.params = pcmk__strkey_table(free, free);
+        }
+
+        pcmk__insert_dup(options.params, name, value);
     }
 
     free(name);
@@ -584,15 +594,29 @@ main(int argc, char **argv)
 
             break;
 
-        case 'R':
+        case 'R': {
+            /* register_device wants a stonith_key_value_t instead of a GHashTable */
+            stonith_key_value_t *params = NULL;
+            GHashTableIter iter;
+            gpointer key, val;
+
+            if (options.params != NULL) {
+                g_hash_table_iter_init(&iter, options.params);
+                while (g_hash_table_iter_next(&iter, &key, &val)) {
+                    params = stonith_key_value_add(params, key, val);
+                }
+            }
             rc = st->cmds->register_device(st, st_opts, device, NULL, options.agent,
-                                           options.params);
+                                           params);
+            stonith_key_value_freeall(params, 1, 1);
+
             rc = pcmk_legacy2rc(rc);
             if (rc != pcmk_rc_ok) {
                 out->err(out, "Can't register device %s using agent %s: %s",
                          device, options.agent, pcmk_rc_str(rc));
             }
             break;
+        }
 
         case 'D':
             rc = st->cmds->remove_device(st, st_opts, device);
@@ -655,7 +679,11 @@ main(int argc, char **argv)
             break;
 
         case 'K':
-            device = options.devices ? options.devices->key : NULL;
+            device = NULL;
+            if (options.devices != NULL) {
+                device = g_list_nth_data(options.devices, 0);
+            }
+
             rc = pcmk__fence_validate(out, st, options.agent, device, options.params,
                                         options.timeout*1000);
             break;
@@ -676,7 +704,11 @@ main(int argc, char **argv)
     }
     pcmk__unregister_formats();
     free(name);
-    stonith_key_value_freeall(options.params, 1, 1);
+    g_list_free_full(options.devices, free);
+
+    if (options.params != NULL) {
+        g_hash_table_destroy(options.params);
+    }
 
     if (st != NULL) {
         st->cmds->disconnect(st);

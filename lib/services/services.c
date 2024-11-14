@@ -887,7 +887,7 @@ is_op_blocked(const char *rsc)
 
     for (gIter = inflight_ops; gIter != NULL; gIter = gIter->next) {
         op = gIter->data;
-        if (pcmk__str_eq(op->rsc, rsc, pcmk__str_casei)) {
+        if (pcmk__str_eq(op->rsc, rsc, pcmk__str_none)) {
             return TRUE;
         }
     }

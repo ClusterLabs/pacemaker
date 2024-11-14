@@ -145,33 +145,28 @@ get_operation_list(xmlNode *rsc_entry) {
     GList *op_list = NULL;
     xmlNode *rsc_op = NULL;
 
-    for (rsc_op = pcmk__xe_first_child(rsc_entry, NULL, NULL, NULL);
-         rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op)) {
+    for (rsc_op = pcmk__xe_first_child(rsc_entry, PCMK__XE_LRM_RSC_OP, NULL,
+                                       NULL);
+         rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op, PCMK__XE_LRM_RSC_OP)) {
 
         const char *task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
-        const char *interval_ms_s = crm_element_value(rsc_op,
-                                                      PCMK_META_INTERVAL);
-        const char *op_rc = crm_element_value(rsc_op, PCMK__XA_RC_CODE);
-        int op_rc_i;
 
-        pcmk__scan_min_int(op_rc, &op_rc_i, 0);
+        if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
+            continue; // Ignore notify actions
+        } else {
+            int exit_status;
 
-        /* Display 0-interval monitors as "probe" */
-        if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)
-            && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
-            task = "probe";
+            pcmk__scan_min_int(crm_element_value(rsc_op, PCMK__XA_RC_CODE),
+                               &exit_status, 0);
+            if ((exit_status == CRM_EX_NOT_RUNNING)
+                && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_none)
+                && pcmk__str_eq(crm_element_value(rsc_op, PCMK_META_INTERVAL),
+                                "0", pcmk__str_null_matches)) {
+                continue; // Ignore probes that found the resource not running
+            }
         }
 
-        /* Ignore notifies and some probes */
-        if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_none)
-            || (pcmk__str_eq(task, "probe", pcmk__str_none)
-                && (op_rc_i == CRM_EX_NOT_RUNNING))) {
-            continue;
-        }
-
-        if (pcmk__xe_is(rsc_op, PCMK__XE_LRM_RSC_OP)) {
-            op_list = g_list_append(op_list, rsc_op);
-        }
+        op_list = g_list_append(op_list, rsc_op);
     }
 
     op_list = g_list_sort(op_list, sort_op_by_callid);
@@ -282,7 +277,7 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
                                 last_change_str ? last_change_str : "",
                                 exec_str ? exec_str : "",
                                 queue_str ? queue_str : "",
-                                rc, services_ocf_exitcode_str(rc));
+                                rc, crm_exit_str(rc));
 
         if (last_change_str) {
             free(last_change_str);
@@ -1441,8 +1436,7 @@ failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
                    node_name, NULL);
 
     if (status == PCMK_EXEC_DONE) {
-        pcmk__g_strcat(str, " returned '", services_ocf_exitcode_str(rc), "'",
-                       NULL);
+        pcmk__g_strcat(str, " returned '", crm_exit_str(rc), "'", NULL);
         if (!pcmk__str_empty(exit_reason)) {
             pcmk__g_strcat(str, " (", exit_reason, ")", NULL);
         }
@@ -1502,7 +1496,7 @@ failed_action_technical(pcmk__output_t *out, const xmlNode *xml_op,
 {
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     const char *queue_time = crm_element_value(xml_op, PCMK_XA_QUEUE_TIME);
-    const char *exit_status = services_ocf_exitcode_str(rc);
+    const char *exit_status = crm_exit_str(rc);
     const char *lrm_status = pcmk_exec_status_str(status);
     time_t last_change_epoch = 0;
     GString *str = NULL;
@@ -1615,7 +1609,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     if (crm_element_value(xml_op, PCMK__XA_OPERATION_KEY) == NULL) {
         op_key_name = PCMK_XA_ID;
     }
-    exitstatus = services_ocf_exitcode_str(rc);
+    exitstatus = crm_exit_str(rc);
     rc_s = pcmk__itoa(rc);
     status_s = pcmk_exec_status_str(status);
     node = pcmk__output_create_xml_node(out, PCMK_XE_FAILURE,
@@ -1680,7 +1674,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
 
     for (xml_op = pcmk__xe_first_child(scheduler->priv->failed, NULL, NULL,
                                        NULL);
-         xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
+         xml_op != NULL; xml_op = pcmk__xe_next(xml_op, NULL)) {
 
         char *rsc = NULL;
 
@@ -2459,7 +2453,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
     /* Print history of each of the node's resources */
     for (rsc_entry = pcmk__xe_first_child(lrm_rsc, PCMK__XE_LRM_RESOURCE, NULL,
                                           NULL);
-         rsc_entry != NULL; rsc_entry = pcmk__xe_next_same(rsc_entry)) {
+         rsc_entry != NULL;
+         rsc_entry = pcmk__xe_next(rsc_entry, PCMK__XE_LRM_RESOURCE)) {
 
         const char *rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
         pcmk_resource_t *rsc = NULL;
@@ -2722,7 +2717,8 @@ node_summary(pcmk__output_t *out, va_list args) {
 
     for (node_state = pcmk__xe_first_child(cib_status, PCMK__XE_NODE_STATE,
                                            NULL, NULL);
-         node_state != NULL; node_state = pcmk__xe_next_same(node_state)) {
+         node_state != NULL;
+         node_state = pcmk__xe_next(node_state, PCMK__XE_NODE_STATE)) {
 
         pcmk_node_t *node = pe_find_node_id(scheduler->nodes,
                                             pcmk__xe_id(node_state));
@@ -2819,7 +2815,7 @@ op_history_xml(pcmk__output_t *out, va_list args) {
 
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     char *rc_s = pcmk__itoa(rc);
-    const char *rc_text = services_ocf_exitcode_str(rc);
+    const char *rc_text = crm_exit_str(rc);
     xmlNodePtr node = NULL;
 
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION_HISTORY,

@@ -77,10 +77,10 @@ class BasePatterns:
             "Pat:Fencing_active": r"stonith resource .* is active on 2 nodes (attempting recovery)",
             "Pat:Fencing_probe": r"pacemaker-controld.* Result of probe operation for %s on .*: Error",
 
-            "Pat:RscOpOK": r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
+            "Pat:RscOpOK": r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?OK",
             "Pat:RscOpFail": r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of %s ",
             "Pat:CloneOpFail": r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of (%s|%s) ",
-            "Pat:RscRemoteOpOK": r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
+            "Pat:RscRemoteOpOK": r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?OK",
             "Pat:NodeFenced": r"pacemaker-controld.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
         }
 

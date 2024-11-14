@@ -7,6 +7,8 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+include $(top_srcdir)/mk/common.mk
+
 SUBDIRS = \
 	acl		\
 	actions		\
@@ -34,6 +36,8 @@ SUBDIRS = \
 	strings		\
 	utils		\
 	xml 		\
+	xml_comment 	\
+	xml_element 	\
 	xpath
 
 if SUPPORT_PROCFS

@@ -573,6 +573,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         crm_err("Couldn't parse: '%.120s'", remote->buffer + header->payload_offset);
     }
 
+    crm_log_xml_trace(xml, "[remote msg]");
     return xml;
 }
 
@@ -656,13 +657,12 @@ pcmk__remote_ready(const pcmk__remote_t *remote, int timeout_ms)
  * \note This function will return when the socket read buffer is empty or an
  *       error is encountered.
  */
-static int
-read_available_remote_data(pcmk__remote_t *remote)
+int
+pcmk__read_available_remote_data(pcmk__remote_t *remote)
 {
     int rc = pcmk_rc_ok;
     size_t read_len = sizeof(struct remote_header_v0);
     struct remote_header_v0 *header = localized_remote_header(remote);
-    bool received = false;
     ssize_t read_rc;
 
     if(header) {
@@ -678,7 +678,7 @@ read_available_remote_data(pcmk__remote_t *remote)
         remote->buffer = pcmk__realloc(remote->buffer, remote->buffer_size + 1);
     }
 
-    if (!received && remote->tls_session) {
+    if (remote->tls_session) {
         read_rc = gnutls_record_recv(*(remote->tls_session),
                                      remote->buffer + remote->buffer_offset,
                                      remote->buffer_size - remote->buffer_offset);
@@ -691,20 +691,14 @@ read_available_remote_data(pcmk__remote_t *remote)
                       gnutls_strerror(read_rc), (long long) read_rc);
             rc = EIO;
         }
-        received = true;
-    }
-
-    if (!received && remote->tcp_socket) {
+    } else if (remote->tcp_socket) {
         read_rc = read(remote->tcp_socket,
                        remote->buffer + remote->buffer_offset,
                        remote->buffer_size - remote->buffer_offset);
         if (read_rc < 0) {
             rc = errno;
         }
-        received = true;
-    }
-
-    if (!received) {
+    } else {
         crm_err("Remote connection type undetermined (bug?)");
         return ESOCKTNOSUPPORT;
     }
@@ -790,7 +784,7 @@ pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms)
                       QB_XS " rc=%d", pcmk_rc_str(rc), rc);
 
         } else {
-            rc = read_available_remote_data(remote);
+            rc = pcmk__read_available_remote_data(remote);
             if (rc == pcmk_rc_ok) {
                 return rc;
             } else if (rc == EAGAIN) {
@@ -844,7 +838,7 @@ check_connect_finished(gpointer userdata)
     if (rc < 0) { // select() error
         rc = errno;
         if ((rc == EINPROGRESS) || (rc == EAGAIN)) {
-            if ((time(NULL) - cb_data->start) < (cb_data->timeout_ms / 1000)) {
+            if ((time(NULL) - cb_data->start) < pcmk__timeout_ms2s(cb_data->timeout_ms)) {
                 return TRUE; // There is time left, so reschedule timer
             } else {
                 rc = ETIMEDOUT;
@@ -854,7 +848,7 @@ check_connect_finished(gpointer userdata)
                   cb_data->sock, pcmk_rc_str(rc), rc);
 
     } else if (rc == 0) { // select() timeout
-        if ((time(NULL) - cb_data->start) < (cb_data->timeout_ms / 1000)) {
+        if ((time(NULL) - cb_data->start) < pcmk__timeout_ms2s(cb_data->timeout_ms)) {
             return TRUE; // There is time left, so reschedule timer
         }
         crm_debug("Timed out while waiting for socket %d connection success",
@@ -974,7 +968,7 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
      */
     crm_trace("Scheduling check in %dms for whether connect to fd %d finished",
               interval, sock);
-    timer = g_timeout_add(interval, check_connect_finished, cb_data);
+    timer = pcmk__create_timer(interval, check_connect_finished, cb_data);
     if (timer_id) {
         *timer_id = timer;
     }

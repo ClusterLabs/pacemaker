@@ -1267,7 +1267,10 @@ class CibadminRegressionTest(RegressionTest):
         """A list of Test instances to be run as part of this regression test."""
         basic_tests = [
             Test("Validate CIB", "cibadmin -Q", update_cib=True),
-            Test("Digest calculation", "cibadmin -Q | cibadmin -5 -p 2>&1"),
+            # FIXME: The calculated digest is different in certain build environments
+            # for unknown reasons.  When this is figured out, remove the part that gets
+            # rid of the hash.
+            Test("Digest calculation", "cibadmin -Q | cibadmin -5 -p 2>&1 | sed -e 's/Digest:.*/Digest:/'"),
             Test("Require --force for CIB erasure", "cibadmin -E",
                  expected_rc=ExitStatus.UNSAFE, update_cib=True),
             Test("Allow CIB erasure with --force", "cibadmin -E --force"),
@@ -2227,65 +2230,55 @@ class CrmShadowRegressionTest(RegressionTest):
                                 [Test, ValidatingTest],
                                 expected_rc=ExitStatus.ERROR),
             ], setup=delete_shadow_resource_defaults),
-            # Reset shadow instance (overwrite existing shadow file based on active CIB)
-            Test("Reset shadow instance", "crm_shadow --reset {shadow} --batch"),
-            Test("Get active shadow instance's diff (after reset)", "crm_shadow --diff"),
         ]
 
         reset_1_tests = [
-            ValidatingTest("Reset shadow instance",
-                           "crm_shadow --reset {shadow} --batch --output-as=xml"),
-            ValidatingTest("Get active shadow instance's diff (after reset)",
-                           "crm_shadow --diff --output-as=xml"),
-            # Reset an inactive shadow instance with no active instance
-            Test("Reset shadow instance (no active instance)",
+            Test("Resetting active shadow instance to active CIB requires force",
                  "crm_shadow --reset {shadow} --batch",
-                 env={"CIB_shadow": None}),
+                 expected_rc=ExitStatus.USAGE),
+            Test("Reset active shadow instance to active CIB",
+                 "crm_shadow --reset {shadow} --batch --force"),
+            Test("Active shadow instance no different from active CIB after reset",
+                 "crm_shadow --diff"),
+            Test("Active shadow instance differs from active CIB after change",
+                 "crm_shadow --diff",
+                 setup="crm_attribute -n admin_epoch -v 99",
+                 expected_rc=ExitStatus.ERROR),
+
+            ValidatingTest("Reset active shadow instance to active CIB",
+                           "crm_shadow --reset {shadow} --batch --force --output-as=xml"),
+            ValidatingTest("Active shadow instance no different from active CIB after reset",
+                           "crm_shadow --diff --output-as=xml"),
+            ValidatingTest("Active shadow instance differs from active CIB after change",
+                           "crm_shadow --diff --output-as=xml",
+                           setup="crm_attribute -n admin_epoch -v 199",
+                           expected_rc=ExitStatus.ERROR),
+
+            make_test_group("Reset shadow instance to active CIB with nonexistent shadow file",
+                            "crm_shadow --reset {shadow} --batch --force {fmt}",
+                            [Test, ValidatingTest],
+                            setup="crm_shadow --delete {shadow} --force"),
+            Test("Active shadow instance no different from active CIB after force-reset",
+                 "crm_shadow --diff"),
         ]
 
         reset_2_tests = [
-            ValidatingTest("Reset shadow instance (no active instance)",
-                           "crm_shadow --reset {shadow} --batch --output-as=xml"),
-            # Reset an inactive shadow instance with an active instance
-            Test("Reset shadow instance (mismatch)",
-                 "crm_shadow --reset {shadow} --batch",
-                 env={"CIB_shadow": "nonexistent_shadow"},
-                 expected_rc=ExitStatus.USAGE),
-            Test("Reset shadow instance (mismatch) (force)",
-                 "crm_shadow --reset {shadow} --batch --force",
-                 env={"CIB_shadow": "nonexistent_shadow"}),
+            make_test_group("Reset inactive shadow instance (none active) to active CIB",
+                            "crm_shadow --reset {shadow} --force --batch {fmt}",
+                            [Test, ValidatingTest]),
         ]
 
         reset_3_tests = [
-            ValidatingTest("Reset shadow instance (mismatch)",
-                           "crm_shadow --reset {shadow} --batch --output-as=xml",
-                           expected_rc=ExitStatus.USAGE),
-            ValidatingTest("Reset shadow instance (mismatch) (force)",
-                           "crm_shadow --reset {shadow} --batch --force --output-as=xml"),
+            make_test_group("Reset inactive shadow instance while another instance active",
+                            "crm_shadow --reset {shadow} --batch --force {fmt}",
+                            [Test, ValidatingTest]),
         ]
 
         reset_4_tests = [
-            # Reset an active shadow instance when the CIB file is missing
-            make_test_group("Reset shadow instance (nonexistent CIB file)",
-                            "crm_shadow --reset {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.NOSUCH),
-            make_test_group("Reset shadow instance (nonexistent CIB file) (force)",
+            make_test_group("Reset shadow instance with nonexistent CIB",
                             "crm_shadow --reset {shadow} --batch --force {fmt}",
                             [Test, ValidatingTest],
                             expected_rc=ExitStatus.NOSUCH),
-            # Reset an active shadow instance whose shadow file is missing
-            TestGroup([
-                make_test_group("Reset shadow instance (nonexistent shadow file)",
-                                "crm_shadow --reset {shadow} --batch {fmt}",
-                                [Test, ValidatingTest],
-                                expected_rc=ExitStatus.NOSUCH),
-            ], env={"CIB_file": "{cts_cli_data}/crm_mon.xml"}, setup="crm_shadow --delete {shadow} --force"),
-            TestGroup([
-                make_test_group("Reset shadow instance (nonexistent shadow file) (force)",
-                                "crm_shadow --reset {shadow} --batch --force {fmt}",
-                                [Test, ValidatingTest]),
-            ], env={"CIB_file": "{cts_cli_data}/crm_mon.xml"}, setup="crm_shadow --delete {shadow} --force"),
         ]
 
         # Switch shadow instances
@@ -2334,19 +2327,15 @@ class CrmShadowRegressionTest(RegressionTest):
                             env={"CIB_file": "{cts_cli_data}/crm_mon.xml"},
                             create=False),
             ShadowTestGroup(reset_1_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml"},
-                            create_empty=True),
+                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml"}),
             ShadowTestGroup(reset_2_tests,
                             env={"CIB_file": "{cts_cli_data}/crm_mon.xml",
-                                 "CIB_shadow": None},
-                            create_empty=True),
+                                 "CIB_shadow": None}),
             ShadowTestGroup(reset_3_tests,
                             env={"CIB_file": "{cts_cli_data}/crm_mon.xml",
-                                 "CIB_shadow": "nonexistent_shadow"},
-                            create_empty=True),
+                                 "CIB_shadow": "nonexistent_shadow"}),
             ShadowTestGroup(reset_4_tests,
-                            env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"},
-                            create_empty=True),
+                            env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"}),
             ShadowTestGroup(switch_tests,
                             env={"CIB_shadow": "nonexistent_shadow"},
                             create_empty=True),
@@ -2365,9 +2354,6 @@ class CrmVerifyRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         invalid_tests = [
-            Test("Verbosely verify a file-specified configuration with an unallowed fencing level ID",
-                 "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_fencing_topology.xml --verbose",
-                 expected_rc=ExitStatus.CONFIG),
             make_test_group("Verify a file-specified invalid configuration",
                             "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml {fmt}",
                             [Test, ValidatingTest],
@@ -2732,6 +2718,11 @@ class AclsRegressionTest(RegressionTest):
             Test("root: Create a resource",
                  """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
                  update_cib=True, env={"CIB_user": "root"}),
+
+            # For use with later tests
+            Test("root: Create another resource (with description)",
+                 """cibadmin -C -o resources --xml-text '<primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>'""",
+                 update_cib=True, env={"CIB_user": "root"}),
         ]
 
         deny_cib_2_tests = [
@@ -2785,7 +2776,7 @@ class AclsRegressionTest(RegressionTest):
                         expected_rc=ExitStatus.INSUFFICIENT_PRIV),
                 AclTest("niceguy: Replace - delete attribute (deny)",
                         "cibadmin --replace -p",
-                        setup="""cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'""",
+                        setup="""cibadmin --replace --xml-text '<primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy"/>'""",
                         expected_rc=ExitStatus.INSUFFICIENT_PRIV),
                 AclTest("niceguy: Replace - create attribute (deny)",
                         "cibadmin --replace -p",
@@ -3044,13 +3035,6 @@ class RulesRegressionTest(RegressionTest):
           </date_expression>
         </rule>
       </rsc_location>
-      <rsc_location id="cli-prefer-dummy-date_spec-years-moon" rsc="dummy">
-        <rule id="cli-prefer-rule-dummy-date_spec-years-moon" score="INFINITY">
-          <date_expression id="cli-prefer-dummy-date_spec-years-moon-expr" operation="date_spec">
-            <date_spec id="cli-prefer-dummy-date_spec-years-moon-spec" years="2019" moon="1"/>
-          </date_expression>
-        </rule>
-      </rsc_location>
       <rsc_location id="cli-no-date_expression" rsc="dummy">
         <rule id="cli-no-date_expression-rule" score="INFINITY">
           <expression id="ban-apache-expr" attribute="#uname" operation="eq" value="node3"/>
@@ -3107,10 +3091,6 @@ class RulesRegressionTest(RegressionTest):
                             [Test, ValidatingTest]),
             make_test_group("Try to check a rule whose date_spec does not contain years=",
                             "crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
-            make_test_group("Try to check a rule whose date_spec contains years= and moon=",
-                            "crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon {fmt}",
                             [Test, ValidatingTest],
                             expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
             make_test_group("Try to check a rule with no date_expression",

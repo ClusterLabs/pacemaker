@@ -48,7 +48,7 @@ enum pcmk__fence_history {
  * \return Standard Pacemaker return code
  * \note If \p reason is not NULL, the caller is responsible for freeing its
  *       returned value.
- * \todo delay is eventually used with g_timeout_add() and should be guint
+ * \todo delay is eventually used with pcmk__create_timer() and should be guint
  */
 int pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
                           const char *name, unsigned int timeout,
@@ -188,13 +188,12 @@ int pcmk__fence_registered(pcmk__output_t *out, stonith_t *st,
  * \param[in,out] st          A connection to the fencer API
  * \param[in]     target      The object to register a fencing level for
  * \param[in]     fence_level Index number of level to add
- * \param[in]     devices     Devices to use in level
+ * \param[in]     devices     Devices to use in level as a list of char *
  *
  * \return Standard Pacemaker return code
  */
 int pcmk__fence_register_level(stonith_t *st, const char *target,
-                               int fence_level,
-                               const stonith_key_value_t *devices);
+                               int fence_level, GList *devices);
 
 /*!
  * \brief Unregister a fencing level for specific node, node regex, or attribute
@@ -236,8 +235,7 @@ int pcmk__fence_unregister_level(stonith_t *st, const char *target,
  * \return Standard Pacemaker return code
  */
 int pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
-                         const char *id, const stonith_key_value_t *params,
-                         unsigned int timeout);
+                         const char *id, GHashTable *params, unsigned int timeout);
 
 /*!
  * \brief Fetch fencing history, optionally reducing it

@@ -1,0 +1,120 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-3.10" epoch="8" num_updates="0" admin_epoch="0">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * There are the following resources:
+           * A template
+           * A primitive outside of any collective resource
+           * A group containing a single member
+           * A cloned primitive
+           * A cloned group containing a single member
+           * A bundle containing a primitive
+         * There is an op_defaults element.
+         * Each primitive has an op element.
+         * Each op and the op_defaults element have a meta_attributes element
+           containing an nvpair with name="role_after_failure" and another with
+           name="other".
+         * There are other nvsets containing nvpairs with
+           name="role_after_failure".
+
+         In this situation, all role_after_failure meta-attributes within op and
+         op_defaults elements should be dropped. Other meta-attributes should be
+         unchanged.
+      -->
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-role_after_failure" name="role_after_failure" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <template class="ocf" id="template1" provider="pacemaker" type="Dummy">
+        <operations>
+          <op id="template1_monitor_20000" interval="20s" name="monitor">
+            <meta_attributes id="template1_monitor_20000-meta_attributes">
+              <nvpair id="template_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="true"/>
+              <nvpair id="template_monitor_20000-meta_attributes-other" name="other" value="true"/>
+            </meta_attributes>
+          </op>
+        </operations>
+      </template>
+      <primitive class="ocf" id="rsc1" provider="pacemaker" type="Dummy">
+        <operations>
+          <op id="rsc1_monitor_20000" interval="20s" name="monitor">
+            <meta_attributes id="rsc1_monitor_20000-meta_attributes">
+              <nvpair id="rsc1_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="false"/>
+              <nvpair id="rsc1_monitor_20000-meta_attributes-other" name="other" value="false"/>
+            </meta_attributes>
+          </op>
+        </operations>
+        <instance_attributes id="rsc1-instance_attributes">
+          <nvpair id="rsc1-instance_attributes-role_after_failure" name="role_after_failure" value="true"/>
+        </instance_attributes>
+        <meta_attributes id="rsc1-meta_attributes">
+          <nvpair id="rsc1-meta_attributes-role_after_failure" name="role_after_failure" value="true"/>
+        </meta_attributes>
+        <utilization id="rsc1-utilization">
+          <nvpair id="rsc1-utilization-role_after_failure" name="role_after_failure" value="true"/>
+        </utilization>
+      </primitive>
+      <group id="grp1">
+        <primitive class="ocf" id="rsc2" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="rsc2_monitor_20000" interval="20s" name="monitor">
+              <meta_attributes id="rsc2_monitor_20000-meta_attributes">
+                <nvpair id="rsc2_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="true"/>
+                <nvpair id="rsc2_monitor_20000-meta_attributes-other" name="other" value="true"/>
+              </meta_attributes>
+            </op>
+          </operations>
+        </primitive>
+      </group>
+      <clone id="clone1">
+        <primitive class="ocf" id="rsc3" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="rsc3_monitor_20000" interval="20s" name="monitor">
+              <meta_attributes id="rsc3_monitor_20000-meta_attributes">
+                <nvpair id="rsc3_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="false"/>
+                <nvpair id="rsc3_monitor_20000-meta_attributes-other" name="other" value="false"/>
+              </meta_attributes>
+            </op>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="clone2">
+        <group id="grp2">
+          <primitive class="ocf" id="rsc4" provider="pacemaker" type="Dummy">
+            <operations>
+              <op id="rsc4_monitor_20000" interval="20s" name="monitor">
+                <meta_attributes id="rsc4_monitor_20000-meta_attributes">
+                  <nvpair id="rsc4_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="true"/>
+                  <nvpair id="rsc4_monitor_20000-meta_attributes-other" name="other" value="true"/>
+                </meta_attributes>
+              </op>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+      <bundle id="bundle1">
+        <podman image="localhost/pcmktest:http" replicas="3"/>
+        <primitive class="ocf" id="rsc5" provider="heartbeat" type="apache">
+          <operations>
+            <op id="rsc5_monitor_20000" interval="20s" name="monitor">
+              <meta_attributes id="rsc5_monitor_20000-meta_attributes">
+                <nvpair id="rsc5_monitor_20000-meta_attributes-role_after_failure" name="role_after_failure" value="false"/>
+                <nvpair id="rsc5_monitor_20000-meta_attributes-other" name="other" value="false"/>
+              </meta_attributes>
+            </op>
+          </operations>
+        </primitive>
+      </bundle>
+    </resources>
+    <constraints/>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-meta_attributes-role_after_failure" name="role_after_failure" value="true"/>
+        <nvpair id="op_defaults-meta_attributes-other" name="other" value="true"/>
+      </meta_attributes>
+    </op_defaults>
+  </configuration>
+  <status/>
+</cib>

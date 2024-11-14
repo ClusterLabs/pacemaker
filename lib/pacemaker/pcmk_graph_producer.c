@@ -372,17 +372,6 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
         }
 
         pcmk__add_guest_meta_to_xml(args_xml, action);
-
-    } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)
-               && (action->node != NULL)) {
-        /* Pass the node's attributes as meta-attributes.
-         *
-         * @TODO: Determine whether it is still necessary to do this. It was
-         * added in 33d99707, probably for the libfence-based implementation in
-         * c9a90bd, which is no longer used.
-         */
-        g_hash_table_foreach(action->node->priv->attrs, hash2metafield,
-                             args_xml);
     }
 
     pcmk__xe_sort_attrs(args_xml);
@@ -860,7 +849,7 @@ static xmlNode *
 create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
 {
     int synapse_priority = 0;
-    xmlNode *syn = pcmk__xe_create(scheduler->priv->graph, "synapse");
+    xmlNode *syn = pcmk__xe_create(scheduler->priv->graph, PCMK__XE_SYNAPSE);
 
     crm_xml_add_int(syn, PCMK_XA_ID, scheduler->priv->synapse_count++);
 
@@ -923,8 +912,8 @@ add_action_to_graph(gpointer data, gpointer user_data)
               ((action->node == NULL)? "" : action->node->priv->name));
 
     syn = create_graph_synapse(action, scheduler);
-    set = pcmk__xe_create(syn, "action_set");
-    in = pcmk__xe_create(syn, "inputs");
+    set = pcmk__xe_create(syn, PCMK__XE_ACTION_SET);
+    in = pcmk__xe_create(syn, PCMK__XE_INPUTS);
 
     create_graph_action(set, action, false, scheduler);
 
@@ -932,7 +921,7 @@ add_action_to_graph(gpointer data, gpointer user_data)
         pcmk__related_action_t *input = lpc->data;
 
         if (should_add_input_to_graph(action, input)) {
-            xmlNode *input_xml = pcmk__xe_create(in, "trigger");
+            xmlNode *input_xml = pcmk__xe_create(in, PCMK__XE_TRIGGER);
 
             input->graphed = true;
             create_graph_action(input_xml, input->action, true, scheduler);

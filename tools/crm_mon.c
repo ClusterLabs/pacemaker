@@ -90,7 +90,7 @@ static enum pcmk__fence_history fence_history = pcmk__fence_history_none;
 int interactive_fence_level = 0;
 
 static pcmk__supported_format_t formats[] = {
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
     CRM_MON_SUPPORTED_FORMAT_CURSES,
 #endif
     PCMK__SUPPORTED_FORMAT_HTML,
@@ -743,7 +743,7 @@ static GOptionEntry deprecated_entries[] = {
 static gboolean
 reconnect_after_timeout(gpointer data)
 {
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
     if (output_format == mon_output_console) {
         clear();
         refresh();
@@ -761,8 +761,8 @@ reconnect_after_timeout(gpointer data)
     out->message(out, "crm-mon-disconnected",
                  "Latest connection attempt failed", pcmkd_state);
 
-    reconnect_timer = g_timeout_add(options.reconnect_ms,
-                                    reconnect_after_timeout, NULL);
+    reconnect_timer = pcmk__create_timer(options.reconnect_ms,
+                                         reconnect_after_timeout, NULL);
     return G_SOURCE_REMOVE;
 }
 
@@ -806,8 +806,8 @@ mon_cib_connection_destroy(gpointer user_data)
 
     if (cib) {
         cib->cmds->signoff(cib);
-        reconnect_timer = g_timeout_add(options.reconnect_ms,
-                                        reconnect_after_timeout, NULL);
+        reconnect_timer = pcmk__create_timer(options.reconnect_ms,
+                                             reconnect_after_timeout, NULL);
     }
 }
 
@@ -818,7 +818,7 @@ mon_shutdown(int nsig)
     clean_up(CRM_EX_OK);
 }
 
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
 static volatile sighandler_t ncurses_winch_handler;
 
 /* Signal handler installed the regular way (not into the main loop) for when
@@ -1011,7 +1011,7 @@ setup_api_connections(void)
     return rc;
 }
 
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
 static const char *
 get_option_desc(char c)
 {
@@ -1162,7 +1162,7 @@ refresh:
 
     return rc;
 }
-#endif  // CURSES_ENABLED
+#endif  // PCMK__ENABLE_CURSES
 
 // Basically crm_signal_handler(SIGCHLD, SIG_IGN) plus the SA_NOCLDWAIT flag
 static void
@@ -1194,11 +1194,11 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
         { NULL }
     };
 
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
     const char *fmts = "console (default), html, text, xml, none";
 #else
     const char *fmts = "text (default), html, xml, none";
-#endif // CURSES_ENABLED
+#endif // PCMK__ENABLE_CURSES
     const char *desc = NULL;
 
     desc = "Notes:\n\n"
@@ -1221,7 +1221,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
            "list of valid sections, pass --include=list or --exclude=list.\n\n"
 
            "Interactive Use:\n\n"
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
            "When run interactively, crm_mon can be told to hide and show\n"
            "various sections of output. To see a help screen explaining the\n"
            "options, press '?'. Any key stroke aside from those listed will\n"
@@ -1230,14 +1230,14 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
            "The local installation of Pacemaker was built without support for\n"
            "interactive (console) mode. A curses library must be available at\n"
            "build time to support interactive mode.\n\n"
-#endif // CURSES_ENABLED
+#endif // PCMK__ENABLE_CURSES
 
            "Examples:\n\n"
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
            "Display the cluster status on the console with updates as they\n"
            "occur:\n\n"
            "\tcrm_mon\n\n"
-#endif // CURSES_ENABLED
+#endif // PCMK__ENABLE_CURSES
 
            "Display the cluster status once and exit:\n\n"
            "\tcrm_mon -1\n\n"
@@ -1298,7 +1298,7 @@ reconcile_output_format(pcmk__common_args_t *args)
     } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
         output_format = mon_output_xml;
 
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
     } else if (pcmk__str_eq(args->output_ty, "console",
                             pcmk__str_null_matches)) {
         /* Console is the default format if no conflicting options are given.
@@ -1322,7 +1322,7 @@ reconcile_output_format(pcmk__common_args_t *args)
             output_format = mon_output_console;
             crm_enable_stderr(FALSE);
         }
-#endif // CURSES_ENABLED
+#endif // PCMK__ENABLE_CURSES
 
     } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
         /* Text output was explicitly requested, or it's the default because
@@ -1582,7 +1582,7 @@ main(int argc, char **argv)
     }
 
     if ((output_format == mon_output_html) && (out->dest != stdout)) {
-        char *content = pcmk__itoa(options.reconnect_ms / 1000);
+        char *content = pcmk__itoa(pcmk__timeout_ms2s(options.reconnect_ms));
 
         pcmk__html_add_header(PCMK__XE_META,
                               PCMK__XA_HTTP_EQUIV, PCMK__VALUE_REFRESH,
@@ -1615,13 +1615,13 @@ main(int argc, char **argv)
 
         if (rc != pcmk_rc_ok) {
             if ((rc == ENOTCONN) || (rc == ECONNREFUSED)) {
-                out->transient(out, "Connection failed. Retrying in %ums...",
-                               options.reconnect_ms);
+                out->transient(out, "Connection failed. Retrying in %s...",
+                               pcmk__readable_interval(options.reconnect_ms));
             }
 
             // Give some time to view all output even if we won't retry
             pcmk__sleep_ms(options.reconnect_ms);
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
             if (output_format == mon_output_console) {
                 clear();
                 refresh();
@@ -1641,7 +1641,7 @@ main(int argc, char **argv)
 
     mainloop_add_signal(SIGTERM, mon_shutdown);
     mainloop_add_signal(SIGINT, mon_shutdown);
-#if CURSES_ENABLED
+#if PCMK__ENABLE_CURSES
     if (output_format == mon_output_console) {
         ncurses_winch_handler = crm_signal_handler(SIGWINCH, mon_winresize);
         if (ncurses_winch_handler == SIG_DFL ||
@@ -1785,7 +1785,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
         }
 
     } else if (status == PCMK_EXEC_DONE) {
-        desc = services_ocf_exitcode_str(rc);
+        desc = crm_exit_str(rc);
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
 
     } else {
@@ -2073,7 +2073,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
     setup_fencer_connection();
 
     if (enforce ||
-        ((now - last_refresh) > (options.reconnect_ms / 1000)) ||
+        ((now - last_refresh) > pcmk__timeout_ms2s(options.reconnect_ms)) ||
         updates >= 10) {
         mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
         mainloop_timer_stop(refresh_timer);

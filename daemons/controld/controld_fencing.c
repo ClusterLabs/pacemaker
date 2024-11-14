@@ -942,8 +942,7 @@ static int
 fence_with_delay(const char *target, const char *type, int delay)
 {
     uint32_t options = st_opt_none; // Group of enum stonith_call_options
-    int timeout_sec = (int) (controld_globals.transition_graph->stonith_timeout
-                             / 1000);
+    int timeout_sec = pcmk__timeout_ms2s(controld_globals.transition_graph->stonith_timeout);
 
     if (crmd_join_phase_count(controld_join_confirmed) == 1) {
         stonith__set_call_options(options, target, st_opt_allow_self_fencing);
@@ -975,8 +974,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     const char *priority_delay = NULL;
     int delay_i = 0;
     gboolean invalid_action = FALSE;
-    int stonith_timeout = (int) (controld_globals.transition_graph->stonith_timeout
-                                 / 1000);
+    int stonith_timeout = pcmk__timeout_ms2s(controld_globals.transition_graph->stonith_timeout);
 
     CRM_CHECK(id != NULL, invalid_action = TRUE);
     CRM_CHECK(uuid != NULL, invalid_action = TRUE);

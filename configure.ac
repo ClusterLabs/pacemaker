@@ -1007,22 +1007,27 @@ AC_SUBST([GETOPT_PATH])
 dnl ===============================================
 dnl Libraries
 dnl ===============================================
-AC_CHECK_LIB(socket, socket)                    dnl -lsocket
-AC_CHECK_LIB(c, dlopen)                         dnl if dlopen is in libc...
-AC_CHECK_LIB(dl, dlopen)                        dnl -ldl (for Linux)
-AC_CHECK_LIB(rt, sched_getscheduler)            dnl -lrt (for Tru64)
-AC_CHECK_LIB(gnugetopt, getopt_long)            dnl -lgnugetopt ( if available )
-AC_CHECK_LIB(pam, pam_start)                    dnl -lpam (if available)
+AC_SEARCH_LIBS([socket], [socket])
+
+save_LIBS="$LIBS"
+DL_LIBS=""
+LIBS=""
+AC_SEARCH_LIBS([dlopen], [dl],
+               [test "$ac_cv_search_dlopen" = "none required" || DL_LIBS="$LIBS"])
+AC_SUBST(DL_LIBS)
+LIBS="$save_LIBS"
+
+save_LIBS="$LIBS"
+PAM_LIBS=""
+LIBS=""
+AC_SEARCH_LIBS([pam_start], [pam],
+               [test "$ac_cv_search_pam_start" = "none required" || PAM_LIBS="$LIBS"])
+AC_SUBST(PAM_LIBS)
+LIBS="$save_LIBS"
 
 PKG_CHECK_MODULES([UUID], [uuid],
                   [CPPFLAGS="${CPPFLAGS} ${UUID_CFLAGS}"
                    LIBS="${LIBS} ${UUID_LIBS}"])
-
-AC_CHECK_FUNCS([sched_setscheduler])
-AS_IF([test x"$ac_cv_func_sched_setscheduler" != x"yes"],
-      [PC_LIBS_RT=""],
-      [PC_LIBS_RT="-lrt"])
-AC_SUBST(PC_LIBS_RT)
 
 # Require minimum glib version
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.42.0],
@@ -1031,15 +1036,6 @@ PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.42.0],
 
 # Check whether high-resolution sleep function is available
 AC_CHECK_FUNCS([nanosleep usleep])
-
-#
-# Where is dlopen?
-#
-AS_IF([test x"$ac_cv_lib_c_dlopen" = x"yes"],
-      [LIBADD_DL=""],
-      [test x"$ac_cv_lib_dl_dlopen" = x"yes"],
-      [LIBADD_DL=-ldl],
-      [LIBADD_DL=${lt_cv_dlopen_libs}])
 
 PKG_CHECK_MODULES(LIBXML2, [libxml-2.0 >= 2.9.2],
                   [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
@@ -1189,6 +1185,7 @@ dnl ========================================================================
 REQUIRE_FUNC([alphasort])
 REQUIRE_FUNC([getopt])
 REQUIRE_FUNC([scandir])
+REQUIRE_FUNC([sched_getscheduler])
 REQUIRE_FUNC([setenv])
 REQUIRE_FUNC([strndup])
 REQUIRE_FUNC([strnlen])
@@ -1258,45 +1255,20 @@ dnl ncurses takes precedence.
 dnl
 AC_CHECK_HEADERS([curses.h curses/curses.h ncurses.h ncurses/ncurses.h])
 
-dnl Although n-library is preferred, only look for it if the n-header was found.
-CURSESLIBS=''
-PC_NAME_CURSES=""
-PC_LIBS_CURSES=""
-AS_IF([test x"$ac_cv_header_ncurses_h" = x"yes"], [
-    AC_CHECK_LIB(ncurses, printw,
-                 [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
-    CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
-    PC_NAME_CURSES="ncurses"
-])
-
-AS_IF([test x"$ac_cv_header_ncurses_ncurses_h" = x"yes"], [
-    AC_CHECK_LIB(ncurses, printw,
-                 [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
-    CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
-    PC_NAME_CURSES="ncurses"
-])
-
-dnl Only look for non-n-library if there was no n-library.
-AS_IF([test x"$CURSESLIBS" = x"" && test x"$ac_cv_header_curses_h" = x"yes"], [
-    AC_CHECK_LIB(curses, printw,
-                 [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
-    PC_LIBS_CURSES="$CURSESLIBS"
-])
-
-dnl Only look for non-n-library if there was no n-library.
-AS_IF([test x"$CURSESLIBS" = x"" && test x"$ac_cv_header_curses_curses_h" = x"yes"], [
-    AC_CHECK_LIB(curses, printw,
-                 [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
-    PC_LIBS_CURSES="$CURSESLIBS"
-])
-
-AS_IF([test x"$CURSESLIBS" != x""],
-      [PCMK_FEATURES="$PCMK_FEATURES ncurses"])
+save_LIBS="$LIBS"
+found_curses=0
+CURSES_LIBS=""
+LIBS=""
+AC_SEARCH_LIBS([printw], [ncurses curses],
+               [test "$ac_cv_search_printw" = "none required" || CURSES_LIBS="$LIBS"
+                found_curses=1],
+               [found_curses=0])
+LIBS="$save_LIBS"
 
 dnl Check for printw() prototype compatibility
-AS_IF([test x"$CURSESLIBS" != x"" && cc_supports_flag -Wcast-qual], [
-    ac_save_LIBS=$LIBS
-    LIBS="$CURSESLIBS"
+AS_IF([test $found_curses -eq 1 && cc_supports_flag -Wcast-qual], [
+    ac_save_LIBS="$LIBS"
+    LIBS="$CURSES_LIBS"
 
     # avoid broken test because of hardened build environment in Fedora 23+
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
@@ -1314,12 +1286,18 @@ AS_IF([test x"$CURSESLIBS" != x"" && cc_supports_flag -Wcast-qual], [
 #  include <ncurses/ncurses.h>
 #elif defined(HAVE_CURSES_H)
 #  include <curses.h>
+#elif defined(HAVE_CURSES_CURSES_H)
+#  include <curses/curses.h>
 #endif
                          ],
                          [printw((const char *)"Test");]
         )],
-        [AC_MSG_RESULT([yes])],
+        [AC_MSG_RESULT([yes])
+         PCMK_FEATURES="$PCMK_FEATURES ncurses"
+        ],
         [
+            found_curses=0
+            CURSES_LIBS=""
             AC_MSG_RESULT([no])
             AC_MSG_WARN(m4_normalize([Disabling curses because the printw()
                                       function of your (n)curses library is old.
@@ -1328,18 +1306,15 @@ AS_IF([test x"$CURSESLIBS" != x"" && cc_supports_flag -Wcast-qual], [
                                       recommended, available from
                                       https://invisible-island.net/ncurses/)
                                      ]))
-            AC_DEFINE([HAVE_INCOMPATIBLE_PRINTW], [1],
-                      [Define to 1 if curses library has incompatible printw()])
         ]
     )
 
-    LIBS=$ac_save_LIBS
+    LIBS="$ac_save_LIBS"
     cc_restore_flags
 ])
 
-AC_SUBST(CURSESLIBS)
-AC_SUBST(PC_NAME_CURSES)
-AC_SUBST(PC_LIBS_CURSES)
+AC_DEFINE_UNQUOTED([PCMK__ENABLE_CURSES], [$found_curses], [have ncurses library])
+AC_SUBST(CURSES_LIBS)
 
 dnl ========================================================================
 dnl    Profiling and GProf
@@ -1404,8 +1379,18 @@ AS_IF([test x"$cross_compiling" != x"yes"],
       [CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"])
 AC_CHECK_HEADERS([stonith/stonith.h],
                  [
-                     AC_CHECK_LIB([pils], [PILLoadPlugin])
-                     AC_CHECK_LIB([plumb], [G_main_add_IPC_Channel])
+                     save_LIBS="$LIBS"
+                     STONITH_LIBS=""
+                     LIBS=""
+                     AC_SEARCH_LIBS([PILLoadPlugin], [pils],
+                                    [test "$ac_cv_search_PILLoadPlugin" = "none required" || STONITH_LIBS="$LIBS"])
+
+                     LIBS=""
+                     AC_SEARCH_LIBS([G_main_add_IPC_Channel], [plumb],
+                                    [test "$ac_cv_search_G_main_add_IPC_Channel" = "none required" || STONITH_LIBS="$STONITH_LIBS $LIBS"])
+                     AC_SUBST(STONITH_LIBS)
+                     LIBS="$save_LIBS"
+
                      PCMK_FEATURES="$PCMK_FEATURES lha"
                  ])
 AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test x"$ac_cv_header_stonith_stonith_h" = x"yes"])
@@ -2047,6 +2032,8 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/strings/Makefile                   \
                 lib/common/tests/utils/Makefile                     \
                 lib/common/tests/xml/Makefile                       \
+                lib/common/tests/xml_comment/Makefile               \
+                lib/common/tests/xml_element/Makefile               \
                 lib/common/tests/xpath/Makefile                     \
                 lib/fencing/Makefile                                \
                 lib/libpacemaker.pc                                 \

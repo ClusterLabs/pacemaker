@@ -206,7 +206,7 @@ when upgrading a cluster node.
    * - Pacemaker 1.y.z
      - Pacemaker 1.0.0
    * - Pacemaker 0.6.z to 0.7.z
-     - Pacemaker 0.6.z
+     - Pacemaker 0.6.0
 
 When upgrading a Pacemaker Remote node, all cluster nodes must be running at
 least the minimum version listed in the table below.

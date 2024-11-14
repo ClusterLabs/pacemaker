@@ -946,15 +946,96 @@ Call failed: Permission denied
 </cib>
 =#=#=#= End test: root: Create a resource - OK (0) =#=#=#=
 * Passed: cibadmin              - root: Create a resource
+=#=#=#= Begin test: root: Create another resource (with description) =#=#=#=
+=#=#=#= Current cib after: root: Create another resource (with description) =#=#=#=
+<cib epoch="13" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
+    </resources>
+    <constraints/>
+    <acls>
+      <acl_target id="l33t-haxor">
+        <role id="nothing"/>
+      </acl_target>
+      <acl_target id="niceguy">
+        <role id="observer"/>
+      </acl_target>
+      <acl_target id="bob">
+        <role id="admin"/>
+      </acl_target>
+      <acl_target id="joe">
+        <role id="super_user"/>
+      </acl_target>
+      <acl_target id="mike">
+        <role id="rsc_writer"/>
+      </acl_target>
+      <acl_target id="chris">
+        <role id="rsc_denied"/>
+      </acl_target>
+      <acl_role id="nothing">
+        <acl_permission id="nothing-deny" kind="deny" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="observer">
+        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
+      </acl_role>
+      <acl_role id="admin">
+        <acl_permission id="admin-read-1" kind="read" xpath="/cib"/>
+        <acl_permission id="admin-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="super_user">
+        <acl_permission id="super_user-write-1" kind="write" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="rsc_writer">
+        <acl_permission id="rsc-writer-deny-1" kind="deny" xpath="/cib"/>
+        <acl_permission id="rsc-writer-write-1" kind="write" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="rsc_denied">
+        <acl_permission id="rsc-denied-write-1" kind="write" xpath="/cib"/>
+        <acl_permission id="rsc-denied-deny-1" kind="deny" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="badidea-role">
+        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="badidea">
+        <role id="badidea-role"/>
+      </acl_target>
+      <acl_role id="betteridea-role">
+        <acl_permission id="betteridea-nothing" kind="deny" xpath="/cib"/>
+        <acl_permission id="betteridea-resources" kind="read" xpath="//meta_attributes"/>
+      </acl_role>
+      <acl_target id="betteridea">
+        <role id="betteridea-role"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: root: Create another resource (with description) - OK (0) =#=#=#=
+* Passed: cibadmin              - root: Create another resource (with description)
 =#=#=#= Begin test: l33t-haxor: Create a resource meta attribute =#=#=#=
+Could not obtain the current CIB: Permission denied
 crm_resource: Error performing operation: Insufficient privileges
 =#=#=#= End test: l33t-haxor: Create a resource meta attribute - Insufficient privileges (4) =#=#=#=
 * Passed: crm_resource          - l33t-haxor: Create a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Query a resource meta attribute =#=#=#=
+Could not obtain the current CIB: Permission denied
 crm_resource: Error performing operation: Insufficient privileges
 =#=#=#= End test: l33t-haxor: Query a resource meta attribute - Insufficient privileges (4) =#=#=#=
 * Passed: crm_resource          - l33t-haxor: Query a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Remove a resource meta attribute =#=#=#=
+Could not obtain the current CIB: Permission denied
 crm_resource: Error performing operation: Insufficient privileges
 =#=#=#= End test: l33t-haxor: Remove a resource meta attribute - Insufficient privileges (4) =#=#=#=
 * Passed: crm_resource          - l33t-haxor: Remove a resource meta attribute
@@ -966,7 +1047,7 @@ pcmk__apply_creation_acl 	trace: Creation of <meta_attributes> scaffolding with 
 pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="dummy-meta_attributes-target-role"
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Stopped
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
-<cib epoch="13" num_updates="0" admin_epoch="0">
+<cib epoch="14" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -982,6 +1063,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
           <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Stopped"/>
         </meta_attributes>
       </primitive>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -1051,7 +1133,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Stopped
 =#=#=#= Current cib after: niceguy: Query a resource meta attribute =#=#=#=
-<cib epoch="13" num_updates="0" admin_epoch="0">
+<cib epoch="14" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1067,6 +1149,7 @@ Stopped
           <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Stopped"/>
         </meta_attributes>
       </primitive>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -1136,7 +1219,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= Current cib after: niceguy: Remove a resource meta attribute =#=#=#=
-<cib epoch="14" num_updates="0" admin_epoch="0">
+<cib epoch="15" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1150,6 +1233,7 @@ Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
         <meta_attributes id="dummy-meta_attributes"/>
       </primitive>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -1220,7 +1304,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="dummy-meta_attributes-target-role"
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Started
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
-<cib epoch="15" num_updates="0" admin_epoch="0">
+<cib epoch="16" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1236,6 +1320,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
           <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
       </primitive>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -1327,7 +1412,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
 </cib>
 =#=#=#= End test: betteridea: Query configuration - explicit deny - OK (0) =#=#=#=
 * Passed: cibadmin              - betteridea: Query configuration - explicit deny
-<cib epoch="16" num_updates="0" admin_epoch="0">
+<cib epoch="17" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1343,6 +1428,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
           <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
       </primitive>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
   </configuration>
@@ -1354,7 +1440,7 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - remove acls - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - remove acls
-<cib epoch="16" num_updates="0" admin_epoch="0">
+<cib epoch="17" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1370,6 +1456,7 @@ Call failed: Permission denied
           <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
       </primitive>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
       <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
@@ -1439,7 +1526,7 @@ pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - create resource
-<cib epoch="16" num_updates="0" admin_epoch="0">
+<cib epoch="17" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1455,6 +1542,7 @@ Call failed: Permission denied
           <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
       </primitive>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -1522,11 +1610,11 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - modify attribute (deny) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - modify attribute (deny)
-<cib epoch="16" num_updates="0" admin_epoch="0">
+<cib epoch="17" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
       </cluster_property_set>
@@ -1538,6 +1626,7 @@ Call failed: Permission denied
           <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
       </primitive>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
     <acls>
@@ -1601,11 +1690,11 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: niceguy: Replace - delete attribute (deny) =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib[@epoch]
-pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl']
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/resources/primitive[@id='dummy_desc']
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - delete attribute (deny) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - delete attribute (deny)
-<cib epoch="16" num_updates="0" admin_epoch="0">
+<cib epoch="17" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1621,6 +1710,7 @@ Call failed: Permission denied
           <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
       </primitive>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -1688,7 +1778,7 @@ pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create attribute (deny) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - create attribute (deny)
-<cib epoch="16" num_updates="0" admin_epoch="0">
+<cib epoch="17" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1704,6 +1794,7 @@ Call failed: Permission denied
           <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
       </primitive>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -1768,7 +1859,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: bob: Replace - create attribute (direct allow) =#=#=#=
 =#=#=#= End test: bob: Replace - create attribute (direct allow) - OK (0) =#=#=#=
 * Passed: cibadmin              - bob: Replace - create attribute (direct allow)
-<cib epoch="17" num_updates="0" admin_epoch="0">
+<cib epoch="18" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1784,6 +1875,7 @@ Call failed: Permission denied
           <nvpair id="dummy-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
       </primitive>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -1848,7 +1940,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: bob: Replace - modify attribute (direct allow) =#=#=#=
 =#=#=#= End test: bob: Replace - modify attribute (direct allow) - OK (0) =#=#=#=
 * Passed: cibadmin              - bob: Replace - modify attribute (direct allow)
-<cib epoch="18" num_updates="0" admin_epoch="0">
+<cib epoch="19" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1860,6 +1952,7 @@ Call failed: Permission denied
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -1924,7 +2017,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: bob: Replace - delete attribute (direct allow) =#=#=#=
 =#=#=#= End test: bob: Replace - delete attribute (direct allow) - OK (0) =#=#=#=
 * Passed: cibadmin              - bob: Replace - delete attribute (direct allow)
-<cib epoch="19" num_updates="0" admin_epoch="0">
+<cib epoch="20" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1936,6 +2029,7 @@ Call failed: Permission denied
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -2000,7 +2094,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: joe: Replace - create attribute (inherited allow) =#=#=#=
 =#=#=#= End test: joe: Replace - create attribute (inherited allow) - OK (0) =#=#=#=
 * Passed: cibadmin              - joe: Replace - create attribute (inherited allow)
-<cib epoch="20" num_updates="0" admin_epoch="0">
+<cib epoch="21" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2012,6 +2106,7 @@ Call failed: Permission denied
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="something interesting"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -2076,7 +2171,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: joe: Replace - modify attribute (inherited allow) =#=#=#=
 =#=#=#= End test: joe: Replace - modify attribute (inherited allow) - OK (0) =#=#=#=
 * Passed: cibadmin              - joe: Replace - modify attribute (inherited allow)
-<cib epoch="21" num_updates="0" admin_epoch="0">
+<cib epoch="22" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2088,6 +2183,7 @@ Call failed: Permission denied
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -2152,7 +2248,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: joe: Replace - delete attribute (inherited allow) =#=#=#=
 =#=#=#= End test: joe: Replace - delete attribute (inherited allow) - OK (0) =#=#=#=
 * Passed: cibadmin              - joe: Replace - delete attribute (inherited allow)
-<cib epoch="22" num_updates="0" admin_epoch="0">
+<cib epoch="23" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2164,6 +2260,7 @@ Call failed: Permission denied
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -2228,7 +2325,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: mike: Replace - create attribute (allow overrides deny) =#=#=#=
 =#=#=#= End test: mike: Replace - create attribute (allow overrides deny) - OK (0) =#=#=#=
 * Passed: cibadmin              - mike: Replace - create attribute (allow overrides deny)
-<cib epoch="23" num_updates="0" admin_epoch="0">
+<cib epoch="24" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2240,6 +2337,7 @@ Call failed: Permission denied
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="something interesting"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -2304,7 +2402,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: mike: Replace - modify attribute (allow overrides deny) =#=#=#=
 =#=#=#= End test: mike: Replace - modify attribute (allow overrides deny) - OK (0) =#=#=#=
 * Passed: cibadmin              - mike: Replace - modify attribute (allow overrides deny)
-<cib epoch="24" num_updates="0" admin_epoch="0">
+<cib epoch="25" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2316,6 +2414,7 @@ Call failed: Permission denied
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -2380,7 +2479,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: mike: Replace - delete attribute (allow overrides deny) =#=#=#=
 =#=#=#= End test: mike: Replace - delete attribute (allow overrides deny) - OK (0) =#=#=#=
 * Passed: cibadmin              - mike: Replace - delete attribute (allow overrides deny)
-<cib epoch="24" num_updates="0" admin_epoch="0">
+<cib epoch="25" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2392,6 +2491,7 @@ Call failed: Permission denied
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
     </resources>
     <constraints/>
     <acls>
@@ -2456,7 +2556,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: mike: Create another resource =#=#=#=
 pcmk__apply_creation_acl 	trace: ACLs allow creation of <primitive> with id="dummy2"
 =#=#=#= Current cib after: mike: Create another resource =#=#=#=
-<cib epoch="25" num_updates="0" admin_epoch="0">
+<cib epoch="26" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2468,6 +2568,7 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <primitive> with id="dum
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
       <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>
     </resources>
     <constraints/>
@@ -2532,7 +2633,7 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <primitive> with id="dum
 </cib>
 =#=#=#= End test: mike: Create another resource - OK (0) =#=#=#=
 * Passed: cibadmin              - mike: Create another resource
-<cib epoch="26" num_updates="0" admin_epoch="0">
+<cib epoch="27" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2544,6 +2645,7 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <primitive> with id="dum
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
       <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>
     </resources>
     <constraints/>
@@ -2611,7 +2713,7 @@ pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib
 Call failed: Permission denied
 =#=#=#= End test: chris: Replace - create attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - chris: Replace - create attribute (deny overrides allow)
-<cib epoch="26" num_updates="0" admin_epoch="0">
+<cib epoch="27" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2623,6 +2725,7 @@ Call failed: Permission denied
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="something interesting"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
       <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy" description="nothing interesting"/>
     </resources>
     <constraints/>
@@ -2690,7 +2793,7 @@ pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib
 Call failed: Permission denied
 =#=#=#= End test: chris: Replace - modify attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - chris: Replace - modify attribute (deny overrides allow)
-<cib epoch="26" num_updates="0" admin_epoch="0">
+<cib epoch="27" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2702,6 +2805,7 @@ Call failed: Permission denied
     <nodes/>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+      <primitive id="dummy_desc" class="ocf" provider="pacemaker" type="Dummy" description="resource with description"/>
       <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>

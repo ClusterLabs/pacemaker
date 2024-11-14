@@ -253,7 +253,7 @@ agent_status_default(pcmk__output_t *out, va_list args) {
                   class,
                   ((provider == NULL)? "" : ":"),
                   ((provider == NULL)? "" : provider),
-                  type, (int) rc, services_ocf_exitcode_str((int) rc),
+                  type, (int) rc, crm_exit_str(rc),
                   ((exit_reason == NULL)? "" : ": "),
                   ((exit_reason == NULL)? "" : exit_reason));
     } else {
@@ -289,7 +289,7 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     const char *exit_reason = va_arg(args, const char *);
 
     char *exit_s = pcmk__itoa(rc);
-    const char *message = services_ocf_exitcode_str((int) rc);
+    const char *message = crm_exit_str(rc);
     char *status_s = pcmk__itoa(status);
     const char *execution_message = pcmk_exec_status_str(status);
 
@@ -355,38 +355,6 @@ override_xml(pcmk__output_t *out, va_list args) {
 
     if (rsc_name != NULL) {
         crm_xml_add(node, PCMK_XA_RSC, rsc_name);
-    }
-
-    return pcmk_rc_ok;
-}
-
-PCMK__OUTPUT_ARGS("property-list", "pcmk_resource_t *", "const char *")
-static int
-property_list_default(pcmk__output_t *out, va_list args) {
-    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
-    const char *attr = va_arg(args, char *);
-
-    const char *value = crm_element_value(rsc->priv->xml, attr);
-
-    if (value != NULL) {
-        out->begin_list(out, NULL, NULL, "Properties");
-        out->list_item(out, attr, "%s", value);
-        out->end_list(out);
-    }
-
-    return pcmk_rc_ok;
-}
-
-PCMK__OUTPUT_ARGS("property-list", "pcmk_resource_t *", "const char *")
-static int
-property_list_text(pcmk__output_t *out, va_list args) {
-    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
-    const char *attr = va_arg(args, const char *);
-
-    const char *value = crm_element_value(rsc->priv->xml, attr);
-
-    if (value != NULL) {
-        pcmk__formatted_printf(out, "%s\n", value);
     }
 
     return pcmk_rc_ok;
@@ -896,8 +864,6 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "attribute-list", "text", attribute_list_text },
     { "override", "default", override_default },
     { "override", "xml", override_xml },
-    { "property-list", "default", property_list_default },
-    { "property-list", "text", property_list_text },
     { "resource-agent-action", "default", resource_agent_action_default },
     { "resource-agent-action", "xml", resource_agent_action_xml },
     { "resource-check-list", "default", resource_check_list_default },

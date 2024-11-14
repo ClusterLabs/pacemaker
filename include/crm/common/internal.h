@@ -82,49 +82,6 @@ int pcmk__scan_nvpair(const char *input, char **name, char **value);
 char *pcmk__format_nvpair(const char *name, const char *value,
                           const char *units);
 
-/*!
- * \internal
- * \brief Add a boolean attribute to an XML node.
- *
- * \param[in,out] node  XML node to add attributes to
- * \param[in]     name  XML attribute to create
- * \param[in]     value Value to give to the attribute
- */
-void
-pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value);
-
-/*!
- * \internal
- * \brief Extract a boolean attribute's value from an XML element
- *
- * \param[in] node XML node to get attribute from
- * \param[in] name XML attribute to get
- *
- * \return True if the given \p name is an attribute on \p node and has
- *         the value \c PCMK_VALUE_TRUE, False in all other cases
- */
-bool
-pcmk__xe_attr_is_true(const xmlNode *node, const char *name);
-
-/*!
- * \internal
- * \brief Extract a boolean attribute's value from an XML element, with
- *        error checking
- *
- * \param[in]  node  XML node to get attribute from
- * \param[in]  name  XML attribute to get
- * \param[out] value Destination for the value of the attribute
- *
- * \return EINVAL if \p name or \p value are NULL, ENODATA if \p node is
- *         NULL or the attribute does not exist, pcmk_rc_unknown_format
- *         if the attribute is not a boolean, and pcmk_rc_ok otherwise.
- *
- * \note \p value only has any meaning if the return value is pcmk_rc_ok.
- */
-int
-pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value);
-
-
 /* internal procfs utilities (from procfs.c) */
 
 pid_t pcmk__procfs_pid_of(const char *name);
@@ -250,6 +207,8 @@ void pcmk__daemonize(const char *name, const char *pidfile);
 void pcmk__panic(const char *reason);
 pid_t pcmk__locate_sbd(void);
 void pcmk__sleep_ms(unsigned int ms);
+guint pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data);
+guint pcmk__timeout_ms2s(guint timeout_ms);
 
 extern int pcmk__score_red;
 extern int pcmk__score_green;

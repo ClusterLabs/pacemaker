@@ -7,6 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
@@ -18,6 +19,7 @@ check_PROGRAMS = compare_version_test			\
 		 pcmk__failcount_name_test 		\
 		 pcmk__getpid_s_test 			\
 		 pcmk__lastfailure_name_test 		\
-		 pcmk__realloc_test
+		 pcmk__realloc_test 			\
+		 pcmk__timeout_ms2s_test
 
 TESTS = $(check_PROGRAMS)

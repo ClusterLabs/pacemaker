@@ -207,7 +207,7 @@ static dbus_bool_t
 add_dbus_timer(DBusTimeout *timeout, void *data)
 {
     int interval_ms = dbus_timeout_get_interval(timeout);
-    guint id = g_timeout_add(interval_ms, timer_popped, timeout);
+    guint id = pcmk__create_timer(interval_ms, timer_popped, timeout);
 
     if (id) {
         dbus_timeout_set_data(timeout, GUINT_TO_POINTER(id), NULL);

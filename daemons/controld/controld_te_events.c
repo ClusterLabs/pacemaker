@@ -581,8 +581,7 @@ process_graph_event(xmlNode *event, const char *event_node)
         crm_notice("Transition %d action %d (%s on %s): expected '%s' but got '%s' "
                    QB_XS " target-rc=%d rc=%d call-id=%d event='%s'",
                    transition_num, action_num, id, uname,
-                   services_ocf_exitcode_str(target_rc),
-                   services_ocf_exitcode_str(rc),
+                   crm_exit_str(target_rc), crm_exit_str(rc),
                    target_rc, rc, callid, desc);
 
     } else if (desc) {
@@ -595,7 +594,7 @@ process_graph_event(xmlNode *event, const char *event_node)
         crm_info("Transition %d action %d (%s on %s) confirmed: %s "
                  QB_XS " rc=%d call-id=%d",
                  transition_num, action_num, id, uname,
-                 services_ocf_exitcode_str(rc), rc, callid);
+                 crm_exit_str(rc), rc, callid);
 
     } else {
         update_failcount(event, event_node, rc, target_rc,
@@ -603,8 +602,7 @@ process_graph_event(xmlNode *event, const char *event_node)
         crm_notice("Transition %d action %d (%s on %s): expected '%s' but got '%s' "
                    QB_XS " target-rc=%d rc=%d call-id=%d",
                    transition_num, action_num, id, uname,
-                   services_ocf_exitcode_str(target_rc),
-                   services_ocf_exitcode_str(rc),
+                   crm_exit_str(target_rc), crm_exit_str(rc),
                    target_rc, rc, callid);
     }
 

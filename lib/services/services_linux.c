@@ -563,9 +563,9 @@ services__finalize_async_op(svc_action_t *op)
             services__set_cancelled(op);
             cancel_recurring_action(op);
         } else {
-            op->opaque->repeat_timer = g_timeout_add(op->interval_ms,
-                                                     recurring_action_timer,
-                                                     (void *) op);
+            op->opaque->repeat_timer = pcmk__create_timer(op->interval_ms,
+                                                          recurring_action_timer,
+                                                          op);
         }
     }
 
@@ -948,7 +948,6 @@ action_launch_child(svc_action_t *op)
      * scripts when SIGPIPE is ignored by the environment. */
     signal(SIGPIPE, SIG_DFL);
 
-#if defined(HAVE_SCHED_SETSCHEDULER)
     if (sched_getscheduler(0) != SCHED_OTHER) {
         struct sched_param sp;
 
@@ -959,7 +958,7 @@ action_launch_child(svc_action_t *op)
             crm_info("Could not reset scheduling policy for %s", op->id);
         }
     }
-#endif
+
     if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
         crm_info("Could not reset process priority for %s", op->id);
     }

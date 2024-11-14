@@ -251,7 +251,7 @@ crm_cs_flush(gpointer data)
             /* Proportionally more if sending failed but cap at 1s */
             delay_ms = QB_MIN(1000, CS_SEND_MAX + (10 * queue_len));
         }
-        cs_message_timer = g_timeout_add(delay_ms, crm_cs_flush_cb, data);
+        cs_message_timer = pcmk__create_timer(delay_ms, crm_cs_flush_cb, data);
     }
 }
 

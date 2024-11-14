@@ -243,9 +243,7 @@ should_fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             break;
 
-        } else if (pcmk_is_set(prereq->flags, pcmk__graph_action_failed)
-                   && !pcmk_is_set(prereq->flags,
-                                   pcmk__graph_action_can_fail)) {
+        } else if (pcmk_is_set(prereq->flags, pcmk__graph_action_failed)) {
             crm_trace("Input %d for synapse %d confirmed but failed",
                       prereq->id, synapse->id);
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
@@ -597,22 +595,6 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         action->interval_ms = 0;
     }
 
-    value = crm_meta_value(action->params, PCMK__META_CAN_FAIL);
-    if (value != NULL) {
-        int can_fail = 0;
-
-        if ((crm_str_to_boolean(value, &can_fail) > 0) && (can_fail > 0)) {
-            pcmk__set_graph_action_flags(action, pcmk__graph_action_can_fail);
-        } else {
-            pcmk__clear_graph_action_flags(action, pcmk__graph_action_can_fail);
-        }
-
-        if (pcmk_is_set(action->flags, pcmk__graph_action_can_fail)) {
-            crm_warn("Support for the " PCMK__META_CAN_FAIL " meta-attribute "
-                     "is deprecated and will be removed in a future release");
-        }
-    }
-
     crm_trace("Action %d has timer set to %dms", action->id, action->timeout);
 
     return action;
@@ -654,13 +636,14 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
     crm_trace("Unpacking synapse %s action sets",
               crm_element_value(xml_synapse, PCMK_XA_ID));
 
-    for (action_set = pcmk__xe_first_child(xml_synapse, "action_set", NULL,
-                                           NULL);
-         action_set != NULL; action_set = pcmk__xe_next_same(action_set)) {
+    for (action_set = pcmk__xe_first_child(xml_synapse, PCMK__XE_ACTION_SET,
+                                           NULL, NULL);
+         action_set != NULL;
+         action_set = pcmk__xe_next(action_set, PCMK__XE_ACTION_SET)) {
 
         for (xmlNode *action = pcmk__xe_first_child(action_set, NULL, NULL,
                                                     NULL);
-             action != NULL; action = pcmk__xe_next(action)) {
+             action != NULL; action = pcmk__xe_next(action, NULL)) {
 
             pcmk__graph_action_t *new_action = unpack_action(new_synapse,
                                                              action);
@@ -679,17 +662,18 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
 
     crm_trace("Unpacking synapse %s inputs", pcmk__xe_id(xml_synapse));
 
-    for (xmlNode *inputs = pcmk__xe_first_child(xml_synapse, "inputs", NULL,
-                                                NULL);
-         inputs != NULL; inputs = pcmk__xe_next_same(inputs)) {
+    for (xmlNode *inputs = pcmk__xe_first_child(xml_synapse, PCMK__XE_INPUTS,
+                                                NULL, NULL);
+         inputs != NULL; inputs = pcmk__xe_next(inputs, PCMK__XE_INPUTS)) {
 
-        for (xmlNode *trigger = pcmk__xe_first_child(inputs, "trigger", NULL,
-                                                     NULL);
-             trigger != NULL; trigger = pcmk__xe_next_same(trigger)) {
+        for (xmlNode *trigger = pcmk__xe_first_child(inputs, PCMK__XE_TRIGGER,
+                                                     NULL, NULL);
+             trigger != NULL;
+             trigger = pcmk__xe_next(trigger, PCMK__XE_TRIGGER)) {
 
             for (xmlNode *input = pcmk__xe_first_child(trigger, NULL, NULL,
                                                        NULL);
-                 input != NULL; input = pcmk__xe_next(input)) {
+                 input != NULL; input = pcmk__xe_next(input, NULL)) {
 
                 pcmk__graph_action_t *new_input = unpack_action(new_synapse,
                                                                 input);
@@ -797,9 +781,10 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
 
     // Unpack each child <synapse> element
     for (const xmlNode *synapse_xml = pcmk__xe_first_child(xml_graph,
-                                                           "synapse", NULL,
-                                                           NULL);
-         synapse_xml != NULL; synapse_xml = pcmk__xe_next_same(synapse_xml)) {
+                                                           PCMK__XE_SYNAPSE,
+                                                           NULL, NULL);
+         synapse_xml != NULL;
+         synapse_xml = pcmk__xe_next(synapse_xml, PCMK__XE_SYNAPSE)) {
 
         pcmk__graph_synapse_t *new_synapse = unpack_synapse(new_graph,
                                                             synapse_xml);
@@ -867,7 +852,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
     }
 
     for (xmlNode *xop = pcmk__xe_first_child(resource, NULL, NULL, NULL);
-         xop != NULL; xop = pcmk__xe_next(xop)) {
+         xop != NULL; xop = pcmk__xe_next(xop, NULL)) {
 
         int tmp = 0;
 

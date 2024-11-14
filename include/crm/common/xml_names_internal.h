@@ -19,6 +19,7 @@ extern "C" {
  */
 
 #define PCMK__XE_ACK                    "ack"
+#define PCMK__XE_ACTION_SET             "action_set"
 #define PCMK__XE_ATTRIBUTES             "attributes"
 #define PCMK__XE_CIB_CALLBACK           "cib-callback"
 #define PCMK__XE_CIB_CALLDATA           "cib_calldata"
@@ -35,6 +36,7 @@ extern "C" {
 #define PCMK__XE_EXIT_NOTIFICATION      "exit-notification"
 #define PCMK__XE_FAILED_UPDATE          "failed_update"
 #define PCMK__XE_GENERATION_TUPLE       "generation_tuple"
+#define PCMK__XE_INPUTS                 "inputs"
 #define PCMK__XE_LRM                    "lrm"
 #define PCMK__XE_LRM_RESOURCE           "lrm_resource"
 #define PCMK__XE_LRM_RESOURCES          "lrm_resources"
@@ -71,9 +73,11 @@ extern "C" {
 #define PCMK__XE_ST_NOTIFY_FENCE        "st_notify_fence"
 #define PCMK__XE_ST_REPLY               "st-reply"
 #define PCMK__XE_STONITH_COMMAND        "stonith_command"
+#define PCMK__XE_SYNAPSE                "synapse"
 #define PCMK__XE_TICKET_STATE           "ticket_state"
 #define PCMK__XE_TRANSIENT_ATTRIBUTES   "transient_attributes"
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
+#define PCMK__XE_TRIGGER                "trigger"
 #define PCMK__XE_XPATH_QUERY            "xpath-query"
 #define PCMK__XE_XPATH_QUERY_PATH       "xpath-query-path"
 
@@ -200,7 +204,6 @@ extern "C" {
 #define PCMK__XA_MAJOR_VERSION          "major_version"
 #define PCMK__XA_MINOR_VERSION          "minor_version"
 #define PCMK__XA_MODE                   "mode"
-#define PCMK__XA_MOON                   "moon"
 #define PCMK__XA_NAMESPACE              "namespace"
 #define PCMK__XA_NODE_FENCED            "node_fenced"
 #define PCMK__XA_NODE_IN_MAINTENANCE    "node_in_maintenance"

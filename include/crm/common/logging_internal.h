@@ -25,24 +25,19 @@ extern "C" {
  * those warnings needs a flag defined here.
  */
 enum pcmk__warnings {
-    pcmk__wo_blind          = (1 << 0),
-    pcmk__wo_restart_type   = (1 << 1),
-    pcmk__wo_role_after     = (1 << 2),
-    pcmk__wo_poweroff       = (1 << 3),
-    pcmk__wo_require_all    = (1 << 4),
-    pcmk__wo_order_score    = (1 << 5),
-    pcmk__wo_remove_after   = (1 << 7),
-    pcmk__wo_group_order    = (1 << 11),
-    pcmk__wo_group_coloc    = (1 << 12),
-    pcmk__wo_set_ordering   = (1 << 15),
-    pcmk__wo_rdisc_enabled  = (1 << 16),
-    pcmk__wo_op_attr_expr   = (1 << 19),
-    pcmk__wo_instance_defaults  = (1 << 20),
-    pcmk__wo_multiple_rules     = (1 << 21),
+    pcmk__wo_blind                  = (1 << 0),
+    pcmk__wo_record_pending         = (1 << 1),
+    pcmk__wo_require_all            = (1 << 4),
+    pcmk__wo_order_score            = (1 << 5),
+    pcmk__wo_group_order            = (1 << 11),
+    pcmk__wo_group_coloc            = (1 << 12),
+    pcmk__wo_set_ordering           = (1 << 15),
+    pcmk__wo_rdisc_enabled          = (1 << 16),
+    pcmk__wo_op_attr_expr           = (1 << 19),
     pcmk__wo_clone_master_max       = (1 << 23),
     pcmk__wo_clone_master_node_max  = (1 << 24),
-    pcmk__wo_master_role    = (1 << 26),
-    pcmk__wo_slave_role     = (1 << 27),
+    pcmk__wo_master_role            = (1 << 26),
+    pcmk__wo_slave_role             = (1 << 27),
 };
 
 /*!

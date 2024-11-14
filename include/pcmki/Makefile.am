@@ -1,5 +1,5 @@
 #
-# Copyright 2019-2023 the Pacemaker project contributors
+# Copyright 2019-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -7,7 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-MAINTAINERCLEANFILES    = Makefile.in
+include $(top_srcdir)/mk/common.mk
 
 noinst_HEADERS		= $(wildcard *.h)
 

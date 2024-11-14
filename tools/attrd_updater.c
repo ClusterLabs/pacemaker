@@ -171,7 +171,10 @@ static GOptionEntry command_entries[] = {
       NULL },
 
     { "query", 'Q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Query the attribute's value from the attribute manager",
+      "Query the attribute's value from the attribute manager. By default\n"
+      INDENT "this will query the value of the attribute on the local node.\n"
+      INDENT "Use -N/--node for the value on a given node, or -A/--all for the\n"
+      INDENT "value on all nodes.",
       NULL },
 
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
@@ -199,7 +202,8 @@ static GOptionEntry addl_entries[] = {
       "SET" },
 
     { "node", 'N', 0, G_OPTION_ARG_STRING, &options.attr_node,
-      "Set the attribute for the named node (instead of the local one)",
+      "Use the named node for setting and querying the attribute (instead\n"
+      INDENT "of the local one)",
       "NODE" },
 
     { "all", 'A', 0, G_OPTION_ARG_NONE, &options.query_all,

@@ -689,6 +689,8 @@ pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      If not NULL, only use blocks of this element
  * \param[in]     rule_data     Matching parameters to use when unpacking
+ *                              (node_hash member must be NULL if \p set_name is
+ *                              PCMK_XE_META_ATTRIBUTES)
  * \param[out]    hash          Where to store extracted name/value pairs
  * \param[in]     always_first  If not NULL, process block with this ID first
  * \param[in,out] scheduler     Scheduler data containing \p xml_obj
@@ -699,8 +701,20 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                            GHashTable *hash, const char *always_first,
                            pcmk_scheduler_t *scheduler)
 {
-    crm_time_t *next_change = crm_time_new_undefined();
+    crm_time_t *next_change = NULL;
 
+    CRM_CHECK((set_name != NULL) && (rule_data != NULL) && (hash != NULL)
+              && (scheduler != NULL), return);
+
+    // Node attribute expressions are not allowed for meta-attributes
+    CRM_CHECK((rule_data->node_hash == NULL)
+              || (strcmp(set_name, PCMK_XE_META_ATTRIBUTES) != 0), return);
+
+    if (xml_obj == NULL) {
+        return;
+    }
+
+    next_change = crm_time_new_undefined();
     pe_eval_nvpairs(scheduler->input, xml_obj, set_name, rule_data, hash,
                     always_first, FALSE, next_change);
     if (crm_time_is_defined(next_change)) {
@@ -875,7 +889,7 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
 
     for (xmlNode *xml_op = pcmk__xe_first_child(scheduler->priv->failed,
                                                 NULL, NULL, NULL);
-         xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
+         xml_op != NULL; xml_op = pcmk__xe_next(xml_op, NULL)) {
 
         const char *value = NULL;
         char *op_id = NULL;

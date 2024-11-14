@@ -84,56 +84,67 @@ static int
 lrmd_remote_client_msg(gpointer data)
 {
     int id = 0;
-    int rc;
+    int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
     pcmk__client_t *client = data;
 
-    if (!pcmk_is_set(client->flags,
-                     pcmk__client_tls_handshake_complete)) {
+    if (!pcmk_is_set(client->flags, pcmk__client_tls_handshake_complete)) {
         return remoted__read_handshake_data(client);
     }
 
-    switch (pcmk__remote_ready(client->remote, 0)) {
+    rc = pcmk__remote_ready(client->remote, 0);
+    switch (rc) {
         case pcmk_rc_ok:
             break;
-        case ETIME: // No message available to read
+
+        case ETIME:
+            /* No message available to read */
             return 0;
-        default:    // Error
-            crm_info("Remote client disconnected while polling it");
+
+        default:
+            /* Error */
+            crm_info("Error polling remote client: %s", pcmk_rc_str(rc));
             return -1;
     }
 
-    rc = pcmk__read_remote_message(client->remote, -1);
+    rc = pcmk__read_available_remote_data(client->remote);
+    switch (rc) {
+        case pcmk_rc_ok:
+            break;
+
+        case EAGAIN:
+            /* We haven't read the whole message yet */
+            return 0;
+
+        default:
+            /* Error */
+            crm_info("Error reading from remote client: %s", pcmk_rc_str(rc));
+            return -1;
+    }
 
     request = pcmk__remote_message_xml(client->remote);
-    while (request) {
-        crm_element_value_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
-        crm_trace("Processing remote client request %d", id);
-        if (!client->name) {
-            client->name = crm_element_value_copy(request,
-                                                  PCMK__XA_LRMD_CLIENTNAME);
-        }
-
-        lrmd_call_id++;
-        if (lrmd_call_id < 1) {
-            lrmd_call_id = 1;
-        }
-
-        crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
-        crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
-        crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
-
-        process_lrmd_message(client, id, request);
-        pcmk__xml_free(request);
-
-        /* process all the messages in the current buffer */
-        request = pcmk__remote_message_xml(client->remote);
+    if (request == NULL) {
+        return 0;
     }
 
-    if (rc == ENOTCONN) {
-        crm_info("Remote client disconnected while reading from it");
-        return -1;
+    crm_element_value_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
+    crm_trace("Processing remote client request %d", id);
+    if (!client->name) {
+        client->name = crm_element_value_copy(request,
+                                              PCMK__XA_LRMD_CLIENTNAME);
     }
+
+    lrmd_call_id++;
+    if (lrmd_call_id < 1) {
+        lrmd_call_id = 1;
+    }
+
+    crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
+    crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
+    crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
+
+    process_lrmd_message(client, id, request);
+    pcmk__xml_free(request);
 
     return 0;
 }
@@ -228,9 +239,9 @@ lrmd_remote_listen(gpointer data)
     new_client->remote->tls_session = session;
 
     // Require the client to authenticate within this time
-    new_client->remote->auth_timeout = g_timeout_add(LRMD_REMOTE_AUTH_TIMEOUT,
-                                                     lrmd_auth_timeout_cb,
-                                                     new_client);
+    new_client->remote->auth_timeout = pcmk__create_timer(LRMD_REMOTE_AUTH_TIMEOUT,
+                                                          lrmd_auth_timeout_cb,
+                                                          new_client);
     crm_info("Remote client pending authentication "
              QB_XS " %p id: %s", new_client, new_client->id);
 

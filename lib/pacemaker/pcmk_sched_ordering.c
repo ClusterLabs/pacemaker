@@ -355,26 +355,6 @@ clone_min_ordering(const char *id,
 
 /*!
  * \internal
- * \brief Update ordering flags for restart-type=restart
- *
- * \param[in]     rsc    'Then' resource in ordering
- * \param[in]     kind   Ordering kind
- * \param[in]     flag   Ordering flag to set (when applicable)
- * \param[in,out] flags  Ordering flag set to update
- *
- * \compat The \c PCMK__META_RESTART_TYPE resource meta-attribute is deprecated.
- *         Eventually, it will be removed, and \c pcmk__restart_ignore will be
- *         the only behavior, at which time this can just be removed entirely.
- */
-#define handle_restart_type(rsc, kind, flag, flags) do {                    \
-        if (((kind) == pe_order_kind_optional)                              \
-            && ((rsc)->priv->restart_type == pcmk__restart_restart)) {      \
-            pcmk__set_relation_flags((flags), (flag));                      \
-        }                                                                   \
-    } while (0)
-
-/*!
- * \internal
  * \brief Create new ordering for inverse of symmetric constraint
  *
  * \param[in]     id            Ordering ID (for logging only)
@@ -398,7 +378,6 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
         uint32_t flags = ordering_flags_for_kind(kind, action_first,
                                                  ordering_symmetric_inverse);
 
-        handle_restart_type(rsc_then, kind, pcmk__ar_then_implies_first, flags);
         pcmk__order_resource_actions(rsc_then, action_then, rsc_first,
                                      action_first, flags);
     }
@@ -451,8 +430,6 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
     flags = ordering_flags_for_kind(kind, action_first, symmetry);
-
-    handle_restart_type(rsc_then, kind, pcmk__ar_first_implies_then, flags);
 
     /* If there is a minimum number of instances that must be runnable before
      * the 'then' action is runnable, we use a pseudo-action for convenience:
@@ -611,7 +588,8 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     for (const xmlNode *xml_rsc = pcmk__xe_first_child(set,
                                                        PCMK_XE_RESOURCE_REF,
                                                        NULL, NULL);
-         xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
+         xml_rsc != NULL;
+         xml_rsc = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF)) {
 
         EXPAND_CONSTRAINT_IDREF(id, resource, pcmk__xe_id(xml_rsc));
         resources = g_list_append(resources, resource);
@@ -750,7 +728,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
         for (xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF, NULL,
                                             NULL);
-             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
+             xml_rsc != NULL;
+             xml_rsc = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, pcmk__xe_id(xml_rsc));
 
@@ -766,7 +745,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         }
         for (xml_rsc_2 = pcmk__xe_first_child(set2, PCMK_XE_RESOURCE_REF, NULL,
                                               NULL);
-             xml_rsc_2 != NULL; xml_rsc_2 = pcmk__xe_next_same(xml_rsc_2)) {
+             xml_rsc_2 != NULL;
+             xml_rsc_2 = pcmk__xe_next(xml_rsc_2, PCMK_XE_RESOURCE_REF)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_2, pcmk__xe_id(xml_rsc_2));
 
@@ -798,7 +778,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             for (xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF,
                                                 NULL, NULL);
-                 xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
+                 xml_rsc != NULL;
+                 xml_rsc = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF)) {
 
                 rid = pcmk__xe_id(xml_rsc);
             }
@@ -813,7 +794,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             for (xml_rsc = pcmk__xe_first_child(set2, PCMK_XE_RESOURCE_REF,
                                                 NULL, NULL);
-                 xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
+                 xml_rsc != NULL;
+                 xml_rsc = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF)) {
 
                 rid = pcmk__xe_id(xml_rsc);
             }
@@ -835,7 +817,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     } else if (rsc_1 != NULL) {
         for (xml_rsc = pcmk__xe_first_child(set2, PCMK_XE_RESOURCE_REF, NULL,
                                             NULL);
-             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
+             xml_rsc != NULL;
+             xml_rsc = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_2, pcmk__xe_id(xml_rsc));
             pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2,
@@ -845,7 +828,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     } else if (rsc_2 != NULL) {
         for (xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF, NULL,
                                             NULL);
-             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
+             xml_rsc != NULL;
+             xml_rsc = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, pcmk__xe_id(xml_rsc));
             pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2,
@@ -855,14 +839,16 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     } else {
         for (xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF, NULL,
                                             NULL);
-             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
+             xml_rsc != NULL;
+             xml_rsc = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, pcmk__xe_id(xml_rsc));
 
             for (xmlNode *xml_rsc_2 = pcmk__xe_first_child(set2,
                                                            PCMK_XE_RESOURCE_REF,
                                                            NULL, NULL);
-                 xml_rsc_2 != NULL; xml_rsc_2 = pcmk__xe_next_same(xml_rsc_2)) {
+                 xml_rsc_2 != NULL;
+                 xml_rsc_2 = pcmk__xe_next(xml_rsc_2, PCMK_XE_RESOURCE_REF)) {
 
                 EXPAND_CONSTRAINT_IDREF(id, rsc_2, pcmk__xe_id(xml_rsc_2));
                 pcmk__order_resource_actions(rsc_1, action_1, rsc_2,
@@ -1028,7 +1014,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     // If the constraint has resource sets, unpack them
     for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
-         set != NULL; set = pcmk__xe_next_same(set)) {
+         set != NULL; set = pcmk__xe_next(set, PCMK_XE_RESOURCE_SET)) {
 
         set = pcmk__xe_resolve_idref(set, scheduler->input);
         if ((set == NULL) // Configuration error, message already logged

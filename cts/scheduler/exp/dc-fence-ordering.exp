@@ -248,7 +248,7 @@
   <synapse id="16">
     <action_set>
       <crm_event id="4" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1">
-        <attributes CRM_meta_master_stateful_1="10" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_shutdown="1543430118" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="1"/>
         </downed>

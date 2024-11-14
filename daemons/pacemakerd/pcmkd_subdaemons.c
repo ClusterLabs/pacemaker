@@ -18,6 +18,7 @@
 #include <grp.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -44,7 +45,7 @@ typedef struct pcmk_child_s {
     uint32_t flags;
 } pcmk_child_t;
 
-#define PCMK_PROCESS_CHECK_INTERVAL 1
+#define PCMK_PROCESS_CHECK_INTERVAL 1000    /* 1s */
 #define PCMK_PROCESS_CHECK_RETRIES  5
 #define SHUTDOWN_ESCALATION_PERIOD  180000  /* 3m */
 
@@ -371,8 +372,8 @@ pcmk_shutdown_worker(gpointer user_data)
                 child->flags &= ~child_respawn;
                 stop_child(child, SIGTERM);
                 if (phase < PCMK_CHILD_CONTROLD) {
-                    g_timeout_add(SHUTDOWN_ESCALATION_PERIOD,
-                                  escalate_shutdown, child);
+                    pcmk__create_timer(SHUTDOWN_ESCALATION_PERIOD,
+                                       escalate_shutdown, child);
                 }
 
             } else if (now >= next_log) {
@@ -453,14 +454,10 @@ start_child(pcmk_child_t * child)
         use_valgrind = FALSE;
     }
 
-    if (child->uid) {
-        if (crm_user_lookup(child->uid, &uid, &gid) < 0) {
-            crm_err("Invalid user (%s) for subdaemon %s: not found",
-                    child->uid, name);
-            return EACCES;
-        }
-        crm_info("Using uid %lu and group %lu for subdaemon %s",
-                 (unsigned long) uid, (unsigned long) gid, name);
+    if ((child->uid != NULL) && (crm_user_lookup(child->uid, &uid, &gid) < 0)) {
+        crm_err("Invalid user (%s) for subdaemon %s: not found",
+                child->uid, name);
+        return EACCES;
     }
 
     child->pid = fork();
@@ -470,8 +467,10 @@ start_child(pcmk_child_t * child)
         /* parent */
         mainloop_child_add(child->pid, 0, name, child, pcmk_child_exit);
 
-        crm_info("Forked process %lld for subdaemon %s%s",
-                 (long long) child->pid, name,
+        crm_info("Forked process %lld using user %lu (%s) and group %lu "
+                 "for subdaemon %s%s",
+                 (long long) child->pid, (unsigned long) uid,
+                 pcmk__s(child->uid, "root"), (unsigned long) gid, name,
                  use_valgrind ? " (valgrind enabled: " PCMK__VALGRIND_EXEC ")" : "");
         return pcmk_rc_ok;
 
@@ -794,8 +793,8 @@ find_and_track_existing_processes(void)
         pcmk_children[i].respawn_count = 0;  /* restore pristine state */
     }
 
-    g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL, check_next_subdaemon,
-                          NULL);
+    pcmk__create_timer(PCMK_PROCESS_CHECK_INTERVAL, check_next_subdaemon,
+                       NULL);
     return pcmk_rc_ok;
 }
 

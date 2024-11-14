@@ -1480,10 +1480,10 @@ do_lrm_invoke(long long action,
             /* Delete of malformed or nonexistent resource
              * (deleting something that does not exist is a success)
              */
-            crm_notice("Not registering resource '%s' for a %s event "
-                       QB_XS " get-rc=%d (%s) transition-key=%s",
-                       pcmk__xe_id(xml_rsc), operation,
-                       rc, pcmk_strerror(rc), pcmk__xe_id(input->xml));
+            crm_debug("Not registering resource '%s' for a %s event "
+                      QB_XS " get-rc=%d (%s) transition-key=%s",
+                      pcmk__xe_id(xml_rsc), operation,
+                      rc, pcmk_strerror(rc), pcmk__xe_id(input->xml));
             delete_rsc_entry(lrm_state, input, pcmk__xe_id(xml_rsc), NULL,
                              pcmk_ok, user_name, true);
             return;
@@ -2132,7 +2132,7 @@ log_executor_event(const lrmd_event_data_t *op, const char *op_key,
     switch (op->op_status) {
         case PCMK_EXEC_DONE:
             log_level = LOG_NOTICE;
-            pcmk__g_strcat(str, ": ", services_ocf_exitcode_str(op->rc), NULL);
+            pcmk__g_strcat(str, ": ", crm_exit_str((crm_exit_t) op->rc), NULL);
             break;
 
         case PCMK_EXEC_TIMEOUT:
@@ -2143,25 +2143,14 @@ log_executor_event(const lrmd_event_data_t *op, const char *op_key,
 
         case PCMK_EXEC_CANCELLED:
             log_level = LOG_INFO;
-	    /* order of __attribute__ and Fall through comment is IMPORTANT!
-	     * do not change it without proper testing with both clang and gcc
-	     * in multiple versions.
-	     * the clang check allows to build with all versions of clang.
-	     * the has_c_attribute check is to workaround a bug in clang version
-	     * in rhel7. has_attribute would happily return "YES SIR WE GOT IT"
-	     * and fail the build the next line.
-	     */
-#ifdef __clang__
-#ifdef __has_c_attribute
-#if __has_attribute(fallthrough)
-	    __attribute__((fallthrough));
-#endif
-#endif
-#endif
-            // Fall through
+            pcmk__g_strcat(str, ": ", pcmk_exec_status_str(op->op_status),
+                           NULL);
+            break;
+
         default:
             pcmk__g_strcat(str, ": ", pcmk_exec_status_str(op->op_status),
                            NULL);
+            break;
     }
 
     if ((op->exit_reason != NULL)

@@ -1325,11 +1325,6 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
             pcmk__clear_action_flags(stop, pcmk__action_runnable);
         }
 
-        if (pcmk_is_set(rsc->priv->scheduler->flags,
-                        pcmk__sched_remove_after_stop)) {
-            pcmk__schedule_cleanup(rsc, current, optional);
-        }
-
         if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_unfencing)) {
             pcmk_action_t *unfence = pe_fence_op(current, PCMK_ACTION_ON, true,
                                                  NULL, false,
@@ -1704,7 +1699,7 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 
     if (scheduler->priv->shutdown_lock_ms > 0U) {
         time_t lock_expiration = rsc->priv->lock_time
-                                 + (scheduler->priv->shutdown_lock_ms / 1000U);
+                                 + pcmk__timeout_ms2s(scheduler->priv->shutdown_lock_ms);
 
         pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
                        rsc->id, pcmk__node_name(rsc->priv->lock_node),

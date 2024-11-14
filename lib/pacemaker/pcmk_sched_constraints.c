@@ -44,7 +44,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
 
     for (xmlNode *xml_obj = pcmk__xe_first_child(xml_constraints, NULL, NULL,
                                                  NULL);
-         xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
+         xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj, NULL)) {
 
         const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
         const char *tag = (const char *) xml_obj->name;
@@ -243,14 +243,15 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
 
     for (xmlNode *set = pcmk__xe_first_child(new_xml, PCMK_XE_RESOURCE_SET,
                                              NULL, NULL);
-         set != NULL; set = pcmk__xe_next_same(set)) {
+         set != NULL; set = pcmk__xe_next(set, PCMK_XE_RESOURCE_SET)) {
 
         GList *tag_refs = NULL;
         GList *iter = NULL;
 
         for (xmlNode *xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF,
                                                      NULL, NULL);
-             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
+             xml_rsc != NULL;
+             xml_rsc = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF)) {
 
             pcmk_resource_t *rsc = NULL;
             pcmk__idref_t *tag = NULL;

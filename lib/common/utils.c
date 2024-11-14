@@ -374,6 +374,61 @@ pcmk__sleep_ms(unsigned int ms)
 #endif
 }
 
+/*!
+ * \internal
+ * \brief Add a timer
+ *
+ * \param[in] interval_ms The interval for the function to be called, in ms
+ * \param[in] fn          The function to be called
+ * \param[in] data        Data to be passed to fn (can be NULL)
+ *
+ * \return The ID of the event source
+ */
+guint
+pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data)
+{
+    pcmk__assert(interval_ms != 0 && fn != NULL);
+
+    if (interval_ms % 1000 == 0) {
+        /* In case interval_ms is 0, the call to pcmk__timeout_ms2s ensures
+         * an interval of one second.
+         */
+        return g_timeout_add_seconds(pcmk__timeout_ms2s(interval_ms), fn, data);
+    } else {
+        return g_timeout_add(interval_ms, fn, data);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Convert milliseconds to seconds
+ *
+ * \param[in] timeout_ms The interval, in ms
+ *
+ * \return If \p timeout_ms is 0, return 0.  Otherwise, return the number of
+ *         seconds, rounded to the nearest integer, with a minimum of 1.
+ */
+guint
+pcmk__timeout_ms2s(guint timeout_ms)
+{
+    guint quot, rem;
+
+    if (timeout_ms == 0) {
+        return 0;
+    } else if (timeout_ms < 1000) {
+        return 1;
+    }
+
+    quot = timeout_ms / 1000;
+    rem = timeout_ms % 1000;
+
+    if (rem >= 500) {
+        quot += 1;
+    }
+
+    return quot;
+}
+
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 

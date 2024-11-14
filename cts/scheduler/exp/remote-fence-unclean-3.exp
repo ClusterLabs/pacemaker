@@ -238,7 +238,7 @@
   <synapse id="24">
     <action_set>
       <crm_event id="63" operation="stonith" operation_key="stonith-overcloud-novacompute-0-reboot" on_node="overcloud-novacompute-0" on_node_uuid="overcloud-novacompute-0">
-        <attributes CRM_meta_compute_role="true" CRM_meta_on_node="overcloud-novacompute-0" CRM_meta_on_node_uuid="overcloud-novacompute-0" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="overcloud-novacompute-0" CRM_meta_on_node_uuid="overcloud-novacompute-0" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="overcloud-novacompute-0"/>
         </downed>

@@ -201,9 +201,9 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
         async_timer->cib = cib;
         async_timer->call_id = call_id;
         async_timer->timeout = timeout * 1000;
-        async_timer->ref = g_timeout_add(async_timer->timeout,
-                                         cib_async_timeout_handler,
-                                         async_timer);
+        async_timer->ref = pcmk__create_timer(async_timer->timeout,
+                                              cib_async_timeout_handler,
+                                              async_timer);
     }
 
     crm_trace("Adding callback %s for call %d", callback_name, call_id);

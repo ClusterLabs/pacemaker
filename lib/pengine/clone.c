@@ -384,7 +384,7 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     // Clones may contain a single group or primitive
     for (a_child = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
-         a_child != NULL; a_child = pcmk__xe_next(a_child)) {
+         a_child != NULL; a_child = pcmk__xe_next(a_child, NULL)) {
 
         if (pcmk__str_any_of((const char *) a_child->name,
                              PCMK_XE_PRIMITIVE, PCMK_XE_GROUP, NULL)) {
@@ -862,7 +862,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                                                              PCMK__XA_RC_CODE),
                                            &rc, 0);
                         g_hash_table_insert(stopped, strdup(node->priv->name),
-                                            crm_strdup_printf("Stopped (%s)", services_ocf_exitcode_str(rc)));
+                                            crm_strdup_printf("Stopped (%s)",
+                                                              crm_exit_str(rc)));
                     } else {
                         pcmk__insert_dup(stopped, node->priv->name, state);
                     }

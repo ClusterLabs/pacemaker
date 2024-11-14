@@ -1361,7 +1361,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
     pcmk__xml_free(query);
 
     query_timeout = op->base_timeout * TIMEOUT_MULTIPLY_FACTOR;
-    op->query_timer = g_timeout_add((1000 * query_timeout), remote_op_query_timeout, op);
+    op->query_timer = pcmk__create_timer((1000 * query_timeout), remote_op_query_timeout, op);
 
     return op;
 }
@@ -1505,7 +1505,8 @@ valid_fencing_timeout(int specified_timeout, bool action_specific,
     }
 
     timeout = (int) QB_MIN(QB_MAX(specified_timeout,
-                                  stonith_watchdog_timeout_ms / 1000), INT_MAX);
+                                  pcmk__timeout_ms2s(stonith_watchdog_timeout_ms)),
+                           INT_MAX);
 
     if (timeout > specified_timeout) {
         if (action_specific) {
@@ -1659,7 +1660,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                    if didn't get a reply
                  */
                 if (!found && is_watchdog_fencing(op, device_list->data)) {
-                    total_timeout += stonith_watchdog_timeout_ms / 1000;
+                    total_timeout += pcmk__timeout_ms2s(stonith_watchdog_timeout_ms);
                 }
             }                   /* End Loop2: iterate through devices at a specific level */
         }                       /*End Loop1: iterate through fencing levels */
@@ -1834,8 +1835,8 @@ check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
         if (op->op_timer_one) {
             g_source_remove(op->op_timer_one);
         }
-        op->op_timer_one = g_timeout_add(timeout_ms, remote_op_watchdog_done,
-                                         op);
+        op->op_timer_one = pcmk__create_timer(timeout_ms, remote_op_watchdog_done,
+                                              op);
         return TRUE;
     } else {
         crm_debug("Skipping fallback to watchdog-fencing as %s is "
@@ -1900,7 +1901,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
 
     if (!op->op_timer_total) {
         op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * get_op_total_timeout(op, peer);
-        op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
+        op->op_timer_total = pcmk__create_timer(1000 * op->total_timeout, remote_op_timeout, op);
         report_timeout_period(op, op->total_timeout);
         crm_info("Total timeout set to %ds for peer's fencing targeting %s for %s "
                  QB_XS " id=%.8s",
@@ -1997,7 +1998,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
 
             /* coming here we're not waiting for watchdog timeout -
                thus engage timer with timout evaluated before */
-            op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
+            op->op_timer_one = pcmk__create_timer((1000 * timeout_one), remote_op_timeout_one, op);
         }
 
         pcmk__cluster_send_message(peer_node, pcmk_ipc_fenced, remote_op);
@@ -2253,7 +2254,7 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
     parse_action_specific(xml, peer->host, device, op_requested_action(op),
                           op, st_phase_requested, props);
     for (child = pcmk__xe_first_child(xml, NULL, NULL, NULL); child != NULL;
-         child = pcmk__xe_next(child)) {
+         child = pcmk__xe_next(child, NULL)) {
         /* Replies for "reboot" operations will include the action-specific
          * values for "off" and "on" in child elements, just in case the reboot
          * winds up getting remapped.
@@ -2294,7 +2295,7 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices,
 
     /* Each child element describes one capable device available to the peer */
     for (child = pcmk__xe_first_child(xml, NULL, NULL, NULL); child != NULL;
-         child = pcmk__xe_next(child)) {
+         child = pcmk__xe_next(child, NULL)) {
         const char *device = pcmk__xe_id(child);
 
         if (device) {

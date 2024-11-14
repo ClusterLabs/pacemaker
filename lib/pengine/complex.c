@@ -162,6 +162,15 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
     return ;
 
 }
+
+/*
+ * \brief Get fully evaluated resource meta-attributes
+ *
+ * \param[in,out] meta_hash  Where to store evaluated meta-attributes
+ * \param[in]     rsc        Resource to get meta-attributes for
+ * \param[in]     node       Ignored
+ * \param[in,out] scheduler  Scheduler data
+ */
 void
 get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
                     pcmk_node_t *node, pcmk_scheduler_t *scheduler)
@@ -179,14 +188,6 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
         .rsc_data = &rsc_rule_data,
         .op_data = NULL
     };
-
-    if (node) {
-        /* @COMPAT Support for node attribute expressions in rules for
-         * meta-attributes is deprecated. When we can break behavioral backward
-         * compatibility, drop this block.
-         */
-        rule_data.node_hash = node->priv->attrs;
-    }
 
     for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->priv->xml);
          a != NULL; a = a->next) {
@@ -335,7 +336,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
                                         NULL);
 
     for (child_xml = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
-         child_xml != NULL; child_xml = pcmk__xe_next(child_xml)) {
+         child_xml != NULL; child_xml = pcmk__xe_next(child_xml, NULL)) {
 
         xmlNode *new_child = pcmk__xml_copy(new_xml, child_xml);
 
@@ -349,7 +350,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         GHashTable *rsc_ops_hash = pcmk__strkey_table(free, NULL);
 
         for (op = pcmk__xe_first_child(rsc_ops, NULL, NULL, NULL); op != NULL;
-             op = pcmk__xe_next(op)) {
+             op = pcmk__xe_next(op, NULL)) {
 
             char *key = template_op_key(op);
 
@@ -357,7 +358,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         }
 
         for (op = pcmk__xe_first_child(template_ops, NULL, NULL, NULL);
-             op != NULL; op = pcmk__xe_next(op)) {
+             op != NULL; op = pcmk__xe_next(op, NULL)) {
 
             char *key = template_op_key(op);
 
@@ -879,22 +880,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         }
     } else {
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_unique);
-    }
-
-    // @COMPAT Deprecated meta-attribute
-    value = g_hash_table_lookup(rsc_private->meta, PCMK__META_RESTART_TYPE);
-    if (pcmk__str_eq(value, PCMK_VALUE_RESTART, pcmk__str_casei)) {
-        rsc_private->restart_type = pcmk__restart_restart;
-        pcmk__rsc_trace(*rsc, "%s dependency restart handling: restart",
-                        (*rsc)->id);
-        pcmk__warn_once(pcmk__wo_restart_type,
-                        "Support for " PCMK__META_RESTART_TYPE " is deprecated "
-                        "and will be removed in a future release");
-
-    } else {
-        rsc_private->restart_type = pcmk__restart_ignore;
-        pcmk__rsc_trace(*rsc, "%s dependency restart handling: ignore",
-                        (*rsc)->id);
     }
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_MULTIPLE_ACTIVE);

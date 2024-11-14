@@ -179,7 +179,7 @@ test_exit(crm_exit_t exit_code)
              lrmd_event_type2str(event->type),                          \
              event->rsc_id,                                             \
              event->op_type ? event->op_type : "none",                  \
-             services_ocf_exitcode_str(event->rc),                      \
+             crm_exit_str((crm_exit_t) event->rc),                      \
              pcmk_exec_status_str(event->op_status));                   \
     crm_info("%s", event_buf_v0);
 
@@ -281,7 +281,7 @@ start_test(gpointer user_data)
     lrmd_conn->cmds->set_callback(lrmd_conn, read_events);
 
     if (options.timeout) {
-        g_timeout_add(options.timeout, timeout_err, NULL);
+        pcmk__create_timer(options.timeout, timeout_err, NULL);
     }
 
     if (!options.api_call) {

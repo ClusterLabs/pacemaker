@@ -15,6 +15,9 @@
    "cib-bootstrap-options" always sorts first relative to its siblings.
  * Each nvpair has a value attribute. If an nvpair did not have a value
    attribute prior to this transformation, it is dropped.
+ * There are no "moon" attributes in date_spec elements of rules. If there were
+   any prior to this transformation, the attributes are now removed and the rest
+   of the date_spec is unchanged.
  * The crmd-finalization-timeout cluster property has been renamed to
    "join-finalization-timeout".
  * The crmd-integration-timeout cluster property has been renamed to
@@ -24,6 +27,8 @@
  * The remove-after-stop cluster property is not present.
  * The stonith-action cluster property is set to "off" if it was previously set
    to "poweroff".
+ * There are no fencing levels with index greater than 9. If there were any
+   prior to this transformation, they are dropped.
 
  nvset elements include the following:
  * cluster_property_set
@@ -124,6 +129,12 @@
 <xsl:template match="nvpair[not(@value)]"/>
 
 
+<!-- Rules -->
+
+<!-- Drop the moon attribute from date_spec elements -->
+<xsl:template match="date_spec/@moon"/>
+
+
 <!-- Cluster properties -->
 
 <!-- Rename crmd-finalization-timeout property to join-finalization-timeout -->
@@ -152,5 +163,11 @@
                      /@value[. = 'poweroff']">
     <xsl:attribute name="value">off</xsl:attribute>
 </xsl:template>
+
+
+<!-- Fencing topology -->
+
+<!-- Drop fencing levels with index greater than 9 -->
+<xsl:template match="fencing-level[number(@index) > 9]"/>
 
 </xsl:stylesheet>

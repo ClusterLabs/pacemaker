@@ -525,15 +525,14 @@
     </parameter>
     <parameter name="stonith-action">
       <longdesc lang="en">
-        Action to send to fence device when a node needs to be fenced ("poweroff" is a deprecated alias for "off")  Allowed values: reboot, off, poweroff
+        Action to send to fence device when a node needs to be fenced  Allowed values: reboot, off
       </longdesc>
       <shortdesc lang="en">
-        Action to send to fence device when a node needs to be fenced ("poweroff" is a deprecated alias for "off")
+        Action to send to fence device when a node needs to be fenced
       </shortdesc>
       <content type="select" default="">
         <option value="reboot"/>
         <option value="off"/>
-        <option value="poweroff"/>
       </content>
     </parameter>
     <parameter name="stonith-timeout">
@@ -641,15 +640,6 @@
       </longdesc>
       <shortdesc lang="en">
         Whether to cancel recurring actions removed from the configuration
-      </shortdesc>
-      <content type="boolean" default=""/>
-    </parameter>
-    <parameter name="remove-after-stop">
-      <longdesc lang="en">
-        Values other than default are poorly tested and potentially dangerous.
-      </longdesc>
-      <shortdesc lang="en">
-        *** Deprecated *** Whether to remove stopped resources from the executor
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>

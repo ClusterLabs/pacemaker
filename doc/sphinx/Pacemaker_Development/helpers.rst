@@ -224,12 +224,19 @@ is no ``lib/common/tests/acls`` directory.
 
      check_PROGRAMS = pcmk_acl_required_test
 
-* Double check that ``$(top_srcdir)/mk/tap.mk`` and ``$(top_srcdir)/mk/unittest.mk``
-  are included in the ``Makefile.am``.  These files contain all the flags necessary
-  for most unit tests.  If necessary, individual settings can be overridden like so:
+* Double check that the following includes are at the top of ``Makefile.am``:
 
   .. code-block:: none
 
+     include $(top_srcdir)/mk/common.mk
+     include $(top_srcdir)/mk/tap.mk
+     include $(top_srcdir)/mk/unittest.mk
+
+* If necessary, settings from those includes can be overridden like so:
+
+  .. code-block:: none
+
+     AM_TESTS_ENVIRONMENT += PCMK_CTS_CLI_DIR=$(top_srcdir)/cts/cli
      AM_CPPFLAGS += -I$(top_srcdir)
      LDADD += $(top_builddir)/lib/pengine/libpe_status_test.la
 
@@ -354,10 +361,11 @@ instead of using NULL.
 Assertions
 __________
 
-In addition to the `assertions provided by <https://api.cmocka.org/group__cmocka__asserts.html>`_,
-``unittest_internal.h`` also provides ``pcmk__assert_asserts``.  This macro takes an
-expression and verifies that the expression aborts due to a failed call to
-``CRM_ASSERT`` or some other similar function.  It can be used like so:
+In addition to the `assertions provided by cmocka
+<https://api.cmocka.org/group__cmocka__asserts.html>`_, ``unittest_internal.h``
+also provides ``pcmk__assert_asserts``. This macro takes an expression and
+verifies that the expression aborts due to a failed call to ``pcmk__assert()``
+or some other similar function.  It can be used like so:
 
 .. code-block:: c
 
@@ -371,7 +379,7 @@ expression and verifies that the expression aborts due to a failed call to
    }
 
 Here, ``pcmk__parse_ll_range`` expects non-NULL for its second and third
-arguments.  If one of those arguments is NULL, ``CRM_ASSERT`` will fail and
+arguments.  If one of those arguments is NULL, ``pcmk__assert()`` will fail and
 the program will abort.  ``pcmk__assert_asserts`` checks that the code would
 abort and the test passes.  If the code does not abort, the test fails.
 

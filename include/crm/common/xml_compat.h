@@ -60,12 +60,6 @@ void pcmk_free_xml_subtree(xmlNode *xml);
 void free_xml(xmlNode *child);
 
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *expand_idref(xmlNode *input, xmlNode *top);
-
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-void crm_xml_set_id(xmlNode *xml, const char *format, ...) G_GNUC_PRINTF(2, 3);
-
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 void crm_xml_sanitize_id(char *id);
 
 //! \deprecated Do not use
@@ -77,9 +71,6 @@ char *calculate_operation_digest(xmlNode *input, const char *version);
 //! \deprecated Do not use
 char *calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
                                      gboolean do_filter, const char *version);
-
-//! \deprecated Do not use
-xmlNode *sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive);
 
 #ifdef __cplusplus
 }

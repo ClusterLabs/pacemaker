@@ -968,9 +968,9 @@ using libqb's "extended logging" feature:
 Assertion Logging
 _________________
 
-``CRM_ASSERT(expr)``
-  If ``expr`` is false, this will call <code>crm_err()</code> with a "Triggered
-  fatal assert" message (with details), then abort execution. This should be
+``pcmk__assert(expr)``
+  If ``expr`` is false, this will call ``crm_err()`` with a "Triggered fatal
+  assertion" message (with details), then abort execution. This should be
   used for logic errors that should be impossible (such as a NULL function
   argument where not accepted) and environmental errors that can't be handled
   gracefully (for example, memory allocation failures, though returning
@@ -982,8 +982,9 @@ _________________
   assert" message (with details). If the log level is trace, and the caller is
   a daemon, then it will fork a child process in which to dump core, as well as
   logging the message. If the log level is trace, and the caller is not a
-  daemon, then it will behave like ``CRM_ASSERT()`` (i.e. log and abort). This
-  should be used for logic or protocol errors that require no special handling.
+  daemon, then it will behave like ``pcmk__assert()`` (i.e. log and abort).
+  This should be used for logic or protocol errors that require no special
+  handling.
 
 ``CRM_CHECK(expr, failed_action)``
   If ``expr`` is false, behave like ``CRM_LOG_ASSERT(expr)`` (that is, log a

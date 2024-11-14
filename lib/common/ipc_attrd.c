@@ -28,7 +28,7 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 
     for (xmlNode *node = pcmk__xe_first_child(msg_data, PCMK_XE_NODE, NULL,
                                               NULL);
-         node != NULL; node = pcmk__xe_next_same(node)) {
+         node != NULL; node = pcmk__xe_next(node, PCMK_XE_NODE)) {
 
         pair = pcmk__assert_alloc(1, sizeof(pcmk__attrd_query_pair_t));
 
@@ -284,6 +284,8 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
 
         if (target != NULL) {
             node = target;
+        } else if (node == NULL) {
+            node = "localhost";
         }
     }
 

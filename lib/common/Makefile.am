@@ -30,12 +30,10 @@ SUBDIRS = . tests
 noinst_HEADERS		= crmcommon_private.h \
 			  mock_private.h
 
-libcrmcommon_la_LDFLAGS	= -version-info 47:0:13
+libcrmcommon_la_LDFLAGS	= -version-info 68:0:0
 
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
-
-libcrmcommon_la_LIBADD = @LIBADD_DL@
 
 # If configured with --with-profiling or --with-coverage, BUILD_PROFILING will
 # be set and -fno-builtin will be added to the CFLAGS.  However, libcrmcommon
@@ -43,7 +41,7 @@ libcrmcommon_la_LIBADD = @LIBADD_DL@
 # builtins.  Therefore we need to explicitly link against libm here or the
 # tests won't link.
 if BUILD_PROFILING
-libcrmcommon_la_LIBADD	+= -lm
+libcrmcommon_la_LIBADD	= -lm
 endif
 
 ## Library sources (*must* use += format for bumplibs)
@@ -104,6 +102,7 @@ libcrmcommon_la_SOURCES	+= xml.c
 libcrmcommon_la_SOURCES	+= xml_attr.c
 libcrmcommon_la_SOURCES	+= xml_comment.c
 libcrmcommon_la_SOURCES	+= xml_display.c
+libcrmcommon_la_SOURCES	+= xml_element.c
 libcrmcommon_la_SOURCES	+= xml_idref.c
 libcrmcommon_la_SOURCES	+= xml_io.c
 libcrmcommon_la_SOURCES	+= xpath.c

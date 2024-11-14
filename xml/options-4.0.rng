@@ -37,9 +37,7 @@
             </except>
           </data>
         </attribute>
-        <optional>
-          <attribute name="value"><text/></attribute>
-        </optional>
+        <attribute name="value"><text/></attribute>
       </group>
 
       <!-- stonith-action is allowed with value other than "poweroff" -->
@@ -81,6 +79,9 @@
             <element name="meta_attributes">
               <grammar>
                 <include href="nvset-4.0.rng">
+                  <define name="element-nvset.name-value">
+                    <ref name="rsc_meta_attributes.nvpair.unsupported"/>
+                  </define>
                   <define name="element-nvset.rule">
                     <parentRef name="element-rule-rsc_defaults"/>
                   </define>
@@ -96,6 +97,9 @@
             <element name="meta_attributes">
               <grammar>
                 <include href="nvset-4.0.rng">
+                  <define name="element-nvset.name-value">
+                    <ref name="op_meta_attributes.nvpair.unsupported"/>
+                  </define>
                   <define name="element-nvset.rule">
                     <parentRef name="element-rule-op_defaults"/>
                   </define>

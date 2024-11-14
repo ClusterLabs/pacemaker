@@ -151,7 +151,6 @@ enum crm_ipc_flags
 typedef struct crm_ipc_s crm_ipc_t;
 
 crm_ipc_t *crm_ipc_new(const char *name, size_t max_size);
-bool crm_ipc_connect(crm_ipc_t * client);
 void crm_ipc_close(crm_ipc_t * client);
 void crm_ipc_destroy(crm_ipc_t * client);
 void pcmk_free_ipc_event(struct iovec *event);

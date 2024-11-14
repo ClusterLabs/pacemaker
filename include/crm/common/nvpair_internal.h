@@ -39,6 +39,9 @@ typedef struct unpack_data_s {
     crm_time_t *next_change;
 } pcmk__nvpair_unpack_t;
 
+gint pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b,
+                             gpointer user_data);
+
 /*!
  * \internal
  * \brief Insert a meta-attribute into a hash table
@@ -59,10 +62,6 @@ typedef struct unpack_data_s {
             pcmk__insert_dup((obj)->meta, (name), (value));             \
         }                                                               \
     } while (0)
-
-int pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t);
-int pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
-                       uint32_t default_value);
 
 #ifdef __cplusplus
 }

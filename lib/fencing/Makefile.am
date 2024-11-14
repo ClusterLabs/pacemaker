@@ -14,13 +14,14 @@ noinst_HEADERS		= fencing_private.h
 
 lib_LTLIBRARIES		= libstonithd.la
 
-libstonithd_la_LDFLAGS	= -version-info 34:5:8
+libstonithd_la_LDFLAGS	= -version-info 56:0:0
 
 libstonithd_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libstonithd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
 libstonithd_la_LIBADD = $(top_builddir)/lib/services/libcrmservice.la
 libstonithd_la_LIBADD += $(top_builddir)/lib/common/libcrmcommon.la
+libstonithd_la_LIBADD += @DL_LIBS@ @STONITH_LIBS@
 
 ## Library sources (*must* use += format for bumplibs)
 libstonithd_la_SOURCES	= st_actions.c
