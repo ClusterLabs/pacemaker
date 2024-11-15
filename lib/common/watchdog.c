@@ -180,14 +180,14 @@ pcmk__locate_sbd(void)
     if (rc == pcmk_rc_ok) {
         crm_trace("SBD detected at pid %lld (via PID file %s)",
                   (long long) sbd_pid, pidfile);
-
-#if HAVE_LINUX_PROCFS
     } else {
         /* Fall back to /proc for systems that support it */
         sbd_pid = pcmk__procfs_pid_of("sbd");
-        crm_trace("SBD detected at pid %lld (via procfs)",
-                  (long long) sbd_pid);
-#endif // HAVE_LINUX_PROCFS
+
+        if (sbd_pid != 0) {
+            crm_trace("SBD detected at pid %lld (via procfs)",
+                      (long long) sbd_pid);
+        }
     }
 
     if(sbd_pid < 0) {
