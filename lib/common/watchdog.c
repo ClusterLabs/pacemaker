@@ -24,28 +24,6 @@ static pid_t sbd_pid = 0;
 
 /*!
  * \internal
- * \brief Trigger a sysrq command if supported on current platform
- *
- * \param[in] t  Sysrq command to trigger
- */
-static void
-sysrq_trigger(char t)
-{
-#if HAVE_LINUX_PROCFS
-    // Root can always write here, regardless of kernel.sysrq value
-    FILE *procf = fopen("/proc/sysrq-trigger", "a");
-
-    if (procf == NULL) {
-        crm_warn("Could not open sysrq-trigger: %s", strerror(errno));
-    } else {
-        fprintf(procf, "%c\n", t);
-        fclose(procf);
-    }
-#endif // HAVE_LINUX_PROCFS
-}
-
-/*!
- * \internal
  * \brief Tell pacemakerd to panic the local host
  *
  * \param[in] ppid  Process ID of parent process
@@ -102,13 +80,13 @@ panic_local(void)
 
     if (pcmk__str_empty(full_panic_action)
         || pcmk__str_eq(panic_action, PCMK_VALUE_REBOOT, pcmk__str_none)) {
-        sysrq_trigger('b');
+        pcmk__sysrq_trigger('b');
 
     } else if (pcmk__str_eq(panic_action, PCMK_VALUE_CRASH, pcmk__str_none)) {
-        sysrq_trigger('c');
+        pcmk__sysrq_trigger('c');
 
     } else if (pcmk__str_eq(panic_action, PCMK_VALUE_OFF, pcmk__str_none)) {
-        sysrq_trigger('o');
+        pcmk__sysrq_trigger('o');
 #ifdef RB_POWER_OFF
         reboot_cmd = RB_POWER_OFF;
 #elif defined(RB_POWEROFF)
@@ -118,7 +96,7 @@ panic_local(void)
         crm_warn("Using default '" PCMK_VALUE_REBOOT "' for local option PCMK_"
                  PCMK__ENV_PANIC_ACTION " because '%s' is not a valid value",
                  full_panic_action);
-        sysrq_trigger('b');
+        pcmk__sysrq_trigger('b');
     }
 
     // sysrq failed or is not supported on this platform, so fall back to reboot

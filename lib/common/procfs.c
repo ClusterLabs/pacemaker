@@ -231,3 +231,25 @@ pcmk__procfs_has_pids(void)
     return false;
 #endif // HAVE_LINUX_PROCFS
 }
+
+/*!
+ * \internal
+ * \brief Trigger a sysrq command if supported on current platform
+ *
+ * \param[in] t  Sysrq command to trigger
+ */
+void
+pcmk__sysrq_trigger(char t)
+{
+#if HAVE_LINUX_PROCFS
+    // Root can always write here, regardless of kernel.sysrq value
+    FILE *procf = fopen("/proc/sysrq-trigger", "a");
+
+    if (procf == NULL) {
+        crm_warn("Could not open sysrq-trigger: %s", strerror(errno));
+    } else {
+        fprintf(procf, "%c\n", t);
+        fclose(procf);
+    }
+#endif // HAVE_LINUX_PROCFS
+}
