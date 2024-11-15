@@ -35,7 +35,6 @@ panic_local_nonroot(pid_t ppid)
         crm_emerg("Escalating panic to " PCMK__SERVER_PACEMAKERD "[%lld]",
                   (long long) ppid);
     } else { // Signal (non-parent) pacemakerd if possible
-#if HAVE_LINUX_PROCFS
         ppid = pcmk__procfs_pid_of(PCMK__SERVER_PACEMAKERD);
         if (ppid > 0) {
             union sigval signal_value;
@@ -47,12 +46,9 @@ panic_local_nonroot(pid_t ppid)
                 crm_emerg("Exiting after signal failure: %s", strerror(errno));
             }
         } else {
-#endif
             crm_emerg("Exiting with no known " PCMK__SERVER_PACEMAKERD
                       "process");
-#if HAVE_LINUX_PROCFS
         }
-#endif
     }
     crm_exit(CRM_EX_PANIC);
 }
