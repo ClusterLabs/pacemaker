@@ -576,19 +576,15 @@ pcmk__close_fds_in_child(bool all)
         max_fd = (conf_max > 0)? conf_max : 1024;
     }
 
-    /* /proc/self/fd (on Linux) or /dev/fd (on most OSes) contains symlinks to
-     * all open files for the current process, named as the file descriptor.
-     * Use this if available, because it's more efficient than a shotgun
-     * approach to closing descriptors.
+    /* First try /proc.  If that returns NULL (either because opening the
+     * directory failed, or because procfs isn't supported on this platform),
+     * fall back to /dev/fd.
      */
-#if HAVE_LINUX_PROCFS
-    dir = opendir("/proc/self/fd");
+    dir = pcmk__procfs_fd_dir();
     if (dir == NULL) {
         dir = opendir("/dev/fd");
     }
-#else
-    dir = opendir("/dev/fd");
-#endif // HAVE_LINUX_PROCFS
+
     if (dir != NULL) {
         struct dirent *entry;
         int dir_fd = dirfd(dir);

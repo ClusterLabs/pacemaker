@@ -234,6 +234,28 @@ pcmk__procfs_has_pids(void)
 
 /*!
  * \internal
+ * \brief Return an open handle on the directory containing links to open file
+ *        descriptors, or NULL on error
+ */
+DIR *
+pcmk__procfs_fd_dir(void)
+{
+    DIR *dir = NULL;
+
+    /* /proc/self/fd (on Linux) or /dev/fd (on most OSes) contains symlinks to
+     * all open files for the current process, named as the file descriptor.
+     * Use this if available, because it's more efficient than a shotgun
+     * approach to closing descriptors.
+     */
+#if HAVE_LINUX_PROCFS
+    dir = opendir("/proc/self/fd");
+#endif // HAVE_LINUX_PROCFS
+
+    return dir;
+}
+
+/*!
+ * \internal
  * \brief Trigger a sysrq command if supported on current platform
  *
  * \param[in] t  Sysrq command to trigger
