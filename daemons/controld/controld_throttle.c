@@ -132,7 +132,7 @@ throttle_cib_load(const char *server, float *load)
     time_t now = time(NULL);
 
     if(load == NULL) {
-        return FALSE;
+        return false;
     } else {
         *load = 0.0;
     }
@@ -144,7 +144,7 @@ throttle_cib_load(const char *server, float *load)
         loadfile = find_cib_loadfile(server);
         if (loadfile == NULL) {
             crm_warn("Couldn't find CIB load file");
-            return FALSE;
+            return false;
         }
         ticks_per_s = sysconf(_SC_CLK_TCK);
         crm_trace("Found %s", loadfile);
@@ -156,7 +156,7 @@ throttle_cib_load(const char *server, float *load)
 
         crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
         free(loadfile); loadfile = NULL;
-        return FALSE;
+        return false;
     }
 
     if(fgets(buffer, sizeof(buffer), stream)) {
@@ -174,7 +174,7 @@ throttle_cib_load(const char *server, float *load)
         if(rc != 15) {
             crm_err("Only %d of 15 fields found in %s", rc, loadfile);
             fclose(stream);
-            return FALSE;
+            return false;
 
         } else if(last_call > 0
            && last_call < now
@@ -199,11 +199,11 @@ throttle_cib_load(const char *server, float *load)
         last_stime = stime;
 
         fclose(stream);
-        return TRUE;
+        return true;
     }
 
     fclose(stream);
-    return FALSE;
+    return false;
 }
 
 static bool
@@ -214,14 +214,14 @@ throttle_load_avg(float *load)
     const char *loadfile = "/proc/loadavg";
 
     if(load == NULL) {
-        return FALSE;
+        return false;
     }
 
     stream = fopen(loadfile, "r");
     if(stream == NULL) {
         int rc = errno;
         crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
-        return FALSE;
+        return false;
     }
 
     if(fgets(buffer, sizeof(buffer), stream)) {
@@ -232,11 +232,11 @@ throttle_load_avg(float *load)
         if(nl) { nl[0] = 0; }
 
         fclose(stream);
-        return TRUE;
+        return true;
     }
 
     fclose(stream);
-    return FALSE;
+    return false;
 }
 
 /*!
