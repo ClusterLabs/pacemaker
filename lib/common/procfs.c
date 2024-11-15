@@ -20,6 +20,24 @@
 #if HAVE_LINUX_PROCFS
 /*!
  * \internal
+ * \brief Return name of /proc file containing the CIB daemon's load statistics
+ *
+ * \return Newly allocated memory with file name on success, NULL otherwise
+ *
+ * \note It is the caller's responsibility to free the return value.
+ *       This will return NULL if the daemon is being run via valgrind.
+ *       This should be called only on Linux systems.
+ */
+static char *
+find_cib_loadfile(const char *server)
+{
+    pid_t pid = pcmk__procfs_pid_of(server);
+
+    return pid? crm_strdup_printf("/proc/%lld/stat", (long long) pid) : NULL;
+}
+
+/*!
+ * \internal
  * \brief Get process ID and name associated with a /proc directory entry
  *
  * \param[in]  entry    Directory entry (must be result of readdir() on /proc)
@@ -274,4 +292,174 @@ pcmk__sysrq_trigger(char t)
         fclose(procf);
     }
 #endif // HAVE_LINUX_PROCFS
+}
+
+bool
+pcmk__throttle_cib_load(const char *server, float *load)
+{
+/* /proc/[pid]/stat
+ *
+ * Status information about the process.  This is used by ps(1).  It is defined
+ * in /usr/src/linux/fs/proc/array.c.
+ *
+ * The fields, in order, with their proper scanf(3) format specifiers, are:
+ *
+ * pid %d      (1)  The process ID.
+ * comm %s     (2)  The filename of the executable, in parentheses.  This is
+ *                  visible whether or not the executable is swapped out.
+ * state %c    (3)  One character from the string "RSDZTW" where R is running,
+ *                  S is sleeping in an interruptible wait, D is waiting in
+ *                  uninterruptible disk sleep, Z is zombie, T is traced or
+ *                  stopped (on a signal), and W is paging.
+ * ppid %d     (4)  The PID of the parent.
+ * pgrp %d     (5)  The process group ID of the process.
+ * session %d  (6)  The session ID of the process.
+ * tty_nr %d   (7)  The controlling terminal of the process.  (The minor device
+ *                  number is contained in the combination of bits 31 to 20 and
+ *                  7 to 0; the major device number is in bits 15 to 8.)
+ * tpgid %d    (8)  The ID of the foreground process group of the controlling
+ *                  terminal of the process.
+ * flags %u    (9)  The kernel flags word of the process.  For bit meanings, see
+ *                  the PF_* defines in the Linux kernel source file include/linux/sched.h.
+ *                  Details depend on the kernel version.
+ * minflt %lu  (10) The number of minor faults the process has made which have
+ *                  not required loading a memory page from disk.
+ * cminflt %lu (11) The number of minor faults that the process's waited-for
+ *                  children have made.
+ * majflt %lu  (12) The number of major faults the process has made which have
+ *                  required loading a memory page from disk.
+ * cmajflt %lu (13) The number of major faults that the process's waited-for
+ *                  children have made.
+ * utime %lu   (14) Amount of time that this process has been scheduled in user
+ *                  mode, measured in clock ticks (divide by sysconf(_SC_CLK_TCK)).
+ *                  This includes guest time, guest_time (time spent running a
+ *                  virtual CPU, see below), so that applications that are not
+ *                  aware of the guest time field do not lose that time from
+ *                  their calculations.
+ * stime %lu   (15) Amount of time that this process has been scheduled in
+ *                  kernel mode, measured in clock ticks (divide by sysconf(_SC_CLK_TCK)).
+ */
+
+#if HAVE_LINUX_PROCFS
+    static char *loadfile = NULL;
+    static time_t last_call = 0;
+    static long ticks_per_s = 0;
+    static unsigned long last_utime, last_stime;
+
+    char buffer[64*1024];
+    FILE *stream = NULL;
+    time_t now = time(NULL);
+
+    if (load == NULL) {
+        return false;
+    } else {
+        *load = 0.0;
+    }
+
+    if (loadfile == NULL) {
+        last_call = 0;
+        last_utime = 0;
+        last_stime = 0;
+
+        loadfile = find_cib_loadfile(server);
+        if (loadfile == NULL) {
+            crm_warn("Couldn't find CIB load file");
+            return false;
+        }
+
+        ticks_per_s = sysconf(_SC_CLK_TCK);
+        crm_trace("Found %s", loadfile);
+    }
+
+    stream = fopen(loadfile, "r");
+    if (stream == NULL) {
+        int rc = errno;
+
+        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
+        free(loadfile);
+        loadfile = NULL;
+        return false;
+    }
+
+    if (fgets(buffer, sizeof(buffer), stream) != NULL) {
+        char *comm = pcmk__assert_alloc(1, 256);
+        char state = 0;
+        int rc = 0, pid = 0, ppid = 0, pgrp = 0, session = 0, tty_nr = 0, tpgid = 0;
+        unsigned long flags = 0, minflt = 0, cminflt = 0, majflt = 0, cmajflt = 0, utime = 0, stime = 0;
+
+        rc = sscanf(buffer, "%d %[^ ] %c %d %d %d %d %d %lu %lu %lu %lu %lu %lu %lu",
+                    &pid, comm, &state, &ppid, &pgrp, &session, &tty_nr, &tpgid,
+                    &flags, &minflt, &cminflt, &majflt, &cmajflt, &utime, &stime);
+        free(comm);
+
+        if (rc != 15) {
+            crm_err("Only %d of 15 fields found in %s", rc, loadfile);
+            fclose(stream);
+            return false;
+
+        } else if ((last_call > 0) && (last_call < now) && (last_utime <= utime) &&
+                   (last_stime <= stime)) {
+            time_t elapsed = now - last_call;
+            unsigned long delta_utime = utime - last_utime;
+            unsigned long delta_stime = stime - last_stime;
+
+            *load = delta_utime + delta_stime; /* Cast to a float before division */
+            *load /= ticks_per_s;
+            *load /= elapsed;
+            crm_debug("cib load: %f (%lu ticks in %lds)", *load,
+                      delta_utime + delta_stime, (long) elapsed);
+
+        } else {
+            crm_debug("Init %lu + %lu ticks at %ld (%lu tps)", utime, stime,
+                      (long) now, ticks_per_s);
+        }
+
+        last_call = now;
+        last_utime = utime;
+        last_stime = stime;
+
+        fclose(stream);
+        return true;
+    }
+
+    fclose(stream);
+#endif // HAVE_LINUX_PROCFS
+    return false;
+}
+
+bool
+pcmk__throttle_load_avg(float *load)
+{
+#if HAVE_LINUX_PROCFS
+    char buffer[256];
+    FILE *stream = NULL;
+    const char *loadfile = "/proc/loadavg";
+
+    if (load == NULL) {
+        return false;
+    }
+
+    stream = fopen(loadfile, "r");
+    if (stream == NULL) {
+        int rc = errno;
+        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
+        return false;
+    }
+
+    if (fgets(buffer, sizeof(buffer), stream) != NULL) {
+        char *nl = strstr(buffer, "\n");
+
+        /* Grab the 1-minute average, ignore the rest */
+        *load = strtof(buffer, NULL);
+        if (nl != NULL) {
+            nl[0] = 0;
+        }
+
+        fclose(stream);
+        return true;
+    }
+
+    fclose(stream);
+#endif // HAVE_LINUX_PROCFS
+    return false;
 }
