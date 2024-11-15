@@ -84,42 +84,47 @@ find_cib_loadfile(const char *server)
 static bool
 throttle_cib_load(const char *server, float *load)
 {
-/*
-       /proc/[pid]/stat
-              Status information about the process.  This is used by ps(1).  It is defined in /usr/src/linux/fs/proc/array.c.
-
-              The fields, in order, with their proper scanf(3) format specifiers, are:
-
-              pid %d      (1) The process ID.
-
-              comm %s     (2) The filename of the executable, in parentheses.  This is visible whether or not the executable is swapped out.
-
-              state %c    (3) One character from the string "RSDZTW" where R is running, S is sleeping in an interruptible wait, D is waiting in uninterruptible disk sleep, Z is zombie, T is traced or stopped (on a signal), and W is paging.
-
-              ppid %d     (4) The PID of the parent.
-
-              pgrp %d     (5) The process group ID of the process.
-
-              session %d  (6) The session ID of the process.
-
-              tty_nr %d   (7) The controlling terminal of the process.  (The minor device number is contained in the combination of bits 31 to 20 and 7 to 0; the major device number is in bits 15 to 8.)
-
-              tpgid %d    (8) The ID of the foreground process group of the controlling terminal of the process.
-
-              flags %u (%lu before Linux 2.6.22)
-                          (9) The kernel flags word of the process.  For bit meanings, see the PF_* defines in the Linux kernel source file include/linux/sched.h.  Details depend on the kernel version.
-
-              minflt %lu  (10) The number of minor faults the process has made which have not required loading a memory page from disk.
-
-              cminflt %lu (11) The number of minor faults that the process's waited-for children have made.
-
-              majflt %lu  (12) The number of major faults the process has made which have required loading a memory page from disk.
-
-              cmajflt %lu (13) The number of major faults that the process's waited-for children have made.
-
-              utime %lu   (14) Amount of time that this process has been scheduled in user mode, measured in clock ticks (divide by sysconf(_SC_CLK_TCK)).  This includes guest time, guest_time (time spent running a virtual CPU, see below), so that applications that are not aware of the guest time field do not lose that time from their calculations.
-
-              stime %lu   (15) Amount of time that this process has been scheduled in kernel mode, measured in clock ticks (divide by sysconf(_SC_CLK_TCK)).
+/* /proc/[pid]/stat
+ *
+ * Status information about the process.  This is used by ps(1).  It is defined
+ * in /usr/src/linux/fs/proc/array.c.
+ *
+ * The fields, in order, with their proper scanf(3) format specifiers, are:
+ *
+ * pid %d      (1)  The process ID.
+ * comm %s     (2)  The filename of the executable, in parentheses.  This is
+ *                  visible whether or not the executable is swapped out.
+ * state %c    (3)  One character from the string "RSDZTW" where R is running,
+ *                  S is sleeping in an interruptible wait, D is waiting in
+ *                  uninterruptible disk sleep, Z is zombie, T is traced or
+ *                  stopped (on a signal), and W is paging.
+ * ppid %d     (4)  The PID of the parent.
+ * pgrp %d     (5)  The process group ID of the process.
+ * session %d  (6)  The session ID of the process.
+ * tty_nr %d   (7)  The controlling terminal of the process.  (The minor device
+ *                  number is contained in the combination of bits 31 to 20 and
+ *                  7 to 0; the major device number is in bits 15 to 8.)
+ * tpgid %d    (8)  The ID of the foreground process group of the controlling
+ *                  terminal of the process.
+ * flags %u    (9)  The kernel flags word of the process.  For bit meanings, see
+ *                  the PF_* defines in the Linux kernel source file include/linux/sched.h.
+ *                  Details depend on the kernel version.
+ * minflt %lu  (10) The number of minor faults the process has made which have
+ *                  not required loading a memory page from disk.
+ * cminflt %lu (11) The number of minor faults that the process's waited-for
+ *                  children have made.
+ * majflt %lu  (12) The number of major faults the process has made which have
+ *                  required loading a memory page from disk.
+ * cmajflt %lu (13) The number of major faults that the process's waited-for
+ *                  children have made.
+ * utime %lu   (14) Amount of time that this process has been scheduled in user
+ *                  mode, measured in clock ticks (divide by sysconf(_SC_CLK_TCK)).
+ *                  This includes guest time, guest_time (time spent running a
+ *                  virtual CPU, see below), so that applications that are not
+ *                  aware of the guest time field do not lose that time from
+ *                  their calculations.
+ * stime %lu   (15) Amount of time that this process has been scheduled in
+ *                  kernel mode, measured in clock ticks (divide by sysconf(_SC_CLK_TCK)).
  */
 
     static char *loadfile = NULL;
@@ -131,67 +136,68 @@ throttle_cib_load(const char *server, float *load)
     FILE *stream = NULL;
     time_t now = time(NULL);
 
-    if(load == NULL) {
+    if (load == NULL) {
         return false;
     } else {
         *load = 0.0;
     }
 
-    if(loadfile == NULL) {
+    if (loadfile == NULL) {
         last_call = 0;
         last_utime = 0;
         last_stime = 0;
+
         loadfile = find_cib_loadfile(server);
         if (loadfile == NULL) {
             crm_warn("Couldn't find CIB load file");
             return false;
         }
+
         ticks_per_s = sysconf(_SC_CLK_TCK);
         crm_trace("Found %s", loadfile);
     }
 
     stream = fopen(loadfile, "r");
-    if(stream == NULL) {
+    if (stream == NULL) {
         int rc = errno;
 
         crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
-        free(loadfile); loadfile = NULL;
+        free(loadfile);
+        loadfile = NULL;
         return false;
     }
 
-    if(fgets(buffer, sizeof(buffer), stream)) {
+    if (fgets(buffer, sizeof(buffer), stream) != NULL) {
         char *comm = pcmk__assert_alloc(1, 256);
         char state = 0;
         int rc = 0, pid = 0, ppid = 0, pgrp = 0, session = 0, tty_nr = 0, tpgid = 0;
         unsigned long flags = 0, minflt = 0, cminflt = 0, majflt = 0, cmajflt = 0, utime = 0, stime = 0;
 
-        rc = sscanf(buffer,  "%d %[^ ] %c %d %d %d %d %d %lu %lu %lu %lu %lu %lu %lu",
-                    &pid, comm, &state,
-                    &ppid, &pgrp, &session, &tty_nr, &tpgid,
+        rc = sscanf(buffer, "%d %[^ ] %c %d %d %d %d %d %lu %lu %lu %lu %lu %lu %lu",
+                    &pid, comm, &state, &ppid, &pgrp, &session, &tty_nr, &tpgid,
                     &flags, &minflt, &cminflt, &majflt, &cmajflt, &utime, &stime);
         free(comm);
 
-        if(rc != 15) {
+        if (rc != 15) {
             crm_err("Only %d of 15 fields found in %s", rc, loadfile);
             fclose(stream);
             return false;
 
-        } else if(last_call > 0
-           && last_call < now
-           && last_utime <= utime
-           && last_stime <= stime) {
-
+        } else if ((last_call > 0) && (last_call < now) && (last_utime <= utime) &&
+                   (last_stime <= stime)) {
             time_t elapsed = now - last_call;
             unsigned long delta_utime = utime - last_utime;
             unsigned long delta_stime = stime - last_stime;
 
-            *load = (delta_utime + delta_stime); /* Cast to a float before division */
+            *load = delta_utime + delta_stime; /* Cast to a float before division */
             *load /= ticks_per_s;
             *load /= elapsed;
-            crm_debug("cib load: %f (%lu ticks in %lds)", *load, delta_utime + delta_stime, (long)elapsed);
+            crm_debug("cib load: %f (%lu ticks in %lds)", *load,
+                      delta_utime + delta_stime, (long) elapsed);
 
         } else {
-            crm_debug("Init %lu + %lu ticks at %ld (%lu tps)", utime, stime, (long)now, ticks_per_s);
+            crm_debug("Init %lu + %lu ticks at %ld (%lu tps)", utime, stime,
+                      (long) now, ticks_per_s);
         }
 
         last_call = now;
@@ -213,23 +219,25 @@ throttle_load_avg(float *load)
     FILE *stream = NULL;
     const char *loadfile = "/proc/loadavg";
 
-    if(load == NULL) {
+    if (load == NULL) {
         return false;
     }
 
     stream = fopen(loadfile, "r");
-    if(stream == NULL) {
+    if (stream == NULL) {
         int rc = errno;
         crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
         return false;
     }
 
-    if(fgets(buffer, sizeof(buffer), stream)) {
+    if (fgets(buffer, sizeof(buffer), stream) != NULL) {
         char *nl = strstr(buffer, "\n");
 
         /* Grab the 1-minute average, ignore the rest */
         *load = strtof(buffer, NULL);
-        if(nl) { nl[0] = 0; }
+        if (nl != NULL) {
+            nl[0] = 0;
+        }
 
         fclose(stream);
         return true;
@@ -308,24 +316,23 @@ throttle_mode(void)
     float thresholds[4];
 
     cores = pcmk__procfs_num_cores();
-    if(throttle_cib_load(PCMK__SERVER_BASED, &load)) {
+    if (throttle_cib_load(PCMK__SERVER_BASED, &load)) {
         float cib_max_cpu = 0.95;
 
-        /* The CIB is a single-threaded task and thus cannot consume
-         * more than 100% of a CPU (and 1/cores of the overall system
-         * load).
+        /* The CIB is a single-threaded task and thus cannot consume more
+         * than 100% of a CPU (and 1/cores of the overall system load).
          *
-         * On a many-cored system, the CIB might therefore be maxed out
-         * (causing operations to fail or appear to fail) even though
-         * the overall system load is still reasonable.
+         * On a many-cored system, the CIB might therefore be maxed out (causing
+         * operations to fail or appear to fail) even though the overall system
+         * load is still reasonable.
          *
-         * Therefore, the 'normal' thresholds can not apply here, and we
-         * need a special case.
+         * Therefore, the 'normal' thresholds can not apply here, and we need a
+         * special case.
          */
-        if(cores == 1) {
+        if (cores == 1) {
             cib_max_cpu = 0.4;
         }
-        if(throttle_load_target > 0.0 && throttle_load_target < cib_max_cpu) {
+        if ((throttle_load_target > 0.0) && (throttle_load_target < cib_max_cpu)) {
             cib_max_cpu = throttle_load_target;
         }
 
@@ -338,12 +345,14 @@ throttle_mode(void)
         mode = throttle_check_thresholds(load, "CIB load", thresholds);
     }
 
-    if(throttle_load_target <= 0) {
-        /* If we ever make this a valid value, the cluster will at least behave as expected */
+    if (throttle_load_target <= 0) {
+        /* If we ever make this a valid value, the cluster will at least behave
+         * as expected
+         */
         return mode;
     }
 
-    if(throttle_load_avg(&load)) {
+    if (throttle_load_avg(&load)) {
         enum throttle_state_e cpu_load;
 
         cpu_load = throttle_handle_load(load, "CPU load", cores);
