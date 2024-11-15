@@ -74,15 +74,15 @@ load2str(enum throttle_state_e mode)
  *       This should be called only on Linux systems.
  */
 static char *
-find_cib_loadfile(void)
+find_cib_loadfile(const char *server)
 {
-    pid_t pid = pcmk__procfs_pid_of(PCMK__SERVER_BASED);
+    pid_t pid = pcmk__procfs_pid_of(server);
 
     return pid? crm_strdup_printf("/proc/%lld/stat", (long long) pid) : NULL;
 }
 
 static bool
-throttle_cib_load(float *load)
+throttle_cib_load(const char *server, float *load)
 {
 /*
        /proc/[pid]/stat
@@ -141,7 +141,7 @@ throttle_cib_load(float *load)
         last_call = 0;
         last_utime = 0;
         last_stime = 0;
-        loadfile = find_cib_loadfile();
+        loadfile = find_cib_loadfile(server);
         if (loadfile == NULL) {
             crm_warn("Couldn't find CIB load file");
             return FALSE;
@@ -308,7 +308,7 @@ throttle_mode(void)
     float thresholds[4];
 
     cores = pcmk__procfs_num_cores();
-    if(throttle_cib_load(&load)) {
+    if(throttle_cib_load(PCMK__SERVER_BASED, &load)) {
         float cib_max_cpu = 0.95;
 
         /* The CIB is a single-threaded task and thus cannot consume
