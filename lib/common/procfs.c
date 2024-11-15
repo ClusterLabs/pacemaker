@@ -17,6 +17,7 @@
 #include <dirent.h>
 #include <ctype.h>
 
+#if HAVE_LINUX_PROCFS
 /*!
  * \internal
  * \brief Get process ID and name associated with a /proc directory entry
@@ -91,6 +92,7 @@ pcmk__procfs_process_info(const struct dirent *entry, char *name, pid_t *pid)
 
     return 0;
 }
+#endif // HAVE_LINUX_PROCFS
 
 /*!
  * \internal
@@ -106,6 +108,7 @@ pcmk__procfs_process_info(const struct dirent *entry, char *name, pid_t *pid)
 pid_t
 pcmk__procfs_pid_of(const char *name)
 {
+#if HAVE_LINUX_PROCFS
     DIR *dp;
     struct dirent *entry;
     pid_t pid = 0;
@@ -129,6 +132,9 @@ pcmk__procfs_pid_of(const char *name)
     }
     closedir(dp);
     return pid;
+#else
+    return 0;
+#endif // HAVE_LINUX_PROCFS
 }
 
 /*!
@@ -140,6 +146,7 @@ pcmk__procfs_pid_of(const char *name)
 unsigned int
 pcmk__procfs_num_cores(void)
 {
+#if HAVE_LINUX_PROCFS
     int cores = 0;
     FILE *stream = NULL;
 
@@ -158,6 +165,9 @@ pcmk__procfs_num_cores(void)
         fclose(stream);
     }
     return cores? cores : 1;
+#else
+    return 1;
+#endif // HAVE_LINUX_PROCFS
 }
 
 /*!
