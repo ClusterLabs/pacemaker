@@ -14,6 +14,8 @@ Current cluster status:
     * edge	(ocf:heartbeat:Xen):	 Started xen-a
     * base	(ocf:heartbeat:Xen):	 Started xen-a
     * Email_Alerting	(ocf:heartbeat:MailTo):	 Started xen-b
+warning: Ignoring symmetrical for 'serialize-xen' because not valid with kind of 'Serialize'
+warning: Ignoring symmetrical for 'xen-set' because not valid with kind of 'Serialize'
 
 Transition Summary:
   * Restart    xen-a-fencing     (          xen-b )  due to resource definition change

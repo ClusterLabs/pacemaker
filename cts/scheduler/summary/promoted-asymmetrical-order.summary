@@ -11,6 +11,22 @@ Current cluster status:
     * Clone Set: ms2 [rsc2] (promotable):
       * Promoted: [ node2 ]
       * Unpromoted: [ node1 ]
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc2-monitor-unpromoted-5 is duplicate of rsc2-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc2-monitor-unpromoted-5 is duplicate of rsc2-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc2-monitor-unpromoted-5 is duplicate of rsc2-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc2-monitor-unpromoted-5 is duplicate of rsc2-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc2-monitor-unpromoted-5 is duplicate of rsc2-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc2-monitor-unpromoted-5 is duplicate of rsc2-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc2-monitor-unpromoted-5 is duplicate of rsc2-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc2-monitor-unpromoted-5 is duplicate of rsc2-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
 
 Transition Summary:
   * Stop       rsc1:0     (   Promoted node1 )  due to node availability

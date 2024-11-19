@@ -18,6 +18,8 @@ Current cluster status:
     * stonith-fence_ipmilan-node1	(stonith:fence_ipmilan):	 Started node2 (UNCLEAN)
     * stonith-fence_ipmilan-node3	(stonith:fence_ipmilan):	 Started node2 (UNCLEAN)
     * stonith-fence_ipmilan-node2	(stonith:fence_ipmilan):	 Started node3 (UNCLEAN)
+warning: Node node2 is unclean but cannot be fenced
+warning: Node node3 is unclean but cannot be fenced
 
 Transition Summary:
   * Stop       rabbitmq-bundle-docker-0        (                    node1 )  due to no quorum

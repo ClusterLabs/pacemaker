@@ -1,3 +1,4 @@
+warning: Support for the 'ordered' group meta-attribute is deprecated and will be removed in a future release (use a resource set instead)
 9 of 87 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:

@@ -24,6 +24,12 @@ Current cluster status:
     * R-lxc-01_kiff-01	(ocf:heartbeat:VirtualDomain):	 FAILED kiff-01 (UNCLEAN)
     * R-lxc-02_kiff-01	(ocf:heartbeat:VirtualDomain):	 Started kiff-01 (UNCLEAN)
     * R-lxc-02_kiff-02	(ocf:heartbeat:VirtualDomain):	 Started kiff-02
+warning: Invalid ordering constraint between shared0:0 and R-lxc-02_kiff-02
+warning: Invalid ordering constraint between clvmd:0 and R-lxc-02_kiff-02
+warning: Invalid ordering constraint between dlm:0 and R-lxc-02_kiff-02
+warning: Invalid ordering constraint between shared0:0 and R-lxc-01_kiff-02
+warning: Invalid ordering constraint between clvmd:0 and R-lxc-01_kiff-02
+warning: Invalid ordering constraint between dlm:0 and R-lxc-01_kiff-02
 
 Transition Summary:
   * Fence (reboot) lxc-02_kiff-01 (resource: R-lxc-02_kiff-01) 'guest is unclean'

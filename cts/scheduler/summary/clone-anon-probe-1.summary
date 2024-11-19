@@ -1,3 +1,6 @@
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
 Current cluster status:
   * Node List:
     * Online: [ mysql-01 mysql-02 ]
@@ -17,6 +20,9 @@ Executing Cluster Transition:
   * Resource action: drbd0:0         start on mysql-01
   * Resource action: drbd0:1         start on mysql-02
   * Pseudo action:   ms-drbd0_running_0
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
 
 Revised Cluster Status:
   * Node List:

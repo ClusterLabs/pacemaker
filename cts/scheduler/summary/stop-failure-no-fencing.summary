@@ -1,3 +1,6 @@
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 0 of 9 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
@@ -10,6 +13,11 @@ Current cluster status:
     * Clone Set: dlm-clone [dlm]:
       * Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
     * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
+warning: Node pcmk-3 is unclean but cannot be fenced
+warning: Node pcmk-4 is unclean but cannot be fenced
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 
 Transition Summary:
 

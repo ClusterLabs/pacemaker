@@ -1,3 +1,5 @@
+warning: Support for the 'ordered' group meta-attribute is deprecated and will be removed in a future release (use a resource set instead)
+error: Resetting 'on-fail' for monitor of resource_1 to 'stop' because 'fence' is not valid when fencing is disabled
 Current cluster status:
   * Node List:
     * Online: [ rh44-1 rh44-2 ]
@@ -10,6 +12,8 @@ Current cluster status:
         * promotable_Stateful:0	(ocf:heartbeat:Stateful):	 Unpromoted rh44-2
       * Resource Group: grp_ms_sf:1:
         * promotable_Stateful:1	(ocf:heartbeat:Stateful):	 Unpromoted rh44-1
+error: Resetting 'on-fail' for stop of resource_1 to 'stop' because 'fence' is not valid when fencing is disabled
+error: Resetting 'on-fail' for start of resource_1 to 'stop' because 'fence' is not valid when fencing is disabled
 
 Transition Summary:
   * Promote    promotable_Stateful:1     ( Unpromoted -> Promoted rh44-1 )
@@ -22,6 +26,7 @@ Executing Cluster Transition:
   * Pseudo action:   grp_ms_sf:1_promoted_0
   * Resource action: promotable_Stateful:1 monitor=6000 on rh44-1
   * Pseudo action:   ms-sf_promoted_0
+error: Resetting 'on-fail' for monitor of resource_1 to 'stop' because 'fence' is not valid when fencing is disabled
 
 Revised Cluster Status:
   * Node List:

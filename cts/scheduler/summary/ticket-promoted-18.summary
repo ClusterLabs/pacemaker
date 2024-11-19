@@ -7,6 +7,14 @@ Current cluster status:
     * Clone Set: ms1 [rsc1] (promotable):
       * Promoted: [ node1 ]
       * Unpromoted: [ node2 ]
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc1-monitor-unpromoted-5 is duplicate of rsc1-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
 
 Transition Summary:
   * Demote     rsc1:0     ( Promoted -> Unpromoted node1 )

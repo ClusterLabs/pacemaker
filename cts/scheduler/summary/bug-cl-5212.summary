@@ -19,6 +19,8 @@ Current cluster status:
       * prmPingd	(ocf:pacemaker:ping):	 Started srv02 (UNCLEAN)
       * prmPingd	(ocf:pacemaker:ping):	 Started srv01 (UNCLEAN)
       * Started: [ srv03 ]
+warning: Node srv01 is unclean but cannot be fenced
+warning: Node srv02 is unclean but cannot be fenced
 
 Transition Summary:
   * Stop       prmStonith1-1     (            srv02 )  blocked

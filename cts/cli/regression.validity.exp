@@ -66,15 +66,20 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Set invalid rsc_order first-action value (schema validation disabled) - OK (0) =#=#=#=
 * Passed: cibadmin              - Set invalid rsc_order first-action value (schema validation disabled)
 =#=#=#= Begin test: Run crm_simulate with invalid rsc_order first-action (schema validation disabled) =#=#=#=
+warning: Support for validate-with='none' is deprecated and will be removed in a future release without the possibility of upgrades (manually edit to use a supported schema)
+warning: Support for validate-with='none' is deprecated and will be removed in a future release without the possibility of upgrades (manually edit to use a supported schema)
 Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-invert_action 	warning: Unknown action 'break' specified in order constraint
-invert_action 	warning: Unknown action 'break' specified in order constraint
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+warning: Support for validate-with='none' is deprecated and will be removed in a future release without the possibility of upgrades (manually edit to use a supported schema)
+warning: Support for validate-with='none' is deprecated and will be removed in a future release without the possibility of upgrades (manually edit to use a supported schema)
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+warning: Unknown action 'break' specified in order constraint
+warning: Unknown action 'break' specified in order constraint
+warning: Cannot invert constraint 'ord_1-2' (please specify inverse manually)
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Current cluster status:
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped

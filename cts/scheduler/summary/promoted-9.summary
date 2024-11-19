@@ -29,6 +29,8 @@ Current cluster status:
       * ocf_msdummy:5	(ocf:heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	 Stopped
       * ocf_msdummy:6	(ocf:heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	 Stopped
       * ocf_msdummy:7	(ocf:heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	 Stopped
+warning: Node sgi2 is unclean but cannot be fenced
+warning: Node test02 is unclean but cannot be fenced
 
 Transition Summary:
   * Start      DcIPaddr                 (                     va1 )  due to no quorum (blocked)

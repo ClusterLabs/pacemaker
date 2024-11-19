@@ -10,6 +10,9 @@ Current cluster status:
       * Resource Group: group:1:
         * stateful-1:1	(ocf:heartbeat:Stateful):	 Unpromoted dl380g5a
         * stateful-2:1	(ocf:heartbeat:Stateful):	 Unpromoted dl380g5a
+error: Resetting 'on-fail' for stateful-1:0 stop action to default value because 'stop' is not allowed for stop
+error: Resetting 'on-fail' for stateful-1:1 stop action to default value because 'stop' is not allowed for stop
+error: Resetting 'on-fail' for stateful-2:1 stop action to default value because 'stop' is not allowed for stop
 
 Transition Summary:
   * Stop       stateful-1:0     (             Unpromoted dl380g5b )  due to node availability

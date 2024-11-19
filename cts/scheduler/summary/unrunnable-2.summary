@@ -85,6 +85,7 @@ Current cluster status:
       * Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: openstack-nova-conductor-clone [openstack-nova-conductor]:
       * Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
+warning: Support for require-all in ordering constraints is deprecated and will be removed in a future release (use clone-min clone meta-attribute instead)
 
 Transition Summary:
   * Start      openstack-cinder-volume     ( overcloud-controller-2 )  due to unrunnable openstack-cinder-scheduler-clone running (blocked)

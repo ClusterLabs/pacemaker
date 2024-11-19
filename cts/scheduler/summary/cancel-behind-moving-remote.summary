@@ -1,3 +1,99 @@
+warning: compute-0 requires fencing but fencing is disabled
+warning: compute-1 requires fencing but fencing is disabled
+warning: galera-bundle requires fencing but fencing is disabled
+warning: galera-bundle-master requires fencing but fencing is disabled
+warning: galera:0 requires fencing but fencing is disabled
+warning: galera:1 requires fencing but fencing is disabled
+warning: galera:2 requires fencing but fencing is disabled
+warning: galera-bundle-podman-0 requires fencing but fencing is disabled
+warning: galera-bundle-0 requires fencing but fencing is disabled
+warning: galera-bundle-podman-1 requires fencing but fencing is disabled
+warning: galera-bundle-1 requires fencing but fencing is disabled
+warning: galera-bundle-podman-2 requires fencing but fencing is disabled
+warning: galera-bundle-2 requires fencing but fencing is disabled
+warning: rabbitmq-bundle requires fencing but fencing is disabled
+warning: rabbitmq-bundle-clone requires fencing but fencing is disabled
+warning: rabbitmq:0 requires fencing but fencing is disabled
+warning: rabbitmq:1 requires fencing but fencing is disabled
+warning: rabbitmq:2 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-podman-0 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-0 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-podman-1 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-1 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-podman-2 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-2 requires fencing but fencing is disabled
+warning: redis-bundle requires fencing but fencing is disabled
+warning: redis-bundle-master requires fencing but fencing is disabled
+warning: redis:0 requires fencing but fencing is disabled
+warning: redis:1 requires fencing but fencing is disabled
+warning: redis:2 requires fencing but fencing is disabled
+warning: redis-bundle-podman-0 requires fencing but fencing is disabled
+warning: redis-bundle-0 requires fencing but fencing is disabled
+warning: redis-bundle-podman-1 requires fencing but fencing is disabled
+warning: redis-bundle-1 requires fencing but fencing is disabled
+warning: redis-bundle-podman-2 requires fencing but fencing is disabled
+warning: redis-bundle-2 requires fencing but fencing is disabled
+warning: ip-192.168.24.150 requires fencing but fencing is disabled
+warning: ip-10.0.0.150 requires fencing but fencing is disabled
+warning: ip-172.17.1.151 requires fencing but fencing is disabled
+warning: ip-172.17.1.150 requires fencing but fencing is disabled
+warning: ip-172.17.3.150 requires fencing but fencing is disabled
+warning: ip-172.17.4.150 requires fencing but fencing is disabled
+warning: haproxy-bundle requires fencing but fencing is disabled
+warning: haproxy-bundle-podman-0 requires fencing but fencing is disabled
+warning: haproxy-bundle-podman-1 requires fencing but fencing is disabled
+warning: haproxy-bundle-podman-2 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-master requires fencing but fencing is disabled
+warning: ovndb_servers:0 requires fencing but fencing is disabled
+warning: ovndb_servers:1 requires fencing but fencing is disabled
+warning: ovndb_servers:2 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-podman-0 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-0 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-podman-1 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-1 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-podman-2 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-2 requires fencing but fencing is disabled
+warning: ip-172.17.1.87 requires fencing but fencing is disabled
+warning: stonith-fence_compute-fence-nova requires fencing but fencing is disabled
+warning: compute-unfence-trigger-clone requires fencing but fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:0 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:1 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:2 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:3 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:4 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:5 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:6 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:7 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:8 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:9 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:10 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:11 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:12 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:13 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:14 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:15 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:16 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:17 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:18 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:19 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:20 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:21 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:22 to "quorum" because fencing is disabled
+warning: nova-evacuate requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400aa1373 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400dc23e0 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-52540040bb56 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400addd38 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-52540078fb07 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400ea59b0 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400066e50 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400e1534e requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-52540060dbba requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400e018b6 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400c87cdb requires fencing but fencing is disabled
+warning: openstack-cinder-volume requires fencing but fencing is disabled
+warning: openstack-cinder-volume-podman-0 requires fencing but fencing is disabled
 Using the original execution date of: 2021-02-15 01:40:51Z
 Current cluster status:
   * Node List:
@@ -130,6 +226,102 @@ Executing Cluster Transition:
   * Pseudo action:   ovn-dbs-bundle_promoted_0
   * Resource action: ovndb_servers   monitor=10000 on ovn-dbs-bundle-2
   * Resource action: ovndb_servers   monitor=30000 on ovn-dbs-bundle-0
+warning: compute-0 requires fencing but fencing is disabled
+warning: compute-1 requires fencing but fencing is disabled
+warning: galera-bundle requires fencing but fencing is disabled
+warning: galera-bundle-master requires fencing but fencing is disabled
+warning: galera:0 requires fencing but fencing is disabled
+warning: galera:1 requires fencing but fencing is disabled
+warning: galera:2 requires fencing but fencing is disabled
+warning: galera-bundle-podman-0 requires fencing but fencing is disabled
+warning: galera-bundle-0 requires fencing but fencing is disabled
+warning: galera-bundle-podman-1 requires fencing but fencing is disabled
+warning: galera-bundle-1 requires fencing but fencing is disabled
+warning: galera-bundle-podman-2 requires fencing but fencing is disabled
+warning: galera-bundle-2 requires fencing but fencing is disabled
+warning: rabbitmq-bundle requires fencing but fencing is disabled
+warning: rabbitmq-bundle-clone requires fencing but fencing is disabled
+warning: rabbitmq:0 requires fencing but fencing is disabled
+warning: rabbitmq:1 requires fencing but fencing is disabled
+warning: rabbitmq:2 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-podman-0 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-0 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-podman-1 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-1 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-podman-2 requires fencing but fencing is disabled
+warning: rabbitmq-bundle-2 requires fencing but fencing is disabled
+warning: redis-bundle requires fencing but fencing is disabled
+warning: redis-bundle-master requires fencing but fencing is disabled
+warning: redis:0 requires fencing but fencing is disabled
+warning: redis:1 requires fencing but fencing is disabled
+warning: redis:2 requires fencing but fencing is disabled
+warning: redis-bundle-podman-0 requires fencing but fencing is disabled
+warning: redis-bundle-0 requires fencing but fencing is disabled
+warning: redis-bundle-podman-1 requires fencing but fencing is disabled
+warning: redis-bundle-1 requires fencing but fencing is disabled
+warning: redis-bundle-podman-2 requires fencing but fencing is disabled
+warning: redis-bundle-2 requires fencing but fencing is disabled
+warning: ip-192.168.24.150 requires fencing but fencing is disabled
+warning: ip-10.0.0.150 requires fencing but fencing is disabled
+warning: ip-172.17.1.151 requires fencing but fencing is disabled
+warning: ip-172.17.1.150 requires fencing but fencing is disabled
+warning: ip-172.17.3.150 requires fencing but fencing is disabled
+warning: ip-172.17.4.150 requires fencing but fencing is disabled
+warning: haproxy-bundle requires fencing but fencing is disabled
+warning: haproxy-bundle-podman-0 requires fencing but fencing is disabled
+warning: haproxy-bundle-podman-1 requires fencing but fencing is disabled
+warning: haproxy-bundle-podman-2 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-master requires fencing but fencing is disabled
+warning: ovndb_servers:0 requires fencing but fencing is disabled
+warning: ovndb_servers:1 requires fencing but fencing is disabled
+warning: ovndb_servers:2 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-podman-0 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-0 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-podman-1 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-1 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-podman-2 requires fencing but fencing is disabled
+warning: ovn-dbs-bundle-2 requires fencing but fencing is disabled
+warning: ip-172.17.1.87 requires fencing but fencing is disabled
+warning: stonith-fence_compute-fence-nova requires fencing but fencing is disabled
+warning: compute-unfence-trigger-clone requires fencing but fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:0 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:1 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:2 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:3 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:4 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:5 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:6 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:7 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:8 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:9 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:10 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:11 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:12 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:13 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:14 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:15 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:16 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:17 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:18 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:19 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:20 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:21 to "quorum" because fencing is disabled
+warning: Resetting "requires" for compute-unfence-trigger:22 to "quorum" because fencing is disabled
+warning: nova-evacuate requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400aa1373 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400dc23e0 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-52540040bb56 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400addd38 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-52540078fb07 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400ea59b0 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400066e50 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400e1534e requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-52540060dbba requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400e018b6 requires fencing but fencing is disabled
+warning: stonith-fence_ipmilan-525400c87cdb requires fencing but fencing is disabled
+warning: openstack-cinder-volume requires fencing but fencing is disabled
+warning: openstack-cinder-volume-podman-0 requires fencing but fencing is disabled
 Using the original execution date of: 2021-02-15 01:40:51Z
 
 Revised Cluster Status:

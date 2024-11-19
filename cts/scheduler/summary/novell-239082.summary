@@ -1,3 +1,8 @@
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
 Current cluster status:
   * Node List:
     * Online: [ xen-1 xen-2 ]
@@ -7,6 +12,8 @@ Current cluster status:
     * Clone Set: ms-drbd0 [drbd0] (promotable):
       * Promoted: [ xen-1 ]
       * Unpromoted: [ xen-2 ]
+warning: Support for setting meta-attributes (such as target_role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target_role) to the explicit value '#default' is deprecated and will be removed in a future release
 
 Transition Summary:
   * Move       fs_1        (               xen-1 -> xen-2 )
@@ -47,6 +54,11 @@ Executing Cluster Transition:
   * Resource action: drbd0:0         notify on xen-2
   * Pseudo action:   ms-drbd0_confirmed-post_notify_promoted_0
   * Resource action: fs_1            start on xen-2
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
+warning: Support for setting meta-attributes (such as target-role) to the explicit value '#default' is deprecated and will be removed in a future release
 
 Revised Cluster Status:
   * Node List:

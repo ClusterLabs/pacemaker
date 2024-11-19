@@ -1,3 +1,6 @@
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Current cluster status:
   * Node List:
     * RemoteNode mrg-02: UNCLEAN (offline)
@@ -10,6 +13,12 @@ Current cluster status:
     * libvirtd-compute	(systemd:libvirtd):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
     * ceilometer-compute	(systemd:openstack-ceilometer-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
     * nova-compute	(systemd:openstack-nova-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+warning: Node mrg-02 is unclean but cannot be fenced
+warning: Node mrg-03 is unclean but cannot be fenced
+warning: Node mrg-04 is unclean but cannot be fenced
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 
 Transition Summary:
 

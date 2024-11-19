@@ -8,6 +8,7 @@ Current cluster status:
     * rsc1	(ocf:heartbeat:apache):	 Started node1 (UNCLEAN)
     * rsc2	(ocf:heartbeat:apache):	 Started node1 (UNCLEAN)
     * rsc3	(ocf:heartbeat:apache):	 Stopped
+warning: Node node1 is unclean but cannot be fenced
 
 Transition Summary:
   * Start      stonith-1     ( node2 )  due to quorum freeze (blocked)

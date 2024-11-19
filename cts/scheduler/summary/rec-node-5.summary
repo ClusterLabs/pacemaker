@@ -6,6 +6,8 @@ Current cluster status:
   * Full List of Resources:
     * rsc1	(ocf:heartbeat:apache):	 Stopped
     * rsc2	(ocf:heartbeat:apache):	 Stopped
+warning: Node node1 is unclean but cannot be fenced
+warning: Resource functionality and data integrity cannot be guaranteed (configure, enable, and test fencing to correct this)
 
 Transition Summary:
   * Start      rsc1    ( node2 )

@@ -9,6 +9,7 @@ Current cluster status:
     * Clone Set: promotable-1 [stateful-1] (promotable):
       * Promoted: [ node-3 ]
       * Stopped: [ node-1 node-2 ]
+warning: Support for the Promoted role is deprecated and will be removed in a future release. Use Promoted instead.
 
 Transition Summary:
   * Start      stateful-1:1     ( node-1 )  due to unrunnable stateful-1:0 monitor (blocked)

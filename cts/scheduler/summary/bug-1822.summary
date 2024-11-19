@@ -1,3 +1,4 @@
+warning: Support for the 'ordered' group meta-attribute is deprecated and will be removed in a future release (use a resource set instead)
 Current cluster status:
   * Node List:
     * Online: [ process1a process2b ]
@@ -10,6 +11,9 @@ Current cluster status:
       * Resource Group: ms-sf_group:1:
         * promotable_Stateful:1	(ocf:heartbeat:Dummy-statful):	 Promoted process1a
         * promotable_procdctl:1	(ocf:heartbeat:procdctl):	 Promoted process1a
+error: Resetting 'on-fail' for promotable_Stateful:0 stop action to default value because 'stop' is not allowed for stop
+error: Resetting 'on-fail' for promotable_Stateful:1 stop action to default value because 'stop' is not allowed for stop
+error: Resetting 'on-fail' for promotable_procdctl:1 stop action to default value because 'stop' is not allowed for stop
 
 Transition Summary:
   * Stop       promotable_Stateful:1     ( Promoted process1a )  due to node availability

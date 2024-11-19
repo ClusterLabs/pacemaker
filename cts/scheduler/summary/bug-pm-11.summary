@@ -1,3 +1,4 @@
+warning: Support for the 'ordered' group meta-attribute is deprecated and will be removed in a future release (use a resource set instead)
 Current cluster status:
   * Node List:
     * Online: [ node-a node-b ]
