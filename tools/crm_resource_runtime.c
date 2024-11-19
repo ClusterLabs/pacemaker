@@ -1491,7 +1491,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
 
         pcmk__xml_free(*cib_xml_orig);
         *cib_xml_orig = xml;
-        cluster_status(scheduler);
+        pcmk_unpack_scheduler_input(scheduler);
     }
 
   done:

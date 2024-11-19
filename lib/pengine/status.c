@@ -208,12 +208,6 @@ pcmk_unpack_scheduler_input(pcmk_scheduler_t *scheduler)
     return pcmk_rc_ok;
 }
 
-gboolean
-cluster_status(pcmk_scheduler_t * scheduler)
-{
-    return pcmk_unpack_scheduler_input(scheduler) == pcmk_rc_ok;
-}
-
 /*!
  * \internal
  * \brief Free a list of pcmk_resource_t
@@ -536,6 +530,12 @@ pe_find_node_id(const GList *nodes, const char *id)
 // LCOV_EXCL_START
 
 #include <crm/pengine/status_compat.h>
+
+gboolean
+cluster_status(pcmk_scheduler_t * scheduler)
+{
+    return pcmk_unpack_scheduler_input(scheduler) == pcmk_rc_ok;
+}
 
 /*!
  * \brief Find a node by name in a list of nodes

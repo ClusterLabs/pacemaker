@@ -33,9 +33,6 @@ const char *rsc_printable_id(const pcmk_resource_t *rsc);
 int pcmk_unpack_scheduler_input(pcmk_scheduler_t *scheduler);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-gboolean cluster_status(pcmk_scheduler_t *scheduler);
-
-// NOTE: sbd (as of at least 1.5.2) uses this
 pcmk_scheduler_t *pe_new_working_set(void);
 
 // NOTE: sbd (as of at least 1.5.2) uses this

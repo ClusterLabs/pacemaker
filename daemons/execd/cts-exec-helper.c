@@ -475,7 +475,7 @@ generate_params(void)
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
     scheduler->input = cib_xml_copy;
     scheduler->priv->now = crm_time_new(NULL);
-    cluster_status(scheduler);
+    pcmk_unpack_scheduler_input(scheduler);
 
     // Find resource in CIB
     rsc = pe_find_resource_with_flags(scheduler->priv->resources,

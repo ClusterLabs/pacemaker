@@ -809,7 +809,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     }
 
     reset(scheduler, input, out, use_date, flags);
-    cluster_status(scheduler);
+    pcmk_unpack_scheduler_input(scheduler);
 
     if (!out->is_quiet(out)) {
         const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
@@ -862,7 +862,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
         cleanup_calculations(scheduler);
         reset(scheduler, input, out, use_date, flags);
-        cluster_status(scheduler);
+        pcmk_unpack_scheduler_input(scheduler);
     }
 
     if (input_file != NULL) {
@@ -972,7 +972,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
 
-    cluster_status(scheduler);
+    pcmk_unpack_scheduler_input(scheduler);
     print_cluster_status(scheduler, 0, section_opts, "Revised Cluster Status",
                          true);
 

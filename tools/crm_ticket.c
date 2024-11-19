@@ -441,7 +441,7 @@ main(int argc, char **argv)
     scheduler->input = cib_xml_copy;
     scheduler->priv->now = crm_time_new(NULL);
 
-    cluster_status(scheduler);
+    pcmk_unpack_scheduler_input(scheduler);
 
     /* For recording the tickets that are referenced in PCMK_XE_RSC_TICKET
      * constraints but have never been granted yet.

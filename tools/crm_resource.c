@@ -959,7 +959,7 @@ clear_constraints(pcmk__output_t *out)
         }
 
         scheduler->input = cib_xml;
-        cluster_status(scheduler);
+        pcmk_unpack_scheduler_input(scheduler);
 
         after = build_constraint_list(scheduler->input);
         remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
@@ -993,7 +993,7 @@ initialize_scheduler_data(xmlNode **cib_xml_orig)
         return rc;
     }
 
-    cluster_status(scheduler);
+    pcmk_unpack_scheduler_input(scheduler);
     return pcmk_rc_ok;
 }
 

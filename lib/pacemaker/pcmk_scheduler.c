@@ -756,7 +756,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
 
     pcmk__set_scheduler_flags(scheduler, flags);
     scheduler->input = cib;
-    cluster_status(scheduler); // Sets pcmk__sched_have_status
+    pcmk_unpack_scheduler_input(scheduler); // Sets pcmk__sched_have_status
 }
 
 /*!
@@ -873,7 +873,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
     }
 
     // Unpack everything
-    cluster_status(new_scheduler);
+    pcmk_unpack_scheduler_input(new_scheduler);
     *scheduler = new_scheduler;
 
     return pcmk_rc_ok;

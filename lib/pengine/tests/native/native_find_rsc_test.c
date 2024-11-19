@@ -46,7 +46,7 @@ setup(void **state) {
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
     scheduler->input = input;
 
-    cluster_status(scheduler);
+    pcmk_unpack_scheduler_input(scheduler);
 
     /* Get references to the cluster nodes so we don't have to find them repeatedly. */
     cluster01 = pcmk_find_node(scheduler, "cluster01");

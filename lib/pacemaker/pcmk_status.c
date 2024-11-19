@@ -104,7 +104,7 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
 
     pe_reset_working_set(scheduler);
     scheduler->input = cib_copy;
-    cluster_status(scheduler);
+    pcmk_unpack_scheduler_input(scheduler);
 
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,
