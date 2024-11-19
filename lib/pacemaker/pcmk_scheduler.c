@@ -835,6 +835,8 @@ int
 pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
                      pcmk_scheduler_t **scheduler)
 {
+    int rc = pcmk_rc_ok;
+
     // Allows for cleaner syntax than dereferencing the scheduler argument
     pcmk_scheduler_t *new_scheduler = NULL;
 
@@ -857,7 +859,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
         }
 
     } else {
-        int rc = cib__signon_query(out, NULL, &(new_scheduler->input));
+        rc = cib__signon_query(out, NULL, &(new_scheduler->input));
 
         if (rc != pcmk_rc_ok) {
             pe_free_working_set(new_scheduler);
@@ -873,7 +875,12 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
     }
 
     // Unpack everything
-    pcmk_unpack_scheduler_input(new_scheduler);
+    rc = pcmk_unpack_scheduler_input(new_scheduler);
+    if (rc != pcmk_rc_ok) {
+        pe_free_working_set(new_scheduler);
+        return rc;
+    }
+
     *scheduler = new_scheduler;
 
     return pcmk_rc_ok;

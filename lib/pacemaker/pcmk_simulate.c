@@ -809,7 +809,11 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     }
 
     reset(scheduler, input, out, use_date, flags);
-    pcmk_unpack_scheduler_input(scheduler);
+    rc = pcmk_unpack_scheduler_input(scheduler);
+
+    if (rc != pcmk_rc_ok) {
+        goto simulate_done;
+    }
 
     if (!out->is_quiet(out)) {
         const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
@@ -862,6 +866,11 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
         cleanup_calculations(scheduler);
         reset(scheduler, input, out, use_date, flags);
+        /* pcmk_unpack_scheduler_input only returns error on scheduler being
+         * NULL or the feature set being unsupported.  Neither of those
+         * conditions could have changed since the first call, so there's no
+         * need to check the return value again.
+         */
         pcmk_unpack_scheduler_input(scheduler);
     }
 
@@ -972,9 +981,11 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
 
-    pcmk_unpack_scheduler_input(scheduler);
-    print_cluster_status(scheduler, 0, section_opts, "Revised Cluster Status",
-                         true);
+    rc = pcmk_unpack_scheduler_input(scheduler);
+    if (rc == pcmk_rc_ok) {
+        print_cluster_status(scheduler, 0, section_opts, "Revised Cluster Status",
+                             true);
+    }
 
 simulate_done:
     cib__clean_up_connection(&cib);
