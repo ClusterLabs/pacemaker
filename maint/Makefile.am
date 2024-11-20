@@ -37,7 +37,7 @@ require_last_release:
 
 .PHONY: summary
 summary: require_last_release
-	@printf "# Pacemaker-%s (%s)\n* %d commits with%s\n"		\
+	@printf "# %s (%s)\n* %d commits with%s\n"			\
 		"$(NEXT_RELEASE)" "$$(date +'%d %b %Y')"		\
 		"$$("$(GIT)" log --pretty=oneline --no-merges		\
 			$(LAST_RELEASE)..HEAD | wc -l)"			\
