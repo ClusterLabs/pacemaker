@@ -174,6 +174,19 @@ pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
     return ETIME;
 }
 
+static char *
+get_gnutls_priorities(gnutls_credentials_type_t cred_type)
+{
+    const char *prio_base = pcmk__env_option(PCMK__ENV_TLS_PRIORITIES);
+
+    if (prio_base == NULL) {
+        prio_base = PCMK__GNUTLS_PRIORITIES;
+    }
+
+    return crm_strdup_printf("%s:%s", prio_base,
+                             (cred_type == GNUTLS_CRD_ANON)? "+ANON-DH" : "+DHE-PSK:+PSK");
+}
+
 /*!
  * \internal
  * \brief Initialize a new TLS session
@@ -190,23 +203,8 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
                       gnutls_credentials_type_t cred_type, void *credentials)
 {
     int rc = GNUTLS_E_SUCCESS;
-    const char *prio_base = NULL;
     char *prio = NULL;
     gnutls_session_t *session = NULL;
-
-    /* Determine list of acceptable ciphers, etc. Pacemaker always adds the
-     * values required for its functionality.
-     *
-     * For an example of anonymous authentication, see:
-     * http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
-     */
-
-    prio_base = pcmk__env_option(PCMK__ENV_TLS_PRIORITIES);
-    if (prio_base == NULL) {
-        prio_base = PCMK__GNUTLS_PRIORITIES;
-    }
-    prio = crm_strdup_printf("%s:%s", prio_base,
-                             (cred_type == GNUTLS_CRD_ANON)? "+ANON-DH" : "+DHE-PSK:+PSK");
 
     session = gnutls_malloc(sizeof(gnutls_session_t));
     if (session == NULL) {
@@ -218,6 +216,14 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
     if (rc != GNUTLS_E_SUCCESS) {
         goto error;
     }
+
+    /* Determine list of acceptable ciphers, etc. Pacemaker always adds the
+     * values required for its functionality.
+     *
+     * For an example of anonymous authentication, see:
+     * http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
+     */
+    prio = get_gnutls_priorities(cred_type);
 
     /* @TODO On the server side, it would be more efficient to cache the
      * priority with gnutls_priority_init2() and set it with
