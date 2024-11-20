@@ -43,7 +43,7 @@ VERSION		?= $(shell if [ -z "$(CHECKOUT)" ]; then			\
 			echo 0.0.0;						\
 		     else							\
 			"$(GIT)" tag -l						\
-				| sed -n -e 's/^\(Pacemaker-[0-9.]*\)$$/\1/p'	\
+				| sed -n -e 's/^Pacemaker-\([0-9.]*\)$$/\1/p'	\
 				| sort -Vr | head -n 1;				\
 		     fi)
 

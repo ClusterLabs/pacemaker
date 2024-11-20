@@ -13,6 +13,7 @@
 top_srcdir              ?= ..
 abs_srcdir              ?= $(shell pwd)
 abs_builddir 	?= $(abs_srcdir)
+GIT                     ?= git
 MAKE                    ?= make
 PACKAGE                 ?= pacemaker
 AM_V_at                 ?= @
