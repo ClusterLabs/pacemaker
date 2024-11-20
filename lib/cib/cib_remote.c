@@ -490,27 +490,30 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     if (private->server == NULL || private->user == NULL) {
         rc = -EINVAL;
+        goto done;
     }
 
-    if (rc == pcmk_ok) {
-        rc = cib_tls_signon(cib, &(private->command), FALSE);
+    rc = cib_tls_signon(cib, &(private->command), FALSE);
+    if (rc != pcmk_ok) {
+        goto done;
     }
 
-    if (rc == pcmk_ok) {
-        rc = cib_tls_signon(cib, &(private->callback), TRUE);
+    rc = cib_tls_signon(cib, &(private->callback), TRUE);
+    if (rc != pcmk_ok) {
+        goto done;
     }
 
-    if (rc == pcmk_ok) {
-        rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL, cib_none,
-                            NULL, name, &hello);
+    rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL, cib_none, NULL,
+                        name, &hello);
+    if (rc != pcmk_ok) {
+        goto done;
     }
 
-    if (rc == pcmk_ok) {
-        rc = pcmk__remote_send_xml(&private->command, hello);
-        rc = pcmk_rc2legacy(rc);
-        pcmk__xml_free(hello);
-    }
+    rc = pcmk__remote_send_xml(&private->command, hello);
+    rc = pcmk_rc2legacy(rc);
+    pcmk__xml_free(hello);
 
+done:
     if (rc == pcmk_ok) {
         crm_info("Opened connection to %s:%d for %s",
                  private->server, private->port, name);
