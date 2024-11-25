@@ -55,11 +55,6 @@ void cib_remote_connection_destroy(gpointer user_data);
 
 gnutls_dh_params_t dh_params;
 gnutls_anon_server_credentials_t anon_cred_s;
-static void
-debug_log(int level, const char *str)
-{
-    fputs(str, stderr);
-}
 
 // @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
@@ -97,8 +92,6 @@ init_remote_listener(int port, gboolean encrypted)
     if (encrypted) {
         crm_notice("Starting TLS listener on port %d", port);
         crm_gnutls_global_init();
-        /* gnutls_global_set_log_level (10); */
-        gnutls_global_set_log_function(debug_log);
         if (pcmk__init_tls_dh(&dh_params) != pcmk_rc_ok) {
             return -1;
         }
