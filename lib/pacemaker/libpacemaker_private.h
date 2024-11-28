@@ -983,7 +983,8 @@ xmlNode *pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
 G_GNUC_INTERNAL
 void pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn,
                             xmlNode *cib_node, const char *resource,
-                            const char *task, guint interval_ms, int rc);
+                            const char *task, guint interval_ms, int rc,
+                            bool infinity);
 
 G_GNUC_INTERNAL
 xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
