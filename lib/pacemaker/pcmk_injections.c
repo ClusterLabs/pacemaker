@@ -89,11 +89,13 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
  * \param[in]     exit_status  Action result for fail count to inject (if
  *                             \c PCMK_OCF_OK, or \c PCMK_OCF_NOT_RUNNING when
  *                             \p interval_ms is 0, inject nothing)
+ * \param[in]     infinity     If true, set fail count to "INFINITY", otherwise
+ *                             increase it by 1
  */
 void
 pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn, xmlNode *cib_node,
                        const char *resource, const char *task,
-                       guint interval_ms, int exit_status)
+                       guint interval_ms, int exit_status, bool infinity)
 {
     char *name = NULL;
     char *value = NULL;
@@ -120,7 +122,14 @@ pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn, xmlNode *cib_node,
             failcount = 0;
         }
     }
-    value = pcmk__itoa(failcount + 1);
+
+    if (infinity) {
+        value = pcmk__str_copy(PCMK_VALUE_INFINITY);
+
+    } else {
+        value = pcmk__itoa(failcount + 1);
+    }
+
     inject_transient_attr(out, cib_node, name, value);
 
     free(name);
@@ -569,6 +578,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     xmlNode *cib_resource = NULL;
     const pcmk_resource_t *rsc = NULL;
     lrmd_event_data_t *op = NULL;
+    bool infinity = false;
 
     out->message(out, "inject-spec", spec);
 
@@ -596,8 +606,17 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     cib_node = pcmk__inject_node(cib, node, NULL);
     pcmk__assert(cib_node != NULL);
 
+    if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_none)) {
+        infinity = true;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_none)
+               && pcmk_is_set(scheduler->flags,
+                              pcmk_sched_start_failure_fatal)) {
+        infinity = true;
+    }
+
     pcmk__inject_failcount(out, cib, cib_node, resource, task, interval_ms,
-                           outcome);
+                           outcome, infinity);
 
     cib_resource = pcmk__inject_resource_history(out, cib_node,
                                                  resource, resource,

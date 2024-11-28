@@ -600,6 +600,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         const char *spec = (const char *) iter->data;
         char *key = NULL;
         const char *match_name = NULL;
+        const char *offset = NULL;
 
         // Allow user to specify anonymous clone with or without instance number
         key = crm_strdup_printf(PCMK__OP_FMT "@%s=", resource, op->op_type,
@@ -637,8 +638,18 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                   action->id, op->rc);
         pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
         graph->abort_priority = PCMK_SCORE_INFINITY;
+
+        if (pcmk__str_eq(op->op_type, PCMK_ACTION_START, pcmk__str_none)) {
+            offset = pcmk__s(graph->failed_start_offset, PCMK_VALUE_INFINITY);
+
+        } else if (pcmk__str_eq(op->op_type, PCMK_ACTION_STOP,
+                                pcmk__str_none)) {
+            offset = pcmk__s(graph->failed_stop_offset, PCMK_VALUE_INFINITY);
+        }
+
         pcmk__inject_failcount(out, fake_cib, cib_node, match_name, op->op_type,
-                               op->interval_ms, op->rc);
+                               op->interval_ms, op->rc,
+                               pcmk_str_is_infinity(offset));
         break;
     }
 
