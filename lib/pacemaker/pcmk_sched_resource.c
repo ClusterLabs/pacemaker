@@ -558,14 +558,14 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
         }
         rsc->priv->assigned_node = NULL;
 
-        /* We're going to free the pcmk_node_t, but its details member is shared
-         * and will remain, so update that appropriately first.
+        /* We're going to free the pcmk_node_t copy, but its priv member is
+         * shared and will remain, so update that appropriately first.
          */
         old->priv->assigned_resources =
             g_list_remove(old->priv->assigned_resources, rsc);
         old->priv->num_resources--;
         pcmk__release_node_capacity(old->priv->utilization, rsc);
-        free(old);
+        pcmk__free_node_copy(old);
         return;
     }
 
