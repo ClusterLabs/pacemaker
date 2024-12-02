@@ -869,8 +869,16 @@ action_complete(svc_action_t * action)
             cmd->real_action = cmd->action;
             cmd->action = pcmk__str_copy(PCMK_ACTION_MONITOR);
 
-        } else if (cmd->real_action != NULL) {
-            // This is follow-up monitor to check whether start/stop completed
+        } else if (cmd->result.execution_status == PCMK_EXEC_PENDING &&
+                   pcmk__str_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) &&
+                   cmd->interval_ms == 0 &&
+                   cmd->real_action == NULL) {
+            /* If the state is Pending at the time of probe, execute follow-up monitor. */
+            goagain = true;
+            cmd->real_action = cmd->action;
+            cmd->action = pcmk__str_copy(PCMK_ACTION_MONITOR);
+	} else if (cmd->real_action != NULL) {
+            // This is follow-up monitor to check whether start/stop/probe(monitor) completed
             if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
                 goagain = true;
 
