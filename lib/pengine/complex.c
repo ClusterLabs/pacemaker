@@ -784,8 +784,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     rsc_private->meta = pcmk__strkey_table(free, free);
     rsc_private->utilization = pcmk__strkey_table(free, free);
-    rsc_private->probed_nodes = pcmk__strkey_table(NULL, free);
-    rsc_private->allowed_nodes = pcmk__strkey_table(NULL, free);
+    rsc_private->probed_nodes = pcmk__strkey_table(NULL, pcmk__free_node_copy);
+    rsc_private->allowed_nodes = pcmk__strkey_table(NULL, pcmk__free_node_copy);
 
     value = crm_element_value(rsc_private->xml, PCMK__META_CLONE);
     if (value) {
@@ -1087,7 +1087,7 @@ common_free(pcmk_resource_t * rsc)
     free(rsc->priv->variant_opaque);
     free(rsc->priv->history_id);
     free(rsc->priv->pending_action);
-    free(rsc->priv->assigned_node);
+    pcmk__free_node_copy(rsc->priv->assigned_node);
 
     g_list_free(rsc->priv->actions);
     g_list_free(rsc->priv->active_nodes);

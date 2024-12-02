@@ -1371,11 +1371,11 @@ pe_free_action(pcmk_action_t *action)
     if (action->meta) {
         g_hash_table_destroy(action->meta);
     }
+    pcmk__free_node_copy(action->node);
     free(action->cancel_task);
     free(action->reason);
     free(action->task);
     free(action->uuid);
-    free(action->node);
     free(action);
 }
 

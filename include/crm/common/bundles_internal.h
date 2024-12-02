@@ -26,7 +26,7 @@ extern "C" {
 typedef struct {
     int offset;                 //!< 0-origin index of this instance in bundle
     char *ipaddr;               //!< IP address associated with this instance
-    pcmk_node_t *node;          //!< Node created for this instance
+    pcmk_node_t *node;          //!< Copy of node created for this instance
     pcmk_resource_t *ip;        //!< IP address resource for ipaddr
     pcmk_resource_t *child;     //!< Instance of bundled resource
     pcmk_resource_t *container; //!< Container associated with this instance

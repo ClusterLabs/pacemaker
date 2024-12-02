@@ -14,6 +14,26 @@
 
 /*!
  * \internal
+ * \brief Free a copy of a node object
+ *
+ * \param[in] data  Node copy (created by pe__copy_node()) to free
+ */
+void
+pcmk__free_node_copy(void *data)
+{
+    if (data != NULL) {
+        pcmk_node_t *node = data;
+
+        if (node->assign != NULL) {
+            // This is the only member allocated separately for a node copy
+            free(node->assign);
+        }
+        free(node);
+    }
+}
+
+/*!
+ * \internal
  * \brief Check whether a node is online
  *
  * \param[in] node  Node to check

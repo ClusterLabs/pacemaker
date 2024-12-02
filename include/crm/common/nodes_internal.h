@@ -123,6 +123,7 @@ struct pcmk__node_private {
     pcmk_scheduler_t *scheduler;        // Scheduler data that node is part of
 };
 
+void pcmk__free_node_copy(void *data);
 pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
 
 /*!

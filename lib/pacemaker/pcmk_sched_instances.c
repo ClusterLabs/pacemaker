@@ -131,7 +131,7 @@ ban_unavailable_allowed_nodes(pcmk_resource_t *instance, int max_per_node)
 static GHashTable *
 new_node_table(pcmk_node_t *node)
 {
-    GHashTable *table = pcmk__strkey_table(NULL, free);
+    GHashTable *table = pcmk__strkey_table(NULL, pcmk__free_node_copy);
 
     node = pe__copy_node(node);
     g_hash_table_insert(table, (gpointer) node->priv->id, node);

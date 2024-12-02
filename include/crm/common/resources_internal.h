@@ -384,7 +384,8 @@ struct pcmk__resource_private {
 
     /* The assigned node (if not NULL) is the one where the resource *should*
      * be active by the end of the current scheduler transition. Only primitive
-     * resources have an assigned node.
+     * resources have an assigned node. This is a node copy (created by
+     * pe__copy_node()) and so must be freed using pcmk__free_node_copy().
      *
      * @TODO This should probably be part of the primitive variant data.
      */
@@ -399,6 +400,11 @@ struct pcmk__resource_private {
      * combines active nodes of all descendants.
      */
     GList *active_nodes;
+
+    /* The next two tables store node copies (created by pe__copy_node()), which
+     * share some members with the original node objects and must be freed with
+     * pcmk__free_node_copy().
+     */
 
     // Nodes where resource has been probed (key is node ID, not name)
     GHashTable *probed_nodes;
