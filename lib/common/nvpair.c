@@ -390,6 +390,95 @@ xml2list(const xmlNode *parent)
     return nvpair_hash;
 }
 
+/*!
+ * \internal
+ * \brief Unpack a single nvpair XML element into a hash table
+ *
+ * \param[in]     nvpair    XML nvpair element to unpack
+ * \param[in,out] userdata  Unpack data
+ *
+ * \return pcmk_rc_ok (to always proceed to next nvpair)
+ */
+static int
+unpack_nvpair(xmlNode *nvpair, void *userdata)
+{
+    pcmk__nvpair_unpack_t *unpack_data = userdata;
+
+    const char *name = NULL;
+    const char *value = NULL;
+    const char *old_value = NULL;
+    const xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, NULL);
+
+    if (ref_nvpair == NULL) {
+        /* Not possible with schema validation enabled (error already
+         * logged)
+         */
+        return pcmk_rc_ok;
+    }
+
+    name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
+    value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
+    if ((name == NULL) || (value == NULL)) {
+        return pcmk_rc_ok; // Not possible with schema validation enabled
+    }
+
+    old_value = g_hash_table_lookup(unpack_data->values, name);
+
+    if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
+        // @COMPAT Deprecated since 2.1.8
+        pcmk__config_warn("Support for setting meta-attributes (such as "
+                          "%s) to the explicit value '#default' is "
+                          "deprecated and will be removed in a future "
+                          "release", name);
+        if (old_value != NULL) {
+            g_hash_table_remove(unpack_data->values, name);
+        }
+
+    } else if ((old_value == NULL) || unpack_data->overwrite) {
+        crm_trace("Setting %s=\"%s\" (was %s)",
+                  name, value, pcmk__s(old_value, "unset"));
+        pcmk__insert_dup(unpack_data->values, name, value);
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Unpack an XML block of nvpair elements into a hash table,
+ *        evaluated for any rule
+ *
+ * \param[in]     data       XML block to unpack
+ * \param[in,out] user_data  Unpack data
+ *
+ * \note This is suitable for use as a GList iterator function
+ */
+void
+pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
+{
+    xmlNode *pair = data;
+    pcmk__nvpair_unpack_t *unpack_data = user_data;
+
+    xmlNode *rule_xml = NULL;
+
+    pcmk__assert((pair != NULL) && (unpack_data != NULL)
+                 && (unpack_data->values != NULL));
+
+    rule_xml = pcmk__xe_first_child(pair, PCMK_XE_RULE, NULL, NULL);
+    if ((rule_xml != NULL)
+        && (pcmk_evaluate_rule(rule_xml, &(unpack_data->rule_input),
+                               unpack_data->next_change) != pcmk_rc_ok)) {
+        return;
+    }
+
+    crm_trace("Adding name/value pairs from %s %s overwrite",
+              pcmk__xe_id(pair), (unpack_data->overwrite? "with" : "without"));
+    if (pcmk__xe_is(pair->children, PCMK__XE_ATTRIBUTES)) {
+        pair = pair->children;
+    }
+    pcmk__xe_foreach_child(pair, PCMK_XE_NVPAIR, unpack_nvpair, unpack_data);
+}
+
+
 // Meta-attribute handling
 
 /*!

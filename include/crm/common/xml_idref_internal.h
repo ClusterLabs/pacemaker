@@ -22,5 +22,7 @@ typedef struct {
 void pcmk__add_idref(GHashTable *table, const char *id, const char *referrer);
 void pcmk__free_idref(gpointer data);
 xmlNode *pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search);
+GList *pcmk__xe_dereference_children(const xmlNode *xml,
+                                     const char *element_name);
 
 #endif // PCMK__CRM_COMMON_XML_IDREF_INTERNAL__H

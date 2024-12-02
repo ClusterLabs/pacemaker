@@ -38,6 +38,7 @@ SUBDIRS = \
 	xml 		\
 	xml_comment 	\
 	xml_element 	\
+	xml_idref 	\
 	xpath
 
 if SUPPORT_PROCFS

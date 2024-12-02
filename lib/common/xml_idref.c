@@ -113,3 +113,34 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
     free(xpath);
     return result;
 }
+
+/*!
+ * \internal
+ * \brief Get list of resolved ID references for child elements of given element
+ *
+ * \param[in] xml           XML element to get list for
+ * \param[in] element_name  If not NULL, list only children of this element type
+ *
+ * \return Unordered list of XML elements corresponding to child elements of
+ *         \p xml with any ID references resolved to the referenced elements
+ */
+GList *
+pcmk__xe_dereference_children(const xmlNode *xml, const char *element_name)
+{
+    GList *result = NULL;
+
+    if (xml == NULL) {
+        return NULL;
+    }
+    for (xmlNode *child = pcmk__xe_first_child(xml, element_name, NULL, NULL);
+         child != NULL; child = pcmk__xe_next(child, element_name)) {
+
+        xmlNode *resolved = pcmk__xe_resolve_idref(child, NULL);
+
+        if (resolved == NULL) {
+            continue; // Not possible with schema validation enabled
+        }
+        result = g_list_prepend(result, resolved);
+    }
+    return result;
+}

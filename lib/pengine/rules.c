@@ -62,112 +62,6 @@ map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
     }
 }
 
-static void
-populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
-{
-    if (pcmk__xe_is(nvpair_list->children, PCMK__XE_ATTRIBUTES)) {
-        nvpair_list = nvpair_list->children;
-    }
-
-    for (xmlNode *nvpair = pcmk__xe_first_child(nvpair_list, PCMK_XE_NVPAIR,
-                                                NULL, NULL);
-         nvpair != NULL; nvpair = pcmk__xe_next(nvpair, PCMK_XE_NVPAIR)) {
-
-        xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, NULL);
-        const char *name = NULL;
-        const char *value = NULL;
-        const char *old_value = NULL;
-
-        if (ref_nvpair == NULL) {
-            /* Not possible with schema validation enabled (error already
-             * logged)
-             */
-            continue;
-        }
-
-        name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
-        value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
-        if ((name == NULL) || (value == NULL)) {
-            continue;
-        }
-
-        old_value = g_hash_table_lookup(hash, name);
-
-        if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
-            // @COMPAT Deprecated since 2.1.8
-            pcmk__config_warn("Support for setting meta-attributes (such as "
-                              "%s) to the explicit value '#default' is "
-                              "deprecated and will be removed in a future "
-                              "release", name);
-            if (old_value != NULL) {
-                crm_trace("Letting %s default (removing explicit value \"%s\")",
-                          name, value);
-                g_hash_table_remove(hash, name);
-            }
-
-        } else if (old_value == NULL) {
-            crm_trace("Setting %s=\"%s\"", name, value);
-            pcmk__insert_dup(hash, name, value);
-
-        } else if (overwrite) {
-            crm_trace("Setting %s=\"%s\" (overwriting old value \"%s\")",
-                      name, value, old_value);
-            pcmk__insert_dup(hash, name, value);
-        }
-    }
-}
-
-static void
-unpack_attr_set(gpointer data, gpointer user_data)
-{
-    xmlNode *pair = data;
-    pcmk__nvpair_unpack_t *unpack_data = user_data;
-
-    xmlNode *rule_xml = pcmk__xe_first_child(pair, PCMK_XE_RULE, NULL, NULL);
-
-    if ((rule_xml != NULL)
-        && (pcmk_evaluate_rule(rule_xml, &(unpack_data->rule_input),
-                               unpack_data->next_change) != pcmk_rc_ok)) {
-        return;
-    }
-
-    crm_trace("Adding name/value pairs from %s %s overwrite",
-              pcmk__xe_id(pair), (unpack_data->overwrite? "with" : "without"));
-    populate_hash(pair, unpack_data->values, unpack_data->overwrite);
-}
-
-/*!
- * \internal
- * \brief Create a sorted list of nvpair blocks
- *
- * \param[in]     xml_obj       XML element containing blocks of nvpair elements
- * \param[in]     set_name      If not NULL, only get blocks of this element
- *
- * \return List of XML blocks of name/value pairs
- */
-static GList *
-make_pairs(const xmlNode *xml_obj, const char *set_name)
-{
-    GList *unsorted = NULL;
-
-    if (xml_obj == NULL) {
-        return NULL;
-    }
-    for (xmlNode *attr_set = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
-         attr_set != NULL; attr_set = pcmk__xe_next(attr_set, NULL)) {
-
-        if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
-            xmlNode *expanded_attr_set = pcmk__xe_resolve_idref(attr_set, NULL);
-
-            if (expanded_attr_set == NULL) {
-                continue; // Not possible with schema validation enabled
-            }
-            unsorted = g_list_prepend(unsorted, expanded_attr_set);
-        }
-    }
-    return unsorted;
-}
-
 /*!
  * \brief Extract nvpair blocks contained by an XML element into a hash table
  *
@@ -187,7 +81,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 const char *always_first, gboolean overwrite,
                 crm_time_t *next_change)
 {
-    GList *pairs = make_pairs(xml_obj, set_name);
+    GList *pairs = pcmk__xe_dereference_children(xml_obj, set_name);
 
     if (pairs) {
         pcmk__nvpair_unpack_t data = {
@@ -200,7 +94,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
         map_rule_input(&(data.rule_input), rule_data);
 
         pairs = g_list_sort_with_data(pairs, pcmk__cmp_nvpair_blocks, &data);
-        g_list_foreach(pairs, unpack_attr_set, &data);
+        g_list_foreach(pairs, pcmk__unpack_nvpair_block, &data);
         g_list_free(pairs);
     }
 }
