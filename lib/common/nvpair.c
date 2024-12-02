@@ -431,8 +431,6 @@ unpack_nvpair(xmlNode *nvpair, void *userdata)
                           "deprecated and will be removed in a future "
                           "release", name);
         if (old_value != NULL) {
-            crm_trace("Letting %s default (removing explicit value \"%s\")",
-                      name, value);
             g_hash_table_remove(unpack_data->values, name);
         }
 
