@@ -138,6 +138,7 @@ get_schema_files(void)
 
     cib = cib_new();
     if (cib == NULL) {
+        pcmk_common_cleanup();
         _exit(CRM_EX_OSERR);
     }
 
@@ -145,6 +146,7 @@ get_schema_files(void)
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         crm_err("Could not connect to the CIB manager: %s", pcmk_rc_str(rc));
+        pcmk_common_cleanup();
         _exit(pcmk_rc2exitc(rc));
     }
 
@@ -189,6 +191,7 @@ get_schema_files(void)
 
     pcmk__xml_free(reply);
     cib__clean_up_connection(&cib);
+    pcmk_common_cleanup();
     _exit(pcmk_rc2exitc(rc));
 }
 
