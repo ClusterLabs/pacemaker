@@ -1,0 +1,4 @@
+WARNING: Dropping lifetime element from constraint rsc2-with-rsc1 because lifetime elements are no longer supported. Any rules contained there will no longer apply to the constraint
+WARNING: Dropping lifetime element from constraint rsc4-with-rsc3 because lifetime elements are no longer supported. Any rules contained there will no longer apply to the constraint
+WARNING: Dropping lifetime element from constraint rsc1-then-rsc2 because lifetime elements are no longer supported. Any rules contained there will no longer apply to the constraint
+WARNING: Dropping lifetime element from constraint rsc3-then-rsc4 because lifetime elements are no longer supported. Any rules contained there will no longer apply to the constraint

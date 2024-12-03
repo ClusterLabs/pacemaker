@@ -224,7 +224,17 @@
 </xsl:template>
 
 <!-- Drop lifetime elements within colocation and order constraints -->
-<xsl:template match="rsc_colocation/lifetime"/>
-<xsl:template match="rsc_order/lifetime"/>
+<xsl:template match="rsc_colocation/lifetime
+                     |rsc_order/lifetime">
+    <xsl:call-template name="warning">
+        <xsl:with-param name="msg"
+                        select="concat('Dropping lifetime element from',
+                                       ' constraint ', ../@id,
+                                       ' because lifetime elements are no',
+                                       ' longer supported. Any rules contained',
+                                       ' there will no longer apply to the',
+                                       ' constraint')"/>
+    </xsl:call-template>
+</xsl:template>
 
 </xsl:stylesheet>
