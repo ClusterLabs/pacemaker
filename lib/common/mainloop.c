@@ -331,10 +331,11 @@ mainloop_destroy_signal_entry(int sig)
 {
     crm_signal_t *tmp = crm_signals[sig];
 
-    crm_signals[sig] = NULL;
-
-    crm_trace("Destroying signal %d", sig);
-    mainloop_destroy_trigger((crm_trigger_t *) tmp);
+    if (tmp != NULL) {
+        crm_signals[sig] = NULL;
+        crm_trace("Unregistering mainloop handler for signal %d", sig);
+        mainloop_destroy_trigger((crm_trigger_t *) tmp);
+    }
 }
 
 /*!
@@ -415,8 +416,9 @@ static qb_array_t *gio_map = NULL;
 void
 mainloop_cleanup(void) 
 {
-    if (gio_map) {
+    if (gio_map != NULL) {
         qb_array_free(gio_map);
+        gio_map = NULL;
     }
 
     for (int sig = 0; sig < NSIG; ++sig) {
