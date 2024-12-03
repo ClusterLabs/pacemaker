@@ -156,14 +156,22 @@
     </xsl:call-template>
 </xsl:template>
 
-<!-- Drop can_fail operation meta-attribute -->
+<!-- Drop can_fail and role_after_failure operation meta-attributes -->
 <xsl:template match="op/meta_attributes/nvpair[@name = 'can_fail']
-                     |op_defaults/meta_attributes/nvpair[@name = 'can_fail']"/>
-
-<!-- Drop role_after_failure operation meta-attribute -->
-<xsl:template match="op/meta_attributes/nvpair[@name = 'role_after_failure']
+                     |op/meta_attributes/nvpair[@name = 'role_after_failure']
+                     |op_defaults/meta_attributes/nvpair[@name = 'can_fail']
                      |op_defaults/meta_attributes/nvpair
-                         [@name = 'role_after_failure']"/>
+                         [@name = 'role_after_failure']">
+    <xsl:call-template name="warning">
+        <xsl:with-param name="msg"
+                        select="concat('Dropping ', @name,
+                                       ' meta-attribute from ', ../@id,
+                                       ' because it is no longer supported.',
+                                       ' Consider setting the',
+                                       ' &quot;on-fail&quot; operation',
+                                       ' attribute instead')"/>
+    </xsl:call-template>
+</xsl:template>
 
 
 <!-- Constraints -->

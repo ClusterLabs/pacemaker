@@ -1,0 +1,7 @@
+WARNING: Dropping can_fail meta-attribute from template1_monitor_20000-meta_attributes because it is no longer supported. Consider setting the "on-fail" operation attribute instead
+WARNING: Dropping can_fail meta-attribute from rsc1_monitor_20000-meta_attributes because it is no longer supported. Consider setting the "on-fail" operation attribute instead
+WARNING: Dropping can_fail meta-attribute from rsc2_monitor_20000-meta_attributes because it is no longer supported. Consider setting the "on-fail" operation attribute instead
+WARNING: Dropping can_fail meta-attribute from rsc3_monitor_20000-meta_attributes because it is no longer supported. Consider setting the "on-fail" operation attribute instead
+WARNING: Dropping can_fail meta-attribute from rsc4_monitor_20000-meta_attributes because it is no longer supported. Consider setting the "on-fail" operation attribute instead
+WARNING: Dropping can_fail meta-attribute from rsc5_monitor_20000-meta_attributes because it is no longer supported. Consider setting the "on-fail" operation attribute instead
+WARNING: Dropping can_fail meta-attribute from op_defaults-meta_attributes because it is no longer supported. Consider setting the "on-fail" operation attribute instead
