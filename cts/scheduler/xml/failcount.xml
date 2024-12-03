@@ -461,11 +461,13 @@
         </rule>
       </rsc_location>
       <rsc_order first="cl-ldirectord" id="or-wesbprod" then="cl-wesbprod"/>
-      <rsc_location id="lo-drdns-ping" rsc="re-drdns-ip">
+      <rsc_location id="lo-drdns-ping-1" rsc="re-drdns-ip">
         <rule boolean-op="or" id="re-drdns-ping-rule" score="-INFINITY">
           <expression attribute="at-ping-sjim" id="lo-drdns-ping-expression" operation="not_defined"/>
           <expression attribute="at-ping-sjim" id="lo-drdns-ping-expression-0" operation="lte" value="0"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="lo-drdns-ping-2" rsc="re-drdns-ip">
         <rule id="lo-drdns-ping-rule" score="INFINITY">
           <expression attribute="#uname" id="lo-drdns-ping-expression-1" operation="eq" value="dresproddns01"/>
         </rule>

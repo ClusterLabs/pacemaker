@@ -40,13 +40,15 @@
       </group>
     </resources>
     <constraints>
+      <!--### Resource Location ###-->
       <rsc_location id="rsc_location-msDrbd-1" rsc="grpDummy">
-        <!--### Resource Location ###-->
         <rule score="200" id="rsc_location-msDrbd-1-rule">
           <expression attribute="#uname" operation="eq" value="rh72-01" id="rsc_location-msDrbd-1-rule-expression"/>
         </rule>
-        <rule score="100" id="rsc_location-msDrbd-1-rule-0">
-          <expression attribute="#uname" operation="eq" value="rh72-02" id="rsc_location-msDrbd-1-rule-0-expression"/>
+      </rsc_location>
+      <rsc_location id="rsc_location-msDrbd-2" rsc="grpDummy">
+        <rule score="100" id="rsc_location-msDrbd-2-rule">
+          <expression attribute="#uname" operation="eq" value="rh72-02" id="rsc_location-msDrbd-2-rule-expression"/>
         </rule>
       </rsc_location>
     </constraints>

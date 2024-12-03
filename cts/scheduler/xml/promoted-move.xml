@@ -66,8 +66,10 @@
         <rule id="rsc_location-1-rule" role="Promoted" score="200">
           <expression attribute="#uname" id="rsc_location-1-expression" operation="eq" value="bl460g1n13"/>
         </rule>
-        <rule id="rsc_location-1-rule-0" role="Promoted" score="100">
-          <expression attribute="#uname" id="rsc_location-1-expression-0" operation="eq" value="bl460g1n14"/>
+      </rsc_location>
+      <rsc_location id="rsc_location-2" rsc="msDRBD">
+        <rule id="rsc_location-2-rule" role="Promoted" score="100">
+          <expression attribute="#uname" id="rsc_location-2-expression" operation="eq" value="bl460g1n14"/>
         </rule>
       </rsc_location>
       <rsc_colocation id="rsc_colocation-1" rsc="grpDRBD" score="INFINITY" with-rsc="msDRBD" with-rsc-role="Promoted"/>
