@@ -138,12 +138,13 @@ get_schema_files(void)
 
     cib = cib_new();
     if (cib == NULL) {
-        _exit(ENOTCONN);
+        _exit(CRM_EX_OSERR);
     }
 
     rc = cib->cmds->signon(cib, crm_system_name, cib_query);
-    if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
+    rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not connect to the CIB manager: %s", pcmk_rc_str(rc));
         _exit(pcmk_rc2exitc(rc));
     }
 
