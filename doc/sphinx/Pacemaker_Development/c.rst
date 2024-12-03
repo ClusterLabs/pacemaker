@@ -782,6 +782,18 @@ initialization procedure on the new object.
 * If the constructor may add the new object to some existing object, its name
   should include ``create``.
 
+Functions that take the caller's name as an argument
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes, we define a function that uses the ``__FILE__``, ``__func__``,
+and/or ``__LINE__`` of the caller for logging purposes, often with a wrapper
+macro that automatically passes them.
+
+* The function should take those values as its first arguments.
+* The function name should end in ``_as()``.
+* If a wrapper macro is used, its name should be the same without ``_as()``.
+* See ``pcmk__assert_alloc()`` and ``pcmk__assert_alloc_as()`` as examples.
+
 
 Function Definitions
 ____________________
