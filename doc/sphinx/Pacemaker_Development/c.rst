@@ -1107,6 +1107,14 @@ Pacemaker may crash with a segmentation fault, or change tracking and ACL
 checking may be incorrectly disabled.
 
 
+XPaths
+______
+
+Separting XPath element names with ``/`` (specifying each level in the
+hierarchy explicitly) is more efficient than ``//`` (allowing intermediate
+levels to be omitted), so it should be used whenever practical.
+
+
 .. index::
    single: Makefile.am
 
