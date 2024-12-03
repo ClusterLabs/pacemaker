@@ -164,7 +164,14 @@
 </xsl:template>
 
 <!-- Drop remove-after-stop property -->
-<xsl:template match="cluster_property_set/nvpair[@name = 'remove-after-stop']"/>
+<xsl:template match="cluster_property_set/nvpair[@name = 'remove-after-stop']">
+    <xsl:call-template name="warning">
+        <xsl:with-param name="msg"
+                        select="concat('Dropping nvpair ', @id,
+                                       ' because the remove-after-stop',
+                                       ' property is unsupported')"/>
+    </xsl:call-template>
+</xsl:template>
 
 <!-- Replace stonith-action="poweroff" with stonith-action="off" -->
 <xsl:template match="cluster_property_set/nvpair[@name = 'stonith-action']
