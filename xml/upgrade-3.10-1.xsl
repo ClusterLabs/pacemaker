@@ -132,7 +132,15 @@
 <!-- Rules -->
 
 <!-- Drop the moon attribute from date_spec elements -->
-<xsl:template match="date_spec/@moon"/>
+<xsl:template match="date_spec/@moon">
+    <xsl:call-template name="warning">
+        <xsl:with-param name="msg"
+                        select="concat('Dropping moon attribute from',
+                                       ' date spec ', ../@id,
+                                       ' because moon phase is no longer',
+                                       ' supported')"/>
+    </xsl:call-template>
+</xsl:template>
 
 
 <!-- Cluster properties -->

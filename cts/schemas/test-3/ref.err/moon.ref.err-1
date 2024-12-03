@@ -1,0 +1,2 @@
+WARNING: Dropping moon attribute from date spec cluster-properties1-rule-expr-date_spec because moon phase is no longer supported
+WARNING: Dropping moon attribute from date spec cluster-properties2-rule-expr-date_spec because moon phase is no longer supported
