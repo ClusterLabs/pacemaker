@@ -129,7 +129,14 @@
 </xsl:template>
 
 <!-- Drop rkt bundles -->
-<xsl:template match="bundle[rkt]"/>
+<xsl:template match="bundle[rkt]">
+    <xsl:call-template name="warning">
+        <xsl:with-param name="msg"
+                        select="concat('Dropping bundle resource ', @id,
+                                       ' because rkt containers are no longer',
+                                       ' supported')"/>
+    </xsl:call-template>
+</xsl:template>
 
 <!-- Drop restart-type resource meta-attribute -->
 <xsl:template match="template/meta_attributes/nvpair[@name = 'restart-type']
