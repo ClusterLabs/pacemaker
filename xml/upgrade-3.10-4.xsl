@@ -145,7 +145,16 @@
                      |clone/meta_attributes/nvpair[@name = 'restart-type']
                      |bundle/meta_attributes/nvpair[@name = 'restart-type']
                      |rsc_defaults/meta_attributes/nvpair
-                         [@name = 'restart-type']"/>
+                         [@name = 'restart-type']">
+    <xsl:call-template name="warning">
+        <xsl:with-param name="msg"
+                        select="concat('Dropping ', @name,
+                                       ' meta-attribute from ', ../@id,
+                                       ' because it is no longer supported.',
+                                       ' Consider setting the &quot;kind&quot;',
+                                       ' attribute for relevant constraints')"/>
+    </xsl:call-template>
+</xsl:template>
 
 <!-- Drop can_fail operation meta-attribute -->
 <xsl:template match="op/meta_attributes/nvpair[@name = 'can_fail']
