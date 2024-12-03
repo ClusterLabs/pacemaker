@@ -9,3 +9,7 @@ addFilter("W: invalid-url Source0:")
 
 # pacemaker_remote scriptlets use a state file
 addFilter("W: dangerous-command-in-%(pre|postun|posttrans) rm")
+
+# This is a Mandriva-specific specific check that is sometimes enabled
+# on other distributions
+addFilter("E: lib-package-without-%mklibname")
