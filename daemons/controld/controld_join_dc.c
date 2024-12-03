@@ -174,11 +174,14 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
     }
 
     if ((phase <= controld_join_none) || (phase == (last + 1))) {
-        struct controld_node_status_data *data =
-            pcmk__assert_alloc(1, sizeof(struct controld_node_status_data));
+        struct controld_node_status_data *data = NULL;
 
+        if (node->user_data == NULL) {
+            node->user_data =
+                pcmk__assert_alloc(1, sizeof(struct controld_node_status_data));
+        }
+        data = node->user_data;
         data->join_phase = phase;
-        node->user_data = data;
 
         crm_trace("Node %s join-%d phase is now %s (was %s) "
                   QB_XS " nodeid=%" PRIu32 " source=%s",
