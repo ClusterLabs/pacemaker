@@ -116,16 +116,38 @@
 
 <!-- Drop groups that would become empty -->
 <xsl:template match="group">
-    <xsl:if test="count(.|$dropped_groups) != count($dropped_groups)">
-        <xsl:call-template name="identity"/>
-    </xsl:if>
+    <xsl:choose>
+        <xsl:when test="count(.|$dropped_groups) = count($dropped_groups)">
+            <xsl:call-template name="info">
+                <xsl:with-param name="msg"
+                                select="concat('Dropping group ', @id,
+                                               ' because it would become',
+                                               ' empty')"/>
+            </xsl:call-template>
+        </xsl:when>
+
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- Drop clones that would become empty -->
 <xsl:template match="clone">
-    <xsl:if test="count(.|$dropped_clones) != count($dropped_clones)">
-        <xsl:call-template name="identity"/>
-    </xsl:if>
+    <xsl:choose>
+        <xsl:when test="count(.|$dropped_clones) = count($dropped_clones)">
+            <xsl:call-template name="info">
+                <xsl:with-param name="msg"
+                                select="concat('Dropping clone ', @id,
+                                               ' because it would become',
+                                               ' empty')"/>
+            </xsl:call-template>
+        </xsl:when>
+
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- Drop rkt bundles -->
