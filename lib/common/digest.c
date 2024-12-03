@@ -25,6 +25,30 @@
 
 #define BEST_EFFORT_STATUS 0
 
+/*
+ * Pacemaker uses digests (MD5 hashes) of stringified XML to detect changes in
+ * the CIB as a whole, a particular resource's agent parameters, and the device
+ * parameters last used to unfence a particular node.
+ *
+ * "v2" digests hash pcmk__xml_string() directly, while less efficient "v1"
+ * digests do the same with a prefixed space, suffixed newline, and optional
+ * pre-sorting.
+ *
+ * On-disk CIB digests use v1 without sorting.
+ *
+ * Operation digests use v1 with sorting, and are stored in a resource's
+ * operation history in the CIB status section. They come in three flavors:
+ * - a digest of (nearly) all resource parameters and options, used to detect
+ *   any resource configuration change;
+ * - a digest of resource parameters marked as nonreloadable, used to decide
+ *   whether a reload or full restart is needed after a configuration change;
+ * - and a digest of resource parameters not marked as private, used in
+ *   simulations where private parameters have been removed from the input.
+ *
+ * Unfencing digests are set as node attributes, and are used to require
+ * that nodes be unfenced again after a device's configuration changes.
+ */
+
 /*!
  * \internal
  * \brief Dump XML in a format used with v1 digests
