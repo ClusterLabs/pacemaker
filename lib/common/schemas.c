@@ -797,7 +797,7 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
     va_list ap, aq;
     char *arg_cur;
 
-    bool found = FALSE;
+    bool found = false;
     const char *fmt_iter = fmt;
     uint8_t msg_log_level = LOG_WARNING;  /* default for runaway messages */
     const unsigned * log_level = (const unsigned *) ctx;
@@ -821,44 +821,31 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
             break;
         case 's':
             if (scan_state == escan_seenpercent) {
+                size_t prefix_len = 0;
+
                 scan_state = escan_seennothing;
                 arg_cur = va_arg(aq, char *);
-                if (arg_cur != NULL) {
-                    switch (arg_cur[0]) {
-                    case 'W':
-                        if (!strncmp(arg_cur, "WARNING: ",
-                                     sizeof("WARNING: ") - 1)) {
-                            msg_log_level = LOG_WARNING;
-                        }
-                        if (ctx == NULL) {
-                            memmove(arg_cur, arg_cur + sizeof("WARNING: ") - 1,
-                                    strlen(arg_cur + sizeof("WARNING: ") - 1) + 1);
-                        }
-                        found = TRUE;
-                        break;
-                    case 'I':
-                        if (!strncmp(arg_cur, "INFO: ",
-                                     sizeof("INFO: ") - 1)) {
-                            msg_log_level = LOG_INFO;
-                        }
-                        if (ctx == NULL) {
-                            memmove(arg_cur, arg_cur + sizeof("INFO: ") - 1,
-                                    strlen(arg_cur + sizeof("INFO: ") - 1) + 1);
-                        }
-                        found = TRUE;
-                        break;
-                    case 'D':
-                        if (!strncmp(arg_cur, "DEBUG: ",
-                                     sizeof("DEBUG: ") - 1)) {
-                            msg_log_level = LOG_DEBUG;
-                        }
-                        if (ctx == NULL) {
-                            memmove(arg_cur, arg_cur + sizeof("DEBUG: ") - 1,
-                                    strlen(arg_cur + sizeof("DEBUG: ") - 1) + 1);
-                        }
-                        found = TRUE;
-                        break;
-                    }
+
+                if (pcmk__starts_with(arg_cur, "WARNING: ")) {
+                    prefix_len = sizeof("WARNING: ") - 1;
+                    msg_log_level = LOG_WARNING;
+
+                } else if (pcmk__starts_with(arg_cur, "INFO: ")) {
+                    prefix_len = sizeof("INFO: ") - 1;
+                    msg_log_level = LOG_INFO;
+
+                } else if (pcmk__starts_with(arg_cur, "DEBUG: ")) {
+                    prefix_len = sizeof("DEBUG: ") - 1;
+                    msg_log_level = LOG_DEBUG;
+
+                } else {
+                    break;
+                }
+
+                found = true;
+                if (ctx == NULL) {
+                    memmove(arg_cur, arg_cur + prefix_len,
+                            strlen(arg_cur + prefix_len) + 1);
                 }
             }
             break;
