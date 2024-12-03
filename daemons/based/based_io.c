@@ -456,6 +456,7 @@ write_cib_contents(gpointer p)
         }
 
         /* Use _exit() because exit() could affect the parent adversely */
+        pcmk_common_cleanup();
         _exit(exit_code);
     }
     return exit_rc;
