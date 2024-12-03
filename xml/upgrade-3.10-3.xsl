@@ -19,10 +19,11 @@
        top-level constraint rule, containing the existing top-level constraint
        rule and the lifetime-based rule.
    * If a lifetime element existed in a colocation or order constraint prior to
-     this transformation, its rules are in a new location constraint that does
-     not apply to any resources. This is in case some other rule references
-     them. A rule in a lifetime element may contain a node attribute expression,
-     which is now allowed only within a location constraint rule.
+     this transformation, we drop it. If any rules contained in it are
+     referenced elsewhere, those rules are in a new location constraint that
+     does not apply to any resources. (A rule in a lifetime element may contain
+     a node attribute expression, which is now allowed only within a location
+     constraint rule.)
  -->
 
 <xsl:stylesheet version="1.0"
