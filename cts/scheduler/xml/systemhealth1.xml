@@ -18,9 +18,6 @@
         <operations id="apache_1-operations">
           <op id="apache_1-op-monitor-10" interval="10" name="monitor" start-delay="1m" timeout="20"/>
         </operations>
-        <instance_attributes id="apache_1-instance_attributes">
-          <nvpair id="nvpair-a915b958-b215-4fa1-b465-23ab60aa06ca" name="configfile"/>
-        </instance_attributes>
       </primitive>
       <primitive class="ocf" id="nfs_1" provider="heartbeat" type="Filesystem">
         <meta_attributes id="nfs_1-meta_attributes">
