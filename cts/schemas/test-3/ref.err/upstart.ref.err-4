@@ -1,0 +1,8 @@
+WARNING: Dropping template template_drop because upstart resources are no longer supported
+WARNING: Dropping resource primitive1_drop because upstart resources are no longer supported
+WARNING: Dropping resource primitive3_drop because upstart resources are no longer supported
+WARNING: Dropping resource grp2_rsc1_drop because upstart resources are no longer supported
+WARNING: Dropping resource grp2_rsc3_drop because upstart resources are no longer supported
+WARNING: Dropping resource clone4_grp_rsc1_drop because upstart resources are no longer supported
+WARNING: Dropping resource clone4_grp_rsc3_drop because upstart resources are no longer supported
+WARNING: Dropping resource bundle_rsc_drop because upstart resources are no longer supported

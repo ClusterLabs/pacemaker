@@ -74,16 +74,44 @@
 
 <!-- Drop nagios- and upstart-class resource templates -->
 <xsl:template match="template">
-    <xsl:if test="count(.|$dropped_templates) != count($dropped_templates)">
-        <xsl:call-template name="identity"/>
-    </xsl:if>
+    <xsl:choose>
+        <xsl:when test="count(.|$dropped_templates)
+                        = count($dropped_templates)">
+            <xsl:call-template name="warning">
+                <xsl:with-param name="msg"
+                                select="concat('Dropping template ', @id,
+                                               ' because ', @class,
+                                               ' resources are no longer',
+                                               ' supported')"/>
+            </xsl:call-template>
+        </xsl:when>
+
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- Drop nagios- and upstart-class primitives -->
 <xsl:template match="primitive">
-    <xsl:if test="count(.|$dropped_primitives) != count($dropped_primitives)">
-        <xsl:call-template name="identity"/>
-    </xsl:if>
+    <xsl:choose>
+        <xsl:when test="count(.|$dropped_primitives)
+                        = count($dropped_primitives)">
+            <xsl:variable name="class"
+                          select="@class|key('template_id', @template)/@class"/>
+            <xsl:call-template name="warning">
+                <xsl:with-param name="msg"
+                                select="concat('Dropping resource ', @id,
+                                               ' because ', $class,
+                                               ' resources are no longer',
+                                               ' supported')"/>
+            </xsl:call-template>
+        </xsl:when>
+
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- Drop groups that would become empty -->
