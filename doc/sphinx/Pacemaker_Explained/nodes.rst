@@ -425,7 +425,8 @@ following values:
    |            |    single: yellow; node health attribute value               |
    |            |    single: node attribute; health (yellow)                   |
    |            |                                                              |
-   |            | This indicator is becoming unhealthy                         |
+   |            | This indicator is close to unhealthy (whether worsening or   |
+   |            | recovering)                                                  |
    +------------+--------------------------------------------------------------+
    | ``green``  | .. index::                                                   |
    |            |    single: green; node health attribute value                |
@@ -440,6 +441,16 @@ following values:
    |            | A numeric score to apply to all resources on this node (0 or |
    |            | positive is healthy, negative is unhealthy)                  |
    +------------+--------------------------------------------------------------+
+
+.. note::
+
+   A health attribute may technically be transient or permanent, but generally
+   only transient makes sense.
+
+.. note::
+
+   ``red``, ``yellow``, and ``green`` function as aliases for particular
+   numeric scores as described later.
 
 
 .. index::
