@@ -24,9 +24,15 @@ typedef struct {
     gnutls_dh_params_t dh_params;
     gnutls_credentials_type_t cred_type;
 
+    const char *ca_file;
+    const char *cert_file;
+    const char *crl_file;
+    const char *key_file;
+
     union {
         gnutls_anon_server_credentials_t anon_s;
         gnutls_anon_client_credentials_t anon_c;
+        gnutls_certificate_credentials_t cert;
         gnutls_psk_server_credentials_t psk_s;
         gnutls_psk_client_credentials_t psk_c;
     } credentials;
