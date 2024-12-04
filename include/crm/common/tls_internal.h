@@ -42,7 +42,7 @@ int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
  *
  * \param[in] csock       Connected socket for TLS session
  * \param[in] conn_type   GNUTLS_SERVER or GNUTLS_CLIENT
- * \param[in] cred_type   GNUTLS_CRD_ANON or GNUTLS_CRD_PSK
+ * \param[in] cred_type   GNUTLS_CRD_ANON, GNUTLS_CRD_PSK, or GNUTLS_CRD_CERTIFICATE
  * \param[in] credentials TLS session credentials
  *
  * \return Pointer to newly created session object, or NULL on error

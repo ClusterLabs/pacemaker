@@ -28,6 +28,20 @@ get_gnutls_priorities(gnutls_credentials_type_t cred_type)
                              (cred_type == GNUTLS_CRD_ANON)? "+ANON-DH" : "+DHE-PSK:+PSK");
 }
 
+static const char *
+tls_cred_str(gnutls_credentials_type_t cred_type)
+{
+    if (cred_type == GNUTLS_CRD_ANON) {
+        return "unauthenticated";
+    } else if (cred_type == GNUTLS_CRD_PSK) {
+        return "shared-key-authenticated";
+    } else if (cred_type == GNUTLS_CRD_CERTIFICATE) {
+        return "certificate-authenticated";
+    } else {
+        return "unknown";
+    }
+}
+
 int
 pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
 {
@@ -108,9 +122,8 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
     return session;
 
 error:
-    crm_err("Could not initialize %s TLS %s session: %s "
-            QB_XS " rc=%d priority='%s'",
-            (cred_type == GNUTLS_CRD_ANON)? "anonymous" : "PSK",
+    crm_err("Could not initialize %s TLS %s session: %s " QB_XS " rc=%d priority='%s'",
+            tls_cred_str(cred_type),
             (conn_type == GNUTLS_SERVER)? "server" : "client",
             gnutls_strerror(rc), rc, prio);
     free(prio);
