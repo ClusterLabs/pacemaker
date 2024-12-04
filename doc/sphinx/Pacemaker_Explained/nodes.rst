@@ -20,6 +20,30 @@ toward cluster quorum, and serve as the cluster's Designated Controller (DC).
 Every cluster must have at least one cluster node. Scalability is limited by
 the cluster layer to around 32 cluster nodes.
 
+Host Clock Considerations
+#########################
+
+In general, Pacemaker does not rely on time or time zones being synchronized
+across nodes. However, if the configuration uses date/time-based :ref:`rules
+<rules>`, synchronization is a good idea, otherwise the rules will evaluate
+differently depending on which node is the Designated Controller (DC). Also,
+synchronization is greatly helpful when comparing logs across multiple nodes
+for problem investigation.
+
+If a node's clock jumps forward, you may see relatively minor issues such as
+various timeouts suddenly being considered expired.
+
+If a node's clock jumps backward, more serious problems may occur, so this
+should be avoided. If the host clock is adjusted at boot, and Pacemaker is
+enabled at boot, Pacemaker's start should be ordered after the clock
+adjustment. When run under systemd, Pacemaker will automatically order itself
+after ``time-sync.target``. However, depending on the local setup, you may need
+to enable an additional service (for example, ``chronyd-wait.service``) for
+that to be effective, or write your own workaround (for example, see the
+discussion on
+`systemd issue#5097 <https://github.com/systemd/systemd/issues/5097>`_.
+
+
 .. _pacemaker_remote:
 
 .. index::
