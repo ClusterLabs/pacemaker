@@ -98,6 +98,17 @@ If not specified, the default from the table below is used.
        this is 0, Pacemaker will apply other properties configured for this
        operation to instances that are scheduled as needed during normal
        cluster operation. *(required)*
+   * - .. _op_description:
+       
+       .. index::
+          pair: op; description
+          single:  description; action property
+          single: action; property, description
+       
+       description
+     - :ref:`text <text>`
+     - 
+     - Arbitrary text for user's use (ignored by Pacemaker)
    * - .. _op_role:
        
        .. index::
