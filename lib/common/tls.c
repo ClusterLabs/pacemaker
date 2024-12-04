@@ -42,6 +42,92 @@ tls_cred_str(gnutls_credentials_type_t cred_type)
     }
 }
 
+static void
+_gnutls_log_func(int level, const char *msg)
+{
+    crm_trace("%s", msg);
+}
+
+void
+pcmk__free_tls(pcmk__tls_t *tls)
+{
+    if (tls == NULL) {
+        return;
+    }
+
+    /* This is only set on the server side. */
+    if (tls->server) {
+        gnutls_dh_params_deinit(tls->dh_params);
+    }
+
+    if (tls->cred_type == GNUTLS_CRD_ANON) {
+        if (tls->server) {
+            gnutls_anon_free_server_credentials(tls->credentials.anon_s);
+        }
+    } else if (tls->cred_type == GNUTLS_CRD_PSK) {
+        if (tls->server) {
+            gnutls_psk_free_server_credentials(tls->credentials.psk_s);
+        }
+    }
+
+    free(tls);
+    tls = NULL;
+
+    gnutls_global_deinit();
+}
+
+int
+pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_type)
+{
+    int rc = pcmk_rc_ok;
+
+    if (*tls != NULL) {
+        return rc;
+    }
+
+    *tls = pcmk__assert_alloc(1, sizeof(pcmk__tls_t));
+
+    signal(SIGPIPE, SIG_IGN);
+
+    /* gnutls_global_init is safe to call multiple times, but we have to call
+     * gnutls_global_deinit the same number of times for that function to do
+     * anything.
+     *
+     * FIXME: When we can use gnutls >= 3.3.0, we don't have to call
+     * gnutls_global_init anymore.
+     */
+    gnutls_global_init();
+    gnutls_global_set_log_level(8);
+    gnutls_global_set_log_function(_gnutls_log_func);
+
+    if (server) {
+        rc = pcmk__init_tls_dh(&(*tls)->dh_params);
+        if (rc != pcmk_rc_ok) {
+            pcmk__free_tls(*tls);
+            return rc;
+        }
+    }
+
+    (*tls)->cred_type = cred_type;
+    (*tls)->server = server;
+
+    if (cred_type == GNUTLS_CRD_ANON) {
+        if (server) {
+            gnutls_anon_allocate_server_credentials(&(*tls)->credentials.anon_s);
+            gnutls_anon_set_server_dh_params((*tls)->credentials.anon_s,
+                                             (*tls)->dh_params);
+        }
+    } else if (cred_type == GNUTLS_CRD_PSK) {
+        if (server) {
+            gnutls_psk_allocate_server_credentials(&(*tls)->credentials.psk_s);
+            gnutls_psk_set_server_dh_params((*tls)->credentials.psk_s,
+                                            (*tls)->dh_params);
+        }
+    }
+
+    return rc;
+}
+
 int
 pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
 {
@@ -156,6 +242,13 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
         return EPROTO;
     }
     return pcmk_rc_ok;
+}
+
+void
+pcmk__tls_add_psk_callback(pcmk__tls_t *tls,
+                           gnutls_psk_server_credentials_function *cb)
+{
+    gnutls_psk_set_server_credentials_function(tls->credentials.psk_s, cb);
 }
 
 int

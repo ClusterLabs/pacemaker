@@ -30,16 +30,10 @@
 #include <gnutls/gnutls.h>
 
 #define LRMD_REMOTE_AUTH_TIMEOUT 10000
-gnutls_psk_server_credentials_t psk_cred_s;
-gnutls_dh_params_t dh_params;
+
+static pcmk__tls_t *tls = NULL;
 static int ssock = -1;
 extern int lrmd_call_id;
-
-static void
-debug_log(int level, const char *str)
-{
-    fputs(str, stderr);
-}
 
 /*!
  * \internal
@@ -227,7 +221,7 @@ lrmd_remote_listen(gpointer data)
     }
 
     session = pcmk__new_tls_session(csock, GNUTLS_SERVER, GNUTLS_CRD_PSK,
-                                    psk_cred_s);
+                                    tls->credentials.psk_s);
     if (session == NULL) {
         close(csock);
         return TRUE;
@@ -349,6 +343,7 @@ get_address_info(const char *bind_name, int port, struct addrinfo **res)
 int
 lrmd_init_remote_tls_server(void)
 {
+    int rc = pcmk_rc_ok;
     int filter;
     int port = crm_default_remote_port();
     struct addrinfo *res = NULL, *iter;
@@ -364,15 +359,13 @@ lrmd_init_remote_tls_server(void)
 
     crm_debug("Starting TLS listener on %s port %d",
               (bind_name? bind_name : "all addresses on"), port);
-    crm_gnutls_global_init();
-    gnutls_global_set_log_function(debug_log);
 
-    if (pcmk__init_tls_dh(&dh_params) != pcmk_rc_ok) {
+    rc = pcmk__init_tls(&tls, true, GNUTLS_CRD_PSK);
+    if (rc != pcmk_rc_ok) {
         return -1;
     }
-    gnutls_psk_allocate_server_credentials(&psk_cred_s);
-    gnutls_psk_set_server_credentials_function(psk_cred_s, lrmd_tls_server_key_cb);
-    gnutls_psk_set_server_dh_params(psk_cred_s, dh_params);
+
+    pcmk__tls_add_psk_callback(tls, lrmd_tls_server_key_cb);
 
     /* The key callback won't get called until the first client connection
      * attempt. Do it once here, so we can warn the user at start-up if we can't
@@ -428,9 +421,9 @@ lrmd_init_remote_tls_server(void)
 void
 execd_stop_tls_server(void)
 {
-    if (psk_cred_s) {
-        gnutls_psk_free_server_credentials(psk_cred_s);
-        psk_cred_s = 0;
+    if (tls != NULL) {
+        pcmk__free_tls(tls);
+        tls = NULL;
     }
 
     if (ssock >= 0) {
