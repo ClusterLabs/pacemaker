@@ -108,6 +108,8 @@ be the same as its local hostname. Pacemaker uses the following for a cluster
 node's name, in order of most preferred first:
 
 * The value of ``name`` in the ``nodelist`` section of ``corosync.conf``
+  (``nodeid`` must also be explicitly set there in order for Pacemaker to
+  associate the name with the node)
 * The value of ``ring0_addr`` in the ``nodelist`` section of ``corosync.conf``
 * The local hostname (value of ``uname -n``)
 
