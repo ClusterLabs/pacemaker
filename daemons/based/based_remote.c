@@ -294,10 +294,7 @@ cib_remote_listen(gpointer data)
         pcmk__set_client_flags(new_client, pcmk__client_tls);
 
         /* create gnutls session for the server socket */
-        new_client->remote->tls_session = pcmk__new_tls_session(csock,
-                                                                GNUTLS_SERVER,
-                                                                GNUTLS_CRD_ANON,
-                                                                tls->credentials.anon_s);
+        new_client->remote->tls_session = pcmk__new_tls_session(tls, csock);
         if (new_client->remote->tls_session == NULL) {
             close(csock);
             return TRUE;

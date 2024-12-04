@@ -176,9 +176,9 @@ error:
 }
 
 gnutls_session_t
-pcmk__new_tls_session(int csock, unsigned int conn_type,
-                      gnutls_credentials_type_t cred_type, void *credentials)
+pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
 {
+    unsigned int conn_type = tls->server ? GNUTLS_SERVER : GNUTLS_CLIENT;
     int rc = GNUTLS_E_SUCCESS;
     char *prio = NULL;
     gnutls_session_t session = NULL;
@@ -194,7 +194,7 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
      * For an example of anonymous authentication, see:
      * http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
      */
-    prio = get_gnutls_priorities(cred_type);
+    prio = get_gnutls_priorities(tls->cred_type);
 
     /* @TODO On the server side, it would be more efficient to cache the
      * priority with gnutls_priority_init2() and set it with
@@ -208,16 +208,31 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
     gnutls_transport_set_ptr(session,
                              (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
 
-    rc = gnutls_credentials_set(session, cred_type, credentials);
+    /* gnutls does not make this easy */
+    if (tls->cred_type == GNUTLS_CRD_ANON && tls->server) {
+        rc = gnutls_credentials_set(session, tls->cred_type, tls->credentials.anon_s);
+    } else if (tls->cred_type == GNUTLS_CRD_ANON) {
+        rc = gnutls_credentials_set(session, tls->cred_type, tls->credentials.anon_c);
+    } else if (tls->cred_type == GNUTLS_CRD_PSK && tls->server) {
+        rc = gnutls_credentials_set(session, tls->cred_type, tls->credentials.psk_s);
+    } else if (tls->cred_type == GNUTLS_CRD_PSK) {
+        rc = gnutls_credentials_set(session, tls->cred_type, tls->credentials.psk_c);
+    } else {
+        crm_err("Unknown credential type: %d", tls->cred_type);
+        rc = EINVAL;
+        goto error;
+    }
+
     if (rc != GNUTLS_E_SUCCESS) {
         goto error;
     }
+
     free(prio);
     return session;
 
 error:
     crm_err("Could not initialize %s TLS %s session: %s " QB_XS " rc=%d priority='%s'",
-            tls_cred_str(cred_type),
+            tls_cred_str(tls->cred_type),
             (conn_type == GNUTLS_SERVER)? "server" : "client",
             gnutls_strerror(rc), rc, prio);
     free(prio);

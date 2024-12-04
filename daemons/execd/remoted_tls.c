@@ -220,8 +220,7 @@ lrmd_remote_listen(gpointer data)
         return TRUE;
     }
 
-    session = pcmk__new_tls_session(csock, GNUTLS_SERVER, GNUTLS_CRD_PSK,
-                                    tls->credentials.psk_s);
+    session = pcmk__new_tls_session(tls, csock);
     if (session == NULL) {
         close(csock);
         return TRUE;

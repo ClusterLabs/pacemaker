@@ -1555,9 +1555,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
     pcmk__tls_add_psk_key(native->tls, &psk_key);
     gnutls_free(psk_key.data);
 
-    native->remote->tls_session = pcmk__new_tls_session(sock, GNUTLS_CLIENT,
-                                                        GNUTLS_CRD_PSK,
-                                                        native->tls->credentials.psk_c);
+    native->remote->tls_session = pcmk__new_tls_session(native->tls, sock);
     if (native->remote->tls_session == NULL) {
         lrmd_tls_connection_destroy(lrmd);
         report_async_connection_result(lrmd, -EPROTO);
@@ -1649,9 +1647,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     pcmk__tls_add_psk_key(native->tls, &psk_key);
     gnutls_free(psk_key.data);
 
-    native->remote->tls_session = pcmk__new_tls_session(native->sock, GNUTLS_CLIENT,
-                                                        GNUTLS_CRD_PSK,
-                                                        native->tls->credentials.psk_c);
+    native->remote->tls_session = pcmk__new_tls_session(native->tls, native->sock);
     if (native->remote->tls_session == NULL) {
         lrmd_tls_connection_destroy(lrmd);
         return EPROTO;
