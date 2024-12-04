@@ -184,6 +184,44 @@ If not specified, the default from the table below is used.
        (:ref:`is-managed <is_managed>` set to ``false``), which does not stop
        recurring operations. Maintenance mode, which does stop configured
        monitors, overrides this setting.
+   * - .. _op_interval_origin:
+       
+       .. index::
+          pair: op; interval-origin
+          single: interval-origin; action property
+          single: action; property, interval-origin
+       
+       interval-origin
+     - :ref:`ISO 8601 <iso8601>`
+     -
+     - If set for a recurring action, the action will be scheduled for this
+       time plus a multiple of the action's interval, rather than immediately
+       after the resource gains the monitored role. For example, you might
+       schedule an in-depth monitor to run once per day outside business hours,
+       by setting this to the desired time (on any date) and setting
+       ``interval`` to ``24h``. At most one of ``interval-origin`` and
+       ``start-delay`` may be set.
+   * - .. _op_start_delay:
+       
+       .. index::
+          pair: op; start-delay
+          single: start-delay; action property
+          single: action; property, start-delay
+       
+       start-delay
+     - :ref:`duration <duration>`
+     -
+     - If set, the cluster will wait this long before running the action (for
+       the first time, if recurring). This is an advanced option that should
+       generally be avoided. It can be useful for a recurring monitor if a
+       resource agent incorrectly returns success from start before the service
+       is actually ready, and the agent can't be corrected, or for a start
+       action if a service takes a very long time to start, and you don't want
+       to block the cluster from responding to other events during that time.
+       If this delay is longer than 5 minutes, the cluster will pretend that
+       the action succeeded when it is first scheduled for the purpose of other
+       actions needed, then act on the result when it actually runs. At most
+       one of ``interval-origin`` and ``start-delay`` may be set.
    * - .. _op_record_pending:
        
        .. index::
@@ -412,42 +450,6 @@ Once you've done whatever you needed to do, you can then re-enable it with
 .. code-block:: none
 
    # cibadmin --modify --xml-text '<op id="public-ip-check" enabled="true"/>'
-
-
-.. index::
-   single: start-delay; operation attribute
-   single: interval-origin; operation attribute
-   single: interval; interval-origin
-   single: operation; interval-origin
-   single: operation; start-delay
-
-Specifying When Recurring Actions are Performed
-###############################################
-
-By default, recurring actions are scheduled relative to when the resource
-started. In some cases, you might prefer that a recurring action start relative
-to a specific date and time. For example, you might schedule an in-depth
-monitor to run once every 24 hours, and want it to run outside business hours.
-
-To do this, set the operation's ``interval-origin``. The cluster uses this point
-to calculate the correct ``start-delay`` such that the operation will occur
-at ``interval-origin`` plus a multiple of the operation interval.
-
-For example, if the recurring operation's interval is 24h, its
-``interval-origin`` is set to 02:00, and it is currently 14:32, then the
-cluster would initiate the operation after 11 hours and 28 minutes.
-
-The value specified for ``interval`` and ``interval-origin`` can be any
-date/time conforming to the
-`ISO8601 standard <https://en.wikipedia.org/wiki/ISO_8601>`_. By way of
-example, to specify an operation that would run on the first Monday of
-2021 and every Monday after that, you would add:
-
-.. topic:: Example recurring action that runs relative to base date/time
-
-   .. code-block:: xml
-
-      <op id="intensive-monitor" name="monitor" interval="P7D" interval-origin="2021-W01-1"/>
 
 
 .. index::
