@@ -383,10 +383,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
         }
 
         /* bind the socket to GnuTls lib */
-        connection->tls_session = pcmk__new_tls_session(connection->tcp_socket,
-                                                        GNUTLS_CLIENT,
-                                                        GNUTLS_CRD_ANON,
-                                                        tls->credentials.anon_c);
+        connection->tls_session = pcmk__new_tls_session(tls, connection->tcp_socket);
         if (connection->tls_session == NULL) {
             cib_tls_close(cib);
             return -1;

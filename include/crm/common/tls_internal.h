@@ -78,16 +78,12 @@ int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
  * \internal
  * \brief Initialize a new TLS session
  *
+ * \param[in] tls         A TLS environment object
  * \param[in] csock       Connected socket for TLS session
- * \param[in] conn_type   GNUTLS_SERVER or GNUTLS_CLIENT
- * \param[in] cred_type   GNUTLS_CRD_ANON, GNUTLS_CRD_PSK, or GNUTLS_CRD_CERTIFICATE
- * \param[in] credentials TLS session credentials
  *
  * \return Pointer to newly created session object, or NULL on error
  */
-gnutls_session_t pcmk__new_tls_session(int csock, unsigned int conn_type,
-                                       gnutls_credentials_type_t cred_type,
-                                       void *credentials);
+gnutls_session_t pcmk__new_tls_session(pcmk__tls_t *tls, int csock);
 
 /*!
  * \internal
