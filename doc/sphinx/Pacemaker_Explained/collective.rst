@@ -33,7 +33,7 @@ of groups.
              <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
           </instance_attributes>
          </primitive>
-         <primitive id="Email" class="lsb" type="exim"/>
+         <primitive id="Email" class="systemd" type="exim"/>
       </group> 
    
 Although the example above contains only two resources, there is no
@@ -65,7 +65,7 @@ The group above is logically equivalent to writing:
               <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
            </instance_attributes>
           </primitive>
-          <primitive id="Email" class="lsb" type="exim"/>
+          <primitive id="Email" class="systemd" type="exim"/>
          </resources>
          <constraints>
             <rsc_colocation id="xxx" rsc="Email" with-rsc="Public-IP" score="INFINITY"/>
@@ -374,7 +374,7 @@ Clones must contain exactly one primitive or group resource.
    .. code-block:: xml
 
       <clone id="apache-clone">
-          <primitive id="apache" class="lsb" type="apache">
+          <primitive id="apache" class="systemd" type="httpd">
               <operations>
                  <op id="apache-monitor" name="monitor" interval="30"/>
               </operations>
