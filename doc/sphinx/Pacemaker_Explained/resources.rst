@@ -82,9 +82,10 @@ Most Linux distributions use `Systemd
 and service management. *Unit files* specify how to manage services and are
 usually provided by the distribution.
 
-Pacemaker can manage systemd services. Simply create a resource with
-``systemd`` as the resource standard and the unit file name as the resource
-type. Do *not* run ``systemctl enable`` on the unit.
+Pacemaker can manage systemd units of type service, socket, mount, timer, or
+path. Simply create a resource with ``systemd`` as the resource standard and
+the unit file name as the resource type. Do *not* run ``systemctl enable`` on
+the unit.
 
 .. important::
 
