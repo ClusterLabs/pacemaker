@@ -94,6 +94,44 @@ tls_load_x509_data(pcmk__tls_t *tls)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Verify a peer's certificate
+ *
+ * \return 0 if the certificate is trusted and the gnutls handshake should
+ *         continue, -1 otherwise
+ */
+static int
+verify_peer_cert(gnutls_session_t session)
+{
+    int rc;
+    int type;
+    unsigned int status;
+    gnutls_datum_t out;
+
+    /* NULL = no hostname comparison will be performed */
+    rc = gnutls_certificate_verify_peers3(session, NULL, &status);
+
+    /* Success means it was able to perform the verification.  We still have
+     * to check status to see whether the cert is valid or not.
+     */
+    if (rc != GNUTLS_E_SUCCESS) {
+        crm_err("Failed to verify peer certificate: %s", gnutls_strerror(rc));
+        return -1;
+    }
+
+    if (status == 0) {
+        /* The certificate is trusted. */
+        return 0;
+    }
+
+    type = gnutls_certificate_type_get(session);
+    gnutls_certificate_verification_status_print(status, type, &out, 0);
+    crm_err("Peer certificate invalid: %s", out.data);
+    gnutls_free(out.data);
+    return GNUTLS_E_CERTIFICATE_VERIFICATION_ERROR;
+}
+
 static void
 _gnutls_log_func(int level, const char *msg)
 {
@@ -304,6 +342,21 @@ pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
     }
 
     free(prio);
+
+    if (tls->cred_type == GNUTLS_CRD_CERTIFICATE) {
+        if (conn_type == GNUTLS_SERVER) {
+            /* Require the client to send a certificate for the server to verify. */
+            gnutls_certificate_server_set_request(session, GNUTLS_CERT_REQUIRE);
+        }
+
+        /* Register a function to verify the peer's certificate.
+         *
+         * FIXME: When we can require gnutls >= 3.4.6, remove verify_peer_cert
+         * and use gnutls_session_set_verify_cert instead.
+         */
+        gnutls_certificate_set_verify_function(tls->credentials.cert, verify_peer_cert);
+    }
+
     return session;
 
 error:
