@@ -26,6 +26,9 @@ extern "C" {
  *             release.
  */
 
+//! \deprecated Use gnutls_global_init() instead
+void crm_gnutls_global_init(void);
+
 //! \deprecated Do not use (will be dropped in a future release)
 bool crm_is_daemon_name(const char *name);
 
