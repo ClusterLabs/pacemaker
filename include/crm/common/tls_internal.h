@@ -19,6 +19,42 @@
 extern "C" {
 #endif
 
+typedef struct {
+    bool server;
+    gnutls_dh_params_t dh_params;
+    gnutls_credentials_type_t cred_type;
+
+    union {
+        gnutls_anon_server_credentials_t anon_s;
+        gnutls_psk_server_credentials_t psk_s;
+    } credentials;
+} pcmk__tls_t;
+
+/*!
+ * \internal
+ * \brief Free a previously allocated \p pcmk__tls_t object
+ *
+ * \param[in,out] tls The object to free
+ */
+void pcmk__free_tls(pcmk__tls_t *tls);
+
+/*!
+ * \internal
+ * \brief Initialize a new TLS object
+ *
+ * Unlike \p pcmk__new_tls_session, this function is used for creating the
+ * global environment for TLS connections.
+ *
+ * \param[in,out] tls       The object to be allocated and initialized
+ * \param[in]     server    Is this a server or not?
+ * \param[in]     cred_type What type of gnutls credentials are in use?
+ *                          (GNUTLS_CRD_* constants)
+ *
+ * \returns Standard Pacemaker return code
+ */
+int pcmk__init_tls(pcmk__tls_t **tls, bool server,
+                   gnutls_credentials_type_t cred_type);
+
 /*!
  * \internal
  * \brief Initialize Diffie-Hellman parameters for a TLS server
@@ -50,6 +86,19 @@ int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
 gnutls_session_t pcmk__new_tls_session(int csock, unsigned int conn_type,
                                        gnutls_credentials_type_t cred_type,
                                        void *credentials);
+
+/*!
+ * \internal
+ * \brief Register the server's PSK credential fetching callback
+ *
+ * This function must be called for all TLS servers that are using PSK for
+ * authentication.
+ *
+ * \param[in,out] tls The TLS environment
+ * \param[in]     cb  The server's PSK credential fetching callback
+ */
+void pcmk__tls_add_psk_callback(pcmk__tls_t *tls,
+                                gnutls_psk_server_credentials_function *cb);
 
 /*!
  * \internal

@@ -48,14 +48,13 @@
 #  define HAVE_PAM 1
 #endif
 
+static pcmk__tls_t *tls = NULL;
+
 extern int remote_tls_fd;
 extern gboolean cib_shutdown_flag;
 
 int init_remote_listener(int port, gboolean encrypted);
 void cib_remote_connection_destroy(gpointer user_data);
-
-gnutls_dh_params_t dh_params;
-gnutls_anon_server_credentials_t anon_cred_s;
 
 // @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
@@ -92,12 +91,11 @@ init_remote_listener(int port, gboolean encrypted)
 
     if (encrypted) {
         crm_notice("Starting TLS listener on port %d", port);
-        crm_gnutls_global_init();
-        if (pcmk__init_tls_dh(&dh_params) != pcmk_rc_ok) {
+        rc = pcmk__init_tls(&tls, true, GNUTLS_CRD_ANON);
+
+        if (rc != pcmk_rc_ok) {
             return -1;
         }
-        gnutls_anon_allocate_server_credentials(&anon_cred_s);
-        gnutls_anon_set_server_dh_params(anon_cred_s, dh_params);
     } else {
         crm_warn("Starting plain-text listener on port %d", port);
     }
@@ -299,7 +297,7 @@ cib_remote_listen(gpointer data)
         new_client->remote->tls_session = pcmk__new_tls_session(csock,
                                                                 GNUTLS_SERVER,
                                                                 GNUTLS_CRD_ANON,
-                                                                anon_cred_s);
+                                                                tls->credentials.anon_s);
         if (new_client->remote->tls_session == NULL) {
             close(csock);
             return TRUE;
