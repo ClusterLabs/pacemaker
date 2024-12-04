@@ -110,163 +110,191 @@ Writing an Alert Agent
    single: alert; environment variables
    single: environment variable; alert agents
 
-.. table:: **Environment variables passed to alert agents**
+.. list-table:: **Environment variables passed to alert agents**
    :class: longtable
    :widths: 1 3
+   :header-rows: 1
    
-   +---------------------------+----------------------------------------------------------------+
-   | Environment Variable      | Description                                                    |
-   +===========================+================================================================+
-   | CRM_alert_kind            | .. index::                                                     | 
-   |                           |   single:environment variable; CRM_alert_kind                  |
-   |                           |   single:CRM_alert_kind                                        |
-   |                           |                                                                |
-   |                           | The type of alert (``node``, ``fencing``, ``resource``, or     |
-   |                           | ``attribute``)                                                 |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_node            | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_node                  |
-   |                           |   single:CRM_alert_node                                        |
-   |                           |                                                                |
-   |                           | Name of affected node                                          |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_node_sequence   | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_sequence              |
-   |                           |   single:CRM_alert_sequence                                    |
-   |                           |                                                                |
-   |                           | A sequence number increased whenever an alert is being issued  |
-   |                           | on the local node, which can be used to reference the order in |
-   |                           | which alerts have been issued by Pacemaker. An alert for an    |
-   |                           | event that happened later in time reliably has a higher        |
-   |                           | sequence number than alerts for earlier events.                |
-   |                           |                                                                |
-   |                           | Be aware that this number has no cluster-wide meaning.         |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_recipient       | .. index::                                                     | 
-   |                           |   single:environment variable; CRM_alert_recipient             |
-   |                           |   single:CRM_alert_recipient                                   |
-   |                           |                                                                |
-   |                           | The configured recipient                                       |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_timestamp       | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_timestamp             |
-   |                           |   single:CRM_alert_timestamp                                   |
-   |                           |                                                                |
-   |                           | A timestamp created prior to executing the agent, in the       |
-   |                           | format specified by the ``timestamp-format`` meta-attribute.   |
-   |                           | This allows the agent to have a reliable, high-precision time  |
-   |                           | of when the event occurred, regardless of when the agent       |
-   |                           | itself was invoked (which could potentially be delayed due to  |
-   |                           | system load, etc.).                                            |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_timestamp_epoch | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_timestamp_epoch       |
-   |                           |   single:CRM_alert_timestamp_epoch                             |
-   |                           |                                                                |
-   |                           | The same time as ``CRM_alert_timestamp``, expressed as the     |
-   |                           | integer number of seconds since January 1, 1970. This (along   |
-   |                           | with ``CRM_alert_timestamp_usec``) can be useful for alert     |
-   |                           | agents that need to format time in a specific way rather than  |
-   |                           | let the user configure it.                                     |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_timestamp_usec  | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_timestamp_usec        |
-   |                           |   single:CRM_alert_timestamp_usec                              |
-   |                           |                                                                |
-   |                           | The same time as ``CRM_alert_timestamp``, expressed as the     |
-   |                           | integer number of microseconds since                           |
-   |                           | ``CRM_alert_timestamp_epoch``.                                 |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_version         | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_version               |
-   |                           |   single:CRM_alert_version                                     |
-   |                           |                                                                |
-   |                           | The version of Pacemaker sending the alert                     |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_desc            | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_desc                  |
-   |                           |   single:CRM_alert_desc                                        |
-   |                           |                                                                |
-   |                           | Detail about event. For ``node`` alerts, this is the node's    |
-   |                           | current state (``member`` or ``lost``). For ``fencing``        |
-   |                           | alerts, this is a summary of the requested fencing operation,  |
-   |                           | including origin, target, and fencing operation error code, if |
-   |                           | any. For ``resource`` alerts, this is a readable string        |
-   |                           | equivalent of ``CRM_alert_status``.                            |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_nodeid          | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_nodeid                |
-   |                           |   single:CRM_alert_nodeid                                      |
-   |                           |                                                                |
-   |                           | ID of node whose status changed (provided with ``node`` alerts |
-   |                           | only)                                                          |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_rc              | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_rc                    |
-   |                           |   single:CRM_alert_rc                                          |
-   |                           |                                                                |
-   |                           | The numerical return code of the fencing or resource operation |
-   |                           | (provided with ``fencing`` and ``resource`` alerts only)       |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_task            | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_task                  |
-   |                           |   single:CRM_alert_task                                        |
-   |                           |                                                                |
-   |                           | The requested fencing or resource operation (provided with     |
-   |                           | ``fencing`` and ``resource`` alerts only)                      |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_exec_time       | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_exec_time             |
-   |                           |   single:CRM_alert_exec_time                                   |
-   |                           |                                                                |
-   |                           | The (wall-clock) time, in milliseconds, that it took to        |
-   |                           | execute the action. If the action timed out,                   |
-   |                           | ``CRM_alert_status`` will be 2, ``CRM_alert_desc`` will be     |
-   |                           | "Timed Out", and this value will be the action timeout. May    |
-   |                           | not be supported on all platforms. (``resource`` alerts only)  |
-   |                           | *(since 2.0.1)*                                                |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_interval        | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_interval              |
-   |                           |   single:CRM_alert_interval                                    |
-   |                           |                                                                |
-   |                           | The interval of the resource operation (``resource`` alerts    |
-   |                           | only)                                                          |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_rsc             | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_rsc                   |
-   |                           |   single:CRM_alert_rsc                                         |
-   |                           |                                                                |
-   |                           | The name of the affected resource (``resource`` alerts only)   |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_status          | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_status                |
-   |                           |   single:CRM_alert_status                                      |
-   |                           |                                                                |
-   |                           | A numerical code used by Pacemaker to represent the operation  |
-   |                           | result (``resource`` alerts only)                              |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_target_rc       | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_target_rc             |
-   |                           |   single:CRM_alert_target_rc                                   |
-   |                           |                                                                |
-   |                           | The expected numerical return code of the operation            |
-   |                           | (``resource`` alerts only)                                     |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_attribute_name  | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_attribute_name        |
-   |                           |   single:CRM_alert_attribute_name                              |
-   |                           |                                                                |
-   |                           | The name of the node attribute that changed (``attribute``     |
-   |                           | alerts only)                                                   |
-   +---------------------------+----------------------------------------------------------------+
-   | CRM_alert_attribute_value | .. index::                                                     |
-   |                           |   single:environment variable; CRM_alert_attribute_value       |
-   |                           |   single:CRM_alert_attribute_value                             |
-   |                           |                                                                |
-   |                           | The new value of the node attribute that changed               |
-   |                           | (``attribute`` alerts only)                                    |
-   +---------------------------+----------------------------------------------------------------+
+   * - Environment Variable
+     - Description
+   * - .. _CRM_alert_kind:
+       
+       .. index::
+          single: environment variable; CRM_alert_kind
+          single: CRM_alert_kind
+
+       CRM_alert_kind
+     - The type of alert (``node``, ``fencing``, ``resource``, or
+       ``attribute``)
+   * - .. _CRM_alert_node:
+
+       .. index::
+          single: environment variable; CRM_alert_node
+          single: CRM_alert_node
+
+       CRM_alert_node
+     - Name of affected node
+   * - .. _CRM_alert_node_sequence:
+     
+       .. index::
+          single: environment variable; CRM_alert_node_sequence
+          single: CRM_alert_node_sequence
+       
+       CRM_alert_node_sequence
+     - A sequence number increased whenever an alert is being issued on the
+       local node, which can be used to reference the order in which alerts
+       have been issued by Pacemaker. An alert for an event that happened later
+       in time reliably has a higher sequence number than alerts for earlier
+       events. This number has no cluster-wide meaning.
+   * - .. _CRM_alert_recipient:
+     
+       .. index::
+          single: environment variable; CRM_alert_recipient
+          single: CRM_alert_recipient
+       
+       CRM_alert_recipient
+     - The configured recipient
+   * - .. _CRM_alert_timestamp:
+     
+       .. index::
+          single: environment variable; CRM_alert_timestamp
+          single: CRM_alert_timestamp
+       
+       CRM_alert_timestamp
+     - A timestamp created prior to executing the agent, in the format
+       specified by the ``timestamp-format`` meta-attribute.  This allows the
+       agent to have a reliable, high-precision time of when the event
+       occurred, regardless of when the agent itself was invoked (which could
+       potentially be delayed due to system load, etc.).
+   * - .. _CRM_alert_timestamp_epoch:
+     
+       .. index::
+          single: environment variable; CRM_alert_timestamp_epoch
+          single: CRM_alert_timestamp_epoch
+       
+       CRM_alert_timestamp_epoch
+     - The same time as ``CRM_alert_timestamp``, expressed as the integer
+       number of seconds since January 1, 1970. This (along with
+       ``CRM_alert_timestamp_usec``) can be useful for alert agents that need
+       to format time in a specific way rather than let the user configure it.
+   * - .. _CRM_alert_timestamp_usec:
+     
+       .. index::
+          single: environment variable; CRM_alert_timestamp_usec
+          single: CRM_alert_timestamp_usec
+       
+       CRM_alert_timestamp_usec
+     - The same time as ``CRM_alert_timestamp``, expressed as the integer
+       number of microseconds since ``CRM_alert_timestamp_epoch``.
+   * - .. _CRM_alert_version:
+     
+       .. index::
+          single: environment variable; CRM_alert_version
+          single: CRM_alert_version
+       
+       CRM_alert_version
+     - The version of Pacemaker sending the alert
+   * - .. _CRM_alert_desc:
+     
+       .. index::
+          single: environment variable; CRM_alert_desc
+          single: CRM_alert_desc
+       
+       CRM_alert_desc
+     - Detail about event. For ``node`` alerts, this is the node's current
+       state (``member`` or ``lost``). For ``fencing`` alerts, this is a
+       summary of the requested fencing operation, including origin, target,
+       and fencing operation error code, if any. For ``resource`` alerts, this
+       is a readable string equivalent of ``CRM_alert_status``.
+   * - .. _CRM_alert_nodeid:
+     
+       .. index::
+          single: environment variable; CRM_alert_nodeid
+          single: CRM_alert_nodeid
+       
+       CRM_alert_nodeid
+     - ID of node whose status changed (provided with ``node`` alerts only)
+   * - .. _CRM_alert_rc:
+     
+       .. index::
+          single: environment variable; CRM_alert_rc
+          single: CRM_alert_rc
+       
+       CRM_alert_rc
+     - The numerical return code of the fencing or resource operation (provided
+       with ``fencing`` and ``resource`` alerts only)
+   * - .. _CRM_alert_task:
+     
+       .. index::
+          single: environment variable; CRM_alert_task
+          single: CRM_alert_task
+       
+       CRM_alert_task
+     - The requested fencing or resource operation (provided with ``fencing``
+       and ``resource`` alerts only)
+   * - .. _CRM_alert_exec_time:
+     
+       .. index::
+          single: environment variable; CRM_alert_exec_time
+          single: CRM_alert_exec_time
+       
+       CRM_alert_exec_time
+     - The (wall-clock) time, in milliseconds, that it took to execute the
+       action. If the action timed out, ``CRM_alert_status`` will be 2,
+       ``CRM_alert_desc`` will be "Timed Out", and this value will be the
+       action timeout. May not be supported on all platforms. (``resource``
+       alerts only) *(since 2.0.1)*
+   * - .. _CRM_alert_interval:
+     
+       .. index::
+          single: environment variable; CRM_alert_interval
+          single: CRM_alert_interval
+       
+       CRM_alert_interval
+     - The interval of the resource operation (``resource`` alerts only)
+   * - .. _CRM_alert_rsc:
+     
+       .. index::
+          single: environment variable; CRM_alert_rsc
+          single: CRM_alert_rsc
+       
+       CRM_alert_rsc
+     - The name of the affected resource (``resource`` alerts only)
+   * - .. _CRM_alert_status:
+     
+       .. index::
+          single: environment variable; CRM_alert_status
+          single: CRM_alert_status
+       
+       CRM_alert_status
+     - A numerical code used by Pacemaker to represent the operation result
+       (``resource`` alerts only)
+   * - .. _CRM_alert_target_rc:
+     
+       .. index::
+          single: environment variable; CRM_alert_target_rc
+          single: CRM_alert_target_rc
+       
+       CRM_alert_target_rc
+     - The expected numerical return code of the operation (``resource`` alerts
+       only)
+   * - .. _CRM_alert_attribute_name:
+     
+       .. index::
+          single: environment variable; CRM_alert_attribute_name
+          single: CRM_alert_attribute_name
+       
+       CRM_alert_attribute_name
+     - The name of the node attribute that changed (``attribute`` alerts only)
+   * - .. _CRM_alert_attribute_value:
+     
+       .. index::
+          single: environment variable; CRM_alert_attribute_value
+          single: CRM_alert_attribute_value
+       
+       CRM_alert_attribute_value
+     - The new value of the node attribute that changed (``attribute`` alerts
+       only)
    
 Special concerns when writing alert agents:
    
