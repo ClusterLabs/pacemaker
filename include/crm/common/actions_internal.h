@@ -201,7 +201,7 @@ struct pcmk__action {
     int priority;
 
     pcmk_resource_t *rsc;   // Resource to apply action to, if any
-    pcmk_node_t *node;      // Node to execute action on, if any
+    pcmk_node_t *node;      // Copy of node to execute action on, if any
     xmlNode *op_entry;      // Action XML configuration, if any
     char *task;             // Action name
     char *uuid;             // Action key

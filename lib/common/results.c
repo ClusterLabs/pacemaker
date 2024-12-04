@@ -1041,28 +1041,20 @@ pcmk__bzlib2rc(int bz2)
 }
 
 crm_exit_t
-crm_exit(crm_exit_t rc)
+crm_exit(crm_exit_t exit_status)
 {
     /* A compiler could theoretically use any type for crm_exit_t, but an int
      * should always hold it, so cast to int to keep static analysis happy.
      */
-    if ((((int) rc) < 0) || (((int) rc) > CRM_EX_MAX)) {
-        rc = CRM_EX_ERROR;
+    if ((((int) exit_status) < 0) || (((int) exit_status) > CRM_EX_MAX)) {
+        exit_status = CRM_EX_ERROR;
     }
 
-    mainloop_cleanup();
-    pcmk__xml_cleanup();
-
-    if (crm_system_name) {
-        crm_info("Exiting %s " QB_XS " with status %d", crm_system_name, rc);
-        free(crm_system_name);
-    } else {
-        crm_trace("Exiting with status %d", rc);
-    }
-    pcmk__free_common_logger();
-    qb_log_fini(); // Don't log anything after this point
-
-    exit(rc);
+    crm_info("Exiting %s " QB_XS " with status %d (%s: %s)",
+             pcmk__s(crm_system_name, "process"), exit_status,
+             crm_exit_name(exit_status), crm_exit_str(exit_status));
+    pcmk_common_cleanup();
+    exit(exit_status);
 }
 
 /*

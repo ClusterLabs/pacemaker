@@ -84,6 +84,8 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
  *
  * \return Newly allocated shallow copy of this_node
  * \note This function asserts on errors and is guaranteed to return non-NULL.
+ *       The caller is responsible for freeing the result using
+ *       pcmk__free_node_copy().
  */
 pcmk_node_t *
 pe__copy_node(const pcmk_node_t *this_node)
@@ -107,7 +109,7 @@ pe__copy_node(const pcmk_node_t *this_node)
 
 /*!
  * \internal
- * \brief Create a node hash table from a node list
+ * \brief Create a hash table of node copies from a list of nodes
  *
  * \param[in] list  Node list
  *
@@ -118,7 +120,7 @@ pe__node_list2table(const GList *list)
 {
     GHashTable *result = NULL;
 
-    result = pcmk__strkey_table(NULL, free);
+    result = pcmk__strkey_table(NULL, pcmk__free_node_copy);
     for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *new_node = NULL;
 
@@ -391,7 +393,7 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         // @TODO Should this be more like pcmk__unassign_resource()?
         crm_info("Unassigning %s from %s",
                  rsc->id, pcmk__node_name(rsc->priv->assigned_node));
-        free(rsc->priv->assigned_node);
+        pcmk__free_node_copy(rsc->priv->assigned_node);
         rsc->priv->assigned_node = NULL;
     }
 }

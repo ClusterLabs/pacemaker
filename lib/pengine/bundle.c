@@ -1819,10 +1819,8 @@ free_bundle_replica(pcmk__bundle_replica_t *replica)
         return;
     }
 
-    if (replica->node) {
-        free(replica->node);
-        replica->node = NULL;
-    }
+    pcmk__free_node_copy(replica->node);
+    replica->node = NULL;
 
     if (replica->ip) {
         pcmk__xml_free(replica->ip->priv->xml);
