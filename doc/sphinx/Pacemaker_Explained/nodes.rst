@@ -126,6 +126,29 @@ node ID will display the name used by the node with the given Corosync
 
 
 .. index::
+   single: node; quorum-only
+   single: quorum-only node
+
+Quorum-only Nodes
+_________________
+
+One popular cluster design uses an even number of cluster nodes (often 2), with
+an additional lightweight host that contributes to providing quorum but cannot
+run resources.
+
+With Pacemaker, this can be achieved in either of two ways:
+
+* When Corosync is used as the underlying cluster layer, the lightweight host
+  can run `qdevice <https://github.com/corosync/corosync-qdevice>`_ instead of
+  Corosync and Pacemaker.
+
+* The lightweight host can be configured as a Pacemaker cluster node, and a
+  :ref:`location constraint <location-constraint>` can be configured for the
+  node with ``score`` set to ``-INFINITY``, ``rsc-pattern`` set to ``.*``, and
+  ``resource-discovey`` set to ``never``.
+
+
+.. index::
    single: node; attribute
    single: node attribute
 
