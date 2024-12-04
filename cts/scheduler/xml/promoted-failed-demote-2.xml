@@ -72,10 +72,12 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="rsc_location" rsc="ms-sf">
+      <rsc_location id="rsc_location-0" rsc="ms-sf">
         <rule id="location-0" role="Promoted" score="100">
           <expression id="expression.id22304" attribute="#uname" operation="eq" value="dl380g5a"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-1" rsc="ms-sf">
         <rule id="location-1" role="Promoted" score="500">
           <expression id="expression.id22324" attribute="#uname" operation="eq" value="dl380g5b"/>
         </rule>

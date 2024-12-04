@@ -1,0 +1,1 @@
+WARNING: Dropping nvpair cib-bootstrap-options-remove-after-stop because the remove-after-stop property is unsupported

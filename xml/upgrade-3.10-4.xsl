@@ -74,34 +74,91 @@
 
 <!-- Drop nagios- and upstart-class resource templates -->
 <xsl:template match="template">
-    <xsl:if test="count(.|$dropped_templates) != count($dropped_templates)">
-        <xsl:call-template name="identity"/>
-    </xsl:if>
+    <xsl:choose>
+        <xsl:when test="count(.|$dropped_templates)
+                        = count($dropped_templates)">
+            <xsl:call-template name="warning">
+                <xsl:with-param name="msg"
+                                select="concat('Dropping template ', @id,
+                                               ' because ', @class,
+                                               ' resources are no longer',
+                                               ' supported')"/>
+            </xsl:call-template>
+        </xsl:when>
+
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- Drop nagios- and upstart-class primitives -->
 <xsl:template match="primitive">
-    <xsl:if test="count(.|$dropped_primitives) != count($dropped_primitives)">
-        <xsl:call-template name="identity"/>
-    </xsl:if>
+    <xsl:choose>
+        <xsl:when test="count(.|$dropped_primitives)
+                        = count($dropped_primitives)">
+            <xsl:variable name="class"
+                          select="@class|key('template_id', @template)/@class"/>
+            <xsl:call-template name="warning">
+                <xsl:with-param name="msg"
+                                select="concat('Dropping resource ', @id,
+                                               ' because ', $class,
+                                               ' resources are no longer',
+                                               ' supported')"/>
+            </xsl:call-template>
+        </xsl:when>
+
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- Drop groups that would become empty -->
 <xsl:template match="group">
-    <xsl:if test="count(.|$dropped_groups) != count($dropped_groups)">
-        <xsl:call-template name="identity"/>
-    </xsl:if>
+    <xsl:choose>
+        <xsl:when test="count(.|$dropped_groups) = count($dropped_groups)">
+            <xsl:call-template name="info">
+                <xsl:with-param name="msg"
+                                select="concat('Dropping group ', @id,
+                                               ' because it would become',
+                                               ' empty')"/>
+            </xsl:call-template>
+        </xsl:when>
+
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- Drop clones that would become empty -->
 <xsl:template match="clone">
-    <xsl:if test="count(.|$dropped_clones) != count($dropped_clones)">
-        <xsl:call-template name="identity"/>
-    </xsl:if>
+    <xsl:choose>
+        <xsl:when test="count(.|$dropped_clones) = count($dropped_clones)">
+            <xsl:call-template name="info">
+                <xsl:with-param name="msg"
+                                select="concat('Dropping clone ', @id,
+                                               ' because it would become',
+                                               ' empty')"/>
+            </xsl:call-template>
+        </xsl:when>
+
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- Drop rkt bundles -->
-<xsl:template match="bundle[rkt]"/>
+<xsl:template match="bundle[rkt]">
+    <xsl:call-template name="warning">
+        <xsl:with-param name="msg"
+                        select="concat('Dropping bundle resource ', @id,
+                                       ' because rkt containers are no longer',
+                                       ' supported')"/>
+    </xsl:call-template>
+</xsl:template>
 
 <!-- Drop restart-type resource meta-attribute -->
 <xsl:template match="template/meta_attributes/nvpair[@name = 'restart-type']
@@ -110,16 +167,33 @@
                      |clone/meta_attributes/nvpair[@name = 'restart-type']
                      |bundle/meta_attributes/nvpair[@name = 'restart-type']
                      |rsc_defaults/meta_attributes/nvpair
-                         [@name = 'restart-type']"/>
+                         [@name = 'restart-type']">
+    <xsl:call-template name="warning">
+        <xsl:with-param name="msg"
+                        select="concat('Dropping ', @name,
+                                       ' meta-attribute from ', ../@id,
+                                       ' because it is no longer supported.',
+                                       ' Consider setting the &quot;kind&quot;',
+                                       ' attribute for relevant constraints')"/>
+    </xsl:call-template>
+</xsl:template>
 
-<!-- Drop can_fail operation meta-attribute -->
+<!-- Drop can_fail and role_after_failure operation meta-attributes -->
 <xsl:template match="op/meta_attributes/nvpair[@name = 'can_fail']
-                     |op_defaults/meta_attributes/nvpair[@name = 'can_fail']"/>
-
-<!-- Drop role_after_failure operation meta-attribute -->
-<xsl:template match="op/meta_attributes/nvpair[@name = 'role_after_failure']
+                     |op/meta_attributes/nvpair[@name = 'role_after_failure']
+                     |op_defaults/meta_attributes/nvpair[@name = 'can_fail']
                      |op_defaults/meta_attributes/nvpair
-                         [@name = 'role_after_failure']"/>
+                         [@name = 'role_after_failure']">
+    <xsl:call-template name="warning">
+        <xsl:with-param name="msg"
+                        select="concat('Dropping ', @name,
+                                       ' meta-attribute from ', ../@id,
+                                       ' because it is no longer supported.',
+                                       ' Consider setting the',
+                                       ' &quot;on-fail&quot; operation',
+                                       ' attribute instead')"/>
+    </xsl:call-template>
+</xsl:template>
 
 
 <!-- Constraints -->

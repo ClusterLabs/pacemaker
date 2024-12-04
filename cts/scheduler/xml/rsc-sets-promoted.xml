@@ -36,10 +36,12 @@
           <resource_ref id="ms-rsc"/>
         </resource_set>
       </rsc_colocation>
-      <rsc_location id="pref-ms-rsc-1" rsc="ms-rsc">
+      <rsc_location id="pref-ms-rsc-0" rsc="ms-rsc">
         <rule id="prefer-master-1-rule-0" role="Promoted" score="500">
           <expression attribute="#uname" id="pref-ms-rsc-1-expression-0" operation="eq" value="node1"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="pref-ms-rsc-1" rsc="ms-rsc">
         <rule id="prefer-master-1-rule-1" role="Promoted" score="300">
           <expression attribute="#uname" id="pref-ms-rsc-1-expression-1" operation="eq" value="node2"/>
         </rule>

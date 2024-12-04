@@ -181,36 +181,50 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="l1" rsc="prmDummy">
-        <rule score="200" id="l1-rule">
+      <rsc_location id="l1-a" rsc="prmDummy">
+        <rule score="200" id="l1-a-rule">
           <expression attribute="#uname" operation="eq" value="bl460g1n6" id="l1-expression"/>
         </rule>
-        <rule score="300" id="l1-rule-0">
+      </rsc_location>
+      <rsc_location id="l1-b" rsc="prmDummy">
+        <rule score="300" id="l1-b-rule">
           <expression attribute="#uname" operation="eq" value="bl460g1n7" id="l1-expression-0"/>
         </rule>
-        <rule score="200" id="l1-rule-1">
+      </rsc_location>
+      <rsc_location id="l1-c" rsc="prmDummy">
+        <rule score="200" id="l1-c-rule">
           <expression attribute="#uname" operation="eq" value="bl460g1n8" id="l1-expression-1"/>
         </rule>
       </rsc_location>
-      <rsc_location id="l2" rsc="prmVM2">
-        <rule score="200" id="l2-rule">
+      <rsc_location id="l2-a" rsc="prmVM2">
+        <rule score="200" id="l2-a-rule">
           <expression attribute="#uname" operation="eq" value="bl460g1n6" id="l2-expression"/>
         </rule>
-        <rule score="300" id="l2-rule-0">
+      </rsc_location>
+      <rsc_location id="l2-b" rsc="prmVM2">
+        <rule score="300" id="l2-b-rule">
           <expression attribute="#uname" operation="eq" value="bl460g1n7" id="l2-expression-0"/>
         </rule>
-        <rule score="200" id="l2-rule-1">
+      </rsc_location>
+      <rsc_location id="l2-c" rsc="prmVM2">
+        <rule score="200" id="l2-c-rule">
           <expression attribute="#uname" operation="eq" value="bl460g1n8" id="l2-expression-1"/>
         </rule>
-        <rule score="-INFINITY" boolean-op="or" id="l2-rule-2">
+      </rsc_location>
+      <rsc_location id="l2-d" rsc="prmVM2">
+        <rule score="-INFINITY" boolean-op="or" id="l2-d-rule">
           <expression operation="not_defined" attribute="default_ping_set" id="l2-expression-2"/>
           <expression attribute="default_ping_set" operation="lt" value="100" id="l2-expression-3"/>
         </rule>
-        <rule score="-INFINITY" boolean-op="or" id="l2-rule-3">
+      </rsc_location>
+      <rsc_location id="l2-e" rsc="prmVM2">
+        <rule score="-INFINITY" boolean-op="or" id="l2-e-rule">
           <expression operation="not_defined" attribute="diskcheck_status" id="l2-expression-4"/>
           <expression attribute="diskcheck_status" operation="eq" value="ERROR" id="l2-expression-5"/>
         </rule>
-        <rule score="-INFINITY" boolean-op="or" id="l2-rule-4">
+      </rsc_location>
+      <rsc_location id="l2-f" rsc="prmVM2">
+        <rule score="-INFINITY" boolean-op="or" id="l2-f-rule">
           <expression operation="not_defined" attribute="diskcheck_status_internal" id="l2-expression-6"/>
           <expression attribute="diskcheck_status_internal" operation="eq" value="ERROR" id="l2-expression-7"/>
         </rule>

@@ -132,7 +132,15 @@
 <!-- Rules -->
 
 <!-- Drop the moon attribute from date_spec elements -->
-<xsl:template match="date_spec/@moon"/>
+<xsl:template match="date_spec/@moon">
+    <xsl:call-template name="warning">
+        <xsl:with-param name="msg"
+                        select="concat('Dropping moon attribute from',
+                                       ' date spec ', ../@id,
+                                       ' because moon phase is no longer',
+                                       ' supported')"/>
+    </xsl:call-template>
+</xsl:template>
 
 
 <!-- Cluster properties -->
@@ -156,7 +164,14 @@
 </xsl:template>
 
 <!-- Drop remove-after-stop property -->
-<xsl:template match="cluster_property_set/nvpair[@name = 'remove-after-stop']"/>
+<xsl:template match="cluster_property_set/nvpair[@name = 'remove-after-stop']">
+    <xsl:call-template name="warning">
+        <xsl:with-param name="msg"
+                        select="concat('Dropping nvpair ', @id,
+                                       ' because the remove-after-stop',
+                                       ' property is unsupported')"/>
+    </xsl:call-template>
+</xsl:template>
 
 <!-- Replace stonith-action="poweroff" with stonith-action="off" -->
 <xsl:template match="cluster_property_set/nvpair[@name = 'stonith-action']

@@ -1,0 +1,12 @@
+WARNING: Dropping restart-type meta-attribute from template1-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints
+WARNING: Dropping restart-type meta-attribute from rsc1-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints
+WARNING: Dropping restart-type meta-attribute from rsc2-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints
+WARNING: Dropping restart-type meta-attribute from grp1-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints
+WARNING: Dropping restart-type meta-attribute from rsc3-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints
+WARNING: Dropping restart-type meta-attribute from clone1-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints
+WARNING: Dropping restart-type meta-attribute from rsc4-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints
+WARNING: Dropping restart-type meta-attribute from grp2-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints
+WARNING: Dropping restart-type meta-attribute from clone2-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints
+WARNING: Dropping restart-type meta-attribute from rsc5-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints
+WARNING: Dropping restart-type meta-attribute from bundle1-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints
+WARNING: Dropping restart-type meta-attribute from rsc_defaults-meta_attributes because it is no longer supported. Consider setting the "kind" attribute for relevant constraints

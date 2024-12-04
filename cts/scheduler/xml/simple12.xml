@@ -17,10 +17,12 @@
       <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache"/>
     </resources>
     <constraints>
-      <rsc_location id="run_rsc1" rsc="rsc1">
+      <rsc_location id="run_rsc1-1" rsc="rsc1">
         <rule id="can1" score="1">
           <expression id="expression.id21907" attribute="#uname" operation="ne" value="darthvader"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="run_rsc1-2" rsc="rsc1">
         <rule id="score1" score="10">
           <expression id="expression.id21925" attribute="#uname" operation="eq" value="node2"/>
         </rule>

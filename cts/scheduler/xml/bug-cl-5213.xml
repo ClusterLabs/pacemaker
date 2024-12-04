@@ -49,8 +49,10 @@
         <rule role="Promoted" score="200" id="rsc_location-msStateful-1-rule">
           <expression attribute="#uname" operation="eq" value="srv01" id="rsc_location-msStateful-1-expression"/>
         </rule>
-        <rule role="Promoted" score="-INFINITY" id="rsc_location-msStateful-1-rule-0">
-          <expression attribute="#uname" operation="eq" value="srv02" id="rsc_location-msStateful-1-expression-0"/>
+      </rsc_location>
+      <rsc_location id="rsc_location-msStateful-2" rsc="msPostgresql">
+        <rule role="Promoted" score="-INFINITY" id="rsc_location-msStateful-2-rule">
+          <expression attribute="#uname" operation="eq" value="srv02" id="rsc_location-msStateful-2-expression"/>
         </rule>
       </rsc_location>
       <rsc_colocation id="rsc_colocation-promoted-1" score="INFINITY" rsc="msPostgresql" rsc-role="Promoted" with-rsc="A-master">
