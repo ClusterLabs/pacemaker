@@ -92,6 +92,17 @@ int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
  */
 int pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc);
 
+/*!
+ * \internal
+ * \brief Is X509 authentication supported by the environment?
+ *
+ * \param[in] server Is this a server?
+ *
+ * \return true if the appropriate environment variables are set (see
+ *         etc/sysconfig/pacemaker.in), otherwise false
+ */
+bool pcmk__x509_enabled(bool server);
+
 #ifdef __cplusplus
 }
 #endif

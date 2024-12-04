@@ -194,3 +194,22 @@ pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
 
     return ETIME;
 }
+
+bool
+pcmk__x509_enabled(bool server)
+{
+    /* Environment variables for servers come through the sysconfig file, and
+     * have names like PCMK_<whatever>.  Environment variables for clients come
+     * from the environment and have names like CIB_<whatever>.  This function
+     * is used for both, so we need to check both.
+     */
+    if (server) {
+        return !pcmk__str_empty(pcmk__env_option(PCMK__ENV_CERT_FILE)) &&
+               !pcmk__str_empty(pcmk__env_option(PCMK__ENV_CA_FILE)) &&
+               !pcmk__str_empty(pcmk__env_option(PCMK__ENV_KEY_FILE));
+    } else {
+        return !pcmk__str_empty(getenv("CIB_cert_file")) &&
+               !pcmk__str_empty(getenv("CIB_ca_file")) &&
+               !pcmk__str_empty(getenv("CIB_key_file"));
+    }
+}
