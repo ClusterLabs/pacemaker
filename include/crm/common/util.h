@@ -35,7 +35,7 @@ extern "C" {
  * \ingroup core
  */
 
-/* public node attribute functions (from attrd_client.c) */
+/* public node attribute functions (from attrs.c) */
 char *pcmk_promotion_score_name(const char *rsc_id);
 
 /* public Pacemaker Remote functions (from remote.c) */
@@ -93,8 +93,8 @@ pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
  */
 #define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
 
+void pcmk_common_cleanup(void);
 char *crm_md5sum(const char *buffer);
-
 char *crm_generate_uuid(void);
 
 // This belongs in ipc.h but is here for backward compatibility

@@ -47,6 +47,28 @@ gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
 char *crm_system_name = NULL;
 
+/*!
+ * \brief Free all memory used by libcrmcommon
+ *
+ * Free all global memory allocated by the libcrmcommon library. This should be
+ * called before exiting a process that uses the library, and the process should
+ * not call any libcrmcommon or libxml2 APIs after calling this one.
+ */
+void
+pcmk_common_cleanup(void)
+{
+    // @TODO This isn't really everything, move all cleanup here
+    mainloop_cleanup();
+    crm_xml_cleanup();
+    pcmk__free_common_logger();
+    qb_log_fini(); // Don't log anything after this point
+
+    free(pcmk__our_nodename);
+    pcmk__our_nodename = NULL;
+    free(crm_system_name);
+    crm_system_name = NULL;
+}
+
 bool
 pcmk__is_user_in_group(const char *user, const char *group)
 {
