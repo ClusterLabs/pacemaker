@@ -112,11 +112,12 @@ Writing an Alert Agent
 
 .. list-table:: **Environment variables passed to alert agents**
    :class: longtable
-   :widths: 1 3
+   :widths: 1 3 1
    :header-rows: 1
    
    * - Environment Variable
      - Description
+     - Alert Types
    * - .. _CRM_alert_kind:
        
        .. index::
@@ -126,6 +127,7 @@ Writing an Alert Agent
        CRM_alert_kind
      - The type of alert (``node``, ``fencing``, ``resource``, or
        ``attribute``)
+     - all
    * - .. _CRM_alert_node:
 
        .. index::
@@ -134,6 +136,7 @@ Writing an Alert Agent
 
        CRM_alert_node
      - Name of affected node
+     - all
    * - .. _CRM_alert_node_sequence:
      
        .. index::
@@ -146,6 +149,7 @@ Writing an Alert Agent
        have been issued by Pacemaker. An alert for an event that happened later
        in time reliably has a higher sequence number than alerts for earlier
        events. This number has no cluster-wide meaning.
+     - all
    * - .. _CRM_alert_recipient:
      
        .. index::
@@ -154,6 +158,7 @@ Writing an Alert Agent
        
        CRM_alert_recipient
      - The configured recipient
+     - all
    * - .. _CRM_alert_timestamp:
      
        .. index::
@@ -166,6 +171,7 @@ Writing an Alert Agent
        agent to have a reliable, high-precision time of when the event
        occurred, regardless of when the agent itself was invoked (which could
        potentially be delayed due to system load, etc.).
+     - all
    * - .. _CRM_alert_timestamp_epoch:
      
        .. index::
@@ -177,6 +183,7 @@ Writing an Alert Agent
        number of seconds since January 1, 1970. This (along with
        ``CRM_alert_timestamp_usec``) can be useful for alert agents that need
        to format time in a specific way rather than let the user configure it.
+     - all
    * - .. _CRM_alert_timestamp_usec:
      
        .. index::
@@ -186,6 +193,7 @@ Writing an Alert Agent
        CRM_alert_timestamp_usec
      - The same time as ``CRM_alert_timestamp``, expressed as the integer
        number of microseconds since ``CRM_alert_timestamp_epoch``.
+     - all
    * - .. _CRM_alert_version:
      
        .. index::
@@ -194,6 +202,7 @@ Writing an Alert Agent
        
        CRM_alert_version
      - The version of Pacemaker sending the alert
+     - all
    * - .. _CRM_alert_desc:
      
        .. index::
@@ -206,6 +215,7 @@ Writing an Alert Agent
        summary of the requested fencing operation, including origin, target,
        and fencing operation error code, if any. For ``resource`` alerts, this
        is a readable string equivalent of ``CRM_alert_status``.
+     - ``node``, ``fencing``, ``resource``
    * - .. _CRM_alert_nodeid:
      
        .. index::
@@ -213,7 +223,8 @@ Writing an Alert Agent
           single: CRM_alert_nodeid
        
        CRM_alert_nodeid
-     - ID of node whose status changed (provided with ``node`` alerts only)
+     - ID of node whose status changed
+     - ``node``
    * - .. _CRM_alert_rc:
      
        .. index::
@@ -221,8 +232,8 @@ Writing an Alert Agent
           single: CRM_alert_rc
        
        CRM_alert_rc
-     - The numerical return code of the fencing or resource operation (provided
-       with ``fencing`` and ``resource`` alerts only)
+     - The numerical return code of the fencing or resource operation
+     - ``fencing``, ``resource``
    * - .. _CRM_alert_task:
      
        .. index::
@@ -230,8 +241,8 @@ Writing an Alert Agent
           single: CRM_alert_task
        
        CRM_alert_task
-     - The requested fencing or resource operation (provided with ``fencing``
-       and ``resource`` alerts only)
+     - The requested fencing or resource operation
+     - ``fencing``, ``resource``
    * - .. _CRM_alert_exec_time:
      
        .. index::
@@ -242,8 +253,8 @@ Writing an Alert Agent
      - The (wall-clock) time, in milliseconds, that it took to execute the
        action. If the action timed out, ``CRM_alert_status`` will be 2,
        ``CRM_alert_desc`` will be "Timed Out", and this value will be the
-       action timeout. May not be supported on all platforms. (``resource``
-       alerts only) *(since 2.0.1)*
+       action timeout. May not be supported on all platforms. *(since 2.0.1)*
+     - ``resource``
    * - .. _CRM_alert_interval:
      
        .. index::
@@ -251,7 +262,8 @@ Writing an Alert Agent
           single: CRM_alert_interval
        
        CRM_alert_interval
-     - The interval of the resource operation (``resource`` alerts only)
+     - The interval of the resource operation
+     - ``resource``
    * - .. _CRM_alert_rsc:
      
        .. index::
@@ -259,7 +271,8 @@ Writing an Alert Agent
           single: CRM_alert_rsc
        
        CRM_alert_rsc
-     - The name of the affected resource (``resource`` alerts only)
+     - The name of the affected resource
+     - ``resource``
    * - .. _CRM_alert_status:
      
        .. index::
@@ -268,7 +281,7 @@ Writing an Alert Agent
        
        CRM_alert_status
      - A numerical code used by Pacemaker to represent the operation result
-       (``resource`` alerts only)
+     - ``resource``
    * - .. _CRM_alert_target_rc:
      
        .. index::
@@ -276,8 +289,8 @@ Writing an Alert Agent
           single: CRM_alert_target_rc
        
        CRM_alert_target_rc
-     - The expected numerical return code of the operation (``resource`` alerts
-       only)
+     - The expected numerical return code of the operation
+     - ``resource``
    * - .. _CRM_alert_attribute_name:
      
        .. index::
@@ -285,7 +298,8 @@ Writing an Alert Agent
           single: CRM_alert_attribute_name
        
        CRM_alert_attribute_name
-     - The name of the node attribute that changed (``attribute`` alerts only)
+     - The name of the node attribute that changed
+     - ``attribute``
    * - .. _CRM_alert_attribute_value:
      
        .. index::
@@ -293,9 +307,9 @@ Writing an Alert Agent
           single: CRM_alert_attribute_value
        
        CRM_alert_attribute_value
-     - The new value of the node attribute that changed (``attribute`` alerts
-       only)
-   
+     - The new value of the node attribute that changed
+     - ``attribute``
+
 Special concerns when writing alert agents:
    
 * Alert agents may be called with no recipient (if none is configured),
