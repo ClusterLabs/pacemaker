@@ -63,10 +63,14 @@ pcmk__free_tls(pcmk__tls_t *tls)
     if (tls->cred_type == GNUTLS_CRD_ANON) {
         if (tls->server) {
             gnutls_anon_free_server_credentials(tls->credentials.anon_s);
+        } else {
+            gnutls_anon_free_client_credentials(tls->credentials.anon_c);
         }
     } else if (tls->cred_type == GNUTLS_CRD_PSK) {
         if (tls->server) {
             gnutls_psk_free_server_credentials(tls->credentials.psk_s);
+        } else {
+            gnutls_psk_free_client_credentials(tls->credentials.psk_c);
         }
     }
 
@@ -116,12 +120,16 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
             gnutls_anon_allocate_server_credentials(&(*tls)->credentials.anon_s);
             gnutls_anon_set_server_dh_params((*tls)->credentials.anon_s,
                                              (*tls)->dh_params);
+        } else {
+            gnutls_anon_allocate_client_credentials(&(*tls)->credentials.anon_c);
         }
     } else if (cred_type == GNUTLS_CRD_PSK) {
         if (server) {
             gnutls_psk_allocate_server_credentials(&(*tls)->credentials.psk_s);
             gnutls_psk_set_server_dh_params((*tls)->credentials.psk_s,
                                             (*tls)->dh_params);
+        } else {
+            gnutls_psk_allocate_client_credentials(&(*tls)->credentials.psk_c);
         }
     }
 
@@ -242,6 +250,14 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
         return EPROTO;
     }
     return pcmk_rc_ok;
+}
+
+void
+pcmk__tls_add_psk_key(pcmk__tls_t *tls, gnutls_datum_t *key)
+{
+    gnutls_psk_set_client_credentials(tls->credentials.psk_c,
+                                      DEFAULT_REMOTE_USERNAME, key,
+                                      GNUTLS_PSK_KEY_RAW);
 }
 
 void

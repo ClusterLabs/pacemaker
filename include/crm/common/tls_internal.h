@@ -26,7 +26,9 @@ typedef struct {
 
     union {
         gnutls_anon_server_credentials_t anon_s;
+        gnutls_anon_client_credentials_t anon_c;
         gnutls_psk_server_credentials_t psk_s;
+        gnutls_psk_client_credentials_t psk_c;
     } credentials;
 } pcmk__tls_t;
 
@@ -86,6 +88,18 @@ int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
 gnutls_session_t pcmk__new_tls_session(int csock, unsigned int conn_type,
                                        gnutls_credentials_type_t cred_type,
                                        void *credentials);
+
+/*!
+ * \internal
+ * \brief Add the client PSK key to the TLS environment
+ *
+ * This function must be called for all TLS clients that are using PSK for
+ * authentication.
+ *
+ * \param[in,out] tls The TLS environment
+ * \param[in]     key The client's PSK key
+ */
+void pcmk__tls_add_psk_key(pcmk__tls_t *tls, gnutls_datum_t *key);
 
 /*!
  * \internal
