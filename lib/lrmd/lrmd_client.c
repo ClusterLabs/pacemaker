@@ -60,7 +60,6 @@ void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*call
 // GnuTLS client handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
 
-gnutls_psk_client_credentials_t psk_cred_s;
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
 static void lrmd_tls_connection_destroy(gpointer userdata);
@@ -80,7 +79,7 @@ typedef struct lrmd_private_s {
     char *remote_nodename;
     char *server;
     int port;
-    gnutls_psk_client_credentials_t psk_cred_c;
+    pcmk__tls_t *tls;
 
     /* while the async connection is occurring, this is the id
      * of the connection timeout timer. */
@@ -627,8 +626,9 @@ lrmd_tls_connection_destroy(gpointer userdata)
         gnutls_deinit(native->remote->tls_session);
         native->remote->tls_session = NULL;
     }
-    if (native->psk_cred_c) {
-        gnutls_psk_free_client_credentials(native->psk_cred_c);
+    if (native->tls) {
+        pcmk__free_tls(native->tls);
+        native->tls = NULL;
     }
     if (native->sock) {
         close(native->sock);
@@ -651,8 +651,6 @@ lrmd_tls_connection_destroy(gpointer userdata)
     native->remote->buffer = NULL;
     native->remote->start_state = NULL;
     native->source = 0;
-    native->sock = 0;
-    native->psk_cred_c = NULL;
     native->sock = 0;
 
     if (native->callback) {
@@ -1358,17 +1356,6 @@ lrmd__init_remote_key(gnutls_datum_t *key)
 }
 
 static void
-lrmd_gnutls_global_init(void)
-{
-    static int gnutls_init = 0;
-
-    if (!gnutls_init) {
-        crm_gnutls_global_init();
-    }
-    gnutls_init = 1;
-}
-
-static void
 report_async_connection_result(lrmd_t * lrmd, int rc)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -1545,6 +1532,16 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 
     native->sock = sock;
 
+    if (native->tls == NULL) {
+        rc = pcmk__init_tls(&native->tls, false, GNUTLS_CRD_PSK);
+
+        if (rc != pcmk_rc_ok) {
+            lrmd_tls_connection_destroy(lrmd);
+            report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+            return;
+        }
+    }
+
     rc = lrmd__init_remote_key(&psk_key);
     if (rc != pcmk_rc_ok) {
         crm_info("Could not connect to Pacemaker Remote at %s:%d: %s "
@@ -1555,13 +1552,12 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
         return;
     }
 
-    gnutls_psk_allocate_client_credentials(&native->psk_cred_c);
-    gnutls_psk_set_client_credentials(native->psk_cred_c, DEFAULT_REMOTE_USERNAME, &psk_key, GNUTLS_PSK_KEY_RAW);
+    pcmk__tls_add_psk_key(native->tls, &psk_key);
     gnutls_free(psk_key.data);
 
     native->remote->tls_session = pcmk__new_tls_session(sock, GNUTLS_CLIENT,
                                                         GNUTLS_CRD_PSK,
-                                                        native->psk_cred_c);
+                                                        native->tls->credentials.psk_c);
     if (native->remote->tls_session == NULL) {
         lrmd_tls_connection_destroy(lrmd);
         report_async_connection_result(lrmd, -EPROTO);
@@ -1603,7 +1599,6 @@ lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
     int timer_id = 0;
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    lrmd_gnutls_global_init();
     native->sock = -1;
     rc = pcmk__connect_remote(native->server, native->port, timeout, &timer_id,
                               &(native->sock), lrmd, lrmd_tcp_connect_cb);
@@ -1625,8 +1620,6 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     lrmd_private_t *native = lrmd->lrmd_private;
     gnutls_datum_t psk_key = { NULL, 0 };
 
-    lrmd_gnutls_global_init();
-
     native->sock = -1;
     rc = pcmk__connect_remote(native->server, native->port, 0, NULL,
                               &(native->sock), NULL, NULL);
@@ -1638,19 +1631,27 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
         return ENOTCONN;
     }
 
+    if (native->tls == NULL) {
+        rc = pcmk__init_tls(&native->tls, false, GNUTLS_CRD_PSK);
+
+        if (rc != pcmk_rc_ok) {
+            lrmd_tls_connection_destroy(lrmd);
+            return rc;
+        }
+    }
+
     rc = lrmd__init_remote_key(&psk_key);
     if (rc != pcmk_rc_ok) {
         lrmd_tls_connection_destroy(lrmd);
         return rc;
     }
 
-    gnutls_psk_allocate_client_credentials(&native->psk_cred_c);
-    gnutls_psk_set_client_credentials(native->psk_cred_c, DEFAULT_REMOTE_USERNAME, &psk_key, GNUTLS_PSK_KEY_RAW);
+    pcmk__tls_add_psk_key(native->tls, &psk_key);
     gnutls_free(psk_key.data);
 
     native->remote->tls_session = pcmk__new_tls_session(native->sock, GNUTLS_CLIENT,
                                                         GNUTLS_CRD_PSK,
-                                                        native->psk_cred_c);
+                                                        native->tls->credentials.psk_c);
     if (native->remote->tls_session == NULL) {
         lrmd_tls_connection_destroy(lrmd);
         return EPROTO;

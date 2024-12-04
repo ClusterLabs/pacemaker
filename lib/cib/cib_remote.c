@@ -34,8 +34,7 @@
 // GnuTLS handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
 
-static gnutls_anon_client_credentials_t anon_cred_c;
-static gboolean remote_gnutls_credentials_init = FALSE;
+static pcmk__tls_t *tls = NULL;
 
 #include <arpa/inet.h>
 
@@ -317,13 +316,11 @@ cib_tls_close(cib_t *cib)
             gnutls_bye(private->callback.tls_session, GNUTLS_SHUT_RDWR);
             gnutls_deinit(private->callback.tls_session);
         }
+
         private->command.tls_session = NULL;
         private->callback.tls_session = NULL;
-        if (remote_gnutls_credentials_init) {
-            gnutls_anon_free_client_credentials(anon_cred_c);
-            gnutls_global_deinit();
-            remote_gnutls_credentials_init = FALSE;
-        }
+        pcmk__free_tls(tls);
+        tls = NULL;
     }
 
     if (private->command.tcp_socket) {
@@ -380,18 +377,16 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     if (private->encrypted) {
         int tls_rc = GNUTLS_E_SUCCESS;
 
-        /* initialize GnuTls lib */
-        if (remote_gnutls_credentials_init == FALSE) {
-            crm_gnutls_global_init();
-            gnutls_anon_allocate_client_credentials(&anon_cred_c);
-            remote_gnutls_credentials_init = TRUE;
+        rc = pcmk__init_tls(&tls, false, GNUTLS_CRD_ANON);
+        if (rc != pcmk_rc_ok) {
+            return -1;
         }
 
         /* bind the socket to GnuTls lib */
         connection->tls_session = pcmk__new_tls_session(connection->tcp_socket,
                                                         GNUTLS_CLIENT,
                                                         GNUTLS_CRD_ANON,
-                                                        anon_cred_c);
+                                                        tls->credentials.anon_c);
         if (connection->tls_session == NULL) {
             cib_tls_close(cib);
             return -1;
