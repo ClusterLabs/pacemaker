@@ -142,18 +142,22 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="cyrus_address_location" rsc="cyrus_address">
+      <rsc_location id="cyrus_address_location-1" rsc="cyrus_address">
         <rule id="cyrus_address_ping_rule" score-attribute="pingd">
           <expression id="expression.id22688" attribute="pingd" operation="defined"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="cyrus_address_location-2" rsc="cyrus_address">
         <rule id="cyrus_address_node_rule" score="10">
           <expression id="expression.id22704" attribute="#uname" operation="eq" value="cxa1"/>
         </rule>
       </rsc_location>
-      <rsc_location id="named_address_location" rsc="named_address">
+      <rsc_location id="named_address_location-1" rsc="named_address">
         <rule id="named_address_ping_rule" score-attribute="pingd">
           <expression id="expression.id22730" attribute="pingd" operation="defined"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="named_address_location-2" rsc="named_address">
         <rule id="named_address_node_rule" score="10">
           <expression id="expression.id22747" attribute="#uname" operation="eq" value="cxb1"/>
         </rule>

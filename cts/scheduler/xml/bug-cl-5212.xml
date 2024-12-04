@@ -115,11 +115,15 @@
         <rule role="Promoted" score="300" id="rsc_location-msPostgresql-1-rule">
           <expression attribute="#uname" operation="eq" value="srv01" id="rsc_location-msPostgresql-1-expression"/>
         </rule>
-        <rule role="Promoted" score="200" id="rsc_location-msPostgresql-1-rule-0">
-          <expression attribute="#uname" operation="eq" value="srv02" id="rsc_location-msPostgresql-1-expression-0"/>
+      </rsc_location>
+      <rsc_location id="rsc_location-msPostgresql-2" rsc="msPostgresql">
+        <rule role="Promoted" score="200" id="rsc_location-msPostgresql-2-rule">
+          <expression attribute="#uname" operation="eq" value="srv02" id="rsc_location-msPostgresql-2-expression"/>
         </rule>
-        <rule role="Promoted" score="100" id="rsc_location-msPostgresql-1-rule-1">
-          <expression attribute="#uname" operation="eq" value="srv03" id="rsc_location-msPostgresql-1-expression-1"/>
+      </rsc_location>
+      <rsc_location id="rsc_location-msPostgresql-3" rsc="msPostgresql">
+        <rule role="Promoted" score="100" id="rsc_location-msPostgresql-3-rule">
+          <expression attribute="#uname" operation="eq" value="srv03" id="rsc_location-msPostgresql-3-expression"/>
         </rule>
       </rsc_location>
       <rsc_colocation id="rsc_colocation-msPostgresql-clnPingd-1" score="INFINITY" rsc="msPostgresql" rsc-role="Promoted" with-rsc="clnPingd">

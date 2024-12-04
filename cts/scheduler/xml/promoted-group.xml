@@ -78,10 +78,12 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="rlcPostgreSQLDB" rsc="test">
+      <rsc_location id="rlcPostgreSQLDB-1" rsc="test">
         <rule id="rulPostgreSQLDB_node01" score="200">
           <expression id="expression.id22323" attribute="#uname" operation="eq" value="rh44-1"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="rlcPostgreSQLDB-2" rsc="test">
         <rule id="rulPostgreSQLDB_node02" score="100">
           <expression id="expression.id22341" attribute="#uname" operation="eq" value="rh44-2"/>
         </rule>
@@ -90,6 +92,8 @@
         <rule id="preferred_location_group_0" role="Promoted" score="100">
           <expression id="expression.id22369" attribute="#uname" operation="eq" value="rh44-1"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location_group_1" rsc="ms-sf">
         <rule id="preferred_location_group_1" role="Promoted" score="50">
           <expression id="expression.id22390" attribute="#uname" operation="eq" value="rh44-2"/>
         </rule>

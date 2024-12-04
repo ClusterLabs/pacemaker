@@ -159,10 +159,12 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_location id="rsc-location-drbd-msr" rsc="drbd-msr">
-        <rule id="preferred-location-drbd-msr" role="Promoted" score="50">
+      <rsc_location id="rsc-location-drbd-msr-1" rsc="drbd-msr">
+        <rule id="preferred-location-drbd-msr-1" role="Promoted" score="50">
           <expression id="expression.id22801" attribute="#uname" operation="eq" value="pollux"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="rsc-location-drbd-msr-2" rsc="drbd-msr">
         <rule id="pingd-score-group-1" role="Promoted" score-attribute="pingd-1-node-attribute">
           <expression id="expression.id22822" attribute="pingd-1-node-attribute" operation="defined"/>
         </rule>
@@ -170,19 +172,23 @@
       <rsc_colocation id="group-1-prefer-on-drbd-msr-promoted" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Promoted" score="INFINITY"/>
       <rsc_colocation id="group-1-never-on-drbd-msr-unpromoted" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Unpromoted" score="-INFINITY"/>
       <rsc_order id="group-1-after-drbd-msr" first="drbd-msr" then="group-1" then-action="start" first-action="promote"/>
-      <rsc_location id="pollux-fencing-placement" rsc="pollux-fencing">
-        <rule id="pollux-fencing-placement-1" score="INFINITY">
+      <rsc_location id="pollux-fencing-placement-1" rsc="pollux-fencing">
+        <rule id="pollux-fencing-placement-1-rule" score="INFINITY">
           <expression id="expression.id22883" attribute="#uname" operation="ne" value="pollux"/>
         </rule>
-        <rule id="pollux-fencing-placement-2" score="-INFINITY">
+      </rsc_location>
+      <rsc_location id="pollux-fencing-placement-2" rsc="pollux-fencing">
+        <rule id="pollux-fencing-placement-2-rule" score="-INFINITY">
           <expression id="expression.id22901" attribute="#uname" operation="eq" value="pollux"/>
         </rule>
       </rsc_location>
-      <rsc_location id="sirius-fencing-placement" rsc="sirius-fencing">
-        <rule id="sirius-fencing-placement-1" score="INFINITY">
+      <rsc_location id="sirius-fencing-placement-1" rsc="sirius-fencing">
+        <rule id="sirius-fencing-placement-1-rule" score="INFINITY">
           <expression id="expression.id22928" attribute="#uname" operation="ne" value="sirius"/>
         </rule>
-        <rule id="sirius-fencing-placement-2" score="-INFINITY">
+      </rsc_location>
+      <rsc_location id="sirius-fencing-placement-2" rsc="sirius-fencing">
+        <rule id="sirius-fencing-placement-2-rule" score="-INFINITY">
           <expression id="expression.id22946" attribute="#uname" operation="eq" value="sirius"/>
         </rule>
       </rsc_location>

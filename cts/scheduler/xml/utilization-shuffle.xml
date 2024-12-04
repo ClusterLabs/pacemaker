@@ -179,55 +179,73 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="rsc_location-grpPostgreSQLDB1" rsc="grpPostgreSQLDB1">
-        <rule id="rsc_location-grpPostgreSQLDB1-rule" score="200">
-          <expression attribute="#uname" id="rsc_location-grpPostgreSQLDB1-expression" operation="eq" value="act1"/>
-        </rule>
-        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB1-rule-0" score="-INFINITY">
-          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB1-expression-0" operation="not_defined"/>
-          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB1-expression-1" operation="lt" value="100"/>
-        </rule>
-        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB1-rule-1" score="-INFINITY">
-          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB1-expression-2" operation="not_defined"/>
-          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB1-expression-3" operation="eq" value="ERROR"/>
-        </rule>
-        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB1-rule-2" score="-INFINITY">
-          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB1-expression-4" operation="not_defined"/>
-          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB1-expression-5" operation="eq" value="ERROR"/>
+      <rsc_location id="rsc_location-grpPostgreSQLDB1-1" rsc="grpPostgreSQLDB1">
+        <rule id="rsc_location-grpPostgreSQLDB1-1-rule" score="200">
+          <expression attribute="#uname" id="rsc_location-grpPostgreSQLDB1-1-expression" operation="eq" value="act1"/>
         </rule>
       </rsc_location>
-      <rsc_location id="rsc_location-grpPostgreSQLDB2" rsc="grpPostgreSQLDB2">
-        <rule id="rsc_location-grpPostgreSQLDB2-rule" score="200">
-          <expression attribute="#uname" id="rsc_location-grpPostgreSQLDB2-expression" operation="eq" value="act2"/>
-        </rule>
-        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB2-rule-0" score="-INFINITY">
-          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB2-expression-0" operation="not_defined"/>
-          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB2-expression-1" operation="lt" value="100"/>
-        </rule>
-        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB2-rule-1" score="-INFINITY">
-          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB2-expression-2" operation="not_defined"/>
-          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB2-expression-3" operation="eq" value="ERROR"/>
-        </rule>
-        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB2-rule-2" score="-INFINITY">
-          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB2-expression-4" operation="not_defined"/>
-          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB2-expression-5" operation="eq" value="ERROR"/>
+      <rsc_location id="rsc_location-grpPostgreSQLDB1-2" rsc="grpPostgreSQLDB1">
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB1-2-rule" score="-INFINITY">
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB1-2-expression-1" operation="not_defined"/>
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB1-2-expression-2" operation="lt" value="100"/>
         </rule>
       </rsc_location>
-      <rsc_location id="rsc_location-grpPostgreSQLDB3" rsc="grpPostgreSQLDB3">
-        <rule id="rsc_location-grpPostgreSQLDB3-rule" score="200">
-          <expression attribute="#uname" id="rsc_location-grpPostgreSQLDB3-expression" operation="eq" value="act3"/>
+      <rsc_location id="rsc_location-grpPostgreSQLDB1-3" rsc="grpPostgreSQLDB1">
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB1-3-rule" score="-INFINITY">
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB1-3-expression-1" operation="not_defined"/>
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB1-3-expression-2" operation="eq" value="ERROR"/>
         </rule>
-        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB3-rule-0" score="-INFINITY">
-          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB3-expression-0" operation="not_defined"/>
-          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB3-expression-1" operation="lt" value="100"/>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpPostgreSQLDB1-4" rsc="grpPostgreSQLDB1">
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB1-4-rule" score="-INFINITY">
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB1-4-expression-1" operation="not_defined"/>
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB1-4-expression-2" operation="eq" value="ERROR"/>
         </rule>
-        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB3-rule-1" score="-INFINITY">
-          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB3-expression-2" operation="not_defined"/>
-          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB3-expression-3" operation="eq" value="ERROR"/>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpPostgreSQLDB2-1" rsc="grpPostgreSQLDB2">
+        <rule id="rsc_location-grpPostgreSQLDB2-1-rule" score="200">
+          <expression attribute="#uname" id="rsc_location-grpPostgreSQLDB2-1-expression" operation="eq" value="act2"/>
         </rule>
-        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB3-rule-2" score="-INFINITY">
-          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB3-expression-4" operation="not_defined"/>
-          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB3-expression-5" operation="eq" value="ERROR"/>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpPostgreSQLDB2-2" rsc="grpPostgreSQLDB2">
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB2-2-rule" score="-INFINITY">
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB2-2-expression-1" operation="not_defined"/>
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB2-2-expression-2" operation="lt" value="100"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpPostgreSQLDB2-3" rsc="grpPostgreSQLDB2">
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB2-3-rule" score="-INFINITY">
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB2-3-expression-1" operation="not_defined"/>
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB2-3-expression-2" operation="eq" value="ERROR"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpPostgreSQLDB2-4" rsc="grpPostgreSQLDB2">
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB2-4-rule" score="-INFINITY">
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB2-4-expression-1" operation="not_defined"/>
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB2-4-expression-2" operation="eq" value="ERROR"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpPostgreSQLDB3-1" rsc="grpPostgreSQLDB3">
+        <rule id="rsc_location-grpPostgreSQLDB3-1-rule" score="200">
+          <expression attribute="#uname" id="rsc_location-grpPostgreSQLDB3-1-expression" operation="eq" value="act3"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpPostgreSQLDB3-2" rsc="grpPostgreSQLDB3">
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB3-2-rule" score="-INFINITY">
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB3-2-expression-1" operation="not_defined"/>
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB3-2-expression-2" operation="lt" value="100"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpPostgreSQLDB3-3" rsc="grpPostgreSQLDB3">
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB3-3-rule" score="-INFINITY">
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB3-3-expression-1" operation="not_defined"/>
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB3-3-expression-2" operation="eq" value="ERROR"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpPostgreSQLDB3-4" rsc="grpPostgreSQLDB3">
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB3-4-rule" score="-INFINITY">
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB3-4-expression-1" operation="not_defined"/>
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB3-4-expression-2" operation="eq" value="ERROR"/>
         </rule>
       </rsc_location>
       <rsc_colocation id="grp1_colocation-1" rsc="grpPostgreSQLDB1" score="INFINITY" with-rsc="clnPingd">

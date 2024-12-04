@@ -104,4 +104,38 @@
     </xsl:copy>
 </xsl:template>
 
+<!--
+ Outputs a warning message
+
+ Output a message with the prefix "WARNING: ". This directs Pacemaker's XSLT
+ error handler to strip the prefix and log the message at warning level.
+
+ Params:
+ * msg: Message to output
+ -->
+<xsl:template name="warning">
+    <xsl:param name="msg"/>
+
+    <xsl:message>
+        <xsl:value-of select="concat('WARNING: ', $msg)"/>
+    </xsl:message>
+</xsl:template>
+
+<!--
+ Outputs an info message
+
+ Output a message with the prefix "INFO: ". This directs Pacemaker's XSLT error
+ handler to strip the prefix and log the message at info level.
+
+ Params:
+ * msg: Message to output
+ -->
+<xsl:template name="info">
+    <xsl:param name="msg"/>
+
+    <xsl:message>
+        <xsl:value-of select="concat('INFO: ', $msg)"/>
+    </xsl:message>
+</xsl:template>
+
 </xsl:stylesheet>

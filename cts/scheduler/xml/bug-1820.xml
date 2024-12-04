@@ -49,10 +49,12 @@
     </resources>
     <constraints>
       <rsc_location id="loc1" rsc="gr1">
-        <rule id="loc1-rule1" score="INFINITY">
+        <rule id="loc1-rule" score="INFINITY">
           <expression id="expression.id22067" attribute="#uname" operation="eq" value="star"/>
         </rule>
-        <rule id="loc1-rule2" score="1000">
+      </rsc_location>
+      <rsc_location id="loc2" rsc="gr1">
+        <rule id="loc2-rule" score="1000">
           <expression id="expression.id22085" attribute="#uname" operation="eq" value="world"/>
         </rule>
       </rsc_location>

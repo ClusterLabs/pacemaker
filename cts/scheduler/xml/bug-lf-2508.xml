@@ -216,12 +216,18 @@
         <rule id="rule-grp01-1" score="200">
           <expression id="exp-grp01-1" attribute="#uname" operation="eq" value="srv01"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="location-grp01-2" rsc="Group01">
         <rule id="rule-grp01-2" score="-INFINITY">
           <expression id="exp-grp01-2" attribute="#uname" operation="eq" value="srv02"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="location-grp01-3" rsc="Group01">
         <rule id="rule-grp01-3" score="-INFINITY">
           <expression id="exp-grp01-3" attribute="#uname" operation="eq" value="srv03"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="location-grp01-4" rsc="Group01">
         <rule id="rule-grp01-4" score="100">
           <expression id="exp-grp01-4" attribute="#uname" operation="eq" value="srv04"/>
         </rule>
@@ -230,12 +236,18 @@
         <rule id="rule-grp02-1" score="-INFINITY">
           <expression id="exp-grp02-1" attribute="#uname" operation="eq" value="srv01"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-2" rsc="Group02">
         <rule id="rule-grp02-2" score="200">
           <expression id="exp-grp02-2" attribute="#uname" operation="eq" value="srv02"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-3" rsc="Group02">
         <rule id="rule-grp02-3" score="-INFINITY">
           <expression id="exp-grp02-3" attribute="#uname" operation="eq" value="srv03"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-4" rsc="Group02">
         <rule id="rule-grp02-4" score="100">
           <expression id="exp-grp02-4" attribute="#uname" operation="eq" value="srv04"/>
         </rule>
@@ -244,12 +256,18 @@
         <rule id="rule-grp03-1" score="-INFINITY">
           <expression id="exp-grp03-1" attribute="#uname" operation="eq" value="srv01"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="location-grp03-2" rsc="Group03">
         <rule id="rule-grp03-2" score="-INFINITY">
           <expression id="exp-grp03-2" attribute="#uname" operation="eq" value="srv02"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="location-grp03-3" rsc="Group03">
         <rule id="rule-grp03-3" score="200">
           <expression id="exp-grp03-3" attribute="#uname" operation="eq" value="srv03"/>
         </rule>
+      </rsc_location>
+      <rsc_location id="location-grp03-4" rsc="Group03">
         <rule id="rule-grp03-4" score="100">
           <expression id="exp-grp03-4" attribute="#uname" operation="eq" value="srv04"/>
         </rule>

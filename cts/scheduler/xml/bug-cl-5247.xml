@@ -144,8 +144,10 @@
         <rule score="-INFINITY" id="rsc_location-msPostgresql-1-rule">
           <expression attribute="#uname" operation="eq" value="bl460g8n3" id="rsc_location-msPostgresql-1-rule-expression"/>
         </rule>
-        <rule score="-INFINITY" id="rsc_location-msPostgresql-1-rule-0">
-          <expression attribute="#uname" operation="eq" value="bl460g8n4" id="rsc_location-msPostgresql-1-rule-0-expression"/>
+      </rsc_location>
+      <rsc_location id="rsc_location-msPostgresql-2" rsc="msPostgresql">
+        <rule score="-INFINITY" id="rsc_location-msPostgresql-2-rule">
+          <expression attribute="#uname" operation="eq" value="bl460g8n4" id="rsc_location-msPostgresql-2-rule-expression"/>
         </rule>
       </rsc_location>
       <rsc_location id="rsc_location-prmDB1-2" rsc="prmDB1">

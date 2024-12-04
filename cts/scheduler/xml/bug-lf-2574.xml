@@ -56,28 +56,36 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="rsc_location-main_rsc" rsc="main_rsc">
-        <rule id="rsc_location-main_rsc-rule" score="200">
-          <expression attribute="#uname" id="rsc_location-main_rsc-expression" operation="eq" value="srv01"/>
-        </rule>
-        <rule id="rsc_location-main_rsc-rule-0" score="100">
-          <expression attribute="#uname" id="rsc_location-main_rsc-expression-0" operation="eq" value="srv03"/>
-        </rule>
-        <rule boolean-op="or" id="pingd-main_rsc-rule" score="-INFINITY">
-          <expression attribute="pingd" id="rsc_location-main_rsc-expression-1" operation="not_defined"/>
-          <expression attribute="pingd" id="rsc_location-main_rsc-expression-2" operation="lt" value="1"/>
+      <rsc_location id="rsc_location-main_rsc-1" rsc="main_rsc">
+        <rule id="rsc_location-main_rsc-1-rule" score="200">
+          <expression attribute="#uname" id="rsc_location-main_rsc-1-expression" operation="eq" value="srv01"/>
         </rule>
       </rsc_location>
-      <rsc_location id="rsc_location-main_rsc2" rsc="main_rsc2">
-        <rule id="rsc_location-main_rsc2-rule" score="200">
-          <expression attribute="#uname" id="rsc_location-main_rsc2-expression" operation="eq" value="srv02"/>
+      <rsc_location id="rsc_location-main_rsc-2" rsc="main_rsc">
+        <rule id="rsc_location-main_rsc-2-rule" score="100">
+          <expression attribute="#uname" id="rsc_location-main_rsc-2-expression" operation="eq" value="srv03"/>
         </rule>
-        <rule id="rsc_location-main_rsc2-rule-0" score="100">
-          <expression attribute="#uname" id="rsc_location-main_rsc2-expression-0" operation="eq" value="srv03"/>
+      </rsc_location>
+      <rsc_location id="rsc_location-main_rsc-3" rsc="main_rsc">
+        <rule boolean-op="or" id="rsc_location-main_rsc-3-rule" score="-INFINITY">
+          <expression attribute="pingd" id="rsc_location-main_rsc-3-expression-1" operation="not_defined"/>
+          <expression attribute="pingd" id="rsc_location-main_rsc-3-expression-2" operation="lt" value="1"/>
         </rule>
-        <rule boolean-op="or" id="pingd-main_rsc2-rule" score="-INFINITY">
-          <expression attribute="pingd" id="rsc_location-main_rsc2-expression-1" operation="not_defined"/>
-          <expression attribute="pingd" id="rsc_location-main_rsc2-expression-2" operation="lt" value="1"/>
+      </rsc_location>
+      <rsc_location id="rsc_location-main_rsc2-1" rsc="main_rsc2">
+        <rule id="rsc_location-main_rsc2-1-rule" score="200">
+          <expression attribute="#uname" id="rsc_location-main_rsc2-1-expression" operation="eq" value="srv02"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-main_rsc2-2" rsc="main_rsc2">
+        <rule id="rsc_location-main_rsc2-2-rule" score="100">
+          <expression attribute="#uname" id="rsc_location-main_rsc2-2-expression" operation="eq" value="srv03"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-main_rsc2-3" rsc="main_rsc2">
+        <rule boolean-op="or" id="rsc_location-main_rsc2-3-rule" score="-INFINITY">
+          <expression attribute="pingd" id="rsc_location-main_rsc2-3-expression-1" operation="not_defined"/>
+          <expression attribute="pingd" id="rsc_location-main_rsc2-3-expression-2" operation="lt" value="1"/>
         </rule>
       </rsc_location>
       <rsc_colocation id="rsc_colocation-clnPingd-clnDummy1-1" rsc="clnPingd" score="INFINITY" with-rsc="clnDummy1"/>

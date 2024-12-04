@@ -146,13 +146,15 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_location id="location-rsc1-rhel7-1-INFINITY" rsc="rsc1">
+      <rsc_location id="location-rsc1-rhel7-1-INFINITY-1" rsc="rsc1">
         <rule id="rule-2-1" score="INFINITY" boolean-op="and">
           <expression id="expression-2-1" attribute="#uname" operation="eq" value="rhel7-5"/>
           <rule id="rule-2-2" score="INFINITY">
             <date_expression id="expression-2-2" operation="in_range" start="2019-09-23 11:00:00 -05:00" end="2019-09-23 13:00:00 -05:00"/>
           </rule>
         </rule>
+      </rsc_location>
+      <rsc_location id="location-rsc1-rhel7-1-INFINITY-2" rsc="rsc1">
         <rule id="rule-3-1" score="INFINITY" boolean-op="and">
           <expression id="expression-3-1" attribute="#uname" operation="eq" value="rhel7-4"/>
           <rule id="rule-3-2" score="INFINITY">
