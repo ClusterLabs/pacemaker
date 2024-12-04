@@ -90,9 +90,11 @@ init_remote_listener(int port, gboolean encrypted)
     }
 
     if (encrypted) {
-        crm_notice("Starting TLS listener on port %d", port);
-        rc = pcmk__init_tls(&tls, true, GNUTLS_CRD_ANON);
+        bool use_cert = pcmk__x509_enabled(true);
 
+        crm_notice("Starting TLS listener on port %d", port);
+
+        rc = pcmk__init_tls(&tls, true, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_ANON);
         if (rc != pcmk_rc_ok) {
             return -1;
         }

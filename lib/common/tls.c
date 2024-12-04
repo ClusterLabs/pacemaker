@@ -11,6 +11,7 @@
 
 #include <errno.h>
 #include <gnutls/gnutls.h>
+#include <gnutls/x509.h>
 #include <stdlib.h>
 
 #include <crm/common/tls_internal.h>
@@ -42,6 +43,57 @@ tls_cred_str(gnutls_credentials_type_t cred_type)
     }
 }
 
+static int
+tls_load_x509_data(pcmk__tls_t *tls)
+{
+    int rc;
+
+    CRM_CHECK(tls->cred_type == GNUTLS_CRD_CERTIFICATE, return EINVAL);
+
+    /* Load a trusted CA to be used to verify client certificates.  Use
+     * of this function instead of gnutls_certificate_set_x509_system_trust
+     * means we do not look at the system-wide authorities installed in
+     * /etc/pki somewhere.  This requires the cluster admin to set up their
+     * own CA.
+     */
+    rc = gnutls_certificate_set_x509_trust_file(tls->credentials.cert,
+                                                tls->ca_file,
+                                                GNUTLS_X509_FMT_PEM);
+    if (rc <= 0) {
+        crm_err("Failed to set X509 CA file: %s", gnutls_strerror(rc));
+        return ENODATA;
+    }
+
+    /* If a Certificate Revocation List (CRL) file was given in the environment,
+     * load that now so we know which clients have been banned.
+     */
+    if (tls->crl_file != NULL) {
+        rc = gnutls_certificate_set_x509_crl_file(tls->credentials.cert,
+                                                  tls->crl_file,
+                                                  GNUTLS_X509_FMT_PEM);
+        if (rc < 0) {
+            crm_err("Failed to set X509 CRL file: %s",
+                    gnutls_strerror(rc));
+            return ENODATA;
+        }
+    }
+
+    /* NULL = no password for the key, GNUTLS_PKCS_PLAIN = unencrypted key
+     * file
+     */
+    rc = gnutls_certificate_set_x509_key_file2(tls->credentials.cert,
+                                               tls->cert_file, tls->key_file,
+                                               GNUTLS_X509_FMT_PEM, NULL,
+                                               GNUTLS_PKCS_PLAIN);
+    if (rc < 0) {
+        crm_err("Failed to set X509 cert/key pair: %s",
+                gnutls_strerror(rc));
+        return ENODATA;
+    }
+
+    return pcmk_rc_ok;
+}
+
 static void
 _gnutls_log_func(int level, const char *msg)
 {
@@ -66,6 +118,8 @@ pcmk__free_tls(pcmk__tls_t *tls)
         } else {
             gnutls_anon_free_client_credentials(tls->credentials.anon_c);
         }
+    } else if (tls->cred_type == GNUTLS_CRD_CERTIFICATE) {
+        gnutls_certificate_free_credentials(tls->credentials.cert);
     } else if (tls->cred_type == GNUTLS_CRD_PSK) {
         if (tls->server) {
             gnutls_psk_free_server_credentials(tls->credentials.psk_s);
@@ -122,6 +176,26 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
                                              (*tls)->dh_params);
         } else {
             gnutls_anon_allocate_client_credentials(&(*tls)->credentials.anon_c);
+        }
+    } else if (cred_type == GNUTLS_CRD_CERTIFICATE) {
+        /* Grab these environment variables before doing anything else. */
+        (*tls)->ca_file = pcmk__env_option(PCMK__ENV_CA_FILE);
+        (*tls)->cert_file = pcmk__env_option(PCMK__ENV_CERT_FILE);
+        (*tls)->crl_file = pcmk__env_option(PCMK__ENV_CRL_FILE);
+        (*tls)->key_file = pcmk__env_option(PCMK__ENV_KEY_FILE);
+
+        gnutls_certificate_allocate_credentials(&(*tls)->credentials.cert);
+
+        if (server) {
+            gnutls_certificate_set_dh_params((*tls)->credentials.cert,
+                                             (*tls)->dh_params);
+
+        }
+
+        rc = tls_load_x509_data(*tls);
+        if (rc != pcmk_rc_ok) {
+            pcmk__free_tls(*tls);
+            return rc;
         }
     } else if (cred_type == GNUTLS_CRD_PSK) {
         if (server) {
@@ -213,6 +287,8 @@ pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
         rc = gnutls_credentials_set(session, tls->cred_type, tls->credentials.anon_s);
     } else if (tls->cred_type == GNUTLS_CRD_ANON) {
         rc = gnutls_credentials_set(session, tls->cred_type, tls->credentials.anon_c);
+    } else if (tls->cred_type == GNUTLS_CRD_CERTIFICATE) {
+        rc = gnutls_credentials_set(session, tls->cred_type, tls->credentials.cert);
     } else if (tls->cred_type == GNUTLS_CRD_PSK && tls->server) {
         rc = gnutls_credentials_set(session, tls->cred_type, tls->credentials.psk_s);
     } else if (tls->cred_type == GNUTLS_CRD_PSK) {
