@@ -393,7 +393,7 @@ For instance, given the following CIB section:
        <primitive class="ocf" id="inactive-dummy-2" provider="pacemaker" type="Dummy"/>
      </group>
      <clone id="inactive-clone">
-       <primitive id="inactive-dhcpd" class="lsb" type="dhcpd"/>
+       <primitive id="inactive-dhcpd" class="systemd" type="dhcpd"/>
      </clone>
    </resources>
    <tags>
