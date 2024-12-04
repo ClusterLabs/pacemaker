@@ -869,8 +869,16 @@ action_complete(svc_action_t * action)
             cmd->real_action = cmd->action;
             cmd->action = pcmk__str_copy(PCMK_ACTION_MONITOR);
 
-        } else if (cmd->real_action != NULL) {
-            // This is follow-up monitor to check whether start/stop completed
+        } else if (cmd->result.execution_status == PCMK_EXEC_PENDING &&
+                   pcmk__str_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) &&
+                   cmd->interval_ms == 0 &&
+                   cmd->real_action == NULL) {
+            /* If the state is Pending at the time of probe, execute follow-up monitor. */
+            goagain = true;
+            cmd->real_action = cmd->action;
+            cmd->action = pcmk__str_copy(PCMK_ACTION_MONITOR);
+	} else if (cmd->real_action != NULL) {
+            // This is follow-up monitor to check whether start/stop/probe(monitor) completed
             if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
                 goagain = true;
 
@@ -901,6 +909,27 @@ action_complete(svc_action_t * action)
                                             pcmk__str_casei)) {
                         cmd->result.exit_status = PCMK_OCF_OK;
                     }
+                }
+            }
+        } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) && 
+                  (cmd->interval_ms > 0)) { 
+            /* For monitors, excluding follow-up monitors,                                  */
+            /* if the pending state persists from the first notification until its timeout, */
+            /* it will be treated as a timeout.                                             */
+
+            if ((cmd->result.execution_status == PCMK_EXEC_PENDING) &&
+                (cmd->last_notify_op_status == PCMK_EXEC_PENDING)) {
+                int time_left = time(NULL) - (cmd->epoch_rcchange + (cmd->timeout_orig/1000));
+
+                if (time_left >= 0) {
+                    crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout (first pending notification=%s timeout=%ds)",
+                        cmd->rsc_id, cmd->action,
+                        cmd->result.exit_status, pcmk__trim(ctime(&cmd->epoch_rcchange)), cmd->timeout_orig);
+                    pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+                         PCMK_EXEC_TIMEOUT,
+                         "Investigate reason for timeout, and adjust "
+                         "configured operation timeout if necessary");
+                    cmd_original_times(cmd);
                 }
             }
         }
