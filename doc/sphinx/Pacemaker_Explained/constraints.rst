@@ -775,7 +775,16 @@ have an effect in all contexts.
    |             |                  |    single: score; resource_set attribute               |
    |             |                  |                                                        |
    |             |                  | *Advanced use only.* Use a specific score for this     |
-   |             |                  | set within the constraint.                             |
+   |             |                  | set. Meaningful within ``rsc_location`` or             |
+   |             |                  | ``rsc_colocation``.                                    |
+   +-------------+------------------+--------------------------------------------------------+
+   | kind        |                  | .. index::                                             |
+   |             |                  |    single: resource_set; attribute, kind               |
+   |             |                  |    single: attribute; kind (resource_set)              |
+   |             |                  |    single: kind; resource_set attribute                |
+   |             |                  |                                                        |
+   |             |                  | *Advanced use only.* Use a specific kind for this      |
+   |             |                  | set. Meaningful within ``rsc_order``.                  |
    +-------------+------------------+--------------------------------------------------------+
 
 .. _s-resource-sets-ordering:
