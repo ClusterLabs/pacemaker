@@ -518,6 +518,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        further protection (which can mean *data loss* if the unresponsive node
        still accesses shared storage, for example). See also the
        :ref:`requires <requires>` resource meta-attribute.
+
+       This option applies only to fencing scheduled by the cluster, not to
+       requests initiated externally (such as with the ``stonith_admin``
+       command-line tool).
    * - .. _stonith_action:
       
        .. index::
