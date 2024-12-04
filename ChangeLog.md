@@ -1,3 +1,475 @@
+# Pacemaker-3.0.0-rc1 (14 Nov 2024)
+* 1938 commits with 685 files changed, 26363 insertions(+), 33503 deletions(-)
+
+## Features added since Pacemaker-2.1.9
+
+* For more details, especially about build option changes, see
+  https://projects.clusterlabs.org/w/projects/pacemaker/pacemaker_3.0_changes/
+* **upgrades:** drop support for rolling upgrades from versions less than 2.0.0
+* **Pacemaker Remote:** drop support for Pacemaker 1 cluster nodes connecting
+  to Pacemaker Remote 3 or later nodes or bundles, and Pacemaker 3 or later
+  cluster nodes connecting to Pacemaker Remote 1.1.14 or earlier nodes
+* **build:** drop creation of deprecated `pacemaker_remoted` link to
+  `pacemaker-remoted`
+* **environment:** drop support for deprecated `HA_cib_timeout`,
+  `HA_shutdown_delay`, `PCMK_cib_timeout`, `PCMK_dh_min_bits`, and
+  `PCMK_shutdown_delay` variables
+* **environment:** `PCMK_panic_action` values are case-sensitive
+* **CIB:** XML syntax must be correctly formed (no errors will be ignored)
+* **CIB:** `validate-with` must be set, case-sensitive, and not `pacemaker-0.6`,
+  `pacemaker-0.7`, `pacemaker-1.1`, `pacemaker-next`, `transitional-0.6`, or
+  unknown
+* **CIB:** deprecate `concurrent-fencing` cluster option, which now defaults to
+  true
+* **CIB:** deprecate `record-pending` operation option
+* **CIB:** drop support for deprecated cluster options
+  `crmd-finalization-timeout`, `crmd-integration-timeout`, and
+  `crmd-transition-delay`, and `remove-after-stop`
+* **CIB:** drop support for deprecated `poweroff` value of `stonith-action`
+  cluster option
+* **CIB:** drop support for nodes with `type` set to deprecated value `ping` or
+  an invalid value
+* **CIB:** drop support for deprecated `nagios` and `upstart` resource classes
+* **CIB:** drop support for deprecated `master` resources
+* **CIB:** drop support for deprecated `masters` bundle option
+* **CIB:** drop support for deprecated bundles using `rkt` containers
+* **CIB:** drop support for `instance_attributes` in `rsc_defaults`
+* **CIB:** drop support for deprecated `restart-type` resource option
+* **CIB:** drop support for deprecated `can-fail`, `can_fail`, and
+  `role_after_failure` operation options
+* **CIB:** drop support for deprecated `rsc-instance`, `with-rsc-instance`,
+  `first-instance`, and `then-instance` constraint options
+* **CIB:** drop support for deprecated `lifetime` elements in constraints
+* **CIB:** drop support for multiple top-level rules in location constraints or
+  name/value blocks
+* **CIB:** drop support for `name` attribute when `id-ref` attribute is present
+* **CIB:** drop support for deprecated `moon` in `date_spec` elements of rules
+* **CIB:** `globally-unique` clone option defaults to true if `clone-node-max`
+  is greater than 1
+* **CIB:** location constraints with an invalid `score`, `boolean-op`, or
+  `role`, colocation constraints with an invalid `score`, `rsc-role`, or
+  `with-rsc-role`, and ticket constraints with an invalid `rsc-role` are now
+  ignored (previously, default values would be used)
+* **CIB:** ignore node expressions for meta-attributes
+* **CIB:** treat misconfigured rules and rule expressions as not passing
+* **CIB:** treat negative `migration-threshold` as invalid and use default
+* **CIB:** invalid fencing level indexes are rejected by schema
+* **agents:** drop ocf:pacemaker:o2cb resource agent
+* **agents:** do not pass `HA_mcp`, `HA_quorum_type`, `PCMK_mcp`, or
+  `PCMK_quorum_type`, environment variables to agents
+* **alerts:** don't send deprecated alert environment variables to agents
+* **fencer:** drop support for non-clustered mode in fencer
+* **fencing:** default `pcmk_host_argument` to `none` if `port` not advertised
+* **liblrmd,libstonithd:** use standard default timeout (20s) for meta-data
+  actions
+* **pacemaker-based:** reject remote users if PAM not available
+* **tools:** `crm_shadow --reset` now requires `--force`
+* **tools:** define behavior of `attrd_updater -Q` without `-N`
+* **tools:** deprecate `cibadmin --local` option
+* **tools:** drop `--text-fancy` command-line option from all tools
+* **tools:** drop deprecated `cibadmin --host` and `--no-bcast` options
+* **tools:** drop deprecated `crm_resource --get-property`, `--set-property`,
+  and `--xml-file` options
+* **tools:** `cibadmin --md5-sum-versioned` no longer prints feature set
+* **tools:** `crm_resource` rejects invalid timeouts
+* **tools:** `crm_resource --delete` does not accept clone instances
+* **tools:** `crm_resource --delete` without `-t opt` exits with a usage error
+* **tools:** `crm_resource --delete` now succeeds if resource doesn't exist
+* **tools:** `crm_resource --option` throws usage error if appropriate
+* **tools:** drop deprecated `crm_mon` options `--as-html`,
+  `--disable-ncurses`, `--simple-status`, and `--web-cgi`
+
+## Fixes since Pacemaker-2.1.9
+
+* **executor:** avoid use-after-free during shutdown
+* **libcrmcommon:** rule expressions with the empty string as value now pass
+  when the corresponding node attribute is the empty string
+* **libstonithd:** avoid use-after-free when retrieving metadata of Linux-HA
+  fence agents
+* **libstonithd:** free escaped metadata descriptions correctly
+* **scheduler:** apply promotion priority to cloned group instances
+* **scheduler:** correctly retrieve any existing fail-count for increment
+* **scheduler:** don't apply colocations twice for promotion priority
+* **scheduler:** ignore `nvpair` with invalid `id-ref`
+* **scheduler:** ignore `value` in `nvpair` with `id-ref`
+* **scheduler:** use first action meta-attribute if block has duplicates
+* **scheduler:** consider group locations when member is explicit colocation
+  dependent
+* **tools:** don't trigger an assertion if stdout is closed
+* **tools:** CIB clients retry signon if first try fails
+* **tools:** don't double-free XML in `crm_verify` after schema update
+
+## Public API changes since Pacemaker-2.1.9
+
+* **libcib:** drop `util_compat.h` header
+* **libcib:** drop enum values `cib_database`, `cib_inhibit_bcast`,
+  `cib_mixed_update`, `cib_quorum_override`, and `cib_zero_copy`
+* **libcib:** drop `cib_api_operations_t` members `delete_absolute()`,
+  `inputfd()`, `is_master()`, `quit()`, `set_master()`, `set_op_callback()`,
+  `set_slave()`, `set_slave_all()`, `signon_raw()`, `update()`
+* **libcib:** drop `cib_t` member `op_callback()`
+* **libcib:** drop functions `cib_get_generation()`, `cib_metadata()`,
+  `cib_pref()`, `get_object_parent()`, `get_object_path()`,
+  `get_object_root()`, `query_node_uname()`, and `set_standby()`
+* **libcrmcluster:** add `pcmk_cluster_t` member `priv`
+* **libcrmcluster:** drop enums (including all their values)
+  `crm_ais_msg_class`, `crm_ais_msg_types`, `crm_get_peer_flags`,
+  `crm_join_phase`, `crm_node_flags`, and `crm_status_type`
+* **libcrmcluster:** drop type alias `crm_node_t`
+* **libcrmcluster:** drop struct `crm_peer_node_s`
+* **libcrmcluster:** drop `pcmk_cluster_t` members `cpg_handle`,
+  `group`, `nodeid`, `uname`, and `uuid`
+* **libcrmcluster:** drop global variables `crm_have_quorum`, `crm_peer_cache`,
+  `crm_peer_seq`, `crm_remote_peer_cache`
+* **libcrmcluster:** drop enum value `crm_join_nack_quiet`
+* **libcrmcluster:** drop string constants `CRM_NODE_LOST`, `CRM_NODE_MEMBER`
+* **libcrmcluster:** drop functions `cluster_connect_cpg()`,
+  `cluster_disconnect_cpg()`, `crm_active_peers()`, `crm_cluster_disconnect()`,
+  `crm_get_peer()`, `crm_get_peer_full()`, `crm_is_corosync_peer_active()`,
+  `crm_is_peer_active()`, `crm_join_phase_str()`, `crm_peer_destroy()`,
+  `crm_peer_init()`, `crm_peer_uname()`, `crm_peer_uuid()`,
+  `crm_remote_peer_cache_refresh()`, `crm_remote_peer_cache_remove()`,
+  `crm_remote_peer_cache_size()`, `crm_remote_peer_get()`,
+  `crm_set_autoreap()`, `crm_set_status_callback()`, `crm_terminate_member()`,
+  `crm_terminate_member_no_mainloop()`, `get_local_nodeid()`,
+  `get_local_node_name()`, `get_node_name()`, `is_corosync_cluster()`,
+  `pcmk_cpg_membership()`, `pcmk_message_common_cs()`, `reap_crm_member()`,
+  `send_cluster_message()`, `send_cluster_text()`, `set_uuid()`, and
+  `text2msg_type()`
+* **libcrmcluster:** rename struct `crm_cluster_s` to `pcmk__cluster`
+* **libcrmcommon:** add enum `pcmk_ipc_server` value `pcmk_ipc_unknown`
+* **libcrmcommon:** rename structs `pe_action_s` to `pcmk__action`, `pe_node_s`
+  to `pcmk__scored_node`, `pe_node_shared_s` to `pcmk__node_details`,
+  `pe_resource_s` to `pcmk__resource`, and `pe_working_set_s` to
+  `pcmk__scheduler`
+* **libcrmcommon:** add `pcmk_node_t` members `assign` and `private`
+* **libcrmcommon:** add `pcmk_resource_t` member `private`
+* **libcrmcommon:** change `pcmk_scheduler_t` member `flags` type to `uint64_t`
+* **libcrmcommon:** add defined constants `PCMK_OCF_ROOT`,
+  `PCMK_SCHEDULER_INPUT_DIR`, `PCMK_SCHEMA_DIR`, `PCMK_VALUE_CRASH`,
+  `PCMK_VALUE_OFF`, and `PCMK_VALUE_REBOOT`
+* **libcrmcommon:** deprecate  defined constants `CIB_OPTIONS_FIRST`,
+  `CRM_SCHEMA_DIRECTORY`, `CRM_SYSTEM_STONITHD`, `CRM_XS`, `OCF_ROOT_DIR`, and
+  `PE_STATE_DIR`
+* **libcrmcommon:** deprecate functions `calculate_on_disk_digest()`,
+  `calculate_operation_digest()`, `calculate_xml_versioned_digest()`,
+  `char2score()`, `crm_extended_logging()`, `crm_ipc_connect()`,
+  `crm_is_daemon_name()`, `crm_xml_cleanup()`, `crm_xml_init()`,
+  `crm_xml_sanitize_id()`, `crm_xml_set_id()`, `expand_idref()`, `free_xml()`,
+  `hash2nvpair()`, `pcmk_free_xml_subtree()`, `pcmk_nvpairs2xml_attrs()`,
+  `pcmk_sort_nvpairs()`, `pcmk_xml_attrs2nvpairs()`, and `sorted_xml()`
+* **libcrmcommon:** drop headers `agents_compat.h`, `compatibility.h`,
+  `logging_compat.h`, `mainloop_compat.h`, `results_compat.h`,
+  `scores_compat.h`, `tags.h`, `tickets.h`, and `xml_io_compat.h`
+* **libcrmcommon:** drop global variables `crm_config_error`,
+  `crm_config_warning`, `resource_class_functions[]`, `was_processing_error`,
+  and `was_processing_warning`
+* **libcrmcommon:** drop enums (including all their values)
+  `action_fail_response`, `action_tasks`, `node_type`, `pcmk_rsc_flags`,
+  `pcmk_sched_flags`, `pe_action_flags`, `pe_discover_e`, `pe_link_state`,
+  `pe_obj_types`, `pe_ordering`, `pe_print_options`, `pe_restart`,
+  `rsc_recovery_type`, `rsc_start_requirement`, and `xml_log_options`
+* **libcrmcommon:** drop enum `crm_ipc_flags` value `crm_ipc_server_error`,
+  and enum `crm_ipc_flags` value `crm_ipc_server_info`
+* **libcrmcommon:** drop enum `ocf_exitcode` values `PCMK_OCF_CANCELLED`,
+  `PCMK_OCF_DEGRADED_MASTER`, `PCMK_OCF_EXEC_ERROR`, `PCMK_OCF_FAILED_MASTER`,
+  `PCMK_OCF_NOT_SUPPORTED`, `PCMK_OCF_OTHER_ERROR`, `PCMK_OCF_PENDING`,
+  `PCMK_OCF_RUNNING_MASTER`, `PCMK_OCF_SIGNAL`, and `PCMK_OCF_TIMEOUT`
+* **libcrmcommon:** drop enum `pe_find` values `pe_find_anon`, `pe_find_any`,
+  `pe_find_clone`, `pe_find_current`, `pe_find_inactive`, and `pe_find_renamed`
+* **libcrmcommon:** drop types `pcmk_assignment_methods_t`,
+  `pcmk_rsc_methods_t`, `pcmk_tag_t`, `pcmk_ticket_t`,
+  `resource_alloc_functions_t`, and `resource_object_functions_t`
+* **libcrmcommon:** drop structs `pe_action_wrapper_s`, `pe_tag_s`,
+  `pe_ticket_s`, `resource_alloc_functions_s`, and
+  `resource_object_functions_s`
+* **libcrmcommon:** drop `pcmk_scheduler_t` members `actions`, `action_id`,
+  `blocked_resources`, `colocation_constraints`, `config_hash`, `dc_uuid`,
+  `disabled_resources`, `failed`, `graph`, `localhost`, `max_valid_nodes`,
+  `ninstances`, `node_pending_timeout`, `now`, `num_synapse`, `op_defaults`,
+  `ordering_constraints`, `param_check`, `placement_constraints`,
+  `placement_strategy`, `priority_fencing_delay`, `recheck_by`, `resources`,
+  `rsc_defaults`, `shutdown_lock`, `singletons`, `stonith_action`,
+  `stonith_timeout`, `stop_needed`, `tags`, `template_rsc_sets`, `tickets`, and
+  `ticket_constraints`
+* **libcrmcommon:** drop direct access to all members of `pcmk_action_t`
+* **libcrmcommon:** drop `pcmk_node_t` members `count`, `fixed`,
+  `rsc_discover_mode`, and `weight`
+* **libcrmcommon:** drop `pcmk_resource_t` members `actions`, `allocated_to`,
+  `allowed_nodes`, `children`, `clone_name`, `cluster`, `cmds`, `container`,
+  `dangling_migrations`, `exclusive_discover`, `failure_timeout`, `fillers`,
+  `fns`, `is_remote_node`, `known_on`, `lock_node`, `lock_time`, `meta`,
+  `migration_threshold`, `next_role`, `ops_xml`, `orig_xml`, `parameters`,
+  `parameter_cache`, `parent`, `partial_migration_source`,
+  `partial_migration_target`, `pending_node`, `pending_task`, `priority`,
+  `recovery_type`, `remote_reconnect_ms`, `restart_type`, `role`, `rsc_cons`,
+  `rsc_cons_lhs`, `rsc_location`, `rsc_tickets`, `running_on`, `sort_index`,
+  `stickiness`, `utilization`, `variant`, `variant_opaque`, and `xml`
+* **libcrmcommon:** drop struct `pe_node_shared_s` members `allocated_rsc`,
+  `attrs`, `digest_cache`, `expected_up`, `id`, `is_dc`, `num_resources`,
+  `priority`, `remote_maintenance`, `remote_requires_reset`, `remote_rsc`,
+  `remote_was_fenced`, `rsc_discovery_enabled`, `scheduler`, `standby`,
+  `standby_onfail`, `type`, `uname`, `unpacked`, `unseen`, and `utilization`
+* **libcrmcommon:** drop defined constants `CRMD_ACTION_CANCEL`,
+  `CRMD_ACTION_DELETE`, `CRMD_ACTION_DEMOTE`, `CRMD_ACTION_DEMOTED`,
+  `CRMD_ACTION_METADATA`, `CRMD_ACTION_MIGRATE`, `CRMD_ACTION_MIGRATED`,
+  `CRMD_ACTION_NOTIFIED`, `CRMD_ACTION_NOTIFY`, `CRMD_ACTION_PROMOTE`,
+  `CRMD_ACTION_PROMOTED`, `CRMD_ACTION_RELOAD`, `CRMD_ACTION_RELOAD_AGENT`,
+  `CRMD_ACTION_START`, `CRMD_ACTION_STARTED`, `CRMD_ACTION_STATUS`,
+  `CRMD_ACTION_STOP`, `CRMD_ACTION_STOPPED`, `CRMD_METADATA`,
+  `CRM_ATTR_RA_VERSION`, `CRM_DEFAULT_OP_TIMEOUT_S`, `CRM_INFINITY_S`,
+  `CRM_MINUS_INFINITY_S`, `CRM_OP_FENCE`, `CRM_OP_LOCAL_SHUTDOWN`,
+  `CRM_OP_LRM_QUERY`, `CRM_OP_LRM_REFRESH`, `CRM_OP_RELAXED_CLONE`,
+  `CRM_OP_RELAXED_SET`, `CRM_PLUS_INFINITY_S`, `EOS`, `F_CLIENTNAME`,
+  `F_CRM_DATA`, `F_CRM_DC_LEAVING`, `F_CRM_ELECTION_AGE_S`,
+  `F_CRM_ELECTION_AGE_US`, `F_CRM_ELECTION_ID`, `F_CRM_ELECTION_OWNER`,
+  `F_CRM_HOST_FROM`, `F_CRM_HOST_TO`, `F_CRM_JOIN_ID`, `F_CRM_MSG_TYPE`,
+  `F_CRM_ORIGIN`, `F_CRM_REFERENCE`, `F_CRM_SYS_FROM`, `F_CRM_SYS_TO`,
+  `F_CRM_TASK`, `F_CRM_TGRAPH`, `F_CRM_TGRAPH_INPUT`, `F_CRM_THROTTLE_MAX`,
+  `F_CRM_THROTTLE_MODE`, `F_CRM_USER`, `F_CRM_VERSION`, `F_ORIG`, `F_SEQ`,
+  `F_SUBTYPE`, `F_TYPE`, `F_XML_TAGNAME`, `INFINITY`, `INFINITY_S`,
+  `MAX_IPC_DELAY`, `MINUS_INFINITY_S`, `OFFLINESTATUS`, `ONLINESTATUS`,
+  `PCMK_DEFAULT_METADATA_TIMEOUT_MS`, `PCMK_RESOURCE_CLASS_NAGIOS`,
+  `PCMK_RESOURCE_CLASS_UPSTART`, `PCMK_XA_PROMOTED_MAX_LEGACY`,
+  `PCMK_XA_PROMOTED_NODE_MAX_LEGACY`, `PCMK_XE_PROMOTABLE_LEGACY`,
+  `PCMK_XE_PROMOTED_MAX_LEGACY`, `PCMK_XE_PROMOTED_NODE_MAX_LEGACY`,
+  `RSC_CANCEL`, `RSC_DELETE`, `RSC_DEMOTE`, `RSC_DEMOTED`, `RSC_METADATA`,
+  `RSC_MIGRATE`, `RSC_MIGRATED`, `RSC_NOTIFIED`, `RSC_NOTIFY`, `RSC_PROMOTE`,
+  `RSC_PROMOTED`, `RSC_ROLE_MASTER`, `RSC_ROLE_PROMOTED`,
+  `RSC_ROLE_PROMOTED_S`, `RSC_ROLE_SLAVE`, `RSC_ROLE_STARTED`,
+  `RSC_ROLE_STOPPED`, `RSC_ROLE_UNKNOWN`, `RSC_ROLE_UNPROMOTED`, `RSC_START`,
+  `RSC_STARTED`, `RSC_STATUS`, `RSC_STOP`, `RSC_STOPPED`, `SUPPORT_UPSTART`,
+  `T_ATTRD`, `T_CRM`, `XML_ACL_ATTR_ATTRIBUTE`, `XML_ACL_ATTR_KIND`,
+  `XML_ACL_ATTR_REF`, `XML_ACL_ATTR_REFv1`, `XML_ACL_ATTR_TAG`,
+  `XML_ACL_ATTR_TAGv1`, `XML_ACL_ATTR_XPATH`, `XML_ACL_TAG_DENY`,
+  `XML_ACL_TAG_GROUP`, `XML_ACL_TAG_PERMISSION`, `XML_ACL_TAG_READ`,
+  `XML_ACL_TAG_ROLE`, `XML_ACL_TAG_ROLE_REF`, `XML_ACL_TAG_ROLE_REFv1`,
+  `XML_ACL_TAG_USER`, `XML_ACL_TAG_USERv1`, `XML_ACL_TAG_WRITE`,
+  `XML_AGENT_ATTR_CLASS`, `XML_AGENT_ATTR_PROVIDER`, `XML_ALERT_ATTR_PATH`,
+  `XML_ALERT_ATTR_REC_VALUE`, `XML_ALERT_ATTR_TIMEOUT`,
+  `XML_ALERT_ATTR_TSTAMP_FORMAT`, `XML_ATTR_CRM_VERSION`, `XML_ATTR_DC_UUID`,
+  `XML_ATTR_DESC`, `XML_ATTR_DIGEST`, `XML_ATTR_GENERATION`,
+  `XML_ATTR_GENERATION_ADMIN`, `XML_ATTR_HAVE_QUORUM`,
+  `XML_ATTR_HAVE_WATCHDOG`, `XML_ATTR_ID`, `XML_ATTR_IDREF`,
+  `XML_ATTR_ID_LONG`, `XML_ATTR_NAME`, `XML_ATTR_NUMUPDATES`, `XML_ATTR_OP`,
+  `XML_ATTR_ORIGIN`, `XML_ATTR_QUORUM_PANIC`, `XML_ATTR_RA_VERSION`,
+  `XML_ATTR_REFERENCE`, `XML_ATTR_REQUEST`, `XML_ATTR_RESPONSE`,
+  `XML_ATTR_STONITH_DEVICES`, `XML_ATTR_STONITH_INDEX`,
+  `XML_ATTR_STONITH_TARGET`, `XML_ATTR_STONITH_TARGET_ATTRIBUTE`,
+  `XML_ATTR_STONITH_TARGET_PATTERN`, `XML_ATTR_STONITH_TARGET_VALUE`,
+  `XML_ATTR_TE_NOWAIT`, `XML_ATTR_TE_TARGET_RC`, `XML_ATTR_TIMEOUT`,
+  `XML_ATTR_TRANSITION_KEY`, `XML_ATTR_TRANSITION_MAGIC`, `XML_ATTR_TSTAMP`,
+  `XML_ATTR_TYPE`, `XML_ATTR_UNAME`, `XML_ATTR_UPDATE_CLIENT`,
+  `XML_ATTR_UPDATE_ORIG`, `XML_ATTR_UPDATE_USER`, `XML_ATTR_UUID`,
+  `XML_ATTR_VALIDATION`, `XML_ATTR_VERBOSE`, `XML_ATTR_VERSION`,
+  `XML_BOOLEAN_FALSE`, `XML_BOOLEAN_NO`, `XML_BOOLEAN_TRUE`, `XML_BOOLEAN_YES`,
+  `XML_CIB_ATTR_PRIORITY`, `XML_CIB_ATTR_REPLACE`, `XML_CIB_ATTR_SHUTDOWN`,
+  `XML_CIB_ATTR_SOURCE`, `XML_CIB_ATTR_WRITTEN`, `XML_CIB_TAG_ACLS`,
+  `XML_CIB_TAG_ALERT`, `XML_CIB_TAG_ALERTS`, `XML_CIB_TAG_ALERT_ATTR`,
+  `XML_CIB_TAG_ALERT_ATTRIBUTES`, `XML_CIB_TAG_ALERT_FENCING`,
+  `XML_CIB_TAG_ALERT_NODES`, `XML_CIB_TAG_ALERT_RECIPIENT`,
+  `XML_CIB_TAG_ALERT_RESOURCES`, `XML_CIB_TAG_ALERT_SELECT`,
+  `XML_CIB_TAG_CONFIGURATION`, `XML_CIB_TAG_CONSTRAINTS`,
+  `XML_CIB_TAG_CONTAINER`, `XML_CIB_TAG_CRMCONFIG`, `XML_CIB_TAG_DOMAINS`,
+  `XML_CIB_TAG_GENERATION_TUPPLE`, `XML_CIB_TAG_GROUP`,
+  `XML_CIB_TAG_INCARNATION`, `XML_CIB_TAG_LRM`, `XML_CIB_TAG_MASTER`,
+  `XML_CIB_TAG_NODE`, `XML_CIB_TAG_NODES`, `XML_CIB_TAG_NVPAIR`,
+  `XML_CIB_TAG_OBJ_REF`, `XML_CIB_TAG_OPCONFIG`, `XML_CIB_TAG_PROPSET`,
+  `XML_CIB_TAG_RESOURCE`, `XML_CIB_TAG_RESOURCES`, `XML_CIB_TAG_RSCCONFIG`,
+  `XML_CIB_TAG_RSC_TEMPLATE`, `XML_CIB_TAG_SECTION_ALL`, `XML_CIB_TAG_STATE`,
+  `XML_CIB_TAG_STATUS`, `XML_CIB_TAG_TAG`, `XML_CIB_TAG_TAGS`,
+  `XML_CIB_TAG_TICKETS`, `XML_CIB_TAG_TICKET_STATE`, `XML_COLOC_ATTR_INFLUENCE`,
+  `XML_COLOC_ATTR_NODE_ATTR`, `XML_COLOC_ATTR_SOURCE`,
+  `XML_COLOC_ATTR_SOURCE_INSTANCE`, `XML_COLOC_ATTR_SOURCE_ROLE`,
+  `XML_COLOC_ATTR_TARGET`, `XML_COLOC_ATTR_TARGET_INSTANCE`,
+  `XML_COLOC_ATTR_TARGET_ROLE`, `XML_CONFIG_ATTR_DC_DEADTIME`,
+  `XML_CONFIG_ATTR_ELECTION_FAIL`, `XML_CONFIG_ATTR_FENCE_REACTION`,
+  `XML_CONFIG_ATTR_FORCE_QUIT`, `XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT`,
+  `XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY`, `XML_CONFIG_ATTR_RECHECK`,
+  `XML_CONFIG_ATTR_SHUTDOWN_LOCK`, `XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT`,
+  `XML_CONS_ATTR_SYMMETRICAL`, `XML_CONS_TAG_RSC_DEPEND`,
+  `XML_CONS_TAG_RSC_LOCATION`, `XML_CONS_TAG_RSC_ORDER`, `XML_CONS_TAG_RSC_SET`,
+  `XML_CONS_TAG_RSC_TICKET`, `XML_CRM_TAG_PING`, `XML_DIFF_ATTR`,
+  `XML_DIFF_CHANGE`, `XML_DIFF_LIST`, `XML_DIFF_MARKER`, `XML_DIFF_OP`,
+  `XML_DIFF_PATH`, `XML_DIFF_POSITION`, `XML_DIFF_RESULT`, `XML_DIFF_VERSION`,
+  `XML_DIFF_VSOURCE`, `XML_DIFF_VTARGET`, `XML_EXPR_ATTR_ATTRIBUTE`,
+  `XML_EXPR_ATTR_OPERATION`, `XML_EXPR_ATTR_TYPE`, `XML_EXPR_ATTR_VALUE`,
+  `XML_EXPR_ATTR_VALUE_SOURCE`, `XML_FAILCIB_ATTR_ID`,
+  `XML_FAILCIB_ATTR_OBJTYPE`, `XML_FAILCIB_ATTR_OP`, `XML_FAILCIB_ATTR_REASON`,
+  `XML_FAIL_TAG_CIB`, `XML_GRAPH_TAG_CRM_EVENT`, `XML_GRAPH_TAG_DOWNED`,
+  `XML_GRAPH_TAG_MAINTENANCE`, `XML_GRAPH_TAG_PSEUDO_EVENT`,
+  `XML_GRAPH_TAG_RSC_OP`, `XML_LOCATION_ATTR_DISCOVERY`, `XML_LOC_ATTR_SOURCE`,
+  `XML_LOC_ATTR_SOURCE_PATTERN`, `XML_LRM_ATTR_CALLID`,
+  `XML_LRM_ATTR_EXIT_REASON`, `XML_LRM_ATTR_INTERVAL`,
+  `XML_LRM_ATTR_INTERVAL_MS`, `XML_LRM_ATTR_MIGRATE_SOURCE`,
+  `XML_LRM_ATTR_MIGRATE_TARGET`, `XML_LRM_ATTR_OPSTATUS`,
+  `XML_LRM_ATTR_OP_DIGEST`, `XML_LRM_ATTR_OP_RESTART`, `XML_LRM_ATTR_OP_SECURE`,
+  `XML_LRM_ATTR_RC`, `XML_LRM_ATTR_RESTART_DIGEST`, `XML_LRM_ATTR_ROUTER_NODE`,
+  `XML_LRM_ATTR_RSCID`, `XML_LRM_ATTR_SECURE_DIGEST`, `XML_LRM_ATTR_TARGET`,
+  `XML_LRM_ATTR_TARGET_UUID`, `XML_LRM_ATTR_TASK`, `XML_LRM_ATTR_TASK_KEY`,
+  `XML_LRM_TAG_RESOURCE`, `XML_LRM_TAG_RESOURCES`, `XML_LRM_TAG_RSC_OP`,
+  `XML_NODE_ATTR_RSC_DISCOVERY`, `XML_NODE_EXPECTED`, `XML_NODE_IN_CLUSTER`,
+  `XML_NODE_IS_FENCED`, `XML_NODE_IS_MAINTENANCE`, `XML_NODE_IS_PEER`,
+  `XML_NODE_IS_REMOTE`, `XML_NODE_JOIN_STATE`, `XML_NVPAIR_ATTR_NAME`,
+  `XML_NVPAIR_ATTR_VALUE`, `XML_OP_ATTR_ALLOW_MIGRATE`,
+  `XML_OP_ATTR_DIGESTS_ALL`, `XML_OP_ATTR_DIGESTS_SECURE`,
+  `XML_OP_ATTR_ON_FAIL`, `XML_OP_ATTR_ORIGIN`, `XML_OP_ATTR_PENDING`,
+  `XML_OP_ATTR_START_DELAY`, `XML_ORDER_ATTR_FIRST`,
+  `XML_ORDER_ATTR_FIRST_ACTION`, `XML_ORDER_ATTR_FIRST_INSTANCE`,
+  `XML_ORDER_ATTR_KIND`, `XML_ORDER_ATTR_THEN`, `XML_ORDER_ATTR_THEN_ACTION`,
+  `XML_ORDER_ATTR_THEN_INSTANCE`, `XML_PARANOIA_CHECKS`,
+  `XML_PING_ATTR_CRMDSTATE`, `XML_PING_ATTR_PACEMAKERDSTATE`,
+  `XML_PING_ATTR_PACEMAKERDSTATE_INIT`,
+  `XML_PING_ATTR_PACEMAKERDSTATE_REMOTE`,
+  `XML_PING_ATTR_PACEMAKERDSTATE_RUNNING`,
+  `XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE`
+  `XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN`
+  `XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS`
+  `XML_PING_ATTR_PACEMAKERDSTATE_WAITPING`, `XML_PING_ATTR_STATUS`,
+  `XML_PING_ATTR_SYSFROM`, `XML_REMOTE_ATTR_RECONNECT_INTERVAL`,
+  `XML_RSC_ATTR_CLEAR_INTERVAL`, `XML_RSC_ATTR_CLEAR_OP`,
+  `XML_RSC_ATTR_CONTAINER`, `XML_RSC_ATTR_CRITICAL`,
+  `XML_RSC_ATTR_FAIL_STICKINESS`, `XML_RSC_ATTR_FAIL_TIMEOUT`,
+  `XML_RSC_ATTR_INCARNATION`, `XML_RSC_ATTR_INCARNATION_MAX`,
+  `XML_RSC_ATTR_INCARNATION_MIN`, `XML_RSC_ATTR_INCARNATION_NODEMAX`,
+  `XML_RSC_ATTR_INTERLEAVE`, `XML_RSC_ATTR_INTERNAL_RSC`,
+  `XML_RSC_ATTR_MAINTENANCE`, `XML_RSC_ATTR_MANAGED`, `XML_RSC_ATTR_MASTER_MAX`,
+  `XML_RSC_ATTR_MASTER_NODEMAX`, `XML_RSC_ATTR_MULTIPLE`, `XML_RSC_ATTR_NOTIFY`,
+  `XML_RSC_ATTR_ORDERED`, `XML_RSC_ATTR_PROMOTABLE`,
+  `XML_RSC_ATTR_PROMOTED_MAX`, `XML_RSC_ATTR_PROMOTED_NODEMAX`,
+  `XML_RSC_ATTR_PROVIDES`, `XML_RSC_ATTR_REMOTE_NODE`,
+  `XML_RSC_ATTR_REMOTE_RA_ADDR`, `XML_RSC_ATTR_REMOTE_RA_PORT`,
+  `XML_RSC_ATTR_REMOTE_RA_SERVER`, `XML_RSC_ATTR_REQUIRES`,
+  `XML_RSC_ATTR_RESTART`, `XML_RSC_ATTR_STICKINESS`, `XML_RSC_ATTR_TARGET`,
+  `XML_RSC_ATTR_TARGET_ROLE`, `XML_RSC_ATTR_UNIQUE`, `XML_RSC_OP_LAST_CHANGE`,
+  `XML_RSC_OP_LAST_RUN`, `XML_RSC_OP_T_EXEC`, `XML_RSC_OP_T_QUEUE`,
+  `XML_RULE_ATTR_BOOLEAN_OP`, `XML_RULE_ATTR_ROLE`, `XML_RULE_ATTR_SCORE`,
+  `XML_RULE_ATTR_SCORE_ATTRIBUTE`, `XML_TAG_ATTRS`, `XML_TAG_ATTR_SETS`,
+  `XML_TAG_DIFF`, `XML_TAG_DIFF_ADDED`, `XML_TAG_DIFF_REMOVED`,
+  `XML_TAG_EXPRESSION`, `XML_TAG_FAILED`, `XML_TAG_FENCING_LEVEL`,
+  `XML_TAG_FENCING_TOPOLOGY`, `XML_TAG_FRAGMENT`, `XML_TAG_GRAPH`,
+  `XML_TAG_META_SETS`, `XML_TAG_OPTIONS`, `XML_TAG_OP_VER_ATTRS`,
+  `XML_TAG_OP_VER_META`, `XML_TAG_PARAM`, `XML_TAG_PARAMS`,
+  `XML_TAG_RESOURCE_REF`, `XML_TAG_RSC_VER_ATTRS`, `XML_TAG_RULE`,
+  `XML_TAG_TRANSIENT_NODEATTRS`, `XML_TAG_UTILIZATION`,
+  `XML_TICKET_ATTR_LOSS_POLICY`, and `XML_TICKET_ATTR_TICKET`
+* **libcrmcommon:** drop support for patchset format 1 in
+  `xml_apply_patchset()`, `xml_create_patchset()`, and `xml_patch_versions()`
+* **libcrmcommon:** drop functions/macros `add_message_xml()`,
+  `add_node_copy()`, `add_node_nocopy()`, `apply_xml_diff()`, `bz2_strerror()`,
+  `can_prune_leaf()`, `copy_in_properties()` `create_hello_message()`,
+  `create_reply()`, `create_reply_adv()`, `create_request()`,
+  `create_request_adv()`, `create_xml_node()`, `crm_action_str()`,
+  `crm_add_logfile()`, `crm_atoi()`, `crm_build_path()`, `crm_destroy_xml()`,
+  `crm_errno2exit()`, `crm_ftoa()`, `crm_get_interval()`,
+  `crm_hash_table_size()`, `crm_itoa()`, `crm_itoa_stack()`,
+  `crm_log_cli_init()`, `crm_map_element_name()`, `crm_next_same_xml()`,
+  `crm_parse_int()`, `crm_parse_interval_spec()`, `crm_parse_ll()`,
+  `crm_provider_required()`, `crm_signal()`, `crm_str()`,
+  `crm_strcase_equal()`, `crm_strcase_hash()`, `crm_strcase_table_new()`,
+  `crm_strip_trailing_newline()`, `crm_str_eq()`, `crm_str_hash()`,
+  `crm_str_table_dup()`, `crm_str_table_new()`, `crm_ttoa()`,
+  `crm_xml_add_boolean()`, `crm_xml_escape()`, `crm_xml_replace()`,
+  `diff_xml_object()`, `do_crm_log_always()`, `dump_xml_formatted()`,
+  `dump_xml_formatted_with_text()`, `dump_xml_unformatted()`,
+  `expand_plus_plus()`, `filename2xml()`, `find_entity()`,
+  `find_xml_children()`, `find_xml_node()`, `first_named_child()`,
+  `fix_plus_plus_recursive()`, `getDocPtr()`, `get_message_xml()`,
+  `get_schema_name()`, `get_schema_version()`, `get_xpath_object_relative()`,
+  `g_str_hash_traditional()`, `ID()`, `is_not_set()`, `is_set_any()`,
+  `log_data_element()`, `pcmk_action_text()`, `pcmk_create_html_node()`,
+  `pcmk_create_xml_text_node()`, `pcmk_format_named_time()`,
+  `pcmk_format_nvpair()`, `pcmk_hostname()`, `pcmk_log_xml_impl()`,
+  `pcmk_numeric_strcasecmp()`, `pcmk_on_fail_text()`, `pcmk_parse_action()`,
+  `pcmk_scan_nvpair()`, `purge_diff_markers()`, `replace_xml_child()`,
+  `safe_str_eq()`, `safe_str_neq()`, `score2char()`, `score2char_stack()`,
+  `stdin2xml()`, `string2xml()` `subtract_xml_object()`, `TYPE()`,
+  `update_validation()`, `update_xml_child()`, `validate_xml()`,
+  `validate_xml_verbose()`, `write_xml_fd()`, `write_xml_file()`,
+  `xml_get_path()`, `xml_has_children()`, `xml_latest_schema()`,
+  `xml_log_changes()`, `xml_log_patchset()`, `xml_remove_prop()`, `__likely()`,
+  and `__unlikely()`
+* **libcrmservice:** drop header `services_compat.h`
+* **libcrmservice:** deprecate function `services_ocf_exitcode_str()`
+* **libcrmservice:** drop enums (including all their values) `nagios_exitcode`
+  and `op_status`
+* **libcrmservice:** drop defined constants `F_LRMD_ALERT`, `F_LRMD_ALERT_ID`,
+  `F_LRMD_ALERT_PATH`, `F_LRMD_CALLBACK_TOKEN`, `F_LRMD_CALLDATA`,
+  `F_LRMD_CALLID`, `F_LRMD_CALLOPTS`, `F_LRMD_CLASS`, `F_LRMD_CLIENTID`,
+  `F_LRMD_CLIENTNAME`, `F_LRMD_EXEC_RC`, `F_LRMD_IPC_CLIENT`,
+  `F_LRMD_IPC_IPC_SERVER`, `F_LRMD_IPC_MSG`, `F_LRMD_IPC_MSG_FLAGS`,
+  `F_LRMD_IPC_MSG_ID`, `F_LRMD_IPC_OP`, `F_LRMD_IPC_SESSION`, `F_LRMD_IPC_USER`,
+  `F_LRMD_IS_IPC_PROVIDER`, `F_LRMD_OPERATION`, `F_LRMD_OP_STATUS`,
+  `F_LRMD_ORIGIN`, `F_LRMD_PROTOCOL_VERSION`, `F_LRMD_PROVIDER`, `F_LRMD_RC`,
+  `F_LRMD_REMOTE_MSG_ID`, `F_LRMD_REMOTE_MSG_TYPE`, `F_LRMD_RSC`,
+  `F_LRMD_RSC_ACTION`, `F_LRMD_RSC_DELETED`, `F_LRMD_RSC_EXEC_TIME`,
+  `F_LRMD_RSC_EXIT_REASON`, `F_LRMD_RSC_ID`, `F_LRMD_RSC_INTERVAL`,
+  `F_LRMD_RSC_OUTPUT`, `F_LRMD_RSC_QUEUE_TIME`, `F_LRMD_RSC_RCCHANGE_TIME`,
+  `F_LRMD_RSC_RUN_TIME`, `F_LRMD_RSC_START_DELAY`, `F_LRMD_RSC_USERDATA_STR`,
+  `F_LRMD_TIMEOUT`, `F_LRMD_TYPE`, `F_LRMD_WATCHDOG`, `T_LRMD`,
+  `T_LRMD_IPC_PROXY`, `T_LRMD_NOTIFY`, `T_LRMD_REPLY`, and `T_LRMD_RSC_OP`
+* **libcrmservice:** drop functions `services_action_create()`,
+  `services_get_ocf_exitcode()`, `services_list()`, and
+  `services_lrm_status_str()`
+* **liblrmd:** drop header `lrmd_compat.h`
+* **liblrmd:** redefine `lrmd_opt_drop_recurring` enum value
+* **liblrmd:** change type of `lrmd_event_data_t` members `t_rcchange` and
+  `t_run` to `time_t`
+* **liblrmd:** drop defined constants `ALT_REMOTE_KEY_LOCATION` and
+  `LRMD_MIN_PROTOCOL_VERSION`
+* **libpacemaker:** add high-level API equivalents of `stonith_admin` options
+  including `pcmk_request_fencing()`, `pcmk_fence_history()`,
+  `pcmk_fence_installed()`, `pcmk_fence_last()`, `pcmk_fence_list_targets()`,
+  `pcmk_fence_metadata()`, `pcmk_fence_registered()`,
+  `pcmk_fence_register_level()`, `pcmk_fence_unregister_level()`, and
+  `pcmk_fence_validate()`
+* **libpe_rules:** drop functions `find_expression_type()`,
+  `pe_evaluate_rules()`, `pe_eval_expr()`, `pe_eval_rules()`,
+  `pe_eval_subexpr()`, `pe_expand_re_matches()`, `pe_test_expression()`,
+  `pe_test_expression_full()`, `pe_test_expression_re()`, `pe_test_rule()`,
+  `pe_test_rule_full()`, `pe_test_rule_re()`, `test_expression()`,
+  `test_ruleset()`, and `unpack_instance_attributes()`
+* **libpe_status,libpe_rules:** drop types `action_t`, `action_wrapper_t`,
+  `no_quorum_policy_t`, `pe_action_t`, `pe_action_wrapper_t`, `pe_node_t`,
+  `pe_resource_t`, `pe_tag_t`, `pe_ticket_t`, `tag_t`, and `ticket_t`
+* **libpe_status,libpe_rules:** drop enums (including all their values)
+  `pe_check_parameters` and `pe_graph_flags`
+* **libpe_status,libpe_rules:** drop defined constants `pe_flag_check_config`,
+  `pe_flag_concurrent_fencing`, `pe_flag_enable_unfencing`,
+  `pe_flag_have_remote_nodes`, `pe_flag_have_status`,
+  `pe_flag_maintenance_mode`, `pe_flag_no_compat`, `pe_flag_no_counts`,
+  `pe_flag_quick_location`, `pe_flag_remove_after_stop`, `pe_flag_sanitized`,
+  `pe_flag_show_scores`, `pe_flag_show_utilization`, `pe_flag_shutdown_lock`,
+  `pe_flag_startup_fencing`, `pe_flag_startup_probes`,
+  `pe_flag_start_failure_fatal`, `pe_flag_stdout`, `pe_flag_stonith_enabled`,
+  `pe_flag_stop_action_orphans`, `pe_flag_stop_everything`,
+  `pe_flag_stop_rsc_orphans`, `pe_flag_symmetric_cluster`, `pe_rsc_allocating`,
+  `pe_rsc_allow_migrate`, `pe_rsc_allow_remote_remotes`, `pe_rsc_block`,
+  `pe_rsc_critical`, `pe_rsc_detect_loop`, `pe_rsc_failed`,
+  `pe_rsc_failure_ignored`, `pe_rsc_fence_device`, `pe_rsc_is_container`,
+  `pe_rsc_maintenance`, `pe_rsc_merging`, `pe_rsc_needs_fencing`,
+  `pe_rsc_needs_quorum`, `pe_rsc_needs_unfencing`, `pe_rsc_notify`,
+  `pe_rsc_orphan`, `pe_rsc_orphan_container_filler`, `pe_rsc_promotable`,
+  `pe_rsc_provisional`, `pe_rsc_reload`, `pe_rsc_replica_container`,
+  `pe_rsc_restarting`, `pe_rsc_runnable`, `pe_rsc_starting`,
+  `pe_rsc_start_pending`, `pe_rsc_stop`, `pe_rsc_stopping`,
+  `pe_rsc_stop_unexpected`, `pe_rsc_unique`, `RSC_ROLE_MASTER_S`,
+  `RSC_ROLE_MAX`, `RSC_ROLE_PROMOTED_LEGACY_S`, `RSC_ROLE_SLAVE_S`,
+  `RSC_ROLE_STARTED_S`, `RSC_ROLE_STOPPED_S`, `RSC_ROLE_UNKNOWN_S`,
+  `RSC_ROLE_UNPROMOTED_LEGACY_S`, and `RSC_ROLE_UNPROMOTED_S`
+* **libpe_status,libpe_rules:** drop functions `fail2text(),` `pe_pref()`,
+  `recovery2text()`, `role2text()`, `task2text()`, `text2role()`, and
+  `text2task()`
+* **libpe_status:** drop functions/macros `pe_rsc_is_anon_clone()`,
+  `pe_rsc_is_bundled()`, `pe_rsc_is_clone()`, `pe_rsc_is_unique_clone()`, and
+  `status_print()`
+* **libstonithd:** drop `stonith_t` member `call_timeout`
+* **libstonithd:** drop `stonith_event_t` members `message` and `type`
+* **libstonithd:** drop defined constants `T_STONITH_NOTIFY_DISCONNECT`,
+  `T_STONITH_NOTIFY_FENCE`, `T_STONITH_NOTIFY_HISTORY`, and
+  `T_STONITH_NOTIFY_HISTORY_SYNCED`
+* **libstonithd:** drop function `get_stonith_provider()`
+
 # Pacemaker-2.1.9 (31 Oct 2024)
 - 169 commits with 252 files changed, 4498 insertions(+), 2259 deletions(-)
 
@@ -2104,8 +2576,8 @@
     calculate the value based on `SBD_WATCHDOG_TIMEOUT` (which was the behavior
     of 0 before 1.1.15; 0 retains its post-1.1.15 behavior of disabling use of
     the watchdog as a fencing device)
-  + The undocumented restart-type and `role_after_failure`
-    resource meta-attributes are now deprecated
+  + The undocumented `restart-type` resource option and `role_after_failure`
+    operation option are now deprecated
   + Regression testing code has been consolidated and overhauled
     (the most obvious change is new command names)
   + **build:** create /etc/pacemaker directory when installing

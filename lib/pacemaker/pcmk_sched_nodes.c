@@ -56,11 +56,12 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
 
 /*!
  * \internal
- * \brief Copy a hash table of node objects
+ * \brief Create a hash table with copies of another table's nodes
  *
  * \param[in] nodes  Hash table to copy
  *
- * \return New copy of nodes (or NULL if nodes is NULL)
+ * \return New table with copies of nodes in \p nodes, or \c NULL if \p nodes is
+ *         \c NULL
  */
 GHashTable *
 pcmk__copy_node_table(GHashTable *nodes)
@@ -72,7 +73,7 @@ pcmk__copy_node_table(GHashTable *nodes)
     if (nodes == NULL) {
         return NULL;
     }
-    new_table = pcmk__strkey_table(NULL, free);
+    new_table = pcmk__strkey_table(NULL, pcmk__free_node_copy);
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         pcmk_node_t *new_node = pe__copy_node(node);

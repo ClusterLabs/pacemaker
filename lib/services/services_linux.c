@@ -933,6 +933,7 @@ exit_child(const svc_action_t *op, int exit_status, const char *exit_reason)
                         pcmk__str_none)) {
         fprintf(stderr, PCMK_OCF_REASON_PREFIX "%s\n", exit_reason);
     }
+    pcmk_common_cleanup();
     _exit(exit_status);
 }
 
