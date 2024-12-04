@@ -103,9 +103,7 @@ ________________
    |             |    single: attribute; description (group)                        |
    |             |    single: description; group attribute                          |   
    |             |                                                                  |
-   |             | An optional description of the group, for the user's own         |
-   |             | purposes.                                                        |
-   |             | E.g. ``resources needed for website``                            |
+   |             | Arbitrary text for user's use (ignored by Pacemaker)             |
    +-------------+------------------------------------------------------------------+
 
 Group Options
@@ -231,9 +229,7 @@ ________________
    |             |    single: attribute; description (clone)                        |
    |             |    single: description; clone attribute                          |   
    |             |                                                                  |
-   |             | An optional description of the clone, for the user's own         |
-   |             | purposes.                                                        |
-   |             | E.g. ``IP address for website``                                  |
+   |             | Arbitrary text for user's use (ignored by Pacemaker)             |
    +-------------+------------------------------------------------------------------+
 
 .. index::
@@ -715,9 +711,7 @@ _________________
    |             |    single: attribute; description (bundle)                       |
    |             |    single: description; bundle attribute                         |
    |             |                                                                  |
-   |             | An optional description of the group, for the user's own         |
-   |             | purposes.                                                        |
-   |             | E.g. ``manages the container that runs the service``             |
+   |             | Arbitrary text for user's use (ignored by Pacemaker)             |
    +-------------+------------------------------------------------------------------+
 
 

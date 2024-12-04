@@ -189,8 +189,7 @@ where to find that resource agent and what standards it conforms to.
    |             |    single: description; resource                                 |
    |             |    single: resource; property, description                       |
    |             |                                                                  |
-   |             | A description of the Resource Agent, intended for local use.     |
-   |             | E.g. ``IP address for website``                                  |
+   |             | Arbitrary text for user's use (ignored by Pacemaker)             |
    +-------------+------------------------------------------------------------------+
    | type        | .. index::                                                       |
    |             |    single: type; resource                                        |

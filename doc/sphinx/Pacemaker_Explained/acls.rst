@@ -84,7 +84,7 @@ element in the CIB ``acls`` section.
    |                  |    single: description; acl_role attribute                |
    |                  |    single: attribute; description (acl_role)              |
    |                  |                                                           |
-   |                  | Arbitrary text (not used by Pacemaker)                    |
+   |                  | Arbitrary text for user's use (ignored by Pacemaker)      |
    +------------------+-----------------------------------------------------------+
 
 An ``acl_role`` element may contain any number of ``acl_permission`` elements.
@@ -111,7 +111,7 @@ An ``acl_role`` element may contain any number of ``acl_permission`` elements.
    |                  |    single: description; acl_permission attribute          |
    |                  |    single: attribute; description (acl_permission)        |
    |                  |                                                           |
-   |                  | Arbitrary text (not used by Pacemaker)                    |
+   |                  | Arbitrary text for user's use (ignored by Pacemaker)      |
    +------------------+-----------------------------------------------------------+
    | kind             | .. index::                                                |
    |                  |    single: acl_permission; kind (attribute)               |
