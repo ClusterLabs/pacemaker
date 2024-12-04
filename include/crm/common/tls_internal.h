@@ -131,6 +131,15 @@ int pcmk__read_handshake_data(const pcmk__client_t *client);
 
 /*!
  * \internal
+ * \brief Log if a TLS certificate is near its expiration date
+ *
+ * \param[in] session The gnutls session object after handshaking is
+ *                    complete
+ */
+void pcmk__tls_check_cert_expiration(gnutls_session_t session);
+
+/*!
+ * \internal
  * \brief Perform client TLS handshake after establishing TCP socket
  *
  * \param[in,out] remote       Newly established remote connection

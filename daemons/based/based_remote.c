@@ -443,6 +443,13 @@ cib_remote_msg(gpointer data)
             g_source_remove(client->remote->auth_timeout);
         }
 
+        /* Now that the handshake is done, see if any client TLS certificate is
+         * close to its expiration date and log if so.  If a TLS certificate is not
+         * in use, this function will just return so we don't need to check for the
+         * session type here.
+         */
+        pcmk__tls_check_cert_expiration(client->remote->tls_session);
+
         // Require the client to authenticate within this time
         client->remote->auth_timeout = pcmk__create_timer(REMOTE_AUTH_TIMEOUT,
                                                           remote_auth_timeout_cb,

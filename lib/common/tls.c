@@ -411,6 +411,47 @@ pcmk__tls_add_psk_callback(pcmk__tls_t *tls,
     gnutls_psk_set_server_credentials_function(tls->credentials.psk_s, cb);
 }
 
+void
+pcmk__tls_check_cert_expiration(gnutls_session_t session)
+{
+    gnutls_x509_crt_t cert;
+    const gnutls_datum_t *datum = NULL;
+    time_t expiry;
+
+    if (session == NULL) {
+        return;
+    }
+
+    if (gnutls_certificate_type_get(session) != GNUTLS_CRT_X509) {
+        return;
+    }
+
+    datum = gnutls_certificate_get_ours(session);
+    if (datum == NULL) {
+        return;
+    }
+
+    gnutls_x509_crt_init(&cert);
+    gnutls_x509_crt_import(cert, datum, GNUTLS_X509_FMT_DER);
+
+    expiry = gnutls_x509_crt_get_expiration_time(cert);
+
+    if (expiry != -1) {
+        time_t now = time(NULL);
+
+        /* If the cert is going to expire within ~ one month (30 days), log it */
+        if (expiry - now <= 60 * 60 * 24 * 30) {
+            crm_time_t *expiry_t = pcmk__copy_timet(expiry);
+
+            crm_time_log(LOG_WARNING, "TLS certificate will expire on",
+                         expiry_t, crm_time_log_date | crm_time_log_timeofday);
+            crm_time_free(expiry_t);
+        }
+    }
+
+    gnutls_x509_crt_deinit(cert);
+}
+
 int
 pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
 {
