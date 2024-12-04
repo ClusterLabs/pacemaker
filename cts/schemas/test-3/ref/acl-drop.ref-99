@@ -44,9 +44,9 @@
     </constraints>
     <acls>
       <acl_role id="role1">
-        <acl_permission id="role1-deny-property-drop" kind="deny" reference="cib-bootstrap-options-remove-after-stop"/>
-        <acl_permission id="role1-deny-rsc1-loc-drop" kind="deny" reference="rsc1-loc"/>
-        <acl_permission id="role1-deny-rsc2-meta_attributes-drop" kind="deny" reference="rsc2-meta_attributes"/>
+        <acl_permission id="role1-deny-property-drop" kind="deny" xpath="/*[false()]"/>
+        <acl_permission id="role1-deny-rsc1-loc-drop" kind="deny" xpath="/*[false()]"/>
+        <acl_permission id="role1-deny-rsc2-meta_attributes-drop" kind="deny" xpath="/*[false()]"/>
         <acl_permission id="role1-deny-rsc1-keep" kind="deny" reference="rsc1"/>
         <acl_permission id="role1-deny-role1-deny-property-drop-keep" kind="deny" reference="role1-deny-property-drop"/>
       </acl_role>
