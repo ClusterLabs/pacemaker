@@ -12,6 +12,9 @@
    original input XML). Any elements with id-refs that were resolved in the
    first step of the transformation pipeline have been converted back to
    id-refs. See upgrade-3.10-common.xsl for details.
+ * If an acl_permission has a reference attribute, it's a valid IDREF. This was
+   the case before the transformation pipeline began, but element removals in
+   earlier stages may have invalidated some ACL permissions.
 
  This file is numbered 99 because it must be the last stylesheet in the
  pipeline. This numbering allows us to add more stylesheets without needing to
@@ -23,6 +26,9 @@
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:import href="upgrade-3.10-common.xsl"/>
+
+<!-- Index all elements by ID -->
+<xsl:key name="element_id" match="*" use="@id"/>
 
 <!-- Copy everything unaltered by default -->
 <xsl:template match="/|@*|node()">
@@ -67,5 +73,24 @@
 
 <!-- Drop "original" attribute -->
 <xsl:template match="@original"/>
+
+
+<!-- ACLs -->
+
+<!--
+ "Drop" ACL permissions that refer to a nonexistent element ID.
+
+ Rather than truly dropping the permission, we replace its reference attribute
+ with an xpath attribute whose value ("/*[false()]") doesn't match anything.
+ This avoids dependency chains in which one ACL permission refers to the ID of
+ another ACL permission that is also removed at this stage.
+ -->
+<xsl:template match="acl_permission
+                     [@reference and not(key('element_id', @reference))]
+                     /@reference">
+    <xsl:attribute name="xpath">
+        <xsl:value-of select="'/*[false()]'"/>
+    </xsl:attribute>
+</xsl:template>
 
 </xsl:stylesheet>

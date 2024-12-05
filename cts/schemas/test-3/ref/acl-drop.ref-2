@@ -1,0 +1,63 @@
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-4.0" epoch="8" num_updates="0" admin_epoch="0" original="1">
+  <configuration original="1">
+    <!-- The essential elements of this test are:
+         * There is a remove-after-stop property that will be dropped.
+         * There is a location constraint that will be replaced by two new
+           location constraints, such that the original constraint ID no longer
+           exists.
+         * There is a nagios resource that will be dropped, and it contains a
+           meta_attributes block.
+         * There is an OCF resource that will be kept.
+         * There are ACL permissions that refer directly to the
+           remove-after-stop element and original location constraint mentioned
+           listed above.
+         * There is an ACL permissions that refers directly to the
+           meta_attributes block nested within the nagios resource.
+         * There is an ACL permission that refers directly to the OCF resource.
+         * There is an ACL permission that refers directly to the ACL permission
+           for the remove-after-stop property.
+
+         In this situation:
+         * The ACL permissions that refer to the dropped remove-after-stop
+           element and the meta_attributes block within the dropped nagios
+           resource should have their reference attributes replaced with
+           "xpath='/*[false()]'", which doesn't match anything.
+         * The ACL permission that refers to the location constraint should have
+           its reference attribute replaced with an xpath attribute that matches
+           the IDs of the replacement constraints.
+         * The other ACL permissions should remain unchanged.
+      -->
+    <crm_config original="1">
+      <cluster_property_set id="cib-bootstrap-options" original="1"/>
+    </crm_config>
+    <nodes original="1"/>
+    <resources original="1">
+      <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+      <primitive id="rsc2" class="nagios" type="fake" original="1">
+        <meta_attributes id="rsc2-meta_attributes" original="1"/>
+      </primitive>
+    </resources>
+    <constraints original="1">
+      <rsc_location id="pcmk__3_10_upgrade-rsc1-loc-1" rsc="rsc1" original="0">
+        <rule id="rsc1-loc-rule-1" score="INFINITY" original="1">
+          <date_expression id="rsc1-loc-rule-1-expr" operation="gt" start="2021-01-01" original="1"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="pcmk__3_10_upgrade-rsc1-loc-2" rsc="rsc1" original="0">
+        <rule id="rsc1-loc-rule-2" score="INFINITY" original="1">
+          <date_expression id="rsc1-loc-rule-2-expr" operation="gt" start="2022-01-01" original="1"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+    <acls original="1">
+      <acl_role id="role1" original="1">
+        <acl_permission id="role1-deny-property-drop" kind="deny" reference="cib-bootstrap-options-remove-after-stop" original="1"/>
+        <acl_permission id="role1-deny-rsc1-loc-drop" kind="deny" xpath="//*[@id = 'pcmk__3_10_upgrade-rsc1-loc-1' or @id = 'pcmk__3_10_upgrade-rsc1-loc-2']" original="1"/>
+        <acl_permission id="role1-deny-rsc2-meta_attributes-drop" kind="deny" reference="rsc2-meta_attributes" original="1"/>
+        <acl_permission id="role1-deny-rsc1-keep" kind="deny" reference="rsc1" original="1"/>
+        <acl_permission id="role1-deny-role1-deny-property-drop-keep" kind="deny" reference="role1-deny-property-drop" original="1"/>
+      </acl_role>
+    </acls>
+  </configuration>
+  <status original="1"/>
+</cib>
