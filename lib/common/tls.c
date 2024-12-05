@@ -217,10 +217,17 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
         }
     } else if (cred_type == GNUTLS_CRD_CERTIFICATE) {
         /* Grab these environment variables before doing anything else. */
-        (*tls)->ca_file = pcmk__env_option(PCMK__ENV_CA_FILE);
-        (*tls)->cert_file = pcmk__env_option(PCMK__ENV_CERT_FILE);
-        (*tls)->crl_file = pcmk__env_option(PCMK__ENV_CRL_FILE);
-        (*tls)->key_file = pcmk__env_option(PCMK__ENV_KEY_FILE);
+        if (server) {
+            (*tls)->ca_file = pcmk__env_option(PCMK__ENV_CA_FILE);
+            (*tls)->cert_file = pcmk__env_option(PCMK__ENV_CERT_FILE);
+            (*tls)->crl_file = pcmk__env_option(PCMK__ENV_CRL_FILE);
+            (*tls)->key_file = pcmk__env_option(PCMK__ENV_KEY_FILE);
+        } else {
+            (*tls)->ca_file = getenv("CIB_ca_file");
+            (*tls)->cert_file = getenv("CIB_cert_file");
+            (*tls)->crl_file = getenv("CIB_crl_file");
+            (*tls)->key_file = getenv("CIB_key_file");
+        }
 
         gnutls_certificate_allocate_credentials(&(*tls)->credentials.cert);
 
