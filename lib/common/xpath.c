@@ -80,21 +80,21 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
         xpathObj->nodesetval->nodeTab[index] = NULL;
     }
 
-    if (match->type == XML_DOCUMENT_NODE) {
-        /* Will happen if section = '/' */
-        match = match->children;
+    switch (match->type) {
+        case XML_ELEMENT_NODE:
+            return match;
 
-    } else if (match->type != XML_ELEMENT_NODE
-               && match->parent && match->parent->type == XML_ELEMENT_NODE) {
-        /* Return the parent instead */
-        match = match->parent;
+        case XML_DOCUMENT_NODE: // Searched for '/'
+            return match->children;
 
-    } else if (match->type != XML_ELEMENT_NODE) {
-        /* We only support searching nodes */
-        crm_err("We only support %d not %d", XML_ELEMENT_NODE, match->type);
-        match = NULL;
+        default:
+           if ((match->parent != NULL)
+               && (match->parent->type == XML_ELEMENT_NODE)) {
+                return match->parent;
+           }
+           crm_warn("Unsupported XPath match type %d (bug?)", match->type);
+           return NULL;
     }
-    return match;
 }
 
 void
