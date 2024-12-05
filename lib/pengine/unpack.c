@@ -333,10 +333,12 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     switch (scheduler->no_quorum_policy) {
         case pcmk_no_quorum_freeze:
-            crm_debug("On loss of quorum: Freeze resources");
+            crm_debug("On loss of quorum: "
+                      "Freeze resources that require quorum");
             break;
         case pcmk_no_quorum_stop:
-            crm_debug("On loss of quorum: Stop ALL resources");
+            crm_debug("On loss of quorum: "
+                      "Stop resources that require quorum");
             break;
         case pcmk_no_quorum_demote:
             crm_debug("On loss of quorum: "
