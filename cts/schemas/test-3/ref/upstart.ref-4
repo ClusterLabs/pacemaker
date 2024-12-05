@@ -31,77 +31,112 @@
     <crm_config original="1"/>
     <nodes original="1"/>
     <resources original="1">
+      <dropped/>
       <template id="template_keep" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+      <dropped/>
       <primitive id="primitive2_keep" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+      <dropped/>
       <primitive id="primitive4_keep" template="template_keep" original="1"/>
+      <dropped/>
       <group id="grp2_keep" original="1">
+        <dropped/>
         <primitive id="grp2_rsc2_keep" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+        <dropped/>
         <primitive id="grp2_rsc4_keep" template="template_keep" original="1"/>
       </group>
+      <dropped/>
       <clone id="clone2_keep" original="1">
         <primitive id="clone2_rsc_keep" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
       </clone>
+      <dropped/>
       <clone id="clone4_keep" original="1">
         <group id="clone4_grp_keep" original="1">
+          <dropped/>
           <primitive id="clone4_grp_rsc2_keep" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+          <dropped/>
           <primitive id="clone4_grp_rsc4_keep" template="template_keep" original="1"/>
         </group>
       </clone>
       <bundle id="bundle_keep" original="1">
         <podman image="image" original="1"/>
+        <dropped/>
       </bundle>
     </resources>
     <constraints original="1">
+      <dropped/>
       <rsc_location id="location2_keep" rsc="primitive2_keep" node="node1" score="INFINITY" original="1"/>
+      <dropped/>
       <rsc_location id="location4_keep" node="node1" score="INFINITY" original="1">
         <resource_set id="location4_keep-set" original="1">
           <resource_ref id="clone2_keep" original="1"/>
+          <dropped/>
           <resource_ref id="clone4_keep" original="1"/>
         </resource_set>
       </rsc_location>
       <rsc_location id="location5_keep" node="node1" score="INFINITY" original="1">
+        <dropped/>
         <resource_set id="location5_keep-set_keep" original="1">
           <resource_ref id="clone2_keep" original="1"/>
+          <dropped/>
           <resource_ref id="clone4_keep" original="1"/>
         </resource_set>
       </rsc_location>
       <rsc_location id="location6_keep" rsc-pattern="primitive1_drop" node="node1" score="INFINITY" original="1"/>
+      <dropped/>
+      <dropped/>
+      <dropped/>
       <rsc_colocation id="colocation4_keep" rsc="primitive4_keep" with-rsc="primitive2_keep" original="1"/>
+      <dropped/>
       <rsc_colocation id="colocation6_keep" original="1">
         <resource_set id="colocation6_keep-set" original="1">
           <resource_ref id="clone2_keep" original="1"/>
+          <dropped/>
           <resource_ref id="clone4_keep" original="1"/>
         </resource_set>
       </rsc_colocation>
       <rsc_colocation id="colocation7_keep" original="1">
+        <dropped/>
         <resource_set id="colocation7_keep-set_keep" original="1">
           <resource_ref id="clone2_keep" original="1"/>
+          <dropped/>
           <resource_ref id="clone4_keep" original="1"/>
         </resource_set>
       </rsc_colocation>
+      <dropped/>
+      <dropped/>
+      <dropped/>
       <rsc_order id="order4_keep" first="primitive4_keep" then="primitive2_keep" original="1"/>
+      <dropped/>
       <rsc_order id="order6_keep" original="1">
         <resource_set id="order6_keep-set" original="1">
           <resource_ref id="clone2_keep" original="1"/>
+          <dropped/>
           <resource_ref id="clone4_keep" original="1"/>
         </resource_set>
       </rsc_order>
       <rsc_order id="order7_keep" original="1">
+        <dropped/>
         <resource_set id="order7_keep-set_keep" original="1">
           <resource_ref id="clone2_keep" original="1"/>
+          <dropped/>
           <resource_ref id="clone4_keep" original="1"/>
         </resource_set>
       </rsc_order>
+      <dropped/>
       <rsc_ticket id="ticket2_keep" rsc="primitive2_keep" ticket="ticket1" original="1"/>
+      <dropped/>
       <rsc_ticket id="ticket4_keep" ticket="ticket1" original="1">
         <resource_set id="ticket4_keep-set" original="1">
           <resource_ref id="clone2_keep" original="1"/>
+          <dropped/>
           <resource_ref id="clone4_keep" original="1"/>
         </resource_set>
       </rsc_ticket>
       <rsc_ticket id="ticket5_keep" ticket="ticket1" original="1">
+        <dropped/>
         <resource_set id="ticket5_keep-set_keep" original="1">
           <resource_ref id="clone2_keep" original="1"/>
+          <dropped/>
           <resource_ref id="clone4_keep" original="1"/>
         </resource_set>
       </rsc_ticket>

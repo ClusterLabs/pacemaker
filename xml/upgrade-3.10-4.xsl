@@ -84,6 +84,8 @@
                                                ' resources are no longer',
                                                ' supported')"/>
             </xsl:call-template>
+
+            <xsl:element name="dropped"/>
         </xsl:when>
 
         <xsl:otherwise>
@@ -106,6 +108,8 @@
                                                ' resources are no longer',
                                                ' supported')"/>
             </xsl:call-template>
+
+            <xsl:element name="dropped"/>
         </xsl:when>
 
         <xsl:otherwise>
@@ -124,6 +128,8 @@
                                                ' because it would become',
                                                ' empty')"/>
             </xsl:call-template>
+
+            <xsl:element name="dropped"/>
         </xsl:when>
 
         <xsl:otherwise>
@@ -142,6 +148,8 @@
                                                ' because it would become',
                                                ' empty')"/>
             </xsl:call-template>
+
+            <xsl:element name="dropped"/>
         </xsl:when>
 
         <xsl:otherwise>
@@ -158,6 +166,8 @@
                                        ' because rkt containers are no longer',
                                        ' supported')"/>
     </xsl:call-template>
+
+    <xsl:element name="dropped"/>
 </xsl:template>
 
 <!-- Drop restart-type resource meta-attribute -->
@@ -176,6 +186,8 @@
                                        ' Consider setting the &quot;kind&quot;',
                                        ' attribute for relevant constraints')"/>
     </xsl:call-template>
+
+    <xsl:element name="dropped"/>
 </xsl:template>
 
 <!-- Drop can_fail and role_after_failure operation meta-attributes -->
@@ -193,6 +205,8 @@
                                        ' &quot;on-fail&quot; operation',
                                        ' attribute instead')"/>
     </xsl:call-template>
+
+    <xsl:element name="dropped"/>
 </xsl:template>
 
 
@@ -203,10 +217,16 @@
               select="//resource_ref[@id = $dropped_resources/@id]"/>
 
 <xsl:template match="resource_ref">
-    <xsl:if test="count(.|$dropped_resource_refs)
-                  != count($dropped_resource_refs)">
-        <xsl:call-template name="identity"/>
-    </xsl:if>
+    <xsl:choose>
+        <xsl:when test="count(.|$dropped_resource_refs)
+                        = count($dropped_resource_refs)">
+            <xsl:element name="dropped"/>
+        </xsl:when>
+
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- Drop resource sets that would become empty -->
@@ -216,21 +236,31 @@
                        = count($dropped_resource_refs)]"/>
 
 <xsl:template match="resource_set">
-    <xsl:if test="count(.|$dropped_resource_sets)
-                  != count($dropped_resource_sets)">
-        <xsl:call-template name="identity"/>
-    </xsl:if>
+    <xsl:choose>
+        <xsl:when test="count(.|$dropped_resource_sets)
+                        = count($dropped_resource_sets)">
+            <xsl:element name="dropped"/>
+        </xsl:when>
+
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- Drop constraints that would contain no valid resource references -->
 <xsl:template match="rsc_location|rsc_ticket">
     <xsl:choose>
-        <xsl:when test="@rsc = $dropped_resources/@id"/>
+        <xsl:when test="@rsc = $dropped_resources/@id">
+            <xsl:element name="dropped"/>
+        </xsl:when>
 
         <!-- The constraint contained resource sets, and they're all dropped -->
         <xsl:when test="resource_set
                         and (count(resource_set|$dropped_resource_sets)
-                             = count($dropped_resource_sets))"/>
+                             = count($dropped_resource_sets))">
+            <xsl:element name="dropped"/>
+        </xsl:when>
 
         <xsl:otherwise>
             <xsl:call-template name="identity"/>
@@ -240,11 +270,20 @@
 
 <xsl:template match="rsc_colocation">
     <xsl:choose>
-        <xsl:when test="@rsc = $dropped_resources/@id"/>
-        <xsl:when test="@with-rsc = $dropped_resources/@id"/>
+        <xsl:when test="@rsc = $dropped_resources/@id">
+            <xsl:element name="dropped"/>
+        </xsl:when>
+
+        <xsl:when test="@with-rsc = $dropped_resources/@id">
+            <xsl:element name="dropped"/>
+        </xsl:when>
+
         <xsl:when test="resource_set
                         and (count(resource_set|$dropped_resource_sets)
-                             = count($dropped_resource_sets))"/>
+                             = count($dropped_resource_sets))">
+            <xsl:element name="dropped"/>
+        </xsl:when>
+
         <xsl:otherwise>
             <xsl:call-template name="identity"/>
         </xsl:otherwise>
@@ -253,11 +292,20 @@
 
 <xsl:template match="rsc_order">
     <xsl:choose>
-        <xsl:when test="@first = $dropped_resources/@id"/>
-        <xsl:when test="@then = $dropped_resources/@id"/>
+        <xsl:when test="@first = $dropped_resources/@id">
+            <xsl:element name="dropped"/>
+        </xsl:when>
+
+        <xsl:when test="@then = $dropped_resources/@id">
+            <xsl:element name="dropped"/>
+        </xsl:when>
+
         <xsl:when test="resource_set
                         and (count(resource_set|$dropped_resource_sets)
-                             = count($dropped_resource_sets))"/>
+                             = count($dropped_resource_sets))">
+            <xsl:element name="dropped"/>
+        </xsl:when>
+
         <xsl:otherwise>
             <xsl:call-template name="identity"/>
         </xsl:otherwise>
