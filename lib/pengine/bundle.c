@@ -735,7 +735,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         if (replica->child->priv->allowed_nodes != NULL) {
             g_hash_table_destroy(replica->child->priv->allowed_nodes);
         }
-        replica->child->priv->allowed_nodes = pcmk__strkey_table(NULL, free);
+        replica->child->priv->allowed_nodes =
+            pcmk__strkey_table(NULL, pcmk__free_node_copy);
         g_hash_table_insert(replica->child->priv->allowed_nodes,
                             (gpointer) replica->node->priv->id,
                             pe__copy_node(replica->node));
