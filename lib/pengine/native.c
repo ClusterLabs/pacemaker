@@ -12,7 +12,6 @@
 #include <stdint.h>
 
 #include <crm/common/output.h>
-#include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/complex.h>
 #include <crm/pengine/internal.h>

@@ -358,7 +358,7 @@ void pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
 void pe__register_messages(pcmk__output_t *out);
 
 void pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
-                                const pe_rule_eval_data_t *rule_data,
+                                const pcmk_rule_input_t *rule_input,
                                 GHashTable *hash, const char *always_first,
                                 pcmk_scheduler_t *scheduler);
 
