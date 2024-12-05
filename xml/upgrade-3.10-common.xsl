@@ -25,6 +25,12 @@
    of our transformation pipeline may fail to validate if IDREFs refer to
    unexpected element types.
 
+ Notes:
+ * A "dropped" element should always be inserted as a replacement when dropping
+   an element. A "changed" attribute should always be set to 1 when changing any
+   of an element's attributes. These are used at the end of the transformation
+   pipeline to output a conditional warning, and they are then stripped.
+
  @TODO Try to clean up IDREFs to unexpected element types when the referenced
  elements are removed.
  -->

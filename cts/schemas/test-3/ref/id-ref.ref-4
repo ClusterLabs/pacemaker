@@ -56,6 +56,7 @@
       <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy" original="1">
         <meta_attributes id="rsc1-meta_attributes" original="1">
           <nvpair id="rsc1-meta_attributes-option1" name="option1" value="valueX" original="1"/>
+          <dropped/>
           <nvpair id="pcmk__3_10_upgrade-cluster-properties1-option1-option3" name="option3" value="value1" original="0"/>
         </meta_attributes>
       </primitive>

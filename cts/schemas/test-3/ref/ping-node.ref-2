@@ -14,7 +14,7 @@
     <crm_config original="1"/>
     <nodes original="1">
       <node id="node1-id" uname="node1" type="member" original="1"/>
-      <node id="node2-id" uname="node2" type="member" original="1"/>
+      <node id="node2-id" uname="node2" type="member" original="1" changed="1"/>
       <node id="node3-id" uname="node3" type="remote" original="1"/>
     </nodes>
     <resources original="1"/>
