@@ -447,14 +447,15 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
         *from = msg->sender.uname;
     }
 
+    if (!check_message_sanity(msg)) {
+        return NULL;
+    }
+
     if (msg->is_compressed && (msg->size > 0)) {
         int rc = BZ_OK;
         char *uncompressed = NULL;
         unsigned int new_size = msg->size + 1;
 
-        if (!check_message_sanity(msg)) {
-            goto badmsg;
-        }
 
         crm_trace("Decompressing message data");
         uncompressed = pcmk__assert_alloc(1, new_size);
@@ -473,9 +474,6 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
         pcmk__assert(new_size == msg->size);
 
         data = uncompressed;
-
-    } else if (!check_message_sanity(msg)) {
-        goto badmsg;
 
     } else {
         data = strdup(msg->data);
