@@ -49,6 +49,12 @@ static int cs_message_timer = 0;
 struct pcmk__cpg_host_s {
     uint32_t id;
     uint32_t pid;
+
+    /* This is unused but is needed to keep the struct size the same for
+     * backward compatibility in rolling upgrades
+     */
+    gboolean local;
+
     enum pcmk_ipc_server type;  // For logging only
     uint32_t size;
     char uname[MAX_NAME];
