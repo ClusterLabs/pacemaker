@@ -463,16 +463,15 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
                                         msg->compressed_size, 1, 0);
 
         rc = pcmk__bzlib2rc(rc);
-
+        if ((rc == pcmk_rc_ok) && (msg->size != new_size)) { // libbz2 bug?
+            rc = pcmk_rc_compression;
+        }
         if (rc != pcmk_rc_ok) {
             crm_err("Decompression failed: %s " QB_XS " rc=%d",
                     pcmk_rc_str(rc), rc);
             free(uncompressed);
             goto badmsg;
         }
-
-        pcmk__assert(new_size == msg->size);
-
         data = uncompressed;
 
     } else {
