@@ -393,6 +393,10 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
     char *data = NULL;
     pcmk__cpg_msg_t *msg = content;
 
+    if (from != NULL) {
+        *from = NULL;
+    }
+
     if (handle != 0) {
         // Do filtering and field massaging
         uint32_t local_nodeid = pcmk__cpg_local_nodeid(handle);
