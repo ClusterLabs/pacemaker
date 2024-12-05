@@ -13,6 +13,7 @@
 #include <unistd.h>             // pid_t, getpid()
 #include <stdbool.h>            // bool
 #include <stdint.h>             // uint8_t, uint64_t
+#include <inttypes.h>           // PRIu64
 
 #include <glib.h>               // guint, GList, GHashTable
 #include <libxml/tree.h>        // xmlNode
@@ -145,12 +146,10 @@ pcmk__set_flags_as(const char *function, int line, uint8_t log_level,
 
     if (result != flag_group) {
         do_crm_log_unlikely(log_level,
-                            "%s flags %#.8llx (%s) for %s set by %s:%d",
-                            ((flag_type == NULL)? "Group of" : flag_type),
-                            (unsigned long long) flags,
-                            ((flags_str == NULL)? "flags" : flags_str),
-                            ((target == NULL)? "target" : target),
-                            function, line);
+                            "%s flags %#.8" PRIx64 " (%s) for %s set by %s:%d",
+                            pcmk__s(flag_type, "Group of"), flags,
+                            pcmk__s(flags_str, "flags"),
+                            pcmk__s(target, "target"), function, line);
     }
     return result;
 }
@@ -179,12 +178,11 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
     if (result != flag_group) {
         do_crm_log_unlikely(log_level,
-                            "%s flags %#.8llx (%s) for %s cleared by %s:%d",
-                            ((flag_type == NULL)? "Group of" : flag_type),
-                            (unsigned long long) flags,
-                            ((flags_str == NULL)? "flags" : flags_str),
-                            ((target == NULL)? "target" : target),
-                            function, line);
+                            "%s flags %#.8" PRIx64
+                            " (%s) for %s cleared by %s:%d",
+                            pcmk__s(flag_type, "Group of"), flags,
+                            pcmk__s(flags_str, "flags"),
+                            pcmk__s(target, "target"), function, line);
     }
     return result;
 }
