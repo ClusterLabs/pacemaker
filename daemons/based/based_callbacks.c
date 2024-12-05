@@ -861,9 +861,8 @@ cib_process_request(xmlNode *request, gboolean privileged,
 
     if (cib_status != pcmk_ok) {
         rc = cib_status;
-        crm_err("Operation ignored, cluster configuration is invalid."
-                " Please repair and restart: %s", pcmk_strerror(cib_status));
-
+        crm_err("Ignoring request because cluster configuration is invalid "
+                "(please repair and restart): %s", pcmk_strerror(rc));
         op_reply = create_cib_reply(op, call_id, client_id, call_options, rc,
                                     the_cib);
 
