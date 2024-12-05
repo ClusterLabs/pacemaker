@@ -17,11 +17,15 @@
          * There is an ACL permission that refers directly to the ACL permission
            for the remove-after-stop property.
 
-         In this situation, the ACL permissions that refer to the dropped
-         remove-after-stop element, the dropped location constraint, and the
-         meta_attributes block within the nagios resource should have their
-         reference attributes replaced with "xpath='/*[false()]'", which doesn't
-         match anything. The other ACL permissions should remain unchanged.
+         In this situation:
+         * The ACL permissions that refer to the dropped remove-after-stop
+           element and the meta_attributes block within the dropped nagios
+           resource should have their reference attributes replaced with
+           "xpath='/*[false()]'", which doesn't match anything.
+         * The ACL permission that refers to the location constraint should have
+           its reference attribute replaced with an xpath attribute that matches
+           the IDs of the replacement constraints.
+         * The other ACL permissions should remain unchanged.
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -45,7 +49,7 @@
     <acls>
       <acl_role id="role1">
         <acl_permission id="role1-deny-property-drop" kind="deny" xpath="/*[false()]"/>
-        <acl_permission id="role1-deny-rsc1-loc-drop" kind="deny" xpath="/*[false()]"/>
+        <acl_permission id="role1-deny-rsc1-loc-drop" kind="deny" xpath="//*[@id = 'pcmk__3_10_upgrade-rsc1-loc-1' or @id = 'pcmk__3_10_upgrade-rsc1-loc-2']"/>
         <acl_permission id="role1-deny-rsc2-meta_attributes-drop" kind="deny" xpath="/*[false()]"/>
         <acl_permission id="role1-deny-rsc1-keep" kind="deny" reference="rsc1"/>
         <acl_permission id="role1-deny-role1-deny-property-drop-keep" kind="deny" reference="role1-deny-property-drop"/>

@@ -32,6 +32,9 @@
 
 <xsl:import href="upgrade-3.10-common.xsl"/>
 
+<!-- Index all location constraints by ID -->
+<xsl:key name="location_id" match="//rsc_location" use="@id"/>
+
 <!--
  Copy everything unaltered by default, except optionally set "original"
 
@@ -265,6 +268,55 @@
             </xsl:choose>
         </xsl:element>
     </xsl:for-each>
+</xsl:template>
+
+
+<!-- ACLs -->
+
+<!--
+ If an ACL permission refers to a location constraint with multiple top-level
+ rules, replace the reference attribute with an xpath attribute. The xpath
+ attribute should match the IDs of all the new location constraints that replace
+ the original one.
+
+ Mirror the logic from the "rsc_location[count(rule) > 1]" template.
+-->
+<xsl:template match="acl_permission/@reference">
+    <xsl:variable name="location" select="key('location_id', .)"/>
+
+    <xsl:choose>
+        <xsl:when test="$location and $location[count(rule) > 1]">
+            <!--
+             This ACL refers to a constraint that is replaced by multiple new
+             ones. Update accordingly.
+             -->
+
+            <!-- Use variable as a hack to avoid parsing difficulties -->
+            <xsl:variable name="apos">'</xsl:variable>
+
+            <xsl:attribute name="xpath">
+                <xsl:value-of select="'//*['"/>
+
+                <xsl:for-each select="$location/rule">
+                    <xsl:variable name="cons_id"
+                                  select="concat($upgrade_prefix, ../@id, '-',
+                                                 position())"/>
+
+                    <xsl:if test="position() > 1">
+                        <xsl:value-of select="' or '"/>
+                    </xsl:if>
+                    <xsl:value-of select="concat('@id = ', $apos, $cons_id,
+                                                 $apos)"/>
+                </xsl:for-each>
+
+                <xsl:value-of select="']'"/>
+            </xsl:attribute>
+        </xsl:when>
+
+        <xsl:otherwise>
+            <xsl:call-template name="identity"/>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 </xsl:stylesheet>
