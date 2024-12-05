@@ -31,7 +31,6 @@
                 "to events"
 
 _Noreturn void crmd_init(void);
-extern void init_dotfile(void);
 
 controld_globals_t controld_globals = {
     // Automatic initialization to 0, false, or NULL is fine for most members
@@ -196,7 +195,6 @@ crmd_init(void)
     crm_exit_t exit_code = CRM_EX_OK;
     enum crmd_fsa_state state;
 
-    init_dotfile();
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
 
     pcmk__cluster_init_node_caches();
