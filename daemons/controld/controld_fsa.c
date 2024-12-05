@@ -28,60 +28,12 @@
 //! Triggers an FSA invocation
 static crm_trigger_t *fsa_trigger = NULL;
 
-#define DOT_PREFIX "actions:trace: "
-#define do_dot_log(fmt, args...)     crm_trace( fmt, ##args)
-
 static void do_state_transition(enum crmd_fsa_state cur_state,
                                 enum crmd_fsa_state next_state,
                                 fsa_data_t *msg_data);
 
 void s_crmd_fsa_actions(fsa_data_t * fsa_data);
 void log_fsa_input(fsa_data_t * stored_msg);
-void init_dotfile(void);
-
-void
-init_dotfile(void)
-{
-    do_dot_log(DOT_PREFIX "digraph \"g\" {");
-    do_dot_log(DOT_PREFIX "	size = \"30,30\"");
-    do_dot_log(DOT_PREFIX "	graph [");
-    do_dot_log(DOT_PREFIX "		fontsize = \"12\"");
-    do_dot_log(DOT_PREFIX "		fontname = \"Times-Roman\"");
-    do_dot_log(DOT_PREFIX "		fontcolor = \"black\"");
-    do_dot_log(DOT_PREFIX "		bb = \"0,0,398.922306,478.927856\"");
-    do_dot_log(DOT_PREFIX "		color = \"black\"");
-    do_dot_log(DOT_PREFIX "	]");
-    do_dot_log(DOT_PREFIX "	node [");
-    do_dot_log(DOT_PREFIX "		fontsize = \"12\"");
-    do_dot_log(DOT_PREFIX "		fontname = \"Times-Roman\"");
-    do_dot_log(DOT_PREFIX "		fontcolor = \"black\"");
-    do_dot_log(DOT_PREFIX "		shape = \"ellipse\"");
-    do_dot_log(DOT_PREFIX "		color = \"black\"");
-    do_dot_log(DOT_PREFIX "	]");
-    do_dot_log(DOT_PREFIX "	edge [");
-    do_dot_log(DOT_PREFIX "		fontsize = \"12\"");
-    do_dot_log(DOT_PREFIX "		fontname = \"Times-Roman\"");
-    do_dot_log(DOT_PREFIX "		fontcolor = \"black\"");
-    do_dot_log(DOT_PREFIX "		color = \"black\"");
-    do_dot_log(DOT_PREFIX "	]");
-    do_dot_log(DOT_PREFIX "// special nodes");
-    do_dot_log(DOT_PREFIX "	\"S_PENDING\" ");
-    do_dot_log(DOT_PREFIX "	[");
-    do_dot_log(DOT_PREFIX "	 color = \"blue\"");
-    do_dot_log(DOT_PREFIX "	 fontcolor = \"blue\"");
-    do_dot_log(DOT_PREFIX "	 ]");
-    do_dot_log(DOT_PREFIX "	\"S_TERMINATE\" ");
-    do_dot_log(DOT_PREFIX "	[");
-    do_dot_log(DOT_PREFIX "	 color = \"red\"");
-    do_dot_log(DOT_PREFIX "	 fontcolor = \"red\"");
-    do_dot_log(DOT_PREFIX "	 ]");
-    do_dot_log(DOT_PREFIX "// DC only nodes");
-    do_dot_log(DOT_PREFIX "	\"S_INTEGRATION\" [ fontcolor = \"green\" ]");
-    do_dot_log(DOT_PREFIX "	\"S_POLICY_ENGINE\" [ fontcolor = \"green\" ]");
-    do_dot_log(DOT_PREFIX "	\"S_TRANSITION_ENGINE\" [ fontcolor = \"green\" ]");
-    do_dot_log(DOT_PREFIX "	\"S_RELEASE_DC\" [ fontcolor = \"green\" ]");
-    do_dot_log(DOT_PREFIX "	\"S_IDLE\" [ fontcolor = \"green\" ]");
-}
 
 static void
 do_fsa_action(fsa_data_t * fsa_data, long long an_action,
@@ -91,7 +43,6 @@ do_fsa_action(fsa_data_t * fsa_data, long long an_action,
                                 enum crmd_fsa_input cur_input, fsa_data_t * msg_data))
 {
     controld_clear_fsa_action_flags(an_action);
-    crm_trace(DOT_PREFIX "\t// %s", fsa_action2string(an_action));
     function(an_action, fsa_data->fsa_cause, controld_globals.fsa_state,
              fsa_data->fsa_input, fsa_data);
 }
@@ -263,12 +214,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
          */
         if (last_state != globals->fsa_state) {
             do_state_transition(last_state, globals->fsa_state, fsa_data);
-        } else {
-            do_dot_log(DOT_PREFIX "\t// FSA input: State=%s \tCause=%s"
-                       " \tInput=%s \tOrigin=%s() \tid=%d",
-                       fsa_state2string(globals->fsa_state),
-                       fsa_cause2string(fsa_data->fsa_cause),
-                       fsa_input2string(fsa_data->fsa_input), fsa_data->origin, fsa_data->id);
         }
 
         /* start doing things... */
@@ -592,9 +537,6 @@ do_state_transition(enum crmd_fsa_state cur_state,
     const char *input = fsa_input2string(current_input);
 
     CRM_LOG_ASSERT(cur_state != next_state);
-
-    do_dot_log(DOT_PREFIX "\t%s -> %s [ label=%s cause=%s origin=%s ]",
-               state_from, state_to, input, fsa_cause2string(cause), msg_data->origin);
 
     if (cur_state == S_IDLE || next_state == S_IDLE) {
         level = LOG_NOTICE;
