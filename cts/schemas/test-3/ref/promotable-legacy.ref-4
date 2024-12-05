@@ -18,7 +18,7 @@
     <crm_config original="1"/>
     <nodes original="1"/>
     <resources original="1">
-      <clone id="rsc1-master" original="1">
+      <clone id="rsc1-master" original="1" changed="1">
         <meta_attributes id="pcmk__3_10_upgrade-promotable-legacy-rsc1-master-meta_attributes" score="INFINITY">
           <nvpair id="pcmk__3_10_upgrade-promotable-legacy-rsc1-master-meta_attributes-promotable" name="promotable" value="true"/>
         </meta_attributes>
@@ -33,7 +33,7 @@
           <nvpair id="rsc1-master-meta_attributes-some-attr" name="some-attr" value="some_value" original="1"/>
         </meta_attributes>
       </clone>
-      <clone id="grp1-master" original="1">
+      <clone id="grp1-master" original="1" changed="1">
         <meta_attributes id="pcmk__3_10_upgrade-promotable-legacy-grp1-master-meta_attributes" score="INFINITY">
           <nvpair id="pcmk__3_10_upgrade-promotable-legacy-grp1-master-meta_attributes-promotable" name="promotable" value="true"/>
         </meta_attributes>

@@ -28,11 +28,14 @@
          * The other ACL permissions should remain unchanged.
       -->
     <crm_config original="1">
-      <cluster_property_set id="cib-bootstrap-options" original="1"/>
+      <cluster_property_set id="cib-bootstrap-options" original="1">
+        <dropped/>
+      </cluster_property_set>
     </crm_config>
     <nodes original="1"/>
     <resources original="1">
       <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy" original="1"/>
+      <dropped/>
     </resources>
     <constraints original="1">
       <rsc_location id="pcmk__3_10_upgrade-rsc1-loc-1" rsc="rsc1" original="0">
@@ -49,7 +52,7 @@
     <acls original="1">
       <acl_role id="role1" original="1">
         <acl_permission id="role1-deny-property-drop" kind="deny" reference="cib-bootstrap-options-remove-after-stop" original="1"/>
-        <acl_permission id="role1-deny-rsc1-loc-drop" kind="deny" xpath="//*[@id = 'pcmk__3_10_upgrade-rsc1-loc-1' or @id = 'pcmk__3_10_upgrade-rsc1-loc-2']" original="1"/>
+        <acl_permission id="role1-deny-rsc1-loc-drop" kind="deny" xpath="//*[@id = 'pcmk__3_10_upgrade-rsc1-loc-1' or @id = 'pcmk__3_10_upgrade-rsc1-loc-2']" changed="1" original="1"/>
         <acl_permission id="role1-deny-rsc2-meta_attributes-drop" kind="deny" reference="rsc2-meta_attributes" original="1"/>
         <acl_permission id="role1-deny-rsc1-keep" kind="deny" reference="rsc1" original="1"/>
         <acl_permission id="role1-deny-role1-deny-property-drop-keep" kind="deny" reference="role1-deny-property-drop" original="1"/>

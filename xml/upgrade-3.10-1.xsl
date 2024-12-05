@@ -126,7 +126,9 @@
 <!-- Name/value pairs -->
 
 <!-- Drop any nvpair that does not have a value attribute -->
-<xsl:template match="nvpair[not(@value)]"/>
+<xsl:template match="nvpair[not(@value)]">
+    <xsl:element name="dropped"/>
+</xsl:template>
 
 
 <!-- Rules -->
@@ -140,6 +142,8 @@
                                        ' because moon phase is no longer',
                                        ' supported')"/>
     </xsl:call-template>
+
+    <xsl:attribute name="changed">1</xsl:attribute>
 </xsl:template>
 
 
@@ -149,18 +153,21 @@
 <xsl:template match="cluster_property_set
                      /nvpair[@name = 'crmd-finalization-timeout']/@name">
     <xsl:attribute name="name">join-finalization-timeout</xsl:attribute>
+    <xsl:attribute name="changed">1</xsl:attribute>
 </xsl:template>
 
 <!-- Rename crmd-integration-timeout property to join-integration-timeout -->
 <xsl:template match="cluster_property_set
                      /nvpair[@name = 'crmd-integration-timeout']/@name">
     <xsl:attribute name="name">join-integration-timeout</xsl:attribute>
+    <xsl:attribute name="changed">1</xsl:attribute>
 </xsl:template>
 
 <!-- Rename crmd-transition-delay property to transition-delay -->
 <xsl:template match="cluster_property_set
                      /nvpair[@name = 'crmd-transition-delay']/@name">
     <xsl:attribute name="name">transition-delay</xsl:attribute>
+    <xsl:attribute name="changed">1</xsl:attribute>
 </xsl:template>
 
 <!-- Drop remove-after-stop property -->
@@ -171,18 +178,23 @@
                                        ' because the remove-after-stop',
                                        ' property is unsupported')"/>
     </xsl:call-template>
+
+    <xsl:element name="dropped"/>
 </xsl:template>
 
 <!-- Replace stonith-action="poweroff" with stonith-action="off" -->
 <xsl:template match="cluster_property_set/nvpair[@name = 'stonith-action']
                      /@value[. = 'poweroff']">
     <xsl:attribute name="value">off</xsl:attribute>
+    <xsl:attribute name="changed">1</xsl:attribute>
 </xsl:template>
 
 
 <!-- Fencing topology -->
 
 <!-- Drop fencing levels with index greater than 9 -->
-<xsl:template match="fencing-level[number(@index) > 9]"/>
+<xsl:template match="fencing-level[number(@index) > 9]">
+    <xsl:element name="dropped"/>
+</xsl:template>
 
 </xsl:stylesheet>

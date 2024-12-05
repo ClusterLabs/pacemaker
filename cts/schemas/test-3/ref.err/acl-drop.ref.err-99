@@ -1,0 +1,1 @@
+WARNING: CIB syntax changes may invalidate ACLs that use "xpath". It is strongly recommended to run "cibadmin --upgrade" and then examine the updated CIB carefully to ensure ACLs still match the desired intent.
