@@ -49,7 +49,7 @@
     <acls original="1">
       <acl_role id="role1" original="1">
         <acl_permission id="role1-deny-property-drop" kind="deny" reference="cib-bootstrap-options-remove-after-stop" original="1"/>
-        <acl_permission id="role1-deny-rsc1-loc-drop" kind="deny" xpath="*[@id = 'pcmk__3_10_upgrade-rsc1-loc-1' or @id = 'pcmk__3_10_upgrade-rsc1-loc-2']" original="1"/>
+        <acl_permission id="role1-deny-rsc1-loc-drop" kind="deny" xpath="//*[@id = 'pcmk__3_10_upgrade-rsc1-loc-1' or @id = 'pcmk__3_10_upgrade-rsc1-loc-2']" original="1"/>
         <acl_permission id="role1-deny-rsc2-meta_attributes-drop" kind="deny" reference="rsc2-meta_attributes" original="1"/>
         <acl_permission id="role1-deny-rsc1-keep" kind="deny" reference="rsc1" original="1"/>
         <acl_permission id="role1-deny-role1-deny-property-drop-keep" kind="deny" reference="role1-deny-property-drop" original="1"/>

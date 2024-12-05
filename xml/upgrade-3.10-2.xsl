@@ -295,7 +295,7 @@
             <xsl:variable name="apos">'</xsl:variable>
 
             <xsl:attribute name="xpath">
-                <xsl:value-of select="'*['"/>
+                <xsl:value-of select="'//*['"/>
 
                 <xsl:for-each select="$location/rule">
                     <xsl:variable name="cons_id"
