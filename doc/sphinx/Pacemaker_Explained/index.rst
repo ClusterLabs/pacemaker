@@ -25,12 +25,12 @@ Table of Contents
    operations
    constraints
    fencing
-   alerts
-   rules
    collective
-   reusing-configuration
    utilization
+   rules
    acls
+   alerts
+   reusing-configuration
    status
    multi-site-clusters
    ap-samples

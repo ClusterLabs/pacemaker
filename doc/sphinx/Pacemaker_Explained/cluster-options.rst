@@ -518,6 +518,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        further protection (which can mean *data loss* if the unresponsive node
        still accesses shared storage, for example). See also the
        :ref:`requires <requires>` resource meta-attribute.
+
+       This option applies only to fencing scheduled by the cluster, not to
+       requests initiated externally (such as with the ``stonith_admin``
+       command-line tool).
    * - .. _stonith_action:
       
        .. index::
@@ -813,10 +817,19 @@ values, by running the ``man pacemaker-schedulerd`` and
      - Pacemaker is primarily event-driven, and looks ahead to know when to
        recheck the cluster for failure-timeout settings and most time-based
        rules *(since 2.0.3)*. However, it will also recheck the cluster after
-       this amount of inactivity. This has two goals: rules with ``date_spec``
-       are only guaranteed to be checked this often, and it also serves as a
-       fail-safe for some kinds of scheduler bugs. A value of 0 disables this
-       polling.
+       this amount of inactivity. This has three main effects:
+       
+       * :ref:`Rules <rules>` using ``date_spec`` are guaranteed to be checked
+         only this often.
+       * If :ref:`fencing <fencing>` fails enough to reach
+         :ref:`stonith-max-attempts <stonith_max_attempts>`, attempts will
+         begin again after at most this time.
+       * It serves as a fail-safe in case of certain scheduler bugs. If the
+         scheduler incorrectly determines only some of the actions needed to
+         react to a particular event, it will often correctly determine the
+         rest after at most this time.
+       
+       A value of 0 disables this polling.
    * - .. _shutdown_lock:
       
        .. index::

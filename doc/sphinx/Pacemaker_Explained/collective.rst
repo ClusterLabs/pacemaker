@@ -33,7 +33,7 @@ of groups.
              <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
           </instance_attributes>
          </primitive>
-         <primitive id="Email" class="lsb" type="exim"/>
+         <primitive id="Email" class="systemd" type="exim"/>
       </group> 
    
 Although the example above contains only two resources, there is no
@@ -65,7 +65,7 @@ The group above is logically equivalent to writing:
               <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
            </instance_attributes>
           </primitive>
-          <primitive id="Email" class="lsb" type="exim"/>
+          <primitive id="Email" class="systemd" type="exim"/>
          </resources>
          <constraints>
             <rsc_colocation id="xxx" rsc="Email" with-rsc="Public-IP" score="INFINITY"/>
@@ -103,9 +103,7 @@ ________________
    |             |    single: attribute; description (group)                        |
    |             |    single: description; group attribute                          |   
    |             |                                                                  |
-   |             | An optional description of the group, for the user's own         |
-   |             | purposes.                                                        |
-   |             | E.g. ``resources needed for website``                            |
+   |             | Arbitrary text for user's use (ignored by Pacemaker)             |
    +-------------+------------------------------------------------------------------+
 
 Group Options
@@ -231,9 +229,7 @@ ________________
    |             |    single: attribute; description (clone)                        |
    |             |    single: description; clone attribute                          |   
    |             |                                                                  |
-   |             | An optional description of the clone, for the user's own         |
-   |             | purposes.                                                        |
-   |             | E.g. ``IP address for website``                                  |
+   |             | Arbitrary text for user's use (ignored by Pacemaker)             |
    +-------------+------------------------------------------------------------------+
 
 .. index::
@@ -378,7 +374,7 @@ Clones must contain exactly one primitive or group resource.
    .. code-block:: xml
 
       <clone id="apache-clone">
-          <primitive id="apache" class="lsb" type="apache">
+          <primitive id="apache" class="systemd" type="httpd">
               <operations>
                  <op id="apache-monitor" name="monitor" interval="30"/>
               </operations>
@@ -715,9 +711,7 @@ _________________
    |             |    single: attribute; description (bundle)                       |
    |             |    single: description; bundle attribute                         |
    |             |                                                                  |
-   |             | An optional description of the group, for the user's own         |
-   |             | purposes.                                                        |
-   |             | E.g. ``manages the container that runs the service``             |
+   |             | Arbitrary text for user's use (ignored by Pacemaker)             |
    +-------------+------------------------------------------------------------------+
 
 

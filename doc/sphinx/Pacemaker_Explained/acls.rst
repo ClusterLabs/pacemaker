@@ -36,6 +36,12 @@ In order to use ACLs:
   supports ACLs only if the output of the command ``pacemakerd --features``
   contains ``acls``. In newer versions, ACLs are always enabled.
    
+.. important::
+
+   ``enable-acl`` should be set either by the root user, or as part of a batch
+   of CIB changes including roles and users. Otherwise, the user setting it
+   might lock themselves out from making any further changes.
+
 
 .. index::
    single: Access Control List (ACL); acls
@@ -78,7 +84,7 @@ element in the CIB ``acls`` section.
    |                  |    single: description; acl_role attribute                |
    |                  |    single: attribute; description (acl_role)              |
    |                  |                                                           |
-   |                  | Arbitrary text (not used by Pacemaker)                    |
+   |                  | Arbitrary text for user's use (ignored by Pacemaker)      |
    +------------------+-----------------------------------------------------------+
 
 An ``acl_role`` element may contain any number of ``acl_permission`` elements.
@@ -105,7 +111,7 @@ An ``acl_role`` element may contain any number of ``acl_permission`` elements.
    |                  |    single: description; acl_permission attribute          |
    |                  |    single: attribute; description (acl_permission)        |
    |                  |                                                           |
-   |                  | Arbitrary text (not used by Pacemaker)                    |
+   |                  | Arbitrary text for user's use (ignored by Pacemaker)      |
    +------------------+-----------------------------------------------------------+
    | kind             | .. index::                                                |
    |                  |    single: acl_permission; kind (attribute)               |
@@ -280,6 +286,16 @@ elements.
    is true, permission to all parts of the CIB is denied by default (permissions
    must be explicitly granted).
    
+
+ACLs and Pacemaker Remote Nodes
+###############################
+
+ACLs apply differently on Pacemaker Remote nodes, which are assumed to be
+special-purpose hosts without typical user accounts. Instead, CIB modifications
+coming from a Pacemaker Remote node use the node's name as the ACL user name,
+and ``pacemaker-remote`` as the role.
+
+
 ACL Examples
 ############
    
