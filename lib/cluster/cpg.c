@@ -443,6 +443,10 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
               msg->is_compressed ? " compressed" : "",
               msg_data_len(msg), msg->size, msg->compressed_size);
 
+    // Ensure sender is in peer cache (though it should already be)
+    pcmk__get_node(msg->sender.id, msg->sender.uname, NULL,
+                   pcmk__node_search_cluster_member);
+
     if (from != NULL) {
         *from = msg->sender.uname;
     }
@@ -477,10 +481,6 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
     } else {
         data = strdup(msg->data);
     }
-
-    // Is this necessary?
-    pcmk__get_node(msg->sender.id, msg->sender.uname, NULL,
-                   pcmk__node_search_cluster_member);
 
     crm_trace("Payload: %.200s", data);
     return data;
