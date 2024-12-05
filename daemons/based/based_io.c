@@ -270,16 +270,12 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     /* Do this before schema validation happens */
 
     /* fill in some defaults */
-    name = PCMK_XA_ADMIN_EPOCH;
-    value = crm_element_value(root, name);
-    if (value == NULL) {
-        crm_warn("No value for %s was specified in the configuration.", name);
-        crm_warn("The recommended course of action is to shutdown,"
-                 " run crm_verify and fix any errors it reports.");
-        crm_warn("We will default to zero and continue but may get"
-                 " confused about which configuration to use if"
-                 " multiple nodes are powered up at the same time.");
-        crm_xml_add_int(root, name, 0);
+    value = crm_element_value(root, PCMK_XA_ADMIN_EPOCH);
+    if (value == NULL) { // Not possible with schema validation enabled
+        crm_warn("Defaulting missing " PCMK_XA_ADMIN_EPOCH " to 0, but "
+                 "cluster may get confused about which node's configuration "
+                 "is most recent");
+        crm_xml_add_int(root, PCMK_XA_ADMIN_EPOCH, 0);
     }
 
     name = PCMK_XA_EPOCH;
@@ -313,18 +309,10 @@ uninitializeCib(void)
     xmlNode *tmp_cib = the_cib;
 
     if (tmp_cib == NULL) {
-        crm_debug("The CIB has already been deallocated.");
         return FALSE;
     }
-
     the_cib = NULL;
-
-    crm_debug("Deallocating the CIB.");
-
     pcmk__xml_free(tmp_cib);
-
-    crm_debug("The CIB has been deallocated.");
-
     return TRUE;
 }
 
