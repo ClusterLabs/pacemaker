@@ -12,6 +12,14 @@ Current cluster status:
     * Clone Set: ms3 [rsc3] (promotable):
       * Promoted: [ node2 ]
       * Unpromoted: [ node1 ]
+error: Operation rsc3-monitor-unpromoted-5 is duplicate of rsc3-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc3-monitor-unpromoted-5 is duplicate of rsc3-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc3-monitor-unpromoted-5 is duplicate of rsc3-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc3-monitor-unpromoted-5 is duplicate of rsc3-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc3-monitor-unpromoted-5 is duplicate of rsc3-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc3-monitor-unpromoted-5 is duplicate of rsc3-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc3-monitor-unpromoted-5 is duplicate of rsc3-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
+error: Operation rsc3-monitor-unpromoted-5 is duplicate of rsc3-monitor-promoted-5 (do not use same name and interval combination more than once per resource)
 
 Transition Summary:
   * Fence (reboot) node2 'rsc1 failed there'

@@ -1471,8 +1471,12 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
             goto done;
         }
 
-        pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
-                               scheduler);
+        rc = pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
+                                    scheduler);
+        if (rc != pcmk_rc_ok) {
+            /* Error printing is handled by pcmk__set_config_error_handler */
+            goto done;
+        }
 
         prev_quiet = out->is_quiet(out);
         out->quiet = true;
@@ -1491,7 +1495,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
 
         pcmk__xml_free(*cib_xml_orig);
         *cib_xml_orig = xml;
-        cluster_status(scheduler);
+        pcmk_unpack_scheduler_input(scheduler);
     }
 
   done:
@@ -2101,8 +2105,13 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         if (rc != pcmk_rc_ok) {
             break;
         }
-        pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
-                               scheduler);
+
+        rc = pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
+                                    scheduler);
+        if (rc != pcmk_rc_ok) {
+            /* Error printing is handled by pcmk__set_config_error_handler */
+            break;
+        }
 
         if (!printed_version_warning) {
             /* If the DC has a different version than the local node, the two

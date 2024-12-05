@@ -14,6 +14,7 @@ Current cluster status:
       * child_DoFencing:1	(stonith:ssh):	 Started c001n02
       * child_DoFencing:2	(stonith:ssh):	 Started c001n03
       * child_DoFencing:3	(stonith:ssh):	 Stopped
+warning: Node c001n08 is unclean but cannot be fenced
 
 Transition Summary:
   * Stop       DcIPaddr              ( c001n03 )  due to no quorum

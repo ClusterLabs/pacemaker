@@ -16,6 +16,8 @@ Current cluster status:
       * Stopped: [ pcmk-1 pcmk-3 pcmk-4 ]
     * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
     * Fencing	(stonith:fence_xvm):	 Stopped
+warning: Node pcmk-3 is unclean but cannot be fenced
+warning: Node pcmk-4 is unclean but cannot be fenced
 
 Transition Summary:
   * Fence (reboot) pcmk-2 'clvm:0 failed there'
