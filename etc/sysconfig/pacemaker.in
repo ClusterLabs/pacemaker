@@ -198,7 +198,7 @@
 # Default: PCMK_panic_action="reboot"
 
 
-## Pacemaker Remote
+## Pacemaker Remote and remote CIB administration
 
 # PCMK_authkey_location
 #
@@ -227,6 +227,39 @@
 # must be the same on all nodes.
 #
 # Default: PCMK_remote_port="3121"
+
+# PCMK_ca_file
+#
+# The location of a file containing trusted Certificate Authorities, used to
+# verify client or server certificates.  This file should be in PEM format.
+# If set, along with PCMK_key_file and PCMK_cert_file, X509 authentication
+# will be enabled for remote CIB connections.
+#
+# Default: PCMK_ca_file=""
+
+# PCMK_cert_file
+#
+# The location of a file containing the signed certificate for the server
+# (CIB manager) side of the connection, in PEM format.  If set, along with
+# PCMK_ca_file and PCMK_key_file, X509 authentication will be enabled for
+# remote CIB connections.
+#
+# Default: PCMK_cert_file=""
+
+# PCMK_crl_file
+#
+# The location of a Certificate Revocation List file, in PEM format.  This
+# setting is optional for X509 authentication.
+#
+# Default: PCMK_crl_file=""
+
+# PCMK_key_file
+#
+# The location of a file containing the private key for the matching PCMK_cert_file,
+# in PEM format.  If set, along with PCMK_ca_file and PCMK_cert_file, X509
+# authentication will be enabled for remote CIB connections.
+#
+# Default: PCMK_key_file=""
 
 # PCMK_remote_pid1 (Advanced Use Only)
 #

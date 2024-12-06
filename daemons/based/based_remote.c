@@ -31,6 +31,7 @@
 #include <crm/common/ipc_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/remote_internal.h>
+#include <crm/common/tls_internal.h>
 #include <crm/cib/internal.h>
 
 #include "pacemaker-based.h"
@@ -47,19 +48,13 @@
 #  define HAVE_PAM 1
 #endif
 
+static pcmk__tls_t *tls = NULL;
+
 extern int remote_tls_fd;
 extern gboolean cib_shutdown_flag;
 
 int init_remote_listener(int port, gboolean encrypted);
 void cib_remote_connection_destroy(gpointer user_data);
-
-gnutls_dh_params_t dh_params;
-gnutls_anon_server_credentials_t anon_cred_s;
-static void
-debug_log(int level, const char *str)
-{
-    fputs(str, stderr);
-}
 
 // @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
@@ -95,15 +90,14 @@ init_remote_listener(int port, gboolean encrypted)
     }
 
     if (encrypted) {
+        bool use_cert = pcmk__x509_enabled(true);
+
         crm_notice("Starting TLS listener on port %d", port);
-        crm_gnutls_global_init();
-        /* gnutls_global_set_log_level (10); */
-        gnutls_global_set_log_function(debug_log);
-        if (pcmk__init_tls_dh(&dh_params) != pcmk_rc_ok) {
+
+        rc = pcmk__init_tls(&tls, true, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_ANON);
+        if (rc != pcmk_rc_ok) {
             return -1;
         }
-        gnutls_anon_allocate_server_credentials(&anon_cred_s);
-        gnutls_anon_set_server_dh_params(anon_cred_s, dh_params);
     } else {
         crm_warn("Starting plain-text listener on port %d", port);
     }
@@ -302,10 +296,7 @@ cib_remote_listen(gpointer data)
         pcmk__set_client_flags(new_client, pcmk__client_tls);
 
         /* create gnutls session for the server socket */
-        new_client->remote->tls_session = pcmk__new_tls_session(csock,
-                                                                GNUTLS_SERVER,
-                                                                GNUTLS_CRD_ANON,
-                                                                anon_cred_s);
+        new_client->remote->tls_session = pcmk__new_tls_session(tls, csock);
         if (new_client->remote->tls_session == NULL) {
             close(csock);
             return TRUE;
@@ -352,15 +343,14 @@ cib_remote_connection_destroy(gpointer user_data)
             break;
         case pcmk__client_tls:
             if (client->remote->tls_session) {
-                void *sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
+                void *sock_ptr = gnutls_transport_get_ptr(client->remote->tls_session);
 
                 csock = GPOINTER_TO_INT(sock_ptr);
                 if (pcmk_is_set(client->flags,
                                 pcmk__client_tls_handshake_complete)) {
-                    gnutls_bye(*client->remote->tls_session, GNUTLS_SHUT_WR);
+                    gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_WR);
                 }
-                gnutls_deinit(*client->remote->tls_session);
-                gnutls_free(client->remote->tls_session);
+                gnutls_deinit(client->remote->tls_session);
                 client->remote->tls_session = NULL;
             }
             break;
@@ -452,6 +442,13 @@ cib_remote_msg(gpointer data)
         if (client->remote->auth_timeout) {
             g_source_remove(client->remote->auth_timeout);
         }
+
+        /* Now that the handshake is done, see if any client TLS certificate is
+         * close to its expiration date and log if so.  If a TLS certificate is not
+         * in use, this function will just return so we don't need to check for the
+         * session type here.
+         */
+        pcmk__tls_check_cert_expiration(client->remote->tls_session);
 
         // Require the client to authenticate within this time
         client->remote->auth_timeout = pcmk__create_timer(REMOTE_AUTH_TIMEOUT,

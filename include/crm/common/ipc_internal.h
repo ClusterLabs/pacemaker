@@ -114,7 +114,7 @@ struct pcmk__remote_s {
     char *token;
 
     /* TLS only */
-    gnutls_session_t *tls_session;
+    gnutls_session_t tls_session;
 };
 
 enum pcmk__client_flags {

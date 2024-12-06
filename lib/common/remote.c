@@ -32,6 +32,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/remote_internal.h>
+#include <crm/common/tls_internal.h>
 
 #include <gnutls/gnutls.h>
 
@@ -124,227 +125,9 @@ localized_remote_header(pcmk__remote_t *remote)
     return header;
 }
 
-int
-pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
-{
-    int rc = pcmk_rc_ok;
-
-    if (gnutls_rc != NULL) {
-        *gnutls_rc = GNUTLS_E_SUCCESS;
-    }
-
-    rc = gnutls_handshake(*remote->tls_session);
-
-    switch (rc) {
-        case GNUTLS_E_SUCCESS:
-            rc = pcmk_rc_ok;
-            break;
-
-        case GNUTLS_E_INTERRUPTED:
-        case GNUTLS_E_AGAIN:
-            rc = EAGAIN;
-            break;
-
-        default:
-            if (gnutls_rc != NULL) {
-                *gnutls_rc = rc;
-            }
-
-            rc = EPROTO;
-            break;
-    }
-
-    return rc;
-}
-
-int
-pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
-                           int *gnutls_rc)
-{
-    const time_t time_limit = time(NULL) + timeout_sec;
-
-    do {
-        int rc = pcmk__tls_client_try_handshake(remote, gnutls_rc);
-
-        if (rc != EAGAIN) {
-            return rc;
-        }
-    } while (time(NULL) < time_limit);
-
-    return ETIME;
-}
-
-/*!
- * \internal
- * \brief Initialize a new TLS session
- *
- * \param[in] csock       Connected socket for TLS session
- * \param[in] conn_type   GNUTLS_SERVER or GNUTLS_CLIENT
- * \param[in] cred_type   GNUTLS_CRD_ANON or GNUTLS_CRD_PSK
- * \param[in] credentials TLS session credentials
- *
- * \return Pointer to newly created session object, or NULL on error
- */
-gnutls_session_t *
-pcmk__new_tls_session(int csock, unsigned int conn_type,
-                      gnutls_credentials_type_t cred_type, void *credentials)
-{
-    int rc = GNUTLS_E_SUCCESS;
-    const char *prio_base = NULL;
-    char *prio = NULL;
-    gnutls_session_t *session = NULL;
-
-    /* Determine list of acceptable ciphers, etc. Pacemaker always adds the
-     * values required for its functionality.
-     *
-     * For an example of anonymous authentication, see:
-     * http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
-     */
-
-    prio_base = pcmk__env_option(PCMK__ENV_TLS_PRIORITIES);
-    if (prio_base == NULL) {
-        prio_base = PCMK__GNUTLS_PRIORITIES;
-    }
-    prio = crm_strdup_printf("%s:%s", prio_base,
-                             (cred_type == GNUTLS_CRD_ANON)? "+ANON-DH" : "+DHE-PSK:+PSK");
-
-    session = gnutls_malloc(sizeof(gnutls_session_t));
-    if (session == NULL) {
-        rc = GNUTLS_E_MEMORY_ERROR;
-        goto error;
-    }
-
-    rc = gnutls_init(session, conn_type);
-    if (rc != GNUTLS_E_SUCCESS) {
-        goto error;
-    }
-
-    /* @TODO On the server side, it would be more efficient to cache the
-     * priority with gnutls_priority_init2() and set it with
-     * gnutls_priority_set() for all sessions.
-     */
-    rc = gnutls_priority_set_direct(*session, prio, NULL);
-    if (rc != GNUTLS_E_SUCCESS) {
-        goto error;
-    }
-
-    gnutls_transport_set_ptr(*session,
-                             (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
-
-    rc = gnutls_credentials_set(*session, cred_type, credentials);
-    if (rc != GNUTLS_E_SUCCESS) {
-        goto error;
-    }
-    free(prio);
-    return session;
-
-error:
-    crm_err("Could not initialize %s TLS %s session: %s "
-            QB_XS " rc=%d priority='%s'",
-            (cred_type == GNUTLS_CRD_ANON)? "anonymous" : "PSK",
-            (conn_type == GNUTLS_SERVER)? "server" : "client",
-            gnutls_strerror(rc), rc, prio);
-    free(prio);
-    if (session != NULL) {
-        gnutls_free(session);
-    }
-    return NULL;
-}
-
-/*!
- * \internal
- * \brief Initialize Diffie-Hellman parameters for a TLS server
- *
- * \param[out] dh_params  Parameter object to initialize
- *
- * \return Standard Pacemaker return code
- * \todo The current best practice is to allow the client and server to
- *       negotiate the Diffie-Hellman parameters via a TLS extension (RFC 7919).
- *       However, we have to support both older versions of GnuTLS (<3.6) that
- *       don't support the extension on our side, and older Pacemaker versions
- *       that don't support the extension on the other side. The next best
- *       practice would be to use a known good prime (see RFC 5114 section 2.2),
- *       possibly stored in a file distributed with Pacemaker.
- */
-int
-pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
-{
-    int rc = GNUTLS_E_SUCCESS;
-    unsigned int dh_bits = 0;
-    int dh_max_bits = 0;
-
-    rc = gnutls_dh_params_init(dh_params);
-    if (rc != GNUTLS_E_SUCCESS) {
-        goto error;
-    }
-
-    dh_bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH,
-                                          GNUTLS_SEC_PARAM_NORMAL);
-    if (dh_bits == 0) {
-        rc = GNUTLS_E_DH_PRIME_UNACCEPTABLE;
-        goto error;
-    }
-
-    pcmk__scan_min_int(pcmk__env_option(PCMK__ENV_DH_MAX_BITS), &dh_max_bits,
-                       0);
-    if ((dh_max_bits > 0) && (dh_bits > dh_max_bits)) {
-        dh_bits = dh_max_bits;
-    }
-
-    crm_info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",
-             dh_bits);
-    rc = gnutls_dh_params_generate2(*dh_params, dh_bits);
-    if (rc != GNUTLS_E_SUCCESS) {
-        goto error;
-    }
-
-    return pcmk_rc_ok;
-
-error:
-    crm_err("Could not initialize Diffie-Hellman parameters for TLS: %s "
-            QB_XS " rc=%d", gnutls_strerror(rc), rc);
-    return EPROTO;
-}
-
-/*!
- * \internal
- * \brief Process handshake data from TLS client
- *
- * Read as much TLS handshake data as is available.
- *
- * \param[in] client  Client connection
- *
- * \return Standard Pacemaker return code (of particular interest, EAGAIN
- *         if some data was successfully read but more data is needed)
- */
-int
-pcmk__read_handshake_data(const pcmk__client_t *client)
-{
-    int rc = 0;
-
-    pcmk__assert((client != NULL) && (client->remote != NULL)
-                 && (client->remote->tls_session != NULL));
-
-    do {
-        rc = gnutls_handshake(*client->remote->tls_session);
-    } while (rc == GNUTLS_E_INTERRUPTED);
-
-    if (rc == GNUTLS_E_AGAIN) {
-        /* No more data is available at the moment. This function should be
-         * invoked again once the client sends more.
-         */
-        return EAGAIN;
-    } else if (rc != GNUTLS_E_SUCCESS) {
-        crm_err("TLS handshake with remote client failed: %s "
-                QB_XS " rc=%d", gnutls_strerror(rc), rc);
-        return EPROTO;
-    }
-    return pcmk_rc_ok;
-}
-
 // \return Standard Pacemaker return code
 static int
-send_tls(gnutls_session_t *session, struct iovec *iov)
+send_tls(gnutls_session_t session, struct iovec *iov)
 {
     const char *unsent = iov->iov_base;
     size_t unsent_len = iov->iov_len;
@@ -357,7 +140,7 @@ send_tls(gnutls_session_t *session, struct iovec *iov)
     crm_trace("Sending TLS message of %llu bytes",
               (unsigned long long) unsent_len);
     while (true) {
-        gnutls_rc = gnutls_record_send(*session, unsent, unsent_len);
+        gnutls_rc = gnutls_record_send(session, unsent, unsent_len);
 
         if (gnutls_rc == GNUTLS_E_INTERRUPTED || gnutls_rc == GNUTLS_E_AGAIN) {
             crm_trace("Retrying to send %llu bytes remaining",
@@ -581,7 +364,7 @@ static int
 get_remote_socket(const pcmk__remote_t *remote)
 {
     if (remote->tls_session) {
-        void *sock_ptr = gnutls_transport_get_ptr(*remote->tls_session);
+        void *sock_ptr = gnutls_transport_get_ptr(remote->tls_session);
 
         return GPOINTER_TO_INT(sock_ptr);
     }
@@ -679,7 +462,7 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
     }
 
     if (remote->tls_session) {
-        read_rc = gnutls_record_recv(*(remote->tls_session),
+        read_rc = gnutls_record_recv(remote->tls_session,
                                      remote->buffer + remote->buffer_offset,
                                      remote->buffer_size - remote->buffer_offset);
         if (read_rc == GNUTLS_E_INTERRUPTED) {
