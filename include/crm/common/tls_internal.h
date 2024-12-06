@@ -47,9 +47,9 @@ int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
  *
  * \return Pointer to newly created session object, or NULL on error
  */
-gnutls_session_t *pcmk__new_tls_session(int csock, unsigned int conn_type,
-                                        gnutls_credentials_type_t cred_type,
-                                        void *credentials);
+gnutls_session_t pcmk__new_tls_session(int csock, unsigned int conn_type,
+                                       gnutls_credentials_type_t cred_type,
+                                       void *credentials);
 
 /*!
  * \internal

@@ -309,15 +309,13 @@ cib_tls_close(cib_t *cib)
 
     if (private->encrypted) {
         if (private->command.tls_session) {
-            gnutls_bye(*(private->command.tls_session), GNUTLS_SHUT_RDWR);
-            gnutls_deinit(*(private->command.tls_session));
-            gnutls_free(private->command.tls_session);
+            gnutls_bye(private->command.tls_session, GNUTLS_SHUT_RDWR);
+            gnutls_deinit(private->command.tls_session);
         }
 
         if (private->callback.tls_session) {
-            gnutls_bye(*(private->callback.tls_session), GNUTLS_SHUT_RDWR);
-            gnutls_deinit(*(private->callback.tls_session));
-            gnutls_free(private->callback.tls_session);
+            gnutls_bye(private->callback.tls_session, GNUTLS_SHUT_RDWR);
+            gnutls_deinit(private->callback.tls_session);
         }
         private->command.tls_session = NULL;
         private->callback.tls_session = NULL;
@@ -405,8 +403,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             crm_err("Remote CIB session creation for %s:%d failed: %s",
                     private->server, private->port,
                     (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
-            gnutls_deinit(*connection->tls_session);
-            gnutls_free(connection->tls_session);
+            gnutls_deinit(connection->tls_session);
             connection->tls_session = NULL;
             cib_tls_close(cib);
             return -1;
