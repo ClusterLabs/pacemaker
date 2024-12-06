@@ -127,7 +127,7 @@ localized_remote_header(pcmk__remote_t *remote)
 
 // \return Standard Pacemaker return code
 static int
-send_tls(gnutls_session_t *session, struct iovec *iov)
+send_tls(gnutls_session_t session, struct iovec *iov)
 {
     const char *unsent = iov->iov_base;
     size_t unsent_len = iov->iov_len;
@@ -140,7 +140,7 @@ send_tls(gnutls_session_t *session, struct iovec *iov)
     crm_trace("Sending TLS message of %llu bytes",
               (unsigned long long) unsent_len);
     while (true) {
-        gnutls_rc = gnutls_record_send(*session, unsent, unsent_len);
+        gnutls_rc = gnutls_record_send(session, unsent, unsent_len);
 
         if (gnutls_rc == GNUTLS_E_INTERRUPTED || gnutls_rc == GNUTLS_E_AGAIN) {
             crm_trace("Retrying to send %llu bytes remaining",
@@ -364,7 +364,7 @@ static int
 get_remote_socket(const pcmk__remote_t *remote)
 {
     if (remote->tls_session) {
-        void *sock_ptr = gnutls_transport_get_ptr(*remote->tls_session);
+        void *sock_ptr = gnutls_transport_get_ptr(remote->tls_session);
 
         return GPOINTER_TO_INT(sock_ptr);
     }
@@ -462,7 +462,7 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
     }
 
     if (remote->tls_session) {
-        read_rc = gnutls_record_recv(*(remote->tls_session),
+        read_rc = gnutls_record_recv(remote->tls_session,
                                      remote->buffer + remote->buffer_offset,
                                      remote->buffer_size - remote->buffer_offset);
         if (read_rc == GNUTLS_E_INTERRUPTED) {

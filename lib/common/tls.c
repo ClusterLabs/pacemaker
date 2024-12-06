@@ -67,21 +67,15 @@ error:
     return EPROTO;
 }
 
-gnutls_session_t *
+gnutls_session_t
 pcmk__new_tls_session(int csock, unsigned int conn_type,
                       gnutls_credentials_type_t cred_type, void *credentials)
 {
     int rc = GNUTLS_E_SUCCESS;
     char *prio = NULL;
-    gnutls_session_t *session = NULL;
+    gnutls_session_t session = NULL;
 
-    session = gnutls_malloc(sizeof(gnutls_session_t));
-    if (session == NULL) {
-        rc = GNUTLS_E_MEMORY_ERROR;
-        goto error;
-    }
-
-    rc = gnutls_init(session, conn_type);
+    rc = gnutls_init(&session, conn_type);
     if (rc != GNUTLS_E_SUCCESS) {
         goto error;
     }
@@ -98,15 +92,15 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
      * priority with gnutls_priority_init2() and set it with
      * gnutls_priority_set() for all sessions.
      */
-    rc = gnutls_priority_set_direct(*session, prio, NULL);
+    rc = gnutls_priority_set_direct(session, prio, NULL);
     if (rc != GNUTLS_E_SUCCESS) {
         goto error;
     }
 
-    gnutls_transport_set_ptr(*session,
+    gnutls_transport_set_ptr(session,
                              (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
 
-    rc = gnutls_credentials_set(*session, cred_type, credentials);
+    rc = gnutls_credentials_set(session, cred_type, credentials);
     if (rc != GNUTLS_E_SUCCESS) {
         goto error;
     }
@@ -121,7 +115,7 @@ error:
             gnutls_strerror(rc), rc, prio);
     free(prio);
     if (session != NULL) {
-        gnutls_free(session);
+        gnutls_deinit(session);
     }
     return NULL;
 }
@@ -135,7 +129,7 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
                  && (client->remote->tls_session != NULL));
 
     do {
-        rc = gnutls_handshake(*client->remote->tls_session);
+        rc = gnutls_handshake(client->remote->tls_session);
     } while (rc == GNUTLS_E_INTERRUPTED);
 
     if (rc == GNUTLS_E_AGAIN) {
@@ -160,7 +154,7 @@ pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
         *gnutls_rc = GNUTLS_E_SUCCESS;
     }
 
-    rc = gnutls_handshake(*remote->tls_session);
+    rc = gnutls_handshake(remote->tls_session);
 
     switch (rc) {
         case GNUTLS_E_SUCCESS:

@@ -174,12 +174,11 @@ lrmd_remote_client_destroy(gpointer user_data)
         void *sock_ptr;
         int csock;
 
-        sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
+        sock_ptr = gnutls_transport_get_ptr(client->remote->tls_session);
         csock = GPOINTER_TO_INT(sock_ptr);
 
-        gnutls_bye(*client->remote->tls_session, GNUTLS_SHUT_RDWR);
-        gnutls_deinit(*client->remote->tls_session);
-        gnutls_free(client->remote->tls_session);
+        gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_RDWR);
+        gnutls_deinit(client->remote->tls_session);
         client->remote->tls_session = NULL;
         close(csock);
     }
@@ -212,7 +211,7 @@ static int
 lrmd_remote_listen(gpointer data)
 {
     int csock = -1;
-    gnutls_session_t *session = NULL;
+    gnutls_session_t session = NULL;
     pcmk__client_t *new_client = NULL;
 
     // For client socket

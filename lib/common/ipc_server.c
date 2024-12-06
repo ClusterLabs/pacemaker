@@ -320,7 +320,7 @@ pcmk__free_client(pcmk__client_t *c)
             /* @TODO Reduce duplication at callers. Put here everything
              * necessary to tear down and free tls_session.
              */
-            gnutls_free(c->remote->tls_session);
+            gnutls_deinit(c->remote->tls_session);
         }
         free(c->remote->buffer);
         free(c->remote);

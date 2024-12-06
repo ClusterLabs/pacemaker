@@ -346,15 +346,14 @@ cib_remote_connection_destroy(gpointer user_data)
             break;
         case pcmk__client_tls:
             if (client->remote->tls_session) {
-                void *sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
+                void *sock_ptr = gnutls_transport_get_ptr(client->remote->tls_session);
 
                 csock = GPOINTER_TO_INT(sock_ptr);
                 if (pcmk_is_set(client->flags,
                                 pcmk__client_tls_handshake_complete)) {
-                    gnutls_bye(*client->remote->tls_session, GNUTLS_SHUT_WR);
+                    gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_WR);
                 }
-                gnutls_deinit(*client->remote->tls_session);
-                gnutls_free(client->remote->tls_session);
+                gnutls_deinit(client->remote->tls_session);
                 client->remote->tls_session = NULL;
             }
             break;
