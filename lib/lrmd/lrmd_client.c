@@ -1391,6 +1391,13 @@ tls_handshake_succeeded(lrmd_t *lrmd)
     int rc = pcmk_rc_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
 
+    /* Now that the handshake is done, see if any client TLS certificate is
+     * close to its expiration date and log if so.  If a TLS certificate is not
+     * in use, this function will just return so we don't need to check for the
+     * session type here.
+     */
+    pcmk__tls_check_cert_expiration(native->remote->tls_session);
+
     crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
              native->server, native->port);
     rc = add_tls_to_mainloop(lrmd, true);
@@ -1514,8 +1521,8 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
-    gnutls_datum_t psk_key = { NULL, 0 };
     int tls_rc = GNUTLS_E_SUCCESS;
+    bool use_cert = pcmk__x509_enabled();
 
     native->async_timer = 0;
 
@@ -1533,7 +1540,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
     native->sock = sock;
 
     if (native->tls == NULL) {
-        rc = pcmk__init_tls(&native->tls, false, GNUTLS_CRD_PSK);
+        rc = pcmk__init_tls(&native->tls, false, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_PSK);
 
         if (rc != pcmk_rc_ok) {
             lrmd_tls_connection_destroy(lrmd);
@@ -1542,18 +1549,22 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
         }
     }
 
-    rc = lrmd__init_remote_key(&psk_key);
-    if (rc != pcmk_rc_ok) {
-        crm_info("Could not connect to Pacemaker Remote at %s:%d: %s "
-                 QB_XS " rc=%d",
-                 native->server, native->port, pcmk_rc_str(rc), rc);
-        lrmd_tls_connection_destroy(lrmd);
-        report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
-        return;
-    }
+    if (!use_cert) {
+        gnutls_datum_t psk_key = { NULL, 0 };
 
-    pcmk__tls_add_psk_key(native->tls, &psk_key);
-    gnutls_free(psk_key.data);
+        rc = lrmd__init_remote_key(&psk_key);
+        if (rc != pcmk_rc_ok) {
+            crm_info("Could not connect to Pacemaker Remote at %s:%d: %s "
+                     QB_XS " rc=%d",
+                     native->server, native->port, pcmk_rc_str(rc), rc);
+            lrmd_tls_connection_destroy(lrmd);
+            report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+            return;
+        }
+
+        pcmk__tls_add_psk_key(native->tls, &psk_key);
+        gnutls_free(psk_key.data);
+    }
 
     native->remote->tls_session = pcmk__new_tls_session(native->tls, sock);
     if (native->remote->tls_session == NULL) {
@@ -1614,9 +1625,8 @@ static int
 lrmd_tls_connect(lrmd_t * lrmd, int *fd)
 {
     int rc = pcmk_rc_ok;
-
+    bool use_cert = pcmk__x509_enabled();
     lrmd_private_t *native = lrmd->lrmd_private;
-    gnutls_datum_t psk_key = { NULL, 0 };
 
     native->sock = -1;
     rc = pcmk__connect_remote(native->server, native->port, 0, NULL,
@@ -1630,7 +1640,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     }
 
     if (native->tls == NULL) {
-        rc = pcmk__init_tls(&native->tls, false, GNUTLS_CRD_PSK);
+        rc = pcmk__init_tls(&native->tls, false, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_PSK);
 
         if (rc != pcmk_rc_ok) {
             lrmd_tls_connection_destroy(lrmd);
@@ -1638,14 +1648,18 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
         }
     }
 
-    rc = lrmd__init_remote_key(&psk_key);
-    if (rc != pcmk_rc_ok) {
-        lrmd_tls_connection_destroy(lrmd);
-        return rc;
-    }
+    if (!use_cert) {
+        gnutls_datum_t psk_key = { NULL, 0 };
 
-    pcmk__tls_add_psk_key(native->tls, &psk_key);
-    gnutls_free(psk_key.data);
+        rc = lrmd__init_remote_key(&psk_key);
+        if (rc != pcmk_rc_ok) {
+            lrmd_tls_connection_destroy(lrmd);
+            return rc;
+        }
+
+        pcmk__tls_add_psk_key(native->tls, &psk_key);
+        gnutls_free(psk_key.data);
+    }
 
     native->remote->tls_session = pcmk__new_tls_session(native->tls, native->sock);
     if (native->remote->tls_session == NULL) {
