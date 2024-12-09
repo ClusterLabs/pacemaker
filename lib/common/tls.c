@@ -200,6 +200,7 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
         rc = pcmk__init_tls_dh(&(*tls)->dh_params);
         if (rc != pcmk_rc_ok) {
             pcmk__free_tls(*tls);
+            *tls = NULL;
             return rc;
         }
     }
@@ -250,6 +251,7 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
         rc = tls_load_x509_data(*tls);
         if (rc != pcmk_rc_ok) {
             pcmk__free_tls(*tls);
+            *tls = NULL;
             return rc;
         }
     } else if (cred_type == GNUTLS_CRD_PSK) {
