@@ -9,23 +9,36 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
+#include <stdio.h>                      // NULL
+#include <glib.h>                       // gboolean, GList, GHashTable
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
+#include <crm/common/iso8601.h>         // crm_time_t
+#include <crm/common/roles.h>           // enum rsc_role_e
+
 #include <crm/common/xml.h>
-#include <crm/pengine/rules.h>
-
-#include <crm/common/iso8601_internal.h>
-#include <crm/common/nvpair_internal.h>
-#include <crm/common/rules_internal.h>
-#include <crm/common/xml_internal.h>
-#include <crm/pengine/internal.h>
-#include <crm/pengine/rules_internal.h>
-
-#include <sys/types.h>
-#include <regex.h>
+#include <crm/common/rules.h>           // pcmk_rule_input_t, etc.
+#include <crm/common/nvpair_internal.h> // pcmk__nvpair_unpack_t, etc.
 
 CRM_TRACE_INIT_DATA(pe_rules);
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/pengine/common_compat.h>
+#include <crm/pengine/rules_compat.h>
+
+gboolean
+test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
+{
+    pcmk_rule_input_t rule_input = {
+        .node_attrs = node_hash,
+        .now = now,
+    };
+
+    return pcmk_evaluate_rule(rule, &rule_input, NULL) == pcmk_rc_ok;
+}
 
 /*!
  * \internal
@@ -62,19 +75,6 @@ map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
     }
 }
 
-/*!
- * \brief Extract nvpair blocks contained by an XML element into a hash table
- *
- * \param[in,out] top           Ignored
- * \param[in]     xml_obj       XML element containing blocks of nvpair elements
- * \param[in]     set_name      If not NULL, only use blocks of this element
- * \param[in]     rule_data     Matching parameters to use when unpacking
- * \param[out]    hash          Where to store extracted name/value pairs
- * \param[in]     always_first  If not NULL, process block with this ID first
- * \param[in]     overwrite     Whether to replace existing values with same
- *                              name (all internal callers pass \c FALSE)
- * \param[out]    next_change   If not NULL, set to when evaluation will change
- */
 void
 pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 const pe_rule_eval_data_t *rule_data, GHashTable *hash,
@@ -99,20 +99,6 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
     }
 }
 
-/*!
- * \brief Extract nvpair blocks contained by an XML element into a hash table
- *
- * \param[in,out] top           Ignored
- * \param[in]     xml_obj       XML element containing blocks of nvpair elements
- * \param[in]     set_name      Element name to identify nvpair blocks
- * \param[in]     node_hash     Node attributes to use when evaluating rules
- * \param[out]    hash          Where to store extracted name/value pairs
- * \param[in]     always_first  If not NULL, process block with this ID first
- * \param[in]     overwrite     Whether to replace existing values with same
- *                              name (all internal callers pass \c FALSE)
- * \param[in]     now           Time to use when evaluating rules
- * \param[out]    next_change   If not NULL, set to when evaluation will change
- */
 void
 pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                   GHashTable *node_hash, GHashTable *hash,
@@ -129,22 +115,6 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 
     pe_eval_nvpairs(NULL, xml_obj, set_name, &rule_data, hash,
                     always_first, overwrite, next_change);
-}
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/pengine/rules_compat.h>
-
-gboolean
-test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
-{
-    pcmk_rule_input_t rule_input = {
-        .node_attrs = node_hash,
-        .now = now,
-    };
-
-    return pcmk_evaluate_rule(rule, &rule_input, NULL) == pcmk_rc_ok;
 }
 
 // LCOV_EXCL_STOP

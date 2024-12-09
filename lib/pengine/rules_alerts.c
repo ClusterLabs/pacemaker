@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/pengine/rules.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/rules_internal.h>
@@ -34,8 +33,12 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
     const char *value = NULL;
     int rc = pcmk_rc_ok;
 
-    pe_unpack_nvpairs(basenode, basenode, PCMK_XE_META_ATTRIBUTES, NULL,
-                      config_hash, NULL, FALSE, now, NULL);
+    pcmk_rule_input_t rule_input = {
+        .now = now,
+    };
+
+    pcmk_unpack_nvpair_blocks(basenode, PCMK_XE_META_ATTRIBUTES, NULL,
+                              &rule_input, config_hash, NULL);
     crm_time_free(now);
 
     value = g_hash_table_lookup(config_hash, PCMK_META_ENABLED);
