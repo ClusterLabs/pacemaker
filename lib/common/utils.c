@@ -343,13 +343,6 @@ crm_generate_uuid(void)
     return buffer;
 }
 
-void
-crm_gnutls_global_init(void)
-{
-    signal(SIGPIPE, SIG_IGN);
-    gnutls_global_init();
-}
-
 /*!
  * \internal
  * \brief Sleep for given milliseconds
@@ -453,6 +446,21 @@ pcmk__timeout_ms2s(guint timeout_ms)
 // LCOV_EXCL_START
 
 #include <crm/common/util_compat.h>
+
+static void
+_gnutls_log_func(int level, const char *msg)
+{
+    crm_trace("%s", msg);
+}
+
+void
+crm_gnutls_global_init(void)
+{
+    signal(SIGPIPE, SIG_IGN);
+    gnutls_global_init();
+    gnutls_global_set_log_level(8);
+    gnutls_global_set_log_function(_gnutls_log_func);
+}
 
 /*!
  * \brief Check whether string represents a client name used by cluster daemons
