@@ -65,6 +65,13 @@ remoted__read_handshake_data(pcmk__client_t *client)
     pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
     crm_notice("Remote client connection accepted");
 
+    /* Now that the handshake is done, see if any client TLS certificate is
+     * close to its expiration date and log if so.  If a TLS certificate is not
+     * in use, this function will just return so we don't need to check for the
+     * session type here.
+     */
+    pcmk__tls_check_cert_expiration(client->remote->tls_session);
+
     /* Only a client with access to the TLS key can connect, so we can treat
      * it as privileged.
      */
@@ -346,8 +353,8 @@ lrmd_init_remote_tls_server(void)
     int filter;
     int port = crm_default_remote_port();
     struct addrinfo *res = NULL, *iter;
-    gnutls_datum_t psk_key = { NULL, 0 };
     const char *bind_name = pcmk__env_option(PCMK__ENV_REMOTE_ADDRESS);
+    bool use_cert = pcmk__x509_enabled();
 
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
         .dispatch = lrmd_remote_listen,
@@ -359,22 +366,27 @@ lrmd_init_remote_tls_server(void)
     crm_debug("Starting TLS listener on %s port %d",
               (bind_name? bind_name : "all addresses on"), port);
 
-    rc = pcmk__init_tls(&tls, true, GNUTLS_CRD_PSK);
+    rc = pcmk__init_tls(&tls, true, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_PSK);
     if (rc != pcmk_rc_ok) {
         return -1;
     }
 
-    pcmk__tls_add_psk_callback(tls, lrmd_tls_server_key_cb);
+    if (!use_cert) {
+        gnutls_datum_t psk_key = { NULL, 0 };
 
-    /* The key callback won't get called until the first client connection
-     * attempt. Do it once here, so we can warn the user at start-up if we can't
-     * read the key. We don't error out, though, because it's fine if the key is
-     * going to be added later.
-     */
-    if (lrmd__init_remote_key(&psk_key) != pcmk_rc_ok) {
-        crm_warn("A cluster connection will not be possible until the key is available");
+        pcmk__tls_add_psk_callback(tls, lrmd_tls_server_key_cb);
+
+        /* The key callback won't get called until the first client connection
+         * attempt. Do it once here, so we can warn the user at start-up if we can't
+         * read the key. We don't error out, though, because it's fine if the key is
+         * going to be added later.
+         */
+        if (lrmd__init_remote_key(&psk_key) != pcmk_rc_ok) {
+            crm_warn("A cluster connection will not be possible until the key is available");
+        }
+
+        gnutls_free(psk_key.data);
     }
-    gnutls_free(psk_key.data);
 
     if (get_address_info(bind_name, port, &res) != pcmk_rc_ok) {
         return -1;
