@@ -1,3 +1,6 @@
+warning: Ignoring resource-discovery-enabled attribute for 18node1 because disabling resource discovery is not allowed for cluster nodes
+warning: Ignoring resource-discovery-enabled attribute for 18node2 because disabling resource discovery is not allowed for cluster nodes
+warning: Support for the resource-discovery-enabled node attribute is deprecated and will be removed (and behave as 'true') in a future release.
 Current cluster status:
   * Node List:
     * Online: [ 18builder 18node1 18node2 18node3 18node4 ]
@@ -110,6 +113,8 @@ Executing Cluster Transition:
   * Resource action: FAKECLONE2:4    monitor=60000 on remote1
   * Resource action: FAKECLONE2:5    monitor=60000 on 18builder
   * Resource action: FAKE4           monitor=60000 on remote1
+warning: Ignoring resource-discovery-enabled attribute for 18node1 because disabling resource discovery is not allowed for cluster nodes
+warning: Ignoring resource-discovery-enabled attribute for 18node2 because disabling resource discovery is not allowed for cluster nodes
 
 Revised Cluster Status:
   * Node List:

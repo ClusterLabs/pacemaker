@@ -1333,15 +1333,15 @@ Deleted crm_config option: id=(null) name=cluster-delay
 =#=#=#= End test: Delete cluster option with -i - OK (0) =#=#=#=
 * Passed: crm_attribute         - Delete cluster option with -i
 =#=#=#= Begin test: Create node1 and bring it online =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Current cluster status:
   * Full List of Resources:
     * No resources
@@ -1601,9 +1601,9 @@ scope=status  name=fail-count-foo value=3
 =#=#=#= End test: Query a fail count - OK (0) =#=#=#=
 * Passed: crm_failcount         - Query a fail count
 =#=#=#= Begin test: Show node attributes with crm_simulate =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Current cluster status:
   * Node List:
     * Online: [ node1 ]

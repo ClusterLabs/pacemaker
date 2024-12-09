@@ -9,6 +9,7 @@ Current cluster status:
     * rsc4	(ocf:pacemaker:Dummy):	 Stopped
     * rsc5	(ocf:pacemaker:Dummy):	 Stopped
     * rsc6	(ocf:pacemaker:Dummy):	 Stopped
+error: Ignoring constraint 'template1-colo-template2' because two templates or tags cannot be colocated
 
 Transition Summary:
   * Start      rsc1    ( node1 )

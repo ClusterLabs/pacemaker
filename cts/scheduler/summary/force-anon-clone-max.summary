@@ -1,3 +1,10 @@
+warning: Ignoring globally-unique for clone1 because lsb resources such as lsb1:0 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone1 because lsb resources such as lsb1:1 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone2 because lsb resources such as lsb2:0 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone2 because lsb resources such as lsb2:1 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone2 because lsb resources such as lsb2:2 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone3 because lsb resources such as lsb3:0 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone3 because lsb resources such as lsb3:1 can be used only as anonymous clones
 Current cluster status:
   * Node List:
     * Online: [ node1 node2 node3 ]
@@ -59,6 +66,14 @@ Executing Cluster Transition:
   * Resource action: dummy2:1        monitor=5000 on node2
   * Resource action: lsb3:1          monitor=5000 on node2
   * Pseudo action:   clone3_running_0
+warning: Ignoring globally-unique for clone1 because lsb resources such as lsb1:0 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone1 because lsb resources such as lsb1:1 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone2 because lsb resources such as lsb2:0 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone2 because lsb resources such as lsb2:1 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone2 because lsb resources such as lsb2:2 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone3 because lsb resources such as lsb3:0 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone3 because lsb resources such as lsb3:1 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone3 because lsb resources such as lsb3:2 can be used only as anonymous clones
 
 Revised Cluster Status:
   * Node List:

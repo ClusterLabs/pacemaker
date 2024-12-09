@@ -52,6 +52,7 @@ Current cluster status:
       * Promoted: [ rhel7-4 ]
       * Unpromoted: [ rhel7-1 rhel7-2 rhel7-3 ]
       * Stopped: [ rhel7-5 ]
+error: Constraint 'colocation-rsc1a-rsc1b-INFINITY' has invalid value for influence (using default)
 
 Transition Summary:
   * Move       rsc1a          ( rhel7-2 -> rhel7-3 )

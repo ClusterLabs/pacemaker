@@ -45,7 +45,7 @@ setup(void **state) {
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
     scheduler->input = input;
 
-    cluster_status(scheduler);
+    pcmk_unpack_scheduler_input(scheduler);
 
     /* Get references to several resources we use frequently. */
     for (GList *iter = scheduler->priv->resources;

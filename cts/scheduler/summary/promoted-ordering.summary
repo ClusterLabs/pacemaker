@@ -1,3 +1,5 @@
+warning: Ignoring globally-unique for clone_webservice because lsb resources such as mysql-proxy:0 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone_webservice because lsb resources such as mysql-proxy:1 can be used only as anonymous clones
 Current cluster status:
   * Node List:
     * Online: [ webcluster01 ]
@@ -21,6 +23,14 @@ Current cluster status:
     * Clone Set: ms_drbd_mysql [drbd_mysql] (promotable):
       * Stopped: [ webcluster01 webcluster02 ]
     * fs_mysql	(ocf:heartbeat:Filesystem):	 Stopped
+warning: No resource, template, or tag named 'drbd_mysql'
+error: Ignoring constraint 'colo_drbd_mysql_ip0' because 'drbd_mysql' is not a valid resource or tag
+warning: No resource, template, or tag named 'drbd_mysql'
+error: Ignoring constraint 'colo_drbd_mysql_ip1' because 'drbd_mysql' is not a valid resource or tag
+warning: No resource, template, or tag named 'drbd_www'
+error: Ignoring constraint 'colo_drbd_www_ip0' because 'drbd_www' is not a valid resource or tag
+warning: No resource, template, or tag named 'drbd_www'
+error: Ignoring constraint 'colo_drbd_www_ip1' because 'drbd_www' is not a valid resource or tag
 
 Transition Summary:
   * Start      extip_1            ( webcluster01 )
@@ -68,6 +78,8 @@ Executing Cluster Transition:
   * Pseudo action:   ms_drbd_www_confirmed-post_notify_running_0
   * Resource action: drbd_mysql:0    notify on webcluster01
   * Pseudo action:   ms_drbd_mysql_confirmed-post_notify_running_0
+warning: Ignoring globally-unique for clone_webservice because lsb resources such as mysql-proxy:0 can be used only as anonymous clones
+warning: Ignoring globally-unique for clone_webservice because lsb resources such as mysql-proxy:1 can be used only as anonymous clones
 
 Revised Cluster Status:
   * Node List:
