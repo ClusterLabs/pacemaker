@@ -375,7 +375,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     if (private->encrypted) {
-        bool use_cert = pcmk__x509_enabled(false);
+        bool use_cert = pcmk__x509_enabled();
         int tls_rc = GNUTLS_E_SUCCESS;
 
         rc = pcmk__init_tls(&tls, false, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_ANON);
