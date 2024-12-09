@@ -90,7 +90,7 @@ init_remote_listener(int port, gboolean encrypted)
     }
 
     if (encrypted) {
-        bool use_cert = pcmk__x509_enabled(true);
+        bool use_cert = pcmk__x509_enabled();
 
         crm_notice("Starting TLS listener on port %d", port);
 
