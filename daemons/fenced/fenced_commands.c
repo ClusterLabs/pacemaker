@@ -2061,6 +2061,21 @@ localhost_is_eligible_with_remap(const stonith_device_t *device,
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Check whether we can use a device's cached target list
+ *
+ * \param[in] dev  Fencing device to check
+ *
+ * \return \c true if \p dev cached its targets less than a minute ago,
+ *         otherwise \c false
+ */
+static inline bool
+can_use_target_cache(const stonith_device_t *dev)
+{
+    return (dev->targets != NULL) && (time(NULL) < (dev->targets_age + 60));
+}
+
 static void
 can_fence_host_with_device(stonith_device_t *dev,
                            struct device_search_s *search)
@@ -2117,9 +2132,7 @@ can_fence_host_with_device(stonith_device_t *dev,
 
     } else if (pcmk__str_eq(check_type, PCMK_VALUE_DYNAMIC_LIST,
                             pcmk__str_casei)) {
-        time_t now = time(NULL);
-
-        if (dev->targets == NULL || dev->targets_age + 60 < now) {
+        if (!can_use_target_cache(dev)) {
             int device_timeout = get_action_timeout(dev, PCMK_ACTION_LIST,
                                                     search->per_device_timeout);
 
