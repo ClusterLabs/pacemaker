@@ -2046,14 +2046,6 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     lrmd_free_event(op);
 }
 
-void
-do_lrm_event(long long action,
-             enum crmd_fsa_cause cause,
-             enum crmd_fsa_state cur_state, enum crmd_fsa_input cur_input, fsa_data_t * msg_data)
-{
-    CRM_CHECK(FALSE, return);
-}
-
 static char *
 unescape_newlines(const char *string)
 {

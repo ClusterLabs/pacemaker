@@ -142,9 +142,6 @@ fsa_input2string(enum crmd_fsa_input input)
         case I_WAIT_FOR_EVENT:
             inputAsText = "I_WAIT_FOR_EVENT";
             break;
-        case I_LRM_EVENT:
-            inputAsText = "I_LRM_EVENT";
-            break;
         case I_PENDING:
             inputAsText = "I_PENDING";
             break;
@@ -307,9 +304,6 @@ fsa_action2string(long long action)
             break;
         case A_LRM_CONNECT:
             actionAsText = "A_LRM_CONNECT";
-            break;
-        case A_LRM_EVENT:
-            actionAsText = "A_LRM_EVENT";
             break;
         case A_LRM_INVOKE:
             actionAsText = "A_LRM_INVOKE";
@@ -576,9 +570,6 @@ fsa_dump_actions(uint64_t action, const char *text)
     }
     if (pcmk_is_set(action, A_LRM_CONNECT)) {
         crm_trace("Action %.16llx (A_LRM_CONNECT) %s", A_LRM_CONNECT, text);
-    }
-    if (pcmk_is_set(action, A_LRM_EVENT)) {
-        crm_trace("Action %.16llx (A_LRM_EVENT) %s", A_LRM_EVENT, text);
     }
     if (pcmk_is_set(action, A_LRM_INVOKE)) {
         crm_trace("Action %.16llx (A_LRM_INVOKE) %s", A_LRM_INVOKE, text);
