@@ -46,9 +46,15 @@ static bool cpg_evicted = false;
 static GList *cs_message_queue = NULL;
 static int cs_message_timer = 0;
 
+/* @COMPAT Any changes to these structs (other than renames) will break all
+ * rolling upgrades, and should be avoided if possible or done at a major
+ * version bump if not
+ */
+
 struct pcmk__cpg_host_s {
     uint32_t id;
     uint32_t pid;
+    gboolean local;             // Unused but needed for compatibility
     enum pcmk_ipc_server type;  // For logging only
     uint32_t size;
     char uname[MAX_NAME];
@@ -382,7 +388,8 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
  * \param[out]    from       If not \c NULL, will be set to sender uname
  *                           (valid for the lifetime of \p content)
  *
- * \return Newly allocated string with message data
+ * \return Newly allocated string with message data, or NULL for errors and
+ *         messages not intended for the local node
  *
  * \note The caller is responsible for freeing the return value using \c free().
  */
@@ -393,41 +400,52 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
     char *data = NULL;
     pcmk__cpg_msg_t *msg = content;
 
+    if (from != NULL) {
+        *from = NULL;
+    }
+
     if (handle != 0) {
-        // Do filtering and field massaging
         uint32_t local_nodeid = pcmk__cpg_local_nodeid(handle);
         const char *local_name = pcmk__cluster_local_node_name();
 
-        if ((msg->sender.id != 0) && (msg->sender.id != sender_id)) {
-            crm_err("Nodeid mismatch from %" PRIu32 ".%" PRIu32
-                    ": claimed nodeid=%" PRIu32,
+        // Update or validate message sender ID
+        if (msg->sender.id == 0) {
+            msg->sender.id = sender_id;
+        } else if (msg->sender.id != sender_id) {
+            crm_warn("Ignoring CPG message from ID %" PRIu32 " PID %" PRIu32
+                     ": claimed ID %" PRIu32,
                     sender_id, pid, msg->sender.id);
             return NULL;
         }
+
+        // Ignore messages that aren't for the local node
         if ((msg->host.id != 0) && (local_nodeid != msg->host.id)) {
-            crm_trace("Not for us: %" PRIu32" != %" PRIu32,
-                      msg->host.id, local_nodeid);
+            crm_trace("Ignoring CPG message from ID %" PRIu32 " PID %" PRIu32
+                      ": for ID %" PRIu32 " not %" PRIu32,
+                      sender_id, pid, msg->host.id, local_nodeid);
             return NULL;
         }
         if ((msg->host.size > 0)
             && !pcmk__str_eq(msg->host.uname, local_name, pcmk__str_casei)) {
 
-            crm_trace("Not for us: %s != %s", msg->host.uname, local_name);
+            crm_trace("Ignoring CPG message from ID %" PRIu32 " PID %" PRIu32
+                      ": for name %s not %s",
+                      sender_id, pid, msg->host.uname, local_name);
             return NULL;
         }
 
-        msg->sender.id = sender_id;
+        // Add sender name if not in original message
         if (msg->sender.size == 0) {
             const pcmk__node_status_t *peer =
                 pcmk__get_node(sender_id, NULL, NULL,
                                pcmk__node_search_cluster_member);
 
             if (peer->name == NULL) {
-                crm_err("No node name for peer with nodeid=%u", sender_id);
-
+                crm_debug("Received CPG message from node with ID %" PRIu32
+                          " but its name is unknown", sender_id);
             } else {
-                crm_notice("Fixing node name for peer with nodeid=%u",
-                           sender_id);
+                crm_debug("Updating name of CPG message sender with ID %" PRIu32
+                          " to %s", sender_id, peer->name);
                 msg->sender.size = strlen(peer->name);
                 memset(msg->sender.uname, 0, MAX_NAME);
                 memcpy(msg->sender.uname, peer->name, msg->sender.size);
@@ -435,65 +453,48 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
         }
     }
 
-    crm_trace("Got new%s message (size=%d, %d, %d)",
-              msg->is_compressed ? " compressed" : "",
-              msg_data_len(msg), msg->size, msg->compressed_size);
+    // Ensure sender is in peer cache (though it should already be)
+    pcmk__get_node(msg->sender.id, msg->sender.uname, NULL,
+                   pcmk__node_search_cluster_member);
 
     if (from != NULL) {
         *from = msg->sender.uname;
     }
 
-    if (msg->is_compressed && (msg->size > 0)) {
-        int rc = BZ_OK;
-        char *uncompressed = NULL;
-        unsigned int new_size = msg->size + 1;
-
-        if (!check_message_sanity(msg)) {
-            goto badmsg;
-        }
-
-        crm_trace("Decompressing message data");
-        uncompressed = pcmk__assert_alloc(1, new_size);
-        rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, msg->data,
-                                        msg->compressed_size, 1, 0);
-
-        rc = pcmk__bzlib2rc(rc);
-
-        if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " QB_XS " rc=%d",
-                    pcmk_rc_str(rc), rc);
-            free(uncompressed);
-            goto badmsg;
-        }
-
-        pcmk__assert(new_size == msg->size);
-
-        data = uncompressed;
-
-    } else if (!check_message_sanity(msg)) {
-        goto badmsg;
-
-    } else {
-        data = strdup(msg->data);
+    if (!check_message_sanity(msg)) {
+        return NULL;
     }
 
-    // Is this necessary?
-    pcmk__get_node(msg->sender.id, msg->sender.uname, NULL,
-                   pcmk__node_search_cluster_member);
+    if (msg->is_compressed && (msg->size > 0)) {
+        int rc = BZ_OK;
+        unsigned int new_size = msg->size + 1;
+        char *uncompressed = pcmk__assert_alloc(1, new_size);
 
-    crm_trace("Payload: %.200s", data);
+        rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, msg->data,
+                                        msg->compressed_size, 1, 0);
+        rc = pcmk__bzlib2rc(rc);
+        if ((rc == pcmk_rc_ok) && (msg->size != new_size)) { // libbz2 bug?
+            rc = pcmk_rc_compression;
+        }
+        if (rc != pcmk_rc_ok) {
+            free(uncompressed);
+            crm_warn("Ignoring compressed CPG message %d from %s (ID %" PRIu32
+                    " PID %" PRIu32 "): %s",
+                     msg->id, ais_dest(&(msg->sender)), sender_id, pid,
+                     pcmk_rc_str(rc));
+            return NULL;
+        }
+        data = uncompressed;
+
+    } else {
+        data = pcmk__str_copy(msg->data);
+    }
+
+    crm_trace("Received %sCPG message %d from %s (ID %" PRIu32
+              " PID %" PRIu32 "): %.40s...",
+              (msg->is_compressed? "compressed " : ""),
+              msg->id, ais_dest(&(msg->sender)), sender_id, pid, msg->data);
     return data;
-
-  badmsg:
-    crm_err("Invalid message (id=%d, dest=%s:%s, from=%s:%s.%d):"
-            " min=%d, total=%d, size=%d, bz2_size=%d",
-            msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
-            ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-            msg->sender.pid, (int)sizeof(pcmk__cpg_msg_t),
-            msg->header.size, msg->size, msg->compressed_size);
-
-    free(data);
-    return NULL;
 }
 
 /*!
