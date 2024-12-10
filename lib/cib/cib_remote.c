@@ -26,6 +26,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 #include <crm/common/remote_internal.h>
+#include <crm/common/tls_internal.h>
 #include <crm/common/output_internal.h>
 
 #include <gnutls/gnutls.h>
@@ -33,8 +34,7 @@
 // GnuTLS handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
 
-static gnutls_anon_client_credentials_t anon_cred_c;
-static gboolean remote_gnutls_credentials_init = FALSE;
+static pcmk__tls_t *tls = NULL;
 
 #include <arpa/inet.h>
 
@@ -308,23 +308,19 @@ cib_tls_close(cib_t *cib)
 
     if (private->encrypted) {
         if (private->command.tls_session) {
-            gnutls_bye(*(private->command.tls_session), GNUTLS_SHUT_RDWR);
-            gnutls_deinit(*(private->command.tls_session));
-            gnutls_free(private->command.tls_session);
+            gnutls_bye(private->command.tls_session, GNUTLS_SHUT_RDWR);
+            gnutls_deinit(private->command.tls_session);
         }
 
         if (private->callback.tls_session) {
-            gnutls_bye(*(private->callback.tls_session), GNUTLS_SHUT_RDWR);
-            gnutls_deinit(*(private->callback.tls_session));
-            gnutls_free(private->callback.tls_session);
+            gnutls_bye(private->callback.tls_session, GNUTLS_SHUT_RDWR);
+            gnutls_deinit(private->callback.tls_session);
         }
+
         private->command.tls_session = NULL;
         private->callback.tls_session = NULL;
-        if (remote_gnutls_credentials_init) {
-            gnutls_anon_free_client_credentials(anon_cred_c);
-            gnutls_global_deinit();
-            remote_gnutls_credentials_init = FALSE;
-        }
+        pcmk__free_tls(tls);
+        tls = NULL;
     }
 
     if (private->command.tcp_socket) {
@@ -379,20 +375,16 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     if (private->encrypted) {
+        bool use_cert = pcmk__x509_enabled(false);
         int tls_rc = GNUTLS_E_SUCCESS;
 
-        /* initialize GnuTls lib */
-        if (remote_gnutls_credentials_init == FALSE) {
-            crm_gnutls_global_init();
-            gnutls_anon_allocate_client_credentials(&anon_cred_c);
-            remote_gnutls_credentials_init = TRUE;
+        rc = pcmk__init_tls(&tls, false, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_ANON);
+        if (rc != pcmk_rc_ok) {
+            return -1;
         }
 
         /* bind the socket to GnuTls lib */
-        connection->tls_session = pcmk__new_tls_session(connection->tcp_socket,
-                                                        GNUTLS_CLIENT,
-                                                        GNUTLS_CRD_ANON,
-                                                        anon_cred_c);
+        connection->tls_session = pcmk__new_tls_session(tls, connection->tcp_socket);
         if (connection->tls_session == NULL) {
             cib_tls_close(cib);
             return -1;
@@ -404,13 +396,19 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             crm_err("Remote CIB session creation for %s:%d failed: %s",
                     private->server, private->port,
                     (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
-            gnutls_deinit(*connection->tls_session);
-            gnutls_free(connection->tls_session);
+            gnutls_deinit(connection->tls_session);
             connection->tls_session = NULL;
             cib_tls_close(cib);
             return -1;
         }
     }
+
+    /* Now that the handshake is done, see if any client TLS certificate is
+     * close to its expiration date and log if so.  If a TLS certificate is not
+     * in use, this function will just return so we don't need to check for the
+     * session type here.
+     */
+    pcmk__tls_check_cert_expiration(connection->tls_session);
 
     /* login to server */
     login = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
@@ -490,27 +488,30 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     if (private->server == NULL || private->user == NULL) {
         rc = -EINVAL;
+        goto done;
     }
 
-    if (rc == pcmk_ok) {
-        rc = cib_tls_signon(cib, &(private->command), FALSE);
+    rc = cib_tls_signon(cib, &(private->command), FALSE);
+    if (rc != pcmk_ok) {
+        goto done;
     }
 
-    if (rc == pcmk_ok) {
-        rc = cib_tls_signon(cib, &(private->callback), TRUE);
+    rc = cib_tls_signon(cib, &(private->callback), TRUE);
+    if (rc != pcmk_ok) {
+        goto done;
     }
 
-    if (rc == pcmk_ok) {
-        rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL, cib_none,
-                            NULL, name, &hello);
+    rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL, cib_none, NULL,
+                        name, &hello);
+    if (rc != pcmk_ok) {
+        goto done;
     }
 
-    if (rc == pcmk_ok) {
-        rc = pcmk__remote_send_xml(&private->command, hello);
-        rc = pcmk_rc2legacy(rc);
-        pcmk__xml_free(hello);
-    }
+    rc = pcmk__remote_send_xml(&private->command, hello);
+    rc = pcmk_rc2legacy(rc);
+    pcmk__xml_free(hello);
 
+done:
     if (rc == pcmk_ok) {
         crm_info("Opened connection to %s:%d for %s",
                  private->server, private->port, name);

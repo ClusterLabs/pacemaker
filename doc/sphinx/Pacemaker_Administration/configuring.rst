@@ -189,9 +189,30 @@ the cluster.
 For security reasons, this capability is disabled by default. If you wish to
 allow remote access, set the ``remote-tls-port`` (encrypted) or
 ``remote-clear-port`` (unencrypted) CIB properties (attributes of the ``cib``
-element). Encrypted communication is keyless, which makes it subject to
-man-in-the-middle attacks, so either option should be used only on protected
-networks.
+element). Encrypted communication can be performed keyless (which makes it
+subject to man-in-the-middle attacks), but a better option is to also use
+TLS certificates.
+
+To enable TLS certificates, it is recommended to first set up your own
+Certificate Authority (CA) and generate a root CA certificate. Then create a
+public/private key pair and certificate signing request (CSR) for your server.
+Use the CA to sign this CSR.
+
+Then, create a public/private key pair and CSR for each remote system that you
+wish to have remote access.  Use the CA to sign the CSRs.  It is recommended to
+use a unique certificate for each remote system so they can be revoked if
+necessary.
+
+The server's public/private key pair and signed certificate should be installed
+to the |PCMK_CONFIG_DIR| directory and owned by ``CIB_user``. Remember that
+private keys should not be readable by anyone other than their owner. Finally,
+edit the |PCMK_CONFIG_FILE| file to refer to these credentials:
+
+.. code-block:: none
+
+   PCMK_ca_file="/etc/pacemaker/ca.cert.pem"
+   PCMK_cert_file="/etc/pacemaker/server.cert.pem"
+   PCMK_key_file="/etc/pacemaker/server.key.pem"
 
 The administrator's machine simply needs Pacemaker installed. To connect to the
 cluster, set the following environment variables:
@@ -204,6 +225,14 @@ cluster, set the following environment variables:
 
 Only the Pacemaker daemon user (|CRM_DAEMON_USER|) may be used as ``CIB_user``.
 
+To use TLS certificates, the administrator's machine also needs their
+public/private key pair, signed client certificate, and root CA certificate.
+Those must additionally be specified with the following environment variables:
+
+* :ref:`CIB_ca_file <file>`
+* :ref:`CIB_cert_file <file>`
+* :ref:`CIB_key_file <file>`
+
 As an example, if **node1** is a cluster node, and the CIB is configured with
 ``remote-tls-port`` set to 1234, the administrator could read the current
 cluster configuration using the following commands, and would be prompted for
@@ -212,6 +241,9 @@ the daemon user's password:
 .. code-block:: none
 
    # export CIB_server=node1; export CIB_port=1234; export CIB_encrypted=true
+   # export CIB_ca_file=/etc/pacemaker/ca.cert.pem
+   # export CIB_cert_file=/etc/pacemaker/admin.cert.pem
+   # export CIB_key_file=/etc/pacemaker/admin.key.pem
    # cibadmin -Q
 
 .. note::

@@ -562,6 +562,10 @@ cib_t *
 cib_new(void)
 {
     const char *value = getenv("CIB_shadow");
+    const char *server = NULL;
+    const char *user = NULL;
+    const char *pass = NULL;
+    gboolean encrypted = TRUE;
     int port;
 
     if (!pcmk__str_empty(value)) {
@@ -574,37 +578,35 @@ cib_new(void)
     }
 
     value = getenv("CIB_port");
-    if (!pcmk__str_empty(value)) {
-        gboolean encrypted = TRUE;
-        const char *server = getenv("CIB_server");
-        const char *user = getenv("CIB_user");
-        const char *pass = getenv("CIB_passwd");
-
-        /* We don't ensure port is valid (>= 0) because cib_new() currently
-         * can't return NULL in practice, and introducing a NULL return here
-         * could cause core dumps that would previously just cause signon()
-         * failures.
-         */
-        pcmk__scan_port(value, &port);
-
-        if (!crm_is_true(getenv("CIB_encrypted"))) {
-            encrypted = FALSE;
-        }
-
-        if (pcmk__str_empty(user)) {
-            user = CRM_DAEMON_USER;
-        }
-
-        if (pcmk__str_empty(server)) {
-            server = "localhost";
-        }
-
-        crm_debug("Initializing %s remote CIB access to %s:%d as user %s",
-                  (encrypted? "encrypted" : "plain-text"), server, port, user);
-        return cib_remote_new(server, user, pass, port, encrypted);
+    if (pcmk__str_empty(value)) {
+        return cib_native_new();
     }
 
-    return cib_native_new();
+    /* We don't ensure port is valid (>= 0) because cib_new() currently can't
+     * return NULL in practice, and introducing a NULL return here could cause
+     * core dumps that would previously just cause signon() failures.
+     */
+    pcmk__scan_port(value, &port);
+
+    if (!crm_is_true(getenv("CIB_encrypted"))) {
+        encrypted = FALSE;
+    }
+
+    server = getenv("CIB_server");
+    user = getenv("CIB_user");
+    pass = getenv("CIB_passwd");
+
+    if (pcmk__str_empty(user)) {
+        user = CRM_DAEMON_USER;
+    }
+
+    if (pcmk__str_empty(server)) {
+        server = "localhost";
+    }
+
+    crm_debug("Initializing %s remote CIB access to %s:%d as user %s",
+              (encrypted? "encrypted" : "plain-text"), server, port, user);
+    return cib_remote_new(server, user, pass, port, encrypted);
 }
 
 /*!
