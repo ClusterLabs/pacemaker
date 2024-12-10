@@ -160,6 +160,9 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
     pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
 
+    /* @TODO This checks rsc and the top rsc, but should probably check all
+     * ancestors (a cloned group could have it set on the group)
+     */
     if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
         || pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                        pcmk__rsc_exclusive_probes)) {

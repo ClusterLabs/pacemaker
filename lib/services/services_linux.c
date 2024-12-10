@@ -977,6 +977,10 @@ action_launch_child(svc_action_t *op)
      * below) instead of exit status. However, we've already forked, so
      * exit status is all we have. At least for OCF actions, we can output an
      * exit reason for the parent to parse.
+     *
+     * @TODO It might be better to substitute secrets in the parent before
+     * forking, so that if it fails, we can give a better message and result,
+     * and avoid the fork.
      */
 
 #if PCMK__ENABLE_CIBSECRETS

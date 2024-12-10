@@ -130,6 +130,10 @@ get_node_names(const GList *list, GString **all_node_names,
         const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
 
         if (node->priv->name == NULL) {
+            /* @TODO This breaks the comparability of the various notification
+             * variables and thus any agent relying on it. Maybe add "UNKNOWN"
+             * or something like that.
+             */
             continue;
         }
 
@@ -496,7 +500,14 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         pcmk__insert_meta(n_data->post_done,
                           "notify_operation", n_data->action);
 
-        // Order original action complete -> "post-" -> "post-" complete
+        /* Order original action complete -> "post-" -> "post-" complete
+         *
+         * @TODO Should we add |pcmk__ar_unrunnable_first_blocks to these?
+         * Otherwise we might get an invalid transition due to unresolved
+         * dependencies when "complete" is a fencing op (which can happen at
+         * least for bundles) but that op is unrunnable (due to lack of quorum,
+         * for example).
+         */
         order_actions(complete, n_data->post, pcmk__ar_first_implies_then);
         order_actions(n_data->post, n_data->post_done,
                       pcmk__ar_first_implies_then);

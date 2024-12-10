@@ -1077,7 +1077,8 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                                             PCMK_ACTION_STOP, 0),
                                NULL, pcmk__ar_then_implies_first, scheduler);
 
-            if (pcmk_is_set(rsc->flags, pcmk__rsc_remote_nesting_allowed)) {
+            if (pcmk_is_set(rsc->flags, pcmk__rsc_remote_nesting_allowed)
+                /* @TODO: && non-bundle Pacemaker Remote nodes exist */) {
                 score = 10000;    /* Highly preferred but not essential */
             } else {
                 score = PCMK_SCORE_INFINITY; // Force to run on same host

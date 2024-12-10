@@ -2353,6 +2353,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
+        // @TODO Maybe skip filtering for XML output
         g_hash_table_iter_init(&iter, node->priv->attrs);
         while (g_hash_table_iter_next (&iter, &key, NULL)) {
             attr_list = filter_attr_list(attr_list, key);

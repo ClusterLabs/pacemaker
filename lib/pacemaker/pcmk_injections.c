@@ -31,6 +31,7 @@
 
 #include "libpacemaker_private.h"
 
+// @TODO Replace this with a new scheduler flag
 bool pcmk__simulate_node_config = false;
 
 #define XPATH_NODE_CONFIG   "//" PCMK_XE_NODE "[@" PCMK_XA_UNAME "='%s']"

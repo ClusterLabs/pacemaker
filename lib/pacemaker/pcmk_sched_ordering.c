@@ -29,6 +29,7 @@ enum ordering_symmetry {
     ordering_symmetric_inverse, // the inverse relation in a symmetric ordering
 };
 
+// @TODO de-functionize this for readability and possibly better log messages
 #define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                  \
         __rsc = pcmk__find_constraint_resource(scheduler->priv->resources,  \
                                                __name);                     \
@@ -1153,6 +1154,8 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
         /* Don't touch a resource that is unmanaged or blocked, to avoid
          * blocking the shutdown (though if another action depends on this one,
          * we may still end up blocking)
+         *
+         * @TODO This "if" looks wrong, create a regression test for these cases
          */
         if (!pcmk_any_flags_set(action->rsc->flags,
                                 pcmk__rsc_managed|pcmk__rsc_blocked)) {

@@ -520,6 +520,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
     const char *remote_allow_migrate=NULL;
     const char *is_managed = NULL;
 
+    // @TODO This doesn't handle rules or id-ref
     for (attr_set = pcmk__xe_first_child(xml_obj, PCMK_XE_META_ATTRIBUTES,
                                          NULL, NULL);
          attr_set != NULL;
@@ -2523,8 +2524,12 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     } else if ((rsc->priv->history_id != NULL)
                && (strchr(rsc->priv->history_id, ':') != NULL)) {
-        /* Only do this for older status sections that included instance numbers
-         * Otherwise stopped instances will appear as orphans
+        /* @COMPAT This is for older (<1.1.8) status sections that included
+         * instance numbers, otherwise stopped instances are considered orphans.
+         *
+         * @TODO We should be able to drop this, but some old regression tests
+         * will need to be updated. Double-check that this is not still needed
+         * for unique clones (which may have been later converted to anonymous).
          */
         pcmk__rsc_trace(rsc, "Clearing history ID %s for %s (stopped)",
                         rsc->priv->history_id, rsc->id);
@@ -3814,6 +3819,11 @@ static void
 remap_operation(struct action_history *history,
                 enum pcmk__on_fail *on_fail, bool expired)
 {
+    /* @TODO It would probably also be a good idea to map an exit status of
+     * CRM_EX_PROMOTED or CRM_EX_DEGRADED_PROMOTED to CRM_EX_OK for promote
+     * actions
+     */
+
     bool is_probe = false;
     int orig_exit_status = history->exit_status;
     int orig_exec_status = history->execution_status;
