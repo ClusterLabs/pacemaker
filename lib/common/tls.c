@@ -25,8 +25,13 @@ get_gnutls_priorities(gnutls_credentials_type_t cred_type)
         prio_base = PCMK__GNUTLS_PRIORITIES;
     }
 
-    return crm_strdup_printf("%s:%s", prio_base,
-                             (cred_type == GNUTLS_CRD_ANON)? "+ANON-DH" : "+DHE-PSK:+PSK");
+    if (cred_type == GNUTLS_CRD_ANON) {
+        return crm_strdup_printf("%s:+ANON-DH", prio_base);
+    } else if (cred_type == GNUTLS_CRD_PSK) {
+        return crm_strdup_printf("%s:+DHE-PSK:+PSK", prio_base);
+    } else {
+        return strdup(prio_base);
+    }
 }
 
 static const char *
