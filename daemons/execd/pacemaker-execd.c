@@ -139,6 +139,10 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         return 0;
     }
 
+    /* @TODO functionize some of this to reduce duplication with
+     * lrmd_remote_client_msg()
+     */
+
     if (!client->name) {
         const char *value = crm_element_value(request,
                                               PCMK__XA_LRMD_CLIENTNAME);
@@ -297,6 +301,7 @@ exit_executor(void)
 
     g_hash_table_destroy(rsc_list);
 
+    // @TODO End mainloop instead so all cleanup is done
     crm_exit(CRM_EX_OK);
 }
 

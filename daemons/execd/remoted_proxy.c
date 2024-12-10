@@ -33,7 +33,13 @@ static qb_ipcs_service_t *pacemakerd_ipcs = NULL;
 
 // An IPC provider is a cluster node controller connecting as a client
 static GList *ipc_providers = NULL;
-/* ipc clients == things like cibadmin, crm_resource, connecting locally */
+
+
+/* ipc clients == things like cibadmin, crm_resource, connecting locally
+ *
+ * @TODO This should be unnecessary (pcmk__foreach_ipc_client() should be
+ * sufficient)
+ */
 static GHashTable *ipc_clients = NULL;
 
 /*!

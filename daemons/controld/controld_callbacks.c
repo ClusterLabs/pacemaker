@@ -106,6 +106,7 @@ node_alive(const pcmk__node_status_t *node)
 
 #define state_text(state) ((state)? (const char *)(state) : "in unknown state")
 
+// @TODO This is insanely long, and some parts should be functionized
 void
 peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                      const void *data)
@@ -128,9 +129,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
         && pcmk_is_set(node->processes, crm_get_cluster_proc())
         && !AM_I_DC
         && !is_remote) {
-        /*
-         * This is a hack until we can send to a nodeid and/or we fix node name lookups
-         * These messages are ignored in crmd_ha_msg_filter()
+        /* relay_message() on the recipient ignores these messages, but
+         * libcrmcluster will have cached the node name by then
          */
         xmlNode *query = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
                                            NULL, CRM_SYSTEM_CRMD, CRM_OP_HELLO,
@@ -140,7 +140,6 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                   "node name",
                   node->cluster_layer_id);
         pcmk__cluster_send_message(node, pcmk_ipc_controld, query);
-
         pcmk__xml_free(query);
     }
 

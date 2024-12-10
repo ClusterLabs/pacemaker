@@ -46,6 +46,7 @@ struct device_search_s {
     /* requested fence action */
     char *action;
     /* timeout to use if a device is queried dynamically for possible targets */
+    // @TODO This name is misleading now, it's the value of stonith-timeout
     int per_device_timeout;
     /* number of registered fencing devices at time of request */
     int replies_needed;
@@ -3323,7 +3324,10 @@ handle_fence_request(pcmk__request_t *request)
             crm_xml_add(request->xml, PCMK__XA_ST_CLIENTID,
                         request->ipc_client->id);
             crm_xml_add(request->xml, PCMK__XA_ST_REMOTE_OP, op->id);
+
+            // @TODO On failure, fail request immediately, or maybe panic
             pcmk__cluster_send_message(node, pcmk_ipc_fenced, request->xml);
+
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
                              NULL);
 
