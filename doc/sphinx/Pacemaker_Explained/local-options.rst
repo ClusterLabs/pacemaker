@@ -482,21 +482,6 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
        sync values are more likely to preserve log messages, but with the risk
        that the host may be left active if the synchronization hangs.
 
-   * - .. _pcmk_authkey_location:
-
-       .. index::
-          pair: node option; PCMK_authkey_location
-
-       PCMK_authkey_location
-     - :ref:`text <text>`
-     - |PCMK_AUTHKEY_FILE|
-     - Use the contents of this file as the authorization key to use with
-       :ref:`Pacemaker Remote <pacemaker_remote>` connections. This file must
-       be readable by Pacemaker daemons (that is, it must allow read
-       permissions to either the |CRM_DAEMON_USER| user or the
-       |CRM_DAEMON_GROUP| group), and its contents must be identical on all
-       nodes.
-
    * - .. _pcmk_remote_address:
 
        .. index::
@@ -525,6 +510,91 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
      - 3121
      - Use this TCP port number for :ref:`Pacemaker Remote <pacemaker_remote>`
        node connections. This value must be the same on all nodes.
+
+   * - .. _pcmk_ca_file:
+
+       .. index::
+          pair: node option; PCMK_ca_file
+
+       PCMK_ca_file
+     - :ref:`text <text>`
+     -
+     - The location of a file containing trusted Certificate Authorities, used to
+       verify client or server certificates. This file must be in PEM format and
+       must be readable by Pacemaker daemons (that is, it must allow read permissions
+       to either the |CRM_DAEMON_USER| user or the |CRM_DAEMON_GROUP| group).
+       If set, along with :ref:`PCMK_key_file <PCMK_key_file>` and
+       :ref:`PCMK_cert_file <PCMK_cert_file>`, X509 authentication will be enabled
+       for :ref:`Pacemaker Remote <pacemaker_remote>` and remote CIB connections.
+
+       Example: ``PCMK_ca_file="/etc/pacemaker/ca.cert.pem"``
+
+   * - .. _pcmk_cert_file:
+
+       .. index::
+          pair: node option; PCMK_cert_file
+
+       PCMK_cert_file
+     - :ref:`text <text>`
+     -
+     - The location of a file containing the signed certificate for the server
+       side of the connection. This file must be in PEM format and must be
+       readable by Pacemaker daemons (that is, it must allow read permissions
+       to either the |CRM_DAEMON_USER| user or the |CRM_DAEMON_GROUP| group).
+       If set, along with :ref:`PCMK_ca_file <PCMK_ca_file>` and
+       :ref:`PCMK_key_file <PCMK_key_file>`, X509 authentication will be enabled
+       for :ref:`Pacemaker Remote <pacemaker_remote>` and remote CIB connections.
+
+       Example: ``PCMK_cert_file="/etc/pacemaker/server.cert.pem"``
+
+   * - .. _pcmk_crl_file:
+
+       .. index::
+          pair: node option; PCMK_crl_file
+
+       PCMK_crl_file
+     - :ref:`text <text>`
+     -
+     - The location of a Certificate Revocation List file, in PEM format. This
+       setting is optional for X509 authentication.
+
+       Example: ``PCMK_cr1_file="/etc/pacemaker/crl.pem"``
+
+   * - .. _pcmk_key_file:
+
+       .. index::
+          pair: node option; PCMK_key_file
+
+       PCMK_key_file
+     - :ref:`text <text>`
+     -
+     - The location of a file containing the private key for the matching
+       :ref:`PCMK_cert_file <PCMK_cert_file>`, in PEM format. This file must
+       be readble by Pacemaker daemons (that is, it must allow read permissions
+       to either the |CRM_DAEMON_USER| user or the |CRM_DAEMON_GROUP| group).
+       If set, along with :ref:`PCMK_ca_file <PCMK_ca_file>` and
+       :ref:`PCMK_cert_file <PCMK_cert_file>`, X509 authentication will be
+       enabled for :ref:`Pacemaker Remote <pacemaker_remote>` and remote CIB
+       connections.
+
+       Example: ``PCMK_key_file="/etc/pacemaker/server.key.pem"``
+
+   * - .. _pcmk_authkey_location:
+
+       .. index::
+          pair: node option; PCMK_authkey_location
+
+       PCMK_authkey_location
+     - :ref:`text <text>`
+     - |PCMK_AUTHKEY_FILE|
+     - As an alternative to using X509 authentication for :ref:`Pacemaker Remote
+       <pacemaker_remote>` connections, use the contents of this file as the
+       authorization key. This file must be readable by Pacemaker daemons (that
+       is, it must allow read permissions to either the |CRM_DAEMON_USER| user
+       or the |CRM_DAEMON_GROUP| group), and its contents must be identical on
+       all nodes.
+
+       This is an alternative to using X509 certificates.
 
    * - .. _pcmk_remote_pid1:
 

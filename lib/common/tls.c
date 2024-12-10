@@ -25,8 +25,13 @@ get_gnutls_priorities(gnutls_credentials_type_t cred_type)
         prio_base = PCMK__GNUTLS_PRIORITIES;
     }
 
-    return crm_strdup_printf("%s:%s", prio_base,
-                             (cred_type == GNUTLS_CRD_ANON)? "+ANON-DH" : "+DHE-PSK:+PSK");
+    if (cred_type == GNUTLS_CRD_ANON) {
+        return crm_strdup_printf("%s:+ANON-DH", prio_base);
+    } else if (cred_type == GNUTLS_CRD_PSK) {
+        return crm_strdup_printf("%s:+DHE-PSK:+PSK", prio_base);
+    } else {
+        return strdup(prio_base);
+    }
 }
 
 static const char *
@@ -200,6 +205,7 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
         rc = pcmk__init_tls_dh(&(*tls)->dh_params);
         if (rc != pcmk_rc_ok) {
             pcmk__free_tls(*tls);
+            *tls = NULL;
             return rc;
         }
     }
@@ -216,16 +222,26 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
             gnutls_anon_allocate_client_credentials(&(*tls)->credentials.anon_c);
         }
     } else if (cred_type == GNUTLS_CRD_CERTIFICATE) {
-        /* Grab these environment variables before doing anything else. */
-        if (server) {
-            (*tls)->ca_file = pcmk__env_option(PCMK__ENV_CA_FILE);
-            (*tls)->cert_file = pcmk__env_option(PCMK__ENV_CERT_FILE);
-            (*tls)->crl_file = pcmk__env_option(PCMK__ENV_CRL_FILE);
-            (*tls)->key_file = pcmk__env_option(PCMK__ENV_KEY_FILE);
-        } else {
+        /* Try the PCMK_ version of each environment variable first, and if
+         * it's not set then try the CIB_ version.
+         */
+        (*tls)->ca_file = pcmk__env_option(PCMK__ENV_CA_FILE);
+        if (pcmk__str_empty((*tls)->ca_file)) {
             (*tls)->ca_file = getenv("CIB_ca_file");
+        }
+
+        (*tls)->cert_file = pcmk__env_option(PCMK__ENV_CERT_FILE);
+        if (pcmk__str_empty((*tls)->cert_file)) {
             (*tls)->cert_file = getenv("CIB_cert_file");
+        }
+
+        (*tls)->crl_file = pcmk__env_option(PCMK__ENV_CRL_FILE);
+        if (pcmk__str_empty((*tls)->crl_file)) {
             (*tls)->crl_file = getenv("CIB_crl_file");
+        }
+
+        (*tls)->key_file = pcmk__env_option(PCMK__ENV_KEY_FILE);
+        if (pcmk__str_empty((*tls)->key_file)) {
             (*tls)->key_file = getenv("CIB_key_file");
         }
 
@@ -240,6 +256,7 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
         rc = tls_load_x509_data(*tls);
         if (rc != pcmk_rc_ok) {
             pcmk__free_tls(*tls);
+            *tls = NULL;
             return rc;
         }
     } else if (cred_type == GNUTLS_CRD_PSK) {
@@ -510,20 +527,17 @@ pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
 }
 
 bool
-pcmk__x509_enabled(bool server)
+pcmk__x509_enabled(void)
 {
     /* Environment variables for servers come through the sysconfig file, and
      * have names like PCMK_<whatever>.  Environment variables for clients come
      * from the environment and have names like CIB_<whatever>.  This function
      * is used for both, so we need to check both.
      */
-    if (server) {
-        return !pcmk__str_empty(pcmk__env_option(PCMK__ENV_CERT_FILE)) &&
-               !pcmk__str_empty(pcmk__env_option(PCMK__ENV_CA_FILE)) &&
-               !pcmk__str_empty(pcmk__env_option(PCMK__ENV_KEY_FILE));
-    } else {
-        return !pcmk__str_empty(getenv("CIB_cert_file")) &&
-               !pcmk__str_empty(getenv("CIB_ca_file")) &&
-               !pcmk__str_empty(getenv("CIB_key_file"));
-    }
+    return (!pcmk__str_empty(pcmk__env_option(PCMK__ENV_CERT_FILE)) ||
+            !pcmk__str_empty(getenv("CIB_cert_file"))) &&
+           (!pcmk__str_empty(pcmk__env_option(PCMK__ENV_CA_FILE)) ||
+            !pcmk__str_empty(getenv("CIB_ca_file"))) &&
+           (!pcmk__str_empty(pcmk__env_option(PCMK__ENV_KEY_FILE)) ||
+            !pcmk__str_empty(getenv("CIB_key_file")));
 }
