@@ -231,7 +231,9 @@
 # PCMK_ca_file
 #
 # The location of a file containing trusted Certificate Authorities, used to
-# verify client or server certificates.  This file should be in PEM format.
+# verify client or server certificates. This file must be in PEM format and
+# must be readable by Pacemaker daemons (that is, it must allow read permissions
+# to either the @CRM_DAEMON_USER@ user or the @CRM_DAEMON_GROUP@ group).
 # If set, along with PCMK_key_file and PCMK_cert_file, X509 authentication
 # will be enabled for remote CIB connections.
 #
@@ -240,15 +242,17 @@
 # PCMK_cert_file
 #
 # The location of a file containing the signed certificate for the server
-# (CIB manager) side of the connection, in PEM format.  If set, along with
-# PCMK_ca_file and PCMK_key_file, X509 authentication will be enabled for
-# remote CIB connections.
+# (CIB manager) side of the connection. This file must be in PEM format and
+# must be readable by Pacemaker daemons (that is, it must allow read
+# permissions to either the @CRM_DAEMON_USER@ user or the @CRM_DAEMON_GROUP@
+# group). If set, along with PCMK_ca_file and PCMK_key_file, X509
+# authentication will be enabled for remote CIB connections.
 #
 # Default: PCMK_cert_file=""
 
 # PCMK_crl_file
 #
-# The location of a Certificate Revocation List file, in PEM format.  This
+# The location of a Certificate Revocation List file, in PEM format. This
 # setting is optional for X509 authentication.
 #
 # Default: PCMK_crl_file=""
@@ -256,8 +260,10 @@
 # PCMK_key_file
 #
 # The location of a file containing the private key for the matching PCMK_cert_file,
-# in PEM format.  If set, along with PCMK_ca_file and PCMK_cert_file, X509
-# authentication will be enabled for remote CIB connections.
+# in PEM format. This file must be readble by Pacemaker daemons (that is, it
+# must allow read permissions to either the @CRM_DAEMON_USER@ user or the
+# @CRM_DAEMON_GROUP@ group). If set, along with PCMK_ca_file and PCMK_cert_file,
+# X509 authentication will be enabled for remote CIB connections.
 #
 # Default: PCMK_key_file=""
 
