@@ -617,7 +617,7 @@ stonith_action_to_svc(stonith_action_t *action)
 static int
 internal_stonith_action_execute(stonith_action_t * action)
 {
-    int rc = -EPROTO;
+    int rc = pcmk_ok;
     int is_retry = 0;
     svc_action_t *svc_action = NULL;
 
@@ -662,11 +662,8 @@ internal_stonith_action_execute(stonith_action_t * action)
                                               &stonith_action_async_forked));
         return pcmk_ok;
 
-    } else if (services_action_sync(svc_action)) { // sync success
-        rc = pcmk_ok;
-
-    } else { // sync failure
-        rc = -ECONNABORTED;
+    } else if (!services_action_sync(svc_action)) {
+        rc = -ECONNABORTED; // @TODO Update API to return more useful error
     }
 
     set_result_from_svc_action(action, svc_action);
