@@ -590,14 +590,15 @@ internal_stonith_action_execute(stonith_action_t * action)
         return -EINVAL;
     }
 
-    if (!action->tries) {
+    if (action->tries++ == 0) {
+        // First attempt of the desired action
         action->initial_start_time = time(NULL);
-    }
-    action->tries++;
-
-    if (action->tries > 1) {
-        crm_info("Attempt %d to execute %s (%s). remaining timeout is %d",
-                 action->tries, action->agent, action->action, action->remaining_timeout);
+    } else {
+        // Later attempt after earlier failure
+        crm_info("Attempt %d to execute '%s' action of agent %s "
+                 "(%ds timeout remaining)",
+                 action->tries, action->action, action->agent,
+                 action->remaining_timeout);
         is_retry = 1;
     }
 
