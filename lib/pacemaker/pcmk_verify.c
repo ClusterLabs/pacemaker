@@ -108,7 +108,10 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
          * ownership of the passed-in XML object, hence we pass in a copy
          * to the scheduler.
          */
-        pcmk__schedule_actions(cib_object_copy, flags, scheduler);
+        rc = pcmk__schedule_actions(cib_object_copy, flags, scheduler);
+        if (rc != pcmk_rc_ok) {
+            pcmk__config_has_error = true;
+        }
     }
 
 verify_done:

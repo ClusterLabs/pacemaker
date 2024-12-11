@@ -1,4 +1,7 @@
+warning: Support for validate-with='none' is deprecated and will be removed in a future release without the possibility of upgrades (manually edit to use a supported schema)
 Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
+warning: Support for validate-with='none' is deprecated and will be removed in a future release without the possibility of upgrades (manually edit to use a supported schema)
+warning: Support for validate-with='none' is deprecated and will be removed in a future release without the possibility of upgrades (manually edit to use a supported schema)
 Current cluster status:
   * Node List:
     * Online: [ node1 ]
@@ -8,6 +11,10 @@ Current cluster status:
     * rsc2	(ocf:heartbeat:apache):	 Started node1
     * rsc3	(ocf:heartbeat:apache):	 Stopped
     * rsc4	(ocf:heartbeat:apache):	 Started node1
+error: Resetting 'kind' for constraint order1 to 'Mandatory' because 'foo' is not valid
+error: Resetting 'kind' for constraint order1 to 'Mandatory' because 'foo' is not valid
+error: Resetting 'kind' for constraint order1 to 'Mandatory' because 'foo' is not valid
+error: Resetting 'kind' for constraint order1 to 'Mandatory' because 'foo' is not valid
 
 Transition Summary:
   * Start      rsc1    ( node1 )

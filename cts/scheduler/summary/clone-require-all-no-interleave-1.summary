@@ -11,6 +11,7 @@ Current cluster status:
       * Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
     * Clone Set: C-clone [C]:
       * Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
+warning: Support for require-all in ordering constraints is deprecated and will be removed in a future release (use clone-min clone meta-attribute instead)
 
 Transition Summary:
   * Start      A:0     ( rhel7-auto3 )

@@ -21,6 +21,7 @@ Current cluster status:
     * dummy3-5	(ocf:heartbeat:Dummy):	 Stopped
     * dummy2-4	(ocf:heartbeat:Dummy):	 Stopped
     * dummy2-5	(ocf:heartbeat:Dummy):	 Stopped
+warning: Support for 'ordering' other than 'group' in resource_set (such as pcs_rsc_set_dummy3-1_dummy3-2_dummy3-3_dummy3-4_dummy3-5-1) is deprecated and will be removed in a future release
 
 Transition Summary:
   * Start      dummy1-1     ( node1 )  due to no quorum (blocked)

@@ -1040,9 +1040,9 @@ crm_resource: Error performing operation: Insufficient privileges
 =#=#=#= End test: l33t-haxor: Remove a resource meta attribute - Insufficient privileges (4) =#=#=#=
 * Passed: crm_resource          - l33t-haxor: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 pcmk__apply_creation_acl 	trace: Creation of <meta_attributes> scaffolding with id="dummy-meta_attributes" is implicitly allowed
 pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="dummy-meta_attributes-target-role"
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Stopped
@@ -1128,9 +1128,9 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
 =#=#=#= End test: niceguy: Create a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource          - niceguy: Create a resource meta attribute
 =#=#=#= Begin test: niceguy: Query a resource meta attribute =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Stopped
 =#=#=#= Current cib after: niceguy: Query a resource meta attribute =#=#=#=
 <cib epoch="14" num_updates="0" admin_epoch="0">
@@ -1214,9 +1214,9 @@ Stopped
 =#=#=#= End test: niceguy: Query a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource          - niceguy: Query a resource meta attribute
 =#=#=#= Begin test: niceguy: Remove a resource meta attribute =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= Current cib after: niceguy: Remove a resource meta attribute =#=#=#=
 <cib epoch="15" num_updates="0" admin_epoch="0">
@@ -1298,9 +1298,9 @@ Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= End test: niceguy: Remove a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource          - niceguy: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+error: Resource start-up disabled since no STONITH resources have been defined
+error: Either configure some or disable STONITH with the stonith-enabled option
+error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="dummy-meta_attributes-target-role"
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Started
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=

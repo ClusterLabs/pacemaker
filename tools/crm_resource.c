@@ -139,6 +139,54 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
+/*!
+ * \internal
+ * \brief Output a configuration error
+ *
+ * \param[in] ctx  Output object
+ * \param[in] msg  printf(3)-style format string
+ * \param[in] ...  Format string arguments
+ */
+G_GNUC_PRINTF(2, 3)
+static void
+output_config_error(void *ctx, const char *msg, ...)
+{
+    va_list ap;
+    char *buf = NULL;
+    pcmk__output_t *out = ctx;
+
+    va_start(ap, msg);
+    pcmk__assert(vasprintf(&buf, msg, ap) > 0);
+    if (!out->is_quiet(out)) {
+        out->err(out, "error: %s", buf);
+    }
+    va_end(ap);
+}
+
+/*!
+ * \internal
+ * \brief Output a configuration warning
+ *
+ * \param[in] ctx  Output object
+ * \param[in] msg  printf(3)-style format string
+ * \param[in] ...  Format string arguments
+ */
+G_GNUC_PRINTF(2, 3)
+static void
+output_config_warning(void *ctx, const char *msg, ...)
+{
+    va_list ap;
+    char *buf = NULL;
+    pcmk__output_t *out = ctx;
+
+    va_start(ap, msg);
+    pcmk__assert(vasprintf(&buf, msg, ap) > 0);
+    if (!out->is_quiet(out)) {
+        out->err(out, "warning: %s", buf);
+    }
+    va_end(ap);
+}
+
 // Clean up and exit
 static crm_exit_t
 bye(crm_exit_t ec)
@@ -959,7 +1007,15 @@ clear_constraints(pcmk__output_t *out)
         }
 
         scheduler->input = cib_xml;
-        cluster_status(scheduler);
+        rc = pcmk_unpack_scheduler_input(scheduler);
+
+        if (rc != pcmk_rc_ok) {
+            /* Error printing is handled by pcmk__set_config_error_handler, and
+             * cleaning up scheduler is handled by the bye() function.
+             */
+            g_list_free(before);
+            return rc;
+        }
 
         after = build_constraint_list(scheduler->input);
         remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
@@ -993,7 +1049,14 @@ initialize_scheduler_data(xmlNode **cib_xml_orig)
         return rc;
     }
 
-    cluster_status(scheduler);
+    rc = pcmk_unpack_scheduler_input(scheduler);
+    if (rc != pcmk_rc_ok) {
+        /* Error printing is handled by pcmk__set_config_error_handler, and
+         * cleaning up scheduler is handled by the bye() function.
+         */
+        return rc;
+    }
+
     return pcmk_rc_ok;
 }
 
@@ -1475,6 +1538,9 @@ main(int argc, char **argv)
     pcmk__register_lib_messages(out);
 
     out->quiet = args->quiet;
+
+    pcmk__set_config_error_handler(output_config_error, out);
+    pcmk__set_config_warning_handler(output_config_warning, out);
 
     crm_log_args(argc, argv);
 

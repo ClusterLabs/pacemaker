@@ -88,8 +88,9 @@ check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
     }
 }
 
-/*
- * Unpack everything
+/*!
+ * Unpack scheduler input
+ *
  * At the end you'll have:
  *  - A list of nodes
  *  - A list of resources (each with any dependencies on other resources)
@@ -98,15 +99,17 @@ check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
  *  - A list of nodes that need to be stonith'd
  *  - A list of nodes that need to be shutdown
  *  - A list of the possible stop/start actions (without dependencies)
+ *
+ * \return Standard Pacemaker return code
  */
-gboolean
-cluster_status(pcmk_scheduler_t * scheduler)
+int
+pcmk_unpack_scheduler_input(pcmk_scheduler_t *scheduler)
 {
     const char *new_version = NULL;
     xmlNode *section = NULL;
 
     if ((scheduler == NULL) || (scheduler->input == NULL)) {
-        return FALSE;
+        return EINVAL;
     }
 
     new_version = crm_element_value(scheduler->input, PCMK_XA_CRM_FEATURE_SET);
@@ -114,7 +117,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
     if (pcmk__check_feature_set(new_version) != pcmk_rc_ok) {
         pcmk__config_err("Can't process CIB with feature set '%s' greater than our own '%s'",
                          new_version, CRM_FEATURE_SET);
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     crm_trace("Beginning unpack");
@@ -202,7 +205,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
 
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_status);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -527,6 +530,12 @@ pe_find_node_id(const GList *nodes, const char *id)
 // LCOV_EXCL_START
 
 #include <crm/pengine/status_compat.h>
+
+gboolean
+cluster_status(pcmk_scheduler_t * scheduler)
+{
+    return pcmk_unpack_scheduler_input(scheduler) == pcmk_rc_ok;
+}
 
 /*!
  * \brief Find a node by name in a list of nodes
