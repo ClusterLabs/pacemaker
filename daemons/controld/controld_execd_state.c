@@ -14,7 +14,6 @@
 #include <crm/crm.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/xml.h>
-#include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_internal.h>
 
 #include <pacemaker-internal.h>
