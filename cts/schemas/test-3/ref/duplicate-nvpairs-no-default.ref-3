@@ -15,6 +15,8 @@
     <crm_config original="1">
       <cluster_property_set id="cib-bootstrap-options" original="1">
         <nvpair id="cib-bootstrap-options-option1" name="option" value="value1" original="1"/>
+        <dropped/>
+        <dropped/>
         <nvpair id="cib-bootstrap-options-other-option" name="other-option" value="value0" original="1"/>
       </cluster_property_set>
     </crm_config>
@@ -23,15 +25,21 @@
       <primitive class="ocf" id="rsc1" provider="heartbeat" type="apache" original="1">
         <instance_attributes id="rsc1-instance_attributes" original="1">
           <nvpair id="rsc1-instance_attributes-option1" name="option" value="value1" original="1"/>
+          <dropped/>
           <nvpair id="rsc1-instance_attributes-other-option" name="other-option" value="value0" original="1"/>
+          <dropped/>
         </instance_attributes>
         <meta_attributes id="rsc1-meta_attributes" original="1">
           <nvpair id="rsc1-meta_attributes-option1" name="option" value="value1" original="1"/>
           <nvpair id="rsc1-meta_attributes-other-option" name="other-option" value="value0" original="1"/>
+          <dropped/>
+          <dropped/>
         </meta_attributes>
         <utilization id="rsc1-utilization" original="1">
           <nvpair id="rsc1-utilization-other-option" name="other-option" value="valueX" original="1"/>
           <nvpair id="rsc1-meta_attributes-option1" name="option" value="value1" original="0"/>
+          <dropped/>
+          <dropped/>
         </utilization>
       </primitive>
     </resources>

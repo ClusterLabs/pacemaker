@@ -28,7 +28,9 @@
          * The other ACL permissions should remain unchanged.
       -->
     <crm_config original="1">
-      <cluster_property_set id="cib-bootstrap-options" original="1"/>
+      <cluster_property_set id="cib-bootstrap-options" original="1">
+        <dropped/>
+      </cluster_property_set>
     </crm_config>
     <nodes original="1"/>
     <resources original="1">

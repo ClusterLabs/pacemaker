@@ -11,11 +11,12 @@
     <nodes original="1"/>
     <resources original="1">
       <bundle id="bundle1" original="1">
-        <docker image="alpine:latest" promoted-max="2" run-command="sleep 60" original="1"/>
+        <docker image="alpine:latest" promoted-max="2" changed="1" run-command="sleep 60" original="1"/>
       </bundle>
       <bundle id="bundle2" original="1">
-        <podman image="alpine:latest" promoted-max="2" run-command="sleep 60" original="1"/>
+        <podman image="alpine:latest" promoted-max="2" changed="1" run-command="sleep 60" original="1"/>
       </bundle>
+      <dropped/>
     </resources>
     <constraints original="1"/>
   </configuration>

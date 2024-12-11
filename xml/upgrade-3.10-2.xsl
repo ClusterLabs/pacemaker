@@ -67,7 +67,9 @@
  name. Value "#default" unsets the option, so any later nvpair takes precedence.
 -->
 <xsl:template match="nvpair[(@value = '#default')
-                            and (@name = following-sibling::*/@name)]"/>
+                            and (@name = following-sibling::*/@name)]">
+    <xsl:element name="dropped"/>
+</xsl:template>
 
 <!--
  Drop nvpairs with a value other than "#default" if certain conditions (detailed
@@ -94,7 +96,9 @@
          "#default". The later "#default" value would unset the current nvpair's
          value.
          -->
-        <xsl:when test="$after[@value = '#default']"/>
+        <xsl:when test="$after[@value = '#default']">
+            <xsl:element name="dropped"/>
+        </xsl:when>
 
         <!--
          Drop if both:
@@ -113,7 +117,9 @@
         <xsl:when test="$before
                         and (not($last_default_before)
                              or $last_default_before/following-sibling::nvpair
-                                [count(.|$before) = count($before)])"/>
+                                [count(.|$before) = count($before)])">
+            <xsl:element name="dropped"/>
+        </xsl:when>
 
         <!-- Otherwise, keep the nvpair -->
         <xsl:otherwise>
@@ -133,6 +139,7 @@
     <xsl:copy>
         <xsl:apply-templates select="@*"/>
         <xsl:attribute name="type">member</xsl:attribute>
+        <xsl:attribute name="changed">1</xsl:attribute>
         <xsl:apply-templates select="node()"/>
     </xsl:copy>
 </xsl:template>
@@ -146,6 +153,7 @@
 <xsl:template match="master">
     <xsl:element name="clone">
         <xsl:apply-templates select="@*"/>
+        <xsl:attribute name="changed">1</xsl:attribute>
 
         <!--
          Prepend new meta_attributes element that takes precedence over all
@@ -185,6 +193,7 @@
     <xsl:attribute name="promoted-max">
         <xsl:value-of select="."/>
     </xsl:attribute>
+    <xsl:attribute name="changed">1</xsl:attribute>
 </xsl:template>
 
 
@@ -311,6 +320,8 @@
 
                 <xsl:value-of select="']'"/>
             </xsl:attribute>
+
+            <xsl:attribute name="changed">1</xsl:attribute>
         </xsl:when>
 
         <xsl:otherwise>
