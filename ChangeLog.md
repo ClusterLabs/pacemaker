@@ -1,3 +1,28 @@
+# Pacemaker-3.0.0-rc2 (11 Dec 2024)
+* 57 commits with 44 files changed, 1487 insertions(+), 633 deletions(-)
+
+## Features added since Pacemaker-3.0.0-rc1
+
+* **Pacemaker Remote and CIB manager:** support X.509 (SSL/TLS) certificates
+  for encrypting Pacemaker Remote connections and remote CIB administration
+
+## Fixes since Pacemaker-3.0.0-rc1
+
+* **libcrmcluster:** restore ability to do rolling upgrades
+  (regression introduced in 3.0.0-rc1)
+* **controller:** avoid memory leak when updating join phase
+  (regression introduced in 3.0.0-rc1)
+* **scheduler:** avoid memory leaks in bundles and when freeing node copies
+  (regression introduced in 3.0.0-rc1)
+* **CIB:** log warnings if CIB upgrade might not preserve behavior exactly
+* **CIB:** ensure ACLs remain valid after CIB upgrades, and warn if upgrade
+  might change ACL effect (regression introduced in 3.0.0-rc1)
+
+## Public API changes since Pacemaker-3.0.0-rc1
+
+* **libcrmcommon:** add `pcmk_common_cleanup()`
+
+
 # Pacemaker-3.0.0-rc1 (14 Nov 2024)
 * 1938 commits with 685 files changed, 26363 insertions(+), 33503 deletions(-)
 
