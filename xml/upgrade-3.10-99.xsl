@@ -36,6 +36,31 @@
 </xsl:template>
 
 <!--
+ Warn once per document if there exists an ACL permission with xpath and an
+ element has been dropped, changed, or created.
+ -->
+<xsl:template match="/cib
+                     [//acl_permission[@xpath]
+                      and (//drop|//@changed|*[not(@original = 1)])]">
+    <xsl:call-template name="warning">
+        <!--
+         Technically the ACLs are still valid but may no longer match what they
+         were intended to match.
+         -->
+        <xsl:with-param name="msg"
+                        select="concat('CIB syntax changes may invalidate ACLs',
+                                       ' that use &quot;xpath&quot;.',
+                                       ' It is strongly recommended to run',
+                                       ' &quot;cibadmin --upgrade&quot;',
+                                       ' and then examine the updated CIB',
+                                       ' carefully to ensure ACLs still match',
+                                       ' the desired intent.')"/>
+    </xsl:call-template>
+
+    <xsl:call-template name="identity"/>
+</xsl:template>
+
+<!--
  If an element was converted from id-ref to the referenced element earlier in
  the upgrade transformation pipeline, convert it back to an id-ref as described
  in upgrade-3.10-common.xsl
@@ -70,6 +95,9 @@
         </xsl:otherwise>
     </xsl:choose>
 </xsl:template>
+
+<!-- Drop "dropped" elements and "changed" attributes -->
+<xsl:template match="//dropped|//@changed"/>
 
 <!-- Drop "original" attribute -->
 <xsl:template match="@original"/>

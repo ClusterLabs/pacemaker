@@ -9,7 +9,7 @@
       -->
     <crm_config original="1">
       <cluster_property_set id="cib-bootstrap-options" original="1">
-        <nvpair id="cib-bootstrap-options-crmd-finalization-timeout" name="join-finalization-timeout" value="30" original="1"/>
+        <nvpair id="cib-bootstrap-options-crmd-finalization-timeout" name="join-finalization-timeout" changed="1" value="30" original="1"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true" original="1"/>
       </cluster_property_set>
     </crm_config>
