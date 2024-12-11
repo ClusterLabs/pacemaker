@@ -20,6 +20,7 @@ check_PROGRAMS = crm_meta_name_test		\
 		 pcmk__xe_get_datetime_test	\
 		 pcmk__xe_get_flags_test	\
 		 pcmk__xe_set_bool_attr_test	\
-		 pcmk__unpack_nvpair_block_test
+		 pcmk__unpack_nvpair_block_test	\
+		 pcmk_unpack_nvpair_blocks_test
 
 TESTS = $(check_PROGRAMS)

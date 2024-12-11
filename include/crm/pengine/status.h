@@ -14,7 +14,6 @@
 #  include <stdbool.h>              // bool
 #  include <crm/common/util.h>      // pcmk_is_set()
 #  include <crm/common/iso8601.h>
-#  include <crm/pengine/common.h>
 #  include <crm/pengine/pe_types.h> // pcmk_node_t, pcmk_resource_t, etc.
 #  include <crm/pengine/complex.h>
 
@@ -62,6 +61,7 @@ int pe_bundle_replicas(const pcmk_resource_t *rsc);
 #endif
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/pengine/common.h>
 #include <crm/pengine/status_compat.h>
 #endif
 

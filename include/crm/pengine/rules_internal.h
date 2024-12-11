@@ -14,8 +14,6 @@
 #include <libxml/tree.h>
 
 #include <crm/common/iso8601.h>
-#include <crm/pengine/common.h>
-#include <crm/pengine/rules.h>
 
 #ifdef __cplusplus
 extern "C" {
