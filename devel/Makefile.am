@@ -250,6 +250,8 @@ coverage-clean: coverage-partial-clean
 #
 # indent cannot cope with all our exceptions and needs heavy manual editing
 #
+# @TODO investigate using clang-format instead
+#
 
 # indent target: Limit indent to these directories
 INDENT_DIRS	?= .
