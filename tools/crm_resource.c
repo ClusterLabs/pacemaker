@@ -717,7 +717,7 @@ static GOptionEntry addl_entries[] = {
       "Operation to clear instead of all (with -C -r)",
       "OPERATION" },
     { "interval", 'I', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.interval_spec,
-      "Interval of operation to clear (default 0) (with -C -r -n)",
+      "Interval of operation to clear (default 0s) (with -C -r -n)",
       "N" },
     { "class", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, cmdline_config_cb,
       "The standard the resource agent conforms to (for example, ocf).\n"
