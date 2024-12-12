@@ -1214,6 +1214,9 @@ check_node_health(resource_checks_t *checks, pcmk_node_t *node)
     }
 }
 
+/* @TODO Make this check all resources if rsc is NULL, so it can be called after
+ * cleanup of all resources
+ */
 int
 cli_resource_check(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 {
@@ -1636,6 +1639,10 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     int lpc = 0;
     int before = 0;
     guint step_timeout_s = 0;
+
+    /* @TODO Due to this sleep interval, a timeout <2s will cause problems and
+     * should be rejected
+     */
     guint sleep_interval = 2U;
     guint timeout = pcmk__timeout_ms2s(timeout_ms);
 
@@ -2455,6 +2462,11 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
             return pcmk_rc_already;
         }
     }
+
+    /* @TODO The constraint changes in the following commands should done
+     * atomically in a single CIB transaction, to avoid the possibility of
+     * multiple moves
+     */
 
     /* Clear any previous prefer constraints across all nodes. */
     cli_resource_clear(rsc_id, NULL, scheduler->nodes, cib, false, force);

@@ -119,6 +119,9 @@ report_schema_unchanged(void)
 static inline bool
 cib_action_is_dangerous(void)
 {
+    /* @TODO Ideally, --upgrade wouldn't be considered dangerous if the CIB
+     * already uses the latest schema.
+     */
     return options.delete_all
            || pcmk__str_any_of(options.cib_action,
                                PCMK__CIB_REQUEST_UPGRADE,
