@@ -73,7 +73,7 @@ void cib_common_callback_worker(uint32_t id, uint32_t flags,
 int cib_process_request(xmlNode *request, gboolean privileged,
                         const pcmk__client_t *cib_client);
 void cib_shutdown(int nsig);
-void terminate_cib(const char *caller, int fast);
+void terminate_cib(int exit_status);
 
 gboolean uninitializeCib(void);
 xmlNode *readCibXmlFile(const char *dir, const char *file,
