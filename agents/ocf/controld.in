@@ -27,10 +27,6 @@
 : ${OCF_RESOURCE_INSTANCE:=""}
 
 case "$OCF_RESOURCE_INSTANCE" in
-    *[gG][fF][sS]*)
-        : ${OCF_RESKEY_args=-g 0}
-        : ${OCF_RESKEY_daemon:=gfs_controld}
-        ;;
     *[dD][lL][mM]*)
         : ${OCF_RESKEY_args=-s 0}
         : ${OCF_RESKEY_daemon:=dlm_controld}
@@ -74,7 +70,7 @@ Any additional options to start the dlm_controld service with
 
 <parameter name="daemon" unique-group="daemon">
 <longdesc lang="en">
-The daemon to start - supports gfs_controld and dlm_controld
+The daemon to start - supports dlm_controld
 </longdesc>
 <shortdesc lang="en">The daemon to start</shortdesc>
 <content type="string" default="dlm_controld" />
