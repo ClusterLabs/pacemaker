@@ -1018,12 +1018,14 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
     crm_xml_add(scheduler->graph, PCMK_OPT_STONITH_TIMEOUT, value);
 
-    crm_xml_add(scheduler->graph, "failed-stop-offset", "INFINITY");
+    crm_xml_add(scheduler->graph, PCMK__XA_FAILED_STOP_OFFSET,
+                PCMK_VALUE_INFINITY);
 
     if (pcmk_is_set(scheduler->flags, pcmk_sched_start_failure_fatal)) {
-        crm_xml_add(scheduler->graph, "failed-start-offset", "INFINITY");
+        crm_xml_add(scheduler->graph, PCMK__XA_FAILED_START_OFFSET,
+                    PCMK_VALUE_INFINITY);
     } else {
-        crm_xml_add(scheduler->graph, "failed-start-offset", "1");
+        crm_xml_add(scheduler->graph, PCMK__XA_FAILED_START_OFFSET, "1");
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_BATCH_LIMIT);
