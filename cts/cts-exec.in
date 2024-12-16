@@ -308,11 +308,13 @@ class ExecTests(Tests):
             os.system("service pacemaker_remote stop")
         self.cleanup_environment()
 
-        if self.tls and not os.path.isfile("/etc/pacemaker/authkey"):
-            print("Installing /etc/pacemaker/authkey ...")
-            os.system("mkdir -p /etc/pacemaker")
-            os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
-            self._installed_files.append("/etc/pacemaker/authkey")
+        # @TODO Support the option of using specified existing certificates
+        authkey = "%s/authkey" % BuildOptions.PACEMAKER_CONFIG_DIR
+        if self.tls and not os.path.isfile(authkey):
+            print("Installing %s ..." % authkey)
+            os.system("mkdir -p %s" % BuildOptions.PACEMAKER_CONFIG_DIR)
+            os.system("dd if=/dev/urandom of=%s bs=4096 count=1" % authkey)
+            self._installed_files.append(authkey)
 
         # If we're in build directory, install agents if not already installed
         # pylint: disable=protected-access
