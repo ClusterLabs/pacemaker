@@ -64,6 +64,9 @@ class BuildOptions:
     OCF_ROOT_DIR = "@PCMK_OCF_ROOT@"
     """Root directory for OCF resource agents and libraries."""
 
+    PACEMAKER_CONFIG_DIR = "@PACEMAKER_CONFIG_DIR@"
+    """Where configuration files such as authkey are kept."""
+
     RSC_TMP_DIR = "@PCMK__OCF_TMP_DIR@"
     """Where resource agents should keep state files."""
 
