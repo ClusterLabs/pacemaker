@@ -942,11 +942,11 @@ action_complete(svc_action_t * action)
         int timeout_left = cmd->timeout_orig - time_sum;
         int delay = cmd->timeout_orig / 10;
 
-        if(delay >= timeout_left && timeout_left > 20) {
-            delay = timeout_left/2;
+        if ((delay >= timeout_left) && (timeout_left > 20)) {
+            delay = timeout_left / 2;
         }
+        delay = QB_MAX(2000, delay); // Use a minimum 2s delay
 
-        delay = QB_MIN(2000, delay);
         if (delay < timeout_left) {
             cmd->start_delay = delay;
             cmd->timeout = timeout_left;
