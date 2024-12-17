@@ -222,6 +222,8 @@ class RemoteExec:
 
         Returns the return code of the cp_command.
         """
+        # @TODO Use subprocess module with argument array instead
+        # (self._cp_command should be an array too)
         cmd = "%s '%s' '%s'" % (self._cp_command, source, target)
         rc = os.system(cmd)
 

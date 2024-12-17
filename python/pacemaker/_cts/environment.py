@@ -144,6 +144,8 @@ class Environment:
                 # GoodThing(tm).
                 try:
                     n = node.strip()
+                    # @TODO This only handles IPv4, use getaddrinfo() instead
+                    # (here and in _discover())
                     socket.gethostbyname_ex(n)
                     self._nodes.append(n)
                 except socket.herror:
