@@ -49,7 +49,6 @@ static struct {
     gboolean get_node_path;
     gboolean no_children;
     gboolean score_update;
-    gboolean sync_call;
 
     /* @COMPAT: For "-!" version option. Not advertised nor marked as
      * deprecated, but accepted.
@@ -58,6 +57,9 @@ static struct {
 
     // @COMPAT Deprecated since 3.0.0
     gboolean local;
+
+    // @COMPAT Deprecated since 3.0.1
+    gboolean sync_call;
 } options = {
     .cmd_options = cib_sync_call,
 };
@@ -341,9 +343,6 @@ static GOptionEntry addl_entries[] = {
       "Run the command with permissions of the named user (valid only for the "
       "root and " CRM_DAEMON_USER " accounts)", "value" },
 
-    { "sync-call", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &options.sync_call, "Wait for call to complete before returning", NULL },
-
     { "scope", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
       "Limit scope of operation to specific section of CIB\n"
       INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
@@ -425,6 +424,10 @@ static GOptionEntry addl_entries[] = {
     // @COMPAT Deprecated since 3.0.0
     { "local", 'l', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.local,
       "(deprecated)", NULL },
+
+    // @COMPAT Deprecated since 3.0.1
+    { "sync-call", 's', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,
+      &options.sync_call, "(deprecated)", NULL },
 
     { NULL }
 };
