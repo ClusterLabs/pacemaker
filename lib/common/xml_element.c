@@ -43,17 +43,16 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                      const char *attr_n, const char *attr_v)
 {
     xmlNode *child = NULL;
-    const char *parent_name = "<null>";
 
     CRM_CHECK((attr_v == NULL) || (attr_n != NULL), return NULL);
 
-    if (parent != NULL) {
-        child = parent->children;
-        while ((child != NULL) && (child->type != XML_ELEMENT_NODE)) {
-            child = child->next;
-        }
+    if (parent == NULL) {
+        return NULL;
+    }
 
-        parent_name = (const char *) parent->name;
+    child = parent->children;
+    while ((child != NULL) && (child->type != XML_ELEMENT_NODE)) {
+        child = child->next;
     }
 
     for (; child != NULL; child = pcmk__xe_next(child, NULL)) {
@@ -80,15 +79,13 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
         }
     }
 
-    if (node_name == NULL) {
-        node_name = "(any)";    // For logging
-    }
-    if (attr_n != NULL) {
-        crm_trace("XML child node <%s %s=%s> not found in %s",
-                  node_name, attr_n, attr_v, parent_name);
+    if (attr_n == NULL) {
+        crm_trace("%s XML has no child element of %s type",
+                  (const char *) parent->name, pcmk__s(node_name, "any"));
     } else {
-        crm_trace("XML child node <%s> not found in %s",
-                  node_name, parent_name);
+        crm_trace("%s XML has no child element of %s type with %s='%s'",
+                  (const char *) parent->name, pcmk__s(node_name, "any"),
+                  attr_n, attr_v);
     }
     return NULL;
 }

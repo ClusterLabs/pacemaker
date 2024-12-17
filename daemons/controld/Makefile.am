@@ -21,7 +21,6 @@ pacemaker_controld_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 pacemaker_controld_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
 pacemaker_controld_LDADD += $(top_builddir)/lib/cib/libcib.la
-pacemaker_controld_LDADD += $(top_builddir)/lib/pengine/libpe_rules.la
 pacemaker_controld_LDADD += $(top_builddir)/lib/fencing/libstonithd.la
 pacemaker_controld_LDADD += $(top_builddir)/lib/cluster/libcrmcluster.la
 pacemaker_controld_LDADD += $(top_builddir)/lib/lrmd/liblrmd.la

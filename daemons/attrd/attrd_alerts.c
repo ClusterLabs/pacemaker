@@ -15,7 +15,6 @@
 #include <crm/common/alerts_internal.h>
 #include <crm/common/cib_internal.h>
 #include <crm/common/xml.h>
-#include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_internal.h>
 #include "pacemaker-attrd.h"
 
@@ -101,8 +100,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         return;
     }
 
-    pe_free_alert_list(attrd_alert_list);
-    attrd_alert_list = pe_unpack_alerts(crmalerts);
+    pcmk__free_alerts(attrd_alert_list);
+    attrd_alert_list = pcmk__unpack_alerts(crmalerts);
 }
 
 gboolean

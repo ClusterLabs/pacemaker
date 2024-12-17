@@ -117,7 +117,6 @@ crm_resource_SOURCES	= crm_resource.c		\
 crm_resource_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
 crm_resource_LDADD += $(top_builddir)/lib/pengine/libpe_status.la
 crm_resource_LDADD += $(top_builddir)/lib/cib/libcib.la
-crm_resource_LDADD += $(top_builddir)/lib/pengine/libpe_rules.la
 crm_resource_LDADD += $(top_builddir)/lib/lrmd/liblrmd.la
 crm_resource_LDADD += $(top_builddir)/lib/fencing/libstonithd.la
 crm_resource_LDADD += $(top_builddir)/lib/services/libcrmservice.la
@@ -127,7 +126,6 @@ crm_rule_SOURCES 	= crm_rule.c
 crm_rule_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
 crm_rule_LDADD += $(top_builddir)/lib/pengine/libpe_status.la
 crm_rule_LDADD += $(top_builddir)/lib/cib/libcib.la
-crm_rule_LDADD += $(top_builddir)/lib/pengine/libpe_rules.la
 crm_rule_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 
 iso8601_SOURCES		= iso8601.c
@@ -140,7 +138,6 @@ attrd_updater_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 crm_ticket_SOURCES	= crm_ticket.c
 crm_ticket_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
 crm_ticket_LDADD += $(top_builddir)/lib/pengine/libpe_status.la
-crm_ticket_LDADD += $(top_builddir)/lib/pengine/libpe_rules.la
 crm_ticket_LDADD += $(top_builddir)/lib/cib/libcib.la
 crm_ticket_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 

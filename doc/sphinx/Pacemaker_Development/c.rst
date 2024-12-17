@@ -92,8 +92,8 @@ Pacemaker Libraries
 |               |         |               |                           |    single: C library; libpe_rules   |
 |               |         |               |                           |    single: libpe_rules              |
 |               |         |               |                           |                                     |
-|               |         |               |                           | Scheduler functionality related     |
-|               |         |               |                           | to evaluating rules                 |
+|               |         |               |                           | Deprecated APIs related to          |
+|               |         |               |                           | evaluating rules                    |
 +---------------+---------+---------------+---------------------------+-------------------------------------+
 | libpe_status  | pe      | lib/pengine   | | include/crm/pengine/*   | .. index::                          |
 |               |         |               |                           |    single: C library; libpe_status  |

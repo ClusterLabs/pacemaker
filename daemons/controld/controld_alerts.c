@@ -12,10 +12,10 @@
 #include <glib.h>
 #include <libxml/tree.h>
 
+#include <crm/common/alerts_internal.h>
 #include <crm/fencing/internal.h>
 #include <crm/lrmd.h>
 #include <crm/lrmd_internal.h>
-#include <crm/pengine/rules_internal.h>
 #include <crm/pengine/status.h>
 #include <crm/stonith-ng.h>
 
@@ -26,8 +26,8 @@ static GList *crmd_alert_list = NULL;
 void
 crmd_unpack_alerts(xmlNode *alerts)
 {
-    pe_free_alert_list(crmd_alert_list);
-    crmd_alert_list = pe_unpack_alerts(alerts);
+    pcmk__free_alerts(crmd_alert_list);
+    crmd_alert_list = pcmk__unpack_alerts(alerts);
 }
 
 void
