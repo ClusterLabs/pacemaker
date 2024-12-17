@@ -341,16 +341,13 @@ Working with the scheduler is difficult. Challenges include:
   later. For example, data unpacked from the CIB can safely be used anytime
   after ``unpack_cib(),`` but actions may become optional or required anytime
   before ``pcmk__create_graph()``. There's no easy way to deal with this.
-* Many names of struct members, functions, etc., are suboptimal, but are part
-  of the public API and cannot be changed until an API backward compatibility
-  break.
 
 
 .. index::
    single: pcmk_scheduler_t
 
-Cluster Working Set
-___________________
+The Scheduler Object
+____________________
 
 The main data object for the scheduler is ``pcmk_scheduler_t``, which contains
 all information needed about nodes, resources, constraints, etc., both as the
@@ -363,18 +360,21 @@ transition graph XML. The variable name is usually ``scheduler``.
 Resources
 _________
 
-``pcmk_resource_t`` is the data object representing cluster resources. A
-resource has a variant: :term:`primitive`, group, clone, or :term:`bundle`.
+``pcmk_resource_t`` is the data object representing cluster resources. It has a
+couple of public members for backward compatibility reasons, but most of the
+implementation is in the internal ``pcmk__resource_private_t`` type.
 
-The resource object has members for two sets of methods,
-``resource_object_functions_t`` from the ``libpe_status`` public API, and
-``resource_alloc_functions_t`` whose implementation is internal to
+A resource has a variant: :term:`primitive`, group, clone, or :term:`bundle`.
+
+The private resource object has members for two sets of methods,
+``pcmk__rsc_methods_t`` from ``libcrmcommon``, and
+``pcmk__assignment_methods_t`` whose implementation is internal to
 ``libpacemaker``. The actual functions vary by variant.
 
-The object functions have basic capabilities such as unpacking the resource
+The resource methods have basic capabilities such as unpacking the resource
 XML, and determining the current or planned location of the resource.
 
-The :term:`assignment <assign>` functions have more obscure capabilities needed
+The :term:`assignment <assign>` methods have more obscure capabilities needed
 for scheduling, such as processing location and ordering constraints. For
 example, ``pcmk__create_internal_constraints()`` simply calls the
 ``internal_constraints()`` method for each top-level resource in the cluster.
@@ -390,25 +390,33 @@ with the highest :term:`score` for a given resource. The scheduler does a bunch
 of processing to generate the scores, then the actual assignment is
 straightforward.
 
+The scheduler node implementation is a little confusing.
+
+``pcmk_node_t`` (``struct pcmk__scored_node``) is the primary object used.
+
+It contains two sub-structs, ``pcmk__node_private_t *priv`` (which is internal)
+and ``struct pcmk__node_details *details`` (which is public for backward
+compatibility reasons), that contain all node information that is independent
+of resource assignment (the node name, etc.).
+
+It contains one other (internal) sub-struct, ``struct pcmk__node_assignment
+*assign``, which contains information particular to a specific resource being
+assigned.
+
 Node lists are frequently used. For example, ``pcmk_scheduler_t`` has a
-``nodes`` member which is a list of all nodes in the cluster, and
-``pcmk_resource_t`` has a ``running_on`` member which is a list of all nodes on
-which the resource is (or might be) active. These are lists of ``pcmk_node_t``
-objects.
+``nodes`` member which is a list of all nodes in the cluster, and the internal
+resource object has an ``active_nodes`` member which is a list of all nodes on
+which the resource is (or might be) active.
 
-The ``pcmk_node_t`` object contains a ``struct pe_node_shared_s *details``
-member with all node information that is independent of resource assignment
-(the node name, etc.).
+Only the scheduler's ``nodes`` list has the full, original node instances. All
+other node lists have shallow copies created by ``pe__copy_node()``, which
+share ``details`` and ``priv`` from the main list (but can differ in their
+``assign`` member).
 
-The working set's ``nodes`` member contains the original of this information.
-All other node lists contain copies of ``pcmk_node_t`` where only the
-``details`` member points to the originals in the working set's ``nodes`` list.
-In this way, the other members of ``pcmk_node_t`` (such as ``weight``, which is
-the node score) may vary by node list, while the common details are shared.
 
 .. index::
    single: pcmk_action_t
-   single: pe_action_flags
+   single: pcmk__action_flags
 
 Actions
 _______
@@ -418,16 +426,16 @@ taken. These could be resource actions, cluster-wide actions such as fencing a
 node, or "pseudo-actions" which are abstractions used as convenient points for
 ordering other actions against.
 
-It has a ``flags`` member which is a bitmask of ``enum pe_action_flags``. The
-most important of these are ``pe_action_runnable`` (if not set, the action is
-"blocked" and cannot be added to the transition graph) and
-``pe_action_optional`` (actions with this set will not be added to the
-transition graph; actions often start out as optional, and may become required
-later).
+Its (internal) implementation has a ``flags`` member which is a bitmask of
+``enum pcmk__action_flags``. The most important of these are
+``pcmk__action_runnable`` (if not set, the action is "blocked" and cannot be
+added to the transition graph) and ``pcmk__action_optional`` (actions with this
+set will not be added to the transition graph; actions often start out as
+optional, and may become required later).
 
 
 .. index::
-   single: pe__colocation_t
+   single: pcmk__colocation_t
 
 Colocations
 ___________
@@ -462,30 +470,45 @@ The resource assignment functions have several methods related to colocations:
 
 
 .. index::
-   single: pe__ordering_t
-   single: pe_ordering
+   single: pcmk__action_relation_t
+   single: action; relation
 
-Orderings
-_________
+Action Relations
+________________
 
 Ordering constraints are simple in concept, but they are one of the most
 important, powerful, and difficult to follow aspects of the scheduler code.
 
-``pe__ordering_t`` is the data object representing an ordering, better thought
-of as a relationship between two actions, since the relation can be more
-complex than just "this one runs after that one".
+``pcmk__action_relation_t`` is the data object representing an ordering, better
+thought of as a relationship between two actions, since the relation can be
+more complex than just "this one runs after that one".
 
-For an ordering "A then B", the code generally refers to A as "first" or
+For a relation "A then B", the code generally refers to A as "first" or
 "before", and B as "then" or "after".
 
-Much of the power comes from ``enum pe_ordering``, which are flags that
-determine how an ordering behaves. There are many obscure flags with big
-effects. A few examples:
+Much of the power comes from ``enum pcmk__action_relation_flags``, which are
+flags that determine how a relation behaves. There are many obscure flags with
+big effects. A few examples:
 
-* ``pe_order_none`` means the ordering is disabled and will be ignored. It's 0,
-  meaning no flags set, so it must be compared with equality rather than
-  ``pcmk_is_set()``.
-* ``pe_order_optional`` means the ordering does not make either action
-  required, so it only applies if they both become required for other reasons.
-* ``pe_order_implies_first`` means that if action B becomes required for any
-  reason, then action A will become required as well.
+* ``pcmk__ar_none`` means the relation is disabled and will be ignored. The
+  value is 0, meaning no flags set, so it must be compared with equality rather
+  than ``pcmk_is_set()``.
+* ``pcmk__ar_ordered`` without any other flags set means the relation does not
+  make either action required, so it applies only if they both become required
+  for other reasons.
+* ``pcmk__ar_then_implies_first`` means that if action B becomes required for
+  any reason, then action A will become required as well.
+
+Adding a New Scheduler Regression Test
+______________________________________
+
+#. Choose a test name.
+#. Copy the uncompressed input CIB to cts/scheduler/xml/TESTNAME.xml. It's
+   helpful to add an XML comment at the top describing the essential features of
+   the test (which configuration and status scenarios are being tested).
+#. Edit ``cts/cts-scheduler.in`` and add the test name and description to the
+   ``TESTS`` array.
+#. Run ``cts/cts-scheduler --update --run TESTNAME`` to generate the expected
+   transition graph, scores, etc. Look over the generated files to make sure
+   they are as expected.
+#. Commit your changes.
