@@ -32,6 +32,10 @@ Current cluster status:
       * FAKE4-IP	(ocf:heartbeat:IPaddr2):	 Started lamaVM2
     * Clone Set: FAKE6-clone [FAKE6]:
       * Started: [ lamaVM1 lamaVM2 lamaVM3 ]
+warning: Invalid ordering constraint between FSlun4 and VM3
+warning: Invalid ordering constraint between FSlun3 and VM2
+warning: Invalid ordering constraint between FSlun2 and VM1
+warning: Invalid ordering constraint between FSlun1 and VM1
 
 Transition Summary:
   * Fence (reboot) lamaVM2 (resource: VM2) 'guest is unclean'

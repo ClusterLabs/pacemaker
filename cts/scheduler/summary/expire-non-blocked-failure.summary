@@ -1,3 +1,4 @@
+warning: Ignoring failure timeout (1m) for rsc1 because it conflicts with on-fail=block
 0 of 3 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
@@ -13,6 +14,7 @@ Transition Summary:
 
 Executing Cluster Transition:
   * Cluster action:  clear_failcount for rsc2 on node1
+warning: Ignoring failure timeout (1m) for rsc1 because it conflicts with on-fail=block
 
 Revised Cluster Status:
   * Node List:

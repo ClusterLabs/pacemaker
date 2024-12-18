@@ -362,6 +362,7 @@ profile_file(const char *xml_file, long long repeat,
     }
 
     for (int i = 0; i < repeat; ++i) {
+        int rc;
         xmlNode *input = cib_object;
 
         if (repeat > 1) {
@@ -369,8 +370,12 @@ profile_file(const char *xml_file, long long repeat,
         }
         scheduler->input = input;
         set_effective_date(scheduler, false, use_date);
-        pcmk__schedule_actions(input, scheduler_flags, scheduler);
+        rc = pcmk__schedule_actions(input, scheduler_flags, scheduler);
         pe_reset_working_set(scheduler);
+
+        if (rc != pcmk_rc_ok) {
+            break;
+        }
     }
 
     end = clock();
@@ -820,7 +825,11 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     }
 
     reset(scheduler, input, out, use_date, flags);
-    cluster_status(scheduler);
+    rc = pcmk_unpack_scheduler_input(scheduler);
+
+    if (rc != pcmk_rc_ok) {
+        goto simulate_done;
+    }
 
     if (!out->is_quiet(out)) {
         const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
@@ -873,7 +882,12 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
         cleanup_calculations(scheduler);
         reset(scheduler, input, out, use_date, flags);
-        cluster_status(scheduler);
+        /* pcmk_unpack_scheduler_input only returns error on scheduler being
+         * NULL or the feature set being unsupported.  Neither of those
+         * conditions could have changed since the first call, so there's no
+         * need to check the return value again.
+         */
+        pcmk_unpack_scheduler_input(scheduler);
     }
 
     if (input_file != NULL) {
@@ -922,6 +936,11 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             scheduler->priv->out = logger_out;
         }
 
+        /* Likewise here - pcmk__schedule_actions only returns an error if
+         * cluster_status did, and there's nothing that could have changed since
+         * the first call to cause new errors here.  So we don't need to check
+         * this return value either.
+         */
         pcmk__schedule_actions(input, scheduler_flags, scheduler);
 
         if (logger_out == NULL) {
@@ -983,9 +1002,11 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
 
-    cluster_status(scheduler);
-    print_cluster_status(scheduler, 0, section_opts, "Revised Cluster Status",
-                         true);
+    rc = pcmk_unpack_scheduler_input(scheduler);
+    if (rc == pcmk_rc_ok) {
+        print_cluster_status(scheduler, 0, section_opts, "Revised Cluster Status",
+                             true);
+    }
 
 simulate_done:
     cib__clean_up_connection(&cib);

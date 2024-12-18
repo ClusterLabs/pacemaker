@@ -8,6 +8,8 @@ Current cluster status:
     * Resource Group: group1:
       * child_DoFencing_1	(stonith:ssh):	 Stopped
       * child_DoFencing_2	(stonith:ssh):	 Stopped
+warning: Node hadev1 is unclean but cannot be fenced
+warning: Node hadev3 is unclean but cannot be fenced
 
 Transition Summary:
   * Start      child_DoFencing_1     ( hadev2 )

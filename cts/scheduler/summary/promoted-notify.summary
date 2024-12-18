@@ -6,6 +6,18 @@ Current cluster status:
     * shooter	(stonith:fence_xvm):	 Started rhel7-auto1
     * Clone Set: fake-master [fake] (promotable):
       * Unpromoted: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
+error: Operation fake-monitor-interval-10-role-Unpromoted is duplicate of fake-monitor-interval-10-role-Promoted (do not use same name and interval combination more than once per resource)
 
 Transition Summary:
   * Promote    fake:0     ( Unpromoted -> Promoted rhel7-auto1 )

@@ -104,7 +104,14 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
 
     pe_reset_working_set(scheduler);
     scheduler->input = cib_copy;
-    cluster_status(scheduler);
+    rc = pcmk_unpack_scheduler_input(scheduler);
+
+    if (rc != pcmk_rc_ok) {
+        /* Now that we've set up the scheduler, it's up to the caller to clean up.
+         * Doing cleanup here can result in double frees of XML or CIB data.
+         */
+        return rc;
+    }
 
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,

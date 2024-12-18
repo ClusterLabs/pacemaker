@@ -13,6 +13,8 @@ Current cluster status:
     * rsc4	(ocf:pacemaker:Dummy):	 FAILED rhel7-5 (blocked)
     * rsc5	(ocf:pacemaker:Dummy):	 Started rhel7-1
     * rsc6	(ocf:pacemaker:Dummy):	 Started rhel7-2
+error: Operation rsc3-monitor-interval-P40S is duplicate of rsc3-monitor-interval-40s (do not use same name and interval combination more than once per resource)
+error: Operation rsc3-monitor-interval-P40S is duplicate of rsc3-monitor-interval-40s (do not use same name and interval combination more than once per resource)
 
 Transition Summary:
   * Start      rsc2    (            rhel7-3 )

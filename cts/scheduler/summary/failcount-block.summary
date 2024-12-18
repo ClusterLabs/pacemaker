@@ -1,3 +1,6 @@
+error: Ignoring invalid node_state entry without id
+warning: Ignoring failure timeout (10s) for rsc_pcmk-2 because it conflicts with on-fail=block
+warning: Ignoring failure timeout (10s) for rsc_pcmk-4 because it conflicts with on-fail=block
 0 of 5 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
@@ -25,6 +28,8 @@ Executing Cluster Transition:
   * Cluster action:  clear_failcount for rsc_pcmk-5 on pcmk-1
   * Resource action: rsc_pcmk-3      monitor=5000 on pcmk-1
   * Resource action: rsc_pcmk-4      monitor=5000 on pcmk-1
+error: Ignoring invalid node_state entry without id
+warning: Ignoring failure timeout (10s) for rsc_pcmk-2 because it conflicts with on-fail=block
 
 Revised Cluster Status:
   * Node List:

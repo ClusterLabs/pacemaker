@@ -14,6 +14,8 @@ Current cluster status:
       * child_DoFencing:5	(stonith:ssh):	 Stopped
       * child_DoFencing:6	(stonith:ssh):	 Stopped
       * child_DoFencing:7	(stonith:ssh):	 Stopped
+warning: Node hadev1 is unclean but cannot be fenced
+warning: Node hadev3 is unclean but cannot be fenced
 
 Transition Summary:
   * Start      child_DoFencing:0     ( hadev2 )

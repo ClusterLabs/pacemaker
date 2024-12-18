@@ -36,8 +36,8 @@ typedef struct {
 
 void pcmk__unpack_constraints(pcmk_scheduler_t *scheduler);
 
-void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
-                            pcmk_scheduler_t *scheduler);
+int pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
+                           pcmk_scheduler_t *scheduler);
 
 GList *pcmk__copy_node_list(const GList *list, bool reset);
 
