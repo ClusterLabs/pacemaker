@@ -90,13 +90,20 @@ Alert Meta-Attributes
 As with resources, meta-attributes can be configured for alerts to change
 whether and how Pacemaker calls them.
    
-.. table:: **Meta-Attributes of an Alert**
+.. table:: **Meta-Attributes of an Alert or Recipient**
    :class: longtable
    :widths: 1 1 3
    
    +------------------+---------------+-----------------------------------------------------+
    | Meta-Attribute   | Default       | Description                                         |
    +==================+===============+=====================================================+
+   | description      |               | .. index::                                          |
+   |                  |               |    single: acl_permission; description (attribute)  |
+   |                  |               |    single: description; acl_permission attribute    |
+   |                  |               |    single: attribute; description (acl_permission)  |
+   |                  |               |                                                     |
+   |                  |               | Arbitrary text for user's use (ignored by Pacemaker)|
+   +------------------+---------------+-----------------------------------------------------+
    | enabled          | true          | .. index::                                          |
    |                  |               |    single: alert; meta-attribute, enabled           |
    |                  |               |    single: meta-attribute; enabled (alert)          |

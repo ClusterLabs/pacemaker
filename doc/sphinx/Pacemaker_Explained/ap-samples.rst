@@ -101,12 +101,12 @@ Advanced Configuration
               </instance_attributes>
             </primitive>
             <group id="myGroup">
-              <primitive id="database" class="lsb" type="oracle">
+              <primitive id="database" class="systemd" type="mariadb">
                 <operations>
                   <op id="database-monitor" name="monitor" interval="300s"/>
                 </operations>
               </primitive>
-              <primitive id="webserver" class="lsb" type="apache">
+              <primitive id="webserver" class="systemd" type="httpd">
                 <operations>
                   <op id="webserver-monitor" name="monitor" interval="300s"/>
                 </operations>

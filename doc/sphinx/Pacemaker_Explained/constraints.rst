@@ -775,8 +775,36 @@ have an effect in all contexts.
    |             |                  |    single: score; resource_set attribute               |
    |             |                  |                                                        |
    |             |                  | *Advanced use only.* Use a specific score for this     |
-   |             |                  | set within the constraint.                             |
+   |             |                  | set. Meaningful within ``rsc_location`` or             |
+   |             |                  | ``rsc_colocation``.                                    |
    +-------------+------------------+--------------------------------------------------------+
+   | kind        |                  | .. index::                                             |
+   |             |                  |    single: resource_set; attribute, kind               |
+   |             |                  |    single: attribute; kind (resource_set)              |
+   |             |                  |    single: kind; resource_set attribute                |
+   |             |                  |                                                        |
+   |             |                  | *Advanced use only.* Use a specific kind for this      |
+   |             |                  | set. Meaningful within ``rsc_order``.                  |
+   +-------------+------------------+--------------------------------------------------------+
+
+Anti-colocation Chains
+______________________
+
+Sometimes, you would like a set of resources to be anti-colocated with each
+other. For example, ``resource1``, ``resource2``, and ``resource3`` must all
+run on different nodes.
+
+A straightforward approach would be to configure either separate colocations or
+a resource set, with ``-INFINITY`` scores between all the resources.
+
+However, this will not work as expected.
+
+Resource sets may in the future gain new syntax for this specific situation,
+but for now, a workaround is to use :ref:`utilization <utilization>` instead of
+colocations to keep the resources apart. Create a utilization attribute for the
+anti-colocation, assign the same value to each resource, and give each node the
+capacity to run one resource.
+
 
 .. _s-resource-sets-ordering:
 
