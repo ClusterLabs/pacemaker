@@ -14,6 +14,7 @@ import time
 from collections import UserDict
 
 from pacemaker.buildoptions import BuildOptions
+from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.CTS import NodeStatus
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.cib import ConfigFactory
@@ -820,15 +821,16 @@ class ClusterManager(UserDict):
             if self.expected_status[node] != "up":
                 continue
 
-            (_, quorum) = self.rsh(node, self.templates["QuorumCmd"], verbose=1)
-            quorum = quorum[0].strip()
+            (rc, quorum) = self.rsh(node, self.templates["QuorumCmd"], verbose=1)
+            if rc != ExitStatus.OK:
+                self.debug("WARN: Quorum check on %s returned error (%d)" % (node, rc))
+                continue
 
+            quorum = quorum[0].strip()
             if quorum.find("1") != -1:
                 return True
-
             if quorum.find("0") != -1:
                 return False
-
             self.debug("WARN: Unexpected quorum test result from %s:%s" % (node, quorum))
 
         return False
