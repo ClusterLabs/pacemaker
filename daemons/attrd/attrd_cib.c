@@ -53,17 +53,16 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
     const char *client_name = NULL;
     bool status_changed = false;
 
-    if (attrd_shutting_down(true)) {
-        crm_debug("Ignoring CIB change during shutdown");
-        return;
-    }
-
     if (cib__get_notify_patchset(msg, &patchset) != pcmk_rc_ok) {
         return;
     }
 
     if (pcmk__cib_element_in_patchset(patchset, PCMK_XE_ALERTS)) {
-        mainloop_set_trigger(attrd_config_read);
+        if (attrd_shutting_down(true)) {
+            crm_debug("Ignoring alerts change in CIB during shutdown");
+        } else {
+            mainloop_set_trigger(attrd_config_read);
+        }
     }
 
     status_changed = pcmk__cib_element_in_patchset(patchset, PCMK_XE_STATUS);
@@ -83,6 +82,12 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
 
     if (status_changed
         || pcmk__cib_element_in_patchset(patchset, PCMK_XE_NODES)) {
+
+        if (attrd_shutting_down(true)) {
+            crm_debug("Ignoring node change in CIB during shutdown");
+            return;
+        }
+
         /* An unsafe client modified the PCMK_XE_NODES or PCMK_XE_STATUS
          * section. Write transient attributes to ensure they're up-to-date in
          * the CIB.
@@ -91,7 +96,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
             client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTID);
         }
         crm_notice("Updating all attributes after %s event triggered by %s",
-                   event, pcmk__s(client_name, "(unidentified client)"));
+                   event, pcmk__s(client_name, "unidentified client"));
 
         attrd_write_attributes(attrd_write_all);
     }
