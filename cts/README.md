@@ -309,22 +309,3 @@ without requiring a password to be entered each time:
 
   If this works without prompting for a password, you're in business.
   If not, look at the documentation for your version of ssh.
-
-
-## Upgrading scheduler test inputs for new XSLTs
-
-The scheduler/xml inputs should be kept in sync with the latest major schema
-version, since these tests are not meant to test schema upgrades (unless
-expressly designated as such).
-
-To upgrade the inputs to a new major schema version:
-
-    cd "$(git rev-parse --show-toplevel)/xml"
-    ./regression.sh cts_scheduler -G
-    cd "$(git rev-parse --show-toplevel)/cts"
-    git add --interactive .
-    git commit -m 'Test: scheduler: upgrade test inputs to schema $X.$Y'
-    ./cts-scheduler || echo 'Investigate what went wrong'
-
-The first two commands can be run anytime to verify no further upgrades are
-needed.
