@@ -931,7 +931,6 @@ dnl ==============================================
 AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
 AC_PATH_PROG([HELP2MAN], [help2man])
 AC_PATH_PROG([SPHINX], [sphinx-build])
-AC_PATH_PROG([INKSCAPE], [inkscape])
 AC_PATH_PROG([XSLTPROC], [xsltproc])
 AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
 
@@ -976,8 +975,7 @@ AM_CONDITIONAL([BUILD_ASCIIDOC], [test "x${ASCIIDOC_CONV}" != x])
 AS_IF([test x"${ASCIIDOC_CONV}" != x""],
       [PCMK_FEATURES="$PCMK_FEATURES ascii-docs"])
 
-AM_CONDITIONAL([BUILD_SPHINX_DOCS],
-               [test x"${SPHINX}" != x"" && test x"${INKSCAPE}" != x""])
+AM_CONDITIONAL([BUILD_SPHINX_DOCS], [test x"${SPHINX}" != x""])
 AM_COND_IF([BUILD_SPHINX_DOCS], [PCMK_FEATURES="$PCMK_FEATURES books"])
 
 dnl Pacemaker's shell scripts (and thus man page builders) rely on GNU getopt
