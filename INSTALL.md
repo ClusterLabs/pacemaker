@@ -49,7 +49,6 @@ Also:
 | Linux-HA style fencing agents                   |                | cluster-glue-libs-devel | libglue-devel           | cluster-glue-dev        |
 | documentation                                   |                | asciidoc or asciidoctor | asciidoc or asciidoctor | asciidoc or asciidoctor |
 | documentation                                   |                | help2man                | help2man                | help2man                |
-| documentation                                   |                | inkscape                | inkscape                | inkscape                |
 | documentation                                   |                | docbook-style-xsl       | docbook-xsl-stylesheets | docbook-xsl             |
 | documentation                                   |                | python3-sphinx          | python3-sphinx          | python3-sphinx          |
 | documentation (PDF)                             |                | latexmk texlive texlive-capt-of texlive-collection-xetex texlive-fncychap texlive-framed texlive-multirow texlive-needspace texlive-tabulary texlive-titlesec texlive-threeparttable texlive-upquote texlive-wrapfig texlive-xetex | texlive texlive-latex  | texlive texlive-latex-extra |
