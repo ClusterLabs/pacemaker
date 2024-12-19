@@ -437,7 +437,7 @@ should_forget_cluster_node(gpointer key, gpointer value, gpointer user_data)
         return FALSE;
     }
 
-    crm_info("Removing node with name %s and cluster layer ID " PRIu32
+    crm_info("Removing node with name %s and cluster layer ID %" PRIu32
              " from membership cache",
              pcmk__s(node->name, "(unknown)"), node->cluster_layer_id);
     return TRUE;
@@ -1282,7 +1282,7 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
              * refresh_remote_nodes().
              */
             if(iter) {
-                crm_notice("Purged 1 peer with cluster layer ID=" PRIu32
+                crm_notice("Purged 1 peer with cluster layer ID %" PRIu32
                            "and/or name=%s from the membership cache",
                            node->cluster_layer_id, node->name);
                 g_hash_table_iter_remove(iter);
