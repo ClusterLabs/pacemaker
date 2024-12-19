@@ -43,32 +43,31 @@ SPHINXFLAGS	?=
 # End of useful overrides
 
 
-# Example scheduler transition graphs
-# @TODO The original CIB XML for these is long lost. Ideally, we would recreate
-# something similar and keep those here instead of the DOTs (or use a couple of
-# scheduler regression test inputs instead), then regenerate the SVG
-# equivalents using crm_simulate and dot when making a release.
-DOTS =	$(wildcard shared/images/*.dot)
-
-# Vector sources for generated PNGs (including SVG equivalents of DOTS, created
-# manually using dot)
-SVGS =	$(wildcard shared/images/pcmk-*.svg) \
-	$(DOTS:%.dot=%.svg)
-
-# PNG images generated from SVGS
+# All images needed by the documentation are PNGs (added to the source
+# repository and distributions). Some of these PNGs can be regenerated
+# manually from DOT and/or SVG sources (also in the source repository, but
+# not distributed).
 #
-# These will not be accessible in a VPATH build, which will generate warnings
-# when building the documentation, but the make will still succeed. It is
-# nontrivial to get them working for VPATH builds and not worth the effort.
-PNGS_GENERATED	= $(SVGS:%.svg=%.png)
-
-# Original PNG image sources
-PNGS_Clusters_from_Scratch = $(wildcard Clusters_from_Scratch/images/*.png)
-PNGS_Pacemaker_Explained   = $(wildcard Pacemaker_Explained/images/*.png)
+# To regenerate an SVG from a DOT, you can use dot:
+#
+#    dot $NAME.dot -Tsvg > $NAME.svg
+#
+# To regenerate a PNG from an SVG, you can use Inkscape (>= 1.0):
+#
+#    inkscape --export-dpi=90 -C --export-filename=$NAME.png $NAME.svg
+#
+# @TODO The original CIB XML for the example scheduler transitions
+# (Policy-Engine-*) is long lost. Ideally, we would recreate something similar
+# and keep that XML here (or use a couple of scheduler regression test inputs
+# instead). Then the DOTs could be regenerated as well, using crm_simulate.
+PNGS_shared			= $(wildcard shared/images/*.png)
+PNGS_Clusters_from_Scratch	= $(wildcard Clusters_from_Scratch/images/*.png)
+PNGS_Pacemaker_Explained	= $(wildcard Pacemaker_Explained/images/*.png)
 
 STATIC_FILES	= $(wildcard _static/*.css)
 
-EXTRA_DIST	= $(wildcard */*.rst) $(DOTS) $(SVGS)			\
+EXTRA_DIST	= $(wildcard */*.rst) 					\
+		  $(PNGS_shared)					\
 		  $(PNGS_Clusters_from_Scratch)				\
 		  $(PNGS_Pacemaker_Explained)				\
 		  $(wildcard Pacemaker_Python_API/_templates/*rst) 	\
@@ -81,8 +80,8 @@ BOOK_RSYNC_DEST	= $(RSYNC_PACKAGE_DEST)/doc/$(PACKAGE_SERIES)
 
 BOOK		= none
 
-DEPS_intro			= shared/pacemaker-intro.rst \
-				  $(PNGS_GENERATED)
+DEPS_intro			= shared/pacemaker-intro.rst	\
+				  $(PNGS_shared)
 
 DEPS_Clusters_from_Scratch	= $(DEPS_intro) 		\
 				  $(PNGS_Clusters_from_Scratch)
@@ -93,18 +92,6 @@ DEPS_Pacemaker_Explained	= $(DEPS_intro) 		\
 DEPS_Pacemaker_Python_API 	= ../../python
 
 if BUILD_SPHINX_DOCS
-
-INKSCAPE_CMD	= $(INKSCAPE) --export-dpi=90 -C
-
-# Pattern rule to generate PNGs from SVGs
-# (--export-png works with Inkscape <1.0, --export-filename with >=1.0;
-# create the destination directory in case this is a VPATH build)
-%.png: %.svg
-	$(AM_V_at)-$(MKDIR_P) "$(shell dirname "$@")"
-	$(AM_V_GEN) {							\
-		$(INKSCAPE_CMD) --export-png="$@" "$<" 2>/dev/null	\
-		|| $(INKSCAPE_CMD) --export-filename="$@" "$<";		\
-	} $(PCMK_quiet)
 
 # Create a book's Sphinx configuration.
 # Create the book directory in case this is a VPATH build.
@@ -221,5 +208,4 @@ clean-local:
 	$(AM_V_at)-rm -rf				\
 		$(BOOKS:%="$(builddir)/%/_build")	\
 		$(BOOKS:%="$(builddir)/%/conf.py")	\
-		$(BOOKS:%="$(builddir)/%/generated")	\
-		$(PNGS_GENERATED)
+		$(BOOKS:%="$(builddir)/%/generated")

@@ -223,7 +223,6 @@ TAGS
 /doc/sphinx/*/conf.py
 /doc/sphinx/*/generated
 /doc/sphinx/build-[0-9]*.txt
-/doc/sphinx/shared/images/*.png
 
 # Test artifacts (from unit tests, regression tests, static analysis, etc.)
 *.coverity

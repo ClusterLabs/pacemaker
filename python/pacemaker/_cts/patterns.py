@@ -307,7 +307,9 @@ class Corosync2Patterns(BasePatterns):
 
         self._components["pacemaker-controld-ignore"] = []
         self._components["pacemaker-attrd"] = []
-        self._components["pacemaker-attrd-ignore"] = []
+        self._components["pacemaker-attrd-ignore"] = [
+            r"pacemaker-controld.*Connection to attrd (IPC failed|closed)",
+        ]
 
         self._components["pacemaker-schedulerd"] = [
             r"State transition .* S_RECOVERY",

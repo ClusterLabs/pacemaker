@@ -73,10 +73,6 @@ open-source cluster filesystems make use of a common *Distributed Lock
 Manager* (DLM), which makes direct use of Corosync for its messaging and
 membership capabilities and Pacemaker for the ability to fence nodes.
 
-.. image:: ../shared/images/pcmk-stack.png
-   :alt: Example cluster stack
-   :align: center
-
 Pacemaker Architecture
 ______________________
 
