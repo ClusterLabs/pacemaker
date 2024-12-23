@@ -782,6 +782,18 @@ initialization procedure on the new object.
 * If the constructor may add the new object to some existing object, its name
   should include ``create``.
 
+Functions that take the caller's name as an argument
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes, we define a function that uses the ``__FILE__``, ``__func__``,
+and/or ``__LINE__`` of the caller for logging purposes, often with a wrapper
+macro that automatically passes them.
+
+* The function should take those values as its first arguments.
+* The function name should end in ``_as()``.
+* If a wrapper macro is used, its name should be the same without ``_as()``.
+* See ``pcmk__assert_alloc()`` and ``pcmk__assert_alloc_as()`` as examples.
+
 
 Function Definitions
 ____________________
@@ -1093,6 +1105,14 @@ Pacemaker assumes that every XML node is part of a document and has private data
 allocated. If libxml2 APIs are used directly instead of the wrapper functions,
 Pacemaker may crash with a segmentation fault, or change tracking and ACL
 checking may be incorrectly disabled.
+
+
+XPaths
+______
+
+Separting XPath element names with ``/`` (specifying each level in the
+hierarchy explicitly) is more efficient than ``//`` (allowing intermediate
+levels to be omitted), so it should be used whenever practical.
 
 
 .. index::

@@ -528,6 +528,12 @@ main(int argc, char **argv)
         target = options.unregister_level;
     }
 
+    if ((options.timeout > (UINT_MAX / 1000)) || (options.timeout < 0)) {
+        out->err(out, "Integer value \"%d\" for -t out of range", options.timeout);
+        exit_code = CRM_EX_USAGE;
+        goto done;
+    }
+
     if (action == 0) {
         char *help = g_option_context_get_help(context, TRUE, NULL);
 

@@ -368,7 +368,7 @@ hosts_family() {
     return $family
 }
 
-integer=$(echo ${OCF_RESKEY_timeout} | egrep -o '[0-9]*')
+integer=$(echo ${OCF_RESKEY_timeout} | $EGREP -o '[0-9]*')
 case "${OCF_RESKEY_timeout}" in
     *[0-9]ms|*[0-9]msec) OCF_RESKEY_timeout=$(expr $integer / 1000);;
     *[0-9]m|*[0-9]min) OCF_RESKEY_timeout=$(expr $integer \* 60);;
