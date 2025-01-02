@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1839,8 +1839,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                  * definition appear to have been changed. Defer the check until
                  * later in this case.
                  */
-                pcmk__add_param_check(rsc_op, rsc, node, pcmk__check_active,
-                                      rsc->priv->scheduler);
+                pcmk__add_param_check(rsc_op, rsc, node, pcmk__check_active);
 
             } else if (pcmk__check_action_config(rsc, node, rsc_op)
                        && (pe_get_failcount(node, rsc, NULL, pcmk__fc_effective,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -4023,8 +4023,7 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
              * substitute addr parameters for the REMOTE_CONTAINER_HACK.
              * When that's needed, defer the check until later.
              */
-            pcmk__add_param_check(xml_op, rsc, node, pcmk__check_last_failure,
-                                  rsc->priv->scheduler);
+            pcmk__add_param_check(xml_op, rsc, node, pcmk__check_last_failure);
 
         } else {
             pcmk__op_digest_t *digest_data = NULL;

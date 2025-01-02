@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -353,20 +353,17 @@ struct param_check {
  * \brief Add a deferred parameter check
  *
  * \param[in]     rsc_history  Resource history XML to check later
- * \param[in]     rsc          Resource that history is for
+ * \param[in,out] rsc          Resource that history is for
  * \param[in]     node         Node that history is for
  * \param[in]     flag         What needs to be checked later
- * \param[in,out] scheduler    Scheduler data
  */
 void
 pcmk__add_param_check(const xmlNode *rsc_history, pcmk_resource_t *rsc,
-                      pcmk_node_t *node, enum pcmk__check_parameters flag,
-                      pcmk_scheduler_t *scheduler)
+                      pcmk_node_t *node, enum pcmk__check_parameters flag)
 {
     struct param_check *param_check = NULL;
 
-    CRM_CHECK((rsc_history != NULL) && (rsc != NULL) && (node != NULL)
-              && (scheduler != NULL), return);
+    CRM_CHECK((rsc_history != NULL) && (rsc != NULL) && (node != NULL), return);
 
     crm_trace("Deferring checks of %s until after assignment",
               pcmk__xe_id(rsc_history));
@@ -375,8 +372,9 @@ pcmk__add_param_check(const xmlNode *rsc_history, pcmk_resource_t *rsc,
     param_check->rsc = rsc;
     param_check->node = node;
     param_check->check_type = flag;
-    scheduler->priv->param_check = g_list_prepend(scheduler->priv->param_check,
-                                                  param_check);
+
+    rsc->priv->scheduler->priv->param_check =
+        g_list_prepend(rsc->priv->scheduler->priv->param_check, param_check);
 }
 
 /*!

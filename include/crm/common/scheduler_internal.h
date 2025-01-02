@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -285,8 +285,7 @@ void pcmk__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
                                const char *reason);
 
 void pcmk__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
-                           pcmk_node_t *node, enum pcmk__check_parameters,
-                           pcmk_scheduler_t *scheduler);
+                           pcmk_node_t *node, enum pcmk__check_parameters);
 void pcmk__foreach_param_check(pcmk_scheduler_t *scheduler,
                                void (*cb)(pcmk_resource_t*, pcmk_node_t*,
                                           const xmlNode*,
