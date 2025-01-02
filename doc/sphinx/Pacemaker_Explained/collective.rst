@@ -251,10 +251,10 @@ _____________
    | globally-unique   | **true** if     |  .. index::                                           |
    |                   | clone-node-max  |     single: clone; option, globally-unique            |
    |                   | is greater than |     single: option; globally-unique (clone)           |
-   |                   | 1, otherwise    |     single: globally-unique; clone option             |
-   |                   | **false**       |                                                       |
-   |                   |                 | If **true**, each clone instance performs a           |
-   |                   |                 | distinct function, such that a single node can run    |
+   |                   | 1 *(since*      |     single: globally-unique; clone option             |
+   |                   | *3.0.0)*,       |                                                       |
+   |                   | otherwise       | If **true**, each clone instance performs a           |
+   |                   | **false**       | distinct function, such that a single node can run    |
    |                   |                 | more than one instance at the same time               |
    +-------------------+-----------------+-------------------------------------------------------+
    | clone-max         | 0               | .. index::                                            |
