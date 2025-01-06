@@ -14,6 +14,7 @@
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 
+#include <stdbool.h>
 #include <sys/stat.h>
 #include <gio/gio.h>
 #include <services_private.h>
@@ -133,7 +134,7 @@ systemd_call_simple_method(const char *method)
     return reply;
 }
 
-static gboolean
+static bool
 systemd_init(void)
 {
     static int need_init = 1;
@@ -152,9 +153,9 @@ systemd_init(void)
         systemd_proxy = pcmk_dbus_connect();
     }
     if (systemd_proxy == NULL) {
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
 }
 
 static inline char *
@@ -548,7 +549,7 @@ systemd_unit_listall(void)
     DBusMessageIter elem;
     DBusMessage *reply = NULL;
 
-    if (systemd_init() == FALSE) {
+    if (!systemd_init()) {
         return NULL;
     }
 
