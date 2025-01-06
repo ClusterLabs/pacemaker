@@ -114,6 +114,18 @@ Pacemaker uses several environment variables set on the client side.
        private key for the local host. Used with :ref:`CIB_port <CIB_port>` for
        connecting to a remote CIB instance; ignored if
        :ref:`CIB_port <CIB_port>` is not set.
+   * - .. _CIB_crl_file:
+
+       .. index::
+          single: CIB_crl_file
+          single: environment variable; CIB_crl_file
+
+       CIB_crl_file
+     - 
+     - If this, :ref:`CIB_ca_file <CIB_ca_file>`,
+       :ref:`CIB_cert_file <CIB_cert_file>`, and
+       :ref:`CIB_key_file <CIB_key_file>` are all set, then certificates listed
+       in this PEM-format Certificate Revocation List file will be rejected.
    * - .. _CIB_shadow:
 
        .. index::

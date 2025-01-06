@@ -246,6 +246,9 @@ the daemon user's password:
    # export CIB_key_file=/etc/pacemaker/admin.key.pem
    # cibadmin -Q
 
+Optionally, :ref:`CIB_crl_file <CIB_crl_file>` may be set to the location of a
+Certificate Revocation List in PEM format.
+
 .. note::
 
    Pacemaker must have been built with PAM support for remote access to work.
