@@ -391,7 +391,7 @@ group_free(pcmk_resource_t * rsc)
 
         pcmk__assert(child_rsc != NULL);
         pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
-        child_rsc->priv->fns->free(child_rsc);
+        pcmk__free_resource(child_rsc);
     }
 
     pcmk__rsc_trace(rsc, "Freeing child list");

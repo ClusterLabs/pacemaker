@@ -398,7 +398,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
         && (fc_data.last_failure > 0)
         && (rsc->priv->failure_expiration_ms > 0)) {
 
-        time_t now = get_effective_time(rsc->priv->scheduler);
+        time_t now = pcmk__scheduler_epoch_time(rsc->priv->scheduler);
         const guint expiration = pcmk__timeout_ms2s(rsc->priv->failure_expiration_ms);
 
         if (now > (fc_data.last_failure + expiration)) {

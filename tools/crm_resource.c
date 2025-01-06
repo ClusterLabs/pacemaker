@@ -170,7 +170,7 @@ bye(crm_exit_t ec)
         mainloop = NULL;
     }
 
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     scheduler = NULL;
     crm_exit(ec);
     return ec;
@@ -981,7 +981,7 @@ initialize_scheduler_data(xmlNode **cib_xml_orig)
 {
     int rc = pcmk_rc_ok;
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         return ENOMEM;
     }

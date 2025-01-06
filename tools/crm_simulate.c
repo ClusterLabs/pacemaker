@@ -510,7 +510,7 @@ main(int argc, char **argv)
         options.flags |= pcmk_sim_verbose;
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         rc = ENOMEM;
         g_set_error(&error, PCMK__RC_ERROR, rc,
@@ -561,7 +561,7 @@ main(int argc, char **argv)
     g_strfreev(processed_args);
 
     if (scheduler != NULL) {
-        pe_free_working_set(scheduler);
+        pcmk_free_scheduler(scheduler);
     }
 
     fflush(stderr);

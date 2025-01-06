@@ -102,7 +102,7 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
                                                fence_history);
     }
 
-    pe_reset_working_set(scheduler);
+    pcmk_reset_scheduler(scheduler);
     scheduler->input = cib_copy;
     cluster_status(scheduler);
 
@@ -258,7 +258,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
         goto done;
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = out;
 
@@ -276,7 +276,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     }
 
 done:
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     stonith_api_delete(stonith);
     pcmk__xml_free(current_cib);
     return pcmk_rc_ok;

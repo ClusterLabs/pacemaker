@@ -1435,7 +1435,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
 
     pcmk__output_t *out = scheduler->priv->out;
 
-    pe_reset_working_set(scheduler);
+    pcmk_reset_scheduler(scheduler);
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
 
     if(simulate) {
@@ -1730,7 +1730,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
       - Allow a --no-deps option (aka. --force-restart)
     */
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         rc = errno;
         out->err(out, "Could not allocate scheduler data: %s", pcmk_rc_str(rc));
@@ -1967,7 +1967,7 @@ done:
     }
     free(rsc_id);
     free(lookup_id);
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     return rc;
 }
 
@@ -2067,7 +2067,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         expire_time += pcmk__timeout_ms2s(timeout_ms + 999);
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         return ENOMEM;
     }
@@ -2096,7 +2096,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         }
 
         /* Get latest transition graph */
-        pe_reset_working_set(scheduler);
+        pcmk_reset_scheduler(scheduler);
         rc = update_scheduler_input(out, scheduler, cib, NULL);
         if (rc != pcmk_rc_ok) {
             break;
@@ -2130,7 +2130,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
     } while (actions_are_pending(scheduler->priv->actions)
              || pending_unknown_state_resources);
 
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     free(xpath);
     return rc;
 }

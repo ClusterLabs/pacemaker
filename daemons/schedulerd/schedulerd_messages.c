@@ -23,9 +23,9 @@
 static GHashTable *schedulerd_handlers = NULL;
 
 static pcmk_scheduler_t *
-init_working_set(void)
+init_scheduler(void)
 {
-    pcmk_scheduler_t *scheduler = pe_new_working_set();
+    pcmk_scheduler_t *scheduler = pcmk_new_scheduler();
 
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = logger_out;
@@ -66,7 +66,7 @@ handle_pecalc_request(pcmk__request_t *request)
     xmlNode *reply = NULL;
     bool is_repoke = false;
     bool process = true;
-    pcmk_scheduler_t *scheduler = init_working_set();
+    pcmk_scheduler_t *scheduler = init_scheduler();
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
@@ -165,7 +165,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
 done:
     pcmk__xml_free(converted);
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
 
     return reply;
 }

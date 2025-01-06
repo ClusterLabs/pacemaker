@@ -11,7 +11,7 @@
 #define PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 
 #include <stdint.h>                     // uint32_t
-#include <glib.h>                       // gboolean, guint, GHashTable, GList
+#include <glib.h>                       // gboolean, gpointer, guint, etc.
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/common/resources.h>       // pcmk_resource_t
@@ -442,6 +442,7 @@ struct pcmk__resource_private {
     const pcmk__assignment_methods_t *cmds; // Resource assignment methods
 };
 
+void pcmk__free_resource(gpointer user_data);
 const char *pcmk__multiply_active_text(const pcmk_resource_t *rsc);
 
 /*!

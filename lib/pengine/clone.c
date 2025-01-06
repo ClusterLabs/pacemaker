@@ -931,7 +931,7 @@ clone_free(pcmk_resource_t * rsc)
         /* There could be a saved unexpanded xml */
         pcmk__xml_free(child_rsc->priv->orig_xml);
         child_rsc->priv->orig_xml = NULL;
-        child_rsc->priv->fns->free(child_rsc);
+        pcmk__free_resource(child_rsc);
     }
 
     g_list_free(rsc->priv->children);

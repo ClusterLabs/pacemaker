@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -278,6 +278,19 @@ extern uint32_t pcmk__warnings;
             LOG_TRACE, "Scheduler", crm_system_name,                        \
             (scheduler)->flags, (flags_to_clear), #flags_to_clear);         \
     } while (0)
+
+void pcmk__set_scheduler_defaults(pcmk_scheduler_t *scheduler);
+time_t pcmk__scheduler_epoch_time(pcmk_scheduler_t *scheduler);
+void pcmk__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
+                               const char *reason);
+
+void pcmk__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
+                           pcmk_node_t *node, enum pcmk__check_parameters);
+void pcmk__foreach_param_check(pcmk_scheduler_t *scheduler,
+                               void (*cb)(pcmk_resource_t*, pcmk_node_t*,
+                                          const xmlNode*,
+                                          enum pcmk__check_parameters));
+void pcmk__free_param_checks(pcmk_scheduler_t *scheduler);
 
 #ifdef __cplusplus
 }

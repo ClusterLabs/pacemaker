@@ -1599,7 +1599,7 @@ main(int argc, char **argv)
         one_shot();
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = out;
     if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
@@ -2127,7 +2127,7 @@ clean_up(crm_exit_t exit_code)
 
     g_strfreev(processed_args);
 
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
 
     /* (2) If this is abnormal termination and we're in curses mode, shut down
      * curses first.  Any messages displayed to the screen before curses is shut

@@ -128,7 +128,6 @@ void pe__count_bundle(pcmk_resource_t *rsc);
 void common_free(pcmk_resource_t *rsc);
 
 pcmk_node_t *pe__copy_node(const pcmk_node_t *this_node);
-time_t get_effective_time(pcmk_scheduler_t *scheduler);
 
 /* Failure handling utilities (from failcounts.c) */
 
@@ -230,8 +229,6 @@ GList *find_actions_exact(GList *input, const char *key,
                           const pcmk_node_t *on_node);
 GList *pe__resource_actions(const pcmk_resource_t *rsc, const pcmk_node_t *node,
                             const char *task, bool require_node);
-
-extern void pe_free_action(pcmk_action_t *action);
 
 void resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
                        const char *tag, pcmk_scheduler_t *scheduler);
@@ -336,18 +333,8 @@ const char *pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
                                        const char *field);
 bool pe__is_universal_clone(const pcmk_resource_t *rsc,
                             const pcmk_scheduler_t *scheduler);
-void pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
-                         pcmk_node_t *node, enum pcmk__check_parameters,
-                         pcmk_scheduler_t *scheduler);
-void pe__foreach_param_check(pcmk_scheduler_t *scheduler,
-                             void (*cb)(pcmk_resource_t*, pcmk_node_t*,
-                                        const xmlNode*,
-                                        enum pcmk__check_parameters));
-void pe__free_param_checks(pcmk_scheduler_t *scheduler);
 
 bool pe__shutdown_requested(const pcmk_node_t *node);
-void pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
-                             const char *reason);
 
 /*!
  * \internal

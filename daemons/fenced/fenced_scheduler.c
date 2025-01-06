@@ -37,7 +37,7 @@ fenced_scheduler_init(void)
         return rc;
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         pcmk__output_free(logger);
         return ENOMEM;
@@ -95,7 +95,7 @@ fenced_scheduler_cleanup(void)
             pcmk__output_free(logger);
             scheduler->priv->out = NULL;
         }
-        pe_free_working_set(scheduler);
+        pcmk_free_scheduler(scheduler);
         scheduler = NULL;
     }
 }
@@ -250,5 +250,5 @@ fenced_scheduler_run(xmlNode *cib)
                    NULL);
 
     scheduler->input = NULL; // Wasn't a copy, so don't let API free it
-    pe_reset_working_set(scheduler);
+    pcmk_reset_scheduler(scheduler);
 }

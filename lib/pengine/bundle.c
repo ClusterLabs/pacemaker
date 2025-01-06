@@ -1264,7 +1264,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         if (create_replica_resources(rsc, bundle_data, replica) != pcmk_rc_ok) {
             pcmk__config_err("Failed unpacking resource %s", rsc->id);
-            rsc->priv->fns->free(rsc);
+            pcmk__free_resource(rsc);
             return FALSE;
         }
 
@@ -1825,17 +1825,17 @@ free_bundle_replica(pcmk__bundle_replica_t *replica)
     if (replica->ip) {
         pcmk__xml_free(replica->ip->priv->xml);
         replica->ip->priv->xml = NULL;
-        replica->ip->priv->fns->free(replica->ip);
+        pcmk__free_resource(replica->ip);
     }
     if (replica->container) {
         pcmk__xml_free(replica->container->priv->xml);
         replica->container->priv->xml = NULL;
-        replica->container->priv->fns->free(replica->container);
+        pcmk__free_resource(replica->container);
     }
     if (replica->remote) {
         pcmk__xml_free(replica->remote->priv->xml);
         replica->remote->priv->xml = NULL;
-        replica->remote->priv->fns->free(replica->remote);
+        pcmk__free_resource(replica->remote);
     }
     free(replica->ipaddr);
     free(replica);
@@ -1870,7 +1870,7 @@ pe__free_bundle(pcmk_resource_t *rsc)
     if(bundle_data->child) {
         pcmk__xml_free(bundle_data->child->priv->xml);
         bundle_data->child->priv->xml = NULL;
-        bundle_data->child->priv->fns->free(bundle_data->child);
+        pcmk__free_resource(bundle_data->child);
     }
     common_free(rsc);
 }
