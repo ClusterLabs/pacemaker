@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -134,6 +134,58 @@ systemd_call_simple_method(const char *method)
     return reply;
 }
 
+static DBusHandlerResult
+filter_systemd_signals(DBusConnection *connection, DBusMessage *message,
+                       void *user_data)
+{
+    CRM_CHECK((connection != NULL) && (message != NULL),
+              return DBUS_HANDLER_RESULT_NOT_YET_HANDLED);
+
+    crm_trace("Checking DBus message %s.%s() on %s",
+              dbus_message_get_interface(message),
+              dbus_message_get_member(message),
+              dbus_message_get_path(message));
+
+    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+}
+
+static int
+subscribe_to_signals(void)
+{
+    DBusMessage *reply = NULL;
+    DBusError error;
+
+    /* Tell DBus to report signals from systemd */
+    dbus_error_init(&error);
+    dbus_bus_add_match(systemd_proxy,
+                       "type='signal',sender='" BUS_NAME "',interface='"
+                       BUS_NAME_MANAGER "',path='" BUS_PATH "'",
+                       &error);
+
+    if (dbus_error_is_set(&error)) {
+        crm_err("Could not listen for systemd DBus signals: %s " QB_XS " (%s)",
+                error.message, error.name);
+        return ECOMM;
+    }
+
+    /* Set a message filter to look for signals from systemd */
+    if (!dbus_connection_add_filter(systemd_proxy, filter_systemd_signals,
+                                    NULL, NULL)) {
+        crm_err("Could not add DBus filter for systemd signals");
+        return ECOMM;
+    }
+
+    /* Tell systemd to issue signals */
+    reply = systemd_call_simple_method("Subscribe");
+    if (reply == NULL) {
+        crm_err("Could not subscribe to systemd DBus signals");
+        return ECOMM;
+    }
+
+    dbus_message_unref(reply);
+    return pcmk_rc_ok;
+}
+
 static bool
 systemd_init(void)
 {
@@ -151,11 +203,14 @@ systemd_init(void)
     if (need_init) {
         need_init = 0;
         systemd_proxy = pcmk_dbus_connect();
+
+        if (subscribe_to_signals() != pcmk_rc_ok) {
+            pcmk_dbus_disconnect(systemd_proxy);
+            systemd_proxy = NULL;
+        }
     }
-    if (systemd_proxy == NULL) {
-        return false;
-    }
-    return true;
+
+    return (systemd_proxy != NULL);
 }
 
 static inline char *
