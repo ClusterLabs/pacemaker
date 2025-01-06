@@ -125,6 +125,7 @@ xmlNode *
 create_node_state_update(pcmk__node_status_t *node, int flags,
                          xmlNode *parent, const char *source)
 {
+    // @TODO Ensure all callers handle NULL returns
     const char *value = NULL;
     xmlNode *node_state;
 

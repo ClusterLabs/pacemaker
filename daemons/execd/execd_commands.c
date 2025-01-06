@@ -1516,6 +1516,15 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
             // This is a remote connection from a cluster node's controller
             ipc_proxy_add_provider(client);
 
+            /* @TODO Allowing multiple proxies makes no sense given that clients
+             * have no way to choose between them. Maybe always use the most
+             * recent one and switch any existing IPC connections to use it,
+             * by iterating over ipc_clients here, and if client->id doesn't
+             * match the client's userdata, replace the userdata with the new
+             * ID. After the iteration, call lrmd_remote_client_destroy() on any
+             * of the replaced values in ipc_providers.
+             */
+
             /* If this was a register operation, also ask for new schema files but
              * only if it's supported by the protocol version.
              */

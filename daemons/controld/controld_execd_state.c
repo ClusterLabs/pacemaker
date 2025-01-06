@@ -319,6 +319,9 @@ controld_get_executor_state(const char *node_name, bool create)
     return state;
 }
 
+/* @TODO the lone caller just needs to iterate over the values, so replace this
+ * with a g_hash_table_foreach() wrapper instead
+ */
 GList *
 lrm_state_get_list(void)
 {

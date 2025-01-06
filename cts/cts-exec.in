@@ -304,7 +304,10 @@ class ExecTests(Tests):
 
     def setup_environment(self):
         """Prepare the host before executing any tests."""
+
         if BuildOptions.REMOTE_ENABLED:
+            # @TODO Use systemctl when available, and use the subprocess module
+            # with an argument array instead of os.system()
             os.system("service pacemaker_remote stop")
         self.cleanup_environment()
 
@@ -312,7 +315,9 @@ class ExecTests(Tests):
         authkey = "%s/authkey" % BuildOptions.PACEMAKER_CONFIG_DIR
         if self.tls and not os.path.isfile(authkey):
             print("Installing %s ..." % authkey)
+            # @TODO Use os.mkdir() instead
             os.system("mkdir -p %s" % BuildOptions.PACEMAKER_CONFIG_DIR)
+            # @TODO Use the subprocess module with an argument array instead
             os.system("dd if=/dev/urandom of=%s bs=4096 count=1" % authkey)
             self._installed_files.append(authkey)
 

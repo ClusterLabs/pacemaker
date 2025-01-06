@@ -883,6 +883,10 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                              "%s of %s to 'stop' because 'fence' is not "
                              "valid when fencing is disabled",
                              action_name, rsc->id);
+            /* @TODO This should probably do
+            g_hash_table_remove(meta, PCMK_META_ON_FAIL);
+            like the other "Resetting" spots, to avoid repeating the message
+            */
             on_fail = pcmk__on_fail_stop;
             desc = "stop resource";
         }

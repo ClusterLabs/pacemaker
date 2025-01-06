@@ -606,6 +606,7 @@ monitor_timeout_cb(gpointer data)
     free_cmd(cmd);
 
     if(lrm_state) {
+        // @TODO Should we move this before reporting the result above?
         lrm_state_disconnect(lrm_state);
     }
     return FALSE;
@@ -950,12 +951,13 @@ handle_remote_ra_exec(gpointer user_data)
         } else if (!strcmp(cmd->action, PCMK_ACTION_STOP)) {
 
             if (pcmk_is_set(ra_data->status, expect_takeover)) {
-                /* briefly wait on stop for the takeover event to occur. If the
-                 * takeover event does not occur during the wait period, that's fine.
-                 * It just means that the remote-node's lrm_status section is going to get
-                 * cleared which will require all the resources running in the remote-node
-                 * to be explicitly re-detected via probe actions.  If the takeover does occur
-                 * successfully, then we can leave the status section intact. */
+                /* Briefly wait on stop for an expected takeover to occur. If
+                 * the takeover does not occur during the wait, that's fine; it
+                 * just means that the remote node's resource history will be
+                 * cleared, which will require probing all resources on the
+                 * remote node. If the takeover does occur successfully, then we
+                 * can leave the status section intact.
+                 */
                 cmd->takeover_timeout_id = pcmk__create_timer((cmd->timeout/2),
                                                               connection_takeover_timeout_cb,
                                                               cmd);

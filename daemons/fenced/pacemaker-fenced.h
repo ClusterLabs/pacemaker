@@ -75,6 +75,11 @@ enum st_remap_phase {
 };
 
 typedef struct remote_fencing_op_s {
+    /* @TODO Abstract the overlap with async_command_t (some members have
+     * different names for the same thing), which should allow reducing
+     * duplication in some functions
+     */
+
     /* The unique id associated with this operation */
     char *id;
     /*! The node this operation will fence */

@@ -40,7 +40,9 @@
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
+// @TODO This should be guint
 long long stonith_watchdog_timeout_ms = 0;
+
 GList *stonith_watchdog_targets = NULL;
 
 static GMainLoop *mainloop = NULL;

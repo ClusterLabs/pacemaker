@@ -229,9 +229,9 @@ To use TLS certificates, the administrator's machine also needs their
 public/private key pair, signed client certificate, and root CA certificate.
 Those must additionally be specified with the following environment variables:
 
-* :ref:`CIB_ca_file <file>`
-* :ref:`CIB_cert_file <file>`
-* :ref:`CIB_key_file <file>`
+* :ref:`CIB_ca_file <CIB_ca_file>`
+* :ref:`CIB_cert_file <CIB_cert_file>`
+* :ref:`CIB_key_file <CIB_key_file>`
 
 As an example, if **node1** is a cluster node, and the CIB is configured with
 ``remote-tls-port`` set to 1234, the administrator could read the current
@@ -245,6 +245,9 @@ the daemon user's password:
    # export CIB_cert_file=/etc/pacemaker/admin.cert.pem
    # export CIB_key_file=/etc/pacemaker/admin.key.pem
    # cibadmin -Q
+
+Optionally, :ref:`CIB_crl_file <CIB_crl_file>` may be set to the location of a
+Certificate Revocation List in PEM format.
 
 .. note::
 

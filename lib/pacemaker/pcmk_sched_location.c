@@ -454,6 +454,8 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             free(pmatch);
         }
 
+        // @TODO Maybe log a notice if we did not match any resources
+
         regfree(&regex);
     }
 }

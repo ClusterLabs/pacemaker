@@ -572,6 +572,7 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
 xmlNode *
 controld_query_executor_state(void)
 {
+    // @TODO Ensure all callers handle NULL returns
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
@@ -597,7 +598,7 @@ controld_query_executor_state(void)
     crm_xml_add(xml_data, PCMK_XA_ID, peer->xml_id);
     rsc_list = pcmk__xe_create(xml_data, PCMK__XE_LRM_RESOURCES);
 
-    /* Build a list of active (not always running) resources */
+    // Build a list of active (not necessarily running) resources
     build_active_RAs(lrm_state, rsc_list);
 
     crm_log_xml_trace(xml_state, "Current executor state");

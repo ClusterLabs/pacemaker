@@ -173,6 +173,7 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
     xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
 
+    // @TODO An XPath search can't handle multiple instances or rules
     stonith_watchdog_xml = get_xpath_object(XPATH_WATCHDOG_TIMEOUT, cib,
                                             LOG_NEVER);
     if (stonith_watchdog_xml) {

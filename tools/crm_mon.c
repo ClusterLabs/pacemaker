@@ -601,7 +601,9 @@ use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 /* *INDENT-OFF* */
 static GOptionEntry addl_entries[] = {
     { "interval", 'i', 0, G_OPTION_ARG_CALLBACK, reconnect_cb,
-      "Update frequency (default is 5 seconds)",
+      "Update frequency (default is 5 seconds). Note: When run interactively\n"
+      INDENT "on a live cluster, the display will be updated automatically\n"
+      INDENT "whenever the cluster configuration or status changes.",
       "TIMESPEC" },
 
     { "one-shot", '1', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,

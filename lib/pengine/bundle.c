@@ -72,6 +72,9 @@ typedef struct pe__bundle_variant_data_s {
         GList *ports;       // pe__bundle_port_t *
         GList *mounts;      // pe__bundle_mount_t *
 
+        /* @TODO Maybe use a more object-oriented design instead, with a set of
+         * methods that are different per type rather than switching on this
+         */
         enum pe__container_agent agent_type;
 } pe__bundle_variant_data_t;
 
@@ -1983,6 +1986,9 @@ pe__bundle_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
 GList *
 pe__bundle_containers(const pcmk_resource_t *bundle)
 {
+    /* @TODO It would be more efficient to do this once when unpacking the
+     * bundle, creating a new GList* in the variant data
+     */
     GList *containers = NULL;
     const pe__bundle_variant_data_t *data = NULL;
 

@@ -112,6 +112,10 @@ CTS includes:
     the log file, then CTS lab will not check for aggregation.
   * CTS lab does not currently detect systemd journal log aggregation.
 
+* Optionally, if the lab nodes use the systemd journal for logs, create
+  /etc/systemd/journald.conf.d/cts-lab.conf on each with
+  `RateLimitIntervalSec=0` or `RateLimitBurst=0`, to avoid issues with log
+  detection.
 
 ### Run
 

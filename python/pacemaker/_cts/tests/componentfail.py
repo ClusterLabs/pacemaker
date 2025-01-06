@@ -21,6 +21,10 @@ from pacemaker._cts.tests.simulstartlite import SimulStartLite
 # pylint: disable=unsubscriptable-object
 
 
+# @TODO Separate this into a separate test for each component, so the patterns
+# can be made specific to each component, investigating failures is a little
+# easier, and specific testing can be done for each component (for example,
+# set attributes before and after killing pacemaker-attrd and check values).
 class ComponentFail(CTSTest):
     """Kill a random pacemaker daemon and wait for the cluster to recover."""
 

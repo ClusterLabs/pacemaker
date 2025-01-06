@@ -642,7 +642,11 @@ static GOptionEntry advanced_entries[] = {
       NULL },
     { "restart", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Tell the cluster to restart this resource and\n"
-      INDENT "anything that depends on it",
+      INDENT "anything that depends on it. This temporarily modifies\n"
+      INDENT "the CIB, and other CIB modifications should be avoided\n"
+      INDENT "while this is in progress. If a node is fenced because\n"
+      INDENT "the stop portion of the restart fails, CIB modifications\n"
+      INDENT "such as target-role may remain.",
       NULL },
     { "wait", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Wait until the cluster settles into a stable state",
@@ -717,7 +721,7 @@ static GOptionEntry addl_entries[] = {
       "Operation to clear instead of all (with -C -r)",
       "OPERATION" },
     { "interval", 'I', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.interval_spec,
-      "Interval of operation to clear (default 0) (with -C -r -n)",
+      "Interval of operation to clear (default 0s) (with -C -r -n)",
       "N" },
     { "class", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, cmdline_config_cb,
       "The standard the resource agent conforms to (for example, ocf).\n"

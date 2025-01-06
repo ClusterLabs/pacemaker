@@ -27,6 +27,10 @@ enum pcmk__graph_action_type {
     pcmk__pseudo_graph_action,
     pcmk__rsc_graph_action,
     pcmk__cluster_graph_action,
+    /* @TODO maybe separate a new pcmk__fencing_graph_action from
+     * pcmk__cluster_graph_action to make code cleaner (for example, see
+     * initiate_action())
+     */
 };
 
 enum pcmk__synapse_flags {

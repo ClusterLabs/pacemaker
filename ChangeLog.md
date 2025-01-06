@@ -1,3 +1,50 @@
+# Pacemaker-3.0.0-rc3 (23 Dec 2024)
+* 33 commits with 9 files changed, 77 insertions(+), 12 deletions(-)
+
+## Features added since Pacemaker-3.0.0-rc2
+
+* Inkscape is no longer a build dependency for Pacemaker documentation
+* The `ocf:pacemaker:controld` agent will now always manage `dlm_controld`
+  (previously, it would try to manage the long-obsolete `gfs_controld` if the
+  resource name started with `gfs`)
+
+## Fixes since Pacemaker-3.0.0-rc2
+
+* **agents:** `ocf:pacemaker:ping` now uses `grep -E` instead of the obsolete
+  `egrep`
+* **tools:** when injecting a fail count with `crm_simulate`, use an `INFINITY`
+  score when the cluster would
+* **tools:** validate `stonith_admin --timeout` value
+
+## Public API changes since Pacemaker-3.0.0-rc2
+
+* **Python:** add `PACEMAKER_CONFIG_DIR` to `BuildOptions`
+
+# Pacemaker-3.0.0-rc2 (11 Dec 2024)
+* 57 commits with 44 files changed, 1487 insertions(+), 633 deletions(-)
+
+## Features added since Pacemaker-3.0.0-rc1
+
+* **Pacemaker Remote and CIB manager:** support X.509 (SSL/TLS) certificates
+  for encrypting Pacemaker Remote connections and remote CIB administration
+
+## Fixes since Pacemaker-3.0.0-rc1
+
+* **libcrmcluster:** restore ability to do rolling upgrades
+  (regression introduced in 3.0.0-rc1)
+* **controller:** avoid memory leak when updating join phase
+  (regression introduced in 3.0.0-rc1)
+* **scheduler:** avoid memory leaks in bundles and when freeing node copies
+  (regression introduced in 3.0.0-rc1)
+* **CIB:** log warnings if CIB upgrade might not preserve behavior exactly
+* **CIB:** ensure ACLs remain valid after CIB upgrades, and warn if upgrade
+  might change ACL effect (regression introduced in 3.0.0-rc1)
+
+## Public API changes since Pacemaker-3.0.0-rc1
+
+* **libcrmcommon:** add `pcmk_common_cleanup()`
+
+
 # Pacemaker-3.0.0-rc1 (14 Nov 2024)
 * 1938 commits with 685 files changed, 26363 insertions(+), 33503 deletions(-)
 

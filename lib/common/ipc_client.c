@@ -674,7 +674,11 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
         flags = crm_ipc_client_response;
     }
 
-    // The 0 here means a default timeout of 5 seconds
+    /* The 0 here means a default timeout of 5 seconds
+     *
+     * @TODO Maybe add a timeout_ms member to pcmk_ipc_api_t and a
+     * pcmk_set_ipc_timeout() setter for it, then use it here.
+     */
     rc = crm_ipc_send(api->ipc, request, flags, 0, &reply);
 
     if (rc < 0) {
