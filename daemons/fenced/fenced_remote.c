@@ -1122,7 +1122,6 @@ fenced_handle_manual_confirmation(const pcmk__client_t *client, xmlNode *msg)
         return EPROTO;
     }
     op->state = st_done;
-    set_fencing_completed(op);
     op->delegate = pcmk__str_copy("a human");
 
     // For the fencer's purposes, the fencing operation is done

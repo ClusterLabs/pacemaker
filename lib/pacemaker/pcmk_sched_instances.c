@@ -1326,8 +1326,7 @@ find_instance_action(const pcmk_action_t *action, const pcmk_resource_t *instanc
     }
 
     if (pcmk_is_set(instance->flags, pcmk__rsc_removed)
-        || pcmk__str_any_of(action_name, PCMK_ACTION_STOP, PCMK_ACTION_DEMOTE,
-                            NULL)) {
+        || pcmk__is_down_action(action_name)) {
         crm_trace("No %s action found for %s%s",
                   action_name,
                   pcmk_is_set(instance->flags, pcmk__rsc_removed)? "orphan " : "",

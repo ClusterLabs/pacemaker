@@ -55,7 +55,6 @@ typedef struct remote_ra_cmd_s {
     int delay_id;
     /*! timeout in ms for cmd */
     int timeout;
-    int remaining_timeout;
     /*! recurring interval in ms */
     guint interval_ms;
     /*! interval timer id */
@@ -512,10 +511,18 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     lrmd__reset_result(&op);
 }
 
-static void
-update_remaining_timeout(remote_ra_cmd_t * cmd)
+/*!
+ * \internal
+ * \brief Return a remote command's remaining timeout in seconds
+ *
+ * \param[in] cmd  Remote command to check
+ *
+ * \return Command's remaining timeout in seconds
+ */
+static int
+remaining_timeout_sec(const remote_ra_cmd_t *cmd)
 {
-    cmd->remaining_timeout = ((cmd->timeout / 1000) - (time(NULL) - cmd->start_time)) * 1000;
+    return pcmk__timeout_ms2s(cmd->timeout) - (time(NULL) - cmd->start_time);
 }
 
 static gboolean
@@ -525,19 +532,19 @@ retry_start_cmd_cb(gpointer data)
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
     remote_ra_cmd_t *cmd = NULL;
     int rc = ETIME;
+    int remaining = 0;
 
     if (!ra_data || !ra_data->cur_cmd) {
         return FALSE;
     }
     cmd = ra_data->cur_cmd;
-    if (!pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
-                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
+    if (!pcmk__is_up_action(cmd->action)) {
         return FALSE;
     }
-    update_remaining_timeout(cmd);
 
-    if (cmd->remaining_timeout > 0) {
-        rc = handle_remote_ra_start(lrm_state, cmd, cmd->remaining_timeout);
+    remaining = remaining_timeout_sec(cmd);
+    if (remaining > 0) {
+        rc = handle_remote_ra_start(lrm_state, cmd, remaining * 1000);
     } else {
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                          PCMK_EXEC_TIMEOUT,
@@ -720,11 +727,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     /* Start actions and migrate from actions complete after connection
      * comes back to us. */
-    if ((op->type == lrmd_event_connect)
-        && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
-                                PCMK_ACTION_MIGRATE_FROM, NULL)) {
+    if ((op->type == lrmd_event_connect) && pcmk__is_up_action(cmd->action)) {
         if (op->connection_rc < 0) {
-            update_remaining_timeout(cmd);
+            int remaining = remaining_timeout_sec(cmd);
 
             if ((op->connection_rc == -ENOKEY)
                 || (op->connection_rc == -EKEYREJECTED)) {
@@ -733,14 +738,15 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
                                  PCMK_EXEC_ERROR,
                                  pcmk_strerror(op->connection_rc));
 
-            } else if (cmd->remaining_timeout > 3000) {
-                crm_trace("rescheduling start, remaining timeout %d", cmd->remaining_timeout);
+            } else if (remaining > 3) {
+                crm_trace("Rescheduling start (%ds remains before timeout)",
+                          remaining);
                 pcmk__create_timer(1000, retry_start_cmd_cb, lrm_state);
                 return;
 
             } else {
-                crm_trace("can't reschedule start, remaining timeout too small %d",
-                          cmd->remaining_timeout);
+                crm_trace("Not enough time before timeout (%ds) "
+                          "to reschedule start", remaining);
                 pcmk__format_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                                     PCMK_EXEC_TIMEOUT,
                                     "%s without enough time to retry",

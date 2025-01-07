@@ -406,9 +406,6 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
                                A_ELECTION_COUNT)) {
             do_fsa_action(fsa_data, A_ELECTION_COUNT, do_election_count_vote);
 
-        } else if (pcmk_is_set(controld_globals.fsa_actions, A_LRM_EVENT)) {
-            do_fsa_action(fsa_data, A_LRM_EVENT, do_lrm_event);
-
             /*
              * High priority actions
              */

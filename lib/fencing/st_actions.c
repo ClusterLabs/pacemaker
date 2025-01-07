@@ -572,14 +572,54 @@ stonith_action_async_forked(svc_action_t *svc_action)
               action->pid, action->action);
 }
 
+/*!
+ * \internal
+ * \brief Convert a fencing library action to a services library action
+ *
+ * \param[in,out] action  Fencing library action to convert
+ *
+ * \return Services library action equivalent to \p action on success; on error,
+ *         NULL will be returned and \p action's result will be set
+ */
+static svc_action_t *
+stonith_action_to_svc(stonith_action_t *action)
+{
+    static int stonith_sequence = 0;
+
+    char *path = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s", action->agent);
+    svc_action_t *svc_action = services_action_create_generic(path, NULL);
+
+    free(path);
+    if (svc_action->rc != PCMK_OCF_UNKNOWN) {
+        set_result_from_svc_action(action, svc_action);
+        services_action_free(svc_action);
+        return NULL;
+    }
+
+    svc_action->timeout = action->remaining_timeout * 1000;
+    svc_action->standard = pcmk__str_copy(PCMK_RESOURCE_CLASS_STONITH);
+    svc_action->id = crm_strdup_printf("%s_%s_%dof%d", action->agent,
+                                       action->action, action->tries,
+                                       action->max_retries);
+    svc_action->agent = pcmk__str_copy(action->agent);
+    svc_action->sequence = stonith_sequence++;
+    svc_action->params = action->args;
+    svc_action->cb_data = (void *) action;
+    svc_action->flags = pcmk__set_flags_as(__func__, __LINE__,
+                                           LOG_TRACE, "Action",
+                                           svc_action->id, svc_action->flags,
+                                           SVC_ACTION_NON_BLOCKED,
+                                           "SVC_ACTION_NON_BLOCKED");
+
+    return svc_action;
+}
+
 static int
 internal_stonith_action_execute(stonith_action_t * action)
 {
-    int rc = -EPROTO;
+    int rc = pcmk_ok;
     int is_retry = 0;
     svc_action_t *svc_action = NULL;
-    static int stonith_sequence = 0;
-    char *buffer = NULL;
 
     CRM_CHECK(action != NULL, return -EINVAL);
 
@@ -590,46 +630,28 @@ internal_stonith_action_execute(stonith_action_t * action)
         return -EINVAL;
     }
 
-    if (!action->tries) {
+    if (action->tries++ == 0) {
+        // First attempt of the desired action
         action->initial_start_time = time(NULL);
-    }
-    action->tries++;
-
-    if (action->tries > 1) {
-        crm_info("Attempt %d to execute %s (%s). remaining timeout is %d",
-                 action->tries, action->agent, action->action, action->remaining_timeout);
+    } else {
+        // Later attempt after earlier failure
+        crm_info("Attempt %d to execute '%s' action of agent %s "
+                 "(%ds timeout remaining)",
+                 action->tries, action->action, action->agent,
+                 action->remaining_timeout);
         is_retry = 1;
     }
 
-    buffer = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s",
-                               basename(action->agent));
-    svc_action = services_action_create_generic(buffer, NULL);
-    free(buffer);
-
-    if (svc_action->rc != PCMK_OCF_UNKNOWN) {
-        set_result_from_svc_action(action, svc_action);
-        services_action_free(svc_action);
+    svc_action = stonith_action_to_svc(action);
+    if (svc_action == NULL) {
+        // The only possible errors are out-of-memory and too many arguments
         return -E2BIG;
     }
-
-    svc_action->timeout = 1000 * action->remaining_timeout;
-    svc_action->standard = strdup(PCMK_RESOURCE_CLASS_STONITH);
-    svc_action->id = crm_strdup_printf("%s_%s_%dof%d", basename(action->agent),
-                                       action->action, action->tries,
-                                       action->max_retries);
-    svc_action->agent = strdup(action->agent);
-    svc_action->sequence = stonith_sequence++;
-    svc_action->params = action->args;
-    svc_action->cb_data = (void *) action;
-    svc_action->flags = pcmk__set_flags_as(__func__, __LINE__,
-                                           LOG_TRACE, "Action",
-                                           svc_action->id, svc_action->flags,
-                                           SVC_ACTION_NON_BLOCKED,
-                                           "SVC_ACTION_NON_BLOCKED");
 
     /* keep retries from executing out of control and free previous results */
     if (is_retry) {
         pcmk__reset_result(&(action->result));
+        // @TODO This should be nonblocking via timer if mainloop is used
         sleep(1);
     }
 
@@ -640,11 +662,8 @@ internal_stonith_action_execute(stonith_action_t * action)
                                               &stonith_action_async_forked));
         return pcmk_ok;
 
-    } else if (services_action_sync(svc_action)) { // sync success
-        rc = pcmk_ok;
-
-    } else { // sync failure
-        rc = -ECONNABORTED;
+    } else if (!services_action_sync(svc_action)) {
+        rc = -ECONNABORTED; // @TODO Update API to return more useful error
     }
 
     set_result_from_svc_action(action, svc_action);

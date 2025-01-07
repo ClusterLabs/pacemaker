@@ -193,9 +193,8 @@ stonith_peer_callback(xmlNode * msg, void *private_data)
 
 #if SUPPORT_COROSYNC
 static void
-stonith_peer_ais_callback(cpg_handle_t handle,
-                          const struct cpg_name *groupName,
-                          uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
+handle_cpg_message(cpg_handle_t handle, const struct cpg_name *groupName,
+                   uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
     xmlNode *xml = NULL;
     const char *from = NULL;
@@ -617,7 +616,7 @@ main(int argc, char **argv)
 #if SUPPORT_COROSYNC
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         pcmk_cluster_set_destroy_fn(cluster, stonith_peer_cs_destroy);
-        pcmk_cpg_set_deliver_fn(cluster, stonith_peer_ais_callback);
+        pcmk_cpg_set_deliver_fn(cluster, handle_cpg_message);
         pcmk_cpg_set_confchg_fn(cluster, pcmk__cpg_confchg_cb);
     }
 #endif // SUPPORT_COROSYNC
