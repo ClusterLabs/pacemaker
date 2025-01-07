@@ -469,7 +469,6 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 {
     int rc = pcmk_ok;
     cib_remote_opaque_t *private = cib->variant_opaque;
-    xmlNode *hello = NULL;
 
     if (name == NULL) {
         name = pcmk__s(crm_system_name, "client");
@@ -497,19 +496,6 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     }
 
     rc = cib_tls_signon(cib, &(private->callback), TRUE);
-    if (rc != pcmk_ok) {
-        goto done;
-    }
-
-    rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL, cib_none, NULL,
-                        name, &hello);
-    if (rc != pcmk_ok) {
-        goto done;
-    }
-
-    rc = pcmk__remote_send_xml(&private->command, hello);
-    rc = pcmk_rc2legacy(rc);
-    pcmk__xml_free(hello);
 
 done:
     if (rc == pcmk_ok) {
