@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -57,9 +57,6 @@ fsa_input2string(enum crmd_fsa_input input)
     switch (input) {
         case I_NULL:
             inputAsText = "I_NULL";
-            break;
-        case I_CIB_OP:
-            inputAsText = "I_CIB_OP (unused)";
             break;
         case I_CIB_UPDATE:
             inputAsText = "I_CIB_UPDATE";

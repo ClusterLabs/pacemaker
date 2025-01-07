@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -133,11 +133,7 @@ enum crmd_fsa_state {
  *
  *======================================*/
 enum crmd_fsa_input {
-/* 0 */
     I_NULL,                     /* Nothing happened */
-/* 1 */
-
-    I_CIB_OP,                   /* An update to the CIB occurred */
     I_CIB_UPDATE,               /* An update to the CIB occurred */
     I_DC_TIMEOUT,               /* We have lost communication with the DC */
     I_ELECTION,                 /* Someone started an election */
@@ -153,7 +149,6 @@ enum crmd_fsa_input {
                                  * being performed.  For example, we may have lost
                                  * our connection to the CIB.
                                  */
-/* 9 */
     I_FAIL,                     /* The action failed to complete successfully */
     I_INTEGRATED,
     I_FINALIZED,
@@ -171,7 +166,6 @@ enum crmd_fsa_input {
     I_TE_SUCCESS,               /* Some non-resource, non-cluster-layer action
                                  * is required of us, e.g. ping
                                  */
-/* 20 */
     I_ROUTER,                   /* Do our job as router and forward this to the
                                  * right place
                                  */
@@ -180,17 +174,14 @@ enum crmd_fsa_input {
     I_TERMINATE,                /* Actually exit */
     I_STARTUP,
     I_PE_SUCCESS,               /* The action completed successfully */
-
     I_JOIN_OFFER,               /* The DC is offering membership */
     I_JOIN_REQUEST,             /* The client is requesting membership */
     I_JOIN_RESULT,              /* If not the DC: The result of a join request
                                  * Else: A client is responding with its local state info
                                  */
-
     I_WAIT_FOR_EVENT,           /* we may be waiting for an async task to "happen"
                                  * and until it does, we can't do anything else
                                  */
-
     I_DC_HEARTBEAT,             /* The DC is telling us that it is alive and well */
 
     I_PENDING,

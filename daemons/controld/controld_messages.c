@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -308,7 +308,6 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
     /* done or process later? */
     switch (result) {
         case I_NULL:
-        case I_CIB_OP:
         case I_ROUTER:
         case I_NODE_JOIN:
         case I_JOIN_REQUEST:
