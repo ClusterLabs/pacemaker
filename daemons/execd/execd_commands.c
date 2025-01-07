@@ -883,7 +883,7 @@ action_complete(svc_action_t * action)
             goagain = true;
             cmd->real_action = cmd->action;
             cmd->action = pcmk__str_copy(PCMK_ACTION_MONITOR);
-	} else if (cmd->real_action != NULL) {
+        } else if (cmd->real_action != NULL) {
             // This is follow-up monitor to check whether start/stop/probe(monitor) completed
             if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
                 goagain = true;
@@ -917,8 +917,8 @@ action_complete(svc_action_t * action)
                     }
                 }
             }
-        } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) && 
-                  (cmd->interval_ms > 0)) { 
+        } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) &&
+                  (cmd->interval_ms > 0)) {
             /* For monitors, excluding follow-up monitors,                                  */
             /* if the pending state persists from the first notification until its timeout, */
             /* it will be treated as a timeout.                                             */
