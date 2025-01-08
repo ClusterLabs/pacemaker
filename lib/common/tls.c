@@ -14,6 +14,8 @@
 #include <gnutls/x509.h>
 #include <stdlib.h>
 
+#include <glib.h>           // gpointer, GPOINTER_TO_INT(), GINT_TO_POINTER()
+
 #include <crm/common/tls_internal.h>
 
 static char *
@@ -399,6 +401,28 @@ error:
         gnutls_deinit(session);
     }
     return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Get the socket file descriptor for a remote connection's TLS session
+ *
+ * \param[in] remote  Remote connection
+ *
+ * \return Socket file descriptor for \p remote
+ *
+ * \note The remote connection's \c tls_session must have already been
+ *       initialized using \c pcmk__new_tls_session().
+ */
+int
+pcmk__tls_get_client_sock(const pcmk__remote_t *remote)
+{
+    gpointer sock_ptr = NULL;
+
+    pcmk__assert((remote != NULL) && (remote->tls_session != NULL));
+
+    sock_ptr = (gpointer) gnutls_transport_get_ptr(remote->tls_session);
+    return GPOINTER_TO_INT(sock_ptr);
 }
 
 int

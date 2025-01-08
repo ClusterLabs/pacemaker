@@ -363,16 +363,12 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
 static int
 get_remote_socket(const pcmk__remote_t *remote)
 {
-    if (remote->tls_session) {
-        void *sock_ptr = gnutls_transport_get_ptr(remote->tls_session);
-
-        return GPOINTER_TO_INT(sock_ptr);
+    if (remote->tls_session != NULL) {
+        return pcmk__tls_get_client_sock(remote);
     }
-
     if (remote->tcp_socket >= 0) {
         return remote->tcp_socket;
     }
-
     crm_err("Remote connection type undetermined (bug?)");
     return -1;
 }
