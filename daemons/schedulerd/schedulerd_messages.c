@@ -164,6 +164,8 @@ handle_pecalc_request(pcmk__request_t *request)
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 
 done:
+    pcmk__config_has_error = false;
+    pcmk__config_has_warning = false;
     pcmk__xml_free(converted);
     pcmk_free_scheduler(scheduler);
 
