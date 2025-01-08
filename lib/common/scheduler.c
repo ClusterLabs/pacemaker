@@ -180,9 +180,8 @@ pcmk_reset_scheduler(pcmk_scheduler_t *scheduler)
 
     pcmk__set_scheduler_defaults(scheduler);
 
-    /* @TODO We should probably reset pcmk__config_has_warning and
-     * pcmk__config_has_error as well
-     */
+    pcmk__config_has_error = false;
+    pcmk__config_has_warning = false;
 }
 
 /*!
