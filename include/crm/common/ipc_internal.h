@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -114,6 +114,8 @@ struct pcmk__remote_s {
     char *token;
 
     /* TLS only */
+
+    // Must be created by pcmk__new_tls_session()
     gnutls_session_t tls_session;
 };
 

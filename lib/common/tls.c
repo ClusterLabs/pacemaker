@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,8 @@
 #include <gnutls/gnutls.h>
 #include <gnutls/x509.h>
 #include <stdlib.h>
+
+#include <glib.h>           // gpointer, GPOINTER_TO_INT(), GINT_TO_POINTER()
 
 #include <crm/common/tls_internal.h>
 
@@ -314,10 +316,16 @@ error:
 gnutls_session_t
 pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
 {
-    unsigned int conn_type = tls->server ? GNUTLS_SERVER : GNUTLS_CLIENT;
+    unsigned int conn_type = GNUTLS_CLIENT;
     int rc = GNUTLS_E_SUCCESS;
     char *prio = NULL;
     gnutls_session_t session = NULL;
+
+    CRM_CHECK((tls != NULL) && (csock >= 0), return NULL);
+
+    if (tls->server) {
+        conn_type = GNUTLS_SERVER;
+    }
 
     rc = gnutls_init(&session, conn_type);
     if (rc != GNUTLS_E_SUCCESS) {
@@ -393,6 +401,28 @@ error:
         gnutls_deinit(session);
     }
     return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Get the socket file descriptor for a remote connection's TLS session
+ *
+ * \param[in] remote  Remote connection
+ *
+ * \return Socket file descriptor for \p remote
+ *
+ * \note The remote connection's \c tls_session must have already been
+ *       initialized using \c pcmk__new_tls_session().
+ */
+int
+pcmk__tls_get_client_sock(const pcmk__remote_t *remote)
+{
+    gpointer sock_ptr = NULL;
+
+    pcmk__assert((remote != NULL) && (remote->tls_session != NULL));
+
+    sock_ptr = (gpointer) gnutls_transport_get_ptr(remote->tls_session);
+    return GPOINTER_TO_INT(sock_ptr);
 }
 
 int

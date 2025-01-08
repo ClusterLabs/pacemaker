@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2024 the Pacemaker project contributors
+ * Copyright 2008-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -223,7 +223,7 @@ remote_send_iovs(pcmk__remote_t *remote, struct iovec *iov, int iovs)
             rc = send_tls(remote->tls_session, &(iov[lpc]));
             continue;
         }
-        if (remote->tcp_socket) {
+        if (remote->tcp_socket >= 0) {
             rc = send_plaintext(remote->tcp_socket, &(iov[lpc]));
         } else {
             rc = ESOCKTNOSUPPORT;
@@ -363,16 +363,12 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
 static int
 get_remote_socket(const pcmk__remote_t *remote)
 {
-    if (remote->tls_session) {
-        void *sock_ptr = gnutls_transport_get_ptr(remote->tls_session);
-
-        return GPOINTER_TO_INT(sock_ptr);
+    if (remote->tls_session != NULL) {
+        return pcmk__tls_get_client_sock(remote);
     }
-
-    if (remote->tcp_socket) {
+    if (remote->tcp_socket >= 0) {
         return remote->tcp_socket;
     }
-
     crm_err("Remote connection type undetermined (bug?)");
     return -1;
 }
@@ -392,13 +388,13 @@ int
 pcmk__remote_ready(const pcmk__remote_t *remote, int timeout_ms)
 {
     struct pollfd fds = { 0, };
-    int sock = 0;
+    int sock = -1;
     int rc = 0;
     time_t start;
     int timeout = timeout_ms;
 
     sock = get_remote_socket(remote);
-    if (sock <= 0) {
+    if (sock < 0) {
         crm_trace("No longer connected");
         return ENOTCONN;
     }
@@ -474,7 +470,7 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
                       gnutls_strerror(read_rc), (long long) read_rc);
             rc = EIO;
         }
-    } else if (remote->tcp_socket) {
+    } else if (remote->tcp_socket >= 0) {
         read_rc = read(remote->tcp_socket,
                        remote->buffer + remote->buffer_offset,
                        remote->buffer_size - remote->buffer_offset);

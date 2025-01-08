@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -630,7 +630,7 @@ lrmd_tls_connection_destroy(gpointer userdata)
         pcmk__free_tls(native->tls);
         native->tls = NULL;
     }
-    if (native->sock) {
+    if (native->sock >= 0) {
         close(native->sock);
     }
     if (native->process_notify) {
@@ -651,7 +651,7 @@ lrmd_tls_connection_destroy(gpointer userdata)
     native->remote->buffer = NULL;
     native->remote->start_state = NULL;
     native->source = 0;
-    native->sock = 0;
+    native->sock = -1;
 
     if (native->callback) {
         lrmd_event_data_t event = { 0, };
@@ -1782,9 +1782,9 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
         mainloop_del_ipc_client(native->source);
         native->source = NULL;
 
-    } else if (native->sock) {
+    } else if (native->sock >= 0) {
         close(native->sock);
-        native->sock = 0;
+        native->sock = -1;
     }
 
     if (native->pending_notify) {

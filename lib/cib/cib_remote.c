@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2024 the Pacemaker project contributors
+ * Copyright 2008-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -323,16 +323,16 @@ cib_tls_close(cib_t *cib)
         tls = NULL;
     }
 
-    if (private->command.tcp_socket) {
+    if (private->command.tcp_socket >= 0) {
         shutdown(private->command.tcp_socket, SHUT_RDWR);       /* no more receptions */
         close(private->command.tcp_socket);
     }
-    if (private->callback.tcp_socket) {
+    if (private->callback.tcp_socket >= 0) {
         shutdown(private->callback.tcp_socket, SHUT_RDWR);      /* no more receptions */
         close(private->callback.tcp_socket);
     }
-    private->command.tcp_socket = 0;
-    private->callback.tcp_socket = 0;
+    private->command.tcp_socket = -1;
+    private->callback.tcp_socket = -1;
 
     free(private->command.buffer);
     free(private->callback.buffer);
