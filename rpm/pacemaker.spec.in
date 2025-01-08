@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2024 the Pacemaker project contributors
+# Copyright 2008-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -270,7 +270,7 @@ BuildRequires: sed
 
 # Required for core functionality
 BuildRequires: pkgconfig(glib-2.0) >= 2.42
-BuildRequires: pkgconfig(gnutls) >= 3.1.7
+BuildRequires: pkgconfig(gnutls) >= 3.4.6
 BuildRequires: pkgconfig(libxml-2.0) >= 2.9.2
 BuildRequires: pkgconfig(systemd)
 BuildRequires: libxslt-devel
@@ -624,7 +624,6 @@ exit 0
 %files
 ###########################################################
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
-%config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %{_sbindir}/pacemakerd
 %{_unitdir}/pacemaker.service
 
@@ -660,8 +659,11 @@ exit 0
 %{ocf_root}/resource.d/pacemaker/controld
 %{ocf_root}/resource.d/pacemaker/remote
 
+# The logrotate script is here rather than the main pacemaker package so
+# pacemaker-remoted can use it
 %files cli
 %dir %attr (750, root, %{gname}) %{_sysconfdir}/pacemaker
+%config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 
 %{_unitdir}/crm_mon.service

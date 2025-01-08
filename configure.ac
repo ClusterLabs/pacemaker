@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2024 the Pacemaker project contributors
+dnl Copyright 2009-2025 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -1565,7 +1565,7 @@ dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
-PKG_CHECK_MODULES(GNUTLS, [gnutls >= 3.1.7],
+PKG_CHECK_MODULES(GNUTLS, [gnutls >= 3.4.6],
                   [CPPFLAGS="${CPPFLAGS} ${GNUTLS_CFLAGS}"
                    LIBS="${LIBS} ${GNUTLS_LIBS}"])
 

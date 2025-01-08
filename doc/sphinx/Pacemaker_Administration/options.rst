@@ -72,6 +72,60 @@ Pacemaker uses several environment variables set on the client side.
      - The host to connect to. Used with :ref:`CIB_port <CIB_port>` for
        connecting to a remote CIB instance; ignored if
        :ref:`CIB_port <CIB_port>` is not set.
+   * - .. _CIB_ca_file:
+
+       .. index::
+          single: CIB_ca_file
+          single: environment variable; CIB_ca_file
+
+       CIB_ca_file
+     - 
+     - If this, :ref:`CIB_cert_file <CIB_cert_file>`, and
+       :ref:`CIB_key_file <CIB_key_file>` are set, remote CIB administration
+       will be encrypted using X.509 (SSL/TLS) certificates, with this root
+       certificate for the certificate authority. Used with :ref:`CIB_port
+       <CIB_port>` for connecting to a remote CIB instance; ignored if
+       :ref:`CIB_port <CIB_port>` is not set.
+   * - .. _CIB_cert_file:
+
+       .. index::
+          single: CIB_cert_file
+          single: environment variable; CIB_cert_file
+
+       CIB_cert_file
+     - 
+     - If this, :ref:`CIB_ca_file <CIB_ca_file>`, and
+       :ref:`CIB_key_file <CIB_key_file>` are set, remote CIB administration
+       will be encrypted using X.509 (SSL/TLS) certificates, with this
+       certificate for the local host. Used with :ref:`CIB_port <CIB_port>` for
+       connecting to a remote CIB instance; ignored if
+       :ref:`CIB_port <CIB_port>` is not set.
+   * - .. _CIB_key_file:
+
+       .. index::
+          single: CIB_key_file
+          single: environment variable; CIB_key_file
+
+       CIB_key_file
+     - 
+     - If this, :ref:`CIB_ca_file <CIB_ca_file>`, and
+       :ref:`CIB_cert_file <CIB_cert_file>` are set, remote CIB administration
+       will be encrypted using X.509 (SSL/TLS) certificates, with this
+       private key for the local host. Used with :ref:`CIB_port <CIB_port>` for
+       connecting to a remote CIB instance; ignored if
+       :ref:`CIB_port <CIB_port>` is not set.
+   * - .. _CIB_crl_file:
+
+       .. index::
+          single: CIB_crl_file
+          single: environment variable; CIB_crl_file
+
+       CIB_crl_file
+     - 
+     - If this, :ref:`CIB_ca_file <CIB_ca_file>`,
+       :ref:`CIB_cert_file <CIB_cert_file>`, and
+       :ref:`CIB_key_file <CIB_key_file>` are all set, then certificates listed
+       in this PEM-format Certificate Revocation List file will be rejected.
    * - .. _CIB_shadow:
 
        .. index::
