@@ -1,52 +1,5 @@
-# Pacemaker-3.0.0-rc3 (23 Dec 2024)
-* 33 commits with 9 files changed, 77 insertions(+), 12 deletions(-)
-
-## Features added since Pacemaker-3.0.0-rc2
-
-* Inkscape is no longer a build dependency for Pacemaker documentation
-* The `ocf:pacemaker:controld` agent will now always manage `dlm_controld`
-  (previously, it would try to manage the long-obsolete `gfs_controld` if the
-  resource name started with `gfs`)
-
-## Fixes since Pacemaker-3.0.0-rc2
-
-* **agents:** `ocf:pacemaker:ping` now uses `grep -E` instead of the obsolete
-  `egrep`
-* **tools:** when injecting a fail count with `crm_simulate`, use an `INFINITY`
-  score when the cluster would
-* **tools:** validate `stonith_admin --timeout` value
-
-## Public API changes since Pacemaker-3.0.0-rc2
-
-* **Python:** add `PACEMAKER_CONFIG_DIR` to `BuildOptions`
-
-# Pacemaker-3.0.0-rc2 (11 Dec 2024)
-* 57 commits with 44 files changed, 1487 insertions(+), 633 deletions(-)
-
-## Features added since Pacemaker-3.0.0-rc1
-
-* **Pacemaker Remote and CIB manager:** support X.509 (SSL/TLS) certificates
-  for encrypting Pacemaker Remote connections and remote CIB administration
-
-## Fixes since Pacemaker-3.0.0-rc1
-
-* **libcrmcluster:** restore ability to do rolling upgrades
-  (regression introduced in 3.0.0-rc1)
-* **controller:** avoid memory leak when updating join phase
-  (regression introduced in 3.0.0-rc1)
-* **scheduler:** avoid memory leaks in bundles and when freeing node copies
-  (regression introduced in 3.0.0-rc1)
-* **CIB:** log warnings if CIB upgrade might not preserve behavior exactly
-* **CIB:** ensure ACLs remain valid after CIB upgrades, and warn if upgrade
-  might change ACL effect (regression introduced in 3.0.0-rc1)
-
-## Public API changes since Pacemaker-3.0.0-rc1
-
-* **libcrmcommon:** add `pcmk_common_cleanup()`
-
-
-# Pacemaker-3.0.0-rc1 (14 Nov 2024)
-* 1938 commits with 685 files changed, 26363 insertions(+), 33503 deletions(-)
+# Pacemaker-3.0.0 (08 Jan 2025)
+* 2039 commits with 659 files changed, 23924 insertions(+), 32384 deletions(-)
 
 ## Features added since Pacemaker-2.1.9
 
@@ -101,7 +54,10 @@
 * **CIB:** treat misconfigured rules and rule expressions as not passing
 * **CIB:** treat negative `migration-threshold` as invalid and use default
 * **CIB:** invalid fencing level indexes are rejected by schema
-* **agents:** drop ocf:pacemaker:o2cb resource agent
+* **agents:** drop `ocf:pacemaker:o2cb` resource agent
+* **agents:** the `ocf:pacemaker:controld` agent will now always manage
+  `dlm_controld` (previously, it would try to manage the long-obsolete
+  `gfs_controld` if the resource name started with `gfs`)
 * **agents:** do not pass `HA_mcp`, `HA_quorum_type`, `PCMK_mcp`, or
   `PCMK_quorum_type`, environment variables to agents
 * **alerts:** don't send deprecated alert environment variables to agents
@@ -109,6 +65,9 @@
 * **fencing:** default `pcmk_host_argument` to `none` if `port` not advertised
 * **liblrmd,libstonithd:** use standard default timeout (20s) for meta-data
   actions
+* **Pacemaker Remote and pacemaker-based:** support X.509 (SSL/TLS)
+  certificates for encrypting Pacemaker Remote connections and remote CIB
+  administration
 * **pacemaker-based:** reject remote users if PAM not available
 * **tools:** `crm_shadow --reset` now requires `--force`
 * **tools:** define behavior of `attrd_updater -Q` without `-N`
@@ -128,6 +87,8 @@
 
 ## Fixes since Pacemaker-2.1.9
 
+* **agents:** `ocf:pacemaker:ping` now uses `grep -E` instead of the obsolete
+  `egrep`
 * **executor:** avoid use-after-free during shutdown
 * **libcrmcommon:** rule expressions with the empty string as value now pass
   when the corresponding node attribute is the empty string
@@ -145,9 +106,13 @@
 * **tools:** don't trigger an assertion if stdout is closed
 * **tools:** CIB clients retry signon if first try fails
 * **tools:** don't double-free XML in `crm_verify` after schema update
+* **tools:** when injecting a fail count with `crm_simulate`, use an `INFINITY`
+  score when the cluster would
+* **tools:** validate `stonith_admin --timeout` value
 
 ## Public API changes since Pacemaker-2.1.9
 
+* **Python:** add `PACEMAKER_CONFIG_DIR` to `pacemaker.BuildOptions`
 * **libcib:** drop `util_compat.h` header
 * **libcib:** drop enum values `cib_database`, `cib_inhibit_bcast`,
   `cib_mixed_update`, `cib_quorum_override`, and `cib_zero_copy`
@@ -195,6 +160,7 @@
 * **libcrmcommon:** add defined constants `PCMK_OCF_ROOT`,
   `PCMK_SCHEDULER_INPUT_DIR`, `PCMK_SCHEMA_DIR`, `PCMK_VALUE_CRASH`,
   `PCMK_VALUE_OFF`, and `PCMK_VALUE_REBOOT`
+* **libcrmcommon:** add function `pcmk_common_cleanup()`
 * **libcrmcommon:** deprecate  defined constants `CIB_OPTIONS_FIRST`,
   `CRM_SCHEMA_DIRECTORY`, `CRM_SYSTEM_STONITHD`, `CRM_XS`, `OCF_ROOT_DIR`, and
   `PE_STATE_DIR`
