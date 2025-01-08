@@ -412,13 +412,15 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                                          pcmk__sched_sanitized),
                              scheduler);
 
-    if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
+    if (!pcmk__str_eq(data->digest_restart_calc, digest_restart,
+                      pcmk__str_null_matches)) {
         pcmk__rsc_info(rsc,
-                       "Parameters to %ums-interval %s action for %s on %s "
-                       "changed: hash was %s vs. now %s (restart:%s) %s",
-                       interval_ms, task, rsc->id, pcmk__node_name(node),
-                       pcmk__s(digest_restart, "missing"),
-                       data->digest_restart_calc, op_version,
+                       "Parameter change for %s-interval %s of %s on %s "
+                       "requires restart (hash now %s vs. %s "
+                       "with op feature set %s for transition %s)",
+                       pcmk__readable_interval(interval_ms), task, rsc->id,
+                       pcmk__node_name(node), data->digest_restart_calc,
+                       pcmk__s(digest_restart, "missing"), op_version,
                        crm_element_value(xml_op, PCMK__XA_TRANSITION_MAGIC));
         data->rc = pcmk__digest_restart;
 

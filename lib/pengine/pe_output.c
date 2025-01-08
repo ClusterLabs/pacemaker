@@ -1037,6 +1037,11 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
     }
 
     switch (scheduler->no_quorum_policy) {
+        /* @COMPAT These should say something like "resources that require
+         * quorum" since resources with requires="nothing" are unaffected, but
+         * it would be a good idea to investigate whether any major projects
+         * search for this text first
+         */
         case pcmk_no_quorum_freeze:
             out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
