@@ -18,7 +18,7 @@
 | 3.6 or later    | python3            | python3            | python3        |
 | 0.18 or later   | gettext-devel      | gettext-tools      | gettext        |
 | 0.18 or later   |                    |                    | autopoint      |
-| 3.1.7 or later  | gnutls-devel       | libgnutls-devel    | libgnutls-dev  |
+| 3.4.6 or later  | gnutls-devel       | libgnutls-devel    | libgnutls-dev  |
 
 Also:
 * make must be GNU (or compatible) (setting MAKE=gmake might also work but is
