@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -107,12 +107,7 @@ init_remote_listener(int port, gboolean encrypted)
 #endif
 
     /* create server socket */
-    ssock = malloc(sizeof(int));
-    if(ssock == NULL) {
-        crm_err("Listener socket allocation failed: %s", pcmk_rc_str(errno));
-        return -1;
-    }
-
+    ssock = pcmk__assert_alloc(1, sizeof(int));
     *ssock = socket(AF_INET, SOCK_STREAM, 0);
     if (*ssock == -1) {
         crm_err("Listener socket creation failed: %s", pcmk_rc_str(errno));
