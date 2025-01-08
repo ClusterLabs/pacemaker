@@ -1,7 +1,7 @@
 """Test environment classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["EnvFactory"]
-__copyright__ = "Copyright 2014-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
@@ -27,8 +27,9 @@ class Environment:
 
     # pylint doesn't understand that self._rsh is callable (it stores the
     # singleton instance of RemoteExec, as returned by the getInstance method
-    # of RemoteFactory).  It's possible we could fix this with type annotations,
-    # but those were introduced with python 3.5 and we only support python 3.4.
+    # of RemoteFactory).
+    # @TODO See if type annotations fix this.
+
     # I think we could also fix this by getting rid of the getInstance methods,
     # but that's a project for another day.  For now, just disable the warning.
     # pylint: disable=not-callable
