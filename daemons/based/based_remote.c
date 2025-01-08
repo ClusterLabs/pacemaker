@@ -248,7 +248,7 @@ remote_auth_timeout_cb(gpointer data)
 static int
 cib_remote_listen(gpointer data)
 {
-    int csock = 0;
+    int csock = -1;
     unsigned laddr;
     struct sockaddr_storage addr;
     char ipstr[INET6_ADDRSTRLEN];
@@ -320,7 +320,7 @@ void
 cib_remote_connection_destroy(gpointer user_data)
 {
     pcmk__client_t *client = user_data;
-    int csock = 0;
+    int csock = -1;
 
     if (client == NULL) {
         return;
@@ -355,7 +355,7 @@ cib_remote_connection_destroy(gpointer user_data)
                      pcmk__client_name(client), client->flags);
     }
 
-    if (csock > 0) {
+    if (csock >= 0) {
         close(csock);
     }
 
