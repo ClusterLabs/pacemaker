@@ -54,7 +54,7 @@ or "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)".
 Python Version Compatibility
 ############################
 
-Pacemaker targets compatibility with Python 3.4 and later.
+Pacemaker targets compatibility with Python 3.6 and later.
 
 Do not use features not available in all targeted Python versions. An
 example is the ``subprocess.run()`` function.
