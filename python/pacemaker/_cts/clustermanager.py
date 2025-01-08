@@ -1,7 +1,7 @@
 """ClusterManager class for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["ClusterManager"]
-__copyright__ = """Copyright 2000-2024 the Pacemaker project contributors.
+__copyright__ = """Copyright 2000-2025 the Pacemaker project contributors.
 Certain portions by Huang Zhen <zhenhltc@cn.ibm.com> are copyright 2004
 International Business Machines. The version control history for this file
 may have further details."""
@@ -26,8 +26,9 @@ from pacemaker._cts.watcher import LogWatcher
 
 # pylint doesn't understand that self._rsh is callable (it stores the
 # singleton instance of RemoteExec, as returned by the getInstance method
-# of RemoteFactory).  It's possible we could fix this with type annotations,
-# but those were introduced with python 3.5 and we only support python 3.4.
+# of RemoteFactory).
+# @TODO See if type annotations fix this.
+
 # I think we could also fix this by getting rid of the getInstance methods,
 # but that's a project for another day.  For now, just disable the warning.
 # pylint: disable=not-callable
