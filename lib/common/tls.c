@@ -173,8 +173,6 @@ pcmk__free_tls(pcmk__tls_t *tls)
 
     free(tls);
     tls = NULL;
-
-    gnutls_global_deinit();
 }
 
 int
@@ -190,14 +188,6 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
 
     signal(SIGPIPE, SIG_IGN);
 
-    /* gnutls_global_init is safe to call multiple times, but we have to call
-     * gnutls_global_deinit the same number of times for that function to do
-     * anything.
-     *
-     * FIXME: When we can use gnutls >= 3.3.0, we don't have to call
-     * gnutls_global_init anymore.
-     */
-    gnutls_global_init();
     gnutls_global_set_log_level(8);
     gnutls_global_set_log_function(_gnutls_log_func);
 
