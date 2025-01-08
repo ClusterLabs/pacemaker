@@ -14,8 +14,6 @@
 #include <gnutls/x509.h>
 #include <stdlib.h>
 
-#include <glib.h>           // gpointer, GPOINTER_TO_INT(), GINT_TO_POINTER()
-
 #include <crm/common/tls_internal.h>
 
 static char *
@@ -349,8 +347,7 @@ pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
         goto error;
     }
 
-    gnutls_transport_set_ptr(session,
-                             (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
+    gnutls_transport_set_int(session, csock);
 
     /* gnutls does not make this easy */
     if (tls->cred_type == GNUTLS_CRD_ANON && tls->server) {
@@ -417,12 +414,9 @@ error:
 int
 pcmk__tls_get_client_sock(const pcmk__remote_t *remote)
 {
-    gpointer sock_ptr = NULL;
-
     pcmk__assert((remote != NULL) && (remote->tls_session != NULL));
 
-    sock_ptr = (gpointer) gnutls_transport_get_ptr(remote->tls_session);
-    return GPOINTER_TO_INT(sock_ptr);
+    return gnutls_transport_get_int(remote->tls_session);
 }
 
 int
