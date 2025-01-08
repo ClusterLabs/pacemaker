@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -314,10 +314,16 @@ error:
 gnutls_session_t
 pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
 {
-    unsigned int conn_type = tls->server ? GNUTLS_SERVER : GNUTLS_CLIENT;
+    unsigned int conn_type = GNUTLS_CLIENT;
     int rc = GNUTLS_E_SUCCESS;
     char *prio = NULL;
     gnutls_session_t session = NULL;
+
+    CRM_CHECK((tls != NULL) && (csock >= 0), return NULL);
+
+    if (tls->server) {
+        conn_type = GNUTLS_SERVER;
+    }
 
     rc = gnutls_init(&session, conn_type);
     if (rc != GNUTLS_E_SUCCESS) {
