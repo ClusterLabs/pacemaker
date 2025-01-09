@@ -7,7 +7,7 @@ needs to be subclassed in order to do anything useful.  Various functions
 will raise NotImplementedError if not overridden by a subclass.
 """
 
-__copyright__ = "Copyright 2009-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2009-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 __all__ = ["Test", "Tests"]
@@ -130,7 +130,7 @@ class Test:
         Note that this requires all subclasses to set self._daemon_location
         before accessing this property or an exception will be raised.
         """
-        return os.path.join(self.logdir, "%s.log" % self._daemon_location)
+        return os.path.join(self.logdir, f"{self._daemon_location}.log")
 
     #
     # PRIVATE METHODS
@@ -164,7 +164,7 @@ class Test:
                         n_negative_matches += 1
 
                         if self.verbose:
-                            print("This pattern should not have matched = '%s" % pat)
+                            print(f"This pattern should not have matched = '{pat}'")
 
                         break
 
@@ -173,7 +173,7 @@ class Test:
 
             if not pat.negative and not positive_match:
                 n_failed_matches += 1
-                print("Pattern Not Matched = '%s'" % pat)
+                print(f"Pattern Not Matched = '{pat}'")
 
         if n_failed_matches > 0 or n_negative_matches > 0:
             msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
@@ -258,7 +258,7 @@ class Test:
                 self._daemon_process.wait()
             else:
                 rc = self._daemon_process.returncode
-                signame = self._signal_dict().get(-rc, "RET=%s" % rc)
+                signame = self._signal_dict().get(-rc, f"RET={rc}")
                 msg = "FAILURE - '%s' failed. %s abnormally exited during test (%s)."
 
                 self._result_txt = msg % (self.name, self._daemon_location, signame)
@@ -282,7 +282,7 @@ class Test:
 
     def print_result(self, filler):
         """Print the result of the last test execution."""
-        print("%s%s" % (filler, self._result_txt))
+        print(f"{filler}{self._result_txt}")
 
     def run(self):
         """Execute this test."""
@@ -291,33 +291,33 @@ class Test:
         self.start_environment()
 
         if self.verbose:
-            print("\n--- START TEST - %s" % self.name)
+            print(f"\n--- START TEST - {self.name}")
 
-        self._result_txt = "SUCCESS - '%s'" % (self.name)
+        self._result_txt = f"SUCCESS - '{self.name}'"
         self.exitcode = ExitStatus.OK
 
         for cmd in self._cmds:
             try:
                 self.run_cmd(cmd)
             except ExitCodeError as e:
-                print("Step %d FAILED - command returned %s, expected %d" % (i, e, cmd['expected_exitcode']))
+                print(f"Step {i} FAILED - command returned {e}, expected {cmd['expected_exitcode']}")
                 self.set_error(i, cmd)
                 break
             except OutputNotFoundError as e:
-                print("Step %d FAILED - '%s' was not found in command output: %s" % (i, cmd['stdout_match'], e))
+                print(f"""Step {i} FAILED - '{cmd["stdout_match"]}' was not found in command output: {e}""")
                 self.set_error(i, cmd)
                 break
             except OutputFoundError as e:
-                print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_no_match'], e))
+                print(f"""Step {i} FAILED - '{cmd["stdout_no_match"]}' was found in command output: {e}""")
                 self.set_error(i, cmd)
                 break
             except XmlValidationError as e:
-                print("Step %d FAILED - xmllint failed: %s" % (i, e))
+                print(f"Step {i} FAILED - xmllint failed: {e}")
                 self.set_error(i, cmd)
                 break
 
             if self.verbose:
-                print("Step %d SUCCESS" % (i))
+                print(f"Step {i} SUCCESS")
 
             i += 1
 
@@ -328,7 +328,7 @@ class Test:
 
         print(self._result_txt)
         if self.verbose:
-            print("--- END TEST - %s\n" % self.name)
+            print(f"--- END TEST - {self.name}\n")
 
         self.executed = True
 
@@ -338,7 +338,8 @@ class Test:
         cmd.insert(0, args['cmd'])
 
         if self.verbose:
-            print("\n\nRunning: %s" % " ".join(cmd))
+            s = " ".join(cmd)
+            print(f"\n\nRunning: {s}")
 
         # FIXME: Using "with" here breaks fencing merge tests.
         # pylint: disable=consider-using-with
@@ -352,7 +353,7 @@ class Test:
 
         if args['kill']:
             if self.verbose:
-                print("Also running: %s" % args['kill'])
+                print(f"Also running: {args['kill']}")
 
             # Typically, the kill argument is used to detect some sort of
             # failure. Without yielding for a few seconds here, the process
@@ -428,14 +429,14 @@ class Test:
 
             if self.timeout > 0 and (now - init_time) >= self.timeout:
                 if not self.force_wait:
-                    print("\tDaemon %s doesn't seem to have been initialized within %fs."
-                          "\n\tConsider specifying a longer '--timeout' value."
-                          % (self._daemon_location, self.timeout))
+                    print(f"\tDaemon {self._daemon_location} doesn't seem to have "
+                          f"been initialized within {self.timeout}s.\n\tConsider "
+                          "specifying a longer '--timeout' value.")
                 return
 
             if self.verbose and (now - update_time) >= 5:
-                print("Waiting for %s to be initialized: %fs ..."
-                      % (self._daemon_location, now - init_time))
+                print(f"Waiting for {self._daemon_location} to be initialized: "
+                      f"{now - init_time}s ...")
                 update_time = now
 
 
@@ -478,12 +479,14 @@ class Tests:
 
     def print_list(self):
         """List all registered tests."""
-        print("\n==== %d TESTS FOUND ====" % len(self._tests))
-        print("%35s - %s" % ("TEST NAME", "TEST DESCRIPTION"))
-        print("%35s - %s" % ("--------------------", "--------------------"))
+        print(f"\n==== {len(self._tests)} TESTS FOUND ====")
+        s = "TEST NAME"
+        print(f"{s:35} - TEST DESCRIPTION")
+        s = "--------------------"
+        print(f"{s:35} - {s}")
 
         for test in self._tests:
-            print("%35s - %s" % (test.name, test.description))
+            print(f"{test.name:35} - {test.description}")
 
         print("==== END OF LIST ====\n")
 
@@ -508,7 +511,7 @@ class Tests:
         if failures == 0:
             print("    None")
 
-        print("\n--- TOTALS\n    Pass:%d\n    Fail:%d\n" % (success, failures))
+        print(f"\n--- TOTALS\n    Pass:{success}\n    Fail:{failures}\n")
 
     def run_single(self, name):
         """Run a single named test."""

@@ -1,7 +1,7 @@
 """A module providing private library management code."""
 
 __all__ = ["_libcrmcommon"]
-__copyright__ = "Copyright 2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2024-2025 the Pacemaker project contributors"
 __license__ = "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)"
 
 import ctypes
@@ -20,8 +20,8 @@ def load_library(basename):
     # for it in the build directory
     if path is None:
         # pylint: disable=protected-access
-        for d in glob("%s/lib/*/.libs" % BuildOptions._BUILD_DIR):
-            path = "%s/lib%s.so" % (d, basename)
+        for d in glob(f"{BuildOptions._BUILD_DIR}/lib/*/.libs"):
+            path = f"{d}/lib{basename}.so"
 
             if os.path.exists(path):
                 break

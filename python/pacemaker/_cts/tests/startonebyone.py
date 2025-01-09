@@ -1,7 +1,7 @@
 """Start all stopped nodes serially."""
 
 __all__ = ["StartOnebyOne"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -48,6 +48,6 @@ class StartOnebyOne(CTSTest):
                 failed.append(node)
 
         if failed:
-            return self.failure("Some node failed to start: %r" % failed)
+            return self.failure(f"Some node failed to start: {failed!r}")
 
         return self.success()

@@ -8,7 +8,7 @@ __all__ = [
     "RandomTests",
     "Sequence",
 ]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -208,8 +208,7 @@ class Scenario:
         did_run = False
 
         self._cm.clear_instance_errors_to_ignore()
-        choice = "(%s)" % nodechoice
-        self._cm.log("Running test {:<22} {:<15} [{:>3}]".format(test.name, choice, testcount))
+        self._cm.log(f"Running test {test.name:<22} {f'({nodechoice})':<15} [{testcount:>3}]")
 
         starttime = test.set_timer()
 
@@ -224,7 +223,7 @@ class Scenario:
             self._cm.log("Teardown failed")
 
             if not should_continue(self._cm.env):
-                raise ValueError("Teardown of %s on %s failed" % (test.name, nodechoice))
+                raise ValueError(f"Teardown of {test.name} on {nodechoice} failed")
 
             ret = False
 
@@ -276,13 +275,11 @@ class Scenario:
             for key in stat_filter:
                 stat_filter[key] = test.stats[key]
 
-            name = "Test %s:" % test.name
-            self._cm.log("{:<25} {!r}".format(name, stat_filter))
+            self._cm.log(f"{f'Test {test.name}':<25} {stat_filter!r}")
 
         self._cm.debug("Detailed Results")
         for test in self.tests:
-            name = "Test %s:" % test.name
-            self._cm.debug("{:<25} {!r}".format(name, stat_filter))
+            self._cm.debug(f"{f'Test {test.name}':<25} {stat_filter!r}")
 
         self._cm.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
@@ -307,10 +304,10 @@ class Scenario:
         failed = 0
         for audit in self._audits:
             if not audit():
-                self._cm.log("Audit %s FAILED." % audit.name)
+                self._cm.log(f"Audit {audit.name} FAILED.")
                 failed += 1
             else:
-                self._cm.debug("Audit %s passed." % audit.name)
+                self._cm.debug(f"Audit {audit.name} passed.")
 
         while errcount < 1000:
             match = None
@@ -325,7 +322,7 @@ class Scenario:
                         add_err = False
 
                 if add_err:
-                    self._cm.log("BadNews: %s" % match)
+                    self._cm.log(f"BadNews: {match}")
                     self.incr("BadNews")
                     errcount += 1
             else:

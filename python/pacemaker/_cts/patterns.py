@@ -1,7 +1,7 @@
 """Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["PatternSelector"]
-__copyright__ = "Copyright 2008-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 import argparse
@@ -95,7 +95,7 @@ class BasePatterns:
         if key in self._components:
             return self._components[key]
 
-        print("Unknown component '%s' for %s" % (key, self._name))
+        print(f"Unknown component '{key}' for {self._name}")
         return []
 
     def get_patterns(self, key):
@@ -116,7 +116,7 @@ class BasePatterns:
         if key == "Components":
             return self._components
 
-        print("Unknown pattern '%s' for %s" % (key, self._name))
+        print(f"Unknown pattern '{key}' for {self._name}")
         return None
 
     def __getitem__(self, key):
@@ -127,7 +127,7 @@ class BasePatterns:
         if key in self._search:
             return self._search[key]
 
-        print("Unknown template '%s' for %s" % (key, self._name))
+        print(f"Unknown template '{key}' for {self._name}")
         return None
 
 

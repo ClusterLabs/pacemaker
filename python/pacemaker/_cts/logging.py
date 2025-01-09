@@ -1,7 +1,7 @@
 """Logging classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["LogFactory"]
-__copyright__ = "Copyright 2014-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
@@ -21,7 +21,7 @@ class Logger:
         self._logfile = filename
 
         if tag:
-            self._source = "%s: " % tag
+            self._source = f"{tag}: "
         else:
             self._source = ""
 
@@ -59,7 +59,7 @@ class StdErrLog(Logger):
             lines = [lines]
 
         for line in lines:
-            print("%s%s" % (timestamp, line), file=sys.__stderr__)
+            print(f"{timestamp}{line}", file=sys.__stderr__)
 
         sys.__stderr__.flush()
 
@@ -81,8 +81,7 @@ class FileLog(Logger):
                 lines = [lines]
 
             for line in lines:
-                print("%s%s %s%s" % (timestamp, self._hostname, self._source, line),
-                      file=logf)
+                print(f"{timestamp}{self._hostname} {self._source}{line}", file=logf)
 
 
 class LogFactory:
@@ -111,7 +110,7 @@ class LogFactory:
         """Log a debug message (to all configured log destinations)."""
         for logfn in LogFactory.log_methods:
             if logfn.is_debug_target:
-                logfn("debug: %s" % args.strip())
+                logfn(f"debug: {args.strip()}")
 
     def traceback(self, traceback):
         """Log a stack trace (to all configured log destinations)."""

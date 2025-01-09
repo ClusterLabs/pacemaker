@@ -12,7 +12,7 @@ __all__ = [
     "Resource",
     "Rule",
 ]
-__copyright__ = "Copyright 2008-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 
@@ -34,7 +34,7 @@ def key_val_string(**kwargs):
         if v is None:
             continue
 
-        retval += ' %s="%s"' % (k, v)
+        retval += f' {k}="{v}"'
 
     return retval
 
@@ -46,13 +46,13 @@ def element(element_name, **kwargs):
     This element does not support having any children, so it will be closed
     on the same line.  The attributes are processed by key_val_string.
     """
-    return "<%s %s/>" % (element_name, key_val_string(**kwargs))
+    return f"<{element_name} {key_val_string(**kwargs)}/>"
 
 
 def containing_element(element_name, inner, **kwargs):
     """Like element, but surrounds some child text passed by the inner parameter."""
     attrs = key_val_string(**kwargs)
-    return "<%s %s>%s</%s>" % (element_name, attrs, inner, element_name)
+    return f"<{element_name} {attrs}>{inner}</{element_name}>"
 
 
 class XmlBase:
@@ -89,7 +89,7 @@ class XmlBase:
 
     def __repr__(self):
         """Return a short string description of this XML section."""
-        return "%s-%s" % (self._tag, self.name)
+        return f"{self._tag}-{self.name}"
 
     def add_child(self, child):
         """Add an XML section as a child of this one."""
@@ -109,9 +109,9 @@ class XmlBase:
 
     def show(self):
         """Recursively return a string representation of this XML section."""
-        text = '''<%s''' % self._tag
+        text = f"<{self._tag}"
         if self.name:
-            text += ''' id="%s"''' % self.name
+            text += f' id="{self.name}"'
 
         text += key_val_string(**self._kwargs)
 
@@ -124,7 +124,7 @@ class XmlBase:
         for c in self._children:
             text += c.show()
 
-        text += '''</%s>''' % self._tag
+        text += f"</{self._tag}>"
         return text
 
     def _run(self, operation, xml, section, options=""):
@@ -142,16 +142,16 @@ class XmlBase:
         if self.name:
             label = self.name
         else:
-            label = "<%s>" % self._tag
+            label = f"<{self._tag}>"
 
-        self._factory.debug("Writing out %s" % label)
+        self._factory.debug(f"Writing out {label}")
 
-        fixed = "HOME=/root CIB_file=%s" % self._factory.tmpfile
-        fixed += " cibadmin --%s --scope %s %s --xml-text '%s'" % (operation, section, options, xml)
+        fixed = f"HOME=/root CIB_file={self._factory.tmpfile}"
+        fixed += f" cibadmin --{operation} --scope {section} {options} --xml-text '{xml}'"
 
         (rc, _) = self._factory.rsh(self._factory.target, fixed)
         if rc != 0:
-            raise RuntimeError("Configure call failed: %s" % fixed)
+            raise RuntimeError(f"Configure call failed: {fixed}")
 
 
 class InstanceAttributes(XmlBase):
@@ -170,7 +170,7 @@ class InstanceAttributes(XmlBase):
 
         # Create an <nvpair> for each attribute
         for (attr, value) in attrs.items():
-            self.add_child(XmlBase(factory, "nvpair", "%s-%s" % (_id, attr),
+            self.add_child(XmlBase(factory, "nvpair", f"{_id}-{attr}",
                                    name=attr, value=value))
 
 
@@ -189,7 +189,7 @@ class Node(XmlBase):
                       attributes for this node
         """
         XmlBase.__init__(self, factory, "node", node_id, uname=node_name)
-        self.add_child(InstanceAttributes(factory, "%s-1" % node_name, node_attrs))
+        self.add_child(InstanceAttributes(factory, f"{node_name}-1", node_attrs))
 
 
 class Nodes(XmlBase):
@@ -249,11 +249,11 @@ class FencingTopology(XmlBase):
                         to which this level applies
         """
         if target:
-            xml_id = "cts-%s.%d" % (target, index)
+            xml_id = f"cts-{target}.{index}"
             self.add_child(XmlBase(self._factory, "fencing-level", xml_id, target=target, index=index, devices=devices))
 
         else:
-            xml_id = "%s-%s.%d" % (target_attr, target_value, index)
+            xml_id = f"{target_attr}-{target_value}.{index}"
             child = XmlBase(self._factory, "fencing-level", xml_id, index=index, devices=devices)
             child["target-attribute"] = target_attr
             child["target-value"] = target_value
@@ -279,7 +279,7 @@ class Option(XmlBase):
 
     def __setitem__(self, key, value):
         """Add a child nvpair element containing the given key/value pair."""
-        self.add_child(XmlBase(self._factory, "nvpair", "cts-%s" % key, name=key, value=value))
+        self.add_child(XmlBase(self._factory, "nvpair", f"cts-{key}", name=key, value=value))
 
     def commit(self):
         """Modify the CIB on the cluster to include this XML section."""
@@ -302,7 +302,7 @@ class OpDefaults(XmlBase):
 
     def __setitem__(self, key, value):
         """Add a child nvpair meta_attribute element containing the given key/value pair."""
-        self.meta.add_child(XmlBase(self._factory, "nvpair", "cts-op_defaults-%s" % key, name=key, value=value))
+        self.meta.add_child(XmlBase(self._factory, "nvpair", f"cts-op_defaults-{key}", name=key, value=value))
 
     def commit(self):
         """Modify the CIB on the cluster to include this XML section."""
@@ -332,10 +332,10 @@ class Alerts(XmlBase):
         recipient -- An environment variable to be passed to the script
         """
         self._alert_count += 1
-        alert = XmlBase(self._factory, "alert", "alert-%d" % self._alert_count,
+        alert = XmlBase(self._factory, "alert", f"alert-{self._alert_count}",
                         path=path)
         recipient1 = XmlBase(self._factory, "recipient",
-                             "alert-%d-recipient-1" % self._alert_count,
+                             f"alert-{self._alert_count}-recipient-1",
                              value=recipient)
         alert.add_child(recipient1)
         self.add_child(alert)
@@ -445,7 +445,7 @@ class Resource(XmlBase):
         kwargs   -- Any additional key/value pairs that should be added to
                     this element as attributes
         """
-        self._op.append(XmlBase(self._factory, "op", "%s-%s" % (_id, interval),
+        self._op.append(XmlBase(self._factory, "op", f"{_id}-{interval}",
                                 name=_id, interval=interval, **kwargs))
 
     def _add_param(self, name, value):
@@ -467,8 +467,8 @@ class Resource(XmlBase):
                  of creating a new rule
         """
         if not rule:
-            rule = Rule(self._factory, "prefer-%s-r" % node, score,
-                        expr=Expression(self._factory, "prefer-%s-e" % node, "#uname", "eq", node))
+            rule = Rule(self._factory, f"prefer-{node}-r", score,
+                        expr=Expression(self._factory, f"prefer-{node}-e", "#uname", "eq", node))
 
         self._scores[node] = rule
 
@@ -532,15 +532,15 @@ class Resource(XmlBase):
         text = "<constraints>"
 
         for (k, v) in self._scores.items():
-            attrs = {"id": "prefer-%s" % k, "rsc": self.name}
+            attrs = {"id": f"prefer-{k}", "rsc": self.name}
             text += containing_element("rsc_location", v.show(), **attrs)
 
         for (k, kargs) in self._needs.items():
-            attrs = {"id": "%s-after-%s" % (self.name, k), "first": k, "then": self.name}
+            attrs = {"id": f"{self.name}-after-{k}", "first": k, "then": self.name}
             text += element("rsc_order", **attrs, **kargs)
 
         for (k, kargs) in self._coloc.items():
-            attrs = {"id": "%s-with-%s" % (self.name, k), "rsc": self.name, "with-rsc": k}
+            attrs = {"id": f"{self.name}-with-{k}", "rsc": self.name, "with-rsc": k}
             text += element("rsc_colocation", **attrs)
 
         text += "</constraints>"
@@ -548,37 +548,37 @@ class Resource(XmlBase):
 
     def show(self):
         """Recursively return a string representation of this XML section."""
-        text = '''<primitive id="%s" class="%s" type="%s"''' % (self.name, self._standard, self._rtype)
+        text = f'<primitive id="{self.name}" class="{self._standard}" type="{self._rtype}"'
 
         if self._provider:
-            text += ''' provider="%s"''' % self._provider
+            text += f' provider="{self._provider}"'
 
         text += '''>'''
 
         if self._meta:
             nvpairs = ""
             for (p, v) in self._meta.items():
-                attrs = {"id": "%s-%s" % (self.name, p), "name": p, "value": v}
+                attrs = {"id": f"{self.name}-{p}", "name": p, "value": v}
                 nvpairs += element("nvpair", **attrs)
 
             text += containing_element("meta_attributes", nvpairs,
-                                       id="%s-meta" % self.name)
+                                       id=f"{self.name}-meta")
 
         if self._param:
             nvpairs = ""
             for (p, v) in self._param.items():
-                attrs = {"id": "%s-%s" % (self.name, p), "name": p, "value": v}
+                attrs = {"id": f"{self.name}-{p}", "name": p, "value": v}
                 nvpairs += element("nvpair", **attrs)
 
             text += containing_element("instance_attributes", nvpairs,
-                                       id="%s-params" % self.name)
+                                       id=f"{self.name}-params")
 
         if self._op:
             text += '''<operations>'''
 
             for o in self._op:
                 key = o.name
-                o.name = "%s-%s" % (self.name, key)
+                o.name = f"{self.name}-{key}"
                 text += o.show()
                 o.name = key
 
@@ -618,21 +618,21 @@ class Group(Resource):
 
     def show(self):
         """Recursively return a string representation of this XML section."""
-        text = '''<%s id="%s">''' % (self.tag, self.name)
+        text = f'<{self.tag} id="{self.name}">'
 
         if len(self._meta) > 0:
             nvpairs = ""
             for (p, v) in self._meta.items():
-                attrs = {"id": "%s-%s" % (self.name, p), "name": p, "value": v}
+                attrs = {"id": f"{self.name}-{p}", "name": p, "value": v}
                 nvpairs += element("nvpair", **attrs)
 
             text += containing_element("meta_attributes", nvpairs,
-                                       id="%s-meta" % self.name)
+                                       id=f"{self.name}-meta")
 
         for c in self._children:
             text += c.show()
 
-        text += '''</%s>''' % self.tag
+        text += f"</{self.tag}>"
         return text
 
 
@@ -670,4 +670,4 @@ class Clone(Group):
         if not self._children:
             self._children.append(child)
         else:
-            self._factory.log("Clones can only have a single child. Ignoring %s" % child.name)
+            self._factory.log(f"Clones can only have a single child. Ignoring {child.name}")

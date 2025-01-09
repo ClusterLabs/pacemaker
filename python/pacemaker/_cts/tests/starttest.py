@@ -1,7 +1,7 @@
 """Start the cluster manager on a given node."""
 
 __all__ = ["StartTest"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -48,5 +48,4 @@ class StartTest(CTSTest):
         if self._cm.start_cm(node):
             return self.success()
 
-        return self.failure("Startup %s on node %s failed"
-                            % (self._env["Name"], node))
+        return self.failure(f"Startup {self._env['Name']} on node {node} failed")

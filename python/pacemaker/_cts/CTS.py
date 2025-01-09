@@ -1,7 +1,7 @@
 """Main classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["CtsLab", "NodeStatus", "Process"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys
@@ -85,7 +85,7 @@ class CtsLab:
         self._logger.log("Cluster nodes: ")
         # pylint: disable=unsubscriptable-object
         for node in self._env["nodes"]:
-            self._logger.log("    * %s" % (node))
+            self._logger.log(f"    * {node}")
 
         if not scenario.setup():
             return ExitStatus.ERROR
@@ -96,7 +96,7 @@ class CtsLab:
         try:
             scenario.run(iterations)
         except:  # noqa: E722
-            self._logger.log("Exception by %s" % sys.exc_info()[0])
+            self._logger.log(f"Exception by {sys.exc_info()[0]}")
             self._logger.traceback(traceback)
 
             scenario.summarize()
@@ -135,7 +135,7 @@ class NodeStatus:
     def _node_booted(self, node):
         """Return True if the given node is booted (responds to pings)."""
         # pylint: disable=not-callable
-        (rc, _) = RemoteFactory().getInstance()("localhost", "ping -nq -c1 -w1 %s" % node, verbose=0)
+        (rc, _) = RemoteFactory().getInstance()("localhost", f"ping -nq -c1 -w1 {node}", verbose=0)
         return rc == 0
 
     def _sshd_up(self, node):
@@ -162,20 +162,20 @@ class NodeStatus:
                 if anytimeouts:
                     # Fudge to wait for the system to finish coming up
                     time.sleep(30)
-                    LogFactory().debug("Node %s now up" % node)
+                    LogFactory().debug(f"Node {node} now up")
 
                 return True
 
             time.sleep(30)
             if not anytimeouts:
-                LogFactory().debug("Waiting for node %s to come up" % node)
+                LogFactory().debug(f"Waiting for node {node} to come up")
 
             anytimeouts = True
             timeout -= 1
 
-        LogFactory().log("%s did not come up within %d tries" % (node, initial_timeout))
+        LogFactory().log(f"{node} did not come up within {initial_timeout} tries")
         if not should_continue(self._env["continue"]):
-            raise ValueError("%s did not come up within %d tries" % (node, initial_timeout))
+            raise ValueError(f"{node} did not come up within {initial_timeout} tries")
 
         return False
 
@@ -224,7 +224,7 @@ class Process:
 
     def kill(self, node):
         """Kill the instance of this process running on the given node."""
-        (rc, _) = self._cm.rsh(node, "killall -9 %s" % self.name)
+        (rc, _) = self._cm.rsh(node, f"killall -9 {self.name}")
 
         if rc != 0:
-            self._cm.log("ERROR: Kill %s failed on node %s" % (self.name, node))
+            self._cm.log(f"ERROR: Kill {self.name} failed on node {node}")

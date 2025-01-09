@@ -1,7 +1,7 @@
 """CIB generator for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["ConfigFactory"]
-__copyright__ = "Copyright 2008-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import warnings
@@ -49,11 +49,11 @@ class CIB:
     def _show(self):
         """Query a cluster node for its generated CIB; log and return the result."""
         output = ""
-        (_, result) = self._factory.rsh(self._factory.target, "HOME=/root CIB_file=%s cibadmin -Q" % self._factory.tmpfile, verbose=1)
+        (_, result) = self._factory.rsh(self._factory.target, f"HOME=/root CIB_file={self._factory.tmpfile} cibadmin -Q", verbose=1)
 
         for line in result:
             output += line
-            self._factory.debug("Generated Config: %s" % line)
+            self._factory.debug(f"Generated Config: {line}")
 
         return output
 
@@ -64,9 +64,9 @@ class CIB:
             if not name:
                 if ":" in ip:
                     (_, _, suffix) = ip.rpartition(":")
-                    name = "r%s" % suffix
+                    name = f"r{suffix}"
                 else:
-                    name = "r%s" % ip
+                    name = f"r{ip}"
 
             r = Resource(self._factory, name, self._cm.env["IPagent"], "ocf")
             r["ip"] = ip
@@ -79,7 +79,7 @@ class CIB:
 
         else:
             if not name:
-                name = "r%s%d" % (self._cm.env["IPagent"], self._counter)
+                name = f"r{self._cm.env['IPagent']}{self._counter}"
                 self._counter += 1
 
             r = Resource(self._factory, name, self._cm.env["IPagent"], "ocf")
@@ -123,9 +123,9 @@ class CIB:
         # Force a rebuild
         self._cib = None
 
-        self._factory.tmpfile = "%s/cib.xml" % BuildOptions.CIB_DIR
+        self._factory.tmpfile = f"{BuildOptions.CIB_DIR}/cib.xml"
         self.contents(target)
-        self._factory.rsh(self._factory.target, "chown %s %s" % (BuildOptions.DAEMON_USER, self._factory.tmpfile))
+        self._factory.rsh(self._factory.target, f"chown {BuildOptions.DAEMON_USER} {self._factory.tmpfile}")
 
         self._factory.tmpfile = old
 
@@ -138,13 +138,13 @@ class CIB:
         if target:
             self._factory.target = target
 
-        self._factory.rsh(self._factory.target, "HOME=/root cibadmin --empty %s > %s" % (self.version, self._factory.tmpfile))
+        self._factory.rsh(self._factory.target, f"HOME=/root cibadmin --empty {self.version} > {self._factory.tmpfile}")
         self._num_nodes = len(self._cm.env["nodes"])
 
         no_quorum = "stop"
         if self._num_nodes < 3:
             no_quorum = "ignore"
-            self._factory.log("Cluster only has %d nodes, configuring: no-quorum-policy=ignore" % self._num_nodes)
+            self._factory.log(f"Cluster only has {self._num_nodes} nodes, configuring: no-quorum-policy=ignore")
 
         # We don't need a nodes section unless we add attributes
         stn = None
@@ -173,7 +173,7 @@ class CIB:
                 try:
                     (name, value) = entry.split('=', 1)
                 except ValueError:
-                    print("Warning: skipping invalid fencing parameter: %s" % entry)
+                    print(f"Warning: skipping invalid fencing parameter: {entry}")
                     continue
 
                 # Allow user to specify "all" as the node list, and expand it here
@@ -193,7 +193,7 @@ class CIB:
             stl = FencingTopology(self._factory)
             for node in self._cm.env["nodes"]:
                 # Remote node tests will rename the node
-                remote_node = "remote-%s" % node
+                remote_node = f"remote-{node}"
 
                 # Randomly assign node to a fencing method
                 ftype = self._cm.env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
@@ -210,7 +210,7 @@ class CIB:
                         attr_nodes[node] = node_id
                         by = " (by attribute)"
 
-                self._cm.log(" - Using %s fencing for node: %s%s" % (ftype, node, by))
+                self._cm.log(f" - Using {ftype} fencing for node: {node}{by}")
 
                 if ftype == "levels-and":
                     # If targeting by name, add a topology level for this node
@@ -297,8 +297,8 @@ class CIB:
         # generate cib
         self._cib = self._show()
 
-        if self._factory.tmpfile != "%s/cib.xml" % BuildOptions.CIB_DIR:
-            self._factory.rsh(self._factory.target, "rm -f %s" % self._factory.tmpfile)
+        if self._factory.tmpfile != f"{BuildOptions.CIB_DIR}/cib.xml":
+            self._factory.rsh(self._factory.target, f"rm -f {self._factory.tmpfile}")
 
         return self._cib
 
@@ -306,7 +306,7 @@ class CIB:
         """Add various resources and their constraints to the CIB."""
         # Per-node resources
         for node in self._cm.env["nodes"]:
-            name = "rsc_%s" % node
+            name = f"rsc_{node}"
             r = self.new_ip(name)
             r.prefer(node, "100")
             r.commit()
@@ -397,12 +397,12 @@ class ConfigFactory:
 
     def log(self, args):
         """Log a message."""
-        self._cm.log("cib: %s" % args)
+        self._cm.log(f"cib: {args}")
 
     def debug(self, args):
         """Log a debug message."""
-        self._cm.debug("cib: %s" % args)
+        self._cm.debug(f"cib: {args}")
 
-    def create_config(self, name="pacemaker-%s" % BuildOptions.CIB_SCHEMA_VERSION):
+    def create_config(self, name=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}"):
         """Return a CIB object for the given schema version."""
         return CIB(self._cm, name, self)

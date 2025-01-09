@@ -1,7 +1,7 @@
 """Restart the cluster and verify resources remain running."""
 
 __all__ = ["Reattach"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -80,7 +80,7 @@ class Reattach(CTSTest):
         """Re-enable resources that were incompatible with this test."""
         self.debug("Re-enable incompatible resources")
         xml = """<meta_attributes id="cts-lab-Reattach-meta"/>"""
-        return self._rsh(node, """cibadmin --delete --xml-text '%s'""" % xml)
+        return self._rsh(node, f"""cibadmin --delete --xml-text '{xml}'""")
 
     def _reprobe(self, node):
         """
@@ -143,7 +143,7 @@ class Reattach(CTSTest):
         self._set_unmanaged(node)
 
         if not managed.look_for_all():
-            self._logger.log("Patterns not found: %r" % managed.unmatched)
+            self._logger.log(f"Patterns not found: {managed.unmatched!r}")
             return self.failure("Resource management not disabled")
 
         pats = [
@@ -191,7 +191,7 @@ class Reattach(CTSTest):
                 r = AuditResource(self._cm, line)
 
                 if r.rclass == "stonith":
-                    self.debug("Ignoring start actions for %s" % r.id)
+                    self.debug(f"Ignoring start actions for {r.id}")
                     ignore.append(self.templates["Pat:RscOpOK"] % ("start", r.id))
 
         if self.local_badnews("ResourceActivity:", watch, ignore):

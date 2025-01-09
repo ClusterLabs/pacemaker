@@ -1,7 +1,7 @@
 """Put a node into standby mode and check that resources migrate."""
 
 __all__ = ["StandbyTest"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -48,15 +48,15 @@ class StandbyTest(CTSTest):
         if not ret:
             return self.failure("Start all nodes failed")
 
-        self.debug("Make sure node %s is active" % node)
+        self.debug(f"Make sure node {node} is active")
         if self._cm.in_standby_mode(node):
             if not self._cm.set_standby_mode(node, False):
-                return self.failure("can't set node %s to active mode" % node)
+                return self.failure(f"can't set node {node} to active mode")
 
         self._cm.cluster_stable()
 
         if self._cm.in_standby_mode(node):
-            return self.failure("standby status of %s is [on] but we expect [off]" % node)
+            return self.failure(f"standby status of {node} is [on] but we expect [off]")
 
         watchpats = [
             r"State transition .* -> S_POLICY_ENGINE",
@@ -64,42 +64,42 @@ class StandbyTest(CTSTest):
         watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
         watch.set_watch()
 
-        self.debug("Setting node %s to standby mode" % node)
+        self.debug(f"Setting node {node} to standby mode")
         if not self._cm.set_standby_mode(node, True):
-            return self.failure("can't set node %s to standby mode" % node)
+            return self.failure(f"can't set node {node} to standby mode")
 
         self.set_timer("on")
 
         ret = watch.look_for_all()
         if not ret:
-            self._logger.log("Patterns not found: %r" % watch.unmatched)
+            self._logger.log(f"Patterns not found: {watch.unmatched!r}")
             self._cm.set_standby_mode(node, False)
-            return self.failure("cluster didn't react to standby change on %s" % node)
+            return self.failure(f"cluster didn't react to standby change on {node}")
 
         self._cm.cluster_stable()
 
         if not self._cm.in_standby_mode(node):
-            return self.failure("standby status of %s is [off] but we expect [on]" % node)
+            return self.failure(f"standby status of {node} is [off] but we expect [on]")
 
         self.log_timer("on")
 
         self.debug("Checking resources")
         rscs_on_node = self._cm.active_resources(node)
         if rscs_on_node:
-            rc = self.failure("%s set to standby, %r is still running on it" % (node, rscs_on_node))
-            self.debug("Setting node %s to active mode" % node)
+            rc = self.failure(f"{node} set to standby, {rscs_on_node!r} is still running on it")
+            self.debug(f"Setting node {node} to active mode")
             self._cm.set_standby_mode(node, False)
             return rc
 
-        self.debug("Setting node %s to active mode" % node)
+        self.debug(f"Setting node {node} to active mode")
         if not self._cm.set_standby_mode(node, False):
-            return self.failure("can't set node %s to active mode" % node)
+            return self.failure(f"can't set node {node} to active mode")
 
         self.set_timer("off")
         self._cm.cluster_stable()
 
         if self._cm.in_standby_mode(node):
-            return self.failure("standby status of %s is [on] but we expect [off]" % node)
+            return self.failure(f"standby status of {node} is [on] but we expect [off]")
 
         self.log_timer("off")
 
