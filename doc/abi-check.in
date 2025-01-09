@@ -109,17 +109,18 @@ EOF
 }
 
 # Dump the ABI for a particular version
-extract_one() {
+dump_version() {
     TAG="$1"
     VERSION="$2"
 
-    # If dump already exists, remove it if dumping HEAD (which changes),
-    # otherwise use it (a dump for a particular commit stays the same).
+    # Reuse any previous dump unless it's for HEAD (which changes)
     DUMP="${ABI_DUMPS}/$(dumpfile "$VERSION")"
-    if [ "$VERSION" = HEAD ]; then
-        rm -rf "$DUMP"
-    elif [ -f "$DUMP" ]; then
-        return
+    if [ -f "$DUMP" ]; then
+        if [ "$VERSION" = HEAD ]; then
+            rm -f "$DUMP"
+        else
+            return
+        fi
     fi
 
     checkout_commit "$TAG"
@@ -134,11 +135,11 @@ extract_one() {
     rm -rf "$ABI_CHECKOUT" "$ABI_INSTALL"
 }
 
-extract_all() {
+dump_versions() {
     for arg in $*; do
         T=$(tag "$arg")
         V=$(version "$T")
-        extract_one "$T" "$V"
+        dump_version "$T" "$V"
     done
 }
 
@@ -147,7 +148,8 @@ die() {
 	exit 1
 }
 
-which git 2>/dev/null || die "abi-check: git must be installed"
+# Validate environment
+which git >/dev/null 2>/dev/null || die "abi-check: git must be installed"
 git rev-parse --git-dir >/dev/null 2>/dev/null	\
 	|| die "abi-check: must be run from git checkout"
 
@@ -158,26 +160,29 @@ fi
 
 PACKAGE="$1"; shift
 
-extract_all "$@"
+dump_versions "$@"
 
-if [ $# -eq 2 ]; then
-    V1=$(version "$1")
-    V2=$(version "$2")
+# Unless exactly two versions were given, we're just dumping
+if [ $# -ne 2 ]; then
+    exit
+fi
 
-    (cd abi && abi-compliance-checker -l ${PACKAGE} \
-        -d1 "${ABI_DUMPS#abi/}/$(dumpfile "$V1")"   \
-        -d2 "${ABI_DUMPS#abi/}/$(dumpfile "$V2")" )
-    if [ $? -ne 0 ]; then
-        echo "WARNING: compliance checker exited $?"
-    fi
+V1=$(version "$1")
+V2=$(version "$2")
 
-    # Top-level rsync destination for package's file uploads (no trailing slash)
-    : ${RSYNC_PACKAGE_DEST:=sites.clusterlabs.org:/var/www/html/projects/$PACKAGE}
+(cd abi && abi-compliance-checker -l ${PACKAGE} \
+    -d1 "${ABI_DUMPS#abi/}/$(dumpfile "$V1")"   \
+    -d2 "${ABI_DUMPS#abi/}/$(dumpfile "$V2")" )
+if [ $? -ne 0 ]; then
+    echo "WARNING: compliance checker exited $?"
+fi
 
-    REPORT="${ABI_REPORTS}/${PACKAGE}/${V1}_to_${V2}"
-    if [ $UPLOAD -eq 1 ] && [ -d "$REPORT" ]; then
-        rsync -azxlSD --progress "$REPORT" "${RSYNC_PACKAGE_DEST}/abi/"
-    fi
+# Top-level rsync destination for package's file uploads (no trailing slash)
+: ${RSYNC_PACKAGE_DEST:=sites.clusterlabs.org:/var/www/html/projects/$PACKAGE}
+
+REPORT="${ABI_REPORTS}/${PACKAGE}/${V1}_to_${V2}"
+if [ $UPLOAD -eq 1 ] && [ -d "$REPORT" ]; then
+    rsync -azxlSD --progress "$REPORT" "${RSYNC_PACKAGE_DEST}/abi/"
 fi
 
 # vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:
