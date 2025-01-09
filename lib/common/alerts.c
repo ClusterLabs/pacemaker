@@ -150,10 +150,11 @@ pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,
                     const char *value)
 {
     for (const char **key = pcmk__alert_keys[name]; *key; key++) {
-        crm_trace("Inserting alert key %s = '%s'", *key, value);
         if (value) {
+            crm_trace("Inserting alert key %s = '%s'", *key, value);
             pcmk__insert_dup(table, *key, value);
         } else {
+            crm_trace("Removing alert key %s (no value given)", *key);
             g_hash_table_remove(table, *key);
         }
     }
