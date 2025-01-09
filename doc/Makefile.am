@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2024 the Pacemaker project contributors
+# Copyright 2003-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -121,7 +121,7 @@ abi-www:
 
 .PHONY: abi-clean
 abi-clean:
-	-rm -rf abi_dumps compat_reports
+	-rm -rf abi
 
 
 # The main documentation books (which are actually in the sphinx subdirectory)

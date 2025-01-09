@@ -212,12 +212,10 @@ GTAGS
 TAGS
 /daemons/fenced/pacemaker-fenced.xml
 /daemons/schedulerd/pacemaker-schedulerd.xml
-/doc/.ABI-build
 /doc/HTML
-/doc/abi_dumps
+/doc/abi/
 /doc/abi-check
 /doc/api/
-/doc/compat_reports
 /doc/crm_fencing.html
 /doc/sphinx/*/_build
 /doc/sphinx/*/conf.py
@@ -307,9 +305,12 @@ pacemaker_*.info
 /doc/*/publican.cfg
 /doc/*/publish
 /doc/*/tmp/**
+/doc/.ABI-build
 /doc/Clusters_from_Scratch.txt
 /doc/Pacemaker_Explained.txt
+/doc/abi_dumps
 /doc/acls.html
+/doc/compat_reports
 /doc/publican-catalog*
 /doc/shared/en-US/*.xml
 /doc/shared/en-US/images/pcmk-*.png
