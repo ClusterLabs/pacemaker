@@ -297,7 +297,6 @@ BuildRequires: %{pkgname_glue_libs}-devel
 %endif
 
 %if %{with doc}
-BuildRequires: asciidoc
 BuildRequires: %{python_name}-sphinx
 %endif
 
