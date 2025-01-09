@@ -38,8 +38,11 @@ tag() {
     fi
 }
 
+# sed -i isn't portable
 sed_in_place() {
+    # Preserve permissions
     cp -p "$1" "$1.$$"
+
     sed -e "$2" "$1" > "$1.$$"
     mv "$1.$$" "$1"
 }
@@ -47,6 +50,26 @@ sed_in_place() {
 # Strip anything up to and including a dash from the argument
 version() {
     echo "$1" | sed s:.*-::
+}
+
+checkout_commit() {
+    local TAG="$1"
+
+    echo "Checking out $TAG to $ABI_CHECKOUT..."
+    rm -rf "$ABI_CHECKOUT"
+    ( cd .. ; git archive --prefix "doc/${ABI_CHECKOUT}/" "$TAG" | tar x )
+    [ $? -eq 0 ] || exit
+
+    # Remove "doc" from SUBDIRS in Makefile (but why?)
+    sed_in_place "${ABI_CHECKOUT}/Makefile.am" 's: doc::'
+}
+
+build_checkout() {
+    echo "Building to $ABI_INSTALL..."
+    ( cd "${ABI_CHECKOUT}" && ./autogen.sh \
+        && ./configure --quiet --disable-fatal-warnings )
+    make -C "${ABI_CHECKOUT}" V=0 DESTDIR="$(pwd)/$ABI_INSTALL" install
+    [ $? -eq 0 ] || exit
 }
 
 # Create configuration file for ABI dumper
@@ -68,18 +91,6 @@ abi_config() {
 </headers>
 <libs>
 EOF
-
-    # Build checkout, installing into subdirectory
-    ( cd "$ABI_CHECKOUT" && ./autogen.sh && ./configure --disable-fatal-warnings )
-    make -C "$ABI_CHECKOUT" V=0 DESTDIR="$ABI_INSTALL" install
-    if [ $? -ne 0 ]; then
-        echo "Build for $TAG failed. Repair, populate <libs/> and re-run: "
-        echo "  abi-compliance-checker -l $PACKAGE -dump_abi $DESC"
-        echo ""
-        echo "To find libraries after building:"
-        echo "  find $ABI_INSTALL -name "*.so" -print"
-        exit 1
-    fi
 
     # Add library names to configuration file
     find "$ABI_INSTALL" -name "*.so" -print >> $DESC
@@ -105,19 +116,11 @@ extract_one() {
         return
     fi
 
-    echo "Building ABI dump for $*"
-
-    # Get a clean checkout at the desired commit
-    rm -rf "$ABI_CHECKOUT"
-    ( cd .. ; git archive --prefix "doc/${ABI_CHECKOUT}/" "$TAG" | tar xv )
-    if [ $? -ne 0 ]; then
-        exit
-    fi
-
-    # Remove "doc" from SUBDIRS in Makefile (but why?)
-    sed_in_place "${ABI_CHECKOUT}/Makefile.am" 's: doc::'
+    checkout_commit "$TAG"
+    build_checkout "$TAG"
 
     # Run ABI dump
+    echo "Building ABI dump for $TAG"
     abi_config "$PACKAGE" "$VERSION" "$DESC"
     abi-compliance-checker -l "$PACKAGE" -dump_abi "$DESC" \
         -dump-path "${ABI_DUMPS}/${PACKAGE}_${VERSION}.abi.tar.gz"
