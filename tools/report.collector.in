@@ -189,7 +189,7 @@ getbt() {
 
 dump_status_and_config() {
     crm_mon -1 2>&1 | grep -v '^Last upd' > $target/$CRM_MON_F
-    cibadmin -Ql 2>/dev/null > $target/${CIB_F}.live
+    cibadmin -Q 2>/dev/null > $target/${CIB_F}.live
 }
 
 getconfig() {

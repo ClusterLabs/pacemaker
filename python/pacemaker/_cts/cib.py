@@ -49,7 +49,7 @@ class CIB:
     def _show(self):
         """Query a cluster node for its generated CIB; log and return the result."""
         output = ""
-        (_, result) = self._factory.rsh(self._factory.target, "HOME=/root CIB_file=%s cibadmin -Ql" % self._factory.tmpfile, verbose=1)
+        (_, result) = self._factory.rsh(self._factory.target, "HOME=/root CIB_file=%s cibadmin -Q" % self._factory.tmpfile, verbose=1)
 
         for line in result:
             output += line
