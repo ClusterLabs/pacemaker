@@ -169,7 +169,6 @@ send_plaintext(int sock, struct iovec *iov)
 {
     const char *unsent = iov->iov_base;
     size_t unsent_len = iov->iov_len;
-    ssize_t write_rc;
 
     if (unsent == NULL) {
         return EINVAL;
@@ -178,11 +177,12 @@ send_plaintext(int sock, struct iovec *iov)
     crm_debug("Sending plaintext message of %zu bytes to socket %d",
               unsent_len, sock);
     while (true) {
-        write_rc = write(sock, unsent, unsent_len);
+        ssize_t write_rc = write(sock, unsent, unsent_len);
+
         if (write_rc < 0) {
             int rc = errno;
 
-            if ((errno == EINTR) || (errno == EAGAIN)) {
+            if ((rc == EINTR) || (rc == EAGAIN) || (rc == EWOULDBLOCK)) {
                 crm_trace("Retrying to send %zu bytes remaining to socket %d",
                           unsent_len, sock);
                 continue;
@@ -197,15 +197,13 @@ send_plaintext(int sock, struct iovec *iov)
             crm_trace("Sent %zd of %zu bytes remaining", write_rc, unsent_len);
             unsent += write_rc;
             unsent_len -= write_rc;
-            continue;
 
         } else {
             crm_trace("Sent all %zd bytes remaining: %.100s",
                       write_rc, (char *) (iov->iov_base));
-            break;
+            return pcmk_rc_ok;
         }
     }
-    return pcmk_rc_ok;
 }
 
 // \return Standard Pacemaker return code
@@ -485,14 +483,14 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
         crm_trace("Received %zd more bytes (%zu total)",
                   read_rc, remote->buffer_offset);
 
-    } else if ((rc == EINTR) || (rc == EAGAIN)) {
-        crm_trace("No data available for non-blocking remote read: %s (%d)",
-                  pcmk_rc_str(rc), rc);
-
     } else if (read_rc == 0) {
         crm_debug("End of remote data encountered after %zu bytes",
                   remote->buffer_offset);
         return ENOTCONN;
+
+    } else if ((rc == EINTR) || (rc == EAGAIN) || (rc == EWOULDBLOCK)) {
+        crm_trace("No data available for non-blocking remote read: %s (%d)",
+                  pcmk_rc_str(rc), rc);
 
     } else {
         crm_debug("Error receiving remote data after %zu bytes: %s (%d)",
@@ -608,7 +606,7 @@ check_connect_finished(gpointer userdata)
 
     if (rc < 0) { // select() error
         rc = errno;
-        if ((rc == EINPROGRESS) || (rc == EAGAIN)) {
+        if ((rc == EINTR) || (rc == EAGAIN)) {
             if ((time(NULL) - cb_data->start) < pcmk__timeout_ms2s(cb_data->timeout_ms)) {
                 return TRUE; // There is time left, so reschedule timer
             } else {
@@ -704,11 +702,19 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
     }
 
     rc = connect(sock, addr, addrlen);
-    if (rc < 0 && (errno != EINPROGRESS) && (errno != EAGAIN)) {
+    if (rc < 0) {
         rc = errno;
-        crm_warn("Could not connect socket: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(rc), rc);
-        return rc;
+        switch (rc) {
+            case EINTR:
+            case EINPROGRESS:
+            case EAGAIN:
+                break;
+
+            default:
+                crm_warn("Could not connect socket: %s " QB_XS " rc=%d",
+                         pcmk_rc_str(rc), rc);
+                return rc;
+        }
     }
 
     cb_data = pcmk__assert_alloc(1, sizeof(struct tcp_async_cb_data));
