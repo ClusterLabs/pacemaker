@@ -16,9 +16,6 @@
 # upload it to the website.
 #
 
-# Top-level rsync destination for package's file uploads (without trailing slash)
-: ${RSYNC_PACKAGE_DEST:=sites.clusterlabs.org:/var/www/html/projects/$(PACKAGE)}
-
 # If the argument is of form x.y.z, print Pacemaker-x.y.z,
 # otherwise print the argument (presumably a commit ID) directly
 tag() {
@@ -157,8 +154,13 @@ if [ $# -eq 2 ]; then
         echo "WARNING: compliance checker exited $?"
     fi
 
+    # Top-level rsync destination for package's file uploads (no trailing slash)
+    : ${RSYNC_PACKAGE_DEST:=sites.clusterlabs.org:/var/www/html/projects/$PACKAGE}
+
     COMPAT_REPORT="compat_reports/${PACKAGE}/${V1}_to_${V2}"
     if [ $UPLOAD -eq 1 ] && [ -d "$COMPAT_REPORT" ]; then
         rsync -azxlSD --progress "$COMPAT_REPORT" "${RSYNC_PACKAGE_DEST}/abi/"
     fi
 fi
+
+# vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:
