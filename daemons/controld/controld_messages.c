@@ -9,8 +9,10 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
+#include <inttypes.h>                   // PRIx64
+#include <stdint.h>                     // uint64_t
 #include <string.h>
+#include <sys/param.h>
 #include <time.h>
 
 #include <crm/crm.h>
@@ -110,8 +112,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     fsa_data->actions = with_actions;
 
     if (with_actions != A_NOTHING) {
-        crm_trace("Adding actions %.16llx to input",
-                  (unsigned long long) with_actions);
+        crm_trace("Adding actions %.16" PRIx64 " to input", with_actions);
     }
 
     if (data != NULL) {
@@ -1381,4 +1382,3 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg);
     pcmk__xml_free(msg);
 }
-

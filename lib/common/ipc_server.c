@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -528,11 +528,11 @@ crm_ipcs_flush_events(pcmk__client_t *c)
         sent++;
         header = event[0].iov_base;
         if (header->size_compressed) {
-            crm_trace("Event %d to %p[%d] (%lld compressed bytes) sent",
-                      header->qb.id, c->ipcs, c->pid, (long long) qb_rc);
+            crm_trace("Event %" PRId32 " to %p[%u] (%zd compressed bytes) sent",
+                      header->qb.id, c->ipcs, c->pid, qb_rc);
         } else {
-            crm_trace("Event %d to %p[%d] (%lld bytes) sent: %.120s",
-                      header->qb.id, c->ipcs, c->pid, (long long) qb_rc,
+            crm_trace("Event %" PRId32 " to %p[%u] (%zd bytes) sent: %.120s",
+                      header->qb.id, c->ipcs, c->pid, qb_rc,
                       (char *) (event[1].iov_base));
         }
         pcmk_free_ipc_event(event);
@@ -540,9 +540,8 @@ crm_ipcs_flush_events(pcmk__client_t *c)
 
     queue_len -= sent;
     if (sent > 0 || queue_len) {
-        crm_trace("Sent %d events (%d remaining) for %p[%d]: %s (%lld)",
-                  sent, queue_len, c->ipcs, c->pid,
-                  pcmk_rc_str(rc), (long long) qb_rc);
+        crm_trace("Sent %u events (%u remaining) for %p[%d]: %s (%zd)",
+                  sent, queue_len, c->ipcs, c->pid, pcmk_rc_str(rc), qb_rc);
     }
 
     if (queue_len) {
@@ -734,14 +733,14 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
             if (qb_rc < 0) {
                 rc = (int) -qb_rc;
             }
-            crm_notice("Response %d to pid %d failed: %s "
-                       QB_XS " bytes=%u rc=%lld ipcs=%p",
+            crm_notice("Response %" PRId32 " to pid %u failed: %s "
+                       QB_XS " bytes=%" PRId32 " rc=%zd ipcs=%p",
                        header->qb.id, c->pid, pcmk_rc_str(rc),
-                       header->qb.size, (long long) qb_rc, c->ipcs);
+                       header->qb.size, qb_rc, c->ipcs);
 
         } else {
-            crm_trace("Response %d sent, %lld bytes to %p[%d]",
-                      header->qb.id, (long long) qb_rc, c->ipcs, c->pid);
+            crm_trace("Response %" PRId32 " sent, %zd bytes to %p[%u]",
+                      header->qb.id, qb_rc, c->ipcs, c->pid);
         }
 
         if (flags & crm_ipc_server_free) {
