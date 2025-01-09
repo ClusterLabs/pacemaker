@@ -401,7 +401,7 @@ getnodes() {
     # have ever had a permanent node attribute set, because it only
     # searches the nodes section. It should also search the config
     # for resources that create Pacemaker Remote nodes.
-    cib_nodes=$(cibadmin -Ql -o nodes 2>/dev/null)
+    cib_nodes=$(cibadmin -Q -o nodes 2>/dev/null)
     if [ $? -eq 0 ]; then
 	debug "Querying CIB for nodes"
         echo "$cib_nodes" | node_names_from_xml

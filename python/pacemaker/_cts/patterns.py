@@ -41,7 +41,7 @@ class BasePatterns:
 
         self._commands = {
             "StatusCmd": "crmadmin -t 60 -S %s 2>/dev/null",
-            "CibQuery": "cibadmin -Ql",
+            "CibQuery": "cibadmin -Q",
             "CibAddXml": "cibadmin --modify -c --xml-text %s",
             "CibDelXpath": "cibadmin --delete --xpath %s",
             "RscRunning": BuildOptions.DAEMON_DIR + "/cts-exec-helper -R -r %s",

@@ -113,7 +113,7 @@ query_attr_sum() {
 	# Query attributes that match xpath
 	# @TODO We ignore stderr because we don't want "no results" to look
 	# like an error, but that also makes $VERBOSE pointless.
-	QAS_ALL=$(cibadmin --query --sync-call --local \
+	QAS_ALL=$(cibadmin --query --sync-call \
 		--xpath="$QAS_XPATH" 2>/dev/null)
 	QAS_EX=$?
 
