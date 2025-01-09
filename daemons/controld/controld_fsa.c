@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <inttypes.h>               // PRIx64
 #include <sys/param.h>
 #include <stdio.h>
 #include <stdint.h>                 // uint64_t
@@ -279,9 +280,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         || (controld_globals.fsa_actions != A_NOTHING)
         || pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
 
-        crm_debug("Exiting the FSA: queue=%d, fsa_actions=%#llx, stalled=%s",
+        crm_debug("Exiting the FSA: queue=%d, fsa_actions=%" PRIx64
+                  ", stalled=%s",
                   g_list_length(controld_globals.fsa_message_queue),
-                  (unsigned long long) controld_globals.fsa_actions,
+                  controld_globals.fsa_actions,
                   pcmk__flag_text(controld_globals.flags,
                                   controld_fsa_is_stalled));
     } else {
@@ -502,9 +504,9 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
 
             /* Error checking and reporting */
         } else {
-            crm_err("Action %s not supported " QB_XS " %#llx",
+            crm_err("Action %s not supported " QB_XS " %" PRIx64,
                     fsa_action2string(controld_globals.fsa_actions),
-                    (unsigned long long) controld_globals.fsa_actions);
+                    controld_globals.fsa_actions);
             register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL,
                                    __func__);
         }

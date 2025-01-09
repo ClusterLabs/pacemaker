@@ -137,29 +137,26 @@ send_tls(gnutls_session_t session, struct iovec *iov)
         return EINVAL;
     }
 
-    crm_trace("Sending TLS message of %llu bytes",
-              (unsigned long long) unsent_len);
+    crm_trace("Sending TLS message of %zu bytes", unsent_len);
+
     while (true) {
         gnutls_rc = gnutls_record_send(session, unsent, unsent_len);
 
         if (gnutls_rc == GNUTLS_E_INTERRUPTED || gnutls_rc == GNUTLS_E_AGAIN) {
-            crm_trace("Retrying to send %llu bytes remaining",
-                      (unsigned long long) unsent_len);
+            crm_trace("Retrying to send %zu bytes remaining", unsent_len);
 
         } else if (gnutls_rc < 0) {
             // Caller can log as error if necessary
-            crm_info("TLS connection terminated: %s " QB_XS " rc=%lld",
-                     gnutls_strerror((int) gnutls_rc),
-                     (long long) gnutls_rc);
+            crm_info("TLS connection terminated: %s " QB_XS " rc=%zd",
+                     gnutls_strerror((int) gnutls_rc), gnutls_rc);
             return ECONNABORTED;
 
         } else if (gnutls_rc < unsent_len) {
-            crm_trace("Sent %lld of %llu bytes remaining",
-                      (long long) gnutls_rc, (unsigned long long) unsent_len);
+            crm_trace("Sent %zd of %zu bytes remaining", gnutls_rc, unsent_len);
             unsent_len -= gnutls_rc;
             unsent += gnutls_rc;
         } else {
-            crm_trace("Sent all %lld bytes remaining", (long long) gnutls_rc);
+            crm_trace("Sent all %zd bytes remaining", gnutls_rc);
             break;
         }
     }
@@ -178,16 +175,16 @@ send_plaintext(int sock, struct iovec *iov)
         return EINVAL;
     }
 
-    crm_debug("Sending plaintext message of %llu bytes to socket %d",
-              (unsigned long long) unsent_len, sock);
+    crm_debug("Sending plaintext message of %zu bytes to socket %d",
+              unsent_len, sock);
     while (true) {
         write_rc = write(sock, unsent, unsent_len);
         if (write_rc < 0) {
             int rc = errno;
 
             if ((errno == EINTR) || (errno == EAGAIN)) {
-                crm_trace("Retrying to send %llu bytes remaining to socket %d",
-                          (unsigned long long) unsent_len, sock);
+                crm_trace("Retrying to send %zu bytes remaining to socket %d",
+                          unsent_len, sock);
                 continue;
             }
 
@@ -197,15 +194,14 @@ send_plaintext(int sock, struct iovec *iov)
             return rc;
 
         } else if (write_rc < unsent_len) {
-            crm_trace("Sent %lld of %llu bytes remaining",
-                      (long long) write_rc, (unsigned long long) unsent_len);
+            crm_trace("Sent %zd of %zu bytes remaining", write_rc, unsent_len);
             unsent += write_rc;
             unsent_len -= write_rc;
             continue;
 
         } else {
-            crm_trace("Sent all %lld bytes remaining: %.100s",
-                      (long long) write_rc, (char *) (iov->iov_base));
+            crm_trace("Sent all %zd bytes remaining: %.100s",
+                      write_rc, (char *) (iov->iov_base));
             break;
         }
     }
@@ -452,8 +448,7 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
     /* automatically grow the buffer when needed */
     if(remote->buffer_size < read_len) {
         remote->buffer_size = 2 * read_len;
-        crm_trace("Expanding buffer to %llu bytes",
-                  (unsigned long long) remote->buffer_size);
+        crm_trace("Expanding buffer to %zu bytes", remote->buffer_size);
         remote->buffer = pcmk__realloc(remote->buffer, remote->buffer_size + 1);
     }
 
@@ -466,8 +461,8 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
         } else if (read_rc == GNUTLS_E_AGAIN) {
             rc = EAGAIN;
         } else if (read_rc < 0) {
-            crm_debug("TLS receive failed: %s (%lld)",
-                      gnutls_strerror(read_rc), (long long) read_rc);
+            crm_debug("TLS receive failed: %s (%zd)",
+                      gnutls_strerror((int) read_rc), read_rc);
             rc = EIO;
         }
     } else if (remote->tcp_socket >= 0) {
@@ -487,35 +482,32 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
         remote->buffer_offset += read_rc;
         /* always null terminate buffer, the +1 to alloc always allows for this. */
         remote->buffer[remote->buffer_offset] = '\0';
-        crm_trace("Received %lld more bytes (%llu total)",
-                  (long long) read_rc,
-                  (unsigned long long) remote->buffer_offset);
+        crm_trace("Received %zd more bytes (%zu total)",
+                  read_rc, remote->buffer_offset);
 
     } else if ((rc == EINTR) || (rc == EAGAIN)) {
         crm_trace("No data available for non-blocking remote read: %s (%d)",
                   pcmk_rc_str(rc), rc);
 
     } else if (read_rc == 0) {
-        crm_debug("End of remote data encountered after %llu bytes",
-                  (unsigned long long) remote->buffer_offset);
+        crm_debug("End of remote data encountered after %zu bytes",
+                  remote->buffer_offset);
         return ENOTCONN;
 
     } else {
-        crm_debug("Error receiving remote data after %llu bytes: %s (%d)",
-                  (unsigned long long) remote->buffer_offset,
-                  pcmk_rc_str(rc), rc);
+        crm_debug("Error receiving remote data after %zu bytes: %s (%d)",
+                  remote->buffer_offset, pcmk_rc_str(rc), rc);
         return ENOTCONN;
     }
 
     header = localized_remote_header(remote);
     if(header) {
         if(remote->buffer_offset < header->size_total) {
-            crm_trace("Read partial remote message (%llu of %u bytes)",
-                      (unsigned long long) remote->buffer_offset,
-                      header->size_total);
+            crm_trace("Read partial remote message (%zu of %" PRIu32 " bytes)",
+                      remote->buffer_offset, header->size_total);
         } else {
-            crm_trace("Read full remote message of %llu bytes",
-                      (unsigned long long) remote->buffer_offset);
+            crm_trace("Read full remote message of %zu bytes",
+                      remote->buffer_offset);
             return pcmk_rc_ok;
         }
     }
