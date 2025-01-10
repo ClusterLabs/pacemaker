@@ -327,7 +327,6 @@ get_cancel_action(const char *id, const char *node)
 
             task = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
             if (!pcmk__str_eq(task, id, pcmk__str_casei)) {
-                crm_trace("Wrong key %s for %s on %s", task, id, node);
                 continue;
             }
 
