@@ -940,9 +940,7 @@ action_complete(svc_action_t * action)
             }
         }
     }
-#endif
 
-#ifdef PCMK__TIME_USE_CGT
     if (goagain) {
         int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
         int timeout_left = cmd->timeout_orig - time_sum;
