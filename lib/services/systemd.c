@@ -138,6 +138,10 @@ static DBusHandlerResult
 filter_systemd_signals(DBusConnection *connection, DBusMessage *message,
                        void *user_data)
 {
+    const char *bus_path, *unit_name, *result;
+    uint32_t job_id;
+    DBusError error;
+
     CRM_CHECK((connection != NULL) && (message != NULL),
               return DBUS_HANDLER_RESULT_NOT_YET_HANDLED);
 
@@ -145,6 +149,26 @@ filter_systemd_signals(DBusConnection *connection, DBusMessage *message,
               dbus_message_get_interface(message),
               dbus_message_get_member(message),
               dbus_message_get_path(message));
+
+    if (!dbus_message_is_signal(message, BUS_NAME_MANAGER, "JobRemoved")) {
+        return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    }
+
+    dbus_error_init(&error);
+    if (!dbus_message_get_args(message, &error,
+                               DBUS_TYPE_UINT32, &job_id,
+                               DBUS_TYPE_OBJECT_PATH, &bus_path,
+                               DBUS_TYPE_STRING, &unit_name,
+                               DBUS_TYPE_STRING, &result,
+                               DBUS_TYPE_INVALID)) {
+        crm_err("Could not interpret systemd DBus signal: %s" QB_XS " (%s)",
+                error.message, error.name);
+    } else {
+        crm_trace("Dispatching JobRemoved() with ID %d for %s with result %s",
+                  job_id, unit_name, result);
+    }
+
+    dbus_error_free(&error);
 
     return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
