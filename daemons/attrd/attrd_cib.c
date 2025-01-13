@@ -45,6 +45,87 @@ attrd_cib_destroy_cb(gpointer user_data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check a patchset change for deletion of node attribute values
+ *
+ * \param[in] xml   Patchset change element
+ * \param[in] data  Ignored
+ *
+ * \return pcmk_rc_ok (to always continue to next patchset change)
+ */
+static int
+drop_values_in_deletion(xmlNode *xml, void *data)
+{
+    const char *value = NULL;
+    GRegex *regex = NULL;
+    GMatchInfo *match_info = NULL;
+    gchar *node_id = NULL;
+    gchar *set_type = NULL;
+    gchar *set_id = NULL;
+    gchar *attr_id = NULL;
+
+    // Skip this change if it does not look like a deletion
+    value = pcmk__xe_get(xml, PCMK_XA_OPERATION);
+    if (!pcmk__str_eq(value, "delete", pcmk__str_none)) {
+        return pcmk_rc_ok;
+    }
+
+    value = pcmk__xe_get(xml, PCMK_XA_PATH);
+    if (value == NULL) {
+        crm_warn("Ignoring malformed deletion in "
+                 "CIB change notification: No " PCMK_XA_PATH);
+        return pcmk_rc_ok;
+    }
+
+    regex = g_regex_new("^/" PCMK_XE_CIB
+                        "/" PCMK_XE_STATUS
+                        "/" PCMK__XE_NODE_STATE
+                        "\\[@" PCMK_XA_ID "='(?<NODE_ID>[^']+)'\\]"
+                        "(?:"
+                            "/" PCMK__XE_TRANSIENT_ATTRIBUTES
+                            "\\[@" PCMK_XA_ID "='[^']+'\\]"
+                            "(?:"
+                                "/(?<SET_TYPE>[^[/]+)"
+                                "\\[@" PCMK_XA_ID "='(?<SET_ID>[^']+)'\\]"
+                                "(?:"
+                                    "/" PCMK_XE_NVPAIR
+                                    "\\[@" PCMK_XA_ID "='(?<ATTR_ID>[^']+)'\\]"
+                                ")?"
+                            ")?"
+                        ")?$",
+                        0, 0, NULL);
+
+    if (!g_regex_match(regex, value, 0, &match_info)) {
+        goto done;
+    }
+
+    node_id = g_match_info_fetch_named(match_info, "NODE_ID");
+    set_type = g_match_info_fetch_named(match_info, "SET_TYPE");
+    set_id = g_match_info_fetch_named(match_info, "SET_ID");
+    attr_id = g_match_info_fetch_named(match_info, "ATTR_ID");
+
+    if (!pcmk__str_empty(attr_id)) {
+        attrd_drop_removed_value(set_type, attr_id);
+
+    } else if (!pcmk__str_empty(set_type)) {
+        CRM_CHECK(!pcmk__str_empty(set_id), goto done);
+        attrd_drop_removed_set(set_type, set_id);
+
+    } else if (!pcmk__str_empty(node_id)) {
+        attrd_drop_removed_values(node_id);
+    }
+
+done:
+    g_free(node_id);
+    g_free(set_type);
+    g_free(set_id);
+    g_free(attr_id);
+    g_match_info_free(match_info);
+    g_regex_unref(regex);
+    return pcmk_rc_ok;
+}
+
 static void
 attrd_cib_updated_cb(const char *event, xmlNode *msg)
 {
@@ -70,7 +151,21 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
     if (!cib__client_triggers_refresh(client_name)) {
         /* This change came from a source that ensured the CIB is consistent
          * with our attributes table, so we don't need to write anything out.
+         * If a removed attribute has been erased, we can forget it now.
          */
+        int format = 1;
+
+        if ((pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format) != pcmk_rc_ok)
+            || (format != 2)) {
+            crm_warn("Can't handle CIB patch format %d", format);
+            return;
+        }
+
+        /* This won't modify patchset, but we need to break const to match the
+         * function signature.
+         */
+        pcmk__xe_foreach_child((xmlNode *) patchset, PCMK_XE_CHANGE,
+                               drop_values_in_deletion, NULL);
         return;
     }
 
@@ -216,8 +311,8 @@ void
 attrd_cib_init(void)
 {
     /* We have no attribute values in memory, so wipe the CIB to match. This is
-     * normally done by the DC's controller when this node leaves the cluster, but
-     * this handles the case where the node restarted so quickly that the
+     * normally done by the writer when this node leaves the cluster, but this
+     * handles the case where the node restarted so quickly that the
      * cluster layer didn't notice.
      *
      * \todo If the attribute manager respawns after crashing (see
@@ -551,6 +646,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
         const char *node_xml_id = NULL;
         const char *prev_xml_id = NULL;
+        pcmk__node_status_t *peer = NULL;
 
         if (!should_write) {
             private_updates++;
@@ -569,12 +665,23 @@ write_attribute(attribute_t *a, bool ignore_delay)
             // A Pacemaker Remote node's XML ID is the same as its name
             node_xml_id = v->nodename;
 
+        } else if (v->current == NULL) {
+            /* If a value was removed, check the caches for the node XML ID,
+             * but don't create a new cache entry. We don't want to re-create a
+             * purged node.
+             */
+            peer = pcmk__search_node_caches(0, v->nodename, prev_xml_id,
+                                            pcmk__node_search_any
+                                            |pcmk__node_search_cluster_cib);
+            node_xml_id = pcmk__cluster_get_xml_id(peer);
+            if (node_xml_id == NULL) {
+                node_xml_id = prev_xml_id;
+            }
+
         } else {
             // This creates a cluster node cache entry if none exists
-            pcmk__node_status_t *peer = pcmk__get_node(0, v->nodename,
-                                                       prev_xml_id,
-                                                       pcmk__node_search_any);
-
+            peer = pcmk__get_node(0, v->nodename, prev_xml_id,
+                                  pcmk__node_search_any);
             node_xml_id = pcmk__cluster_get_xml_id(peer);
             if (node_xml_id == NULL) {
                 node_xml_id = prev_xml_id;
@@ -602,8 +709,8 @@ write_attribute(attribute_t *a, bool ignore_delay)
         if (rc != pcmk_rc_ok) {
             crm_err("Couldn't add %s[%s]='%s' to CIB transaction: %s "
                     QB_XS " node XML ID %s",
-                    a->id, v->nodename, v->current, pcmk_rc_str(rc),
-                    node_xml_id);
+                    a->id, v->nodename, pcmk__s(v->current, "(unset)"),
+                    pcmk_rc_str(rc), node_xml_id);
             continue;
         }
 
@@ -639,6 +746,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
                                                   "attrd_cib_callback",
                                                   attrd_cib_callback, free)) {
             // Transmit alert of the attribute
+            // @TODO Do this in callback only if write was successful
             send_alert_attributes_value(a, alert_attribute_value);
         }
     }
