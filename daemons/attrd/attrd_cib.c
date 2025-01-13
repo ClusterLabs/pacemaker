@@ -494,18 +494,12 @@ write_attribute(attribute_t *a, bool ignore_delay)
     GHashTableIter iter;
     GHashTable *alert_attribute_value = NULL;
     int rc = pcmk_ok;
-    bool should_write = true;
+    bool should_write = attrd_for_cib(a);
 
     if (a == NULL) {
         return;
     }
 
-    // Private attributes (or any in standalone mode) are not written to the CIB
-    if (stand_alone || pcmk__is_set(a->flags, attrd_attr_is_private)) {
-        should_write = false;
-    }
-
-    /* If this attribute will be written to the CIB ... */
     if (should_write) {
         /* Defer the write if now's not a good time */
         if (a->update && (a->update < last_cib_op_done)) {
