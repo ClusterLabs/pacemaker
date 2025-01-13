@@ -828,6 +828,9 @@ action_complete(svc_action_t * action)
 #ifdef PCMK__TIME_USE_CGT
     const char *rclass = NULL;
     bool goagain = false;
+    int time_sum = 0;
+    int timeout_left = 0;
+    int delay = 0;
 #endif
 
     if (!cmd) {
@@ -943,58 +946,60 @@ action_complete(svc_action_t * action)
         }
     }
 
-    if (goagain) {
-        int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
-        int timeout_left = cmd->timeout_orig - time_sum;
-        int delay = cmd->timeout_orig / 10;
+    if (!goagain) {
+        goto finalize;
+    }
 
-        if(delay >= timeout_left && timeout_left > 20) {
-            delay = timeout_left/2;
-        }
+    time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
+    timeout_left = cmd->timeout_orig - time_sum;
+    delay = cmd->timeout_orig / 10;
 
-        delay = QB_MIN(2000, delay);
-        if (delay < timeout_left) {
-            cmd->start_delay = delay;
-            cmd->timeout = timeout_left;
+    if (delay >= timeout_left && timeout_left > 20) {
+        delay = timeout_left/2;
+    }
 
-            if (pcmk__result_ok(&(cmd->result))) {
-                crm_debug("%s %s may still be in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                          cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
+    delay = QB_MIN(2000, delay);
+    if (delay < timeout_left) {
+        cmd->start_delay = delay;
+        cmd->timeout = timeout_left;
 
-            } else if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
-                crm_info("%s %s is still in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                         cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
+        if (pcmk__result_ok(&(cmd->result))) {
+            crm_debug("%s %s may still be in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                      cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
 
-            } else {
-                crm_notice("%s %s failed: %s: Re-scheduling (remaining "
-                           "timeout %s) " QB_XS
-                           " exitstatus=%d elapsed=%dms start_delay=%dms)",
-                           cmd->rsc_id, cmd->action,
-                           crm_exit_str(cmd->result.exit_status),
-                           pcmk__readable_interval(timeout_left),
-                           cmd->result.exit_status, time_sum, delay);
-            }
-
-            cmd_reset(cmd);
-            if(rsc) {
-                rsc->active = NULL;
-            }
-            schedule_lrmd_cmd(rsc, cmd);
-
-            /* Don't finalize cmd, we're not done with it yet */
-            return;
+        } else if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
+            crm_info("%s %s is still in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                     cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
 
         } else {
-            crm_notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, remaining=%dms)",
-                       cmd->rsc_id,
-                       (cmd->real_action? cmd->real_action : cmd->action),
-                       cmd->result.exit_status, time_sum, timeout_left);
-            pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                             PCMK_EXEC_TIMEOUT,
-                             "Investigate reason for timeout, and adjust "
-                             "configured operation timeout if necessary");
-            cmd_original_times(cmd);
+            crm_notice("%s %s failed: %s: Re-scheduling (remaining "
+                       "timeout %s) " QB_XS
+                       " exitstatus=%d elapsed=%dms start_delay=%dms)",
+                       cmd->rsc_id, cmd->action,
+                       crm_exit_str(cmd->result.exit_status),
+                       pcmk__readable_interval(timeout_left),
+                       cmd->result.exit_status, time_sum, delay);
         }
+
+        cmd_reset(cmd);
+        if (rsc) {
+            rsc->active = NULL;
+        }
+        schedule_lrmd_cmd(rsc, cmd);
+
+        /* Don't finalize cmd, we're not done with it yet */
+        return;
+
+    } else {
+        crm_notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, remaining=%dms)",
+                   cmd->rsc_id,
+                   (cmd->real_action? cmd->real_action : cmd->action),
+                   cmd->result.exit_status, time_sum, timeout_left);
+        pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+                         PCMK_EXEC_TIMEOUT,
+                         "Investigate reason for timeout, and adjust "
+                         "configured operation timeout if necessary");
+        cmd_original_times(cmd);
     }
 #endif
 
