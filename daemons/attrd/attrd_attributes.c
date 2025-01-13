@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -281,4 +281,19 @@ attrd_nvpair_id(const attribute_t *attr, const char *node_state_id)
     }
     pcmk__xml_sanitize_id(nvpair_id);
     return nvpair_id;
+}
+
+/*!
+ * \internal
+ * \brief Check whether an attribute is one that must be written to the CIB
+ *
+ * \param[in] a  Attribute to check
+ *
+ * \return false if we are in standalone mode or \p a is private, otherwise true
+ */
+bool
+attrd_for_cib(const attribute_t *a)
+{
+    return !stand_alone && (a != NULL)
+           && !pcmk_is_set(a->flags, attrd_attr_is_private);
 }
