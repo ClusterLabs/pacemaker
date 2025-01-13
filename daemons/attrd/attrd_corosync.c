@@ -549,12 +549,35 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
                host, source, (uncache? "and" : "without"));
 
     g_hash_table_iter_init(&aIter, attributes);
-    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
-        if(g_hash_table_remove(a->values, host)) {
-            crm_debug("Removed %s[%s] for peer %s", a->id, host, source);
+    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) &a)) {
+        /* If the attribute won't be written to the CIB, we can drop the value
+         * now. Otherwise we need to set it NULL and wait for a notification
+         * that it was erased, because if there's no writer or the current
+         * writer fails to write it then leaves, we may become the writer and
+         * need to do it.
+         */
+        if (attrd_for_cib(a)) {
+            attribute_value_t *v = g_hash_table_lookup(a->values, host);
+
+            if ((v != NULL) && (v->current != NULL)) {
+                crm_debug("Removed %s[%s] (by setting NULL) for %s",
+                          a->id, host, source);
+                pcmk__str_update(&(v->current), NULL);
+                attrd_set_attr_flags(a, attrd_attr_changed);
+            }
+        } else if (g_hash_table_remove(a->values, host)) {
+            crm_debug("Removed %s[%s] immediately for %s",
+                      a->id, host, source);
         }
     }
 
+    if (attrd_election_won()) {
+        attrd_cib_erase_transient_attrs(host); // Wipe from CIB
+    } else {
+        attrd_start_election_if_needed(); // Make sure CIB gets updated
+    }
+
+    // Remove node from caches if requested
     if (uncache) {
         pcmk__purge_node_from_cache(host, 0);
         attrd_forget_node_xml_id(host);
