@@ -1511,7 +1511,7 @@ pcmk__schedule_cleanup(pcmk_resource_t *rsc, const pcmk_node_t *node,
         return;
     }
 
-    if (node->details->unclean || !node->details->online) {
+    if (!pcmk__node_available(node, pcmk__node_alive)) {
         pcmk__rsc_trace(rsc, "Skipping clean-up of %s on %s: node unavailable",
                         rsc->id, pcmk__node_name(node));
         return;

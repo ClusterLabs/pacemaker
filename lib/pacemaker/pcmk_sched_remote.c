@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -143,8 +143,7 @@ get_remote_node_state(const pcmk_node_t *node)
          */
         return remote_state_unknown;
 
-    } else if (cluster_node->details->unclean
-               || !(cluster_node->details->online)) {
+    } else if (!pcmk__node_available(cluster_node, pcmk__node_alive)) {
         // Connection is running on a dead node, see if we can recover it first
         return remote_state_resting;
 
