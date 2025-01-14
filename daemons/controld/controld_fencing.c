@@ -207,11 +207,19 @@ cib_fencing_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
     }
 }
 
+/*!
+ * \internal
+ * \brief Update a fencing target's node state
+ *
+ * \param[in] target         Node that was successfully fenced
+ * \param[in] target_xml_id  CIB XML ID of target
+ */
 static void
-send_stonith_update(const char *target, const char *uuid)
+update_node_state_after_fencing(const char *target, const char *target_xml_id)
 {
     int rc = pcmk_ok;
     crm_node_t *peer = NULL;
+    xmlNode *node_state = NULL;
 
     /* We (usually) rely on the membership layer to do node_update_cluster,
      * and the peer status callback to do node_update_peer, because the node
@@ -219,18 +227,10 @@ send_stonith_update(const char *target, const char *uuid)
      */
     int flags = node_update_join | node_update_expected;
 
-    /* zero out the node-status & remove all LRM status info */
-    xmlNode *node_state = NULL;
+    CRM_CHECK((target != NULL) && (target_xml_id != NULL), return);
 
-    CRM_CHECK(target != NULL, return);
-    CRM_CHECK(uuid != NULL, return);
-
-    /* Make sure the membership and join caches are accurate.
-     * Try getting any existing node cache entry also by node uuid in case it
-     * doesn't have an uname yet.
-     */
-    peer = pcmk__get_node(0, target, uuid, pcmk__node_search_any);
-
+    // Ensure target is cached
+    peer = pcmk__get_node(0, target, target_xml_id, pcmk__node_search_any);
     CRM_CHECK(peer != NULL, return);
 
     if (peer->state == NULL) {
@@ -242,16 +242,15 @@ send_stonith_update(const char *target, const char *uuid)
     }
 
     if (peer->uuid == NULL) {
-        crm_info("Recording uuid '%s' for node '%s'", uuid, target);
-        peer->uuid = pcmk__str_copy(uuid);
+        crm_info("Recording XML ID '%s' for node '%s'", target_xml_id, target);
+        peer->uuid = pcmk__str_copy(target_xml_id);
     }
 
     crmd_peer_down(peer, TRUE);
 
-    /* Generate a node state update for the CIB */
     node_state = create_node_state_update(peer, flags, NULL, __func__);
+    crm_xml_add(node_state, PCMK_XA_ID, target_xml_id);
 
-    /* we have to mark whether or not remote nodes have already been fenced */
     if (peer->flags & crm_remote_node) {
         char *now_s = pcmk__ttoa(time(NULL));
 
@@ -259,27 +258,17 @@ send_stonith_update(const char *target, const char *uuid)
         free(now_s);
     }
 
-    /* Force our known ID */
-    crm_xml_add(node_state, PCMK_XA_ID, uuid);
-
     rc = controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
                                                  PCMK_XE_STATUS, node_state,
                                                  cib_scope_local
                                                  |cib_can_create);
+    free_xml(node_state);
 
-    /* Delay processing the trigger until the update completes */
-    crm_debug("Sending fencing update %d for %s", rc, target);
+    crm_debug("Updating node state for %s after fencing (call %d)", target, rc);
     fsa_register_cib_callback(rc, pcmk__str_copy(target), cib_fencing_updated);
-
-    // Make sure it sticks
-    /* controld_globals.cib_conn->cmds->bump_epoch(controld_globals.cib_conn,
-     *                                             cib_scope_local);
-     */
 
     controld_delete_node_state(peer->uname, controld_section_all,
                                cib_scope_local);
-    free_xml(node_state);
-    return;
 }
 
 /*!
@@ -388,7 +377,7 @@ execute_stonith_cleanup(void)
         const char *uuid = pcmk__cluster_get_xml_id(target_node);
 
         crm_notice("Marking %s, target of a previous stonith action, as clean", target);
-        send_stonith_update(target, uuid);
+        update_node_state_after_fencing(target, uuid);
         free(target);
     }
     g_list_free(stonith_cleanup_list);
@@ -605,7 +594,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
 
         if (AM_I_DC) {
             /* The DC always sends updates */
-            send_stonith_update(event->target, uuid);
+            update_node_state_after_fencing(event->target, uuid);
 
             /* @TODO Ideally, at this point, we'd check whether the fenced node
              * hosted any guest nodes, and call remote_node_down() for them.
@@ -643,7 +632,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
              */
             if (pcmk__str_eq(event->executioner, controld_globals.our_nodename,
                              pcmk__str_casei)) {
-                send_stonith_update(event->target, uuid);
+                update_node_state_after_fencing(event->target, uuid);
             }
             add_stonith_cleanup(event->target);
         }
@@ -890,7 +879,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                              is_remote_node);
 
             } else if (!(pcmk_is_set(action->flags, pcmk__graph_action_sent_update))) {
-                send_stonith_update(target, uuid);
+                update_node_state_after_fencing(target, uuid);
                 pcmk__set_graph_action_flags(action,
                                              pcmk__graph_action_sent_update);
             }
