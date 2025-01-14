@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -168,7 +168,6 @@ typedef struct attribute_value_s {
     char *nodename;     // Node that this value is for
     char *current;      // Attribute value
     char *requested;    // Value specified in pending CIB write, if any
-    char *node_xml_id;  // XML ID used for node in CIB
     uint32_t flags;     // Group of attrd_value_flags
 } attribute_value_t;
 
