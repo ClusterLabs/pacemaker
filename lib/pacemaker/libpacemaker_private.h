@@ -1002,6 +1002,9 @@ enum pcmk__node_availability {
     //! Disallow shutting down, standby, and maintenance nodes
     pcmk__node_usable               = (1 << 0),
 
+    //! Disallow nodes with zero score
+    pcmk__node_no_zero              = (1 << 1),
+
     //! Disallow nodes with negative scores
     pcmk__node_no_negative          = (1 << 2),
 

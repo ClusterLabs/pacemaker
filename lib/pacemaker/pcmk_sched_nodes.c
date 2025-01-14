@@ -47,6 +47,10 @@ pcmk__node_available(const pcmk_node_t *node, uint32_t flags)
         }
     }
 
+    if (pcmk_is_set(flags, pcmk__node_no_zero) && (node->assign->score == 0)) {
+        return false;
+    }
+
     if (pcmk_is_set(flags, pcmk__node_no_negative)
         && (node->assign->score < 0)) {
         return false;
