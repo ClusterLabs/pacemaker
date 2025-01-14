@@ -26,17 +26,25 @@
 bool
 pcmk__node_available(const pcmk_node_t *node, uint32_t flags)
 {
-    // pcmk__node_alive is implicit
-    if ((node == NULL) || (node->details == NULL)
-        || !node->details->online || node->details->unclean) {
-        return false;
+    if ((node == NULL) || (node->details == NULL)) {
+        return false; // A nonexistent node is not available
     }
 
-    if (pcmk_is_set(flags, pcmk__node_usable)
-        && (node->details->shutdown
-            || pcmk_is_set(node->priv->flags, pcmk__node_standby)
-            || node->details->maintenance)) {
-        return false;
+    // Guest nodes may be exempted from alive and usable checks
+    if (!pcmk_is_set(flags, pcmk__node_exempt_guest)
+        || !pcmk__is_guest_or_bundle_node(node)) {
+
+        // pcmk__node_alive is implicit
+        if (!node->details->online || node->details->unclean) {
+            return false;
+        }
+
+        if (pcmk_is_set(flags, pcmk__node_usable)
+            && (node->details->shutdown
+                || pcmk_is_set(node->priv->flags, pcmk__node_standby)
+                || node->details->maintenance)) {
+            return false;
+        }
     }
 
     if (pcmk_is_set(flags, pcmk__node_no_negative)
