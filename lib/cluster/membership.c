@@ -158,7 +158,13 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
      */
     node = pcmk__search_node_caches(0, node_name, NULL,
                                     pcmk__node_search_cluster_member);
-    if ((node != NULL) && (node->xml_id == NULL)) {
+    if ((node != NULL)
+        && ((node->xml_id == NULL)
+            /* This assumes only Pacemaker Remote nodes have their XML ID the
+             * same as their node name
+             */
+            || pcmk__str_eq(node->name, node->xml_id, pcmk__str_none))) {
+
         /* node_name could be a pointer into the cache entry being removed, so
          * reassign it to a copy before the original gets freed
          */
