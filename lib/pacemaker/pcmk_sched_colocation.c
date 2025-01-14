@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1578,7 +1578,7 @@ best_node_score_matching_attr(const pcmk__colocation_t *colocation,
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
         if ((node->assign->score > best_score)
-            && pcmk__node_available(node, false, false)
+            && pcmk__node_available(node, pcmk__node_alive|pcmk__node_usable)
             && pcmk__str_eq(value, pcmk__colocation_node_attr(node, attr, rsc),
                             pcmk__str_casei)) {
 

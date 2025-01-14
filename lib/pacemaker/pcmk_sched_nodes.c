@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,31 +18,34 @@
  * \internal
  * \brief Check whether a node is available to run resources
  *
- * \param[in] node            Node to check
- * \param[in] consider_score  If true, consider a negative score unavailable
- * \param[in] consider_guest  If true, consider a guest node unavailable whose
- *                            resource will not be active
+ * \param[in] node   Node to check
+ * \param[in] flags  Group of enum pcmk__node_availability flags
  *
- * \return true if node is online and not shutting down, unclean, or in standby
- *         or maintenance mode, otherwise false
+ * \return true if node is available per flags, otherwise false
  */
 bool
-pcmk__node_available(const pcmk_node_t *node, bool consider_score,
-                     bool consider_guest)
+pcmk__node_available(const pcmk_node_t *node, uint32_t flags)
 {
-    if ((node == NULL) || (node->details == NULL) || !node->details->online
-            || node->details->shutdown || node->details->unclean
+    // pcmk__node_alive is implicit
+    if ((node == NULL) || (node->details == NULL)
+        || !node->details->online || node->details->unclean) {
+        return false;
+    }
+
+    if (pcmk_is_set(flags, pcmk__node_usable)
+        && (node->details->shutdown
             || pcmk_is_set(node->priv->flags, pcmk__node_standby)
-            || node->details->maintenance) {
+            || node->details->maintenance)) {
         return false;
     }
 
-    if (consider_score && (node->assign->score < 0)) {
+    if (pcmk_is_set(flags, pcmk__node_no_negative)
+        && (node->assign->score < 0)) {
         return false;
     }
 
-    // @TODO Go through all callers to see which should set consider_guest
-    if (consider_guest && pcmk__is_guest_or_bundle_node(node)) {
+    if (pcmk_is_set(flags, pcmk__node_no_unrunnable_guest)
+        && pcmk__is_guest_or_bundle_node(node)) {
         pcmk_resource_t *guest = node->priv->remote->priv->launcher;
 
         if (guest->priv->fns->location(guest, NULL,
@@ -226,10 +229,10 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // Compare node scores
 
-    if (pcmk__node_available(node1, false, false)) {
+    if (pcmk__node_available(node1, pcmk__node_alive|pcmk__node_usable)) {
         node1_score = node1->assign->score;
     }
-    if (pcmk__node_available(node2, false, false)) {
+    if (pcmk__node_available(node2, pcmk__node_alive|pcmk__node_usable)) {
         node2_score = node2->assign->score;
     }
 
@@ -351,7 +354,9 @@ pcmk__any_node_available(GHashTable *nodes)
     }
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-        if (pcmk__node_available(node, true, false)) {
+        if (pcmk__node_available(node, pcmk__node_alive
+                                       |pcmk__node_usable
+                                       |pcmk__node_no_negative)) {
             return true;
         }
     }

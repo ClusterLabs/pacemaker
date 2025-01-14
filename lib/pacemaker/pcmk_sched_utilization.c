@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2024 the Pacemaker project contributors
+ * Copyright 2014-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -336,7 +336,9 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     // Check whether any node has enough capacity for all the resources
     g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-        if (!pcmk__node_available(node, true, false)) {
+        if (!pcmk__node_available(node, pcmk__node_alive
+                                        |pcmk__node_usable
+                                        |pcmk__node_no_negative)) {
             continue;
         }
 
@@ -355,7 +357,9 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
         // If so, ban resource from any node with insufficient capacity
         g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-            if (pcmk__node_available(node, true, false)
+            if (pcmk__node_available(node, pcmk__node_alive
+                                           |pcmk__node_usable
+                                           |pcmk__node_no_negative)
                 && !have_enough_capacity(node, rscs_id,
                                          unassigned_utilization)) {
                 pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
@@ -371,7 +375,9 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
         // Otherwise, ban from nodes with insufficient capacity for rsc alone
         g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-            if (pcmk__node_available(node, true, false)
+            if (pcmk__node_available(node, pcmk__node_alive
+                                           |pcmk__node_usable
+                                           |pcmk__node_no_negative)
                 && !have_enough_capacity(node, rsc->id,
                                          rsc->priv->utilization)) {
                 pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2024 the Pacemaker project contributors
+ * Copyright 2014-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -436,23 +436,28 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
 
     // Assigning a primitive
 
-    if (!force && (node != NULL)
-        && ((node->assign->score < 0)
+    if (!force && (node != NULL)) {
+        bool available = pcmk__node_available(node, pcmk__node_alive
+                                                    |pcmk__node_usable
+                                                    |pcmk__node_no_negative);
+
+        if ((node->assign->score < 0)
             // Allow graph to assume that guest node connections will come up
-            || (!pcmk__node_available(node, true, false)
-                && !pcmk__is_guest_or_bundle_node(node)))) {
+            || (!available && !pcmk__is_guest_or_bundle_node(node))) {
 
-        pcmk__rsc_debug(rsc,
-                        "All nodes for resource %s are unavailable, unclean or "
-                        "shutting down (%s can%s run resources, with score %s)",
-                        rsc->id, pcmk__node_name(node),
-                        (pcmk__node_available(node, true, false)? "" : "not"),
-                        pcmk_readable_score(node->assign->score));
+            pcmk__rsc_debug(rsc,
+                            "All nodes for resource %s are unavailable, "
+                            "unclean or shutting down (%s can%s run "
+                            "resources, with score %s)",
+                            rsc->id, pcmk__node_name(node),
+                            (available? "" : "not"),
+                            pcmk_readable_score(node->assign->score));
 
-        if (stop_if_fail) {
-            pe__set_next_role(rsc, pcmk_role_stopped, "node availability");
+            if (stop_if_fail) {
+                pe__set_next_role(rsc, pcmk_role_stopped, "node availability");
+            }
+            node = NULL;
         }
-        node = NULL;
     }
 
     if (rsc->priv->assigned_node != NULL) {

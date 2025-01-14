@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -994,9 +994,23 @@ xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
 
 // Nodes (pcmk_sched_nodes.c)
 
+//! Options for checking node availability
+enum pcmk__node_availability {
+    //! Disallow offline or unclean nodes (always implied)
+    pcmk__node_alive                = 0,
+
+    //! Disallow shutting down, standby, and maintenance nodes
+    pcmk__node_usable               = (1 << 0),
+
+    //! Disallow nodes with negative scores
+    pcmk__node_no_negative          = (1 << 2),
+
+    //! Disallow guest nodes whose guest resource is unrunnable
+    pcmk__node_no_unrunnable_guest  = (1 << 4),
+};
+
 G_GNUC_INTERNAL
-bool pcmk__node_available(const pcmk_node_t *node, bool consider_score,
-                          bool consider_guest);
+bool pcmk__node_available(const pcmk_node_t *node, uint32_t flags);
 
 G_GNUC_INTERNAL
 bool pcmk__any_node_available(GHashTable *nodes);

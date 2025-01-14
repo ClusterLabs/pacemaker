@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -206,7 +206,9 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
                         rsc->id, rsc->priv->priority);
         return NULL;
 
-    } else if (!pcmk__node_available(node, false, true)) {
+    } else if (!pcmk__node_available(node, pcmk__node_alive
+                                           |pcmk__node_usable
+                                           |pcmk__node_no_unrunnable_guest)) {
         pcmk__rsc_trace(rsc,
                         "%s can't be promoted because %s can't run resources",
                         rsc->id, pcmk__node_name(node));
@@ -801,7 +803,8 @@ pcmk__add_promotion_scores(pcmk_resource_t *rsc)
 
         g_hash_table_iter_init(&iter, child_rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-            if (!pcmk__node_available(node, false, false)) {
+            if (!pcmk__node_available(node,
+                                      pcmk__node_alive|pcmk__node_usable)) {
                 /* This node will never be promoted, so don't apply the
                  * promotion score, as that may lead to clone shuffling.
                  */

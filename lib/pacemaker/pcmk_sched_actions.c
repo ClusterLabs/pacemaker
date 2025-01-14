@@ -1940,7 +1940,7 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
          * cancel any existing recurring monitors.
          */
         if (node->details->maintenance
-            || pcmk__node_available(node, false, false)) {
+            || pcmk__node_available(node, pcmk__node_alive|pcmk__node_usable)) {
 
             char *xpath = NULL;
             xmlNode *history = NULL;
