@@ -208,8 +208,7 @@ cib_fencing_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
 }
 
 static void
-send_stonith_update(pcmk__graph_action_t *action, const char *target,
-                    const char *uuid)
+send_stonith_update(const char *target, const char *uuid)
 {
     int rc = pcmk_ok;
     crm_node_t *peer = NULL;
@@ -389,7 +388,7 @@ execute_stonith_cleanup(void)
         const char *uuid = pcmk__cluster_get_xml_id(target_node);
 
         crm_notice("Marking %s, target of a previous stonith action, as clean", target);
-        send_stonith_update(NULL, target, uuid);
+        send_stonith_update(target, uuid);
         free(target);
     }
     g_list_free(stonith_cleanup_list);
@@ -606,7 +605,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
 
         if (AM_I_DC) {
             /* The DC always sends updates */
-            send_stonith_update(NULL, event->target, uuid);
+            send_stonith_update(event->target, uuid);
 
             /* @TODO Ideally, at this point, we'd check whether the fenced node
              * hosted any guest nodes, and call remote_node_down() for them.
@@ -644,7 +643,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
              */
             if (pcmk__str_eq(event->executioner, controld_globals.our_nodename,
                              pcmk__str_casei)) {
-                send_stonith_update(NULL, event->target, uuid);
+                send_stonith_update(event->target, uuid);
             }
             add_stonith_cleanup(event->target);
         }
@@ -891,7 +890,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                              is_remote_node);
 
             } else if (!(pcmk_is_set(action->flags, pcmk__graph_action_sent_update))) {
-                send_stonith_update(action, target, uuid);
+                send_stonith_update(target, uuid);
                 pcmk__set_graph_action_flags(action,
                                              pcmk__graph_action_sent_update);
             }
