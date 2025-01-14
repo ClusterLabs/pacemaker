@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2011-2024 the Pacemaker project contributors
+# Copyright 2011-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,8 +16,17 @@
 # upload it to the website.
 #
 
-# Top-level rsync destination for package's file uploads (without trailing slash)
-: ${RSYNC_PACKAGE_DEST:=sites.clusterlabs.org:/var/www/html/projects/$(PACKAGE)}
+# Where to checkout the source for a version
+ABI_CHECKOUT="abi/src"
+
+# Where to install the checkout build
+ABI_INSTALL="abi/install"
+
+# Where to build ABI dumps
+ABI_DUMPS="abi/dumps"
+
+# Where to build ABI reports
+ABI_REPORTS="abi/compat_reports"
 
 # If the argument is of form x.y.z, print Pacemaker-x.y.z,
 # otherwise print the argument (presumably a commit ID) directly
@@ -29,8 +38,11 @@ tag() {
     fi
 }
 
+# sed -i isn't portable
 sed_in_place() {
+    # Preserve permissions
     cp -p "$1" "$1.$$"
+
     sed -e "$2" "$1" > "$1.$$"
     mv "$1.$$" "$1"
 }
@@ -40,15 +52,40 @@ version() {
     echo "$1" | sed s:.*-::
 }
 
+dumpfile() {
+    local VERSION="$1"
+
+    echo "${PACKAGE}_${VERSION}.abi.tar.gz"
+}
+
+checkout_commit() {
+    local TAG="$1"
+
+    echo "Checking out $TAG to $ABI_CHECKOUT..."
+    rm -rf "$ABI_CHECKOUT"
+    ( cd .. ; git archive --prefix "doc/${ABI_CHECKOUT}/" "$TAG" | tar x )
+    [ $? -eq 0 ] || exit
+
+    # Remove "doc" from SUBDIRS in Makefile (but why?)
+    sed_in_place "${ABI_CHECKOUT}/Makefile.am" 's: doc::'
+}
+
+build_checkout() {
+    echo "Building to $ABI_INSTALL..."
+    ( cd "${ABI_CHECKOUT}" && ./autogen.sh \
+        && ./configure --quiet --disable-fatal-warnings )
+    make -C "${ABI_CHECKOUT}" V=0 DESTDIR="$(pwd)/$ABI_INSTALL" install
+    [ $? -eq 0 ] || exit
+}
+
 # Create configuration file for ABI dumper
 abi_config() {
     PACKAGE="$1"
     VERSION="$2"
-    BUILD_ROOT="$3"
-    DESC="$4"
+    DESC="$3"
 
     # Create header
-    DESC="$BUILD_ROOT/$VERSION.xml"
+    DESC="${ABI_CHECKOUT}/${VERSION}.xml"
     cat <<EOF > "$DESC"
 <?xml version="1.0" encoding="utf-8"?>
 <descriptor>
@@ -56,25 +93,13 @@ abi_config() {
     $VERSION
 </version>
 <headers>
-        $BUILD_ROOT/root/usr/include/$PACKAGE/crm
+        $(pwd)/${ABI_INSTALL}/usr/include/${PACKAGE}/crm
 </headers>
 <libs>
 EOF
 
-    # Build checkout, installing into subdirectory
-    ( cd "$BUILD_ROOT" && ./autogen.sh && ./configure --disable-fatal-warnings )
-    make -C "$BUILD_ROOT" V=0 DESTDIR="${BUILD_ROOT}/root" install
-    if [ $? -ne 0 ]; then
-        echo "Build for $TAG failed. Repair, populate <libs/> and re-run: "
-        echo "  abi-compliance-checker -l $PACKAGE -dump_abi $DESC"
-        echo ""
-        echo "To find libraries after building:"
-        echo "  find $BUILD_ROOT/root -name "*.so" -print"
-        exit 1
-    fi
-
     # Add library names to configuration file
-    find $BUILD_ROOT/root -name "*.so" -print >> $DESC
+    find "$ABI_INSTALL" -name "*.so" -print >> $DESC
 
     # Add footer
     cat <<EOF >> "$DESC"
@@ -84,47 +109,37 @@ EOF
 }
 
 # Dump the ABI for a particular version
-extract_one() {
+dump_version() {
     TAG="$1"
     VERSION="$2"
 
-    # If dump already exists, remove it if dumping HEAD (which changes),
-    # otherwise use it (a dump for a particular commit stays the same).
-    TARBALL="abi_dumps/$PACKAGE/${PACKAGE}_$VERSION.abi.tar.gz"
-    if [ "$VERSION" = HEAD ]; then
-        rm -rf "$TARBALL"
-    elif [ -f "$TARBALL" ]; then
-        return
+    # Reuse any previous dump unless it's for HEAD (which changes)
+    DUMP="${ABI_DUMPS}/$(dumpfile "$VERSION")"
+    if [ -f "$DUMP" ]; then
+        if [ "$VERSION" = HEAD ]; then
+            rm -f "$DUMP"
+        else
+            return
+        fi
     fi
 
-    echo "Building ABI dump for $*"
-
-    # Get a clean checkout at the desired commit
-    BUILD_ROOT=".ABI-build"
-    rm -rf "$BUILD_ROOT"
-    ( cd .. ; git archive --prefix "doc/$BUILD_ROOT/" "$TAG" | tar xv )
-    if [ $? -ne 0 ]; then
-        exit
-    fi
-
-    # Remove "doc" from SUBDIRS in Makefile (but why?)
-    BUILD_ROOT="$(pwd)/$BUILD_ROOT"
-    sed_in_place "$BUILD_ROOT/Makefile.am" 's: doc::'
+    checkout_commit "$TAG"
+    build_checkout "$TAG"
 
     # Run ABI dump
-    abi_config "$PACKAGE" "$VERSION" "$BUILD_ROOT" "$DESC"
-    abi-compliance-checker -l "$PACKAGE" -dump_abi "$DESC" \
-        -dump-path "abi_dumps/${PACKAGE}/${PACKAGE}_${VERSION}.abi.tar.gz"
+    echo "Building ABI dump for $TAG"
+    abi_config "$PACKAGE" "$VERSION" "$DESC"
+    abi-compliance-checker -l "$PACKAGE" -dump_abi "$DESC" -dump-path "$DUMP"
 
     # Clean up
-    rm -rf "$BUILD_ROOT"
+    rm -rf "$ABI_CHECKOUT" "$ABI_INSTALL"
 }
 
-extract_all() {
+dump_versions() {
     for arg in $*; do
         T=$(tag "$arg")
         V=$(version "$T")
-        extract_one "$T" "$V"
+        dump_version "$T" "$V"
     done
 }
 
@@ -133,7 +148,8 @@ die() {
 	exit 1
 }
 
-which git 2>/dev/null || die "abi-check: git must be installed"
+# Validate environment
+which git >/dev/null 2>/dev/null || die "abi-check: git must be installed"
 git rev-parse --git-dir >/dev/null 2>/dev/null	\
 	|| die "abi-check: must be run from git checkout"
 
@@ -144,21 +160,29 @@ fi
 
 PACKAGE="$1"; shift
 
-extract_all "$@"
+dump_versions "$@"
 
-if [ $# -eq 2 ]; then
-    V1=$(version "$1")
-    V2=$(version "$2")
-
-    abi-compliance-checker -l ${PACKAGE} \
-        -d1 abi_dumps/${PACKAGE}/${PACKAGE}_${V1}.abi.tar.gz \
-        -d2 abi_dumps/${PACKAGE}/${PACKAGE}_${V2}.abi.tar.gz
-    if [ $? -ne 0 ]; then
-        echo "WARNING: compliance checker exited $?"
-    fi
-
-    COMPAT_REPORT="compat_reports/${PACKAGE}/${V1}_to_${V2}"
-    if [ $UPLOAD -eq 1 ] && [ -d "$COMPAT_REPORT" ]; then
-        rsync -azxlSD --progress "$COMPAT_REPORT" "${RSYNC_PACKAGE_DEST}/abi/"
-    fi
+# Unless exactly two versions were given, we're just dumping
+if [ $# -ne 2 ]; then
+    exit
 fi
+
+V1=$(version "$1")
+V2=$(version "$2")
+
+(cd abi && abi-compliance-checker -l ${PACKAGE} \
+    -d1 "${ABI_DUMPS#abi/}/$(dumpfile "$V1")"   \
+    -d2 "${ABI_DUMPS#abi/}/$(dumpfile "$V2")" )
+if [ $? -ne 0 ]; then
+    echo "WARNING: compliance checker exited $?"
+fi
+
+# Top-level rsync destination for package's file uploads (no trailing slash)
+: ${RSYNC_PACKAGE_DEST:=sites.clusterlabs.org:/var/www/html/projects/$PACKAGE}
+
+REPORT="${ABI_REPORTS}/${PACKAGE}/${V1}_to_${V2}"
+if [ $UPLOAD -eq 1 ] && [ -d "$REPORT" ]; then
+    rsync -azxlSD --progress "$REPORT" "${RSYNC_PACKAGE_DEST}/abi/"
+fi
+
+# vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:

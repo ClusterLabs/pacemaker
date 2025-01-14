@@ -47,7 +47,6 @@ Also:
 | systemd support                                 |                | systemd-devel           | systemd-devel           | libsystemd-dev          |
 | systemd resource support                | 1.5.12 or later| dbus-devel              | dbus-devel              | libdbus-1-dev           |
 | Linux-HA style fencing agents                   |                | cluster-glue-libs-devel | libglue-devel           | cluster-glue-dev        |
-| documentation                                   |                | asciidoc or asciidoctor | asciidoc or asciidoctor | asciidoc or asciidoctor |
 | documentation                                   |                | help2man                | help2man                | help2man                |
 | documentation                                   |                | docbook-style-xsl       | docbook-xsl-stylesheets | docbook-xsl             |
 | documentation                                   |                | python3-sphinx          | python3-sphinx          | python3-sphinx          |

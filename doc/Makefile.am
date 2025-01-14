@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2024 the Pacemaker project contributors
+# Copyright 2003-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -28,17 +28,6 @@ noinst_SCRIPTS		= abi-check
 SUBDIRS		= sphinx
 
 EXTRA_DIST	= clusterlabs-logo-55x55.png
-
-if IS_ASCIIDOC
-ASCIIDOC_HTML_ARGS	= --unsafe --backend=xhtml11
-ASCIIDOC_DBOOK_ARGS	= -b docbook -d book
-else
-ASCIIDOC_HTML_ARGS	= --backend=html5
-ASCIIDOC_DBOOK_ARGS	= -b docbook45 -d book
-endif
-
-%.html: %.txt
-	$(AM_V_GEN)$(ASCIIDOC_CONV) $(ASCIIDOC_HTML_ARGS) --out-file=$@ $< $(PCMK_quiet)
 
 # For Makefile debugging
 .PHONY: vars
@@ -121,7 +110,7 @@ abi-www:
 
 .PHONY: abi-clean
 abi-clean:
-	-rm -rf abi_dumps compat_reports
+	-rm -rf abi
 
 
 # The main documentation books (which are actually in the sphinx subdirectory)

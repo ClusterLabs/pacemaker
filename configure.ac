@@ -935,7 +935,6 @@ dnl ==============================================
 dnl Documentation build dependencies and checks
 dnl ==============================================
 
-AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
 AC_PATH_PROG([HELP2MAN], [help2man])
 AC_PATH_PROG([SPHINX], [sphinx-build])
 AC_PATH_PROG([XSLTPROC], [xsltproc])
@@ -976,11 +975,6 @@ AC_SUBST(MANPAGE_XSLT)
 AM_CONDITIONAL(BUILD_XML_HELP, test x"${MANPAGE_XSLT}" != x"")
 AS_IF([test x"${MANPAGE_XSLT}" != x""],
       [PCMK_FEATURES="$PCMK_FEATURES agent-manpages"])
-
-AM_CONDITIONAL([IS_ASCIIDOC], [echo "${ASCIIDOC_CONV}" | grep -Eq 'asciidoc$'])
-AM_CONDITIONAL([BUILD_ASCIIDOC], [test "x${ASCIIDOC_CONV}" != x])
-AS_IF([test x"${ASCIIDOC_CONV}" != x""],
-      [PCMK_FEATURES="$PCMK_FEATURES ascii-docs"])
 
 AM_CONDITIONAL([BUILD_SPHINX_DOCS], [test x"${SPHINX}" != x""])
 AM_COND_IF([BUILD_SPHINX_DOCS], [PCMK_FEATURES="$PCMK_FEATURES books"])
