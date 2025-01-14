@@ -460,6 +460,7 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
 {
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
+    pcmk__node_status_t *local_node = NULL;
     int rc = pcmk_rc_ok;
 
     pcmk__cluster_init_node_caches();
@@ -490,8 +491,12 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
     }
 
     // Ensure local node always exists in peer cache
-    pcmk__get_node(cluster->priv->node_id, cluster->priv->node_name, NULL,
-                   pcmk__node_search_cluster_member);
+    local_node = pcmk__get_node(cluster->priv->node_id,
+                                cluster->priv->node_name, NULL,
+                                pcmk__node_search_cluster_member);
+
+    cluster->priv->node_xml_id = pcmk__corosync_uuid(local_node);
+    CRM_LOG_ASSERT(cluster->priv->node_xml_id != NULL);
 
     return pcmk_rc_ok;
 }

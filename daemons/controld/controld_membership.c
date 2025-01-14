@@ -142,7 +142,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
     }
 
     if (crm_xml_add(node_state, PCMK_XA_ID,
-                    pcmk__cluster_node_uuid(node)) == NULL) {
+                    pcmk__cluster_get_xml_id(node)) == NULL) {
         crm_info("Node update for %s cancelled: no ID", node->name);
         pcmk__xml_free(node_state);
         return NULL;

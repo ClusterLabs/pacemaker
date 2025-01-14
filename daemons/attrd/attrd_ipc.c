@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <inttypes.h>   // PRIu32
 #include <sys/types.h>
 
 #include <crm/cluster.h>
@@ -155,7 +156,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
             pcmk__node_status_t *node = NULL;
             char *host_alloc = NULL;
 
-            node = pcmk__search_node_caches(nodeid, NULL,
+            node = pcmk__search_node_caches(nodeid, NULL, NULL,
                                             pcmk__node_search_cluster_member);
             if ((node != NULL) && (node->name != NULL)) {
                 // Use cached name if available
@@ -232,12 +233,13 @@ attrd_client_refresh(pcmk__request_t *request)
 static void
 handle_missing_host(xmlNode *xml)
 {
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
-
-    if (host == NULL) {
-        crm_trace("Inferring host");
-        pcmk__xe_add_node(xml, attrd_cluster->priv->node_name,
-                          attrd_cluster->priv->node_id);
+    if (crm_element_value(xml, PCMK__XA_ATTR_HOST) == NULL) {
+        crm_trace("Inferring local node %s with XML ID %s",
+                  attrd_cluster->priv->node_name,
+                  attrd_cluster->priv->node_xml_id);
+        crm_xml_add(xml, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
+        crm_xml_add(xml, PCMK__XA_ATTR_HOST_ID,
+                    attrd_cluster->priv->node_xml_id);
     }
 }
 

@@ -119,7 +119,7 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
     if (controld_globals.dc_name != NULL) {
         pcmk__node_status_t *peer = NULL;
 
-        peer = pcmk__search_node_caches(0, controld_globals.dc_name,
+        peer = pcmk__search_node_caches(0, controld_globals.dc_name, NULL,
                                         pcmk__node_search_cluster_member);
         if (peer != NULL) {
             for (int i = 0; i < left_list_entries; ++i) {

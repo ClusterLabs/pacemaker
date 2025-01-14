@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -99,7 +99,7 @@ extern crm_trigger_t *attrd_config_read;
 
 void attrd_lrmd_disconnect(void);
 gboolean attrd_read_options(gpointer user_data);
-int attrd_send_attribute_alert(const char *node, int nodeid,
+int attrd_send_attribute_alert(const char *node, const char *node_xml_id,
                                const char *attr, const char *value);
 
 // Elections
@@ -115,10 +115,18 @@ void attrd_xml_add_writer(xmlNode *xml);
 
 enum attrd_attr_flags {
     attrd_attr_none         = 0U,
-    attrd_attr_changed      = (1U << 0),    // Attribute value has changed since last write
-    attrd_attr_uuid_missing = (1U << 1),    // Whether we know we're missing a peer UUID
-    attrd_attr_is_private   = (1U << 2),    // Whether to keep this attribute out of the CIB
-    attrd_attr_force_write  = (1U << 3),    // Update attribute by ignoring delay
+
+    // At least one of attribute's values has changed since last write
+    attrd_attr_changed      = (1U << 0),
+
+    // At least one of attribute's values has an unknown node XML ID
+    attrd_attr_node_unknown = (1U << 1),
+
+    // This attribute should never be written to the CIB
+    attrd_attr_is_private   = (1U << 2),
+
+    // Ignore any configured delay for next write of this attribute
+    attrd_attr_force_write  = (1U << 3),
 };
 
 typedef struct attribute_s {
@@ -155,7 +163,6 @@ typedef struct attribute_value_s {
     char *nodename;     // Node that this value is for
     char *current;      // Attribute value
     char *requested;    // Value specified in pending CIB write, if any
-    uint32_t nodeid;    // Cluster node ID of node that this value is for
     uint32_t flags;     // Group of attrd_value_flags
 } attribute_value_t;
 
@@ -243,5 +250,11 @@ const char *attrd_request_sync_point(xmlNode *xml);
 bool attrd_request_has_sync_point(xmlNode *xml);
 
 extern gboolean stand_alone;
+
+// Node utilities (from attrd_nodes.c)
+const char *attrd_get_node_xml_id(const char *node_name);
+void attrd_set_node_xml_id(const char *node_name, const char *node_xml_id);
+void attrd_forget_node_xml_id(const char *node_name);
+void attrd_cleanup_xml_ids(void);
 
 #endif /* PACEMAKER_ATTRD__H */
