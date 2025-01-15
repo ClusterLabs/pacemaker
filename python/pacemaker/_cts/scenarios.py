@@ -279,7 +279,7 @@ class Scenario:
 
         self._cm.debug("Detailed Results")
         for test in self.tests:
-            self._cm.debug(f"{f'Test {test.name}':<25} {stat_filter!r}")
+            self._cm.debug(f"{f'Test {test.name}: ':<25} {test.stats!r}")
 
         self._cm.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
