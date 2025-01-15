@@ -1841,6 +1841,11 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
         return;
     }
 
+    /* @TODO Using pcmk__node_banned here instead of pcmk__node_no_negative
+     * should allow more dependents to be active. Investigate the results of
+     * that on existing regression tests and come up with a new one that
+     * is targeted to it.
+     */
     if (pcmk__any_node_available(work, pcmk__node_alive
                                        |pcmk__node_usable
                                        |pcmk__node_no_negative)) {
