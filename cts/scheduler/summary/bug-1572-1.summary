@@ -12,8 +12,8 @@ Current cluster status:
       * IPaddr_147_81_84_133	(ocf:heartbeat:IPaddr):	 Started arc-tkincaidlx.wsicorp.com
 
 Transition Summary:
-  * Stop       rsc_drbd_7788:0          (            Unpromoted arc-dknightlx )  due to node availability
   * Restart    rsc_drbd_7788:1          ( Promoted arc-tkincaidlx.wsicorp.com )  due to resource definition change
+  * Stop       rsc_drbd_7788:0          (            Unpromoted arc-dknightlx )  due to node availability
   * Restart    fs_mirror                (          arc-tkincaidlx.wsicorp.com )  due to required ms_drbd_7788 notified
   * Restart    pgsql_5555               (          arc-tkincaidlx.wsicorp.com )  due to required fs_mirror start
   * Restart    IPaddr_147_81_84_133     (          arc-tkincaidlx.wsicorp.com )  due to required pgsql_5555 start
@@ -22,8 +22,8 @@ Executing Cluster Transition:
   * Pseudo action:   ms_drbd_7788_pre_notify_demote_0
   * Pseudo action:   grp_pgsql_mirror_stop_0
   * Resource action: IPaddr_147_81_84_133 stop on arc-tkincaidlx.wsicorp.com
-  * Resource action: rsc_drbd_7788:0 notify on arc-dknightlx
   * Resource action: rsc_drbd_7788:1 notify on arc-tkincaidlx.wsicorp.com
+  * Resource action: rsc_drbd_7788:0 notify on arc-dknightlx
   * Pseudo action:   ms_drbd_7788_confirmed-pre_notify_demote_0
   * Resource action: pgsql_5555      stop on arc-tkincaidlx.wsicorp.com
   * Resource action: fs_mirror       stop on arc-tkincaidlx.wsicorp.com
@@ -32,16 +32,16 @@ Executing Cluster Transition:
   * Resource action: rsc_drbd_7788:1 demote on arc-tkincaidlx.wsicorp.com
   * Pseudo action:   ms_drbd_7788_demoted_0
   * Pseudo action:   ms_drbd_7788_post_notify_demoted_0
-  * Resource action: rsc_drbd_7788:0 notify on arc-dknightlx
   * Resource action: rsc_drbd_7788:1 notify on arc-tkincaidlx.wsicorp.com
+  * Resource action: rsc_drbd_7788:0 notify on arc-dknightlx
   * Pseudo action:   ms_drbd_7788_confirmed-post_notify_demoted_0
   * Pseudo action:   ms_drbd_7788_pre_notify_stop_0
-  * Resource action: rsc_drbd_7788:0 notify on arc-dknightlx
   * Resource action: rsc_drbd_7788:1 notify on arc-tkincaidlx.wsicorp.com
+  * Resource action: rsc_drbd_7788:0 notify on arc-dknightlx
   * Pseudo action:   ms_drbd_7788_confirmed-pre_notify_stop_0
   * Pseudo action:   ms_drbd_7788_stop_0
-  * Resource action: rsc_drbd_7788:0 stop on arc-dknightlx
   * Resource action: rsc_drbd_7788:1 stop on arc-tkincaidlx.wsicorp.com
+  * Resource action: rsc_drbd_7788:0 stop on arc-dknightlx
   * Pseudo action:   ms_drbd_7788_stopped_0
   * Cluster action:  do_shutdown on arc-dknightlx
   * Pseudo action:   ms_drbd_7788_post_notify_stopped_0

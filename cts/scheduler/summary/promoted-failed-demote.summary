@@ -12,17 +12,17 @@ Current cluster status:
         * stateful-2:1	(ocf:heartbeat:Stateful):	 Unpromoted dl380g5a
 
 Transition Summary:
-  * Stop       stateful-1:0     (             Unpromoted dl380g5b )  due to node availability
   * Promote    stateful-1:1     ( Unpromoted -> Promoted dl380g5a )
   * Promote    stateful-2:1     ( Unpromoted -> Promoted dl380g5a )
+  * Stop       stateful-1:0     (             Unpromoted dl380g5b )  due to node availability
 
 Executing Cluster Transition:
   * Resource action: stateful-1:1    cancel=20000 on dl380g5a
   * Resource action: stateful-2:1    cancel=20000 on dl380g5a
   * Pseudo action:   ms-sf_pre_notify_stop_0
-  * Resource action: stateful-1:0    notify on dl380g5b
   * Resource action: stateful-1:1    notify on dl380g5a
   * Resource action: stateful-2:1    notify on dl380g5a
+  * Resource action: stateful-1:0    notify on dl380g5b
   * Pseudo action:   ms-sf_confirmed-pre_notify_stop_0
   * Pseudo action:   ms-sf_stop_0
   * Pseudo action:   group:0_stop_0

@@ -10,10 +10,10 @@ Current cluster status:
       * Stopped: [ node1 ]
 
 Transition Summary:
-  * Demote     rsc1:1     ( Promoted -> Unpromoted node2 )
-  * Demote     rsc2:1     ( Promoted -> Unpromoted node2 )
   * Promote    rsc1:2     (    Stopped -> Promoted node1 )
   * Promote    rsc2:2     (    Stopped -> Promoted node1 )
+  * Demote     rsc1:1     ( Promoted -> Unpromoted node2 )
+  * Demote     rsc2:1     ( Promoted -> Unpromoted node2 )
 
 Executing Cluster Transition:
   * Resource action: rsc1            cancel=10000 on node2

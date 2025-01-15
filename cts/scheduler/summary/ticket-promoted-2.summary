@@ -8,13 +8,13 @@ Current cluster status:
       * Stopped: [ node1 node2 ]
 
 Transition Summary:
-  * Start      rsc1:0     (                     node2 )
   * Promote    rsc1:1     ( Stopped -> Promoted node1 )
+  * Start      rsc1:0     (                     node2 )
 
 Executing Cluster Transition:
   * Pseudo action:   ms1_start_0
-  * Resource action: rsc1:0          start on node2
   * Resource action: rsc1:1          start on node1
+  * Resource action: rsc1:0          start on node2
   * Pseudo action:   ms1_running_0
   * Pseudo action:   ms1_promote_0
   * Resource action: rsc1:1          promote on node1

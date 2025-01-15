@@ -14,16 +14,16 @@ Current cluster status:
 
 Transition Summary:
   * Start      FAKECLONE:0     ( c7auto1 )
-  * Stop       FAKECLONE2:0    ( c7auto3 )  due to node availability
   * Stop       FAKECLONE2:1    ( c7auto4 )  due to unrunnable clone-one-or-more:order-FAKECLONE-clone-FAKECLONE2-clone-mandatory
+  * Stop       FAKECLONE2:0    ( c7auto3 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   FAKECLONE-clone_start_0
   * Pseudo action:   FAKECLONE2-clone_stop_0
   * Resource action: FAKECLONE       start on c7auto1
   * Pseudo action:   FAKECLONE-clone_running_0
-  * Resource action: FAKECLONE2      stop on c7auto3
   * Resource action: FAKECLONE2      stop on c7auto4
+  * Resource action: FAKECLONE2      stop on c7auto3
   * Pseudo action:   FAKECLONE2-clone_stopped_0
   * Resource action: FAKECLONE       monitor=10000 on c7auto1
 

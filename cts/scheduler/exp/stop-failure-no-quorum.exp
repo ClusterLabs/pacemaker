@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0">
     <action_set>
-      <pseudo_event id="10" operation="stop" operation_key="clvm_stop_0" internal_operation_key="clvm:0_stop_0">
+      <pseudo_event id="12" operation="stop" operation_key="clvm_stop_0" internal_operation_key="clvm:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -22,7 +22,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="10" operation="stop" operation_key="clvm_stop_0" internal_operation_key="clvm:0_stop_0"/>
+        <pseudo_event id="12" operation="stop" operation_key="clvm_stop_0" internal_operation_key="clvm:0_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="16" operation="stop" operation_key="clvm-clone_stop_0"/>

@@ -13,11 +13,11 @@ Current cluster status:
 
 Transition Summary:
   * Start      rsc1       (                     node2 )  due to unrunnable rsc3 start (blocked)
+  * Promote    rsc2:4     ( Stopped -> Promoted node2 )  due to colocation with rsc1 (blocked)
   * Start      rsc2:0     (                     node3 )
   * Start      rsc2:1     (                     node4 )
   * Start      rsc2:2     (                     node5 )
   * Start      rsc2:3     (                     node1 )
-  * Promote    rsc2:4     ( Stopped -> Promoted node2 )  due to colocation with rsc1 (blocked)
 
 Executing Cluster Transition:
   * Resource action: rsc1            monitor on node5
@@ -25,22 +25,22 @@ Executing Cluster Transition:
   * Resource action: rsc1            monitor on node3
   * Resource action: rsc1            monitor on node2
   * Resource action: rsc1            monitor on node1
+  * Resource action: rsc2:4          monitor on node2
   * Resource action: rsc2:0          monitor on node3
   * Resource action: rsc2:1          monitor on node4
   * Resource action: rsc2:2          monitor on node5
   * Resource action: rsc2:3          monitor on node1
-  * Resource action: rsc2:4          monitor on node2
   * Pseudo action:   rsc2-clone_start_0
   * Resource action: rsc3            monitor on node5
   * Resource action: rsc3            monitor on node4
   * Resource action: rsc3            monitor on node3
   * Resource action: rsc3            monitor on node2
   * Resource action: rsc3            monitor on node1
+  * Resource action: rsc2:4          start on node2
   * Resource action: rsc2:0          start on node3
   * Resource action: rsc2:1          start on node4
   * Resource action: rsc2:2          start on node5
   * Resource action: rsc2:3          start on node1
-  * Resource action: rsc2:4          start on node2
   * Pseudo action:   rsc2-clone_running_0
   * Resource action: rsc2:0          monitor=10000 on node3
   * Resource action: rsc2:1          monitor=10000 on node4

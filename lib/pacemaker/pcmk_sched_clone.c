@@ -572,6 +572,8 @@ probe_anonymous_clone(pcmk_resource_t *clone, pcmk_node_t *node)
 
     // Otherwise, use the first clone instance
     if (child == NULL) {
+        clone->priv->children = g_list_sort(clone->priv->children,
+                                            pcmk__cmp_instance_number);
         child = clone->priv->children->data;
     }
 
@@ -621,8 +623,6 @@ pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
         }
     }
 
-    rsc->priv->children = g_list_sort(rsc->priv->children,
-                                      pcmk__cmp_instance_number);
     if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
         return pcmk__probe_resource_list(rsc->priv->children, node);
     } else {

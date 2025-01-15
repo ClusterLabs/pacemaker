@@ -36,58 +36,20 @@
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="10" operation="monitor" operation_key="coloc_dependent_monitor_11000" internal_operation_key="coloc_dependent:0_monitor_11000" on_node="fastvm-fedora39-22" on_node_uuid="1">
-        <primitive id="coloc_dependent" long-id="coloc_dependent:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="fastvm-fedora39-22" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="8" operation="demote" operation_key="coloc_dependent_demote_0" internal_operation_key="coloc_dependent:0_demote_0" on_node="fastvm-fedora39-22" on_node_uuid="1"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="4">
-    <action_set>
-      <rsc_op id="8" operation="demote" operation_key="coloc_dependent_demote_0" internal_operation_key="coloc_dependent:0_demote_0" on_node="fastvm-fedora39-22" on_node_uuid="1">
-        <primitive id="coloc_dependent" long-id="coloc_dependent:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="false" CRM_meta_on_node="fastvm-fedora39-22" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="10000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="2" operation="cancel" operation_key="coloc_dependent_monitor_10000" internal_operation_key="coloc_dependent:0_monitor_10000" on_node="fastvm-fedora39-22" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="21" operation="demote" operation_key="coloc_dependent-clone_demote_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="5">
-    <action_set>
-      <rsc_op id="2" operation="cancel" operation_key="coloc_dependent_monitor_10000" internal_operation_key="coloc_dependent:0_monitor_10000" on_node="fastvm-fedora39-22" on_node_uuid="1">
-        <primitive id="coloc_dependent" long-id="coloc_dependent:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="fastvm-fedora39-22" CRM_meta_on_node_uuid="1" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="6">
-    <action_set>
-      <rsc_op id="14" operation="monitor" operation_key="coloc_dependent_monitor_10000" internal_operation_key="coloc_dependent:1_monitor_10000" on_node="fastvm-fedora39-23" on_node_uuid="2">
+      <rsc_op id="10" operation="monitor" operation_key="coloc_dependent_monitor_10000" internal_operation_key="coloc_dependent:1_monitor_10000" on_node="fastvm-fedora39-23" on_node_uuid="2">
         <primitive id="coloc_dependent" long-id="coloc_dependent:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="fastvm-fedora39-23" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="promote" operation_key="coloc_dependent_promote_0" internal_operation_key="coloc_dependent:1_promote_0" on_node="fastvm-fedora39-23" on_node_uuid="2"/>
+        <rsc_op id="9" operation="promote" operation_key="coloc_dependent_promote_0" internal_operation_key="coloc_dependent:1_promote_0" on_node="fastvm-fedora39-23" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="7">
+  <synapse id="4">
     <action_set>
-      <rsc_op id="13" operation="promote" operation_key="coloc_dependent_promote_0" internal_operation_key="coloc_dependent:1_promote_0" on_node="fastvm-fedora39-23" on_node_uuid="2">
+      <rsc_op id="9" operation="promote" operation_key="coloc_dependent_promote_0" internal_operation_key="coloc_dependent:1_promote_0" on_node="fastvm-fedora39-23" on_node_uuid="2">
         <primitive id="coloc_dependent" long-id="coloc_dependent:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="false" CRM_meta_on_node="fastvm-fedora39-23" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="10000" />
       </rsc_op>
@@ -101,11 +63,49 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="8">
+  <synapse id="5">
     <action_set>
       <rsc_op id="3" operation="cancel" operation_key="coloc_dependent_monitor_11000" internal_operation_key="coloc_dependent:1_monitor_11000" on_node="fastvm-fedora39-23" on_node_uuid="2">
         <primitive id="coloc_dependent" long-id="coloc_dependent:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="fastvm-fedora39-23" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="14" operation="monitor" operation_key="coloc_dependent_monitor_11000" internal_operation_key="coloc_dependent:0_monitor_11000" on_node="fastvm-fedora39-22" on_node_uuid="1">
+        <primitive id="coloc_dependent" long-id="coloc_dependent:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="fastvm-fedora39-22" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="demote" operation_key="coloc_dependent_demote_0" internal_operation_key="coloc_dependent:0_demote_0" on_node="fastvm-fedora39-22" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="12" operation="demote" operation_key="coloc_dependent_demote_0" internal_operation_key="coloc_dependent:0_demote_0" on_node="fastvm-fedora39-22" on_node_uuid="1">
+        <primitive id="coloc_dependent" long-id="coloc_dependent:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="false" CRM_meta_on_node="fastvm-fedora39-22" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="10000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="2" operation="cancel" operation_key="coloc_dependent_monitor_10000" internal_operation_key="coloc_dependent:0_monitor_10000" on_node="fastvm-fedora39-22" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="21" operation="demote" operation_key="coloc_dependent-clone_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="2" operation="cancel" operation_key="coloc_dependent_monitor_10000" internal_operation_key="coloc_dependent:0_monitor_10000" on_node="fastvm-fedora39-22" on_node_uuid="1">
+        <primitive id="coloc_dependent" long-id="coloc_dependent:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="fastvm-fedora39-22" CRM_meta_on_node_uuid="1" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -118,7 +118,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="8" operation="demote" operation_key="coloc_dependent_demote_0" internal_operation_key="coloc_dependent:0_demote_0" on_node="fastvm-fedora39-22" on_node_uuid="1"/>
+        <rsc_op id="12" operation="demote" operation_key="coloc_dependent_demote_0" internal_operation_key="coloc_dependent:0_demote_0" on_node="fastvm-fedora39-22" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <pseudo_event id="21" operation="demote" operation_key="coloc_dependent-clone_demote_0"/>
@@ -141,7 +141,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="promote" operation_key="coloc_dependent_promote_0" internal_operation_key="coloc_dependent:1_promote_0" on_node="fastvm-fedora39-23" on_node_uuid="2"/>
+        <rsc_op id="9" operation="promote" operation_key="coloc_dependent_promote_0" internal_operation_key="coloc_dependent:1_promote_0" on_node="fastvm-fedora39-23" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
