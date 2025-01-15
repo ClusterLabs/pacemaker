@@ -1,5 +1,5 @@
 #
-# Copyright 2011-2023 the Pacemaker project contributors
+# Copyright 2011-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -226,7 +226,7 @@ TAGS
 /doc/sphinx/*/_build
 /doc/sphinx/*/conf.py
 /doc/sphinx/*/generated
-/doc/sphinx/build-2.1.txt
+/doc/sphinx/build-[0-9]*.txt
 /doc/sphinx/shared/images/*.png
 
 # Test artifacts (from unit tests, regression tests, static analysis, etc.)
@@ -270,6 +270,8 @@ pacemaker_*.info
 
 # Files built by main branch (helps when jumping back and forth in checkout)
 /cts/cts-schemas
+/cts/schemas/test-*/
+/lib/*/fuzzers/*/*_fuzzer
 
 # Formerly built files (helps when jumping back and forth in checkout)
 /.ABI-build

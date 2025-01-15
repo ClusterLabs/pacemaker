@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -79,14 +79,14 @@ pcmk__cluster_parse_msg_type(const char *text)
 
 /*!
  * \internal
- * \brief Get a node's cluster-layer UUID, setting it if not already set
+ * \brief Get a node's XML ID in the CIB, setting it if not already set
  *
  * \param[in,out] node  Node to check
  *
- * \return Cluster-layer node UUID of \p node, or \c NULL if unknown
+ * \return CIB XML ID of \p node if known, otherwise \c NULL
  */
 const char *
-pcmk__cluster_node_uuid(crm_node_t *node)
+pcmk__cluster_get_xml_id(crm_node_t *node)
 {
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
 
@@ -96,6 +96,9 @@ pcmk__cluster_node_uuid(crm_node_t *node)
     if (node->uuid != NULL) {
         return node->uuid;
     }
+
+    // xml_id is always set when a Pacemaker Remote node entry is created
+    CRM_CHECK(!pcmk_is_set(node->flags, crm_remote_node), return NULL);
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC
@@ -370,7 +373,8 @@ pcmk__node_name_from_uuid(const char *uuid)
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
+        if (pcmk__str_eq(uuid, pcmk__cluster_get_xml_id(node),
+                         pcmk__str_none)) {
             return node->uname;
         }
     }
@@ -470,7 +474,7 @@ pcmk_get_cluster_layer(void)
 void
 set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
 {
-    crm_xml_add(xml, attr, pcmk__cluster_node_uuid(node));
+    crm_xml_add(xml, attr, pcmk__cluster_get_xml_id(node));
 }
 
 gboolean
@@ -522,7 +526,7 @@ send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
 const char *
 crm_peer_uuid(crm_node_t *peer)
 {
-    return pcmk__cluster_node_uuid(peer);
+    return pcmk__cluster_get_xml_id(peer);
 }
 
 char *
