@@ -1,7 +1,7 @@
 """Log searching classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["LogKind", "LogWatcher"]
-__copyright__ = "Copyright 2014-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from enum import Enum, auto, unique
@@ -47,7 +47,7 @@ except ImportError:
                                          int(match.group(6)))
 
 
-CTS_SUPPORT_BIN = "%s/cts-support" % BuildOptions.DAEMON_DIR
+CTS_SUPPORT_BIN = f"{BuildOptions.DAEMON_DIR}/cts-support"
 
 
 @unique
@@ -99,18 +99,18 @@ class SearchObj:
 
     def __str__(self):
         if self.host:
-            return "%s:%s" % (self.host, self.filename)
+            return f"{self.host}:{self.filename}"
 
         return self.filename
 
     def log(self, args):
         """Log a message."""
-        message = "lw: %s: %s" % (self, args)
+        message = f"lw: {self}: {args}"
         self.logger.log(message)
 
     def debug(self, args):
         """Log a debug message."""
-        message = "lw: %s: %s" % (self, args)
+        message = f"lw: {self}: {args}"
         self.logger.debug(message)
 
     def harvest_async(self, delegate=None):
@@ -173,11 +173,11 @@ class FileObj(SearchObj):
 
             if match:
                 self.offset = match.group(1)
-                self.debug("Got %d lines, new offset: %s  %r" % (len(out), self.offset, self._delegate))
+                self.debug(f"Got {len(out)} lines, new offset: {self.offset}  {self._delegate!r}")
             elif re.search(r"^CTSwatcher:.*truncated", line):
                 self.log(line)
             elif re.search(r"^CTSwatcher:", line):
-                self.debug("Got control line: %s" % line)
+                self.debug(f"Got control line: {line}")
             else:
                 messages.append(line)
 
@@ -200,9 +200,7 @@ class FileObj(SearchObj):
 
             return None
 
-        cmd = ("%s watch -p CTSwatcher: -l 200 -f %s -o %s"
-               % (CTS_SUPPORT_BIN, self.filename, self.offset))
-
+        cmd = f"{CTS_SUPPORT_BIN} watch -p CTSwatcher: -l 200 -f {self.filename} -o {self.offset}"
         return self.rsh.call_async(self.host, cmd, delegate=self)
 
     def harvest_cached(self):
@@ -221,8 +219,7 @@ class FileObj(SearchObj):
         if self.limit:
             return
 
-        cmd = ("%s watch -p CTSwatcher: -l 2 -f %s -o EOF"
-               % (CTS_SUPPORT_BIN, self.filename))
+        cmd = f"{CTS_SUPPORT_BIN} watch -p CTSwatcher: -l 2 -f {self.filename} -o EOF"
 
         # pylint: disable=not-callable
         (_, lines) = self.rsh(self.host, cmd, verbose=0)
@@ -231,7 +228,7 @@ class FileObj(SearchObj):
             match = re.search(r"^CTSwatcher:Last read: (\d+)", line)
             if match:
                 self.limit = int(match.group(1))
-                self.debug("Set limit to: %d" % self.limit)
+                self.debug(f"Set limit to: {self.limit}")
 
 
 class JournalObj(SearchObj):
@@ -286,11 +283,10 @@ class JournalObj(SearchObj):
             # Else find index of first message logged after limit
             for idx, msg in enumerate(msgs):
                 if self._msg_after_limit(msg):
-                    self.debug("Got %d lines before passing limit timestamp"
-                               % idx)
+                    self.debug(f"Got {idx} lines before passing limit timestamp")
                     return msgs[:idx], msgs[idx:]
 
-        self.debug("Got %s lines" % len(msgs))
+        self.debug(f"Got {len(msgs)} lines")
         return msgs, []
 
     def async_complete(self, pid, returncode, out, err):
@@ -312,11 +308,10 @@ class JournalObj(SearchObj):
             out, cursor_line = out[:-1], out[-1]
             match = re.search(r"^-- cursor: ([^.]+)", cursor_line)
             if not match:
-                raise OutputNotFoundError('Cursor not found at end of output:'
-                                          + '\n%s' % out)
+                raise OutputNotFoundError(f"Cursor not found at end of output:\n{out}")
 
             self.offset = match.group(1).strip()
-            self.debug("Got new cursor: %s" % self.offset)
+            self.debug(f"Got new cursor: {self.offset}")
 
         before, after = self._split_msgs_by_limit(out)
 
@@ -342,7 +337,7 @@ class JournalObj(SearchObj):
         if self.offset == "EOF":
             command += " --lines 0"
         else:
-            command += " --after-cursor='%s' --lines=200" % self.offset
+            command += f" --after-cursor='{self.offset}' --lines=200"
 
         return self.rsh.call_async(self.host, command, delegate=self)
 
@@ -369,10 +364,10 @@ class JournalObj(SearchObj):
 
         if rc == 0 and len(lines) == 1:
             self.limit = self._parser.isoparse(lines[0].strip())
-            self.debug("Set limit to: %s" % self.limit)
+            self.debug(f"Set limit to: {self.limit}")
         else:
-            self.debug("Unable to set limit for %s because date returned %d lines with status %d"
-                       % (self.host, len(lines), rc))
+            self.debug(f"Unable to set limit for {self.host} because date returned "
+                       f"{len(lines)} lines with status {rc}")
 
 
 class LogWatcher:
@@ -430,11 +425,11 @@ class LogWatcher:
 
         if not silent:
             for regex in self.regexes:
-                self._debug("Looking for regex: %s" % regex)
+                self._debug(f"Looking for regex: {regex}")
 
     def _debug(self, args):
         """Log a debug message."""
-        message = "lw: %s: %s" % (self.name, args)
+        message = f"lw: {self.name}: {args}"
         self._logger.debug(message)
 
     def set_watch(self):
@@ -468,7 +463,7 @@ class LogWatcher:
         # pylint: disable=unused-argument
 
         # TODO: Probably need a lock for updating self._line_cache
-        self._logger.debug("%s: Got %d lines from %d (total %d)" % (self.name, len(out), pid, len(self._line_cache)))
+        self._logger.debug(f"{self.name}: Got {len(out)} lines from {pid} (total {len(self._line_cache)})")
 
         if out:
             with self._cache_lock:
@@ -484,8 +479,7 @@ class LogWatcher:
         for f in self._file_list:
             cached = f.harvest_cached()
             if cached:
-                self._debug("Got %d lines from %s cache (total %d)"
-                            % (len(cached), f.name, len(self._line_cache)))
+                self._debug(f"Got {len(cached)} lines from {f.name} cache (total {len(self._line_cache)})")
                 with self._cache_lock:
                     self._line_cache.extend(cached)
             else:
@@ -496,7 +490,7 @@ class LogWatcher:
         for t in pending:
             t.join(60.0)
             if t.is_alive():
-                self._logger.log("%s: Aborting after 20s waiting for %r logging commands" % (self.name, t))
+                self._logger.log(f"{self.name}: Aborting after 20s waiting for {t!r} logging commands")
                 return
 
     def end(self):
@@ -559,7 +553,7 @@ class LogWatcher:
 
                     if matchobj:
                         self.whichmatch = which
-                        self._debug("Matched: %s" % line)
+                        self._debug(f"Matched: {line}")
                         return line
 
             elif timeout > 0 and end < time.time():
@@ -571,10 +565,10 @@ class LogWatcher:
                 self.__get_lines()
 
                 if not self._line_cache and end < time.time():
-                    self._debug("Single search terminated: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
+                    self._debug(f"Single search terminated: start={begin}, end={end}, now={time.time()}, lines={lines}")
                     return None
 
-                self._debug("Waiting: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), len(self._line_cache)))
+                self._debug(f"Waiting: start={begin}, end={end}, now={time.time()}, lines={len(self._line_cache)}")
                 time.sleep(1)
 
     def look_for_all(self, allow_multiple_matches=False, silent=False):
@@ -598,7 +592,7 @@ class LogWatcher:
         result = []
 
         if not silent:
-            self._debug("starting search: timeout=%d" % self._timeout)
+            self._debug(f"starting search: timeout={self._timeout}")
 
         while self.regexes:
             one_result = self.look(self._timeout)

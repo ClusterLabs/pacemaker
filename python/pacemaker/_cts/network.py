@@ -1,7 +1,7 @@
 """Network related utilities for CTS."""
 
 __all__ = ["next_ip"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 # pylint: disable=global-statement
@@ -55,5 +55,5 @@ def next_ip(ip_base=None, reset=False):
         if new_ip > 255:
             raise ValueError("No more available IP addresses")
 
-    CURRENT_IP = "%s%s%s" % (fields[0], fields[1], new_ip)
+    CURRENT_IP = f"{fields[0]}{fields[1]}{new_ip}"
     return CURRENT_IP

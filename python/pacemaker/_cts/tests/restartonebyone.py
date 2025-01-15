@@ -1,7 +1,7 @@
 """Restart all nodes in order."""
 
 __all__ = ["RestartOnebyOne"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -51,6 +51,6 @@ class RestartOnebyOne(CTSTest):
                 did_fail.append(node)
 
         if did_fail:
-            return self.failure("Could not restart %d nodes: %r" % (len(did_fail), did_fail))
+            return self.failure(f"Could not restart {len(did_fail)} nodes: {did_fail!r}")
 
         return self.success()

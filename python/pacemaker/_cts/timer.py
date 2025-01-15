@@ -1,7 +1,7 @@
 """Timer-related utilities for CTS."""
 
 __all__ = ["Timer"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time
@@ -42,7 +42,7 @@ class Timer:
 
     def __exit__(self, *args):
         """When used as a context manager, log the elapsed time."""
-        self._logger.debug("%s:%s runtime: %.2f" % (self._test_name, self._timer_name, self.elapsed))
+        self._logger.debug(f"{self._test_name}:{self._timer_name} runtime: {self.elapsed:.2f}")
 
     def reset(self):
         """Restart the timer."""

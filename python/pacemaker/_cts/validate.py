@@ -1,6 +1,6 @@
 """A module providing XML validation utilities."""
 
-__copyright__ = "Copyright 2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2024-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 __all__ = ["validate"]
@@ -26,7 +26,7 @@ def find_validator(rng_file):
 
         return [BuildOptions.XMLLINT_PATH, "--relaxng", rng_file, "-"]
 
-    raise FileNotFoundError("Could not find validator for %s" % rng_file)
+    raise FileNotFoundError(f"Could not find validator for {rng_file}")
 
 
 def rng_directory():
@@ -35,8 +35,8 @@ def rng_directory():
         return os.environ["PCMK_schema_directory"]
 
     for path in sys.path:
-        if os.path.exists("%s/cts-fencing.in" % path):
-            return "%s/xml" % path
+        if os.path.exists(f"{path}/cts-fencing.in"):
+            return f"{path}/xml"
 
     return BuildOptions.SCHEMA_DIR
 
@@ -44,14 +44,15 @@ def rng_directory():
 def validate(xml, check_rng=True, verbose=False):
     """Validate the given XML input string against a schema."""
     if check_rng:
-        rng_file = "%s/api/api-result.rng" % rng_directory()
+        rng_file = f"{rng_directory()}/api/api-result.rng"
     else:
         rng_file = None
 
     cmd = find_validator(rng_file)
 
     if verbose:
-        print("\nRunning: %s" % " ".join(cmd))
+        s = " ".join(cmd)
+        print(f"\nRunning: {s}")
 
     with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as validator:
         output = pipe_communicate(validator, check_stderr=True, stdin=xml)

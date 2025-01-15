@@ -1,7 +1,7 @@
 """Simultaneously stop running nodes."""
 
 __all__ = ["SimulStopLite"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -39,7 +39,7 @@ class SimulStopLite(CTSTest):
     def __call__(self, dummy):
         """Return whether stopping all running nodes more or less simultaneously succeeds."""
         self.incr("calls")
-        self.debug("Setup: %s" % self.name)
+        self.debug(f"Setup: {self.name}")
 
         # We ignore the "node" parameter...
         watchpats = []
@@ -76,10 +76,10 @@ class SimulStopLite(CTSTest):
                 up_nodes.append(node)
 
         if did_fail:
-            return self.failure("Active nodes exist: %s" % up_nodes)
+            return self.failure(f"Active nodes exist: {up_nodes}")
 
-        self._logger.log("Warn: All nodes stopped but CTS didn't detect: %s" % watch.unmatched)
-        return self.failure("Missing log message: %s " % watch.unmatched)
+        self._logger.log(f"Warn: All nodes stopped but CTS didn't detect: {watch.unmatched}")
+        return self.failure(f"Missing log message: {watch.unmatched}")
 
     def is_applicable(self):
         """Return True if this test is applicable in the current test configuration."""

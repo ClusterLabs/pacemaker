@@ -1,7 +1,7 @@
 """Corosync-specific class for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["Corosync2"]
-__copyright__ = "Copyright 2007-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2007-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.CTS import Process
@@ -41,7 +41,7 @@ class Corosync2(ClusterManager):
                 "pacemaker-fenced"
             ]
             for c in daemons:
-                badnews = self.templates.get_component("%s-ignore" % c) + common_ignore
+                badnews = self.templates.get_component(f"{c}-ignore") + common_ignore
                 proc = Process(self, c, pats=self.templates.get_component(c),
                                badnews_ignore=badnews)
                 self._fullcomplist[c] = proc
@@ -64,7 +64,7 @@ class Corosync2(ClusterManager):
         vgrind = self.env["valgrind-procs"].split()
         for (key, val) in self._fullcomplist.items():
             if self.env["valgrind-tests"] and key in vgrind:
-                self.log("Filtering %s from the component list as it is being profiled by valgrind" % key)
+                self.log(f"Filtering {key} from the component list as it is being profiled by valgrind")
                 continue
 
             if key == "pacemaker-fenced" and not self.env["DoFencing"]:

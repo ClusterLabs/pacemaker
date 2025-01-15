@@ -1,7 +1,7 @@
 """Base classes for CTS tests."""
 
 __all__ = ["CTSTest"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -92,7 +92,7 @@ class CTSTest:
             return
 
         elapsed = self._timers[key].elapsed
-        self.debug("%s:%s runtime: %.2f" % (self.name, key, elapsed))
+        self.debug(f"{self.name}:{key} runtime: {elapsed:.2f}")
         del self._timers[key]
 
     def incr(self, name):
@@ -110,7 +110,7 @@ class CTSTest:
         """Increment the failure count, with an optional failure reason."""
         self.passed = False
         self.incr("failure")
-        self._logger.log(("Test %s" % self.name).ljust(35) + " FAILED: %s" % reason)
+        self._logger.log(f"{f'Test {self.name}':<35} FAILED: {reason}")
 
         return False
 
@@ -134,7 +134,7 @@ class CTSTest:
 
         for audit in self.audits:
             if not audit():
-                self._logger.log("Internal %s Audit %s FAILED." % (self.name, audit.name))
+                self._logger.log(f"Internal {self.name} Audit {audit.name} FAILED.")
                 self.incr("auditfail")
                 passed = False
 
@@ -207,7 +207,7 @@ class CTSTest:
                         add_err = False
 
                 if add_err:
-                    self._logger.log("%s %s" % (prefix, match))
+                    self._logger.log(f"{prefix} {match}")
                     errcount += 1
             else:
                 break

@@ -1,7 +1,7 @@
 """Fence a running node and wait for it to restart."""
 
 __all__ = ["StonithdTest"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker.exitstatus import ExitStatus
@@ -52,13 +52,13 @@ class StonithdTest(CTSTest):
         ]
 
         if not self._env["at-boot"]:
-            self.debug("Expecting %s to stay down" % node)
+            self.debug(f"Expecting {node} to stay down")
             self._cm.expected_status[node] = "down"
         else:
-            self.debug("Expecting %s to come up again %d" % (node, self._env["at-boot"]))
+            self.debug(f"Expecting {node} to come up again {self._env['at-boot']}")
             watchpats.extend([
-                "%s.* S_STARTING -> S_PENDING" % node,
-                "%s.* S_PENDING -> S_NOT_DC" % node,
+                f"{node}.* S_STARTING -> S_PENDING",
+                f"{node}.* S_PENDING -> S_NOT_DC",
             ])
 
         watch = self.create_watch(watchpats, 30 + self._env["DeadTime"] + self._env["StableTime"] + self._env["StartTime"])
@@ -66,7 +66,7 @@ class StonithdTest(CTSTest):
 
         origin = self._env.random_gen.choice(self._env["nodes"])
 
-        (rc, _) = self._rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
+        (rc, _) = self._rsh(origin, f"stonith_admin --reboot {node} -VVVVVV")
 
         if rc == ExitStatus.TIMEOUT:
             # Look for the patterns, usually this means the required
@@ -78,7 +78,7 @@ class StonithdTest(CTSTest):
             # no confirmation, but pacemaker should be watching and
             # fence the node again
 
-            self._logger.log("Fencing command on %s to fence %s timed out" % (origin, node))
+            self._logger.log(f"Fencing command on {origin} to fence {node} timed out")
 
         elif origin != node and rc != 0:
             self.debug("Waiting for the cluster to recover")
@@ -87,18 +87,18 @@ class StonithdTest(CTSTest):
             self.debug("Waiting for fenced node to come back up")
             self._cm.ns.wait_for_all_nodes(self._env["nodes"], 600)
 
-            self._logger.log("Fencing command on %s failed to fence %s (rc=%d)" % (origin, node, rc))
+            self._logger.log(f"Fencing command on {origin} failed to fence {node} (rc={rc})")
 
         elif origin == node and rc != 255:
             # 255 == broken pipe, ie. the node was fenced as expected
-            self._logger.log("Locally originated fencing returned %d" % rc)
+            self._logger.log(f"Locally originated fencing returned {rc}")
 
         with Timer(self._logger, self.name, "fence"):
             matched = watch.look_for_all()
 
         self.set_timer("reform")
         if watch.unmatched:
-            self._logger.log("Patterns not found: %r" % watch.unmatched)
+            self._logger.log(f"Patterns not found: {watch.unmatched!r}")
 
         self.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
