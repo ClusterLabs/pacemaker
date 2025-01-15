@@ -356,12 +356,13 @@ pcmk__sort_nodes(GList *nodes, pcmk_node_t *active_node)
  * \brief Check whether any node is available to run resources
  *
  * \param[in] nodes  Nodes to check
+ * \param[in] flags  Group of enum pcmk__node_availability flags
  *
- * \return true if any node in \p nodes is available to run resources,
- *         otherwise false
+ * \return true if any node in \p nodes is available to run resources
+ *         per flags, otherwise false
  */
 bool
-pcmk__any_node_available(GHashTable *nodes)
+pcmk__any_node_available(GHashTable *nodes, uint32_t flags)
 {
     GHashTableIter iter;
     const pcmk_node_t *node = NULL;
@@ -371,9 +372,7 @@ pcmk__any_node_available(GHashTable *nodes)
     }
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-        if (pcmk__node_available(node, pcmk__node_alive
-                                       |pcmk__node_usable
-                                       |pcmk__node_no_negative)) {
+        if (pcmk__node_available(node, flags)) {
             return true;
         }
     }

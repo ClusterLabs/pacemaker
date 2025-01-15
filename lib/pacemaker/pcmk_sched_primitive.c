@@ -329,7 +329,10 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
     // Apply the colocation score to this resource's allowed node scores
     rsc->priv->cmds->apply_coloc_score(rsc, other, colocation, true);
     if ((archive != NULL)
-        && !pcmk__any_node_available(rsc->priv->allowed_nodes)) {
+        && !pcmk__any_node_available(rsc->priv->allowed_nodes,
+                                     pcmk__node_alive
+                                     |pcmk__node_usable
+                                     |pcmk__node_no_negative)) {
         pcmk__rsc_info(rsc,
                        "%s: Reverting scores from colocation with %s "
                        "because no nodes allowed",
