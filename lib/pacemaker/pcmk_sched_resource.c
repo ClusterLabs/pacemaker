@@ -440,7 +440,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         // Allow graph to assume that guest node connections will come up
         && !pcmk__node_available(node, pcmk__node_alive
                                        |pcmk__node_usable
-                                       |pcmk__node_no_negative
+                                       |pcmk__node_no_banned
                                        |pcmk__node_exempt_guest)) {
 
         pcmk__rsc_debug(rsc,
