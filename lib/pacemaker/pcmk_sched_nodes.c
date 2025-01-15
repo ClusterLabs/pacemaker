@@ -56,6 +56,11 @@ pcmk__node_available(const pcmk_node_t *node, uint32_t flags)
         return false;
     }
 
+    if (pcmk_is_set(flags, pcmk__node_no_banned)
+        && (node->assign->score <= -PCMK_SCORE_INFINITY)) {
+        return false;
+    }
+
     if (pcmk_is_set(flags, pcmk__node_no_unrunnable_guest)
         && pcmk__is_guest_or_bundle_node(node)) {
         pcmk_resource_t *guest = node->priv->remote->priv->launcher;
