@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -183,20 +183,6 @@ pcmk_foreach_active_resource(pcmk_node_t *node,
         }
     }
     return result;
-}
-
-void
-pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
-{
-    pcmk__assert(xml != NULL);
-
-    if (node != NULL) {
-        crm_xml_add(xml, PCMK__XA_ATTR_HOST, node);
-    }
-
-    if (nodeid > 0) {
-        crm_xml_add_int(xml, PCMK__XA_ATTR_HOST_ID, nodeid);
-    }
 }
 
 /*!

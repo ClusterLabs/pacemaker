@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -62,19 +62,6 @@ int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            const struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);
 guint pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer);
-
-
-/* internal node-related XML utilities (from nodes.c) */
-
-/*!
- * \internal
- * \brief Add local node name and ID to an XML node
- *
- * \param[in,out] request  XML node to modify
- * \param[in]     node     The local node's name
- * \param[in]     nodeid   The local node's ID (can be 0)
- */
-void pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid);
 
 
 /* internal name/value utilities (from nvpair.c) */

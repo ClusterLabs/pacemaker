@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -754,7 +754,10 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
             crm_xml_add(request, PCMK__XA_SRC, crm_system_name);
             crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
             pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, true);
-            pcmk__xe_add_node(request, node_name, nodeid);
+            crm_xml_add(request, PCMK__XA_ATTR_HOST, node_name);
+            if (nodeid > 0) {
+                crm_xml_add_int(request, PCMK__XA_ATTR_HOST_ID, nodeid);
+            }
             break;
 
         case pcmk_ipc_controld:
