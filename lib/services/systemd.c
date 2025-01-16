@@ -75,6 +75,32 @@ systemd_new_method(const char *method)
  */
 
 static DBusConnection* systemd_proxy = NULL;
+static svc__systemd_callback_t systemd_callback = NULL;
+static void *systemd_callback_data = NULL;
+
+/*!
+ * \internal
+ * \brief Register a function to be called when a systemd job completes
+ *
+ * If the application registers a callback using this function, the callback
+ * will be called whenever a systemd JobRemoved signal is received. This allows
+ * called whenever a systemd JobRemoved signal is received. This allows
+ * applications to be notified when a systemd action completes, rather than just
+ * when it is initiated.
+ *
+ * \param[in] callback   Function to call when jobs complete
+ * \param[in] user_data  Data to pass to the callback
+ *
+ * \note The callback must be registered before any other systemd function
+ *       is called (i.e. at start-up is best).
+ */
+void
+services__set_systemd_callback(svc__systemd_callback_t callback,
+                               void *user_data)
+{
+    systemd_callback = callback;
+    systemd_callback_data = user_data;
+}
 
 static inline DBusPendingCall *
 systemd_send(DBusMessage *msg,
@@ -166,6 +192,7 @@ filter_systemd_signals(DBusConnection *connection, DBusMessage *message,
     } else {
         crm_trace("Dispatching JobRemoved() with ID %d for %s with result %s",
                   job_id, unit_name, result);
+        systemd_callback((int) job_id, bus_path, unit_name, result, user_data);
     }
 
     dbus_error_free(&error);
