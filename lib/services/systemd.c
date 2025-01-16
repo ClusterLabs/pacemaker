@@ -1222,8 +1222,11 @@ services__execute_systemd(svc_action_t *op)
                          "Bug in service library");
 
     if (invoke_unit_by_name(op->agent, op, NULL) == pcmk_rc_ok) {
-        op->opaque->timerid = pcmk__create_timer(op->timeout + 5000,
-                                                 systemd_timeout_callback, op);
+        if (!pcmk__str_eq(op->action, PCMK_ACTION_START, pcmk__str_casei)) {
+            op->opaque->timerid = pcmk__create_timer(op->timeout + 5000,
+                                                     systemd_timeout_callback, op);
+        }
+
         services_add_inflight_op(op);
         return pcmk_rc_ok;
     }
