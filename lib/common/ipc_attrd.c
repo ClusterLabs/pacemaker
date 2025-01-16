@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2024 the Pacemaker project contributors
+ * Copyright 2011-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -201,7 +201,7 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
               pcmk__s(resource, "all resources"), pcmk__s(node, "all nodes"));
 
     crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
-    pcmk__xe_add_node(request, node, 0);
+    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
     crm_xml_add(request, PCMK__XA_ATTR_RESOURCE, resource);
     crm_xml_add(request, PCMK__XA_ATTR_CLEAR_OPERATION, operation);
     crm_xml_add(request, PCMK__XA_ATTR_CLEAR_INTERVAL, interval_spec);
@@ -257,7 +257,7 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
 
     crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
     pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, reap);
-    pcmk__xe_add_node(request, node, 0);
+    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
 
     rc = connect_and_send_attrd_request(api, request);
 
@@ -297,7 +297,7 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
 
     crm_xml_add(request, PCMK__XA_ATTR_NAME, name);
     crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_QUERY);
-    pcmk__xe_add_node(request, node, 0);
+    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
 
     rc = connect_and_send_attrd_request(api, request);
     pcmk__xml_free(request);
@@ -321,7 +321,7 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
     request = create_attrd_op(NULL);
 
     crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_REFRESH);
-    pcmk__xe_add_node(request, node, 0);
+    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
 
     rc = connect_and_send_attrd_request(api, request);
 
@@ -361,7 +361,7 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
 
     crm_xml_add(op, PCMK__XA_ATTR_VALUE, value);
     crm_xml_add(op, PCMK__XA_ATTR_DAMPENING, dampen);
-    pcmk__xe_add_node(op, node, 0);
+    crm_xml_add(op, PCMK__XA_ATTR_HOST, node);
     crm_xml_add(op, PCMK__XA_ATTR_SET, set);
     crm_xml_add_int(op, PCMK__XA_ATTR_IS_REMOTE,
                     pcmk_is_set(options, pcmk__node_attr_remote));

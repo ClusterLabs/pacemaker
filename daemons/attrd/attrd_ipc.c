@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -66,7 +66,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         if (host) {
             v = g_hash_table_lookup(a->values, host);
             host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
-            pcmk__xe_add_node(host_value, host, 0);
+            crm_xml_add(host_value, PCMK__XA_ATTR_HOST, host);
             crm_xml_add(host_value, PCMK__XA_ATTR_VALUE,
                         (v? v->current : NULL));
 
@@ -77,7 +77,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
             g_hash_table_iter_init(&iter, a->values);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
                 host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
-                pcmk__xe_add_node(host_value, v->nodename, 0);
+                crm_xml_add(host_value, PCMK__XA_ATTR_HOST, v->nodename);
                 crm_xml_add(host_value, PCMK__XA_ATTR_VALUE, v->current);
             }
         }
@@ -166,7 +166,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
                 host_alloc = pcmk__cluster_node_name(nodeid);
                 host = host_alloc;
             }
-            pcmk__xe_add_node(xml, host, 0);
+            crm_xml_add(xml, PCMK__XA_ATTR_HOST, host);
         }
     }
 
