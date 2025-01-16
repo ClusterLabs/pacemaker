@@ -44,7 +44,7 @@ struct svc_action_private_s {
 #endif
 
 #if SUPPORT_SYSTEMD
-    char *job_path;
+    char *job_path;         // D-Bus object path for enqueued start/stop job
 #endif  // SUPPORT_SYSTEMD
 };
 
