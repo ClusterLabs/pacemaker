@@ -869,13 +869,27 @@ action_complete(svc_action_t * action)
         goto finalize;
     }
 
-    if (pcmk__result_ok(&(cmd->result))
-        && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
-                                PCMK_ACTION_STOP, NULL)) {
+    if (pcmk__result_ok(&(cmd->result)) &&
+        pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
+        /* Getting results for when a start action completes is now handled
+         * by watching for JobRemoved() signals from systemd and reacting
+         * to them.  So, we can bypass the rest of the code in this function
+         * for those actions.
+         *
+         * @TODO When stop actions and monitors are handled in the same way,
+         * this function can either be drastically simplified or done away
+         * with entirely.
+         */
+        return;
+
+    } else if (pcmk__result_ok(&(cmd->result)) &&
+               pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
         /* systemd returns from start and stop actions after the action
          * begins, not after it completes. We have to jump through a few
          * hoops so that we don't report 'complete' to the rest of pacemaker
          * until it's actually done.
+         *
+         * Note that we are only jumping through hoops for stop actions now.
          */
         goagain = true;
         cmd->real_action = cmd->action;
