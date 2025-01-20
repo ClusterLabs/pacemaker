@@ -1,6 +1,6 @@
 /*
  * Copyright 2010-2011 Red Hat, Inc.
- * Later changes copyright 2012-2024 the Pacemaker project contributors
+ * Later changes copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -48,6 +48,9 @@ struct svc_action_private_s {
 #if HAVE_DBUS
     DBusPendingCall* pending;
     unsigned timerid;
+#endif
+#if SUPPORT_SYSTEMD
+    char *unit_name;
 #endif
 };
 

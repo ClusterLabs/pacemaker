@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -594,6 +594,9 @@ services_action_free(svc_action_t * op)
         free(op->opaque->args[i]);
     }
 
+#if SUPPORT_SYSTEMD
+    free(op->opaque->unit_name);
+#endif
     free(op->opaque->exit_reason);
     free(op->opaque);
     free(op->rsc);

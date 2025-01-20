@@ -468,7 +468,12 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
                                                 pcmk__str_none));
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name,
                                             DBUS_TYPE_INVALID));
-    free(name);
+
+    if (op != NULL) {
+        op->opaque->unit_name = name;
+    } else {
+        free(name);
+    }
 
     if ((op == NULL) || op->synchronous) {
         // For synchronous ops, wait for a reply and extract the result
@@ -1123,4 +1128,14 @@ done:
     } else {
         return services__finalize_async_op(op);
     }
+}
+
+const char *
+services__systemd_unit_name(svc_action_t *action)
+{
+    if (action == NULL || action->opaque == NULL) {
+        return NULL;
+    }
+
+    return action->opaque->unit_name;
 }

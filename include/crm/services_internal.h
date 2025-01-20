@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -56,6 +56,8 @@ void services__set_result(svc_action_t *action, int agent_status,
 void services__format_result(svc_action_t *action, int agent_status,
                              enum pcmk_exec_status exec_status,
                              const char *format, ...) G_GNUC_PRINTF(4, 5);
+
+const char *services__systemd_unit_name(svc_action_t *action);
 
 #ifdef __cplusplus
 }
