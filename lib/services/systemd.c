@@ -908,7 +908,7 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
      */
     process_unit_method_reply(reply, op);
 
-    if (!pcmk__str_eq(op->action, PCMK_ACTION_START, pcmk__str_casei)) {
+    if (!pcmk__strcase_any_of(op->action, PCMK_ACTION_START, PCMK_ACTION_STOP, NULL)) {
         services__finalize_async_op(op);
     }
 
@@ -1230,7 +1230,8 @@ services__execute_systemd(svc_action_t *op)
                          "Bug in service library");
 
     if (invoke_unit_by_name(op->agent, op, NULL) == pcmk_rc_ok) {
-        if (!pcmk__str_eq(op->action, PCMK_ACTION_START, pcmk__str_casei)) {
+        if (!pcmk__strcase_any_of(op->action, PCMK_ACTION_START,
+                                  PCMK_ACTION_STOP, NULL)) {
             op->opaque->timerid = pcmk__create_timer(op->timeout + 5000,
                                                      systemd_timeout_callback, op);
         }
