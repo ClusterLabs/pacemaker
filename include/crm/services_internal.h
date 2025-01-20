@@ -84,6 +84,8 @@ void services__format_result(svc_action_t *action, int agent_status,
 
 const char *services__systemd_unit_name(svc_action_t *action);
 
+svc_action_t *services__systemd_get_inflight_op(const char *unit_name);
+
 #ifdef __cplusplus
 }
 #endif

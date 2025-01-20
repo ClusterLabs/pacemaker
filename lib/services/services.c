@@ -1359,3 +1359,27 @@ services__grab_stderr(svc_action_t *action)
     action->stderr_data = NULL;
     return output;
 }
+
+#if SUPPORT_SYSTEMD
+svc_action_t *
+services__systemd_get_inflight_op(const char *unit_name)
+{
+    GList *gIter = NULL;
+    svc_action_t *op = NULL;
+
+    for (gIter = inflight_ops; gIter != NULL; gIter = gIter->next) {
+        op = gIter->data;
+
+        if (!pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD,
+                          pcmk__str_casei)) {
+            continue;
+        }
+
+        if (pcmk__str_eq(op->opaque->unit_name, unit_name, pcmk__str_none)) {
+            return op;
+        }
+    }
+
+    return NULL;
+}
+#endif
