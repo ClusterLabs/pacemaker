@@ -82,6 +82,8 @@ void services__format_result(svc_action_t *action, int agent_status,
                              enum pcmk_exec_status exec_status,
                              const char *format, ...) G_GNUC_PRINTF(4, 5);
 
+int services__finalize_async_op(svc_action_t *op);
+
 const char *services__systemd_unit_name(svc_action_t *action);
 
 svc_action_t *services__systemd_get_inflight_op(const char *unit_name);

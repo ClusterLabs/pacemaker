@@ -74,9 +74,6 @@ G_GNUC_INTERNAL
 gboolean recurring_action_timer(gpointer data);
 
 G_GNUC_INTERNAL
-int services__finalize_async_op(svc_action_t *op);
-
-G_GNUC_INTERNAL
 int services__generic_error(const svc_action_t *op);
 
 G_GNUC_INTERNAL
