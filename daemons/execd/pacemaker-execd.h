@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -87,6 +87,12 @@ stonith_t *get_stonith_connection(void);
  * us to timeout any pending stonith commands
  */
 void stonith_connection_failed(void);
+
+#if SUPPORT_SYSTEMD
+void handle_systemd_job_complete(int job_id, const char *bus_path,
+                                 const char *unit_name, const char *result,
+                                 void *user_data);
+#endif
 
 #ifdef PCMK__COMPILE_REMOTE
 void ipc_proxy_init(void);

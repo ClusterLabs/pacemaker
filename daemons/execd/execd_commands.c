@@ -818,6 +818,57 @@ client_disconnect_cleanup(const char *client_id)
     }
 }
 
+#if SUPPORT_SYSTEMD
+void
+handle_systemd_job_complete(int job_id, const char *bus_path, const char *unit_name,
+                            const char *result, void *user_data)
+{
+    svc_action_t *action = NULL;
+    lrmd_cmd_t *cmd = NULL;
+    lrmd_rsc_t *rsc = NULL;
+
+    /* Get an inflight operation that matches unit_name.  If there's no match,
+     * systemd is telling us about a job for a unit that we didn't invoke and
+     * therefore don't care about.  We can just return in that case.
+     */
+    action = services__systemd_get_inflight_op(unit_name);
+
+    if (action == NULL) {
+        return;
+    }
+
+    cmd = action->cb_data;
+    rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
+
+    /* Actions besides Start are not supported right now */
+    if (!pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
+        return;
+    }
+
+    if (pcmk__str_eq(result, "done", pcmk__str_none)) {
+        pcmk__set_result(&(cmd->result), PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
+
+    } else if (pcmk__str_eq(result, "timeout", pcmk__str_none)) {
+        pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+                         PCMK_EXEC_TIMEOUT,
+                         "Investigate reason for timeout, and adjust "
+                         "configured operation timeout if necessary");
+
+    } else {
+        /* FIXME: Should I handle additional results here instead of globbing
+         * them together into a generic error?
+         */
+        pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+                         PCMK_EXEC_ERROR, NULL);
+    }
+
+    pcmk__set_result_output(&(cmd->result), services__grab_stdout(action),
+                            services__grab_stderr(action));
+    services__finalize_async_op(action);
+    cmd_finalize(cmd, rsc);
+}
+#endif
+
 static void
 action_complete(svc_action_t * action)
 {

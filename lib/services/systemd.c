@@ -901,9 +901,17 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
 
-    // Determine result and finalize action
+    /* Determine result and finalize action.  Start actions must be finalized
+     * by the registered systemd callback (for instance, handle_systemd_job_complete
+     * in the executor) to allow for some place to react to the finished
+     * action before finalizing it and cleaning it up.
+     */
     process_unit_method_reply(reply, op);
-    services__finalize_async_op(op);
+
+    if (!pcmk__str_eq(op->action, PCMK_ACTION_START, pcmk__str_casei)) {
+        services__finalize_async_op(op);
+    }
+
     if (reply != NULL) {
         dbus_message_unref(reply);
     }
