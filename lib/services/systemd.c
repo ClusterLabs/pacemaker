@@ -901,14 +901,23 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
 
-    /* Determine result and finalize action.  Start actions must be finalized
-     * by the registered systemd callback (for instance, handle_systemd_job_complete
-     * in the executor) to allow for some place to react to the finished
-     * action before finalizing it and cleaning it up.
+    /* Determine result and finalize action.
+     *
+     * Start and stop actions must be finalized by the registerd systemd callback
+     * (for instance, handle_systemd_job_complete in the executor) to allow for
+     * some place to react to the finished action before finalizing it and cleaning
+     * it up.
+     *
+     * HOWEVER, if the operation failed with NOT_INSTALLED, we need to finalize it
+     * right now too.  We'll never receive a JobRemoved() signal for that case, so
+     * the callback will never be called.  Additionally since we set up an override
+     * file, LoadUnit will always succeed so we can't finalize based on that
+     * failing.  We have to do this here.
      */
     process_unit_method_reply(reply, op);
 
-    if (!pcmk__strcase_any_of(op->action, PCMK_ACTION_START, PCMK_ACTION_STOP, NULL)) {
+    if (!pcmk__strcase_any_of(op->action, PCMK_ACTION_START, PCMK_ACTION_STOP, NULL) ||
+        op->status == PCMK_EXEC_NOT_INSTALLED) {
         services__finalize_async_op(op);
     }
 
