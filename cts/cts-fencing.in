@@ -2,6 +2,12 @@
 """ Regression tests for Pacemaker's fencer
 """
 
+# pylint doesn't like the module name "cts-fencing" which is an invalid complaint for this file
+# but probably something we want to continue warning about elsewhere
+# pylint: disable=invalid-name
+# pacemaker imports need to come after we modify sys.path, which pylint will complain about.
+# pylint: disable=wrong-import-position
+
 __copyright__ = "Copyright 2012-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
@@ -17,13 +23,13 @@ import tempfile
 if os.path.exists("@abs_top_srcdir@/python"):
     sys.path.insert(0, "@abs_top_srcdir@/python")
 
+# pylint: disable=comparison-of-constants,comparison-with-itself,condition-evals-to-constant
 if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
     sys.path.insert(0, "@abs_top_builddir@/python")
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.corosync import Corosync, localname
-from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError, XmlValidationError
 from pacemaker._cts.process import killall, exit_if_proc_running
 from pacemaker._cts.test import Test, Tests
 
@@ -34,6 +40,7 @@ def update_path():
 
     new_path = os.environ['PATH']
     if os.path.exists(f"{TEST_DIR}/cts-fencing.in"):
+        # pylint: disable=protected-access
         print(f"Running tests from the source tree: {BuildOptions._BUILD_DIR} ({TEST_DIR})")
         # For pacemaker-fenced and cts-fence-helper
         new_path = f"{BuildOptions._BUILD_DIR}/daemons/fenced:{new_path}"
@@ -67,6 +74,7 @@ class FenceTest(Test):
             s = " ".join(cmd)
             print(f"Starting {s}")
 
+        # pylint: disable=consider-using-with
         self._daemon_process = subprocess.Popen(cmd)
 
 class FenceTests(Tests):
