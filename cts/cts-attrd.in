@@ -345,9 +345,9 @@ def build_options():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="Run pacemaker-attrd regression tests",
                                      epilog="Example: Run only the test 'start_stop'\n"
-                                            "\t " + sys.argv[0] + " --run-only start_stop\n\n"
+                                            f"\t {sys.argv[0]} --run-only start_stop\n\n"
                                             "Example: Run only the tests with the string 'systemd' present in them\n"
-                                            "\t " + sys.argv[0] + " --run-only-pattern systemd")
+                                            f"\t {sys.argv[0]} --run-only-pattern systemd")
     parser.add_argument("-l", "--list-tests", action="store_true",
                         help="Print out all registered tests")
     parser.add_argument("-p", "--run-only-pattern", metavar='PATTERN',
