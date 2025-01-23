@@ -246,7 +246,8 @@ pcmk__inject_action_result(xmlNode *cib_resource, lrmd_event_data_t *op,
  * \param[in]     node      Name of node to inject
  * \param[in]     uuid      UUID of node to inject
  *
- * \return XML of \c PCMK__XE_NODE_STATE entry for new node
+ * \return XML of \c PCMK__XE_NODE_STATE entry for new node, or NULL if
+ *         \c node is not valid
  * \note If the global pcmk__simulate_node_config has been set to true, a
  *       node entry in the configuration section will be added, as well as a
  *       node state entry in the status section.
@@ -320,6 +321,11 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
 
         rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                    cib_xpath|cib_sync_call);
+        if (rc == -ENXIO) {
+            crm_trace("Node %s does not exist", node);
+            goto done;
+        }
+
         crm_trace("Injecting node state for %s (rc=%d)", node, rc);
     }
 
@@ -333,7 +339,6 @@ done:
         return NULL; // not reached, but makes static analysis happy
     }
 
-    pcmk__assert(rc == pcmk_ok);
     return cib_object;
 }
 
@@ -345,12 +350,17 @@ done:
  * \param[in]     node      Name of node to inject change for
  * \param[in]     up        If true, change state to online, otherwise offline
  *
- * \return XML of changed (or added) node state entry
+ * \return XML of changed (or added) node state entry, or NULL if node is
+ *         not valid
  */
 xmlNode *
 pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
 {
     xmlNode *cib_node = pcmk__inject_node(cib_conn, node, NULL);
+
+    if (cib_node == NULL) {
+        return cib_node;
+    }
 
     if (up) {
         pcmk__xe_set_props(cib_node,
@@ -601,7 +611,10 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     rprovider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
 
     cib_node = pcmk__inject_node(cib, node, NULL);
-    pcmk__assert(cib_node != NULL);
+    if (cib_node == NULL) {
+        out->err(out, "Node does not exist: %s", node);
+        goto done;
+    }
 
     if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_none)) {
         infinity = true;
@@ -679,7 +692,10 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         out->message(out, "inject-modify-node", "Online", node);
 
         cib_node = pcmk__inject_node_state_change(cib, node, true);
-        pcmk__assert(cib_node != NULL);
+        if (cib_node == NULL) {
+            out->err(out, "Node does not exist: %s", node);
+            continue;
+        }
 
         rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node, cib_sync_call);
         pcmk__assert(rc == pcmk_ok);
@@ -693,7 +709,10 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         out->message(out, "inject-modify-node", "Offline", node);
 
         cib_node = pcmk__inject_node_state_change(cib, node, false);
-        pcmk__assert(cib_node != NULL);
+        if (cib_node == NULL) {
+            out->err(out, "Node does not exist: %s", node);
+            continue;
+        }
 
         rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node, cib_sync_call);
         pcmk__assert(rc == pcmk_ok);
@@ -720,9 +739,12 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         out->message(out, "inject-modify-node", "Failing", node);
 
         cib_node = pcmk__inject_node_state_change(cib, node, true);
-        crm_xml_add(cib_node, PCMK__XA_IN_CCM, PCMK_VALUE_FALSE);
-        pcmk__assert(cib_node != NULL);
+        if (cib_node == NULL) {
+            out->err(out, "Node does not exist: %s", node);
+            continue;
+        }
 
+        crm_xml_add(cib_node, PCMK__XA_IN_CCM, PCMK_VALUE_FALSE);
         rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node, cib_sync_call);
         pcmk__assert(rc == pcmk_ok);
         pcmk__xml_free(cib_node);
