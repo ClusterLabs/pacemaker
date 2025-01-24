@@ -1,5 +1,5 @@
-Contents
---------
+Pacemaker Python Module
+-----------------------
 
 The APIs are documented here in submodules, but each submodule class is
 included at the top level, so code should import directly from the
@@ -7,5 +7,14 @@ included at the top level, so code should import directly from the
 not ``from pacemaker.buildoptions import BuildOptions``.
 
 .. toctree::
+   :maxdepth: 2
 
    api
+
+
+Index
+-----
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
