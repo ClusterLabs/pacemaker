@@ -1,8 +1,7 @@
-API
-===
+API Reference
+=============
 
-.. autosummary::
-   :toctree: generated
+.. toctree::
 
    pacemaker
    pacemaker.buildoptions
