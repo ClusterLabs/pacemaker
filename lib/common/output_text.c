@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,6 +34,7 @@ free_list_data(gpointer data) {
 
     free(list_data->singular_noun);
     free(list_data->plural_noun);
+    free(list_data);
 }
 
 static void
