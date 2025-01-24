@@ -315,6 +315,35 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
 
 /*!
  * \internal
+ * \brief \c scandir() filter for scheduler input CIB files to profile
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 0 if the filename begins with '.' or does not end in ".xml"
+ * \retval 1 otherwise
+ */
+static int
+profile_filter(const struct dirent *entry)
+{
+    const char *filename = entry->d_name;
+
+    if (pcmk__str_any_of(filename, ".", "..", NULL)) {
+        // Skip current (".") and parent ("..") directory links
+        return 0;
+    }
+    if (filename[0] == '.') {
+        crm_trace("Not profiling hidden file '%s'", filename);
+        return 0;
+    }
+    if (!pcmk__ends_with_ext(filename, ".xml")) {
+        crm_trace("Not profiling file '%s' without '.xml' extension", filename);
+        return 0;
+    }
+    return 1;
+}
+
+/*!
+ * \internal
  * \brief Profile the configuration updates and scheduler actions in a single
  *        CIB file, printing the profiling timings.
  *
@@ -400,7 +429,7 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
         scheduler_flags |= pcmk__sched_show_utilization;
     }
 
-    num_files = scandir(dir, &namelist, NULL, alphasort);
+    num_files = scandir(dir, &namelist, profile_filter, alphasort);
     if (num_files < 0) {
         rc = errno;
         goto done;
@@ -413,16 +442,16 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
 
     for (int i = 0; i < num_files; i++) {
         const char *filename = namelist[i]->d_name;
+        char buffer[FILENAME_MAX];
+        struct stat prop;
 
-        if ((filename[0] != '.') && pcmk__ends_with_ext(filename, ".xml")) {
-            struct stat prop;
-            char buffer[FILENAME_MAX];
+        // Check for regular file here because profile_filter() doesn't have dir
+        snprintf(buffer, sizeof(buffer), "%s/%s", dir, filename);
 
-            snprintf(buffer, sizeof(buffer), "%s/%s", dir, filename);
-            if ((stat(buffer, &prop) == 0) && S_ISREG(prop.st_mode)) {
-                profile_file(buffer, repeat, scheduler, scheduler_flags,
-                             use_date);
-            }
+        if ((stat(buffer, &prop) == 0) && S_ISREG(prop.st_mode)) {
+            profile_file(buffer, repeat, scheduler, scheduler_flags, use_date);
+        } else {
+            crm_trace("Not profiling file '%s': not a regular file", filename);
         }
         free(namelist[i]);
     }
