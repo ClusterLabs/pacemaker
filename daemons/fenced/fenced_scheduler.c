@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,6 +19,7 @@
 #include <pacemaker-internal.h>
 #include <pacemaker-fenced.h>
 
+// fenced_scheduler_run() assumes it's the only place scheduler->input gets set
 static pcmk_scheduler_t *scheduler = NULL;
 
 /*!
@@ -233,19 +234,23 @@ register_if_fencing_device(gpointer data, gpointer user_data)
  * \internal
  * \brief Run the scheduler for fencer purposes
  *
- * \param[in] cib  Cluster's current CIB
+ * \param[in] cib  CIB to use as scheduler input
+ *
+ * \note Scheduler object is reset before returning, but \p cib is not freed.
  */
 void
 fenced_scheduler_run(xmlNode *cib)
 {
-    CRM_CHECK((cib != NULL) && (scheduler != NULL), return);
+    CRM_CHECK((cib != NULL) && (scheduler != NULL)
+              && (scheduler->input == NULL), return);
 
-    if (scheduler->priv->now != NULL) {
-        crm_time_free(scheduler->priv->now);
-        scheduler->priv->now = NULL;
-    }
-    pcmk__schedule_actions(cib, pcmk__sched_location_only
-                                |pcmk__sched_no_counts, scheduler);
+    pcmk_reset_scheduler(scheduler);
+
+    scheduler->input = cib;
+    pcmk__set_scheduler_flags(scheduler,
+                              pcmk__sched_location_only|pcmk__sched_no_counts);
+    cluster_status(scheduler);
+    pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
     g_list_foreach(scheduler->priv->resources, register_if_fencing_device,
                    NULL);
 
