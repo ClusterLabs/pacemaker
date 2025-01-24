@@ -382,7 +382,7 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
     pcmk_scheduler_t *scheduler = NULL;
     uint64_t scheduler_flags = pcmk__sched_none;
     struct dirent **namelist;
-    int file_num = 0;
+    int num_files = 0;
     int rc = pcmk_rc_ok;
 
     pcmk__assert(out != NULL);
@@ -400,39 +400,33 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
         scheduler_flags |= pcmk__sched_show_utilization;
     }
 
-    file_num = scandir(dir, &namelist, 0, alphasort);
-    if (file_num < 0) {
+    num_files = scandir(dir, &namelist, NULL, alphasort);
+    if (num_files < 0) {
         rc = errno;
         goto done;
     }
+    if (num_files == 0) {
+        goto done;
+    }
 
-    if (file_num > 0) {
-        struct stat prop;
-        char buffer[FILENAME_MAX];
+    out->begin_list(out, NULL, NULL, "Timings");
 
-        out->begin_list(out, NULL, NULL, "Timings");
+    for (int i = 0; i < num_files; i++) {
+        const char *filename = namelist[i]->d_name;
 
-        while (file_num--) {
-            if ('.' == namelist[file_num]->d_name[0]) {
-                free(namelist[file_num]);
-                continue;
+        if ((filename[0] != '.') && pcmk__ends_with_ext(filename, ".xml")) {
+            struct stat prop;
+            char buffer[FILENAME_MAX];
 
-            } else if (!pcmk__ends_with_ext(namelist[file_num]->d_name,
-                                            ".xml")) {
-                free(namelist[file_num]);
-                continue;
-            }
-            snprintf(buffer, sizeof(buffer), "%s/%s",
-                     dir, namelist[file_num]->d_name);
-            if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
+            snprintf(buffer, sizeof(buffer), "%s/%s", dir, filename);
+            if ((stat(buffer, &prop) == 0) && S_ISREG(prop.st_mode)) {
                 profile_file(buffer, repeat, scheduler, scheduler_flags,
                              use_date);
             }
-            free(namelist[file_num]);
         }
-
-        out->end_list(out);
+        free(namelist[i]);
     }
+    out->end_list(out);
 
 done:
     pcmk_free_scheduler(scheduler);
