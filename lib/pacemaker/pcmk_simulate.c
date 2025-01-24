@@ -383,6 +383,7 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
     uint64_t scheduler_flags = pcmk__sched_none;
     struct dirent **namelist;
     int file_num = 0;
+    int rc = pcmk_rc_ok;
 
     pcmk__assert(out != NULL);
 
@@ -400,6 +401,11 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
     }
 
     file_num = scandir(dir, &namelist, 0, alphasort);
+    if (file_num < 0) {
+        rc = errno;
+        goto done;
+    }
+
     if (file_num > 0) {
         struct stat prop;
         char buffer[FILENAME_MAX];
@@ -424,13 +430,14 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
             }
             free(namelist[file_num]);
         }
-        free(namelist);
 
         out->end_list(out);
     }
 
+done:
     pcmk_free_scheduler(scheduler);
-    return pcmk_rc_ok;
+    free(namelist);
+    return rc;
 }
 
 /*!
