@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -367,12 +367,15 @@ profile_file(const char *xml_file, long long repeat,
         if (repeat > 1) {
             input = pcmk__xml_copy(NULL, cib_object);
         }
-        scheduler->input = input;
-        set_effective_date(scheduler, false, use_date);
-        pcmk__schedule_actions(input, scheduler_flags, scheduler);
         pcmk_reset_scheduler(scheduler);
+        scheduler->input = input;
+        pcmk__set_scheduler_flags(scheduler, scheduler_flags);
+        set_effective_date(scheduler, false, use_date);
+        cluster_status(scheduler);
+        pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
     }
 
+    pcmk_reset_scheduler(scheduler);
     end = clock();
     out->message(out, "profile", xml_file, start, end);
 }
