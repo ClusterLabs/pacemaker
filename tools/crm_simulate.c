@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdint.h>
+#include <stdint.h>                         // uint32_t
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -40,7 +40,7 @@ struct {
     char *graph_file;
     gchar *input_file;
     pcmk_injections_t *injections;
-    unsigned int flags;
+    uint32_t flags;
     gchar *output_file;
     long long repeat;
     gboolean store;

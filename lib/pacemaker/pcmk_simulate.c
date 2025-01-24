@@ -15,7 +15,7 @@
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 
-#include <stdint.h>
+#include <stdint.h>                 // uint32_t
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -804,7 +804,7 @@ pcmk__simulate_transition(pcmk_scheduler_t *scheduler, cib_t *cib,
 
 int
 pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
-               const pcmk_injections_t *injections, unsigned int flags,
+               const pcmk_injections_t *injections, uint32_t flags,
                uint32_t section_opts, const char *use_date,
                const char *input_file, const char *graph_file,
                const char *dot_file)
@@ -992,6 +992,7 @@ simulate_done:
     return rc;
 }
 
+// @COMPAT Use uint32_t for flags
 int
 pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *scheduler,
               const pcmk_injections_t *injections, unsigned int flags,
@@ -1010,8 +1011,9 @@ pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *scheduler,
     pe__register_messages(out);
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__simulate(scheduler, out, injections, flags, section_opts,
-                        use_date, input_file, graph_file, dot_file);
+    rc = pcmk__simulate(scheduler, out, injections, (uint32_t) flags,
+                        (uint32_t) section_opts, use_date, input_file,
+                        graph_file, dot_file);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
