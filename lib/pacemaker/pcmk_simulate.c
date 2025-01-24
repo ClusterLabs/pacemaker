@@ -345,13 +345,11 @@ profile_file(const char *xml_file, long long repeat,
     }
 
     if (pcmk__update_configured_schema(&cib_object, false) != pcmk_rc_ok) {
-        pcmk__xml_free(cib_object);
-        return;
+        goto done;
     }
 
     if (!pcmk__validate_xml(cib_object, NULL, NULL, NULL)) {
-        pcmk__xml_free(cib_object);
-        return;
+        goto done;
     }
 
     if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
@@ -362,22 +360,24 @@ profile_file(const char *xml_file, long long repeat,
     }
 
     for (int i = 0; i < repeat; ++i) {
-        xmlNode *input = cib_object;
-
-        if (repeat > 1) {
-            input = pcmk__xml_copy(NULL, cib_object);
-        }
         pcmk_reset_scheduler(scheduler);
-        scheduler->input = input;
+
+        scheduler->input = cib_object;
         pcmk__set_scheduler_flags(scheduler, scheduler_flags);
         set_effective_date(scheduler, false, use_date);
         cluster_status(scheduler);
         pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
+
+        // Avoid freeing cib_object in pcmk_reset_scheduler()
+        scheduler->input = NULL;
     }
 
     pcmk_reset_scheduler(scheduler);
     end = clock();
     out->message(out, "profile", xml_file, start, end);
+
+done:
+    pcmk__xml_free(cib_object);
 }
 
 void
