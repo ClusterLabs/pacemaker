@@ -15,7 +15,7 @@
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 
-#include <stdint.h>                 // uint32_t
+#include <stdint.h>                 // uint32_t, uint64_t
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -314,26 +314,28 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
 }
 
 /*!
+ * \internal
  * \brief Profile the configuration updates and scheduler actions in a single
  *        CIB file, printing the profiling timings.
  *
- * \note \p scheduler->priv->out must have been set to a valid \p pcmk__output_t
+ * \note \p scheduler->priv->out must have been set to a valid \c pcmk__output_t
  *       object before this function is called.
  *
  * \param[in]     xml_file   The CIB file to profile
  * \param[in]     repeat     Number of times to run
  * \param[in,out] scheduler  Scheduler data
+ * \param[in,out] flags      Group of <tt>enum pcmk__scheduler_flags</tt> to set
+ *                           in addition to defaults
  * \param[in]     use_date   The date to set the cluster's time to (may be NULL)
  */
 static void
 profile_file(const char *xml_file, long long repeat,
-             pcmk_scheduler_t *scheduler, const char *use_date)
+             pcmk_scheduler_t *scheduler, uint64_t flags, const char *use_date)
 {
     pcmk__output_t *out = scheduler->priv->out;
     xmlNode *cib_object = NULL;
     clock_t start = 0;
     clock_t end;
-    unsigned long long scheduler_flags = pcmk__sched_none;
 
     pcmk__assert(out != NULL);
 
@@ -352,18 +354,11 @@ profile_file(const char *xml_file, long long repeat,
         goto done;
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
-        scheduler_flags |= pcmk__sched_output_scores;
-    }
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
-        scheduler_flags |= pcmk__sched_show_utilization;
-    }
-
     for (int i = 0; i < repeat; ++i) {
         pcmk_reset_scheduler(scheduler);
 
         scheduler->input = cib_object;
-        pcmk__set_scheduler_flags(scheduler, scheduler_flags);
+        pcmk__set_scheduler_flags(scheduler, flags);
         set_effective_date(scheduler, false, use_date);
         cluster_status(scheduler);
         pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
@@ -380,17 +375,31 @@ done:
     pcmk__xml_free(cib_object);
 }
 
-void
-pcmk__profile_dir(const char *dir, long long repeat,
-                  pcmk_scheduler_t *scheduler, const char *use_date)
+int
+pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
+                  long long repeat, const char *use_date)
 {
-    pcmk__output_t *out = scheduler->priv->out;
+    pcmk_scheduler_t *scheduler = NULL;
+    uint64_t scheduler_flags = pcmk__sched_none;
     struct dirent **namelist;
-
-    int file_num = scandir(dir, &namelist, 0, alphasort);
+    int file_num = 0;
 
     pcmk__assert(out != NULL);
 
+    scheduler = pcmk_new_scheduler();
+    if (scheduler == NULL) {
+        return ENOMEM;
+    }
+
+    scheduler->priv->out = out;
+    if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
+        scheduler_flags |= pcmk__sched_output_scores;
+    }
+    if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
+        scheduler_flags |= pcmk__sched_show_utilization;
+    }
+
+    file_num = scandir(dir, &namelist, 0, alphasort);
     if (file_num > 0) {
         struct stat prop;
         char buffer[FILENAME_MAX];
@@ -410,7 +419,8 @@ pcmk__profile_dir(const char *dir, long long repeat,
             snprintf(buffer, sizeof(buffer), "%s/%s",
                      dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-                profile_file(buffer, repeat, scheduler, use_date);
+                profile_file(buffer, repeat, scheduler, scheduler_flags,
+                             use_date);
             }
             free(namelist[file_num]);
         }
@@ -418,6 +428,9 @@ pcmk__profile_dir(const char *dir, long long repeat,
 
         out->end_list(out);
     }
+
+    pcmk_free_scheduler(scheduler);
+    return pcmk_rc_ok;
 }
 
 /*!

@@ -28,16 +28,16 @@ extern "C" {
  *        CIB file in a given directory, printing the profiling timings for
  *        each.
  *
- * \note \p scheduler->priv->out must have been set to a valid \p pcmk__output_t
- *       object before this function is called.
+ * \param[in,out] out       Output object
+ * \param[in]     flags     Group of <tt>enum pcmk_sim_flags</tt>
+ * \param[in]     dir       Directory full of CIB files to be profiled
+ * \param[in]     repeat    Number of times to run on each input file
+ * \param[in]     use_date  Date to set the cluster's time to (can be \c NULL)
  *
- * \param[in]     dir        A directory full of CIB files to be profiled
- * \param[in]     repeat     Number of times to run on each input file
- * \param[in,out] scheduler  Scheduler data
- * \param[in]     use_date   The date to set the cluster's time to (may be NULL)
+ * \return Standard Pacemaker return code
  */
-void pcmk__profile_dir(const char *dir, long long repeat,
-                       pcmk_scheduler_t *scheduler, const char *use_date);
+int pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
+                      long long repeat, const char *use_date);
 
 /*!
  * \internal
