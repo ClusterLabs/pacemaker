@@ -37,7 +37,7 @@ extern "C" {
  * \return Standard Pacemaker return code
  */
 int pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
-                      long long repeat, const char *use_date);
+                      unsigned int repeat, const char *use_date);
 
 /*!
  * \internal

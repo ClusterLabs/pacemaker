@@ -358,7 +358,7 @@ profile_filter(const struct dirent *entry)
  * \param[in]     use_date   The date to set the cluster's time to (may be NULL)
  */
 static void
-profile_file(const char *xml_file, long long repeat,
+profile_file(const char *xml_file, unsigned int repeat,
              pcmk_scheduler_t *scheduler, uint64_t flags, const char *use_date)
 {
     pcmk__output_t *out = scheduler->priv->out;
@@ -406,7 +406,7 @@ done:
 
 int
 pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
-                  long long repeat, const char *use_date)
+                  unsigned int repeat, const char *use_date)
 {
     pcmk_scheduler_t *scheduler = NULL;
     uint64_t scheduler_flags = pcmk__sched_none;

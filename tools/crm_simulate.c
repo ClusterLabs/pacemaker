@@ -42,7 +42,7 @@ struct {
     pcmk_injections_t *injections;
     uint32_t flags;
     gchar *output_file;
-    long long repeat;
+    gint repeat;
     gboolean store;
     gchar *test_dir;
     char *use_date;
@@ -512,7 +512,8 @@ main(int argc, char **argv)
 
     if (options.test_dir != NULL) {
         rc = pcmk__profile_dir(out, options.flags, options.test_dir,
-                               options.repeat, options.use_date);
+                               (unsigned int) QB_MAX(options.repeat, 0),
+                               options.use_date);
         goto done;
     }
 
