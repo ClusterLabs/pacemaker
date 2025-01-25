@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -51,7 +51,6 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 {
     int rc = pcmk_rc_ok;
     xmlNode *status = NULL;
-    xmlNode *cib_object_copy = NULL;
 
     pcmk__assert(cib_object != NULL);
 
@@ -95,20 +94,20 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
      * example, action configuration), so we aren't necessarily checking those.
      */
     if (*cib_object != NULL) {
-        unsigned long long flags = pcmk__sched_no_counts;
-
-        if (status == NULL) {
-            // No status available, so do minimal checks
-            flags |= pcmk__sched_validate_only;
-        }
-        cib_object_copy = pcmk__xml_copy(NULL, *cib_object);
-
         /* The scheduler takes ownership of the XML object and potentially
          * frees it later. We want the caller of pcmk__verify to retain
          * ownership of the passed-in XML object, hence we pass in a copy
          * to the scheduler.
          */
-        pcmk__schedule_actions(cib_object_copy, flags, scheduler);
+        scheduler->input = pcmk__xml_copy(NULL, *cib_object);
+
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
+        if (status == NULL) {
+            // No status available, so do minimal checks
+            pcmk__set_scheduler_flags(scheduler, pcmk__sched_validate_only);
+        }
+        cluster_status(scheduler);
+        pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
     }
 
 verify_done:
