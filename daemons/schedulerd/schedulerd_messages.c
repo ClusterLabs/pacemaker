@@ -96,7 +96,7 @@ handle_pecalc_request(pcmk__request_t *request)
                                   pcmk__sched_no_counts
                                   |pcmk__sched_show_utilization);
         cluster_status(scheduler);
-        pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
+        pcmk__schedule_actions(scheduler);
 
         // Don't free converted as part of scheduler
         scheduler->input = NULL;

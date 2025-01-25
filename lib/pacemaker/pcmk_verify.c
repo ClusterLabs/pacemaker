@@ -111,7 +111,7 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             pcmk__set_scheduler_flags(scheduler, pcmk__sched_validate_only);
         }
         cluster_status(scheduler);
-        pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
+        pcmk__schedule_actions(scheduler);
 
         scheduler->input = NULL;
     }

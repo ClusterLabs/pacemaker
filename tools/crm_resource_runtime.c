@@ -1475,7 +1475,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
         }
 
         cluster_status(scheduler);
-        pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
+        pcmk__schedule_actions(scheduler);
 
         prev_quiet = out->is_quiet(out);
         out->quiet = true;
@@ -2110,7 +2110,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         }
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
         cluster_status(scheduler);
-        pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
+        pcmk__schedule_actions(scheduler);
 
         if (!printed_version_warning) {
             /* If the DC has a different version than the local node, the two

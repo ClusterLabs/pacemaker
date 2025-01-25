@@ -390,7 +390,7 @@ profile_file(const char *xml_file, unsigned int repeat,
         pcmk__set_scheduler_flags(scheduler, flags);
         set_effective_date(scheduler, false, use_date);
         cluster_status(scheduler);
-        pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
+        pcmk__schedule_actions(scheduler);
 
         // Avoid freeing cib_object in pcmk_reset_scheduler()
         scheduler->input = NULL;
@@ -960,7 +960,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             scheduler->priv->out = logger_out;
         }
 
-        pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
+        pcmk__schedule_actions(scheduler);
 
         if (logger_out == NULL) {
             out->end_list(out);
