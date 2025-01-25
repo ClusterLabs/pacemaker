@@ -179,7 +179,7 @@ print_transition_summary(pcmk_scheduler_t *scheduler, bool print_spacer)
 
 /*!
  * \internal
- * \brief Reset scheduler input, output, date, and flags, and unpack status
+ * \brief Reset scheduler, set some members, and unpack status
  *
  * \param[in,out] scheduler  Scheduler data
  * \param[in]     input      What to set as cluster input
@@ -191,6 +191,8 @@ static void
 reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
       const char *use_date, unsigned int flags)
 {
+    pcmk_reset_scheduler(scheduler);
+
     scheduler->input = input;
     scheduler->priv->out = out;
     set_effective_date(scheduler, true, use_date);
@@ -916,7 +918,6 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             goto simulate_done;
         }
 
-        pcmk_reset_scheduler(scheduler);
         reset(scheduler, input, out, use_date, flags);
     }
 
