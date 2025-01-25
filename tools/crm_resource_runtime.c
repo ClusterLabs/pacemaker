@@ -2108,8 +2108,9 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         if (rc != pcmk_rc_ok) {
             break;
         }
-        pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
-                               scheduler);
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
+        cluster_status(scheduler);
+        pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
 
         if (!printed_version_warning) {
             /* If the DC has a different version than the local node, the two
