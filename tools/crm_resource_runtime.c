@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1474,8 +1474,8 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
             goto done;
         }
 
-        pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
-                               scheduler);
+        cluster_status(scheduler);
+        pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
 
         prev_quiet = out->is_quiet(out);
         out->quiet = true;
