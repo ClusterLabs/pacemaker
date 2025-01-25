@@ -931,14 +931,6 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
         pcmk__output_t *logger_out = NULL;
-        unsigned long long scheduler_flags = pcmk__sched_none;
-
-        if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
-            scheduler_flags |= pcmk__sched_output_scores;
-        }
-        if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
-            scheduler_flags |= pcmk__sched_show_utilization;
-        }
 
         if (pcmk_all_flags_set(scheduler->flags,
                                pcmk__sched_output_scores
@@ -968,7 +960,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             scheduler->priv->out = logger_out;
         }
 
-        pcmk__schedule_actions(input, scheduler_flags, scheduler);
+        pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
 
         if (logger_out == NULL) {
             out->end_list(out);
