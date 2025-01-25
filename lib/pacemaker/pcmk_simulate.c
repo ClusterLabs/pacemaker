@@ -179,7 +179,7 @@ print_transition_summary(pcmk_scheduler_t *scheduler, bool print_spacer)
 
 /*!
  * \internal
- * \brief Reset scheduler input, output, date, and flags
+ * \brief Reset scheduler input, output, date, and flags, and unpack status
  *
  * \param[in,out] scheduler  Scheduler data
  * \param[in]     input      What to set as cluster input
@@ -203,6 +203,7 @@ reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
+    cluster_status(scheduler);
 }
 
 /*!
@@ -389,7 +390,6 @@ profile_file(const char *xml_file, unsigned int repeat,
         scheduler->input = cib_object;
         pcmk__set_scheduler_flags(scheduler, flags);
         set_effective_date(scheduler, false, use_date);
-        cluster_status(scheduler);
         pcmk__schedule_actions(scheduler);
 
         // Avoid freeing cib_object in pcmk_reset_scheduler()
@@ -866,7 +866,6 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     }
 
     reset(scheduler, input, out, use_date, flags);
-    cluster_status(scheduler);
 
     if (!out->is_quiet(out)) {
         const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
@@ -919,7 +918,6 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
         pcmk_reset_scheduler(scheduler);
         reset(scheduler, input, out, use_date, flags);
-        cluster_status(scheduler);
     }
 
     if (input_file != NULL) {

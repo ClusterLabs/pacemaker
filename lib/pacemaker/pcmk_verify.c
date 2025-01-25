@@ -110,7 +110,6 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             // No status available, so do minimal checks
             pcmk__set_scheduler_flags(scheduler, pcmk__sched_validate_only);
         }
-        cluster_status(scheduler);
         pcmk__schedule_actions(scheduler);
 
         scheduler->input = NULL;

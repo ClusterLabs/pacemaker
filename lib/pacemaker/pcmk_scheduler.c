@@ -739,6 +739,7 @@ log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
 void
 pcmk__schedule_actions(pcmk_scheduler_t *scheduler)
 {
+    cluster_status(scheduler);
     pcmk__set_assignment_methods(scheduler);
     pcmk__apply_node_health(scheduler);
     pcmk__unpack_constraints(scheduler);
