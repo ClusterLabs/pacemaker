@@ -49,6 +49,15 @@ int
 pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
              xmlNode **cib_object)
 {
+    /* @TODO The scheduler argument is needed only for pcmk__config_has_error
+     * and pcmk__config_has_warning. When we reset the scheduler, we reset those
+     * global variables. Otherwise, we could drop the argument and create our
+     * own scheduler object locally. Then we could be confident that it has no
+     * relevant state.
+     *
+     * We should improve this, possibly with an "enum pcmk__fail_type" pointer
+     * argument or similar.
+     */
     int rc = pcmk_rc_ok;
     xmlNode *status = NULL;
 
@@ -94,12 +103,7 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
      * example, action configuration), so we aren't necessarily checking those.
      */
     if (*cib_object != NULL) {
-        /* The scheduler takes ownership of the XML object and potentially
-         * frees it later. We want the caller of pcmk__verify to retain
-         * ownership of the passed-in XML object, hence we pass in a copy
-         * to the scheduler.
-         */
-        scheduler->input = pcmk__xml_copy(NULL, *cib_object);
+        scheduler->input = *cib_object;
 
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
         if (status == NULL) {
@@ -108,6 +112,8 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         }
         cluster_status(scheduler);
         pcmk__schedule_actions(NULL, pcmk__sched_none, scheduler);
+
+        scheduler->input = NULL;
     }
 
 verify_done:
