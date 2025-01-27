@@ -2,7 +2,7 @@
 """ Regression tests for Pacemaker's scheduler
 """
 
-__copyright__ = "Copyright 2004-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2004-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -1287,10 +1287,10 @@ class CtsScheduler(object):
         self.args = parser.parse_args(argv[1:])
 
     def _error(self, s):
-        print("      * ERROR:   %s" % s)
+        print(f"      * ERROR:   {s}")
 
     def _failed(self, s):
-        print("      * FAILED:  %s" % s)
+        print(f"      * FAILED:  {s}")
 
     def _get_valgrind_cmd(self):
         """ Return command arguments needed (or not) to run valgrind """
@@ -1306,7 +1306,7 @@ class CtsScheduler(object):
                 "--show-reachable=no",
                 "--leak-check=full",
                 "--num-callers=20",
-                "--suppressions=%s/valgrind-pcmk.suppressions" % (self.test_home)
+                f"--suppressions={self.test_home}/valgrind-pcmk.suppressions"
             ]
 
         if self.args.valgrind_dhat:
@@ -1424,7 +1424,7 @@ class CtsScheduler(object):
             if self.valgrind_args:
                 os.makedirs(self.valgrind_out_dir, 0o755, True)
         except OSError as ex:
-            self._error("Unable to create output subdirectory: %s" % ex)
+            self._error(f"Unable to create output subdirectory: {ex}")
             remove_files([
                 self.outfile_out_dir,
                 self.dot_out_dir,
@@ -1446,43 +1446,32 @@ class CtsScheduler(object):
     def run_one(self, test_name, test_desc, test_args):
         """ Run one scheduler test """
 
-        print("  Test %-41s %s" % ((test_name + ":"), test_desc))
+        s = test_name + ":"
+        print(f"  Test {s:41} {test_desc}")
 
         did_fail = False
         self.num_tests = self.num_tests + 1
 
         # Test inputs
-        input_filename = os.path.join(
-            self.xml_input_dir, "%s.xml" % test_name)
-        expected_filename = os.path.join(
-            self.expected_dir, "%s.exp" % test_name)
-        dot_expected_filename = os.path.join(
-            self.dot_expected_dir, "%s.dot" % test_name)
-        scores_filename = os.path.join(
-            self.scores_dir, "%s.scores" % test_name)
-        summary_filename = os.path.join(
-            self.summary_dir, "%s.summary" % test_name)
-        stderr_expected_filename = os.path.join(
-            self.stderr_expected_dir, "%s.stderr" % test_name)
+        input_filename = os.path.join(self.xml_input_dir, f"{test_name}.xml")
+        expected_filename = os.path.join(self.expected_dir, f"{test_name}.exp")
+        dot_expected_filename = os.path.join(self.dot_expected_dir, f"{test_name}.dot")
+        scores_filename = os.path.join(self.scores_dir, f"{test_name}.scores")
+        summary_filename = os.path.join(self.summary_dir, f"{test_name}.summary")
+        stderr_expected_filename = os.path.join(self.stderr_expected_dir, f"{test_name}.stderr")
 
         # (Intermediate) test outputs
-        output_filename = os.path.join(
-            self.outfile_out_dir, "%s.out" % test_name)
-        dot_output_filename = os.path.join(
-            self.dot_out_dir, "%s.dot.pe" % test_name)
-        score_output_filename = os.path.join(
-            self.scores_out_dir, "%s.scores.pe" % test_name)
-        summary_output_filename = os.path.join(
-            self.summary_out_dir, "%s.summary.pe" % test_name)
-        stderr_output_filename = os.path.join(
-            self.stderr_out_dir, "%s.stderr.pe" % test_name)
-        valgrind_output_filename = os.path.join(
-            self.valgrind_out_dir, "%s.valgrind" % test_name)
+        output_filename = os.path.join(self.outfile_out_dir, f"{test_name}.out")
+        dot_output_filename = os.path.join(self.dot_out_dir, f"{test_name}.dot.pe")
+        score_output_filename = os.path.join(self.scores_out_dir, f"{test_name}.scores.pe")
+        summary_output_filename = os.path.join(self.summary_out_dir, f"{test_name}.summary.pe")
+        stderr_output_filename = os.path.join(self.stderr_out_dir, f"{test_name}.stderr.pe")
+        valgrind_output_filename = os.path.join(self.valgrind_out_dir, f"{test_name}.valgrind")
 
         # Common arguments for running test
         test_cmd = []
         if self.valgrind_args:
-            test_cmd = self.valgrind_args + [ "--log-file=%s" % valgrind_output_filename ]
+            test_cmd = self.valgrind_args + [ f"--log-file={valgrind_output_filename}" ]
         test_cmd = test_cmd + self.simulate_args
 
         # @TODO It would be more pythonic to raise exceptions for errors,
@@ -1521,7 +1510,7 @@ class CtsScheduler(object):
 
         # Check for test command failure
         if rc != ExitStatus.OK:
-            self._failed("Test returned: %d" % rc)
+            self._failed(f"Test returned: {rc}")
             did_fail = True
             print(" ".join(test_cmd_full))
 
@@ -1537,7 +1526,7 @@ class CtsScheduler(object):
         if os.path.isfile("core"):
             self._failed("Core-file detected: core." + test_name)
             did_fail = True
-            os.rename("core", "%s/core.%s" % (self.test_home, test_name))
+            os.rename("core", f"{self.test_home}/core.{test_name}")
 
         # Check any stderr output
         if os.path.isfile(stderr_expected_filename):
@@ -1655,16 +1644,14 @@ class CtsScheduler(object):
 
         if os.path.isfile(self.failed_filename) and os.stat(self.failed_filename).st_size != 0:
             if self.args.verbose:
-                self._error("Results of %d failed tests (out of %d):" %
-                    (self.num_failed, self.num_tests))
+                self._error(f"Results of {self.num_failed} failed tests (out of {self.num_tests}):")
                 cat(self.failed_filename)
             else:
-                self._error("Results of %d failed tests (out of %d) are in %s" %
-                    (self.num_failed, self.num_tests, self.failed_filename))
+                self._error(f"Results of {self.num_failed} failed tests (out of {self.num_tests}) "
+                            f"are in {self.failed_filename}")
                 self._error("Use -V to display them after running the tests")
         else:
-            self._error("%d (of %d) tests failed (no diff results)" %
-                (self.num_failed, self.num_tests))
+            self._error(f"{self.num_failed} (of {self.num_tests}) tests failed (no diff results)")
             if os.path.isfile(self.failed_filename):
                 shutil.rmtree(self.failed_dir)
         return ExitStatus.ERROR
@@ -1705,7 +1692,7 @@ class CtsScheduler(object):
             test = self.find_test(self.args.run)
 
             if test is None:
-                print("No test named %s" % self.args.run)
+                print(f"No test named {self.args.run}")
                 return ExitStatus.INVALID_PARAM
 
             # If no arguments were given on the command line, default to the ones

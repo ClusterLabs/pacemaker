@@ -7,7 +7,7 @@
 # pacemaker imports need to come after we modify sys.path, which pylint will complain about.
 # pylint: disable=wrong-import-position
 
-__copyright__ = "Copyright 2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2023-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
@@ -38,18 +38,18 @@ TEST_DIR = sys.path[0]
 def update_path():
     """Set the PATH environment variable appropriately for the tests."""
     new_path = os.environ['PATH']
-    if os.path.exists("%s/cts-attrd.in" % TEST_DIR):
+    if os.path.exists(f"{TEST_DIR}/cts-attrd.in"):
         # pylint: disable=protected-access
-        print("Running tests from the source tree: %s (%s)" % (BuildOptions._BUILD_DIR, TEST_DIR))
+        print(f"Running tests from the source tree: {BuildOptions._BUILD_DIR} ({TEST_DIR})")
         # For pacemaker-attrd
-        new_path = "%s/daemons/attrd:%s" % (BuildOptions._BUILD_DIR, new_path)
+        new_path = f"{BuildOptions._BUILD_DIR}/daemons/attrd:{new_path}"
 
     else:
-        print("Running tests from the install tree: %s (not %s)" % (BuildOptions.DAEMON_DIR, TEST_DIR))
+        print(f"Running tests from the install tree: {BuildOptions.DAEMON_DIR} (not {TEST_DIR})")
         # For pacemaker-attrd
-        new_path = "%s:%s" % (BuildOptions.DAEMON_DIR, new_path)
+        new_path = f"{BuildOptions.DAEMON_DIR}:{new_path}"
 
-    print('Using PATH="%s"' % new_path)
+    print(f'Using PATH="{new_path}"')
     os.environ['PATH'] = new_path
 
 
@@ -76,7 +76,7 @@ class AttributeTest(Test):
 
     def _start_daemons(self):
         if self.verbose:
-            print("Starting %s" % self._daemon_location)
+            print(f"Starting {self._daemon_location}")
 
         cmd = [self._daemon_location, "-s", "-l", self.logpath]
         # pylint: disable=consider-using-with
@@ -345,9 +345,9 @@ def build_options():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="Run pacemaker-attrd regression tests",
                                      epilog="Example: Run only the test 'start_stop'\n"
-                                            "\t " + sys.argv[0] + " --run-only start_stop\n\n"
+                                            f"\t {sys.argv[0]} --run-only start_stop\n\n"
                                             "Example: Run only the tests with the string 'systemd' present in them\n"
-                                            "\t " + sys.argv[0] + " --run-only-pattern systemd")
+                                            f"\t {sys.argv[0]} --run-only-pattern systemd")
     parser.add_argument("-l", "--list-tests", action="store_true",
                         help="Print out all registered tests")
     parser.add_argument("-p", "--run-only-pattern", metavar='PATTERN',

@@ -6,7 +6,7 @@
 # that should have all caps names, and that cm and n are too short.
 # pylint: disable=invalid-name
 
-__copyright__ = "Copyright 2001-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2001-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import signal
@@ -26,7 +26,7 @@ LogFactory().add_stderr()
 
 def sig_handler(signum, _frame):
     """Handle the given signal number."""
-    LogFactory().log("Interrupted by signal %d" % signum)
+    LogFactory().log(f"Interrupted by signal {signum}")
 
     if scenario:
         scenario.summarize()
@@ -61,14 +61,14 @@ if __name__ == '__main__':
     if environment["Stack"] == "corosync 2+":
         cm = Corosync2()
     else:
-        LogFactory().log("Unknown stack: %s" % environment["stack"])
+        LogFactory().log(f"Unknown stack: {environment['stack']}")
         sys.exit(1)
 
     if environment["TruncateLog"]:
         if environment["OutputFile"] is None:
             LogFactory().log("Ignoring truncate request because no output file specified")
         else:
-            LogFactory().log("Truncating %s" % environment["OutputFile"])
+            LogFactory().log(f"Truncating {environment['OutputFile']}")
 
             with open(environment["OutputFile"], "w", encoding="utf-8") as outputfile:
                 outputfile.truncate(0)
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     if environment["ListTests"]:
         tests = test_list(cm, audits)
-        LogFactory().log("Total %d tests" % len(tests))
+        LogFactory().log(f"Total {len(tests)} tests")
 
         for test in tests:
             LogFactory().log(test.name)
@@ -113,21 +113,21 @@ if __name__ == '__main__':
     else:
         scenario = RandomTests(cm, [BootCluster(cm, environment)], audits, tests)
 
-    LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING %r TEST%s" % (iters, plural_s(iters)))
-    LogFactory().log("Stack:                  %s (%s)" % (environment["Stack"], environment["Name"]))
-    LogFactory().log("Schema:                 %s" % environment["Schema"])
-    LogFactory().log("Scenario:               %s" % scenario.__doc__)
-    LogFactory().log("CTS Exerciser:          %s" % environment["cts-exerciser"])
-    LogFactory().log("CTS Logfile:            %s" % environment["OutputFile"])
-    LogFactory().log("Random Seed:            %s" % environment["RandSeed"])
+    LogFactory().log(f">>>>>>>>>>>>>>>> BEGINNING {iters!r} TEST{plural_s(iters)}")
+    LogFactory().log(f"Stack:                  {environment['Stack']} ({environment['Name']})")
+    LogFactory().log(f"Schema:                 {environment['Schema']}")
+    LogFactory().log(f"Scenario:               {scenario.__doc__}")
+    LogFactory().log(f"CTS Exerciser:          {environment['cts-exerciser']}")
+    LogFactory().log(f"CTS Logfile:            {environment['OutputFile']}")
+    LogFactory().log(f"Random Seed:            {environment['RandSeed']}")
     if "syslogd" in environment:
-        LogFactory().log("Syslog variant:         %s" % environment["syslogd"].strip())
-    LogFactory().log("System log files:       %s" % environment["LogFileName"])
+        LogFactory().log(f"Syslog variant:         {environment['syslogd'].strip()}")
+    LogFactory().log(f"System log files:       {environment['LogFileName']}")
 
     if "IPBase" in environment:
-        LogFactory().log("Base IP for resources:  %s" % environment["IPBase"])
+        LogFactory().log(f"Base IP for resources:  {environment['IPBase']}")
 
-    LogFactory().log("Cluster starts at boot: %d" % environment["at-boot"])
+    LogFactory().log(f"Cluster starts at boot: {environment['at-boot']}")
 
     environment.dump()
     rc = environment.run(scenario, iters)

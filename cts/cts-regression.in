@@ -4,7 +4,7 @@
 Usage: cts-regression [-h] [-V] [-v] [COMPONENT ...]
 """
 
-__copyright__ = 'Copyright 2012-2023 the Pacemaker project contributors'
+__copyright__ = 'Copyright 2012-2025 the Pacemaker project contributors'
 __license__ = 'GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY'
 
 import argparse
@@ -74,7 +74,7 @@ class Component():
         if self.name == 'pacemaker_remote':
             self.cmd = [os.path.join(test_home, 'cts-exec'), '-R']
         else:
-            self.cmd = [os.path.join(test_home, 'cts-%s' % self.name)]
+            self.cmd = [os.path.join(test_home, f"cts-{self.name}")]
 
     def run(self, verbose=False, valgrind=False):
         """Run the component's regression tests and return the result.
@@ -86,7 +86,7 @@ class Component():
         :return: The exit code from the component's test suite.
         :rtype: :class:`ExitStatus`
         """
-        print('Executing the %s regression tests' % self.name)
+        print(f"Executing the {self.name} regression tests")
         print('=' * 60)
 
         cmd = self.cmd
@@ -103,7 +103,7 @@ class Component():
         try:
             rc = ExitStatus(subprocess.call(cmd))
         except OSError as err:
-            error_print('Failed to execute %s tests: %s' % (self.name, err))
+            error_print(f"Failed to execute {self.name} tests: {err}")
             rc = ExitStatus.NOT_INSTALLED
 
         print('=' * 60 + '\n\n')
@@ -165,7 +165,7 @@ def error_print(msg):
     :param msg: Message to print.
     :type msg: str
     """
-    print('      * ERROR:   %s' % msg)
+    print(f"      * ERROR:   {msg}")
 
 
 def run_components(components, verbose=False, valgrind=False):
@@ -183,13 +183,13 @@ def run_components(components, verbose=False, valgrind=False):
     for comp in components:
         rc = comp.run(verbose, valgrind)
         if rc != ExitStatus.OK:
-            error_print('%s regression tests failed (%s)' % (comp.name, rc))
+            error_print(f"{comp.name} regression tests failed ({rc})")
             failed.append(comp.name)
 
     if failed:
         print('Failed regression tests:', end='')
         for comp in failed:
-            print(' %s' % comp, end='')
+            print(f" {comp}", end='')
         print()
         return ExitStatus.ERROR
 
@@ -259,11 +259,9 @@ def main():
     ''')
 
     for name, comp in sorted(components.items()):
-        description += '\n {:<20} {}'.format(name, comp.description)
+        description += f"\n {name:<20} {comp.description}"
 
-    description += (
-        '\n {:<20} Synonym for "cli exec fencing scheduler"'.format('all')
-    )
+    description += f'\n {"all":<20} Synonym for "cli exec fencing scheduler"'
 
     # Parse the arguments
     parser = argparse.ArgumentParser(
