@@ -9,7 +9,7 @@
 
 .PHONY: pylint
 pylint: $(PYCHECKFILES)
-	PYTHONPATH=$(abs_top_builddir)/python \
+	PYTHONPATH=$(abs_top_builddir)/python:$(abs_top_builddir)/python/pacemaker/.libs \
 	pylint --rcfile $(top_srcdir)/python/pylintrc $(PYCHECKFILES)
 
 # Disabled warnings:
@@ -27,5 +27,5 @@ pylint: $(PYCHECKFILES)
 # Disable docstrings warnings on unit tests.
 .PHONY: pyflake
 pyflake: $(PYCHECKFILES)
-	PYTHONPATH=$(abs_top_builddir)/python \
+	PYTHONPATH=$(abs_top_builddir)/python:$(abs_top_builddir)/python/pacemaker/.libs \
 	flake8 --ignore=W503,E402,E501,F401 --per-file-ignores="tests/*:D100,D101,D102,D104" $(PYCHECKFILES)

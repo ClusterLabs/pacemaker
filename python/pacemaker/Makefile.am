@@ -18,7 +18,9 @@ _pcmksupport_la_LIBADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
 
 pkgpython_PYTHON = __init__.py 		\
 		   _library.py 		\
-		   exitstatus.py
+		   exceptions.py 	\
+		   exitstatus.py 	\
+		   resource.py
 
 nodist_pkgpython_PYTHON = buildoptions.py
 
