@@ -53,7 +53,7 @@ void cib_dump_pending_callbacks(void);
 int num_cib_op_callbacks(void);
 void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
-#  define CIB_LIBRARY "libcib.so.27"
+#define CIB_LIBRARY "libcib.so.54"
 
 #ifdef __cplusplus
 }
