@@ -518,6 +518,9 @@ AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
 
 dnl Require a minimum Python version
 AM_PATH_PYTHON([3.6])
+PKG_CHECK_MODULES([PYTHON], [python])
+AC_SUBST([PYTHON_LIBS])
+AC_SUBST([PYTHON_CFLAGS])
 
 AC_PROG_LN_S
 AC_PROG_MKDIR_P
