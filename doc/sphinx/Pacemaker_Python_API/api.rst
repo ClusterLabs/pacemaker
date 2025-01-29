@@ -1,9 +1,7 @@
-API
-===
+API Reference
+=============
 
-.. autosummary::
-   :toctree: generated
-   :template: custom-module-template.rst
+.. toctree::
 
    pacemaker
    pacemaker.buildoptions
