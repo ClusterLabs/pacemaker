@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -226,6 +226,9 @@ enum ocf_exitcode {
  * tldp.org recommends 64-113 for application use.
  *
  * We try to overlap with the above conventions when practical.
+ *
+ * NOTE: When new exit codes are added here, remember to also update
+ * python/pacemaker/exitstatus.py.
  */
 typedef enum crm_exit_e {
     // Common convention
