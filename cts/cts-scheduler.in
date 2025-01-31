@@ -1269,7 +1269,7 @@ class CtsScheduler:
         self.single_test_args = []
         narg = 0
         for arg in argv:
-            narg = narg + 1
+            narg += 1
             if arg == '--run':
                 (argv, self.single_test_args) = (argv[:narg+1], argv[narg+1:])
                 break
@@ -1439,7 +1439,7 @@ class CtsScheduler:
         print(f"  Test {f'{test_name}:':41} {test_desc}")
 
         did_fail = False
-        self.num_tests = self.num_tests + 1
+        self.num_tests += 1
 
         # Test inputs
         input_filename = os.path.join(self.xml_input_dir, f"{test_name}.xml")
@@ -1461,7 +1461,7 @@ class CtsScheduler:
         test_cmd = []
         if self.valgrind_args:
             test_cmd = self.valgrind_args + [ f"--log-file={valgrind_output_filename}" ]
-        test_cmd = test_cmd + self.simulate_args
+        test_cmd += self.simulate_args
 
         # @TODO It would be more pythonic to raise exceptions for errors,
         # then perhaps it would be nice to make a single-test class
@@ -1469,7 +1469,7 @@ class CtsScheduler:
         # Ensure necessary test inputs exist
         if not os.path.isfile(input_filename):
             self._error("No input")
-            self.num_failed = self.num_failed + 1
+            self.num_failed += 1
             return ExitStatus.NOINPUT
         if not self.args.update and not os.path.isfile(expected_filename):
             self._error("no stored output")
@@ -1533,7 +1533,7 @@ class CtsScheduler:
             or os.stat(output_filename).st_size == 0):
             self._error("No graph produced")
             did_fail = True
-            self.num_failed = self.num_failed + 1
+            self.num_failed += 1
             remove_files([ output_filename ])
             return ExitStatus.ERROR
         normalize(output_filename)
@@ -1543,7 +1543,7 @@ class CtsScheduler:
             os.stat(dot_output_filename).st_size == 0):
             self._error("No dot-file summary produced")
             did_fail = True
-            self.num_failed = self.num_failed + 1
+            self.num_failed += 1
             remove_files([ dot_output_filename, output_filename ])
             return ExitStatus.ERROR
         with io.open(dot_output_filename, "rt", encoding="utf-8") as f:
@@ -1562,7 +1562,7 @@ class CtsScheduler:
             or os.stat(score_output_filename).st_size == 0):
             self._error("No allocation scores produced")
             did_fail = True
-            self.num_failed = self.num_failed + 1
+            self.num_failed += 1
             remove_files([ score_output_filename, output_filename ])
             return ExitStatus.ERROR
         else:
@@ -1599,7 +1599,7 @@ class CtsScheduler:
                        summary_output_filename])
 
         if did_fail:
-            self.num_failed = self.num_failed + 1
+            self.num_failed += 1
             return ExitStatus.ERROR
 
         return ExitStatus.OK
