@@ -199,11 +199,9 @@ TESTS = [
         SchedulerTest("rule-dbl-as-number-no-match",
                       "Floating-point rule values set to number comparison: no match"),
         SchedulerTest("rule-dbl-parse-fail-default-str-match",
-                      "Floating-point rule values fail to parse, default to string "
-                      "comparison: match"),
+                      "Floating-point rule values fail to parse, default to string comparison: match"),
         SchedulerTest("rule-dbl-parse-fail-default-str-no-match",
-                      "Floating-point rule values fail to parse, default to string "
-                      "comparison: no match"),
+                      "Floating-point rule values fail to parse, default to string comparison: no match"),
         SchedulerTest("rule-int-as-auto-integer-match",
                       "Integer rule values default to integer comparison: match"),
         SchedulerTest("rule-int-as-auto-integer-no-match",
@@ -217,11 +215,9 @@ TESTS = [
         SchedulerTest("rule-int-as-number-no-match",
                       "Integer rule values set to number comparison: no match"),
         SchedulerTest("rule-int-parse-fail-default-str-match",
-                      "Integer rule values fail to parse, default to string "
-                      "comparison: match"),
+                      "Integer rule values fail to parse, default to string comparison: match"),
         SchedulerTest("rule-int-parse-fail-default-str-no-match",
-                      "Integer rule values fail to parse, default to string "
-                      "comparison: no match"),
+                      "Integer rule values fail to parse, default to string comparison: no match"),
     ]),
     SchedulerTestGroup([
         SchedulerTest("order1", "Order start 1"),
@@ -298,17 +294,13 @@ TESTS = [
         SchedulerTest("coloc-cloned-group-promoted-dependent2",
                       "Cloned group promoted role with primitive (optional)"),
         SchedulerTest("coloc-optional-promoted-dependent-moves-1",
-                      "Colocation score less than promotion score "
-                      + "difference: move"),
+                      "Colocation score less than promotion score difference: move"),
         SchedulerTest("coloc-optional-promoted-dependent-moves-2",
-                      "Colocation score greater than promotion score "
-                      + "difference: move"),
+                      "Colocation score greater than promotion score difference: move"),
         SchedulerTest("coloc-optional-promoted-dependent-stays-1",
-                      "Colocation score greater than promotion score "
-                      + "difference: stay"),
+                      "Colocation score greater than promotion score difference: stay"),
         SchedulerTest("coloc-optional-promoted-dependent-stays-2",
-                      "Colocation score less than promotion score "
-                      + "difference: stay"),
+                      "Colocation score less than promotion score difference: stay"),
     ]),
     SchedulerTestGroup([
         SchedulerTest("rsc-sets-seq-true", "Resource Sets - sequential=false"),
@@ -483,32 +475,23 @@ TESTS = [
         SchedulerTest("clone-recover-no-shuffle-3",
                       "Don't shuffle instances when starting a new bundle instance"),
         SchedulerTest("clone-recover-no-shuffle-4",
-                      "Don't shuffle instances when starting a new primitive instance with "
-                      "location preference "),
+                      "Don't shuffle instances when starting a new primitive instance with location preference "),
         SchedulerTest("clone-recover-no-shuffle-5",
-                      "Don't shuffle instances when starting a new group instance with "
-                      "location preference"),
+                      "Don't shuffle instances when starting a new group instance with location preference"),
         SchedulerTest("clone-recover-no-shuffle-6",
-                      "Don't shuffle instances when starting a new bundle instance with "
-                      "location preference"),
+                      "Don't shuffle instances when starting a new bundle instance with location preference"),
         SchedulerTest("clone-recover-no-shuffle-7",
-                      "Don't shuffle instances when starting a new primitive instance that "
-                      "will be promoted"),
+                      "Don't shuffle instances when starting a new primitive instance that will be promoted"),
         SchedulerTest("clone-recover-no-shuffle-8",
-                      "Don't shuffle instances when starting a new group instance that "
-                      "will be promoted "),
+                      "Don't shuffle instances when starting a new group instance that will be promoted "),
         SchedulerTest("clone-recover-no-shuffle-9",
-                      "Don't shuffle instances when starting a new bundle instance that "
-                      "will be promoted "),
+                      "Don't shuffle instances when starting a new bundle instance that will be promoted "),
         SchedulerTest("clone-recover-no-shuffle-10",
-                      "Don't shuffle instances when starting a new primitive instance that "
-                      "won't be promoted"),
+                      "Don't shuffle instances when starting a new primitive instance that won't be promoted"),
         SchedulerTest("clone-recover-no-shuffle-11",
-                      "Don't shuffle instances when starting a new group instance that "
-                      "won't be promoted "),
+                      "Don't shuffle instances when starting a new group instance that won't be promoted "),
         SchedulerTest("clone-recover-no-shuffle-12",
-                      "Don't shuffle instances when starting a new bundle instance that "
-                      "won't be promoted "),
+                      "Don't shuffle instances when starting a new bundle instance that won't be promoted "),
         SchedulerTest("clone-max-zero", "Orphan processing with clone-max=0"),
         SchedulerTest("clone-anon-dup",
                       "Bug LF#2087 - Correctly parse the state of anonymous clones that are active more than once per node"),
