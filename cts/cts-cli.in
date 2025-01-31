@@ -1511,7 +1511,7 @@ class CrmStandbyRegressionTest(RegressionTest):
 
         return [
             ShadowTestGroup(basic_tests,
-			    setup="""cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1"/>'"""),
+                            setup="""cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1"/>'"""),
         ]
 
 
