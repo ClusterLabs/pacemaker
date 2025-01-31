@@ -235,7 +235,7 @@ designated_controller_event_cb(pcmk_ipc_api_t *controld_api,
 
     reply = (const pcmk_controld_api_reply_t *) event_data;
     out->message(out, "dc", reply->host_from);
-    data->rc = pcmk_rc_ok;
+    data->rc = reply->host_from ? pcmk_rc_ok : pcmk_rc_no_dc;
 }
 
 /*!

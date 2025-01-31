@@ -111,6 +111,7 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_no_dc               = -1040,
     pcmk_rc_compression         = -1039,
     pcmk_rc_ns_resolution       = -1038,
     pcmk_rc_no_transaction      = -1037,
@@ -273,6 +274,7 @@ typedef enum crm_exit_e {
     CRM_EX_NOT_YET_IN_EFFECT    = 111, //!< Requested item is not in effect
     CRM_EX_INDETERMINATE        = 112, //!< Could not determine status
     CRM_EX_UNSATISFIED          = 113, //!< Requested item does not satisfy constraints
+    CRM_EX_NO_DC                = 114, //!< DC is not yet elected, e.g. right after cluster restart
 
     // Other
     CRM_EX_TIMEOUT              = 124, //!< Convention from timeout(1)
