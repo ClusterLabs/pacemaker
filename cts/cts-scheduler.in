@@ -1316,13 +1316,13 @@ class CtsScheduler:
         """ Locate the simulation binary """
 
         if self.args.binary is None:
-            self.args.binary = BuildOptions._BUILD_DIR + "/tools/crm_simulate"
+            self.args.binary = f"{BuildOptions._BUILD_DIR}/tools/crm_simulate"
             if not is_executable(self.args.binary):
-                self.args.binary = BuildOptions.SBIN_DIR + "/crm_simulate"
+                self.args.binary = f"{BuildOptions.SBIN_DIR}/crm_simulate"
 
         if not is_executable(self.args.binary):
             # @TODO it would be more pythonic to raise an exception
-            self._error("Test binary " + self.args.binary + " not found")
+            self._error(f"Test binary {self.args.binary} not found")
             sys.exit(ExitStatus.NOT_INSTALLED)
 
         return [ self.args.binary ] + shlex.split(self.args.testcmd_options)
@@ -1436,8 +1436,7 @@ class CtsScheduler:
     def run_one(self, test_name, test_desc, test_args):
         """ Run one scheduler test """
 
-        s = test_name + ":"
-        print(f"  Test {s:41} {test_desc}")
+        print(f"  Test {f'{test_name}:':41} {test_desc}")
 
         did_fail = False
         self.num_tests = self.num_tests + 1
@@ -1514,7 +1513,7 @@ class CtsScheduler:
 
         # Check for core dump
         if os.path.isfile("core"):
-            self._failed("Core-file detected: core." + test_name)
+            self._failed(f"Core-file detected: core.{test_name}")
             did_fail = True
             os.rename("core", f"{self.test_home}/core.{test_name}")
 
@@ -1619,10 +1618,10 @@ class CtsScheduler:
     def _print_summary(self):
         """ Print a summary of parameters for this test run """
 
-        print("Test home is:\t" + self.test_home)
-        print("Test binary is:\t" + self.args.binary)
+        print(f"Test home is:\t{self.test_home}")
+        print(f"Test binary is:\t{self.args.binary}")
         if 'PCMK_schema_directory' in os.environ:
-            print("Schema home is:\t" + os.environ['PCMK_schema_directory'])
+            print(f"Schema home is:\t{os.environ['PCMK_schema_directory']}")
         if self.valgrind_args != []:
             print("Activating memory testing with valgrind")
         print()
@@ -1662,7 +1661,7 @@ class CtsScheduler:
 
         # Check for pre-existing core so we don't think it's from us
         if os.path.exists("core"):
-            self._failed("Can't run with core already present in " + self.test_home)
+            self._failed(f"Can't run with core already present in {self.test_home}")
             return ExitStatus.OSFILE
 
         self._print_summary()
@@ -1671,7 +1670,7 @@ class CtsScheduler:
         self.failed_file = io.open(self.failed_filename, "wt", encoding="utf-8")
 
         if self.args.run is None:
-            print("Performing the following tests from " + self.args.io_dir)
+            print(f"Performing the following tests from {self.args.io_dir}")
             print()
             self.run_all()
             print()
@@ -1695,7 +1694,7 @@ class CtsScheduler:
             rc = self.run_one(test.name, test.desc, args)
             self.failed_file.close()
             if self.num_failed > 0:
-              print("\nFailures:\nThese have also been written to: " + self.failed_filename + "\n")
+              print(f"\nFailures:\nThese have also been written to: {self.failed_filename}\n")
               cat(self.failed_filename)
               shutil.rmtree(self.failed_dir)
 
