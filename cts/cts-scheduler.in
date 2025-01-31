@@ -1178,8 +1178,8 @@ def is_executable(path):
 def diff(file1, file2, **kwargs):
     """ Call diff on two files """
 
-    return subprocess.call([ "diff", "-u", "-N", "--ignore-all-space",
-                             "--ignore-blank-lines", file1, file2 ], **kwargs)
+    return subprocess.call(["diff", "-u", "-N", "--ignore-all-space",
+                            "--ignore-blank-lines", file1, file2], **kwargs)
 
 
 def sort_file(filename):
@@ -1273,7 +1273,7 @@ class CtsScheduler:
         for arg in argv:
             narg += 1
             if arg == '--run':
-                (argv, self.single_test_args) = (argv[:narg+1], argv[narg+1:])
+                (argv, self.single_test_args) = (argv[:narg + 1], argv[narg + 1:])
                 break
 
         self.args = parser.parse_args(argv[1:])
@@ -1328,7 +1328,7 @@ class CtsScheduler:
             self._error(f"Test binary {self.args.binary} not found")
             sys.exit(ExitStatus.NOT_INSTALLED)
 
-        return [ self.args.binary ] + shlex.split(self.args.testcmd_options)
+        return [self.args.binary] + shlex.split(self.args.testcmd_options)
 
     def set_schema_env(self):
         """ Ensure schema directory environment variable is set, if possible """
@@ -1337,8 +1337,8 @@ class CtsScheduler:
             return os.environ['PCMK_schema_directory']
         except KeyError:
             # pylint: disable=protected-access
-            for d in [ os.path.join(BuildOptions._BUILD_DIR, "xml"),
-                       BuildOptions.SCHEMA_DIR ]:
+            for d in [os.path.join(BuildOptions._BUILD_DIR, "xml"),
+                       BuildOptions.SCHEMA_DIR]:
                 if not os.path.isdir(d):
                     continue
 
@@ -1392,7 +1392,7 @@ class CtsScheduler:
             # User can give test base name or file name of a test input
             self.args.run = os.path.splitext(os.path.basename(self.args.run))[0]
         except (AttributeError, TypeError):
-            pass # --run was not specified
+            pass  # --run was not specified
 
         self.set_schema_env()
 
@@ -1466,7 +1466,7 @@ class CtsScheduler:
         # Common arguments for running test
         test_cmd = []
         if self.valgrind_args:
-            test_cmd = self.valgrind_args + [ f"--log-file={valgrind_output_filename}" ]
+            test_cmd = self.valgrind_args + [f"--log-file={valgrind_output_filename}"]
         test_cmd += self.simulate_args
 
         # @TODO It would be more pythonic to raise exceptions for errors,
@@ -1482,8 +1482,8 @@ class CtsScheduler:
             return ExitStatus.NOINPUT
 
         # Run simulation to generate summary output
-        test_cmd_full = test_cmd + [ '-x', input_filename, '-S' ] + test_args
-        if self.args.run: # Single test mode
+        test_cmd_full = test_cmd + ['-x', input_filename, '-S'] + test_args
+        if self.args.run:  # Single test mode
             print(" ".join(test_cmd_full))
 
         with io.open(summary_output_filename, "wt", encoding="utf-8") as f:
@@ -1494,13 +1494,12 @@ class CtsScheduler:
             cat(summary_output_filename)
 
         # Re-run simulation to generate dot, graph, and scores
-        test_cmd_full = test_cmd + [
-            '-x', input_filename,
-            '-D', dot_output_filename,
-            '-G', output_filename,
-            '-sSQ' ] + test_args
+        test_cmd_full = test_cmd + ['-x', input_filename,
+                                    '-D', dot_output_filename,
+                                    '-G', output_filename,
+                                    '-sSQ'] + test_args
         with io.open(stderr_output_filename, "wt", encoding="utf-8") as f_stderr, \
-             io.open(score_output_filename,  "wt", encoding="utf-8") as f_score:
+             io.open(score_output_filename, "wt", encoding="utf-8") as f_score:
             rc = subprocess.call(test_cmd_full, stdout=f_score, stderr=f_stderr, env=os.environ)
 
         # Check for test command failure
@@ -1515,7 +1514,7 @@ class CtsScheduler:
                 self._failed("Valgrind reported errors")
                 did_fail = True
                 cat(valgrind_output_filename)
-            remove_files([ valgrind_output_filename ])
+            remove_files([valgrind_output_filename])
 
         # Check for core dump
         if os.path.isfile("core"):
@@ -1532,7 +1531,7 @@ class CtsScheduler:
             self._failed("Output was written to stderr")
             did_fail = True
             cat(stderr_output_filename)
-        remove_files([ stderr_output_filename ])
+        remove_files([stderr_output_filename])
 
         # Check whether output graph exists, and normalize it
         if (not os.path.isfile(output_filename)
@@ -1540,24 +1539,24 @@ class CtsScheduler:
             self._error("No graph produced")
             did_fail = True
             self.num_failed += 1
-            remove_files([ output_filename ])
+            remove_files([output_filename])
             return ExitStatus.ERROR
         normalize(output_filename)
 
         # Check whether dot output exists, and sort it
-        if (not os.path.isfile(dot_output_filename) or
-            os.stat(dot_output_filename).st_size == 0):
+        if (not os.path.isfile(dot_output_filename)
+            or os.stat(dot_output_filename).st_size == 0):
             self._error("No dot-file summary produced")
             did_fail = True
             self.num_failed += 1
-            remove_files([ dot_output_filename, output_filename ])
+            remove_files([dot_output_filename, output_filename])
             return ExitStatus.ERROR
         with io.open(dot_output_filename, "rt", encoding="utf-8") as f:
-            first_line = f.readline() # "digraph" line with opening brace
+            first_line = f.readline()  # "digraph" line with opening brace
             lines = f.readlines()
-            last_line = lines[-1] # closing brace
+            last_line = lines[-1]  # closing brace
             del lines[-1]
-            lines = sorted(set(lines)) # unique sort
+            lines = sorted(set(lines))  # unique sort
         with io.open(dot_output_filename, "wt", encoding="utf-8") as f:
             f.write(first_line)
             f.writelines(lines)
@@ -1569,7 +1568,7 @@ class CtsScheduler:
             self._error("No allocation scores produced")
             did_fail = True
             self.num_failed += 1
-            remove_files([ score_output_filename, output_filename ])
+            remove_files([score_output_filename, output_filename])
             return ExitStatus.ERROR
 
         sort_file(score_output_filename)
@@ -1589,7 +1588,7 @@ class CtsScheduler:
             self._failed("dot-file summary changed")
             did_fail = True
         else:
-            remove_files([ dot_output_filename ])
+            remove_files([dot_output_filename])
 
         if self._compare_files(expected_filename, output_filename):
             self._failed("xml-file changed")
@@ -1599,10 +1598,10 @@ class CtsScheduler:
             self._failed("scores-file changed")
             did_fail = True
 
-        remove_files([ output_filename,
-                       dot_output_filename,
-                       score_output_filename,
-                       summary_output_filename])
+        remove_files([output_filename,
+                      dot_output_filename,
+                      score_output_filename,
+                      summary_output_filename])
 
         if did_fail:
             self.num_failed += 1
