@@ -1243,7 +1243,7 @@ def cat(filename, dest=sys.stdout):
         shutil.copyfileobj(f, dest)
 
 
-class CtsScheduler(object):
+class CtsScheduler:
     """ Regression tests for Pacemaker's scheduler """
 
     def _parse_args(self, argv):
