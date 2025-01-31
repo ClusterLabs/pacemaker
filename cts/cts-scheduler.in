@@ -1316,6 +1316,7 @@ class CtsScheduler:
         """ Locate the simulation binary """
 
         if self.args.binary is None:
+            # pylint: disable=protected-access
             self.args.binary = f"{BuildOptions._BUILD_DIR}/tools/crm_simulate"
             if not is_executable(self.args.binary):
                 self.args.binary = f"{BuildOptions.SBIN_DIR}/crm_simulate"
@@ -1333,6 +1334,7 @@ class CtsScheduler:
         try:
             return os.environ['PCMK_schema_directory']
         except KeyError:
+            # pylint: disable=protected-access
             for d in [ os.path.join(BuildOptions._BUILD_DIR, "xml"),
                        BuildOptions.SCHEMA_DIR ]:
                 if os.path.isdir(d):
@@ -1667,6 +1669,7 @@ class CtsScheduler:
         self._print_summary()
 
         # Zero out the error log
+        # pylint: disable=consider-using-with
         self.failed_file = io.open(self.failed_filename, "wt", encoding="utf-8")
 
         if self.args.run is None:
