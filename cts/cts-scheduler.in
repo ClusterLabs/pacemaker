@@ -1202,9 +1202,9 @@ def diff(file1, file2, **kwargs):
 def sort_file(filename):
     """ Sort a file alphabetically """
 
-    with io.open(filename, "rt") as f:
+    with io.open(filename, "rt", encoding="utf-8") as f:
         lines = sorted(f)
-    with io.open(filename, "wt") as f:
+    with io.open(filename, "wt", encoding="utf-8") as f:
         f.writelines(lines)
 
 
@@ -1227,9 +1227,9 @@ def normalize(filename):
             re.compile(r'batch-limit="[0-9]*"')
         ]
     if os.path.isfile(filename):
-        with io.open(filename, "rt") as f:
+        with io.open(filename, "rt", encoding="utf-8") as f:
             lines = f.readlines()
-        with io.open(filename, "wt") as f:
+        with io.open(filename, "wt", encoding="utf-8") as f:
             for line in lines:
                 for pattern in normalize.patterns:
                     line = pattern.sub("", line)
@@ -1239,7 +1239,7 @@ def normalize(filename):
 def cat(filename, dest=sys.stdout):
     """ Copy a file to a destination file descriptor """
 
-    with io.open(filename, "rt") as f:
+    with io.open(filename, "rt", encoding="utf-8") as f:
         shutil.copyfileobj(f, dest)
 
 
@@ -1498,7 +1498,7 @@ class CtsScheduler(object):
         if self.args.run: # Single test mode
             print(" ".join(test_cmd_full))
 
-        with io.open(summary_output_filename, "wt") as f:
+        with io.open(summary_output_filename, "wt", encoding="utf-8") as f:
             subprocess.run(test_cmd_full, stdout=f, stderr=subprocess.STDOUT,
                            env=os.environ, check=False)
 
@@ -1511,8 +1511,8 @@ class CtsScheduler(object):
             '-D', dot_output_filename,
             '-G', output_filename,
             '-sSQ' ] + test_args
-        with io.open(stderr_output_filename, "wt") as f_stderr, \
-             io.open(score_output_filename,  "wt") as f_score:
+        with io.open(stderr_output_filename, "wt", encoding="utf-8") as f_stderr, \
+             io.open(score_output_filename,  "wt", encoding="utf-8") as f_score:
             rc = subprocess.call(test_cmd_full, stdout=f_score, stderr=f_stderr, env=os.environ)
 
         # Check for test command failure
@@ -1564,13 +1564,13 @@ class CtsScheduler(object):
             self.num_failed = self.num_failed + 1
             remove_files([ dot_output_filename, output_filename ])
             return ExitStatus.ERROR
-        with io.open(dot_output_filename, "rt") as f:
+        with io.open(dot_output_filename, "rt", encoding="utf-8") as f:
             first_line = f.readline() # "digraph" line with opening brace
             lines = f.readlines()
             last_line = lines[-1] # closing brace
             del lines[-1]
             lines = sorted(set(lines)) # unique sort
-        with io.open(dot_output_filename, "wt") as f:
+        with io.open(dot_output_filename, "wt", encoding="utf-8") as f:
             f.write(first_line)
             f.writelines(lines)
             f.write(last_line)
@@ -1685,7 +1685,7 @@ class CtsScheduler(object):
         self._print_summary()
 
         # Zero out the error log
-        self.failed_file = io.open(self.failed_filename, "wt")
+        self.failed_file = io.open(self.failed_filename, "wt", encoding="utf-8")
 
         if self.args.run is None:
             print("Performing the following tests from " + self.args.io_dir)
