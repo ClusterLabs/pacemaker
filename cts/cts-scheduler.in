@@ -1,6 +1,5 @@
 #!@PYTHON@
-""" Regression tests for Pacemaker's scheduler
-"""
+"""Regression tests for Pacemaker's scheduler."""
 
 # pylint doesn't like the module name "cts-scheduler" which is an invalid complaint for this file
 # but probably something we want to continue warning about elsewhere
@@ -38,7 +37,17 @@ from pacemaker.exitstatus import ExitStatus
 
 
 class SchedulerTest:
+    """A single scheduler test."""
+
     def __init__(self, name, desc, args=None):
+        """
+        Create a new SchedulerTest instance.
+
+        Arguments:
+        name -- A unique name for this test.
+        desc -- A meaningful description for the test.
+        args -- Additional arguments to pass when running this test
+        """
         self.name = name
         self.desc = desc
 
@@ -49,7 +58,16 @@ class SchedulerTest:
 
 
 class SchedulerTestGroup:
+    """Collection of scheduler regression tests."""
+
     def __init__(self, tests):
+        """
+        Create a new SchedulerTestGroup instance.
+
+        Arguments:
+        tests -- A list of SchedulerTest instances to be executed as part of
+                 this group.
+        """
         self.tests = tests
 
 
@@ -1168,7 +1186,7 @@ TESTS_64BIT = [
 
 
 def is_executable(path):
-    """ Check whether a file at a given path is executable. """
+    """Check whether a file at a given path is executable."""
     try:
         return os.stat(path)[stat.ST_MODE] & stat.S_IXUSR
     except OSError:
@@ -1176,13 +1194,13 @@ def is_executable(path):
 
 
 def diff(file1, file2, **kwargs):
-    """ Call diff on two files """
+    """Call diff on two files."""
     return subprocess.call(["diff", "-u", "-N", "--ignore-all-space",
                             "--ignore-blank-lines", file1, file2], **kwargs)
 
 
 def sort_file(filename):
-    """ Sort a file alphabetically """
+    """Sort a file alphabetically."""
     with io.open(filename, "rt", encoding="utf-8") as f:
         lines = sorted(f)
 
@@ -1191,7 +1209,7 @@ def sort_file(filename):
 
 
 def remove_files(filenames):
-    """ Remove a list of files """
+    """Remove a list of files."""
     for filename in filenames:
         try:
             os.remove(filename)
@@ -1200,7 +1218,7 @@ def remove_files(filenames):
 
 
 def normalize(filename):
-    """ Remove text from a file that isn't important for comparison """
+    """Remove text from a file that isn't important for comparison."""
     if not hasattr(normalize, "patterns"):
         normalize.patterns = [
             re.compile(r'crm_feature_set="[^"]*"'),
@@ -1222,16 +1240,16 @@ def normalize(filename):
 
 
 def cat(filename, dest=sys.stdout):
-    """ Copy a file to a destination file descriptor """
+    """Copy a file to a destination file descriptor."""
     with io.open(filename, "rt", encoding="utf-8") as f:
         shutil.copyfileobj(f, dest)
 
 
 class CtsScheduler:
-    """ Regression tests for Pacemaker's scheduler """
+    """Regression tests for Pacemaker's scheduler."""
 
     def _parse_args(self, argv):
-        """ Parse command-line arguments """
+        """Parse command-line arguments."""
         parser = argparse.ArgumentParser(description="Regression tests for Pacemaker's scheduler")
 
         parser.add_argument('-V', '--verbose', action='count',
@@ -1268,13 +1286,15 @@ class CtsScheduler:
         self.args = parser.parse_args(argv[1:])
 
     def _error(self, s):
+        """Print an error message."""
         print(f"      * ERROR:   {s}")
 
     def _failed(self, s):
+        """Print a failure message."""
         print(f"      * FAILED:  {s}")
 
     def _get_valgrind_cmd(self):
-        """ Return command arguments needed (or not) to run valgrind """
+        """Return command arguments needed (or not) to run valgrind."""
         if self.args.valgrind:
             os.environ['G_SLICE'] = "always-malloc"
             return [
@@ -1303,7 +1323,7 @@ class CtsScheduler:
         return []
 
     def _get_simulator_cmd(self):
-        """ Locate the simulation binary """
+        """Locate the simulation binary."""
         if self.args.binary is None:
             # pylint: disable=protected-access
             self.args.binary = f"{BuildOptions._BUILD_DIR}/tools/crm_simulate"
@@ -1319,7 +1339,7 @@ class CtsScheduler:
         return [self.args.binary] + shlex.split(self.args.testcmd_options)
 
     def set_schema_env(self):
-        """ Ensure schema directory environment variable is set, if possible """
+        """Ensure schema directory environment variable is set, if possible."""
         try:
             return os.environ['PCMK_schema_directory']
         except KeyError:
@@ -1335,6 +1355,7 @@ class CtsScheduler:
             return None
 
     def __init__(self, argv=sys.argv):
+        """Create a new CtsScheduler instance."""
         # Ensure all command output is in portable locale for comparison
         os.environ['LC_ALL'] = "C"
 
@@ -1421,7 +1442,7 @@ class CtsScheduler:
             sys.exit(ExitStatus.CANTCREAT)
 
     def _compare_files(self, filename1, filename2):
-        """ Add any file differences to failed results """
+        """Add any file differences to failed results."""
         if diff(filename1, filename2, stdout=subprocess.DEVNULL) != 0:
             diff(filename1, filename2, stdout=self.failed_file, stderr=subprocess.DEVNULL)
             self.failed_file.write("\n")
@@ -1434,7 +1455,7 @@ class CtsScheduler:
         return not os.path.isfile(path) or os.path.getsize(path) == 0
 
     def run_one(self, test_name, test_desc, test_args):
-        """ Run one scheduler test """
+        """Run one scheduler test."""
         print(f"  Test {f'{test_name}:':41} {test_desc}")
 
         did_fail = False
@@ -1608,7 +1629,7 @@ class CtsScheduler:
         return ExitStatus.OK
 
     def run_all(self):
-        """ Run all defined tests """
+        """Run all defined tests."""
         if platform.architecture()[0] == "64bit":
             TESTS.extend(TESTS_64BIT)
 
@@ -1619,7 +1640,7 @@ class CtsScheduler:
             print()
 
     def _print_summary(self):
-        """ Print a summary of parameters for this test run """
+        """Print a summary of parameters for this test run."""
         print(f"Test home is:\t{self.test_home}")
         print(f"Test binary is:\t{self.args.binary}")
 
@@ -1632,6 +1653,7 @@ class CtsScheduler:
         print()
 
     def _test_results(self):
+        """Report test results."""
         if self.num_failed == 0:
             shutil.rmtree(self.failed_dir)
             return ExitStatus.OK
@@ -1651,6 +1673,7 @@ class CtsScheduler:
         return ExitStatus.ERROR
 
     def find_test(self, name):
+        """Return the SchedulerTest object with the given name."""
         if platform.architecture()[0] == "64bit":
             TESTS.extend(TESTS_64BIT)
 
@@ -1662,7 +1685,7 @@ class CtsScheduler:
         return None
 
     def run(self):
-        """ Run test(s) as specified """
+        """Run test(s) as specified."""
         # Check for pre-existing core so we don't think it's from us
         if os.path.exists("core"):
             self._failed(f"Can't run with core already present in {self.test_home}")
