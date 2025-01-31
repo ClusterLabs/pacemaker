@@ -1,5 +1,5 @@
 #
-# Copyright 2001-2024 the Pacemaker project contributors
+# Copyright 2001-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -67,7 +67,10 @@ cts-support-uninstall:
 # Everything listed here is a python script, typically generated from a .in file
 # (though that is not a requirement).  We want to run pylint on all of these
 # things after they've been built.
+# FIXME: When cts-schemas is converted to python, this can be removed because
+# it will duplicate test_SCRIPTS above.
 python_files = cts-attrd       \
+	       cts-cli 		\
 	       cts-exec         \
 	       cts-fencing      \
 	       cts-lab          \
