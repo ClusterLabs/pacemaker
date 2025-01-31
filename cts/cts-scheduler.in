@@ -1456,6 +1456,7 @@ class CtsScheduler:
 
     def run_one(self, test_name, test_desc, test_args):
         """Run one scheduler test."""
+        # pylint: disable=too-many-locals
         print(f"  Test {f'{test_name}:':41} {test_desc}")
 
         did_fail = False
