@@ -265,6 +265,7 @@ class FileAudit(ClusterAudit):
         self.name = "FileAudit"
 
     def _output_has_core(self, output, node):
+        """Check output for any lines that would indicate the presence of a core dump."""
         found = False
 
         for line in output:
@@ -279,6 +280,11 @@ class FileAudit(ClusterAudit):
 
         return found
 
+    def _find_core_with_coredumpctl(self, node):
+        """Use coredumpctl to find core dumps on the given node."""
+        (_, lsout) = self._cm.rsh(node, "coredumpctl --no-legend --no-pager")
+        return self._output_has_core(lsout, node)
+
     def _find_core_on_fs(self, node, path):
         """Check for core dumps on the given node, under the given path."""
         (_, lsout) = self._cm.rsh(node, f"ls -al {path} | grep core.[0-9]", verbose=1)
@@ -291,13 +297,28 @@ class FileAudit(ClusterAudit):
         self._cm.ns.wait_for_all_nodes(self._cm.env["nodes"])
 
         for node in self._cm.env["nodes"]:
-            found = self._find_core_on_fs(node, "/var/lib/pacemaker/cores/*", "Pacemaker")
-            if found:
-                passed = False
+            found = False
 
-            found = self._find_core_on_fs(node, "/var/lib/corosync", "Corosync")
-            if found:
-                passed = False
+            # If systemd is present, first see if coredumpctl logged any core dumps.
+            if self._cm.env["have_systemd"]:
+                found = self._find_core_with_coredumpctl(node)
+                if found:
+                    passed = False
+
+            # If we didn't find any core dumps, it's for one of three reasons:
+            # (1) Nothing crashed
+            # (2) systemd is not present
+            # (3) systemd is present but coredumpctl is not enabled
+            #
+            # To handle the last two cases, check the other filesystem locations.
+            if not found:
+                found = self._find_core_on_fs(node, "/var/lib/pacemaker/cores/*")
+                if found:
+                    passed = False
+
+                found = self._find_core_on_fs(node, "/var/lib/corosync")
+                if found:
+                    passed = False
 
             if self._cm.expected_status.get(node) == "down":
                 clean = False
