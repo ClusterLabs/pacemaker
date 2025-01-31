@@ -1429,6 +1429,10 @@ class CtsScheduler:
 
         return False
 
+    def _file_missing(self, path):
+        """Return True if path does not exist or is empty."""
+        return not os.path.isfile(path) or os.path.getsize(path) == 0
+
     def run_one(self, test_name, test_desc, test_args):
         """ Run one scheduler test """
         print(f"  Test {f'{test_name}:':41} {test_desc}")
@@ -1502,7 +1506,7 @@ class CtsScheduler:
 
         # Check for valgrind errors
         if self.valgrind_args and not self.args.valgrind_skip_output:
-            if os.stat(valgrind_output_filename).st_size > 0:
+            if os.path.getsize(valgrind_output_filename) > 0:
                 self._failed("Valgrind reported errors")
                 did_fail = True
                 cat(valgrind_output_filename)
@@ -1520,7 +1524,7 @@ class CtsScheduler:
             if self._compare_files(stderr_expected_filename, stderr_output_filename):
                 self._failed("stderr changed")
                 did_fail = True
-        elif os.stat(stderr_output_filename).st_size > 0:
+        elif os.path.getsize(stderr_output_filename) > 0:
             self._failed("Output was written to stderr")
             did_fail = True
             cat(stderr_output_filename)
@@ -1528,8 +1532,7 @@ class CtsScheduler:
         remove_files([stderr_output_filename])
 
         # Check whether output graph exists, and normalize it
-        if (not os.path.isfile(output_filename)
-            or os.stat(output_filename).st_size == 0):
+        if self._file_missing(output_filename):
             self._error("No graph produced")
             did_fail = True
             self.num_failed += 1
@@ -1539,8 +1542,7 @@ class CtsScheduler:
         normalize(output_filename)
 
         # Check whether dot output exists, and sort it
-        if (not os.path.isfile(dot_output_filename)
-            or os.stat(dot_output_filename).st_size == 0):
+        if self._file_missing(dot_output_filename):
             self._error("No dot-file summary produced")
             did_fail = True
             self.num_failed += 1
@@ -1560,8 +1562,7 @@ class CtsScheduler:
             f.write(last_line)
 
         # Check whether score output exists, and sort it
-        if (not os.path.isfile(score_output_filename)
-            or os.stat(score_output_filename).st_size == 0):
+        if self._file_missing(score_output_filename):
             self._error("No allocation scores produced")
             did_fail = True
             self.num_failed += 1
@@ -1635,18 +1636,17 @@ class CtsScheduler:
             shutil.rmtree(self.failed_dir)
             return ExitStatus.OK
 
-        if os.path.isfile(self.failed_filename) and os.stat(self.failed_filename).st_size != 0:
-            if self.args.verbose:
-                self._error(f"Results of {self.num_failed} failed tests (out of {self.num_tests}):")
-                cat(self.failed_filename)
-            else:
-                self._error(f"Results of {self.num_failed} failed tests (out of {self.num_tests}) "
-                            f"are in {self.failed_filename}")
-                self._error("Use -V to display them after running the tests")
-        else:
+        if self._file_missing(self.failed_filename):
             self._error(f"{self.num_failed} (of {self.num_tests}) tests failed (no diff results)")
             if os.path.isfile(self.failed_filename):
                 shutil.rmtree(self.failed_dir)
+        elif self.args.verbose:
+            self._error(f"Results of {self.num_failed} failed tests (out of {self.num_tests}):")
+            cat(self.failed_filename)
+        else:
+            self._error(f"Results of {self.num_failed} failed tests (out of {self.num_tests}) "
+                        f"are in {self.failed_filename}")
+            self._error("Use -V to display them after running the tests")
 
         return ExitStatus.ERROR
 
