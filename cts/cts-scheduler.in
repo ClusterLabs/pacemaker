@@ -47,9 +47,11 @@ class SchedulerTest:
         else:
             self.args = args
 
+
 class SchedulerTestGroup:
     def __init__(self, tests):
         self.tests = tests
+
 
 # Each entry in TESTS is a group of tests, where each test consists of a
 # test base name, test description, and additional test arguments.
@@ -1167,7 +1169,6 @@ TESTS_64BIT = [
 
 def is_executable(path):
     """ Check whether a file at a given path is executable. """
-
     try:
         return os.stat(path)[stat.ST_MODE] & stat.S_IXUSR
     except OSError:
@@ -1176,23 +1177,21 @@ def is_executable(path):
 
 def diff(file1, file2, **kwargs):
     """ Call diff on two files """
-
     return subprocess.call(["diff", "-u", "-N", "--ignore-all-space",
                             "--ignore-blank-lines", file1, file2], **kwargs)
 
 
 def sort_file(filename):
     """ Sort a file alphabetically """
-
     with io.open(filename, "rt", encoding="utf-8") as f:
         lines = sorted(f)
+
     with io.open(filename, "wt", encoding="utf-8") as f:
         f.writelines(lines)
 
 
 def remove_files(filenames):
     """ Remove a list of files """
-
     for filename in filenames:
         try:
             os.remove(filename)
@@ -1202,27 +1201,28 @@ def remove_files(filenames):
 
 def normalize(filename):
     """ Remove text from a file that isn't important for comparison """
-
     if not hasattr(normalize, "patterns"):
         normalize.patterns = [
             re.compile(r'crm_feature_set="[^"]*"'),
             re.compile(r'batch-limit="[0-9]*"')
         ]
+
     if not os.path.isfile(filename):
         return
 
     with io.open(filename, "rt", encoding="utf-8") as f:
         lines = f.readlines()
+
     with io.open(filename, "wt", encoding="utf-8") as f:
         for line in lines:
             for pattern in normalize.patterns:
                 line = pattern.sub("", line)
+
             f.write(line)
 
 
 def cat(filename, dest=sys.stdout):
     """ Copy a file to a destination file descriptor """
-
     with io.open(filename, "rt", encoding="utf-8") as f:
         shutil.copyfileobj(f, dest)
 
@@ -1232,37 +1232,27 @@ class CtsScheduler:
 
     def _parse_args(self, argv):
         """ Parse command-line arguments """
-
         parser = argparse.ArgumentParser(description="Regression tests for Pacemaker's scheduler")
 
         parser.add_argument('-V', '--verbose', action='count',
                             help='Display any differences from expected output')
-
         parser.add_argument('--run', metavar='TEST',
                             help=('Run only single specified test (any further '
                                   'arguments will be passed to crm_simulate)'))
-
         parser.add_argument('--update', action='store_true',
                             help='Update expected results with actual results')
-
         parser.add_argument('-b', '--binary', metavar='PATH',
                             help='Specify path to crm_simulate')
-
         parser.add_argument('-i', '--io-dir', metavar='PATH',
                             help='Specify path to regression test data directory')
-
         parser.add_argument('-o', '--out-dir', metavar='PATH',
                             help='Specify where intermediate and output files should go')
-
         parser.add_argument('-v', '--valgrind', action='store_true',
                             help='Run all commands under valgrind')
-
         parser.add_argument('--valgrind-dhat', action='store_true',
                             help='Run all commands under valgrind with heap analyzer')
-
         parser.add_argument('--valgrind-skip-output', action='store_true',
                             help='If running under valgrind, do not display output')
-
         parser.add_argument('--testcmd-options', metavar='OPTIONS', default='',
                             help='Additional options for command under test')
 
@@ -1285,7 +1275,6 @@ class CtsScheduler:
 
     def _get_valgrind_cmd(self):
         """ Return command arguments needed (or not) to run valgrind """
-
         if self.args.valgrind:
             os.environ['G_SLICE'] = "always-malloc"
             return [
@@ -1315,10 +1304,10 @@ class CtsScheduler:
 
     def _get_simulator_cmd(self):
         """ Locate the simulation binary """
-
         if self.args.binary is None:
             # pylint: disable=protected-access
             self.args.binary = f"{BuildOptions._BUILD_DIR}/tools/crm_simulate"
+
             if not is_executable(self.args.binary):
                 self.args.binary = f"{BuildOptions.SBIN_DIR}/crm_simulate"
 
@@ -1331,22 +1320,21 @@ class CtsScheduler:
 
     def set_schema_env(self):
         """ Ensure schema directory environment variable is set, if possible """
-
         try:
             return os.environ['PCMK_schema_directory']
         except KeyError:
             # pylint: disable=protected-access
             for d in [os.path.join(BuildOptions._BUILD_DIR, "xml"),
-                       BuildOptions.SCHEMA_DIR]:
+                      BuildOptions.SCHEMA_DIR]:
                 if not os.path.isdir(d):
                     continue
 
                 os.environ['PCMK_schema_directory'] = d
                 return d
+
             return None
 
     def __init__(self, argv=sys.argv):
-
         # Ensure all command output is in portable locale for comparison
         os.environ['LC_ALL'] = "C"
 
@@ -1375,8 +1363,9 @@ class CtsScheduler:
             self.failed_filename = os.path.join(self.failed_dir, "test-output.diff")
         else:
             self.failed_filename = os.path.join(self.args.out_dir, "test-output.diff")
+
         os.environ['CIB_shadow_dir'] = self.args.out_dir
-        
+
         self.failed_file = None
 
         self.outfile_out_dir = os.path.join(self.args.out_dir, "out")
@@ -1416,6 +1405,7 @@ class CtsScheduler:
             os.makedirs(self.scores_out_dir, 0o755, True)
             os.makedirs(self.summary_out_dir, 0o755, True)
             os.makedirs(self.stderr_out_dir, 0o755, True)
+
             if self.valgrind_args:
                 os.makedirs(self.valgrind_out_dir, 0o755, True)
         except OSError as ex:
@@ -1427,20 +1417,20 @@ class CtsScheduler:
                 self.summary_out_dir,
                 self.stderr_out_dir,
             ])
+
             sys.exit(ExitStatus.CANTCREAT)
 
     def _compare_files(self, filename1, filename2):
         """ Add any file differences to failed results """
-
         if diff(filename1, filename2, stdout=subprocess.DEVNULL) != 0:
             diff(filename1, filename2, stdout=self.failed_file, stderr=subprocess.DEVNULL)
             self.failed_file.write("\n")
             return True
+
         return False
 
     def run_one(self, test_name, test_desc, test_args):
         """ Run one scheduler test """
-
         print(f"  Test {f'{test_name}:':41} {test_desc}")
 
         did_fail = False
@@ -1466,6 +1456,7 @@ class CtsScheduler:
         test_cmd = []
         if self.valgrind_args:
             test_cmd = self.valgrind_args + [f"--log-file={valgrind_output_filename}"]
+
         test_cmd += self.simulate_args
 
         # @TODO It would be more pythonic to raise exceptions for errors,
@@ -1476,6 +1467,7 @@ class CtsScheduler:
             self._error("No input")
             self.num_failed += 1
             return ExitStatus.NOINPUT
+
         if not self.args.update and not os.path.isfile(expected_filename):
             self._error("no stored output")
             return ExitStatus.NOINPUT
@@ -1497,6 +1489,7 @@ class CtsScheduler:
                                     '-D', dot_output_filename,
                                     '-G', output_filename,
                                     '-sSQ'] + test_args
+
         with io.open(stderr_output_filename, "wt", encoding="utf-8") as f_stderr, \
              io.open(score_output_filename, "wt", encoding="utf-8") as f_score:
             rc = subprocess.call(test_cmd_full, stdout=f_score, stderr=f_stderr, env=os.environ)
@@ -1513,6 +1506,7 @@ class CtsScheduler:
                 self._failed("Valgrind reported errors")
                 did_fail = True
                 cat(valgrind_output_filename)
+
             remove_files([valgrind_output_filename])
 
         # Check for core dump
@@ -1530,6 +1524,7 @@ class CtsScheduler:
             self._failed("Output was written to stderr")
             did_fail = True
             cat(stderr_output_filename)
+
         remove_files([stderr_output_filename])
 
         # Check whether output graph exists, and normalize it
@@ -1540,6 +1535,7 @@ class CtsScheduler:
             self.num_failed += 1
             remove_files([output_filename])
             return ExitStatus.ERROR
+
         normalize(output_filename)
 
         # Check whether dot output exists, and sort it
@@ -1550,12 +1546,14 @@ class CtsScheduler:
             self.num_failed += 1
             remove_files([dot_output_filename, output_filename])
             return ExitStatus.ERROR
+
         with io.open(dot_output_filename, "rt", encoding="utf-8") as f:
             first_line = f.readline()  # "digraph" line with opening brace
             lines = f.readlines()
             last_line = lines[-1]  # closing brace
             del lines[-1]
             lines = sorted(set(lines))  # unique sort
+
         with io.open(dot_output_filename, "wt", encoding="utf-8") as f:
             f.write(first_line)
             f.writelines(lines)
@@ -1610,24 +1608,26 @@ class CtsScheduler:
 
     def run_all(self):
         """ Run all defined tests """
-
         if platform.architecture()[0] == "64bit":
             TESTS.extend(TESTS_64BIT)
 
         for group in TESTS:
             for test in group.tests:
                 self.run_one(test.name, test.desc, test.args)
+
             print()
 
     def _print_summary(self):
         """ Print a summary of parameters for this test run """
-
         print(f"Test home is:\t{self.test_home}")
         print(f"Test binary is:\t{self.args.binary}")
+
         if 'PCMK_schema_directory' in os.environ:
             print(f"Schema home is:\t{os.environ['PCMK_schema_directory']}")
+
         if self.valgrind_args:
             print("Activating memory testing with valgrind")
+
         print()
 
     def _test_results(self):
@@ -1647,6 +1647,7 @@ class CtsScheduler:
             self._error(f"{self.num_failed} (of {self.num_tests}) tests failed (no diff results)")
             if os.path.isfile(self.failed_filename):
                 shutil.rmtree(self.failed_dir)
+
         return ExitStatus.ERROR
 
     def find_test(self, name):
@@ -1662,7 +1663,6 @@ class CtsScheduler:
 
     def run(self):
         """ Run test(s) as specified """
-
         # Check for pre-existing core so we don't think it's from us
         if os.path.exists("core"):
             self._failed(f"Can't run with core already present in {self.test_home}")
@@ -1698,10 +1698,11 @@ class CtsScheduler:
 
             rc = self.run_one(test.name, test.desc, args)
             self.failed_file.close()
+
             if self.num_failed > 0:
-              print(f"\nFailures:\nThese have also been written to: {self.failed_filename}\n")
-              cat(self.failed_filename)
-              shutil.rmtree(self.failed_dir)
+                print(f"\nFailures:\nThese have also been written to: {self.failed_filename}\n")
+                cat(self.failed_filename)
+                shutil.rmtree(self.failed_dir)
 
         return rc
 
