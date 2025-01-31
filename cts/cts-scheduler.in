@@ -1209,14 +1209,16 @@ def normalize(filename):
             re.compile(r'crm_feature_set="[^"]*"'),
             re.compile(r'batch-limit="[0-9]*"')
         ]
-    if os.path.isfile(filename):
-        with io.open(filename, "rt", encoding="utf-8") as f:
-            lines = f.readlines()
-        with io.open(filename, "wt", encoding="utf-8") as f:
-            for line in lines:
-                for pattern in normalize.patterns:
-                    line = pattern.sub("", line)
-                f.write(line)
+    if not os.path.isfile(filename):
+        return
+
+    with io.open(filename, "rt", encoding="utf-8") as f:
+        lines = f.readlines()
+    with io.open(filename, "wt", encoding="utf-8") as f:
+        for line in lines:
+            for pattern in normalize.patterns:
+                line = pattern.sub("", line)
+            f.write(line)
 
 
 def cat(filename, dest=sys.stdout):
@@ -1337,9 +1339,11 @@ class CtsScheduler:
             # pylint: disable=protected-access
             for d in [ os.path.join(BuildOptions._BUILD_DIR, "xml"),
                        BuildOptions.SCHEMA_DIR ]:
-                if os.path.isdir(d):
-                    os.environ['PCMK_schema_directory'] = d
-                    return d
+                if not os.path.isdir(d):
+                    continue
+
+                os.environ['PCMK_schema_directory'] = d
+                return d
             return None
 
     def __init__(self, argv=sys.argv):
@@ -1567,8 +1571,8 @@ class CtsScheduler:
             self.num_failed += 1
             remove_files([ score_output_filename, output_filename ])
             return ExitStatus.ERROR
-        else:
-            sort_file(score_output_filename)
+
+        sort_file(score_output_filename)
 
         if self.args.update:
             shutil.copyfile(output_filename, expected_filename)
