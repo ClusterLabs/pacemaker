@@ -1622,7 +1622,7 @@ class CtsScheduler:
         print(f"Test binary is:\t{self.args.binary}")
         if 'PCMK_schema_directory' in os.environ:
             print(f"Schema home is:\t{os.environ['PCMK_schema_directory']}")
-        if self.valgrind_args != []:
+        if self.valgrind_args:
             print("Activating memory testing with valgrind")
         print()
 
