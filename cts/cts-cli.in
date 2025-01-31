@@ -1962,7 +1962,7 @@ class CrmShadowRegressionTest(RegressionTest):
             make_test_group("Create copied shadow instance",
                             "crm_shadow --create {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force"),
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
             # Query shadow instance based on active CIB
             make_test_group("Get active shadow instance (copied)",
                             "crm_shadow --which {fmt}",
@@ -1998,15 +1998,15 @@ class CrmShadowRegressionTest(RegressionTest):
             TestGroup([
                 # Commit the modified shadow CIB to a temp active CIB file
                 Test("Commit shadow instance",
-                     "crm_shadow --commit {shadow}",
+                     f"crm_shadow --commit {SHADOW_NAME}",
                      expected_rc=ExitStatus.USAGE),
                 Test("Commit shadow instance (force)",
-                     "crm_shadow --commit {shadow} --force"),
+                     f"crm_shadow --commit {SHADOW_NAME} --force"),
                 Test("Get active shadow instance's diff (after commit)",
                      "crm_shadow --diff",
                      expected_rc=ExitStatus.ERROR),
                 Test("Commit shadow instance (force) (all)",
-                     "crm_shadow --commit {shadow} --force --all"),
+                     f"crm_shadow --commit {SHADOW_NAME} --force --all"),
                 Test("Get active shadow instance's diff (after commit all)",
                      "crm_shadow --diff",
                      expected_rc=ExitStatus.ERROR),
@@ -2014,15 +2014,15 @@ class CrmShadowRegressionTest(RegressionTest):
             TestGroup([
                 # Repeat sequence with XML output
                 ValidatingTest("Commit shadow instance",
-                               "crm_shadow --commit {shadow} --output-as=xml",
+                               f"crm_shadow --commit {SHADOW_NAME} --output-as=xml",
                                expected_rc=ExitStatus.USAGE),
                 ValidatingTest("Commit shadow instance (force)",
-                               "crm_shadow --commit {shadow} --force --output-as=xml"),
+                               f"crm_shadow --commit {SHADOW_NAME} --force --output-as=xml"),
                 ValidatingTest("Get active shadow instance's diff (after commit)",
                                "crm_shadow --diff --output-as=xml",
                                expected_rc=ExitStatus.ERROR),
                 ValidatingTest("Commit shadow instance (force) (all)",
-                               "crm_shadow --commit {shadow} --force --all --output-as=xml"),
+                               f"crm_shadow --commit {SHADOW_NAME} --force --all --output-as=xml"),
                 ValidatingTest("Get active shadow instance's diff (after commit all)",
                                "crm_shadow --diff --output-as=xml",
                                expected_rc=ExitStatus.ERROR),
@@ -2083,50 +2083,50 @@ class CrmShadowRegressionTest(RegressionTest):
 
         delete_1_tests = [
             # Delete an active shadow instance
-            Test("Delete shadow instance", "crm_shadow --delete {shadow}",
+            Test("Delete shadow instance", f"crm_shadow --delete {SHADOW_NAME}",
                  expected_rc=ExitStatus.USAGE),
-            Test("Delete shadow instance (force)", "crm_shadow --delete {shadow} --force"),
+            Test("Delete shadow instance (force)", f"crm_shadow --delete {SHADOW_NAME} --force"),
             ShadowTestGroup([
                 ValidatingTest("Delete shadow instance",
-                               "crm_shadow --delete {shadow} --output-as=xml",
+                               f"crm_shadow --delete {SHADOW_NAME} --output-as=xml",
                                expected_rc=ExitStatus.USAGE),
                 ValidatingTest("Delete shadow instance (force)",
-                               "crm_shadow --delete {shadow} --force --output-as=xml"),
+                               f"crm_shadow --delete {SHADOW_NAME} --force --output-as=xml"),
             ])
         ]
 
         delete_2_tests = [
             # Delete an inactive shadow instance with no active instance
             Test("Delete shadow instance (no active instance)",
-                 "crm_shadow --delete {shadow}",
+                 f"crm_shadow --delete {SHADOW_NAME}",
                  expected_rc=ExitStatus.USAGE),
             Test("Delete shadow instance (no active instance) (force)",
-                 "crm_shadow --delete {shadow} --force"),
+                 f"crm_shadow --delete {SHADOW_NAME} --force"),
         ]
 
         delete_3_tests = [
             ValidatingTest("Delete shadow instance (no active instance)",
-                           "crm_shadow --delete {shadow} --output-as=xml",
+                           f"crm_shadow --delete {SHADOW_NAME} --output-as=xml",
                            expected_rc=ExitStatus.USAGE),
             ValidatingTest("Delete shadow instance (no active instance) (force)",
-                           "crm_shadow --delete {shadow} --force --output-as=xml"),
+                           f"crm_shadow --delete {SHADOW_NAME} --force --output-as=xml"),
         ]
 
         delete_4_tests = [
             # Delete an inactive shadow instance with an active instance
             Test("Delete shadow instance (mismatch)",
-                 "crm_shadow --delete {shadow}",
+                 f"crm_shadow --delete {SHADOW_NAME}",
                  expected_rc=ExitStatus.USAGE),
             Test("Delete shadow instance (mismatch) (force)",
-                 "crm_shadow --delete {shadow} --force"),
+                 f"crm_shadow --delete {SHADOW_NAME} --force"),
         ]
 
         delete_5_tests = [
             ValidatingTest("Delete shadow instance (mismatch)",
-                           "crm_shadow --delete {shadow} --output-as=xml",
+                           f"crm_shadow --delete {SHADOW_NAME} --output-as=xml",
                            expected_rc=ExitStatus.USAGE),
             ValidatingTest("Delete shadow instance (mismatch) (force)",
-                           "crm_shadow --delete {shadow} --force --output-as=xml"),
+                           f"crm_shadow --delete {SHADOW_NAME} --force --output-as=xml"),
             # Delete an active shadow instance whose shadow file is missing
             Test("Delete shadow instance (nonexistent shadow file)",
                  "crm_shadow --delete nonexistent_shadow",
@@ -2143,18 +2143,18 @@ class CrmShadowRegressionTest(RegressionTest):
         delete_6_tests = [
             # Delete an active shadow instance when the CIB file is missing
             Test("Delete shadow instance (nonexistent CIB file)",
-                 "crm_shadow --delete {shadow}",
+                 f"crm_shadow --delete {SHADOW_NAME}",
                  expected_rc=ExitStatus.USAGE),
             Test("Delete shadow instance (nonexistent CIB file) (force)",
-                 "crm_shadow --delete {shadow} --force"),
+                 f"crm_shadow --delete {SHADOW_NAME} --force"),
         ]
 
         delete_7_tests = [
             ValidatingTest("Delete shadow instance (nonexistent CIB file)",
-                           "crm_shadow --delete {shadow} --output-as=xml",
+                           f"crm_shadow --delete {SHADOW_NAME} --output-as=xml",
                            expected_rc=ExitStatus.USAGE),
             ValidatingTest("Delete shadow instance (nonexistent CIB file) (force)",
-                           "crm_shadow --delete {shadow} --force --output-as=xml"),
+                           f"crm_shadow --delete {SHADOW_NAME} --force --output-as=xml"),
         ]
 
         create_1_tests = [
@@ -2162,13 +2162,13 @@ class CrmShadowRegressionTest(RegressionTest):
             make_test_group("Create copied shadow instance (no active instance)",
                             "crm_shadow --create {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force",
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": None}),
             # Create new shadow instance based on active CIB with other instance active
             make_test_group("Create copied shadow instance (mismatch)",
                             "crm_shadow --create {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force",
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": "nonexistent_shadow"}),
             # Create new shadow instance based on CIB (shadow file already exists)
             make_test_group("Create copied shadow instance (file already exists)",
@@ -2183,7 +2183,7 @@ class CrmShadowRegressionTest(RegressionTest):
                             "crm_shadow --create {shadow} --batch --force {fmt}",
                             [Test, ValidatingTest],
                             expected_rc=ExitStatus.NOSUCH,
-                            setup="crm_shadow --delete {shadow} --force",
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"}),
         ]
 
@@ -2192,24 +2192,24 @@ class CrmShadowRegressionTest(RegressionTest):
             make_test_group("Create empty shadow instance",
                             "crm_shadow --create-empty {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force"),
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
             # Create empty shadow instance with no active instance
             make_test_group("Create empty shadow instance (no active instance)",
                             "crm_shadow --create-empty {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force",
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": None}),
             # Create empty shadow instance with other instance active
             make_test_group("Create empty shadow instance (mismatch)",
                             "crm_shadow --create-empty {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force",
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": "nonexistent_shadow"}),
             # Create empty shadow instance when the CIB file is missing
             make_test_group("Create empty shadow instance (nonexistent CIB file)",
                             "crm_shadow --create-empty {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force",
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"}),
             # Create empty shadow instance (shadow file already exists)
             make_test_group("Create empty shadow instance (file already exists)",
@@ -2234,10 +2234,10 @@ class CrmShadowRegressionTest(RegressionTest):
 
         reset_1_tests = [
             Test("Resetting active shadow instance to active CIB requires force",
-                 "crm_shadow --reset {shadow} --batch",
+                 f"crm_shadow --reset {SHADOW_NAME} --batch",
                  expected_rc=ExitStatus.USAGE),
             Test("Reset active shadow instance to active CIB",
-                 "crm_shadow --reset {shadow} --batch --force"),
+                 f"crm_shadow --reset {SHADOW_NAME} --batch --force"),
             Test("Active shadow instance no different from active CIB after reset",
                  "crm_shadow --diff"),
             Test("Active shadow instance differs from active CIB after change",
@@ -2246,7 +2246,7 @@ class CrmShadowRegressionTest(RegressionTest):
                  expected_rc=ExitStatus.ERROR),
 
             ValidatingTest("Reset active shadow instance to active CIB",
-                           "crm_shadow --reset {shadow} --batch --force --output-as=xml"),
+                           f"crm_shadow --reset {SHADOW_NAME} --batch --force --output-as=xml"),
             ValidatingTest("Active shadow instance no different from active CIB after reset",
                            "crm_shadow --diff --output-as=xml"),
             ValidatingTest("Active shadow instance differs from active CIB after change",
@@ -2257,7 +2257,7 @@ class CrmShadowRegressionTest(RegressionTest):
             make_test_group("Reset shadow instance to active CIB with nonexistent shadow file",
                             "crm_shadow --reset {shadow} --batch --force {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force"),
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
             Test("Active shadow instance no different from active CIB after force-reset",
                  "crm_shadow --diff"),
         ]
@@ -2295,7 +2295,7 @@ class CrmShadowRegressionTest(RegressionTest):
                                 "crm_shadow --switch {shadow} --batch --force {fmt}",
                                 [Test, ValidatingTest],
                                 expected_rc=ExitStatus.NOSUCH),
-            ], setup="crm_shadow --delete {shadow} --force"),
+            ], setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
         ]
 
         return no_instance_tests + [
