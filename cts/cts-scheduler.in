@@ -36,7 +36,6 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
-DESC = """Regression tests for Pacemaker's scheduler"""
 
 class SchedulerTest:
     def __init__(self, name, desc, args=None):
@@ -1234,7 +1233,7 @@ class CtsScheduler:
     def _parse_args(self, argv):
         """ Parse command-line arguments """
 
-        parser = argparse.ArgumentParser(description=DESC)
+        parser = argparse.ArgumentParser(description="Regression tests for Pacemaker's scheduler")
 
         parser.add_argument('-V', '--verbose', action='count',
                             help='Display any differences from expected output')
