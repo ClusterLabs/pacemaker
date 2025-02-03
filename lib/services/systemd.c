@@ -104,12 +104,14 @@ systemd_send_recv(DBusMessage *msg, DBusError *error, int timeout)
 static DBusMessage *
 systemd_call_simple_method(const char *method)
 {
-    DBusMessage *msg = systemd_new_method(method);
+    DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
     DBusError error;
 
     /* Don't call systemd_init() here, because that calls this */
     CRM_CHECK(systemd_proxy, return NULL);
+
+    msg = systemd_new_method(method);
 
     if (msg == NULL) {
         crm_err("Could not create message to send %s to systemd", method);
