@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 
+#include <stdbool.h>
 #include <sys/stat.h>
 #include <gio/gio.h>
 #include <services_private.h>
@@ -74,6 +75,32 @@ systemd_new_method(const char *method)
  */
 
 static DBusConnection* systemd_proxy = NULL;
+static svc__systemd_callback_t systemd_callback = NULL;
+static void *systemd_callback_data = NULL;
+
+/*!
+ * \internal
+ * \brief Register a function to be called when a systemd job completes
+ *
+ * If the application registers a callback using this function, the callback
+ * will be called whenever a systemd JobRemoved signal is received. This allows
+ * called whenever a systemd JobRemoved signal is received. This allows
+ * applications to be notified when a systemd action completes, rather than just
+ * when it is initiated.
+ *
+ * \param[in] callback   Function to call when jobs complete
+ * \param[in] user_data  Data to pass to the callback
+ *
+ * \note The callback must be registered before any other systemd function
+ *       is called (i.e. at start-up is best).
+ */
+void
+services__set_systemd_callback(svc__systemd_callback_t callback,
+                               void *user_data)
+{
+    systemd_callback = callback;
+    systemd_callback_data = user_data;
+}
 
 static inline DBusPendingCall *
 systemd_send(DBusMessage *msg,
@@ -133,7 +160,84 @@ systemd_call_simple_method(const char *method)
     return reply;
 }
 
-static gboolean
+static DBusHandlerResult
+filter_systemd_signals(DBusConnection *connection, DBusMessage *message,
+                       void *user_data)
+{
+    const char *bus_path, *unit_name, *result;
+    uint32_t job_id;
+    DBusError error;
+
+    CRM_CHECK((connection != NULL) && (message != NULL),
+              return DBUS_HANDLER_RESULT_NOT_YET_HANDLED);
+
+    crm_trace("Checking DBus message %s.%s() on %s",
+              dbus_message_get_interface(message),
+              dbus_message_get_member(message),
+              dbus_message_get_path(message));
+
+    if (!dbus_message_is_signal(message, BUS_NAME_MANAGER, "JobRemoved")) {
+        return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    }
+
+    dbus_error_init(&error);
+    if (!dbus_message_get_args(message, &error,
+                               DBUS_TYPE_UINT32, &job_id,
+                               DBUS_TYPE_OBJECT_PATH, &bus_path,
+                               DBUS_TYPE_STRING, &unit_name,
+                               DBUS_TYPE_STRING, &result,
+                               DBUS_TYPE_INVALID)) {
+        crm_err("Could not interpret systemd DBus signal: %s" QB_XS " (%s)",
+                error.message, error.name);
+    } else {
+        crm_trace("Dispatching JobRemoved() with ID %d for %s with result %s",
+                  job_id, unit_name, result);
+        systemd_callback((int) job_id, bus_path, unit_name, result, user_data);
+    }
+
+    dbus_error_free(&error);
+
+    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+}
+
+static int
+subscribe_to_signals(void)
+{
+    DBusMessage *reply = NULL;
+    DBusError error;
+
+    /* Tell DBus to report signals from systemd */
+    dbus_error_init(&error);
+    dbus_bus_add_match(systemd_proxy,
+                       "type='signal',sender='" BUS_NAME "',interface='"
+                       BUS_NAME_MANAGER "',path='" BUS_PATH "'",
+                       &error);
+
+    if (dbus_error_is_set(&error)) {
+        crm_err("Could not listen for systemd DBus signals: %s " QB_XS " (%s)",
+                error.message, error.name);
+        return ECOMM;
+    }
+
+    /* Set a message filter to look for signals from systemd */
+    if (!dbus_connection_add_filter(systemd_proxy, filter_systemd_signals,
+                                    NULL, NULL)) {
+        crm_err("Could not add DBus filter for systemd signals");
+        return ECOMM;
+    }
+
+    /* Tell systemd to issue signals */
+    reply = systemd_call_simple_method("Subscribe");
+    if (reply == NULL) {
+        crm_err("Could not subscribe to systemd DBus signals");
+        return ECOMM;
+    }
+
+    dbus_message_unref(reply);
+    return pcmk_rc_ok;
+}
+
+static bool
 systemd_init(void)
 {
     static int need_init = 1;
@@ -150,11 +254,14 @@ systemd_init(void)
     if (need_init) {
         need_init = 0;
         systemd_proxy = pcmk_dbus_connect();
+
+        if (subscribe_to_signals() != pcmk_rc_ok) {
+            pcmk_dbus_disconnect(systemd_proxy);
+            systemd_proxy = NULL;
+        }
     }
-    if (systemd_proxy == NULL) {
-        return FALSE;
-    }
-    return TRUE;
+
+    return (systemd_proxy != NULL);
 }
 
 static inline char *
@@ -467,7 +574,12 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
                                                 pcmk__str_none));
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name,
                                             DBUS_TYPE_INVALID));
-    free(name);
+
+    if (op != NULL) {
+        op->opaque->unit_name = name;
+    } else {
+        free(name);
+    }
 
     if ((op == NULL) || op->synchronous) {
         // For synchronous ops, wait for a reply and extract the result
@@ -548,7 +660,7 @@ systemd_unit_listall(void)
     DBusMessageIter elem;
     DBusMessage *reply = NULL;
 
-    if (systemd_init() == FALSE) {
+    if (!systemd_init()) {
         return NULL;
     }
 
@@ -789,9 +901,26 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
 
-    // Determine result and finalize action
+    /* Determine result and finalize action.
+     *
+     * Start and stop actions must be finalized by the registerd systemd callback
+     * (for instance, handle_systemd_job_complete in the executor) to allow for
+     * some place to react to the finished action before finalizing it and cleaning
+     * it up.
+     *
+     * HOWEVER, if the operation failed with NOT_INSTALLED, we need to finalize it
+     * right now too.  We'll never receive a JobRemoved() signal for that case, so
+     * the callback will never be called.  Additionally since we set up an override
+     * file, LoadUnit will always succeed so we can't finalize based on that
+     * failing.  We have to do this here.
+     */
     process_unit_method_reply(reply, op);
-    services__finalize_async_op(op);
+
+    if (!pcmk__strcase_any_of(op->action, PCMK_ACTION_START, PCMK_ACTION_STOP, NULL) ||
+        op->status == PCMK_EXEC_NOT_INSTALLED) {
+        services__finalize_async_op(op);
+    }
+
     if (reply != NULL) {
         dbus_message_unref(reply);
     }
@@ -1110,8 +1239,12 @@ services__execute_systemd(svc_action_t *op)
                          "Bug in service library");
 
     if (invoke_unit_by_name(op->agent, op, NULL) == pcmk_rc_ok) {
-        op->opaque->timerid = pcmk__create_timer(op->timeout + 5000,
-                                                 systemd_timeout_callback, op);
+        if (!pcmk__strcase_any_of(op->action, PCMK_ACTION_START,
+                                  PCMK_ACTION_STOP, NULL)) {
+            op->opaque->timerid = pcmk__create_timer(op->timeout + 5000,
+                                                     systemd_timeout_callback, op);
+        }
+
         services_add_inflight_op(op);
         return pcmk_rc_ok;
     }
@@ -1122,4 +1255,14 @@ done:
     } else {
         return services__finalize_async_op(op);
     }
+}
+
+const char *
+services__systemd_unit_name(svc_action_t *action)
+{
+    if (action == NULL || action->opaque == NULL) {
+        return NULL;
+    }
+
+    return action->opaque->unit_name;
 }

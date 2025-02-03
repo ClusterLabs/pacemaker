@@ -1,6 +1,6 @@
 /*
  * Copyright 2010-2011 Red Hat, Inc.
- * Later changes copyright 2012-2024 the Pacemaker project contributors
+ * Later changes copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -49,6 +49,9 @@ struct svc_action_private_s {
     DBusPendingCall* pending;
     unsigned timerid;
 #endif
+#if SUPPORT_SYSTEMD
+    char *unit_name;
+#endif
 };
 
 G_GNUC_INTERNAL
@@ -69,9 +72,6 @@ gboolean cancel_recurring_action(svc_action_t * op);
 
 G_GNUC_INTERNAL
 gboolean recurring_action_timer(gpointer data);
-
-G_GNUC_INTERNAL
-int services__finalize_async_op(svc_action_t *op);
 
 G_GNUC_INTERNAL
 int services__generic_error(const svc_action_t *op);

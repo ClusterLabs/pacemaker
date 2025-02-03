@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,6 +15,28 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * \brief Callback function type for systemd job completion
+ *
+ * Applications may register a function to be called when a systemd job
+ * completes. The callback's arguments are:
+ *
+ * \param[in] job_id    Systemd job ID
+ * \param[in] bus_path  Systemd DBus path
+ * \param[in] unit_name Systemd unit name
+ * \param[in] result    One of:
+ *                      done - job executed successfully
+ *                      canceled - job was canceled before finishing
+ *                      timeout - timeout was reached before job finished
+ *                      failed - job failed
+ *                      dependency - job depends on another job that failed
+ *                      skipped - job doesn't apply to unit's current state
+ * \param[in] user_data Data supplied when the callback was registered
+ */
+typedef void (*svc__systemd_callback_t)(int job_id, const char *bus_path,
+                                        const char *unit_name, const char *result,
+                                        void *user_data);
 
 /*!
  * \brief Create a new resource action
@@ -45,6 +67,9 @@ svc_action_t *services__create_resource_action(const char *name,
                                                int timeout, GHashTable *params,
                                                enum svc_action_flags flags);
 
+void services__set_systemd_callback(svc__systemd_callback_t callback,
+                                    void *user_data);
+
 const char *services__exit_reason(const svc_action_t *action);
 char *services__grab_stdout(svc_action_t *action);
 char *services__grab_stderr(svc_action_t *action);
@@ -56,6 +81,12 @@ void services__set_result(svc_action_t *action, int agent_status,
 void services__format_result(svc_action_t *action, int agent_status,
                              enum pcmk_exec_status exec_status,
                              const char *format, ...) G_GNUC_PRINTF(4, 5);
+
+int services__finalize_async_op(svc_action_t *op);
+
+const char *services__systemd_unit_name(svc_action_t *action);
+
+svc_action_t *services__systemd_get_inflight_op(const char *unit_name);
 
 #ifdef __cplusplus
 }

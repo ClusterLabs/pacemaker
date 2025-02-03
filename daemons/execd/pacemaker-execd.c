@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,7 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/services.h>
+#include <crm/services_internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
@@ -545,6 +546,10 @@ main(int argc, char **argv, char **envp)
         goto done;
     }
     ipc_proxy_init();
+#endif
+
+#if SUPPORT_SYSTEMD
+   services__set_systemd_callback(handle_systemd_job_complete, NULL);
 #endif
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
