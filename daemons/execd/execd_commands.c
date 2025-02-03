@@ -934,13 +934,14 @@ action_complete(svc_action_t * action)
             int time_left = time(NULL) - (cmd->epoch_rcchange + (cmd->timeout_orig/1000));
 
             if (time_left >= 0) {
-                crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout (first pending notification=%s timeout=%ds)",
-                    cmd->rsc_id, cmd->action,
-                    cmd->result.exit_status, pcmk__trim(ctime(&cmd->epoch_rcchange)), cmd->timeout_orig);
+                crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout "
+                           "(first pending notification=%s timeout=%ds)",
+                           cmd->rsc_id, cmd->action, cmd->result.exit_status,
+                           pcmk__trim(ctime(&cmd->epoch_rcchange)), cmd->timeout_orig);
                 pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                     PCMK_EXEC_TIMEOUT,
-                     "Investigate reason for timeout, and adjust "
-                     "configured operation timeout if necessary");
+                                 PCMK_EXEC_TIMEOUT,
+                                 "Investigate reason for timeout, and adjust "
+                                 "configured operation timeout if necessary");
                 cmd_original_times(cmd);
             }
         }
