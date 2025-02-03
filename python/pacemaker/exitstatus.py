@@ -1,7 +1,7 @@
 """A module providing constants relating to why a process or function exited."""
 
 __all__ = ["ExitStatus"]
-__copyright__ = "Copyright 2023-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2023-2025 the Pacemaker project contributors"
 __license__ = "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)"
 
 from enum import IntEnum, unique
@@ -57,6 +57,7 @@ class ExitStatus(IntEnum):
     NOT_YET_IN_EFFECT = 111
     INDETERMINATE = 112
     UNSATISFIED = 113
+    NO_DC = 114
     TIMEOUT = 124
     DEGRADED = 190
     DEGRADED_PROMOTED = 191
