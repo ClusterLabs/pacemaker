@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1073,8 +1073,7 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     }
 
     /* Now delete the copy in the CIB */
-    controld_delete_node_state(lrm_state->node_name, controld_section_lrm,
-                               cib_none);
+    controld_delete_node_history(lrm_state->node_name, false, cib_none);
 }
 
 /*!

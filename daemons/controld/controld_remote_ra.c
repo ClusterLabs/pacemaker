@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -235,36 +235,18 @@ should_purge_attributes(pcmk__node_status_t *node)
     return true;
 }
 
-static enum controld_section_e
-section_to_delete(bool purge)
-{
-    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
-        if (purge) {
-            return controld_section_all_unlocked;
-        } else {
-            return controld_section_lrm_unlocked;
-        }
-    } else {
-        if (purge) {
-            return controld_section_all;
-        } else {
-            return controld_section_lrm;
-        }
-    }
-}
-
 static void
 purge_remote_node_attrs(int call_opt, pcmk__node_status_t *node)
 {
-    bool purge = should_purge_attributes(node);
-    enum controld_section_e section = section_to_delete(purge);
+    const bool unlocked_only = pcmk_is_set(controld_globals.flags,
+                                           controld_shutdown_lock_enabled);
 
-    /* Purge node from attrd's memory */
-    if (purge) {
-        update_attrd_remote_node_removed(node->name, NULL);
+    // Purge node's transient attributes (from attribute manager and CIB)
+    if (should_purge_attributes(node)) {
+        controld_purge_node_attrs(node->name, true);
     }
 
-    controld_delete_node_state(node->name, section, call_opt);
+    controld_delete_node_history(node->name, unlocked_only, call_opt);
 }
 
 /*!
@@ -365,18 +347,15 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     int call_opt = crmd_cib_smart_opt();
     pcmk__node_status_t *node = NULL;
 
-    /* Purge node from attrd's memory */
-    update_attrd_remote_node_removed(node_name, NULL);
+    // Purge node's transient attributes (from attribute manager and CIB)
+    controld_purge_node_attrs(node_name, true);
 
-    /* Normally, only node attributes should be erased, and the resource history
-     * should be kept until the node comes back up. However, after a successful
-     * fence, we want to clear the history as well, so we don't think resources
-     * are still running on the node.
+    /* Normally, the resource history should be kept until the node comes back
+     * up. However, after a successful fence, clear the history so we don't
+     * think resources are still running on the node.
      */
     if (opts == DOWN_ERASE_LRM) {
-        controld_delete_node_state(node_name, controld_section_all, call_opt);
-    } else {
-        controld_delete_node_state(node_name, controld_section_attrs, call_opt);
+        controld_delete_node_history(node_name, false, call_opt);
     }
 
     /* Ensure node is in the remote peer cache with lost state */
