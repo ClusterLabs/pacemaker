@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2024 the Pacemaker project contributors
+ * Copyright 2014-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -36,8 +36,7 @@ typedef struct {
 
 void pcmk__unpack_constraints(pcmk_scheduler_t *scheduler);
 
-void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
-                            pcmk_scheduler_t *scheduler);
+void pcmk__schedule_actions(pcmk_scheduler_t *scheduler);
 
 GList *pcmk__copy_node_list(const GList *list, bool reset);
 

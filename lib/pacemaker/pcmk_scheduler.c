@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -732,41 +732,14 @@ log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
 
 /*!
  * \internal
- * \brief Unpack the CIB for scheduling
- *
- * \param[in,out] cib        CIB XML to unpack (may be NULL if already unpacked)
- * \param[in]     flags      Scheduler flags to set in addition to defaults
- * \param[in,out] scheduler  Scheduler data
- */
-static void
-unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
-{
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_have_status)) {
-        crm_trace("Reusing previously calculated cluster status");
-        pcmk__set_scheduler_flags(scheduler, flags);
-        return;
-    }
-    pcmk__assert(cib != NULL);
-    crm_trace("Calculating cluster status");
-    pcmk_reset_scheduler(scheduler);
-    pcmk__set_scheduler_flags(scheduler, flags);
-    scheduler->input = cib;
-    cluster_status(scheduler); // Sets pcmk__sched_have_status
-}
-
-/*!
- * \internal
  * \brief Run the scheduler for a given CIB
  *
- * \param[in,out] cib        CIB XML to use as scheduler input
- * \param[in]     flags      Scheduler flags to set in addition to defaults
  * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
-                       pcmk_scheduler_t *scheduler)
+pcmk__schedule_actions(pcmk_scheduler_t *scheduler)
 {
-    unpack_cib(cib, flags, scheduler);
+    cluster_status(scheduler);
     pcmk__set_assignment_methods(scheduler);
     pcmk__apply_node_health(scheduler);
     pcmk__unpack_constraints(scheduler);

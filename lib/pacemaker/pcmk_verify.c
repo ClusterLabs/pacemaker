@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -49,9 +49,17 @@ int
 pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
              xmlNode **cib_object)
 {
+    /* @TODO The scheduler argument is needed only for pcmk__config_has_error
+     * and pcmk__config_has_warning. When we reset the scheduler, we reset those
+     * global variables. Otherwise, we could drop the argument and create our
+     * own scheduler object locally. Then we could be confident that it has no
+     * relevant state.
+     *
+     * We should improve this, possibly with an "enum pcmk__fail_type" pointer
+     * argument or similar.
+     */
     int rc = pcmk_rc_ok;
     xmlNode *status = NULL;
-    xmlNode *cib_object_copy = NULL;
 
     pcmk__assert(cib_object != NULL);
 
@@ -95,20 +103,16 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
      * example, action configuration), so we aren't necessarily checking those.
      */
     if (*cib_object != NULL) {
-        unsigned long long flags = pcmk__sched_no_counts;
+        scheduler->input = *cib_object;
 
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
         if (status == NULL) {
             // No status available, so do minimal checks
-            flags |= pcmk__sched_validate_only;
+            pcmk__set_scheduler_flags(scheduler, pcmk__sched_validate_only);
         }
-        cib_object_copy = pcmk__xml_copy(NULL, *cib_object);
+        pcmk__schedule_actions(scheduler);
 
-        /* The scheduler takes ownership of the XML object and potentially
-         * frees it later. We want the caller of pcmk__verify to retain
-         * ownership of the passed-in XML object, hence we pass in a copy
-         * to the scheduler.
-         */
-        pcmk__schedule_actions(cib_object_copy, flags, scheduler);
+        scheduler->input = NULL;
     }
 
 verify_done:

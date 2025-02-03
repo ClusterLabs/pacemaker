@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,16 +28,16 @@ extern "C" {
  *        CIB file in a given directory, printing the profiling timings for
  *        each.
  *
- * \note \p scheduler->priv->out must have been set to a valid \p pcmk__output_t
- *       object before this function is called.
+ * \param[in,out] out       Output object
+ * \param[in]     flags     Group of <tt>enum pcmk_sim_flags</tt>
+ * \param[in]     dir       Directory full of CIB files to be profiled
+ * \param[in]     repeat    Number of times to run on each input file
+ * \param[in]     use_date  Date to set the cluster's time to (can be \c NULL)
  *
- * \param[in]     dir        A directory full of CIB files to be profiled
- * \param[in]     repeat     Number of times to run on each input file
- * \param[in,out] scheduler  Scheduler data
- * \param[in]     use_date   The date to set the cluster's time to (may be NULL)
+ * \return Standard Pacemaker return code
  */
-void pcmk__profile_dir(const char *dir, long long repeat,
-                       pcmk_scheduler_t *scheduler, const char *use_date);
+int pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
+                      unsigned int repeat, const char *use_date);
 
 /*!
  * \internal
@@ -67,8 +67,7 @@ enum pcmk__graph_status pcmk__simulate_transition(pcmk_scheduler_t *scheduler,
  * \param[in]     injections   A structure containing cluster events
  *                             (node up/down, tickets, injected operations)
  *                             and related data
- * \param[in]     flags        A bitfield of \p pcmk_sim_flags to modify
- *                             operation of the simulation
+ * \param[in]     flags        Group of <tt>enum pcmk_sim_flags</tt>
  * \param[in]     section_opts Which portions of the cluster status output
  *                             should be displayed?
  * \param[in]     use_date     The date to set the cluster's time to
@@ -85,7 +84,7 @@ enum pcmk__graph_status pcmk__simulate_transition(pcmk_scheduler_t *scheduler,
  * \return Standard Pacemaker return code
  */
 int pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
-                   const pcmk_injections_t *injections, unsigned int flags,
+                   const pcmk_injections_t *injections, uint32_t flags,
                    uint32_t section_opts, const char *use_date,
                    const char *input_file, const char *graph_file,
                    const char *dot_file);

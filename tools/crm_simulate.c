@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdint.h>
+#include <stdint.h>                         // uint32_t
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -40,9 +40,9 @@ struct {
     char *graph_file;
     gchar *input_file;
     pcmk_injections_t *injections;
-    unsigned int flags;
+    uint32_t flags;
     gchar *output_file;
-    long long repeat;
+    gint repeat;
     gboolean store;
     gchar *test_dir;
     char *use_date;
@@ -510,26 +510,18 @@ main(int argc, char **argv)
         options.flags |= pcmk_sim_verbose;
     }
 
+    if (options.test_dir != NULL) {
+        rc = pcmk__profile_dir(out, options.flags, options.test_dir,
+                               (unsigned int) QB_MAX(options.repeat, 0),
+                               options.use_date);
+        goto done;
+    }
+
     scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         rc = ENOMEM;
         g_set_error(&error, PCMK__RC_ERROR, rc,
                     "Could not allocate scheduler data");
-        goto done;
-    }
-
-    if (pcmk_is_set(options.flags, pcmk_sim_show_scores)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk__sched_output_scores);
-    }
-    if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
-        pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
-    }
-
-    if (options.test_dir != NULL) {
-        scheduler->priv->out = out;
-        pcmk__profile_dir(options.test_dir, options.repeat, scheduler,
-                          options.use_date);
-        rc = pcmk_rc_ok;
         goto done;
     }
 
@@ -560,9 +552,7 @@ main(int argc, char **argv)
     pcmk__free_arg_context(context);
     g_strfreev(processed_args);
 
-    if (scheduler != NULL) {
-        pcmk_free_scheduler(scheduler);
-    }
+    pcmk_free_scheduler(scheduler);
 
     fflush(stderr);
 

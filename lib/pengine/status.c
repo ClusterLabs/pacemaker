@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -59,11 +59,23 @@ check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
 gboolean
 cluster_status(pcmk_scheduler_t * scheduler)
 {
+    // @TODO Deprecate, replacing with a safer public alternative if necessary
     const char *new_version = NULL;
     xmlNode *section = NULL;
 
     if ((scheduler == NULL) || (scheduler->input == NULL)) {
         return FALSE;
+    }
+
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_have_status)) {
+        /* cluster_status() has already been called since the last time the
+         * scheduler was reset. Unpacking the input CIB again would cause
+         * duplication within the scheduler object's data structures.
+         *
+         * The correct return code here is not obvious. Nothing internal checks
+         * the code, however.
+         */
+        return TRUE;
     }
 
     new_version = crm_element_value(scheduler->input, PCMK_XA_CRM_FEATURE_SET);
@@ -76,9 +88,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     crm_trace("Beginning unpack");
 
-    if (scheduler->priv->failed != NULL) {
-        pcmk__xml_free(scheduler->priv->failed);
-    }
+    pcmk__xml_free(scheduler->priv->failed);
     scheduler->priv->failed = pcmk__xe_create(NULL, "failed-ops");
 
     if (scheduler->priv->now == NULL) {
