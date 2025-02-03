@@ -30,9 +30,6 @@
 #define SUMMARY "daemon for coordinating a Pacemaker cluster's response "   \
                 "to events"
 
-_Noreturn void crmd_init(void);
-extern void init_dotfile(void);
-
 controld_globals_t controld_globals = {
     // Automatic initialization to 0, false, or NULL is fine for most members
     .fsa_state = S_STARTING,
@@ -73,6 +70,7 @@ main(int argc, char **argv)
     int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
     bool initialize = true;
+    enum crmd_fsa_state state;
 
     crm_ipc_t *old_instance = NULL;
 
@@ -175,52 +173,35 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
+    // We no longer need output
     pcmk__output_and_clear_error(&error, out);
-
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
     pcmk__unregister_formats();
 
-    if ((exit_code == CRM_EX_OK) && initialize) {
-        // Does not return
-        crmd_init();
+    // Exit on error or command-line queries
+    if ((exit_code != CRM_EX_OK) || !initialize) {
+        crm_exit(exit_code);
     }
-    crm_exit(exit_code);
-}
 
-void
-crmd_init(void)
-{
-    crm_exit_t exit_code = CRM_EX_OK;
-    enum crmd_fsa_state state;
-
-    init_dotfile();
+    // Initialize FSA
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
-
     pcmk__cluster_init_node_caches();
     state = s_crmd_fsa(C_STARTUP);
-
-    if (state == S_PENDING || state == S_STARTING) {
-        /* Create the mainloop and run it... */
-        crm_trace("Starting %s's mainloop", crm_system_name);
-        controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
-        g_main_loop_run(controld_globals.mainloop);
-        if (pcmk_is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
-            crm_info("Inhibiting automated respawn");
-            exit_code = CRM_EX_FATAL;
-        }
-
-    } else {
-        crm_err("Startup of %s failed.  Current state: %s",
+    if ((state != S_PENDING) || (state != S_STARTING)) {
+        crm_err("Controller startup failed " QB_XS " FSA state %s",
                 crm_system_name, fsa_state2string(state));
-        exit_code = CRM_EX_ERROR;
+        crmd_fast_exit(CRM_EX_ERROR); // Does not return
     }
 
-    crm_info("%s[%lu] exiting with status %d (%s)",
-             crm_system_name, (unsigned long) getpid(), exit_code,
-             crm_exit_str(exit_code));
-
+    // Run mainloop
+    controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(controld_globals.mainloop);
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
+        crm_info("Inhibiting automated respawn");
+        exit_code = CRM_EX_FATAL;
+    }
     crmd_fast_exit(exit_code);
 }

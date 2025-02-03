@@ -372,10 +372,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     pcmk__clear_graph_action_flags(action, pcmk__graph_action_executed);
     on_node = crm_element_value(action->xml, PCMK__META_ON_NODE);
 
-    CRM_CHECK(!pcmk__str_empty(on_node),
-              crm_err("Corrupted command(id=%s) %s: no node",
-                      pcmk__xe_id(action->xml), pcmk__s(task, "without task"));
-              return pcmk_rc_node_unknown);
+    CRM_CHECK(!pcmk__str_empty(on_node), return pcmk_rc_node_unknown);
 
     rsc_op = action->xml;
     task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
@@ -399,10 +396,6 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     if (crm_is_true(value)) {
         no_wait = TRUE;
     }
-
-    crm_notice("Initiating %s operation %s%s on %s%s " QB_XS " action %d",
-               task, task_uuid, (is_local? " locally" : ""), on_node,
-               (no_wait? " without waiting" : ""), action->id);
 
     cmd = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_TENGINE, router_node,
                             CRM_SYSTEM_LRMD, CRM_OP_INVOKE_LRM, rsc_op);
@@ -432,6 +425,10 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             pcmk__get_node(0, router_node, NULL,
                            pcmk__node_search_cluster_member);
 
+        crm_notice("Asking %s to execute %s on %s%s "
+                   QB_XS " transition %s action %d",
+                   router_node, task_uuid, on_node,
+                   (no_wait? " without waiting" : ""), counter, action->id);
         rc = pcmk__cluster_send_message(node, pcmk_ipc_execd, cmd);
     }
 
