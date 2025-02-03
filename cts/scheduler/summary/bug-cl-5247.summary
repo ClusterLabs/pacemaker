@@ -62,8 +62,8 @@ Executing Cluster Transition:
   * Resource action: vip-master      monitor=10000 on pgsr01
   * Resource action: vip-rep         monitor=10000 on pgsr01
   * Resource action: pgsql           notify on pgsr01
-  * Pseudo action:   msPostgresql_confirmed-post_notify_stopped_0
   * Pseudo action:   pgsql_notified_0
+  * Pseudo action:   msPostgresql_confirmed-post_notify_stopped_0
   * Resource action: pgsql           monitor=9000 on pgsr01
 Using the original execution date of: 2015-08-12 02:53:40Z
 

@@ -18,8 +18,8 @@ Transition Summary:
   * Move       resource_nfsserver_single   ( power720-2 -> power720-1 )
 
 Executing Cluster Transition:
-  * Resource action: export_home_ocfs2:0 monitor on power720-1
   * Resource action: export_home_ocfs2:1 monitor on power720-1
+  * Resource action: export_home_ocfs2:0 monitor on power720-1
   * Resource action: export_home_ocfs2:2 monitor on power720-1
   * Pseudo action:   export_home_ocfs2_clone_set_pre_notify_start_0
   * Pseudo action:   group_nfs_stop_0
@@ -34,8 +34,8 @@ Executing Cluster Transition:
   * Pseudo action:   export_home_ocfs2_clone_set_running_0
   * Pseudo action:   group_nfs_stopped_0
   * Pseudo action:   export_home_ocfs2_clone_set_post_notify_running_0
-  * Resource action: export_home_ocfs2:0 notify on power720-1
   * Resource action: export_home_ocfs2:1 notify on power720-2
+  * Resource action: export_home_ocfs2:0 notify on power720-1
   * Pseudo action:   export_home_ocfs2_clone_set_confirmed-post_notify_running_0
   * Pseudo action:   group_nfs_start_0
   * Resource action: resource_ipaddr1_single start on power720-1
