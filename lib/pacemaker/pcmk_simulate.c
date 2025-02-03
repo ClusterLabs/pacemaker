@@ -573,8 +573,15 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     uuid = crm_element_value_copy(action->xml, PCMK__META_ON_NODE_UUID);
     cib_node = pcmk__inject_node(fake_cib, node,
                                  ((router_node == NULL)? uuid: node));
+    if (cib_node == NULL) {
+        crm_err("Could not simulate action %d on unknown node %s",
+                action->id, node);
+        free(node);
+        free(uuid);
+        return EINVAL;
+    }
+
     free(uuid);
-    pcmk__assert(cib_node != NULL);
 
     // Add a history entry for the action
     cib_resource = pcmk__inject_resource_history(out, cib_node, resource,
@@ -714,6 +721,12 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         // Set node state to offline
         xmlNode *cib_node = pcmk__inject_node_state_change(fake_cib, target,
                                                            false);
+        if (cib_node == NULL) {
+            out->err(out, "Could not simulate fencing action %d on unknown node %s",
+                     action->id, target);
+            free(target);
+            return -EINVAL;
+        }
 
         pcmk__assert(cib_node != NULL);
         crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
