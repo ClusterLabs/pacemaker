@@ -285,9 +285,10 @@ class FileAudit(ClusterAudit):
         (_, lsout) = self._cm.rsh(node, "coredumpctl --no-legend --no-pager")
         return self._output_has_core(lsout, node)
 
-    def _find_core_on_fs(self, node, path):
-        """Check for core dumps on the given node, under the given path."""
-        (_, lsout) = self._cm.rsh(node, f"ls -al {path} | grep core.[0-9]", verbose=1)
+    def _find_core_on_fs(self, node, paths):
+        """Check for core dumps on the given node, under any of the given paths."""
+        (_, lsout) = self._cm.rsh(node, f"ls -al {' '.join(paths)} | grep core.[0-9]",
+                                  verbose=1)
         return self._output_has_core(lsout, node)
 
     def __call__(self):
@@ -312,11 +313,8 @@ class FileAudit(ClusterAudit):
             #
             # To handle the last two cases, check the other filesystem locations.
             if not found:
-                found = self._find_core_on_fs(node, "/var/lib/pacemaker/cores/*")
-                if found:
-                    passed = False
-
-                found = self._find_core_on_fs(node, "/var/lib/corosync")
+                found = self._find_core_on_fs(node, ["/var/lib/pacemaker/cores/*",
+                                                     "/var/lib/corosync"])
                 if found:
                     passed = False
 
