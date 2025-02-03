@@ -294,12 +294,11 @@ pcmk_dbus_connect(void)
 void
 pcmk_dbus_disconnect(DBusConnection *connection)
 {
-    /* Per the DBus documentation, connections created with
-     * dbus_connection_open() are owned by libdbus and should never be closed.
-     *
-     * @TODO Should we call dbus_connection_unref() here?
+    /* DBus connections created with dbus_connection_open() are owned by
+     * libdbus so we shouldn't close them.  However, we should unref the
+     * connection so libdbus does eventually clean it up.
      */
-    return;
+    dbus_connection_unref(connection);
 }
 
 // Custom DBus error names to use
