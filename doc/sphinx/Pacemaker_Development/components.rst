@@ -32,14 +32,14 @@ Most daemons track their cluster peers using Corosync's membership and
 ensures they are ready to be assigned tasks. Joining proceeds through a series
 of phases referred to as the `join sequence` or `join process`.
 
-A node's current join phase is tracked by the ``join`` member of ``crm_node_t``
-(used in the peer cache). It is an ``enum crm_join_phase`` that (ideally)
+A node's current join phase is tracked by the ``user_data`` member of ``pcmk__node_status_t``
+(used in the peer cache). It is an ``enum controld_join_phase`` that (ideally)
 progresses from the DC's point of view as follows:
 
-* The node initially starts at ``crm_join_none``
+* The node initially starts at ``controld_join_none``
 
 * The DC sends the node a `join offer` (``CRM_OP_JOIN_OFFER``), and the node
-  proceeds to ``crm_join_welcomed``. This can happen in three ways:
+  proceeds to ``controld_join_welcomed``. This can happen in three ways:
   
   * The joining node will send a `join announce` (``CRM_OP_JOIN_ANNOUNCE``) at
     its controller startup, and the DC will reply to that with a join offer.
@@ -58,18 +58,18 @@ progresses from the DC's point of view as follows:
 * The node responds to join offers with a `join request`
   (``CRM_OP_JOIN_REQUEST``, via ``do_cl_join_offer_respond()`` and
   ``join_query_callback()``). When the DC receives the request, the
-  node proceeds to ``crm_join_integrated`` (via ``do_dc_join_filter_offer()``).
+  node proceeds to ``controld_join_integrated`` (via ``do_dc_join_filter_offer()``).
 
 * As each node is integrated, the current best CIB is sync'ed to each
   integrated node via ``do_dc_join_finalize()``. As each integrated node's CIB
   sync succeeds, the DC acks the node's join request (``CRM_OP_JOIN_ACKNAK``)
-  and the node proceeds to ``crm_join_finalized`` (via
+  and the node proceeds to ``controld_join_finalized`` (via
   ``finalize_sync_callback()`` + ``finalize_join_for()``).
 
 * Each node confirms the finalization ack (``CRM_OP_JOIN_CONFIRM`` via
   ``do_cl_join_finalize_respond()``), including its current resource operation
   history (via ``controld_query_executor_state()``). Once the DC receives this
-  confirmation, the node proceeds to ``crm_join_confirmed`` via
+  confirmation, the node proceeds to ``controld_join_confirmed`` via
   ``do_dc_join_ack()``.
 
 Once all nodes are confirmed, the DC calls ``do_dc_join_final()``, which checks
