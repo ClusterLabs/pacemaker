@@ -14,6 +14,7 @@
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 
+#include <stdbool.h>
 #include <sys/stat.h>
 #include <gio/gio.h>
 #include <services_private.h>
@@ -103,12 +104,14 @@ systemd_send_recv(DBusMessage *msg, DBusError *error, int timeout)
 static DBusMessage *
 systemd_call_simple_method(const char *method)
 {
-    DBusMessage *msg = systemd_new_method(method);
+    DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
     DBusError error;
 
     /* Don't call systemd_init() here, because that calls this */
     CRM_CHECK(systemd_proxy, return NULL);
+
+    msg = systemd_new_method(method);
 
     if (msg == NULL) {
         crm_err("Could not create message to send %s to systemd", method);
@@ -133,7 +136,7 @@ systemd_call_simple_method(const char *method)
     return reply;
 }
 
-static gboolean
+static bool
 systemd_init(void)
 {
     static int need_init = 1;
@@ -152,9 +155,9 @@ systemd_init(void)
         systemd_proxy = pcmk_dbus_connect();
     }
     if (systemd_proxy == NULL) {
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
 }
 
 static inline char *
@@ -548,7 +551,7 @@ systemd_unit_listall(void)
     DBusMessageIter elem;
     DBusMessage *reply = NULL;
 
-    if (systemd_init() == FALSE) {
+    if (!systemd_init()) {
         return NULL;
     }
 

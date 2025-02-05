@@ -828,6 +828,9 @@ action_complete(svc_action_t * action)
 #ifdef PCMK__TIME_USE_CGT
     const char *rclass = NULL;
     bool goagain = false;
+    int time_sum = 0;
+    int timeout_left = 0;
+    int delay = 0;
 #endif
 
     if (!cmd) {
@@ -862,142 +865,146 @@ action_complete(svc_action_t * action)
 #endif
     }
 
-    if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
-        if (pcmk__result_ok(&(cmd->result))
-            && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
-                                    PCMK_ACTION_STOP, NULL)) {
-            /* systemd returns from start and stop actions after the action
-             * begins, not after it completes. We have to jump through a few
-             * hoops so that we don't report 'complete' to the rest of pacemaker
-             * until it's actually done.
-             */
+    if (!pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
+        goto finalize;
+    }
+
+    if (pcmk__result_ok(&(cmd->result))
+        && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
+                                PCMK_ACTION_STOP, NULL)) {
+        /* systemd returns from start and stop actions after the action
+         * begins, not after it completes. We have to jump through a few
+         * hoops so that we don't report 'complete' to the rest of pacemaker
+         * until it's actually done.
+         */
+        goagain = true;
+        cmd->real_action = cmd->action;
+        cmd->action = pcmk__str_copy(PCMK_ACTION_MONITOR);
+
+    } else if (cmd->result.execution_status == PCMK_EXEC_PENDING &&
+               pcmk__str_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) &&
+               cmd->interval_ms == 0 &&
+               cmd->real_action == NULL) {
+        /* If the state is Pending at the time of probe, execute follow-up monitor. */
+        goagain = true;
+        cmd->real_action = cmd->action;
+        cmd->action = pcmk__str_copy(PCMK_ACTION_MONITOR);
+    } else if (cmd->real_action != NULL) {
+        // This is follow-up monitor to check whether start/stop/probe(monitor) completed
+        if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
             goagain = true;
-            cmd->real_action = cmd->action;
-            cmd->action = pcmk__str_copy(PCMK_ACTION_MONITOR);
 
-        } else if (cmd->result.execution_status == PCMK_EXEC_PENDING &&
-                   pcmk__str_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) &&
-                   cmd->interval_ms == 0 &&
-                   cmd->real_action == NULL) {
-            /* If the state is Pending at the time of probe, execute follow-up monitor. */
+        } else if (pcmk__result_ok(&(cmd->result))
+                   && pcmk__str_eq(cmd->real_action, PCMK_ACTION_STOP,
+                                   pcmk__str_casei)) {
             goagain = true;
-            cmd->real_action = cmd->action;
-            cmd->action = pcmk__str_copy(PCMK_ACTION_MONITOR);
-	} else if (cmd->real_action != NULL) {
-            // This is follow-up monitor to check whether start/stop/probe(monitor) completed
-            if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
-                goagain = true;
 
-            } else if (pcmk__result_ok(&(cmd->result))
-                       && pcmk__str_eq(cmd->real_action, PCMK_ACTION_STOP,
-                                       pcmk__str_casei)) {
-                goagain = true;
+        } else {
+            int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
+            int timeout_left = cmd->timeout_orig - time_sum;
 
-            } else {
-                int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
-                int timeout_left = cmd->timeout_orig - time_sum;
+            crm_debug("%s systemd %s is now complete (elapsed=%dms, "
+                      "remaining=%dms): %s (%d)",
+                      cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
+                      crm_exit_str(cmd->result.exit_status),
+                      cmd->result.exit_status);
+            cmd_original_times(cmd);
 
-                crm_debug("%s systemd %s is now complete (elapsed=%dms, "
-                          "remaining=%dms): %s (%d)",
-                          cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
-                          crm_exit_str(cmd->result.exit_status),
-                          cmd->result.exit_status);
-                cmd_original_times(cmd);
+            // Monitors may return "not running", but start/stop shouldn't
+            if ((cmd->result.execution_status == PCMK_EXEC_DONE)
+                && (cmd->result.exit_status == PCMK_OCF_NOT_RUNNING)) {
 
-                // Monitors may return "not running", but start/stop shouldn't
-                if ((cmd->result.execution_status == PCMK_EXEC_DONE)
-                    && (cmd->result.exit_status == PCMK_OCF_NOT_RUNNING)) {
-
-                    if (pcmk__str_eq(cmd->real_action, PCMK_ACTION_START,
-                                     pcmk__str_casei)) {
-                        cmd->result.exit_status = PCMK_OCF_UNKNOWN_ERROR;
-                    } else if (pcmk__str_eq(cmd->real_action, PCMK_ACTION_STOP,
-                                            pcmk__str_casei)) {
-                        cmd->result.exit_status = PCMK_OCF_OK;
-                    }
+                if (pcmk__str_eq(cmd->real_action, PCMK_ACTION_START,
+                                 pcmk__str_casei)) {
+                    cmd->result.exit_status = PCMK_OCF_UNKNOWN_ERROR;
+                } else if (pcmk__str_eq(cmd->real_action, PCMK_ACTION_STOP,
+                                        pcmk__str_casei)) {
+                    cmd->result.exit_status = PCMK_OCF_OK;
                 }
             }
-        } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) && 
-                  (cmd->interval_ms > 0)) { 
-            /* For monitors, excluding follow-up monitors,                                  */
-            /* if the pending state persists from the first notification until its timeout, */
-            /* it will be treated as a timeout.                                             */
+        }
+    } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL)
+               && (cmd->interval_ms > 0)) {
+        /* For monitors, excluding follow-up monitors,                                  */
+        /* if the pending state persists from the first notification until its timeout, */
+        /* it will be treated as a timeout.                                             */
 
-            if ((cmd->result.execution_status == PCMK_EXEC_PENDING) &&
-                (cmd->last_notify_op_status == PCMK_EXEC_PENDING)) {
-                int time_left = time(NULL) - (cmd->epoch_rcchange + (cmd->timeout_orig/1000));
+        if ((cmd->result.execution_status == PCMK_EXEC_PENDING) &&
+            (cmd->last_notify_op_status == PCMK_EXEC_PENDING)) {
+            int time_left = time(NULL) - (cmd->epoch_rcchange + (cmd->timeout_orig/1000));
 
-                if (time_left >= 0) {
-                    crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout (first pending notification=%s timeout=%ds)",
-                        cmd->rsc_id, cmd->action,
-                        cmd->result.exit_status, pcmk__trim(ctime(&cmd->epoch_rcchange)), cmd->timeout_orig);
-                    pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+            if (time_left >= 0) {
+                crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout "
+                           "(first pending notification=%s timeout=%ds)",
+                           cmd->rsc_id, cmd->action, cmd->result.exit_status,
+                           pcmk__trim(ctime(&cmd->epoch_rcchange)), cmd->timeout_orig);
+                pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+                                 PCMK_EXEC_TIMEOUT,
+                                 "Investigate reason for timeout, and adjust "
+                                 "configured operation timeout if necessary");
+                cmd_original_times(cmd);
+            }
+        }
+    }
+
+    if (!goagain) {
+        goto finalize;
+    }
+
+    time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
+    timeout_left = cmd->timeout_orig - time_sum;
+    delay = cmd->timeout_orig / 10;
+
+    if (delay >= timeout_left && timeout_left > 20) {
+        delay = timeout_left/2;
+    }
+
+    delay = QB_MIN(2000, delay);
+    if (delay < timeout_left) {
+        cmd->start_delay = delay;
+        cmd->timeout = timeout_left;
+
+        if (pcmk__result_ok(&(cmd->result))) {
+            crm_debug("%s %s may still be in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                      cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
+
+        } else if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
+            crm_info("%s %s is still in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                     cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
+
+        } else {
+            crm_notice("%s %s failed: %s: Re-scheduling (remaining "
+                       "timeout %s) " QB_XS
+                       " exitstatus=%d elapsed=%dms start_delay=%dms)",
+                       cmd->rsc_id, cmd->action,
+                       crm_exit_str(cmd->result.exit_status),
+                       pcmk__readable_interval(timeout_left),
+                       cmd->result.exit_status, time_sum, delay);
+        }
+
+        cmd_reset(cmd);
+        if (rsc) {
+            rsc->active = NULL;
+        }
+        schedule_lrmd_cmd(rsc, cmd);
+
+        /* Don't finalize cmd, we're not done with it yet */
+        return;
+
+    } else {
+        crm_notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, remaining=%dms)",
+                   cmd->rsc_id,
+                   (cmd->real_action? cmd->real_action : cmd->action),
+                   cmd->result.exit_status, time_sum, timeout_left);
+        pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                          PCMK_EXEC_TIMEOUT,
                          "Investigate reason for timeout, and adjust "
                          "configured operation timeout if necessary");
-                    cmd_original_times(cmd);
-                }
-            }
-        }
+        cmd_original_times(cmd);
     }
 #endif
 
-#ifdef PCMK__TIME_USE_CGT
-    if (goagain) {
-        int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
-        int timeout_left = cmd->timeout_orig - time_sum;
-        int delay = cmd->timeout_orig / 10;
-
-        if(delay >= timeout_left && timeout_left > 20) {
-            delay = timeout_left/2;
-        }
-
-        delay = QB_MIN(2000, delay);
-        if (delay < timeout_left) {
-            cmd->start_delay = delay;
-            cmd->timeout = timeout_left;
-
-            if (pcmk__result_ok(&(cmd->result))) {
-                crm_debug("%s %s may still be in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                          cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
-
-            } else if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
-                crm_info("%s %s is still in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                         cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
-
-            } else {
-                crm_notice("%s %s failed: %s: Re-scheduling (remaining "
-                           "timeout %s) " QB_XS
-                           " exitstatus=%d elapsed=%dms start_delay=%dms)",
-                           cmd->rsc_id, cmd->action,
-                           crm_exit_str(cmd->result.exit_status),
-                           pcmk__readable_interval(timeout_left),
-                           cmd->result.exit_status, time_sum, delay);
-            }
-
-            cmd_reset(cmd);
-            if(rsc) {
-                rsc->active = NULL;
-            }
-            schedule_lrmd_cmd(rsc, cmd);
-
-            /* Don't finalize cmd, we're not done with it yet */
-            return;
-
-        } else {
-            crm_notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, remaining=%dms)",
-                       cmd->rsc_id,
-                       (cmd->real_action? cmd->real_action : cmd->action),
-                       cmd->result.exit_status, time_sum, timeout_left);
-            pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                             PCMK_EXEC_TIMEOUT,
-                             "Investigate reason for timeout, and adjust "
-                             "configured operation timeout if necessary");
-            cmd_original_times(cmd);
-        }
-    }
-#endif
-
+finalize:
     pcmk__set_result_output(&(cmd->result), services__grab_stdout(action),
                             services__grab_stderr(action));
     cmd_finalize(cmd, rsc);
