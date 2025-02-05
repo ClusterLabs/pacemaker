@@ -635,6 +635,11 @@ services_action_free(svc_action_t * op)
     }
 
     free(op->opaque->exit_reason);
+
+#if SUPPORT_SYSTEMD
+    free(op->opaque->job_path);
+#endif  // SUPPORT_SYSTEMD
+
     free(op->opaque);
     free(op->rsc);
     free(op->action);
