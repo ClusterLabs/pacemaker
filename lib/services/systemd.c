@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -762,8 +762,10 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
         dbus_message_get_args(reply, NULL,
                               DBUS_TYPE_OBJECT_PATH, &path,
                               DBUS_TYPE_INVALID);
+
         crm_debug("DBus request for %s of %s using %s succeeded",
                   op->action, pcmk__s(op->rsc, "unknown resource"), path);
+        pcmk__str_update(&(op->opaque->job_path), path);
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
     }
 }
