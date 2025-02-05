@@ -129,29 +129,6 @@ def current_cib():
         return subprocess.check_output(["cibadmin", "-Q"], encoding="utf-8")
 
 
-def make_test_group(desc, cmd, classes, **kwargs):
-    """
-    Create a TestGroup that replicates the same test for multiple classes.
-
-    The given description, cmd, and kwargs will be passed as arguments to each
-    Test subclass in the classes parameter.  The resulting objects will then be
-    added to a TestGroup and returned.
-
-    The main purpose of this function is to be able to run the same test for
-    both text and XML formats without having to duplicate everything.  Thus, the
-    cmd string may contain "{fmt}", which will have any --output-as= class
-    variable substituted in.
-    """
-    tests = []
-
-    for c in classes:
-        obj = c(desc, apply_substitutions(cmd, extra={"fmt": c.format_args}),
-                **kwargs)
-        tests.append(obj)
-
-    return TestGroup(tests)
-
-
 def create_shadow_cib(shadow_dir, create_empty=True, validate_with=None,
                       valgrind=False):
     """
@@ -394,8 +371,6 @@ class StdinCmd:
 
 class Test:
     """A base class for defining a single command line regression test."""
-
-    format_args = ""
 
     def __init__(self, desc, cmd, expected_rc=ExitStatus.OK, update_cib=False,
                  setup=None, teardown=None, stdin=None, env=None):
@@ -679,8 +654,6 @@ class AclTest(Test):
 
 class ValidatingTest(Test):
     """A Test subclass that additionally runs test results through xmllint."""
-
-    format_args = "--output-as=xml"
 
     def __init__(self, desc, cmd, **kwargs):
         """Create a new ValidatingTest instance."""
@@ -1139,8 +1112,9 @@ class DatesRegressionTest(RegressionTest):
             ])
 
         return invalid_period_tests + [
-            make_test_group("'2005-040/2005-043' period", "iso8601 {fmt} -p '2005-040/2005-043'",
-                            [Test, ValidatingTest]),
+            Test("'2005-040/2005-043' period", "iso8601 -p '2005-040/2005-043'"),
+            ValidatingTest("'2005-040/2005-043' period", "iso8601 --output-as=xml -p '2005-040/2005-043'"),
+
             Test("2014-01-01 00:30:00 - 1 Hour",
                  "iso8601 -d '2014-01-01 00:30:00Z' -D P-1H -E '2013-12-31 23:30:00Z'"),
             Test("Valid date - Feb 29 in leap year",
@@ -1150,9 +1124,11 @@ class DatesRegressionTest(RegressionTest):
             Test("24:00:00 equivalent to 00:00:00 of next day",
                  "iso8601 -d '2019-12-31 24:00:00Z' -E '2020-01-01 00:00:00Z'"),
         ] + year_tests + [
-            make_test_group("2009-W53-07",
-                            "iso8601 {fmt} -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z'",
-                            [Test, ValidatingTest]),
+            Test("2009-W53-07",
+                 "iso8601 -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z'"),
+            ValidatingTest("2009-W53-07",
+                           "iso8601 --output-as=xml -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z'"),
+
             Test("epoch + 2 Years 5 Months 6 Minutes",
                  "iso8601 -d 'epoch' -D P2Y5MT6M -E '1972-06-01 00:06:00Z'"),
             Test("2009-01-31 + 1 Month",
@@ -1161,12 +1137,16 @@ class DatesRegressionTest(RegressionTest):
                  "iso8601 -d '2009-01-31 00:00:00Z' -D P2M -E '2009-03-31 00:00:00Z'"),
             Test("2009-01-31 + 3 Months",
                  "iso8601 -d '2009-01-31 00:00:00Z' -D P3M -E '2009-04-30 00:00:00Z'"),
-            make_test_group("2009-03-31 - 1 Month",
-                            "iso8601 {fmt} -d '2009-03-31 01:00:00 +01:00' -D P-1M -E '2009-02-28 00:00:00Z'",
-                            [Test, ValidatingTest]),
-            make_test_group("2038-01-01 + 3 Months",
-                            "iso8601 {fmt} -d '2038-01-01 00:00:00Z' -D P3M -E '2038-04-01 00:00:00Z'",
-                            [Test, ValidatingTest]),
+
+            Test("2009-03-31 - 1 Month",
+                 "iso8601 -d '2009-03-31 01:00:00 +01:00' -D P-1M -E '2009-02-28 00:00:00Z'"),
+            ValidatingTest("2009-03-31 - 1 Month",
+                           "iso8601 --output-as=xml -d '2009-03-31 01:00:00 +01:00' -D P-1M -E '2009-02-28 00:00:00Z'"),
+
+            Test("2038-01-01 + 3 Months",
+                 "iso8601 -d '2038-01-01 00:00:00Z' -D P3M -E '2038-04-01 00:00:00Z'"),
+            ValidatingTest("2038-01-01 + 3 Months",
+                           "iso8601 --output-as=xml -d '2038-01-01 00:00:00Z' -D P3M -E '2038-04-01 00:00:00Z'"),
         ]
 
 
@@ -1186,15 +1166,20 @@ class ErrorCodeRegressionTest(RegressionTest):
         # Don't test unknown legacy code. FreeBSD includes a colon in strerror(),
         # while other distros do not.
         legacy_tests = [
-            make_test_group("Get legacy return code", "crm_error {fmt} 201",
-                            [Test, ValidatingTest]),
-            make_test_group("Get legacy return code (with name)", "crm_error -n {fmt} 201",
-                            [Test, ValidatingTest]),
-            make_test_group("Get multiple legacy return codes", "crm_error {fmt} 201 202",
-                            [Test, ValidatingTest]),
-            make_test_group("Get multiple legacy return codes (with names)",
-                            "crm_error -n {fmt} 201 202",
-                            [Test, ValidatingTest]),
+            Test("Get legacy return code", "crm_error 201"),
+            ValidatingTest("Get legacy return code", "crm_error --output-as=xml 201"),
+
+            Test("Get legacy return code (with name)", "crm_error -n 201"),
+            ValidatingTest("Get legacy return code (with name)", "crm_error -n --output-as=xml 201"),
+
+            Test("Get multiple legacy return codes", "crm_error 201 202"),
+            ValidatingTest("Get multiple legacy return codes", "crm_error --output-as=xml 201 202"),
+
+            Test("Get multiple legacy return codes (with names)",
+                 "crm_error -n 201 202"),
+            ValidatingTest("Get multiple legacy return codes (with names)",
+                           "crm_error -n --output-as=xml 201 202"),
+
             # We can only rely on our custom codes, so we'll spot-check codes 201-209
             Test("List legacy return codes (spot check)",
                  "crm_error -l | grep 20[1-9]"),
@@ -1210,19 +1195,25 @@ class ErrorCodeRegressionTest(RegressionTest):
         #
         # Don't test positive (system) error codes, which may vary by OS
         standard_tests = [
-            make_test_group("Get unknown Pacemaker return code", "crm_error -r {fmt} -- -10000",
-                            [Test, ValidatingTest]),
-            make_test_group("Get unknown Pacemaker return code (with name)",
-                            "crm_error -n -r {fmt} -- -10000",
-                            [Test, ValidatingTest]),
+            Test("Get unknown Pacemaker return code", "crm_error -r -- -10000"),
+            ValidatingTest("Get unknown Pacemaker return code", "crm_error -r --output-as=xml -- -10000"),
+
+            Test("Get unknown Pacemaker return code (with name)",
+                 "crm_error -n -r -- -10000"),
+            ValidatingTest("Get unknown Pacemaker return code (with name)",
+                           "crm_error -n -r --output-as=xml -- -10000"),
+
             # Negative return codes require parsing out the "--" explicitly, so we need
             # to test them as a separate case
-            make_test_group("Get negative Pacemaker return code", "crm_error -r {fmt} -- -1005",
-                            [Test, ValidatingTest]),
+            Test("Get negative Pacemaker return code", "crm_error -r -- -1005"),
+            ValidatingTest("Get negative Pacemaker return code", "crm_error -r --output-as=xml -- -1005"),
+
             # Testing name lookups for negative return codes only is sufficient
-            make_test_group("Get negative Pacemaker return code (with name)",
-                            "crm_error -n -r {fmt} -- -1005",
-                            [Test, ValidatingTest]),
+            Test("Get negative Pacemaker return code (with name)",
+                 "crm_error -n -r -- -1005"),
+            ValidatingTest("Get negative Pacemaker return code (with name)",
+                           "crm_error -n -r --output-as=xml -- -1005"),
+
             # We can only rely on our custom codes (negative and zero)
             Test("List Pacemaker return codes (non-positive)",
                  "crm_error -l -r | grep -E '^[[:blank:]]*(-[[:digit:]]+|0):'"),
@@ -1236,21 +1227,29 @@ class ErrorCodeRegressionTest(RegressionTest):
 
         # crm_exit_t exit codes
         crm_exit_t_tests = [
-            make_test_group("Get unknown crm_exit_t exit code", "crm_error -X {fmt} -- -10000",
-                            [Test, ValidatingTest]),
-            make_test_group("Get unknown crm_exit_t exit code (with name)",
-                            "crm_error -n -X {fmt} -- -10000",
-                            [Test, ValidatingTest]),
-            make_test_group("Get crm_exit_t exit code", "crm_error -X {fmt} 1",
-                            [Test, ValidatingTest]),
-            make_test_group("Get crm_exit_t exit code (with name)",
-                            "crm_error -n -X {fmt} 1",
-                            [Test, ValidatingTest]),
-            make_test_group("Get all crm_exit_t exit codes", "crm_error -l -X {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Get all crm_exit_t exit codes (with name)",
-                            "crm_error -l -n -X {fmt}",
-                            [Test, ValidatingTest]),
+            Test("Get unknown crm_exit_t exit code", "crm_error -X -- -10000"),
+            ValidatingTest("Get unknown crm_exit_t exit code", "crm_error -X --output-as=xml -- -10000"),
+
+            Test("Get unknown crm_exit_t exit code (with name)",
+                 "crm_error -n -X -- -10000"),
+            ValidatingTest("Get unknown crm_exit_t exit code (with name)",
+                           "crm_error -n -X --output-as=xml -- -10000"),
+
+            Test("Get crm_exit_t exit code", "crm_error -X 1"),
+            ValidatingTest("Get crm_exit_t exit code", "crm_error -X --output-as=xml 1"),
+
+            Test("Get crm_exit_t exit code (with name)",
+                 "crm_error -n -X 1"),
+            ValidatingTest("Get crm_exit_t exit code (with name)",
+                           "crm_error -n -X --output-as=xml 1"),
+
+            Test("Get all crm_exit_t exit codes", "crm_error -l -X"),
+            ValidatingTest("Get all crm_exit_t exit codes", "crm_error -l -X --output-as=xml"),
+
+            Test("Get all crm_exit_t exit codes (with name)",
+                 "crm_error -l -n -X"),
+            ValidatingTest("Get all crm_exit_t exit codes (with name)",
+                           "crm_error -l -n -X --output-as=xml"),
         ]
 
         return legacy_tests + standard_tests + crm_exit_t_tests
@@ -1306,16 +1305,23 @@ class CrmAttributeRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         options_tests = [
-            make_test_group("List all available options (invalid type)",
-                            "crm_attribute --list-options=asdf {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.USAGE),
-            make_test_group("List non-advanced cluster options",
-                            "crm_attribute --list-options=cluster {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("List all available cluster options",
-                            "crm_attribute --list-options=cluster --all {fmt}",
-                            [Test, ValidatingTest]),
+            Test("List all available options (invalid type)",
+                 "crm_attribute --list-options=asdf",
+                 expected_rc=ExitStatus.USAGE),
+            ValidatingTest("List all available options (invalid type)",
+                           "crm_attribute --list-options=asdf --output-as=xml",
+                           expected_rc=ExitStatus.USAGE),
+
+            Test("List non-advanced cluster options",
+                 "crm_attribute --list-options=cluster"),
+            ValidatingTest("List non-advanced cluster options",
+                           "crm_attribute --list-options=cluster --output-as=xml"),
+
+            Test("List all available cluster options",
+                 "crm_attribute --list-options=cluster --all"),
+            ValidatingTest("List all available cluster options",
+                           "crm_attribute --list-options=cluster --all --output-as=xml"),
+
             Test("Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings",
                  "crm_attribute -N cluster01 -p '' -G",
                  expected_rc=ExitStatus.USAGE),
@@ -1333,24 +1339,41 @@ class CrmAttributeRegressionTest(RegressionTest):
             Test("Test '+=' XML attribute update syntax",
                  """cibadmin -M --score --xml-text='<cib admin_epoch="admin_epoch+=2"/>'""",
                  update_cib=True),
-            make_test_group("Test '++' nvpair value update syntax",
-                            "crm_attribute -n test_attr -v 'value++' --score {fmt}",
-                            [Test, ValidatingTest], update_cib=True),
-            make_test_group("Test '+=' nvpair value update syntax",
-                            "crm_attribute -n test_attr -v 'value+=2' --score {fmt}",
-                            [Test, ValidatingTest], update_cib=True),
+
+            Test("Test '++' nvpair value update syntax",
+                 "crm_attribute -n test_attr -v 'value++' --score",
+                 update_cib=True),
+            ValidatingTest("Test '++' nvpair value update syntax",
+                           "crm_attribute -n test_attr -v 'value++' --score --output-as=xml",
+                           update_cib=True),
+
+            Test("Test '+=' nvpair value update syntax",
+                 "crm_attribute -n test_attr -v 'value+=2' --score",
+                 update_cib=True),
+            ValidatingTest("Test '+=' nvpair value update syntax",
+                           "crm_attribute -n test_attr -v 'value+=2' --score --output-as=xml",
+                           update_cib=True),
+
             Test("Test '++' XML attribute update syntax (--score not set)",
                  """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch++"/>'""",
                  update_cib=True),
             Test("Test '+=' XML attribute update syntax (--score not set)",
                  """cibadmin -M --xml-text='<cib admin_epoch="admin_epoch+=2"/>'""",
                  update_cib=True),
-            make_test_group("Test '++' nvpair value update syntax (--score not set)",
-                            "crm_attribute -n test_attr -v 'value++' {fmt}",
-                            [Test, ValidatingTest], update_cib=True),
-            make_test_group("Test '+=' nvpair value update syntax (--score not set)",
-                            "crm_attribute -n test_attr -v 'value+=2' {fmt}",
-                            [Test, ValidatingTest], update_cib=True),
+
+            Test("Test '++' nvpair value update syntax (--score not set)",
+                 "crm_attribute -n test_attr -v 'value++'",
+                 update_cib=True),
+            ValidatingTest("Test '++' nvpair value update syntax (--score not set)",
+                           "crm_attribute -n test_attr -v 'value++' --output-as=xml",
+                           update_cib=True),
+
+            Test("Test '+=' nvpair value update syntax (--score not set)",
+                 "crm_attribute -n test_attr -v 'value+=2'",
+                 update_cib=True),
+            ValidatingTest("Test '+=' nvpair value update syntax (--score not set)",
+                           "crm_attribute -n test_attr -v 'value+=2' --output-as=xml",
+                           update_cib=True),
         ]
 
         query_set_tests = [
@@ -1437,46 +1460,75 @@ class CrmAttributeRegressionTest(RegressionTest):
         ]
 
         promotable_tests = [
-            make_test_group("Query a nonexistent promotable score attribute",
-                            "crm_attribute -N cluster01 -p promotable-rsc -G {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.NOSUCH),
-            make_test_group("Delete a nonexistent promotable score attribute",
-                            "crm_attribute -N cluster01 -p promotable-rsc -D {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Query after deleting a nonexistent promotable score attribute",
-                            "crm_attribute -N cluster01 -p promotable-rsc -G {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.NOSUCH),
-            make_test_group("Update a nonexistent promotable score attribute",
-                            "crm_attribute -N cluster01 -p promotable-rsc -v 1 {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Query after updating a nonexistent promotable score attribute",
-                            "crm_attribute -N cluster01 -p promotable-rsc -G {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Update an existing promotable score attribute",
-                            "crm_attribute -N cluster01 -p promotable-rsc -v 5 {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Query after updating an existing promotable score attribute",
-                            "crm_attribute -N cluster01 -p promotable-rsc -G {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Delete an existing promotable score attribute",
-                            "crm_attribute -N cluster01 -p promotable-rsc -D {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Query after deleting an existing promotable score attribute",
-                            "crm_attribute -N cluster01 -p promotable-rsc -G {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.NOSUCH),
+            Test("Query a nonexistent promotable score attribute",
+                 "crm_attribute -N cluster01 -p promotable-rsc -G",
+                 expected_rc=ExitStatus.NOSUCH),
+            ValidatingTest("Query a nonexistent promotable score attribute",
+                           "crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml",
+                           expected_rc=ExitStatus.NOSUCH),
+
+            Test("Delete a nonexistent promotable score attribute",
+                 "crm_attribute -N cluster01 -p promotable-rsc -D"),
+            ValidatingTest("Delete a nonexistent promotable score attribute",
+                           "crm_attribute -N cluster01 -p promotable-rsc -D --output-as=xml"),
+
+            Test("Query after deleting a nonexistent promotable score attribute",
+                 "crm_attribute -N cluster01 -p promotable-rsc -G",
+                 expected_rc=ExitStatus.NOSUCH),
+            ValidatingTest("Query after deleting a nonexistent promotable score attribute",
+                           "crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml",
+                           expected_rc=ExitStatus.NOSUCH),
+
+            Test("Update a nonexistent promotable score attribute",
+                 "crm_attribute -N cluster01 -p promotable-rsc -v 1"),
+            ValidatingTest("Update a nonexistent promotable score attribute",
+                           "crm_attribute -N cluster01 -p promotable-rsc -v 1 --output-as=xml"),
+
+            Test("Query after updating a nonexistent promotable score attribute",
+                 "crm_attribute -N cluster01 -p promotable-rsc -G"),
+            ValidatingTest("Query after updating a nonexistent promotable score attribute",
+                           "crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"),
+
+            Test("Update an existing promotable score attribute",
+                 "crm_attribute -N cluster01 -p promotable-rsc -v 5"),
+            ValidatingTest("Update an existing promotable score attribute",
+                           "crm_attribute -N cluster01 -p promotable-rsc -v 5 --output-as=xml"),
+
+            Test("Query after updating an existing promotable score attribute",
+                 "crm_attribute -N cluster01 -p promotable-rsc -G"),
+            ValidatingTest("Query after updating an existing promotable score attribute",
+                           "crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"),
+
+            Test("Delete an existing promotable score attribute",
+                 "crm_attribute -N cluster01 -p promotable-rsc -D"),
+            ValidatingTest("Delete an existing promotable score attribute",
+                           "crm_attribute -N cluster01 -p promotable-rsc -D --output-as=xml"),
+
+            Test("Query after deleting an existing promotable score attribute",
+                 "crm_attribute -N cluster01 -p promotable-rsc -G",
+                 expected_rc=ExitStatus.NOSUCH),
+            ValidatingTest("Query after deleting an existing promotable score attribute",
+                           "crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml",
+                           expected_rc=ExitStatus.NOSUCH),
         ]
 
         # Test for an issue with legacy command line parsing when the resource is
         # specified in the environment (CLBZ#5509)
         ocf_rsc_instance_tests = [
-            make_test_group("Update a promotable score attribute to -INFINITY",
-                            "crm_attribute -N cluster01 -p -v -INFINITY {fmt}",
-                            [Test, ValidatingTest],
-                            env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"}),
-            make_test_group("Query after updating a promotable score attribute to -INFINITY",
-                            "crm_attribute -N cluster01 -p -G {fmt}",
-                            [Test, ValidatingTest],
-                            env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"}),
+            Test("Update a promotable score attribute to -INFINITY",
+                 "crm_attribute -N cluster01 -p -v -INFINITY",
+                 env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"}),
+            ValidatingTest("Update a promotable score attribute to -INFINITY",
+                           "crm_attribute -N cluster01 -p -v -INFINITY --output-as=xml",
+                           env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"}),
+
+            Test("Query after updating a promotable score attribute to -INFINITY",
+                 "crm_attribute -N cluster01 -p -G",
+                 env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"}),
+            ValidatingTest("Query after updating a promotable score attribute to -INFINITY",
+                           "crm_attribute -N cluster01 -p -G --output-as=xml",
+                           env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"}),
+
             Test("Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string",
                  "crm_attribute -N cluster01 -p '' -G",
                  env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"}),
@@ -1537,18 +1589,26 @@ class CrmResourceRegressionTest(RegressionTest):
             Test("List all available resource options (invalid type)",
                  "crm_resource --list-options=asdf --output-as=xml",
                  expected_rc=ExitStatus.USAGE),
-            make_test_group("List non-advanced primitive meta-attributes",
-                            "crm_resource --list-options=primitive {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("List all available primitive meta-attributes",
-                            "crm_resource --list-options=primitive --all {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("List non-advanced fencing parameters",
-                            "crm_resource --list-options=fencing {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("List all available fencing parameters",
-                            "crm_resource --list-options=fencing --all {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("List non-advanced primitive meta-attributes",
+                 "crm_resource --list-options=primitive"),
+            ValidatingTest("List non-advanced primitive meta-attributes",
+                           "crm_resource --list-options=primitive --output-as=xml"),
+
+            Test("List all available primitive meta-attributes",
+                 "crm_resource --list-options=primitive --all"),
+            ValidatingTest("List all available primitive meta-attributes",
+                           "crm_resource --list-options=primitive --all --output-as=xml"),
+
+            Test("List non-advanced fencing parameters",
+                 "crm_resource --list-options=fencing"),
+            ValidatingTest("List non-advanced fencing parameters",
+                           "crm_resource --list-options=fencing --output-as=xml"),
+
+            Test("List all available fencing parameters",
+                 "crm_resource --list-options=fencing --all"),
+            ValidatingTest("List all available fencing parameters",
+                           "crm_resource --list-options=fencing --all --output-as=xml"),
         ]
 
         basic_tests = [
@@ -1578,9 +1638,14 @@ class CrmResourceRegressionTest(RegressionTest):
                            "crm_resource -r dummy --meta -d target-role --output-as=xml"),
             ValidatingTest("Get a non-existent attribute from a resource element",
                            "crm_resource -r dummy --get-parameter nonexistent --element --output-as=xml"),
-            make_test_group("Get a non-existent attribute from a resource element",
-                            "crm_resource -r dummy --get-parameter nonexistent --element {fmt}",
-                            [Test, ValidatingTest], update_cib=True),
+
+            Test("Get a non-existent attribute from a resource element",
+                 "crm_resource -r dummy --get-parameter nonexistent --element",
+                 update_cib=True),
+            ValidatingTest("Get a non-existent attribute from a resource element",
+                           "crm_resource -r dummy --get-parameter nonexistent --element --output-as=xml",
+                           update_cib=True),
+
             Test("Get an existent attribute from a resource element",
                  "crm_resource -r dummy --get-parameter class --element",
                  update_cib=True),
@@ -1610,12 +1675,18 @@ class CrmResourceRegressionTest(RegressionTest):
                  update_cib=True),
             Test("Create a resource attribute", "crm_resource -r dummy -p delay -v 10s",
                  update_cib=True),
-            make_test_group("List the configured resources", "crm_resource -L {fmt}",
-                            [Test, ValidatingTest], update_cib=True),
+
+            Test("List the configured resources", "crm_resource -L",
+                 update_cib=True),
+            ValidatingTest("List the configured resources", "crm_resource -L --output-as=xml",
+                           update_cib=True),
+
             Test("Implicitly list the configured resources", "crm_resource"),
             Test("List IDs of instantiated resources", "crm_resource -l"),
-            make_test_group("Show XML configuration of resource", "crm_resource -q -r dummy {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("Show XML configuration of resource", "crm_resource -q -r dummy"),
+            ValidatingTest("Show XML configuration of resource", "crm_resource -q -r dummy --output-as=xml"),
+
             Test("Require a destination when migrating a resource that is stopped",
                  "crm_resource -r dummy -M",
                  update_cib=True, expected_rc=ExitStatus.USAGE),
@@ -1755,12 +1826,15 @@ class CrmResourceRegressionTest(RegressionTest):
                     "prim8", "prim9", "prim10", "prim11", "prim12", "prim13",
                     "group", "clone"]:
             constraint_tests.extend([
-                make_test_group("Check locations and constraints for %s" % rsc,
-                                "crm_resource -a -r %s {fmt}" % rsc,
-                                [Test, ValidatingTest]),
-                make_test_group("Recursively check locations and constraints for %s" % rsc,
-                                "crm_resource -A -r %s {fmt}" % rsc,
-                                [Test, ValidatingTest]),
+                Test("Check locations and constraints for %s" % rsc,
+                     "crm_resource -a -r %s" % rsc),
+                ValidatingTest("Check locations and constraints for %s" % rsc,
+                               "crm_resource -a -r %s --output-as=xml" % rsc),
+
+                Test("Recursively check locations and constraints for %s" % rsc,
+                     "crm_resource -A -r %s" % rsc),
+                ValidatingTest("Recursively check locations and constraints for %s" % rsc,
+                               "crm_resource -A -r %s --output-as=xml" % rsc),
             ])
 
         constraint_tests.extend([
@@ -1784,23 +1858,32 @@ class CrmResourceRegressionTest(RegressionTest):
                            "crm_resource --digests -r rsc1 -N node1 --output-as=xml"),
             Test("Show resource digests with overrides",
                  "crm_resource --digests -r rsc1 -N node1 --output-as=xml CRM_meta_interval=10000 CRM_meta_timeout=20000"),
-            make_test_group("Show resource operations", "crm_resource --list-operations {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("Show resource operations", "crm_resource --list-operations"),
+            ValidatingTest("Show resource operations", "crm_resource --list-operations --output-as=xml"),
         ]
 
         basic2_tests = [
-            make_test_group("List a promotable clone resource",
-                            "crm_resource --locate -r promotable-clone {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("List the primitive of a promotable clone resource",
-                            "crm_resource --locate -r promotable-rsc {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("List a single instance of a promotable clone resource",
-                            "crm_resource --locate -r promotable-rsc:0 {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("List another instance of a promotable clone resource",
-                            "crm_resource --locate -r promotable-rsc:1 {fmt}",
-                            [Test, ValidatingTest]),
+            Test("List a promotable clone resource",
+                 "crm_resource --locate -r promotable-clone"),
+            ValidatingTest("List a promotable clone resource",
+                           "crm_resource --locate -r promotable-clone --output-as=xml"),
+
+            Test("List the primitive of a promotable clone resource",
+                 "crm_resource --locate -r promotable-rsc"),
+            ValidatingTest("List the primitive of a promotable clone resource",
+                           "crm_resource --locate -r promotable-rsc --output-as=xml"),
+
+            Test("List a single instance of a promotable clone resource",
+                 "crm_resource --locate -r promotable-rsc:0"),
+            ValidatingTest("List a single instance of a promotable clone resource",
+                           "crm_resource --locate -r promotable-rsc:0 --output-as=xml"),
+
+            Test("List another instance of a promotable clone resource",
+                 "crm_resource --locate -r promotable-rsc:1"),
+            ValidatingTest("List another instance of a promotable clone resource",
+                           "crm_resource --locate -r promotable-rsc:1 --output-as=xml"),
+
             Test("Try to move an instance of a cloned resource",
                  "crm_resource -r promotable-rsc:0 --move --node node1",
                  expected_rc=ExitStatus.INVALID_PARAM),
@@ -1840,13 +1923,18 @@ class CrmTicketRegressionTest(RegressionTest):
                  "crm_ticket -t ticketA -G granted -d false"),
             Test("Set ticket granted state", "crm_ticket -t ticketA -r --force",
                  update_cib=True),
-            make_test_group("List ticket IDs", "crm_ticket -w {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Query ticket state", "crm_ticket -t ticketA -q {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Query ticket granted state",
-                            "crm_ticket -t ticketA -G granted {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("List ticket IDs", "crm_ticket -w"),
+            ValidatingTest("List ticket IDs", "crm_ticket -w --output-as=xml"),
+
+            Test("Query ticket state", "crm_ticket -t ticketA -q"),
+            ValidatingTest("Query ticket state", "crm_ticket -t ticketA -q --output-as=xml"),
+
+            Test("Query ticket granted state",
+                 "crm_ticket -t ticketA -G granted"),
+            ValidatingTest("Query ticket granted state",
+                           "crm_ticket -t ticketA -G granted --output-as=xml"),
+
             Test("Delete ticket granted state",
                  "crm_ticket -t ticketA -D granted --force",
                  update_cib=True),
@@ -1855,15 +1943,19 @@ class CrmTicketRegressionTest(RegressionTest):
             Test("Query ticket standby state", "crm_ticket -t ticketA -G standby"),
             Test("Activate a ticket", "crm_ticket -t ticketA -a",
                  update_cib=True),
-            make_test_group("List ticket details", "crm_ticket -L -t ticketA {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("List ticket details", "crm_ticket -L -t ticketA"),
+            ValidatingTest("List ticket details", "crm_ticket -L -t ticketA --output-as=xml"),
+
             Test("Add a second ticket", "crm_ticket -t ticketB -G granted -d false",
                  update_cib=True),
             Test("Set second ticket granted state",
                  "crm_ticket -t ticketB -r --force",
                  update_cib=True),
-            make_test_group("List tickets", "crm_ticket -l {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("List tickets", "crm_ticket -l"),
+            ValidatingTest("List tickets", "crm_ticket -l --output-as=xml"),
+
             Test("Delete second ticket",
                  """cibadmin --delete --xml-text '<ticket_state id="ticketB"/>'""",
                  update_cib=True),
@@ -1872,8 +1964,10 @@ class CrmTicketRegressionTest(RegressionTest):
             Test("Add a constraint to a ticket",
                  """cibadmin -C -o constraints --xml-text '<rsc_ticket id="dummy-dep-ticketA" rsc="dummy" rsc-role="Started" ticket="ticketA" loss-policy="freeze"/>'""",
                  update_cib=True),
-            make_test_group("Query ticket constraints", "crm_ticket -t ticketA -c {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("Query ticket constraints", "crm_ticket -t ticketA -c"),
+            ValidatingTest("Query ticket constraints", "crm_ticket -t ticketA -c --output-as=xml"),
+
             Test("Delete ticket constraint",
                  """cibadmin --delete --xml-text '<rsc_ticket id="dummy-dep-ticketA"/>'""",
                  update_cib=True),
@@ -1901,26 +1995,28 @@ class CrmadminRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         basic_tests = [
-            make_test_group("List all nodes", "crmadmin -N {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Minimally list all nodes", "crmadmin -N -q {fmt}",
-                            [Test, ValidatingTest]),
+            Test("List all nodes", "crmadmin -N"),
+            ValidatingTest("List all nodes", "crmadmin -N --output-as=xml"),
+
+            Test("Minimally list all nodes", "crmadmin -N -q"),
+            ValidatingTest("Minimally list all nodes", "crmadmin -N -q --output-as=xml"),
+
             Test("List all nodes as bash exports", "crmadmin -N -B"),
-            make_test_group("List cluster nodes",
-                            "crmadmin -N cluster {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("List guest nodes",
-                            "crmadmin -N guest {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("List remote nodes",
-                            "crmadmin -N remote {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("List cluster,remote nodes",
-                            "crmadmin -N cluster,remote {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("List guest,remote nodes",
-                            "crmadmin -N guest,remote {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("List cluster nodes", "crmadmin -N cluster"),
+            ValidatingTest("List cluster nodes", "crmadmin -N cluster --output-as=xml"),
+
+            Test("List guest nodes", "crmadmin -N guest"),
+            ValidatingTest("List guest nodes", "crmadmin -N guest --output-as=xml"),
+
+            Test("List remote nodes", "crmadmin -N remote"),
+            ValidatingTest("List remote nodes", "crmadmin -N remote --output-as=xml"),
+
+            Test("List cluster,remote nodes", "crmadmin -N cluster,remote"),
+            ValidatingTest("List cluster,remote nodes", "crmadmin -N cluster,remote --output-as=xml"),
+
+            Test("List guest,remote nodes", "crmadmin -N guest,remote"),
+            ValidatingTest("List guest,remote nodes", "crmadmin -N guest,remote --output-as=xml"),
         ]
 
         return [
@@ -1944,40 +2040,65 @@ class CrmShadowRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         no_instance_tests = [
-            make_test_group("Get active shadow instance (no active instance)",
-                            "crm_shadow --which {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.NOSUCH),
-            make_test_group("Get active shadow instance's file name (no active instance)",
-                            "crm_shadow --file {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.NOSUCH),
-            make_test_group("Get active shadow instance's contents (no active instance)",
-                            "crm_shadow --display {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.NOSUCH),
-            make_test_group("Get active shadow instance's diff (no active instance)",
-                            "crm_shadow --diff {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.NOSUCH),
+            Test("Get active shadow instance (no active instance)",
+                 "crm_shadow --which",
+                 expected_rc=ExitStatus.NOSUCH),
+            ValidatingTest("Get active shadow instance (no active instance)",
+                           "crm_shadow --which --output-as=xml",
+                           expected_rc=ExitStatus.NOSUCH),
+
+            Test("Get active shadow instance's file name (no active instance)",
+                 "crm_shadow --file",
+                 expected_rc=ExitStatus.NOSUCH),
+            ValidatingTest("Get active shadow instance's file name (no active instance)",
+                           "crm_shadow --file --output-as=xml",
+                           expected_rc=ExitStatus.NOSUCH),
+
+            Test("Get active shadow instance's contents (no active instance)",
+                 "crm_shadow --display",
+                 expected_rc=ExitStatus.NOSUCH),
+            ValidatingTest("Get active shadow instance's contents (no active instance)",
+                           "crm_shadow --display --output-as=xml",
+                           expected_rc=ExitStatus.NOSUCH),
+
+            Test("Get active shadow instance's diff (no active instance)",
+                 "crm_shadow --diff",
+                 expected_rc=ExitStatus.NOSUCH),
+            ValidatingTest("Get active shadow instance's diff (no active instance)",
+                           "crm_shadow --diff --output-as=xml",
+                           expected_rc=ExitStatus.NOSUCH),
         ]
 
         # Create new shadow instance based on active CIB
         # Don't use create_shadow_cib() here; test explicitly
         new_instance_tests = [
-            make_test_group("Create copied shadow instance",
-                            "crm_shadow --create {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
+            Test("Create copied shadow instance",
+                 f"crm_shadow --create {SHADOW_NAME} --batch",
+                 setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
+            ValidatingTest("Create copied shadow instance",
+                           f"crm_shadow --create {SHADOW_NAME} --batch --output-as=xml",
+                           setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
+
             # Query shadow instance based on active CIB
-            make_test_group("Get active shadow instance (copied)",
-                            "crm_shadow --which {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Get active shadow instance's file name (copied)",
-                            "crm_shadow --file {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Get active shadow instance's contents (copied)",
-                            "crm_shadow --display {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Get active shadow instance's diff (copied)",
-                            "crm_shadow --diff {fmt}",
-                            [Test, ValidatingTest]),
+            Test("Get active shadow instance (copied)",
+                 "crm_shadow --which"),
+            ValidatingTest("Get active shadow instance (copied)",
+                           "crm_shadow --which --output-as=xml"),
+
+            Test("Get active shadow instance's file name (copied)",
+                 "crm_shadow --file"),
+            ValidatingTest("Get active shadow instance's file name (copied)",
+                           "crm_shadow --file --output-as=xml"),
+
+            Test("Get active shadow instance's contents (copied)",
+                 "crm_shadow --display"),
+            ValidatingTest("Get active shadow instance's contents (copied)",
+                           "crm_shadow --display --output-as=xml"),
+
+            Test("Get active shadow instance's diff (copied)",
+                 "crm_shadow --diff"),
+            ValidatingTest("Get active shadow instance's diff (copied)",
+                           "crm_shadow --diff --output-as=xml"),
         ]
 
         # Make some changes to the shadow file
@@ -1988,9 +2109,6 @@ class CrmShadowRegressionTest(RegressionTest):
                      """cibadmin --create -o status --xml-text '<node_state id="3" uname="cluster03" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member"/>'"""
 
         more_tests = [
-            # We can't use make_test_group() here because we only want to run
-            # the modify_cib setup code once, and make_test_group will pass all
-            # kwargs to every instance it creates.
             Test("Get active shadow instance's diff (after changes)",
                  "crm_shadow --diff",
                  setup=modify_cib, expected_rc=ExitStatus.ERROR),
@@ -2028,58 +2146,96 @@ class CrmShadowRegressionTest(RegressionTest):
                 ValidatingTest("Get active shadow instance's diff (after commit all)",
                                "crm_shadow --diff --output-as=xml",
                                expected_rc=ExitStatus.ERROR),
+
                 # Commit an inactive shadow instance with no active instance
-                make_test_group("Commit shadow instance (no active instance)",
-                                "crm_shadow --commit {shadow} {fmt}",
-                                [Test, ValidatingTest],
-                                env={"CIB_shadow": None},
-                                expected_rc=ExitStatus.USAGE),
-                make_test_group("Commit shadow instance (no active instance) (force)",
-                                "crm_shadow --commit {shadow} --force {fmt}",
-                                [Test, ValidatingTest],
-                                env={"CIB_shadow": None}),
+                Test("Commit shadow instance (no active instance)",
+                     f"crm_shadow --commit {SHADOW_NAME}",
+                     env={"CIB_shadow": None},
+                     expected_rc=ExitStatus.USAGE),
+                ValidatingTest("Commit shadow instance (no active instance)",
+                               f"crm_shadow --commit {SHADOW_NAME} --output-as=xml",
+                               env={"CIB_shadow": None},
+                               expected_rc=ExitStatus.USAGE),
+
+                Test("Commit shadow instance (no active instance) (force)",
+                     f"crm_shadow --commit {SHADOW_NAME} --force",
+                     env={"CIB_shadow": None}),
+                ValidatingTest("Commit shadow instance (no active instance) (force)",
+                               f"crm_shadow --commit {SHADOW_NAME} --force --output-as=xml",
+                               env={"CIB_shadow": None}),
+
                 # Commit an inactive shadow instance with an active instance
-                make_test_group("Commit shadow instance (mismatch)",
-                                "crm_shadow --commit {shadow} {fmt}",
-                                [Test, ValidatingTest],
-                                env={"CIB_shadow": "nonexistent_shadow"},
-                                expected_rc=ExitStatus.USAGE),
-                make_test_group("Commit shadow instance (mismatch) (force)",
-                                "crm_shadow --commit {shadow} --force {fmt}",
-                                [Test, ValidatingTest],
-                                env={"CIB_shadow": "nonexistent_shadow"}),
+                Test("Commit shadow instance (mismatch)",
+                     f"crm_shadow --commit {SHADOW_NAME}",
+                     env={"CIB_shadow": "nonexistent_shadow"},
+                     expected_rc=ExitStatus.USAGE),
+                ValidatingTest("Commit shadow instance (mismatch)",
+                               f"crm_shadow --commit {SHADOW_NAME} --output-as=xml",
+                               env={"CIB_shadow": "nonexistent_shadow"},
+                               expected_rc=ExitStatus.USAGE),
+
+                Test("Commit shadow instance (mismatch) (force)",
+                     f"crm_shadow --commit {SHADOW_NAME} --force",
+                     env={"CIB_shadow": "nonexistent_shadow"}),
+                ValidatingTest("Commit shadow instance (mismatch) (force)",
+                               f"crm_shadow --commit {SHADOW_NAME} --force --output-as=xml",
+                               env={"CIB_shadow": "nonexistent_shadow"}),
+
                 # Commit an active shadow instance whose shadow file is missing
-                make_test_group("Commit shadow instance (nonexistent shadow file)",
-                                "crm_shadow --commit nonexistent_shadow {fmt}",
-                                [Test, ValidatingTest],
-                                env={"CIB_shadow": "nonexistent_shadow"},
-                                expected_rc=ExitStatus.USAGE),
-                make_test_group("Commit shadow instance (nonexistent shadow file) (force)",
-                                "crm_shadow --commit nonexistent_shadow --force {fmt}",
-                                [Test, ValidatingTest],
-                                env={"CIB_shadow": "nonexistent_shadow"},
-                                expected_rc=ExitStatus.NOSUCH),
-                make_test_group("Get active shadow instance's diff (nonexistent shadow file)",
-                                "crm_shadow --diff {fmt}",
-                                [Test, ValidatingTest],
-                                env={"CIB_shadow": "nonexistent_shadow"},
-                                expected_rc=ExitStatus.NOSUCH),
+                Test("Commit shadow instance (nonexistent shadow file)",
+                     "crm_shadow --commit nonexistent_shadow",
+                     env={"CIB_shadow": "nonexistent_shadow"},
+                     expected_rc=ExitStatus.USAGE),
+                ValidatingTest("Commit shadow instance (nonexistent shadow file)",
+                               "crm_shadow --commit nonexistent_shadow --output-as=xml",
+                               env={"CIB_shadow": "nonexistent_shadow"},
+                               expected_rc=ExitStatus.USAGE),
+
+                Test("Commit shadow instance (nonexistent shadow file) (force)",
+                     "crm_shadow --commit nonexistent_shadow --force",
+                     env={"CIB_shadow": "nonexistent_shadow"},
+                     expected_rc=ExitStatus.NOSUCH),
+                ValidatingTest("Commit shadow instance (nonexistent shadow file) (force)",
+                               "crm_shadow --commit nonexistent_shadow --force --output-as=xml",
+                               env={"CIB_shadow": "nonexistent_shadow"},
+                               expected_rc=ExitStatus.NOSUCH),
+
+                Test("Get active shadow instance's diff (nonexistent shadow file)",
+                     "crm_shadow --diff",
+                     env={"CIB_shadow": "nonexistent_shadow"},
+                     expected_rc=ExitStatus.NOSUCH),
+                ValidatingTest("Get active shadow instance's diff (nonexistent shadow file)",
+                               "crm_shadow --diff --output-as=xml",
+                               env={"CIB_shadow": "nonexistent_shadow"},
+                               expected_rc=ExitStatus.NOSUCH),
+
                 # Commit an active shadow instance when the CIB file is missing
-                make_test_group("Commit shadow instance (nonexistent CIB file)",
-                                "crm_shadow --commit {shadow} {fmt}",
-                                [Test, ValidatingTest],
-                                env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
-                                expected_rc=ExitStatus.USAGE),
-                make_test_group("Commit shadow instance (nonexistent CIB file) (force)",
-                                "crm_shadow --commit {shadow} --force {fmt}",
-                                [Test, ValidatingTest],
-                                env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
-                                expected_rc=ExitStatus.NOSUCH),
-                make_test_group("Get active shadow instance's diff (nonexistent CIB file)",
-                                "crm_shadow --diff {fmt}",
-                                [Test, ValidatingTest],
-                                env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
-                                expected_rc=ExitStatus.NOSUCH),
+                Test("Commit shadow instance (nonexistent CIB file)",
+                     f"crm_shadow --commit {SHADOW_NAME}",
+                     env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
+                     expected_rc=ExitStatus.USAGE),
+                ValidatingTest("Commit shadow instance (nonexistent CIB file)",
+                               f"crm_shadow --commit {SHADOW_NAME} --output-as=xml",
+                               env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
+                               expected_rc=ExitStatus.USAGE),
+
+                Test("Commit shadow instance (nonexistent CIB file) (force)",
+                     f"crm_shadow --commit {SHADOW_NAME} --force",
+                     env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
+                     expected_rc=ExitStatus.NOSUCH),
+                ValidatingTest("Commit shadow instance (nonexistent CIB file) (force)",
+                               f"crm_shadow --commit {SHADOW_NAME} --force --output-as=xml",
+                               env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
+                               expected_rc=ExitStatus.NOSUCH),
+
+                Test("Get active shadow instance's diff (nonexistent CIB file)",
+                     "crm_shadow --diff",
+                     env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
+                     expected_rc=ExitStatus.NOSUCH),
+                ValidatingTest("Get active shadow instance's diff (nonexistent CIB file)",
+                               "crm_shadow --diff --output-as=xml",
+                               env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
+                               expected_rc=ExitStatus.NOSUCH),
             ], cib_gen=partial(copy_existing_cib, f"{cts_cli_data}/crm_mon.xml")),
         ]
 
@@ -2161,76 +2317,117 @@ class CrmShadowRegressionTest(RegressionTest):
 
         create_1_tests = [
             # Create new shadow instance based on active CIB with no instance active
-            make_test_group("Create copied shadow instance (no active instance)",
-                            "crm_shadow --create {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
-                            env={"CIB_shadow": None}),
+            Test("Create copied shadow instance (no active instance)",
+                 f"crm_shadow --create {SHADOW_NAME} --batch",
+                 setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                 env={"CIB_shadow": None}),
+            ValidatingTest("Create copied shadow instance (no active instance)",
+                           f"crm_shadow --create {SHADOW_NAME} --batch --output-as=xml",
+                           setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                           env={"CIB_shadow": None}),
+
             # Create new shadow instance based on active CIB with other instance active
-            make_test_group("Create copied shadow instance (mismatch)",
-                            "crm_shadow --create {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
-                            env={"CIB_shadow": "nonexistent_shadow"}),
+            Test("Create copied shadow instance (mismatch)",
+                 f"crm_shadow --create {SHADOW_NAME} --batch",
+                 setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                 env={"CIB_shadow": "nonexistent_shadow"}),
+            ValidatingTest("Create copied shadow instance (mismatch)",
+                           f"crm_shadow --create {SHADOW_NAME} --batch --output-as=xml",
+                           setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                           env={"CIB_shadow": "nonexistent_shadow"}),
+
             # Create new shadow instance based on CIB (shadow file already exists)
-            make_test_group("Create copied shadow instance (file already exists)",
-                            "crm_shadow --create {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.CANTCREAT),
-            make_test_group("Create copied shadow instance (file already exists) (force)",
-                            "crm_shadow --create {shadow} --batch --force {fmt}",
-                            [Test, ValidatingTest]),
+            Test("Create copied shadow instance (file already exists)",
+                 f"crm_shadow --create {SHADOW_NAME} --batch",
+                 expected_rc=ExitStatus.CANTCREAT),
+            ValidatingTest("Create copied shadow instance (file already exists)",
+                           f"crm_shadow --create {SHADOW_NAME} --batch --output-as=xml",
+                           expected_rc=ExitStatus.CANTCREAT),
+
+            Test("Create copied shadow instance (file already exists) (force)",
+                 f"crm_shadow --create {SHADOW_NAME} --batch --force"),
+            ValidatingTest("Create copied shadow instance (file already exists) (force)",
+                           f"crm_shadow --create {SHADOW_NAME} --batch --force --output-as=xml"),
+
             # Create new shadow instance based on active CIB when the CIB file is missing
-            make_test_group("Create copied shadow instance (nonexistent CIB file) (force)",
-                            "crm_shadow --create {shadow} --batch --force {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.NOSUCH,
-                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
-                            env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
+            Test("Create copied shadow instance (nonexistent CIB file) (force)",
+                 f"crm_shadow --create {SHADOW_NAME} --batch --force",
+                 expected_rc=ExitStatus.NOSUCH,
+                 setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                 env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
+            ValidatingTest("Create copied shadow instance (nonexistent CIB file) (force)",
+                           f"crm_shadow --create {SHADOW_NAME} --batch --force --output-as=xml",
+                           expected_rc=ExitStatus.NOSUCH,
+                           setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                           env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
         ]
 
         create_2_tests = [
             # Create new empty shadow instance
-            make_test_group("Create empty shadow instance",
-                            "crm_shadow --create-empty {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
+            Test("Create empty shadow instance",
+                 f"crm_shadow --create-empty {SHADOW_NAME} --batch",
+                 setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
+            ValidatingTest("Create empty shadow instance",
+                           f"crm_shadow --create-empty {SHADOW_NAME} --batch --output-as=xml",
+                           setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
+
             # Create empty shadow instance with no active instance
-            make_test_group("Create empty shadow instance (no active instance)",
-                            "crm_shadow --create-empty {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
-                            env={"CIB_shadow": None}),
+            Test("Create empty shadow instance (no active instance)",
+                 f"crm_shadow --create-empty {SHADOW_NAME} --batch",
+                 setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                 env={"CIB_shadow": None}),
+            ValidatingTest("Create empty shadow instance (no active instance)",
+                           f"crm_shadow --create-empty {SHADOW_NAME} --batch --output-as=xml",
+                           setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                           env={"CIB_shadow": None}),
+
             # Create empty shadow instance with other instance active
-            make_test_group("Create empty shadow instance (mismatch)",
-                            "crm_shadow --create-empty {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
-                            env={"CIB_shadow": "nonexistent_shadow"}),
+            Test("Create empty shadow instance (mismatch)",
+                 f"crm_shadow --create-empty {SHADOW_NAME} --batch",
+                 setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                 env={"CIB_shadow": "nonexistent_shadow"}),
+            ValidatingTest("Create empty shadow instance (mismatch)",
+                           f"crm_shadow --create-empty {SHADOW_NAME} --batch --output-as=xml",
+                           setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                           env={"CIB_shadow": "nonexistent_shadow"}),
+
             # Create empty shadow instance when the CIB file is missing
-            make_test_group("Create empty shadow instance (nonexistent CIB file)",
-                            "crm_shadow --create-empty {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
-                            env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
+            Test("Create empty shadow instance (nonexistent CIB file)",
+                 f"crm_shadow --create-empty {SHADOW_NAME} --batch",
+                 setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                 env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
+            ValidatingTest("Create empty shadow instance (nonexistent CIB file)",
+                           f"crm_shadow --create-empty {SHADOW_NAME} --batch --output-as=xml",
+                           setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                           env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
+
             # Create empty shadow instance (shadow file already exists)
-            make_test_group("Create empty shadow instance (file already exists)",
-                            "crm_shadow --create-empty {shadow} --batch {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.CANTCREAT),
-            make_test_group("Create empty shadow instance (file already exists) (force)",
-                            "crm_shadow --create-empty {shadow} --batch --force {fmt}",
-                            [Test, ValidatingTest]),
+            Test("Create empty shadow instance (file already exists)",
+                 f"crm_shadow --create-empty {SHADOW_NAME} --batch",
+                 expected_rc=ExitStatus.CANTCREAT),
+            ValidatingTest("Create empty shadow instance (file already exists)",
+                           f"crm_shadow --create-empty {SHADOW_NAME} --batch --output-as=xml",
+                           expected_rc=ExitStatus.CANTCREAT),
+
+            Test("Create empty shadow instance (file already exists) (force)",
+                 f"crm_shadow --create-empty {SHADOW_NAME} --batch --force"),
+            ValidatingTest("Create empty shadow instance (file already exists) (force)",
+                           f"crm_shadow --create-empty {SHADOW_NAME} --batch --force --output-as=xml"),
+
             # Query shadow instance with an empty CIB.
             # --which and --file queries were done earlier.
             TestGroup([
-                make_test_group("Get active shadow instance's contents (empty CIB)",
-                                "crm_shadow --display {fmt}",
-                                [Test, ValidatingTest]),
-                make_test_group("Get active shadow instance's diff (empty CIB)",
-                                "crm_shadow --diff {fmt}",
-                                [Test, ValidatingTest],
-                                expected_rc=ExitStatus.ERROR),
+                Test("Get active shadow instance's contents (empty CIB)",
+                     "crm_shadow --display"),
+                ValidatingTest("Get active shadow instance's contents (empty CIB)",
+                               "crm_shadow --display --output-as=xml"),
+
+                Test("Get active shadow instance's diff (empty CIB)",
+                     "crm_shadow --diff",
+                     expected_rc=ExitStatus.ERROR),
+                ValidatingTest("Get active shadow instance's diff (empty CIB)",
+                               "crm_shadow --diff --output-as=xml",
+                               expected_rc=ExitStatus.ERROR),
             ], setup=delete_shadow_resource_defaults),
         ]
 
@@ -2256,47 +2453,61 @@ class CrmShadowRegressionTest(RegressionTest):
                            setup="crm_attribute -n admin_epoch -v 199",
                            expected_rc=ExitStatus.ERROR),
 
-            make_test_group("Reset shadow instance to active CIB with nonexistent shadow file",
-                            "crm_shadow --reset {shadow} --batch --force {fmt}",
-                            [Test, ValidatingTest],
-                            setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
+            Test("Reset shadow instance to active CIB with nonexistent shadow file",
+                 f"crm_shadow --reset {SHADOW_NAME} --batch --force",
+                 setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
+            ValidatingTest("Reset shadow instance to active CIB with nonexistent shadow file",
+                           f"crm_shadow --reset {SHADOW_NAME} --batch --force --output-as=xml",
+                           setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
+
             Test("Active shadow instance no different from active CIB after force-reset",
                  "crm_shadow --diff"),
         ]
 
         reset_2_tests = [
-            make_test_group("Reset inactive shadow instance (none active) to active CIB",
-                            "crm_shadow --reset {shadow} --force --batch {fmt}",
-                            [Test, ValidatingTest]),
+            Test("Reset inactive shadow instance (none active) to active CIB",
+                 f"crm_shadow --reset {SHADOW_NAME} --force --batch"),
+            ValidatingTest("Reset inactive shadow instance (none active) to active CIB",
+                           f"crm_shadow --reset {SHADOW_NAME} --force --batch --output-as=xml"),
         ]
 
         reset_3_tests = [
-            make_test_group("Reset inactive shadow instance while another instance active",
-                            "crm_shadow --reset {shadow} --batch --force {fmt}",
-                            [Test, ValidatingTest]),
+            Test("Reset inactive shadow instance while another instance active",
+                 f"crm_shadow --reset {SHADOW_NAME} --batch --force"),
+            ValidatingTest("Reset inactive shadow instance while another instance active",
+                           f"crm_shadow --reset {SHADOW_NAME} --batch --force --output-as=xml"),
         ]
 
         reset_4_tests = [
-            make_test_group("Reset shadow instance with nonexistent CIB",
-                            "crm_shadow --reset {shadow} --batch --force {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.NOSUCH),
+            Test("Reset shadow instance with nonexistent CIB",
+                 f"crm_shadow --reset {SHADOW_NAME} --batch --force",
+                 expected_rc=ExitStatus.NOSUCH),
+            ValidatingTest("Reset shadow instance with nonexistent CIB",
+                           f"crm_shadow --reset {SHADOW_NAME} --batch --force --output-as=xml",
+                           expected_rc=ExitStatus.NOSUCH),
         ]
 
         # Switch shadow instances
         switch_tests = [
-            make_test_group("Switch to new shadow instance",
-                            "crm_shadow --switch {shadow} --batch {fmt}",
-                            [Test, ValidatingTest]),
+            Test("Switch to new shadow instance",
+                 f"crm_shadow --switch {SHADOW_NAME} --batch"),
+            ValidatingTest("Switch to new shadow instance",
+                           f"crm_shadow --switch {SHADOW_NAME} --batch --output-as=xml"),
+
             TestGroup([
-                make_test_group("Switch to nonexistent shadow instance",
-                                "crm_shadow --switch {shadow} --batch {fmt}",
-                                [Test, ValidatingTest],
-                                expected_rc=ExitStatus.NOSUCH),
-                make_test_group("Switch to nonexistent shadow instance (force)",
-                                "crm_shadow --switch {shadow} --batch --force {fmt}",
-                                [Test, ValidatingTest],
-                                expected_rc=ExitStatus.NOSUCH),
+                Test("Switch to nonexistent shadow instance",
+                     f"crm_shadow --switch {SHADOW_NAME} --batch",
+                     expected_rc=ExitStatus.NOSUCH),
+                ValidatingTest("Switch to nonexistent shadow instance",
+                               f"crm_shadow --switch {SHADOW_NAME} --batch --output-as=xml",
+                               expected_rc=ExitStatus.NOSUCH),
+
+                Test("Switch to nonexistent shadow instance (force)",
+                     f"crm_shadow --switch {SHADOW_NAME} --batch --force",
+                     expected_rc=ExitStatus.NOSUCH),
+                ValidatingTest("Switch to nonexistent shadow instance (force)",
+                               f"crm_shadow --switch {SHADOW_NAME} --batch --force --output-as=xml",
+                               expected_rc=ExitStatus.NOSUCH),
             ], setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
         ]
 
@@ -2356,18 +2567,27 @@ class CrmVerifyRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         invalid_tests = [
-            make_test_group("Verify a file-specified invalid configuration",
-                            "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.CONFIG),
-            make_test_group("Verify a file-specified invalid configuration (verbose)",
-                            "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --verbose {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.CONFIG),
-            make_test_group("Verify a file-specified invalid configuration (quiet)",
-                            "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --quiet {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.CONFIG),
+            Test("Verify a file-specified invalid configuration",
+                 f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml",
+                 expected_rc=ExitStatus.CONFIG),
+            ValidatingTest("Verify a file-specified invalid configuration",
+                           f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --output-as=xml",
+                           expected_rc=ExitStatus.CONFIG),
+
+            Test("Verify a file-specified invalid configuration (verbose)",
+                 f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --verbose",
+                 expected_rc=ExitStatus.CONFIG),
+            ValidatingTest("Verify a file-specified invalid configuration (verbose)",
+                           f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --verbose --output-as=xml",
+                           expected_rc=ExitStatus.CONFIG),
+
+            Test("Verify a file-specified invalid configuration (quiet)",
+                 f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --quiet",
+                 expected_rc=ExitStatus.CONFIG),
+            ValidatingTest("Verify a file-specified invalid configuration (quiet)",
+                           f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --quiet --output-as=xml",
+                           expected_rc=ExitStatus.CONFIG),
+
             ValidatingTest("Verify another file-specified invalid configuration",
                            f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_no_stonith.xml --output-as=xml",
                            expected_rc=ExitStatus.CONFIG),
@@ -2408,11 +2628,14 @@ class CrmMonRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         basic_tests = [
-            make_test_group("Basic output", "crm_mon -1 {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Output without node section",
-                            "crm_mon -1 --exclude=nodes {fmt}",
-                            [Test, ValidatingTest]),
+            Test("Basic output", "crm_mon -1"),
+            ValidatingTest("Basic output", "crm_mon -1 --output-as=xml"),
+
+            Test("Output without node section",
+                 "crm_mon -1 --exclude=nodes"),
+            ValidatingTest("Output without node section",
+                           "crm_mon -1 --exclude=nodes --output-as=xml"),
+
             # The next test doesn't need to be performed for other output formats.  It's
             # really just a test to make sure that blank lines are correct.
             Test("Output with only the node section",
@@ -2429,45 +2652,67 @@ class CrmMonRegressionTest(RegressionTest):
                  "crm_mon -1 --include=all --group-by-node --brief"),
             ValidatingTest("Output grouped by node",
                            "crm_mon --output-as=xml --group-by-node"),
-            make_test_group("Complete output filtered by node",
-                            "crm_mon -1 --include=all --node=cluster01 {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Complete output filtered by tag",
-                            "crm_mon -1 --include=all --node=even-nodes {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Complete output filtered by resource tag",
-                            "crm_mon -1 --include=all --resource=fencing-rscs {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Output filtered by node that doesn't exist",
-                            "crm_mon -1 --node=blah {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("Complete output filtered by node",
+                 "crm_mon -1 --include=all --node=cluster01"),
+            ValidatingTest("Complete output filtered by node",
+                           "crm_mon -1 --include=all --node=cluster01 --output-as=xml"),
+
+            Test("Complete output filtered by tag",
+                 "crm_mon -1 --include=all --node=even-nodes"),
+            ValidatingTest("Complete output filtered by tag",
+                           "crm_mon -1 --include=all --node=even-nodes --output-as=xml"),
+
+            Test("Complete output filtered by resource tag",
+                 "crm_mon -1 --include=all --resource=fencing-rscs"),
+            ValidatingTest("Complete output filtered by resource tag",
+                           "crm_mon -1 --include=all --resource=fencing-rscs --output-as=xml"),
+
+            Test("Output filtered by node that doesn't exist",
+                 "crm_mon -1 --node=blah"),
+            ValidatingTest("Output filtered by node that doesn't exist",
+                           "crm_mon -1 --node=blah --output-as=xml"),
+
             Test("Basic text output with inactive resources", "crm_mon -1 -r"),
             # XML already includes inactive resources
             Test("Basic text output with inactive resources, filtered by node",
                  "crm_mon -1 -r --node=cluster02"),
-            make_test_group("Complete output filtered by primitive resource",
-                            "crm_mon -1 --include=all --resource=Fencing {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Complete output filtered by group resource",
-                            "crm_mon -1 --include=all --resource=exim-group {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("Complete output filtered by primitive resource",
+                 "crm_mon -1 --include=all --resource=Fencing"),
+            ValidatingTest("Complete output filtered by primitive resource",
+                           "crm_mon -1 --include=all --resource=Fencing --output-as=xml"),
+
+            Test("Complete output filtered by group resource",
+                 "crm_mon -1 --include=all --resource=exim-group"),
+            ValidatingTest("Complete output filtered by group resource",
+                           "crm_mon -1 --include=all --resource=exim-group --output-as=xml"),
+
             Test("Complete text output filtered by group resource member",
                  "crm_mon -1 --include=all --resource=Public-IP"),
             ValidatingTest("Output filtered by group resource member",
                            "crm_mon --output-as=xml --resource=Email"),
-            make_test_group("Complete output filtered by clone resource",
-                            "crm_mon -1 --include=all --resource=ping-clone {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Complete output filtered by clone resource instance",
-                            "crm_mon -1 --include=all --resource=ping {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("Complete output filtered by clone resource",
+                 "crm_mon -1 --include=all --resource=ping-clone"),
+            ValidatingTest("Complete output filtered by clone resource",
+                           "crm_mon -1 --include=all --resource=ping-clone --output-as=xml"),
+
+            Test("Complete output filtered by clone resource instance",
+                 "crm_mon -1 --include=all --resource=ping"),
+            ValidatingTest("Complete output filtered by clone resource instance",
+                           "crm_mon -1 --include=all --resource=ping --output-as=xml"),
+
             Test("Complete text output filtered by exact clone resource instance",
                  "crm_mon -1 --include=all --show-detail --resource=ping:0"),
             ValidatingTest("Output filtered by exact clone resource instance",
                            "crm_mon --output-as=xml --resource=ping:1"),
-            make_test_group("Output filtered by resource that doesn't exist",
-                            "crm_mon -1 --resource=blah {fmt}",
-                            [Test, ValidatingTest]),
+
+            Test("Output filtered by resource that doesn't exist",
+                 "crm_mon -1 --resource=blah"),
+            ValidatingTest("Output filtered by resource that doesn't exist",
+                           "crm_mon -1 --resource=blah --output-as=xml"),
+
             Test("Basic text output with inactive resources, filtered by tag",
                  "crm_mon -1 -r --resource=inactive-rscs"),
             Test("Basic text output with inactive resources, filtered by bundle resource",
@@ -2537,9 +2782,11 @@ class CrmMonRegressionTest(RegressionTest):
         ]
 
         unmanaged_tests = [
-            make_test_group("Output of active unmanaged resource on offline node",
-                            "crm_mon -1 {fmt}",
-                            [Test, ValidatingTest]),
+            Test("Output of active unmanaged resource on offline node",
+                 "crm_mon -1"),
+            ValidatingTest("Output of active unmanaged resource on offline node",
+                           "crm_mon -1 --output-as=xml"),
+
             Test("Brief text output of active unmanaged resource on offline node",
                  "crm_mon -1 --brief"),
             Test("Brief text output of active unmanaged resource on offline node, grouped by node",
@@ -2547,23 +2794,31 @@ class CrmMonRegressionTest(RegressionTest):
         ]
 
         maint1_tests = [
-            make_test_group("Output of all resources with maintenance-mode enabled",
-                            "crm_mon -1 -r {fmt}",
-                            [Test, ValidatingTest],
-                            setup="crm_attribute -n maintenance-mode -v true",
-                            teardown="crm_attribute -n maintenance-mode -v false"),
-            make_test_group("Output of all resources with maintenance enabled for a node",
-                            "crm_mon -1 -r {fmt}",
-                            [Test, ValidatingTest],
-                            setup="crm_attribute -n maintenance -N cluster02 -v true",
-                            teardown="crm_attribute -n maintenance -N cluster02 -v false"),
+            Test("Output of all resources with maintenance-mode enabled",
+                 "crm_mon -1 -r",
+                 setup="crm_attribute -n maintenance-mode -v true",
+                 teardown="crm_attribute -n maintenance-mode -v false"),
+            ValidatingTest("Output of all resources with maintenance-mode enabled",
+                           "crm_mon -1 -r --output-as=xml",
+                           setup="crm_attribute -n maintenance-mode -v true",
+                           teardown="crm_attribute -n maintenance-mode -v false"),
+
+            Test("Output of all resources with maintenance enabled for a node",
+                 "crm_mon -1 -r",
+                 setup="crm_attribute -n maintenance -N cluster02 -v true",
+                 teardown="crm_attribute -n maintenance -N cluster02 -v false"),
+            ValidatingTest("Output of all resources with maintenance enabled for a node",
+                           "crm_mon -1 -r --output-as=xml",
+                           setup="crm_attribute -n maintenance -N cluster02 -v true",
+                           teardown="crm_attribute -n maintenance -N cluster02 -v false"),
         ]
 
         maint2_tests = [
             # The fence resource is excluded, for comparison
-            make_test_group("Output of all resources with maintenance meta attribute true",
-                            "crm_mon -1 -r {fmt}",
-                            [Test, ValidatingTest]),
+            Test("Output of all resources with maintenance meta attribute true",
+                 "crm_mon -1 -r"),
+            ValidatingTest("Output of all resources with maintenance meta attribute true",
+                           "crm_mon -1 -r --output-as=xml"),
         ]
 
         t180_tests = [
@@ -3048,57 +3303,99 @@ class RulesRegressionTest(RegressionTest):
 </cib>""" % tomorrow.strftime("%F %T %z")
 
         usage_tests = [
-            make_test_group("crm_rule given no arguments", "crm_rule {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.USAGE),
-            make_test_group("crm_rule given no rule to check", "crm_rule -c {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.USAGE),
-            make_test_group("crm_rule given invalid input XML",
-                            "crm_rule -c -r blahblah -X invalidxml {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.DATAERR),
-            make_test_group("crm_rule given invalid input XML on stdin",
-                            "crm_rule -c -r blahblah -X - {fmt}",
-                            [Test, ValidatingTest],
-                            stdin=StdinCmd("echo invalidxml"),
-                            expected_rc=ExitStatus.DATAERR),
+            Test("crm_rule given no arguments", "crm_rule",
+                 expected_rc=ExitStatus.USAGE),
+            ValidatingTest("crm_rule given no arguments", "crm_rule --output-as=xml",
+                           expected_rc=ExitStatus.USAGE),
+
+            Test("crm_rule given no rule to check", "crm_rule -c",
+                 expected_rc=ExitStatus.USAGE),
+            ValidatingTest("crm_rule given no rule to check", "crm_rule -c --output-as=xml",
+                           expected_rc=ExitStatus.USAGE),
+
+            Test("crm_rule given invalid input XML",
+                 "crm_rule -c -r blahblah -X invalidxml",
+                 expected_rc=ExitStatus.DATAERR),
+            ValidatingTest("crm_rule given invalid input XML",
+                           "crm_rule -c -r blahblah -X invalidxml --output-as=xml",
+                           expected_rc=ExitStatus.DATAERR),
+
+            Test("crm_rule given invalid input XML on stdin",
+                 "crm_rule -c -r blahblah -X -",
+                 stdin=StdinCmd("echo invalidxml"),
+                 expected_rc=ExitStatus.DATAERR),
+            ValidatingTest("crm_rule given invalid input XML on stdin",
+                           "crm_rule -c -r blahblah -X - --output-as=xml",
+                           stdin=StdinCmd("echo invalidxml"),
+                           expected_rc=ExitStatus.DATAERR),
         ]
 
         basic_tests = [
-            make_test_group("Try to check a rule that doesn't exist",
-                            "crm_rule -c -r blahblah {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.NOSUCH),
-            make_test_group("Try to check a rule that has too many date_expressions",
-                            "crm_rule -c -r cli-rule-too-many-date-expressions {fmt}",
-                            [Test, ValidatingTest], expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
-            make_test_group("Verify basic rule is expired",
-                            "crm_rule -c -r cli-prefer-rule-dummy-expired {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.EXPIRED),
-            make_test_group("Verify basic rule worked in the past",
-                            "crm_rule -c -r cli-prefer-rule-dummy-expired -d 20180101 {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Verify basic rule is not yet in effect",
-                            "crm_rule -c -r cli-prefer-rule-dummy-not-yet {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.NOT_YET_IN_EFFECT),
-            make_test_group("Verify date_spec rule with years has expired",
-                            "crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.EXPIRED),
-            make_test_group("Verify multiple rules at once",
-                            "crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.EXPIRED),
-            make_test_group("Verify date_spec rule with years is in effect",
-                            "crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201 {fmt}",
-                            [Test, ValidatingTest]),
-            make_test_group("Try to check a rule whose date_spec does not contain years=",
-                            "crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
-            make_test_group("Try to check a rule with no date_expression",
-                            "crm_rule -c -r cli-no-date_expression-rule {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
+            Test("Try to check a rule that doesn't exist",
+                 "crm_rule -c -r blahblah",
+                 expected_rc=ExitStatus.NOSUCH),
+            ValidatingTest("Try to check a rule that doesn't exist",
+                           "crm_rule -c -r blahblah --output-as=xml",
+                           expected_rc=ExitStatus.NOSUCH),
+
+            Test("Try to check a rule that has too many date_expressions",
+                 "crm_rule -c -r cli-rule-too-many-date-expressions",
+                 expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
+            ValidatingTest("Try to check a rule that has too many date_expressions",
+                           "crm_rule -c -r cli-rule-too-many-date-expressions --output-as=xml",
+                           expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
+
+            Test("Verify basic rule is expired",
+                 "crm_rule -c -r cli-prefer-rule-dummy-expired",
+                 expected_rc=ExitStatus.EXPIRED),
+            ValidatingTest("Verify basic rule is expired",
+                           "crm_rule -c -r cli-prefer-rule-dummy-expired --output-as=xml",
+                           expected_rc=ExitStatus.EXPIRED),
+
+            Test("Verify basic rule worked in the past",
+                 "crm_rule -c -r cli-prefer-rule-dummy-expired -d 20180101"),
+            ValidatingTest("Verify basic rule worked in the past",
+                           "crm_rule -c -r cli-prefer-rule-dummy-expired -d 20180101 --output-as=xml"),
+
+            Test("Verify basic rule is not yet in effect",
+                 "crm_rule -c -r cli-prefer-rule-dummy-not-yet",
+                 expected_rc=ExitStatus.NOT_YET_IN_EFFECT),
+            ValidatingTest("Verify basic rule is not yet in effect",
+                           "crm_rule -c -r cli-prefer-rule-dummy-not-yet --output-as=xml",
+                           expected_rc=ExitStatus.NOT_YET_IN_EFFECT),
+
+            Test("Verify date_spec rule with years has expired",
+                 "crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years",
+                 expected_rc=ExitStatus.EXPIRED),
+            ValidatingTest("Verify date_spec rule with years has expired",
+                           "crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years --output-as=xml",
+                           expected_rc=ExitStatus.EXPIRED),
+
+            Test("Verify multiple rules at once",
+                 "crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years",
+                 expected_rc=ExitStatus.EXPIRED),
+            ValidatingTest("Verify multiple rules at once",
+                           "crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years --output-as=xml",
+                           expected_rc=ExitStatus.EXPIRED),
+
+            Test("Verify date_spec rule with years is in effect",
+                 "crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201"),
+            ValidatingTest("Verify date_spec rule with years is in effect",
+                           "crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201 --output-as=xml"),
+
+            Test("Try to check a rule whose date_spec does not contain years=",
+                 "crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years",
+                 expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
+            ValidatingTest("Try to check a rule whose date_spec does not contain years=",
+                           "crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years --output-as=xml",
+                           expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
+
+            Test("Try to check a rule with no date_expression",
+                 "crm_rule -c -r cli-no-date_expression-rule",
+                 expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
+            ValidatingTest("Try to check a rule with no date_expression",
+                           "crm_rule -c -r cli-no-date_expression-rule --output-as=xml",
+                           expected_rc=ExitStatus.UNIMPLEMENT_FEATURE),
         ]
 
         return usage_tests + [
@@ -3153,15 +3450,18 @@ class AgentRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         return [
-            make_test_group("Validate a valid resource configuration",
-                            "crm_resource --validate --class ocf --provider pacemaker --agent Dummy {fmt}",
-                            [Test, ValidatingTest]),
+            Test("Validate a resource configuration",
+                 "crm_resource --validate --class ocf --provider pacemaker --agent Dummy"),
+            ValidatingTest("Validate a resource configuration",
+                           "crm_resource --validate --class ocf --provider pacemaker --agent Dummy --output-as=xml"),
+
             # Make the Dummy configuration invalid (op_sleep can't be a generic string)
-            make_test_group("Validate an invalid resource configuration",
-                            "crm_resource --validate --class ocf --provider pacemaker --agent Dummy {fmt}",
-                            [Test, ValidatingTest],
-                            expected_rc=ExitStatus.NOT_CONFIGURED,
-                            env={"OCF_RESKEY_op_sleep": "asdf"}),
+            Test("Validate an invalid resource configuration",
+                 "crm_resource --validate --class ocf --provider pacemaker --agent Dummy",
+                 expected_rc=ExitStatus.NOT_CONFIGURED, env={"OCF_RESKEY_op_sleep": "asdf"}),
+            ValidatingTest("Validate an invalid resource configuration",
+                           "crm_resource --validate --class ocf --provider pacemaker --agent Dummy --output-as=xml",
+                           expected_rc=ExitStatus.NOT_CONFIGURED, env={"OCF_RESKEY_op_sleep": "asdf"}),
         ]
 
 
