@@ -79,12 +79,12 @@ cts-cli
 =#=#=#= End test: Get active shadow instance (copied) (XML) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance (copied) (XML)
 =#=#=#= Begin test: Get active shadow instance's file name (copied) =#=#=#=
-/tmp/cts-cli.shadow/shadow.cts-cli
+cts-cli.shadow/shadow.cts-cli
 =#=#=#= End test: Get active shadow instance's file name (copied) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's file name (copied)
 =#=#=#= Begin test: Get active shadow instance's file name (copied) (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_shadow --file --output-as=xml">
-  <shadow instance="cts-cli" file="/tmp/cts-cli.shadow/shadow.cts-cli"/>
+  <shadow instance="cts-cli" file="cts-cli.shadow/shadow.cts-cli"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Get active shadow instance's file name (copied) (XML) - OK (0) =#=#=#=
