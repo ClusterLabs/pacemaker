@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1357,8 +1357,7 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     }
 
     if (action->rc != PCMK_OCF_UNKNOWN) {
-        pcmk__set_result(&(cmd->result), action->rc, action->status,
-                         services__exit_reason(action));
+        services__copy_result(action, &(cmd->result));
         services_action_free(action);
         cmd_finalize(cmd, rsc);
         return;
@@ -1383,9 +1382,7 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
          * called cmd_finalize(), which in this case should only reset (not
          * free) cmd.
          */
-
-        pcmk__set_result(&(cmd->result), action->rc, action->status,
-                         services__exit_reason(action));
+        services__copy_result(action, &(cmd->result));
         services_action_free(action);
     }
 }
