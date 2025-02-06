@@ -3271,7 +3271,8 @@ def results(regs, save, verbose):
     output_differs = 0
 
     if verbose:
-        print("\n\nResults")
+        print("\n\nResults\n\n")
+        sys.stdout.flush()
 
     for r in regs:
         r.write()
@@ -3280,7 +3281,7 @@ def results(regs, save, verbose):
             dest = "%s/cli/regression.%s.exp" % (test_home, r.name)
             copyfile(r.results_file, dest)
 
-        r.diff()
+        r.diff(verbose)
         if not r.identical:
             output_differs += 1
 
@@ -3296,7 +3297,8 @@ def summary(regs, output_differs, verbose):
         test_failures += r.failures
         test_successes += r.successes
 
-    print("\n\nSummary")
+    print("\n\nSummary\n\n")
+    sys.stdout.flush()
 
     # First, print all the Passed/Failed lines from each Test run.
     for r in regs:
