@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -63,8 +63,7 @@ static void log_action(stonith_action_t *action, pid_t pid);
 static void
 set_result_from_svc_action(stonith_action_t *action, svc_action_t *svc_action)
 {
-    pcmk__set_result(&(action->result), svc_action->rc, svc_action->status,
-                     services__exit_reason(svc_action));
+    services__copy_result(svc_action, &(action->result));
     pcmk__set_result_output(&(action->result),
                             services__grab_stdout(svc_action),
                             services__grab_stderr(svc_action));
