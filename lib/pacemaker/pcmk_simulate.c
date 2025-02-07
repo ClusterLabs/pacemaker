@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,7 @@
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 
-#include <stdint.h>
+#include <stdint.h>                 // uint32_t, uint64_t
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -179,7 +179,7 @@ print_transition_summary(pcmk_scheduler_t *scheduler, bool print_spacer)
 
 /*!
  * \internal
- * \brief Reset scheduler input, output, date, and flags
+ * \brief Reset scheduler, set some members, and unpack status
  *
  * \param[in,out] scheduler  Scheduler data
  * \param[in]     input      What to set as cluster input
@@ -191,6 +191,8 @@ static void
 reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
       const char *use_date, unsigned int flags)
 {
+    pcmk_reset_scheduler(scheduler);
+
     scheduler->input = input;
     scheduler->priv->out = out;
     set_effective_date(scheduler, true, use_date);
@@ -203,6 +205,7 @@ reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
+    cluster_status(scheduler);
 }
 
 /*!
@@ -314,26 +317,57 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
 }
 
 /*!
+ * \internal
+ * \brief \c scandir() filter for scheduler input CIB files to profile
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 0 if the filename begins with '.' or does not end in ".xml"
+ * \retval 1 otherwise
+ */
+static int
+profile_filter(const struct dirent *entry)
+{
+    const char *filename = entry->d_name;
+
+    if (pcmk__str_any_of(filename, ".", "..", NULL)) {
+        // Skip current (".") and parent ("..") directory links
+        return 0;
+    }
+    if (filename[0] == '.') {
+        crm_trace("Not profiling hidden file '%s'", filename);
+        return 0;
+    }
+    if (!pcmk__ends_with_ext(filename, ".xml")) {
+        crm_trace("Not profiling file '%s' without '.xml' extension", filename);
+        return 0;
+    }
+    return 1;
+}
+
+/*!
+ * \internal
  * \brief Profile the configuration updates and scheduler actions in a single
  *        CIB file, printing the profiling timings.
  *
- * \note \p scheduler->priv->out must have been set to a valid \p pcmk__output_t
+ * \note \p scheduler->priv->out must have been set to a valid \c pcmk__output_t
  *       object before this function is called.
  *
  * \param[in]     xml_file   The CIB file to profile
  * \param[in]     repeat     Number of times to run
  * \param[in,out] scheduler  Scheduler data
+ * \param[in,out] flags      Group of <tt>enum pcmk__scheduler_flags</tt> to set
+ *                           in addition to defaults
  * \param[in]     use_date   The date to set the cluster's time to (may be NULL)
  */
 static void
-profile_file(const char *xml_file, long long repeat,
-             pcmk_scheduler_t *scheduler, const char *use_date)
+profile_file(const char *xml_file, unsigned int repeat,
+             pcmk_scheduler_t *scheduler, uint64_t flags, const char *use_date)
 {
     pcmk__output_t *out = scheduler->priv->out;
     xmlNode *cib_object = NULL;
     clock_t start = 0;
     clock_t end;
-    unsigned long long scheduler_flags = pcmk__sched_none;
 
     pcmk__assert(out != NULL);
 
@@ -345,76 +379,90 @@ profile_file(const char *xml_file, long long repeat,
     }
 
     if (pcmk__update_configured_schema(&cib_object, false) != pcmk_rc_ok) {
-        pcmk__xml_free(cib_object);
-        return;
+        goto done;
     }
 
     if (!pcmk__validate_xml(cib_object, NULL, NULL, NULL)) {
-        pcmk__xml_free(cib_object);
-        return;
-    }
-
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
-        scheduler_flags |= pcmk__sched_output_scores;
-    }
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
-        scheduler_flags |= pcmk__sched_show_utilization;
+        goto done;
     }
 
     for (int i = 0; i < repeat; ++i) {
-        xmlNode *input = cib_object;
-
-        if (repeat > 1) {
-            input = pcmk__xml_copy(NULL, cib_object);
-        }
-        scheduler->input = input;
-        set_effective_date(scheduler, false, use_date);
-        pcmk__schedule_actions(input, scheduler_flags, scheduler);
         pcmk_reset_scheduler(scheduler);
+
+        scheduler->input = cib_object;
+        pcmk__set_scheduler_flags(scheduler, flags);
+        set_effective_date(scheduler, false, use_date);
+        pcmk__schedule_actions(scheduler);
+
+        // Avoid freeing cib_object in pcmk_reset_scheduler()
+        scheduler->input = NULL;
     }
 
+    pcmk_reset_scheduler(scheduler);
     end = clock();
     out->message(out, "profile", xml_file, start, end);
+
+done:
+    pcmk__xml_free(cib_object);
 }
 
-void
-pcmk__profile_dir(const char *dir, long long repeat,
-                  pcmk_scheduler_t *scheduler, const char *use_date)
+int
+pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
+                  unsigned int repeat, const char *use_date)
 {
-    pcmk__output_t *out = scheduler->priv->out;
+    pcmk_scheduler_t *scheduler = NULL;
+    uint64_t scheduler_flags = pcmk__sched_none;
     struct dirent **namelist;
-
-    int file_num = scandir(dir, &namelist, 0, alphasort);
+    int num_files = 0;
+    int rc = pcmk_rc_ok;
 
     pcmk__assert(out != NULL);
 
-    if (file_num > 0) {
-        struct stat prop;
-        char buffer[FILENAME_MAX];
-
-        out->begin_list(out, NULL, NULL, "Timings");
-
-        while (file_num--) {
-            if ('.' == namelist[file_num]->d_name[0]) {
-                free(namelist[file_num]);
-                continue;
-
-            } else if (!pcmk__ends_with_ext(namelist[file_num]->d_name,
-                                            ".xml")) {
-                free(namelist[file_num]);
-                continue;
-            }
-            snprintf(buffer, sizeof(buffer), "%s/%s",
-                     dir, namelist[file_num]->d_name);
-            if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-                profile_file(buffer, repeat, scheduler, use_date);
-            }
-            free(namelist[file_num]);
-        }
-        free(namelist);
-
-        out->end_list(out);
+    scheduler = pcmk_new_scheduler();
+    if (scheduler == NULL) {
+        return ENOMEM;
     }
+
+    scheduler->priv->out = out;
+    if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
+        scheduler_flags |= pcmk__sched_output_scores;
+    }
+    if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
+        scheduler_flags |= pcmk__sched_show_utilization;
+    }
+
+    num_files = scandir(dir, &namelist, profile_filter, alphasort);
+    if (num_files < 0) {
+        rc = errno;
+        goto done;
+    }
+    if (num_files == 0) {
+        goto done;
+    }
+
+    out->begin_list(out, NULL, NULL, "Timings");
+
+    for (int i = 0; i < num_files; i++) {
+        const char *filename = namelist[i]->d_name;
+        char buffer[FILENAME_MAX];
+        struct stat prop;
+
+        // Check for regular file here because profile_filter() doesn't have dir
+        snprintf(buffer, sizeof(buffer), "%s/%s", dir, filename);
+
+        if ((stat(buffer, &prop) == 0) && S_ISREG(prop.st_mode)) {
+            profile_file(buffer, repeat, scheduler, scheduler_flags, use_date);
+        } else {
+            crm_trace("Not profiling file '%s': not a regular file", filename);
+        }
+        free(namelist[i]);
+    }
+    out->end_list(out);
+
+done:
+    pcmk_free_scheduler(scheduler);
+    free(namelist);
+    return rc;
 }
 
 /*!
@@ -804,7 +852,7 @@ pcmk__simulate_transition(pcmk_scheduler_t *scheduler, cib_t *cib,
 
 int
 pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
-               const pcmk_injections_t *injections, unsigned int flags,
+               const pcmk_injections_t *injections, uint32_t flags,
                uint32_t section_opts, const char *use_date,
                const char *input_file, const char *graph_file,
                const char *dot_file)
@@ -820,7 +868,6 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     }
 
     reset(scheduler, input, out, use_date, flags);
-    cluster_status(scheduler);
 
     if (!out->is_quiet(out)) {
         const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
@@ -871,9 +918,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             goto simulate_done;
         }
 
-        pcmk_reset_scheduler(scheduler);
         reset(scheduler, input, out, use_date, flags);
-        cluster_status(scheduler);
     }
 
     if (input_file != NULL) {
@@ -885,14 +930,6 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
         pcmk__output_t *logger_out = NULL;
-        unsigned long long scheduler_flags = pcmk__sched_none;
-
-        if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
-            scheduler_flags |= pcmk__sched_output_scores;
-        }
-        if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
-            scheduler_flags |= pcmk__sched_show_utilization;
-        }
 
         if (pcmk_all_flags_set(scheduler->flags,
                                pcmk__sched_output_scores
@@ -922,7 +959,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
             scheduler->priv->out = logger_out;
         }
 
-        pcmk__schedule_actions(input, scheduler_flags, scheduler);
+        pcmk__schedule_actions(scheduler);
 
         if (logger_out == NULL) {
             out->end_list(out);
@@ -992,6 +1029,7 @@ simulate_done:
     return rc;
 }
 
+// @COMPAT Use uint32_t for flags
 int
 pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *scheduler,
               const pcmk_injections_t *injections, unsigned int flags,
@@ -1010,8 +1048,9 @@ pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *scheduler,
     pe__register_messages(out);
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__simulate(scheduler, out, injections, flags, section_opts,
-                        use_date, input_file, graph_file, dot_file);
+    rc = pcmk__simulate(scheduler, out, injections, (uint32_t) flags,
+                        (uint32_t) section_opts, use_date, input_file,
+                        graph_file, dot_file);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

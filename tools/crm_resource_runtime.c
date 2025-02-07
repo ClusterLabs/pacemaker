@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1474,8 +1474,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
             goto done;
         }
 
-        pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
-                               scheduler);
+        pcmk__schedule_actions(scheduler);
 
         prev_quiet = out->is_quiet(out);
         out->quiet = true;
@@ -2108,8 +2107,8 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         if (rc != pcmk_rc_ok) {
             break;
         }
-        pcmk__schedule_actions(scheduler->input, pcmk__sched_no_counts,
-                               scheduler);
+        pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
+        pcmk__schedule_actions(scheduler);
 
         if (!printed_version_warning) {
             /* If the DC has a different version than the local node, the two

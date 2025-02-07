@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -91,9 +91,14 @@ handle_pecalc_request(pcmk__request_t *request)
     }
 
     if (process) {
-        pcmk__schedule_actions(converted,
-                               pcmk__sched_no_counts
-                               |pcmk__sched_show_utilization, scheduler);
+        scheduler->input = converted;
+        pcmk__set_scheduler_flags(scheduler,
+                                  pcmk__sched_no_counts
+                                  |pcmk__sched_show_utilization);
+        pcmk__schedule_actions(scheduler);
+
+        // Don't free converted as part of scheduler
+        scheduler->input = NULL;
     }
 
     // Get appropriate index into series[] array
@@ -122,7 +127,6 @@ handle_pecalc_request(pcmk__request_t *request)
     crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
               series[series_id].name, series_wrap, seq, value);
 
-    scheduler->input = NULL;
     reply = pcmk__new_reply(msg, scheduler->priv->graph);
 
     if (reply == NULL) {
