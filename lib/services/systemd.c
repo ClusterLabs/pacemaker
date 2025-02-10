@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,9 @@
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 
+#include <inttypes.h>               // PRIu32
 #include <stdbool.h>
+#include <stdint.h>                 // uint32_t
 #include <sys/stat.h>
 #include <gio/gio.h>
 #include <services_private.h>
@@ -24,6 +26,9 @@
 
 static void invoke_unit_by_path(svc_action_t *op, const char *unit);
 
+/* Systemd D-Bus interface
+ * https://www.freedesktop.org/software/systemd/man/latest/org.freedesktop.systemd1.html
+ */
 #define BUS_NAME         "org.freedesktop.systemd1"
 #define BUS_NAME_MANAGER BUS_NAME ".Manager"
 #define BUS_NAME_UNIT    BUS_NAME ".Unit"
@@ -136,6 +141,50 @@ systemd_call_simple_method(const char *method)
     return reply;
 }
 
+/*!
+ * \internal
+ * \brief Subscribe to D-Bus signals from systemd
+ *
+ * Systemd does not broadcast signal messages unless at least one client has
+ * called the \c Subscribe() method. Also, a D-Bus client ignores broadcast
+ * messages unless an appropriate match rule is set, so we set one here.
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+subscribe_to_signals(void)
+{
+    DBusMessage *reply = NULL;
+    DBusError error;
+
+    /* Tell D-Bus to accept signal messages from systemd.
+     * https://dbus.freedesktop.org/doc/dbus-specification.html#message-bus-routing-match-rules
+     */
+    dbus_error_init(&error);
+    dbus_bus_add_match(systemd_proxy,
+                       "type='signal',"
+                       "sender='" BUS_NAME "',"
+                       "interface='" BUS_NAME_MANAGER "',"
+                       "path='" BUS_PATH "'",
+                       &error);
+
+    if (dbus_error_is_set(&error)) {
+        crm_err("Could not listen for systemd DBus signals: %s " QB_XS " (%s)",
+                error.message, error.name);
+        dbus_error_free(&error);
+        return ECOMM;
+    }
+
+    // Tell systemd to broadcast signals
+    reply = systemd_call_simple_method("Subscribe");
+    if (reply == NULL) {
+        return ECOMM;
+    }
+
+    dbus_message_unref(reply);
+    return pcmk_rc_ok;
+}
+
 static bool
 systemd_init(void)
 {
@@ -153,11 +202,14 @@ systemd_init(void)
     if (need_init) {
         need_init = 0;
         systemd_proxy = pcmk_dbus_connect();
+
+        if (subscribe_to_signals() != pcmk_rc_ok) {
+            pcmk_dbus_disconnect(systemd_proxy);
+            systemd_proxy = NULL;
+        }
     }
-    if (systemd_proxy == NULL) {
-        return false;
-    }
-    return true;
+
+    return (systemd_proxy != NULL);
 }
 
 static inline char *
@@ -762,10 +814,109 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
         dbus_message_get_args(reply, NULL,
                               DBUS_TYPE_OBJECT_PATH, &path,
                               DBUS_TYPE_INVALID);
+
         crm_debug("DBus request for %s of %s using %s succeeded",
                   op->action, pcmk__s(op->rsc, "unknown resource"), path);
+        pcmk__str_update(&(op->opaque->job_path), path);
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
     }
+}
+
+/*!
+ * \internal
+ * \brief Process a systemd \c JobRemoved signal for a given service action
+ *
+ * This filter is expected to be added with \c finalize_async_action_dbus() as
+ * the \c free_data_function. Then if \p message is a \c JobRemoved signal for
+ * the action specified by \p user_data, the action's result is set, the filter
+ * is removed, and the action is finalized.
+ *
+ * \param[in,out] connection  D-Bus connection
+ * \param[in]     message     D-Bus message
+ * \param[in,out] user_data   Service action (\c svc_action_t)
+ *
+ * \retval \c DBUS_HANDLER_RESULT_HANDLED if \p message is a \c JobRemoved
+ *         signal for \p user_data
+ * \retval \c DBUS_HANDLER_RESULT_NOT_YET_HANDLED otherwise (on error, if
+ *         \p message is not a \c JobRemoved signal, or if the signal is for
+ *         some other action's job)
+ */
+static DBusHandlerResult
+job_removed_filter(DBusConnection *connection, DBusMessage *message,
+                   void *user_data)
+{
+    svc_action_t *action = user_data;
+    uint32_t job_id = 0;
+    const char *bus_path = NULL;
+    const char *unit_name = NULL;
+    const char *result = NULL;
+    DBusError error;
+
+    CRM_CHECK((connection != NULL) && (message != NULL),
+              return DBUS_HANDLER_RESULT_NOT_YET_HANDLED);
+
+    // action should always be set when the filter is added
+    if ((action == NULL)
+        || !dbus_message_is_signal(message, BUS_NAME_MANAGER, "JobRemoved")) {
+        return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    }
+
+    dbus_error_init(&error);
+    if (!dbus_message_get_args(message, &error,
+                               DBUS_TYPE_UINT32, &job_id,
+                               DBUS_TYPE_OBJECT_PATH, &bus_path,
+                               DBUS_TYPE_STRING, &unit_name,
+                               DBUS_TYPE_STRING, &result,
+                               DBUS_TYPE_INVALID)) {
+        crm_err("Could not interpret systemd DBus signal: %s " QB_XS " (%s)",
+                error.message, error.name);
+        dbus_error_free(&error);
+        return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    }
+
+    if (!pcmk__str_eq(bus_path, action->opaque->job_path, pcmk__str_none)) {
+        // This filter is not for this job
+        return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    }
+
+    crm_trace("Setting %s result for %s (JobRemoved id=%" PRIu32 ", result=%s",
+              pcmk__s(action->action, "(unknown)"), unit_name, job_id, result);
+
+    if (pcmk__str_eq(result, "done", pcmk__str_none)) {
+        services__set_result(action, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
+
+    } else if (pcmk__str_eq(result, "timeout", pcmk__str_none)) {
+        services__set_result(action, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
+                             "Investigate reason for timeout, and adjust "
+                             "configured operation timeout if necessary");
+
+    } else {
+        /* @FIXME Should we handle additional results specially, instead of
+         * mapping them all to a generic error with no exit reason?
+         */
+        services__set_result(action, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                             NULL);
+    }
+
+    /* This instance of the filter was specifically for the given action.
+     *
+     * The action gets finalized by services__finalize_async_op() via the
+     * filter's free_data_function.
+     */
+    dbus_connection_remove_filter(systemd_proxy, job_removed_filter, action);
+    return DBUS_HANDLER_RESULT_HANDLED;
+}
+
+/*!
+ * \internal
+ * \brief \c DBusFreeFunction wrapper for \c services__finalize_async_op()
+ *
+ * \param[in,out] action  Asynchronous service action to finalize
+ */
+static void
+finalize_async_action_dbus(void *action)
+{
+    services__finalize_async_op((svc_action_t *) action);
 }
 
 /*!
@@ -792,12 +943,35 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
 
-    // Determine result and finalize action
     process_unit_method_reply(reply, op);
-    services__finalize_async_op(op);
+
     if (reply != NULL) {
         dbus_message_unref(reply);
     }
+
+    if ((op->status != PCMK_EXEC_NOT_INSTALLED)
+        && pcmk__strcase_any_of(op->action, PCMK_ACTION_START, PCMK_ACTION_STOP,
+                                NULL)) {
+        /* Start and stop method calls return when the job is enqueued, not when
+         * it's complete. Start and stop actions must be finalized after the job
+         * is complete, because the action callback function may use it. We add
+         * a message filter to process the JobRemoved signal, which indicates
+         * completion.
+         *
+         * The filter takes ownership of op, which will be finalized when the
+         * filter is later removed.
+         *
+         * If the action failed with a NOT_INSTALLED error, we'll never receive
+         * a JobRemoved signal, and the callback will never be called. So we
+         * need to finalize the action now, in that case.
+         */
+        if (dbus_connection_add_filter(systemd_proxy, job_removed_filter, op,
+                                       finalize_async_action_dbus)) {
+            return;
+        }
+        crm_err("Could not add D-Bus filter for systemd JobRemoved signals");
+    }
+    services__finalize_async_op(op);
 }
 
 #define SYSTEMD_OVERRIDE_ROOT "/run/systemd/system/"
