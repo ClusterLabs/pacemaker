@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -50,7 +50,7 @@ void crm_update_quorum(gboolean quorum, gboolean force_update);
 void controld_close_attrd_ipc(void);
 void update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node);
 void update_attrd_list(GList *attrs, uint32_t opts);
-void update_attrd_remote_node_removed(const char *host, const char *user_name);
+void controld_purge_node_attrs(const char *node_name, bool from_cache);
 void update_attrd_clear_failures(const char *host, const char *rsc,
                                  const char *op, const char *interval_spec,
                                  gboolean is_remote_node);
