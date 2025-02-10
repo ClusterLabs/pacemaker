@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -822,6 +822,7 @@ pcmk_rc2exitc(int rc)
         case pcmk_rc_old_data:
             return CRM_EX_OLD;
 
+        case pcmk_rc_cib_corrupt:
         case pcmk_rc_schema_validation:
         case pcmk_rc_transform_failed:
         case pcmk_rc_unpack_error:
