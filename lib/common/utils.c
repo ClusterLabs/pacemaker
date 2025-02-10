@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -444,6 +444,8 @@ pcmk__timeout_ms2s(guint timeout_ms)
 
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
+
+#include <gnutls/gnutls.h>          // gnutls_global_init(), etc.
 
 #include <crm/common/util_compat.h>
 
