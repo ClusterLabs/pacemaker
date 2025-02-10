@@ -15,8 +15,8 @@ Transition Summary:
 
 Executing Cluster Transition:
   * Pseudo action:   DB2_HADR-master_pre_notify_stop_0
-  * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-95
   * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-96
+  * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-95
   * Pseudo action:   DB2_HADR-master_confirmed-pre_notify_stop_0
   * Pseudo action:   DB2_HADR-master_stop_0
   * Resource action: DB2_HADR        stop on fastvm-rhel-7-4-96
@@ -31,19 +31,19 @@ Executing Cluster Transition:
   * Resource action: DB2_HADR        start on fastvm-rhel-7-4-96
   * Pseudo action:   DB2_HADR-master_running_0
   * Pseudo action:   DB2_HADR-master_post_notify_running_0
-  * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-95
   * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-96
+  * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-95
   * Pseudo action:   DB2_HADR-master_confirmed-post_notify_running_0
   * Pseudo action:   DB2_HADR-master_pre_notify_promote_0
-  * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-95
   * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-96
+  * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-95
   * Pseudo action:   DB2_HADR-master_confirmed-pre_notify_promote_0
   * Pseudo action:   DB2_HADR-master_promote_0
   * Resource action: DB2_HADR        promote on fastvm-rhel-7-4-96
   * Pseudo action:   DB2_HADR-master_promoted_0
   * Pseudo action:   DB2_HADR-master_post_notify_promoted_0
-  * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-95
   * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-96
+  * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-95
   * Pseudo action:   DB2_HADR-master_confirmed-post_notify_promoted_0
   * Resource action: DB2_HADR        monitor=22000 on fastvm-rhel-7-4-96
 Using the original execution date of: 2017-11-30 12:37:50Z
