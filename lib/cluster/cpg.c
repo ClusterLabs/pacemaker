@@ -996,8 +996,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
             msg->compressed_size = new_size;
 
         } else {
-            // cppcheck seems not to understand the abort logic in pcmk__realloc
-            // cppcheck-suppress memleak
             msg = pcmk__realloc(msg, msg->header.size);
             memcpy(msg->data, data, msg->size);
         }
