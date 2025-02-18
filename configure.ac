@@ -834,12 +834,55 @@ AC_DEFINE_UNQUOTED([PACEMAKER_CONFIG_DIR], ["$PACEMAKER_CONFIG_DIR"],
                    [Where to keep configuration files like authkey])
 AC_SUBST(PACEMAKER_CONFIG_DIR)
 
-AC_DEFINE_UNQUOTED([SBIN_DIR], ["$sbindir"], [Location for system binaries])
+# Fedora >=42 makes /usr/sbin a symlink to /usr/bin. It updates the RPM macros
+# to set _sbindir to "${_exec_prefix}/bin", the same value as _bindir.
+# Previously it was set to "${_exec_prefix}/sbin". (Note that because of the
+# symlink, paths beginning with /usr/sbin remain valid.)
+#
+# This causes problems with bundle resources. Pacemaker automatically generates
+# a configuration for the bundle's container resource. If the bundle contains a
+# primitive and the container's run-command attribute is unset, the generated
+# container resource has its run_cmd attribute set to
+# SBIN_DIR "/" PCMK__SERVER_REMOTED, which is intended as a reasonable default.
+# If SBIN_DIR becomes "/usr/bin" instead of "/usr/sbin", at least two problems
+# can occur:
+#   1. The container resource's digest changes compared to the digest in the
+#      resource history entry. Pacemaker interprets this as a configuration
+#      change and restarts the container resource.
+#   2. If the container is running a different OS distro or an older version of
+#      Fedora, then the new /usr/bin/pacemaker-remoted path may be invalid; the
+#      executable was installed at /usr/sbin/pacemaker-remoted, which is NOT a
+#      symlink to /usr/bin path. In this case, the container fails to start.
+#
+# We override the value only for the SBIN_DIR constant, which is used only for
+# the sbd path and the default pacemaker-remoted path. There is no need to
+# override sbindir, which would affect installation directories.
+#
+# There is no more specific way than the below, to detect whether the build
+# system has this /usr/sbin vs. /usr/bin change in effect. Thus corner cases are
+# possible when sbindir/bindir are manually specified or in distros with
+# atypical defaults.
+#
+# At time of writing, autoconf is unchanged. However, we perform the override
+# here instead of in the spec file, in case autoconf changes in the future.
+#
+# Note that other distros (for example, RHEL) are likely to incorporate these
+# changes in the future.
+#
+# References:
+# * https://fedoraproject.org/wiki/Changes/Unify_bin_and_sbin
+# * https://bodhi.fedoraproject.org/updates/FEDORA-2025-da0a082e66
+# * https://discussion.fedoraproject.org/t/144562
+AS_IF([test x"$sbindir" = x"$bindir" \
+       && test x"$sbindir" = x"${exec_prefix}/bin"],
+      [SBIN_DIR="${exec_prefix}/sbin"],
+      [SBIN_DIR="$sbindir"])
+AC_DEFINE_UNQUOTED([SBIN_DIR], ["$SBIN_DIR"], [Location for system binaries])
 
 # Warn about any directories that don't exist (which may be OK)
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
-    mandir INITDIR docdir CONFIGDIR localedir
+    mandir INITDIR docdir CONFIGDIR localedir SBIN_DIR
 do
     dirname=`eval echo '${'${j}'}'`
     AS_IF([test -n "$dirname" && test ! -d "$dirname"],
