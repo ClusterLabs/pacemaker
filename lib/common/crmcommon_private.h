@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2024 the Pacemaker project contributors
+ * Copyright 2018-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -282,9 +282,6 @@ G_GNUC_INTERNAL
 void pcmk__call_ipc_callback(pcmk_ipc_api_t *api,
                              enum pcmk_ipc_event event_type,
                              crm_exit_t status, void *event_data);
-
-G_GNUC_INTERNAL
-unsigned int pcmk__ipc_buffer_size(unsigned int max);
 
 G_GNUC_INTERNAL
 bool pcmk__valid_ipc_header(const pcmk__ipc_header_t *header);
