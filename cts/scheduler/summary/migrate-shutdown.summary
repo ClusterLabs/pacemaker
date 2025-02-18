@@ -35,8 +35,8 @@ Transition Summary:
   * Stop       ping-1:0             (            pcmk-1 )  due to node availability
   * Stop       ping-1:1             (            pcmk-2 )  due to node availability
   * Stop       ping-1:2             (            pcmk-4 )  due to node availability
-  * Stop       stateful-1:0         ( Unpromoted pcmk-1 )  due to node availability
   * Stop       stateful-1:1         (   Promoted pcmk-2 )  due to node availability
+  * Stop       stateful-1:0         ( Unpromoted pcmk-1 )  due to node availability
   * Stop       stateful-1:2         ( Unpromoted pcmk-4 )  due to node availability
 
 Executing Cluster Transition:
@@ -62,8 +62,8 @@ Executing Cluster Transition:
   * Resource action: stateful-1:0    demote on pcmk-2
   * Pseudo action:   master-1_demoted_0
   * Pseudo action:   master-1_stop_0
-  * Resource action: stateful-1:2    stop on pcmk-1
   * Resource action: stateful-1:0    stop on pcmk-2
+  * Resource action: stateful-1:2    stop on pcmk-1
   * Resource action: stateful-1:3    stop on pcmk-4
   * Pseudo action:   master-1_stopped_0
   * Cluster action:  do_shutdown on pcmk-4
