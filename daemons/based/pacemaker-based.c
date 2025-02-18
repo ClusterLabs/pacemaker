@@ -284,7 +284,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
     /* If main loop returned, clean up and exit. We disconnect in case
-     * terminate_cib() was called with fast=-1.
+     * terminate_cib(-1) was called.
      */
     pcmk_cluster_disconnect(crm_cluster);
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
@@ -345,8 +345,9 @@ cib_cs_destroy(gpointer user_data)
     if (cib_shutdown_flag) {
         crm_info("Corosync disconnection complete");
     } else {
-        crm_crit("Lost connection to cluster layer, shutting down");
-        terminate_cib(__func__, CRM_EX_DISCONNECT);
+        crm_crit("Exiting immediately after losing connection "
+                 "to cluster layer");
+        terminate_cib(CRM_EX_DISCONNECT);
     }
 }
 #endif
@@ -361,8 +362,8 @@ cib_peer_update_callback(enum pcmk__node_update type,
             if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
                 && (pcmk__ipc_client_count() == 0)) {
 
-                crm_info("No more peers");
-                terminate_cib(__func__, -1);
+                crm_info("Exiting after no more peers or clients remain");
+                terminate_cib(-1);
             }
             break;
 

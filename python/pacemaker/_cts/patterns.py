@@ -256,7 +256,7 @@ class Corosync2Patterns(BasePatterns):
             # exit before losing the cluster connection.
             r"pacemakerd.*:\s*warning:.*Lost connection to cluster layer",
             r"pacemaker-attrd.*:\s*(crit|error):.*Lost connection to (Corosync process group|the CIB manager)",
-            r"pacemaker-based.*:\s*(crit|error):.*Lost connection to cluster layer",
+            r"pacemaker-based.*:\s*crit:.*Exiting immediately after losing connection to cluster layer",
             r"pacemaker-controld.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
             r"pacemaker-fenced.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
             r"schedulerd.*Scheduling node .* for fencing",
