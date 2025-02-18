@@ -327,9 +327,6 @@ void pcmk__call_ipc_callback(pcmk_ipc_api_t *api,
                              crm_exit_t status, void *event_data);
 
 G_GNUC_INTERNAL
-unsigned int pcmk__ipc_buffer_size(unsigned int max);
-
-G_GNUC_INTERNAL
 bool pcmk__valid_ipc_header(const pcmk__ipc_header_t *header);
 
 G_GNUC_INTERNAL
