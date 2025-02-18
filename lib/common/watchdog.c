@@ -163,20 +163,15 @@ pcmk__panic(const char *reason)
 pid_t
 pcmk__locate_sbd(void)
 {
-    char *pidfile = NULL;
-    char *sbd_path = NULL;
+    const char *pidfile = PCMK__RUN_DIR "/sbd.pid";
     int rc;
 
     if(sbd_pid > 1) {
         return sbd_pid;
     }
 
-    /* Look for the pid file */
-    pidfile = crm_strdup_printf(PCMK__RUN_DIR "/sbd.pid");
-    sbd_path = crm_strdup_printf("%s/sbd", SBIN_DIR);
-
     /* Read the pid file */
-    rc = pcmk__pidfile_matches(pidfile, 0, sbd_path, &sbd_pid);
+    rc = pcmk__pidfile_matches(pidfile, 0, SBIN_DIR "/sbd", &sbd_pid);
     if (rc == pcmk_rc_ok) {
         crm_trace("SBD detected at pid %lld (via PID file %s)",
                   (long long) sbd_pid, pidfile);
@@ -194,9 +189,6 @@ pcmk__locate_sbd(void)
         sbd_pid = 0;
         crm_trace("SBD not detected");
     }
-
-    free(pidfile);
-    free(sbd_path);
 
     return sbd_pid;
 }
