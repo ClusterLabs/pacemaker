@@ -180,6 +180,8 @@ CPPCHECK_OUT = $(abs_top_builddir)/cppcheck.out
 .PHONY: cppcheck
 cppcheck:
 	cppcheck $(CPPCHECK_ARGS) -I $(top_srcdir)/include	\
+		-I $(top_srcdir)/lib/common 			\
+		--include=/usr/include/qb/qblog.h 		\
 		--output-file=$(CPPCHECK_OUT)			\
 		--max-configs=30 --inline-suppr -q		\
 		--library=posix --library=gnu --library=gtk	\

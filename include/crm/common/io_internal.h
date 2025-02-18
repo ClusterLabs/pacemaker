@@ -53,8 +53,6 @@ void pcmk__close_fds_in_child(bool);
 static inline void
 pcmk__open_devnull(int flags)
 {
-    // Static analysis clutter
-    // cppcheck-suppress leakReturnValNotUsed
     (void) open("/dev/null", flags);
 }
 

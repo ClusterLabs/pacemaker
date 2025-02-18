@@ -132,6 +132,8 @@ pcmk__register_format(GOptionGroup *group, const char *name,
 
     pcmk__assert((create != NULL) && !pcmk__str_empty(name));
 
+    // cppcheck doesn't understand the above pcmk__assert line
+    // cppcheck-suppress ctunullpointer
     name_copy = strdup(name);
     if (name_copy == NULL) {
         return ENOMEM;

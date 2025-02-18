@@ -910,6 +910,8 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     pcmk__assert((start != NULL) && (end != NULL));
 
     *start = PCMK__PARSE_INT_DEFAULT;
+    // cppcheck doesn't understand the above pcmk__assert line
+    // cppcheck-suppress ctunullpointer
     *end = PCMK__PARSE_INT_DEFAULT;
 
     crm_trace("Attempting to decode: [%s]", srcstring);
