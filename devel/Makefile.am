@@ -196,37 +196,43 @@ cppcheck-clean:
 # Coverage/profiling
 #
 
-COVERAGE_DIR = $(top_builddir)/coverage
+COVERAGE_DIR = $(abs_top_builddir)/coverage
 
 # Check coverage of unit tests
 .PHONY: coverage
 coverage: coverage-partial-clean
-	cd $(top_builddir)						\
-	&& $(MAKE) $(AM_MAKEFLAGS)					\
-	&& lcov --no-external --exclude='*_test.c' -c -i -d .		\
-		-o pacemaker_base.info					\
-	&& $(MAKE) $(AM_MAKEFLAGS) check				\
-	&& lcov --no-external --exclude='*_test.c' -c -d .		\
-		-o pacemaker_test.info					\
-	&& lcov -a pacemaker_base.info -a pacemaker_test.info		\
-		-o pacemaker_total.info					\
-	&& lcov --remove pacemaker_total.info -o pacemaker_filtered.info\
-		"$(abs_top_builddir)/tools/*"				\
-		"$(abs_top_builddir)/daemons/*/*"			\
-		"$(abs_top_builddir)/replace/*"				\
-	genhtml $(top_builddir)/pacemaker_filtered.info -o $(COVERAGE_DIR) -s -t "Pacemaker code coverage"
+	cd $(top_builddir) 						\
+	&& $(MAKE) $(AM_MAKEFLAGS) 					\
+	&& lcov --capture --no-external --exclude='*_test.c' --initial 	\
+		--directory lib --ignore-errors=unused 			\
+		--output-file pacemaker_base.info 			\
+	&& $(MAKE) $(AM_MAKEFLAGS) check 				\
+	&& lcov --capture --no-external --exclude='*_test.c' 		\
+		--directory lib --ignore-errors=unused 			\
+		--output-file pacemaker_test.info 			\
+	&& lcov --add-tracefile pacemaker_base.info 			\
+		--add-tracefile pacemaker_test.info			\
+		--output-file pacemaker_total.info 			\
+	&& genhtml --output-directory $(COVERAGE_DIR) 			\
+		--show-details --title "Pacemaker library code coverage"\
+		pacemaker_total.info
 
 # Check coverage of CLI regression tests
 .PHONY: coverage-cts
 coverage-cts: coverage-partial-clean
-	cd $(top_builddir)						\
-	&& $(MAKE) $(AM_MAKEFLAGS)					\
-	&& lcov --no-external -c -i -d tools -o pacemaker_base.info	\
-	&& cts/cts-cli							\
-	&& lcov --no-external -c -d tools -o pacemaker_test.info	\
-	&& lcov -a pacemaker_base.info -a pacemaker_test.info		\
-		-o pacemaker_total.info
-	genhtml $(top_builddir)/pacemaker_total.info -o $(COVERAGE_DIR) -s
+	cd $(top_builddir) 						\
+	&& $(MAKE) $(AM_MAKEFLAGS) 					\
+	&& lcov --capture --no-external --initial --directory tools 	\
+		--output-file pacemaker_base.info 			\
+	&& cts/cts-cli 							\
+	&& lcov --capture --no-external --directory tools 		\
+		--output-file pacemaker_test.info 			\
+	&& lcov --add-tracefile pacemaker_base.info 			\
+		--add-tracefile pacemaker_test.info			\
+		--output-file pacemaker_total.info 			\
+	&& genhtml --output-directory $(COVERAGE_DIR) 			\
+		--show-details --title "Pacemaker tools code coverage" 	\
+		pacemaker_total.info
 
 # Remove coverage-related files that aren't needed across runs
 .PHONY: coverage-partial-clean
