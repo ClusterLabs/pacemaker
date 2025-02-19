@@ -581,7 +581,6 @@ crm_ipcs_flush_events(pcmk__client_t *c)
  *
  * \param[in]  request        Identifier for libqb response header
  * \param[in]  message        XML message to send
- * \param[in]  max_send_size  If 0, default IPC buffer size is used
  * \param[out] result         Where to store prepared I/O vector
  * \param[out] bytes          Size of prepared data in bytes
  *
@@ -589,11 +588,11 @@ crm_ipcs_flush_events(pcmk__client_t *c)
  */
 int
 pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
-                      uint32_t max_send_size, struct iovec **result,
-                      ssize_t *bytes)
+                      struct iovec **result, ssize_t *bytes)
 {
     struct iovec *iov;
     unsigned int total = 0;
+    unsigned int max_send_size = crm_ipc_default_buffer_size();
     GString *buffer = NULL;
     pcmk__ipc_header_t *header = NULL;
     int rc = pcmk_rc_ok;
@@ -611,11 +610,6 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
 
     buffer = g_string_sized_new(1024);
     pcmk__xml_string(message, 0, buffer, 0);
-
-    if (max_send_size == 0) {
-        max_send_size = crm_ipc_default_buffer_size();
-    }
-    CRM_LOG_ASSERT(max_send_size != 0);
 
     *result = NULL;
     iov = pcmk__new_ipc_event();
@@ -770,8 +764,7 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
     if (c == NULL) {
         return EINVAL;
     }
-    rc = pcmk__ipc_prepare_iov(request, message, crm_ipc_default_buffer_size(),
-                               &iov, NULL);
+    rc = pcmk__ipc_prepare_iov(request, message, &iov, NULL);
     if (rc == pcmk_rc_ok) {
         pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
         rc = pcmk__ipc_send_iov(c, iov, flags);

@@ -1332,7 +1332,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
 
     id++;
     CRM_LOG_ASSERT(id != 0); /* Crude wrap-around detection */
-    rc = pcmk__ipc_prepare_iov(id, message, client->max_buf_size, &iov, &bytes);
+    rc = pcmk__ipc_prepare_iov(id, message, &iov, &bytes);
     if (rc != pcmk_rc_ok) {
         crm_warn("Couldn't prepare %s IPC request: %s " QB_XS " rc=%d",
                  client->server_name, pcmk_rc_str(rc), rc);
