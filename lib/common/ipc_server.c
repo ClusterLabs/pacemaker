@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <errno.h>
 #include <bzlib.h>
@@ -623,44 +624,17 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     header->size_uncompressed = 1 + buffer->len;
     total = iov[0].iov_len + header->size_uncompressed;
 
-    if (total < max_send_size) {
-        iov[1].iov_base = pcmk__str_copy(buffer->str);
-        iov[1].iov_len = header->size_uncompressed;
-
-    } else {
-        static unsigned int biggest = 0;
-
-        char *compressed = NULL;
-        unsigned int new_size = 0;
-
-        if (pcmk__compress(buffer->str,
-                           (unsigned int) header->size_uncompressed,
-                           (unsigned int) max_send_size, &compressed,
-                           &new_size) == pcmk_rc_ok) {
-
-            pcmk__set_ipc_flags(header->flags, "send data", crm_ipc_compressed);
-            header->size_compressed = new_size;
-
-            iov[1].iov_len = header->size_compressed;
-            iov[1].iov_base = compressed;
-
-            biggest = QB_MAX(header->size_compressed, biggest);
-
-        } else {
-            crm_log_xml_trace(message, "EMSGSIZE");
-            biggest = QB_MAX(header->size_uncompressed, biggest);
-
-            crm_err("Could not compress %u-byte message into less than IPC "
-                    "limit of %u bytes; set PCMK_ipc_buffer to higher value "
-                    "(%u bytes suggested)",
-                    header->size_uncompressed, max_send_size, 4 * biggest);
-
-            free(compressed);
-            pcmk_free_ipc_event(iov);
-            rc = EMSGSIZE;
-            goto done;
-        }
+    if (total >= max_send_size) {
+        crm_log_xml_trace(message, "EMSGSIZE");
+        crm_err("Could not transmit message; message size %" PRIu32" bytes is "
+                "larger than the maximum of %" PRIu32, header->size_uncompressed,
+                max_send_size);
+        rc = EMSGSIZE;
+        goto done;
     }
+
+    iov[1].iov_base = pcmk__str_copy(buffer->str);
+    iov[1].iov_len = header->size_uncompressed;
 
     header->qb.size = iov[0].iov_len + iov[1].iov_len;
     header->qb.id = (int32_t)request;    /* Replying to a specific request */
