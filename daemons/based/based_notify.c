@@ -106,9 +106,13 @@ cib_notify_send(const xmlNode *xml)
 {
     struct iovec *iov;
     struct cib_notification_s update;
-
+    GString *iov_buffer = NULL;
     ssize_t bytes = 0;
-    int rc = pcmk__ipc_prepare_iov(0, xml, &iov, &bytes);
+    int rc = pcmk_rc_ok;
+
+    iov_buffer = g_string_sized_new(1024);
+    pcmk__xml_string(xml, 0, iov_buffer, 0);
+    rc = pcmk__ipc_prepare_iov(0, iov_buffer, &iov, &bytes);
 
     if (rc == pcmk_rc_ok) {
         update.msg = xml;
@@ -121,6 +125,8 @@ cib_notify_send(const xmlNode *xml)
         crm_notice("Could not notify clients: %s " QB_XS " rc=%d",
                    pcmk_rc_str(rc), rc);
     }
+
+    g_string_free(iov_buffer, TRUE);
 }
 
 void
