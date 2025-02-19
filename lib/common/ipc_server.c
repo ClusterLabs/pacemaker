@@ -551,7 +551,7 @@ crm_ipcs_flush_events(pcmk__client_t *c)
  * \brief Create an I/O vector for sending an IPC XML message
  *
  * \param[in]  request        Identifier for libqb response header
- * \param[in]  message        XML message to send
+ * \param[in]  message        Message to send
  * \param[out] result         Where to store prepared I/O vector - NULL
  *                            on error
  * \param[out] bytes          Size of prepared data in bytes
@@ -559,13 +559,12 @@ crm_ipcs_flush_events(pcmk__client_t *c)
  * \return Standard Pacemaker return code
  */
 int
-pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
+pcmk__ipc_prepare_iov(uint32_t request, const GString *message,
                       struct iovec **result, ssize_t *bytes)
 {
     struct iovec *iov;
     unsigned int total = 0;
     unsigned int max_send_size = crm_ipc_default_buffer_size();
-    GString *buffer = NULL;
     pcmk__ipc_header_t *header = NULL;
     int rc = pcmk_rc_ok;
 
@@ -580,20 +579,17 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
        goto done;
     }
 
-    buffer = g_string_sized_new(1024);
-    pcmk__xml_string(message, 0, buffer, 0);
-
     *result = NULL;
     iov = pcmk__new_ipc_event();
     iov[0].iov_len = sizeof(pcmk__ipc_header_t);
     iov[0].iov_base = header;
 
     header->version = PCMK__IPC_VERSION;
-    header->size = buffer->len + 1;
+    header->size = message->len + 1;
     total = iov[0].iov_len + header->size;
 
     if (total >= max_send_size) {
-        crm_log_xml_trace(message, "EMSGSIZE");
+        crm_trace("%s", message->str);
         crm_err("Could not transmit message; message size %" PRIu32" bytes is "
                 "larger than the maximum of %" PRIu32, header->size,
                 max_send_size);
@@ -602,7 +598,7 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
         goto done;
     }
 
-    iov[1].iov_base = pcmk__str_copy(buffer->str);
+    iov[1].iov_base = pcmk__str_copy(message->str);
     iov[1].iov_len = header->size;
 
     header->qb.size = iov[0].iov_len + iov[1].iov_len;
@@ -615,9 +611,6 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     }
 
 done:
-    if (buffer != NULL) {
-        g_string_free(buffer, TRUE);
-    }
     return rc;
 }
 
@@ -706,11 +699,16 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
 {
     struct iovec *iov = NULL;
     int rc = pcmk_rc_ok;
+    GString *iov_buffer = NULL;
 
     if (c == NULL) {
         return EINVAL;
     }
-    rc = pcmk__ipc_prepare_iov(request, message, &iov, NULL);
+
+    iov_buffer = g_string_sized_new(1024);
+    pcmk__xml_string(message, 0, iov_buffer, 0);
+    rc = pcmk__ipc_prepare_iov(request, iov_buffer, &iov, NULL);
+
     if (rc == pcmk_rc_ok) {
         pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
         rc = pcmk__ipc_send_iov(c, iov, flags);
@@ -718,6 +716,8 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
         crm_notice("IPC message to pid %d failed: %s " QB_XS " rc=%d",
                    c->pid, pcmk_rc_str(rc), rc);
     }
+
+    g_string_free(iov_buffer, TRUE);
     return rc;
 }
 
