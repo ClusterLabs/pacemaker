@@ -1300,7 +1300,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     }
 
     pcmk__xml_string(message, 0, iov_buffer, 0);
-    rc = pcmk__ipc_prepare_iov(id, iov_buffer, &iov, &bytes);
+    rc = pcmk__ipc_prepare_iov(id, iov_buffer, 0, &iov, &bytes);
 
     if (rc != pcmk_rc_ok) {
         crm_warn("Couldn't prepare %s IPC request: %s " QB_XS " rc=%d",

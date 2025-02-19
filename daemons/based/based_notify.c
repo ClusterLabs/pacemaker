@@ -118,7 +118,7 @@ cib_notify_send(const xmlNode *xml)
     }
 
     pcmk__xml_string(xml, 0, iov_buffer, 0);
-    rc = pcmk__ipc_prepare_iov(0, iov_buffer, &iov, &bytes);
+    rc = pcmk__ipc_prepare_iov(0, iov_buffer, 0, &iov, &bytes);
 
     if (rc == pcmk_rc_ok) {
         update.msg = xml;
