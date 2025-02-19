@@ -309,6 +309,7 @@ typedef struct pcmk__ipc_header_s {
     uint32_t size;
     uint32_t flags;
     uint8_t version;
+    uint16_t part_id;               // If this is a multipart message, which part is this?
 } pcmk__ipc_header_t;
 
 G_GNUC_INTERNAL

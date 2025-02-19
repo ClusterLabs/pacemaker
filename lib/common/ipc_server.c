@@ -550,21 +550,30 @@ crm_ipcs_flush_events(pcmk__client_t *c)
  * \internal
  * \brief Create an I/O vector for sending an IPC XML message
  *
- * \param[in]  request        Identifier for libqb response header
- * \param[in]  message        Message to send
- * \param[out] result         Where to store prepared I/O vector - NULL
- *                            on error
- * \param[out] bytes          Size of prepared data in bytes
+ * If the message is too large to fit into a single buffer, this function will
+ * prepare an I/O vector that only holds as much as fits.  The remainder can
+ * be prepared in a separate call by keeping a running count of
+ * \c result[1].iov_len and passing that in for \p offset.
+ *
+ * \param[in]  request      Identifier for libqb response header
+ * \param[in]  message      Message to send
+ * \param[in]  offset       How many bytes into \p buffer to start when
+ *                          building the message
+ * \param[out] result       Where to store prepared I/O vector - NULL
+ *                          on error
+ * \param[out] bytes        Size of prepared data in bytes (includes header)
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__ipc_prepare_iov(uint32_t request, const GString *message,
+pcmk__ipc_prepare_iov(uint32_t request, const GString *message, uint16_t index,
                       struct iovec **result, ssize_t *bytes)
 {
-    struct iovec *iov;
+    struct iovec *iov = NULL;
+    unsigned int payload_size = 0;
     unsigned int total = 0;
     unsigned int max_send_size = crm_ipc_default_buffer_size();
+    size_t offset = 0;
     pcmk__ipc_header_t *header = NULL;
     int rc = pcmk_rc_ok;
 
@@ -585,22 +594,58 @@ pcmk__ipc_prepare_iov(uint32_t request, const GString *message,
     iov[0].iov_base = header;
 
     header->version = PCMK__IPC_VERSION;
-    header->size = message->len + 1;
-    total = iov[0].iov_len + header->size;
+
+    /* We are passed an index, which is basically how many times this function
+     * has been called.  This is how we support multi-part IPC messages.  We
+     * need to convert that into an offset into the buffer that we want to start
+     * reading from.
+     *
+     * Each call to this function can send max_send_size, but this also includes
+     * the header and a null terminator character for the end of the payload.
+     * We need to subtract those out here.
+     */
+    offset = index * (max_send_size - iov[0].iov_len - 1);
+
+    /* How much of message is left to send?  This does not include the null
+     * terminator character.
+     */
+    payload_size = message->len - offset;
+
+    /* How much would be transmitted, including the header size and null
+     * terminator character for the buffer?
+     */
+    total = iov[0].iov_len + payload_size + 1;
 
     if (total >= max_send_size) {
-        crm_trace("%s", message->str);
-        crm_err("Could not transmit message; message size %" PRIu32" bytes is "
-                "larger than the maximum of %" PRIu32, header->size,
-                max_send_size);
-        rc = EMSGSIZE;
-        pcmk_free_ipc_event(iov);
-        goto done;
+        /* The entire packet is too big to fit in a single buffer.  Calculate
+         * how much of it we can send - buffer size, minus header size, minus
+         * one for the null terminator.
+         */
+        payload_size = max_send_size - iov[0].iov_len - 1;
+
+        header->size = payload_size + 1;
+
+        iov[1].iov_base = strndup(message->str + offset, payload_size);
+        if (iov[1].iov_base == NULL) {
+            rc = ENOMEM;
+            pcmk_free_ipc_event(iov);
+            goto done;
+        }
+
+        iov[1].iov_len = header->size;
+        rc = pcmk_rc_ipc_more;
+
+    } else {
+        /* The entire packet fits in a single buffer.  We can copy the entirety
+         * of it into the payload.
+         */
+        header->size = payload_size + 1;
+
+        iov[1].iov_base = pcmk__str_copy(message->str + offset);
+        iov[1].iov_len = header->size;
     }
 
-    iov[1].iov_base = pcmk__str_copy(message->str);
-    iov[1].iov_len = header->size;
-
+    header->part_id = index;
     header->qb.size = iov[0].iov_len + iov[1].iov_len;
     header->qb.id = (int32_t)request;    /* Replying to a specific request */
 
@@ -707,7 +752,7 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
 
     iov_buffer = g_string_sized_new(1024);
     pcmk__xml_string(message, 0, iov_buffer, 0);
-    rc = pcmk__ipc_prepare_iov(request, iov_buffer, &iov, NULL);
+    rc = pcmk__ipc_prepare_iov(request, iov_buffer, 0, &iov, NULL);
 
     if (rc == pcmk_rc_ok) {
         pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
