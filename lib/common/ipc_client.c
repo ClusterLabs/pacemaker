@@ -1331,7 +1331,6 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     ssize_t bytes = 0;
     struct iovec *iov;
     static uint32_t id = 0;
-    static int factor = 8;
     pcmk__ipc_header_t *header;
 
     if (client == NULL) {
@@ -1379,16 +1378,6 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     if (pcmk_is_set(flags, crm_ipc_proxied)) {
         /* Don't look for a synchronous response */
         pcmk__clear_ipc_flags(flags, "client", crm_ipc_client_response);
-    }
-
-    if(header->size_compressed) {
-        if(factor < 10 && (client->max_buf_size / 10) < (bytes / factor)) {
-            crm_notice("Compressed message exceeds %d0%% of configured IPC "
-                       "limit (%u bytes); consider setting PCMK_ipc_buffer to "
-                       "%u or higher",
-                       factor, client->max_buf_size, 2 * client->max_buf_size);
-            factor++;
-        }
     }
 
     crm_trace("Sending %s IPC request %d of %u bytes using %dms timeout",
