@@ -1340,13 +1340,6 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         time_t timeout = time(NULL) + 1 + pcmk__timeout_ms2s(ms_timeout);
 
         do {
-            /* @TODO Is this check really needed? Won't qb_ipcc_sendv() return
-             * an error if it's not connected?
-             */
-            if (!crm_ipc_connected(client)) {
-                goto send_cleanup;
-            }
-
             qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
         } while ((qb_rc == -EAGAIN) && (time(NULL) < timeout));
 
