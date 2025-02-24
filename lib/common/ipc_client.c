@@ -1075,48 +1075,6 @@ crm_ipc_ready(crm_ipc_t *client)
     return (rc < 0)? -errno : rc;
 }
 
-// \return Standard Pacemaker return code
-static int
-crm_ipc_decompress(crm_ipc_t * client)
-{
-    pcmk__ipc_header_t *header = (pcmk__ipc_header_t *)(void*)client->buffer;
-
-    if (header->size_compressed) {
-        int rc = 0;
-        unsigned int size_u = 1 + header->size_uncompressed;
-        /* never let buf size fall below our max size required for ipc reads. */
-        unsigned int new_buf_size = QB_MAX((sizeof(pcmk__ipc_header_t) + size_u), client->max_buf_size);
-        char *uncompressed = pcmk__assert_alloc(1, new_buf_size);
-
-        crm_trace("Decompressing message data %u bytes into %u bytes",
-                 header->size_compressed, size_u);
-
-        rc = BZ2_bzBuffToBuffDecompress(uncompressed + sizeof(pcmk__ipc_header_t), &size_u,
-                                        client->buffer + sizeof(pcmk__ipc_header_t), header->size_compressed, 1, 0);
-        rc = pcmk__bzlib2rc(rc);
-
-        if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " QB_XS " rc=%d",
-                    pcmk_rc_str(rc), rc);
-            free(uncompressed);
-            return rc;
-        }
-
-        pcmk__assert(size_u == header->size_uncompressed);
-
-        memcpy(uncompressed, client->buffer, sizeof(pcmk__ipc_header_t));       /* Preserve the header */
-        header = (pcmk__ipc_header_t *)(void*)uncompressed;
-
-        free(client->buffer);
-        client->buf_size = new_buf_size;
-        client->buffer = uncompressed;
-    }
-
-    pcmk__assert(client->buffer[sizeof(pcmk__ipc_header_t)
-                                + header->size_uncompressed - 1] == 0);
-    return pcmk_rc_ok;
-}
-
 long
 crm_ipc_read(crm_ipc_t * client)
 {
@@ -1129,12 +1087,6 @@ crm_ipc_read(crm_ipc_t * client)
     client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer,
                                           client->buf_size, 0);
     if (client->msg_size >= 0) {
-        int rc = crm_ipc_decompress(client);
-
-        if (rc != pcmk_rc_ok) {
-            return pcmk_rc2legacy(rc);
-        }
-
         header = (pcmk__ipc_header_t *)(void*)client->buffer;
         if (!pcmk__valid_ipc_header(header)) {
             return -EBADMSG;
@@ -1226,11 +1178,6 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
             }
 
             continue;
-        }
-
-        rc = crm_ipc_decompress(client);
-        if (rc != pcmk_rc_ok) {
-            return rc;
         }
 
         hdr = (pcmk__ipc_header_t *)(void*) client->buffer;
