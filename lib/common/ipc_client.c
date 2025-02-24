@@ -1401,8 +1401,17 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     } else {
         // No timeout, and client response needed
         do {
-            qb_rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer,
-                                       client->buf_size, -1);
+            qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
+        } while ((qb_rc == -EAGAIN) && crm_ipc_connected(client));
+
+        rc = (int) qb_rc; // Negative of system errno, or bytes sent
+        if (qb_rc <= 0) {
+            goto send_cleanup;
+        }
+
+        do {
+            qb_rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size,
+                                 -1);
         } while ((qb_rc == -EAGAIN) && crm_ipc_connected(client));
         rc = (int) qb_rc; // Negative system errno, or size of reply received
     }
