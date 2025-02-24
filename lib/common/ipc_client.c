@@ -1368,8 +1368,8 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     crm_trace("Sending %s IPC request %d of %u bytes using %dms timeout",
               client->server_name, header->qb.id, header->qb.size, ms_timeout);
 
-    if ((ms_timeout > 0) || !pcmk_is_set(flags, crm_ipc_client_response)) {
-
+    /* Send the IPC request, respecting any timeout we were passed */
+    if (ms_timeout > 0) {
         time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
 
         do {
@@ -1379,13 +1379,28 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         rc = (int) qb_rc; // Negative of system errno, or bytes sent
         if (qb_rc <= 0) {
             goto send_cleanup;
-
-        } else if (!pcmk_is_set(flags, crm_ipc_client_response)) {
-            crm_trace("Not waiting for reply to %s IPC request %d",
-                      client->server_name, header->qb.id);
-            goto send_cleanup;
         }
 
+    } else {
+        do {
+            qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
+        } while ((qb_rc == -EAGAIN) && crm_ipc_connected(client));
+
+        rc = (int) qb_rc; // Negative of system errno, or bytes sent
+        if (qb_rc <= 0) {
+            goto send_cleanup;
+        }
+    }
+
+    /* If we should not wait for a response, bail now */
+    if (!pcmk_is_set(flags, crm_ipc_client_response)) {
+        crm_trace("Not waiting for reply to %s IPC request %d",
+                  client->server_name, header->qb.id);
+        goto send_cleanup;
+    }
+
+    /* Read the IPC response, respecting any timeout we were passed */
+    if (ms_timeout > 0) {
         rc = internal_ipc_get_reply(client, header->qb.id, ms_timeout, &bytes);
         if (rc != pcmk_rc_ok) {
             /* We didn't get the reply in time, so disable future sends for now.
@@ -1399,16 +1414,6 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         rc = (int) bytes; // Negative system errno, or size of reply received
 
     } else {
-        // No timeout, and client response needed
-        do {
-            qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
-        } while ((qb_rc == -EAGAIN) && crm_ipc_connected(client));
-
-        rc = (int) qb_rc; // Negative of system errno, or bytes sent
-        if (qb_rc <= 0) {
-            goto send_cleanup;
-        }
-
         do {
             qb_rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size,
                                  -1);
@@ -1416,6 +1421,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         rc = (int) qb_rc; // Negative system errno, or size of reply received
     }
 
+    /* Process the response, or error if we couldn't read it */
     if (rc > 0) {
         pcmk__ipc_header_t *hdr = (pcmk__ipc_header_t *)(void*)client->buffer;
 
