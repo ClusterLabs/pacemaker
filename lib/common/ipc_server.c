@@ -400,7 +400,6 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
                       uint32_t *flags)
 {
     xmlNode *xml = NULL;
-    char *uncompressed = NULL;
     char *text = ((char *)data) + sizeof(pcmk__ipc_header_t);
     pcmk__ipc_header_t *header = data;
 
@@ -423,33 +422,11 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         pcmk__set_client_flags(c, pcmk__client_proxied);
     }
 
-    if (header->size_compressed) {
-        int rc = 0;
-        unsigned int size_u = 1 + header->size_uncompressed;
-        uncompressed = pcmk__assert_alloc(1, size_u);
-
-        crm_trace("Decompressing message data %u bytes into %u bytes",
-                  header->size_compressed, size_u);
-
-        rc = BZ2_bzBuffToBuffDecompress(uncompressed, &size_u, text, header->size_compressed, 1, 0);
-        text = uncompressed;
-
-        rc = pcmk__bzlib2rc(rc);
-
-        if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
-                    pcmk_rc_str(rc), rc);
-            free(uncompressed);
-            return NULL;
-        }
-    }
-
     pcmk__assert(text[header->size_uncompressed - 1] == 0);
 
     xml = pcmk__xml_parse(text);
     crm_log_xml_trace(xml, "[IPC received]");
 
-    free(uncompressed);
     return xml;
 }
 
@@ -530,14 +507,9 @@ crm_ipcs_flush_events(pcmk__client_t *c)
 
         sent++;
         header = event[0].iov_base;
-        if (header->size_compressed) {
-            crm_trace("Event %d to %p[%d] (%lld compressed bytes) sent",
-                      header->qb.id, c->ipcs, c->pid, (long long) qb_rc);
-        } else {
-            crm_trace("Event %d to %p[%d] (%lld bytes) sent: %.120s",
-                      header->qb.id, c->ipcs, c->pid, (long long) qb_rc,
-                      (char *) (event[1].iov_base));
-        }
+        crm_trace("Event %" PRId32 " to %p[%u] (%zd bytes) sent: %.120s",
+                  header->qb.id, c->ipcs, c->pid, qb_rc,
+                  (char *) (event[1].iov_base));
         pcmk_free_ipc_event(event);
     }
 
