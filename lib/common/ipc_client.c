@@ -1301,6 +1301,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
              enum crm_ipc_flags flags, int32_t ms_timeout, xmlNode **reply)
 {
     int rc = 0;
+    time_t timeout = 0;
     ssize_t qb_rc = 0;
     ssize_t bytes = 0;
     struct iovec *iov;
@@ -1370,26 +1371,16 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
 
     /* Send the IPC request, respecting any timeout we were passed */
     if (ms_timeout > 0) {
-        time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
+        timeout = time(NULL) + 1 + (ms_timeout / 1000);
+    }
 
-        do {
-            qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
-        } while ((qb_rc == -EAGAIN) && (time(NULL) < timeout));
+    do {
+        qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
+    } while ((qb_rc == -EAGAIN) && ((timeout == 0) || (time(NULL) < timeout)));
 
-        rc = (int) qb_rc; // Negative of system errno, or bytes sent
-        if (qb_rc <= 0) {
-            goto send_cleanup;
-        }
-
-    } else {
-        do {
-            qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
-        } while ((qb_rc == -EAGAIN) && crm_ipc_connected(client));
-
-        rc = (int) qb_rc; // Negative of system errno, or bytes sent
-        if (qb_rc <= 0) {
-            goto send_cleanup;
-        }
+    rc = (int) qb_rc; // Negative of system errno, or bytes sent
+    if (qb_rc <= 0) {
+        goto send_cleanup;
     }
 
     /* If we should not wait for a response, bail now */
