@@ -861,9 +861,8 @@ cib_process_request(xmlNode *request, gboolean privileged,
 
     if (cib_status != pcmk_ok) {
         rc = cib_status;
-        crm_err("Operation ignored, cluster configuration is invalid."
-                " Please repair and restart: %s", pcmk_strerror(cib_status));
-
+        crm_err("Ignoring request because cluster configuration is invalid "
+                "(please repair and restart): %s", pcmk_strerror(rc));
         op_reply = create_cib_reply(op, call_id, client_id, call_options, rc,
                                     the_cib);
 
@@ -1242,8 +1241,9 @@ cib_peer_callback(xmlNode * msg, void *private_data)
 static gboolean
 cib_force_exit(gpointer data)
 {
-    crm_notice("Forcing exit!");
-    terminate_cib(__func__, CRM_EX_ERROR);
+    crm_notice("Exiting immediately after %s without shutdown acknowledgment",
+               pcmk__readable_interval(EXIT_ESCALATION_MS));
+    terminate_cib(CRM_EX_ERROR);
     return FALSE;
 }
 
@@ -1264,7 +1264,8 @@ initiate_exit(void)
 
     active = pcmk__cluster_num_active_nodes();
     if (active < 2) { // This is the last active node
-        terminate_cib(__func__, 0);
+        crm_info("Exiting without sending shutdown request (no active peers)");
+        terminate_cib(CRM_EX_OK);
         return;
     }
 
@@ -1353,15 +1354,12 @@ extern int remote_tls_fd;
  * \internal
  * \brief Close remote sockets, free the global CIB and quit
  *
- * \param[in] caller           Name of calling function (for log message)
- * \param[in] fast             If -1, skip disconnect; if positive, exit that
+ * \param[in] exit_status  What exit status to use (if -1, use CRM_EX_OK, but
+ *                         skip disconnecting from the cluster layer)
  */
 void
-terminate_cib(const char *caller, int fast)
+terminate_cib(int exit_status)
 {
-    crm_info("%s: Exiting%s...", caller,
-             (fast > 0)? " fast" : mainloop ? " from mainloop" : "");
-
     if (remote_fd > 0) {
         close(remote_fd);
         remote_fd = 0;
@@ -1373,27 +1371,30 @@ terminate_cib(const char *caller, int fast)
 
     uninitializeCib();
 
-    if (fast > 0) {
-        /* Quit fast on error */
+    // Exit immediately on error
+    if (exit_status > CRM_EX_OK) {
         pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
-        crm_exit(fast);
+        crm_exit(exit_status);
+        return;
+    }
 
-    } else if ((mainloop != NULL) && g_main_loop_is_running(mainloop)) {
-        /* Quit via returning from the main loop. If fast == -1, we skip the
-         * disconnect here, and it will be done when the main loop returns
-         * (this allows the peer status callback to avoid messing with the
-         * peer caches).
+    if ((mainloop != NULL) && g_main_loop_is_running(mainloop)) {
+        /* Quit via returning from the main loop. If exit_status has the special
+         * value -1, we skip the disconnect here, and it will be done when the
+         * main loop returns (this allows the peer status callback to avoid
+         * messing with the peer caches).
          */
-        if (fast == 0) {
+        if (exit_status == CRM_EX_OK) {
             pcmk_cluster_disconnect(crm_cluster);
         }
         g_main_loop_quit(mainloop);
-
-    } else {
-        /* Quit via clean exit. Even the peer status callback can disconnect
-         * here, because we're not returning control to the caller. */
-        pcmk_cluster_disconnect(crm_cluster);
-        pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
-        crm_exit(CRM_EX_OK);
+        return;
     }
+
+    /* Exit cleanly. Even the peer status callback can disconnect here, because
+     * we're not returning control to the caller.
+     */
+    pcmk_cluster_disconnect(crm_cluster);
+    pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
+    crm_exit(CRM_EX_OK);
 }

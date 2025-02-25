@@ -58,8 +58,8 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
         return -EINVAL;
     }
 
-    crm_info("Peer %s has acknowledged our shutdown request", host);
-    terminate_cib(__func__, 0);
+    crm_info("Exiting after %s acknowledged our shutdown request", host);
+    terminate_cib(CRM_EX_OK);
     return pcmk_ok;
 }
 

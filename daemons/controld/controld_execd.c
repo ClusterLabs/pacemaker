@@ -1954,20 +1954,13 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         }
     }
 
-    /* now do the op */
-    crm_notice("Requesting local execution of %s operation for %s on %s "
-               QB_XS " transition_key=%s op_key=" PCMK__OP_FMT,
-               pcmk__readable_action(op->op_type, op->interval_ms), rsc->id,
-               lrm_state->node_name, pcmk__s(transition, ""), rsc->id,
-               operation, op->interval_ms);
-
     nack_reason = should_nack_action(operation);
     if (nack_reason != NULL) {
-        crm_notice("Discarding attempt to perform action %s on %s in state %s "
-                   "(shutdown=%s)", operation, rsc->id,
-                   fsa_state2string(controld_globals.fsa_state),
-                   pcmk__flag_text(controld_globals.fsa_input_register,
-                                   R_SHUTDOWN));
+        crm_notice("Not requesting local execution of %s operation for %s on %s"
+                   " in state %s: %s",
+                   pcmk__readable_action(op->op_type, op->interval_ms), rsc->id,
+                   lrm_state->node_name,
+                   fsa_state2string(controld_globals.fsa_state), nack_reason);
 
         lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_INVALID,
                          nack_reason);
@@ -1976,6 +1969,11 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         free(op_id);
         return;
     }
+
+    crm_notice("Requesting local execution of %s operation for %s on %s "
+               QB_XS " transition %s",
+               pcmk__readable_action(op->op_type, op->interval_ms), rsc->id,
+               lrm_state->node_name, pcmk__s(transition, ""));
 
     controld_record_pending_op(lrm_state->node_name, rsc, op);
 
