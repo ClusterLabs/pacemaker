@@ -1202,46 +1202,52 @@ static int
 internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
                        ssize_t *bytes)
 {
+    pcmk__ipc_header_t *hdr = NULL;
+    xmlNode *reply = NULL;
     time_t timeout = time(NULL) + 1 + pcmk__timeout_ms2s(ms_timeout);
+    int32_t qb_timeout = 1000;
     int rc = pcmk_rc_ok;
 
     /* get the reply */
-    crm_trace("Waiting on reply to %s IPC message %d",
-              client->server_name, request_id);
+    crm_trace("Waiting on reply to %s IPC message %d", client->server_name,
+              request_id);
+
     do {
+        *bytes = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size,
+                              qb_timeout);
 
-        *bytes = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 1000);
-        if (*bytes > 0) {
-            pcmk__ipc_header_t *hdr = NULL;
-
-            rc = crm_ipc_decompress(client);
-            if (rc != pcmk_rc_ok) {
-                return rc;
-            }
-
-            hdr = (pcmk__ipc_header_t *)(void*)client->buffer;
-            if (hdr->qb.id == request_id) {
-                /* Got it */
+        if (*bytes <= 0) {
+            if (!crm_ipc_connected(client)) {
+                crm_err("%s IPC provider disconnected while waiting for message %d",
+                        client->server_name, request_id);
                 break;
-            } else if (hdr->qb.id < request_id) {
-                xmlNode *bad = pcmk__xml_parse(crm_ipc_buffer(client));
-
-                crm_err("Discarding old reply %d (need %d)", hdr->qb.id, request_id);
-                crm_log_xml_notice(bad, "OldIpcReply");
-
-            } else {
-                xmlNode *bad = pcmk__xml_parse(crm_ipc_buffer(client));
-
-                crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
-                crm_log_xml_notice(bad, "ImpossibleReply");
-                pcmk__assert(hdr->qb.id <= request_id);
             }
-        } else if (!crm_ipc_connected(client)) {
-            crm_err("%s IPC provider disconnected while waiting for message %d",
-                    client->server_name, request_id);
+
+            continue;
+        }
+
+        rc = crm_ipc_decompress(client);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        hdr = (pcmk__ipc_header_t *)(void*) client->buffer;
+
+        if (hdr->qb.id == request_id) {
+            /* Got the reply we were expecting. */
             break;
         }
 
+        reply = pcmk__xml_parse(crm_ipc_buffer(client));
+
+        if (hdr->qb.id < request_id) {
+            crm_err("Discarding old reply %d (need %d)", hdr->qb.id, request_id);
+            crm_log_xml_notice(reply, "OldIpcReply");
+        } else {
+            crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
+            crm_log_xml_notice(reply, "ImpossibleReply");
+            pcmk__assert(hdr->qb.id <= request_id);
+        }
     } while (time(NULL) < timeout);
 
     if (*bytes < 0) {
