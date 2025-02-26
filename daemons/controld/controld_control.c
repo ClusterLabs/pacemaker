@@ -378,11 +378,39 @@ accept_controller_client(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 static int32_t
 dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
 {
+    int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
+    xmlNode *msg = NULL;
 
-    xmlNode *msg = pcmk__client_data2xml(client, data, &id, &flags);
+    rc = pcmk__ipc_msg_append(&client->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        msg = pcmk__client_data2xml(client, client->buffer->data, &id, &flags);
+        g_byte_array_free(client->buffer, TRUE);
+        client->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (client->buffer != NULL) {
+            g_byte_array_free(client->buffer, TRUE);
+            client->buffer = NULL;
+        }
+
+        return 0;
+    }
 
     if (msg == NULL) {
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
