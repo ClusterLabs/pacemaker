@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -207,7 +207,7 @@ systemd_unit_extension(const char *name)
 }
 
 static char *
-systemd_service_name(const char *name, bool add_instance_name)
+systemd_unit_name(const char *name, bool add_instance_name)
 {
     const char *dot = NULL;
 
@@ -228,16 +228,10 @@ systemd_service_name(const char *name, bool add_instance_name)
 
     if (dot) {
         if (dot != name && *(dot-1) == '@') {
-            char *s = NULL;
-
-            if (asprintf(&s, "%.*spacemaker%s", (int) (dot-name), name, dot) == -1) {
-                /* If asprintf fails, just return name. */
-                return strdup(name);
-            }
-
-            return s;
+            return crm_strdup_printf("%.*spacemaker%s",
+                                     (int) (dot - name), name, dot);
         } else {
-            return strdup(name);
+            return pcmk__str_copy(name);
         }
 
     } else if (add_instance_name && *(name+strlen(name)-1) == '@') {
@@ -460,11 +454,10 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     pcmk__assert(msg != NULL);
 
     // Add the (expanded) unit name as the argument
-    name = systemd_service_name(arg_name,
-                                (op == NULL)
-                                || pcmk__str_eq(op->action,
-                                                PCMK_ACTION_META_DATA,
-                                                pcmk__str_none));
+    name = systemd_unit_name(arg_name,
+                             (op == NULL)
+                             || pcmk__str_eq(op->action, PCMK_ACTION_META_DATA,
+                                             pcmk__str_none));
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name,
                                             DBUS_TYPE_INVALID));
     free(name);
@@ -1010,10 +1003,10 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
     /* (ss) */
     {
         const char *replace_s = "replace";
-        char *name = systemd_service_name(op->agent,
-                                          pcmk__str_eq(op->action,
-                                                       PCMK_ACTION_META_DATA,
-                                                       pcmk__str_none));
+        char *name = systemd_unit_name(op->agent,
+                                       pcmk__str_eq(op->action,
+                                                    PCMK_ACTION_META_DATA,
+                                                    pcmk__str_none));
 
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID));
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &replace_s, DBUS_TYPE_INVALID));
