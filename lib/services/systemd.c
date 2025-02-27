@@ -807,10 +807,12 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
  *
  * @TODO Add start timeout
  */
-#define SYSTEMD_OVERRIDE_TEMPLATE                           \
+#define SYSTEMD_UNIT_OVERRIDE_TEMPLATE                      \
     "[Unit]\n"                                              \
     "Description=Cluster Controlled %s\n"                   \
-    "Before=pacemaker.service pacemaker_remote.service\n"   \
+    "Before=pacemaker.service pacemaker_remote.service\n"
+
+#define SYSTEMD_SERVICE_OVERRIDE                            \
     "\n"                                                    \
     "[Service]\n"                                           \
     "Restart=no\n"
@@ -819,16 +821,16 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
  * \internal
  * \brief Get runtime drop-in directory path for a systemd unit
  *
- * \param[in] agent  Systemd resource agent
+ * \param[in] unit_name  Systemd unit (with extension)
  *
  * \return Drop-in directory path
  */
 static GString *
-get_override_dir(const char *agent)
+get_override_dir(const char *unit_name)
 {
     GString *buf = g_string_sized_new(128);
 
-    pcmk__g_strcat(buf, "/run/systemd/system/", agent, ".service.d", NULL);
+    pcmk__g_strcat(buf, "/run/systemd/system/", unit_name, ".d", NULL);
     return buf;
 }
 
@@ -861,13 +863,18 @@ append_override_basename(GString *buf)
 static int
 systemd_create_override(const char *agent, int timeout)
 {
+    char *unit_name = NULL;
     GString *filename = NULL;
+    GString *override = NULL;
     FILE *fp = NULL;
     int fd = 0;
-    char *override = NULL;
     int rc = pcmk_rc_ok;
 
-    filename = get_override_dir(agent);
+    unit_name = systemd_unit_name(agent, false);
+    CRM_CHECK(!pcmk__str_empty(unit_name),
+              rc = EINVAL; goto done);
+
+    filename = get_override_dir(unit_name);
     rc = pcmk__build_path(filename->str, 0755);
     if (rc != pcmk_rc_ok) {
         crm_err("Could not create systemd override directory %s: %s",
@@ -884,9 +891,7 @@ systemd_create_override(const char *agent, int timeout)
         goto done;
     }
 
-    /* Ensure the override file is world-readable. This is not strictly
-     * necessary, but it avoids a systemd warning in the logs.
-     */
+    // Ensure the override file is world-readable (avoid systemd warning in log)
     fd = fileno(fp);
     if ((fd < 0) || (fchmod(fd, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH) < 0)) {
         rc = errno;
@@ -895,8 +900,13 @@ systemd_create_override(const char *agent, int timeout)
         goto done;
     }
 
-    override = crm_strdup_printf(SYSTEMD_OVERRIDE_TEMPLATE, agent);
-    if (fputs(override, fp) == EOF) {
+    override = g_string_sized_new(2 * sizeof(SYSTEMD_UNIT_OVERRIDE_TEMPLATE));
+    g_string_printf(override, SYSTEMD_UNIT_OVERRIDE_TEMPLATE, unit_name);
+    if (pcmk__ends_with_ext(unit_name, ".service")) {
+        g_string_append(override, SYSTEMD_SERVICE_OVERRIDE);
+    }
+
+    if (fputs(override->str, fp) == EOF) {
         rc = EIO;
         crm_err("Cannot write to systemd override file %s", filename->str);
     }
@@ -915,19 +925,27 @@ done:
         unlink(filename->str);
     }
 
+    free(unit_name);
     if (filename != NULL) {
         g_string_free(filename, TRUE);
     }
-    free(override);
+    if (override != NULL) {
+        g_string_free(override, TRUE);
+    }
     return rc;
 }
 
 static void
 systemd_remove_override(const char *agent, int timeout)
 {
-    GString *filename = get_override_dir(agent);
+    char *unit_name = systemd_unit_name(agent, false);
+    GString *filename = NULL;
 
+    CRM_CHECK(!pcmk__str_empty(unit_name), goto done);
+
+    filename = get_override_dir(unit_name);
     append_override_basename(filename);
+
     if (unlink(filename->str) < 0) {
         int rc = errno;
 
@@ -941,7 +959,11 @@ systemd_remove_override(const char *agent, int timeout)
         systemd_daemon_reload(timeout);
     }
 
-    g_string_free(filename, TRUE);
+done:
+    free(unit_name);
+    if (filename != NULL) {
+        g_string_free(filename, TRUE);
+    }
 }
 
 /*!
