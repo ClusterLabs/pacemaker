@@ -70,3 +70,30 @@ pcmk__client_type_str(uint64_t client_type)
             return "unknown";
     }
 }
+
+bool
+pcmk__ipc_msg_is_multipart(void *data)
+{
+    pcmk__ipc_header_t *header = data;
+
+    CRM_LOG_ASSERT(data != NULL);
+    return pcmk_is_set(header->flags, crm_ipc_multipart);
+}
+
+bool
+pcmk__ipc_msg_is_multipart_end(void *data)
+{
+    pcmk__ipc_header_t *header = data;
+
+    CRM_LOG_ASSERT(data != NULL);
+    return pcmk_is_set(header->flags, crm_ipc_multipart_end);
+}
+
+uint16_t
+pcmk__ipc_multipart_id(void *data)
+{
+    pcmk__ipc_header_t *header = data;
+
+    CRM_LOG_ASSERT(data != NULL);
+    return header->part_id;
+}
