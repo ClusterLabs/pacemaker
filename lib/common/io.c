@@ -44,8 +44,6 @@ pcmk__build_path(const char *path_c, mode_t mode)
     int rc = pcmk_rc_ok;
     char *path = strdup(path_c);
 
-    // cppcheck seems not to understand the abort logic in CRM_CHECK
-    // cppcheck-suppress memleak
     CRM_CHECK(path != NULL, return -ENOMEM);
     for (len = strlen(path); offset < len; offset++) {
         if (path[offset] == '/') {

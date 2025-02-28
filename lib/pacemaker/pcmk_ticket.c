@@ -82,6 +82,8 @@ pcmk__get_ticket_state(cib_t *cib, const char *ticket_id, xmlNode **state)
     char *xpath = NULL;
 
     pcmk__assert((cib != NULL) && (state != NULL));
+    // cppcheck doesn't understand the above pcmk__assert line
+    // cppcheck-suppress ctunullpointer
     *state = NULL;
 
     if (ticket_id != NULL) {

@@ -57,8 +57,6 @@ decompress_file(const char *filename)
         goto done;
     }
 
-    // cppcheck seems not to understand the abort-logic in pcmk__realloc
-    // cppcheck-suppress memleak
     do {
         int read_len = 0;
 
