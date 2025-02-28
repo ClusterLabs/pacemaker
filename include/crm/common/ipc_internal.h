@@ -244,6 +244,9 @@ int pcmk__ipc_prepare_iov(uint32_t request, const GString *message,
 int pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request,
                        const xmlNode *message, uint32_t flags);
 int pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags);
+bool pcmk__ipc_msg_is_multipart(void *data);
+bool pcmk__ipc_msg_is_multipart_end(void *data);
+uint16_t pcmk__ipc_multipart_id(void *data);
 xmlNode *pcmk__client_data2xml(pcmk__client_t *c, void *data,
                                uint32_t *id, uint32_t *flags);
 

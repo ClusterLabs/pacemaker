@@ -70,3 +70,39 @@ pcmk__client_type_str(uint64_t client_type)
             return "unknown";
     }
 }
+
+bool
+pcmk__ipc_msg_is_multipart(void *data)
+{
+    pcmk__ipc_header_t *header = data;
+
+    if (!pcmk__valid_ipc_header(header)) {
+        return false;
+    }
+
+    return pcmk_all_flags_set(header->flags, crm_ipc_multipart);
+}
+
+bool
+pcmk__ipc_msg_is_multipart_end(void *data)
+{
+    pcmk__ipc_header_t *header = data;
+
+    if (!pcmk__valid_ipc_header(header)) {
+        return false;
+    }
+
+    return pcmk_all_flags_set(header->flags, crm_ipc_multipart_end);
+}
+
+uint16_t
+pcmk__ipc_multipart_id(void *data)
+{
+    pcmk__ipc_header_t *header = data;
+
+    if (!pcmk__valid_ipc_header(header)) {
+        return false;
+    }
+
+    return header->part_id;
+}
