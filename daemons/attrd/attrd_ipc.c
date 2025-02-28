@@ -553,6 +553,7 @@ attrd_ipc_destroy(qb_ipcs_connection_t *c)
 static int32_t
 attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
+    int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
@@ -565,7 +566,33 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         return 0;
     }
 
-    xml = pcmk__client_data2xml(client, data, &id, &flags);
+    rc = pcmk__ipc_msg_append(&client->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        xml = pcmk__client_data2xml(client, client->buffer->data, &id, &flags);
+        g_byte_array_free(client->buffer, TRUE);
+        client->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (client->buffer != NULL) {
+            g_byte_array_free(client->buffer, TRUE);
+            client->buffer = NULL;
+        }
+
+        return 0;
+    }
 
     if (xml == NULL) {
         crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
