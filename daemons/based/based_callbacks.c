@@ -302,11 +302,46 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 int32_t
 cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean privileged)
 {
+    int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
     uint32_t call_options = cib_none;
     pcmk__client_t *cib_client = pcmk__find_client(c);
-    xmlNode *op_request = pcmk__client_data2xml(cib_client, data, &id, &flags);
+    xmlNode *op_request = NULL;
+
+    if (cib_client == NULL) {
+        crm_trace("Invalid client %p", c);
+        return 0;
+    }
+
+    rc = pcmk__ipc_msg_append(&cib_client->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        op_request = pcmk__client_data2xml(cib_client, cib_client->buffer->data,
+                                           &id, &flags);
+        g_byte_array_free(cib_client->buffer, TRUE);
+        cib_client->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (cib_client->buffer != NULL) {
+            g_byte_array_free(cib_client->buffer, TRUE);
+            cib_client->buffer = NULL;
+        }
+
+        return 0;
+    }
 
     if (op_request) {
         int rc = pcmk_rc_ok;
@@ -323,10 +358,6 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         crm_trace("Invalid message from %p", c);
         pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_NACK, NULL,
                            CRM_EX_PROTOCOL);
-        return 0;
-
-    } else if(cib_client == NULL) {
-        crm_trace("Invalid client %p", c);
         return 0;
     }
 
