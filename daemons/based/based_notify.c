@@ -109,6 +109,7 @@ cib_notify_send(const xmlNode *xml)
     GString *iov_buffer = NULL;
     ssize_t bytes = 0;
     int rc = pcmk_rc_ok;
+    uint16_t index = 0;
 
     iov_buffer = g_string_sized_new(1024);
 
@@ -118,19 +119,28 @@ cib_notify_send(const xmlNode *xml)
     }
 
     pcmk__xml_string(xml, 0, iov_buffer, 0);
-    rc = pcmk__ipc_prepare_iov(0, iov_buffer, 0, &iov, &bytes);
 
-    if (rc == pcmk_rc_ok) {
+    do {
+        rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, &bytes);
+
+        if (rc != pcmk_rc_ok && rc != EAGAIN) {
+            crm_notice("Could not notify clients: %s " QB_XS " rc=%d",
+                       pcmk_rc_str(rc), rc);
+            break;
+        }
+
         update.msg = xml;
         update.iov = iov;
         update.iov_size = bytes;
         pcmk__foreach_ipc_client(cib_notify_send_one, &update);
         pcmk_free_ipc_event(iov);
 
-    } else {
-        crm_notice("Could not notify clients: %s " QB_XS " rc=%d",
-                   pcmk_rc_str(rc), rc);
-    }
+        if (rc == pcmk_rc_ok) {
+            break;
+        }
+
+        index++;
+    } while (true);
 
     g_string_free(iov_buffer, TRUE);
 }
