@@ -23,33 +23,43 @@
 
 #include <crm/common/util.h>
 
-#define MAX_VALUE_LEN 255
-
+/*!
+ * \internal
+ * \brief Read file contents into a string, with trailing whitespace removed
+ *
+ * \param[in] filename  Name of file to read
+ *
+ * \return File contents as a string, or \c NULL on failure or empty file
+ *
+ * \note It would be simpler to call \c pcmk__file_contents() directly without
+ *       trimming trailing whitespace. However, this would change hashes for
+ *       existing value files that have trailing whitespace. Similarly, if we
+ *       trim trailing whitespace, it would make sense to trim leading
+ *       whitespace, but this changes existing hashes.
+ */
 static char *
-read_local_file(char *local_file)
+read_file_trimmed(const char *filename)
 {
-    FILE *fp = fopen(local_file, "r");
-    char buf[MAX_VALUE_LEN+1];
-    char *p;
+    char *p = NULL;
+    char *buf = NULL;
+    int rc = pcmk__file_contents(filename, &buf);
 
-    if (!fp) {
-        if (errno != ENOENT) {
-            crm_perror(LOG_ERR, "cannot open %s" , local_file);
-        }
+    if (rc != pcmk_rc_ok) {
+        crm_err("Failed to read %s: %s", filename, pcmk_rc_str(rc));
+        free(buf);
         return NULL;
     }
 
-    if (!fgets(buf, MAX_VALUE_LEN, fp)) {
-        crm_perror(LOG_ERR, "cannot read %s", local_file);
-        fclose(fp);
+    if (buf == NULL) {
+        crm_err("File %s is empty", filename);
         return NULL;
     }
-    fclose(fp);
 
     // Strip trailing white space
     for (p = buf + strlen(buf) - 1; (p >= buf) && isspace(*p); p--);
-    *(p+1) = '\0';
-    return pcmk__str_copy(buf);
+    *(p + 1) = '\0';
+
+    return buf;
 }
 
 /*!
@@ -71,7 +81,7 @@ validate_hash(const char *filename, const char *secret_value,
     char *calculated = NULL;
     int rc = pcmk_rc_ok;
 
-    stored = read_local_file(filename);
+    stored = read_file_trimmed(filename);
     if (stored == NULL) {
         crm_err("Could not read md5 sum for resource %s parameter '%s' from "
                 "file '%s'",
@@ -157,7 +167,7 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 
         // Path to file containing secret value for this parameter
         g_string_append(filename, param);
-        secret_value = read_local_file(filename->str);
+        secret_value = read_file_trimmed(filename->str);
         if (secret_value == NULL) {
             crm_err("Secret value for resource %s parameter '%s' not found in "
                     PCMK__CIB_SECRETS_DIR,
