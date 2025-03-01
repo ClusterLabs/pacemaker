@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2020 the Pacemaker project contributors
+ * Copyright 2011-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -95,8 +95,9 @@ read_local_file(char *local_file)
 int
 pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 {
-    char local_file[FILENAME_MAX+1], *start_pname;
-    char hash_file[FILENAME_MAX+1], *hash;
+    GString *filename = NULL;
+    gsize dir_len = 0;
+    char *hash = NULL;
     GList *secret_params = NULL, *l;
     char *key, *pvalue, *secret_value;
     int rc = pcmk_rc_ok;
@@ -116,13 +117,9 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 
     crm_debug("Replace secret parameters for resource %s", rsc_id);
 
-    if (snprintf(local_file, FILENAME_MAX, PCMK__CIB_SECRETS_DIR "/%s/", rsc_id)
-            > FILENAME_MAX) {
-        crm_err("Can't replace secret parameters for %s: file name size exceeded",
-                rsc_id);
-        return ENAMETOOLONG;
-    }
-    start_pname = local_file + strlen(local_file);
+    filename = g_string_sized_new(128);
+    pcmk__g_strcat(filename, PCMK__CIB_SECRETS_DIR "/", rsc_id, "/", NULL);
+    dir_len = filename->len;
 
     for (l = g_list_first(secret_params); l; l = g_list_next(l)) {
         key = (char *)(l->data);
@@ -132,14 +129,13 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
             continue;
         }
 
-        if ((strlen(key) + strlen(local_file)) >= FILENAME_MAX-2) {
-            crm_err("%s: parameter name %s too big", rsc_id, key);
-            rc = ENAMETOOLONG;
-            continue;
-        }
+        // Reset filename to the resource's secrets directory path
+        g_string_truncate(filename, dir_len);
 
-        strcpy(start_pname, key);
-        secret_value = read_local_file(local_file);
+        // Now set filename to the secrets file for this particular parameter
+        g_string_append(filename, key);
+
+        secret_value = read_local_file(filename->str);
         if (!secret_value) {
             crm_err("secret for rsc %s parameter %s not found in %s",
                     rsc_id, key, PCMK__CIB_SECRETS_DIR);
@@ -147,35 +143,30 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
             continue;
         }
 
-        strcpy(hash_file, local_file);
-        if (strlen(hash_file) + 5 > FILENAME_MAX) {
-            crm_err("cannot build such a long name "
-                    "for the sign file: %s.sign", hash_file);
+        g_string_append(filename, ".sign");
+        hash = read_local_file(filename->str);
+        if (hash == NULL) {
+            crm_err("md5 sum for rsc %s parameter %s "
+                    "cannot be read from %s", rsc_id, key, filename->str);
             free(secret_value);
-            rc = ENAMETOOLONG;
+            rc = ENOENT;
             continue;
-
-        } else {
-            strcat(hash_file, ".sign");
-            hash = read_local_file(hash_file);
-            if (hash == NULL) {
-                crm_err("md5 sum for rsc %s parameter %s "
-                        "cannot be read from %s", rsc_id, key, hash_file);
-                free(secret_value);
-                rc = ENOENT;
-                continue;
-
-            } else if (!check_md5_hash(hash, secret_value)) {
-                crm_err("md5 sum for rsc %s parameter %s "
-                        "does not match", rsc_id, key);
-                free(secret_value);
-                free(hash);
-                rc = pcmk_rc_cib_corrupt;
-                continue;
-            }
-            free(hash);
         }
+
+        if (!check_md5_hash(hash, secret_value)) {
+            crm_err("md5 sum for rsc %s parameter %s "
+                    "does not match", rsc_id, key);
+            free(secret_value);
+            free(hash);
+            rc = pcmk_rc_cib_corrupt;
+            continue;
+        }
+        free(hash);
         g_hash_table_replace(params, strdup(key), secret_value);
+    }
+
+    if (filename != NULL) {
+        g_string_free(filename, TRUE);
     }
     g_list_free(secret_params);
     return rc;
