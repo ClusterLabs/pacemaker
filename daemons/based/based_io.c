@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -86,25 +86,10 @@ retrieveCib(const char *filename, const char *sigfile)
     return root;
 }
 
-/*
- * for OSs without support for direntry->d_type, like Solaris
- */
-#ifndef DT_UNKNOWN
-# define DT_UNKNOWN     0
-# define DT_FIFO        1
-# define DT_CHR         2
-# define DT_DIR         4
-# define DT_BLK         6
-# define DT_REG         8
-# define DT_LNK         10
-# define DT_SOCK        12
-# define DT_WHT         14
-#endif /*DT_UNKNOWN*/
-
 static int cib_archive_filter(const struct dirent * a)
 {
     int rc = 0;
-    /* Looking for regular files (d_type = 8) starting with 'cib-' and not ending in .sig */
+    // Looking for regular files starting with "cib-" and not ending in .sig
     struct stat s;
     char *a_path = crm_strdup_printf("%s/%s", cib_root, a->d_name);
 
@@ -113,23 +98,9 @@ static int cib_archive_filter(const struct dirent * a)
         crm_trace("%s - stat failed: %s (%d)", a->d_name, pcmk_rc_str(rc), rc);
         rc = 0;
 
-    } else if ((s.st_mode & S_IFREG) != S_IFREG) {
-        unsigned char dtype;
-#ifdef HAVE_STRUCT_DIRENT_D_TYPE
-        dtype = a->d_type;
-#else
-        switch (s.st_mode & S_IFMT) {
-            case S_IFREG:  dtype = DT_REG;      break;
-            case S_IFDIR:  dtype = DT_DIR;      break;
-            case S_IFCHR:  dtype = DT_CHR;      break;
-            case S_IFBLK:  dtype = DT_BLK;      break;
-            case S_IFLNK:  dtype = DT_LNK;      break;
-            case S_IFIFO:  dtype = DT_FIFO;     break;
-            case S_IFSOCK: dtype = DT_SOCK;     break;
-            default:       dtype = DT_UNKNOWN;  break;
-        }
-#endif
-         crm_trace("%s - wrong type (%d)", a->d_name, dtype);
+    } else if (!S_ISREG(s.st_mode)) {
+        crm_trace("%s - wrong type (%#o)",
+                  a->d_name, (unsigned int) (s.st_mode & S_IFMT));
 
     } else if(strstr(a->d_name, "cib-") != a->d_name) {
         crm_trace("%s - wrong prefix", a->d_name);
