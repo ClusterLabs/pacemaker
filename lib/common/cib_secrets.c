@@ -23,11 +23,6 @@
 
 #include <crm/common/util.h>
 
-static int is_magic_value(char *p);
-static bool check_md5_hash(char *hash, char *value);
-static void add_secret_params(gpointer key, gpointer value, gpointer user_data);
-static char *read_local_file(char *local_file);
-
 #define MAX_VALUE_LEN 255
 #define MAGIC "lrm://"
 
@@ -35,6 +30,16 @@ static int
 is_magic_value(char *p)
 {
     return !strcmp(p, MAGIC);
+}
+
+static void
+add_secret_params(gpointer key, gpointer value, gpointer user_data)
+{
+    GList **lp = (GList **)user_data;
+
+    if (is_magic_value((char *)value)) {
+        *lp = g_list_append(*lp, (char *)key);
+    }
 }
 
 static bool
@@ -170,14 +175,4 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
     }
     g_list_free(secret_params);
     return rc;
-}
-
-static void
-add_secret_params(gpointer key, gpointer value, gpointer user_data)
-{
-    GList **lp = (GList **)user_data;
-
-    if (is_magic_value((char *)value)) {
-        *lp = g_list_append(*lp, (char *)key);
-    }
 }
