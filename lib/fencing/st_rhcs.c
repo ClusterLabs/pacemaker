@@ -34,19 +34,25 @@
 static int
 rhcs_agent_filter(const struct dirent *entry)
 {
-    char buf[FILENAME_MAX + 1];
+    char *buf = NULL;
     struct stat sb;
+    int rc = 0;
 
     if (!pcmk__starts_with(entry->d_name, "fence_")) {
-        return 0;
+        goto done;
     }
 
-    snprintf(buf, sizeof(buffer), PCMK__FENCE_BINDIR "/%s", entry->d_name);
+    // glibc doesn't enforce PATH_MAX, so don't limit buf size
+    buf = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s", entry->d_name);
     if ((stat(buf, &sb) != 0) || !S_ISREG(sb.st_mode)) {
-        return 0;
+        goto done;
     }
 
-    return 1;
+    rc = 1;
+
+done:
+    free(buf);
+    return rc;
 }
 
 /*!
