@@ -97,9 +97,7 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 {
     GString *filename = NULL;
     gsize dir_len = 0;
-    char *hash = NULL;
-    GList *secret_params = NULL, *l;
-    char *key, *pvalue, *secret_value;
+    GList *secret_params = NULL;
     int rc = pcmk_rc_ok;
 
     if (params == NULL) {
@@ -117,52 +115,54 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 
     crm_debug("Replace secret parameters for resource %s", rsc_id);
 
+    // Fill in directory path for use with all secret parameters
     filename = g_string_sized_new(128);
     pcmk__g_strcat(filename, PCMK__CIB_SECRETS_DIR "/", rsc_id, "/", NULL);
     dir_len = filename->len;
 
-    for (l = g_list_first(secret_params); l; l = g_list_next(l)) {
-        key = (char *)(l->data);
-        pvalue = g_hash_table_lookup(params, key);
-        if (!pvalue) { /* this cannot really happen */
-            crm_err("odd, no parameter %s for rsc %s found now", key, rsc_id);
-            continue;
-        }
+    for (GList *iter = secret_params; iter != NULL; iter = iter->next) {
+        char *param = iter->data;
+        char *secret_value = NULL;
+        char *hash = NULL;
 
         // Reset filename to the resource's secrets directory path
         g_string_truncate(filename, dir_len);
 
-        // Now set filename to the secrets file for this particular parameter
-        g_string_append(filename, key);
-
+        // Path to file containing secret value for this parameter
+        g_string_append(filename, param);
         secret_value = read_local_file(filename->str);
-        if (!secret_value) {
-            crm_err("secret for rsc %s parameter %s not found in %s",
-                    rsc_id, key, PCMK__CIB_SECRETS_DIR);
+        if (secret_value == NULL) {
+            crm_err("Secret value for resource %s parameter '%s' not found in "
+                    PCMK__CIB_SECRETS_DIR,
+                    rsc_id, param);
             rc = ENOENT;
             continue;
         }
 
+        // Path to file containing md5 sum for this parameter
         g_string_append(filename, ".sign");
         hash = read_local_file(filename->str);
         if (hash == NULL) {
-            crm_err("md5 sum for rsc %s parameter %s "
-                    "cannot be read from %s", rsc_id, key, filename->str);
+            crm_err("Could not read md5 sum for resource %s parameter '%s' "
+                    "from file '%s'",
+                    rsc_id, param, filename->str);
             free(secret_value);
             rc = ENOENT;
             continue;
         }
 
         if (!check_md5_hash(hash, secret_value)) {
-            crm_err("md5 sum for rsc %s parameter %s "
-                    "does not match", rsc_id, key);
+            crm_err("Calculated md5 sum for resource %s parameter '%s' does "
+                    "not match stored md5 sum",
+                    rsc_id, param);
             free(secret_value);
             free(hash);
             rc = pcmk_rc_cib_corrupt;
             continue;
         }
+
         free(hash);
-        g_hash_table_replace(params, strdup(key), secret_value);
+        g_hash_table_replace(params, strdup(param), secret_value);
     }
 
     if (filename != NULL) {
