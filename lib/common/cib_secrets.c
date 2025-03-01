@@ -24,23 +24,6 @@
 #include <crm/common/util.h>
 
 #define MAX_VALUE_LEN 255
-#define MAGIC "lrm://"
-
-static int
-is_magic_value(char *p)
-{
-    return !strcmp(p, MAGIC);
-}
-
-static void
-add_secret_params(gpointer key, gpointer value, gpointer user_data)
-{
-    GList **lp = (GList **)user_data;
-
-    if (is_magic_value((char *)value)) {
-        *lp = g_list_append(*lp, (char *)key);
-    }
-}
 
 static bool
 check_md5_hash(char *hash, char *value)
@@ -100,38 +83,42 @@ read_local_file(char *local_file)
 int
 pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 {
+    GHashTableIter iter;
+    char *param = NULL;
+    char *value = NULL;
     GString *filename = NULL;
     gsize dir_len = 0;
-    GList *secret_params = NULL;
     int rc = pcmk_rc_ok;
 
     if (params == NULL) {
         return pcmk_rc_ok;
     }
 
-    /* secret_params could be cached with the resource;
-     * there are also parameters sent with operations
-     * which cannot be cached
-     */
-    g_hash_table_foreach(params, add_secret_params, &secret_params);
-    if (secret_params == NULL) { // No secret parameters found
-        return pcmk_rc_ok;
-    }
-
-    crm_debug("Replace secret parameters for resource %s", rsc_id);
-
-    // Fill in directory path for use with all secret parameters
-    filename = g_string_sized_new(128);
-    pcmk__g_strcat(filename, PCMK__CIB_SECRETS_DIR "/", rsc_id, "/", NULL);
-    dir_len = filename->len;
-
-    for (GList *iter = secret_params; iter != NULL; iter = iter->next) {
-        char *param = iter->data;
+    // Some params are sent with operations, so we cannot cache secret params
+    g_hash_table_iter_init(&iter, params);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &param,
+                                  (gpointer *) &value)) {
         char *secret_value = NULL;
         char *hash = NULL;
 
-        // Reset filename to the resource's secrets directory path
-        g_string_truncate(filename, dir_len);
+        if (!pcmk__str_eq(value, "lrm://", pcmk__str_none)) {
+            // Not a secret parameter
+            continue;
+        }
+
+        if (filename == NULL) {
+            // First secret parameter. Fill in directory path for use with all.
+            crm_debug("Replacing secret parameters for resource %s", rsc_id);
+
+            filename = g_string_sized_new(128);
+            pcmk__g_strcat(filename, PCMK__CIB_SECRETS_DIR "/", rsc_id, "/",
+                           NULL);
+            dir_len = filename->len;
+
+        } else {
+            // Reset filename to the resource's secrets directory path
+            g_string_truncate(filename, dir_len);
+        }
 
         // Path to file containing secret value for this parameter
         g_string_append(filename, param);
@@ -167,12 +154,11 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
         }
 
         free(hash);
-        g_hash_table_replace(params, strdup(param), secret_value);
+        g_hash_table_iter_replace(&iter, (gpointer) secret_value);
     }
 
     if (filename != NULL) {
         g_string_free(filename, TRUE);
     }
-    g_list_free(secret_params);
     return rc;
 }
