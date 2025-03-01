@@ -22,7 +22,32 @@
 
 #include "fencing_private.h"
 
-#define RH_STONITH_PREFIX "fence_"
+/*!
+ * \internal
+ * \brief \c scandir() filter for RHCS fence agents
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 1 if \p entry is a regular file whose name begins with \c "fence_"
+ * \retval 0 otherwise
+ */
+static int
+rhcs_agent_filter(const struct dirent *entry)
+{
+    char buf[FILENAME_MAX + 1];
+    struct stat sb;
+
+    if (!pcmk__starts_with(entry->d_name, "fence_")) {
+        return 0;
+    }
+
+    snprintf(buf, sizeof(buffer), PCMK__FENCE_BINDIR "/%s", entry->d_name);
+    if ((stat(buf, &sb) != 0) || !S_ISREG(sb.st_mode)) {
+        return 0;
+    }
+
+    return 1;
+}
 
 /*!
  * \internal
@@ -35,30 +60,24 @@
 int
 stonith__list_rhcs_agents(stonith_key_value_t **devices)
 {
-    // Essentially: ls -1 @sbin_dir@/fence_*
-
-    int count = 0;
     struct dirent **namelist = NULL;
-    const int file_num = scandir(PCMK__FENCE_BINDIR, &namelist, 0, alphasort);
+    const int file_num = scandir(PCMK__FENCE_BINDIR, &namelist,
+                                 rhcs_agent_filter, alphasort);
 
-    char buffer[FILENAME_MAX + 1];
+    if (file_num < 0) {
+        int rc = errno;
+
+        crm_err("Could not list " PCMK__FENCE_BINDIR ": %s", pcmk_rc_str(rc));
+        free(namelist);
+        return 0;
+    }
 
     for (int i = 0; i < file_num; i++) {
-        struct stat prop;
-
-        if (pcmk__starts_with(namelist[i]->d_name, RH_STONITH_PREFIX)) {
-            snprintf(buffer, sizeof(buffer), "%s/%s", PCMK__FENCE_BINDIR,
-                     namelist[i]->d_name);
-            if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-                *devices = stonith_key_value_add(*devices, NULL,
-                                                 namelist[i]->d_name);
-                count++;
-            }
-        }
+        *devices = stonith_key_value_add(*devices, NULL, namelist[i]->d_name);
         free(namelist[i]);
     }
     free(namelist);
-    return count;
+    return file_num;
 }
 
 static void
