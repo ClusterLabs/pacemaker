@@ -25,21 +25,6 @@
 
 #define MAX_VALUE_LEN 255
 
-static bool
-check_md5_hash(char *hash, char *value)
-{
-    bool rc = false;
-    char *hash2 = NULL;
-
-    hash2 = crm_md5sum(value);
-    crm_debug("hash: %s, calculated hash: %s", hash, hash2);
-    if (pcmk__str_eq(hash, hash2, pcmk__str_casei)) {
-        rc = true;
-    }
-    free(hash2);
-    return rc;
-}
-
 static char *
 read_local_file(char *local_file)
 {
@@ -64,7 +49,57 @@ read_local_file(char *local_file)
     // Strip trailing white space
     for (p = buf + strlen(buf) - 1; (p >= buf) && isspace(*p); p--);
     *(p+1) = '\0';
-    return strdup(buf);
+    return pcmk__str_copy(buf);
+}
+
+/*!
+ * \internal
+ * \brief Read checksum from a file and compare against calculated checksum
+ *
+ * \param[in] filename      File containing stored checksum
+ * \param[in] secret_value  String to calculate checksum from
+ * \param[in] rsc_id        Resource ID (for logging only)
+ * \param[in] param         Parameter name (for logging only)
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+validate_hash(const char *filename, const char *secret_value,
+              const char *rsc_id, const char *param)
+{
+    char *stored = NULL;
+    char *calculated = NULL;
+    int rc = pcmk_rc_ok;
+
+    stored = read_local_file(filename);
+    if (stored == NULL) {
+        crm_err("Could not read md5 sum for resource %s parameter '%s' from "
+                "file '%s'",
+                rsc_id, param, filename);
+        rc = ENOENT;
+        goto done;
+    }
+
+    calculated = crm_md5sum(secret_value);
+    if (calculated == NULL) {
+        // Should be impossible
+        rc = EINVAL;
+        goto done;
+    }
+
+    crm_trace("Stored hash: %s, calculated hash: %s", stored, calculated);
+
+    if (!pcmk__str_eq(stored, calculated, pcmk__str_casei)) {
+        crm_err("Calculated md5 sum for resource %s parameter '%s' does not "
+                "match stored md5 sum",
+                rsc_id, param);
+        rc = pcmk_rc_cib_corrupt;
+    }
+
+done:
+    free(stored);
+    free(calculated);
+    return rc;
 }
 
 /*!
@@ -99,7 +134,7 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
     while (g_hash_table_iter_next(&iter, (gpointer *) &param,
                                   (gpointer *) &value)) {
         char *secret_value = NULL;
-        char *hash = NULL;
+        int hash_rc = pcmk_rc_ok;
 
         if (!pcmk__str_eq(value, "lrm://", pcmk__str_none)) {
             // Not a secret parameter
@@ -133,27 +168,13 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 
         // Path to file containing md5 sum for this parameter
         g_string_append(filename, ".sign");
-        hash = read_local_file(filename->str);
-        if (hash == NULL) {
-            crm_err("Could not read md5 sum for resource %s parameter '%s' "
-                    "from file '%s'",
-                    rsc_id, param, filename->str);
+        hash_rc = validate_hash(filename->str, secret_value, rsc_id, param);
+        if (hash_rc != pcmk_rc_ok) {
+            rc = hash_rc;
             free(secret_value);
-            rc = ENOENT;
             continue;
         }
 
-        if (!check_md5_hash(hash, secret_value)) {
-            crm_err("Calculated md5 sum for resource %s parameter '%s' does "
-                    "not match stored md5 sum",
-                    rsc_id, param);
-            free(secret_value);
-            free(hash);
-            rc = pcmk_rc_cib_corrupt;
-            continue;
-        }
-
-        free(hash);
         g_hash_table_iter_replace(&iter, (gpointer) secret_value);
     }
 
