@@ -798,8 +798,6 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
     }
 }
 
-#define SYSTEMD_OVERRIDE_ROOT "/run/systemd/system/"
-
 /* When the cluster manages a systemd resource, we create a unit file override
  * to order the service "before" pacemaker. The "before" relationship won't
  * actually be used, since systemd won't ever start the resource -- we're
@@ -819,37 +817,31 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
 
 /*!
  * \internal
- * \brief Create a runtime drop-in directory for a systemd unit
- *
- * This directory does not survive a reboot.
+ * \brief Get runtime drop-in directory path for a systemd unit
  *
  * \param[in] agent  Systemd resource agent
  *
- * \return Standard Pacemaker return code
- *
- * \note Any configuration in \c /etc takes precedence over our drop-in.
- * \todo Document this in Pacemaker Explained or Administration?
+ * \return Drop-in directory path
  */
-static int
-create_override_dir(const char *agent)
+static GString *
+get_override_dir(const char *agent)
 {
-    char *override_dir = crm_strdup_printf(SYSTEMD_OVERRIDE_ROOT
-                                           "/%s.service.d", agent);
-    int rc = pcmk__build_path(override_dir, 0755);
+    GString *buf = g_string_sized_new(128);
 
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not create systemd override directory %s: %s",
-                override_dir, pcmk_rc_str(rc));
-    }
-    free(override_dir);
-    return rc;
+    pcmk__g_strcat(buf, "/run/systemd/system/", agent, ".service.d", NULL);
+    return buf;
 }
 
-static char *
-get_override_filename(const char *agent)
+/*!
+ * \internal
+ * \brief Append systemd override filename to a directory path
+ *
+ * \param[in,out] buf  Buffer containing directory path to append to
+ */
+static inline void
+append_override_basename(GString *buf)
 {
-    return crm_strdup_printf(SYSTEMD_OVERRIDE_ROOT
-                             "/%s.service.d/50-pacemaker.conf", agent);
+    g_string_append(buf, "/50-pacemaker.conf");
 }
 
 /*!
@@ -869,22 +861,26 @@ get_override_filename(const char *agent)
 static int
 systemd_create_override(const char *agent, int timeout)
 {
-    char *filename = NULL;
+    GString *filename = NULL;
     FILE *fp = NULL;
     int fd = 0;
     char *override = NULL;
-    int rc = create_override_dir(agent);
+    int rc = pcmk_rc_ok;
 
+    filename = get_override_dir(agent);
+    rc = pcmk__build_path(filename->str, 0755);
     if (rc != pcmk_rc_ok) {
+        crm_err("Could not create systemd override directory %s: %s",
+                filename->str, pcmk_rc_str(rc));
         goto done;
     }
 
-    filename = get_override_filename(agent);
-    fp = fopen(filename, "w");
+    append_override_basename(filename);
+    fp = fopen(filename->str, "w");
     if (fp == NULL) {
         rc = errno;
         crm_err("Cannot open systemd override file %s for writing: %s",
-                filename, pcmk_rc_str(rc));
+                filename->str, pcmk_rc_str(rc));
         goto done;
     }
 
@@ -895,14 +891,14 @@ systemd_create_override(const char *agent, int timeout)
     if ((fd < 0) || (fchmod(fd, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH) < 0)) {
         rc = errno;
         crm_err("Failed to set permissions on systemd override file %s: %s",
-                filename, pcmk_rc_str(rc));
+                filename->str, pcmk_rc_str(rc));
         goto done;
     }
 
     override = crm_strdup_printf(SYSTEMD_OVERRIDE_TEMPLATE, agent);
     if (fputs(override, fp) == EOF) {
         rc = EIO;
-        crm_err("Cannot write to systemd override file %s", filename);
+        crm_err("Cannot write to systemd override file %s", filename->str);
     }
 
 done:
@@ -916,10 +912,12 @@ done:
 
     } else if (fp != NULL) {
         // File was created, so remove it
-        unlink(filename);
+        unlink(filename->str);
     }
 
-    free(filename);
+    if (filename != NULL) {
+        g_string_free(filename, TRUE);
+    }
     free(override);
     return rc;
 }
@@ -927,21 +925,23 @@ done:
 static void
 systemd_remove_override(const char *agent, int timeout)
 {
-    char *filename = get_override_filename(agent);
+    GString *filename = get_override_dir(agent);
 
-    if (unlink(filename) < 0) {
+    append_override_basename(filename);
+    if (unlink(filename->str) < 0) {
         int rc = errno;
 
         if (rc != ENOENT) {
             // Stop may be called when already stopped, which is fine
             crm_warn("Cannot remove systemd override file %s: %s",
-                     filename, pcmk_rc_str(rc));
+                     filename->str, pcmk_rc_str(rc));
         }
 
     } else {
         systemd_daemon_reload(timeout);
     }
-    free(filename);
+
+    g_string_free(filename, TRUE);
 }
 
 /*!
