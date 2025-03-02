@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,7 +28,9 @@ enum ocf_exitcode services__systemd2ocf(int exit_status);
 G_GNUC_INTERNAL
 int services__execute_systemd(svc_action_t *op);
 
-G_GNUC_INTERNAL gboolean systemd_unit_exists(const gchar * name);
+G_GNUC_INTERNAL
+bool systemd_unit_exists(const char *name);
+
 G_GNUC_INTERNAL void systemd_cleanup(void);
 
 #ifdef __cplusplus

@@ -632,18 +632,19 @@ systemd_unit_listall(void)
     return units;
 }
 
-gboolean
+bool
 systemd_unit_exists(const char *name)
 {
     char *path = NULL;
     char *state = NULL;
+    int rc = false;
 
     /* Note: Makes a blocking dbus calls
      * Used by resources_find_service_class() when resource class=service
      */
     if ((invoke_unit_by_name(name, NULL, &path) != pcmk_rc_ok)
         || (path == NULL)) {
-        return FALSE;
+        goto done;
     }
 
     /* A successful LoadUnit is not sufficient to determine the unit's
@@ -652,13 +653,12 @@ systemd_unit_exists(const char *name)
      */
     state = systemd_get_property(path, "LoadState", NULL, NULL, NULL,
                                  DBUS_TIMEOUT_USE_DEFAULT);
+    rc = pcmk__str_any_of(state, "loaded", "masked", NULL);
+
+done:
     free(path);
-    if (pcmk__str_any_of(state, "loaded", "masked", NULL)) {
-        free(state);
-        return TRUE;
-    }
     free(state);
-    return FALSE;
+    return rc;
 }
 
 // @TODO Use XML string constants and maybe a real XML object
