@@ -438,6 +438,10 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     DBusPendingCall *pending = NULL;
     char *name = NULL;
 
+    if (pcmk__str_empty(arg_name)) {
+        return EINVAL;
+    }
+
     if (!systemd_init()) {
         if (op != NULL) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
@@ -1136,7 +1140,7 @@ services__execute_systemd(svc_action_t *op)
 {
     pcmk__assert(op != NULL);
 
-    if ((op->action == NULL) || (op->agent == NULL)) {
+    if (pcmk__str_empty(op->action) || pcmk__str_empty(op->agent)) {
         services__set_result(op, PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR_FATAL,
                              "Bug in action caller");
         goto done;
