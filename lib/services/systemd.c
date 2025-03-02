@@ -14,6 +14,7 @@
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 
+#include <stdio.h>                  // fopen(), NULL, etc.
 #include <sys/stat.h>
 #include <gio/gio.h>
 #include <services_private.h>
@@ -809,17 +810,6 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
     "[Service]\n"                                           \
     "Restart=no\n"
 
-// Temporarily use rwxr-xr-x umask when opening a file for writing
-static FILE *
-create_world_readable(const char *filename)
-{
-    mode_t orig_umask = umask(S_IWGRP | S_IWOTH);
-    FILE *fp = fopen(filename, "w");
-
-    umask(orig_umask);
-    return fp;
-}
-
 /*!
  * \internal
  * \brief Create a runtime drop-in directory for a systemd unit
@@ -872,8 +862,9 @@ get_override_filename(const char *agent)
 static int
 systemd_create_override(const char *agent, int timeout)
 {
-    FILE *file_strm = NULL;
-    char *filename = get_override_filename(agent);
+    char *filename = NULL;
+    FILE *fp = NULL;
+    int fd = 0;
     char *override = NULL;
     int rc = create_override_dir(agent);
 
@@ -881,34 +872,46 @@ systemd_create_override(const char *agent, int timeout)
         goto done;
     }
 
-    /* Ensure the override file is world-readable. This is not strictly
-     * necessary, but it avoids a systemd warning in the logs.
-     */
-    file_strm = create_world_readable(filename);
-    if (file_strm == NULL) {
-        // @TODO Use errno
-        rc = EIO;
-        crm_err("Cannot open systemd override file %s for writing", filename);
-        goto done;
-    }
-
-    override = crm_strdup_printf(SYSTEMD_OVERRIDE_TEMPLATE, agent);
-    rc = fprintf(file_strm, "%s\n", override);
-    if (rc < 0) {
+    filename = get_override_filename(agent);
+    fp = fopen(filename, "w");
+    if (fp == NULL) {
         rc = errno;
-        crm_err("Cannot write to systemd override file %s: %d",
+        crm_err("Cannot open systemd override file %s for writing: %s",
                 filename, pcmk_rc_str(rc));
         goto done;
     }
 
-    rc = pcmk_rc_ok;
-    fflush(file_strm);
+    /* Ensure the override file is world-readable. This is not strictly
+     * necessary, but it avoids a systemd warning in the logs.
+     */
+    fd = fileno(fp);
+    if ((fd < 0) || (fchmod(fd, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH) < 0)) {
+        rc = errno;
+        crm_err("Failed to set permissions on systemd override file %s: %s",
+                filename, pcmk_rc_str(rc));
+        goto done;
+    }
 
-    // @TODO Make sure the reload succeeds
-    systemd_daemon_reload(timeout);
+    override = crm_strdup_printf(SYSTEMD_OVERRIDE_TEMPLATE, agent);
+    if (fputs(override, fp) == EOF) {
+        rc = EIO;
+        crm_err("Cannot write to systemd override file %s", filename);
+    }
 
 done:
-    fclose(file_strm);
+    if (fp != NULL) {
+        fclose(fp);
+    }
+
+    if (rc == pcmk_rc_ok) {
+        // @TODO Make sure the reload succeeds
+        systemd_daemon_reload(timeout);
+
+    } else if (fp != NULL) {
+        // File was created, so remove it
+        unlink(filename);
+    }
+
     free(filename);
     free(override);
     return rc;
