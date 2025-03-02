@@ -823,7 +823,20 @@ create_world_readable(const char *filename)
     return fp;
 }
 
-static void
+/*!
+ * \internal
+ * \brief Create a runtime drop-in directory for a systemd unit
+ *
+ * This directory does not survive a reboot.
+ *
+ * \param[in] agent  Systemd resource agent
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note Any configuration in \c /etc takes precedence over our drop-in.
+ * \todo Document this in Pacemaker Explained or Administration?
+ */
+static int
 create_override_dir(const char *agent)
 {
     char *override_dir = crm_strdup_printf(SYSTEMD_OVERRIDE_ROOT
@@ -831,10 +844,11 @@ create_override_dir(const char *agent)
     int rc = pcmk__build_path(override_dir, 0755);
 
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not create systemd override directory %s: %s",
-                 override_dir, pcmk_rc_str(rc));
+        crm_err("Could not create systemd override directory %s: %s",
+                override_dir, pcmk_rc_str(rc));
     }
     free(override_dir);
+    return rc;
 }
 
 static char *
@@ -844,53 +858,83 @@ get_override_filename(const char *agent)
                              "/%s.service.d/50-pacemaker.conf", agent);
 }
 
-static void
+/*!
+ * \internal
+ * \brief Create a runtime override file for a systemd unit
+ *
+ * The systemd daemon is then reloaded. This file does not survive a reboot.
+ *
+ * \param[in] agent    Systemd resource agent
+ * \param[in] timeout  Timeout for systemd daemon reload
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note Any configuration in \c /etc takes precedence over our drop-in.
+ * \todo Document this in Pacemaker Explained or Administration?
+ */
+static int
 systemd_create_override(const char *agent, int timeout)
 {
     FILE *file_strm = NULL;
-    char *override_file = get_override_filename(agent);
+    char *filename = get_override_filename(agent);
+    char *override = NULL;
+    int rc = create_override_dir(agent);
 
-    create_override_dir(agent);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
 
     /* Ensure the override file is world-readable. This is not strictly
      * necessary, but it avoids a systemd warning in the logs.
      */
-    file_strm = create_world_readable(override_file);
+    file_strm = create_world_readable(filename);
     if (file_strm == NULL) {
-        crm_err("Cannot open systemd override file %s for writing",
-                override_file);
-    } else {
-        char *override = crm_strdup_printf(SYSTEMD_OVERRIDE_TEMPLATE, agent);
-
-        int rc = fprintf(file_strm, "%s\n", override);
-
-        free(override);
-        if (rc < 0) {
-            crm_perror(LOG_WARNING, "Cannot write to systemd override file %s",
-                       override_file);
-        }
-        fflush(file_strm);
-        fclose(file_strm);
-        systemd_daemon_reload(timeout);
+        // @TODO Use errno
+        rc = EIO;
+        crm_err("Cannot open systemd override file %s for writing", filename);
+        goto done;
     }
 
-    free(override_file);
+    override = crm_strdup_printf(SYSTEMD_OVERRIDE_TEMPLATE, agent);
+    rc = fprintf(file_strm, "%s\n", override);
+    if (rc < 0) {
+        rc = errno;
+        crm_err("Cannot write to systemd override file %s: %d",
+                filename, pcmk_rc_str(rc));
+        goto done;
+    }
+
+    rc = pcmk_rc_ok;
+    fflush(file_strm);
+
+    // @TODO Make sure the reload succeeds
+    systemd_daemon_reload(timeout);
+
+done:
+    fclose(file_strm);
+    free(filename);
+    free(override);
+    return rc;
 }
 
 static void
 systemd_remove_override(const char *agent, int timeout)
 {
-    char *override_file = get_override_filename(agent);
-    int rc = unlink(override_file);
+    char *filename = get_override_filename(agent);
 
-    if (rc < 0) {
-        // Stop may be called when already stopped, which is fine
-        crm_perror(LOG_DEBUG, "Cannot remove systemd override file %s",
-                   override_file);
+    if (unlink(filename) < 0) {
+        int rc = errno;
+
+        if (rc != ENOENT) {
+            // Stop may be called when already stopped, which is fine
+            crm_warn("Cannot remove systemd override file %s: %s",
+                     filename, pcmk_rc_str(rc));
+        }
+
     } else {
         systemd_daemon_reload(timeout);
     }
-    free(override_file);
+    free(filename);
 }
 
 /*!
@@ -974,8 +1018,20 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         return;
 
     } else if (pcmk__str_eq(op->action, PCMK_ACTION_START, pcmk__str_none)) {
+        int rc = pcmk_rc_ok;
+
         method = "StartUnit";
-        systemd_create_override(op->agent, op->timeout);
+        rc = systemd_create_override(op->agent, op->timeout);
+        if (rc != pcmk_rc_ok) {
+            services__format_result(op, pcmk_rc2ocf(rc), PCMK_EXEC_ERROR,
+                                    "Failed to create systemd override file "
+                                    "for %s",
+                                    pcmk__s(op->agent, "(unspecified)"));
+            if (!(op->synchronous)) {
+                services__finalize_async_op(op);
+            }
+            return;
+        }
 
     } else if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_none)) {
         method = "StopUnit";
