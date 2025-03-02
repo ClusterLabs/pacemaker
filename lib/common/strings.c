@@ -996,7 +996,7 @@ static bool
 str_any_of(const char *s, va_list args, uint32_t flags)
 {
     if (s == NULL) {
-        return pcmk_is_set(flags, pcmk__str_null_matches);
+        return false;
     }
 
     while (1) {
