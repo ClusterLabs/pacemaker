@@ -100,96 +100,97 @@ load_env_vars(const char *filename)
      * descriptors open, and don't log -- silently ignore errors.
      */
     FILE *fp = fopen(filename, "r");
+    char line[LINE_MAX] = { 0, };
 
-    if (fp != NULL) {
-        char line[LINE_MAX] = { '\0', };
+    if (fp == NULL) {
+        return;
+    }
 
-        while (fgets(line, LINE_MAX, fp) != NULL) {
-            char *name = NULL;
-            char *end = NULL;
-            char *value = NULL;
-            char *quote = NULL;
+    while (fgets(line, LINE_MAX, fp) != NULL) {
+        char *name = NULL;
+        char *end = NULL;
+        char *value = NULL;
+        char *quote = NULL;
 
-            // Look for valid name immediately followed by equals sign
-            if (find_env_var_name(line, &name, &end) && (*++end == '=')) {
+        // Look for valid name immediately followed by equals sign
+        if (find_env_var_name(line, &name, &end) && (*++end == '=')) {
 
-                // Null-terminate name, and advance beyond equals sign
-                *end++ = '\0';
+            // Null-terminate name, and advance beyond equals sign
+            *end++ = '\0';
 
-                // Check whether value is quoted
-                if ((*end == '\'') || (*end == '"')) {
-                    quote = end++;
-                }
-                value = end;
+            // Check whether value is quoted
+            if ((*end == '\'') || (*end == '"')) {
+                quote = end++;
+            }
+            value = end;
 
-                if (quote) {
-                    /* Value is remaining characters up to next non-backslashed
-                     * matching quote character.
-                     */
-                    while (((*end != *quote) || (*(end - 1) == '\\'))
-                           && (*end != '\0')) {
-                        end++;
-                    }
-                    if (*end == *quote) {
-                        // Null-terminate value, and advance beyond close quote
-                        *end++ = '\0';
-                    } else {
-                        // Matching closing quote wasn't found
-                        value = NULL;
-                    }
-
-                } else {
-                    /* Value is remaining characters up to next non-backslashed
-                     * whitespace.
-                     */
-                    while ((!isspace(*end) || (*(end - 1) == '\\'))
-                           && (*end != '\0')) {
-                        ++end;
-                    }
-
-                    if (end == (line + LINE_MAX - 1)) {
-                        // Line was too long
-                        value = NULL;
-                    }
-                    // Do NOT null-terminate value (yet)
-                }
-
-                /* We have a valid name and value, and end is now the character
-                 * after the closing quote or the first whitespace after the
-                 * unquoted value. Make sure the rest of the line is just
-                 * whitespace or a comment.
+            if (quote != NULL) {
+                /* Value is remaining characters up to next non-backslashed
+                 * matching quote character.
                  */
-                if (value) {
-                    char *value_end = end;
-
-                    while (isspace(*end) && (*end != '\n')) {
-                        ++end;
-                    }
-                    if ((*end == '\n') || (*end == '#')) {
-                        if (quote == NULL) {
-                            // Now we can null-terminate an unquoted value
-                            *value_end = '\0';
-                        }
-
-                        // Don't overwrite (bundle options take precedence)
-                        // coverity[tainted_string] This can't easily be changed right now
-                        setenv(name, value, 0);
-
-                    } else {
-                        value = NULL;
-                    }
+                while (((*end != *quote) || (*(end - 1) == '\\'))
+                       && (*end != '\0')) {
+                    end++;
                 }
+                if (*end == *quote) {
+                    // Null-terminate value, and advance beyond close quote
+                    *end++ = '\0';
+                } else {
+                    // Matching closing quote wasn't found
+                    value = NULL;
+                }
+
+            } else {
+                /* Value is remaining characters up to next non-backslashed
+                 * whitespace.
+                 */
+                while ((!isspace(*end) || (*(end - 1) == '\\'))
+                       && (*end != '\0')) {
+                    end++;
+                }
+
+                if (end == (line + LINE_MAX - 1)) {
+                    // Line was too long
+                    value = NULL;
+                }
+                // Do NOT null-terminate value (yet)
             }
 
-            if ((value == NULL) && (strchr(line, '\n') == NULL)) {
-                // Eat remainder of line beyond LINE_MAX
-                if (fscanf(fp, "%*[^\n]\n") == EOF) {
-                    value = NULL; // Don't care, make compiler happy
+            /* We have a valid name and value, and end is now the character
+             * after the closing quote or the first whitespace after the
+             * unquoted value. Make sure the rest of the line is just whitespace
+             * or a comment.
+             */
+            if (value != NULL) {
+                char *value_end = end;
+
+                while (isspace(*end) && (*end != '\n')) {
+                    end++;
+                }
+                if ((*end == '\n') || (*end == '#')) {
+                    if (quote == NULL) {
+                        // Now we can null-terminate an unquoted value
+                        *value_end = '\0';
+                    }
+
+                    // Don't overwrite (bundle options take precedence)
+                    // coverity[tainted_string] This can't easily be changed right now
+                    setenv(name, value, 0);
+
+                } else {
+                    value = NULL;
                 }
             }
         }
-        fclose(fp);
+
+        if ((value == NULL) && (strchr(line, '\n') == NULL)) {
+            // Eat remainder of line beyond LINE_MAX
+            if (fscanf(fp, "%*[^\n]\n") == EOF) {
+                value = NULL; // Don't care, make compiler happy
+            }
+        }
     }
+    fclose(fp);
 }
 
 void
