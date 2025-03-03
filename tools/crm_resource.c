@@ -1017,42 +1017,47 @@ list_options(void)
 }
 
 static int
-refresh(pcmk__output_t *out)
+refresh(pcmk__output_t *out, const pcmk_node_t *node)
 {
-    int rc = pcmk_rc_ok;
-    const char *router_node = options.host_uname;
+    const char *node_name = NULL;
+    const char *log_node_name = "all nodes";
+    const char *router_node = NULL;
     int attr_options = pcmk__node_attr_none;
+    int rc = pcmk_rc_ok;
 
-    if (options.host_uname) {
-        pcmk_node_t *node = pcmk_find_node(scheduler, options.host_uname);
+    if (node != NULL) {
+        node_name = node->priv->name;
+        log_node_name = pcmk__node_name(node);
+        router_node = node->priv->name;
+    }
 
-        if (pcmk__is_pacemaker_remote_node(node)) {
-            node = pcmk__current_node(node->priv->remote);
-            if (node == NULL) {
-                rc = ENXIO;
-                g_set_error(&error, PCMK__RC_ERROR, rc,
-                            _("No cluster connection to Pacemaker Remote node %s detected"),
-                            options.host_uname);
-                return rc;
-            }
-            router_node = node->priv->name;
-            attr_options |= pcmk__node_attr_remote;
+    if (pcmk__is_pacemaker_remote_node(node)) {
+        const pcmk_node_t *conn_host = pcmk__current_node(node->priv->remote);
+
+        if (conn_host == NULL) {
+            rc = ENXIO;
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        _("No cluster connection to Pacemaker Remote node %s "
+                          "detected"),
+                        log_node_name);
+            return rc;
         }
+        router_node = conn_host->priv->name;
+        pcmk__set_node_attr_flags(attr_options, pcmk__node_attr_remote);
     }
 
     if (controld_api == NULL) {
         out->info(out, "Dry run: skipping clean-up of %s due to CIB_file",
-                  options.host_uname? options.host_uname : "all nodes");
-        rc = pcmk_rc_ok;
-        return rc;
+                  log_node_name);
+        return pcmk_rc_ok;
     }
 
-    crm_debug("Re-checking the state of all resources on %s", options.host_uname?options.host_uname:"all nodes");
+    crm_debug("Re-checking the state of all resources on %s", log_node_name);
 
-    rc = pcmk__attrd_api_clear_failures(NULL, options.host_uname, NULL,
-                                        NULL, NULL, NULL, attr_options);
+    rc = pcmk__attrd_api_clear_failures(NULL, node_name, NULL, NULL, NULL, NULL,
+                                        attr_options);
 
-    if (pcmk_controld_api_reprobe(controld_api, options.host_uname,
+    if (pcmk_controld_api_reprobe(controld_api, node_name,
                                   router_node) == pcmk_rc_ok) {
         start_mainloop(controld_api);
     }
@@ -1999,7 +2004,7 @@ main(int argc, char **argv)
 
         case cmd_refresh:
             if (rsc == NULL) {
-                rc = refresh(out);
+                rc = refresh(out, node);
             } else {
                 refresh_resource(out, rsc, node);
             }
