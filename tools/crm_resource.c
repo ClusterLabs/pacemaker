@@ -916,13 +916,13 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 }
 
 static int
-clear_constraints(pcmk__output_t *out)
+clear_constraints(pcmk__output_t *out, const pcmk_node_t *node)
 {
+    const char *node_name = (node != NULL)? node->priv->name : NULL;
     GList *before = NULL;
     GList *after = NULL;
     GList *remaining = NULL;
     GList *ele = NULL;
-    pcmk_node_t *dest = NULL;
     int rc = pcmk_rc_ok;
 
     if (!out->is_quiet(out)) {
@@ -931,20 +931,12 @@ clear_constraints(pcmk__output_t *out)
 
     if (options.clear_expired) {
         rc = cli_resource_clear_all_expired(scheduler->input, cib_conn,
-                                            options.rsc_id, options.host_uname,
+                                            options.rsc_id, node_name,
                                             options.promoted_role_only);
 
-    } else if (options.host_uname) {
-        dest = pcmk_find_node(scheduler, options.host_uname);
-        if (dest == NULL) {
-            rc = pcmk_rc_node_unknown;
-            if (!out->is_quiet(out)) {
-                g_list_free(before);
-            }
-            return rc;
-        }
-        rc = cli_resource_clear(options.rsc_id, dest->priv->name, NULL,
-                                cib_conn, true, options.force);
+    } else if (node != NULL) {
+        rc = cli_resource_clear(options.rsc_id, node_name, NULL, cib_conn, true,
+                                options.force);
 
     } else {
         rc = cli_resource_clear(options.rsc_id, NULL, scheduler->nodes,
@@ -1866,7 +1858,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_clear:
-            rc = clear_constraints(out);
+            rc = clear_constraints(out, node);
             break;
 
         case cmd_move:
