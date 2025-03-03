@@ -1795,7 +1795,6 @@ main(int argc, char **argv)
             goto done;
 
         case cmd_digests:
-            node = pcmk_find_node(scheduler, options.host_uname);
             if (node == NULL) {
                 rc = pcmk_rc_node_unknown;
             } else {
