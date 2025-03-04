@@ -917,66 +917,6 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 }
 
 static int
-clear_constraints(pcmk__output_t *out, const pcmk_node_t *node)
-{
-    const char *node_name = (node != NULL)? node->priv->name : NULL;
-    GList *before = NULL;
-    GList *after = NULL;
-    GList *remaining = NULL;
-    GList *ele = NULL;
-    int rc = pcmk_rc_ok;
-
-    if (!out->is_quiet(out)) {
-        before = build_constraint_list(scheduler->input);
-    }
-
-    if (options.clear_expired) {
-        rc = cli_resource_clear_all_expired(scheduler->input, cib_conn,
-                                            options.rsc_id, node_name,
-                                            options.promoted_role_only);
-
-    } else if (node != NULL) {
-        rc = cli_resource_clear(options.rsc_id, node_name, NULL, cib_conn, true,
-                                options.force);
-
-    } else {
-        rc = cli_resource_clear(options.rsc_id, NULL, scheduler->nodes,
-                                cib_conn, true, options.force);
-    }
-
-    if (!out->is_quiet(out)) {
-        xmlNode *cib_xml = NULL;
-
-        rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
-        rc = pcmk_legacy2rc(rc);
-
-        if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("Could not get modified CIB: %s\n"), pcmk_rc_str(rc));
-            g_list_free(before);
-            pcmk__xml_free(cib_xml);
-            return rc;
-        }
-
-        scheduler->input = cib_xml;
-        cluster_status(scheduler);
-
-        after = build_constraint_list(scheduler->input);
-        remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
-
-        for (ele = remaining; ele != NULL; ele = ele->next) {
-            out->info(out, "Removing constraint: %s", (char *) ele->data);
-        }
-
-        g_list_free(before);
-        g_list_free(after);
-        g_list_free(remaining);
-    }
-
-    return rc;
-}
-
-static int
 initialize_scheduler_data(xmlNode **cib_xml_orig)
 {
     int rc = pcmk_rc_ok;
@@ -1416,6 +1356,67 @@ handle_cleanup(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     return pcmk_rc_ok;
+}
+
+static int
+handle_clear(const pcmk_node_t *node)
+{
+    const char *node_name = (node != NULL)? node->priv->name : NULL;
+    GList *before = NULL;
+    GList *after = NULL;
+    GList *remaining = NULL;
+    int rc = pcmk_rc_ok;
+
+    if (!out->is_quiet(out)) {
+        before = build_constraint_list(scheduler->input);
+    }
+
+    if (options.clear_expired) {
+        rc = cli_resource_clear_all_expired(scheduler->input, cib_conn,
+                                            options.rsc_id, node_name,
+                                            options.promoted_role_only);
+
+    } else if (node != NULL) {
+        rc = cli_resource_clear(options.rsc_id, node_name, NULL, cib_conn, true,
+                                options.force);
+
+    } else {
+        rc = cli_resource_clear(options.rsc_id, NULL, scheduler->nodes,
+                                cib_conn, true, options.force);
+    }
+
+    if (!out->is_quiet(out)) {
+        xmlNode *cib_xml = NULL;
+
+        rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
+        rc = pcmk_legacy2rc(rc);
+
+        if (rc != pcmk_rc_ok) {
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        _("Could not get modified CIB: %s"), pcmk_rc_str(rc));
+            g_list_free(before);
+            pcmk__xml_free(cib_xml);
+            return rc;
+        }
+
+        scheduler->input = cib_xml;
+        cluster_status(scheduler);
+
+        after = build_constraint_list(scheduler->input);
+        remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
+
+        for (const GList *iter = remaining; iter != NULL; iter = iter->next) {
+            const char *constraint = iter->data;
+
+            out->info(out, "Removing constraint: %s", constraint);
+        }
+
+        g_list_free(before);
+        g_list_free(after);
+        g_list_free(remaining);
+    }
+
+    return rc;
 }
 
 static GOptionContext *
@@ -1912,7 +1913,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_clear:
-            rc = clear_constraints(out, node);
+            rc = handle_clear(node);
             break;
 
         case cmd_move:
