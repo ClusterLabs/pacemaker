@@ -1512,6 +1512,12 @@ handle_list_active_ops(const pcmk_node_t *node)
 }
 
 static int
+handle_list_agents(void)
+{
+    return pcmk__list_agents(out, options.agent_spec);
+}
+
+static int
 handle_list_all_ops(const pcmk_node_t *node)
 {
     const char *node_name = (node != NULL)? node->priv->name : NULL;
@@ -2010,7 +2016,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_list_agents:
-            rc = pcmk__list_agents(out, options.agent_spec);
+            rc = handle_list_agents();
             break;
 
         case cmd_list_standards:
