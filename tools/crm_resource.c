@@ -1501,6 +1501,18 @@ handle_execute_agent(pcmk_resource_t *rsc)
     return pcmk_rc_ok;
 }
 
+static int
+handle_fail(const pcmk_node_t *node)
+{
+    int rc = cli_resource_fail(controld_api, node, options.rsc_id,
+                               scheduler);
+
+    if (rc == pcmk_rc_ok) {
+        start_mainloop(controld_api);
+    }
+    return rc;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1932,11 +1944,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_fail:
-            rc = cli_resource_fail(controld_api, node, options.rsc_id,
-                                   scheduler);
-            if (rc == pcmk_rc_ok) {
-                start_mainloop(controld_api);
-            }
+            rc = handle_fail(node);
             break;
 
         case cmd_list_active_ops:
