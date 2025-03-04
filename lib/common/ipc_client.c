@@ -61,16 +61,13 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
         return EOPNOTSUPP;
     }
 
-    (*api)->ipc_size_max = 0;
-
-    // Set server methods and max_size (if not default)
+    // Set server methods
     switch (server) {
         case pcmk_ipc_attrd:
             (*api)->cmds = pcmk__attrd_api_methods();
             break;
 
         case pcmk_ipc_based:
-            (*api)->ipc_size_max = 512 * 1024; // 512KB
             break;
 
         case pcmk_ipc_controld:
@@ -89,8 +86,6 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
 
         case pcmk_ipc_schedulerd:
             (*api)->cmds = pcmk__schedulerd_api_methods();
-            // @TODO max_size could vary by client, maybe take as argument?
-            (*api)->ipc_size_max = 5 * 1024 * 1024; // 5MB
             break;
 
         default: // pcmk_ipc_unknown
