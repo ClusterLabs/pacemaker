@@ -1419,6 +1419,13 @@ handle_clear(const pcmk_node_t *node)
     return rc;
 }
 
+static int
+handle_colocations(pcmk_resource_t *rsc)
+{
+    return out->message(out, "locations-and-colocations", rsc,
+                        options.recursive, options.force);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1854,8 +1861,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_colocations:
-            rc = out->message(out, "locations-and-colocations", rsc,
-                              options.recursive, (bool) options.force);
+            rc = handle_colocations(rsc);
             break;
 
         case cmd_cts:
