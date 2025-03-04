@@ -92,7 +92,7 @@ GList *cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
 int cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
                         const pcmk_resource_t *rsc, const char *operation,
                         const char *interval_spec, bool just_failures,
-                        pcmk_scheduler_t *scheduler, gboolean force);
+                        pcmk_scheduler_t *scheduler, bool force);
 int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                     const char *operation, const char *interval_spec,
                     pcmk_scheduler_t *scheduler);
