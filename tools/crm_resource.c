@@ -1649,6 +1649,20 @@ main(int argc, char **argv)
             exit_code = pcmk_rc2exitc(rc);
             goto done;
         }
+
+        /* If user supplied a node name, check whether it exists.
+         * Commands that don't require scheduler data ignore the node argument.
+         */
+        if (options.host_uname != NULL) {
+            node = pcmk_find_node(scheduler, options.host_uname);
+
+            if (node == NULL) {
+                exit_code = CRM_EX_NOSUCH;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            _("Node '%s' not found"), options.host_uname);
+                goto done;
+            }
+        }
     }
 
     find_flags = get_find_flags();
@@ -1674,18 +1688,6 @@ main(int argc, char **argv)
             exit_code = CRM_EX_INVALID_PARAM;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         _("Cannot operate on clone resource instance '%s'"), options.rsc_id);
-            goto done;
-        }
-    }
-
-    // If user supplied a node name, check whether it exists
-    if ((options.host_uname != NULL) && (scheduler != NULL)) {
-        node = pcmk_find_node(scheduler, options.host_uname);
-
-        if (node == NULL) {
-            exit_code = CRM_EX_NOSUCH;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Node '%s' not found"), options.host_uname);
             goto done;
         }
     }
