@@ -1146,7 +1146,7 @@ crm_ipc_read(crm_ipc_t * client)
 
     if (header) {
         /* Data excluding the header */
-        return header->size_uncompressed;
+        return header->size;
     }
     return -ENOMSG;
 }
