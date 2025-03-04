@@ -140,43 +140,6 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
-// Clean up and exit
-static crm_exit_t
-bye(crm_exit_t ec)
-{
-    pcmk__output_and_clear_error(&error, out);
-
-    if (out != NULL) {
-        out->finish(out, ec, true, NULL);
-        pcmk__output_free(out);
-    }
-    pcmk__unregister_formats();
-
-    if (cib_conn != NULL) {
-        cib_t *save_cib_conn = cib_conn;
-
-        cib_conn = NULL; // Ensure we can't free this twice
-        cib__clean_up_connection(&save_cib_conn);
-    }
-
-    if (controld_api != NULL) {
-        pcmk_ipc_api_t *save_controld_api = controld_api;
-
-        controld_api = NULL; // Ensure we can't free this twice
-        pcmk_free_ipc_api(save_controld_api);
-    }
-
-    if (mainloop != NULL) {
-        g_main_loop_unref(mainloop);
-        mainloop = NULL;
-    }
-
-    pcmk_free_scheduler(scheduler);
-    scheduler = NULL;
-    crm_exit(ec);
-    return ec;
-}
-
 static void
 quit_main_loop(crm_exit_t ec)
 {
@@ -2212,8 +2175,6 @@ done:
         }
     }
 
-    pcmk__xml_free(cib_xml_orig);
-
     g_free(options.host_uname);
     g_free(options.interval_spec);
     g_free(options.move_lifetime);
@@ -2228,11 +2189,10 @@ done:
     free(options.v_agent);
     free(options.v_class);
     free(options.v_provider);
-    g_strfreev(options.remainder);
-
     if (options.override_params != NULL) {
         g_hash_table_destroy(options.override_params);
     }
+    g_strfreev(options.remainder);
 
     /* options.cmdline_params does not need to be destroyed here.  See the
      * comments in cli_resource_execute_from_params.
@@ -2241,5 +2201,21 @@ done:
     g_strfreev(processed_args);
     g_option_context_free(context);
 
-    return bye(exit_code);
+    pcmk__xml_free(cib_xml_orig);
+    cib__clean_up_connection(&cib_conn);
+    pcmk_free_ipc_api(controld_api);
+    pcmk_free_scheduler(scheduler);
+    if (mainloop != NULL) {
+        g_main_loop_unref(mainloop);
+    }
+
+    pcmk__output_and_clear_error(&error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+
+    pcmk__unregister_formats();
+    return crm_exit(exit_code);
 }
