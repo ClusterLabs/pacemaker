@@ -1471,6 +1471,12 @@ handle_delete_param(pcmk_resource_t *rsc, xmlNode *cib_xml_orig)
                                          cib_xml_orig, options.force);
 }
 
+static int
+handle_digests(pcmk_resource_t *rsc, const pcmk_node_t *node)
+{
+    return pcmk__resource_digests(out, rsc, node, options.override_params);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1901,8 +1907,7 @@ main(int argc, char **argv)
             goto done;
 
         case cmd_digests:
-            rc = pcmk__resource_digests(out, rsc, node,
-                                        options.override_params);
+            rc = handle_digests(rsc, node);
             break;
 
         case cmd_colocations:
