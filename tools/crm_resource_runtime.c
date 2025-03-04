@@ -1062,7 +1062,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
-    const char *display_name = node_name? node_name : "all nodes";
+    const char *log_node_name = pcmk__s(node_name, "all nodes");
 
     pcmk__assert(scheduler != NULL);
 
@@ -1070,11 +1070,11 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
 
     if (controld_api == NULL) {
         out->info(out, "Dry run: skipping clean-up of %s due to CIB_file",
-                  display_name);
+                  log_node_name);
         return rc;
     }
 
-    if (node_name) {
+    if (node_name != NULL) {
         pcmk_node_t *node = pcmk_find_node(scheduler, node_name);
 
         if (node == NULL) {
@@ -1082,7 +1082,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
             return ENXIO;
         }
         if (pcmk__is_pacemaker_remote_node(node)) {
-            attr_options |= pcmk__node_attr_remote;
+            pcmk__set_node_attr_flags(attr_options, pcmk__node_attr_remote);
         }
     }
 
@@ -1090,33 +1090,35 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                                         interval_spec, NULL, attr_options);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Unable to clean up all failures on %s: %s",
-                 display_name, pcmk_rc_str(rc));
+                 log_node_name, pcmk_rc_str(rc));
         return rc;
     }
 
-    if (node_name) {
+    if (node_name != NULL) {
         rc = clear_rsc_failures(out, controld_api, node_name, NULL,
                                 operation, interval_spec, scheduler);
-        if (rc != pcmk_rc_ok) {
-            out->err(out, "Cleaned all resource failures on %s, but unable to clean history: %s",
-                     node_name, pcmk_rc_str(rc));
-            return rc;
-        }
+
     } else {
-        for (GList *iter = scheduler->nodes; iter; iter = iter->next) {
-            pcmk_node_t *node = (pcmk_node_t *) iter->data;
+        for (const GList *iter = scheduler->nodes; iter; iter = iter->next) {
+            const pcmk_node_t *node = iter->data;
 
             rc = clear_rsc_failures(out, controld_api, node->priv->name,
                                     NULL, operation, interval_spec, scheduler);
             if (rc != pcmk_rc_ok) {
-                out->err(out, "Cleaned all resource failures on all nodes, but unable to clean history: %s",
-                         pcmk_rc_str(rc));
-                return rc;
+                break;
             }
         }
     }
 
-    out->info(out, "Cleaned up all resources on %s", display_name);
+    if (rc == pcmk_rc_ok) {
+        out->info(out, "Cleaned up all resources on %s", log_node_name);
+    } else {
+        // @TODO But didn't clear_rsc_failures() fail?
+        out->err(out,
+                 "Cleaned all resource failures on %s, but unable to clean "
+                 "history: %s",
+                 log_node_name, pcmk_rc_str(rc));
+    }
     return rc;
 }
 
