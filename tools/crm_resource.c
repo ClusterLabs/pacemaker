@@ -1705,6 +1705,24 @@ handle_restart(pcmk_resource_t *rsc, const pcmk_node_t *node)
                                 options.promoted_role_only, options.force);
 }
 
+static int
+handle_set_param(pcmk_resource_t *rsc, xmlNode *cib_xml_orig)
+{
+    if (pcmk__str_empty(options.prop_value)) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    _("You need to supply a value with the -v option"));
+        return pcmk_rc_ok;
+    }
+
+    // coverity[var_deref_model] False positive
+    return cli_resource_update_attribute(rsc, options.rsc_id, options.prop_set,
+                                         options.attr_set_type, options.prop_id,
+                                         options.prop_name, options.prop_value,
+                                         options.recursive, cib_conn,
+                                         cib_xml_orig, options.force);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2156,22 +2174,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_set_param:
-            if (pcmk__str_empty(options.prop_value)) {
-                exit_code = CRM_EX_USAGE;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            _("You need to supply a value with the -v option"));
-                goto done;
-            }
-
-            /* coverity[var_deref_model] False positive */
-            rc = cli_resource_update_attribute(rsc, options.rsc_id,
-                                               options.prop_set,
-                                               options.attr_set_type,
-                                               options.prop_id,
-                                               options.prop_name,
-                                               options.prop_value,
-                                               options.recursive, cib_conn,
-                                               cib_xml_orig, options.force);
+            rc = handle_set_param(rsc, cib_xml_orig);
             break;
 
         case cmd_delete_param:
