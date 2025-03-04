@@ -978,8 +978,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 
         if (nodes == NULL) {
             if (force) {
-                // @FIXME This leaks memory
-                nodes = pcmk__copy_node_list(scheduler->nodes, false);
+                nodes = g_list_copy(scheduler->nodes);
 
             } else if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)) {
                 GHashTableIter iter;
