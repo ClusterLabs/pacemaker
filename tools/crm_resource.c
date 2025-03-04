@@ -1582,6 +1582,15 @@ handle_list_active_ops(const pcmk_node_t *node)
                                          scheduler);
 }
 
+static int
+handle_list_all_ops(const pcmk_node_t *node)
+{
+    const char *node_name = (node != NULL)? node->priv->name : NULL;
+
+    return cli_resource_print_operations(options.rsc_id, node_name, false,
+                                         scheduler);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2021,12 +2030,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_list_all_ops:
-            {
-                const char *node_name = (node != NULL)? node->priv->name : NULL;
-
-                rc = cli_resource_print_operations(options.rsc_id, node_name,
-                                                   false, scheduler);
-            }
+            rc = handle_list_all_ops(node);
             break;
 
         case cmd_locate: {
