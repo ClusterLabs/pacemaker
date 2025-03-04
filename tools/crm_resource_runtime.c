@@ -2396,8 +2396,8 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 int
 cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                   const char *host_name, const char *move_lifetime, cib_t *cib,
-                  pcmk_scheduler_t *scheduler, gboolean promoted_role_only,
-                  gboolean force)
+                  pcmk_scheduler_t *scheduler, bool promoted_role_only,
+                  bool force)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -2405,6 +2405,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     pcmk_node_t *current = NULL;
     pcmk_node_t *dest = NULL;
     bool cur_is_dest = false;
+    const char *active_s = promoted_role_only? "promoted" : "active";
 
     pcmk__assert(scheduler != NULL);
 
@@ -2420,14 +2421,32 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
         const pcmk_resource_t *p = pe__const_top_resource(rsc, false);
 
         if (pcmk_is_set(p->flags, pcmk__rsc_promotable)) {
-            out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
+            /* @TODO This is dead code. If rsc is part of a promotable clone,
+             * then it has the pcmk__rsc_promotable flag set.
+             *
+             * This was added by 36e4b490. Prior to that commit, we were
+             * checking whether rsc itself is the promotable clone, and if not,
+             * trying to get a promotable clone ancestor.
+             *
+             * As of that commit, we check whether rsc has the promotable flag
+             * set. But if it has a promotable clone ancestor, that flag is set.
+             *
+             * Question: Should we drop this block and use rsc for the move, or
+             * should we check whether rsc is a clone instead of only checking
+             * whether the promotable flag is set (as we did prior to 36e4b490)?
+             * The latter seems appropriate, especially considering the block
+             * below with promoted_count and promoted_node; but we need to trace
+             * and test.
+             */
+            out->info(out, "Using parent '%s' for move instead of '%s'",
+                      rsc->id, rsc_id);
             rsc_id = p->id;
             rsc = p;
 
         } else {
             out->info(out, "Ignoring --promoted option: %s is not promotable",
                       rsc_id);
-            promoted_role_only = FALSE;
+            promoted_role_only = false;
         }
     }
 
@@ -2437,10 +2456,10 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
         unsigned int promoted_count = 0;
         pcmk_node_t *promoted_node = NULL;
 
-        for (const GList *iter = rsc->priv->children;
-             iter != NULL; iter = iter->next) {
+        for (const GList *iter = rsc->priv->children; iter != NULL;
+             iter = iter->next) {
 
-            const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
+            const pcmk_resource_t *child = iter->data;
             enum rsc_role_e child_role = child->priv->fns->state(child, true);
 
             if (child_role == pcmk_role_promoted) {
@@ -2453,26 +2472,24 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
             count = promoted_count;
             current = promoted_node;
         }
-
     }
 
     if (count > 1) {
-        if (pcmk__is_clone(rsc)) {
-            current = NULL;
-        } else {
+        if (!pcmk__is_clone(rsc)) {
             return pcmk_rc_multiple;
         }
+        current = NULL;
     }
 
     if (pcmk__same_node(current, dest)) {
-        cur_is_dest = true;
-        if (force) {
-            crm_info("%s is already %s on %s, reinforcing placement with location constraint.",
-                     rsc_id, promoted_role_only?"promoted":"active",
-                     pcmk__node_name(dest));
-        } else {
+        if (!force) {
             return pcmk_rc_already;
         }
+
+        cur_is_dest = true;
+        crm_info("%s is already %s on %s, reinforcing placement with location "
+                 "constraint",
+                 rsc_id, active_s, pcmk__node_name(dest));
     }
 
     /* @TODO The constraint changes in the following commands should done
@@ -2493,28 +2510,31 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
 
     crm_trace("%s%s now prefers %s%s",
               rsc->id, (promoted_role_only? " (promoted)" : ""),
-              pcmk__node_name(dest), force?"(forced)":"");
+              pcmk__node_name(dest), (force? " (forced)" : ""));
 
-    /* only ban the previous location if current location != destination location.
-     * it is possible to use -M to enforce a location without regard of where the
-     * resource is currently located */
+    /* Ban the current location if force is set and the current location is not
+     * the destination. It is possible to use move to enforce a location without
+     * regard for where the resource is currently located.
+     */
     if (force && !cur_is_dest) {
         /* Ban the original location if possible */
-        if(current) {
-            (void)cli_resource_ban(out, rsc_id, current->priv->name,
-                                   move_lifetime, cib, promoted_role_only,
-                                   PCMK_ROLE_PROMOTED);
-        } else if(count > 1) {
-            out->info(out, "Resource '%s' is currently %s in %d locations. "
+        if (current != NULL) {
+            cli_resource_ban(out, rsc_id, current->priv->name, move_lifetime,
+                             cib, promoted_role_only, PCMK_ROLE_PROMOTED);
+
+        } else if (count > 1) {
+            out->info(out,
+                      "Resource '%s' is currently %s in %u locations. "
                       "One may now move to %s",
-                      rsc_id, (promoted_role_only? "promoted" : "active"),
-                      count, pcmk__node_name(dest));
-            out->info(out, "To prevent '%s' from being %s at a specific location, "
-                      "specify a node.",
-                      rsc_id, (promoted_role_only? "promoted" : "active"));
+                      rsc_id, active_s, count, pcmk__node_name(dest));
+            out->info(out,
+                      "To prevent '%s' from being %s at a specific location, "
+                      "specify a node",
+                      rsc_id, active_s);
 
         } else {
-            crm_trace("Not banning %s from its current location: not active", rsc_id);
+            crm_trace("Not banning %s from its current location: not active",
+                      rsc_id);
         }
     }
 
