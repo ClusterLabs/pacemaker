@@ -938,26 +938,6 @@ initialize_scheduler_data(xmlNode **cib_xml_orig)
     return pcmk_rc_ok;
 }
 
-static void
-list_options(void)
-{
-    switch (options.opt_list) {
-        case pcmk__opt_fencing:
-            exit_code = pcmk_rc2exitc(pcmk__list_fencing_params(out,
-                                                                options.all));
-            break;
-        case pcmk__opt_primitive:
-            exit_code = pcmk_rc2exitc(pcmk__list_primitive_meta(out,
-                                                                options.all));
-            break;
-        default:
-            exit_code = CRM_EX_SOFTWARE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "BUG: Invalid option list type");
-            break;
-    }
-}
-
 static int
 refresh(pcmk__output_t *out, const pcmk_node_t *node)
 {
@@ -1607,6 +1587,22 @@ handle_list_instances(void)
     return pcmk_rc_ok;
 }
 
+static int
+handle_list_options(void)
+{
+    switch (options.opt_list) {
+        case pcmk__opt_fencing:
+            return pcmk__list_fencing_params(out, options.all);
+        case pcmk__opt_primitive:
+            return pcmk__list_primitive_meta(out, options.all);
+        default:
+            exit_code = CRM_EX_SOFTWARE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "BUG: Invalid option list type");
+            return pcmk_rc_ok;
+    }
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1975,7 +1971,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_list_options:
-            list_options();
+            rc = handle_list_options();
             break;
 
         case cmd_list_alternatives:
