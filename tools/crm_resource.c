@@ -1723,6 +1723,12 @@ handle_set_param(pcmk_resource_t *rsc, xmlNode *cib_xml_orig)
                                          cib_xml_orig, options.force);
 }
 
+static int
+handle_wait(void)
+{
+    return wait_till_stable(out, options.timeout_ms, cib_conn);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2108,7 +2114,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_wait:
-            rc = wait_till_stable(out, options.timeout_ms, cib_conn);
+            rc = handle_wait();
             break;
 
         case cmd_execute_agent:
