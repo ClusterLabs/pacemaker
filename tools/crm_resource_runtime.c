@@ -1055,18 +1055,24 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
 
 // \return Standard Pacemaker return code
 int
-cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
+cli_cleanup_all(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
                 const char *operation, const char *interval_spec,
                 pcmk_scheduler_t *scheduler)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
-    const char *log_node_name = pcmk__s(node_name, "all nodes");
+    const char *node_name = NULL;
+    const char *log_node_name = "all nodes";
 
     pcmk__assert(scheduler != NULL);
 
     out = scheduler->priv->out;
+
+    if (node != NULL) {
+        node_name = node->priv->name;
+        log_node_name = pcmk__node_name(node);
+    }
 
     if (controld_api == NULL) {
         out->info(out, "Dry run: skipping clean-up of %s due to CIB_file",
@@ -1074,16 +1080,8 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
         return rc;
     }
 
-    if (node_name != NULL) {
-        pcmk_node_t *node = pcmk_find_node(scheduler, node_name);
-
-        if (node == NULL) {
-            out->err(out, "Unknown node: %s", node_name);
-            return ENXIO;
-        }
-        if (pcmk__is_pacemaker_remote_node(node)) {
-            pcmk__set_node_attr_flags(attr_options, pcmk__node_attr_remote);
-        }
+    if (pcmk__is_pacemaker_remote_node(node)) {
+        pcmk__set_node_attr_flags(attr_options, pcmk__node_attr_remote);
     }
 
     rc = pcmk__attrd_api_clear_failures(NULL, node_name, NULL, operation,
@@ -1094,15 +1092,15 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
         return rc;
     }
 
-    if (node_name != NULL) {
+    if (node != NULL) {
         rc = clear_rsc_failures(out, controld_api, node_name, NULL,
                                 operation, interval_spec, scheduler);
 
     } else {
         for (const GList *iter = scheduler->nodes; iter; iter = iter->next) {
-            const pcmk_node_t *node = iter->data;
+            const pcmk_node_t *sched_node = iter->data;
 
-            rc = clear_rsc_failures(out, controld_api, node->priv->name,
+            rc = clear_rsc_failures(out, controld_api, sched_node->priv->name,
                                     NULL, operation, interval_spec, scheduler);
             if (rc != pcmk_rc_ok) {
                 break;

@@ -93,7 +93,7 @@ int cli_resource_delete(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
                         const pcmk_resource_t *rsc, const char *operation,
                         const char *interval_spec, bool just_failures,
                         pcmk_scheduler_t *scheduler, bool force);
-int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
+int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
                     const char *operation, const char *interval_spec,
                     pcmk_scheduler_t *scheduler);
 int cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,

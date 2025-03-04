@@ -1990,9 +1990,8 @@ main(int argc, char **argv)
 
         case cmd_cleanup:
             if (rsc == NULL) {
-                rc = cli_cleanup_all(controld_api, options.host_uname,
-                                     options.operation, options.interval_spec,
-                                     scheduler);
+                rc = cli_cleanup_all(controld_api, node, options.operation,
+                                     options.interval_spec, scheduler);
                 if (rc == pcmk_rc_ok) {
                     start_mainloop(controld_api);
                 }
