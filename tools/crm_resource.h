@@ -101,7 +101,7 @@ int cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                          guint timeout_ms, cib_t *cib,
                          gboolean promoted_role_only, gboolean force);
 int cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
-                      const char *host_name, const char *move_lifetime,
+                      const pcmk_node_t *node, const char *move_lifetime,
                       cib_t *cib, pcmk_scheduler_t *scheduler,
                       bool promoted_role_only, bool force);
 crm_exit_t cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,

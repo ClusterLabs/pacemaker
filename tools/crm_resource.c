@@ -1866,10 +1866,10 @@ main(int argc, char **argv)
             break;
 
         case cmd_move:
-            if (options.host_uname == NULL) {
+            if (node == NULL) {
                 rc = ban_or_move(out, rsc, options.move_lifetime);
             } else {
-                rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
+                rc = cli_resource_move(rsc, options.rsc_id, node,
                                        options.move_lifetime, cib_conn,
                                        scheduler, options.promoted_role_only,
                                        options.force);

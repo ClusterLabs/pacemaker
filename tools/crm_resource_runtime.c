@@ -2395,25 +2395,20 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 // \return Standard Pacemaker return code
 int
 cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
-                  const char *host_name, const char *move_lifetime, cib_t *cib,
-                  pcmk_scheduler_t *scheduler, bool promoted_role_only,
-                  bool force)
+                  const pcmk_node_t *dest, const char *move_lifetime,
+                  cib_t *cib, pcmk_scheduler_t *scheduler,
+                  bool promoted_role_only, bool force)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
     pcmk_node_t *current = NULL;
-    pcmk_node_t *dest = NULL;
     bool cur_is_dest = false;
     const char *active_s = promoted_role_only? "promoted" : "active";
 
-    pcmk__assert(scheduler != NULL);
+    pcmk__assert((dest != NULL) && (scheduler != NULL));
 
     out = scheduler->priv->out;
-    dest = pcmk_find_node(scheduler, host_name);
-    if (dest == NULL) {
-        return pcmk_rc_node_unknown;
-    }
 
     if (promoted_role_only
         && !pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
