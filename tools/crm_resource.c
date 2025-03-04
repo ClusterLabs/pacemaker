@@ -1651,6 +1651,26 @@ handle_metadata(void)
     return rc;
 }
 
+static int
+handle_move(pcmk_resource_t *rsc, const pcmk_node_t *node)
+{
+    int rc = pcmk_rc_ok;
+
+    if (node == NULL) {
+        rc = ban_or_move(out, rsc, options.move_lifetime);
+    } else {
+        rc = cli_resource_move(rsc, options.rsc_id, node, options.move_lifetime,
+                               cib_conn, scheduler, options.promoted_role_only,
+                               options.force);
+    }
+
+    if (rc == EINVAL) {
+        exit_code = CRM_EX_USAGE;
+        return pcmk_rc_ok;
+    }
+    return rc;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2097,20 +2117,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_move:
-            if (node == NULL) {
-                rc = ban_or_move(out, rsc, options.move_lifetime);
-            } else {
-                rc = cli_resource_move(rsc, options.rsc_id, node,
-                                       options.move_lifetime, cib_conn,
-                                       scheduler, options.promoted_role_only,
-                                       options.force);
-            }
-
-            if (rc == EINVAL) {
-                exit_code = CRM_EX_USAGE;
-                goto done;
-            }
-
+            rc = handle_move(rsc, node);
             break;
 
         case cmd_ban:
