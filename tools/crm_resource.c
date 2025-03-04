@@ -1400,6 +1400,24 @@ handle_ban(pcmk_resource_t *rsc, const pcmk_node_t *node)
     return rc;
 }
 
+static int
+handle_cleanup(pcmk_resource_t *rsc, pcmk_node_t *node)
+{
+    if (rsc == NULL) {
+        int rc = cli_cleanup_all(controld_api, node, options.operation,
+                                 options.interval_spec, scheduler);
+
+        if (rc == pcmk_rc_ok) {
+            start_mainloop(controld_api);
+        }
+
+    } else {
+        cleanup(out, rsc, node);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2006,15 +2024,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_cleanup:
-            if (rsc == NULL) {
-                rc = cli_cleanup_all(controld_api, node, options.operation,
-                                     options.interval_spec, scheduler);
-                if (rc == pcmk_rc_ok) {
-                    start_mainloop(controld_api);
-                }
-            } else {
-                cleanup(out, rsc, node);
-            }
+            rc = handle_cleanup(rsc, node);
             break;
 
         case cmd_refresh:
