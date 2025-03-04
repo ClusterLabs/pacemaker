@@ -1436,6 +1436,32 @@ handle_cts(void)
     return pcmk_rc_ok;
 }
 
+static int
+handle_delete(void)
+{
+    /* rsc_id was already checked for NULL much earlier when validating command
+     * line arguments
+     */
+    int rc = pcmk_rc_ok;
+
+    if (options.rsc_type == NULL) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    _("You need to specify a resource type with -t"));
+
+    } else {
+        rc = pcmk__resource_delete(cib_conn, cib_sync_call, options.rsc_id,
+                                   options.rsc_type);
+
+        if (rc != pcmk_rc_ok) {
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        _("Could not delete resource %s: %s"),
+                        options.rsc_id, pcmk_rc_str(rc));
+        }
+    }
+    return rc;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2049,24 +2075,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_delete:
-            /* rsc_id was already checked for NULL much earlier when validating
-             * command line arguments.
-             */
-            if (options.rsc_type == NULL) {
-                exit_code = CRM_EX_USAGE;
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                            _("You need to specify a resource type with -t"));
-            } else {
-                rc = pcmk__resource_delete(cib_conn, cib_sync_call,
-                                           options.rsc_id, options.rsc_type);
-
-                if (rc != pcmk_rc_ok) {
-                    g_set_error(&error, PCMK__RC_ERROR, rc,
-                                _("Could not delete resource %s: %s"),
-                                options.rsc_id, pcmk_rc_str(rc));
-                }
-            }
-
+            rc = handle_delete();
             break;
 
         default:
