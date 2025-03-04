@@ -1683,6 +1683,16 @@ handle_query_xml_raw(pcmk_resource_t *rsc)
     return cli_resource_print(rsc, scheduler, false);
 }
 
+static int
+handle_refresh(pcmk_resource_t *rsc, pcmk_node_t *node)
+{
+    if (rsc == NULL) {
+        return refresh(out, node);
+    }
+    refresh_resource(out, rsc, node);
+    return pcmk_rc_ok;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2169,11 +2179,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_refresh:
-            if (rsc == NULL) {
-                rc = refresh(out, node);
-            } else {
-                refresh_resource(out, rsc, node);
-            }
+            rc = handle_refresh(rsc, node);
             break;
 
         case cmd_delete:
