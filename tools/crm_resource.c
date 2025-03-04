@@ -1590,6 +1590,12 @@ handle_list_all_ops(const pcmk_node_t *node)
                                          scheduler);
 }
 
+static int
+handle_list_alternatives(void)
+{
+    return pcmk__list_alternatives(out, options.agent_spec);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1969,7 +1975,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_list_alternatives:
-            rc = pcmk__list_alternatives(out, options.agent_spec);
+            rc = handle_list_alternatives();
             break;
 
         case cmd_list_agents:
