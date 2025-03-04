@@ -1634,6 +1634,16 @@ handle_list_standards(void)
     return pcmk__list_standards(out);
 }
 
+static int
+handle_locate(pcmk_resource_t *rsc)
+{
+    GList *nodes = cli_resource_search(rsc, options.rsc_id, scheduler);
+    int rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
+
+    g_list_free_full(nodes, free);
+    return rc;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2058,12 +2068,9 @@ main(int argc, char **argv)
             rc = handle_list_all_ops(node);
             break;
 
-        case cmd_locate: {
-            GList *nodes = cli_resource_search(rsc, options.rsc_id, scheduler);
-            rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
-            g_list_free_full(nodes, free);
+        case cmd_locate:
+            rc = handle_locate(rsc);
             break;
-        }
 
         case cmd_query_xml:
             rc = cli_resource_print(rsc, scheduler, true);
