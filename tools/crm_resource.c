@@ -900,7 +900,8 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     crm_debug("Erasing failures of %s (%s requested) on %s",
-              rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
+              rsc->id, options.rsc_id,
+              ((node != NULL)? pcmk__node_name(node) : "all nodes"));
     rc = cli_resource_delete(controld_api, node, rsc, options.operation,
                              options.interval_spec, true, scheduler,
                              options.force);
@@ -1075,7 +1076,8 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     crm_debug("Re-checking the state of %s (%s requested) on %s",
-              rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
+              rsc->id, options.rsc_id,
+              ((node != NULL)? pcmk__node_name(node) : "all nodes"));
     rc = cli_resource_delete(controld_api, node, rsc, NULL, 0, false, scheduler,
                              options.force);
 
@@ -1822,15 +1824,21 @@ main(int argc, char **argv)
             break;
 
         case cmd_list_active_ops:
-            rc = cli_resource_print_operations(options.rsc_id,
-                                               options.host_uname, TRUE,
-                                               scheduler);
+            {
+                const char *node_name = (node != NULL)? node->priv->name : NULL;
+
+                rc = cli_resource_print_operations(options.rsc_id, node_name,
+                                                   true, scheduler);
+            }
             break;
 
         case cmd_list_all_ops:
-            rc = cli_resource_print_operations(options.rsc_id,
-                                               options.host_uname, FALSE,
-                                               scheduler);
+            {
+                const char *node_name = (node != NULL)? node->priv->name : NULL;
+
+                rc = cli_resource_print_operations(options.rsc_id, node_name,
+                                                   false, scheduler);
+            }
             break;
 
         case cmd_locate: {
@@ -1849,12 +1857,8 @@ main(int argc, char **argv)
             break;
 
         case cmd_why:
-            if ((options.host_uname != NULL) && (node == NULL)) {
-                rc = pcmk_rc_node_unknown;
-            } else {
-                rc = out->message(out, "resource-reasons-list",
-                                  scheduler->priv->resources, rsc, node);
-            }
+            rc = out->message(out, "resource-reasons-list",
+                              scheduler->priv->resources, rsc, node);
             break;
 
         case cmd_clear:
@@ -1879,10 +1883,8 @@ main(int argc, char **argv)
             break;
 
         case cmd_ban:
-            if (options.host_uname == NULL) {
+            if (node == NULL) {
                 rc = ban_or_move(out, rsc, options.move_lifetime);
-            } else if (node == NULL) {
-                rc = pcmk_rc_node_unknown;
             } else {
                 rc = cli_resource_ban(out, options.rsc_id, node->priv->name,
                                       options.move_lifetime, cib_conn,
