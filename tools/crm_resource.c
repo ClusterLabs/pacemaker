@@ -1478,6 +1478,30 @@ handle_digests(pcmk_resource_t *rsc, const pcmk_node_t *node)
     return pcmk__resource_digests(out, rsc, node, options.override_params);
 }
 
+static int
+handle_execute_agent(pcmk_resource_t *rsc)
+{
+    if (options.cmdline_config) {
+        exit_code = cli_resource_execute_from_params(out, NULL, options.v_class,
+                                                     options.v_provider,
+                                                     options.v_agent,
+                                                     options.operation,
+                                                     options.cmdline_params,
+                                                     options.override_params,
+                                                     options.timeout_ms,
+                                                     args->verbosity,
+                                                     options.force,
+                                                     options.check_level);
+    } else {
+        exit_code = cli_resource_execute(rsc, options.rsc_id, options.operation,
+                                         options.override_params,
+                                         options.timeout_ms, cib_conn,
+                                         scheduler, args->verbosity,
+                                         options.force, options.check_level);
+    }
+    return pcmk_rc_ok;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1893,19 +1917,8 @@ main(int argc, char **argv)
             break;
 
         case cmd_execute_agent:
-            if (options.cmdline_config) {
-                exit_code = cli_resource_execute_from_params(out, NULL,
-                    options.v_class, options.v_provider, options.v_agent,
-                    options.operation, options.cmdline_params,
-                    options.override_params, options.timeout_ms,
-                    args->verbosity, options.force, options.check_level);
-            } else {
-                exit_code = cli_resource_execute(rsc, options.rsc_id,
-                    options.operation, options.override_params,
-                    options.timeout_ms, cib_conn, scheduler,
-                    args->verbosity, options.force, options.check_level);
-            }
-            goto done;
+            rc = handle_execute_agent(rsc);
+            break;
 
         case cmd_digests:
             rc = handle_digests(rsc, node);
