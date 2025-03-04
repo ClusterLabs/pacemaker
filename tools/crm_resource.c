@@ -1693,6 +1693,18 @@ handle_refresh(pcmk_resource_t *rsc, pcmk_node_t *node)
     return pcmk_rc_ok;
 }
 
+static int
+handle_restart(pcmk_resource_t *rsc, const pcmk_node_t *node)
+{
+    /* We don't pass scheduler because rsc needs to stay valid for the entire
+     * lifetime of cli_resource_restart(), but it will reset and update the
+     * scheduler data multiple times, so it needs to use its own copy.
+     */
+    return cli_resource_restart(out, rsc, node, options.move_lifetime,
+                                options.timeout_ms, cib_conn,
+                                options.promoted_role_only, options.force);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2074,15 +2086,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_restart:
-            /* We don't pass scheduler because rsc needs to stay valid for the
-             * entire lifetime of cli_resource_restart(), but it will reset and
-             * update the scheduler data multiple times, so it needs to use its
-             * own copy.
-             */
-            rc = cli_resource_restart(out, rsc, node, options.move_lifetime,
-                                      options.timeout_ms, cib_conn,
-                                      options.promoted_role_only,
-                                      options.force);
+            rc = handle_restart(rsc, node);
             break;
 
         case cmd_wait:
