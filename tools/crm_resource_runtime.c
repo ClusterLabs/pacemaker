@@ -709,30 +709,31 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
 // \return Standard Pacemaker return code
 static int
 send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
-                const char *host_uname, const char *rsc_id,
+                const pcmk_node_t *node, const char *rsc_id,
                 pcmk_scheduler_t *scheduler)
 {
     pcmk__output_t *out = NULL;
-    const char *router_node = host_uname;
     const char *rsc_api_id = NULL;
     const char *rsc_long_id = NULL;
     const char *rsc_class = NULL;
     const char *rsc_provider = NULL;
     const char *rsc_type = NULL;
+    const char *router_node = NULL;
     bool cib_only = false;
     pcmk_resource_t *rsc = NULL;
 
-    pcmk__assert(scheduler != NULL);
+    pcmk__assert((node != NULL) && (scheduler != NULL));
 
-    rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
     out = scheduler->priv->out;
 
+    rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
     if (rsc == NULL) {
         out->err(out, "Resource %s not found", rsc_id);
         return ENXIO;
-
-    } else if (!pcmk__is_primitive(rsc)) {
-        out->err(out, "We can only process primitive resources, not %s", rsc_id);
+    }
+    if (!pcmk__is_primitive(rsc)) {
+        out->err(out, "We can only process primitive resources, not %s",
+                 rsc_id);
         return EINVAL;
     }
 
@@ -744,31 +745,26 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         return EINVAL;
     }
 
-    {
-        pcmk_node_t *node = pcmk_find_node(scheduler, host_uname);
+    router_node = node->priv->name;
 
-        if (node == NULL) {
-            out->err(out, "Node %s not found", host_uname);
-            return pcmk_rc_node_unknown;
+    if (!node->details->online) {
+        if (do_fail_resource) {
+            out->err(out, "Node %s is not online", pcmk__node_name(node));
+            return ENOTCONN;
         }
+        cib_only = true;
 
-        if (!(node->details->online)) {
-            if (do_fail_resource) {
-                out->err(out, "Node %s is not online", host_uname);
-                return ENOTCONN;
-            } else {
-                cib_only = true;
-            }
+    } else if (pcmk__is_pacemaker_remote_node(node)) {
+        const pcmk_node_t *conn_host = pcmk__current_node(node->priv->remote);
+
+        if (conn_host == NULL) {
+            out->err(out,
+                     "No cluster connection to Pacemaker Remote node %s "
+                     "detected",
+                     pcmk__node_name(node));
+            return ENOTCONN;
         }
-        if (!cib_only && pcmk__is_pacemaker_remote_node(node)) {
-            node = pcmk__current_node(node->priv->remote);
-            if (node == NULL) {
-                out->err(out, "No cluster connection to Pacemaker Remote node %s detected",
-                         host_uname);
-                return ENOTCONN;
-            }
-            router_node = node->priv->name;
-        }
+        router_node = conn_host->priv->name;
     }
 
     if (rsc->priv->history_id != NULL) {
@@ -777,15 +773,16 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     } else {
         rsc_api_id = rsc->id;
     }
+
     if (do_fail_resource) {
-        return pcmk_controld_api_fail(controld_api, host_uname, router_node,
-                                      rsc_api_id, rsc_long_id,
+        return pcmk_controld_api_fail(controld_api, node->priv->name,
+                                      router_node, rsc_api_id, rsc_long_id,
                                       rsc_class, rsc_provider, rsc_type);
-    } else {
-        return pcmk_controld_api_refresh(controld_api, host_uname, router_node,
-                                         rsc_api_id, rsc_long_id, rsc_class,
-                                         rsc_provider, rsc_type, cib_only);
     }
+    return pcmk_controld_api_refresh(controld_api, node->priv->name,
+                                     router_node, rsc_api_id, rsc_long_id,
+                                     rsc_class, rsc_provider, rsc_type,
+                                     cib_only);
 }
 
 /*!
@@ -822,8 +819,7 @@ clear_rsc_history(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
      * single operation, we might wind up with a wrong idea of the current
      * resource state, and we might not re-probe the resource.
      */
-    rc = send_lrm_rsc_op(controld_api, false, node->priv->name, rsc_id,
-                         scheduler);
+    rc = send_lrm_rsc_op(controld_api, false, node, rsc_id, scheduler);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -1253,8 +1249,7 @@ cli_resource_fail(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
     pcmk__assert(node != NULL);
 
     crm_notice("Failing %s on %s", rsc_id, pcmk__node_name(node));
-    return send_lrm_rsc_op(controld_api, true, node->priv->name, rsc_id,
-                           scheduler);
+    return send_lrm_rsc_op(controld_api, true, node, rsc_id, scheduler);
 }
 
 static GHashTable *
