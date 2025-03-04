@@ -981,6 +981,8 @@ initialize_scheduler_data(xmlNode **cib_xml_orig)
 {
     int rc = pcmk_rc_ok;
 
+    pcmk__assert(cib_conn != NULL);
+
     scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         return ENOMEM;
@@ -1277,6 +1279,37 @@ is_resource_required(void)
 
 /*!
  * \internal
+ * \brief Check whether a scheduler data object is required
+ *
+ * If true, the caller will populate the scheduler data from the CIB connection.
+ *
+ * \return \c true if scheduler data is required, or \c false otherwise
+ */
+static bool
+is_scheduler_required(void)
+{
+    if (options.cmdline_config) {
+        // cmd_execute_agent using CLI parameters instead of CIB connection
+        return false;
+    }
+
+    switch (options.rsc_cmd) {
+        case cmd_delete:
+        case cmd_list_agents:
+        case cmd_list_alternatives:
+        case cmd_list_options:
+        case cmd_list_providers:
+        case cmd_list_standards:
+        case cmd_metadata:
+        case cmd_wait:
+            return false;
+        default:
+            return true;
+    }
+}
+
+/*!
+ * \internal
  * \brief Check whether a CIB connection is required
  *
  * \return \c true if a CIB connection is required, or \c false otherwise
@@ -1285,19 +1318,21 @@ static bool
 is_cib_required(void)
 {
     if (options.cmdline_config) {
+        // cmd_execute_agent using CLI parameters instead of CIB connection
         return false;
     }
 
+    if (is_scheduler_required()) {
+        return true;
+    }
+
+    // Commands that requires CIB connection but not scheduler data
     switch (options.rsc_cmd) {
-        case cmd_list_agents:
-        case cmd_list_alternatives:
-        case cmd_list_options:
-        case cmd_list_providers:
-        case cmd_list_standards:
-        case cmd_metadata:
-            return false;
-        default:
+        case cmd_delete:
+        case cmd_wait:
             return true;
+        default:
+            return false;
     }
 }
 
@@ -1320,34 +1355,6 @@ is_controller_required(void)
 
         default:
             return false;
-    }
-}
-
-/*!
- * \internal
- * \brief Check whether a scheduler IPC connection is required
- *
- * \return \c true if a scheduler connection is required, or \c false otherwise
- */
-static bool
-is_scheduler_required(void)
-{
-    if (options.cmdline_config) {
-        return false;
-    }
-
-    switch (options.rsc_cmd) {
-        case cmd_delete:
-        case cmd_list_agents:
-        case cmd_list_alternatives:
-        case cmd_list_options:
-        case cmd_list_providers:
-        case cmd_list_standards:
-        case cmd_metadata:
-        case cmd_wait:
-            return false;
-        default:
-            return true;
     }
 }
 
@@ -1642,7 +1649,7 @@ main(int argc, char **argv)
         }
     }
 
-    // Populate scheduler data from XML file if specified or CIB query otherwise
+    // Populate scheduler data from CIB query
     if (is_scheduler_required()) {
         rc = initialize_scheduler_data(&cib_xml_orig);
         if (rc != pcmk_rc_ok) {
