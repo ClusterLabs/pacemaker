@@ -1671,6 +1671,18 @@ handle_move(pcmk_resource_t *rsc, const pcmk_node_t *node)
     return rc;
 }
 
+static int
+handle_query_xml(pcmk_resource_t *rsc)
+{
+    return cli_resource_print(rsc, scheduler, true);
+}
+
+static int
+handle_query_xml_raw(pcmk_resource_t *rsc)
+{
+    return cli_resource_print(rsc, scheduler, false);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2100,11 +2112,11 @@ main(int argc, char **argv)
             break;
 
         case cmd_query_xml:
-            rc = cli_resource_print(rsc, scheduler, true);
+            rc = handle_query_xml(rsc);
             break;
 
         case cmd_query_xml_raw:
-            rc = cli_resource_print(rsc, scheduler, false);
+            rc = handle_query_xml_raw(rsc);
             break;
 
         case cmd_why:
