@@ -1603,6 +1603,12 @@ handle_list_options(void)
     }
 }
 
+static int
+handle_list_providers(void)
+{
+    return pcmk__list_providers(out, options.agent_spec);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1987,7 +1993,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_list_providers:
-            rc = pcmk__list_providers(out, options.agent_spec);
+            rc = handle_list_providers();
             break;
 
         case cmd_metadata:
