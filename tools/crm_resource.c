@@ -1628,6 +1628,12 @@ handle_list_resources(void)
     return rc;
 }
 
+static int
+handle_list_standards(void)
+{
+    return pcmk__list_standards(out);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1997,7 +2003,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_list_standards:
-            rc = pcmk__list_standards(out);
+            rc = handle_list_standards();
             break;
 
         case cmd_list_providers:
