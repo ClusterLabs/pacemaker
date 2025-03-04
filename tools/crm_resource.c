@@ -1818,8 +1818,8 @@ main(int argc, char **argv)
             break;
 
         case cmd_fail:
-            rc = cli_resource_fail(controld_api, options.host_uname,
-                                   options.rsc_id, scheduler);
+            rc = cli_resource_fail(controld_api, node, options.rsc_id,
+                                   scheduler);
             if (rc == pcmk_rc_ok) {
                 start_mainloop(controld_api);
             }
