@@ -1426,6 +1426,16 @@ handle_colocations(pcmk_resource_t *rsc)
                         options.recursive, options.force);
 }
 
+static int
+handle_cts(void)
+{
+    // coverity[var_deref_op] False positive
+    g_list_foreach(scheduler->priv->resources, (GFunc) cli_resource_print_cts,
+                   out);
+    cli_resource_print_cts_constraints(scheduler);
+    return pcmk_rc_ok;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1865,11 +1875,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_cts:
-            rc = pcmk_rc_ok;
-            // coverity[var_deref_op] False positive
-            g_list_foreach(scheduler->priv->resources,
-                           (GFunc) cli_resource_print_cts, out);
-            cli_resource_print_cts_constraints(scheduler);
+            rc = handle_cts();
             break;
 
         case cmd_fail:
