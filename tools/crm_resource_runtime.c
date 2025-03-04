@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                        // bool, true, false
 #include <stdio.h>
 #include <limits.h>
 #include <stdbool.h>                        // bool, true, false
@@ -946,21 +947,21 @@ int
 cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
                     const pcmk_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
-                    pcmk_scheduler_t *scheduler, gboolean force)
+                    pcmk_scheduler_t *scheduler, bool force)
 {
     pcmk__output_t *out = scheduler->priv->out;
     int rc = pcmk_rc_ok;
-    pcmk_node_t *node = NULL;
+    const pcmk_node_t *node = NULL;
 
     if (rsc == NULL) {
         return ENXIO;
+    }
 
-    } else if (rsc->priv->children != NULL) {
+    if (rsc->priv->children != NULL) {
+        for (const GList *iter = rsc->priv->children; iter != NULL;
+             iter = iter->next) {
 
-        for (const GList *lpc = rsc->priv->children;
-             lpc != NULL; lpc = lpc->next) {
-
-            const pcmk_resource_t *child = (const pcmk_resource_t *) lpc->data;
+            const pcmk_resource_t *child = iter->data;
 
             rc = cli_resource_delete(controld_api, host_uname, child, operation,
                                      interval_spec, just_failures, scheduler,
@@ -970,46 +971,49 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             }
         }
         return pcmk_rc_ok;
+    }
 
-    } else if (host_uname == NULL) {
-        GList *lpc = NULL;
+    if (host_uname == NULL) {
         GList *nodes = g_hash_table_get_values(rsc->priv->probed_nodes);
 
-        if(nodes == NULL && force) {
-            nodes = pcmk__copy_node_list(scheduler->nodes, false);
+        if (nodes == NULL) {
+            if (force) {
+                // @FIXME This leaks memory
+                nodes = pcmk__copy_node_list(scheduler->nodes, false);
 
-        } else if ((nodes == NULL)
-                   && pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)) {
-            GHashTableIter iter;
-            pcmk_node_t *node = NULL;
+            } else if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)) {
+                GHashTableIter iter;
 
-            g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
-            while (g_hash_table_iter_next(&iter, NULL, (void**)&node)) {
-                if (node->assign->score >= 0) {
-                    nodes = g_list_prepend(nodes, node);
+                g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
+                while (g_hash_table_iter_next(&iter, NULL,
+                                              (gpointer *) &node)) {
+                    if ((node != NULL) && (node->assign->score >= 0)) {
+                        nodes = g_list_prepend(nodes, (gpointer *) node);
+                    }
                 }
-            }
 
-        } else if(nodes == NULL) {
-            nodes = g_hash_table_get_values(rsc->priv->allowed_nodes);
+            } else {
+                nodes = g_hash_table_get_values(rsc->priv->allowed_nodes);
+            }
         }
 
-        for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
-            node = (pcmk_node_t *) lpc->data;
+        for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
+            node = (const pcmk_node_t *) iter->data;
 
-            if (node->details->online) {
-                rc = cli_resource_delete(controld_api, node->priv->name, rsc,
-                                         operation, interval_spec, just_failures,
-                                         scheduler, force);
+            if (!node->details->online) {
+                continue;
             }
+
+            rc = cli_resource_delete(controld_api, node->priv->name, rsc,
+                                     operation, interval_spec, just_failures,
+                                     scheduler, force);
             if (rc != pcmk_rc_ok) {
-                g_list_free(nodes);
-                return rc;
+                break;
             }
         }
 
         g_list_free(nodes);
-        return pcmk_rc_ok;
+        return rc;
     }
 
     node = pcmk_find_node(scheduler, host_uname);
@@ -1021,7 +1025,9 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
     }
 
     if (!pcmk_is_set(node->priv->flags, pcmk__node_probes_allowed)) {
-        out->err(out, "Unable to clean up %s because resource discovery disabled on %s",
+        out->err(out,
+                 "Unable to clean up %s because resource discovery disabled on "
+                 "%s",
                  rsc->id, host_uname);
         return EOPNOTSUPP;
     }
@@ -1040,13 +1046,15 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
     }
 
     if (just_failures) {
-        rc = clear_rsc_failures(out, controld_api, host_uname, rsc->id, operation,
-                                interval_spec, scheduler);
+        rc = clear_rsc_failures(out, controld_api, host_uname, rsc->id,
+                                operation, interval_spec, scheduler);
     } else {
         rc = clear_rsc_history(controld_api, host_uname, rsc->id, scheduler);
     }
+
     if (rc != pcmk_rc_ok) {
-        out->err(out, "Cleaned %s failures on %s, but unable to clean history: %s",
+        out->err(out,
+                 "Cleaned %s failures on %s, but unable to clean history: %s",
                  rsc->id, host_uname, pcmk_rc_str(rc));
     } else {
         out->info(out, "Cleaned up %s on %s", rsc->id, host_uname);
