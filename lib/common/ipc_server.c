@@ -419,7 +419,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         pcmk__set_client_flags(c, pcmk__client_proxied);
     }
 
-    pcmk__assert(text[header->size_uncompressed - 1] == 0);
+    pcmk__assert(text[header->size - 1] == 0);
 
     xml = pcmk__xml_parse(text);
     crm_log_xml_trace(xml, "[IPC received]");
@@ -588,20 +588,20 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     iov[0].iov_base = header;
 
     header->version = PCMK__IPC_VERSION;
-    header->size_uncompressed = 1 + buffer->len;
-    total = iov[0].iov_len + header->size_uncompressed;
+    header->size = buffer->len + 1;
+    total = iov[0].iov_len + header->size;
 
     if (total >= max_send_size) {
         crm_log_xml_trace(message, "EMSGSIZE");
         crm_err("Could not transmit message; message size %" PRIu32" bytes is "
-                "larger than the maximum of %" PRIu32, header->size_uncompressed,
+                "larger than the maximum of %" PRIu32, header->size,
                 max_send_size);
         rc = EMSGSIZE;
         goto done;
     }
 
     iov[1].iov_base = pcmk__str_copy(buffer->str);
-    iov[1].iov_len = header->size_uncompressed;
+    iov[1].iov_len = header->size;
 
     header->qb.size = iov[0].iov_len + iov[1].iov_len;
     header->qb.id = (int32_t)request;    /* Replying to a specific request */

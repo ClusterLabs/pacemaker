@@ -311,8 +311,7 @@ struct pcmk_ipc_api_s {
 
 typedef struct pcmk__ipc_header_s {
     struct qb_ipc_response_header qb;
-    uint32_t size_uncompressed;
-    uint32_t size_compressed;
+    uint32_t size;
     uint32_t flags;
     uint8_t version;
 } pcmk__ipc_header_t;
