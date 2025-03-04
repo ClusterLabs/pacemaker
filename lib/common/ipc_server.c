@@ -711,23 +711,40 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
     } else {
         ssize_t qb_rc;
+        char *part_text = NULL;
 
         CRM_LOG_ASSERT(header->qb.id != 0);     /* Replying to a specific request */
+
+        if (pcmk__ipc_msg_is_multipart_end(header)) {
+            part_text = crm_strdup_printf(" (final part %d) ", header->part_id);
+        } else if (pcmk__ipc_msg_is_multipart(header)) {
+            if (pcmk__ipc_multipart_id(header) == 0) {
+                part_text = crm_strdup_printf(" (initial part %d) ", header->part_id);
+            } else {
+                part_text = crm_strdup_printf(" (part %d) ", header->part_id);
+            }
+        } else {
+            part_text = crm_strdup_printf(" ");
+        }
 
         qb_rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
         if (qb_rc < header->qb.size) {
             if (qb_rc < 0) {
                 rc = (int) -qb_rc;
             }
-            crm_notice("Response %" PRId32 " to pid %u failed: %s "
+            crm_notice("Response %" PRId32 "%sto pid %u failed: %s "
                        QB_XS " bytes=%" PRId32 " rc=%zd ipcs=%p",
-                       header->qb.id, c->pid, pcmk_rc_str(rc),
+                       header->qb.id, part_text, c->pid, pcmk_rc_str(rc),
                        header->qb.size, qb_rc, c->ipcs);
+            crm_trace("Text = '%s'", (char *) iov[1].iov_base);
 
         } else {
-            crm_trace("Response %" PRId32 " sent, %zd bytes to %p[%u]",
-                      header->qb.id, qb_rc, c->ipcs, c->pid);
+            crm_trace("Response %" PRId32 "%ssent, %zd bytes to %p[%u]",
+                      header->qb.id, part_text, qb_rc, c->ipcs, c->pid);
+            crm_trace("Text = '%s'", (char *) iov[1].iov_base);
         }
+
+        free(part_text);
 
         if (flags & crm_ipc_server_free) {
             pcmk_free_ipc_event(iov);

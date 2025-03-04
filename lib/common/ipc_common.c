@@ -141,7 +141,14 @@ pcmk__ipc_msg_append(GByteArray **buffer, void *data)
          */
         g_byte_array_append(*buffer, payload, header->size);
 
+        crm_trace("Received IPC request %d (final part %d) of %u bytes",
+                  header->qb.id, header->part_id, header->qb.size);
+        crm_trace("Text = '%s'", payload);
+        crm_trace("Buffer = '%s'", (*buffer)->data + sizeof(pcmk__ipc_header_t));
+
     } else if (pcmk__ipc_msg_is_multipart(data)) {
+        const char *initial_str = "";
+
         if (pcmk__ipc_multipart_id(data) == 0) {
             /* This is the first part of a multipart IPC message.  Initialize
              * the buffer with the entire message, including its header.  Do
@@ -161,6 +168,7 @@ pcmk__ipc_msg_append(GByteArray **buffer, void *data)
 
             g_byte_array_append(*buffer, data,
                                 sizeof(pcmk__ipc_header_t) + header->size - 1);
+            initial_str = "initial ";
 
         } else {
             /* This is some intermediate part of a multipart message.  Add
@@ -173,6 +181,11 @@ pcmk__ipc_msg_append(GByteArray **buffer, void *data)
 
         rc = pcmk_rc_ipc_more;
 
+        crm_trace("Received IPC request %d (%spart %d) of %u bytes",
+                  header->qb.id, initial_str, header->part_id, header->qb.size);
+        crm_trace("Text = '%s'", payload);
+        crm_trace("Buffer = '%s'", (*buffer)->data + sizeof(pcmk__ipc_header_t));
+
     } else {
         /* This is a standalone IPC message.  For simplicity in the caller,
          * copy the entire message over into a byte array so it can be handled
@@ -181,6 +194,11 @@ pcmk__ipc_msg_append(GByteArray **buffer, void *data)
         *buffer = g_byte_array_new();
         g_byte_array_append(*buffer, data,
                             sizeof(pcmk__ipc_header_t) + header->size);
+
+        crm_trace("Received IPC request %d of %u bytes", header->qb.id,
+                  header->qb.size);
+        crm_trace("Text = '%s'", payload);
+        crm_trace("Buffer = '%s'", (*buffer)->data + sizeof(pcmk__ipc_header_t));
     }
 
     return rc;

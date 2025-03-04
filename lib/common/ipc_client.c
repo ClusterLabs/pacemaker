@@ -1067,7 +1067,6 @@ crm_ipc_read(crm_ipc_t * client)
     do {
         ssize_t bytes = qb_ipcc_event_recv(client->ipc, buffer,
                                            crm_ipc_default_buffer_size(), 0);
-        pcmk__ipc_header_t *header = NULL;
 
         if (bytes <= 0) {
             crm_trace("No message received from %s IPC: %s",
@@ -1084,12 +1083,6 @@ crm_ipc_read(crm_ipc_t * client)
 
             break;
         }
-
-        header = (pcmk__ipc_header_t *)(void *) buffer;
-
-        crm_trace("Received %s IPC event %d size=%u rc=%zd text='%.100s'",
-                  client->server_name, header->qb.id, header->qb.size, bytes,
-                  buffer + sizeof(pcmk__ipc_header_t));
 
         rc = pcmk__ipc_msg_append(&client->buffer, buffer);
 
@@ -1353,9 +1346,11 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
             crm_trace("Sending %s IPC request %d (%spart %d) of %u bytes using %dms timeout",
                       client->server_name, header->qb.id, is_end ? "final " : "",
                       index, header->qb.size, ms_timeout);
+            crm_trace("Text = '%s'", (char *) iov[1].iov_base);
         } else {
             crm_trace("Sending %s IPC request %d of %u bytes using %dms timeout",
                       client->server_name, header->qb.id, header->qb.size, ms_timeout);
+            crm_trace("Text = '%s'", (char *) iov[1].iov_base);
         }
 
         /* Send the IPC request, respecting any timeout we were passed */
