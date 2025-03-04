@@ -1596,6 +1596,17 @@ handle_list_alternatives(void)
     return pcmk__list_alternatives(out, options.agent_spec);
 }
 
+static int
+handle_list_instances(void)
+{
+    // coverity[var_deref_op] False positive
+    if (out->message(out, "resource-names-list",
+                     scheduler->priv->resources) != pcmk_rc_ok) {
+        return ENXIO;
+    }
+    return pcmk_rc_ok;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1960,14 +1971,7 @@ main(int argc, char **argv)
         }
 
         case cmd_list_instances:
-            // coverity[var_deref_op] False positive
-            rc = out->message(out, "resource-names-list",
-                              scheduler->priv->resources);
-
-            if (rc != pcmk_rc_ok) {
-                rc = ENXIO;
-            }
-
+            rc = handle_list_instances();
             break;
 
         case cmd_list_options:
