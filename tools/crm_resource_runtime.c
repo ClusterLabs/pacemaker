@@ -810,17 +810,20 @@ rsc_fail_name(const pcmk_resource_t *rsc)
 
 // \return Standard Pacemaker return code
 static int
-clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
+clear_rsc_history(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
                   const char *rsc_id, pcmk_scheduler_t *scheduler)
 {
     int rc = pcmk_rc_ok;
+
+    pcmk__assert(node != NULL);
 
     /* Erase the resource's entire LRM history in the CIB, even if we're only
      * clearing a single operation's fail count. If we erased only entries for a
      * single operation, we might wind up with a wrong idea of the current
      * resource state, and we might not re-probe the resource.
      */
-    rc = send_lrm_rsc_op(controld_api, false, host_uname, rsc_id, scheduler);
+    rc = send_lrm_rsc_op(controld_api, false, node->priv->name, rsc_id,
+                         scheduler);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -917,8 +920,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
         crm_debug("Erasing failures of %s on %s",
                   failed_id, pcmk__node_name(node));
-        rc = clear_rsc_history(controld_api, node->priv->name, failed_id,
-                               scheduler);
+        rc = clear_rsc_history(controld_api, node, failed_id, scheduler);
         if (rc != pcmk_rc_ok) {
             return rc;
         }
@@ -1044,8 +1046,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
         rc = clear_rsc_failures(out, controld_api, node, rsc->id, operation,
                                 interval_spec, scheduler);
     } else {
-        rc = clear_rsc_history(controld_api, node->priv->name, rsc->id,
-                               scheduler);
+        rc = clear_rsc_history(controld_api, node, rsc->id, scheduler);
     }
 
     if (rc != pcmk_rc_ok) {
