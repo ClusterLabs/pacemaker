@@ -1795,12 +1795,8 @@ main(int argc, char **argv)
             goto done;
 
         case cmd_digests:
-            if (node == NULL) {
-                rc = pcmk_rc_node_unknown;
-            } else {
-                rc = pcmk__resource_digests(out, rsc, node,
-                                            options.override_params);
-            }
+            rc = pcmk__resource_digests(out, rsc, node,
+                                        options.override_params);
             break;
 
         case cmd_colocations:
