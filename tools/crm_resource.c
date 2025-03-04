@@ -1013,57 +1013,6 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 }
 
-static int
-show_metadata(pcmk__output_t *out, const char *agent_spec)
-{
-    int rc = pcmk_rc_ok;
-    char *standard = NULL;
-    char *provider = NULL;
-    char *type = NULL;
-    char *metadata = NULL;
-    lrmd_t *lrmd_conn = NULL;
-
-    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
-    if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    _("Could not create executor connection"));
-        lrmd_api_delete(lrmd_conn);
-        return rc;
-    }
-
-    rc = crm_parse_agent_spec(agent_spec, &standard, &provider, &type);
-    rc = pcmk_legacy2rc(rc);
-
-    if (rc == pcmk_rc_ok) {
-        rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard,
-                                           provider, type,
-                                           &metadata, 0);
-        rc = pcmk_legacy2rc(rc);
-
-        if (metadata) {
-            out->output_xml(out, PCMK_XE_METADATA, metadata);
-            free(metadata);
-        } else {
-            /* We were given a validly formatted spec, but it doesn't necessarily
-             * match up with anything that exists.  Use ENXIO as the return code
-             * here because that maps to an exit code of CRM_EX_NOSUCH, which
-             * probably is the most common reason to get here.
-             */
-            rc = ENXIO;
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("Metadata query for %s failed: %s"),
-                        agent_spec, pcmk_rc_str(rc));
-        }
-    } else {
-        rc = ENXIO;
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    _("'%s' is not a valid agent specification"), agent_spec);
-    }
-
-    lrmd_api_delete(lrmd_conn);
-    return rc;
-}
-
 static void
 validate_cmdline_config(void)
 {
@@ -1644,6 +1593,58 @@ handle_locate(pcmk_resource_t *rsc)
     return rc;
 }
 
+static int
+handle_metadata(void)
+{
+    int rc = pcmk_rc_ok;
+    char *standard = NULL;
+    char *provider = NULL;
+    char *type = NULL;
+    char *metadata = NULL;
+    lrmd_t *lrmd_conn = NULL;
+
+    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    _("Could not create executor connection"));
+        lrmd_api_delete(lrmd_conn);
+        return rc;
+    }
+
+    rc = crm_parse_agent_spec(options.agent_spec, &standard, &provider, &type);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc == pcmk_rc_ok) {
+        rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard,
+                                           provider, type,
+                                           &metadata, 0);
+        rc = pcmk_legacy2rc(rc);
+
+        if (metadata != NULL) {
+            out->output_xml(out, PCMK_XE_METADATA, metadata);
+            free(metadata);
+        } else {
+            /* We were given a validly formatted spec, but it doesn't necessarily
+             * match up with anything that exists.  Use ENXIO as the return code
+             * here because that maps to an exit code of CRM_EX_NOSUCH, which
+             * probably is the most common reason to get here.
+             */
+            rc = ENXIO;
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        _("Metadata query for %s failed: %s"),
+                        options.agent_spec, pcmk_rc_str(rc));
+        }
+    } else {
+        rc = ENXIO;
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    _("'%s' is not a valid agent specification"),
+                    options.agent_spec);
+    }
+
+    lrmd_api_delete(lrmd_conn);
+    return rc;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2021,7 +2022,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_metadata:
-            rc = show_metadata(out, options.agent_spec);
+            rc = handle_metadata();
             break;
 
         case cmd_restart:
