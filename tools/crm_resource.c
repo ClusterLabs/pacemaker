@@ -1729,6 +1729,13 @@ handle_wait(void)
     return wait_till_stable(out, options.timeout_ms, cib_conn);
 }
 
+static int
+handle_why(pcmk_resource_t *rsc, pcmk_node_t *node)
+{
+    return out->message(out, "resource-reasons-list",
+                        scheduler->priv->resources, rsc, node);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2158,8 +2165,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_why:
-            rc = out->message(out, "resource-reasons-list",
-                              scheduler->priv->resources, rsc, node);
+            rc = handle_why(rsc, node);
             break;
 
         case cmd_clear:
