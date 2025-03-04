@@ -1380,6 +1380,26 @@ accept_clone_instance(void)
     }
 }
 
+static int
+handle_ban(pcmk_resource_t *rsc, const pcmk_node_t *node)
+{
+    int rc = pcmk_rc_ok;
+
+    if (node == NULL) {
+        rc = ban_or_move(out, rsc, options.move_lifetime);
+    } else {
+        rc = cli_resource_ban(out, options.rsc_id, node->priv->name,
+                              options.move_lifetime, cib_conn,
+                              options.promoted_role_only, PCMK_ROLE_PROMOTED);
+    }
+
+    if (rc == EINVAL) {
+        exit_code = CRM_EX_USAGE;
+        return pcmk_rc_ok;
+    }
+    return rc;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1724,6 +1744,9 @@ main(int argc, char **argv)
      * Handle requested command
      */
 
+    /* Some of these set exit_code explicitly and return pcmk_rc_ok to skip
+     * setting exit_code based on rc after the switch.
+     */
     switch (options.rsc_cmd) {
         case cmd_list_resources: {
             GList *all = NULL;
@@ -1892,20 +1915,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_ban:
-            if (node == NULL) {
-                rc = ban_or_move(out, rsc, options.move_lifetime);
-            } else {
-                rc = cli_resource_ban(out, options.rsc_id, node->priv->name,
-                                      options.move_lifetime, cib_conn,
-                                      options.promoted_role_only,
-                                      PCMK_ROLE_PROMOTED);
-            }
-
-            if (rc == EINVAL) {
-                exit_code = CRM_EX_USAGE;
-                goto done;
-            }
-
+            rc = handle_ban(rsc, node);
             break;
 
         case cmd_get_param: {
