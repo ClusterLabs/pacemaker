@@ -1514,6 +1514,65 @@ handle_fail(const pcmk_node_t *node)
     return rc;
 }
 
+static int
+handle_get_param(pcmk_resource_t *rsc)
+{
+    unsigned int count = 0;
+    GHashTable *params = NULL;
+    pcmk_node_t *current = rsc->priv->fns->active_node(rsc, &count, NULL);
+    bool free_params = true;
+    const char *value = NULL;
+    int rc = pcmk_rc_ok;
+
+    if (count > 1) {
+        out->err(out,
+                 "%s is active on more than one node, returning the default "
+                 "value for %s",
+                 rsc->id, pcmk__s(options.prop_name, "unspecified property"));
+        current = NULL;
+    }
+
+    crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
+
+    if (pcmk__str_eq(options.attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
+                     pcmk__str_none)) {
+        params = pe_rsc_params(rsc, current, scheduler);
+        free_params = false;
+
+        value = g_hash_table_lookup(params, options.prop_name);
+
+    } else if (pcmk__str_eq(options.attr_set_type, PCMK_XE_META_ATTRIBUTES,
+                            pcmk__str_none)) {
+        params = pcmk__strkey_table(free, free);
+        get_meta_attributes(params, rsc, NULL, scheduler);
+
+        value = g_hash_table_lookup(params, options.prop_name);
+
+    } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT,
+                            pcmk__str_none)) {
+        value = crm_element_value(rsc->priv->xml, options.prop_name);
+        free_params = false;
+
+    } else {
+        const pcmk_rule_input_t rule_input = {
+            .now = scheduler->priv->now,
+        };
+
+        params = pcmk__strkey_table(free, free);
+        pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_UTILIZATION,
+                                   &rule_input, params, NULL, scheduler);
+
+        value = g_hash_table_lookup(params, options.prop_name);
+    }
+
+    rc = out->message(out, "attribute-list", rsc, options.prop_name, value);
+    if (free_params) {
+        g_hash_table_destroy(params);
+    }
+
+    return rc;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2011,63 +2070,10 @@ main(int argc, char **argv)
             rc = handle_ban(rsc, node);
             break;
 
-        case cmd_get_param: {
-            unsigned int count = 0;
-            GHashTable *params = NULL;
-            // coverity[var_deref_op] False positive
-            pcmk_node_t *current = rsc->priv->fns->active_node(rsc, &count,
-                                                               NULL);
-            bool free_params = true;
-            const char* value = NULL;
-
-            if (count > 1) {
-                out->err(out, "%s is active on more than one node,"
-                         " returning the default value for %s", rsc->id,
-                         pcmk__s(options.prop_name, "unspecified property"));
-                current = NULL;
-            }
-
-            crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
-
-            if (pcmk__str_eq(options.attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
-                             pcmk__str_none)) {
-                params = pe_rsc_params(rsc, current, scheduler);
-                free_params = false;
-
-                value = g_hash_table_lookup(params, options.prop_name);
-
-            } else if (pcmk__str_eq(options.attr_set_type,
-                                    PCMK_XE_META_ATTRIBUTES, pcmk__str_none)) {
-                params = pcmk__strkey_table(free, free);
-                get_meta_attributes(params, rsc, NULL, scheduler);
-
-                value = g_hash_table_lookup(params, options.prop_name);
-
-            } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-
-                value = crm_element_value(rsc->priv->xml, options.prop_name);
-                free_params = false;
-
-            } else {
-                const pcmk_rule_input_t rule_input = {
-                    .now = scheduler->priv->now,
-                };
-
-                params = pcmk__strkey_table(free, free);
-                pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_UTILIZATION,
-                                           &rule_input, params, NULL,
-                                           scheduler);
-
-                value = g_hash_table_lookup(params, options.prop_name);
-            }
-
-            rc = out->message(out, "attribute-list", rsc, options.prop_name, value);
-            if (free_params) {
-                g_hash_table_destroy(params);
-            }
-
+        case cmd_get_param:
+            // coverity[var_deref_model] False positive
+            rc = handle_get_param(rsc);
             break;
-        }
 
         case cmd_set_param:
             if (pcmk__str_empty(options.prop_value)) {
