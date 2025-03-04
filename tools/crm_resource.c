@@ -1610,6 +1610,24 @@ handle_list_providers(void)
     return pcmk__list_providers(out, options.agent_spec);
 }
 
+static int
+handle_list_resources(void)
+{
+    GList *all = g_list_prepend(NULL, (gpointer) "*");
+    int rc = out->message(out, "resource-list", scheduler,
+                          pcmk_show_inactive_rscs
+                          |pcmk_show_rsc_only
+                          |pcmk_show_pending,
+                          true, all, all, false);
+
+    g_list_free(all);
+
+    if (rc == pcmk_rc_no_output) {
+        rc = ENXIO;
+    }
+    return rc;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1958,20 +1976,9 @@ main(int argc, char **argv)
      * setting exit_code based on rc after the switch.
      */
     switch (options.rsc_cmd) {
-        case cmd_list_resources: {
-            GList *all = NULL;
-            uint32_t show_opts = pcmk_show_inactive_rscs | pcmk_show_rsc_only | pcmk_show_pending;
-
-            all = g_list_prepend(all, (gpointer) "*");
-            rc = out->message(out, "resource-list", scheduler,
-                              show_opts, true, all, all, false);
-            g_list_free(all);
-
-            if (rc == pcmk_rc_no_output) {
-                rc = ENXIO;
-            }
+        case cmd_list_resources:
+            rc = handle_list_resources();
             break;
-        }
 
         case cmd_list_instances:
             rc = handle_list_instances();
