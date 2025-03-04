@@ -223,6 +223,7 @@ pe_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 static int32_t
 pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 {
+    int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
     xmlNode *msg = NULL;
@@ -235,7 +236,34 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         schedulerd_register_handlers();
     }
 
-    msg = pcmk__client_data2xml(c, data, &id, &flags);
+    rc = pcmk__ipc_msg_append(&c->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        msg = pcmk__client_data2xml(c, c->buffer->data, &id, &flags);
+        g_byte_array_free(c->buffer, TRUE);
+        c->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (c->buffer != NULL) {
+            g_byte_array_free(c->buffer, TRUE);
+            c->buffer = NULL;
+        }
+
+        return 0;
+    }
+
     if (msg == NULL) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL, CRM_EX_PROTOCOL);
         return 0;
