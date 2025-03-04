@@ -944,14 +944,13 @@ clear_rsc_fail_attrs(const pcmk_resource_t *rsc, const char *operation,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
+cli_resource_delete(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
                     const pcmk_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
                     pcmk_scheduler_t *scheduler, bool force)
 {
     pcmk__output_t *out = scheduler->priv->out;
     int rc = pcmk_rc_ok;
-    const pcmk_node_t *node = NULL;
 
     if (rsc == NULL) {
         return ENXIO;
@@ -963,7 +962,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 
             const pcmk_resource_t *child = iter->data;
 
-            rc = cli_resource_delete(controld_api, host_uname, child, operation,
+            rc = cli_resource_delete(controld_api, node, child, operation,
                                      interval_spec, just_failures, scheduler,
                                      force);
             if (rc != pcmk_rc_ok) {
@@ -973,7 +972,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         return pcmk_rc_ok;
     }
 
-    if (host_uname == NULL) {
+    if (node == NULL) {
         GList *nodes = g_hash_table_get_values(rsc->priv->probed_nodes);
 
         if (nodes == NULL) {
@@ -1003,9 +1002,9 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
                 continue;
             }
 
-            rc = cli_resource_delete(controld_api, node->priv->name, rsc,
-                                     operation, interval_spec, just_failures,
-                                     scheduler, force);
+            rc = cli_resource_delete(controld_api, node, rsc, operation,
+                                     interval_spec, just_failures, scheduler,
+                                     force);
             if (rc != pcmk_rc_ok) {
                 break;
             }
@@ -1015,48 +1014,41 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         return rc;
     }
 
-    node = pcmk_find_node(scheduler, host_uname);
-
-    if (node == NULL) {
-        out->err(out, "Unable to clean up %s because node %s not found",
-                 rsc->id, host_uname);
-        return ENODEV;
-    }
-
     if (!pcmk_is_set(node->priv->flags, pcmk__node_probes_allowed)) {
         out->err(out,
                  "Unable to clean up %s because resource discovery disabled on "
                  "%s",
-                 rsc->id, host_uname);
+                 rsc->id, pcmk__node_name(node));
         return EOPNOTSUPP;
     }
 
     if (controld_api == NULL) {
         out->err(out, "Dry run: skipping clean-up of %s on %s due to CIB_file",
-                 rsc->id, host_uname);
+                 rsc->id, pcmk__node_name(node));
         return pcmk_rc_ok;
     }
 
     rc = clear_rsc_fail_attrs(rsc, operation, interval_spec, node);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Unable to clean up %s failures on %s: %s",
-                 rsc->id, host_uname, pcmk_rc_str(rc));
+                 rsc->id, pcmk__node_name(node), pcmk_rc_str(rc));
         return rc;
     }
 
     if (just_failures) {
-        rc = clear_rsc_failures(out, controld_api, host_uname, rsc->id,
+        rc = clear_rsc_failures(out, controld_api, node->priv->name, rsc->id,
                                 operation, interval_spec, scheduler);
     } else {
-        rc = clear_rsc_history(controld_api, host_uname, rsc->id, scheduler);
+        rc = clear_rsc_history(controld_api, node->priv->name, rsc->id,
+                               scheduler);
     }
 
     if (rc != pcmk_rc_ok) {
         out->err(out,
                  "Cleaned %s failures on %s, but unable to clean history: %s",
-                 rsc->id, host_uname, pcmk_rc_str(rc));
+                 rsc->id, pcmk__node_name(node), pcmk_rc_str(rc));
     } else {
-        out->info(out, "Cleaned up %s on %s", rsc->id, host_uname);
+        out->info(out, "Cleaned up %s on %s", rsc->id, pcmk__node_name(node));
     }
     return rc;
 }

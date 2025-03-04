@@ -901,9 +901,9 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 
     crm_debug("Erasing failures of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(controld_api, options.host_uname, rsc,
-                             options.operation, options.interval_spec, TRUE,
-                             scheduler, options.force);
+    rc = cli_resource_delete(controld_api, node, rsc, options.operation,
+                             options.interval_spec, true, scheduler,
+                             options.force);
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
@@ -1076,8 +1076,8 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 
     crm_debug("Re-checking the state of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(controld_api, options.host_uname, rsc, NULL, 0,
-                             FALSE, scheduler, options.force);
+    rc = cli_resource_delete(controld_api, node, rsc, NULL, 0, false, scheduler,
+                             options.force);
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
