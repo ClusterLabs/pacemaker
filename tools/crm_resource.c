@@ -1462,6 +1462,16 @@ handle_delete(void)
     return rc;
 }
 
+static int
+handle_delete_param(pcmk_resource_t *rsc, xmlNode *cib_xml_orig)
+{
+    /* coverity[var_deref_model] False positive */
+    return cli_resource_delete_attribute(rsc, options.rsc_id, options.prop_set,
+                                         options.attr_set_type, options.prop_id,
+                                         options.prop_name, cib_conn,
+                                         cib_xml_orig, options.force);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -2053,13 +2063,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_delete_param:
-            /* coverity[var_deref_model] False positive */
-            rc = cli_resource_delete_attribute(rsc, options.rsc_id,
-                                               options.prop_set,
-                                               options.attr_set_type,
-                                               options.prop_id,
-                                               options.prop_name, cib_conn,
-                                               cib_xml_orig, options.force);
+            rc = handle_delete_param(rsc, cib_xml_orig);
             break;
 
         case cmd_cleanup:
