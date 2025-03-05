@@ -133,6 +133,9 @@ pcmk__scan_nvpair(const char *input, char **name, char **value)
     pcmk__assert((name != NULL) && (*name == NULL));
     pcmk__assert((value != NULL) && (*value == NULL));
 
+    /* @FIXME A newline character inside the value causes scanning to stop. Only
+     * newlines at the end of the value should be discarded.
+     */
 #ifdef HAVE_SSCANF_M
     if (sscanf(input, "%m[^=]=%m[^\n]", name, value) <= 0) {
         goto fail;
