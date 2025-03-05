@@ -2,7 +2,6 @@
 crm_resource: non-option ARGV-elements:
 [1 of 2] foo
 [2 of 2] bar
-
 =#=#=#= End test: crm_resource run with extra arguments - Incorrect usage (64) =#=#=#=
 * Passed: crm_resource          - crm_resource run with extra arguments
 =#=#=#= Begin test: List all available resource options (invalid type) =#=#=#=

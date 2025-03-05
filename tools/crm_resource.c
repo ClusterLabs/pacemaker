@@ -1821,17 +1821,30 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if ((options.remainder != NULL) && (options.override_params != NULL)) {
+    if (options.remainder != NULL) {
         // Commands that use positional arguments will create override_params
+        if (options.override_params == NULL) {
+            GString *msg = g_string_sized_new(128);
+            guint len = g_strv_length(options.remainder);
+
+            g_string_append(msg, "non-option ARGV-elements:");
+
+            for (int i = 0; i < len; i++) {
+                g_string_append_printf(msg, "\n[%d of %u] %s",
+                                       i + 1, len, options.remainder[i]);
+            }
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "%s", msg->str);
+            g_string_free(msg, TRUE);
+            goto done;
+        }
+
         for (gchar **s = options.remainder; *s; s++) {
             char *name = pcmk__assert_alloc(1, strlen(*s));
             char *value = pcmk__assert_alloc(1, strlen(*s));
             int rc = sscanf(*s, "%[^=]=%s", name, value);
 
-            if (rc == 2) {
-                g_hash_table_replace(options.override_params, name, value);
-
-            } else {
+            if (rc != 2) {
                 exit_code = CRM_EX_USAGE;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                             _("Error parsing '%s' as a name=value pair"),
@@ -1840,45 +1853,8 @@ main(int argc, char **argv)
                 free(name);
                 goto done;
             }
+            g_hash_table_replace(options.override_params, name, value);
         }
-
-    } else if (options.remainder != NULL) {
-        gchar **strv = NULL;
-        gchar *msg = NULL;
-        int i = 1;
-        int len = 0;
-
-        for (gchar **s = options.remainder; *s; s++) {
-            len++;
-        }
-
-        pcmk__assert(len > 0);
-
-        /* Add 1 for the strv[0] string below, and add another 1 for the NULL
-         * at the end of the array so g_strjoinv knows when to stop.
-         */
-        strv = pcmk__assert_alloc(len+2, sizeof(char *));
-        strv[0] = strdup("non-option ARGV-elements:\n");
-
-        for (gchar **s = options.remainder; *s; s++) {
-            strv[i] = crm_strdup_printf("[%d of %d] %s\n", i, len, *s);
-            i++;
-        }
-
-        strv[i] = NULL;
-
-        exit_code = CRM_EX_USAGE;
-        msg = g_strjoinv("", strv);
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "%s", msg);
-        g_free(msg);
-
-        /* Don't try to free the last element, which is just NULL. */
-        for(i = 0; i < len+1; i++) {
-            free(strv[i]);
-        }
-        free(strv);
-
-        goto done;
     }
 
     if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
