@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <string.h>
 #include <ctype.h>
-#include <glib.h>
+#include <glib.h>           // gchar, gint, etc.
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
@@ -110,9 +110,7 @@ pcmk_free_nvpairs(GSList *nvpairs)
 
 /*!
  * \internal
- * \brief Extract the name and value from a string formatted as "name=value".
- *
- * If unable to extract both of them, they are both set to \c NULL.
+ * \brief Extract the name and value from a string formatted as "name=value"
  *
  * \param[in]  input  Input string, likely from the command line
  * \param[out] name   Everything before the first \c '=' in the input string
@@ -120,62 +118,40 @@ pcmk_free_nvpairs(GSList *nvpairs)
  *                    minus trailing newlines
  *
  * \return Standard Pacemaker return code
+ *
+ * \note On success, the caller is responsible for freeing \p *name and
+ *       \p *value using \c g_free(). On failure, nothing is allocated.
  */
 int
-pcmk__scan_nvpair(const char *input, char **name, char **value)
+pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value)
 {
-    int rc = pcmk_rc_bad_nvpair;
-#ifndef HAVE_SSCANF_M
-    char *sep = NULL;
-#endif
+    gchar **nvpair = NULL;
+    int rc = pcmk_rc_ok;
 
     pcmk__assert(input != NULL);
     pcmk__assert((name != NULL) && (*name == NULL));
     pcmk__assert((value != NULL) && (*value == NULL));
 
-    /* @FIXME A newline character inside the value causes scanning to stop. Only
-     * newlines at the end of the value should be discarded.
+    nvpair = g_strsplit(input, "=", 2);
+
+    /* Check whether nvpair is well-formed (short-circuits if input was split
+     * into fewer than 2 tokens)
      */
-#ifdef HAVE_SSCANF_M
-    if (sscanf(input, "%m[^=]=%m[^\n]", name, value) <= 0) {
-        goto fail;
-    }
-#else
-    sep = strstr(optarg, "=");
-    if (sep == NULL) {
-        goto fail;
+    if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+        rc = pcmk_rc_bad_nvpair;
+        goto done;
     }
 
-    *name = strndup(input, sep-input);
+    *name = nvpair[0];
+    *value = nvpair[1];
+    pcmk__trim((char *) *value);
 
-    if (*name == NULL) {
-        rc = ENOMEM;
-        goto fail;
-    }
+    // name and value took ownership
+    nvpair[0] = NULL;
+    nvpair[1] = NULL;
 
-    /* If the last char in optarg is =, the user gave no
-     * value for the option.  Leave it as NULL.
-     */
-    if (*(sep+1) != '\0') {
-        *value = strdup(sep+1);
-
-        if (*value == NULL) {
-            rc = ENOMEM;
-            goto fail;
-        }
-    }
-#endif
-
-    if ((*name != NULL) && (*value != NULL)) {
-        return pcmk_rc_ok;
-    }
-
-fail:
-    free(*name);
-    *name = NULL;
-
-    free(*value);
-    *value = NULL;
+done:
+    g_strfreev(nvpair);
     return rc;
 }
 

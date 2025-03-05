@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <glib.h>                   // gboolean, gchar, etc.
+
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
@@ -283,8 +285,8 @@ add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GErr
 
 gboolean
 add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    char *name = NULL;
-    char *value = NULL;
+    gchar *name = NULL;
+    gchar *value = NULL;
     int rc = 0;
     gboolean retval = TRUE;
 
@@ -305,8 +307,8 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
         pcmk__insert_dup(options.params, name, value);
     }
 
-    free(name);
-    free(value);
+    g_free(name);
+    g_free(value);
     return retval;
 }
 

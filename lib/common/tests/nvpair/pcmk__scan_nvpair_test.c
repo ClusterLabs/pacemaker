@@ -9,14 +9,16 @@
 
 #include <crm_internal.h>
 
+#include <glib.h>       // gchar, g_free
+
 #include <crm/common/unittest_internal.h>
 
 static void
-assert_scan_nvpair(const char *input, int expected_rc,
-                   const char *expected_name, const char *expected_value)
+assert_scan_nvpair(const gchar *input, int expected_rc,
+                   const gchar *expected_name, const gchar *expected_value)
 {
-    char *name = NULL;
-    char *value = NULL;
+    gchar *name = NULL;
+    gchar *value = NULL;
 
     assert_int_equal(pcmk__scan_nvpair(input, &name, &value),
                      expected_rc);
@@ -33,16 +35,16 @@ assert_scan_nvpair(const char *input, int expected_rc,
         assert_string_equal(value, expected_value);
     }
 
-    free(name);
-    free(value);
+    g_free(name);
+    g_free(value);
 }
 
 static void
 null_asserts(void **state)
 {
-    const char *input = "key=value";
-    char *name = NULL;
-    char *value = NULL;
+    const gchar *input = "key=value";
+    gchar *name = NULL;
+    gchar *value = NULL;
 
     pcmk__assert_asserts(pcmk__scan_nvpair(NULL, &name, &value));
     pcmk__assert_asserts(pcmk__scan_nvpair(input, NULL, &value));
@@ -52,14 +54,14 @@ null_asserts(void **state)
 static void
 already_allocated_asserts(void **state)
 {
-    const char *input = "key=value";
-    char *buf_null = NULL;
-    char *buf_allocated = pcmk__str_copy("allocated string");
+    const gchar *input = "key=value";
+    gchar *buf_null = NULL;
+    gchar *buf_allocated = g_strdup("allocated string");
 
     pcmk__assert_asserts(pcmk__scan_nvpair(input, &buf_allocated, &buf_null));
     pcmk__assert_asserts(pcmk__scan_nvpair(input, &buf_null, &buf_allocated));
 
-    free(buf_allocated);
+    g_free(buf_allocated);
 }
 
 static void
@@ -88,12 +90,6 @@ value_only(void **state)
 }
 
 static void
-value_starts_with_newline(void **state)
-{
-    assert_scan_nvpair("name=\nvalue\n", pcmk_rc_bad_nvpair, NULL, NULL);
-}
-
-static void
 valid(void **state)
 {
     assert_scan_nvpair("name=value", pcmk_rc_ok, "name", "value");
@@ -102,9 +98,8 @@ valid(void **state)
     assert_scan_nvpair("name=value\n\n", pcmk_rc_ok, "name", "value");
     assert_scan_nvpair("\nname=value\n", pcmk_rc_ok, "\nname", "value");
     assert_scan_nvpair("name\n=value\n", pcmk_rc_ok, "name\n", "value");
-
-    // @FIXME Should read "val\nue"
-    assert_scan_nvpair("name=val\nue\n", pcmk_rc_ok, "name", "val");
+    assert_scan_nvpair("name=\nvalue\n", pcmk_rc_ok, "name", "\nvalue");
+    assert_scan_nvpair("name=val\nue\n", pcmk_rc_ok, "name", "val\nue");
 
     // Other whitespace is kept (checking only space characters here)
     assert_scan_nvpair(" name=value", pcmk_rc_ok, " name", "value");
@@ -139,5 +134,4 @@ PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(equal_sign_only),
                 cmocka_unit_test(name_only),
                 cmocka_unit_test(value_only),
-                cmocka_unit_test(value_starts_with_newline),
                 cmocka_unit_test(valid))
