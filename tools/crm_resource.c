@@ -2084,127 +2084,97 @@ main(int argc, char **argv)
      * setting exit_code based on rc after the switch.
      */
     switch (options.rsc_cmd) {
-        case cmd_list_resources:
-            rc = handle_list_resources();
-            break;
-
-        case cmd_list_instances:
-            rc = handle_list_instances();
-            break;
-
-        case cmd_list_options:
-            rc = handle_list_options();
-            break;
-
-        case cmd_list_alternatives:
-            rc = handle_list_alternatives();
-            break;
-
-        case cmd_list_agents:
-            rc = handle_list_agents();
-            break;
-
-        case cmd_list_standards:
-            rc = handle_list_standards();
-            break;
-
-        case cmd_list_providers:
-            rc = handle_list_providers();
-            break;
-
-        case cmd_metadata:
-            rc = handle_metadata();
-            break;
-
-        case cmd_restart:
-            rc = handle_restart(rsc, node);
-            break;
-
-        case cmd_wait:
-            rc = handle_wait();
-            break;
-
-        case cmd_execute_agent:
-            rc = handle_execute_agent(rsc);
-            break;
-
-        case cmd_digests:
-            rc = handle_digests(rsc, node);
-            break;
-
-        case cmd_colocations:
-            rc = handle_colocations(rsc);
-            break;
-
-        case cmd_cts:
-            rc = handle_cts();
-            break;
-
-        case cmd_fail:
-            rc = handle_fail(node);
-            break;
-
-        case cmd_list_active_ops:
-            rc = handle_list_active_ops(node);
-            break;
-
-        case cmd_list_all_ops:
-            rc = handle_list_all_ops(node);
-            break;
-
-        case cmd_locate:
-            rc = handle_locate(rsc);
-            break;
-
-        case cmd_query_xml:
-            rc = handle_query_xml(rsc);
-            break;
-
-        case cmd_query_xml_raw:
-            rc = handle_query_xml_raw(rsc);
-            break;
-
-        case cmd_why:
-            rc = handle_why(rsc, node);
-            break;
-
-        case cmd_clear:
-            rc = handle_clear(node);
-            break;
-
-        case cmd_move:
-            rc = handle_move(rsc, node);
-            break;
-
         case cmd_ban:
             rc = handle_ban(rsc, node);
             break;
-
+        case cmd_cleanup:
+            rc = handle_cleanup(rsc, node);
+            break;
+        case cmd_clear:
+            rc = handle_clear(node);
+            break;
+        case cmd_colocations:
+            rc = handle_colocations(rsc);
+            break;
+        case cmd_cts:
+            rc = handle_cts();
+            break;
+        case cmd_delete:
+            rc = handle_delete();
+            break;
+        case cmd_delete_param:
+            rc = handle_delete_param(rsc, cib_xml_orig);
+            break;
+        case cmd_digests:
+            rc = handle_digests(rsc, node);
+            break;
+        case cmd_execute_agent:
+            rc = handle_execute_agent(rsc);
+            break;
+        case cmd_fail:
+            rc = handle_fail(node);
+            break;
         case cmd_get_param:
             // coverity[var_deref_model] False positive
             rc = handle_get_param(rsc);
             break;
-
-        case cmd_set_param:
-            rc = handle_set_param(rsc, cib_xml_orig);
+        case cmd_list_active_ops:
+            rc = handle_list_active_ops(node);
             break;
-
-        case cmd_delete_param:
-            rc = handle_delete_param(rsc, cib_xml_orig);
+        case cmd_list_agents:
+            rc = handle_list_agents();
             break;
-
-        case cmd_cleanup:
-            rc = handle_cleanup(rsc, node);
+        case cmd_list_all_ops:
+            rc = handle_list_all_ops(node);
             break;
-
+        case cmd_list_alternatives:
+            rc = handle_list_alternatives();
+            break;
+        case cmd_list_instances:
+            rc = handle_list_instances();
+            break;
+        case cmd_list_providers:
+            rc = handle_list_providers();
+            break;
+        case cmd_list_options:
+            rc = handle_list_options();
+            break;
+        case cmd_list_resources:
+            rc = handle_list_resources();
+            break;
+        case cmd_list_standards:
+            rc = handle_list_standards();
+            break;
+        case cmd_locate:
+            rc = handle_locate(rsc);
+            break;
+        case cmd_metadata:
+            rc = handle_metadata();
+            break;
+        case cmd_move:
+            rc = handle_move(rsc, node);
+            break;
+        case cmd_query_xml:
+            rc = handle_query_xml(rsc);
+            break;
+        case cmd_query_xml_raw:
+            rc = handle_query_xml_raw(rsc);
+            break;
         case cmd_refresh:
             rc = handle_refresh(rsc, node);
             break;
-
-        case cmd_delete:
-            rc = handle_delete();
+        case cmd_restart:
+            rc = handle_restart(rsc, node);
             break;
-
+        case cmd_set_param:
+            rc = handle_set_param(rsc, cib_xml_orig);
+            break;
+        case cmd_wait:
+            rc = handle_wait();
+            break;
+        case cmd_why:
+            rc = handle_why(rsc, node);
+            break;
         default:
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
