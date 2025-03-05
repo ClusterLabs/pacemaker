@@ -802,16 +802,18 @@ gboolean
 option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
           GError **error)
 {
-    char *name = NULL;
-    char *value = NULL;
+    gchar *name = NULL;
+    gchar *value = NULL;
 
-    if (pcmk__scan_nvpair(optarg, &name, &value) != 2) {
+    if (pcmk__scan_nvpair(optarg, &name, &value) != pcmk_rc_ok) {
         return FALSE;
     }
     if (options.cmdline_params == NULL) {
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
-    g_hash_table_replace(options.cmdline_params, name, value);
+    pcmk__insert_dup(options.cmdline_params, name, value);
+    g_free(name);
+    g_free(value);
     return TRUE;
 }
 

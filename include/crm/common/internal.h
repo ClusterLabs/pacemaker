@@ -66,7 +66,7 @@ guint pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer);
 
 /* internal name/value utilities (from nvpair.c) */
 
-int pcmk__scan_nvpair(const char *input, char **name, char **value);
+int pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value);
 char *pcmk__format_nvpair(const char *name, const char *value,
                           const char *units);
 

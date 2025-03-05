@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,6 +21,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <glib.h>                   // gboolean, gchar, etc.
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
@@ -283,8 +285,8 @@ add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GErr
 
 gboolean
 add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    char *name = NULL;
-    char *value = NULL;
+    gchar *name = NULL;
+    gchar *value = NULL;
     int rc = 0;
     gboolean retval = TRUE;
 
@@ -292,8 +294,7 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
 
     rc = pcmk__scan_nvpair(optarg, &name, &value);
 
-    if (rc != 2) {
-        rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
         g_set_error(error, PCMK__RC_ERROR, rc, "Invalid option: -o %s: %s", optarg, pcmk_rc_str(rc));
         retval = FALSE;
     } else {
@@ -306,8 +307,8 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
         pcmk__insert_dup(options.params, name, value);
     }
 
-    free(name);
-    free(value);
+    g_free(name);
+    g_free(value);
     return retval;
 }
 

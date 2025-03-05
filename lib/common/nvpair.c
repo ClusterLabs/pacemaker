@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <string.h>
 #include <ctype.h>
-#include <glib.h>
+#include <glib.h>           // gchar, gint, etc.
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
@@ -110,60 +110,49 @@ pcmk_free_nvpairs(GSList *nvpairs)
 
 /*!
  * \internal
- * \brief Extract the name and value from an input string formatted as "name=value".
- * If unable to extract them, they are returned as NULL.
+ * \brief Extract the name and value from a string formatted as "name=value"
  *
- * \param[in]  input The input string, likely from the command line
- * \param[out] name  Everything before the first '=' in the input string
- * \param[out] value Everything after the first '=' in the input string
+ * \param[in]  input  Input string, likely from the command line
+ * \param[out] name   Everything before the first \c '=' in the input string
+ * \param[out] value  Everything after the first \c '=' in the input string,
+ *                    minus trailing newlines
  *
- * \return 2 if both name and value could be extracted, 1 if only one could, and
- *         and error code otherwise
+ * \return Standard Pacemaker return code
+ *
+ * \note On success, the caller is responsible for freeing \p *name and
+ *       \p *value using \c g_free(). On failure, nothing is allocated.
  */
 int
-pcmk__scan_nvpair(const char *input, char **name, char **value)
+pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value)
 {
-#ifdef HAVE_SSCANF_M
-    *name = NULL;
-    *value = NULL;
-    if (sscanf(input, "%m[^=]=%m[^\n]", name, value) <= 0) {
-        return -pcmk_err_bad_nvpair;
-    }
-#else
-    char *sep = NULL;
-    *name = NULL;
-    *value = NULL;
+    gchar **nvpair = NULL;
+    int rc = pcmk_rc_ok;
 
-    sep = strstr(optarg, "=");
-    if (sep == NULL) {
-        return -pcmk_err_bad_nvpair;
-    }
+    pcmk__assert(input != NULL);
+    pcmk__assert((name != NULL) && (*name == NULL));
+    pcmk__assert((value != NULL) && (*value == NULL));
 
-    *name = strndup(input, sep-input);
+    nvpair = g_strsplit(input, "=", 2);
 
-    if (*name == NULL) {
-        return -ENOMEM;
-    }
-
-    /* If the last char in optarg is =, the user gave no
-     * value for the option.  Leave it as NULL.
+    /* Check whether nvpair is well-formed (short-circuits if input was split
+     * into fewer than 2 tokens)
      */
-    if (*(sep+1) != '\0') {
-        *value = strdup(sep+1);
-
-        if (*value == NULL) {
-            return -ENOMEM;
-        }
+    if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+        rc = pcmk_rc_bad_nvpair;
+        goto done;
     }
-#endif
 
-    if (*name != NULL && *value != NULL) {
-        return 2;
-    } else if (*name != NULL || *value != NULL) {
-        return 1;
-    } else {
-        return -pcmk_err_bad_nvpair;
-    }
+    *name = nvpair[0];
+    *value = nvpair[1];
+    pcmk__trim((char *) *value);
+
+    // name and value took ownership
+    nvpair[0] = NULL;
+    nvpair[1] = NULL;
+
+done:
+    g_strfreev(nvpair);
+    return rc;
 }
 
 /*!
