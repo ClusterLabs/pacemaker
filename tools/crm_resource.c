@@ -311,7 +311,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.rsc_cmd = cmd_digests;
 
         if (options.override_params == NULL) {
-            options.override_params = pcmk__strkey_table(free, free);
+            options.override_params = pcmk__strkey_table(g_free, g_free);
         }
 
     } else if (pcmk__str_any_of(option_name,
@@ -324,7 +324,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.operation = g_strdup(option_name + 2);  // skip "--"
 
         if (options.override_params == NULL) {
-            options.override_params = pcmk__strkey_table(free, free);
+            options.override_params = pcmk__strkey_table(g_free, g_free);
         }
 
         if (optarg != NULL) {
@@ -1850,9 +1850,7 @@ main(int argc, char **argv)
                 goto done;
             }
 
-            pcmk__insert_dup(options.override_params, name, value);
-            g_free(name);
-            g_free(value);
+            g_hash_table_insert(options.override_params, name, value);
         }
     }
 
