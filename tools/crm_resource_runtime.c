@@ -2238,6 +2238,7 @@ apply_overrides(GHashTable *params, GHashTable *overrides)
     }
 }
 
+// Does not modify override_hash or its contents
 crm_exit_t
 cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_class, const char *rsc_prov,
@@ -2330,6 +2331,7 @@ get_action_timeout(pcmk_resource_t *rsc, const char *action)
     return (guint) QB_MIN(timeout_ms, UINT_MAX);
 }
 
+// Does not modify override_hash or its contents
 crm_exit_t
 cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
