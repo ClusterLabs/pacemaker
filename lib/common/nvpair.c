@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -110,39 +110,44 @@ pcmk_free_nvpairs(GSList *nvpairs)
 
 /*!
  * \internal
- * \brief Extract the name and value from an input string formatted as "name=value".
- * If unable to extract them, they are returned as NULL.
+ * \brief Extract the name and value from a string formatted as "name=value".
  *
- * \param[in]  input The input string, likely from the command line
- * \param[out] name  Everything before the first '=' in the input string
- * \param[out] value Everything after the first '=' in the input string
+ * If unable to extract both of them, they are both set to \c NULL.
  *
- * \return 2 if both name and value could be extracted, 1 if only one could, and
- *         and error code otherwise
+ * \param[in]  input  Input string, likely from the command line
+ * \param[out] name   Everything before the first \c '=' in the input string
+ * \param[out] value  Everything after the first \c '=' in the input string,
+ *                    minus trailing newlines
+ *
+ * \return Standard Pacemaker return code
  */
 int
 pcmk__scan_nvpair(const char *input, char **name, char **value)
 {
+    int rc = pcmk_rc_bad_nvpair;
+#ifndef HAVE_SSCANF_M
+    char *sep = NULL;
+#endif
+
+    pcmk__assert(input != NULL);
+    pcmk__assert((name != NULL) && (*name == NULL));
+    pcmk__assert((value != NULL) && (*value == NULL));
+
 #ifdef HAVE_SSCANF_M
-    *name = NULL;
-    *value = NULL;
     if (sscanf(input, "%m[^=]=%m[^\n]", name, value) <= 0) {
-        return -pcmk_err_bad_nvpair;
+        goto fail;
     }
 #else
-    char *sep = NULL;
-    *name = NULL;
-    *value = NULL;
-
     sep = strstr(optarg, "=");
     if (sep == NULL) {
-        return -pcmk_err_bad_nvpair;
+        goto fail;
     }
 
     *name = strndup(input, sep-input);
 
     if (*name == NULL) {
-        return -ENOMEM;
+        rc = ENOMEM;
+        goto fail;
     }
 
     /* If the last char in optarg is =, the user gave no
@@ -152,18 +157,23 @@ pcmk__scan_nvpair(const char *input, char **name, char **value)
         *value = strdup(sep+1);
 
         if (*value == NULL) {
-            return -ENOMEM;
+            rc = ENOMEM;
+            goto fail;
         }
     }
 #endif
 
-    if (*name != NULL && *value != NULL) {
-        return 2;
-    } else if (*name != NULL || *value != NULL) {
-        return 1;
-    } else {
-        return -pcmk_err_bad_nvpair;
+    if ((*name != NULL) && (*value != NULL)) {
+        return pcmk_rc_ok;
     }
+
+fail:
+    free(*name);
+    *name = NULL;
+
+    free(*value);
+    *value = NULL;
+    return rc;
 }
 
 /*!
