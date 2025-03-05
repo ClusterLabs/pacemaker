@@ -772,6 +772,12 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     if (pcmk__scan_nvpair(optarg, &name, &value) != pcmk_rc_ok) {
         return FALSE;
     }
+
+    /* services__create_resource_action() ultimately takes ownership of
+     * options.cmdline_params. It's not worth trying to ensure that the entire
+     * call path uses (gchar *) strings and g_free(). So create the table for
+     * (char *) strings, and duplicate the (gchar *) strings when inserting.
+     */
     if (options.cmdline_params == NULL) {
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
@@ -1902,7 +1908,6 @@ main(int argc, char **argv)
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     _("--option must be used with --validate and without -r"));
         g_hash_table_destroy(options.cmdline_params);
-        options.cmdline_params = NULL;
         goto done;
     }
 

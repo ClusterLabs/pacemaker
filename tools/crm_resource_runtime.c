@@ -2238,7 +2238,9 @@ apply_overrides(GHashTable *params, GHashTable *overrides)
     }
 }
 
-// Does not modify override_hash or its contents
+/* Takes ownership of params.
+ * Does not modify override_hash or its contents.
+ */
 crm_exit_t
 cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_class, const char *rsc_prov,
@@ -2260,6 +2262,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     set_agent_environment(params, timeout_ms, check_level, resource_verbose);
     apply_overrides(params, override_hash);
 
+    // services__create_resource_action() takes ownership of params on success
     op = services__create_resource_action(rsc_name? rsc_name : "test",
                                           rsc_class, rsc_prov, rsc_type, action,
                                           0, QB_MIN(timeout_ms, INT_MAX),
