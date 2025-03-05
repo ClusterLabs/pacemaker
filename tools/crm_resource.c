@@ -111,13 +111,6 @@ struct {
     .rsc_cmd = cmd_list_resources,  // List all resources if no command given
 };
 
-gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
-                           gpointer data, GError **error);
-gboolean option_cb(const gchar *option_name, const gchar *optarg,
-                   gpointer data, GError **error);
-gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-
 static crm_exit_t exit_code = CRM_EX_OK;
 static pcmk__output_t *out = NULL;
 static pcmk__common_args_t *args = NULL;
@@ -259,6 +252,39 @@ validate_opt_list(const gchar *optarg)
         return FALSE;
     }
 
+    return TRUE;
+}
+
+// GOptionArgFunc callback functions
+
+static gboolean
+attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+                 GError **error) {
+    if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
+        options.attr_set_type = PCMK_XE_META_ATTRIBUTES;
+    } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
+        options.attr_set_type = PCMK_XE_UTILIZATION;
+    } else if (pcmk__str_eq(option_name, "--element", pcmk__str_none)) {
+        options.attr_set_type = ATTR_SET_ELEMENT;
+    }
+    return TRUE;
+}
+
+static gboolean
+cmdline_config_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+                  GError **error)
+{
+    options.cmdline_config = true;
+
+    if (pcmk__str_eq(option_name, "--class", pcmk__str_none)) {
+        pcmk__str_update(&options.v_class, optarg);
+
+    } else if (pcmk__str_eq(option_name, "--provider", pcmk__str_none)) {
+        pcmk__str_update(&options.v_provider, optarg);
+
+    } else {    // --agent
+        pcmk__str_update(&options.v_agent, optarg);
+    }
     return TRUE;
 }
 
@@ -413,6 +439,46 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
     return TRUE;
 }
+
+static gboolean
+option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+          GError **error)
+{
+    gchar *name = NULL;
+    gchar *value = NULL;
+
+    if (pcmk__scan_nvpair(optarg, &name, &value) != pcmk_rc_ok) {
+        return FALSE;
+    }
+
+    /* services__create_resource_action() ultimately takes ownership of
+     * options.cmdline_params. It's not worth trying to ensure that the entire
+     * call path uses (gchar *) strings and g_free(). So create the table for
+     * (char *) strings, and duplicate the (gchar *) strings when inserting.
+     */
+    if (options.cmdline_params == NULL) {
+        options.cmdline_params = pcmk__strkey_table(free, free);
+    }
+    pcmk__insert_dup(options.cmdline_params, name, value);
+    g_free(name);
+    g_free(value);
+    return TRUE;
+}
+
+static gboolean
+timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+           GError **error)
+{
+    long long timeout_ms = crm_get_msec(optarg);
+
+    if (timeout_ms < 0) {
+        return FALSE;
+    }
+    options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
+    return TRUE;
+}
+
+// Command line option specification
 
 /* short option letters still available: eEJkKXyYZ */
 
@@ -731,72 +797,6 @@ static GOptionEntry addl_entries[] = {
 
     { NULL }
 };
-
-gboolean
-attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
-        options.attr_set_type = PCMK_XE_META_ATTRIBUTES;
-    } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
-        options.attr_set_type = PCMK_XE_UTILIZATION;
-    } else if (pcmk__str_eq(option_name, "--element", pcmk__str_none)) {
-        options.attr_set_type = ATTR_SET_ELEMENT;
-    }
-    return TRUE;
-}
-
-gboolean
-cmdline_config_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-                  GError **error)
-{
-    options.cmdline_config = true;
-
-    if (pcmk__str_eq(option_name, "--class", pcmk__str_none)) {
-        pcmk__str_update(&options.v_class, optarg);
-
-    } else if (pcmk__str_eq(option_name, "--provider", pcmk__str_none)) {
-        pcmk__str_update(&options.v_provider, optarg);
-
-    } else {    // --agent
-        pcmk__str_update(&options.v_agent, optarg);
-    }
-    return TRUE;
-}
-
-gboolean
-option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-          GError **error)
-{
-    gchar *name = NULL;
-    gchar *value = NULL;
-
-    if (pcmk__scan_nvpair(optarg, &name, &value) != pcmk_rc_ok) {
-        return FALSE;
-    }
-
-    /* services__create_resource_action() ultimately takes ownership of
-     * options.cmdline_params. It's not worth trying to ensure that the entire
-     * call path uses (gchar *) strings and g_free(). So create the table for
-     * (char *) strings, and duplicate the (gchar *) strings when inserting.
-     */
-    if (options.cmdline_params == NULL) {
-        options.cmdline_params = pcmk__strkey_table(free, free);
-    }
-    pcmk__insert_dup(options.cmdline_params, name, value);
-    g_free(name);
-    g_free(value);
-    return TRUE;
-}
-
-gboolean
-timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    long long timeout_ms = crm_get_msec(optarg);
-
-    if (timeout_ms < 0) {
-        return FALSE;
-    }
-    options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
-    return TRUE;
-}
 
 static int
 ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
