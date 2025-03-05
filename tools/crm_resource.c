@@ -1839,21 +1839,21 @@ main(int argc, char **argv)
             goto done;
         }
 
-        for (gchar **s = options.remainder; *s; s++) {
-            char *name = pcmk__assert_alloc(1, strlen(*s));
-            char *value = pcmk__assert_alloc(1, strlen(*s));
-            int rc = sscanf(*s, "%[^=]=%s", name, value);
+        for (gchar **arg = options.remainder; *arg != NULL; arg++) {
+            gchar *name = NULL;
+            gchar *value = NULL;
+            int rc = pcmk__scan_nvpair(*arg, &name, &value);
 
-            if (rc != 2) {
+            if (rc != pcmk_rc_ok) {
                 exit_code = CRM_EX_USAGE;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            _("Error parsing '%s' as a name=value pair"),
-                            argv[optind]);
-                free(value);
-                free(name);
+                            _("Error parsing '%s' as a name=value pair"), *arg);
                 goto done;
             }
-            g_hash_table_replace(options.override_params, name, value);
+
+            pcmk__insert_dup(options.override_params, name, value);
+            g_free(name);
+            g_free(value);
         }
     }
 
