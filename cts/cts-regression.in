@@ -4,6 +4,12 @@
 Usage: cts-regression [-h] [-V] [-v] [COMPONENT ...]
 """
 
+# pylint doesn't like the module name "cts-regression" which is an invalid complaint for this file
+# but probably something we want to continue warning about elsewhere
+# pylint: disable=invalid-name
+# pacemaker imports need to come after we modify sys.path, which pylint will complain about.
+# pylint: disable=wrong-import-position
+
 __copyright__ = 'Copyright 2012-2025 the Pacemaker project contributors'
 __license__ = 'GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY'
 
@@ -19,11 +25,13 @@ import textwrap
 if os.path.exists("@abs_top_srcdir@/python"):
     sys.path.insert(0, "@abs_top_srcdir@/python")
 
+# pylint: disable=comparison-of-constants,comparison-with-itself,condition-evals-to-constant
 if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
     sys.path.insert(0, "@abs_top_builddir@/python")
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
+
 
 class Component():
     """A class for running regression tests on a component.
@@ -50,7 +58,7 @@ class Component():
 
     def __init__(self, name, description, test_home, requires_root=False,
                  supports_valgrind=False):
-        """Constructor for the :class:`Component` class.
+        """Create a new :class:`Component` instance.
 
         :param name: The name of the component.
         :type name: str
@@ -127,6 +135,7 @@ class ComponentsArgAction(argparse.Action):
     """
 
     def __call__(self, parser, namespace, values, option_string=None):
+        """Process `components` arguments."""
         all_components = ['attrd', 'cli', 'exec', 'fencing', 'scheduler']
         default_components = ['cli', 'scheduler']
 

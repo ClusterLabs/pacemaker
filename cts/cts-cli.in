@@ -54,6 +54,9 @@ other_tests = ["agents"]
 # The directory containing this program
 test_home = os.path.dirname(os.path.realpath(__file__))
 
+# Where test data is stored
+cts_cli_data = f"{test_home}/cli"
+
 # The name of the shadow CIB
 SHADOW_NAME = "cts-cli"
 
@@ -93,7 +96,6 @@ def apply_substitutions(s, extra=None):
     substitutions = {
         "cts_cli_data": "%s/cli" % test_home,
         "shadow": SHADOW_NAME,
-        "test_home": test_home,
     }
 
     if extra is not None:
@@ -1487,7 +1489,7 @@ class CrmAttributeRegressionTest(RegressionTest):
             ShadowTestGroup(query_set_tests),
             TestGroup(promotable_tests + ocf_rsc_instance_tests,
                       env={"OCF_RESOURCE_INSTANCE": "promotable-rsc"},
-                      cib_gen=partial(copy_existing_cib, "{cts_cli_data}/crm_mon.xml")),
+                      cib_gen=partial(copy_existing_cib, f"{cts_cli_data}/crm_mon.xml")),
         ]
 
 
@@ -1513,7 +1515,7 @@ class CrmStandbyRegressionTest(RegressionTest):
 
         return [
             ShadowTestGroup(basic_tests,
-			    setup="""cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1"/>'"""),
+                            setup="""cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1"/>'"""),
         ]
 
 
@@ -1813,14 +1815,14 @@ class CrmResourceRegressionTest(RegressionTest):
 
         return options_tests + [
             ShadowTestGroup(basic_tests, setup=basic_tests_setup),
-            TestGroup(constraint_tests, env={"CIB_file": "{cts_cli_data}/constraints.xml"}),
-            TestGroup(colocation_tests, cib_gen=partial(copy_existing_cib, "{cts_cli_data}/constraints.xml")),
-            TestGroup(digest_tests, env={"CIB_file": "{cts_cli_data}/crm_resource_digests.xml"}),
-            TestGroup(basic2_tests, env={"CIB_file": "{cts_cli_data}/crm_mon.xml"}),
+            TestGroup(constraint_tests, env={"CIB_file": f"{cts_cli_data}/constraints.xml"}),
+            TestGroup(colocation_tests, cib_gen=partial(copy_existing_cib, f"{cts_cli_data}/constraints.xml")),
+            TestGroup(digest_tests, env={"CIB_file": f"{cts_cli_data}/crm_resource_digests.xml"}),
+            TestGroup(basic2_tests, env={"CIB_file": f"{cts_cli_data}/crm_mon.xml"}),
             ValidatingTest("Check that CIB_file=\"-\" works - crm_resource",
                            "crm_resource --digests -r rsc1 -N node1 --output-as=xml",
                            env={"CIB_file": "-"},
-                           stdin=pathlib.Path(apply_substitutions("{cts_cli_data}/crm_resource_digests.xml"))),
+                           stdin=pathlib.Path(f"{cts_cli_data}/crm_resource_digests.xml")),
         ]
 
 
@@ -1925,10 +1927,10 @@ class CrmadminRegressionTest(RegressionTest):
 
         return [
             TestGroup(basic_tests,
-                      env={"CIB_file": "{cts_cli_data}/crmadmin-cluster-remote-guest-nodes.xml"}),
+                      env={"CIB_file": f"{cts_cli_data}/crmadmin-cluster-remote-guest-nodes.xml"}),
             Test("Check that CIB_file=\"-\" works", "crmadmin -N",
                  env={"CIB_file": "-"},
-                 stdin=pathlib.Path(apply_substitutions("{cts_cli_data}/crmadmin-cluster-remote-guest-nodes.xml"))),
+                 stdin=pathlib.Path(f"{cts_cli_data}/crmadmin-cluster-remote-guest-nodes.xml")),
         ]
 
 
@@ -1964,7 +1966,7 @@ class CrmShadowRegressionTest(RegressionTest):
             make_test_group("Create copied shadow instance",
                             "crm_shadow --create {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force"),
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
             # Query shadow instance based on active CIB
             make_test_group("Get active shadow instance (copied)",
                             "crm_shadow --which {fmt}",
@@ -2000,31 +2002,31 @@ class CrmShadowRegressionTest(RegressionTest):
             TestGroup([
                 # Commit the modified shadow CIB to a temp active CIB file
                 Test("Commit shadow instance",
-                     "crm_shadow --commit {shadow}",
+                     f"crm_shadow --commit {SHADOW_NAME}",
                      expected_rc=ExitStatus.USAGE),
                 Test("Commit shadow instance (force)",
-                     "crm_shadow --commit {shadow} --force"),
+                     f"crm_shadow --commit {SHADOW_NAME} --force"),
                 Test("Get active shadow instance's diff (after commit)",
                      "crm_shadow --diff",
                      expected_rc=ExitStatus.ERROR),
                 Test("Commit shadow instance (force) (all)",
-                     "crm_shadow --commit {shadow} --force --all"),
+                     f"crm_shadow --commit {SHADOW_NAME} --force --all"),
                 Test("Get active shadow instance's diff (after commit all)",
                      "crm_shadow --diff",
                      expected_rc=ExitStatus.ERROR),
-            ], cib_gen=partial(copy_existing_cib, "{cts_cli_data}/crm_mon.xml")),
+            ], cib_gen=partial(copy_existing_cib, f"{cts_cli_data}/crm_mon.xml")),
             TestGroup([
                 # Repeat sequence with XML output
                 ValidatingTest("Commit shadow instance",
-                               "crm_shadow --commit {shadow} --output-as=xml",
+                               f"crm_shadow --commit {SHADOW_NAME} --output-as=xml",
                                expected_rc=ExitStatus.USAGE),
                 ValidatingTest("Commit shadow instance (force)",
-                               "crm_shadow --commit {shadow} --force --output-as=xml"),
+                               f"crm_shadow --commit {SHADOW_NAME} --force --output-as=xml"),
                 ValidatingTest("Get active shadow instance's diff (after commit)",
                                "crm_shadow --diff --output-as=xml",
                                expected_rc=ExitStatus.ERROR),
                 ValidatingTest("Commit shadow instance (force) (all)",
-                               "crm_shadow --commit {shadow} --force --all --output-as=xml"),
+                               f"crm_shadow --commit {SHADOW_NAME} --force --all --output-as=xml"),
                 ValidatingTest("Get active shadow instance's diff (after commit all)",
                                "crm_shadow --diff --output-as=xml",
                                expected_rc=ExitStatus.ERROR),
@@ -2068,67 +2070,67 @@ class CrmShadowRegressionTest(RegressionTest):
                 make_test_group("Commit shadow instance (nonexistent CIB file)",
                                 "crm_shadow --commit {shadow} {fmt}",
                                 [Test, ValidatingTest],
-                                env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"},
+                                env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
                                 expected_rc=ExitStatus.USAGE),
                 make_test_group("Commit shadow instance (nonexistent CIB file) (force)",
                                 "crm_shadow --commit {shadow} --force {fmt}",
                                 [Test, ValidatingTest],
-                                env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"},
+                                env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
                                 expected_rc=ExitStatus.NOSUCH),
                 make_test_group("Get active shadow instance's diff (nonexistent CIB file)",
                                 "crm_shadow --diff {fmt}",
                                 [Test, ValidatingTest],
-                                env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"},
+                                env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
                                 expected_rc=ExitStatus.NOSUCH),
-            ], cib_gen=partial(copy_existing_cib, "{cts_cli_data}/crm_mon.xml")),
+            ], cib_gen=partial(copy_existing_cib, f"{cts_cli_data}/crm_mon.xml")),
         ]
 
         delete_1_tests = [
             # Delete an active shadow instance
-            Test("Delete shadow instance", "crm_shadow --delete {shadow}",
+            Test("Delete shadow instance", f"crm_shadow --delete {SHADOW_NAME}",
                  expected_rc=ExitStatus.USAGE),
-            Test("Delete shadow instance (force)", "crm_shadow --delete {shadow} --force"),
+            Test("Delete shadow instance (force)", f"crm_shadow --delete {SHADOW_NAME} --force"),
             ShadowTestGroup([
                 ValidatingTest("Delete shadow instance",
-                               "crm_shadow --delete {shadow} --output-as=xml",
+                               f"crm_shadow --delete {SHADOW_NAME} --output-as=xml",
                                expected_rc=ExitStatus.USAGE),
                 ValidatingTest("Delete shadow instance (force)",
-                               "crm_shadow --delete {shadow} --force --output-as=xml"),
+                               f"crm_shadow --delete {SHADOW_NAME} --force --output-as=xml"),
             ])
         ]
 
         delete_2_tests = [
             # Delete an inactive shadow instance with no active instance
             Test("Delete shadow instance (no active instance)",
-                 "crm_shadow --delete {shadow}",
+                 f"crm_shadow --delete {SHADOW_NAME}",
                  expected_rc=ExitStatus.USAGE),
             Test("Delete shadow instance (no active instance) (force)",
-                 "crm_shadow --delete {shadow} --force"),
+                 f"crm_shadow --delete {SHADOW_NAME} --force"),
         ]
 
         delete_3_tests = [
             ValidatingTest("Delete shadow instance (no active instance)",
-                           "crm_shadow --delete {shadow} --output-as=xml",
+                           f"crm_shadow --delete {SHADOW_NAME} --output-as=xml",
                            expected_rc=ExitStatus.USAGE),
             ValidatingTest("Delete shadow instance (no active instance) (force)",
-                           "crm_shadow --delete {shadow} --force --output-as=xml"),
+                           f"crm_shadow --delete {SHADOW_NAME} --force --output-as=xml"),
         ]
 
         delete_4_tests = [
             # Delete an inactive shadow instance with an active instance
             Test("Delete shadow instance (mismatch)",
-                 "crm_shadow --delete {shadow}",
+                 f"crm_shadow --delete {SHADOW_NAME}",
                  expected_rc=ExitStatus.USAGE),
             Test("Delete shadow instance (mismatch) (force)",
-                 "crm_shadow --delete {shadow} --force"),
+                 f"crm_shadow --delete {SHADOW_NAME} --force"),
         ]
 
         delete_5_tests = [
             ValidatingTest("Delete shadow instance (mismatch)",
-                           "crm_shadow --delete {shadow} --output-as=xml",
+                           f"crm_shadow --delete {SHADOW_NAME} --output-as=xml",
                            expected_rc=ExitStatus.USAGE),
             ValidatingTest("Delete shadow instance (mismatch) (force)",
-                           "crm_shadow --delete {shadow} --force --output-as=xml"),
+                           f"crm_shadow --delete {SHADOW_NAME} --force --output-as=xml"),
             # Delete an active shadow instance whose shadow file is missing
             Test("Delete shadow instance (nonexistent shadow file)",
                  "crm_shadow --delete nonexistent_shadow",
@@ -2145,18 +2147,18 @@ class CrmShadowRegressionTest(RegressionTest):
         delete_6_tests = [
             # Delete an active shadow instance when the CIB file is missing
             Test("Delete shadow instance (nonexistent CIB file)",
-                 "crm_shadow --delete {shadow}",
+                 f"crm_shadow --delete {SHADOW_NAME}",
                  expected_rc=ExitStatus.USAGE),
             Test("Delete shadow instance (nonexistent CIB file) (force)",
-                 "crm_shadow --delete {shadow} --force"),
+                 f"crm_shadow --delete {SHADOW_NAME} --force"),
         ]
 
         delete_7_tests = [
             ValidatingTest("Delete shadow instance (nonexistent CIB file)",
-                           "crm_shadow --delete {shadow} --output-as=xml",
+                           f"crm_shadow --delete {SHADOW_NAME} --output-as=xml",
                            expected_rc=ExitStatus.USAGE),
             ValidatingTest("Delete shadow instance (nonexistent CIB file) (force)",
-                           "crm_shadow --delete {shadow} --force --output-as=xml"),
+                           f"crm_shadow --delete {SHADOW_NAME} --force --output-as=xml"),
         ]
 
         create_1_tests = [
@@ -2164,13 +2166,13 @@ class CrmShadowRegressionTest(RegressionTest):
             make_test_group("Create copied shadow instance (no active instance)",
                             "crm_shadow --create {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force",
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": None}),
             # Create new shadow instance based on active CIB with other instance active
             make_test_group("Create copied shadow instance (mismatch)",
                             "crm_shadow --create {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force",
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": "nonexistent_shadow"}),
             # Create new shadow instance based on CIB (shadow file already exists)
             make_test_group("Create copied shadow instance (file already exists)",
@@ -2185,8 +2187,8 @@ class CrmShadowRegressionTest(RegressionTest):
                             "crm_shadow --create {shadow} --batch --force {fmt}",
                             [Test, ValidatingTest],
                             expected_rc=ExitStatus.NOSUCH,
-                            setup="crm_shadow --delete {shadow} --force",
-                            env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"}),
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                            env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
         ]
 
         create_2_tests = [
@@ -2194,25 +2196,25 @@ class CrmShadowRegressionTest(RegressionTest):
             make_test_group("Create empty shadow instance",
                             "crm_shadow --create-empty {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force"),
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
             # Create empty shadow instance with no active instance
             make_test_group("Create empty shadow instance (no active instance)",
                             "crm_shadow --create-empty {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force",
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": None}),
             # Create empty shadow instance with other instance active
             make_test_group("Create empty shadow instance (mismatch)",
                             "crm_shadow --create-empty {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force",
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": "nonexistent_shadow"}),
             # Create empty shadow instance when the CIB file is missing
             make_test_group("Create empty shadow instance (nonexistent CIB file)",
                             "crm_shadow --create-empty {shadow} --batch {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force",
-                            env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"}),
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force",
+                            env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
             # Create empty shadow instance (shadow file already exists)
             make_test_group("Create empty shadow instance (file already exists)",
                             "crm_shadow --create-empty {shadow} --batch {fmt}",
@@ -2236,10 +2238,10 @@ class CrmShadowRegressionTest(RegressionTest):
 
         reset_1_tests = [
             Test("Resetting active shadow instance to active CIB requires force",
-                 "crm_shadow --reset {shadow} --batch",
+                 f"crm_shadow --reset {SHADOW_NAME} --batch",
                  expected_rc=ExitStatus.USAGE),
             Test("Reset active shadow instance to active CIB",
-                 "crm_shadow --reset {shadow} --batch --force"),
+                 f"crm_shadow --reset {SHADOW_NAME} --batch --force"),
             Test("Active shadow instance no different from active CIB after reset",
                  "crm_shadow --diff"),
             Test("Active shadow instance differs from active CIB after change",
@@ -2248,7 +2250,7 @@ class CrmShadowRegressionTest(RegressionTest):
                  expected_rc=ExitStatus.ERROR),
 
             ValidatingTest("Reset active shadow instance to active CIB",
-                           "crm_shadow --reset {shadow} --batch --force --output-as=xml"),
+                           f"crm_shadow --reset {SHADOW_NAME} --batch --force --output-as=xml"),
             ValidatingTest("Active shadow instance no different from active CIB after reset",
                            "crm_shadow --diff --output-as=xml"),
             ValidatingTest("Active shadow instance differs from active CIB after change",
@@ -2259,7 +2261,7 @@ class CrmShadowRegressionTest(RegressionTest):
             make_test_group("Reset shadow instance to active CIB with nonexistent shadow file",
                             "crm_shadow --reset {shadow} --batch --force {fmt}",
                             [Test, ValidatingTest],
-                            setup="crm_shadow --delete {shadow} --force"),
+                            setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
             Test("Active shadow instance no different from active CIB after force-reset",
                  "crm_shadow --diff"),
         ]
@@ -2297,47 +2299,47 @@ class CrmShadowRegressionTest(RegressionTest):
                                 "crm_shadow --switch {shadow} --batch --force {fmt}",
                                 [Test, ValidatingTest],
                                 expected_rc=ExitStatus.NOSUCH),
-            ], setup="crm_shadow --delete {shadow} --force"),
+            ], setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
         ]
 
         return no_instance_tests + [
             ShadowTestGroup(new_instance_tests + more_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml"},
+                            env={"CIB_file": f"{cts_cli_data}/crm_mon.xml"},
                             create=False),
             ShadowTestGroup(delete_1_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml"}),
+                            env={"CIB_file": f"{cts_cli_data}/crm_mon.xml"}),
             ShadowTestGroup(delete_2_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml",
+                            env={"CIB_file": f"{cts_cli_data}/crm_mon.xml",
                                  "CIB_shadow": None}),
             ShadowTestGroup(delete_3_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml",
+                            env={"CIB_file": f"{cts_cli_data}/crm_mon.xml",
                                  "CIB_shadow": None}),
             ShadowTestGroup(delete_4_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml",
+                            env={"CIB_file": f"{cts_cli_data}/crm_mon.xml",
                                  "CIB_shadow": "nonexistent_shadow"}),
             ShadowTestGroup(delete_5_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml",
+                            env={"CIB_file": f"{cts_cli_data}/crm_mon.xml",
                                  "CIB_shadow": "nonexistent_shadow"}),
             ShadowTestGroup(delete_6_tests,
-                            env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"}),
+                            env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
             ShadowTestGroup(delete_7_tests,
-                            env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"}),
+                            env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
             ShadowTestGroup(create_1_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml"},
+                            env={"CIB_file": f"{cts_cli_data}/crm_mon.xml"},
                             create=False),
             ShadowTestGroup(create_2_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml"},
+                            env={"CIB_file": f"{cts_cli_data}/crm_mon.xml"},
                             create=False),
             ShadowTestGroup(reset_1_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml"}),
+                            env={"CIB_file": f"{cts_cli_data}/crm_mon.xml"}),
             ShadowTestGroup(reset_2_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml",
+                            env={"CIB_file": f"{cts_cli_data}/crm_mon.xml",
                                  "CIB_shadow": None}),
             ShadowTestGroup(reset_3_tests,
-                            env={"CIB_file": "{cts_cli_data}/crm_mon.xml",
+                            env={"CIB_file": f"{cts_cli_data}/crm_mon.xml",
                                  "CIB_shadow": "nonexistent_shadow"}),
             ShadowTestGroup(reset_4_tests,
-                            env={"CIB_file": "{cts_cli_data}/nonexistent_cib.xml"}),
+                            env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
             ShadowTestGroup(switch_tests,
                             env={"CIB_shadow": "nonexistent_shadow"},
                             create_empty=True),
@@ -2369,7 +2371,7 @@ class CrmVerifyRegressionTest(RegressionTest):
                             [Test, ValidatingTest],
                             expected_rc=ExitStatus.CONFIG),
             ValidatingTest("Verify another file-specified invalid configuration",
-                           "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_no_stonith.xml --output-as=xml",
+                           f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_no_stonith.xml --output-as=xml",
                            expected_rc=ExitStatus.CONFIG),
         ]
 
@@ -2378,15 +2380,15 @@ class CrmVerifyRegressionTest(RegressionTest):
 
         valid_tests = [
             ValidatingTest("Verify a file-specified valid configuration",
-                           "crm_verify --xml-file {cts_cli_data}/crm_mon.xml --output-as=xml"),
+                           f"crm_verify --xml-file {cts_cli_data}/crm_mon.xml --output-as=xml"),
             ValidatingTest("Verify a piped-in valid configuration",
                            "crm_verify -p --output-as=xml",
-                           stdin=pathlib.Path(apply_substitutions("{cts_cli_data}/crm_mon.xml"))),
+                           stdin=pathlib.Path(f"{cts_cli_data}/crm_mon.xml")),
             ValidatingTest("Verbosely verify a file-specified valid configuration",
-                           "crm_verify --xml-file {cts_cli_data}/crm_mon.xml --output-as=xml --verbose"),
+                           f"crm_verify --xml-file {cts_cli_data}/crm_mon.xml --output-as=xml --verbose"),
             ValidatingTest("Verbosely verify a piped-in valid configuration",
                            "crm_verify -p --output-as=xml --verbose",
-                           stdin=pathlib.Path(apply_substitutions("{cts_cli_data}/crm_mon.xml"))),
+                           stdin=pathlib.Path(f"{cts_cli_data}/crm_mon.xml")),
             ValidatingTest("Verify a string-supplied valid configuration",
                            "crm_verify -X '%s' --output-as=xml" % cib_contents),
             ValidatingTest("Verbosely verify a string-supplied valid configuration",
@@ -2657,20 +2659,20 @@ class CrmMonRegressionTest(RegressionTest):
 
         return [
             TestGroup(basic_tests,
-                      env={"CIB_file": "{cts_cli_data}/crm_mon.xml"}),
+                      env={"CIB_file": f"{cts_cli_data}/crm_mon.xml"}),
             Test("Check that CIB_file=\"-\" works", "crm_mon -1",
                  env={"CIB_file": "-"},
-                 stdin=pathlib.Path(apply_substitutions("{cts_cli_data}/crm_mon.xml"))),
+                 stdin=pathlib.Path(apply_substitutions(f"{cts_cli_data}/crm_mon.xml"))),
             TestGroup(partial_tests,
-                      env={"CIB_file": "{cts_cli_data}/crm_mon-partial.xml"}),
+                      env={"CIB_file": f"{cts_cli_data}/crm_mon-partial.xml"}),
             TestGroup(unmanaged_tests,
-                      env={"CIB_file": "{cts_cli_data}/crm_mon-unmanaged.xml"}),
+                      env={"CIB_file": f"{cts_cli_data}/crm_mon-unmanaged.xml"}),
             TestGroup(maint1_tests,
-                      cib_gen=partial(copy_existing_cib, "{cts_cli_data}/crm_mon.xml")),
+                      cib_gen=partial(copy_existing_cib, f"{cts_cli_data}/crm_mon.xml")),
             TestGroup(maint2_tests,
-                      env={"CIB_file": "{cts_cli_data}/crm_mon-rsc-maint.xml"}),
+                      env={"CIB_file": f"{cts_cli_data}/crm_mon-rsc-maint.xml"}),
             TestGroup(t180_tests,
-                      env={"CIB_file": "{cts_cli_data}/crm_mon-T180.xml"}),
+                      env={"CIB_file": f"{cts_cli_data}/crm_mon-T180.xml"}),
         ]
 
 
@@ -3202,7 +3204,7 @@ class FeatureSetRegressionTest(RegressionTest):
         basic_tests = [
             # Import the test CIB
             Test("Import the test CIB",
-                 "cibadmin --replace --xml-file {cts_cli_data}/crm_mon-feature_set.xml",
+                 f"cibadmin --replace --xml-file {cts_cli_data}/crm_mon-feature_set.xml",
                  update_cib=True),
             Test("Complete text output, no mixed status",
                  "crm_mon -1 --show-detail"),
