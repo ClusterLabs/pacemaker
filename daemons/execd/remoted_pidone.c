@@ -61,24 +61,26 @@ static struct {
 
 /*!
  * \internal
- * \brief Check a line of text for a valid environment variable name
+ * \brief Check whether a string is a valid environment variable name
  *
- * \param[in] line  Text to check
+ * \param[in] name  String to check
  *
- * \return Last character of valid name if found, or \c NULL otherwise
+ * \return \c true if \p name is a valid name, or \c false otherwise
  * \note It's reasonable to impose limitations on environment variable names
  *       beyond what C or setenv() does: We only allow names that contain only
  *       [a-zA-Z0-9_] characters and do not start with a digit.
  */
-static char *
-find_env_var_name(char *line)
+static bool
+valid_env_var_name(const gchar *name)
 {
-    if (!isalpha(*line) && (*line != '_')) {
+    if (!isalpha(*name) && (*name != '_')) {
         // Invalid first character
-        return NULL;
+        return false;
     }
-    for (line++; isalnum(*line) || (*line == '_'); line++);
-    return line;
+
+    // The rest of the characters must be alphanumeric or underscores
+    for (name++; isalnum(*name) || (*name == '_'); name++);
+    return *name == '\0';
 }
 
 #define CONTAINER_ENV_FILE "/etc/pacemaker/pcmk-init.env"
@@ -98,42 +100,38 @@ load_env_vars(void)
     }
 
     while (getline(&line, &buf_size, fp) != -1) {
-        char *name = NULL;
-        char *end = NULL;
-        char *value = NULL;
-        char *comment = NULL;
+        gchar *name = NULL;
+        gchar *value = NULL;
+        gchar *end = NULL;
+        gchar *comment = NULL;
 
         // Strip leading and trailing whitespace
         g_strstrip(line);
 
-        // Look for valid name immediately followed by equals sign
-        end = find_env_var_name(line);
-        if ((end == NULL) || (*++end != '=')) {
+        if ((pcmk__scan_nvpair(line, &name, &value) != pcmk_rc_ok)
+            || !valid_env_var_name(name)) {
             goto cleanup_loop;
         }
-        name = line;
 
-        // Null-terminate name, and advance beyond equals sign
-        *end++ = '\0';
-
-        value = end;
-
-        // Check whether value is quoted
         if ((*value == '\'') || (*value == '"')) {
-            const char *quote = value++;
+            const char quote = *value;
+
+            // Strip the leading quote
+            *value = ' ';
+            g_strchug(value);
 
             /* Value is remaining characters up to next non-backslashed matching
              * quote character.
              */
-            end = value;
-            while (((*end != *quote) || (*(end - 1) == '\\'))
-                   && (*end != '\0')) {
-                end++;
-            }
-            if (*end != *quote) {
+            for (end = value;
+                 (*end != '\0') && ((*end != quote) || (*(end - 1) == '\\'));
+                 end++);
+
+            if (*end != quote) {
                 // Matching closing quote wasn't found
                 goto cleanup_loop;
             }
+
             // Discard closing quote and advance to check for trailing garbage
             *end++ = '\0';
 
@@ -141,10 +139,9 @@ load_env_vars(void)
             /* Value is remaining characters up to next non-backslashed
              * whitespace.
              */
-            while ((!isspace(*end) || (*(end - 1) == '\\'))
-                   && (*end != '\0')) {
-                end++;
-            }
+            for (end = value;
+                 (*end != '\0') && (!isspace(*end) || (*(end - 1) == '\\'));
+                 end++);
         }
 
         /* We have a valid name and value, and end is now the character after
@@ -172,6 +169,8 @@ load_env_vars(void)
         setenv(name, value, 0);
 
 cleanup_loop:
+        g_free(name);
+        g_free(value);
         errno = 0;
     }
 
