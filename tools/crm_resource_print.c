@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -118,18 +118,20 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
+cli_resource_print(const pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
                    bool expanded)
 {
-    pcmk__output_t *out = scheduler->priv;
-    uint32_t show_opts = pcmk_show_pending;
+    pcmk__output_t *out = NULL;
     GList *all = NULL;
 
+    pcmk__assert((rsc != NULL) && (scheduler != NULL));
+
+    out = scheduler->priv;
     all = g_list_prepend(all, (gpointer) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
-    out->message(out, pcmk__map_element_name(rsc->xml), show_opts, rsc, all,
-                 all);
+    out->message(out, pcmk__map_element_name(rsc->xml), pcmk_show_pending,
+                 rsc, all, all);
     out->message(out, "resource-config", rsc, !expanded);
     out->end_list(out);
 
