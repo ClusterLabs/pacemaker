@@ -93,20 +93,23 @@ find_env_var_name(char *line, char **first, char **last)
     return FALSE;
 }
 
+#define CONTAINER_ENV_FILE "/etc/pacemaker/pcmk-init.env"
+
 static void
-load_env_vars(const char *filename)
+load_env_vars(void)
 {
     /* We haven't forked or initialized logging yet, so don't leave any file
      * descriptors open, and don't log -- silently ignore errors.
      */
-    FILE *fp = fopen(filename, "r");
-    char line[LINE_MAX] = { 0, };
+    FILE *fp = fopen(CONTAINER_ENV_FILE, "r");
+    char *line = NULL;
+    size_t buf_size = 0;
 
     if (fp == NULL) {
         return;
     }
 
-    while (fgets(line, LINE_MAX, fp) != NULL) {
+    while (getline(&line, &buf_size, fp) != -1) {
         char *name = NULL;
         char *end = NULL;
         char *value = NULL;
@@ -114,11 +117,7 @@ load_env_vars(const char *filename)
 
         // Look for valid name immediately followed by equals sign
         if (!find_env_var_name(line, &name, &end) || (*++end != '=')) {
-            if (strchr(line, '\n') == NULL) {
-                // Eat remainder of line beyond LINE_MAX
-                fscanf(fp, "%*[^\n]\n");
-            }
-            continue;
+            goto cleanup_loop;
         }
 
         // Null-terminate name, and advance beyond equals sign
@@ -154,11 +153,6 @@ load_env_vars(const char *filename)
                    && (*end != '\0')) {
                 end++;
             }
-
-            if (end == (line + LINE_MAX - 1)) {
-                // Line was too long
-                value = NULL;
-            }
             // Do NOT null-terminate value (yet)
         }
 
@@ -187,14 +181,20 @@ load_env_vars(const char *filename)
             }
         }
 
-        if ((value == NULL) && (strchr(line, '\n') == NULL)) {
-            // Eat remainder of line beyond LINE_MAX
-            if (fscanf(fp, "%*[^\n]\n") == EOF) {
-                value = NULL; // Don't care, make compiler happy
-            }
-        }
+cleanup_loop:
+        errno = 0;
+    }
+
+    // getline() returns -1 on EOF (expected) or error
+    if (errno != 0) {
+        int rc = errno;
+
+        crm_err("Error while reading environment variables from "
+                CONTAINER_ENV_FILE ": %s",
+                pcmk_rc_str(rc));
     }
     fclose(fp);
+    free(line);
 }
 
 void
@@ -226,7 +226,7 @@ remoted_spawn_pidone(int argc, char **argv)
      * To allow for that, look for a special file containing a shell-like syntax
      * of name/value pairs, and export those into the environment.
      */
-    load_env_vars("/etc/pacemaker/pcmk-init.env");
+    load_env_vars();
 
     if (strcmp(pid1, "vars") == 0) {
         return;
