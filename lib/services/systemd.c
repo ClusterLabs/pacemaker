@@ -923,6 +923,8 @@ done:
     }
 
     free(unit_name);
+
+    // coverity[check_after_deref] False positive
     if (filename != NULL) {
         g_string_free(filename, TRUE);
     }
@@ -958,6 +960,8 @@ systemd_remove_override(const char *agent, int timeout)
 
 done:
     free(unit_name);
+
+    // coverity[check_after_deref] False positive
     if (filename != NULL) {
         g_string_free(filename, TRUE);
     }
