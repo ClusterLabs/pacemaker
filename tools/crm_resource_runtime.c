@@ -710,7 +710,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
                 const char *host_uname, const char *rsc_id,
                 pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv->out;
+    pcmk__output_t *out = NULL;
     const char *router_node = host_uname;
     const char *rsc_api_id = NULL;
     const char *rsc_long_id = NULL;
@@ -718,7 +718,12 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     const char *rsc_provider = NULL;
     const char *rsc_type = NULL;
     bool cib_only = false;
-    pcmk_resource_t *rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
+    pcmk_resource_t *rsc = NULL;
+
+    pcmk__assert(scheduler != NULL);
+
+    rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
+    out = scheduler->priv->out;
 
     if (rsc == NULL) {
         out->err(out, "Resource %s not found", rsc_id);
@@ -1054,10 +1059,14 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                 const char *operation, const char *interval_spec,
                 pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv->out;
+    pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
     const char *display_name = node_name? node_name : "all nodes";
+
+    pcmk__assert(scheduler != NULL);
+
+    out = scheduler->priv->out;
 
     if (controld_api == NULL) {
         out->info(out, "Dry run: skipping clean-up of %s due to CIB_file",
@@ -2390,13 +2399,17 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                   pcmk_scheduler_t *scheduler, gboolean promoted_role_only,
                   gboolean force)
 {
-    pcmk__output_t *out = scheduler->priv->out;
+    pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
     pcmk_node_t *current = NULL;
-    pcmk_node_t *dest = pcmk_find_node(scheduler, host_name);
+    pcmk_node_t *dest = NULL;
     bool cur_is_dest = false;
 
+    pcmk__assert(scheduler != NULL);
+
+    out = scheduler->priv->out;
+    dest = pcmk_find_node(scheduler, host_name);
     if (dest == NULL) {
         return pcmk_rc_node_unknown;
     }
