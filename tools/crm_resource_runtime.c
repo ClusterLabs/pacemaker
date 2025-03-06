@@ -2390,13 +2390,17 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                   pcmk_scheduler_t *scheduler, gboolean promoted_role_only,
                   gboolean force)
 {
-    pcmk__output_t *out = scheduler->priv->out;
+    pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
     pcmk_node_t *current = NULL;
-    pcmk_node_t *dest = pcmk_find_node(scheduler, host_name);
+    pcmk_node_t *dest = NULL;
     bool cur_is_dest = false;
 
+    pcmk__assert(scheduler != NULL);
+
+    out = scheduler->priv->out;
+    dest = pcmk_find_node(scheduler, host_name);
     if (dest == NULL) {
         return pcmk_rc_node_unknown;
     }
