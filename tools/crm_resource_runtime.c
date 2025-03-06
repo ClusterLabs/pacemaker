@@ -639,7 +639,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
                 const char *host_uname, const char *rsc_id,
                 pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv;
+    pcmk__output_t *out = NULL;
     const char *router_node = host_uname;
     const char *rsc_api_id = NULL;
     const char *rsc_long_id = NULL;
@@ -647,7 +647,12 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     const char *rsc_provider = NULL;
     const char *rsc_type = NULL;
     bool cib_only = false;
-    pcmk_resource_t *rsc = pe_find_resource(scheduler->resources, rsc_id);
+    pcmk_resource_t *rsc = NULL;
+
+    pcmk__assert(scheduler != NULL);
+
+    rsc = pe_find_resource(scheduler->resources, rsc_id);
+    out = scheduler->priv;
 
     if (rsc == NULL) {
         out->err(out, "Resource %s not found", rsc_id);
