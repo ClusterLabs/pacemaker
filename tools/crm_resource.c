@@ -1732,6 +1732,7 @@ main(int argc, char **argv)
         }
 
         case cmd_list_instances:
+            // coverity[var_deref_op] False positive
             rc = out->message(out, "resource-names-list",
                               scheduler->priv->resources);
 
@@ -1813,6 +1814,7 @@ main(int argc, char **argv)
 
         case cmd_cts:
             rc = pcmk_rc_ok;
+            // coverity[var_deref_op] False positive
             g_list_foreach(scheduler->priv->resources,
                            (GFunc) cli_resource_print_cts, out);
             cli_resource_print_cts_constraints(scheduler);
@@ -1905,6 +1907,7 @@ main(int argc, char **argv)
         case cmd_get_param: {
             unsigned int count = 0;
             GHashTable *params = NULL;
+            // coverity[var_deref_op] False positive
             pcmk_node_t *current = rsc->priv->fns->active_node(rsc, &count,
                                                                NULL);
             bool free_params = true;
