@@ -1054,10 +1054,14 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                 const char *operation, const char *interval_spec,
                 pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = scheduler->priv->out;
+    pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
     const char *display_name = node_name? node_name : "all nodes";
+
+    pcmk__assert(scheduler != NULL);
+
+    out = scheduler->priv->out;
 
     if (controld_api == NULL) {
         out->info(out, "Dry run: skipping clean-up of %s due to CIB_file",
