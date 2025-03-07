@@ -56,39 +56,43 @@ build_node_info_list(const pcmk_resource_t *rsc)
 GList *
 cli_resource_search(const pcmk_resource_t *rsc, const char *requested_name)
 {
-    GList *retval = NULL;
-    const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
+    GList *node_info_list = NULL;
+    const pcmk_resource_t *parent = NULL;
+
+    pcmk__assert(rsc != NULL);
 
     if (pcmk__is_clone(rsc)) {
-        retval = build_node_info_list(rsc);
-
-    /* The anonymous clone children's common ID is supplied */
-    } else if (pcmk__is_clone(parent)
-               && !pcmk_is_set(rsc->flags, pcmk__rsc_unique)
-               && (rsc->priv->history_id != NULL)
-               && pcmk__str_eq(requested_name, rsc->priv->history_id,
-                               pcmk__str_none)
-               && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_none)) {
-
-        retval = build_node_info_list(parent);
-
-    } else {
-        for (GList *iter = rsc->priv->active_nodes;
-             iter != NULL; iter = iter->next) {
-
-            pcmk_node_t *node = (pcmk_node_t *) iter->data;
-            node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
-
-            ni->node_name = node->priv->name;
-            if (rsc->priv->fns->state(rsc, true) == pcmk_role_promoted) {
-                ni->promoted = true;
-            }
-
-            retval = g_list_prepend(retval, ni);
-        }
+        return build_node_info_list(rsc);
     }
 
-    return retval;
+    parent = pe__const_top_resource(rsc, false);
+
+    // The anonymous clone children's common ID is supplied
+    if (pcmk__is_clone(parent)
+        && !pcmk_is_set(rsc->flags, pcmk__rsc_unique)
+        && (rsc->priv->history_id != NULL)
+        && pcmk__str_eq(requested_name, rsc->priv->history_id,
+                        pcmk__str_none)
+        && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_none)) {
+
+        return build_node_info_list(parent);
+    }
+
+    for (const GList *iter = rsc->priv->active_nodes; iter != NULL;
+         iter = iter->next) {
+
+        const pcmk_node_t *node = iter->data;
+        node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
+
+        ni->node_name = node->priv->name;
+        if (rsc->priv->fns->state(rsc, true) == pcmk_role_promoted) {
+            ni->promoted = true;
+        }
+
+        node_info_list = g_list_prepend(node_info_list, ni);
+    }
+
+    return node_info_list;
 }
 
 // \return Standard Pacemaker return code
