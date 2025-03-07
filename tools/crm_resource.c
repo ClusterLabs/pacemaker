@@ -31,6 +31,7 @@
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
+#include <crm/common/agents.h>          // PCMK_RESOURCE_CLASS_*
 #include <crm/common/ipc_controld.h>
 #include <crm/cib/internal.h>
 
@@ -979,43 +980,83 @@ has_cmdline_config(void)
 static void
 validate_cmdline_config(void)
 {
+    bool is_ocf = pcmk__str_eq(options.class, PCMK_RESOURCE_CLASS_OCF,
+                               pcmk__str_none);
+
+    // Sanity check before throwing any errors
+    if (!has_cmdline_config()) {
+        return;
+    }
+
     // Cannot use both --resource and command-line resource configuration
     if (options.rsc_id != NULL) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    _("--resource cannot be used with --class, --agent, and --provider"));
+                    _("--class, --agent, and --provider cannot be used with "
+                      "-r/--resource"));
+        return;
+    }
 
-    // Not all commands support command-line resource configuration
-    } else if (options.rsc_cmd != cmd_execute_agent) {
+    // Check whether command supports command-line resource configuration
+    if (options.rsc_cmd != cmd_execute_agent) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     _("--class, --agent, and --provider can only be used with "
-                    "--validate and --force-*"));
+                      "--validate and --force-*"));
+        return;
+    }
 
-    // Not all of --class, --agent, and --provider need to be given.  Not all
-    // classes support the concept of a provider.  Check that what we were given
-    // is valid.
-    } else if (pcmk__str_eq(options.class, "stonith", pcmk__str_none)) {
+    // Check for a valid combination of --class, --agent, and --provider
+    if (is_ocf) {
+        if ((options.provider == NULL) || (options.agent == NULL)) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("--provider and --agent are required with "
+                          "--class=ocf"));
+            return;
+        }
+
+    } else {
         if (options.provider != NULL) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        _("stonith does not support providers"));
+                        _("--provider is supported only with --class=ocf"));
+            return;
+        }
 
-        } else if (!stonith_agent_exists(options.agent, 0)) {
+        // Either --class or --agent was given
+        if (options.agent == NULL) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        _("%s is not a known stonith agent"),
-                        pcmk__s(options.agent, "(unspecified)"));
+                        _("--agent is required with --class"));
+            return;
+        }
+        if (options.class == NULL) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("--class is required with --agent"));
+            return;
+        }
+    }
+
+    // Check whether agent exists
+    if (pcmk__str_eq(options.class, PCMK_RESOURCE_CLASS_STONITH,
+                     pcmk__str_none)) {
+        if (!stonith_agent_exists(options.agent, 0)) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("%s is not a known stonith agent"), options.agent);
+            return;
         }
 
     } else if (!resources_agent_exists(options.class, options.provider,
                                        options.agent)) {
-        // provider is only for ocf-class resources
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    _("%s:%s%s%s is not a known resource"),
-                    pcmk__s(options.class, "(unspecified)"),
-                    pcmk__s(options.provider, ""),
-                    ((options.provider != NULL)? ":" : ""),
-                    pcmk__s(options.agent, "(unspecified)"));
+        if (is_ocf) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("%s:%s:%s is not a known resource agent"),
+                        options.class, options.provider, options.agent);
+        } else {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("%s:%s is not a known resource agent"),
+                        options.class, options.agent);
+        }
+        return;
     }
 
-    if ((error == NULL) && (options.cmdline_params == NULL)) {
+    if (options.cmdline_params == NULL) {
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
 }
