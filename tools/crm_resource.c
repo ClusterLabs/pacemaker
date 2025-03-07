@@ -1666,7 +1666,7 @@ handle_move(pcmk_resource_t *rsc, const pcmk_node_t *node)
         rc = ban_or_move(out, rsc, options.move_lifetime);
     } else {
         rc = cli_resource_move(rsc, options.rsc_id, node, options.move_lifetime,
-                               cib_conn, scheduler, options.promoted_role_only,
+                               cib_conn, options.promoted_role_only,
                                options.force);
     }
 

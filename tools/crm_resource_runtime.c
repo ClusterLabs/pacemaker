@@ -2411,11 +2411,11 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
+cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
                   const pcmk_node_t *dest, const char *move_lifetime,
-                  cib_t *cib, pcmk_scheduler_t *scheduler,
-                  bool promoted_role_only, bool force)
+                  cib_t *cib, bool promoted_role_only, bool force)
 {
+    pcmk_scheduler_t *scheduler = NULL;
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
@@ -2423,14 +2423,15 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     bool cur_is_dest = false;
     const char *active_s = promoted_role_only? "promoted" : "active";
 
-    pcmk__assert((dest != NULL) && (scheduler != NULL));
+    pcmk__assert((rsc != NULL) && (dest != NULL));
 
+    scheduler = rsc->priv->scheduler;
     out = scheduler->priv->out;
 
     if (promoted_role_only
         && !pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
 
-        const pcmk_resource_t *p = pe__const_top_resource(rsc, false);
+        pcmk_resource_t *p = uber_parent(rsc);
 
         if (pcmk_is_set(p->flags, pcmk__rsc_promotable)) {
             /* @TODO This is dead code. If rsc is part of a promotable clone,
@@ -2468,10 +2469,10 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
         unsigned int promoted_count = 0;
         pcmk_node_t *promoted_node = NULL;
 
-        for (const GList *iter = rsc->priv->children; iter != NULL;
+        for (GList *iter = rsc->priv->children; iter != NULL;
              iter = iter->next) {
 
-            const pcmk_resource_t *child = iter->data;
+            pcmk_resource_t *child = iter->data;
             enum rsc_role_e child_role = child->priv->fns->state(child, true);
 
             if (child_role == pcmk_role_promoted) {
