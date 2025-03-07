@@ -69,7 +69,17 @@ enum rsc_command {
     cmd_set_param,
     cmd_wait,
     cmd_why,
+
+    // Update this when adding new commands
+    cmd_max = cmd_why,
 };
+
+/*!
+ * \internal
+ * \brief Handler function for a crm_resource command
+ */
+typedef int (*crm_resource_fn_t)(pcmk_resource_t *, pcmk_node_t *, xmlNode *,
+                                 pcmk_scheduler_t *);
 
 struct {
     enum rsc_command rsc_cmd;     // crm_resource command to perform
@@ -1251,7 +1261,8 @@ accept_clone_instance(void)
 }
 
 static int
-handle_ban(pcmk_resource_t *rsc, const pcmk_node_t *node)
+handle_ban(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+           pcmk_scheduler_t *scheduler)
 {
     int rc = pcmk_rc_ok;
 
@@ -1271,7 +1282,8 @@ handle_ban(pcmk_resource_t *rsc, const pcmk_node_t *node)
 }
 
 static int
-handle_cleanup(pcmk_resource_t *rsc, pcmk_node_t *node)
+handle_cleanup(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+               pcmk_scheduler_t *scheduler)
 {
     if (rsc == NULL) {
         int rc = cli_cleanup_all(controld_api, node, options.operation,
@@ -1289,7 +1301,8 @@ handle_cleanup(pcmk_resource_t *rsc, pcmk_node_t *node)
 }
 
 static int
-handle_clear(const pcmk_node_t *node)
+handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+             pcmk_scheduler_t *scheduler)
 {
     const char *node_name = (node != NULL)? node->priv->name : NULL;
     GList *before = NULL;
@@ -1350,14 +1363,16 @@ handle_clear(const pcmk_node_t *node)
 }
 
 static int
-handle_colocations(pcmk_resource_t *rsc)
+handle_colocations(pcmk_resource_t *rsc, pcmk_node_t *node,
+                   xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     return out->message(out, "locations-and-colocations", rsc,
                         options.recursive, options.force);
 }
 
 static int
-handle_cts(void)
+handle_cts(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+           pcmk_scheduler_t *scheduler)
 {
     // coverity[var_deref_op] False positive
     g_list_foreach(scheduler->priv->resources, (GFunc) cli_resource_print_cts,
@@ -1367,7 +1382,8 @@ handle_cts(void)
 }
 
 static int
-handle_delete(void)
+handle_delete(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+              pcmk_scheduler_t *scheduler)
 {
     /* rsc_id was already checked for NULL much earlier when validating command
      * line arguments
@@ -1393,7 +1409,8 @@ handle_delete(void)
 }
 
 static int
-handle_delete_param(pcmk_resource_t *rsc, xmlNode *cib_xml_orig)
+handle_delete_param(pcmk_resource_t *rsc, pcmk_node_t *node,
+                    xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     /* coverity[var_deref_model] False positive */
     return cli_resource_delete_attribute(rsc, options.rsc_id, options.prop_set,
@@ -1403,13 +1420,15 @@ handle_delete_param(pcmk_resource_t *rsc, xmlNode *cib_xml_orig)
 }
 
 static int
-handle_digests(pcmk_resource_t *rsc, const pcmk_node_t *node)
+handle_digests(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+               pcmk_scheduler_t *scheduler)
 {
     return pcmk__resource_digests(out, rsc, node, options.override_params);
 }
 
 static int
-handle_execute_agent(pcmk_resource_t *rsc)
+handle_execute_agent(pcmk_resource_t *rsc, pcmk_node_t *node,
+                     xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     if (has_cmdline_config()) {
         exit_code = cli_resource_execute_from_params(out, NULL, options.class,
@@ -1433,7 +1452,8 @@ handle_execute_agent(pcmk_resource_t *rsc)
 }
 
 static int
-handle_fail(pcmk_resource_t *rsc, const pcmk_node_t *node)
+handle_fail(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+            pcmk_scheduler_t *scheduler)
 {
     int rc = cli_resource_fail(controld_api, rsc, options.rsc_id, node);
 
@@ -1444,7 +1464,8 @@ handle_fail(pcmk_resource_t *rsc, const pcmk_node_t *node)
 }
 
 static int
-handle_get_param(pcmk_resource_t *rsc)
+handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+                 pcmk_scheduler_t *scheduler)
 {
     unsigned int count = 0;
     GHashTable *params = NULL;
@@ -1503,7 +1524,8 @@ handle_get_param(pcmk_resource_t *rsc)
 }
 
 static int
-handle_list_active_ops(const pcmk_node_t *node)
+handle_list_active_ops(pcmk_resource_t *rsc, pcmk_node_t *node,
+                       xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     const char *node_name = (node != NULL)? node->priv->name : NULL;
 
@@ -1512,13 +1534,15 @@ handle_list_active_ops(const pcmk_node_t *node)
 }
 
 static int
-handle_list_agents(void)
+handle_list_agents(pcmk_resource_t *rsc, pcmk_node_t *node,
+                   xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     return pcmk__list_agents(out, options.agent_spec);
 }
 
 static int
-handle_list_all_ops(const pcmk_node_t *node)
+handle_list_all_ops(pcmk_resource_t *rsc, pcmk_node_t *node,
+                    xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     const char *node_name = (node != NULL)? node->priv->name : NULL;
 
@@ -1527,13 +1551,15 @@ handle_list_all_ops(const pcmk_node_t *node)
 }
 
 static int
-handle_list_alternatives(void)
+handle_list_alternatives(pcmk_resource_t *rsc, pcmk_node_t *node,
+                         xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     return pcmk__list_alternatives(out, options.agent_spec);
 }
 
 static int
-handle_list_instances(void)
+handle_list_instances(pcmk_resource_t *rsc, pcmk_node_t *node,
+                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     // coverity[var_deref_op] False positive
     if (out->message(out, "resource-names-list",
@@ -1544,7 +1570,8 @@ handle_list_instances(void)
 }
 
 static int
-handle_list_options(void)
+handle_list_options(pcmk_resource_t *rsc, pcmk_node_t *node,
+                   xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     switch (options.opt_list) {
         case pcmk__opt_fencing:
@@ -1560,13 +1587,15 @@ handle_list_options(void)
 }
 
 static int
-handle_list_providers(void)
+handle_list_providers(pcmk_resource_t *rsc, pcmk_node_t *node,
+                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     return pcmk__list_providers(out, options.agent_spec);
 }
 
 static int
-handle_list_resources(void)
+handle_list_resources(pcmk_resource_t *rsc, pcmk_node_t *node,
+                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     GList *all = g_list_prepend(NULL, (gpointer) "*");
     int rc = out->message(out, "resource-list", scheduler,
@@ -1584,13 +1613,15 @@ handle_list_resources(void)
 }
 
 static int
-handle_list_standards(void)
+handle_list_standards(pcmk_resource_t *rsc, pcmk_node_t *node,
+                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     return pcmk__list_standards(out);
 }
 
 static int
-handle_locate(pcmk_resource_t *rsc)
+handle_locate(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+              pcmk_scheduler_t *scheduler)
 {
     GList *nodes = cli_resource_search(rsc, options.rsc_id);
     int rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
@@ -1600,7 +1631,8 @@ handle_locate(pcmk_resource_t *rsc)
 }
 
 static int
-handle_metadata(void)
+handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+                pcmk_scheduler_t *scheduler)
 {
     int rc = pcmk_rc_ok;
     char *standard = NULL;
@@ -1652,7 +1684,8 @@ handle_metadata(void)
 }
 
 static int
-handle_move(pcmk_resource_t *rsc, const pcmk_node_t *node)
+handle_move(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+            pcmk_scheduler_t *scheduler)
 {
     int rc = pcmk_rc_ok;
 
@@ -1672,19 +1705,22 @@ handle_move(pcmk_resource_t *rsc, const pcmk_node_t *node)
 }
 
 static int
-handle_query_xml(pcmk_resource_t *rsc)
+handle_query_xml(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+                 pcmk_scheduler_t *scheduler)
 {
     return cli_resource_print(rsc, true);
 }
 
 static int
-handle_query_xml_raw(pcmk_resource_t *rsc)
+handle_query_xml_raw(pcmk_resource_t *rsc, pcmk_node_t *node,
+                     xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     return cli_resource_print(rsc, false);
 }
 
 static int
-handle_refresh(pcmk_resource_t *rsc, pcmk_node_t *node)
+handle_refresh(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+               pcmk_scheduler_t *scheduler)
 {
     if (rsc == NULL) {
         return refresh(out, node);
@@ -1694,7 +1730,8 @@ handle_refresh(pcmk_resource_t *rsc, pcmk_node_t *node)
 }
 
 static int
-handle_restart(pcmk_resource_t *rsc, const pcmk_node_t *node)
+handle_restart(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+               pcmk_scheduler_t *scheduler)
 {
     /* We don't pass scheduler because rsc needs to stay valid for the entire
      * lifetime of cli_resource_restart(), but it will reset and update the
@@ -1706,7 +1743,8 @@ handle_restart(pcmk_resource_t *rsc, const pcmk_node_t *node)
 }
 
 static int
-handle_set_param(pcmk_resource_t *rsc, xmlNode *cib_xml_orig)
+handle_set_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+                 pcmk_scheduler_t *scheduler)
 {
     if (pcmk__str_empty(options.prop_value)) {
         exit_code = CRM_EX_USAGE;
@@ -1724,17 +1762,53 @@ handle_set_param(pcmk_resource_t *rsc, xmlNode *cib_xml_orig)
 }
 
 static int
-handle_wait(void)
+handle_wait(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+            pcmk_scheduler_t *scheduler)
 {
     return wait_till_stable(out, options.timeout_ms, cib_conn);
 }
 
 static int
-handle_why(pcmk_resource_t *rsc, pcmk_node_t *node)
+handle_why(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+           pcmk_scheduler_t *scheduler)
 {
     return out->message(out, "resource-reasons-list",
                         scheduler->priv->resources, rsc, node);
 }
+
+static const crm_resource_fn_t crm_resource_functions[] = {
+    [cmd_none]              = NULL,
+    [cmd_ban]               = handle_ban,
+    [cmd_cleanup]           = handle_cleanup,
+    [cmd_clear]             = handle_clear,
+    [cmd_colocations]       = handle_colocations,
+    [cmd_cts]               = handle_cts,
+    [cmd_delete]            = handle_delete,
+    [cmd_delete_param]      = handle_delete_param,
+    [cmd_digests]           = handle_digests,
+    [cmd_execute_agent]     = handle_execute_agent,
+    [cmd_fail]              = handle_fail,
+    [cmd_get_param]         = handle_get_param,
+    [cmd_list_active_ops]   = handle_list_active_ops,
+    [cmd_list_agents]       = handle_list_agents,
+    [cmd_list_all_ops]      = handle_list_all_ops,
+    [cmd_list_alternatives] = handle_list_alternatives,
+    [cmd_list_instances]    = handle_list_instances,
+    [cmd_list_options]      = handle_list_options,
+    [cmd_list_providers]    = handle_list_providers,
+    [cmd_list_resources]    = handle_list_resources,
+    [cmd_list_standards]    = handle_list_standards,
+    [cmd_locate]            = handle_locate,
+    [cmd_metadata]          = handle_metadata,
+    [cmd_move]              = handle_move,
+    [cmd_query_xml]         = handle_query_xml,
+    [cmd_query_xml_raw]     = handle_query_xml_raw,
+    [cmd_refresh]           = handle_refresh,
+    [cmd_restart]           = handle_restart,
+    [cmd_set_param]         = handle_set_param,
+    [cmd_wait]              = handle_wait,
+    [cmd_why]               = handle_why,
+};
 
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
@@ -1804,6 +1878,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
+    crm_resource_fn_t fn = NULL;
     xmlNode *cib_xml_orig = NULL;
     pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
@@ -1921,6 +1996,17 @@ main(int argc, char **argv)
 
     if (args->version) {
         out->version(out, false);
+        goto done;
+    }
+
+    // Ensure command is in valid range and has a handler function
+    if ((options.rsc_cmd >= 0) && (options.rsc_cmd <= cmd_max)) {
+        fn = crm_resource_functions[options.rsc_cmd];
+    }
+    if (fn == NULL) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    _("Unimplemented command: %d"), (int) options.rsc_cmd);
         goto done;
     }
 
@@ -2054,106 +2140,9 @@ main(int argc, char **argv)
      */
 
     /* Some of these set exit_code explicitly and return pcmk_rc_ok to skip
-     * setting exit_code based on rc after the switch.
+     * setting exit_code based on rc
      */
-    switch (options.rsc_cmd) {
-        case cmd_ban:
-            rc = handle_ban(rsc, node);
-            break;
-        case cmd_cleanup:
-            rc = handle_cleanup(rsc, node);
-            break;
-        case cmd_clear:
-            rc = handle_clear(node);
-            break;
-        case cmd_colocations:
-            rc = handle_colocations(rsc);
-            break;
-        case cmd_cts:
-            rc = handle_cts();
-            break;
-        case cmd_delete:
-            rc = handle_delete();
-            break;
-        case cmd_delete_param:
-            rc = handle_delete_param(rsc, cib_xml_orig);
-            break;
-        case cmd_digests:
-            rc = handle_digests(rsc, node);
-            break;
-        case cmd_execute_agent:
-            rc = handle_execute_agent(rsc);
-            break;
-        case cmd_fail:
-            rc = handle_fail(rsc, node);
-            break;
-        case cmd_get_param:
-            // coverity[var_deref_model] False positive
-            rc = handle_get_param(rsc);
-            break;
-        case cmd_list_active_ops:
-            rc = handle_list_active_ops(node);
-            break;
-        case cmd_list_agents:
-            rc = handle_list_agents();
-            break;
-        case cmd_list_all_ops:
-            rc = handle_list_all_ops(node);
-            break;
-        case cmd_list_alternatives:
-            rc = handle_list_alternatives();
-            break;
-        case cmd_list_instances:
-            rc = handle_list_instances();
-            break;
-        case cmd_list_providers:
-            rc = handle_list_providers();
-            break;
-        case cmd_list_options:
-            rc = handle_list_options();
-            break;
-        case cmd_list_resources:
-            rc = handle_list_resources();
-            break;
-        case cmd_list_standards:
-            rc = handle_list_standards();
-            break;
-        case cmd_locate:
-            rc = handle_locate(rsc);
-            break;
-        case cmd_metadata:
-            rc = handle_metadata();
-            break;
-        case cmd_move:
-            rc = handle_move(rsc, node);
-            break;
-        case cmd_query_xml:
-            rc = handle_query_xml(rsc);
-            break;
-        case cmd_query_xml_raw:
-            rc = handle_query_xml_raw(rsc);
-            break;
-        case cmd_refresh:
-            rc = handle_refresh(rsc, node);
-            break;
-        case cmd_restart:
-            rc = handle_restart(rsc, node);
-            break;
-        case cmd_set_param:
-            rc = handle_set_param(rsc, cib_xml_orig);
-            break;
-        case cmd_wait:
-            rc = handle_wait();
-            break;
-        case cmd_why:
-            rc = handle_why(rsc, node);
-            break;
-        default:
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Unimplemented command: %d"), (int) options.rsc_cmd);
-            goto done;
-    }
+    rc = fn(rsc, node, cib_xml_orig, scheduler);
 
     /* Convert rc into an exit code. */
     if (rc != pcmk_rc_ok && rc != pcmk_rc_no_output) {
