@@ -2338,16 +2338,22 @@ get_action_timeout(pcmk_resource_t *rsc, const char *action)
 crm_exit_t
 cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
-                     guint timeout_ms, cib_t *cib, pcmk_scheduler_t *scheduler,
-                     int resource_verbose, gboolean force, int check_level)
+                     guint timeout_ms, cib_t *cib, int resource_verbose,
+                     bool force, int check_level)
 {
-    pcmk__output_t *out = scheduler->priv->out;
+    pcmk_scheduler_t *scheduler = NULL;
+    pcmk__output_t *out = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     const char *rid = requested_name;
     const char *rtype = NULL;
     const char *rprov = NULL;
     const char *rclass = NULL;
     GHashTable *params = NULL;
+
+    pcmk__assert(rsc != NULL);
+
+    scheduler = rsc->priv->scheduler;
+    out = scheduler->priv->out;
 
     if (pcmk__strcase_any_of(rsc_action, "force-start", "force-demote",
                                     "force-promote", NULL)) {

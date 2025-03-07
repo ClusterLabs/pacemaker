@@ -1433,8 +1433,8 @@ handle_execute_agent(pcmk_resource_t *rsc)
         exit_code = cli_resource_execute(rsc, options.rsc_id, options.operation,
                                          options.override_params,
                                          options.timeout_ms, cib_conn,
-                                         scheduler, args->verbosity,
-                                         options.force, options.check_level);
+                                         args->verbosity, options.force,
+                                         options.check_level);
     }
     return pcmk_rc_ok;
 }
@@ -2212,9 +2212,7 @@ done:
     }
     g_strfreev(options.remainder);
 
-    /* options.cmdline_params does not need to be destroyed here.  See the
-     * comments in cli_resource_execute_from_params.
-     */
+    // Don't destroy options.cmdline_params here. See comment in option_cb().
 
     g_strfreev(processed_args);
     g_option_context_free(context);
