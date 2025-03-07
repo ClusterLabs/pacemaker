@@ -1804,7 +1804,7 @@ class CrmResourceRegressionTest(RegressionTest):
                             "crm_resource --locate -r promotable-rsc:1 {fmt}",
                             [Test, ValidatingTest]),
             Test("Try to move an instance of a cloned resource",
-                 "crm_resource -r promotable-rsc:0 --move --node node1",
+                 "crm_resource -r promotable-rsc:0 --move --node cluster01",
                  expected_rc=ExitStatus.INVALID_PARAM),
         ]
 

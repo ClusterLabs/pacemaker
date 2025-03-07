@@ -85,15 +85,15 @@ int cli_resource_print_operations(const char *rsc_id, const char *host_uname,
 /* runtime */
 int cli_resource_check(pcmk__output_t *out, pcmk_resource_t *rsc,
                        pcmk_node_t *node);
-int cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
+int cli_resource_fail(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
                       const char *rsc_id, pcmk_scheduler_t *scheduler);
 GList *cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
                              pcmk_scheduler_t *scheduler);
-int cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
+int cli_resource_delete(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
                         const pcmk_resource_t *rsc, const char *operation,
                         const char *interval_spec, bool just_failures,
-                        pcmk_scheduler_t *scheduler, gboolean force);
-int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
+                        pcmk_scheduler_t *scheduler, bool force);
+int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
                     const char *operation, const char *interval_spec,
                     pcmk_scheduler_t *scheduler);
 int cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
@@ -101,9 +101,9 @@ int cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                          guint timeout_ms, cib_t *cib,
                          gboolean promoted_role_only, gboolean force);
 int cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
-                      const char *host_name, const char *move_lifetime,
+                      const pcmk_node_t *node, const char *move_lifetime,
                       cib_t *cib, pcmk_scheduler_t *scheduler,
-                      gboolean promoted_role_only, gboolean force);
+                      bool promoted_role_only, bool force);
 crm_exit_t cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                             const char *rsc_class, const char *rsc_prov,
                                             const char *rsc_type, const char *rsc_action,

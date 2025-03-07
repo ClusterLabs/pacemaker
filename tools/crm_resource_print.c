@@ -362,6 +362,7 @@ override_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+// Does not modify overrides or its contents
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
                   "crm_exit_t", "int", "const char *", "const char *", "const char *")
@@ -422,6 +423,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+// Does not modify overrides or its contents
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
                   "crm_exit_t", "int", "const char *", "const char *", "const char *")
