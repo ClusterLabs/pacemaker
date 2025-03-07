@@ -1256,8 +1256,7 @@ cli_resource_fail(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
 }
 
 static GHashTable *
-generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
-                         pcmk_scheduler_t *scheduler)
+generate_resource_params(pcmk_resource_t *rsc)
 {
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
@@ -1268,7 +1267,7 @@ generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     combined = pcmk__strkey_table(free, free);
 
-    params = pe_rsc_params(rsc, node, scheduler);
+    params = pe_rsc_params(rsc, NULL, rsc->priv->scheduler);
     if (params != NULL) {
         g_hash_table_iter_init(&iter, params);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
@@ -1277,7 +1276,7 @@ generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     meta = pcmk__strkey_table(free, free);
-    get_meta_attributes(meta, rsc, NULL, scheduler);
+    get_meta_attributes(meta, rsc, NULL, rsc->priv->scheduler);
     if (meta != NULL) {
         g_hash_table_iter_init(&iter, meta);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
@@ -2394,8 +2393,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
     rprov = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
     rtype = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
 
-    params = generate_resource_params(rsc, NULL /* @TODO use local node */,
-                                      scheduler);
+    params = generate_resource_params(rsc); // @TODO use local node
 
     if (timeout_ms == 0U) {
         timeout_ms = get_action_timeout(rsc, get_action(rsc_action));
