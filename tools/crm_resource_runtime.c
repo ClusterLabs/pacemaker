@@ -801,22 +801,13 @@ rsc_fail_name(const pcmk_resource_t *rsc)
 
 // \return Standard Pacemaker return code
 static int
-clear_rsc_history(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
-                  const char *rsc_id, pcmk_scheduler_t *scheduler)
+clear_rsc_history(pcmk_ipc_api_t *controld_api, const pcmk_resource_t *rsc,
+                  const char *rsc_id, const pcmk_node_t *node,
+                  pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = NULL;
-    const pcmk_resource_t *rsc = NULL;
     int rc = pcmk_rc_ok;
 
-    pcmk__assert(node != NULL);
-
-    out = scheduler->priv->out;
-
-    rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
-    if (rsc == NULL) {
-        out->err(out, "Resource %s not found", rsc_id);
-        return ENXIO;
-    }
+    pcmk__assert((rsc != NULL) && (node != NULL));
 
     /* Erase the resource's entire LRM history in the CIB, even if we're only
      * clearing a single operation's fail count. If we erased only entries for a
@@ -918,9 +909,18 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
     g_hash_table_iter_init(&iter, rscs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
+        const pcmk_resource_t *rsc = NULL;
+
         crm_debug("Erasing failures of %s on %s",
                   failed_id, pcmk__node_name(node));
-        rc = clear_rsc_history(controld_api, node, failed_id, scheduler);
+
+        rsc = pe_find_resource(scheduler->priv->resources, failed_id);
+        if (rsc == NULL) {
+            out->err(out, "Resource %s not found", failed_id);
+            return ENXIO;
+        }
+
+        rc = clear_rsc_history(controld_api, rsc, failed_id, node, scheduler);
         if (rc != pcmk_rc_ok) {
             return rc;
         }
@@ -1045,7 +1045,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
         rc = clear_rsc_failures(out, controld_api, node, rsc->id, operation,
                                 interval_spec, scheduler);
     } else {
-        rc = clear_rsc_history(controld_api, node, rsc->id, scheduler);
+        rc = clear_rsc_history(controld_api, rsc, rsc->id, node, scheduler);
     }
 
     if (rc != pcmk_rc_ok) {
