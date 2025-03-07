@@ -68,6 +68,8 @@ enum rsc_command {
     cmd_set_param,
     cmd_wait,
     cmd_why,
+
+    cmd_max = cmd_why,
 };
 
 struct {
@@ -1053,202 +1055,6 @@ validate_cmdline_config(void)
     }
 }
 
-/*!
- * \internal
- * \brief Get the <tt>enum pe_find</tt> flags for a given command
- *
- * \return <tt>enum pe_find</tt> flag group appropriate for \c options.rsc_cmd.
- */
-static uint32_t
-get_find_flags(void)
-{
-    switch (options.rsc_cmd) {
-        case cmd_ban:
-        case cmd_cleanup:
-        case cmd_clear:
-        case cmd_colocations:
-        case cmd_digests:
-        case cmd_execute_agent:
-        case cmd_locate:
-        case cmd_move:
-        case cmd_refresh:
-        case cmd_restart:
-        case cmd_why:
-            return pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
-
-        case cmd_delete_param:
-        case cmd_get_param:
-        case cmd_query_xml_raw:
-        case cmd_query_xml:
-        case cmd_set_param:
-            return pcmk_rsc_match_history|pcmk_rsc_match_basename;
-
-        case cmd_fail:
-            return pcmk_rsc_match_history;
-
-        default:
-            return 0;
-    }
-}
-
-/*!
- * \internal
- * \brief Check whether a node argument is required
- *
- * \return \c true if a \c --node argument is required, or \c false otherwise
- */
-static bool
-is_node_required(void)
-{
-    switch (options.rsc_cmd) {
-        case cmd_digests:
-        case cmd_fail:
-            return true;
-        default:
-            return false;
-    }
-}
-
-/*!
- * \internal
- * \brief Check whether a resource argument is required
- *
- * \return \c true if a \c --resource argument is required, or \c false
- *         otherwise
- */
-static bool
-is_resource_required(void)
-{
-    if (has_cmdline_config()) {
-        return false;
-    }
-
-    switch (options.rsc_cmd) {
-        case cmd_clear:
-            return !options.clear_expired;
-
-        case cmd_cleanup:
-        case cmd_cts:
-        case cmd_list_active_ops:
-        case cmd_list_agents:
-        case cmd_list_all_ops:
-        case cmd_list_alternatives:
-        case cmd_list_instances:
-        case cmd_list_options:
-        case cmd_list_providers:
-        case cmd_list_resources:
-        case cmd_list_standards:
-        case cmd_metadata:
-        case cmd_refresh:
-        case cmd_wait:
-        case cmd_why:
-            return false;
-
-        default:
-            return true;
-    }
-}
-
-/*!
- * \internal
- * \brief Check whether a scheduler data object is required
- *
- * If true, the caller will populate the scheduler data from the CIB connection.
- *
- * \return \c true if scheduler data is required, or \c false otherwise
- */
-static bool
-is_scheduler_required(void)
-{
-    if (has_cmdline_config()) {
-        // cmd_execute_agent using CLI parameters instead of CIB connection
-        return false;
-    }
-
-    switch (options.rsc_cmd) {
-        case cmd_delete:
-        case cmd_list_agents:
-        case cmd_list_alternatives:
-        case cmd_list_options:
-        case cmd_list_providers:
-        case cmd_list_standards:
-        case cmd_metadata:
-        case cmd_wait:
-            return false;
-        default:
-            return true;
-    }
-}
-
-/*!
- * \internal
- * \brief Check whether a CIB connection is required
- *
- * \return \c true if a CIB connection is required, or \c false otherwise
- */
-static bool
-is_cib_required(void)
-{
-    if (has_cmdline_config()) {
-        // cmd_execute_agent using CLI parameters instead of CIB connection
-        return false;
-    }
-
-    if (is_scheduler_required()) {
-        return true;
-    }
-
-    // Commands that requires CIB connection but not scheduler data
-    switch (options.rsc_cmd) {
-        case cmd_delete:
-        case cmd_wait:
-            return true;
-        default:
-            return false;
-    }
-}
-
-/*!
- * \internal
- * \brief Check whether a controller IPC connection is required
- *
- * \return \c true if a controller connection is required, or \c false otherwise
- */
-static bool
-is_controller_required(void)
-{
-    switch (options.rsc_cmd) {
-        case cmd_cleanup:
-        case cmd_fail:
-        case cmd_refresh:
-            return true;
-        default:
-            return false;
-    }
-}
-
-/*!
- * \internal
- * \brief Check whether the chosen command accepts clone instances
- *
- * \return \c true if \p options.rsc_cmd accepts or ignores clone instances, or
- *         \c false otherwise
- */
-static bool
-accept_clone_instance(void)
-{
-    switch (options.rsc_cmd) {
-        case cmd_ban:
-        case cmd_clear:
-        case cmd_delete:
-        case cmd_move:
-        case cmd_restart:
-            return false;
-        default:
-            return true;
-    }
-}
-
 static int
 handle_ban(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
            pcmk_scheduler_t *scheduler)
@@ -1768,38 +1574,220 @@ handle_why(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 typedef int (*crm_resource_fn_t)(pcmk_resource_t *, pcmk_node_t *, xmlNode *,
                                  pcmk_scheduler_t *);
 
-static const crm_resource_fn_t crm_resource_functions[] = {
-    [cmd_none]              = NULL,
-    [cmd_ban]               = handle_ban,
-    [cmd_cleanup]           = handle_cleanup,
-    [cmd_clear]             = handle_clear,
-    [cmd_colocations]       = handle_colocations,
-    [cmd_cts]               = handle_cts,
-    [cmd_delete]            = handle_delete,
-    [cmd_delete_param]      = handle_delete_param,
-    [cmd_digests]           = handle_digests,
-    [cmd_execute_agent]     = handle_execute_agent,
-    [cmd_fail]              = handle_fail,
-    [cmd_get_param]         = handle_get_param,
-    [cmd_list_active_ops]   = handle_list_active_ops,
-    [cmd_list_agents]       = handle_list_agents,
-    [cmd_list_all_ops]      = handle_list_all_ops,
-    [cmd_list_alternatives] = handle_list_alternatives,
-    [cmd_list_instances]    = handle_list_instances,
-    [cmd_list_options]      = handle_list_options,
-    [cmd_list_providers]    = handle_list_providers,
-    [cmd_list_resources]    = handle_list_resources,
-    [cmd_list_standards]    = handle_list_standards,
-    [cmd_locate]            = handle_locate,
-    [cmd_metadata]          = handle_metadata,
-    [cmd_move]              = handle_move,
-    [cmd_query_xml]         = handle_query_xml,
-    [cmd_query_xml_raw]     = handle_query_xml_raw,
-    [cmd_refresh]           = handle_refresh,
-    [cmd_restart]           = handle_restart,
-    [cmd_set_param]         = handle_set_param,
-    [cmd_wait]              = handle_wait,
-    [cmd_why]               = handle_why,
+enum crm_rsc_flags {
+    crm_rsc_find_match_anon_basename = (UINT32_C(1) << 0),
+    crm_rsc_find_match_basename      = (UINT32_C(1) << 1),
+    crm_rsc_find_match_history       = (UINT32_C(1) << 2),
+    crm_rsc_rejects_clone_instance   = (UINT32_C(1) << 3),
+    crm_rsc_requires_cib             = (UINT32_C(1) << 4),
+    crm_rsc_requires_controller      = (UINT32_C(1) << 5),
+    crm_rsc_requires_node            = (UINT32_C(1) << 6),
+    crm_rsc_requires_resource        = (UINT32_C(1) << 7),
+    crm_rsc_requires_scheduler       = (UINT32_C(1) << 8),
+};
+
+typedef struct {
+    crm_resource_fn_t fn;
+    uint32_t flags;
+} crm_resource_cmd_info_t;
+
+static const crm_resource_cmd_info_t crm_resource_commands[] = {
+    [cmd_none]              = {
+        NULL,
+        0,
+    },
+    [cmd_ban]               = {
+        handle_ban,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_cleanup]           = {
+        handle_cleanup,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_controller
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_clear]             = {
+        handle_clear,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource      // Unless options.clear_expired
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_colocations]       = {
+        handle_colocations,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_cts]               = {
+        handle_cts,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_delete]            = {
+        handle_delete,
+        crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource,
+    },
+    [cmd_delete_param]      = {
+        handle_delete_param,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_digests]           = {
+        handle_digests,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_node
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_execute_agent]     = {
+        handle_execute_agent,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_fail]              = {
+        handle_fail,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_controller
+        |crm_rsc_requires_node
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_get_param]         = {
+        handle_get_param,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_list_active_ops]   = {
+        handle_list_active_ops,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_list_agents]       = {
+        handle_list_agents,
+    },
+    [cmd_list_all_ops]      = {
+        handle_list_all_ops,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_list_alternatives] = {
+        handle_list_alternatives,
+    },
+    [cmd_list_instances]    = {
+        handle_list_instances,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_list_options]      = {
+        handle_list_options,
+    },
+    [cmd_list_providers]    = {
+        handle_list_providers,
+    },
+    [cmd_list_resources]    = {
+        handle_list_resources,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_list_standards]    = {
+        handle_list_standards,
+    },
+    [cmd_locate]            = {
+        handle_locate,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_metadata]          = {
+        handle_metadata,
+    },
+    [cmd_move]              = {
+        handle_move,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_query_xml]         = {
+        handle_query_xml,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_query_xml_raw]     = {
+        handle_query_xml_raw,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_refresh]           = {
+        handle_refresh,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_controller
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_restart]           = {
+        handle_restart,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_set_param]         = {
+        handle_set_param,
+        crm_rsc_find_match_basename
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_wait]              = {
+        handle_wait,
+        crm_rsc_requires_cib,
+    },
+    [cmd_why]               = {
+        handle_why,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
 };
 
 static GOptionContext *
@@ -1870,11 +1858,12 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
+    crm_resource_cmd_info_t command_info;
+    crm_resource_fn_t fn = NULL;
     xmlNode *cib_xml_orig = NULL;
     pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
     uint32_t find_flags = 0;
-    crm_resource_fn_t fn = NULL;
     int rc = pcmk_rc_ok;
 
     GOptionGroup *output_group = NULL;
@@ -2009,25 +1998,50 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (is_resource_required() && (options.rsc_id == NULL)) {
-        exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    _("Must supply a resource id with -r"));
-        goto done;
-    }
-    if (is_node_required() && (options.host_uname == NULL)) {
-        exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    _("Must supply a node name with -N"));
-        goto done;
-    }
-
     /*
-     * Set up necessary connections
+     * Handle requested command
      */
 
+    if ((options.rsc_cmd < 0) || (options.rsc_cmd > cmd_max)) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    _("Unimplemented command: %d"), (int) options.rsc_cmd);
+        goto done;
+    }
+
+    command_info = crm_resource_commands[options.rsc_cmd];
+    if (command_info.fn == NULL) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    _("Unimplemented command: %d"), (int) options.rsc_cmd);
+        goto done;
+    }
+
+    // @TODO Make sure we validate command line config in the right place
+    if (pcmk_is_set(command_info.flags, crm_rsc_requires_node)) {
+        if (options.host_uname == NULL) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        _("Must supply a node name with -N"));
+            goto done;
+        }
+    }
+    if (pcmk_is_set(command_info.flags, crm_rsc_requires_resource)
+        && !has_cmdline_config()
+        && ((options.rsc_cmd != cmd_clear) || !options.clear_expired)) {
+
+        if (options.rsc_id == NULL) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        _("Must supply a resource id with -r"));
+            goto done;
+        }
+    }
+
     // Establish a connection to the CIB if needed
-    if (is_cib_required()) {
+    if (pcmk_is_set(command_info.flags, crm_rsc_requires_cib)
+        && !has_cmdline_config()) {
+
         cib_conn = cib_new();
         if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
             exit_code = CRM_EX_DISCONNECT;
@@ -2035,6 +2049,7 @@ main(int argc, char **argv)
                         _("Could not create CIB connection"));
             goto done;
         }
+
         rc = cib__signon_attempts(cib_conn, cib_command, 5);
         rc = pcmk_legacy2rc(rc);
         if (rc != pcmk_rc_ok) {
@@ -2045,8 +2060,10 @@ main(int argc, char **argv)
         }
     }
 
-    // Populate scheduler data from CIB query
-    if (is_scheduler_required()) {
+    // Populate scheduler data from CIB query if needed
+    if (pcmk_is_set(command_info.flags, crm_rsc_requires_scheduler)
+        && !has_cmdline_config()) {
+
         rc = initialize_scheduler_data(&cib_xml_orig);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
@@ -2068,9 +2085,18 @@ main(int argc, char **argv)
         }
     }
 
-    find_flags = get_find_flags();
+    // @TODO Setter macro for tracing?
+    if (pcmk_is_set(command_info.flags, crm_rsc_find_match_anon_basename)) {
+        find_flags |= pcmk_rsc_match_anon_basename;
+    }
+    if (pcmk_is_set(command_info.flags, crm_rsc_find_match_basename)) {
+        find_flags |= pcmk_rsc_match_basename;
+    }
+    if (pcmk_is_set(command_info.flags, crm_rsc_find_match_history)) {
+        find_flags |= pcmk_rsc_match_history;
+    }
 
-    // If command requires that resource exist if specified, find it
+    // Find resource in scheduler data if any find flags are set
     if ((find_flags != 0) && (options.rsc_id != NULL)) {
         rsc = pe_find_resource_with_flags(scheduler->priv->resources,
                                           options.rsc_id, find_flags);
@@ -2081,22 +2107,25 @@ main(int argc, char **argv)
             goto done;
         }
 
-        /* The --ban, --clear, --move, and --restart commands do not work with
-         * instances of clone resourcs.
+        /* The --ban, --clear, --delete, --move, and --restart commands do not
+         * work with instances of clone resources.
          */
-        if (pcmk__is_clone(rsc->priv->parent)
-            && (strchr(options.rsc_id, ':') != NULL)
-            && !accept_clone_instance()) {
+        if (pcmk_is_set(command_info.flags, crm_rsc_rejects_clone_instance)
+            && pcmk__is_clone(rsc->priv->parent)
+            && (strchr(options.rsc_id, ':') != NULL)) {
 
             exit_code = CRM_EX_INVALID_PARAM;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Cannot operate on clone resource instance '%s'"), options.rsc_id);
+                        _("Cannot operate on clone resource instance '%s'"),
+                        options.rsc_id);
             goto done;
         }
     }
 
     // Establish a connection to the controller if needed
-    if (is_controller_required() && (getenv("CIB_file") == NULL)) {
+    if (pcmk_is_set(command_info.flags, crm_rsc_requires_controller)
+        && (getenv("CIB_file") == NULL)) {
+
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
@@ -2104,8 +2133,10 @@ main(int argc, char **argv)
                         _("Error connecting to the controller: %s"), pcmk_rc_str(rc));
             goto done;
         }
+
         pcmk_register_ipc_callback(controld_api, controller_event_callback,
                                    NULL);
+
         rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_main, 5);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
@@ -2116,31 +2147,16 @@ main(int argc, char **argv)
         }
     }
 
-    /*
-     * Handle requested command
-     */
-
     /* Some of these set exit_code explicitly and return pcmk_rc_ok to skip
-     * setting exit_code based on rc after the switch.
+     * setting exit_code based on rc.
      */
-    fn = crm_resource_functions[options.rsc_cmd];
-    if (fn == NULL) {
-        exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    _("Unimplemented command: %d"), (int) options.rsc_cmd);
-        goto done;
-    }
-
+    fn = command_info.fn;
     rc = fn(rsc, node, cib_xml_orig, scheduler);
 
     /* Convert rc into an exit code. */
     if (rc != pcmk_rc_ok && rc != pcmk_rc_no_output) {
         exit_code = pcmk_rc2exitc(rc);
     }
-
-    /*
-     * Clean up and exit
-     */
 
 done:
     /* When we get here, exit_code has been set one of two ways - either at one of
