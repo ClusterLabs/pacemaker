@@ -101,6 +101,7 @@ load_env_vars(void)
         char *name = NULL;
         char *end = NULL;
         char *value = NULL;
+        char *value_end = NULL;
         char *quote = NULL;
 
         // Strip leading whitespace
@@ -130,13 +131,12 @@ load_env_vars(void)
                    && (*end != '\0')) {
                 end++;
             }
-            if (*end == *quote) {
-                // Null-terminate value, and advance beyond close quote
-                *end++ = '\0';
-            } else {
+            if (*end != *quote) {
                 // Matching closing quote wasn't found
-                value = NULL;
+                goto cleanup_loop;
             }
+            // Null-terminate value, and advance beyond close quote
+            *end++ = '\0';
 
         } else {
             /* Value is remaining characters up to next non-backslashed
@@ -153,25 +153,20 @@ load_env_vars(void)
          * the closing quote or the first whitespace after the unquoted value.
          * Make sure the rest of the line is just whitespace or a comment.
          */
-        if (value != NULL) {
-            char *value_end = end;
+        value_end = end;
 
-            while (isspace(*end) && (*end != '\n')) {
-                end++;
+        while (isspace(*end) && (*end != '\n')) {
+            end++;
+        }
+        if ((*end == '\n') || (*end == '#')) {
+            if (quote == NULL) {
+                // Now we can null-terminate an unquoted value
+                *value_end = '\0';
             }
-            if ((*end == '\n') || (*end == '#')) {
-                if (quote == NULL) {
-                    // Now we can null-terminate an unquoted value
-                    *value_end = '\0';
-                }
 
-                // Don't overwrite (bundle options take precedence)
-                // coverity[tainted_string] Can't easily be changed right now
-                setenv(name, value, 0);
-
-            } else {
-                value = NULL;
-            }
+            // Don't overwrite (bundle options take precedence)
+            // coverity[tainted_string] Can't easily be changed right now
+            setenv(name, value, 0);
         }
 
 cleanup_loop:
