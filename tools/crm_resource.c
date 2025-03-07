@@ -1440,10 +1440,9 @@ handle_execute_agent(pcmk_resource_t *rsc)
 }
 
 static int
-handle_fail(const pcmk_node_t *node)
+handle_fail(pcmk_node_t *node)
 {
-    int rc = cli_resource_fail(controld_api, node, options.rsc_id,
-                               scheduler);
+    int rc = cli_resource_fail(controld_api, node, options.rsc_id);
 
     if (rc == pcmk_rc_ok) {
         start_mainloop(controld_api);

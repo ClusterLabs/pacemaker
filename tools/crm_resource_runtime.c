@@ -1242,13 +1242,14 @@ cli_resource_check(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 
 // \return Standard Pacemaker return code
 int
-cli_resource_fail(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
-                  const char *rsc_id, pcmk_scheduler_t *scheduler)
+cli_resource_fail(pcmk_ipc_api_t *controld_api, pcmk_node_t *node,
+                  const char *rsc_id)
 {
     pcmk__assert(node != NULL);
 
     crm_notice("Failing %s on %s", rsc_id, pcmk__node_name(node));
-    return send_lrm_rsc_op(controld_api, true, node, rsc_id, scheduler);
+    return send_lrm_rsc_op(controld_api, true, node, rsc_id,
+                           node->priv->scheduler);
 }
 
 static GHashTable *
