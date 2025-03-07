@@ -103,6 +103,7 @@ load_env_vars(void)
         char *value = NULL;
         char *value_end = NULL;
         char *quote = NULL;
+        char *comment = NULL;
 
         // Strip leading and trailing whitespace
         g_strstrip(line);
@@ -156,11 +157,17 @@ load_env_vars(void)
          */
         value_end = end;
 
+        // Strip trailing comment beginning with '#'
+        comment = strchr(end, '#');
+        if (comment != NULL) {
+            *comment = '\0';
+        }
+
         while (isspace(*end)) {
             end++;
         }
 
-        if ((*end != '\0') && (*end != '#')) {
+        if (*end != '\0') {
             // Found garbage after value
             goto cleanup_loop;
         }
