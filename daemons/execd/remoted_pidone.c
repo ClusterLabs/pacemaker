@@ -104,8 +104,8 @@ load_env_vars(void)
         char *value_end = NULL;
         char *quote = NULL;
 
-        // Strip leading whitespace
-        g_strchug(line);
+        // Strip leading and trailing whitespace
+        g_strstrip(line);
 
         // Look for valid name immediately followed by equals sign
         end = find_env_var_name(line);
@@ -151,15 +151,17 @@ load_env_vars(void)
 
         /* We have a valid name and value, and end is now the character after
          * the closing quote or the first whitespace after the unquoted value.
-         * Make sure the rest of the line is just whitespace or a comment.
+         * Make sure the rest of the line, if any, is just optional whitespace
+         * followed by a comment.
          */
         value_end = end;
 
-        while (isspace(*end) && (*end != '\n')) {
+        while (isspace(*end)) {
             end++;
         }
 
-        if ((*end != '\n') && (*end != '#')) {
+        if ((*end != '\0') && (*end != '#')) {
+            // Found garbage after value
             goto cleanup_loop;
         }
 
