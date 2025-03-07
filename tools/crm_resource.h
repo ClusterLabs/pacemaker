@@ -84,8 +84,8 @@ int cli_resource_print_operations(const char *rsc_id, const char *host_uname,
 /* runtime */
 int cli_resource_check(pcmk__output_t *out, pcmk_resource_t *rsc,
                        pcmk_node_t *node);
-int cli_resource_fail(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
-                      const char *rsc_id, pcmk_scheduler_t *scheduler);
+int cli_resource_fail(pcmk_ipc_api_t *controld_api, pcmk_node_t *node,
+                      const char *rsc_id);
 GList *cli_resource_search(const pcmk_resource_t *rsc,
                            const char *requested_name);
 int cli_resource_delete(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
