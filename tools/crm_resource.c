@@ -1600,7 +1600,7 @@ handle_list_standards(void)
 static int
 handle_locate(pcmk_resource_t *rsc)
 {
-    GList *nodes = cli_resource_search(rsc, options.rsc_id, scheduler);
+    GList *nodes = cli_resource_search(rsc, options.rsc_id);
     int rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
 
     g_list_free_full(nodes, free);

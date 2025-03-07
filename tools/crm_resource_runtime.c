@@ -54,8 +54,7 @@ build_node_info_list(const pcmk_resource_t *rsc)
 }
 
 GList *
-cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
-                    pcmk_scheduler_t *scheduler)
+cli_resource_search(const pcmk_resource_t *rsc, const char *requested_name)
 {
     GList *retval = NULL;
     const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
@@ -2358,7 +2357,8 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
     if (pcmk__strcase_any_of(rsc_action, "force-start", "force-demote",
                                     "force-promote", NULL)) {
         if (pcmk__is_clone(rsc)) {
-            GList *nodes = cli_resource_search(rsc, requested_name, scheduler);
+            GList *nodes = cli_resource_search(rsc, requested_name);
+
             if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
                          rsc_action, rsc->id);
