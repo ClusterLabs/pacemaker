@@ -1169,7 +1169,6 @@ static int
 handle_cts(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
            pcmk_scheduler_t *scheduler)
 {
-    // coverity[var_deref_op] False positive
     g_list_foreach(scheduler->priv->resources, (GFunc) cli_resource_print_cts,
                    out);
     cli_resource_print_cts_constraints(scheduler);
@@ -1207,7 +1206,6 @@ static int
 handle_delete_param(pcmk_resource_t *rsc, pcmk_node_t *node,
                     xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
-    /* coverity[var_deref_model] False positive */
     return cli_resource_delete_attribute(rsc, options.rsc_id, options.prop_set,
                                          options.attr_set_type, options.prop_id,
                                          options.prop_name, cib_conn,
@@ -1356,7 +1354,6 @@ static int
 handle_list_instances(pcmk_resource_t *rsc, pcmk_node_t *node,
                       xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
-    // coverity[var_deref_op] False positive
     if (out->message(out, "resource-names-list",
                      scheduler->priv->resources) != pcmk_rc_ok) {
         return ENXIO;
@@ -1548,7 +1545,6 @@ handle_set_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
         return pcmk_rc_ok;
     }
 
-    // coverity[var_deref_model] False positive
     return cli_resource_update_attribute(rsc, options.rsc_id, options.prop_set,
                                          options.attr_set_type, options.prop_id,
                                          options.prop_name, options.prop_value,
