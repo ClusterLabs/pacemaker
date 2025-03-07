@@ -23,41 +23,54 @@
 
 #include <crm_resource.h>
 
+struct rsc_node_info {
+    const pcmk_resource_t *rsc;
+    GList *list;
+};
+
+static void
+prepend_node_info(gpointer data, gpointer user_data)
+{
+    const pcmk_node_t *node = data;
+    struct rsc_node_info *rni = user_data;
+    node_info_t *ni = NULL;
+
+    pcmk__assert(rni->rsc != NULL);
+
+    ni = pcmk__assert_alloc(1, sizeof(node_info_t));
+    ni->node_name = node->priv->name;
+    ni->promoted = pcmk_is_set(rni->rsc->flags, pcmk__rsc_promotable)
+                   && (rni->rsc->priv->fns->state(rni->rsc, true)
+                       == pcmk_role_promoted);
+
+    rni->list = g_list_prepend(rni->list, ni);
+}
+
 static GList *
 build_node_info_list(const pcmk_resource_t *rsc)
 {
-    GList *retval = NULL;
+    struct rsc_node_info rni = { NULL, NULL };
 
     for (const GList *iter = rsc->priv->children;
          iter != NULL; iter = iter->next) {
 
-        const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
+        const pcmk_resource_t *child = iter->data;
 
-        for (const GList *iter2 = child->priv->active_nodes;
-             iter2 != NULL; iter2 = iter2->next) {
-
-            const pcmk_node_t *node = (const pcmk_node_t *) iter2->data;
-            node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
-
-            ni->node_name = node->priv->name;
-            if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)
-                && (child->priv->fns->state(child,
-                                            true) == pcmk_role_promoted)) {
-                ni->promoted = true;
-            }
-
-            retval = g_list_prepend(retval, ni);
-        }
+        rni.rsc = child;
+        g_list_foreach(child->priv->active_nodes, prepend_node_info, &rni);
     }
 
-    return retval;
+    return rni.list;
 }
 
 GList *
 cli_resource_search(const pcmk_resource_t *rsc, const char *requested_name)
 {
-    GList *node_info_list = NULL;
     const pcmk_resource_t *parent = NULL;
+    struct rsc_node_info rni = {
+        .rsc = rsc,
+        .list = NULL,
+    };
 
     pcmk__assert(rsc != NULL);
 
@@ -78,21 +91,8 @@ cli_resource_search(const pcmk_resource_t *rsc, const char *requested_name)
         return build_node_info_list(parent);
     }
 
-    for (const GList *iter = rsc->priv->active_nodes; iter != NULL;
-         iter = iter->next) {
-
-        const pcmk_node_t *node = iter->data;
-        node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
-
-        ni->node_name = node->priv->name;
-        if (rsc->priv->fns->state(rsc, true) == pcmk_role_promoted) {
-            ni->promoted = true;
-        }
-
-        node_info_list = g_list_prepend(node_info_list, ni);
-    }
-
-    return node_info_list;
+    g_list_foreach(rsc->priv->active_nodes, prepend_node_info, &rni);
+    return rni.list;
 }
 
 // \return Standard Pacemaker return code
