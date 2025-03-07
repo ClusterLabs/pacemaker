@@ -46,27 +46,10 @@ prepend_node_info(gpointer data, gpointer user_data)
     rni->list = g_list_prepend(rni->list, ni);
 }
 
-static GList *
-build_node_info_list(const pcmk_resource_t *rsc)
-{
-    struct rsc_node_info rni = { NULL, NULL };
-
-    for (const GList *iter = rsc->priv->children;
-         iter != NULL; iter = iter->next) {
-
-        const pcmk_resource_t *child = iter->data;
-
-        rni.rsc = child;
-        g_list_foreach(child->priv->active_nodes, prepend_node_info, &rni);
-    }
-
-    return rni.list;
-}
-
 GList *
 cli_resource_search(const pcmk_resource_t *rsc, const char *requested_name)
 {
-    const pcmk_resource_t *parent = NULL;
+    const pcmk_resource_t *clone = NULL;
     struct rsc_node_info rni = {
         .rsc = rsc,
         .list = NULL,
@@ -75,23 +58,37 @@ cli_resource_search(const pcmk_resource_t *rsc, const char *requested_name)
     pcmk__assert(rsc != NULL);
 
     if (pcmk__is_clone(rsc)) {
-        return build_node_info_list(rsc);
+        clone = rsc;
+
+    } else {
+        const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
+
+        if (pcmk__is_clone(parent)
+            && !pcmk_is_set(rsc->flags, pcmk__rsc_unique)
+            && (rsc->priv->history_id != NULL)
+            && pcmk__str_eq(requested_name, rsc->priv->history_id,
+                            pcmk__str_none)
+            && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_none)) {
+
+            // The anonymous clone children's common ID is supplied
+            clone = parent;
+        }
     }
 
-    parent = pe__const_top_resource(rsc, false);
+    if (clone != NULL) {
+        for (const GList *iter = clone->priv->children; iter != NULL;
+             iter = iter->next) {
 
-    // The anonymous clone children's common ID is supplied
-    if (pcmk__is_clone(parent)
-        && !pcmk_is_set(rsc->flags, pcmk__rsc_unique)
-        && (rsc->priv->history_id != NULL)
-        && pcmk__str_eq(requested_name, rsc->priv->history_id,
-                        pcmk__str_none)
-        && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_none)) {
+            const pcmk_resource_t *child = iter->data;
 
-        return build_node_info_list(parent);
+            rni.rsc = child;
+            g_list_foreach(child->priv->active_nodes, prepend_node_info, &rni);
+        }
+
+    } else {
+        g_list_foreach(rsc->priv->active_nodes, prepend_node_info, &rni);
     }
 
-    g_list_foreach(rsc->priv->active_nodes, prepend_node_info, &rni);
     return rni.list;
 }
 
