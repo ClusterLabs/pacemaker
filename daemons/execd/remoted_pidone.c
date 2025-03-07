@@ -101,7 +101,6 @@ load_env_vars(void)
         char *name = NULL;
         char *end = NULL;
         char *value = NULL;
-        char *value_end = NULL;
         char *quote = NULL;
         char *comment = NULL;
 
@@ -136,7 +135,7 @@ load_env_vars(void)
                 // Matching closing quote wasn't found
                 goto cleanup_loop;
             }
-            // Null-terminate value, and advance beyond close quote
+            // Discard closing quote and advance to check for trailing garbage
             *end++ = '\0';
 
         } else {
@@ -147,7 +146,6 @@ load_env_vars(void)
                    && (*end != '\0')) {
                 end++;
             }
-            // Do NOT null-terminate value (yet)
         }
 
         /* We have a valid name and value, and end is now the character after
@@ -155,7 +153,6 @@ load_env_vars(void)
          * Make sure the rest of the line, if any, is just optional whitespace
          * followed by a comment.
          */
-        value_end = end;
 
         // Strip trailing comment beginning with '#'
         comment = strchr(end, '#');
@@ -163,18 +160,12 @@ load_env_vars(void)
             *comment = '\0';
         }
 
-        while (isspace(*end)) {
-            end++;
-        }
+        // Strip any remaining trailing whitespace from value
+        g_strchomp(end);
 
         if (*end != '\0') {
             // Found garbage after value
             goto cleanup_loop;
-        }
-
-        if (quote == NULL) {
-            // Now we can null-terminate an unquoted value
-            *value_end = '\0';
         }
 
         // Don't overwrite (bundle options take precedence)
