@@ -113,10 +113,11 @@ crm_exit_t cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc
                                             gboolean force, int check_level);
 crm_exit_t cli_resource_execute(pcmk_resource_t *rsc,
                                 const char *requested_name,
-                                const char *rsc_action, GHashTable *override_hash,
+                                const char *rsc_action,
+                                GHashTable *override_hash,
                                 guint timeout_ms, cib_t *cib,
-                                pcmk_scheduler_t *scheduler,
-                                int resource_verbose, gboolean force, int check_level);
+                                int resource_verbose, bool force,
+                                int check_level);
 
 int cli_resource_update_attribute(pcmk_resource_t *rsc,
                                   const char *requested_name,
