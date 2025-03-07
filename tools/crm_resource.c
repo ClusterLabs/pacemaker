@@ -212,12 +212,6 @@ start_mainloop(pcmk_ipc_api_t *capi)
     }
 }
 
-static int
-compare_id(gconstpointer a, gconstpointer b)
-{
-    return strcmp((const char *)a, (const char *)b);
-}
-
 static GList *
 build_constraint_list(xmlNode *root)
 {
@@ -232,7 +226,7 @@ build_constraint_list(xmlNode *root)
     for (ndx = 0; ndx < numXpathResults(xpathObj); ndx++) {
         xmlNode *match = getXpathResult(xpathObj, ndx);
         retval = g_list_insert_sorted(retval, (gpointer) pcmk__xe_id(match),
-                                      compare_id);
+                                      (GCompareFunc) g_strcmp0);
     }
 
     freeXpathObject(xpathObj);
