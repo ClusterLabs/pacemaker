@@ -946,27 +946,29 @@ clear_rsc_fail_attrs(const pcmk_resource_t *rsc, const char *operation,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_delete(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
-                    const pcmk_resource_t *rsc, const char *operation,
-                    const char *interval_spec, bool just_failures,
-                    pcmk_scheduler_t *scheduler, bool force)
+cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
+                    const pcmk_node_t *node, const char *operation,
+                    const char *interval_spec, bool just_failures, bool force)
 {
-    pcmk__output_t *out = scheduler->priv->out;
+    pcmk_scheduler_t *scheduler = NULL;
+    pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
     if (rsc == NULL) {
         return ENXIO;
     }
 
+    scheduler = rsc->priv->scheduler;
+    out = scheduler->priv->out;
+
     if (rsc->priv->children != NULL) {
-        for (const GList *iter = rsc->priv->children; iter != NULL;
+        for (GList *iter = rsc->priv->children; iter != NULL;
              iter = iter->next) {
 
-            const pcmk_resource_t *child = iter->data;
+            pcmk_resource_t *child = iter->data;
 
-            rc = cli_resource_delete(controld_api, node, child, operation,
-                                     interval_spec, just_failures, scheduler,
-                                     force);
+            rc = cli_resource_delete(controld_api, child, node, operation,
+                                     interval_spec, just_failures, force);
             if (rc != pcmk_rc_ok) {
                 return rc;
             }
@@ -1004,9 +1006,8 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
                 continue;
             }
 
-            rc = cli_resource_delete(controld_api, node, rsc, operation,
-                                     interval_spec, just_failures, scheduler,
-                                     force);
+            rc = cli_resource_delete(controld_api, rsc, node, operation,
+                                     interval_spec, just_failures, force);
             if (rc != pcmk_rc_ok) {
                 break;
             }
