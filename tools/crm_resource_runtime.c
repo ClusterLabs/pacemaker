@@ -828,11 +828,11 @@ clear_rsc_history(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
 // \return Standard Pacemaker return code
 static int
 clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
-                   const pcmk_node_t *node, const char *rsc_id,
-                   const char *operation, const char *interval_spec,
-                   pcmk_scheduler_t *scheduler)
+                   pcmk_node_t *node, const char *rsc_id, const char *operation,
+                   const char *interval_spec)
 {
     int rc = pcmk_rc_ok;
+    pcmk_scheduler_t *scheduler = NULL;
     const char *failed_value = NULL;
     const char *failed_id = NULL;
     char *interval_ms_s = NULL;
@@ -840,6 +840,8 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     GHashTableIter iter;
 
     pcmk__assert(node != NULL);
+
+    scheduler = node->priv->scheduler;
 
     /* Create a hash table to use as a set of resources to clean. This lets us
      * clean each resource only once (per node) regardless of how many failed
@@ -949,7 +951,7 @@ clear_rsc_fail_attrs(const pcmk_resource_t *rsc, const char *operation,
 // \return Standard Pacemaker return code
 int
 cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
-                    const pcmk_node_t *node, const char *operation,
+                    pcmk_node_t *node, const char *operation,
                     const char *interval_spec, bool just_failures, bool force)
 {
     pcmk_scheduler_t *scheduler = NULL;
@@ -999,8 +1001,8 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
             }
         }
 
-        for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
-            node = (const pcmk_node_t *) iter->data;
+        for (GList *iter = nodes; iter != NULL; iter = iter->next) {
+            node = (pcmk_node_t *) iter->data;
 
             if (!node->details->online) {
                 continue;
@@ -1040,7 +1042,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
 
     if (just_failures) {
         rc = clear_rsc_failures(out, controld_api, node, rsc->id, operation,
-                                interval_spec, scheduler);
+                                interval_spec);
     } else {
         rc = clear_rsc_history(controld_api, rsc, rsc->id, node);
     }
@@ -1057,7 +1059,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
 
 // \return Standard Pacemaker return code
 int
-cli_cleanup_all(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
+cli_cleanup_all(pcmk_ipc_api_t *controld_api, pcmk_node_t *node,
                 const char *operation, const char *interval_spec,
                 pcmk_scheduler_t *scheduler)
 {
@@ -1096,14 +1098,14 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
 
     if (node != NULL) {
         rc = clear_rsc_failures(out, controld_api, node, NULL, operation,
-                                interval_spec, scheduler);
+                                interval_spec);
 
     } else {
-        for (const GList *iter = scheduler->nodes; iter; iter = iter->next) {
-            const pcmk_node_t *sched_node = iter->data;
+        for (GList *iter = scheduler->nodes; iter; iter = iter->next) {
+            pcmk_node_t *sched_node = iter->data;
 
             rc = clear_rsc_failures(out, controld_api, sched_node, NULL,
-                                    operation, interval_spec, scheduler);
+                                    operation, interval_spec);
             if (rc != pcmk_rc_ok) {
                 break;
             }
