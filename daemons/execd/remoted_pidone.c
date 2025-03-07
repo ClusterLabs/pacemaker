@@ -63,34 +63,22 @@ static struct {
  * \internal
  * \brief Check a line of text for a valid environment variable name
  *
- * \param[in]  line  Text to check
- * \param[out] first  First character of valid name if found, NULL otherwise
- * \param[out] last   Last character of valid name if found, NULL otherwise
+ * \param[in] line  Text to check
  *
- * \return TRUE if valid name found, FALSE otherwise
+ * \return Last character of valid name if found, or \c NULL otherwise
  * \note It's reasonable to impose limitations on environment variable names
  *       beyond what C or setenv() does: We only allow names that contain only
  *       [a-zA-Z0-9_] characters and do not start with a digit.
  */
-static bool
-find_env_var_name(char *line, char **first, char **last)
+static char *
+find_env_var_name(char *line)
 {
-    // Skip leading whitespace
-    *first = line;
-    while (isspace(**first)) {
-        ++*first;
+    if (!isalpha(*line) && (*line != '_')) {
+        // Invalid first character
+        return NULL;
     }
-
-    if (isalpha(**first) || (**first == '_')) { // Valid first character
-        *last = *first;
-        while (isalnum(*(*last + 1)) || (*(*last + 1) == '_')) {
-            ++*last;
-        }
-        return TRUE;
-    }
-
-    *first = *last = NULL;
-    return FALSE;
+    for (line++; isalnum(*line) || (*line == '_'); line++);
+    return line;
 }
 
 #define CONTAINER_ENV_FILE "/etc/pacemaker/pcmk-init.env"
@@ -115,10 +103,15 @@ load_env_vars(void)
         char *value = NULL;
         char *quote = NULL;
 
+        // Strip leading whitespace
+        g_strchug(line);
+
         // Look for valid name immediately followed by equals sign
-        if (!find_env_var_name(line, &name, &end) || (*++end != '=')) {
+        end = find_env_var_name(line);
+        if (*++end != '=') {
             goto cleanup_loop;
         }
+        name = line;
 
         // Null-terminate name, and advance beyond equals sign
         *end++ = '\0';
