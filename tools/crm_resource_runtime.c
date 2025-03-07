@@ -959,9 +959,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    if (rsc == NULL) {
-        return ENXIO;
-    }
+    pcmk__assert(rsc != NULL);
 
     scheduler = rsc->priv->scheduler;
     out = scheduler->priv->out;
