@@ -101,7 +101,6 @@ load_env_vars(void)
         char *name = NULL;
         char *end = NULL;
         char *value = NULL;
-        char *quote = NULL;
         char *comment = NULL;
 
         // Strip leading and trailing whitespace
@@ -117,16 +116,16 @@ load_env_vars(void)
         // Null-terminate name, and advance beyond equals sign
         *end++ = '\0';
 
-        // Check whether value is quoted
-        if ((*end == '\'') || (*end == '"')) {
-            quote = end++;
-        }
         value = end;
 
-        if (quote != NULL) {
+        // Check whether value is quoted
+        if ((*value == '\'') || (*value == '"')) {
+            const char *quote = *value++;
+
             /* Value is remaining characters up to next non-backslashed matching
              * quote character.
              */
+            end = value;
             while (((*end != *quote) || (*(end - 1) == '\\'))
                    && (*end != '\0')) {
                 end++;
