@@ -96,10 +96,9 @@ struct {
     int check_level;              // Optional value of --validate or --force-check
 
     // Resource configuration specified via command-line arguments
-    bool cmdline_config;          // Resource configuration was via arguments
-    char *v_agent;                // Value of --agent
-    char *v_class;                // Value of --class
-    char *v_provider;             // Value of --provider
+    gchar *agent;                 // Value of --agent
+    gchar *class;                 // Value of --class
+    gchar *provider;              // Value of --provider
     GHashTable *cmdline_params;   // Resource parameters specified
 
     // Positional command-line arguments
@@ -266,24 +265,6 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.attr_set_type = PCMK_XE_UTILIZATION;
     } else if (pcmk__str_eq(option_name, "--element", pcmk__str_none)) {
         options.attr_set_type = ATTR_SET_ELEMENT;
-    }
-    return TRUE;
-}
-
-static gboolean
-cmdline_config_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-                  GError **error)
-{
-    options.cmdline_config = true;
-
-    if (pcmk__str_eq(option_name, "--class", pcmk__str_none)) {
-        pcmk__str_update(&options.v_class, optarg);
-
-    } else if (pcmk__str_eq(option_name, "--provider", pcmk__str_none)) {
-        pcmk__str_update(&options.v_provider, optarg);
-
-    } else {    // --agent
-        pcmk__str_update(&options.v_agent, optarg);
     }
     return TRUE;
 }
@@ -753,16 +734,15 @@ static GOptionEntry addl_entries[] = {
     { "interval", 'I', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.interval_spec,
       "Interval of operation to clear (default 0s) (with -C -r -n)",
       "N" },
-    { "class", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, cmdline_config_cb,
+    { "class", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.class,
       "The standard the resource agent conforms to (for example, ocf).\n"
       INDENT "Use with --agent, --provider, --option, and --validate.",
       "CLASS" },
-    { "agent", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, cmdline_config_cb,
+    { "agent", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.agent,
       "The agent to use (for example, IPaddr). Use with --class,\n"
       INDENT "--provider, --option, and --validate.",
       "AGENT" },
-    { "provider", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
-          cmdline_config_cb,
+    { "provider", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.provider,
       "The vendor that supplies the resource agent (for example,\n"
       INDENT "heartbeat). Use with --class, --agent, --option, and --validate.",
       "PROVIDER" },
@@ -982,6 +962,20 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether a command-line resource configuration was given
+ *
+ * \return \c true if \c --class, \c --provider, or \c --agent was specified, or
+ *         \c false otherwise
+ */
+static inline bool
+has_cmdline_config(void)
+{
+    return ((options.class != NULL) || (options.provider != NULL)
+            || (options.agent != NULL));
+}
+
 static void
 validate_cmdline_config(void)
 {
@@ -999,22 +993,26 @@ validate_cmdline_config(void)
     // Not all of --class, --agent, and --provider need to be given.  Not all
     // classes support the concept of a provider.  Check that what we were given
     // is valid.
-    } else if (pcmk__str_eq(options.v_class, "stonith", pcmk__str_none)) {
-        if (options.v_provider != NULL) {
+    } else if (pcmk__str_eq(options.class, "stonith", pcmk__str_none)) {
+        if (options.provider != NULL) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         _("stonith does not support providers"));
 
-        } else if (stonith_agent_exists(options.v_agent, 0) == FALSE) {
+        } else if (!stonith_agent_exists(options.agent, 0)) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        _("%s is not a known stonith agent"), options.v_agent ? options.v_agent : "");
+                        _("%s is not a known stonith agent"),
+                        pcmk__s(options.agent, "(unspecified)"));
         }
 
-    } else if (resources_agent_exists(options.v_class, options.v_provider, options.v_agent) == FALSE) {
+    } else if (!resources_agent_exists(options.class, options.provider,
+                                       options.agent)) {
+        // provider is only for ocf-class resources
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    _("%s:%s:%s is not a known resource"),
-                    options.v_class ? options.v_class : "",
-                    options.v_provider ? options.v_provider : "",
-                    options.v_agent ? options.v_agent : "");
+                    _("%s:%s%s%s is not a known resource"),
+                    pcmk__s(options.class, "(unspecified)"),
+                    pcmk__s(options.provider, ""),
+                    ((options.provider != NULL)? ":" : ""),
+                    pcmk__s(options.agent, "(unspecified)"));
     }
 
     if ((error == NULL) && (options.cmdline_params == NULL)) {
@@ -1085,7 +1083,7 @@ is_node_required(void)
 static bool
 is_resource_required(void)
 {
-    if (options.cmdline_config) {
+    if (has_cmdline_config()) {
         return false;
     }
 
@@ -1126,7 +1124,7 @@ is_resource_required(void)
 static bool
 is_scheduler_required(void)
 {
-    if (options.cmdline_config) {
+    if (has_cmdline_config()) {
         // cmd_execute_agent using CLI parameters instead of CIB connection
         return false;
     }
@@ -1155,7 +1153,7 @@ is_scheduler_required(void)
 static bool
 is_cib_required(void)
 {
-    if (options.cmdline_config) {
+    if (has_cmdline_config()) {
         // cmd_execute_agent using CLI parameters instead of CIB connection
         return false;
     }
@@ -1379,10 +1377,10 @@ handle_digests(pcmk_resource_t *rsc, const pcmk_node_t *node)
 static int
 handle_execute_agent(pcmk_resource_t *rsc)
 {
-    if (options.cmdline_config) {
-        exit_code = cli_resource_execute_from_params(out, NULL, options.v_class,
-                                                     options.v_provider,
-                                                     options.v_agent,
+    if (has_cmdline_config()) {
+        exit_code = cli_resource_execute_from_params(out, NULL, options.class,
+                                                     options.provider,
+                                                     options.agent,
                                                      options.operation,
                                                      options.cmdline_params,
                                                      options.override_params,
@@ -1893,7 +1891,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (options.cmdline_config) {
+    if (has_cmdline_config()) {
         /* A resource configuration was given on the command line. Sanity-check
          * the values and set error if they don't make sense.
          */
@@ -2165,9 +2163,9 @@ done:
     g_free(options.rsc_id);
     g_free(options.rsc_type);
     free(options.agent_spec);
-    free(options.v_agent);
-    free(options.v_class);
-    free(options.v_provider);
+    g_free(options.agent);
+    g_free(options.class);
+    g_free(options.provider);
     if (options.override_params != NULL) {
         g_hash_table_destroy(options.override_params);
     }
