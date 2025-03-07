@@ -1682,13 +1682,13 @@ handle_move(pcmk_resource_t *rsc, const pcmk_node_t *node)
 static int
 handle_query_xml(pcmk_resource_t *rsc)
 {
-    return cli_resource_print(rsc, scheduler, true);
+    return cli_resource_print(rsc, true);
 }
 
 static int
 handle_query_xml_raw(pcmk_resource_t *rsc)
 {
-    return cli_resource_print(rsc, scheduler, false);
+    return cli_resource_print(rsc, false);
 }
 
 static int
