@@ -248,6 +248,7 @@ Requires:      %{python_name}-%{name} = %{version}-%{release}
 Requires:      %{python_path}
 BuildRequires: %{python_name}-devel
 BuildRequires: %{python_name}-setuptools
+BuildRequires: %{python_name}-libxml2
 
 # Pacemaker requires a minimum libqb functionality
 Requires:      libqb >= 1.0.1
@@ -373,7 +374,6 @@ License:       LGPL-2.1-or-later
 Summary:       Python libraries for Pacemaker
 Requires:      %{python_path}
 Requires:      %{pkgname_pcmk_libs} = %{version}-%{release}
-BuildArch:     noarch
 
 %description -n %{python_name}-%{name}
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -516,8 +516,9 @@ popd
 
 %check
 make %{_smp_mflags} check
-{ cts/cts-scheduler --run load-stopped-loop \
-  && cts/cts-cli -V \
+{ PYTHONPATH=python/pacemaker/.libs \
+  cts/cts-scheduler --run load-stopped-loop \
+  && PYTHONPATH=python/pacemaker/.libs cts/cts-cli -V \
   && touch .CHECKED
 } 2>&1 | sed 's/[fF]ail/faiil/g'  # prevent false positives in rpmlint
 [ -f .CHECKED ] && rm -f -- .CHECKED
@@ -747,6 +748,7 @@ exit 0
 %doc ChangeLog.md
 
 %files -n %{python_name}-%{name}
+%{python3_sitearch}/_pcmksupport.so
 %{python3_sitelib}/pacemaker/
 %{python3_sitelib}/pacemaker-*.egg-info
 %exclude %{python3_sitelib}/pacemaker/_cts/
