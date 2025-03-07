@@ -1220,12 +1220,9 @@ is_controller_required(void)
 {
     switch (options.rsc_cmd) {
         case cmd_cleanup:
-        case cmd_refresh:
-            return getenv("CIB_file") == NULL;
-
         case cmd_fail:
+        case cmd_refresh:
             return true;
-
         default:
             return false;
     }
@@ -2032,7 +2029,7 @@ main(int argc, char **argv)
     }
 
     // Establish a connection to the controller if needed
-    if (is_controller_required()) {
+    if (is_controller_required() && (getenv("CIB_file") == NULL)) {
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);

@@ -1252,6 +1252,13 @@ cli_resource_fail(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
 {
     pcmk__assert((rsc != NULL) && (rsc_id != NULL) && (node != NULL));
 
+    if (controld_api == NULL) {
+        pcmk__output_t *out = rsc->priv->scheduler->priv->out;
+
+        out->err(out, "Dry run: skipping fail of %s on %s due to CIB_file",
+                 rsc_id, pcmk__node_name(node));
+        return pcmk_rc_ok;
+    }
     crm_notice("Failing %s on %s", rsc_id, pcmk__node_name(node));
     return send_lrm_rsc_op(controld_api, true, rsc, rsc_id, node);
 }
