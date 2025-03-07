@@ -120,7 +120,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
         resource_location(rsc, node, PCMK_SCORE_INFINITY,
                           "not_managed_default", scheduler);
 
-        while(p && node->details->online) {
+        while(p) {
             /* add without the additional location constraint */
             p->priv->active_nodes = g_list_append(p->priv->active_nodes, node);
             p = p->priv->parent;
