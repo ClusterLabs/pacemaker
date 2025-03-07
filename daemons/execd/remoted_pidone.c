@@ -158,16 +158,19 @@ load_env_vars(void)
         while (isspace(*end) && (*end != '\n')) {
             end++;
         }
-        if ((*end == '\n') || (*end == '#')) {
-            if (quote == NULL) {
-                // Now we can null-terminate an unquoted value
-                *value_end = '\0';
-            }
 
-            // Don't overwrite (bundle options take precedence)
-            // coverity[tainted_string] Can't easily be changed right now
-            setenv(name, value, 0);
+        if ((*end != '\n') && (*end != '#')) {
+            goto cleanup_loop;
         }
+
+        if (quote == NULL) {
+            // Now we can null-terminate an unquoted value
+            *value_end = '\0';
+        }
+
+        // Don't overwrite (bundle options take precedence)
+        // coverity[tainted_string] Can't easily be changed right now
+        setenv(name, value, 0);
 
 cleanup_loop:
         errno = 0;
