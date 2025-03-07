@@ -1089,6 +1089,9 @@ get_find_flags(void)
         case cmd_set_param:
             return pcmk_rsc_match_history|pcmk_rsc_match_basename;
 
+        case cmd_fail:
+            return pcmk_rsc_match_history;
+
         default:
             return 0;
     }
@@ -1438,9 +1441,9 @@ handle_execute_agent(pcmk_resource_t *rsc)
 }
 
 static int
-handle_fail(pcmk_node_t *node)
+handle_fail(pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
-    int rc = cli_resource_fail(controld_api, node, options.rsc_id);
+    int rc = cli_resource_fail(controld_api, rsc, options.rsc_id, node);
 
     if (rc == pcmk_rc_ok) {
         start_mainloop(controld_api);
@@ -2090,7 +2093,7 @@ main(int argc, char **argv)
             rc = handle_execute_agent(rsc);
             break;
         case cmd_fail:
-            rc = handle_fail(node);
+            rc = handle_fail(rsc, node);
             break;
         case cmd_get_param:
             // coverity[var_deref_model] False positive
