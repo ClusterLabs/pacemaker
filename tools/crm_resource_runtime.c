@@ -708,8 +708,8 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
 // \return Standard Pacemaker return code
 static int
 send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
-                const pcmk_node_t *node, const char *rsc_id,
-                pcmk_scheduler_t *scheduler)
+                const pcmk_resource_t *rsc, const char *rsc_id,
+                const pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pcmk__output_t *out = NULL;
     const char *rsc_api_id = NULL;
@@ -719,17 +719,12 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     const char *rsc_type = NULL;
     const char *router_node = NULL;
     bool cib_only = false;
-    pcmk_resource_t *rsc = NULL;
 
-    pcmk__assert((node != NULL) && (scheduler != NULL));
+    pcmk__assert((rsc != NULL) && (rsc_id != NULL) && (node != NULL)
+                 && (scheduler != NULL));
 
     out = scheduler->priv->out;
 
-    rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
-    if (rsc == NULL) {
-        out->err(out, "Resource %s not found", rsc_id);
-        return ENXIO;
-    }
     if (!pcmk__is_primitive(rsc)) {
         out->err(out, "We can only process primitive resources, not %s",
                  rsc_id);
@@ -809,16 +804,26 @@ static int
 clear_rsc_history(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
                   const char *rsc_id, pcmk_scheduler_t *scheduler)
 {
+    pcmk__output_t *out = NULL;
+    const pcmk_resource_t *rsc = NULL;
     int rc = pcmk_rc_ok;
 
     pcmk__assert(node != NULL);
+
+    out = scheduler->priv->out;
+
+    rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
+    if (rsc == NULL) {
+        out->err(out, "Resource %s not found", rsc_id);
+        return ENXIO;
+    }
 
     /* Erase the resource's entire LRM history in the CIB, even if we're only
      * clearing a single operation's fail count. If we erased only entries for a
      * single operation, we might wind up with a wrong idea of the current
      * resource state, and we might not re-probe the resource.
      */
-    rc = send_lrm_rsc_op(controld_api, false, node, rsc_id, scheduler);
+    rc = send_lrm_rsc_op(controld_api, false, rsc, rsc_id, node, scheduler);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -1246,11 +1251,23 @@ int
 cli_resource_fail(pcmk_ipc_api_t *controld_api, pcmk_node_t *node,
                   const char *rsc_id)
 {
+    pcmk_scheduler_t *scheduler = NULL;
+    pcmk__output_t *out = NULL;
+    const pcmk_resource_t *rsc = NULL;
+
     pcmk__assert(node != NULL);
 
+    scheduler = node->priv->scheduler;
+    out = scheduler->priv->out;
+
+    rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
+    if (rsc == NULL) {
+        out->err(out, "Resource %s not found", rsc_id);
+        return ENXIO;
+    }
+
     crm_notice("Failing %s on %s", rsc_id, pcmk__node_name(node));
-    return send_lrm_rsc_op(controld_api, true, node, rsc_id,
-                           node->priv->scheduler);
+    return send_lrm_rsc_op(controld_api, true, rsc, rsc_id, node, scheduler);
 }
 
 static GHashTable *
