@@ -95,6 +95,9 @@ enum crm_rsc_flags {
 
     //! Use \c pcmk_rsc_match_basename when looking up a resource
     crm_rsc_find_match_basename      = (UINT32_C(1) << 1),
+
+    //! Use \c pcmk_rsc_match_history when looking up a resource
+    crm_rsc_find_match_history       = (UINT32_C(1) << 2),
 };
 
 /*!
@@ -1091,44 +1094,6 @@ validate_cmdline_config(void)
 
 /*!
  * \internal
- * \brief Get the <tt>enum pe_find</tt> flags for a given command
- *
- * \return <tt>enum pe_find</tt> flag group appropriate for \c options.rsc_cmd.
- */
-static uint32_t
-get_find_flags(void)
-{
-    switch (options.rsc_cmd) {
-        case cmd_ban:
-        case cmd_cleanup:
-        case cmd_clear:
-        case cmd_colocations:
-        case cmd_digests:
-        case cmd_execute_agent:
-        case cmd_locate:
-        case cmd_move:
-        case cmd_refresh:
-        case cmd_restart:
-        case cmd_why:
-            return pcmk_rsc_match_history;
-
-        case cmd_delete_param:
-        case cmd_get_param:
-        case cmd_query_xml_raw:
-        case cmd_query_xml:
-        case cmd_set_param:
-            return pcmk_rsc_match_history;
-
-        case cmd_fail:
-            return pcmk_rsc_match_history;
-
-        default:
-            return 0;
-    }
-}
-
-/*!
- * \internal
  * \brief Check whether a node argument is required
  *
  * \return \c true if a \c --node argument is required, or \c false otherwise
@@ -1808,19 +1773,23 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_ban]               = {
         handle_ban,
-        crm_rsc_find_match_anon_basename,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_cleanup]           = {
         handle_cleanup,
-        crm_rsc_find_match_anon_basename,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_clear]             = {
         handle_clear,
-        crm_rsc_find_match_anon_basename,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_colocations]       = {
         handle_colocations,
-        crm_rsc_find_match_anon_basename,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_cts]               = {
         handle_cts,
@@ -1832,23 +1801,27 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_delete_param]      = {
         handle_delete_param,
-        crm_rsc_find_match_basename,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_digests]           = {
         handle_digests,
-        crm_rsc_find_match_anon_basename,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_execute_agent]     = {
         handle_execute_agent,
-        crm_rsc_find_match_anon_basename,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_fail]              = {
         handle_fail,
-        0,
+        crm_rsc_find_match_history,
     },
     [cmd_get_param]         = {
         handle_get_param,
-        crm_rsc_find_match_basename,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_list_active_ops]   = {
         handle_list_active_ops,
@@ -1888,7 +1861,8 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_locate]            = {
         handle_locate,
-        crm_rsc_find_match_anon_basename,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_metadata]          = {
         handle_metadata,
@@ -1896,27 +1870,33 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_move]              = {
         handle_move,
-        crm_rsc_find_match_anon_basename,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_query_xml]         = {
         handle_query_xml,
-        crm_rsc_find_match_basename,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_query_xml_raw]     = {
         handle_query_xml_raw,
-        crm_rsc_find_match_basename,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_refresh]           = {
         handle_refresh,
-        crm_rsc_find_match_anon_basename,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_restart]           = {
         handle_restart,
-        crm_rsc_find_match_anon_basename,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_set_param]         = {
         handle_set_param,
-        crm_rsc_find_match_basename,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history,
     },
     [cmd_wait]              = {
         handle_wait,
@@ -1924,7 +1904,8 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_why]               = {
         handle_why,
-        crm_rsc_find_match_anon_basename,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history,
     },
 };
 
@@ -2206,16 +2187,20 @@ main(int argc, char **argv)
     }
 
     // @TODO Setter macro for tracing?
-    find_flags = get_find_flags();
     if (pcmk_is_set(command_info->flags, crm_rsc_find_match_anon_basename)) {
         find_flags |= pcmk_rsc_match_anon_basename;
     }
     if (pcmk_is_set(command_info->flags, crm_rsc_find_match_basename)) {
         find_flags |= pcmk_rsc_match_basename;
     }
+    if (pcmk_is_set(command_info->flags, crm_rsc_find_match_history)) {
+        find_flags |= pcmk_rsc_match_history;
+    }
 
-    // If command requires that resource exist if specified, find it
+    // Find resource in scheduler data if any find flags are set
     if ((find_flags != 0) && (options.rsc_id != NULL)) {
+        pcmk__assert(scheduler != NULL);
+
         rsc = pe_find_resource_with_flags(scheduler->priv->resources,
                                           options.rsc_id, find_flags);
         if (rsc == NULL) {
