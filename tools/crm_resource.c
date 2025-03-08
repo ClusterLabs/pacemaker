@@ -83,11 +83,24 @@ typedef int (*crm_resource_fn_t)(pcmk_resource_t *, pcmk_node_t *, xmlNode *,
 
 /*!
  * \internal
+ * \brief Flags to define attributes of a given command
+ *
+ * These attributes may include required command-line options, how to look up a
+ * resource in the scheduler data, whether the command supports clone instances,
+ * etc.
+ */
+enum crm_rsc_flags {
+    //! Use \c pcmk_rsc_match_anon_basename when looking up a resource
+    crm_rsc_find_match_anon_basename = (UINT32_C(1) << 0),
+};
+
+/*!
+ * \internal
  * \brief Handler function and flags for a given command
  */
 typedef struct {
     crm_resource_fn_t fn;   //!< Command handler function
-    uint32_t flags;         //!< Unused
+    uint32_t flags;         //!< Group of <tt>enum crm_rsc_flags</tt>
 } crm_resource_cmd_info_t;
 
 struct {
@@ -1094,7 +1107,7 @@ get_find_flags(void)
         case cmd_refresh:
         case cmd_restart:
         case cmd_why:
-            return pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
+            return pcmk_rsc_match_history;
 
         case cmd_delete_param:
         case cmd_get_param:
@@ -1792,19 +1805,19 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_ban]               = {
         handle_ban,
-        0,
+        crm_rsc_find_match_anon_basename,
     },
     [cmd_cleanup]           = {
         handle_cleanup,
-        0,
+        crm_rsc_find_match_anon_basename,
     },
     [cmd_clear]             = {
         handle_clear,
-        0,
+        crm_rsc_find_match_anon_basename,
     },
     [cmd_colocations]       = {
         handle_colocations,
-        0,
+        crm_rsc_find_match_anon_basename,
     },
     [cmd_cts]               = {
         handle_cts,
@@ -1820,11 +1833,11 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_digests]           = {
         handle_digests,
-        0,
+        crm_rsc_find_match_anon_basename,
     },
     [cmd_execute_agent]     = {
         handle_execute_agent,
-        0,
+        crm_rsc_find_match_anon_basename,
     },
     [cmd_fail]              = {
         handle_fail,
@@ -1872,7 +1885,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_locate]            = {
         handle_locate,
-        0,
+        crm_rsc_find_match_anon_basename,
     },
     [cmd_metadata]          = {
         handle_metadata,
@@ -1880,7 +1893,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_move]              = {
         handle_move,
-        0,
+        crm_rsc_find_match_anon_basename,
     },
     [cmd_query_xml]         = {
         handle_query_xml,
@@ -1892,11 +1905,11 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_refresh]           = {
         handle_refresh,
-        0,
+        crm_rsc_find_match_anon_basename,
     },
     [cmd_restart]           = {
         handle_restart,
-        0,
+        crm_rsc_find_match_anon_basename,
     },
     [cmd_set_param]         = {
         handle_set_param,
@@ -1908,7 +1921,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_why]               = {
         handle_why,
-        0,
+        crm_rsc_find_match_anon_basename,
     },
 };
 
@@ -2189,7 +2202,11 @@ main(int argc, char **argv)
         }
     }
 
+    // @TODO Setter macro for tracing?
     find_flags = get_find_flags();
+    if (pcmk_is_set(command_info->flags, crm_rsc_find_match_anon_basename)) {
+        find_flags |= pcmk_rsc_match_anon_basename;
+    }
 
     // If command requires that resource exist if specified, find it
     if ((find_flags != 0) && (options.rsc_id != NULL)) {
