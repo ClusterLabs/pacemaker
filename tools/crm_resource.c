@@ -101,6 +101,9 @@ enum crm_rsc_flags {
 
     //! Fail if \c --resource refers to a particular clone instance
     crm_rsc_rejects_clone_instance   = (UINT32_C(1) << 3),
+
+    //! Require scheduler data unless resource is specified by agent
+    crm_rsc_requires_scheduler       = (UINT32_C(1) << 8),
 };
 
 /*!
@@ -1157,48 +1160,40 @@ is_resource_required(void)
  * \internal
  * \brief Check whether a scheduler data object is required
  *
+ * \param[in] command_info  Command info
+ *
  * If true, the caller will populate the scheduler data from the CIB connection.
  *
  * \return \c true if scheduler data is required, or \c false otherwise
  */
 static bool
-is_scheduler_required(void)
+is_scheduler_required(const crm_resource_cmd_info_t *command_info)
 {
     if (has_cmdline_config()) {
         // cmd_execute_agent using CLI parameters instead of CIB connection
         return false;
     }
 
-    switch (options.rsc_cmd) {
-        case cmd_delete:
-        case cmd_list_agents:
-        case cmd_list_alternatives:
-        case cmd_list_options:
-        case cmd_list_providers:
-        case cmd_list_standards:
-        case cmd_metadata:
-        case cmd_wait:
-            return false;
-        default:
-            return true;
-    }
+    return pcmk_is_set(command_info->flags, crm_rsc_requires_scheduler);
 }
 
 /*!
  * \internal
  * \brief Check whether a CIB connection is required
  *
+ * \param[in] command_info  Command info
+ *
  * \return \c true if a CIB connection is required, or \c false otherwise
  */
 static bool
-is_cib_required(void)
+is_cib_required(const crm_resource_cmd_info_t *command_info)
 {
     if (has_cmdline_config()) {
         // cmd_execute_agent using CLI parameters instead of CIB connection
         return false;
     }
 
-    if (is_scheduler_required()) {
+    if (is_scheduler_required(command_info)) {
         return true;
     }
 
@@ -1756,27 +1751,31 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         handle_ban,
         crm_rsc_find_match_anon_basename
         |crm_rsc_find_match_history
-        |crm_rsc_rejects_clone_instance,
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_scheduler,
     },
     [cmd_cleanup]           = {
         handle_cleanup,
         crm_rsc_find_match_anon_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_clear]             = {
         handle_clear,
         crm_rsc_find_match_anon_basename
         |crm_rsc_find_match_history
-        |crm_rsc_rejects_clone_instance,
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_scheduler,
     },
     [cmd_colocations]       = {
         handle_colocations,
         crm_rsc_find_match_anon_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_cts]               = {
         handle_cts,
-        0,
+        crm_rsc_requires_scheduler,
     },
     [cmd_delete]            = {
         handle_delete,
@@ -1785,30 +1784,35 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     [cmd_delete_param]      = {
         handle_delete_param,
         crm_rsc_find_match_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_digests]           = {
         handle_digests,
         crm_rsc_find_match_anon_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_execute_agent]     = {
         handle_execute_agent,
         crm_rsc_find_match_anon_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_fail]              = {
         handle_fail,
-        crm_rsc_find_match_history,
+        crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_get_param]         = {
         handle_get_param,
         crm_rsc_find_match_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_list_active_ops]   = {
         handle_list_active_ops,
-        0,
+        crm_rsc_requires_scheduler,
     },
     [cmd_list_agents]       = {
         handle_list_agents,
@@ -1816,7 +1820,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_list_all_ops]      = {
         handle_list_all_ops,
-        0,
+        crm_rsc_requires_scheduler,
     },
     [cmd_list_alternatives] = {
         handle_list_alternatives,
@@ -1824,7 +1828,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_list_instances]    = {
         handle_list_instances,
-        0,
+        crm_rsc_requires_scheduler,
     },
     [cmd_list_options]      = {
         handle_list_options,
@@ -1836,7 +1840,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_list_resources]    = {
         handle_list_resources,
-        0,
+        crm_rsc_requires_scheduler,
     },
     [cmd_list_standards]    = {
         handle_list_standards,
@@ -1845,7 +1849,8 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     [cmd_locate]            = {
         handle_locate,
         crm_rsc_find_match_anon_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_metadata]          = {
         handle_metadata,
@@ -1855,33 +1860,39 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         handle_move,
         crm_rsc_find_match_anon_basename
         |crm_rsc_find_match_history
-        |crm_rsc_rejects_clone_instance,
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_scheduler,
     },
     [cmd_query_xml]         = {
         handle_query_xml,
         crm_rsc_find_match_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_query_xml_raw]     = {
         handle_query_xml_raw,
         crm_rsc_find_match_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_refresh]           = {
         handle_refresh,
         crm_rsc_find_match_anon_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_restart]           = {
         handle_restart,
         crm_rsc_find_match_anon_basename
         |crm_rsc_find_match_history
-        |crm_rsc_rejects_clone_instance,
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_scheduler,
     },
     [cmd_set_param]         = {
         handle_set_param,
         crm_rsc_find_match_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
     [cmd_wait]              = {
         handle_wait,
@@ -1890,7 +1901,8 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     [cmd_why]               = {
         handle_why,
         crm_rsc_find_match_anon_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_scheduler,
     },
 };
 
@@ -2130,7 +2142,7 @@ main(int argc, char **argv)
      */
 
     // Establish a connection to the CIB if needed
-    if (is_cib_required()) {
+    if (is_cib_required(command_info)) {
         cib_conn = cib_new();
         if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
             exit_code = CRM_EX_DISCONNECT;
@@ -2149,7 +2161,7 @@ main(int argc, char **argv)
     }
 
     // Populate scheduler data from CIB query
-    if (is_scheduler_required()) {
+    if (is_scheduler_required(command_info)) {
         rc = initialize_scheduler_data(&cib_xml_orig);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
