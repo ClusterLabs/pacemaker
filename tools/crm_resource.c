@@ -92,6 +92,9 @@ typedef int (*crm_resource_fn_t)(pcmk_resource_t *, pcmk_node_t *, xmlNode *,
 enum crm_rsc_flags {
     //! Use \c pcmk_rsc_match_anon_basename when looking up a resource
     crm_rsc_find_match_anon_basename = (UINT32_C(1) << 0),
+
+    //! Use \c pcmk_rsc_match_basename when looking up a resource
+    crm_rsc_find_match_basename      = (UINT32_C(1) << 1),
 };
 
 /*!
@@ -1114,7 +1117,7 @@ get_find_flags(void)
         case cmd_query_xml_raw:
         case cmd_query_xml:
         case cmd_set_param:
-            return pcmk_rsc_match_history|pcmk_rsc_match_basename;
+            return pcmk_rsc_match_history;
 
         case cmd_fail:
             return pcmk_rsc_match_history;
@@ -1829,7 +1832,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_delete_param]      = {
         handle_delete_param,
-        0,
+        crm_rsc_find_match_basename,
     },
     [cmd_digests]           = {
         handle_digests,
@@ -1845,7 +1848,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_get_param]         = {
         handle_get_param,
-        0,
+        crm_rsc_find_match_basename,
     },
     [cmd_list_active_ops]   = {
         handle_list_active_ops,
@@ -1897,11 +1900,11 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_query_xml]         = {
         handle_query_xml,
-        0,
+        crm_rsc_find_match_basename,
     },
     [cmd_query_xml_raw]     = {
         handle_query_xml_raw,
-        0,
+        crm_rsc_find_match_basename,
     },
     [cmd_refresh]           = {
         handle_refresh,
@@ -1913,7 +1916,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_set_param]         = {
         handle_set_param,
-        0,
+        crm_rsc_find_match_basename,
     },
     [cmd_wait]              = {
         handle_wait,
@@ -2206,6 +2209,9 @@ main(int argc, char **argv)
     find_flags = get_find_flags();
     if (pcmk_is_set(command_info->flags, crm_rsc_find_match_anon_basename)) {
         find_flags |= pcmk_rsc_match_anon_basename;
+    }
+    if (pcmk_is_set(command_info->flags, crm_rsc_find_match_basename)) {
+        find_flags |= pcmk_rsc_match_basename;
     }
 
     // If command requires that resource exist if specified, find it
