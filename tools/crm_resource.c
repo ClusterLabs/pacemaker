@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,6 +30,7 @@
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
+#include <crm/common/agents.h>          // PCMK_RESOURCE_CLASS_*
 #include <crm/common/ipc_controld.h>
 #include <crm/cib/internal.h>
 
@@ -67,6 +68,8 @@ enum rsc_command {
     cmd_set_param,
     cmd_wait,
     cmd_why,
+
+    cmd_max = cmd_why,
 };
 
 struct {
@@ -95,10 +98,9 @@ struct {
     int check_level;              // Optional value of --validate or --force-check
 
     // Resource configuration specified via command-line arguments
-    bool cmdline_config;          // Resource configuration was via arguments
-    char *v_agent;                // Value of --agent
-    char *v_class;                // Value of --class
-    char *v_provider;             // Value of --provider
+    gchar *agent;                 // Value of --agent
+    gchar *class;                 // Value of --class
+    gchar *provider;              // Value of --provider
     GHashTable *cmdline_params;   // Resource parameters specified
 
     // Positional command-line arguments
@@ -109,13 +111,6 @@ struct {
     .check_level = -1,
     .rsc_cmd = cmd_list_resources,  // List all resources if no command given
 };
-
-gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
-                           gpointer data, GError **error);
-gboolean option_cb(const gchar *option_name, const gchar *optarg,
-                   gpointer data, GError **error);
-gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
 static crm_exit_t exit_code = CRM_EX_OK;
 static pcmk__output_t *out = NULL;
@@ -138,43 +133,6 @@ static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
-
-// Clean up and exit
-static crm_exit_t
-bye(crm_exit_t ec)
-{
-    pcmk__output_and_clear_error(&error, out);
-
-    if (out != NULL) {
-        out->finish(out, ec, true, NULL);
-        pcmk__output_free(out);
-    }
-    pcmk__unregister_formats();
-
-    if (cib_conn != NULL) {
-        cib_t *save_cib_conn = cib_conn;
-
-        cib_conn = NULL; // Ensure we can't free this twice
-        cib__clean_up_connection(&save_cib_conn);
-    }
-
-    if (controld_api != NULL) {
-        pcmk_ipc_api_t *save_controld_api = controld_api;
-
-        controld_api = NULL; // Ensure we can't free this twice
-        pcmk_free_ipc_api(save_controld_api);
-    }
-
-    if (mainloop != NULL) {
-        g_main_loop_unref(mainloop);
-        mainloop = NULL;
-    }
-
-    pcmk_free_scheduler(scheduler);
-    scheduler = NULL;
-    crm_exit(ec);
-    return ec;
-}
 
 static void
 quit_main_loop(crm_exit_t ec)
@@ -255,12 +213,6 @@ start_mainloop(pcmk_ipc_api_t *capi)
     }
 }
 
-static int
-compare_id(gconstpointer a, gconstpointer b)
-{
-    return strcmp((const char *)a, (const char *)b);
-}
-
 static GList *
 build_constraint_list(xmlNode *root)
 {
@@ -275,7 +227,7 @@ build_constraint_list(xmlNode *root)
     for (ndx = 0; ndx < numXpathResults(xpathObj); ndx++) {
         xmlNode *match = getXpathResult(xpathObj, ndx);
         retval = g_list_insert_sorted(retval, (gpointer) pcmk__xe_id(match),
-                                      compare_id);
+                                      (GCompareFunc) g_strcmp0);
     }
 
     freeXpathObject(xpathObj);
@@ -295,6 +247,21 @@ validate_opt_list(const gchar *optarg)
         return FALSE;
     }
 
+    return TRUE;
+}
+
+// GOptionArgFunc callback functions
+
+static gboolean
+attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+                 GError **error) {
+    if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
+        options.attr_set_type = PCMK_XE_META_ATTRIBUTES;
+    } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
+        options.attr_set_type = PCMK_XE_UTILIZATION;
+    } else if (pcmk__str_eq(option_name, "--element", pcmk__str_none)) {
+        options.attr_set_type = ATTR_SET_ELEMENT;
+    }
     return TRUE;
 }
 
@@ -348,7 +315,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.rsc_cmd = cmd_digests;
 
         if (options.override_params == NULL) {
-            options.override_params = pcmk__strkey_table(free, free);
+            options.override_params = pcmk__strkey_table(g_free, g_free);
         }
 
     } else if (pcmk__str_any_of(option_name,
@@ -361,7 +328,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.operation = g_strdup(option_name + 2);  // skip "--"
 
         if (options.override_params == NULL) {
-            options.override_params = pcmk__strkey_table(free, free);
+            options.override_params = pcmk__strkey_table(g_free, g_free);
         }
 
         if (optarg != NULL) {
@@ -449,6 +416,46 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
     return TRUE;
 }
+
+static gboolean
+option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+          GError **error)
+{
+    gchar *name = NULL;
+    gchar *value = NULL;
+
+    if (pcmk__scan_nvpair(optarg, &name, &value) != pcmk_rc_ok) {
+        return FALSE;
+    }
+
+    /* services__create_resource_action() ultimately takes ownership of
+     * options.cmdline_params. It's not worth trying to ensure that the entire
+     * call path uses (gchar *) strings and g_free(). So create the table for
+     * (char *) strings, and duplicate the (gchar *) strings when inserting.
+     */
+    if (options.cmdline_params == NULL) {
+        options.cmdline_params = pcmk__strkey_table(free, free);
+    }
+    pcmk__insert_dup(options.cmdline_params, name, value);
+    g_free(name);
+    g_free(value);
+    return TRUE;
+}
+
+static gboolean
+timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+           GError **error)
+{
+    long long timeout_ms = crm_get_msec(optarg);
+
+    if (timeout_ms < 0) {
+        return FALSE;
+    }
+    options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
+    return TRUE;
+}
+
+// Command line option specification
 
 /* short option letters still available: eEJkKXyYZ */
 
@@ -723,16 +730,15 @@ static GOptionEntry addl_entries[] = {
     { "interval", 'I', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.interval_spec,
       "Interval of operation to clear (default 0s) (with -C -r -n)",
       "N" },
-    { "class", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, cmdline_config_cb,
+    { "class", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.class,
       "The standard the resource agent conforms to (for example, ocf).\n"
       INDENT "Use with --agent, --provider, --option, and --validate.",
       "CLASS" },
-    { "agent", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, cmdline_config_cb,
+    { "agent", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.agent,
       "The agent to use (for example, IPaddr). Use with --class,\n"
       INDENT "--provider, --option, and --validate.",
       "AGENT" },
-    { "provider", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
-          cmdline_config_cb,
+    { "provider", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.provider,
       "The vendor that supplies the resource agent (for example,\n"
       INDENT "heartbeat). Use with --class, --agent, --option, and --validate.",
       "PROVIDER" },
@@ -767,66 +773,6 @@ static GOptionEntry addl_entries[] = {
 
     { NULL }
 };
-
-gboolean
-attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
-        options.attr_set_type = PCMK_XE_META_ATTRIBUTES;
-    } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
-        options.attr_set_type = PCMK_XE_UTILIZATION;
-    } else if (pcmk__str_eq(option_name, "--element", pcmk__str_none)) {
-        options.attr_set_type = ATTR_SET_ELEMENT;
-    }
-    return TRUE;
-}
-
-gboolean
-cmdline_config_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-                  GError **error)
-{
-    options.cmdline_config = true;
-
-    if (pcmk__str_eq(option_name, "--class", pcmk__str_none)) {
-        pcmk__str_update(&options.v_class, optarg);
-
-    } else if (pcmk__str_eq(option_name, "--provider", pcmk__str_none)) {
-        pcmk__str_update(&options.v_provider, optarg);
-
-    } else {    // --agent
-        pcmk__str_update(&options.v_agent, optarg);
-    }
-    return TRUE;
-}
-
-gboolean
-option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-          GError **error)
-{
-    gchar *name = NULL;
-    gchar *value = NULL;
-
-    if (pcmk__scan_nvpair(optarg, &name, &value) != pcmk_rc_ok) {
-        return FALSE;
-    }
-    if (options.cmdline_params == NULL) {
-        options.cmdline_params = pcmk__strkey_table(free, free);
-    }
-    pcmk__insert_dup(options.cmdline_params, name, value);
-    g_free(name);
-    g_free(value);
-    return TRUE;
-}
-
-gboolean
-timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    long long timeout_ms = crm_get_msec(optarg);
-
-    if (timeout_ms < 0) {
-        return FALSE;
-    }
-    options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
-    return TRUE;
-}
 
 static int
 ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
@@ -899,10 +845,10 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     crm_debug("Erasing failures of %s (%s requested) on %s",
-              rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(controld_api, options.host_uname, rsc,
-                             options.operation, options.interval_spec, TRUE,
-                             scheduler, options.force);
+              rsc->id, options.rsc_id,
+              ((node != NULL)? pcmk__node_name(node) : "all nodes"));
+    rc = cli_resource_delete(controld_api, rsc, node, options.operation,
+                             options.interval_spec, true, options.force);
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
@@ -915,77 +861,11 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 }
 
 static int
-clear_constraints(pcmk__output_t *out)
-{
-    GList *before = NULL;
-    GList *after = NULL;
-    GList *remaining = NULL;
-    GList *ele = NULL;
-    pcmk_node_t *dest = NULL;
-    int rc = pcmk_rc_ok;
-
-    if (!out->is_quiet(out)) {
-        before = build_constraint_list(scheduler->input);
-    }
-
-    if (options.clear_expired) {
-        rc = cli_resource_clear_all_expired(scheduler->input, cib_conn,
-                                            options.rsc_id, options.host_uname,
-                                            options.promoted_role_only);
-
-    } else if (options.host_uname) {
-        dest = pcmk_find_node(scheduler, options.host_uname);
-        if (dest == NULL) {
-            rc = pcmk_rc_node_unknown;
-            if (!out->is_quiet(out)) {
-                g_list_free(before);
-            }
-            return rc;
-        }
-        rc = cli_resource_clear(options.rsc_id, dest->priv->name, NULL,
-                                cib_conn, true, options.force);
-
-    } else {
-        rc = cli_resource_clear(options.rsc_id, NULL, scheduler->nodes,
-                                cib_conn, true, options.force);
-    }
-
-    if (!out->is_quiet(out)) {
-        xmlNode *cib_xml = NULL;
-
-        rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
-        rc = pcmk_legacy2rc(rc);
-
-        if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("Could not get modified CIB: %s\n"), pcmk_rc_str(rc));
-            g_list_free(before);
-            pcmk__xml_free(cib_xml);
-            return rc;
-        }
-
-        scheduler->input = cib_xml;
-        cluster_status(scheduler);
-
-        after = build_constraint_list(scheduler->input);
-        remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
-
-        for (ele = remaining; ele != NULL; ele = ele->next) {
-            out->info(out, "Removing constraint: %s", (char *) ele->data);
-        }
-
-        g_list_free(before);
-        g_list_free(after);
-        g_list_free(remaining);
-    }
-
-    return rc;
-}
-
-static int
 initialize_scheduler_data(xmlNode **cib_xml_orig)
 {
     int rc = pcmk_rc_ok;
+
+    pcmk__assert(cib_conn != NULL);
 
     scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
@@ -1003,63 +883,48 @@ initialize_scheduler_data(xmlNode **cib_xml_orig)
     return pcmk_rc_ok;
 }
 
-static void
-list_options(void)
-{
-    switch (options.opt_list) {
-        case pcmk__opt_fencing:
-            exit_code = pcmk_rc2exitc(pcmk__list_fencing_params(out,
-                                                                options.all));
-            break;
-        case pcmk__opt_primitive:
-            exit_code = pcmk_rc2exitc(pcmk__list_primitive_meta(out,
-                                                                options.all));
-            break;
-        default:
-            exit_code = CRM_EX_SOFTWARE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "BUG: Invalid option list type");
-            break;
-    }
-}
-
 static int
-refresh(pcmk__output_t *out)
+refresh(pcmk__output_t *out, const pcmk_node_t *node)
 {
-    int rc = pcmk_rc_ok;
-    const char *router_node = options.host_uname;
+    const char *node_name = NULL;
+    const char *log_node_name = "all nodes";
+    const char *router_node = NULL;
     int attr_options = pcmk__node_attr_none;
+    int rc = pcmk_rc_ok;
 
-    if (options.host_uname) {
-        pcmk_node_t *node = pcmk_find_node(scheduler, options.host_uname);
+    if (node != NULL) {
+        node_name = node->priv->name;
+        log_node_name = pcmk__node_name(node);
+        router_node = node->priv->name;
+    }
 
-        if (pcmk__is_pacemaker_remote_node(node)) {
-            node = pcmk__current_node(node->priv->remote);
-            if (node == NULL) {
-                rc = ENXIO;
-                g_set_error(&error, PCMK__RC_ERROR, rc,
-                            _("No cluster connection to Pacemaker Remote node %s detected"),
-                            options.host_uname);
-                return rc;
-            }
-            router_node = node->priv->name;
-            attr_options |= pcmk__node_attr_remote;
+    if (pcmk__is_pacemaker_remote_node(node)) {
+        const pcmk_node_t *conn_host = pcmk__current_node(node->priv->remote);
+
+        if (conn_host == NULL) {
+            rc = ENXIO;
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        _("No cluster connection to Pacemaker Remote node %s "
+                          "detected"),
+                        log_node_name);
+            return rc;
         }
+        router_node = conn_host->priv->name;
+        pcmk__set_node_attr_flags(attr_options, pcmk__node_attr_remote);
     }
 
     if (controld_api == NULL) {
         out->info(out, "Dry run: skipping clean-up of %s due to CIB_file",
-                  options.host_uname? options.host_uname : "all nodes");
-        rc = pcmk_rc_ok;
-        return rc;
+                  log_node_name);
+        return pcmk_rc_ok;
     }
 
-    crm_debug("Re-checking the state of all resources on %s", options.host_uname?options.host_uname:"all nodes");
+    crm_debug("Re-checking the state of all resources on %s", log_node_name);
 
-    rc = pcmk__attrd_api_clear_failures(NULL, options.host_uname, NULL,
-                                        NULL, NULL, NULL, attr_options);
+    rc = pcmk__attrd_api_clear_failures(NULL, node_name, NULL, NULL, NULL, NULL,
+                                        attr_options);
 
-    if (pcmk_controld_api_reprobe(controld_api, options.host_uname,
+    if (pcmk_controld_api_reprobe(controld_api, node_name,
                                   router_node) == pcmk_rc_ok) {
         start_mainloop(controld_api);
     }
@@ -1077,9 +942,10 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     crm_debug("Re-checking the state of %s (%s requested) on %s",
-              rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(controld_api, options.host_uname, rsc, NULL, 0,
-                             FALSE, scheduler, options.force);
+              rsc->id, options.rsc_id,
+              ((node != NULL)? pcmk__node_name(node) : "all nodes"));
+    rc = cli_resource_delete(controld_api, rsc, node, NULL, 0, false,
+                             options.force);
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
@@ -1091,8 +957,474 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether a command-line resource configuration was given
+ *
+ * \return \c true if \c --class, \c --provider, or \c --agent was specified, or
+ *         \c false otherwise
+ */
+static inline bool
+has_cmdline_config(void)
+{
+    return ((options.class != NULL) || (options.provider != NULL)
+            || (options.agent != NULL));
+}
+
+static void
+validate_cmdline_config(void)
+{
+    bool is_ocf = pcmk__str_eq(options.class, PCMK_RESOURCE_CLASS_OCF,
+                               pcmk__str_none);
+
+    // Sanity check before throwing any errors
+    if (!has_cmdline_config()) {
+        return;
+    }
+
+    // Cannot use both --resource and command-line resource configuration
+    if (options.rsc_id != NULL) {
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    _("--class, --agent, and --provider cannot be used with "
+                      "-r/--resource"));
+        return;
+    }
+
+    // Check whether command supports command-line resource configuration
+    if (options.rsc_cmd != cmd_execute_agent) {
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    _("--class, --agent, and --provider can only be used with "
+                      "--validate and --force-*"));
+        return;
+    }
+
+    // Check for a valid combination of --class, --agent, and --provider
+    if (is_ocf) {
+        if ((options.provider == NULL) || (options.agent == NULL)) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("--provider and --agent are required with "
+                          "--class=ocf"));
+            return;
+        }
+
+    } else {
+        if (options.provider != NULL) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("--provider is supported only with --class=ocf"));
+            return;
+        }
+
+        // Either --class or --agent was given
+        if (options.agent == NULL) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("--agent is required with --class"));
+            return;
+        }
+        if (options.class == NULL) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("--class is required with --agent"));
+            return;
+        }
+    }
+
+    // Check whether agent exists
+    if (pcmk__str_eq(options.class, PCMK_RESOURCE_CLASS_STONITH,
+                     pcmk__str_none)) {
+        if (!stonith_agent_exists(options.agent, 0)) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("%s is not a known stonith agent"), options.agent);
+            return;
+        }
+
+    } else if (!resources_agent_exists(options.class, options.provider,
+                                       options.agent)) {
+        if (is_ocf) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("%s:%s:%s is not a known resource agent"),
+                        options.class, options.provider, options.agent);
+        } else {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        _("%s:%s is not a known resource agent"),
+                        options.class, options.agent);
+        }
+        return;
+    }
+
+    if (options.cmdline_params == NULL) {
+        options.cmdline_params = pcmk__strkey_table(free, free);
+    }
+}
+
 static int
-show_metadata(pcmk__output_t *out, const char *agent_spec)
+handle_ban(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+           pcmk_scheduler_t *scheduler)
+{
+    int rc = pcmk_rc_ok;
+
+    if (node == NULL) {
+        rc = ban_or_move(out, rsc, options.move_lifetime);
+    } else {
+        rc = cli_resource_ban(out, options.rsc_id, node->priv->name,
+                              options.move_lifetime, cib_conn,
+                              options.promoted_role_only, PCMK_ROLE_PROMOTED);
+    }
+
+    if (rc == EINVAL) {
+        exit_code = CRM_EX_USAGE;
+        return pcmk_rc_ok;
+    }
+    return rc;
+}
+
+static int
+handle_cleanup(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+               pcmk_scheduler_t *scheduler)
+{
+    if (rsc == NULL) {
+        int rc = cli_cleanup_all(controld_api, node, options.operation,
+                                 options.interval_spec, scheduler);
+
+        if (rc == pcmk_rc_ok) {
+            start_mainloop(controld_api);
+        }
+
+    } else {
+        cleanup(out, rsc, node);
+    }
+
+    return pcmk_rc_ok;
+}
+
+static int
+handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+             pcmk_scheduler_t *scheduler)
+{
+    const char *node_name = (node != NULL)? node->priv->name : NULL;
+    GList *before = NULL;
+    GList *after = NULL;
+    GList *remaining = NULL;
+    int rc = pcmk_rc_ok;
+
+    if (!out->is_quiet(out)) {
+        before = build_constraint_list(scheduler->input);
+    }
+
+    if (options.clear_expired) {
+        rc = cli_resource_clear_all_expired(scheduler->input, cib_conn,
+                                            options.rsc_id, node_name,
+                                            options.promoted_role_only);
+
+    } else if (node != NULL) {
+        rc = cli_resource_clear(options.rsc_id, node_name, NULL, cib_conn, true,
+                                options.force);
+
+    } else {
+        rc = cli_resource_clear(options.rsc_id, NULL, scheduler->nodes,
+                                cib_conn, true, options.force);
+    }
+
+    if (!out->is_quiet(out)) {
+        xmlNode *cib_xml = NULL;
+
+        rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
+        rc = pcmk_legacy2rc(rc);
+
+        if (rc != pcmk_rc_ok) {
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        _("Could not get modified CIB: %s"), pcmk_rc_str(rc));
+            g_list_free(before);
+            pcmk__xml_free(cib_xml);
+            return rc;
+        }
+
+        scheduler->input = cib_xml;
+        cluster_status(scheduler);
+
+        after = build_constraint_list(scheduler->input);
+        remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
+
+        for (const GList *iter = remaining; iter != NULL; iter = iter->next) {
+            const char *constraint = iter->data;
+
+            out->info(out, "Removing constraint: %s", constraint);
+        }
+
+        g_list_free(before);
+        g_list_free(after);
+        g_list_free(remaining);
+    }
+
+    return rc;
+}
+
+static int
+handle_colocations(pcmk_resource_t *rsc, pcmk_node_t *node,
+                   xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    return out->message(out, "locations-and-colocations", rsc,
+                        options.recursive, options.force);
+}
+
+static int
+handle_cts(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+           pcmk_scheduler_t *scheduler)
+{
+    g_list_foreach(scheduler->priv->resources, (GFunc) cli_resource_print_cts,
+                   out);
+    cli_resource_print_cts_constraints(scheduler);
+    return pcmk_rc_ok;
+}
+
+static int
+handle_delete(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+              pcmk_scheduler_t *scheduler)
+{
+    /* rsc_id was already checked for NULL much earlier when validating command
+     * line arguments
+     */
+    int rc = pcmk_rc_ok;
+
+    if (options.rsc_type == NULL) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    _("You need to specify a resource type with -t"));
+
+    } else {
+        rc = pcmk__resource_delete(cib_conn, cib_sync_call, options.rsc_id,
+                                   options.rsc_type);
+
+        if (rc != pcmk_rc_ok) {
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        _("Could not delete resource %s: %s"),
+                        options.rsc_id, pcmk_rc_str(rc));
+        }
+    }
+    return rc;
+}
+
+static int
+handle_delete_param(pcmk_resource_t *rsc, pcmk_node_t *node,
+                    xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    return cli_resource_delete_attribute(rsc, options.rsc_id, options.prop_set,
+                                         options.attr_set_type, options.prop_id,
+                                         options.prop_name, cib_conn,
+                                         cib_xml_orig, options.force);
+}
+
+static int
+handle_digests(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+               pcmk_scheduler_t *scheduler)
+{
+    return pcmk__resource_digests(out, rsc, node, options.override_params);
+}
+
+static int
+handle_execute_agent(pcmk_resource_t *rsc, pcmk_node_t *node,
+                     xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    if (has_cmdline_config()) {
+        exit_code = cli_resource_execute_from_params(out, NULL, options.class,
+                                                     options.provider,
+                                                     options.agent,
+                                                     options.operation,
+                                                     options.cmdline_params,
+                                                     options.override_params,
+                                                     options.timeout_ms,
+                                                     args->verbosity,
+                                                     options.force,
+                                                     options.check_level);
+    } else {
+        exit_code = cli_resource_execute(rsc, options.rsc_id, options.operation,
+                                         options.override_params,
+                                         options.timeout_ms, cib_conn,
+                                         args->verbosity, options.force,
+                                         options.check_level);
+    }
+    return pcmk_rc_ok;
+}
+
+static int
+handle_fail(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+            pcmk_scheduler_t *scheduler)
+{
+    int rc = cli_resource_fail(controld_api, rsc, options.rsc_id, node);
+
+    if (rc == pcmk_rc_ok) {
+        start_mainloop(controld_api);
+    }
+    return rc;
+}
+
+static int
+handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+                 pcmk_scheduler_t *scheduler)
+{
+    unsigned int count = 0;
+    GHashTable *params = NULL;
+    pcmk_node_t *current = rsc->priv->fns->active_node(rsc, &count, NULL);
+    bool free_params = true;
+    const char *value = NULL;
+    int rc = pcmk_rc_ok;
+
+    if (count > 1) {
+        out->err(out,
+                 "%s is active on more than one node, returning the default "
+                 "value for %s",
+                 rsc->id, pcmk__s(options.prop_name, "unspecified property"));
+        current = NULL;
+    }
+
+    crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
+
+    if (pcmk__str_eq(options.attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
+                     pcmk__str_none)) {
+        params = pe_rsc_params(rsc, current, scheduler);
+        free_params = false;
+
+        value = g_hash_table_lookup(params, options.prop_name);
+
+    } else if (pcmk__str_eq(options.attr_set_type, PCMK_XE_META_ATTRIBUTES,
+                            pcmk__str_none)) {
+        params = pcmk__strkey_table(free, free);
+        get_meta_attributes(params, rsc, NULL, scheduler);
+
+        value = g_hash_table_lookup(params, options.prop_name);
+
+    } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT,
+                            pcmk__str_none)) {
+        value = crm_element_value(rsc->priv->xml, options.prop_name);
+        free_params = false;
+
+    } else {
+        const pcmk_rule_input_t rule_input = {
+            .now = scheduler->priv->now,
+        };
+
+        params = pcmk__strkey_table(free, free);
+        pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_UTILIZATION,
+                                   &rule_input, params, NULL, scheduler);
+
+        value = g_hash_table_lookup(params, options.prop_name);
+    }
+
+    rc = out->message(out, "attribute-list", rsc, options.prop_name, value);
+    if (free_params) {
+        g_hash_table_destroy(params);
+    }
+
+    return rc;
+}
+
+static int
+handle_list_active_ops(pcmk_resource_t *rsc, pcmk_node_t *node,
+                       xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    const char *node_name = (node != NULL)? node->priv->name : NULL;
+
+    return cli_resource_print_operations(options.rsc_id, node_name, true,
+                                         scheduler);
+}
+
+static int
+handle_list_agents(pcmk_resource_t *rsc, pcmk_node_t *node,
+                   xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    return pcmk__list_agents(out, options.agent_spec);
+}
+
+static int
+handle_list_all_ops(pcmk_resource_t *rsc, pcmk_node_t *node,
+                    xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    const char *node_name = (node != NULL)? node->priv->name : NULL;
+
+    return cli_resource_print_operations(options.rsc_id, node_name, false,
+                                         scheduler);
+}
+
+static int
+handle_list_alternatives(pcmk_resource_t *rsc, pcmk_node_t *node,
+                         xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    return pcmk__list_alternatives(out, options.agent_spec);
+}
+
+static int
+handle_list_instances(pcmk_resource_t *rsc, pcmk_node_t *node,
+                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    if (out->message(out, "resource-names-list",
+                     scheduler->priv->resources) != pcmk_rc_ok) {
+        return ENXIO;
+    }
+    return pcmk_rc_ok;
+}
+
+static int
+handle_list_options(pcmk_resource_t *rsc, pcmk_node_t *node,
+                   xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    switch (options.opt_list) {
+        case pcmk__opt_fencing:
+            return pcmk__list_fencing_params(out, options.all);
+        case pcmk__opt_primitive:
+            return pcmk__list_primitive_meta(out, options.all);
+        default:
+            exit_code = CRM_EX_SOFTWARE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "BUG: Invalid option list type");
+            return pcmk_rc_ok;
+    }
+}
+
+static int
+handle_list_providers(pcmk_resource_t *rsc, pcmk_node_t *node,
+                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    return pcmk__list_providers(out, options.agent_spec);
+}
+
+static int
+handle_list_resources(pcmk_resource_t *rsc, pcmk_node_t *node,
+                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    GList *all = g_list_prepend(NULL, (gpointer) "*");
+    int rc = out->message(out, "resource-list", scheduler,
+                          pcmk_show_inactive_rscs
+                          |pcmk_show_rsc_only
+                          |pcmk_show_pending,
+                          true, all, all, false);
+
+    g_list_free(all);
+
+    if (rc == pcmk_rc_no_output) {
+        rc = ENXIO;
+    }
+    return rc;
+}
+
+static int
+handle_list_standards(pcmk_resource_t *rsc, pcmk_node_t *node,
+                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+{
+    return pcmk__list_standards(out);
+}
+
+static int
+handle_locate(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+              pcmk_scheduler_t *scheduler)
+{
+    GList *nodes = cli_resource_search(rsc, options.rsc_id);
+    int rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
+
+    g_list_free_full(nodes, free);
+    return rc;
+}
+
+static int
+handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+                pcmk_scheduler_t *scheduler)
 {
     int rc = pcmk_rc_ok;
     char *standard = NULL;
@@ -1109,7 +1441,7 @@ show_metadata(pcmk__output_t *out, const char *agent_spec)
         return rc;
     }
 
-    rc = crm_parse_agent_spec(agent_spec, &standard, &provider, &type);
+    rc = crm_parse_agent_spec(options.agent_spec, &standard, &provider, &type);
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
@@ -1118,7 +1450,7 @@ show_metadata(pcmk__output_t *out, const char *agent_spec)
                                            &metadata, 0);
         rc = pcmk_legacy2rc(rc);
 
-        if (metadata) {
+        if (metadata != NULL) {
             out->output_xml(out, PCMK_XE_METADATA, metadata);
             free(metadata);
         } else {
@@ -1130,248 +1462,329 @@ show_metadata(pcmk__output_t *out, const char *agent_spec)
             rc = ENXIO;
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         _("Metadata query for %s failed: %s"),
-                        agent_spec, pcmk_rc_str(rc));
+                        options.agent_spec, pcmk_rc_str(rc));
         }
     } else {
         rc = ENXIO;
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    _("'%s' is not a valid agent specification"), agent_spec);
+                    _("'%s' is not a valid agent specification"),
+                    options.agent_spec);
     }
 
     lrmd_api_delete(lrmd_conn);
     return rc;
 }
 
-static void
-validate_cmdline_config(void)
+static int
+handle_move(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+            pcmk_scheduler_t *scheduler)
 {
-    // Cannot use both --resource and command-line resource configuration
-    if (options.rsc_id != NULL) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    _("--resource cannot be used with --class, --agent, and --provider"));
+    int rc = pcmk_rc_ok;
 
-    // Not all commands support command-line resource configuration
-    } else if (options.rsc_cmd != cmd_execute_agent) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    _("--class, --agent, and --provider can only be used with "
-                    "--validate and --force-*"));
-
-    // Not all of --class, --agent, and --provider need to be given.  Not all
-    // classes support the concept of a provider.  Check that what we were given
-    // is valid.
-    } else if (pcmk__str_eq(options.v_class, "stonith", pcmk__str_none)) {
-        if (options.v_provider != NULL) {
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        _("stonith does not support providers"));
-
-        } else if (stonith_agent_exists(options.v_agent, 0) == FALSE) {
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        _("%s is not a known stonith agent"), options.v_agent ? options.v_agent : "");
-        }
-
-    } else if (resources_agent_exists(options.v_class, options.v_provider, options.v_agent) == FALSE) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    _("%s:%s:%s is not a known resource"),
-                    options.v_class ? options.v_class : "",
-                    options.v_provider ? options.v_provider : "",
-                    options.v_agent ? options.v_agent : "");
+    if (node == NULL) {
+        rc = ban_or_move(out, rsc, options.move_lifetime);
+    } else {
+        rc = cli_resource_move(rsc, options.rsc_id, node, options.move_lifetime,
+                               cib_conn, options.promoted_role_only,
+                               options.force);
     }
 
-    if ((error == NULL) && (options.cmdline_params == NULL)) {
-        options.cmdline_params = pcmk__strkey_table(free, free);
+    if (rc == EINVAL) {
+        exit_code = CRM_EX_USAGE;
+        return pcmk_rc_ok;
     }
+    return rc;
 }
 
-/*!
- * \internal
- * \brief Get the <tt>enum pe_find</tt> flags for a given command
- *
- * \return <tt>enum pe_find</tt> flag group appropriate for \c options.rsc_cmd.
- */
-static uint32_t
-get_find_flags(void)
+static int
+handle_query_xml(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+                 pcmk_scheduler_t *scheduler)
 {
-    switch (options.rsc_cmd) {
-        case cmd_ban:
-        case cmd_cleanup:
-        case cmd_clear:
-        case cmd_colocations:
-        case cmd_digests:
-        case cmd_execute_agent:
-        case cmd_locate:
-        case cmd_move:
-        case cmd_refresh:
-        case cmd_restart:
-        case cmd_why:
-            return pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
-
-        case cmd_delete_param:
-        case cmd_get_param:
-        case cmd_query_xml_raw:
-        case cmd_query_xml:
-        case cmd_set_param:
-            return pcmk_rsc_match_history|pcmk_rsc_match_basename;
-
-        default:
-            return 0;
-    }
+    return cli_resource_print(rsc, true);
 }
 
-/*!
- * \internal
- * \brief Check whether a node argument is required
- *
- * \return \c true if a \c --node argument is required, or \c false otherwise
- */
-static bool
-is_node_required(void)
+static int
+handle_query_xml_raw(pcmk_resource_t *rsc, pcmk_node_t *node,
+                     xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
-    switch (options.rsc_cmd) {
-        case cmd_digests:
-        case cmd_fail:
-            return true;
-        default:
-            return false;
-    }
+    return cli_resource_print(rsc, false);
 }
 
-/*!
- * \internal
- * \brief Check whether a resource argument is required
- *
- * \return \c true if a \c --resource argument is required, or \c false
- *         otherwise
- */
-static bool
-is_resource_required(void)
+static int
+handle_refresh(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+               pcmk_scheduler_t *scheduler)
 {
-    if (options.cmdline_config) {
-        return false;
+    if (rsc == NULL) {
+        return refresh(out, node);
     }
-
-    switch (options.rsc_cmd) {
-        case cmd_clear:
-            return !options.clear_expired;
-
-        case cmd_cleanup:
-        case cmd_cts:
-        case cmd_list_active_ops:
-        case cmd_list_agents:
-        case cmd_list_all_ops:
-        case cmd_list_alternatives:
-        case cmd_list_instances:
-        case cmd_list_options:
-        case cmd_list_providers:
-        case cmd_list_resources:
-        case cmd_list_standards:
-        case cmd_metadata:
-        case cmd_refresh:
-        case cmd_wait:
-        case cmd_why:
-            return false;
-
-        default:
-            return true;
-    }
+    refresh_resource(out, rsc, node);
+    return pcmk_rc_ok;
 }
 
-/*!
- * \internal
- * \brief Check whether a CIB connection is required
- *
- * \return \c true if a CIB connection is required, or \c false otherwise
- */
-static bool
-is_cib_required(void)
+static int
+handle_restart(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+               pcmk_scheduler_t *scheduler)
 {
-    if (options.cmdline_config) {
-        return false;
-    }
-
-    switch (options.rsc_cmd) {
-        case cmd_list_agents:
-        case cmd_list_alternatives:
-        case cmd_list_options:
-        case cmd_list_providers:
-        case cmd_list_standards:
-        case cmd_metadata:
-            return false;
-        default:
-            return true;
-    }
+    /* We don't pass scheduler because rsc needs to stay valid for the entire
+     * lifetime of cli_resource_restart(), but it will reset and update the
+     * scheduler data multiple times, so it needs to use its own copy.
+     */
+    return cli_resource_restart(out, rsc, node, options.move_lifetime,
+                                options.timeout_ms, cib_conn,
+                                options.promoted_role_only, options.force);
 }
 
-/*!
- * \internal
- * \brief Check whether a controller IPC connection is required
- *
- * \return \c true if a controller connection is required, or \c false otherwise
- */
-static bool
-is_controller_required(void)
+static int
+handle_set_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+                 pcmk_scheduler_t *scheduler)
 {
-    switch (options.rsc_cmd) {
-        case cmd_cleanup:
-        case cmd_refresh:
-            return getenv("CIB_file") == NULL;
-
-        case cmd_fail:
-            return true;
-
-        default:
-            return false;
+    if (pcmk__str_empty(options.prop_value)) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    _("You need to supply a value with the -v option"));
+        return pcmk_rc_ok;
     }
+
+    return cli_resource_update_attribute(rsc, options.rsc_id, options.prop_set,
+                                         options.attr_set_type, options.prop_id,
+                                         options.prop_name, options.prop_value,
+                                         options.recursive, cib_conn,
+                                         cib_xml_orig, options.force);
 }
 
-/*!
- * \internal
- * \brief Check whether a scheduler IPC connection is required
- *
- * \return \c true if a scheduler connection is required, or \c false otherwise
- */
-static bool
-is_scheduler_required(void)
+static int
+handle_wait(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+            pcmk_scheduler_t *scheduler)
 {
-    if (options.cmdline_config) {
-        return false;
-    }
-
-    switch (options.rsc_cmd) {
-        case cmd_delete:
-        case cmd_list_agents:
-        case cmd_list_alternatives:
-        case cmd_list_options:
-        case cmd_list_providers:
-        case cmd_list_standards:
-        case cmd_metadata:
-        case cmd_wait:
-            return false;
-        default:
-            return true;
-    }
+    return wait_till_stable(out, options.timeout_ms, cib_conn);
 }
 
-/*!
- * \internal
- * \brief Check whether the chosen command accepts clone instances
- *
- * \return \c true if \p options.rsc_cmd accepts or ignores clone instances, or
- *         \c false otherwise
- */
-static bool
-accept_clone_instance(void)
+static int
+handle_why(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
+           pcmk_scheduler_t *scheduler)
 {
-    switch (options.rsc_cmd) {
-        case cmd_ban:
-        case cmd_clear:
-        case cmd_delete:
-        case cmd_move:
-        case cmd_restart:
-            return false;
-        default:
-            return true;
-    }
+    return out->message(out, "resource-reasons-list",
+                        scheduler->priv->resources, rsc, node);
 }
+
+typedef int (*crm_resource_fn_t)(pcmk_resource_t *, pcmk_node_t *, xmlNode *,
+                                 pcmk_scheduler_t *);
+
+enum crm_rsc_flags {
+    crm_rsc_find_match_anon_basename = (UINT32_C(1) << 0),
+    crm_rsc_find_match_basename      = (UINT32_C(1) << 1),
+    crm_rsc_find_match_history       = (UINT32_C(1) << 2),
+    crm_rsc_rejects_clone_instance   = (UINT32_C(1) << 3),
+    crm_rsc_requires_cib             = (UINT32_C(1) << 4),
+    crm_rsc_requires_controller      = (UINT32_C(1) << 5),
+    crm_rsc_requires_node            = (UINT32_C(1) << 6),
+    crm_rsc_requires_resource        = (UINT32_C(1) << 7),
+    crm_rsc_requires_scheduler       = (UINT32_C(1) << 8),
+};
+
+typedef struct {
+    crm_resource_fn_t fn;
+    uint32_t flags;
+} crm_resource_cmd_info_t;
+
+static const crm_resource_cmd_info_t crm_resource_commands[] = {
+    [cmd_none]              = {
+        NULL,
+        0,
+    },
+    [cmd_ban]               = {
+        handle_ban,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_cleanup]           = {
+        handle_cleanup,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_controller
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_clear]             = {
+        handle_clear,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource      // Unless options.clear_expired
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_colocations]       = {
+        handle_colocations,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_cts]               = {
+        handle_cts,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_delete]            = {
+        handle_delete,
+        crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource,
+    },
+    [cmd_delete_param]      = {
+        handle_delete_param,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_digests]           = {
+        handle_digests,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_node
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_execute_agent]     = {
+        handle_execute_agent,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_fail]              = {
+        handle_fail,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_controller
+        |crm_rsc_requires_node
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_get_param]         = {
+        handle_get_param,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_list_active_ops]   = {
+        handle_list_active_ops,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_list_agents]       = {
+        handle_list_agents,
+    },
+    [cmd_list_all_ops]      = {
+        handle_list_all_ops,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_list_alternatives] = {
+        handle_list_alternatives,
+    },
+    [cmd_list_instances]    = {
+        handle_list_instances,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_list_options]      = {
+        handle_list_options,
+    },
+    [cmd_list_providers]    = {
+        handle_list_providers,
+    },
+    [cmd_list_resources]    = {
+        handle_list_resources,
+        crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_list_standards]    = {
+        handle_list_standards,
+    },
+    [cmd_locate]            = {
+        handle_locate,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_metadata]          = {
+        handle_metadata,
+    },
+    [cmd_move]              = {
+        handle_move,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_query_xml]         = {
+        handle_query_xml,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_query_xml_raw]     = {
+        handle_query_xml_raw,
+        crm_rsc_find_match_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_refresh]           = {
+        handle_refresh,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_controller
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_restart]           = {
+        handle_restart,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_set_param]         = {
+        handle_set_param,
+        crm_rsc_find_match_basename
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
+        |crm_rsc_requires_scheduler,
+    },
+    [cmd_wait]              = {
+        handle_wait,
+        crm_rsc_requires_cib,
+    },
+    [cmd_why]               = {
+        handle_why,
+        crm_rsc_find_match_anon_basename
+        |crm_rsc_find_match_history
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_scheduler,
+    },
+};
 
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
@@ -1441,6 +1854,8 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
+    crm_resource_cmd_info_t command_info;
+    crm_resource_fn_t fn = NULL;
     xmlNode *cib_xml_orig = NULL;
     pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
@@ -1495,64 +1910,38 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if ((options.remainder != NULL) && (options.override_params != NULL)) {
+    if (options.remainder != NULL) {
         // Commands that use positional arguments will create override_params
-        for (gchar **s = options.remainder; *s; s++) {
-            char *name = pcmk__assert_alloc(1, strlen(*s));
-            char *value = pcmk__assert_alloc(1, strlen(*s));
-            int rc = sscanf(*s, "%[^=]=%s", name, value);
+        if (options.override_params == NULL) {
+            GString *msg = g_string_sized_new(128);
+            guint len = g_strv_length(options.remainder);
 
-            if (rc == 2) {
-                g_hash_table_replace(options.override_params, name, value);
+            g_string_append(msg, "non-option ARGV-elements:");
 
-            } else {
+            for (int i = 0; i < len; i++) {
+                g_string_append_printf(msg, "\n[%d of %u] %s",
+                                       i + 1, len, options.remainder[i]);
+            }
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "%s", msg->str);
+            g_string_free(msg, TRUE);
+            goto done;
+        }
+
+        for (gchar **arg = options.remainder; *arg != NULL; arg++) {
+            gchar *name = NULL;
+            gchar *value = NULL;
+            int rc = pcmk__scan_nvpair(*arg, &name, &value);
+
+            if (rc != pcmk_rc_ok) {
                 exit_code = CRM_EX_USAGE;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            _("Error parsing '%s' as a name=value pair"),
-                            argv[optind]);
-                free(value);
-                free(name);
+                            _("Error parsing '%s' as a name=value pair"), *arg);
                 goto done;
             }
+
+            g_hash_table_insert(options.override_params, name, value);
         }
-
-    } else if (options.remainder != NULL) {
-        gchar **strv = NULL;
-        gchar *msg = NULL;
-        int i = 1;
-        int len = 0;
-
-        for (gchar **s = options.remainder; *s; s++) {
-            len++;
-        }
-
-        pcmk__assert(len > 0);
-
-        /* Add 1 for the strv[0] string below, and add another 1 for the NULL
-         * at the end of the array so g_strjoinv knows when to stop.
-         */
-        strv = pcmk__assert_alloc(len+2, sizeof(char *));
-        strv[0] = strdup("non-option ARGV-elements:\n");
-
-        for (gchar **s = options.remainder; *s; s++) {
-            strv[i] = crm_strdup_printf("[%d of %d] %s\n", i, len, *s);
-            i++;
-        }
-
-        strv[i] = NULL;
-
-        exit_code = CRM_EX_USAGE;
-        msg = g_strjoinv("", strv);
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "%s", msg);
-        g_free(msg);
-
-        /* Don't try to free the last element, which is just NULL. */
-        for(i = 0; i < len+1; i++) {
-            free(strv[i]);
-        }
-        free(strv);
-
-        goto done;
     }
 
     if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
@@ -1587,7 +1976,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (options.cmdline_config) {
+    if (has_cmdline_config()) {
         /* A resource configuration was given on the command line. Sanity-check
          * the values and set error if they don't make sense.
          */
@@ -1602,29 +1991,53 @@ main(int argc, char **argv)
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     _("--option must be used with --validate and without -r"));
         g_hash_table_destroy(options.cmdline_params);
-        options.cmdline_params = NULL;
-        goto done;
-    }
-
-    if (is_resource_required() && (options.rsc_id == NULL)) {
-        exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    _("Must supply a resource id with -r"));
-        goto done;
-    }
-    if (is_node_required() && (options.host_uname == NULL)) {
-        exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    _("Must supply a node name with -N"));
         goto done;
     }
 
     /*
-     * Set up necessary connections
+     * Handle requested command
      */
 
+    if ((options.rsc_cmd < 0) || (options.rsc_cmd > cmd_max)) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    _("Unimplemented command: %d"), (int) options.rsc_cmd);
+        goto done;
+    }
+
+    command_info = crm_resource_commands[options.rsc_cmd];
+    if (command_info.fn == NULL) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    _("Unimplemented command: %d"), (int) options.rsc_cmd);
+        goto done;
+    }
+
+    // @TODO Make sure we validate command line config in the right place
+    if (pcmk_is_set(command_info.flags, crm_rsc_requires_node)) {
+        if (options.host_uname == NULL) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        _("Must supply a node name with -N"));
+            goto done;
+        }
+    }
+    if (pcmk_is_set(command_info.flags, crm_rsc_requires_resource)
+        && !has_cmdline_config()
+        && ((options.rsc_cmd != cmd_clear) || !options.clear_expired)) {
+
+        if (options.rsc_id == NULL) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        _("Must supply a resource id with -r"));
+            goto done;
+        }
+    }
+
     // Establish a connection to the CIB if needed
-    if (is_cib_required()) {
+    if (pcmk_is_set(command_info.flags, crm_rsc_requires_cib)
+        && !has_cmdline_config()) {
+
         cib_conn = cib_new();
         if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
             exit_code = CRM_EX_DISCONNECT;
@@ -1632,6 +2045,7 @@ main(int argc, char **argv)
                         _("Could not create CIB connection"));
             goto done;
         }
+
         rc = cib__signon_attempts(cib_conn, cib_command, 5);
         rc = pcmk_legacy2rc(rc);
         if (rc != pcmk_rc_ok) {
@@ -1642,18 +2056,43 @@ main(int argc, char **argv)
         }
     }
 
-    // Populate scheduler data from XML file if specified or CIB query otherwise
-    if (is_scheduler_required()) {
+    // Populate scheduler data from CIB query if needed
+    if (pcmk_is_set(command_info.flags, crm_rsc_requires_scheduler)
+        && !has_cmdline_config()) {
+
         rc = initialize_scheduler_data(&cib_xml_orig);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             goto done;
         }
+
+        /* If user supplied a node name, check whether it exists.
+         * Commands that don't require scheduler data ignore the node argument.
+         */
+        if (options.host_uname != NULL) {
+            node = pcmk_find_node(scheduler, options.host_uname);
+
+            if (node == NULL) {
+                exit_code = CRM_EX_NOSUCH;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            _("Node '%s' not found"), options.host_uname);
+                goto done;
+            }
+        }
     }
 
-    find_flags = get_find_flags();
+    // @TODO Setter macro for tracing?
+    if (pcmk_is_set(command_info.flags, crm_rsc_find_match_anon_basename)) {
+        find_flags |= pcmk_rsc_match_anon_basename;
+    }
+    if (pcmk_is_set(command_info.flags, crm_rsc_find_match_basename)) {
+        find_flags |= pcmk_rsc_match_basename;
+    }
+    if (pcmk_is_set(command_info.flags, crm_rsc_find_match_history)) {
+        find_flags |= pcmk_rsc_match_history;
+    }
 
-    // If command requires that resource exist if specified, find it
+    // Find resource in scheduler data if any find flags are set
     if ((find_flags != 0) && (options.rsc_id != NULL)) {
         rsc = pe_find_resource_with_flags(scheduler->priv->resources,
                                           options.rsc_id, find_flags);
@@ -1664,34 +2103,25 @@ main(int argc, char **argv)
             goto done;
         }
 
-        /* The --ban, --clear, --move, and --restart commands do not work with
-         * instances of clone resourcs.
+        /* The --ban, --clear, --delete, --move, and --restart commands do not
+         * work with instances of clone resources.
          */
-        if (pcmk__is_clone(rsc->priv->parent)
-            && (strchr(options.rsc_id, ':') != NULL)
-            && !accept_clone_instance()) {
+        if (pcmk_is_set(command_info.flags, crm_rsc_rejects_clone_instance)
+            && pcmk__is_clone(rsc->priv->parent)
+            && (strchr(options.rsc_id, ':') != NULL)) {
 
             exit_code = CRM_EX_INVALID_PARAM;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Cannot operate on clone resource instance '%s'"), options.rsc_id);
-            goto done;
-        }
-    }
-
-    // If user supplied a node name, check whether it exists
-    if ((options.host_uname != NULL) && (scheduler != NULL)) {
-        node = pcmk_find_node(scheduler, options.host_uname);
-
-        if (node == NULL) {
-            exit_code = CRM_EX_NOSUCH;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Node '%s' not found"), options.host_uname);
+                        _("Cannot operate on clone resource instance '%s'"),
+                        options.rsc_id);
             goto done;
         }
     }
 
     // Establish a connection to the controller if needed
-    if (is_controller_required()) {
+    if (pcmk_is_set(command_info.flags, crm_rsc_requires_controller)
+        && (getenv("CIB_file") == NULL)) {
+
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
@@ -1699,8 +2129,10 @@ main(int argc, char **argv)
                         _("Error connecting to the controller: %s"), pcmk_rc_str(rc));
             goto done;
         }
+
         pcmk_register_ipc_callback(controld_api, controller_event_callback,
                                    NULL);
+
         rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_main, 5);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
@@ -1711,343 +2143,16 @@ main(int argc, char **argv)
         }
     }
 
-    /*
-     * Handle requested command
+    /* Some of these set exit_code explicitly and return pcmk_rc_ok to skip
+     * setting exit_code based on rc.
      */
-
-    switch (options.rsc_cmd) {
-        case cmd_list_resources: {
-            GList *all = NULL;
-            uint32_t show_opts = pcmk_show_inactive_rscs | pcmk_show_rsc_only | pcmk_show_pending;
-
-            all = g_list_prepend(all, (gpointer) "*");
-            rc = out->message(out, "resource-list", scheduler,
-                              show_opts, true, all, all, false);
-            g_list_free(all);
-
-            if (rc == pcmk_rc_no_output) {
-                rc = ENXIO;
-            }
-            break;
-        }
-
-        case cmd_list_instances:
-            // coverity[var_deref_op] False positive
-            rc = out->message(out, "resource-names-list",
-                              scheduler->priv->resources);
-
-            if (rc != pcmk_rc_ok) {
-                rc = ENXIO;
-            }
-
-            break;
-
-        case cmd_list_options:
-            list_options();
-            break;
-
-        case cmd_list_alternatives:
-            rc = pcmk__list_alternatives(out, options.agent_spec);
-            break;
-
-        case cmd_list_agents:
-            rc = pcmk__list_agents(out, options.agent_spec);
-            break;
-
-        case cmd_list_standards:
-            rc = pcmk__list_standards(out);
-            break;
-
-        case cmd_list_providers:
-            rc = pcmk__list_providers(out, options.agent_spec);
-            break;
-
-        case cmd_metadata:
-            rc = show_metadata(out, options.agent_spec);
-            break;
-
-        case cmd_restart:
-            /* We don't pass scheduler because rsc needs to stay valid for the
-             * entire lifetime of cli_resource_restart(), but it will reset and
-             * update the scheduler data multiple times, so it needs to use its
-             * own copy.
-             */
-            rc = cli_resource_restart(out, rsc, node, options.move_lifetime,
-                                      options.timeout_ms, cib_conn,
-                                      options.promoted_role_only,
-                                      options.force);
-            break;
-
-        case cmd_wait:
-            rc = wait_till_stable(out, options.timeout_ms, cib_conn);
-            break;
-
-        case cmd_execute_agent:
-            if (options.cmdline_config) {
-                exit_code = cli_resource_execute_from_params(out, NULL,
-                    options.v_class, options.v_provider, options.v_agent,
-                    options.operation, options.cmdline_params,
-                    options.override_params, options.timeout_ms,
-                    args->verbosity, options.force, options.check_level);
-            } else {
-                exit_code = cli_resource_execute(rsc, options.rsc_id,
-                    options.operation, options.override_params,
-                    options.timeout_ms, cib_conn, scheduler,
-                    args->verbosity, options.force, options.check_level);
-            }
-            goto done;
-
-        case cmd_digests:
-            node = pcmk_find_node(scheduler, options.host_uname);
-            if (node == NULL) {
-                rc = pcmk_rc_node_unknown;
-            } else {
-                rc = pcmk__resource_digests(out, rsc, node,
-                                            options.override_params);
-            }
-            break;
-
-        case cmd_colocations:
-            rc = out->message(out, "locations-and-colocations", rsc,
-                              options.recursive, (bool) options.force);
-            break;
-
-        case cmd_cts:
-            rc = pcmk_rc_ok;
-            // coverity[var_deref_op] False positive
-            g_list_foreach(scheduler->priv->resources,
-                           (GFunc) cli_resource_print_cts, out);
-            cli_resource_print_cts_constraints(scheduler);
-            break;
-
-        case cmd_fail:
-            rc = cli_resource_fail(controld_api, options.host_uname,
-                                   options.rsc_id, scheduler);
-            if (rc == pcmk_rc_ok) {
-                start_mainloop(controld_api);
-            }
-            break;
-
-        case cmd_list_active_ops:
-            rc = cli_resource_print_operations(options.rsc_id,
-                                               options.host_uname, TRUE,
-                                               scheduler);
-            break;
-
-        case cmd_list_all_ops:
-            rc = cli_resource_print_operations(options.rsc_id,
-                                               options.host_uname, FALSE,
-                                               scheduler);
-            break;
-
-        case cmd_locate: {
-            GList *nodes = cli_resource_search(rsc, options.rsc_id, scheduler);
-            rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
-            g_list_free_full(nodes, free);
-            break;
-        }
-
-        case cmd_query_xml:
-            rc = cli_resource_print(rsc, scheduler, true);
-            break;
-
-        case cmd_query_xml_raw:
-            rc = cli_resource_print(rsc, scheduler, false);
-            break;
-
-        case cmd_why:
-            if ((options.host_uname != NULL) && (node == NULL)) {
-                rc = pcmk_rc_node_unknown;
-            } else {
-                rc = out->message(out, "resource-reasons-list",
-                                  scheduler->priv->resources, rsc, node);
-            }
-            break;
-
-        case cmd_clear:
-            rc = clear_constraints(out);
-            break;
-
-        case cmd_move:
-            if (options.host_uname == NULL) {
-                rc = ban_or_move(out, rsc, options.move_lifetime);
-            } else {
-                rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
-                                       options.move_lifetime, cib_conn,
-                                       scheduler, options.promoted_role_only,
-                                       options.force);
-            }
-
-            if (rc == EINVAL) {
-                exit_code = CRM_EX_USAGE;
-                goto done;
-            }
-
-            break;
-
-        case cmd_ban:
-            if (options.host_uname == NULL) {
-                rc = ban_or_move(out, rsc, options.move_lifetime);
-            } else if (node == NULL) {
-                rc = pcmk_rc_node_unknown;
-            } else {
-                rc = cli_resource_ban(out, options.rsc_id, node->priv->name,
-                                      options.move_lifetime, cib_conn,
-                                      options.promoted_role_only,
-                                      PCMK_ROLE_PROMOTED);
-            }
-
-            if (rc == EINVAL) {
-                exit_code = CRM_EX_USAGE;
-                goto done;
-            }
-
-            break;
-
-        case cmd_get_param: {
-            unsigned int count = 0;
-            GHashTable *params = NULL;
-            // coverity[var_deref_op] False positive
-            pcmk_node_t *current = rsc->priv->fns->active_node(rsc, &count,
-                                                               NULL);
-            bool free_params = true;
-            const char* value = NULL;
-
-            if (count > 1) {
-                out->err(out, "%s is active on more than one node,"
-                         " returning the default value for %s", rsc->id,
-                         pcmk__s(options.prop_name, "unspecified property"));
-                current = NULL;
-            }
-
-            crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
-
-            if (pcmk__str_eq(options.attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
-                             pcmk__str_none)) {
-                params = pe_rsc_params(rsc, current, scheduler);
-                free_params = false;
-
-                value = g_hash_table_lookup(params, options.prop_name);
-
-            } else if (pcmk__str_eq(options.attr_set_type,
-                                    PCMK_XE_META_ATTRIBUTES, pcmk__str_none)) {
-                params = pcmk__strkey_table(free, free);
-                get_meta_attributes(params, rsc, NULL, scheduler);
-
-                value = g_hash_table_lookup(params, options.prop_name);
-
-            } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-
-                value = crm_element_value(rsc->priv->xml, options.prop_name);
-                free_params = false;
-
-            } else {
-                const pcmk_rule_input_t rule_input = {
-                    .now = scheduler->priv->now,
-                };
-
-                params = pcmk__strkey_table(free, free);
-                pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_UTILIZATION,
-                                           &rule_input, params, NULL,
-                                           scheduler);
-
-                value = g_hash_table_lookup(params, options.prop_name);
-            }
-
-            rc = out->message(out, "attribute-list", rsc, options.prop_name, value);
-            if (free_params) {
-                g_hash_table_destroy(params);
-            }
-
-            break;
-        }
-
-        case cmd_set_param:
-            if (pcmk__str_empty(options.prop_value)) {
-                exit_code = CRM_EX_USAGE;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            _("You need to supply a value with the -v option"));
-                goto done;
-            }
-
-            /* coverity[var_deref_model] False positive */
-            rc = cli_resource_update_attribute(rsc, options.rsc_id,
-                                               options.prop_set,
-                                               options.attr_set_type,
-                                               options.prop_id,
-                                               options.prop_name,
-                                               options.prop_value,
-                                               options.recursive, cib_conn,
-                                               cib_xml_orig, options.force);
-            break;
-
-        case cmd_delete_param:
-            /* coverity[var_deref_model] False positive */
-            rc = cli_resource_delete_attribute(rsc, options.rsc_id,
-                                               options.prop_set,
-                                               options.attr_set_type,
-                                               options.prop_id,
-                                               options.prop_name, cib_conn,
-                                               cib_xml_orig, options.force);
-            break;
-
-        case cmd_cleanup:
-            if (rsc == NULL) {
-                rc = cli_cleanup_all(controld_api, options.host_uname,
-                                     options.operation, options.interval_spec,
-                                     scheduler);
-                if (rc == pcmk_rc_ok) {
-                    start_mainloop(controld_api);
-                }
-            } else {
-                cleanup(out, rsc, node);
-            }
-            break;
-
-        case cmd_refresh:
-            if (rsc == NULL) {
-                rc = refresh(out);
-            } else {
-                refresh_resource(out, rsc, node);
-            }
-            break;
-
-        case cmd_delete:
-            /* rsc_id was already checked for NULL much earlier when validating
-             * command line arguments.
-             */
-            if (options.rsc_type == NULL) {
-                exit_code = CRM_EX_USAGE;
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                            _("You need to specify a resource type with -t"));
-            } else {
-                rc = pcmk__resource_delete(cib_conn, cib_sync_call,
-                                           options.rsc_id, options.rsc_type);
-
-                if (rc != pcmk_rc_ok) {
-                    g_set_error(&error, PCMK__RC_ERROR, rc,
-                                _("Could not delete resource %s: %s"),
-                                options.rsc_id, pcmk_rc_str(rc));
-                }
-            }
-
-            break;
-
-        default:
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Unimplemented command: %d"), (int) options.rsc_cmd);
-            goto done;
-    }
+    fn = command_info.fn;
+    rc = fn(rsc, node, cib_xml_orig, scheduler);
 
     /* Convert rc into an exit code. */
     if (rc != pcmk_rc_ok && rc != pcmk_rc_no_output) {
         exit_code = pcmk_rc2exitc(rc);
     }
-
-    /*
-     * Clean up and exit
-     */
 
 done:
     /* When we get here, exit_code has been set one of two ways - either at one of
@@ -2070,8 +2175,6 @@ done:
         }
     }
 
-    pcmk__xml_free(cib_xml_orig);
-
     g_free(options.host_uname);
     g_free(options.interval_spec);
     g_free(options.move_lifetime);
@@ -2083,21 +2186,34 @@ done:
     g_free(options.rsc_id);
     g_free(options.rsc_type);
     free(options.agent_spec);
-    free(options.v_agent);
-    free(options.v_class);
-    free(options.v_provider);
-    g_strfreev(options.remainder);
-
+    g_free(options.agent);
+    g_free(options.class);
+    g_free(options.provider);
     if (options.override_params != NULL) {
         g_hash_table_destroy(options.override_params);
     }
+    g_strfreev(options.remainder);
 
-    /* options.cmdline_params does not need to be destroyed here.  See the
-     * comments in cli_resource_execute_from_params.
-     */
+    // Don't destroy options.cmdline_params here. See comment in option_cb().
 
     g_strfreev(processed_args);
     g_option_context_free(context);
 
-    return bye(exit_code);
+    pcmk__xml_free(cib_xml_orig);
+    cib__clean_up_connection(&cib_conn);
+    pcmk_free_ipc_api(controld_api);
+    pcmk_free_scheduler(scheduler);
+    if (mainloop != NULL) {
+        g_main_loop_unref(mainloop);
+    }
+
+    pcmk__output_and_clear_error(&error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+
+    pcmk__unregister_formats();
+    return crm_exit(exit_code);
 }

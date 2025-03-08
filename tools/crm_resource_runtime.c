@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                        // bool, true, false
 #include <stdio.h>
 #include <limits.h>
 #include <glib.h>
@@ -21,73 +22,73 @@
 
 #include <crm_resource.h>
 
-static GList *
-build_node_info_list(const pcmk_resource_t *rsc)
+struct rsc_node_info {
+    const pcmk_resource_t *rsc;
+    GList *list;
+};
+
+static void
+prepend_node_info(gpointer data, gpointer user_data)
 {
-    GList *retval = NULL;
+    const pcmk_node_t *node = data;
+    struct rsc_node_info *rni = user_data;
+    node_info_t *ni = NULL;
 
-    for (const GList *iter = rsc->priv->children;
-         iter != NULL; iter = iter->next) {
+    pcmk__assert(rni->rsc != NULL);
 
-        const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
+    ni = pcmk__assert_alloc(1, sizeof(node_info_t));
+    ni->node_name = node->priv->name;
+    ni->promoted = pcmk_is_set(rni->rsc->flags, pcmk__rsc_promotable)
+                   && (rni->rsc->priv->fns->state(rni->rsc, true)
+                       == pcmk_role_promoted);
 
-        for (const GList *iter2 = child->priv->active_nodes;
-             iter2 != NULL; iter2 = iter2->next) {
-
-            const pcmk_node_t *node = (const pcmk_node_t *) iter2->data;
-            node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
-
-            ni->node_name = node->priv->name;
-            if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)
-                && (child->priv->fns->state(child,
-                                            TRUE) == pcmk_role_promoted)) {
-                ni->promoted = true;
-            }
-
-            retval = g_list_prepend(retval, ni);
-        }
-    }
-
-    return retval;
+    rni->list = g_list_prepend(rni->list, ni);
 }
 
 GList *
-cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
-                    pcmk_scheduler_t *scheduler)
+cli_resource_search(const pcmk_resource_t *rsc, const char *requested_name)
 {
-    GList *retval = NULL;
-    const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
+    const pcmk_resource_t *clone = NULL;
+    struct rsc_node_info rni = {
+        .rsc = rsc,
+        .list = NULL,
+    };
+
+    pcmk__assert(rsc != NULL);
 
     if (pcmk__is_clone(rsc)) {
-        retval = build_node_info_list(rsc);
-
-    /* The anonymous clone children's common ID is supplied */
-    } else if (pcmk__is_clone(parent)
-               && !pcmk_is_set(rsc->flags, pcmk__rsc_unique)
-               && (rsc->priv->history_id != NULL)
-               && pcmk__str_eq(requested_name, rsc->priv->history_id,
-                               pcmk__str_none)
-               && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_none)) {
-
-        retval = build_node_info_list(parent);
+        clone = rsc;
 
     } else {
-        for (GList *iter = rsc->priv->active_nodes;
-             iter != NULL; iter = iter->next) {
+        const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
 
-            pcmk_node_t *node = (pcmk_node_t *) iter->data;
-            node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
+        if (pcmk__is_clone(parent)
+            && !pcmk_is_set(rsc->flags, pcmk__rsc_unique)
+            && (rsc->priv->history_id != NULL)
+            && pcmk__str_eq(requested_name, rsc->priv->history_id,
+                            pcmk__str_none)
+            && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_none)) {
 
-            ni->node_name = node->priv->name;
-            if (rsc->priv->fns->state(rsc, TRUE) == pcmk_role_promoted) {
-                ni->promoted = true;
-            }
-
-            retval = g_list_prepend(retval, ni);
+            // The anonymous clone children's common ID is supplied
+            clone = parent;
         }
     }
 
-    return retval;
+    if (clone != NULL) {
+        for (const GList *iter = clone->priv->children; iter != NULL;
+             iter = iter->next) {
+
+            const pcmk_resource_t *child = iter->data;
+
+            rni.rsc = child;
+            g_list_foreach(child->priv->active_nodes, prepend_node_info, &rni);
+        }
+
+    } else {
+        g_list_foreach(rsc->priv->active_nodes, prepend_node_info, &rni);
+    }
+
+    return rni.list;
 }
 
 // \return Standard Pacemaker return code
@@ -707,30 +708,25 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
 // \return Standard Pacemaker return code
 static int
 send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
-                const char *host_uname, const char *rsc_id,
-                pcmk_scheduler_t *scheduler)
+                pcmk_resource_t *rsc, const char *rsc_id,
+                const pcmk_node_t *node)
 {
     pcmk__output_t *out = NULL;
-    const char *router_node = host_uname;
     const char *rsc_api_id = NULL;
     const char *rsc_long_id = NULL;
     const char *rsc_class = NULL;
     const char *rsc_provider = NULL;
     const char *rsc_type = NULL;
+    const char *router_node = NULL;
     bool cib_only = false;
-    pcmk_resource_t *rsc = NULL;
 
-    pcmk__assert(scheduler != NULL);
+    pcmk__assert((rsc != NULL) && (rsc_id != NULL) && (node != NULL));
 
-    rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
-    out = scheduler->priv->out;
+    out = rsc->priv->scheduler->priv->out;
 
-    if (rsc == NULL) {
-        out->err(out, "Resource %s not found", rsc_id);
-        return ENXIO;
-
-    } else if (!pcmk__is_primitive(rsc)) {
-        out->err(out, "We can only process primitive resources, not %s", rsc_id);
+    if (!pcmk__is_primitive(rsc)) {
+        out->err(out, "We can only process primitive resources, not %s",
+                 rsc_id);
         return EINVAL;
     }
 
@@ -742,31 +738,26 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         return EINVAL;
     }
 
-    {
-        pcmk_node_t *node = pcmk_find_node(scheduler, host_uname);
+    router_node = node->priv->name;
 
-        if (node == NULL) {
-            out->err(out, "Node %s not found", host_uname);
-            return pcmk_rc_node_unknown;
+    if (!node->details->online) {
+        if (do_fail_resource) {
+            out->err(out, "Node %s is not online", pcmk__node_name(node));
+            return ENOTCONN;
         }
+        cib_only = true;
 
-        if (!(node->details->online)) {
-            if (do_fail_resource) {
-                out->err(out, "Node %s is not online", host_uname);
-                return ENOTCONN;
-            } else {
-                cib_only = true;
-            }
+    } else if (pcmk__is_pacemaker_remote_node(node)) {
+        const pcmk_node_t *conn_host = pcmk__current_node(node->priv->remote);
+
+        if (conn_host == NULL) {
+            out->err(out,
+                     "No cluster connection to Pacemaker Remote node %s "
+                     "detected",
+                     pcmk__node_name(node));
+            return ENOTCONN;
         }
-        if (!cib_only && pcmk__is_pacemaker_remote_node(node)) {
-            node = pcmk__current_node(node->priv->remote);
-            if (node == NULL) {
-                out->err(out, "No cluster connection to Pacemaker Remote node %s detected",
-                         host_uname);
-                return ENOTCONN;
-            }
-            router_node = node->priv->name;
-        }
+        router_node = conn_host->priv->name;
     }
 
     if (rsc->priv->history_id != NULL) {
@@ -775,15 +766,16 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     } else {
         rsc_api_id = rsc->id;
     }
+
     if (do_fail_resource) {
-        return pcmk_controld_api_fail(controld_api, host_uname, router_node,
-                                      rsc_api_id, rsc_long_id,
+        return pcmk_controld_api_fail(controld_api, node->priv->name,
+                                      router_node, rsc_api_id, rsc_long_id,
                                       rsc_class, rsc_provider, rsc_type);
-    } else {
-        return pcmk_controld_api_refresh(controld_api, host_uname, router_node,
-                                         rsc_api_id, rsc_long_id, rsc_class,
-                                         rsc_provider, rsc_type, cib_only);
     }
+    return pcmk_controld_api_refresh(controld_api, node->priv->name,
+                                     router_node, rsc_api_id, rsc_long_id,
+                                     rsc_class, rsc_provider, rsc_type,
+                                     cib_only);
 }
 
 /*!
@@ -808,17 +800,19 @@ rsc_fail_name(const pcmk_resource_t *rsc)
 
 // \return Standard Pacemaker return code
 static int
-clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                  const char *rsc_id, pcmk_scheduler_t *scheduler)
+clear_rsc_history(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
+                  const char *rsc_id, const pcmk_node_t *node)
 {
     int rc = pcmk_rc_ok;
+
+    pcmk__assert((rsc != NULL) && (node != NULL));
 
     /* Erase the resource's entire LRM history in the CIB, even if we're only
      * clearing a single operation's fail count. If we erased only entries for a
      * single operation, we might wind up with a wrong idea of the current
      * resource state, and we might not re-probe the resource.
      */
-    rc = send_lrm_rsc_op(controld_api, false, host_uname, rsc_id, scheduler);
+    rc = send_lrm_rsc_op(controld_api, false, rsc, rsc_id, node);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -835,15 +829,20 @@ clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
 // \return Standard Pacemaker return code
 static int
 clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
-                   const char *node_name, const char *rsc_id, const char *operation,
-                   const char *interval_spec, pcmk_scheduler_t *scheduler)
+                   pcmk_node_t *node, const char *rsc_id, const char *operation,
+                   const char *interval_spec)
 {
     int rc = pcmk_rc_ok;
+    pcmk_scheduler_t *scheduler = NULL;
     const char *failed_value = NULL;
     const char *failed_id = NULL;
     char *interval_ms_s = NULL;
     GHashTable *rscs = NULL;
     GHashTableIter iter;
+
+    pcmk__assert(node != NULL);
+
+    scheduler = node->priv->scheduler;
 
     /* Create a hash table to use as a set of resources to clean. This lets us
      * clean each resource only once (per node) regardless of how many failed
@@ -885,7 +884,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
         // Host name should always have been provided by this point
         failed_value = crm_element_value(xml_op, PCMK_XA_UNAME);
-        if (!pcmk__str_eq(node_name, failed_value, pcmk__str_casei)) {
+        if (!pcmk__str_eq(node->priv->name, failed_value, pcmk__str_casei)) {
             continue;
         }
 
@@ -910,8 +909,18 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
     g_hash_table_iter_init(&iter, rscs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
-        crm_debug("Erasing failures of %s on %s", failed_id, node_name);
-        rc = clear_rsc_history(controld_api, node_name, failed_id, scheduler);
+        pcmk_resource_t *rsc = NULL;
+
+        crm_debug("Erasing failures of %s on %s",
+                  failed_id, pcmk__node_name(node));
+
+        rsc = pe_find_resource(scheduler->priv->resources, failed_id);
+        if (rsc == NULL) {
+            out->err(out, "Resource %s not found", failed_id);
+            return ENXIO;
+        }
+
+        rc = clear_rsc_history(controld_api, rsc, failed_id, node);
         if (rc != pcmk_rc_ok) {
             return rc;
         }
@@ -942,181 +951,177 @@ clear_rsc_fail_attrs(const pcmk_resource_t *rsc, const char *operation,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                    const pcmk_resource_t *rsc, const char *operation,
-                    const char *interval_spec, bool just_failures,
-                    pcmk_scheduler_t *scheduler, gboolean force)
+cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
+                    pcmk_node_t *node, const char *operation,
+                    const char *interval_spec, bool just_failures, bool force)
 {
-    pcmk__output_t *out = scheduler->priv->out;
+    pcmk_scheduler_t *scheduler = NULL;
+    pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
-    pcmk_node_t *node = NULL;
 
-    if (rsc == NULL) {
-        return ENXIO;
+    pcmk__assert(rsc != NULL);
 
-    } else if (rsc->priv->children != NULL) {
+    scheduler = rsc->priv->scheduler;
+    out = scheduler->priv->out;
 
-        for (const GList *lpc = rsc->priv->children;
-             lpc != NULL; lpc = lpc->next) {
+    if (rsc->priv->children != NULL) {
+        for (GList *iter = rsc->priv->children; iter != NULL;
+             iter = iter->next) {
 
-            const pcmk_resource_t *child = (const pcmk_resource_t *) lpc->data;
+            pcmk_resource_t *child = iter->data;
 
-            rc = cli_resource_delete(controld_api, host_uname, child, operation,
-                                     interval_spec, just_failures, scheduler,
-                                     force);
+            rc = cli_resource_delete(controld_api, child, node, operation,
+                                     interval_spec, just_failures, force);
             if (rc != pcmk_rc_ok) {
                 return rc;
             }
         }
         return pcmk_rc_ok;
+    }
 
-    } else if (host_uname == NULL) {
-        GList *lpc = NULL;
+    if (node == NULL) {
         GList *nodes = g_hash_table_get_values(rsc->priv->probed_nodes);
 
-        if(nodes == NULL && force) {
-            nodes = pcmk__copy_node_list(scheduler->nodes, false);
+        if (nodes == NULL) {
+            if (force) {
+                nodes = g_list_copy(scheduler->nodes);
 
-        } else if ((nodes == NULL)
-                   && pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)) {
-            GHashTableIter iter;
-            pcmk_node_t *node = NULL;
+            } else if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)) {
+                GHashTableIter iter;
 
-            g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
-            while (g_hash_table_iter_next(&iter, NULL, (void**)&node)) {
-                if (node->assign->score >= 0) {
-                    nodes = g_list_prepend(nodes, node);
+                g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
+                while (g_hash_table_iter_next(&iter, NULL,
+                                              (gpointer *) &node)) {
+                    if ((node != NULL) && (node->assign->score >= 0)) {
+                        nodes = g_list_prepend(nodes, (gpointer *) node);
+                    }
                 }
-            }
 
-        } else if(nodes == NULL) {
-            nodes = g_hash_table_get_values(rsc->priv->allowed_nodes);
+            } else {
+                nodes = g_hash_table_get_values(rsc->priv->allowed_nodes);
+            }
         }
 
-        for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
-            node = (pcmk_node_t *) lpc->data;
+        for (GList *iter = nodes; iter != NULL; iter = iter->next) {
+            node = (pcmk_node_t *) iter->data;
 
-            if (node->details->online) {
-                rc = cli_resource_delete(controld_api, node->priv->name, rsc,
-                                         operation, interval_spec, just_failures,
-                                         scheduler, force);
+            if (!node->details->online) {
+                continue;
             }
+
+            rc = cli_resource_delete(controld_api, rsc, node, operation,
+                                     interval_spec, just_failures, force);
             if (rc != pcmk_rc_ok) {
-                g_list_free(nodes);
-                return rc;
+                break;
             }
         }
 
         g_list_free(nodes);
-        return pcmk_rc_ok;
-    }
-
-    node = pcmk_find_node(scheduler, host_uname);
-
-    if (node == NULL) {
-        out->err(out, "Unable to clean up %s because node %s not found",
-                 rsc->id, host_uname);
-        return ENODEV;
+        return rc;
     }
 
     if (!pcmk_is_set(node->priv->flags, pcmk__node_probes_allowed)) {
-        out->err(out, "Unable to clean up %s because resource discovery disabled on %s",
-                 rsc->id, host_uname);
+        out->err(out,
+                 "Unable to clean up %s because resource discovery disabled on "
+                 "%s",
+                 rsc->id, pcmk__node_name(node));
         return EOPNOTSUPP;
     }
 
     if (controld_api == NULL) {
         out->err(out, "Dry run: skipping clean-up of %s on %s due to CIB_file",
-                 rsc->id, host_uname);
+                 rsc->id, pcmk__node_name(node));
         return pcmk_rc_ok;
     }
 
     rc = clear_rsc_fail_attrs(rsc, operation, interval_spec, node);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Unable to clean up %s failures on %s: %s",
-                 rsc->id, host_uname, pcmk_rc_str(rc));
+                 rsc->id, pcmk__node_name(node), pcmk_rc_str(rc));
         return rc;
     }
 
     if (just_failures) {
-        rc = clear_rsc_failures(out, controld_api, host_uname, rsc->id, operation,
-                                interval_spec, scheduler);
+        rc = clear_rsc_failures(out, controld_api, node, rsc->id, operation,
+                                interval_spec);
     } else {
-        rc = clear_rsc_history(controld_api, host_uname, rsc->id, scheduler);
+        rc = clear_rsc_history(controld_api, rsc, rsc->id, node);
     }
+
     if (rc != pcmk_rc_ok) {
-        out->err(out, "Cleaned %s failures on %s, but unable to clean history: %s",
-                 rsc->id, host_uname, pcmk_rc_str(rc));
+        out->err(out,
+                 "Cleaned %s failures on %s, but unable to clean history: %s",
+                 rsc->id, pcmk__node_name(node), pcmk_rc_str(rc));
     } else {
-        out->info(out, "Cleaned up %s on %s", rsc->id, host_uname);
+        out->info(out, "Cleaned up %s on %s", rsc->id, pcmk__node_name(node));
     }
     return rc;
 }
 
 // \return Standard Pacemaker return code
 int
-cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
+cli_cleanup_all(pcmk_ipc_api_t *controld_api, pcmk_node_t *node,
                 const char *operation, const char *interval_spec,
                 pcmk_scheduler_t *scheduler)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
-    const char *display_name = node_name? node_name : "all nodes";
+    const char *node_name = NULL;
+    const char *log_node_name = "all nodes";
 
     pcmk__assert(scheduler != NULL);
 
     out = scheduler->priv->out;
 
+    if (node != NULL) {
+        node_name = node->priv->name;
+        log_node_name = pcmk__node_name(node);
+    }
+
     if (controld_api == NULL) {
         out->info(out, "Dry run: skipping clean-up of %s due to CIB_file",
-                  display_name);
+                  log_node_name);
         return rc;
     }
 
-    if (node_name) {
-        pcmk_node_t *node = pcmk_find_node(scheduler, node_name);
-
-        if (node == NULL) {
-            out->err(out, "Unknown node: %s", node_name);
-            return ENXIO;
-        }
-        if (pcmk__is_pacemaker_remote_node(node)) {
-            attr_options |= pcmk__node_attr_remote;
-        }
+    if (pcmk__is_pacemaker_remote_node(node)) {
+        pcmk__set_node_attr_flags(attr_options, pcmk__node_attr_remote);
     }
 
     rc = pcmk__attrd_api_clear_failures(NULL, node_name, NULL, operation,
                                         interval_spec, NULL, attr_options);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Unable to clean up all failures on %s: %s",
-                 display_name, pcmk_rc_str(rc));
+                 log_node_name, pcmk_rc_str(rc));
         return rc;
     }
 
-    if (node_name) {
-        rc = clear_rsc_failures(out, controld_api, node_name, NULL,
-                                operation, interval_spec, scheduler);
-        if (rc != pcmk_rc_ok) {
-            out->err(out, "Cleaned all resource failures on %s, but unable to clean history: %s",
-                     node_name, pcmk_rc_str(rc));
-            return rc;
-        }
+    if (node != NULL) {
+        rc = clear_rsc_failures(out, controld_api, node, NULL, operation,
+                                interval_spec);
+
     } else {
         for (GList *iter = scheduler->nodes; iter; iter = iter->next) {
-            pcmk_node_t *node = (pcmk_node_t *) iter->data;
+            pcmk_node_t *sched_node = iter->data;
 
-            rc = clear_rsc_failures(out, controld_api, node->priv->name,
-                                    NULL, operation, interval_spec, scheduler);
+            rc = clear_rsc_failures(out, controld_api, sched_node, NULL,
+                                    operation, interval_spec);
             if (rc != pcmk_rc_ok) {
-                out->err(out, "Cleaned all resource failures on all nodes, but unable to clean history: %s",
-                         pcmk_rc_str(rc));
-                return rc;
+                break;
             }
         }
     }
 
-    out->info(out, "Cleaned up all resources on %s", display_name);
+    if (rc == pcmk_rc_ok) {
+        out->info(out, "Cleaned up all resources on %s", log_node_name);
+    } else {
+        // @TODO But didn't clear_rsc_failures() fail?
+        out->err(out,
+                 "Cleaned all resource failures on %s, but unable to clean "
+                 "history: %s",
+                 log_node_name, pcmk_rc_str(rc));
+    }
     return rc;
 }
 
@@ -1241,16 +1246,24 @@ cli_resource_check(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 
 // \return Standard Pacemaker return code
 int
-cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                  const char *rsc_id, pcmk_scheduler_t *scheduler)
+cli_resource_fail(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
+                  const char *rsc_id, const pcmk_node_t *node)
 {
-    crm_notice("Failing %s on %s", rsc_id, host_uname);
-    return send_lrm_rsc_op(controld_api, true, host_uname, rsc_id, scheduler);
+    pcmk__assert((rsc != NULL) && (rsc_id != NULL) && (node != NULL));
+
+    if (controld_api == NULL) {
+        pcmk__output_t *out = rsc->priv->scheduler->priv->out;
+
+        out->err(out, "Dry run: skipping fail of %s on %s due to CIB_file",
+                 rsc_id, pcmk__node_name(node));
+        return pcmk_rc_ok;
+    }
+    crm_notice("Failing %s on %s", rsc_id, pcmk__node_name(node));
+    return send_lrm_rsc_op(controld_api, true, rsc, rsc_id, node);
 }
 
 static GHashTable *
-generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
-                         pcmk_scheduler_t *scheduler)
+generate_resource_params(pcmk_resource_t *rsc)
 {
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
@@ -1261,7 +1274,7 @@ generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     combined = pcmk__strkey_table(free, free);
 
-    params = pe_rsc_params(rsc, node, scheduler);
+    params = pe_rsc_params(rsc, NULL, rsc->priv->scheduler);
     if (params != NULL) {
         g_hash_table_iter_init(&iter, params);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
@@ -1270,7 +1283,7 @@ generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     meta = pcmk__strkey_table(free, free);
-    get_meta_attributes(meta, rsc, NULL, scheduler);
+    get_meta_attributes(meta, rsc, NULL, rsc->priv->scheduler);
     if (meta != NULL) {
         g_hash_table_iter_init(&iter, meta);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
@@ -2234,6 +2247,9 @@ apply_overrides(GHashTable *params, GHashTable *overrides)
     }
 }
 
+/* Takes ownership of params.
+ * Does not modify override_hash or its contents.
+ */
 crm_exit_t
 cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_class, const char *rsc_prov,
@@ -2255,6 +2271,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     set_agent_environment(params, timeout_ms, check_level, resource_verbose);
     apply_overrides(params, override_hash);
 
+    // services__create_resource_action() takes ownership of params on success
     op = services__create_resource_action(rsc_name? rsc_name : "test",
                                           rsc_class, rsc_prov, rsc_type, action,
                                           0, QB_MIN(timeout_ms, INT_MAX),
@@ -2326,13 +2343,15 @@ get_action_timeout(pcmk_resource_t *rsc, const char *action)
     return (guint) QB_MIN(timeout_ms, UINT_MAX);
 }
 
+// Does not modify override_hash or its contents
 crm_exit_t
 cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
-                     guint timeout_ms, cib_t *cib, pcmk_scheduler_t *scheduler,
-                     int resource_verbose, gboolean force, int check_level)
+                     guint timeout_ms, cib_t *cib, int resource_verbose,
+                     bool force, int check_level)
 {
-    pcmk__output_t *out = scheduler->priv->out;
+    pcmk_scheduler_t *scheduler = NULL;
+    pcmk__output_t *out = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     const char *rid = requested_name;
     const char *rtype = NULL;
@@ -2340,10 +2359,16 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
     const char *rclass = NULL;
     GHashTable *params = NULL;
 
+    pcmk__assert(rsc != NULL);
+
+    scheduler = rsc->priv->scheduler;
+    out = scheduler->priv->out;
+
     if (pcmk__strcase_any_of(rsc_action, "force-start", "force-demote",
                                     "force-promote", NULL)) {
         if (pcmk__is_clone(rsc)) {
-            GList *nodes = cli_resource_search(rsc, requested_name, scheduler);
+            GList *nodes = cli_resource_search(rsc, requested_name);
+
             if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
                          rsc_action, rsc->id);
@@ -2375,8 +2400,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
     rprov = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
     rtype = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
 
-    params = generate_resource_params(rsc, NULL /* @TODO use local node */,
-                                      scheduler);
+    params = generate_resource_params(rsc); // @TODO use local node
 
     if (timeout_ms == 0U) {
         timeout_ms = get_action_timeout(rsc, get_action(rsc_action));
@@ -2394,40 +2418,55 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
-                  const char *host_name, const char *move_lifetime, cib_t *cib,
-                  pcmk_scheduler_t *scheduler, gboolean promoted_role_only,
-                  gboolean force)
+cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
+                  const pcmk_node_t *dest, const char *move_lifetime,
+                  cib_t *cib, bool promoted_role_only, bool force)
 {
+    pcmk_scheduler_t *scheduler = NULL;
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
     pcmk_node_t *current = NULL;
-    pcmk_node_t *dest = NULL;
     bool cur_is_dest = false;
+    const char *active_s = promoted_role_only? "promoted" : "active";
 
-    pcmk__assert(scheduler != NULL);
+    pcmk__assert((rsc != NULL) && (dest != NULL));
 
+    scheduler = rsc->priv->scheduler;
     out = scheduler->priv->out;
-    dest = pcmk_find_node(scheduler, host_name);
-    if (dest == NULL) {
-        return pcmk_rc_node_unknown;
-    }
 
     if (promoted_role_only
         && !pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
 
-        const pcmk_resource_t *p = pe__const_top_resource(rsc, false);
+        pcmk_resource_t *p = uber_parent(rsc);
 
         if (pcmk_is_set(p->flags, pcmk__rsc_promotable)) {
-            out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
+            /* @TODO This is dead code. If rsc is part of a promotable clone,
+             * then it has the pcmk__rsc_promotable flag set.
+             *
+             * This was added by 36e4b490. Prior to that commit, we were
+             * checking whether rsc itself is the promotable clone, and if not,
+             * trying to get a promotable clone ancestor.
+             *
+             * As of that commit, we check whether rsc has the promotable flag
+             * set. But if it has a promotable clone ancestor, that flag is set.
+             *
+             * Question: Should we drop this block and use rsc for the move, or
+             * should we check whether rsc is a clone instead of only checking
+             * whether the promotable flag is set (as we did prior to 36e4b490)?
+             * The latter seems appropriate, especially considering the block
+             * below with promoted_count and promoted_node; but we need to trace
+             * and test.
+             */
+            out->info(out, "Using parent '%s' for move instead of '%s'",
+                      rsc->id, rsc_id);
             rsc_id = p->id;
             rsc = p;
 
         } else {
             out->info(out, "Ignoring --promoted option: %s is not promotable",
                       rsc_id);
-            promoted_role_only = FALSE;
+            promoted_role_only = false;
         }
     }
 
@@ -2437,10 +2476,10 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
         unsigned int promoted_count = 0;
         pcmk_node_t *promoted_node = NULL;
 
-        for (const GList *iter = rsc->priv->children;
-             iter != NULL; iter = iter->next) {
+        for (GList *iter = rsc->priv->children; iter != NULL;
+             iter = iter->next) {
 
-            const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
+            pcmk_resource_t *child = iter->data;
             enum rsc_role_e child_role = child->priv->fns->state(child, TRUE);
 
             if (child_role == pcmk_role_promoted) {
@@ -2453,26 +2492,24 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
             count = promoted_count;
             current = promoted_node;
         }
-
     }
 
     if (count > 1) {
-        if (pcmk__is_clone(rsc)) {
-            current = NULL;
-        } else {
+        if (!pcmk__is_clone(rsc)) {
             return pcmk_rc_multiple;
         }
+        current = NULL;
     }
 
     if (pcmk__same_node(current, dest)) {
-        cur_is_dest = true;
-        if (force) {
-            crm_info("%s is already %s on %s, reinforcing placement with location constraint.",
-                     rsc_id, promoted_role_only?"promoted":"active",
-                     pcmk__node_name(dest));
-        } else {
+        if (!force) {
             return pcmk_rc_already;
         }
+
+        cur_is_dest = true;
+        crm_info("%s is already %s on %s, reinforcing placement with location "
+                 "constraint",
+                 rsc_id, active_s, pcmk__node_name(dest));
     }
 
     /* @TODO The constraint changes in the following commands should done
@@ -2493,28 +2530,31 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
 
     crm_trace("%s%s now prefers %s%s",
               rsc->id, (promoted_role_only? " (promoted)" : ""),
-              pcmk__node_name(dest), force?"(forced)":"");
+              pcmk__node_name(dest), (force? " (forced)" : ""));
 
-    /* only ban the previous location if current location != destination location.
-     * it is possible to use -M to enforce a location without regard of where the
-     * resource is currently located */
+    /* Ban the current location if force is set and the current location is not
+     * the destination. It is possible to use move to enforce a location without
+     * regard for where the resource is currently located.
+     */
     if (force && !cur_is_dest) {
         /* Ban the original location if possible */
-        if(current) {
-            (void)cli_resource_ban(out, rsc_id, current->priv->name,
-                                   move_lifetime, cib, promoted_role_only,
-                                   PCMK_ROLE_PROMOTED);
-        } else if(count > 1) {
-            out->info(out, "Resource '%s' is currently %s in %d locations. "
+        if (current != NULL) {
+            cli_resource_ban(out, rsc_id, current->priv->name, move_lifetime,
+                             cib, promoted_role_only, PCMK_ROLE_PROMOTED);
+
+        } else if (count > 1) {
+            out->info(out,
+                      "Resource '%s' is currently %s in %u locations. "
                       "One may now move to %s",
-                      rsc_id, (promoted_role_only? "promoted" : "active"),
-                      count, pcmk__node_name(dest));
-            out->info(out, "To prevent '%s' from being %s at a specific location, "
-                      "specify a node.",
-                      rsc_id, (promoted_role_only? "promoted" : "active"));
+                      rsc_id, active_s, count, pcmk__node_name(dest));
+            out->info(out,
+                      "To prevent '%s' from being %s at a specific location, "
+                      "specify a node",
+                      rsc_id, active_s);
 
         } else {
-            crm_trace("Not banning %s from its current location: not active", rsc_id);
+            crm_trace("Not banning %s from its current location: not active",
+                      rsc_id);
         }
     }
 

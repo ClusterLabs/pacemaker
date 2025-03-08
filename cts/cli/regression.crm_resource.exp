@@ -2,7 +2,6 @@
 crm_resource: non-option ARGV-elements:
 [1 of 2] foo
 [2 of 2] bar
-
 =#=#=#= End test: crm_resource run with extra arguments - Incorrect usage (64) =#=#=#=
 * Passed: crm_resource          - crm_resource run with extra arguments
 =#=#=#= Begin test: List all available resource options (invalid type) =#=#=#=
@@ -847,7 +846,7 @@ Special parameters that are available for all fencing resources, regardless of t
 =#=#=#= End test: Create a resource - OK (0) =#=#=#=
 * Passed: cibadmin              - Create a resource
 =#=#=#= Begin test: crm_resource given both -r and resource config =#=#=#=
-crm_resource: --resource cannot be used with --class, --agent, and --provider
+crm_resource: --class, --agent, and --provider cannot be used with -r/--resource
 =#=#=#= End test: crm_resource given both -r and resource config - Incorrect usage (64) =#=#=#=
 * Passed: crm_resource          - crm_resource given both -r and resource config
 =#=#=#= Begin test: crm_resource given resource config with invalid action =#=#=#=
