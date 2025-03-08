@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -697,10 +697,13 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         delay_base = delay_max;
     }
     if (delay_max > 0) {
-        // coverity[dontcall] It doesn't matter here if rand() is predictable
-        cmd->start_delay +=
-            ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
-            + delay_base;
+        cmd->start_delay += delay_base;
+
+        // Add random offset so that delay_base <= cmd->start_delay <= delay_max
+        if (delay_max > delay_base) {
+            // coverity[dont_call] Doesn't matter that rand() is predictable
+            cmd->start_delay += rand() % (delay_max - delay_base + 1);
+        }
     }
 
     if (cmd->start_delay > 0) {

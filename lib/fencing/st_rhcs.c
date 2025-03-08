@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -38,7 +38,7 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
     // Essentially: ls -1 @sbin_dir@/fence_*
 
     int count = 0, i;
-    struct dirent **namelist;
+    struct dirent **namelist = NULL;
     const int file_num = scandir(PCMK__FENCE_BINDIR, &namelist, 0, alphasort);
 
 #if _POSIX_C_SOURCE < 200809L && !(defined(O_SEARCH) || defined(O_PATH))

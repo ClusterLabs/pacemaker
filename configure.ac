@@ -1111,7 +1111,6 @@ dnl ========================================================================
 cc_temp_flags "$CFLAGS $WERROR"
 
 # Optional headers (inclusion of these should be conditional in C code)
-AC_CHECK_HEADERS([linux/swab.h])
 AC_CHECK_HEADERS([stddef.h])
 AC_CHECK_HEADERS([sys/signalfd.h])
 AC_CHECK_HEADERS([uuid/uuid.h])

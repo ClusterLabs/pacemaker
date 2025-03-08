@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,17 +25,21 @@
 static pid_t schema_fetch_pid = 0;
 
 static int
-rm_files(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftwb)
+rm_files(const char *fpath, const struct stat *sb, int typeflag,
+         struct FTW *ftwbuf)
 {
-    /* Don't delete PCMK__REMOTE_SCHEMA_DIR . */
-    if (ftwb->level == 0) {
-        return 0;
-    }
+    if (ftwbuf->level == 0) {
+        // Don't delete the remote schema directory
+        if (typeflag != FTW_DP) {
+            crm_err("%s already exists but is not a directory", fpath);
+            return ENOTDIR;
+        }
 
-    if (remove(pathname) != 0) {
+    } else if (remove(fpath) != 0) {
         int rc = errno;
-        crm_err("Could not remove %s: %s", pathname, pcmk_rc_str(rc));
-        return -1;
+
+        crm_err("Could not remove %s: %s", fpath, pcmk_rc_str(rc));
+        return rc;
     }
 
     return 0;
@@ -45,41 +49,27 @@ static void
 clean_up_extra_schema_files(void)
 {
     const char *remote_schema_dir = pcmk__remote_schema_dir();
-    struct stat sb;
-    int rc;
+    int rc = nftw(remote_schema_dir, rm_files, 10,
+                  FTW_DEPTH|FTW_MOUNT|FTW_PHYS);
 
-    rc = stat(remote_schema_dir, &sb);
+    if (rc != -1) {
+        // Either we succeeded (rc == 0) or rm_files() failed (rc > 0)
+        return;
+    }
 
-    if (rc == -1) {
-        if (errno == ENOENT) {
-            /* If the directory doesn't exist, try to make it first. */
-            if (mkdir(remote_schema_dir, 0755) != 0) {
-                rc = errno;
-                crm_err("Could not create directory for schemas: %s",
-                        pcmk_rc_str(rc));
-            }
-
-        } else {
+    // rc == -1: nftw() itself failed
+    if (errno == ENOENT) {
+        // remote_schema_dir doesn't exist, so try to create it
+        if (mkdir(remote_schema_dir, 0755) != 0) {
             rc = errno;
             crm_err("Could not create directory for schemas: %s",
                     pcmk_rc_str(rc));
         }
 
-    } else if (!S_ISDIR(sb.st_mode)) {
-        /* If something exists with the same name that's not a directory, that's
-         * an error.
-         */
-        crm_err("%s already exists but is not a directory", remote_schema_dir);
-
     } else {
-        /* It's a directory - clear it out so we can download potentially new
-         * schema files.
-         */
-        rc = nftw(remote_schema_dir, rm_files, 10, FTW_DEPTH|FTW_MOUNT|FTW_PHYS);
-
-        if (rc != 0) {
-            crm_err("Could not remove %s: %s", remote_schema_dir, pcmk_rc_str(rc));
-        }
+        rc = errno;
+        crm_err("Could not clean up directory for schemas: %s",
+                pcmk_rc_str(rc));
     }
 }
 

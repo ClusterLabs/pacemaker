@@ -412,7 +412,7 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
 {
     pcmk_scheduler_t *scheduler = NULL;
     uint64_t scheduler_flags = pcmk__sched_none;
-    struct dirent **namelist;
+    struct dirent **namelist = NULL;
     int num_files = 0;
     int rc = pcmk_rc_ok;
 
