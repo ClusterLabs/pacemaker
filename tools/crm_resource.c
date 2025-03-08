@@ -98,6 +98,9 @@ enum crm_rsc_flags {
 
     //! Use \c pcmk_rsc_match_history when looking up a resource
     crm_rsc_find_match_history       = (UINT32_C(1) << 2),
+
+    //! Fail if \c --resource refers to a particular clone instance
+    crm_rsc_rejects_clone_instance   = (UINT32_C(1) << 3),
 };
 
 /*!
@@ -1228,28 +1231,6 @@ is_controller_required(void)
     }
 }
 
-/*!
- * \internal
- * \brief Check whether the chosen command accepts clone instances
- *
- * \return \c true if \p options.rsc_cmd accepts or ignores clone instances, or
- *         \c false otherwise
- */
-static bool
-accept_clone_instance(void)
-{
-    switch (options.rsc_cmd) {
-        case cmd_ban:
-        case cmd_clear:
-        case cmd_delete:
-        case cmd_move:
-        case cmd_restart:
-            return false;
-        default:
-            return true;
-    }
-}
-
 static int
 handle_ban(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
            pcmk_scheduler_t *scheduler)
@@ -1774,7 +1755,8 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     [cmd_ban]               = {
         handle_ban,
         crm_rsc_find_match_anon_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance,
     },
     [cmd_cleanup]           = {
         handle_cleanup,
@@ -1784,7 +1766,8 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     [cmd_clear]             = {
         handle_clear,
         crm_rsc_find_match_anon_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance,
     },
     [cmd_colocations]       = {
         handle_colocations,
@@ -1797,7 +1780,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     },
     [cmd_delete]            = {
         handle_delete,
-        0,
+        crm_rsc_rejects_clone_instance,
     },
     [cmd_delete_param]      = {
         handle_delete_param,
@@ -1871,7 +1854,8 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     [cmd_move]              = {
         handle_move,
         crm_rsc_find_match_anon_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance,
     },
     [cmd_query_xml]         = {
         handle_query_xml,
@@ -1891,7 +1875,8 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     [cmd_restart]           = {
         handle_restart,
         crm_rsc_find_match_anon_basename
-        |crm_rsc_find_match_history,
+        |crm_rsc_find_match_history
+        |crm_rsc_rejects_clone_instance,
     },
     [cmd_set_param]         = {
         handle_set_param,
@@ -2210,16 +2195,17 @@ main(int argc, char **argv)
             goto done;
         }
 
-        /* The --ban, --clear, --move, and --restart commands do not work with
-         * instances of clone resourcs.
+        /* The --ban, --clear, --delete, --move, and --restart commands do not
+         * support instances of clone resources
          */
-        if (pcmk__is_clone(rsc->priv->parent)
-            && (strchr(options.rsc_id, ':') != NULL)
-            && !accept_clone_instance()) {
+        if (pcmk_is_set(command_info->flags, crm_rsc_rejects_clone_instance)
+            && pcmk__is_clone(rsc->priv->parent)
+            && (strchr(options.rsc_id, ':') != NULL)) {
 
             exit_code = CRM_EX_INVALID_PARAM;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Cannot operate on clone resource instance '%s'"), options.rsc_id);
+                        _("Cannot operate on clone resource instance '%s'"),
+                        options.rsc_id);
             goto done;
         }
     }
