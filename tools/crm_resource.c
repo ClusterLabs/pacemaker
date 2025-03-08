@@ -81,6 +81,15 @@ enum rsc_command {
 typedef int (*crm_resource_fn_t)(pcmk_resource_t *, pcmk_node_t *, xmlNode *,
                                  pcmk_scheduler_t *);
 
+/*!
+ * \internal
+ * \brief Handler function and flags for a given command
+ */
+typedef struct {
+    crm_resource_fn_t fn;   //!< Command handler function
+    uint32_t flags;         //!< Unused
+} crm_resource_cmd_info_t;
+
 struct {
     enum rsc_command rsc_cmd;     // crm_resource command to perform
 
@@ -1776,38 +1785,131 @@ handle_why(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
                         scheduler->priv->resources, rsc, node);
 }
 
-static const crm_resource_fn_t crm_resource_functions[] = {
-    [cmd_none]              = NULL,
-    [cmd_ban]               = handle_ban,
-    [cmd_cleanup]           = handle_cleanup,
-    [cmd_clear]             = handle_clear,
-    [cmd_colocations]       = handle_colocations,
-    [cmd_cts]               = handle_cts,
-    [cmd_delete]            = handle_delete,
-    [cmd_delete_param]      = handle_delete_param,
-    [cmd_digests]           = handle_digests,
-    [cmd_execute_agent]     = handle_execute_agent,
-    [cmd_fail]              = handle_fail,
-    [cmd_get_param]         = handle_get_param,
-    [cmd_list_active_ops]   = handle_list_active_ops,
-    [cmd_list_agents]       = handle_list_agents,
-    [cmd_list_all_ops]      = handle_list_all_ops,
-    [cmd_list_alternatives] = handle_list_alternatives,
-    [cmd_list_instances]    = handle_list_instances,
-    [cmd_list_options]      = handle_list_options,
-    [cmd_list_providers]    = handle_list_providers,
-    [cmd_list_resources]    = handle_list_resources,
-    [cmd_list_standards]    = handle_list_standards,
-    [cmd_locate]            = handle_locate,
-    [cmd_metadata]          = handle_metadata,
-    [cmd_move]              = handle_move,
-    [cmd_query_xml]         = handle_query_xml,
-    [cmd_query_xml_raw]     = handle_query_xml_raw,
-    [cmd_refresh]           = handle_refresh,
-    [cmd_restart]           = handle_restart,
-    [cmd_set_param]         = handle_set_param,
-    [cmd_wait]              = handle_wait,
-    [cmd_why]               = handle_why,
+static const crm_resource_cmd_info_t crm_resource_command_info[] = {
+    [cmd_none]              = {
+        NULL,
+        0,
+    },
+    [cmd_ban]               = {
+        handle_ban,
+        0,
+    },
+    [cmd_cleanup]           = {
+        handle_cleanup,
+        0,
+    },
+    [cmd_clear]             = {
+        handle_clear,
+        0,
+    },
+    [cmd_colocations]       = {
+        handle_colocations,
+        0,
+    },
+    [cmd_cts]               = {
+        handle_cts,
+        0,
+    },
+    [cmd_delete]            = {
+        handle_delete,
+        0,
+    },
+    [cmd_delete_param]      = {
+        handle_delete_param,
+        0,
+    },
+    [cmd_digests]           = {
+        handle_digests,
+        0,
+    },
+    [cmd_execute_agent]     = {
+        handle_execute_agent,
+        0,
+    },
+    [cmd_fail]              = {
+        handle_fail,
+        0,
+    },
+    [cmd_get_param]         = {
+        handle_get_param,
+        0,
+    },
+    [cmd_list_active_ops]   = {
+        handle_list_active_ops,
+        0,
+    },
+    [cmd_list_agents]       = {
+        handle_list_agents,
+        0,
+    },
+    [cmd_list_all_ops]      = {
+        handle_list_all_ops,
+        0,
+    },
+    [cmd_list_alternatives] = {
+        handle_list_alternatives,
+        0,
+    },
+    [cmd_list_instances]    = {
+        handle_list_instances,
+        0,
+    },
+    [cmd_list_options]      = {
+        handle_list_options,
+        0,
+    },
+    [cmd_list_providers]    = {
+        handle_list_providers,
+        0,
+    },
+    [cmd_list_resources]    = {
+        handle_list_resources,
+        0,
+    },
+    [cmd_list_standards]    = {
+        handle_list_standards,
+        0,
+    },
+    [cmd_locate]            = {
+        handle_locate,
+        0,
+    },
+    [cmd_metadata]          = {
+        handle_metadata,
+        0,
+    },
+    [cmd_move]              = {
+        handle_move,
+        0,
+    },
+    [cmd_query_xml]         = {
+        handle_query_xml,
+        0,
+    },
+    [cmd_query_xml_raw]     = {
+        handle_query_xml_raw,
+        0,
+    },
+    [cmd_refresh]           = {
+        handle_refresh,
+        0,
+    },
+    [cmd_restart]           = {
+        handle_restart,
+        0,
+    },
+    [cmd_set_param]         = {
+        handle_set_param,
+        0,
+    },
+    [cmd_wait]              = {
+        handle_wait,
+        0,
+    },
+    [cmd_why]               = {
+        handle_why,
+        0,
+    },
 };
 
 static GOptionContext *
@@ -1878,7 +1980,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
-    crm_resource_fn_t fn = NULL;
+    const crm_resource_cmd_info_t *command_info = NULL;
     xmlNode *cib_xml_orig = NULL;
     pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
@@ -2001,9 +2103,9 @@ main(int argc, char **argv)
 
     // Ensure command is in valid range and has a handler function
     if ((options.rsc_cmd >= 0) && (options.rsc_cmd <= cmd_max)) {
-        fn = crm_resource_functions[options.rsc_cmd];
+        command_info = &crm_resource_command_info[options.rsc_cmd];
     }
-    if (fn == NULL) {
+    if ((command_info == NULL) || (command_info->fn == NULL)) {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     _("Unimplemented command: %d"), (int) options.rsc_cmd);
@@ -2142,7 +2244,7 @@ main(int argc, char **argv)
     /* Some of these set exit_code explicitly and return pcmk_rc_ok to skip
      * setting exit_code based on rc
      */
-    rc = fn(rsc, node, cib_xml_orig, scheduler);
+    rc = command_info->fn(rsc, node, cib_xml_orig, scheduler);
 
     /* Convert rc into an exit code. */
     if (rc != pcmk_rc_ok && rc != pcmk_rc_no_output) {
