@@ -111,6 +111,9 @@ enum crm_rsc_flags {
     //! Require \c --node argument
     crm_rsc_requires_node            = (UINT32_C(1) << 6),
 
+    //! Require \c --resource argument
+    crm_rsc_requires_resource        = (UINT32_C(1) << 7),
+
     //! Require scheduler data unless resource is specified by agent
     crm_rsc_requires_scheduler       = (UINT32_C(1) << 8),
 };
@@ -1109,46 +1112,6 @@ validate_cmdline_config(void)
 
 /*!
  * \internal
- * \brief Check whether a resource argument is required
- *
- * \return \c true if a \c --resource argument is required, or \c false
- *         otherwise
- */
-static bool
-is_resource_required(void)
-{
-    if (has_cmdline_config()) {
-        return false;
-    }
-
-    switch (options.rsc_cmd) {
-        case cmd_clear:
-            return !options.clear_expired;
-
-        case cmd_cleanup:
-        case cmd_cts:
-        case cmd_list_active_ops:
-        case cmd_list_agents:
-        case cmd_list_all_ops:
-        case cmd_list_alternatives:
-        case cmd_list_instances:
-        case cmd_list_options:
-        case cmd_list_providers:
-        case cmd_list_resources:
-        case cmd_list_standards:
-        case cmd_metadata:
-        case cmd_refresh:
-        case cmd_wait:
-        case cmd_why:
-            return false;
-
-        default:
-            return true;
-    }
-}
-
-/*!
- * \internal
  * \brief Check whether a scheduler data object is required
  *
  * \param[in] command_info  Command info
@@ -1714,6 +1677,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         |crm_rsc_find_match_history
         |crm_rsc_rejects_clone_instance
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_cleanup]           = {
@@ -1730,6 +1694,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         |crm_rsc_find_match_history
         |crm_rsc_rejects_clone_instance
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource          // Unless options.clear_expired
         |crm_rsc_requires_scheduler,
     },
     [cmd_colocations]       = {
@@ -1737,6 +1702,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         crm_rsc_find_match_anon_basename
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_cts]               = {
@@ -1747,13 +1713,15 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
     [cmd_delete]            = {
         handle_delete,
         crm_rsc_rejects_clone_instance
-        |crm_rsc_requires_cib,
+        |crm_rsc_requires_cib
+        |crm_rsc_requires_resource,
     },
     [cmd_delete_param]      = {
         handle_delete_param,
         crm_rsc_find_match_basename
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_digests]           = {
@@ -1762,6 +1730,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
         |crm_rsc_requires_node
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_execute_agent]     = {
@@ -1769,6 +1738,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         crm_rsc_find_match_anon_basename
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_fail]              = {
@@ -1777,6 +1747,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         |crm_rsc_requires_cib
         |crm_rsc_requires_controller
         |crm_rsc_requires_node
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_get_param]         = {
@@ -1784,6 +1755,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         crm_rsc_find_match_basename
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_list_active_ops]   = {
@@ -1831,6 +1803,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         crm_rsc_find_match_anon_basename
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_metadata]          = {
@@ -1843,6 +1816,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         |crm_rsc_find_match_history
         |crm_rsc_rejects_clone_instance
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_query_xml]         = {
@@ -1850,6 +1824,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         crm_rsc_find_match_basename
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_query_xml_raw]     = {
@@ -1857,6 +1832,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         crm_rsc_find_match_basename
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_refresh]           = {
@@ -1873,6 +1849,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         |crm_rsc_find_match_history
         |crm_rsc_rejects_clone_instance
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_set_param]         = {
@@ -1880,6 +1857,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         crm_rsc_find_match_basename
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_resource
         |crm_rsc_requires_scheduler,
     },
     [cmd_wait]              = {
@@ -2113,10 +2091,15 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (is_resource_required() && (options.rsc_id == NULL)) {
+    // Ensure --resource is set if it's required
+    if (pcmk_is_set(command_info->flags, crm_rsc_requires_resource)
+        && !has_cmdline_config()
+        && !options.clear_expired
+        && (options.rsc_id == NULL)) {
+
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    _("Must supply a resource id with -r"));
+                    _("Must supply a resource ID with -r/--resource"));
         goto done;
     }
 
