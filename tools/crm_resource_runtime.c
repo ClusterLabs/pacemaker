@@ -2081,6 +2081,7 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
 int
 wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
 {
+    // @FIXME This should bail out when run with CIB_file
     pcmk_scheduler_t *scheduler = NULL;
     xmlXPathObjectPtr search;
     int rc = pcmk_rc_ok;
