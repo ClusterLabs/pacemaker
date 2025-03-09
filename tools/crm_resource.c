@@ -105,6 +105,9 @@ enum crm_rsc_flags {
     //! Require CIB connection unless resource is specified by agent
     crm_rsc_requires_cib             = (UINT32_C(1) << 4),
 
+    //! Require controller connection
+    crm_rsc_requires_controller      = (UINT32_C(1) << 5),
+
     //! Require scheduler data unless resource is specified by agent
     crm_rsc_requires_scheduler       = (UINT32_C(1) << 8),
 };
@@ -1199,25 +1202,6 @@ is_cib_required(const crm_resource_cmd_info_t *command_info)
     return pcmk_is_set(command_info->flags, crm_rsc_requires_cib);
 }
 
-/*!
- * \internal
- * \brief Check whether a controller IPC connection is required
- *
- * \return \c true if a controller connection is required, or \c false otherwise
- */
-static bool
-is_controller_required(void)
-{
-    switch (options.rsc_cmd) {
-        case cmd_cleanup:
-        case cmd_fail:
-        case cmd_refresh:
-            return true;
-        default:
-            return false;
-    }
-}
-
 static int
 handle_ban(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
            pcmk_scheduler_t *scheduler)
@@ -1752,6 +1736,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         crm_rsc_find_match_anon_basename
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_controller
         |crm_rsc_requires_scheduler,
     },
     [cmd_clear]             = {
@@ -1804,6 +1789,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         handle_fail,
         crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_controller
         |crm_rsc_requires_scheduler,
     },
     [cmd_get_param]         = {
@@ -1891,6 +1877,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         crm_rsc_find_match_anon_basename
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_controller
         |crm_rsc_requires_scheduler,
     },
     [cmd_restart]           = {
@@ -2238,7 +2225,9 @@ main(int argc, char **argv)
     }
 
     // Establish a connection to the controller if needed
-    if (is_controller_required() && (getenv("CIB_file") == NULL)) {
+    if (pcmk_is_set(command_info->flags, crm_rsc_requires_controller)
+        && (getenv("CIB_file") == NULL)) {
+
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
