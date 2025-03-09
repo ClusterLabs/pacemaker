@@ -2049,10 +2049,10 @@ main(int argc, char **argv)
         goto done;
     }
 
+    /* If a command-line resource agent specification was given, validate it.
+     * Otherwise, ensure --option was not given.
+     */
     if (has_cmdline_config()) {
-        /* A resource configuration was given on the command line. Sanity-check
-         * the values and set error if they don't make sense.
-         */
         validate_cmdline_config();
         if (error != NULL) {
             exit_code = CRM_EX_USAGE;
@@ -2119,29 +2119,6 @@ main(int argc, char **argv)
             exit_code = pcmk_rc2exitc(rc);
             goto done;
         }
-
-        /* Find node if --node was given.
-         *
-         * @TODO Consider stricter validation. Currently we ignore the --node
-         * argument for commands that don't require scheduler data, since we
-         * have no way to find the node in that case. This is really a usage
-         * error, but we don't validate strictly. We allow multiple commands
-         * (and in some cases their options like --node) to be specified, and we
-         * use the last one in case of conflicts.
-         *
-         * This isn't universally true. --expired results in a usage error
-         * unless the final command is clear.
-         */
-        if (options.host_uname != NULL) {
-            node = pcmk_find_node(scheduler, options.host_uname);
-
-            if (node == NULL) {
-                exit_code = CRM_EX_NOSUCH;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            _("Node '%s' not found"), options.host_uname);
-                goto done;
-            }
-        }
     }
 
     // Establish a connection to the controller if needed
@@ -2169,7 +2146,34 @@ main(int argc, char **argv)
         }
     }
 
-    // @TODO Setter macro for tracing?
+    /* Find node if --node was given.
+     *
+     * @TODO Consider stricter validation. Currently we ignore the --node
+     * argument for commands that don't require scheduler data, since we have no
+     * way to find the node in that case. This is really a usage error, but we
+     * don't validate strictly. We allow multiple commands (and in some cases
+     * their options like --node) to be specified, and we use the last one in
+     * case of conflicts.
+     *
+     * This isn't universally true. --expired results in a usage error unless
+     * the final command is --clear.
+     */
+    if (options.host_uname != NULL) {
+        node = pcmk_find_node(scheduler, options.host_uname);
+
+        if (node == NULL) {
+            exit_code = CRM_EX_NOSUCH;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        _("Node '%s' not found"), options.host_uname);
+            goto done;
+        }
+    }
+
+    /* Find resource if --resource was given and any find flags are set.
+     *
+     * @TODO Consider stricter validation. See comment above for --node.
+     * @TODO Setter macro for tracing?
+     */
     if (pcmk_is_set(command_info->flags, crm_rsc_find_match_anon_basename)) {
         find_flags |= pcmk_rsc_match_anon_basename;
     }
@@ -2179,12 +2183,6 @@ main(int argc, char **argv)
     if (pcmk_is_set(command_info->flags, crm_rsc_find_match_history)) {
         find_flags |= pcmk_rsc_match_history;
     }
-
-    /* Find resource in scheduler data if any find flags are set
-     *
-     * @TODO Consider stricter validation. See comment above pcmk_find_node()
-     * call.
-     */
     if ((find_flags != 0) && (options.rsc_id != NULL)) {
         pcmk__assert(scheduler != NULL);
 
