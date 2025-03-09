@@ -220,12 +220,18 @@ static void
 controller_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
                           crm_exit_t status, void *event_data, void *user_data)
 {
+    crm_exit_t *ec = user_data;
+
+    pcmk__assert(ec != NULL);
+
     switch (event_type) {
         case pcmk_ipc_event_disconnect:
             if (exit_code == CRM_EX_DISCONNECT) { // Unexpected
                 crm_info("Connection to controller was terminated");
             }
-            quit_main_loop(exit_code);
+
+            *ec = exit_code;
+            quit_main_loop(*ec);
             break;
 
         case pcmk_ipc_event_reply:
@@ -233,14 +239,22 @@ controller_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
                 out->err(out, "Error: bad reply from controller: %s",
                          crm_exit_str(status));
                 pcmk_disconnect_ipc(api);
-                quit_main_loop(status);
+
+                *ec = status;
+                quit_main_loop(*ec);
+
             } else {
                 if ((pcmk_controld_api_replies_expected(api) == 0)
-                    && mainloop && g_main_loop_is_running(mainloop)) {
+                    && (mainloop != NULL)
+                    && g_main_loop_is_running(mainloop)) {
+
                     out->info(out, "... got reply (done)");
                     crm_debug("Got all the replies we expected");
                     pcmk_disconnect_ipc(api);
-                    quit_main_loop(CRM_EX_OK);
+
+                    *ec = CRM_EX_OK;
+                    quit_main_loop(*ec);
+
                 } else {
                     out->info(out, "... got reply");
                 }
@@ -2219,7 +2233,7 @@ main(int argc, char **argv)
         }
 
         pcmk_register_ipc_callback(controld_api, controller_event_callback,
-                                   NULL);
+                                   &exit_code);
 
         rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_main, 5);
         if (rc != pcmk_rc_ok) {
