@@ -284,9 +284,9 @@ wrap_libxslt(bool finalize)
 static int
 transform_filter(const struct dirent *entry)
 {
-    return pcmk__str_eq(entry->d_name,
-                        "upgrade-[[:digit:]]+.[[:digit:]]+-[[:digit:]]+.xsl",
-                        pcmk__str_regex)? 1 : 0;
+    const char *re = "upgrade-[[:digit:]]+\\.[[:digit:]]+-[[:digit:]]+\\.xsl";
+
+    return pcmk__str_eq(entry->d_name, re, pcmk__str_regex)? 1 : 0;
 }
 
 /*!
