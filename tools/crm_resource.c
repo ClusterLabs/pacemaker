@@ -1126,46 +1126,6 @@ validate_cmdline_config(void)
     }
 }
 
-/*!
- * \internal
- * \brief Check whether a scheduler data object is required
- *
- * \param[in] command_info  Command info
- *
- * If true, the caller will populate the scheduler data from the CIB connection.
- *
- * \return \c true if scheduler data is required, or \c false otherwise
- */
-static bool
-is_scheduler_required(const crm_resource_cmd_info_t *command_info)
-{
-    if (has_cmdline_config()) {
-        // cmd_execute_agent using CLI parameters instead of CIB connection
-        return false;
-    }
-
-    return pcmk_is_set(command_info->flags, crm_rsc_requires_scheduler);
-}
-
-/*!
- * \internal
- * \brief Check whether a CIB connection is required
- *
- * \param[in] command_info  Command info
- *
- * \return \c true if a CIB connection is required, or \c false otherwise
- */
-static bool
-is_cib_required(const crm_resource_cmd_info_t *command_info)
-{
-    if (has_cmdline_config()) {
-        // cmd_execute_agent using CLI parameters instead of CIB connection
-        return false;
-    }
-
-    return pcmk_is_set(command_info->flags, crm_rsc_requires_cib);
-}
-
 static int
 handle_ban(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
            pcmk_scheduler_t *scheduler)
@@ -2129,12 +2089,10 @@ main(int argc, char **argv)
         goto done;
     }
 
-    /*
-     * Set up necessary connections
-     */
-
     // Establish a connection to the CIB if needed
-    if (is_cib_required(command_info)) {
+    if (pcmk_is_set(command_info->flags, crm_rsc_requires_cib)
+        && !has_cmdline_config()) {
+
         cib_conn = cib_new();
         if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
             exit_code = CRM_EX_DISCONNECT;
@@ -2152,16 +2110,27 @@ main(int argc, char **argv)
         }
     }
 
-    // Populate scheduler data from CIB query
-    if (is_scheduler_required(command_info)) {
+    // Populate scheduler data from CIB query if needed
+    if (pcmk_is_set(command_info->flags, crm_rsc_requires_scheduler)
+        && !has_cmdline_config()) {
+
         rc = initialize_scheduler_data(&cib_xml_orig);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             goto done;
         }
 
-        /* If user supplied a node name, check whether it exists.
-         * Commands that don't require scheduler data ignore the node argument.
+        /* Find node if --node was given.
+         *
+         * @TODO Consider stricter validation. Currently we ignore the --node
+         * argument for commands that don't require scheduler data, since we
+         * have no way to find the node in that case. This is really a usage
+         * error, but we don't validate strictly. We allow multiple commands
+         * (and in some cases their options like --node) to be specified, and we
+         * use the last one in case of conflicts.
+         *
+         * This isn't universally true. --expired results in a usage error
+         * unless the final command is clear.
          */
         if (options.host_uname != NULL) {
             node = pcmk_find_node(scheduler, options.host_uname);
@@ -2186,7 +2155,11 @@ main(int argc, char **argv)
         find_flags |= pcmk_rsc_match_history;
     }
 
-    // Find resource in scheduler data if any find flags are set
+    /* Find resource in scheduler data if any find flags are set
+     *
+     * @TODO Consider stricter validation. See comment above pcmk_find_node()
+     * call.
+     */
     if ((find_flags != 0) && (options.rsc_id != NULL)) {
         pcmk__assert(scheduler != NULL);
 
@@ -2237,23 +2210,14 @@ main(int argc, char **argv)
         }
     }
 
-    /*
-     * Handle requested command
-     */
-
-    /* Some of these set exit_code explicitly and return pcmk_rc_ok to skip
-     * setting exit_code based on rc
+    /* Some handler functions set exit_code explicitly and return pcmk_rc_ok to
+     * skip setting exit_code based on rc
      */
     rc = command_info->fn(rsc, node, cib_xml_orig, scheduler);
 
-    /* Convert rc into an exit code. */
-    if (rc != pcmk_rc_ok && rc != pcmk_rc_no_output) {
+    if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_no_output)) {
         exit_code = pcmk_rc2exitc(rc);
     }
-
-    /*
-     * Clean up and exit
-     */
 
 done:
     /* When we get here, exit_code has been set one of two ways - either at one of
