@@ -1045,7 +1045,23 @@ validate_cmdline_config(void)
         return;
     }
 
-    // Check whether command supports command-line resource configuration
+    /* Check whether command supports command-line resource configuration
+     *
+     * @FIXME According to the help text, these options can only be used with
+     * --validate. The --force-* commands are documented for resources that are
+     * configured in Pacemaker. So this is a bug. We have two choices:
+     * * Throw an error if --force-* commands are used with these options.
+     * * Document that --force-* commands can be used with these options.
+     *
+     * An error seems safer. If a user really wants to run a non-trivial
+     * resource action based on CLI parameters, they can do so by executing the
+     * resource agent directly. It's unsafe to do so if Pacemaker is managing
+     * the resource that's specified via --class, --option, etc.
+     *
+     * On the other hand, besides safety concerns, running other actions is
+     * exactly the same as running a validate action, and the implementation is
+     * already in place.
+     */
     if (options.rsc_cmd != cmd_execute_agent) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     _("--class, --agent, and --provider can only be used with "
