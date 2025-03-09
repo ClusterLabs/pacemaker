@@ -176,7 +176,6 @@ static GError *error = NULL;
 static GMainLoop *mainloop = NULL;
 static cib_t *cib_conn = NULL;
 static pcmk_ipc_api_t *controld_api = NULL;
-static pcmk_scheduler_t *scheduler = NULL;
 
 #define MESSAGE_TIMEOUT_S 60
 
@@ -919,26 +918,52 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 }
 
+/*!
+ * \internal
+ * \brief Allocate a scheduler data object and initialize it from the CIB
+ *
+ * We transform the queried CIB XML to the latest schema version before using it
+ * to populate the scheduler data.
+ *
+ * \param[out] scheduler     Where to store scheduler data
+ * \param[in]  cib_conn      CIB connection
+ * \param[in]  out           Output object for new scheduler data object
+ * \param[out] cib_xml_orig  Where to store queried CIB XML from before any
+ *                           schema upgrades
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note \p *scheduler and \p *cib_xml_orig must be \c NULL when this function
+ *       is called.
+ * \note The caller is responsible for freeing \p *scheduler using
+ *       \c pcmk_free_scheduler.
+ */
 static int
-initialize_scheduler_data(xmlNode **cib_xml_orig)
+initialize_scheduler_data(pcmk_scheduler_t **scheduler, cib_t *cib_conn,
+                          pcmk__output_t *out, xmlNode **cib_xml_orig)
 {
     int rc = pcmk_rc_ok;
 
-    pcmk__assert(cib_conn != NULL);
+    pcmk__assert((scheduler != NULL) && (*scheduler == NULL)
+                 && (cib_conn != NULL) && (out != NULL)
+                 && (cib_xml_orig != NULL) && (*cib_xml_orig == NULL));
 
-    scheduler = pcmk_new_scheduler();
-    if (scheduler == NULL) {
+    *scheduler = pcmk_new_scheduler();
+    if (*scheduler == NULL) {
         return ENOMEM;
     }
 
-    pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
-    scheduler->priv->out = out;
-    rc = update_scheduler_input(out, scheduler, cib_conn, cib_xml_orig);
+    pcmk__set_scheduler_flags(*scheduler, pcmk__sched_no_counts);
+    (*scheduler)->priv->out = out;
+
+    rc = update_scheduler_input(out, *scheduler, cib_conn, cib_xml_orig);
     if (rc != pcmk_rc_ok) {
+        pcmk_free_scheduler(*scheduler);
+        *scheduler = NULL;
         return rc;
     }
 
-    cluster_status(scheduler);
+    cluster_status(*scheduler);
     return pcmk_rc_ok;
 }
 
@@ -1976,9 +2001,10 @@ int
 main(int argc, char **argv)
 {
     const crm_resource_cmd_info_t *command_info = NULL;
-    xmlNode *cib_xml_orig = NULL;
     pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
+    pcmk_scheduler_t *scheduler = NULL;
+    xmlNode *cib_xml_orig = NULL;
     uint32_t find_flags = 0;
     int rc = pcmk_rc_ok;
 
@@ -2172,7 +2198,8 @@ main(int argc, char **argv)
     if (pcmk_is_set(command_info->flags, crm_rsc_requires_scheduler)
         && !has_cmdline_config()) {
 
-        rc = initialize_scheduler_data(&cib_xml_orig);
+        rc = initialize_scheduler_data(&scheduler, cib_conn, out,
+                                       &cib_xml_orig);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             goto done;
