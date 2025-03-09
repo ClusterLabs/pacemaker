@@ -79,7 +79,7 @@ enum rsc_command {
  * \brief Handler function for a crm_resource command
  */
 typedef crm_exit_t (*crm_resource_fn_t)(pcmk_resource_t *, pcmk_node_t *,
-                                        xmlNode *, pcmk_scheduler_t *);
+                                        cib_t *, pcmk_scheduler_t *, xmlNode *);
 
 /*!
  * \internal
@@ -174,7 +174,6 @@ static pcmk__common_args_t *args = NULL;
 // Things that should be cleaned up on exit
 static GError *error = NULL;
 static GMainLoop *mainloop = NULL;
-static cib_t *cib_conn = NULL;
 static pcmk_ipc_api_t *controld_api = NULL;
 
 #define MESSAGE_TIMEOUT_S 60
@@ -844,7 +843,7 @@ static GOptionEntry addl_entries[] = {
 };
 
 static int
-ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
+ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc, cib_t *cib_conn,
             const char *move_lifetime)
 {
     int rc = pcmk_rc_ok;
@@ -1178,13 +1177,13 @@ validate_cmdline_config(void)
 }
 
 static crm_exit_t
-handle_ban(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-           pcmk_scheduler_t *scheduler)
+handle_ban(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+           pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = pcmk_rc_ok;
 
     if (node == NULL) {
-        rc = ban_or_move(out, rsc, options.move_lifetime);
+        rc = ban_or_move(out, rsc, cib_conn, options.move_lifetime);
     } else {
         rc = cli_resource_ban(out, options.rsc_id, node->priv->name,
                               options.move_lifetime, cib_conn,
@@ -1198,8 +1197,8 @@ handle_ban(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_cleanup(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-               pcmk_scheduler_t *scheduler)
+handle_cleanup(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+               pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     if (rsc == NULL) {
         int rc = cli_cleanup_all(controld_api, node, options.operation,
@@ -1222,8 +1221,8 @@ handle_cleanup(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-             pcmk_scheduler_t *scheduler)
+handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+             pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     const char *node_name = (node != NULL)? node->priv->name : NULL;
     GList *before = NULL;
@@ -1284,8 +1283,8 @@ handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_colocations(pcmk_resource_t *rsc, pcmk_node_t *node,
-                   xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_colocations(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                   pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = out->message(out, "locations-and-colocations", rsc,
                           options.recursive, options.force);
@@ -1294,8 +1293,8 @@ handle_colocations(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_cts(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-           pcmk_scheduler_t *scheduler)
+handle_cts(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+           pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     g_list_foreach(scheduler->priv->resources, (GFunc) cli_resource_print_cts,
                    out);
@@ -1304,8 +1303,8 @@ handle_cts(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_delete(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-              pcmk_scheduler_t *scheduler)
+handle_delete(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+              pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     /* rsc_id was already checked for NULL much earlier when validating command
      * line arguments
@@ -1331,8 +1330,8 @@ handle_delete(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_delete_param(pcmk_resource_t *rsc, pcmk_node_t *node,
-                    xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_delete_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                    pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = cli_resource_delete_attribute(rsc, options.rsc_id,
                                            options.prop_set,
@@ -1345,8 +1344,8 @@ handle_delete_param(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_digests(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-               pcmk_scheduler_t *scheduler)
+handle_digests(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+               pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = pcmk__resource_digests(out, rsc, node, options.override_params);
 
@@ -1354,8 +1353,8 @@ handle_digests(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_execute_agent(pcmk_resource_t *rsc, pcmk_node_t *node,
-                     xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_execute_agent(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                     pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     if (has_cmdline_config()) {
         return cli_resource_execute_from_params(out, NULL, options.class,
@@ -1374,8 +1373,8 @@ handle_execute_agent(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_fail(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-            pcmk_scheduler_t *scheduler)
+handle_fail(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+            pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = cli_resource_fail(controld_api, rsc, options.rsc_id, node);
 
@@ -1388,8 +1387,8 @@ handle_fail(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-                 pcmk_scheduler_t *scheduler)
+handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                 pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     unsigned int count = 0;
     GHashTable *params = NULL;
@@ -1448,8 +1447,8 @@ handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_list_active_ops(pcmk_resource_t *rsc, pcmk_node_t *node,
-                       xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_list_active_ops(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                       pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     const char *node_name = (node != NULL)? node->priv->name : NULL;
     int rc = cli_resource_print_operations(options.rsc_id, node_name, true,
@@ -1459,8 +1458,8 @@ handle_list_active_ops(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_list_agents(pcmk_resource_t *rsc, pcmk_node_t *node,
-                   xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_list_agents(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                   pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = pcmk__list_agents(out, options.agent_spec);
 
@@ -1468,8 +1467,8 @@ handle_list_agents(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_list_all_ops(pcmk_resource_t *rsc, pcmk_node_t *node,
-                    xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_list_all_ops(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                    pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     const char *node_name = (node != NULL)? node->priv->name : NULL;
     int rc = cli_resource_print_operations(options.rsc_id, node_name, false,
@@ -1480,7 +1479,8 @@ handle_list_all_ops(pcmk_resource_t *rsc, pcmk_node_t *node,
 
 static crm_exit_t
 handle_list_alternatives(pcmk_resource_t *rsc, pcmk_node_t *node,
-                         xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+                         cib_t *cib_conn, pcmk_scheduler_t *scheduler,
+                         xmlNode *cib_xml_orig)
 {
     int rc = pcmk__list_alternatives(out, options.agent_spec);
 
@@ -1488,8 +1488,8 @@ handle_list_alternatives(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_list_instances(pcmk_resource_t *rsc, pcmk_node_t *node,
-                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_list_instances(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                      pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = out->message(out, "resource-names-list",
                           scheduler->priv->resources);
@@ -1502,8 +1502,8 @@ handle_list_instances(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_list_options(pcmk_resource_t *rsc, pcmk_node_t *node,
-                   xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_list_options(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                    pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     crm_exit_t ec = CRM_EX_OK;
     int rc = pcmk_rc_ok;
@@ -1526,8 +1526,8 @@ handle_list_options(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_list_providers(pcmk_resource_t *rsc, pcmk_node_t *node,
-                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_list_providers(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                      pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = pcmk__list_providers(out, options.agent_spec);
 
@@ -1535,8 +1535,8 @@ handle_list_providers(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_list_resources(pcmk_resource_t *rsc, pcmk_node_t *node,
-                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_list_resources(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                      pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     GList *all = g_list_prepend(NULL, (gpointer) "*");
     int rc = out->message(out, "resource-list", scheduler,
@@ -1555,8 +1555,8 @@ handle_list_resources(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_list_standards(pcmk_resource_t *rsc, pcmk_node_t *node,
-                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_list_standards(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                      pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = pcmk__list_standards(out);
 
@@ -1564,8 +1564,8 @@ handle_list_standards(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_locate(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-              pcmk_scheduler_t *scheduler)
+handle_locate(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+              pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     GList *nodes = cli_resource_search(rsc, options.rsc_id);
     int rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
@@ -1575,8 +1575,8 @@ handle_locate(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-                pcmk_scheduler_t *scheduler)
+handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = pcmk_rc_ok;
     char *standard = NULL;
@@ -1628,13 +1628,13 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_move(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-            pcmk_scheduler_t *scheduler)
+handle_move(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+            pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = pcmk_rc_ok;
 
     if (node == NULL) {
-        rc = ban_or_move(out, rsc, options.move_lifetime);
+        rc = ban_or_move(out, rsc, cib_conn, options.move_lifetime);
     } else {
         rc = cli_resource_move(rsc, options.rsc_id, node, options.move_lifetime,
                                cib_conn, options.promoted_role_only,
@@ -1648,8 +1648,8 @@ handle_move(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_query_xml(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-                 pcmk_scheduler_t *scheduler)
+handle_query_xml(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                 pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = cli_resource_print(rsc, true);
 
@@ -1657,8 +1657,8 @@ handle_query_xml(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_query_xml_raw(pcmk_resource_t *rsc, pcmk_node_t *node,
-                     xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
+handle_query_xml_raw(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                     pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = cli_resource_print(rsc, false);
 
@@ -1666,8 +1666,8 @@ handle_query_xml_raw(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static crm_exit_t
-handle_refresh(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-               pcmk_scheduler_t *scheduler)
+handle_refresh(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+               pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     if (rsc == NULL) {
         return refresh(out, node);
@@ -1684,8 +1684,8 @@ handle_refresh(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_restart(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-               pcmk_scheduler_t *scheduler)
+handle_restart(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+               pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     /* We don't pass scheduler because rsc needs to stay valid for the entire
      * lifetime of cli_resource_restart(), but it will reset and update the
@@ -1699,8 +1699,8 @@ handle_restart(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_set_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-                 pcmk_scheduler_t *scheduler)
+handle_set_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+                 pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = pcmk_rc_ok;
 
@@ -1721,8 +1721,8 @@ handle_set_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_wait(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-            pcmk_scheduler_t *scheduler)
+handle_wait(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+            pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = wait_till_stable(out, options.timeout_ms, cib_conn);
 
@@ -1730,8 +1730,8 @@ handle_wait(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
 }
 
 static crm_exit_t
-handle_why(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
-           pcmk_scheduler_t *scheduler)
+handle_why(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
+           pcmk_scheduler_t *scheduler, xmlNode *cib_xml_orig)
 {
     int rc = out->message(out, "resource-reasons-list",
                           scheduler->priv->resources, rsc, node);
@@ -2017,6 +2017,7 @@ main(int argc, char **argv)
     const crm_resource_cmd_info_t *command_info = NULL;
     pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
+    cib_t *cib_conn = NULL;
     pcmk_scheduler_t *scheduler = NULL;
     xmlNode *cib_xml_orig = NULL;
     uint32_t find_flags = 0;
@@ -2309,7 +2310,7 @@ main(int argc, char **argv)
         }
     }
 
-    exit_code = command_info->fn(rsc, node, cib_xml_orig, scheduler);
+    exit_code = command_info->fn(rsc, node, cib_conn, scheduler, cib_xml_orig);
 
 done:
     // For CRM_EX_USAGE, error is already set satisfactorily
