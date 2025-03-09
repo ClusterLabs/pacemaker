@@ -2144,6 +2144,31 @@ main(int argc, char **argv)
         }
     }
 
+    // Establish a connection to the controller if needed
+    if (pcmk_is_set(command_info->flags, crm_rsc_requires_controller)
+        && (getenv("CIB_file") == NULL)) {
+
+        rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
+        if (rc != pcmk_rc_ok) {
+            exit_code = pcmk_rc2exitc(rc);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        _("Error connecting to the controller: %s"), pcmk_rc_str(rc));
+            goto done;
+        }
+
+        pcmk_register_ipc_callback(controld_api, controller_event_callback,
+                                   NULL);
+
+        rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_main, 5);
+        if (rc != pcmk_rc_ok) {
+            exit_code = pcmk_rc2exitc(rc);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        _("Error connecting to %s: %s"),
+                        pcmk_ipc_name(controld_api, true), pcmk_rc_str(rc));
+            goto done;
+        }
+    }
+
     // @TODO Setter macro for tracing?
     if (pcmk_is_set(command_info->flags, crm_rsc_find_match_anon_basename)) {
         find_flags |= pcmk_rsc_match_anon_basename;
@@ -2183,29 +2208,6 @@ main(int argc, char **argv)
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         _("Cannot operate on clone resource instance '%s'"),
                         options.rsc_id);
-            goto done;
-        }
-    }
-
-    // Establish a connection to the controller if needed
-    if (pcmk_is_set(command_info->flags, crm_rsc_requires_controller)
-        && (getenv("CIB_file") == NULL)) {
-
-        rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
-        if (rc != pcmk_rc_ok) {
-            exit_code = pcmk_rc2exitc(rc);
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Error connecting to the controller: %s"), pcmk_rc_str(rc));
-            goto done;
-        }
-        pcmk_register_ipc_callback(controld_api, controller_event_callback,
-                                   NULL);
-        rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_main, 5);
-        if (rc != pcmk_rc_ok) {
-            exit_code = pcmk_rc2exitc(rc);
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Error connecting to %s: %s"),
-                        pcmk_ipc_name(controld_api, true), pcmk_rc_str(rc));
             goto done;
         }
     }
