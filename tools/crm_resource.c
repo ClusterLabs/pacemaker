@@ -1447,7 +1447,7 @@ handle_list_options(pcmk_resource_t *rsc, pcmk_node_t *node,
         default:
             exit_code = CRM_EX_SOFTWARE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "BUG: Invalid option list type");
+                        "Bug: Invalid option list type");
             return pcmk_rc_ok;
     }
 }
@@ -2043,9 +2043,9 @@ main(int argc, char **argv)
         command_info = &crm_resource_command_info[options.rsc_cmd];
     }
     if ((command_info == NULL) || (command_info->fn == NULL)) {
-        exit_code = CRM_EX_USAGE;
+        exit_code = CRM_EX_SOFTWARE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    _("Unimplemented command: %d"), (int) options.rsc_cmd);
+                    _("Bug: Unimplemented command: %d"), (int) options.rsc_cmd);
         goto done;
     }
 
