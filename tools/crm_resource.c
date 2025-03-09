@@ -108,6 +108,9 @@ enum crm_rsc_flags {
     //! Require controller connection
     crm_rsc_requires_controller      = (UINT32_C(1) << 5),
 
+    //! Require \c --node argument
+    crm_rsc_requires_node            = (UINT32_C(1) << 6),
+
     //! Require scheduler data unless resource is specified by agent
     crm_rsc_requires_scheduler       = (UINT32_C(1) << 8),
 };
@@ -1106,24 +1109,6 @@ validate_cmdline_config(void)
 
 /*!
  * \internal
- * \brief Check whether a node argument is required
- *
- * \return \c true if a \c --node argument is required, or \c false otherwise
- */
-static bool
-is_node_required(void)
-{
-    switch (options.rsc_cmd) {
-        case cmd_digests:
-        case cmd_fail:
-            return true;
-        default:
-            return false;
-    }
-}
-
-/*!
- * \internal
  * \brief Check whether a resource argument is required
  *
  * \return \c true if a \c --resource argument is required, or \c false
@@ -1776,6 +1761,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         crm_rsc_find_match_anon_basename
         |crm_rsc_find_match_history
         |crm_rsc_requires_cib
+        |crm_rsc_requires_node
         |crm_rsc_requires_scheduler,
     },
     [cmd_execute_agent]     = {
@@ -1790,6 +1776,7 @@ static const crm_resource_cmd_info_t crm_resource_command_info[] = {
         crm_rsc_find_match_history
         |crm_rsc_requires_cib
         |crm_rsc_requires_controller
+        |crm_rsc_requires_node
         |crm_rsc_requires_scheduler,
     },
     [cmd_get_param]         = {
@@ -2132,10 +2119,14 @@ main(int argc, char **argv)
                     _("Must supply a resource id with -r"));
         goto done;
     }
-    if (is_node_required() && (options.host_uname == NULL)) {
+
+    // Ensure --node is set if it's required
+    if (pcmk_is_set(command_info->flags, crm_rsc_requires_node)
+        && (options.host_uname == NULL)) {
+
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    _("Must supply a node name with -N"));
+                    _("Must supply a node name with -N/--node"));
         goto done;
     }
 
