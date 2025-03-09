@@ -13,6 +13,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
+#include <limits.h>             // UCHAR_MAX
 #include <sys/stat.h>
 #include <stdarg.h>
 
@@ -279,14 +280,38 @@ wrap_libxslt(bool finalize)
  * \param[in] entry  Directory entry whose filename to check
  *
  * \return 1 if the entry's filename is of the form
- *         <tt>upgrade-X.Y-ORDER.xsl</tt>, or 0 otherwise
+ *         <tt>upgrade-X.Y-ORDER.xsl</tt> with each number in the range 0 to
+ *         255, or 0 otherwise
  */
 static int
 transform_filter(const struct dirent *entry)
 {
-    const char *re = "upgrade-[[:digit:]]+\\.[[:digit:]]+-[[:digit:]]+\\.xsl";
+    const char *re = NULL;
+    unsigned int major = 0;
+    unsigned int minor = 0;
+    unsigned int order = 0;
 
-    return pcmk__str_eq(entry->d_name, re, pcmk__str_regex)? 1 : 0;
+    /* Each number is an unsigned char, which is 1 to 3 digits long. (Pacemaker
+     * requires an 8-bit char via a configure test.)
+     */
+    re = "upgrade-[[:digit:]]{1,3}\\.[[:digit:]]{1,3}-[[:digit:]]{1,3}\\.xsl";
+
+    if (!pcmk__str_eq(entry->d_name, re, pcmk__str_regex)) {
+        return 0;
+    }
+
+    /* Performance isn't critical here and this is simpler than range-checking
+     * within the regex
+     */
+    if (sscanf(entry->d_name, "upgrade-%u.%u-%u.xsl",
+               &major, &minor, &order) != 3) {
+        return 0;
+    }
+
+    if ((major > UCHAR_MAX) || (minor > UCHAR_MAX) || (order > UCHAR_MAX)) {
+        return 0;
+    }
+    return 1;
 }
 
 /*!
@@ -333,9 +358,9 @@ load_transforms_from_dir(const char *dir)
 
     for (int i = 0; i < num_matches; i++) {
         pcmk__schema_version_t version = SCHEMA_ZERO;
-        int order = 0;  // Placeholder only
+        unsigned char order = 0;  // Placeholder only
 
-        if (sscanf(namelist[i]->d_name, "upgrade-%hhu.%hhu-%d.xsl",
+        if (sscanf(namelist[i]->d_name, "upgrade-%hhu.%hhu-%hhu.xsl",
                    &(version.v[0]), &(version.v[1]), &order) == 3) {
 
             char *version_s = crm_strdup_printf("%hhu.%hhu",
