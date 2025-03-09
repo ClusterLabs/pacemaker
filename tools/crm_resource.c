@@ -78,8 +78,8 @@ enum rsc_command {
  * \internal
  * \brief Handler function for a crm_resource command
  */
-typedef int (*crm_resource_fn_t)(pcmk_resource_t *, pcmk_node_t *, xmlNode *,
-                                 pcmk_scheduler_t *);
+typedef crm_exit_t (*crm_resource_fn_t)(pcmk_resource_t *, pcmk_node_t *,
+                                        xmlNode *, pcmk_scheduler_t *);
 
 /*!
  * \internal
@@ -256,6 +256,7 @@ controller_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
 static void
 start_mainloop(pcmk_ipc_api_t *capi)
 {
+    // @TODO See if we can avoid setting exit_code as a global variable
     unsigned int count = pcmk_controld_api_replies_expected(capi);
 
     if (count > 0) {
@@ -910,6 +911,9 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
         cli_resource_check(out, rsc, node);
     }
 
+    /* @FIXME The mainloop functions in this file set exit_code. What happens to
+     * exit_code if rc != pcmk_rc_ok here?
+     */
     if (rc == pcmk_rc_ok) {
         start_mainloop(controld_api);
     }
@@ -938,7 +942,7 @@ initialize_scheduler_data(xmlNode **cib_xml_orig)
     return pcmk_rc_ok;
 }
 
-static int
+static crm_exit_t
 refresh(pcmk__output_t *out, const pcmk_node_t *node)
 {
     const char *node_name = NULL;
@@ -962,7 +966,7 @@ refresh(pcmk__output_t *out, const pcmk_node_t *node)
                         _("No cluster connection to Pacemaker Remote node %s "
                           "detected"),
                         log_node_name);
-            return rc;
+            return pcmk_rc2exitc(rc);
         }
         router_node = conn_host->priv->name;
         pcmk__set_node_attr_flags(attr_options, pcmk__node_attr_remote);
@@ -971,20 +975,25 @@ refresh(pcmk__output_t *out, const pcmk_node_t *node)
     if (controld_api == NULL) {
         out->info(out, "Dry run: skipping clean-up of %s due to CIB_file",
                   log_node_name);
-        return pcmk_rc_ok;
+        return CRM_EX_OK;
     }
 
     crm_debug("Re-checking the state of all resources on %s", log_node_name);
 
+    // @FIXME We shouldn't discard rc here
     rc = pcmk__attrd_api_clear_failures(NULL, node_name, NULL, NULL, NULL, NULL,
                                         attr_options);
 
+    /* @FIXME The mainloop functions in this file set exit_code. What happens to
+     * exit_code if pcmk_controld_api_reprobe() doesn't return pcmk_rc_ok?
+     */
     if (pcmk_controld_api_reprobe(controld_api, node_name,
                                   router_node) == pcmk_rc_ok) {
         start_mainloop(controld_api);
+        return exit_code;
     }
 
-    return rc;
+    return pcmk_rc2exitc(rc);
 }
 
 static void
@@ -1007,6 +1016,9 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
         cli_resource_check(out, rsc, node);
     }
 
+    /* @FIXME The mainloop functions in this file set exit_code. What happens to
+     * exit_code if rc != pcmk_rc_ok here?
+     */
     if (rc == pcmk_rc_ok) {
         start_mainloop(controld_api);
     }
@@ -1126,7 +1138,7 @@ validate_cmdline_config(void)
     }
 }
 
-static int
+static crm_exit_t
 handle_ban(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
            pcmk_scheduler_t *scheduler)
 {
@@ -1141,13 +1153,12 @@ handle_ban(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
     }
 
     if (rc == EINVAL) {
-        exit_code = CRM_EX_USAGE;
-        return pcmk_rc_ok;
+        return CRM_EX_USAGE;
     }
-    return rc;
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_cleanup(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
                pcmk_scheduler_t *scheduler)
 {
@@ -1163,10 +1174,15 @@ handle_cleanup(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
         cleanup(out, rsc, node);
     }
 
-    return pcmk_rc_ok;
+    /* @FIXME Both of the blocks above are supposed to set exit_code via
+     * start_mainloop(). But if cli_cleanup_all() or cli_resource_delete()
+     * fails, we never start the mainloop. It looks as if we exit with CRM_EX_OK
+     * in those cases.
+     */
+    return exit_code;
 }
 
-static int
+static crm_exit_t
 handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
              pcmk_scheduler_t *scheduler)
 {
@@ -1205,7 +1221,7 @@ handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
                         _("Could not get modified CIB: %s"), pcmk_rc_str(rc));
             g_list_free(before);
             pcmk__xml_free(cib_xml);
-            return rc;
+            return pcmk_rc2exitc(rc);
         }
 
         scheduler->input = cib_xml;
@@ -1225,28 +1241,30 @@ handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
         g_list_free(remaining);
     }
 
-    return rc;
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_colocations(pcmk_resource_t *rsc, pcmk_node_t *node,
                    xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
-    return out->message(out, "locations-and-colocations", rsc,
-                        options.recursive, options.force);
+    int rc = out->message(out, "locations-and-colocations", rsc,
+                          options.recursive, options.force);
+
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_cts(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
            pcmk_scheduler_t *scheduler)
 {
     g_list_foreach(scheduler->priv->resources, (GFunc) cli_resource_print_cts,
                    out);
     cli_resource_print_cts_constraints(scheduler);
-    return pcmk_rc_ok;
+    return CRM_EX_OK;
 }
 
-static int
+static crm_exit_t
 handle_delete(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
               pcmk_scheduler_t *scheduler)
 {
@@ -1256,78 +1274,81 @@ handle_delete(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
     int rc = pcmk_rc_ok;
 
     if (options.rsc_type == NULL) {
-        exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+        crm_exit_t ec = CRM_EX_USAGE;
+
+        g_set_error(&error, PCMK__EXITC_ERROR, ec,
                     _("You need to specify a resource type with -t"));
-
-    } else {
-        rc = pcmk__resource_delete(cib_conn, cib_sync_call, options.rsc_id,
-                                   options.rsc_type);
-
-        if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("Could not delete resource %s: %s"),
-                        options.rsc_id, pcmk_rc_str(rc));
-        }
+        return ec;
     }
-    return rc;
+
+    rc = pcmk__resource_delete(cib_conn, cib_sync_call, options.rsc_id,
+                               options.rsc_type);
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    _("Could not delete resource %s: %s"),
+                    options.rsc_id, pcmk_rc_str(rc));
+    }
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_delete_param(pcmk_resource_t *rsc, pcmk_node_t *node,
                     xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
-    return cli_resource_delete_attribute(rsc, options.rsc_id, options.prop_set,
-                                         options.attr_set_type, options.prop_id,
-                                         options.prop_name, cib_conn,
-                                         cib_xml_orig, options.force);
+    int rc = cli_resource_delete_attribute(rsc, options.rsc_id,
+                                           options.prop_set,
+                                           options.attr_set_type,
+                                           options.prop_id,
+                                           options.prop_name, cib_conn,
+                                           cib_xml_orig, options.force);
+
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_digests(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
                pcmk_scheduler_t *scheduler)
 {
-    return pcmk__resource_digests(out, rsc, node, options.override_params);
+    int rc = pcmk__resource_digests(out, rsc, node, options.override_params);
+
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_execute_agent(pcmk_resource_t *rsc, pcmk_node_t *node,
                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     if (has_cmdline_config()) {
-        exit_code = cli_resource_execute_from_params(out, NULL, options.class,
-                                                     options.provider,
-                                                     options.agent,
-                                                     options.operation,
-                                                     options.cmdline_params,
-                                                     options.override_params,
-                                                     options.timeout_ms,
-                                                     args->verbosity,
-                                                     options.force,
-                                                     options.check_level);
-    } else {
-        exit_code = cli_resource_execute(rsc, options.rsc_id, options.operation,
-                                         options.override_params,
-                                         options.timeout_ms, cib_conn,
-                                         args->verbosity, options.force,
-                                         options.check_level);
+        return cli_resource_execute_from_params(out, NULL, options.class,
+                                                options.provider, options.agent,
+                                                options.operation,
+                                                options.cmdline_params,
+                                                options.override_params,
+                                                options.timeout_ms,
+                                                args->verbosity, options.force,
+                                                options.check_level);
     }
-    return pcmk_rc_ok;
+    return cli_resource_execute(rsc, options.rsc_id, options.operation,
+                                options.override_params, options.timeout_ms,
+                                cib_conn, args->verbosity, options.force,
+                                options.check_level);
 }
 
-static int
+static crm_exit_t
 handle_fail(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
             pcmk_scheduler_t *scheduler)
 {
     int rc = cli_resource_fail(controld_api, rsc, options.rsc_id, node);
 
     if (rc == pcmk_rc_ok) {
+        // start_mainloop() sets exit_code
         start_mainloop(controld_api);
+        return exit_code;
     }
-    return rc;
+    return pcmk_rc2exitc(rc);;
 }
 
-static int
+static crm_exit_t
 handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
                  pcmk_scheduler_t *scheduler)
 {
@@ -1384,79 +1405,97 @@ handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
         g_hash_table_destroy(params);
     }
 
-    return rc;
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_list_active_ops(pcmk_resource_t *rsc, pcmk_node_t *node,
                        xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     const char *node_name = (node != NULL)? node->priv->name : NULL;
+    int rc = cli_resource_print_operations(options.rsc_id, node_name, true,
+                                           scheduler);
 
-    return cli_resource_print_operations(options.rsc_id, node_name, true,
-                                         scheduler);
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_list_agents(pcmk_resource_t *rsc, pcmk_node_t *node,
                    xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
-    return pcmk__list_agents(out, options.agent_spec);
+    int rc = pcmk__list_agents(out, options.agent_spec);
+
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_list_all_ops(pcmk_resource_t *rsc, pcmk_node_t *node,
                     xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
     const char *node_name = (node != NULL)? node->priv->name : NULL;
+    int rc = cli_resource_print_operations(options.rsc_id, node_name, false,
+                                           scheduler);
 
-    return cli_resource_print_operations(options.rsc_id, node_name, false,
-                                         scheduler);
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_list_alternatives(pcmk_resource_t *rsc, pcmk_node_t *node,
                          xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
-    return pcmk__list_alternatives(out, options.agent_spec);
+    int rc = pcmk__list_alternatives(out, options.agent_spec);
+
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_list_instances(pcmk_resource_t *rsc, pcmk_node_t *node,
                       xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
-    if (out->message(out, "resource-names-list",
-                     scheduler->priv->resources) != pcmk_rc_ok) {
-        return ENXIO;
+    int rc = out->message(out, "resource-names-list",
+                          scheduler->priv->resources);
+
+    if (rc == pcmk_rc_no_output) {
+        // @COMPAT It seems wrong to return an error because there no resources
+        return CRM_EX_NOSUCH;
     }
-    return pcmk_rc_ok;
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_list_options(pcmk_resource_t *rsc, pcmk_node_t *node,
                    xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
+    crm_exit_t ec = CRM_EX_OK;
+    int rc = pcmk_rc_ok;
+
     switch (options.opt_list) {
         case pcmk__opt_fencing:
-            return pcmk__list_fencing_params(out, options.all);
+            rc = pcmk__list_fencing_params(out, options.all);
+            return pcmk_rc2exitc(rc);
+
         case pcmk__opt_primitive:
-            return pcmk__list_primitive_meta(out, options.all);
+            rc = pcmk__list_primitive_meta(out, options.all);
+            return pcmk_rc2exitc(rc);
+
         default:
-            exit_code = CRM_EX_SOFTWARE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+            ec = CRM_EX_SOFTWARE;
+            g_set_error(&error, PCMK__EXITC_ERROR, ec,
                         "Bug: Invalid option list type");
-            return pcmk_rc_ok;
+            return ec;
     }
 }
 
-static int
+static crm_exit_t
 handle_list_providers(pcmk_resource_t *rsc, pcmk_node_t *node,
                       xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
-    return pcmk__list_providers(out, options.agent_spec);
+    int rc = pcmk__list_providers(out, options.agent_spec);
+
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_list_resources(pcmk_resource_t *rsc, pcmk_node_t *node,
                       xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
@@ -1470,19 +1509,22 @@ handle_list_resources(pcmk_resource_t *rsc, pcmk_node_t *node,
     g_list_free(all);
 
     if (rc == pcmk_rc_no_output) {
-        rc = ENXIO;
+        // @COMPAT It seems wrong to return an error because there no resources
+        return CRM_EX_NOSUCH;
     }
-    return rc;
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_list_standards(pcmk_resource_t *rsc, pcmk_node_t *node,
                       xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
-    return pcmk__list_standards(out);
+    int rc = pcmk__list_standards(out);
+
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_locate(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
               pcmk_scheduler_t *scheduler)
 {
@@ -1490,10 +1532,10 @@ handle_locate(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
     int rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
 
     g_list_free_full(nodes, free);
-    return rc;
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
                 pcmk_scheduler_t *scheduler)
 {
@@ -1509,7 +1551,7 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
         g_set_error(&error, PCMK__RC_ERROR, rc,
                     _("Could not create executor connection"));
         lrmd_api_delete(lrmd_conn);
-        return rc;
+        return pcmk_rc2exitc(rc);
     }
 
     rc = crm_parse_agent_spec(options.agent_spec, &standard, &provider, &type);
@@ -1543,10 +1585,10 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
     }
 
     lrmd_api_delete(lrmd_conn);
-    return rc;
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_move(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
             pcmk_scheduler_t *scheduler)
 {
@@ -1561,27 +1603,30 @@ handle_move(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
     }
 
     if (rc == EINVAL) {
-        exit_code = CRM_EX_USAGE;
-        return pcmk_rc_ok;
+        return CRM_EX_USAGE;
     }
-    return rc;
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_query_xml(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
                  pcmk_scheduler_t *scheduler)
 {
-    return cli_resource_print(rsc, true);
+    int rc = cli_resource_print(rsc, true);
+
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_query_xml_raw(pcmk_resource_t *rsc, pcmk_node_t *node,
                      xmlNode *cib_xml_orig, pcmk_scheduler_t *scheduler)
 {
-    return cli_resource_print(rsc, false);
+    int rc = cli_resource_print(rsc, false);
+
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_refresh(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
                pcmk_scheduler_t *scheduler)
 {
@@ -1589,10 +1634,17 @@ handle_refresh(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
         return refresh(out, node);
     }
     refresh_resource(out, rsc, node);
-    return pcmk_rc_ok;
+
+    /* @FIXME Both of the calls above are supposed to set exit_code via
+     * start_mainloop(). But there appear to be cases in which we can return
+     * from refresh() or refresh_resource() without starting the mainloop or
+     * returning an error code. It looks as if we exit with CRM_EX_OK in those
+     * cases.
+     */
+    return exit_code;
 }
 
-static int
+static crm_exit_t
 handle_restart(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
                pcmk_scheduler_t *scheduler)
 {
@@ -1600,42 +1652,52 @@ handle_restart(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
      * lifetime of cli_resource_restart(), but it will reset and update the
      * scheduler data multiple times, so it needs to use its own copy.
      */
-    return cli_resource_restart(out, rsc, node, options.move_lifetime,
-                                options.timeout_ms, cib_conn,
-                                options.promoted_role_only, options.force);
+    int rc = cli_resource_restart(out, rsc, node, options.move_lifetime,
+                                  options.timeout_ms, cib_conn,
+                                  options.promoted_role_only, options.force);
+
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_set_param(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
                  pcmk_scheduler_t *scheduler)
 {
+    int rc = pcmk_rc_ok;
+
     if (pcmk__str_empty(options.prop_value)) {
-        exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        crm_exit_t ec = CRM_EX_USAGE;
+
+        g_set_error(&error, PCMK__EXITC_ERROR, ec,
                     _("You need to supply a value with the -v option"));
-        return pcmk_rc_ok;
+        return ec;
     }
 
-    return cli_resource_update_attribute(rsc, options.rsc_id, options.prop_set,
-                                         options.attr_set_type, options.prop_id,
-                                         options.prop_name, options.prop_value,
-                                         options.recursive, cib_conn,
-                                         cib_xml_orig, options.force);
+    rc = cli_resource_update_attribute(rsc, options.rsc_id, options.prop_set,
+                                       options.attr_set_type, options.prop_id,
+                                       options.prop_name, options.prop_value,
+                                       options.recursive, cib_conn,
+                                       cib_xml_orig, options.force);
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_wait(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
             pcmk_scheduler_t *scheduler)
 {
-    return wait_till_stable(out, options.timeout_ms, cib_conn);
+    int rc = wait_till_stable(out, options.timeout_ms, cib_conn);
+
+    return pcmk_rc2exitc(rc);
 }
 
-static int
+static crm_exit_t
 handle_why(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *cib_xml_orig,
            pcmk_scheduler_t *scheduler)
 {
-    return out->message(out, "resource-reasons-list",
-                        scheduler->priv->resources, rsc, node);
+    int rc = out->message(out, "resource-reasons-list",
+                          scheduler->priv->resources, rsc, node);
+
+    return pcmk_rc2exitc(rc);
 }
 
 static const crm_resource_cmd_info_t crm_resource_command_info[] = {
@@ -2206,24 +2268,11 @@ main(int argc, char **argv)
         }
     }
 
-    /* Some handler functions set exit_code explicitly and return pcmk_rc_ok to
-     * skip setting exit_code based on rc
-     */
-    rc = command_info->fn(rsc, node, cib_xml_orig, scheduler);
-
-    if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_no_output)) {
-        exit_code = pcmk_rc2exitc(rc);
-    }
+    exit_code = command_info->fn(rsc, node, cib_xml_orig, scheduler);
 
 done:
-    /* When we get here, exit_code has been set one of two ways - either at one of
-     * the spots where there's a "goto done" (which itself could have happened either
-     * directly or by calling pcmk_rc2exitc), or just up above after any of the break
-     * statements.
-     *
-     * Thus, we can use just exit_code here to decide what to do.
-     */
-    if (exit_code != CRM_EX_OK && exit_code != CRM_EX_USAGE) {
+    // For CRM_EX_USAGE, error is already set satisfactorily
+    if ((exit_code != CRM_EX_OK) && (exit_code != CRM_EX_USAGE)) {
         if (error != NULL) {
             char *msg = crm_strdup_printf("%s\nError performing operation: %s",
                                           error->message, crm_exit_str(exit_code));
