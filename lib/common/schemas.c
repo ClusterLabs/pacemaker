@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -319,8 +319,17 @@ static GHashTable *
 load_transforms_from_dir(const char *dir)
 {
     struct dirent **namelist = NULL;
+    GHashTable *transforms = NULL;
     int num_matches = scandir(dir, &namelist, transform_filter, versionsort);
-    GHashTable *transforms = pcmk__strkey_table(free, free_transform_list);
+
+    if (num_matches < 0) {
+        int rc = errno;
+
+        crm_warn("Could not load transforms from %s: %s", dir, pcmk_rc_str(rc));
+        goto done;
+    }
+
+    transforms = pcmk__strkey_table(free, free_transform_list);
 
     for (int i = 0; i < num_matches; i++) {
         pcmk__schema_version_t version = SCHEMA_ZERO;
@@ -355,6 +364,7 @@ load_transforms_from_dir(const char *dir)
         }
     }
 
+done:
     free(namelist);
     return transforms;
 }
@@ -368,8 +378,10 @@ pcmk__load_schemas_from_dir(const char *dir)
 
     max = scandir(dir, &namelist, schema_filter, schema_cmp_directory);
     if (max < 0) {
-        crm_warn("Could not load schemas from %s: %s", dir, strerror(errno));
-        return;
+        int rc = errno;
+
+        crm_warn("Could not load schemas from %s: %s", dir, pcmk_rc_str(rc));
+        goto done;
     }
 
     // Look for any upgrade transforms in the same directory
@@ -384,11 +396,13 @@ pcmk__load_schemas_from_dir(const char *dir)
             char *orig_key = NULL;
             GList *transform_list = NULL;
 
-            // The schema becomes the owner of transform_list
-            g_hash_table_lookup_extended(transforms, version_s,
-                                         (gpointer *) &orig_key,
-                                         (gpointer *) &transform_list);
-            g_hash_table_steal(transforms, version_s);
+            if (transforms != NULL) {
+                // The schema becomes the owner of transform_list
+                g_hash_table_lookup_extended(transforms, version_s,
+                                             (gpointer *) &orig_key,
+                                             (gpointer *) &transform_list);
+                g_hash_table_steal(transforms, version_s);
+            }
 
             add_schema(pcmk__schema_validator_rng, &version, NULL,
                        transform_list);
@@ -407,8 +421,11 @@ pcmk__load_schemas_from_dir(const char *dir)
         free(namelist[lpc]);
     }
 
+done:
     free(namelist);
-    g_hash_table_destroy(transforms);
+    if (transforms != NULL) {
+        g_hash_table_destroy(transforms);
+    }
 }
 
 static gint
