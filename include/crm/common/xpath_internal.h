@@ -70,6 +70,8 @@ GString *pcmk__element_xpath(const xmlNode *xml);
 char *pcmk__xpath_node_id(const char *xpath, const char *node);
 
 xmlXPathObject *pcmk__xpath_search(xmlDoc *doc, const char *path);
+xmlNode *pcmk__xpath_result(xmlXPathObject *xpath_obj, int index);
+xmlNode *pcmk__xpath_match_element(xmlNode *match);
 
 void pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
                                       const char *name);

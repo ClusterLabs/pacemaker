@@ -119,7 +119,7 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj)
     int max = pcmk__xpath_num_results(xpathObj);
 
     for (int lpc = 0; lpc < max; lpc++) {
-        xmlNode *match = getXpathResult(xpathObj, lpc);
+        xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
 
         remove_topology_level(match);
         add_topology_level(match);
