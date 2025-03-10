@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdbool.h>                // bool, true, false
-#include <stdint.h>
+#include <stdint.h>                 // uint32_t
 
 #include <crm/common/output.h>
 #include <crm/pengine/status.h>
@@ -268,7 +268,7 @@ rsc_is_on_node(pcmk_resource_t *rsc, const pcmk_node_t *node, int flags)
 
 pcmk_resource_t *
 native_find_rsc(pcmk_resource_t *rsc, const char *id,
-                const pcmk_node_t *on_node, int flags)
+                const pcmk_node_t *on_node, uint32_t flags)
 {
     bool match = false;
     pcmk_resource_t *result = NULL;

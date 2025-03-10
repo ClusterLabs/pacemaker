@@ -11,7 +11,7 @@
 #define PCMK__CRM_PENGINE_INTERNAL__H
 
 #include <stdbool.h>
-#include <stdint.h>
+#include <stdint.h>                         // uint32_t
 #include <string.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/status.h>
@@ -71,7 +71,7 @@ bool clone_unpack(pcmk_resource_t *rsc);
 bool pe__unpack_bundle(pcmk_resource_t *rsc);
 
 pcmk_resource_t *native_find_rsc(pcmk_resource_t *rsc, const char *id,
-                                 const pcmk_node_t *node, int flags);
+                                 const pcmk_node_t *node, uint32_t flags);
 
 gboolean native_active(pcmk_resource_t *rsc, gboolean all);
 gboolean group_active(pcmk_resource_t *rsc, gboolean all);

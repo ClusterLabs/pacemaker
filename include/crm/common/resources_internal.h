@@ -201,7 +201,7 @@ typedef struct {
      * \return Resource that matches search criteria if any, otherwise NULL
      */
     pcmk_resource_t *(*find_rsc)(pcmk_resource_t *rsc, const char *search,
-                                 const pcmk_node_t *node, int flags);
+                                 const pcmk_node_t *node, uint32_t flags);
 
     /*!
      * \internal
