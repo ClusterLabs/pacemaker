@@ -116,9 +116,9 @@ remove_topology_level(xmlNode *match)
 static void
 register_fencing_topology(xmlXPathObjectPtr xpathObj)
 {
-    int max = numXpathResults(xpathObj), lpc = 0;
+    int max = pcmk__xpath_num_results(xpathObj);
 
-    for (lpc = 0; lpc < max; lpc++) {
+    for (int lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
         remove_topology_level(match);

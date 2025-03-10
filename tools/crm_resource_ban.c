@@ -444,14 +444,15 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
     xmlXPathObject *xpathObj = NULL;
     xmlNode *cib_constraints = NULL;
     crm_time_t *now = crm_time_new(NULL);
-    int i;
+    int num_results = 0;
     int rc = pcmk_rc_ok;
 
     cib_constraints = pcmk_find_cib_element(root, PCMK_XE_CONSTRAINTS);
     xpathObj = pcmk__xpath_search(cib_constraints->doc,
                                   "//" PCMK_XE_RSC_LOCATION);
+    num_results = pcmk__xpath_num_results(xpathObj);
 
-    for (i = 0; i < numXpathResults(xpathObj); i++) {
+    for (int i = 0; i < num_results; i++) {
         xmlNode *constraint_node = getXpathResult(xpathObj, i);
         xmlNode *date_expr_node = NULL;
         crm_time_t *end = NULL;
