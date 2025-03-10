@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,6 @@
 
 #include <signal.h>
 #include <stdarg.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <setjmp.h>
 #include <sys/resource.h>
