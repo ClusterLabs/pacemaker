@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,7 @@
 
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
+#include <libxml/xpath.h>           // xmlXPathObject
 
 #include <crm/common/nvpair.h>  // crm_xml_add()
 #include <crm/common/xml_names.h>   // PCMK_XE_CLONE
@@ -71,6 +72,9 @@ char *calculate_operation_digest(xmlNode *input, const char *version);
 //! \deprecated Do not use
 char *calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
                                      gboolean do_filter, const char *version);
+
+//! \deprecated Do not use
+xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
 
 #ifdef __cplusplus
 }

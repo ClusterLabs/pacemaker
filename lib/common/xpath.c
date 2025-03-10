@@ -163,15 +163,6 @@ pcmk__xpath_search(xmlDoc *doc, const char *path)
     return xpath_obj;
 }
 
-/* the caller needs to check if the result contains a xmlDocPtr or xmlNodePtr */
-xmlXPathObjectPtr
-xpath_search(const xmlNode *xml_top, const char *path)
-{
-    CRM_CHECK(xml_top != NULL, return NULL);
-
-    return pcmk__xpath_search(xml_top->doc, path);
-}
-
 /*!
  * \brief Run a supplied function for each result of an xpath search
  *
@@ -380,3 +371,19 @@ pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
     out->info(out, "Multiple attributes match " PCMK_XA_NAME "=%s", name);
     pcmk__xe_foreach_child(search, NULL, output_attr_child, out);
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
+
+xmlXPathObjectPtr
+xpath_search(const xmlNode *xml_top, const char *path)
+{
+    CRM_CHECK(xml_top != NULL, return NULL);
+
+    return pcmk__xpath_search(xml_top->doc, path);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
