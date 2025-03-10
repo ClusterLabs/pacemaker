@@ -22,6 +22,7 @@
 
 #include "libpacemaker_private.h"
 
+static const char *profiling_dir = NULL;
 static pcmk__output_t *out = NULL;
 static cib_t *fake_cib = NULL;
 static GList *fake_resource_list = NULL;
@@ -322,27 +323,42 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
  *
  * \param[in] entry  Directory entry
  *
- * \retval 0 if the filename begins with '.' or does not end in ".xml"
- * \retval 1 otherwise
+ * \retval 1 if the filename ends with ".xml", does not begin with ".", and
+ *           refers to a regular file
+ * \retval 0 otherwise
  */
 static int
 profile_filter(const struct dirent *entry)
 {
     const char *filename = entry->d_name;
+    char *buf = NULL;
+    struct stat sb;
+    int rc = 0;
 
     if (pcmk__str_any_of(filename, ".", "..", NULL)) {
         // Skip current (".") and parent ("..") directory links
-        return 0;
+        goto done;
     }
     if (filename[0] == '.') {
         crm_trace("Not profiling hidden file '%s'", filename);
-        return 0;
+        goto done;
     }
     if (!pcmk__ends_with_ext(filename, ".xml")) {
         crm_trace("Not profiling file '%s' without '.xml' extension", filename);
-        return 0;
+        goto done;
     }
-    return 1;
+
+    buf = crm_strdup_printf("%s/%s", profiling_dir, filename);
+    if ((stat(buf, &sb) != 0) || !S_ISREG(sb.st_mode)) {
+        crm_trace("Not profiling file '%s': not a regular file", filename);
+        goto done;
+    }
+
+    rc = 1;
+
+done:
+    free(buf);
+    return rc;
 }
 
 /*!
@@ -431,7 +447,11 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
         scheduler_flags |= pcmk__sched_show_utilization;
     }
 
+    // Hack to pass user data to profile_filter
+    profiling_dir = dir;
     num_files = scandir(dir, &namelist, profile_filter, alphasort);
+    profiling_dir = NULL;
+
     if (num_files < 0) {
         rc = errno;
         goto done;
@@ -443,18 +463,11 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
     out->begin_list(out, NULL, NULL, "Timings");
 
     for (int i = 0; i < num_files; i++) {
-        const char *filename = namelist[i]->d_name;
-        char buffer[FILENAME_MAX];
-        struct stat prop;
+        // glibc doesn't enforce PATH_MAX, so don't limit the buffer size
+        char *path = crm_strdup_printf("%s/%s", dir, namelist[i]->d_name);
 
-        // Check for regular file here because profile_filter() doesn't have dir
-        snprintf(buffer, sizeof(buffer), "%s/%s", dir, filename);
-
-        if ((stat(buffer, &prop) == 0) && S_ISREG(prop.st_mode)) {
-            profile_file(buffer, repeat, scheduler, scheduler_flags, use_date);
-        } else {
-            crm_trace("Not profiling file '%s': not a regular file", filename);
-        }
+        profile_file(path, repeat, scheduler, scheduler_flags, use_date);
+        free(path);
         free(namelist[i]);
     }
     out->end_list(out);

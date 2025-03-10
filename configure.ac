@@ -1216,9 +1216,6 @@ dnl Structures
 dnl ========================================================================
 
 AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[[#include <time.h>]])
-AC_CHECK_MEMBER([struct dirent.d_type],
-    AC_DEFINE(HAVE_STRUCT_DIRENT_D_TYPE,1,[Define this if struct dirent has d_type]),,
-    [#include <dirent.h>])
 
 dnl ========================================================================
 dnl Functions

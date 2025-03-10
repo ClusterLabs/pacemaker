@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,7 +22,38 @@
 
 #include "fencing_private.h"
 
-#define RH_STONITH_PREFIX "fence_"
+/*!
+ * \internal
+ * \brief \c scandir() filter for RHCS fence agents
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 1 if \p entry is a regular file whose name begins with \c "fence_"
+ * \retval 0 otherwise
+ */
+static int
+rhcs_agent_filter(const struct dirent *entry)
+{
+    char *buf = NULL;
+    struct stat sb;
+    int rc = 0;
+
+    if (!pcmk__starts_with(entry->d_name, "fence_")) {
+        goto done;
+    }
+
+    // glibc doesn't enforce PATH_MAX, so don't limit buf size
+    buf = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s", entry->d_name);
+    if ((stat(buf, &sb) != 0) || !S_ISREG(sb.st_mode)) {
+        goto done;
+    }
+
+    rc = 1;
+
+done:
+    free(buf);
+    return rc;
+}
 
 /*!
  * \internal
@@ -35,59 +66,24 @@
 int
 stonith__list_rhcs_agents(stonith_key_value_t **devices)
 {
-    // Essentially: ls -1 @sbin_dir@/fence_*
+    struct dirent **namelist = NULL;
+    const int file_num = scandir(PCMK__FENCE_BINDIR, &namelist,
+                                 rhcs_agent_filter, alphasort);
 
-    int count = 0, i;
-    struct dirent **namelist;
-    const int file_num = scandir(PCMK__FENCE_BINDIR, &namelist, 0, alphasort);
+    if (file_num < 0) {
+        int rc = errno;
 
-#if _POSIX_C_SOURCE < 200809L && !(defined(O_SEARCH) || defined(O_PATH))
-    char buffer[FILENAME_MAX + 1];
-#elif defined(O_SEARCH)
-    const int dirfd = open(PCMK__FENCE_BINDIR, O_SEARCH);
-#else
-    const int dirfd = open(PCMK__FENCE_BINDIR, O_PATH);
-#endif
+        crm_err("Could not list " PCMK__FENCE_BINDIR ": %s", pcmk_rc_str(rc));
+        free(namelist);
+        return 0;
+    }
 
-    for (i = 0; i < file_num; i++) {
-        struct stat prop;
-
-        if (pcmk__starts_with(namelist[i]->d_name, RH_STONITH_PREFIX)) {
-#if _POSIX_C_SOURCE < 200809L && !(defined(O_SEARCH) || defined(O_PATH))
-            snprintf(buffer, sizeof(buffer), "%s/%s", PCMK__FENCE_BINDIR,
-                     namelist[i]->d_name);
-            if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-#else
-            if (dirfd == -1) {
-                if (i == 0) {
-                    crm_notice("Problem with listing %s directory "
-                               QB_XS " errno=%d", RH_STONITH_PREFIX, errno);
-                }
-                free(namelist[i]);
-                continue;
-            }
-            /* note: we can possibly prevent following symlinks here,
-                     which may be a good idea, but fall on the nose when
-                     these agents are moved elsewhere & linked back */
-            if (fstatat(dirfd, namelist[i]->d_name, &prop, 0) == 0
-                    && S_ISREG(prop.st_mode)) {
-#endif
-                *devices = stonith_key_value_add(*devices, NULL,
-                                                 namelist[i]->d_name);
-                count++;
-            }
-        }
+    for (int i = 0; i < file_num; i++) {
+        *devices = stonith_key_value_add(*devices, NULL, namelist[i]->d_name);
         free(namelist[i]);
     }
-    if (file_num > 0) {
-        free(namelist);
-    }
-#if _POSIX_C_SOURCE >= 200809L || defined(O_SEARCH) || defined(O_PATH)
-    if (dirfd >= 0) {
-        close(dirfd);
-    }
-#endif
-    return count;
+    free(namelist);
+    return file_num;
 }
 
 static void
