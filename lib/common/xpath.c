@@ -40,13 +40,13 @@
 void
 freeXpathObject(xmlXPathObjectPtr xpathObj)
 {
-    int lpc, max = numXpathResults(xpathObj);
+    int max = pcmk__xpath_num_results(xpathObj);
 
     if (xpathObj == NULL) {
         return;
     }
 
-    for (lpc = 0; lpc < max; lpc++) {
+    for (int lpc = 0; lpc < max; lpc++) {
         if (xpathObj->nodesetval->nodeTab[lpc] && xpathObj->nodesetval->nodeTab[lpc]->type != XML_NAMESPACE_DECL) {
             xpathObj->nodesetval->nodeTab[lpc] = NULL;
         }
@@ -60,7 +60,7 @@ xmlNode *
 getXpathResult(xmlXPathObjectPtr xpathObj, int index)
 {
     xmlNode *match = NULL;
-    int max = numXpathResults(xpathObj);
+    int max = pcmk__xpath_num_results(xpathObj);
 
     CRM_CHECK(index >= 0, return NULL);
     CRM_CHECK(xpathObj != NULL, return NULL);
@@ -102,13 +102,13 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
 void
 dedupXpathResults(xmlXPathObjectPtr xpathObj)
 {
-    int lpc, max = numXpathResults(xpathObj);
+    int max = pcmk__xpath_num_results(xpathObj);
 
     if (xpathObj == NULL) {
         return;
     }
 
-    for (lpc = 0; lpc < max; lpc++) {
+    for (int lpc = 0; lpc < max; lpc++) {
         xmlNode *xml = NULL;
         gboolean dedup = FALSE;
 
@@ -185,7 +185,7 @@ crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
     CRM_CHECK(xml != NULL, return);
 
     xpathObj = pcmk__xpath_search(xml->doc, xpath);
-    nresults = numXpathResults(xpathObj);
+    nresults = pcmk__xpath_num_results(xpathObj);
 
     for (int i = 0; i < nresults; i++) {
         xmlNode *result = getXpathResult(xpathObj, i);
@@ -213,7 +213,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
 
     xpathObj = pcmk__xpath_search(xml_obj->doc, xpath);
     nodePath = (char *)xmlGetNodePath(xml_obj);
-    max = numXpathResults(xpathObj);
+    max = pcmk__xpath_num_results(xpathObj);
 
     if (max < 1) {
         if (error_level < LOG_NEVER) {

@@ -399,7 +399,7 @@ match_down_event(const char *target)
             match = (pcmk__graph_action_t *) gIter2->data;
             if (pcmk_is_set(match->flags, pcmk__graph_action_executed)) {
                 xpath_ret = pcmk__xpath_search(match->xml->doc, xpath);
-                if (numXpathResults(xpath_ret) < 1) {
+                if (pcmk__xpath_num_results(xpath_ret) < 1) {
                     match = NULL;
                 }
                 freeXpathObject(xpath_ret);

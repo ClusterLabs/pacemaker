@@ -72,7 +72,7 @@ all_tickets(void **state)
     xpath_obj = pcmk__xpath_search(xml->doc,
                                    "//" PCMK_XE_PACEMAKER_RESULT
                                    "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET);
-    assert_int_equal(numXpathResults(xpath_obj), 3);
+    assert_int_equal(pcmk__xpath_num_results(xpath_obj), 3);
     freeXpathObject(xpath_obj);
 
     xpath_obj = pcmk__xpath_search(xml->doc,
@@ -131,7 +131,7 @@ single_ticket(void **state)
                                    "//" PCMK_XE_PACEMAKER_RESULT
                                    "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
                                    "[@" PCMK_XA_ID "=\"ticketA\"]");
-    assert_int_equal(numXpathResults(xpath_obj), 1);
+    assert_int_equal(pcmk__xpath_num_results(xpath_obj), 1);
 
     node = getXpathResult(xpath_obj, 0);
     assert_string_equal(crm_element_value(node, PCMK_XA_STATUS), PCMK_VALUE_REVOKED);

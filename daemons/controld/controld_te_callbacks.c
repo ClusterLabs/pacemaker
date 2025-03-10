@@ -446,7 +446,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
               pcmk__s(crm_element_value(msg, PCMK__XA_SRC), ""));
 
     xpathObj = pcmk__xpath_search(xml_data->doc, "//" PCMK__XE_LRM_RSC_OP);
-    nmatches = numXpathResults(xpathObj);
+    nmatches = pcmk__xpath_num_results(xpathObj);
     if (nmatches == 0) {
         crm_err("Received transition request with no results (bug?)");
     } else {

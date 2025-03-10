@@ -230,7 +230,7 @@ pcmk__apply_acl(xmlNode *xml)
         xml_acl_t *acl = aIter->data;
 
         xpathObj = pcmk__xpath_search(xml->doc, acl->xpath);
-        max = numXpathResults(xpathObj);
+        max = pcmk__xpath_num_results(xpathObj);
 
         for (lpc = 0; lpc < max; lpc++) {
             xmlNode *match = getXpathResult(xpathObj, lpc);
@@ -459,7 +459,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
             xmlXPathObject *xpathObj = pcmk__xpath_search(target->doc,
                                                           acl->xpath);
 
-            max = numXpathResults(xpathObj);
+            max = pcmk__xpath_num_results(xpathObj);
             for(lpc = 0; lpc < max; lpc++) {
                 xmlNode *match = getXpathResult(xpathObj, lpc);
 
