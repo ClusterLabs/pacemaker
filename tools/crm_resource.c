@@ -289,12 +289,14 @@ build_constraint_list(xmlNode *root)
     xmlNode *cib_constraints = NULL;
     xmlXPathObject *xpathObj = NULL;
     int ndx = 0;
+    int num_results = 0;
 
     cib_constraints = pcmk_find_cib_element(root, PCMK_XE_CONSTRAINTS);
     xpathObj = pcmk__xpath_search(cib_constraints->doc,
                                   "//" PCMK_XE_RSC_LOCATION);
+    num_results = pcmk__xpath_num_results(xpathObj);
 
-    for (ndx = 0; ndx < numXpathResults(xpathObj); ndx++) {
+    for (ndx = 0; ndx < num_results; ndx++) {
         xmlNode *match = getXpathResult(xpathObj, ndx);
         retval = g_list_insert_sorted(retval, (gpointer) pcmk__xe_id(match),
                                       (GCompareFunc) g_strcmp0);

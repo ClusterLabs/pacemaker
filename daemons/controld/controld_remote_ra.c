@@ -1369,7 +1369,7 @@ remote_ra_process_pseudo(xmlNode *xml)
 {
     xmlXPathObject *search = pcmk__xpath_search(xml->doc, XPATH_PSEUDO_FENCE);
 
-    if (numXpathResults(search) == 1) {
+    if (pcmk__xpath_num_results(search) == 1) {
         xmlNode *result = getXpathResult(search, 0);
 
         /* Normally, we handle the necessary side effects of a guest node stop
@@ -1439,7 +1439,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
     xmlXPathObject *search = pcmk__xpath_search(xml->doc,
                                                 XPATH_PSEUDO_MAINTENANCE);
 
-    if (numXpathResults(search) == 1) {
+    if (pcmk__xpath_num_results(search) == 1) {
         xmlNode *node;
         int cnt = 0, cnt_remote = 0;
 

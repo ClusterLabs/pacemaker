@@ -683,7 +683,7 @@ cib_process_xpath(const char *op, int options, const char *section,
         xpathObj = pcmk__xpath_search((*result_cib)->doc, section);
     }
 
-    max = numXpathResults(xpathObj);
+    max = pcmk__xpath_num_results(xpathObj);
 
     if ((max < 1)
         && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {

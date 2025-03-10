@@ -12,7 +12,7 @@
 
 #include <glib.h>                       // GString
 #include <libxml/tree.h>                // xmlDoc, xmlNode
-#include <libxml/xpath.h>               // xmlXPathObject
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/common/options.h>             // PCMK_META_*, PCMK_VALUE_*
 #include <crm/common/output_internal.h>     // pcmk__output_t
@@ -45,6 +45,26 @@
 #define PCMK__XP_REMOTE_NODE_STATUS                                 \
     "//" PCMK_XE_CIB "//" PCMK_XE_STATUS "//" PCMK__XE_NODE_STATE   \
     "[@" PCMK_XA_REMOTE_NODE "='" PCMK_VALUE_TRUE "']"
+
+/*!
+ * \internal
+ * \brief Get the number of nodes in an XPath object's node set
+ *
+ * In other words, this is the number of results from evaluating an XPath
+ * expression.
+ *
+ * \param[in] xpath_obj  XPath object
+ *
+ * \return Number of nodes in <tt>xpath_obj->nodesetval</tt>
+ */
+static inline int
+pcmk__xpath_num_results(const xmlXPathObject *xpath_obj)
+{
+    if (xpath_obj == NULL) {
+        return 0;
+    }
+    return xmlXPathNodeSetGetLength(xpath_obj->nodesetval);
+}
 
 GString *pcmk__element_xpath(const xmlNode *xml);
 char *pcmk__xpath_node_id(const char *xpath, const char *node);

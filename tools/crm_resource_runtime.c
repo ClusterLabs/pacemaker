@@ -2172,7 +2172,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         }
 
         search = pcmk__xpath_search(scheduler->input->doc, xpath);
-        pending_unknown_state_resources = (numXpathResults(search) > 0);
+        pending_unknown_state_resources = (pcmk__xpath_num_results(search) > 0);
         freeXpathObject(search);
     } while (actions_are_pending(scheduler->priv->actions)
              || pending_unknown_state_resources);
