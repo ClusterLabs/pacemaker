@@ -265,13 +265,13 @@ typedef struct {
      *
      * \param[in] rsc           Resource ID to check for
      * \param[in] only_rsc      List of resource IDs to check
-     * \param[in] check_parent  If TRUE, check top ancestor as well
+     * \param[in] check_parent  If \c true, check top ancestor as well
      *
-     * \return TRUE if \p rsc, its top parent if requested, or '*' is in
-     *         \p only_rsc, otherwise FALSE
+     * \return \c true if \p rsc, its top parent if requested, or \c "*" is in
+     *         \p only_rsc, or \c false otherwise
      */
-    gboolean (*is_filtered)(const pcmk_resource_t *rsc, GList *only_rsc,
-                            gboolean check_parent);
+    bool (*is_filtered)(const pcmk_resource_t *rsc, const GList *only_rsc,
+                        bool check_parent);
 
     /*!
      * \internal

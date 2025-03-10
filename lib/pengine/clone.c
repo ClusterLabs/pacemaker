@@ -541,9 +541,9 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     GList *all = NULL;
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
-    gboolean print_everything = TRUE;
+    bool print_everything = true;
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -639,7 +639,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
     get_clone_variant_data(clone_data, rsc);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -991,15 +991,15 @@ pe__is_universal_clone(const pcmk_resource_t *rsc,
     return FALSE;
 }
 
-gboolean
-pe__clone_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                      gboolean check_parent)
+bool
+pe__clone_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                      bool check_parent)
 {
-    gboolean passes = FALSE;
+    bool passes = FALSE;
     clone_variant_data_t *clone_data = NULL;
 
     if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
-        passes = TRUE;
+        passes = true;
     } else {
         get_clone_variant_data(clone_data, rsc);
         passes = pcmk__str_in_list(pcmk__xe_id(clone_data->xml_obj_child),
@@ -1013,8 +1013,8 @@ pe__clone_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
 
                 child_rsc = (const pcmk_resource_t *) iter->data;
                 if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc,
-                                                       FALSE)) {
-                    passes = TRUE;
+                                                       false)) {
+                    passes = true;
                     break;
                 }
             }

@@ -159,7 +159,7 @@ skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
 {
     bool star_list = pcmk__list_of_1(only_rsc) &&
                      pcmk__str_eq("*", g_list_first(only_rsc)->data, pcmk__str_none);
-    bool child_filtered = child->priv->fns->is_filtered(child, only_rsc, FALSE);
+    bool child_filtered = child->priv->fns->is_filtered(child, only_rsc, false);
     bool child_active = child->priv->fns->active(child, false);
     bool show_inactive = pcmk_is_set(show_opts, pcmk_show_inactive_rscs);
 
@@ -276,7 +276,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
     desc = pe__resource_description(rsc, show_opts);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -341,7 +341,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
 
     desc = pe__resource_description(rsc, show_opts);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -422,21 +422,21 @@ group_resource_state(const pcmk_resource_t *rsc, bool current)
     return group_role;
 }
 
-gboolean
-pe__group_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                      gboolean check_parent)
+bool
+pe__group_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                      bool check_parent)
 {
-    gboolean passes = FALSE;
+    bool passes = false;
 
     if (check_parent
         && pcmk__str_in_list(rsc_printable_id(pe__const_top_resource(rsc,
                                                                      false)),
                              only_rsc, pcmk__str_star_matches)) {
-        passes = TRUE;
+        passes = true;
     } else if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
-        passes = TRUE;
+        passes = true;
     } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
-        passes = TRUE;
+        passes = true;
     } else {
         for (const GList *iter = rsc->priv->children;
              iter != NULL; iter = iter->next) {
@@ -444,8 +444,8 @@ pe__group_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
             const pcmk_resource_t *child_rsc = iter->data;
 
             if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc,
-                                                   FALSE)) {
-                passes = TRUE;
+                                                   false)) {
+                passes = true;
                 break;
             }
         }

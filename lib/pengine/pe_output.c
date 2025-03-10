@@ -2491,7 +2491,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
                                       pcmk__str_star_matches)) {
                 continue;
             }
-        } else if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        } else if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
             continue;
         }
 

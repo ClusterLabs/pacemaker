@@ -756,7 +756,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     pcmk__assert(pcmk__is_primitive(rsc));
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return pcmk_rc_no_output;
     }
 
@@ -825,7 +825,7 @@ pe__resource_html(pcmk__output_t *out, va_list args)
 
     const pcmk_node_t *node = pcmk__current_node(rsc);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return pcmk_rc_no_output;
     }
 
@@ -852,7 +852,7 @@ pe__resource_text(pcmk__output_t *out, va_list args)
 
     pcmk__assert(pcmk__is_primitive(rsc));
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return pcmk_rc_no_output;
     }
 
@@ -1125,20 +1125,20 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, uint32_t show_opts)
     return rc;
 }
 
-gboolean
-pe__native_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                       gboolean check_parent)
+bool
+pe__native_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                       bool check_parent)
 {
     if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
         pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
-        return FALSE;
+        return false;
     } else if (check_parent && (rsc->priv->parent != NULL)) {
         const pcmk_resource_t *up = pe__const_top_resource(rsc, true);
 
-        return up->priv->fns->is_filtered(up, only_rsc, FALSE);
+        return up->priv->fns->is_filtered(up, only_rsc, false);
     }
 
-    return TRUE;
+    return true;
 }
 
 /*!

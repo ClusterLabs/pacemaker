@@ -1401,14 +1401,14 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
-    gboolean print_everything = TRUE;
+    bool print_everything = true;
 
     const char *desc = NULL;
 
     pcmk__assert(rsc != NULL);
     get_bundle_variant_data(bundle_data, rsc);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -1572,14 +1572,14 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
     const char *desc = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
-    gboolean print_everything = TRUE;
+    bool print_everything = true;
 
     pcmk__assert(rsc != NULL);
     get_bundle_variant_data(bundle_data, rsc);
 
     desc = pe__resource_description(rsc, show_opts);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -1715,14 +1715,14 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
     const char *desc = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
-    gboolean print_everything = TRUE;
+    bool print_everything = true;
 
     desc = pe__resource_description(rsc, show_opts);
 
     pcmk__assert(rsc != NULL);
     get_bundle_variant_data(bundle_data, rsc);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -1929,15 +1929,15 @@ pe__count_bundle(pcmk_resource_t *rsc)
     }
 }
 
-gboolean
-pe__bundle_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                       gboolean check_parent)
+bool
+pe__bundle_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                       bool check_parent)
 {
-    gboolean passes = FALSE;
+    bool passes = false;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
     if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
-        passes = TRUE;
+        passes = true;
     } else {
         get_bundle_variant_data(bundle_data, rsc);
 
@@ -1949,23 +1949,23 @@ pe__bundle_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
             pcmk_resource_t *remote = replica->remote;
 
             if ((ip != NULL)
-                && !ip->priv->fns->is_filtered(ip, only_rsc, FALSE)) {
-                passes = TRUE;
+                && !ip->priv->fns->is_filtered(ip, only_rsc, false)) {
+                passes = true;
                 break;
             }
             if ((child != NULL)
-                && !child->priv->fns->is_filtered(child, only_rsc, FALSE)) {
-                passes = TRUE;
+                && !child->priv->fns->is_filtered(child, only_rsc, false)) {
+                passes = true;
                 break;
             }
             if (!container->priv->fns->is_filtered(container, only_rsc,
-                                                   FALSE)) {
-                passes = TRUE;
+                                                   false)) {
+                passes = true;
                 break;
             }
             if ((remote != NULL)
-                && !remote->priv->fns->is_filtered(remote, only_rsc, FALSE)) {
-                passes = TRUE;
+                && !remote->priv->fns->is_filtered(remote, only_rsc, false)) {
+                passes = true;
                 break;
             }
         }
