@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 #define PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 
+#include <stdbool.h>                    // bool
 #include <stdint.h>                     // uint32_t
 #include <glib.h>                       // gboolean, gpointer, guint, etc.
 #include <libxml/tree.h>                // xmlNode
@@ -182,12 +183,11 @@ typedef struct {
      * \internal
      * \brief Parse variant-specific resource XML from CIB into struct members
      *
-     * \param[in,out] rsc        Partially unpacked resource
-     * \param[in,out] scheduler  Scheduler data
+     * \param[in,out] rsc  Partially unpacked resource
      *
-     * \return TRUE if resource was unpacked successfully, otherwise FALSE
+     * \return \c true if resource was unpacked successfully, otherwise \c false
      */
-    gboolean (*unpack)(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
+    bool (*unpack)(pcmk_resource_t *rsc);
 
     /*!
      * \internal

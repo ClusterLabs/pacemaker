@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -65,10 +65,10 @@ pcmk_node_t *native_location(const pcmk_resource_t *rsc, GList **list,
 void native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                         pcmk_scheduler_t *scheduler, gboolean failed);
 
-gboolean native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
-gboolean group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
-gboolean clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
-gboolean pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
+bool native_unpack(pcmk_resource_t *rsc);
+bool group_unpack(pcmk_resource_t *rsc);
+bool clone_unpack(pcmk_resource_t *rsc);
+bool pe__unpack_bundle(pcmk_resource_t *rsc);
 
 pcmk_resource_t *native_find_rsc(pcmk_resource_t *rsc, const char *id,
                                  const pcmk_node_t *node, int flags);

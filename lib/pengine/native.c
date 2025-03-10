@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                // bool, true, false
 #include <stdint.h>
 
 #include <crm/common/output.h>
@@ -200,8 +201,8 @@ recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
                    NULL);
 }
 
-gboolean
-native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
+bool
+native_unpack(pcmk_resource_t *rsc)
 {
     pcmk_resource_t *parent = uber_parent(rsc);
     const char *standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
@@ -219,7 +220,7 @@ native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
          * be a backward-incompatible change that we should probably do with a
          * transform at a schema major version bump.
          */
-        pe__force_anon(standard, parent, rsc->id, scheduler);
+        pe__force_anon(standard, parent, rsc->id, rsc->priv->scheduler);
 
         /* Clear PCMK_META_GLOBALLY_UNIQUE on the parent and all its descendants
          * unpacked so far (clearing the parent should make any future children

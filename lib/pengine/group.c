@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                        // bool, true, false
 #include <stdint.h>
 
 #include <crm/pengine/status.h>
@@ -179,8 +180,8 @@ skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
     return true;
 }
 
-gboolean
-group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
+bool
+group_unpack(pcmk_resource_t *rsc)
 {
     xmlNode *xml_obj = rsc->priv->xml;
     xmlNode *xml_native_rsc = NULL;
@@ -210,7 +211,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         crm_xml_add(xml_native_rsc, PCMK__META_CLONE, clone_id);
         if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
-                                scheduler) != pcmk_rc_ok) {
+                                rsc->priv->scheduler) != pcmk_rc_ok) {
             continue;
         }
 

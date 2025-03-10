@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -946,7 +946,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                     (rsc_private->next_role == pcmk_role_unknown)?
                         "default" : pcmk_role_text(rsc_private->next_role));
 
-    if (rsc_private->fns->unpack(*rsc, scheduler) == FALSE) {
+    if (!rsc_private->fns->unpack(*rsc)) {
         pcmk__free_resource(*rsc);
         *rsc = NULL;
         return pcmk_rc_unpack_error;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <ctype.h>
+#include <stdbool.h>                    // bool, true, false
 #include <stdint.h>
 
 #include <crm/pengine/status.h>
@@ -952,8 +953,8 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
                                    flags, (flags_to_set), #flags_to_set);   \
     } while (0)
 
-gboolean
-pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
+bool
+pe__unpack_bundle(pcmk_resource_t *rsc)
 {
     const char *value = NULL;
     xmlNode *xml_obj = NULL;
@@ -1160,7 +1161,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         GString *buffer = NULL;
 
         if (pe__unpack_resource(xml_resource, &(bundle_data->child), rsc,
-                                scheduler) != pcmk_rc_ok) {
+                                rsc->priv->scheduler) != pcmk_rc_ok) {
             return FALSE;
         }
 
