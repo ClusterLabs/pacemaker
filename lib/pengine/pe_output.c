@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2491,7 +2491,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
                                       pcmk__str_star_matches)) {
                 continue;
             }
-        } else if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        } else if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
             continue;
         }
 
@@ -3060,8 +3060,8 @@ resource_list(pcmk__output_t *out, va_list args)
         int x;
 
         /* Complex resources may have some sub-resources active and some inactive */
-        gboolean is_active = rsc->priv->fns->active(rsc, TRUE);
-        gboolean partially_active = rsc->priv->fns->active(rsc, FALSE);
+        bool is_active = rsc->priv->fns->active(rsc, true);
+        bool partially_active = rsc->priv->fns->active(rsc, false);
 
         /* Skip inactive orphans (deleted but still in CIB) */
         if (pcmk_is_set(rsc->flags, pcmk__rsc_removed) && !is_active) {

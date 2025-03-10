@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,8 @@
 #include <pacemaker-internal.h>
 
 #include <sys/param.h>
-#include <stdint.h>         // uint32_t
+#include <stdbool.h>                        // bool, true, false
+#include <stdint.h>                         // uint32_t
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -852,7 +853,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
         current = NULL;
         for (iter = rsc->priv->children; iter != NULL; iter = iter->next) {
             pcmk_resource_t *child = (pcmk_resource_t *)iter->data;
-            enum rsc_role_e child_role = child->priv->fns->state(child, TRUE);
+            enum rsc_role_e child_role = child->priv->fns->state(child, true);
 
             if (child_role == pcmk_role_promoted) {
                 count++;

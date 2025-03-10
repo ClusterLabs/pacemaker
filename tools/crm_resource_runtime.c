@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <limits.h>
+#include <stdbool.h>                        // bool, true, false
 #include <glib.h>
 #include <libxml/tree.h>
 
@@ -40,7 +41,7 @@ build_node_info_list(const pcmk_resource_t *rsc)
             ni->node_name = node->priv->name;
             if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)
                 && (child->priv->fns->state(child,
-                                            TRUE) == pcmk_role_promoted)) {
+                                            true) == pcmk_role_promoted)) {
                 ni->promoted = true;
             }
 
@@ -79,7 +80,7 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
             node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
 
             ni->node_name = node->priv->name;
-            if (rsc->priv->fns->state(rsc, TRUE) == pcmk_role_promoted) {
+            if (rsc->priv->fns->state(rsc, true) == pcmk_role_promoted) {
                 ni->promoted = true;
             }
 
@@ -2441,7 +2442,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
              iter != NULL; iter = iter->next) {
 
             const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
-            enum rsc_role_e child_role = child->priv->fns->state(child, TRUE);
+            enum rsc_role_e child_role = child->priv->fns->state(child, true);
 
             if (child_role == pcmk_role_promoted) {
                 rsc = child;

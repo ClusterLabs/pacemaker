@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,8 @@
 
 #include <crm_internal.h>
 
-#include <stdint.h>
+#include <stdbool.h>                // bool, true, false
+#include <stdint.h>                 // uint32_t
 
 #include <crm/common/output.h>
 #include <crm/pengine/status.h>
@@ -200,8 +201,8 @@ recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
                    NULL);
 }
 
-gboolean
-native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
+bool
+native_unpack(pcmk_resource_t *rsc)
 {
     pcmk_resource_t *parent = uber_parent(rsc);
     const char *standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
@@ -219,7 +220,7 @@ native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
          * be a backward-incompatible change that we should probably do with a
          * transform at a schema major version bump.
          */
-        pe__force_anon(standard, parent, rsc->id, scheduler);
+        pe__force_anon(standard, parent, rsc->id, rsc->priv->scheduler);
 
         /* Clear PCMK_META_GLOBALLY_UNIQUE on the parent and all its descendants
          * unpacked so far (clearing the parent should make any future children
@@ -267,7 +268,7 @@ rsc_is_on_node(pcmk_resource_t *rsc, const pcmk_node_t *node, int flags)
 
 pcmk_resource_t *
 native_find_rsc(pcmk_resource_t *rsc, const char *id,
-                const pcmk_node_t *on_node, int flags)
+                const pcmk_node_t *on_node, uint32_t flags)
 {
     bool match = false;
     pcmk_resource_t *result = NULL;
@@ -320,29 +321,8 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
     return NULL;
 }
 
-// create is ignored
-char *
-native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
-                 const char *name, pcmk_scheduler_t *scheduler)
-{
-    const char *value = NULL;
-    GHashTable *params = NULL;
-
-    CRM_CHECK(rsc != NULL, return NULL);
-    CRM_CHECK(name != NULL && strlen(name) != 0, return NULL);
-
-    pcmk__rsc_trace(rsc, "Looking up %s in %s", name, rsc->id);
-    params = pe_rsc_params(rsc, node, scheduler);
-    value = g_hash_table_lookup(params, name);
-    if (value == NULL) {
-        /* try meta attributes instead */
-        value = g_hash_table_lookup(rsc->priv->meta, name);
-    }
-    return pcmk__str_copy(value);
-}
-
-gboolean
-native_active(pcmk_resource_t * rsc, gboolean all)
+bool
+native_active(const pcmk_resource_t *rsc, bool all)
 {
     for (GList *gIter = rsc->priv->active_nodes;
          gIter != NULL; gIter = gIter->next) {
@@ -761,7 +741,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     char ra_name[LINE_MAX];
     const char *rsc_state = native_displayable_state(rsc, print_pending);
     const char *target_role = NULL;
-    const char *active = pcmk__btoa(rsc->priv->fns->active(rsc, TRUE));
+    const char *active = pcmk__btoa(rsc->priv->fns->active(rsc, true));
     const char *orphaned = pcmk__flag_text(rsc->flags, pcmk__rsc_removed);
     const char *blocked = pcmk__flag_text(rsc->flags, pcmk__rsc_blocked);
     const char *maintenance = pcmk__flag_text(rsc->flags,
@@ -776,7 +756,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     pcmk__assert(pcmk__is_primitive(rsc));
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return pcmk_rc_no_output;
     }
 
@@ -845,7 +825,7 @@ pe__resource_html(pcmk__output_t *out, va_list args)
 
     const pcmk_node_t *node = pcmk__current_node(rsc);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return pcmk_rc_no_output;
     }
 
@@ -872,7 +852,7 @@ pe__resource_text(pcmk__output_t *out, va_list args)
 
     pcmk__assert(pcmk__is_primitive(rsc));
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return pcmk_rc_no_output;
     }
 
@@ -891,7 +871,7 @@ native_free(pcmk_resource_t * rsc)
 }
 
 enum rsc_role_e
-native_resource_state(const pcmk_resource_t * rsc, gboolean current)
+native_resource_state(const pcmk_resource_t *rsc, bool current)
 {
     enum rsc_role_e role = rsc->priv->next_role;
 
@@ -1145,20 +1125,20 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, uint32_t show_opts)
     return rc;
 }
 
-gboolean
-pe__native_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                       gboolean check_parent)
+bool
+pe__native_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                       bool check_parent)
 {
     if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
         pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
-        return FALSE;
+        return false;
     } else if (check_parent && (rsc->priv->parent != NULL)) {
         const pcmk_resource_t *up = pe__const_top_resource(rsc, true);
 
-        return up->priv->fns->is_filtered(up, only_rsc, FALSE);
+        return up->priv->fns->is_filtered(up, only_rsc, false);
     }
 
-    return TRUE;
+    return true;
 }
 
 /*!

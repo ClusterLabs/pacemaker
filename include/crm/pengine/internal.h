@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #define PCMK__CRM_PENGINE_INTERNAL__H
 
 #include <stdbool.h>
-#include <stdint.h>
+#include <stdint.h>                         // uint32_t
 #include <string.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/status.h>
@@ -58,25 +58,23 @@ void pe__create_promotable_pseudo_ops(pcmk_resource_t *clone,
 
 bool pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node);
 
-char *native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
-                       const char *name, pcmk_scheduler_t *scheduler);
 pcmk_node_t *native_location(const pcmk_resource_t *rsc, GList **list,
                              uint32_t target);
 void native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                         pcmk_scheduler_t *scheduler, gboolean failed);
 
-gboolean native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
-gboolean group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
-gboolean clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
-gboolean pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
+bool native_unpack(pcmk_resource_t *rsc);
+bool group_unpack(pcmk_resource_t *rsc);
+bool clone_unpack(pcmk_resource_t *rsc);
+bool pe__unpack_bundle(pcmk_resource_t *rsc);
 
 pcmk_resource_t *native_find_rsc(pcmk_resource_t *rsc, const char *id,
-                                 const pcmk_node_t *node, int flags);
+                                 const pcmk_node_t *node, uint32_t flags);
 
-gboolean native_active(pcmk_resource_t *rsc, gboolean all);
-gboolean group_active(pcmk_resource_t *rsc, gboolean all);
-gboolean clone_active(pcmk_resource_t *rsc, gboolean all);
-gboolean pe__bundle_active(pcmk_resource_t *rsc, gboolean all);
+bool native_active(const pcmk_resource_t *rsc, bool all);
+bool group_active(const pcmk_resource_t *rsc, bool all);
+bool clone_active(const pcmk_resource_t *rsc, bool all);
+bool pe__bundle_active(const pcmk_resource_t *rsc, bool all);
 
 gchar *pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
                                   const pcmk_node_t *node, uint32_t show_opts,
@@ -113,14 +111,11 @@ void group_free(pcmk_resource_t *rsc);
 void clone_free(pcmk_resource_t *rsc);
 void pe__free_bundle(pcmk_resource_t *rsc);
 
-enum rsc_role_e native_resource_state(const pcmk_resource_t *rsc,
-                                      gboolean current);
-enum rsc_role_e group_resource_state(const pcmk_resource_t *rsc,
-                                     gboolean current);
-enum rsc_role_e clone_resource_state(const pcmk_resource_t *rsc,
-                                     gboolean current);
+enum rsc_role_e native_resource_state(const pcmk_resource_t *rsc, bool current);
+enum rsc_role_e group_resource_state(const pcmk_resource_t *rsc, bool current);
+enum rsc_role_e clone_resource_state(const pcmk_resource_t *rsc, bool current);
 enum rsc_role_e pe__bundle_resource_state(const pcmk_resource_t *rsc,
-                                          gboolean current);
+                                          bool current);
 
 void pe__count_common(pcmk_resource_t *rsc);
 void pe__count_bundle(pcmk_resource_t *rsc);
@@ -368,14 +363,14 @@ GList * pe__build_rsc_list(pcmk_scheduler_t *scheduler, const char *s);
 
 bool pcmk__rsc_filtered_by_node(pcmk_resource_t *rsc, GList *only_node);
 
-gboolean pe__bundle_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                                gboolean check_parent);
-gboolean pe__clone_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                               gboolean check_parent);
-gboolean pe__group_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                               gboolean check_parent);
-gboolean pe__native_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                                gboolean check_parent);
+bool pe__bundle_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                            bool check_parent);
+bool pe__clone_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                           bool check_parent);
+bool pe__group_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                           bool check_parent);
+bool pe__native_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                            bool check_parent);
 
 xmlNode *pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name);
 

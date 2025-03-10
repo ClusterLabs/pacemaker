@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -389,7 +389,7 @@ update_resource_action_runnable(pcmk_action_t *action,
                 break;
 
             case pcmk_no_quorum_freeze:
-                if (!rsc->priv->fns->active(rsc, TRUE)
+                if (!rsc->priv->fns->active(rsc, true)
                     || (rsc->priv->next_role > rsc->priv->orig_role)) {
                     pcmk__rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
                                     action->uuid,

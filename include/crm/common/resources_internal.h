@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 #define PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 
+#include <stdbool.h>                    // bool
 #include <stdint.h>                     // uint32_t
 #include <glib.h>                       // gboolean, gpointer, guint, etc.
 #include <libxml/tree.h>                // xmlNode
@@ -182,12 +183,11 @@ typedef struct {
      * \internal
      * \brief Parse variant-specific resource XML from CIB into struct members
      *
-     * \param[in,out] rsc        Partially unpacked resource
-     * \param[in,out] scheduler  Scheduler data
+     * \param[in,out] rsc  Partially unpacked resource
      *
-     * \return TRUE if resource was unpacked successfully, otherwise FALSE
+     * \return \c true if resource was unpacked successfully, otherwise \c false
      */
-    gboolean (*unpack)(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
+    bool (*unpack)(pcmk_resource_t *rsc);
 
     /*!
      * \internal
@@ -201,23 +201,7 @@ typedef struct {
      * \return Resource that matches search criteria if any, otherwise NULL
      */
     pcmk_resource_t *(*find_rsc)(pcmk_resource_t *rsc, const char *search,
-                                 const pcmk_node_t *node, int flags);
-
-    /*!
-     * \internal
-     * \brief Get value of a resource instance attribute
-     *
-     * \param[in,out] rsc        Resource to check
-     * \param[in]     node       Node to use to evaluate rules
-     * \param[in]     create     Ignored
-     * \param[in]     name       Name of instance attribute to check
-     * \param[in,out] scheduler  Scheduler data
-     *
-     * \return Value of requested attribute if available, otherwise NULL
-     * \note The caller is responsible for freeing the result using free().
-     */
-    char *(*parameter)(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
-                       const char *name, pcmk_scheduler_t *scheduler);
+                                 const pcmk_node_t *node, uint32_t flags);
 
     /*!
      * \internal
@@ -228,18 +212,19 @@ typedef struct {
      *
      * \return TRUE if \p rsc is active, otherwise FALSE
      */
-    gboolean (*active)(pcmk_resource_t *rsc, gboolean all);
+    bool (*active)(const pcmk_resource_t *rsc, bool all);
 
     /*!
      * \internal
      * \brief Get resource's current or assigned role
      *
      * \param[in] rsc      Resource to check
-     * \param[in] current  If TRUE, check current role, otherwise assigned role
+     * \param[in] current  If \c true, check current role; otherwise, check
+     *                     assigned role
      *
      * \return Current or assigned role of \p rsc
      */
-    enum rsc_role_e (*state)(const pcmk_resource_t *rsc, gboolean current);
+    enum rsc_role_e (*state)(const pcmk_resource_t *rsc, bool current);
 
     /*!
      * \internal
@@ -280,13 +265,13 @@ typedef struct {
      *
      * \param[in] rsc           Resource ID to check for
      * \param[in] only_rsc      List of resource IDs to check
-     * \param[in] check_parent  If TRUE, check top ancestor as well
+     * \param[in] check_parent  If \c true, check top ancestor as well
      *
-     * \return TRUE if \p rsc, its top parent if requested, or '*' is in
-     *         \p only_rsc, otherwise FALSE
+     * \return \c true if \p rsc, its top parent if requested, or \c "*" is in
+     *         \p only_rsc, or \c false otherwise
      */
-    gboolean (*is_filtered)(const pcmk_resource_t *rsc, GList *only_rsc,
-                            gboolean check_parent);
+    bool (*is_filtered)(const pcmk_resource_t *rsc, const GList *only_rsc,
+                        bool check_parent);
 
     /*!
      * \internal

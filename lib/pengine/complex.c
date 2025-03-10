@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,6 @@ static pcmk__rsc_methods_t resource_class_functions[] = {
     {
          native_unpack,
          native_find_rsc,
-         native_parameter,
          native_active,
          native_resource_state,
          native_location,
@@ -39,7 +38,6 @@ static pcmk__rsc_methods_t resource_class_functions[] = {
     {
          group_unpack,
          native_find_rsc,
-         native_parameter,
          group_active,
          group_resource_state,
          native_location,
@@ -52,7 +50,6 @@ static pcmk__rsc_methods_t resource_class_functions[] = {
     {
          clone_unpack,
          native_find_rsc,
-         native_parameter,
          clone_active,
          clone_resource_state,
          native_location,
@@ -65,7 +62,6 @@ static pcmk__rsc_methods_t resource_class_functions[] = {
     {
          pe__unpack_bundle,
          native_find_rsc,
-         native_parameter,
          pe__bundle_active,
          pe__bundle_resource_state,
          native_location,
@@ -946,7 +942,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                     (rsc_private->next_role == pcmk_role_unknown)?
                         "default" : pcmk_role_text(rsc_private->next_role));
 
-    if (rsc_private->fns->unpack(*rsc, scheduler) == FALSE) {
+    if (!rsc_private->fns->unpack(*rsc)) {
         pcmk__free_resource(*rsc);
         *rsc = NULL;
         return pcmk_rc_unpack_error;

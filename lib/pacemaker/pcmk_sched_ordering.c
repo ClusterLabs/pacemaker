@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <inttypes.h>               // PRIx32
-#include <stdbool.h>
+#include <stdbool.h>                // bool, true, false
 #include <glib.h>
 
 #include <crm/crm.h>
@@ -1312,7 +1312,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
         parse_op_key(order->task1, NULL, &op_type, &interval_ms);
         key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
-        first_role = first_rsc->priv->fns->state(first_rsc, TRUE);
+        first_role = first_rsc->priv->fns->state(first_rsc, true);
         if ((first_role == pcmk_role_stopped)
             && pcmk__str_eq(op_type, PCMK_ACTION_STOP, pcmk__str_none)) {
             free(key);

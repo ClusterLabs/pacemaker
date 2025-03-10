@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                        // bool, true, false
 #include <stdio.h>
 #include <sys/param.h>
 #include <glib.h>
@@ -734,7 +735,7 @@ handle_asymmetric_ordering(const pcmk_action_t *first, pcmk_action_t *then)
     if (pcmk_is_set(then->flags, pcmk__action_optional)) {
         enum rsc_role_e then_rsc_role;
 
-        then_rsc_role = then->rsc->priv->fns->state(then->rsc, TRUE);
+        then_rsc_role = then->rsc->priv->fns->state(then->rsc, true);
 
         if ((then_rsc_role == pcmk_role_stopped)
             && pcmk__str_eq(then->task, PCMK_ACTION_STOP, pcmk__str_none)) {

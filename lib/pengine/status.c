@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdint.h>                     // uint32_t
 #include <sys/param.h>
 
 #include <crm/crm.h>
@@ -186,7 +187,7 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         pcmk_resource_t *parent = rIter->data;
         pcmk_resource_t *match = parent->priv->fns->find_rsc(parent, id, NULL,
-                                                             flags);
+                                                             (uint32_t) flags);
 
         if (match != NULL) {
             return match;
