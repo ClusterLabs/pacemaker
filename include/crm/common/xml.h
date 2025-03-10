@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -48,7 +48,6 @@ typedef const xmlChar *pcmkXmlStr;
 // NOTE: sbd (as of at least 1.5.2) uses this
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
 
-xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
 void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
                               void (*helper)(xmlNode*, void*), void *user_data);
 
