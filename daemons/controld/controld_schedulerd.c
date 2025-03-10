@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,6 +18,8 @@
 #include <crm/common/xml_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_schedulerd.h>
+
+#include <libxml/xpath.h>               // xmlXPathObject
 
 #include <pacemaker-controld.h>
 
@@ -375,7 +377,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     int lpc = 0;
     const char *xpath_base = NULL;
     char *xpath_string = NULL;
-    xmlXPathObjectPtr xpathObj = NULL;
+    xmlXPathObject *xpathObj = NULL;
 
     xpath_base = pcmk_cib_xpath_for(PCMK_XE_CRM_CONFIG);
     if (xpath_base == NULL) {
@@ -386,7 +388,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     xpath_string = crm_strdup_printf("%s//%s//nvpair[@name='%s']",
                                      xpath_base, PCMK_XE_CLUSTER_PROPERTY_SET,
                                      attr_name);
-    xpathObj = xpath_search(xml, xpath_string);
+    xpathObj = pcmk__xpath_search(xml->doc, xpath_string);
     max = numXpathResults(xpathObj);
     free(xpath_string);
 
