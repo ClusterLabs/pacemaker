@@ -568,7 +568,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
         max = pcmk__xpath_num_results(xpathObj);
 
         for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpathObj, lpc);
+            xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
 
             CRM_LOG_ASSERT(match != NULL);
             if(match != NULL) {
@@ -2447,7 +2447,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
 
     for (lpc = 0; lpc < max; lpc++) {
         const char *parameter = NULL;
-        xmlNode *match = getXpathResult(xpath, lpc);
+        xmlNode *match = pcmk__xpath_result(xpath, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
         if (match == NULL) {

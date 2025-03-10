@@ -453,7 +453,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
     num_results = pcmk__xpath_num_results(xpathObj);
 
     for (int i = 0; i < num_results; i++) {
-        xmlNode *constraint_node = getXpathResult(xpathObj, i);
+        xmlNode *constraint_node = pcmk__xpath_result(xpathObj, i);
         xmlNode *date_expr_node = NULL;
         crm_time_t *end = NULL;
         int rc = pcmk_rc_ok;

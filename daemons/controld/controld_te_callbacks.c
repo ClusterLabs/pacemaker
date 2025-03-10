@@ -451,7 +451,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         crm_err("Received transition request with no results (bug?)");
     } else {
         for (int lpc = 0; lpc < nmatches; lpc++) {
-            xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
+            xmlNode *rsc_op = pcmk__xpath_result(xpathObj, lpc);
             const char *node = get_node_id(rsc_op);
 
             process_graph_event(rsc_op, node);

@@ -14,7 +14,7 @@
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
-#include <libxml/xpath.h>               // xmlXPathObject
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 /*
  * From xpath2.c
@@ -56,6 +56,111 @@ freeXpathObject(xmlXPathObjectPtr xpathObj)
     xmlXPathFreeObject(xpathObj);
 }
 
+
+/*!
+ * \internal
+ * \brief Get a node from the result set of evaluating an XPath expression
+ *
+ * Evaluating an XPath expression stores the list of matching nodes in an
+ * \c xmlXPathObject. This function gets the node at a particular index within
+ * that list.
+ *
+ * \param[in,out] xpath_obj  XPath object containing result nodes
+ * \param[in]     index      Index of result node to get
+ *
+ * \return Result node at the given index if possible, or \c NULL otherwise
+ *
+ * \note This has a side effect: it sets the result node at \p index to NULL
+ *       within \p xpath_obj, so the result at a given index can be retrieved
+ *       only once. This is a workaround to prevent a use-after-free error.
+ *
+ *       All elements returned by an XPath query are pointers to elements from
+ *       the tree, except namespace nodes (which are allocated separately for
+ *       the XPath object's node set). Accordingly, only namespace nodes and the
+ *       node set itself are freed when libxml2 frees a node set.
+ *
+ *       This logic requires checking the type of every node in the node set.
+ *       However, a node may have been freed already while processing an XPath
+ *       object -- either directly (for example, with \c xmlFreeNode()) or
+ *       indirectly (for example, with \c xmlNodeSetContent()). In that case,
+ *       checking the freed node's type while freeing the XPath object is a
+ *       use-after-free error.
+ *
+ *       To reduce the likelihood of this, when we access a node in the XPath
+ *       object, we remove it from the XPath object's node set by setting it to
+ *       \c NULL. This approach is adapted from \c xpath2.c in libxml2's
+ *       examples. That file also describes a way to reproduce the
+ *       use-after-free error.
+ *
+ *       However, there are still ways that a use-after-free can occur. For
+ *       example, freeing the entire XML tree before freeing an XPath object
+ *       that contains pointers to it would be an error. It's dangerous to mix
+ *       processing XPath search results with modifications to a tree, and it
+ *       must be done with care.
+ */
+xmlNode *
+pcmk__xpath_result(xmlXPathObject *xpath_obj, int index)
+{
+    xmlNode *match = NULL;
+
+    CRM_CHECK((xpath_obj != NULL) && (index >= 0), return NULL);
+
+    match = xmlXPathNodeSetItem(xpath_obj->nodesetval, index);
+    if (match == NULL) {
+        // Previously requested or out of range
+        return NULL;
+    }
+
+    if (match->type != XML_NAMESPACE_DECL) {
+        xpath_obj->nodesetval->nodeTab[index] = NULL;
+    }
+
+    return match;
+}
+
+/*!
+ * \internal
+ * \brief Get an element node corresponding to an XPath match node
+ *
+ * Each node in an XPath object's result node set may be of an arbitrary type.
+ * This function is guaranteed to return an element node (or \c NULL).
+ *
+ * \param[in] match  XML node that matched some XPath expression
+ *
+ * \retval \p match if \p match is an element
+ * \retval Root element of \p match if \p match is a document
+ * \retval <tt>match->parent</tt> if \p match is not an element but its parent
+ *         is an element
+ * \retval \c NULL otherwise
+ *
+ * \todo Phase this out. Code that relies on this behavior is likely buggy.
+ */
+xmlNode *
+pcmk__xpath_match_element(xmlNode *match)
+{
+    pcmk__assert(match != NULL);
+
+    switch (match->type) {
+        case XML_ELEMENT_NODE:
+            return match;
+
+        case XML_DOCUMENT_NODE:
+            // Happens if XPath expression is "/"; return root element instead
+            return xmlDocGetRootElement((xmlDoc *) match);
+
+        default:
+            if ((match->parent != NULL)
+                && (match->parent->type == XML_ELEMENT_NODE)) {
+
+                // Probably an attribute; return parent element instead
+                return match->parent;
+            }
+            crm_err("Cannot get element from XPath expression match of type %s",
+                    pcmk__xml_element_type_text(match->type));
+            return NULL;
+    }
+}
+
 xmlNode *
 getXpathResult(xmlXPathObjectPtr xpathObj, int index)
 {
@@ -78,7 +183,7 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     CRM_CHECK(match != NULL, return NULL);
 
     if (xpathObj->nodesetval->nodeTab[index]->type != XML_NAMESPACE_DECL) {
-        /* See the comment for freeXpathObject() */
+        // See the comment for pcmk__xpath_result()
         xpathObj->nodesetval->nodeTab[index] = NULL;
     }
 
@@ -188,11 +293,18 @@ crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
     nresults = pcmk__xpath_num_results(xpathObj);
 
     for (int i = 0; i < nresults; i++) {
-        xmlNode *result = getXpathResult(xpathObj, i);
+        xmlNode *result = pcmk__xpath_result(xpathObj, i);
 
         CRM_LOG_ASSERT(result != NULL);
-        if (result) {
-            (*helper)(result, user_data);
+
+        if (result != NULL) {
+            result = pcmk__xpath_match_element(result);
+
+            CRM_LOG_ASSERT(result != NULL);
+
+            if (result != NULL) {
+                (*helper)(result, user_data);
+            }
         }
     }
     freeXpathObject(xpathObj);
@@ -230,22 +342,31 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
                        xpath, pcmk__s(nodePath, "unknown path"));
 
             for (lpc = 0; lpc < max; lpc++) {
-                xmlNode *match = getXpathResult(xpathObj, lpc);
+                xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
 
                 CRM_LOG_ASSERT(match != NULL);
                 if (match != NULL) {
-                    matchNodePath = (char *) xmlGetNodePath(match);
-                    do_crm_log(error_level, "%s[%d] = %s",
-                               xpath, lpc,
-                               pcmk__s(matchNodePath, "unrecognizable match"));
-                    free(matchNodePath);
+                    match = pcmk__xpath_match_element(match);
+
+                    CRM_LOG_ASSERT(match != NULL);
+                    if (match != NULL) {
+                        matchNodePath = (char *) xmlGetNodePath(match);
+                        do_crm_log(error_level, "%s[%d] = %s",
+                                   xpath, lpc,
+                                   pcmk__s(matchNodePath,
+                                           "unrecognizable match"));
+                        free(matchNodePath);
+                    }
                 }
             }
             crm_log_xml_explicit(xml_obj, "Bad Input");
         }
 
     } else {
-        result = getXpathResult(xpathObj, 0);
+        result = pcmk__xpath_result(xpathObj, 0);
+        if (result != NULL) {
+            result = pcmk__xpath_match_element(result);
+        }
     }
 
     freeXpathObject(xpathObj);

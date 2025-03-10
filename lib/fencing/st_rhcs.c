@@ -103,7 +103,7 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
      * Pacemaker handles and adds it */
     xpathObj = pcmk__xpath_search(metadata->doc, xpath);
     if (pcmk__xpath_num_results(xpathObj) > 0) {
-        xmlNode *tmp = getXpathResult(xpathObj, 0);
+        xmlNode *tmp = pcmk__xpath_result(xpathObj, 0);
 
         crm_xml_add(tmp, "required", "0");
     }
@@ -173,7 +173,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
 
     xpathObj = pcmk__xpath_search(xml->doc, "//" PCMK_XE_ACTIONS);
     if (pcmk__xpath_num_results(xpathObj) > 0) {
-        actions = getXpathResult(xpathObj, 0);
+        actions = pcmk__xpath_result(xpathObj, 0);
     }
     freeXpathObject(xpathObj);
 
