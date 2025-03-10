@@ -250,6 +250,7 @@ copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
     return pcmk_rc_ok;
 }
 
+// Takes ownership of params
 svc_action_t *
 services__create_resource_action(const char *name, const char *standard,
                         const char *provider, const char *agent,
