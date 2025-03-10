@@ -71,10 +71,10 @@ bool pe__unpack_bundle(pcmk_resource_t *rsc);
 pcmk_resource_t *native_find_rsc(pcmk_resource_t *rsc, const char *id,
                                  const pcmk_node_t *node, uint32_t flags);
 
-gboolean native_active(pcmk_resource_t *rsc, gboolean all);
-gboolean group_active(pcmk_resource_t *rsc, gboolean all);
-gboolean clone_active(pcmk_resource_t *rsc, gboolean all);
-gboolean pe__bundle_active(pcmk_resource_t *rsc, gboolean all);
+bool native_active(const pcmk_resource_t *rsc, bool all);
+bool group_active(const pcmk_resource_t *rsc, bool all);
+bool clone_active(const pcmk_resource_t *rsc, bool all);
+bool pe__bundle_active(const pcmk_resource_t *rsc, bool all);
 
 gchar *pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
                                   const pcmk_node_t *node, uint32_t show_opts,

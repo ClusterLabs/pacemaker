@@ -321,8 +321,8 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
     return NULL;
 }
 
-gboolean
-native_active(pcmk_resource_t * rsc, gboolean all)
+bool
+native_active(const pcmk_resource_t *rsc, bool all)
 {
     for (GList *gIter = rsc->priv->active_nodes;
          gIter != NULL; gIter = gIter->next) {
@@ -741,7 +741,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     char ra_name[LINE_MAX];
     const char *rsc_state = native_displayable_state(rsc, print_pending);
     const char *target_role = NULL;
-    const char *active = pcmk__btoa(rsc->priv->fns->active(rsc, TRUE));
+    const char *active = pcmk__btoa(rsc->priv->fns->active(rsc, true));
     const char *orphaned = pcmk__flag_text(rsc->flags, pcmk__rsc_removed);
     const char *blocked = pcmk__flag_text(rsc->flags, pcmk__rsc_blocked);
     const char *maintenance = pcmk__flag_text(rsc->flags,

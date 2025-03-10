@@ -1320,8 +1320,8 @@ replica_resource_active(pcmk_resource_t *rsc, gboolean all)
     return -1;
 }
 
-gboolean
-pe__bundle_active(pcmk_resource_t *rsc, gboolean all)
+bool
+pe__bundle_active(const pcmk_resource_t *rsc, bool all)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
     GList *iter = NULL;
@@ -1333,22 +1333,22 @@ pe__bundle_active(pcmk_resource_t *rsc, gboolean all)
 
         rsc_active = replica_resource_active(replica->ip, all);
         if (rsc_active >= 0) {
-            return (gboolean) rsc_active;
+            return (bool) rsc_active;
         }
 
         rsc_active = replica_resource_active(replica->child, all);
         if (rsc_active >= 0) {
-            return (gboolean) rsc_active;
+            return (bool) rsc_active;
         }
 
         rsc_active = replica_resource_active(replica->container, all);
         if (rsc_active >= 0) {
-            return (gboolean) rsc_active;
+            return (bool) rsc_active;
         }
 
         rsc_active = replica_resource_active(replica->remote, all);
         if (rsc_active >= 0) {
-            return (gboolean) rsc_active;
+            return (bool) rsc_active;
         }
     }
 

@@ -108,7 +108,7 @@ inactive_resources(pcmk_resource_t *rsc)
 
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
-        if (!child_rsc->priv->fns->active(child_rsc, TRUE)) {
+        if (!child_rsc->priv->fns->active(child_rsc, true)) {
             retval++;
         }
     }
@@ -160,7 +160,7 @@ skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
     bool star_list = pcmk__list_of_1(only_rsc) &&
                      pcmk__str_eq("*", g_list_first(only_rsc)->data, pcmk__str_none);
     bool child_filtered = child->priv->fns->is_filtered(child, only_rsc, FALSE);
-    bool child_active = child->priv->fns->active(child, FALSE);
+    bool child_active = child->priv->fns->active(child, false);
     bool show_inactive = pcmk_is_set(show_opts, pcmk_show_inactive_rscs);
 
     /* If the resource is in only_rsc by name (so, ignoring "*") then allow
@@ -231,8 +231,8 @@ group_unpack(pcmk_resource_t *rsc)
     return TRUE;
 }
 
-gboolean
-group_active(pcmk_resource_t *rsc, gboolean all)
+bool
+group_active(const pcmk_resource_t *rsc, bool all)
 {
     gboolean c_all = TRUE;
     gboolean c_any = FALSE;
@@ -336,8 +336,8 @@ pe__group_default(pcmk__output_t *out, va_list args)
     gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
                              (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
 
-    gboolean active = rsc->priv->fns->active(rsc, TRUE);
-    gboolean partially_active = rsc->priv->fns->active(rsc, FALSE);
+    bool active = rsc->priv->fns->active(rsc, true);
+    bool partially_active = rsc->priv->fns->active(rsc, false);
 
     desc = pe__resource_description(rsc, show_opts);
 

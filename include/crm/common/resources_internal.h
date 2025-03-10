@@ -212,7 +212,7 @@ typedef struct {
      *
      * \return TRUE if \p rsc is active, otherwise FALSE
      */
-    gboolean (*active)(pcmk_resource_t *rsc, gboolean all);
+    bool (*active)(const pcmk_resource_t *rsc, bool all);
 
     /*!
      * \internal

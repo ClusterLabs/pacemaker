@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -747,7 +747,7 @@ pe__rsc_running_on_any(pcmk_resource_t *rsc, GList *node_list)
 bool
 pcmk__rsc_filtered_by_node(pcmk_resource_t *rsc, GList *only_node)
 {
-    return rsc->priv->fns->active(rsc, FALSE)
+    return rsc->priv->fns->active(rsc, false)
            && !pe__rsc_running_on_any(rsc, only_node);
 }
 

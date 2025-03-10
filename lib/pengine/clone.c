@@ -441,14 +441,14 @@ clone_unpack(pcmk_resource_t *rsc)
     return TRUE;
 }
 
-gboolean
-clone_active(pcmk_resource_t * rsc, gboolean all)
+bool
+clone_active(const pcmk_resource_t *rsc, bool all)
 {
     for (GList *gIter = rsc->priv->children;
          gIter != NULL; gIter = gIter->next) {
 
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
-        gboolean child_active = child_rsc->priv->fns->active(child_rsc, all);
+        bool child_active = child_rsc->priv->fns->active(child_rsc, all);
 
         if (all == FALSE && child_active) {
             return TRUE;
@@ -649,8 +649,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     for (gIter = rsc->priv->children; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
-        gboolean partially_active = child_rsc->priv->fns->active(child_rsc,
-                                                                 FALSE);
+        bool partially_active = child_rsc->priv->fns->active(child_rsc, false);
 
         if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
             continue;
@@ -699,7 +698,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             // Print individual instance when active orphaned/unmanaged/failed
             print_full = TRUE;
 
-        } else if (child_rsc->priv->fns->active(child_rsc, TRUE)) {
+        } else if (child_rsc->priv->fns->active(child_rsc, true)) {
             // Instance of fully active anonymous clone
 
             pcmk_node_t *location = NULL;
