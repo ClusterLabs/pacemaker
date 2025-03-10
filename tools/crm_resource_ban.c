@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <libxml/xpath.h>   // xmlXPathObject
 
 #include <crm_resource.h>
 
@@ -446,7 +448,8 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
     int rc = pcmk_rc_ok;
 
     cib_constraints = pcmk_find_cib_element(root, PCMK_XE_CONSTRAINTS);
-    xpathObj = xpath_search(cib_constraints, "//" PCMK_XE_RSC_LOCATION);
+    xpathObj = pcmk__xpath_search(cib_constraints->doc,
+                                  "//" PCMK_XE_RSC_LOCATION);
 
     for (i = 0; i < numXpathResults(xpathObj); i++) {
         xmlNode *constraint_node = getXpathResult(xpathObj, i);
