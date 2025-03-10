@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,8 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
+
+#include <libxml/xpath.h>               // xmlXPathObject
 
 #include <pacemaker-controld.h>
 
@@ -443,7 +445,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
               pcmk__s(crm_element_value(msg, PCMK_XA_REFERENCE), ""),
               pcmk__s(crm_element_value(msg, PCMK__XA_SRC), ""));
 
-    xpathObj = xpath_search(xml_data, "//" PCMK__XE_LRM_RSC_OP);
+    xpathObj = pcmk__xpath_search(xml_data->doc, "//" PCMK__XE_LRM_RSC_OP);
     nmatches = numXpathResults(xpathObj);
     if (nmatches == 0) {
         crm_err("Received transition request with no results (bug?)");

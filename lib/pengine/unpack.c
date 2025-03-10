@@ -11,8 +11,10 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <glib.h>
 #include <time.h>
+
+#include <glib.h>
+#include <libxml/xpath.h>               // xmlXPathObject
 
 #include <crm/crm.h>
 #include <crm/services.h>
@@ -201,10 +203,10 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 static void
 set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *scheduler)
 {
-    xmlXPathObjectPtr result = NULL;
+    xmlXPathObject *result = NULL;
 
     if (!pcmk_is_set(scheduler->flags, flag)) {
-        result = xpath_search(scheduler->input, xpath);
+        result = pcmk__xpath_search(scheduler->input->doc, xpath);
         if (result && (numXpathResults(result) > 0)) {
             pcmk__set_scheduler_flags(scheduler, flag);
         }
@@ -3017,7 +3019,7 @@ static bool
 unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
 {
     bool result = false;
-    xmlXPathObjectPtr search;
+    xmlXPathObject *search;
     char *xpath = NULL;
 
     xpath = crm_strdup_printf(XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
@@ -3026,7 +3028,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
                               "[@" PCMK__XA_RC_CODE "!='%d']",
                               node_name, rsc->id, PCMK_OCF_UNKNOWN);
 
-    search = xpath_search(rsc->priv->scheduler->input, xpath);
+    search = pcmk__xpath_search(rsc->priv->scheduler->input->doc, xpath);
     result = (numXpathResults(search) == 0);
     freeXpathObject(search);
     free(xpath);

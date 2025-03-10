@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,8 @@
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml.h>
 #include <pacemaker.h>
+
+#include <libxml/xpath.h>                   // xmlXPathObject
 
 #include <pacemaker-internal.h>
 
@@ -94,7 +96,9 @@ ticket_exists(void **state)
     /* Verify that the XML result has only one <ticket>, and that its ID is
      * what we asked for.
      */
-    xpath_obj = xpath_search(xml, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]");
+    xpath_obj = pcmk__xpath_search(xml->doc,
+                                   "//" PCMK__XE_TICKET_STATE
+                                   "[@" PCMK_XA_ID "=\"ticketA\"]");
     assert_int_equal(numXpathResults(xpath_obj), 1);
 
     freeXpathObject(xpath_obj);
@@ -117,7 +121,7 @@ multiple_tickets(void **state)
     /* Verify that the XML result has four <ticket> elements, and that their
      * IDs are as expected.
      */
-    xpath_obj = xpath_search(xml, "//" PCMK__XE_TICKET_STATE);
+    xpath_obj = pcmk__xpath_search(xml->doc, "//" PCMK__XE_TICKET_STATE);
 
     assert_int_equal(numXpathResults(xpath_obj), 4);
 
@@ -152,7 +156,9 @@ duplicate_tickets(void **state)
     /* Verify that the XML result has two <ticket> elements, and that their
      * IDs are as expected.
      */
-    xpath_obj = xpath_search(xml, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketC\"]");
+    xpath_obj = pcmk__xpath_search(xml->doc,
+                                   "//" PCMK__XE_TICKET_STATE
+                                   "[@" PCMK_XA_ID "=\"ticketC\"]");
 
     assert_int_equal(numXpathResults(xpath_obj), 2);
     freeXpathObject(xpath_obj);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,6 +15,8 @@
 #include <crm/lrmd.h>
 #include <crm/lrmd_internal.h>
 #include <crm/services.h>
+
+#include <libxml/xpath.h>               // xmlXPathObject
 
 #include <pacemaker-controld.h>
 
@@ -1365,7 +1367,7 @@ remote_ra_fail(const char *node_name)
 void
 remote_ra_process_pseudo(xmlNode *xml)
 {
-    xmlXPathObjectPtr search = xpath_search(xml, XPATH_PSEUDO_FENCE);
+    xmlXPathObject *search = pcmk__xpath_search(xml->doc, XPATH_PSEUDO_FENCE);
 
     if (numXpathResults(search) == 1) {
         xmlNode *result = getXpathResult(search, 0);
@@ -1434,7 +1436,8 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 void
 remote_ra_process_maintenance_nodes(xmlNode *xml)
 {
-    xmlXPathObjectPtr search = xpath_search(xml, XPATH_PSEUDO_MAINTENANCE);
+    xmlXPathObject *search = pcmk__xpath_search(xml->doc,
+                                                XPATH_PSEUDO_MAINTENANCE);
 
     if (numXpathResults(search) == 1) {
         xmlNode *node;

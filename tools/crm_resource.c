@@ -29,6 +29,8 @@
 #include <libgen.h>
 #include <time.h>
 
+#include <libxml/xpath.h>                   // xmlXPathObject
+
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
 #include <crm/common/agents.h>          // PCMK_RESOURCE_CLASS_*
@@ -285,11 +287,12 @@ build_constraint_list(xmlNode *root)
 {
     GList *retval = NULL;
     xmlNode *cib_constraints = NULL;
-    xmlXPathObjectPtr xpathObj = NULL;
+    xmlXPathObject *xpathObj = NULL;
     int ndx = 0;
 
     cib_constraints = pcmk_find_cib_element(root, PCMK_XE_CONSTRAINTS);
-    xpathObj = xpath_search(cib_constraints, "//" PCMK_XE_RSC_LOCATION);
+    xpathObj = pcmk__xpath_search(cib_constraints->doc,
+                                  "//" PCMK_XE_RSC_LOCATION);
 
     for (ndx = 0; ndx < numXpathResults(xpathObj); ndx++) {
         xmlNode *match = getXpathResult(xpathObj, ndx);

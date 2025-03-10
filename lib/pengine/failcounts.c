@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2024 the Pacemaker project contributors
+ * Copyright 2008-2025 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -9,7 +9,9 @@
 
 #include <sys/types.h>
 #include <regex.h>
+
 #include <glib.h>
+#include <libxml/xpath.h>           // xmlXPathObject
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -96,7 +98,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                         "='" PCMK_VALUE_BLOCK "']",
                                     xml_name);
 
-    xmlXPathObject *xpathObj = xpath_search(rsc->priv->xml, xpath);
+    xmlXPathObject *xpathObj = pcmk__xpath_search(rsc->priv->xml->doc, xpath);
     gboolean should_block = FALSE;
 
     free(xpath);
@@ -118,6 +120,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                 const char *conf_op_name = NULL;
                 const char *conf_op_interval_spec = NULL;
                 guint conf_op_interval_ms = 0;
+                pcmk_scheduler_t *scheduler = rsc->priv->scheduler;
                 char *lrm_op_xpath = NULL;
                 xmlXPathObject *lrm_op_xpathObj = NULL;
 
@@ -137,8 +140,8 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                                  node->priv->name, xml_name,
                                                  conf_op_name,
                                                  conf_op_interval_ms);
-                lrm_op_xpathObj = xpath_search(rsc->priv->scheduler->input,
-                                               lrm_op_xpath);
+                lrm_op_xpathObj = pcmk__xpath_search(scheduler->input->doc,
+                                                     lrm_op_xpath);
 
                 free(lrm_op_xpath);
 

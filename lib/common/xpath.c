@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,8 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
+
+#include <libxml/xpath.h>               // xmlXPathObject
 
 /*
  * From xpath2.c
@@ -134,24 +136,40 @@ dedupXpathResults(xmlXPathObjectPtr xpathObj)
     }
 }
 
+/*!
+ * \internal
+ * \brief Search an XML document using an XPath expression
+ *
+ * \param[in] doc   XML document to search
+ * \param[in] path  XPath expression to evaluate in the context of \p doc
+ *
+ * \return XPath object containing result of evaluating \p path against \p doc
+ */
+xmlXPathObject *
+pcmk__xpath_search(xmlDoc *doc, const char *path)
+{
+    pcmkXmlStr xpath_expr = (pcmkXmlStr) path;
+    xmlXPathContext *xpath_context = NULL;
+    xmlXPathObject *xpath_obj = NULL;
+
+    CRM_CHECK((doc != NULL) && !pcmk__str_empty(path), return NULL);
+
+    xpath_context = xmlXPathNewContext(doc);
+    pcmk__mem_assert(xpath_context);
+
+    xpath_obj = xmlXPathEval(xpath_expr, xpath_context);
+
+    xmlXPathFreeContext(xpath_context);
+    return xpath_obj;
+}
+
 /* the caller needs to check if the result contains a xmlDocPtr or xmlNodePtr */
 xmlXPathObjectPtr
 xpath_search(const xmlNode *xml_top, const char *path)
 {
-    xmlXPathObjectPtr xpathObj = NULL;
-    xmlXPathContextPtr xpathCtx = NULL;
-    const xmlChar *xpathExpr = (pcmkXmlStr) path;
-
-    CRM_CHECK(path != NULL, return NULL);
     CRM_CHECK(xml_top != NULL, return NULL);
-    CRM_CHECK(strlen(path) > 0, return NULL);
 
-    xpathCtx = xmlXPathNewContext(xml_top->doc);
-    pcmk__mem_assert(xpathCtx);
-
-    xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
-    xmlXPathFreeContext(xpathCtx);
-    return xpathObj;
+    return pcmk__xpath_search(xml_top->doc, path);
 }
 
 /*!
@@ -170,11 +188,15 @@ void
 crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
                          void (*helper)(xmlNode*, void*), void *user_data)
 {
-    xmlXPathObjectPtr xpathObj = xpath_search(xml, xpath);
-    int nresults = numXpathResults(xpathObj);
-    int i;
+    xmlXPathObject *xpathObj = NULL;
+    int nresults = 0;
 
-    for (i = 0; i < nresults; i++) {
+    CRM_CHECK(xml != NULL, return);
+
+    xpathObj = pcmk__xpath_search(xml->doc, xpath);
+    nresults = numXpathResults(xpathObj);
+
+    for (int i = 0; i < nresults; i++) {
         xmlNode *result = getXpathResult(xpathObj, i);
 
         CRM_LOG_ASSERT(result != NULL);
@@ -190,7 +212,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
 {
     int max;
     xmlNode *result = NULL;
-    xmlXPathObjectPtr xpathObj = NULL;
+    xmlXPathObject *xpathObj = NULL;
     char *nodePath = NULL;
     char *matchNodePath = NULL;
 
@@ -198,7 +220,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
         return xml_obj;         /* or return NULL? */
     }
 
-    xpathObj = xpath_search(xml_obj, xpath);
+    xpathObj = pcmk__xpath_search(xml_obj->doc, xpath);
     nodePath = (char *)xmlGetNodePath(xml_obj);
     max = numXpathResults(xpathObj);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,6 +21,7 @@
 
 #include <glib.h>
 #include <libxml/tree.h>
+#include <libxml/xpath.h>               // xmlXPathObject
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
@@ -672,14 +673,14 @@ cib_process_xpath(const char *op, int options, const char *section,
     int rc = pcmk_ok;
     bool is_query = pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none);
 
-    xmlXPathObjectPtr xpathObj = NULL;
+    xmlXPathObject *xpathObj = NULL;
 
     crm_trace("Processing \"%s\" event", op);
 
     if (is_query) {
-        xpathObj = xpath_search(existing_cib, section);
+        xpathObj = pcmk__xpath_search(existing_cib->doc, section);
     } else {
-        xpathObj = xpath_search(*result_cib, section);
+        xpathObj = pcmk__xpath_search((*result_cib)->doc, section);
     }
 
     max = numXpathResults(xpathObj);
