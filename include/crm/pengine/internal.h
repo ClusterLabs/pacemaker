@@ -58,8 +58,6 @@ void pe__create_promotable_pseudo_ops(pcmk_resource_t *clone,
 
 bool pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node);
 
-char *native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
-                       const char *name, pcmk_scheduler_t *scheduler);
 pcmk_node_t *native_location(const pcmk_resource_t *rsc, GList **list,
                              uint32_t target);
 void native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,

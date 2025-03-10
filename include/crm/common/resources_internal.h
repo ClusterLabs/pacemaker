@@ -205,22 +205,6 @@ typedef struct {
 
     /*!
      * \internal
-     * \brief Get value of a resource instance attribute
-     *
-     * \param[in,out] rsc        Resource to check
-     * \param[in]     node       Node to use to evaluate rules
-     * \param[in]     create     Ignored
-     * \param[in]     name       Name of instance attribute to check
-     * \param[in,out] scheduler  Scheduler data
-     *
-     * \return Value of requested attribute if available, otherwise NULL
-     * \note The caller is responsible for freeing the result using free().
-     */
-    char *(*parameter)(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
-                       const char *name, pcmk_scheduler_t *scheduler);
-
-    /*!
-     * \internal
      * \brief Check whether a resource is active
      *
      * \param[in] rsc  Resource to check

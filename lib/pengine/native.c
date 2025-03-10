@@ -321,27 +321,6 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
     return NULL;
 }
 
-// create is ignored
-char *
-native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
-                 const char *name, pcmk_scheduler_t *scheduler)
-{
-    const char *value = NULL;
-    GHashTable *params = NULL;
-
-    CRM_CHECK(rsc != NULL, return NULL);
-    CRM_CHECK(name != NULL && strlen(name) != 0, return NULL);
-
-    pcmk__rsc_trace(rsc, "Looking up %s in %s", name, rsc->id);
-    params = pe_rsc_params(rsc, node, scheduler);
-    value = g_hash_table_lookup(params, name);
-    if (value == NULL) {
-        /* try meta attributes instead */
-        value = g_hash_table_lookup(rsc->priv->meta, name);
-    }
-    return pcmk__str_copy(value);
-}
-
 gboolean
 native_active(pcmk_resource_t * rsc, gboolean all)
 {
