@@ -950,7 +950,7 @@ clone_free(pcmk_resource_t * rsc)
 }
 
 enum rsc_role_e
-clone_resource_state(const pcmk_resource_t * rsc, gboolean current)
+clone_resource_state(const pcmk_resource_t *rsc, bool current)
 {
     enum rsc_role_e clone_role = pcmk_role_unknown;
 

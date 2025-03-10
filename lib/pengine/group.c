@@ -402,7 +402,7 @@ group_free(pcmk_resource_t * rsc)
 }
 
 enum rsc_role_e
-group_resource_state(const pcmk_resource_t * rsc, gboolean current)
+group_resource_state(const pcmk_resource_t *rsc, bool current)
 {
     enum rsc_role_e group_role = pcmk_role_unknown;
 

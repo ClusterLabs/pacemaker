@@ -219,11 +219,12 @@ typedef struct {
      * \brief Get resource's current or assigned role
      *
      * \param[in] rsc      Resource to check
-     * \param[in] current  If TRUE, check current role, otherwise assigned role
+     * \param[in] current  If \c true, check current role; otherwise, check
+     *                     assigned role
      *
      * \return Current or assigned role of \p rsc
      */
-    enum rsc_role_e (*state)(const pcmk_resource_t *rsc, gboolean current);
+    enum rsc_role_e (*state)(const pcmk_resource_t *rsc, bool current);
 
     /*!
      * \internal

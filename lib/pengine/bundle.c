@@ -1880,7 +1880,7 @@ pe__free_bundle(pcmk_resource_t *rsc)
 }
 
 enum rsc_role_e
-pe__bundle_resource_state(const pcmk_resource_t *rsc, gboolean current)
+pe__bundle_resource_state(const pcmk_resource_t *rsc, bool current)
 {
     enum rsc_role_e container_role = pcmk_role_unknown;
     return container_role;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>                // bool, true, false
 
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
@@ -190,7 +192,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
         return NULL;
 
     } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
-        if (rsc->priv->fns->state(rsc, TRUE) == pcmk_role_promoted) {
+        if (rsc->priv->fns->state(rsc, true) == pcmk_role_promoted) {
             crm_notice("Unmanaged instance %s will be left promoted on %s",
                        rsc->id, pcmk__node_name(node));
         } else {
@@ -284,8 +286,8 @@ cmp_promotable_instance(gconstpointer a, gconstpointer b)
     }
 
     // If those are the same, prefer instance whose current role is higher
-    role1 = rsc1->priv->fns->state(rsc1, TRUE);
-    role2 = rsc2->priv->fns->state(rsc2, TRUE);
+    role1 = rsc1->priv->fns->state(rsc1, true);
+    role2 = rsc2->priv->fns->state(rsc2, true);
     if (role1 > role2) {
         pcmk__rsc_trace(rsc1,
                         "%s has higher promotion priority than %s "
@@ -951,7 +953,7 @@ set_instance_priority(gpointer data, gpointer user_data)
     pcmk__rsc_trace(clone, "Assigning priority for %s: %s", instance->id,
                     pcmk_role_text(instance->priv->next_role));
 
-    if (instance->priv->fns->state(instance, TRUE) == pcmk_role_started) {
+    if (instance->priv->fns->state(instance, true) == pcmk_role_started) {
         set_current_role_unpromoted(instance, NULL);
     }
 
@@ -967,7 +969,7 @@ set_instance_priority(gpointer data, gpointer user_data)
         return;
     }
 
-    next_role = instance->priv->fns->state(instance, FALSE);
+    next_role = instance->priv->fns->state(instance, false);
     switch (next_role) {
         case pcmk_role_started:
         case pcmk_role_unknown:
@@ -1283,7 +1285,7 @@ pcmk__update_dependent_with_promotable(const pcmk_resource_t *primary,
             continue;
         }
         if (instance->priv->fns->state(instance,
-                                       FALSE) == colocation->primary_role) {
+                                       false) == colocation->primary_role) {
             update_dependent_allowed_nodes(dependent, primary, node,
                                            colocation);
             affected_nodes = g_list_prepend(affected_nodes, node);

@@ -111,14 +111,11 @@ void group_free(pcmk_resource_t *rsc);
 void clone_free(pcmk_resource_t *rsc);
 void pe__free_bundle(pcmk_resource_t *rsc);
 
-enum rsc_role_e native_resource_state(const pcmk_resource_t *rsc,
-                                      gboolean current);
-enum rsc_role_e group_resource_state(const pcmk_resource_t *rsc,
-                                     gboolean current);
-enum rsc_role_e clone_resource_state(const pcmk_resource_t *rsc,
-                                     gboolean current);
+enum rsc_role_e native_resource_state(const pcmk_resource_t *rsc, bool current);
+enum rsc_role_e group_resource_state(const pcmk_resource_t *rsc, bool current);
+enum rsc_role_e clone_resource_state(const pcmk_resource_t *rsc, bool current);
 enum rsc_role_e pe__bundle_resource_state(const pcmk_resource_t *rsc,
-                                          gboolean current);
+                                          bool current);
 
 void pe__count_common(pcmk_resource_t *rsc);
 void pe__count_bundle(pcmk_resource_t *rsc);
