@@ -235,7 +235,7 @@ build_constraint_list(xmlNode *root)
     num_results = pcmk__xpath_num_results(xpathObj);
 
     for (ndx = 0; ndx < num_results; ndx++) {
-        xmlNode *match = getXpathResult(xpathObj, ndx);
+        xmlNode *match = pcmk__xpath_result(xpathObj, ndx);
         retval = g_list_insert_sorted(retval, (gpointer) pcmk__xe_id(match),
                                       compare_id);
     }

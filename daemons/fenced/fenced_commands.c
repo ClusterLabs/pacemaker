@@ -948,7 +948,7 @@ read_action_metadata(stonith_device_t *device)
 
     for (lpc = 0; lpc < max; lpc++) {
         const char *action = NULL;
-        xmlNode *match = getXpathResult(xpath, lpc);
+        xmlNode *match = pcmk__xpath_result(xpath, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
         if(match == NULL) { continue; };

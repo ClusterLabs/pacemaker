@@ -80,7 +80,7 @@ all_tickets(void **state)
                                    "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
                                    "[@" PCMK_XA_ID "=\"ticketA\"]");
 
-    node = getXpathResult(xpath_obj, 0);
+    node = pcmk__xpath_result(xpath_obj, 0);
     assert_string_equal(crm_element_value(node, PCMK_XA_STATUS), PCMK_VALUE_REVOKED);
     assert_string_equal(crm_element_value(node, PCMK__XA_GRANTED), "false");
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
@@ -92,7 +92,7 @@ all_tickets(void **state)
                                    "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
                                    "[@" PCMK_XA_ID "=\"ticketB\"]");
 
-    node = getXpathResult(xpath_obj, 0);
+    node = pcmk__xpath_result(xpath_obj, 0);
     assert_string_equal(crm_element_value(node, PCMK_XA_STATUS), PCMK_VALUE_GRANTED);
     assert_string_equal(crm_element_value(node, PCMK__XA_GRANTED), "true");
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
@@ -104,7 +104,7 @@ all_tickets(void **state)
                                    "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
                                    "[@" PCMK_XA_ID "=\"ticketC\"]");
 
-    node = getXpathResult(xpath_obj, 0);
+    node = pcmk__xpath_result(xpath_obj, 0);
     assert_string_equal(crm_element_value(node, PCMK_XA_STATUS), PCMK_VALUE_GRANTED);
     assert_string_equal(crm_element_value(node, PCMK__XA_GRANTED), "true");
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
@@ -133,7 +133,7 @@ single_ticket(void **state)
                                    "[@" PCMK_XA_ID "=\"ticketA\"]");
     assert_int_equal(pcmk__xpath_num_results(xpath_obj), 1);
 
-    node = getXpathResult(xpath_obj, 0);
+    node = pcmk__xpath_result(xpath_obj, 0);
     assert_string_equal(crm_element_value(node, PCMK_XA_STATUS), PCMK_VALUE_REVOKED);
     assert_string_equal(crm_element_value(node, PCMK__XA_GRANTED), "false");
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
