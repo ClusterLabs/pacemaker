@@ -671,7 +671,9 @@ cib_process_xpath(const char *op, int options, const char *section,
     int num_results = 0;
     int rc = pcmk_ok;
     bool is_query = pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none);
-
+    bool delete_multiple = pcmk_is_set(options, cib_multiple)
+                           && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE,
+                                           pcmk__str_none);
     xmlXPathObject *xpathObj = NULL;
 
     crm_trace("Processing \"%s\" event", op);
@@ -698,14 +700,31 @@ cib_process_xpath(const char *op, int options, const char *section,
         *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
     }
 
-    if (pcmk_is_set(options, cib_multiple)
-        && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
-        dedupXpathResults(xpathObj);
-    }
-
     for (int i = 0; i < num_results; i++) {
+        xmlNode *match = NULL;
         xmlChar *path = NULL;
-        xmlNode *match = pcmk__xpath_result(xpathObj, i);
+
+        /* If we're deleting multiple nodes, go in reverse document order.
+         * If we go in forward order and the node set contains both a parent and
+         * its descendant, then deleting the parent frees the descendant before
+         * the loop reaches the descendant. This is a use-after-free error.
+         *
+         * @COMPAT cib_multiple is only ever used with delete operations. The
+         * correct order to process multiple nodes for operations other than
+         * query (forward) and delete (reverse) is less clear but likely should
+         * be reverse. If we ever replace the CIB public API with libpacemaker
+         * functions, revisit this. For now, we keep forward order for other
+         * operations to preserve backward compatibility, even though external
+         * callers of other ops with cib_multiple might segfault.
+         *
+         * For more info, see comment in xpath2.c:update_xpath_nodes() in
+         * libxml2.
+         */
+        if (delete_multiple) {
+            match = pcmk__xpath_result(xpathObj, num_results - 1 - i);
+        } else {
+            match = pcmk__xpath_result(xpathObj, i);
+        }
 
         if (match == NULL) {
             continue;
