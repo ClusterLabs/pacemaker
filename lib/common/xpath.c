@@ -161,49 +161,6 @@ pcmk__xpath_match_element(xmlNode *match)
     }
 }
 
-xmlNode *
-getXpathResult(xmlXPathObjectPtr xpathObj, int index)
-{
-    xmlNode *match = NULL;
-    int max = pcmk__xpath_num_results(xpathObj);
-
-    CRM_CHECK(index >= 0, return NULL);
-    CRM_CHECK(xpathObj != NULL, return NULL);
-
-    if (index >= max) {
-        crm_err("Requested index %d of only %d items", index, max);
-        return NULL;
-
-    } else if(xpathObj->nodesetval->nodeTab[index] == NULL) {
-        /* Previously requested */
-        return NULL;
-    }
-
-    match = xpathObj->nodesetval->nodeTab[index];
-    CRM_CHECK(match != NULL, return NULL);
-
-    if (xpathObj->nodesetval->nodeTab[index]->type != XML_NAMESPACE_DECL) {
-        // See the comment for pcmk__xpath_result()
-        xpathObj->nodesetval->nodeTab[index] = NULL;
-    }
-
-    switch (match->type) {
-        case XML_ELEMENT_NODE:
-            return match;
-
-        case XML_DOCUMENT_NODE: // Searched for '/'
-            return match->children;
-
-        default:
-           if ((match->parent != NULL)
-               && (match->parent->type == XML_ELEMENT_NODE)) {
-                return match->parent;
-           }
-           crm_warn("Unsupported XPath match type %d (bug?)", match->type);
-           return NULL;
-    }
-}
-
 void
 dedupXpathResults(xmlXPathObjectPtr xpathObj)
 {
@@ -504,6 +461,49 @@ xpath_search(const xmlNode *xml_top, const char *path)
     CRM_CHECK(xml_top != NULL, return NULL);
 
     return pcmk__xpath_search(xml_top->doc, path);
+}
+
+xmlNode *
+getXpathResult(xmlXPathObjectPtr xpathObj, int index)
+{
+    xmlNode *match = NULL;
+    int max = pcmk__xpath_num_results(xpathObj);
+
+    CRM_CHECK(index >= 0, return NULL);
+    CRM_CHECK(xpathObj != NULL, return NULL);
+
+    if (index >= max) {
+        crm_err("Requested index %d of only %d items", index, max);
+        return NULL;
+
+    } else if(xpathObj->nodesetval->nodeTab[index] == NULL) {
+        /* Previously requested */
+        return NULL;
+    }
+
+    match = xpathObj->nodesetval->nodeTab[index];
+    CRM_CHECK(match != NULL, return NULL);
+
+    if (xpathObj->nodesetval->nodeTab[index]->type != XML_NAMESPACE_DECL) {
+        // See the comment for pcmk__xpath_result()
+        xpathObj->nodesetval->nodeTab[index] = NULL;
+    }
+
+    switch (match->type) {
+        case XML_ELEMENT_NODE:
+            return match;
+
+        case XML_DOCUMENT_NODE: // Searched for '/'
+            return match->children;
+
+        default:
+           if ((match->parent != NULL)
+               && (match->parent->type == XML_ELEMENT_NODE)) {
+                return match->parent;
+           }
+           crm_warn("Unsupported XPath match type %d (bug?)", match->type);
+           return NULL;
+    }
 }
 
 // LCOV_EXCL_STOP

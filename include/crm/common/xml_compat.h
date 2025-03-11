@@ -85,6 +85,9 @@ static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
     return xpathObj->nodesetval->nodeNr;
 }
 
+//! \deprecated Do not use
+xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
+
 #ifdef __cplusplus
 }
 #endif
