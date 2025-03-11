@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <libxml/tree.h>                // xmlNode
+#include <libxml/xmlstring.h>           // xmlChar
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/common/xml.h>
@@ -134,7 +136,7 @@ pcmk__xpath_match_element(xmlNode *match)
 xmlXPathObject *
 pcmk__xpath_search(xmlDoc *doc, const char *path)
 {
-    pcmkXmlStr xpath_expr = (pcmkXmlStr) path;
+    const xmlChar *xpath_expr = (const xmlChar *) path;
     xmlXPathContext *xpath_context = NULL;
     xmlXPathObject *xpath_obj = NULL;
 

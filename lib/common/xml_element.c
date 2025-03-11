@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,6 +18,7 @@
 
 #include <libxml/tree.h>                // xmlNode, etc.
 #include <libxml/valid.h>               // xmlValidateNameValue()
+#include <libxml/xmlstring.h>           // xmlChar
 
 #include <crm/crm.h>
 #include <crm/common/nvpair.h>          // crm_xml_add(), etc.
@@ -336,7 +337,7 @@ void
 pcmk__xe_remove_attr(xmlNode *element, const char *name)
 {
     if (name != NULL) {
-        pcmk__xa_remove(xmlHasProp(element, (pcmkXmlStr) name), false);
+        pcmk__xa_remove(xmlHasProp(element, (const xmlChar *) name), false);
     }
 }
 
@@ -410,13 +411,13 @@ pcmk__xe_create(xmlNode *parent, const char *name)
     if (parent == NULL) {
         xmlDoc *doc = pcmk__xml_new_doc();
 
-        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
+        node = xmlNewDocRawNode(doc, NULL, (const xmlChar *) name, NULL);
         pcmk__mem_assert(node);
 
         xmlDocSetRootElement(doc, node);
 
     } else {
-        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
+        node = xmlNewChild(parent, NULL, (const xmlChar *) name, NULL);
         pcmk__mem_assert(node);
     }
 
@@ -471,7 +472,7 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
             va_end(ap);
         }
 
-        xmlNodeSetContent(node, (pcmkXmlStr) content);
+        xmlNodeSetContent(node, (const xmlChar *) content);
         free(buf);
     }
 }
@@ -504,7 +505,7 @@ pcmk__xe_set_id(xmlNode *node, const char *format, ...)
     pcmk__assert(vasprintf(&id, format, ap) >= 0);
     va_end(ap);
 
-    if (!xmlValidateNameValue((pcmkXmlStr) id)) {
+    if (!xmlValidateNameValue((const xmlChar *) id)) {
         pcmk__xml_sanitize_id(id);
     }
     crm_xml_add(node, PCMK_XA_ID, id);
@@ -1035,7 +1036,7 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
         return NULL;
     }
 
-    attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
+    attr = xmlSetProp(node, (const xmlChar *) name, (const xmlChar *) value);
 
     /* If the attribute already exists, this does nothing. Attribute values
      * don't get private data.
@@ -1176,7 +1177,7 @@ crm_element_value(const xmlNode *data, const char *name)
         return NULL;
     }
 
-    attr = xmlHasProp(data, (pcmkXmlStr) name);
+    attr = xmlHasProp(data, (const xmlChar *) name);
     if (!attr || !attr->children) {
         return NULL;
     }
