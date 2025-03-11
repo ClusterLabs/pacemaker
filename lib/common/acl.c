@@ -704,6 +704,41 @@ xml_acl_enabled(const xmlNode *xml)
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Deny access to an XML tree's document based on ACLs
+ *
+ * \param[in,out] xml        XML tree
+ * \param[in]     attr_name  Name of attribute being accessed in \p xml (for
+ *                           logging only)
+ * \param[in]     prefix     Prefix describing ACL that denied access (for
+ *                           logging only)
+ * \param[in]     user       User accessing \p xml (for logging only)
+ * \param[in]     mode       Access mode
+ */
+#define check_acl_deny(xml, attr_name, prefix, user, mode) do {             \
+        xmlNode *tree = xml;                                                \
+                                                                            \
+        pcmk__set_xml_doc_flag(tree, pcmk__xf_acl_denied);                  \
+        pcmk__if_tracing(                                                   \
+            {                                                               \
+                GString *xpath = pcmk__element_xpath(tree);                 \
+                                                                            \
+                if ((attr_name) != NULL) {                                  \
+                    pcmk__g_strcat(xpath, "[@", attr_name, "]", NULL);      \
+                }                                                           \
+                qb_log_from_external_source(__func__, __FILE__,             \
+                                            "%sACL denies user '%s' %s "    \
+                                            "access to %s",                 \
+                                            LOG_TRACE, __LINE__, 0 ,        \
+                                            prefix, user,                   \
+                                            acl_to_text(mode), xpath->str); \
+                g_string_free(xpath, TRUE);                                 \
+            },                                                              \
+            {}                                                              \
+        );                                                                  \
+    } while (false);
+
 bool
 pcmk__check_acl(xmlNode *xml, const char *attr_name,
                 enum xml_private_flags mode)
@@ -717,28 +752,8 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name,
     }
 
     docpriv = xml->doc->_private;
-
     if (docpriv->acls == NULL) {
-        pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
-
-        pcmk__if_tracing(
-            {
-                GString *xpath = pcmk__element_xpath(xml);
-
-                if (attr_name != NULL) {
-                    pcmk__g_strcat(xpath, "[@", attr_name, "]", NULL);
-                }
-
-                qb_log_from_external_source(__func__, __FILE__,
-                                            "User '%s' without ACLs denied %s "
-                                            "access to %s",
-                                            LOG_TRACE, __LINE__, 0,
-                                            docpriv->user, acl_to_text(mode),
-                                            xpath->str);
-                g_string_free(xpath, TRUE);
-            },
-            {}
-        );
+        check_acl_deny(xml, attr_name, "Lack of ", docpriv->user, mode);
         return false;
     }
 
@@ -766,51 +781,14 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name,
         }
 
         if (pcmk_is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
-            pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
+            const char *pfx = (parent != xml)? "Parent " : "";
 
-            pcmk__if_tracing(
-                {
-                    GString *xpath = pcmk__element_xpath(xml);
-
-                    if (attr_name != NULL) {
-                        pcmk__g_strcat(xpath, "[@", attr_name, "]", NULL);
-                    }
-
-                    qb_log_from_external_source(__func__, __FILE__,
-                                                "%sACL denies user '%s' %s "
-                                                "access to %s",
-                                                LOG_TRACE, __LINE__, 0,
-                                                (parent != xml)? "Parent ": "",
-                                                docpriv->user,
-                                                acl_to_text(mode), xpath->str);
-                    g_string_free(xpath, TRUE);
-                },
-                {}
-            );
+            check_acl_deny(xml, attr_name, pfx, docpriv->user, mode);
             return false;
         }
     }
 
-    pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
-
-    pcmk__if_tracing(
-        {
-            GString *xpath = pcmk__element_xpath(xml);
-
-            if (attr_name != NULL) {
-                pcmk__g_strcat(xpath, "[@", attr_name, "]", NULL);
-            }
-
-            qb_log_from_external_source(__func__, __FILE__,
-                                        "Default ACL denies user '%s' %s "
-                                        "access to %s",
-                                        LOG_TRACE, __LINE__, 0,
-                                        docpriv->user, acl_to_text(mode),
-                                        xpath->str);
-            g_string_free(xpath, TRUE);
-        },
-        {}
-    );
+    check_acl_deny(xml, attr_name, "Default ", docpriv->user, mode);
     return false;
 }
 
