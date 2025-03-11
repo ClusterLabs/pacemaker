@@ -10,21 +10,12 @@
 #ifndef PCMK__CRM_COMMON_XML__H
 #define PCMK__CRM_COMMON_XML__H
 
+#include <stdbool.h>                // bool
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <libxml/tree.h>            // xmlNode
 
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-
-#include <libxml/tree.h>
-#include <libxml/xpath.h>
-
-#include <crm/crm.h>
-#include <crm/common/nvpair.h>
-#include <crm/common/schemas.h>
+// xml.h is a wrapper for the following headers
+#include <crm/common/xml_element.h>
 #include <crm/common/xml_io.h>
 #include <crm/common/xml_names.h>
 

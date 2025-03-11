@@ -22,6 +22,7 @@
 #include <qb/qbipcs.h>              // qb_ipcs_connection_t, ...
 
 #include <crm_config.h>             // HAVE_GETPEEREID
+#include <crm/crm.h>                    // crm_system_name
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_controld.h>    // pcmk_controld_api_reply
 #include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_{api_reply,state}
