@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2024 the Pacemaker project contributors
+ * Copyright 2016-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <glib.h>
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
 #include <crm/services.h>
@@ -105,8 +106,9 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     static int alert_sequence_no = 0;
 
-    xmlNode *alert_xml = get_xpath_object("//" PCMK__XE_LRMD_ALERT, request,
-                                          LOG_ERR);
+    xmlNode *alert_xml = pcmk__xpath_find_one(request->doc,
+                                              "//" PCMK__XE_LRMD_ALERT,
+                                              LOG_ERR);
     const char *alert_id = crm_element_value(alert_xml, PCMK__XA_LRMD_ALERT_ID);
     const char *alert_path = crm_element_value(alert_xml,
                                                PCMK__XA_LRMD_ALERT_PATH);

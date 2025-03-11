@@ -229,7 +229,7 @@ pcmk_cib_node_shutdown(xmlNode *cib, const char *node)
 {
     if ((cib != NULL) && (node != NULL)) {
         char *xpath = crm_strdup_printf(XP_SHUTDOWN, node);
-        xmlNode *match = get_xpath_object(xpath, cib, LOG_TRACE);
+        xmlNode *match = pcmk__xpath_find_one(cib->doc, xpath, LOG_TRACE);
 
         free(xpath);
         if (match != NULL) {

@@ -9,6 +9,8 @@
 
 #include <crm_internal.h>
 
+#include <libxml/tree.h>                    // xmlNode
+
 #include <crm/pengine/internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
@@ -296,8 +298,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    cib_resources = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
-                                     LOG_TRACE);
+    cib_resources = pcmk__xpath_find_one(scheduler->input->doc,
+                                         "//" PCMK_XE_RESOURCES, LOG_TRACE);
     if (cib_resources == NULL) {
         pcmk__config_err("No resources configured");
         return FALSE;

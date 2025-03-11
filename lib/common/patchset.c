@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 #include <stdarg.h>
 #include <bzlib.h>
 
-#include <libxml/tree.h>
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
 #include <crm/common/cib_internal.h>
@@ -455,7 +455,7 @@ first_matching_xml_child(const xmlNode *parent, const char *name,
 
 /*!
  * \internal
- * \brief Simplified, more efficient alternative to get_xpath_object()
+ * \brief Simplified, more efficient alternative to pcmk__xpath_find_one()
  *
  * \param[in] top              Root of XML to search
  * \param[in] key              Search xpath
