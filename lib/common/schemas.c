@@ -1427,7 +1427,7 @@ external_refs_in_schema(GList **list, const char *contents)
     const char *search = "//*[local-name()='externalRef'] | //*[local-name()='include']";
     xmlNode *xml = pcmk__xml_parse(contents);
 
-    crm_foreach_xpath_result(xml, search, append_href, list);
+    pcmk__xpath_foreach_result(xml->doc, search, append_href, list);
     pcmk__xml_free(xml);
 }
 
