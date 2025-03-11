@@ -1023,7 +1023,7 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
         return NULL;
     }
 
-    if (pcmk__tracking_xml_changes(node, FALSE)) {
+    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)) {
         const char *old = crm_element_value(node, name);
 
         if (old == NULL || value == NULL || strcmp(old, value) != 0) {

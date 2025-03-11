@@ -106,21 +106,6 @@ pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
     return true;
 }
 
-bool
-pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
-{
-    if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
-        return FALSE;
-    } else if (!pcmk_is_set(((xml_doc_private_t *)xml->doc->_private)->flags,
-                            pcmk__xf_tracking)) {
-        return FALSE;
-    } else if (lazy && !pcmk_is_set(((xml_doc_private_t *)xml->doc->_private)->flags,
-                                    pcmk__xf_lazy)) {
-        return FALSE;
-    }
-    return TRUE;
-}
-
 void
 pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags)
 {
@@ -238,7 +223,7 @@ mark_xml_tree_dirty_created(xmlNode *xml)
 {
     pcmk__assert(xml != NULL);
 
-    if (!pcmk__tracking_xml_changes(xml, false)) {
+    if (!pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking)) {
         // Tracking is disabled for entire document
         return;
     }
@@ -344,7 +329,7 @@ new_private_data(xmlNode *node, void *user_data)
             return true;
     }
 
-    if (pcmk__tracking_xml_changes(node, false)) {
+    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)) {
         pcmk__mark_xml_node_dirty(node);
     }
     return true;
@@ -804,7 +789,7 @@ free_xml_with_position(xmlNode *node, int position)
         return;
     }
 
-    if ((doc != NULL) && pcmk__tracking_xml_changes(node, false)
+    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)
         && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
 
         xml_doc_private_t *docpriv = doc->_private;
@@ -1270,7 +1255,13 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
                                   old_value);
 
             } else if ((old_pos != new_pos)
-                       && !pcmk__tracking_xml_changes(new_xml, TRUE)) {
+                       && !pcmk__xml_doc_all_flags_set(new_xml->doc,
+                                                       pcmk__xf_lazy
+                                                       |pcmk__xf_tracking)) {
+                /* pcmk__xf_tracking is always set by xml_calculate_changes()
+                 * before this function is called, so only the pcmk__xf_lazy
+                 * check is truly relevant.
+                 */
                 mark_attr_moved(new_xml, (const char *) old_xml->name,
                                 old_attr, new_attr, old_pos, new_pos);
             }
