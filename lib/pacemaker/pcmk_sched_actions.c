@@ -12,7 +12,9 @@
 #include <stdbool.h>                        // bool, true, false
 #include <stdio.h>
 #include <sys/param.h>
+
 #include <glib.h>
+#include <libxml/tree.h>                    // xmlNode
 
 #include <crm/lrmd_internal.h>
 #include <crm/common/scheduler_internal.h>
@@ -1947,7 +1949,8 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
             xmlNode *history = NULL;
 
             xpath = crm_strdup_printf(XPATH_NODE_HISTORY, node->priv->name);
-            history = get_xpath_object(xpath, scheduler->input, LOG_NEVER);
+            history = pcmk__xpath_find_one(scheduler->input->doc, xpath,
+                                           LOG_NEVER);
             free(xpath);
 
             process_node_history(node, history);

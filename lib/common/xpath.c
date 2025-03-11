@@ -8,13 +8,15 @@
  */
 
 #include <crm_internal.h>
+#include <stdint.h>                     // uint8_t
 #include <stdio.h>
 #include <string.h>
+
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
+
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
-
-#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 /*!
  * \internal
@@ -182,6 +184,84 @@ pcmk__xpath_foreach_result(xmlDoc *doc, const char *path,
         }
     }
     xmlXPathFreeObject(xpath_obj);
+}
+
+/*!
+ * \internal
+ * \brief Search an XML document using an XPath expression and get result node
+ *
+ * This function requires a unique result node from evaluating the XPath
+ * expression. If there are multiple result nodes or no result nodes, it returns
+ * \c NULL.
+ *
+ * \param[in] doc    XML document to search
+ * \param[in] path   XPath expression to evaluate in the context of \p doc
+ * \param[in] level  Log level for errors
+ *
+ * \return Result node from evaluating \p path if unique, or \c NULL otherwise
+ */
+xmlNode *
+pcmk__xpath_find_one(xmlDoc *doc, const char *path, uint8_t level)
+{
+    int num_results = 0;
+    xmlNode *result = NULL;
+    xmlXPathObject *xpath_obj = NULL;
+    const xmlNode *root = NULL;
+    const char *root_name = "(unknown)";
+
+    CRM_CHECK((doc != NULL) && (path != NULL), goto done);
+
+    xpath_obj = pcmk__xpath_search(doc, path);
+    num_results = pcmk__xpath_num_results(xpath_obj);
+
+    if (num_results == 1) {
+        result = pcmk__xpath_result(xpath_obj, 0);
+        goto done;
+    }
+
+    if (level >= LOG_NEVER) {
+        // For no matches or multiple matches, the rest is just logging
+        goto done;
+    }
+
+    root = xmlDocGetRootElement(doc);
+    if (root != NULL) {
+        root_name = (const char *) root->name;
+    }
+
+    if (num_results < 1) {
+        do_crm_log(level, "No match for %s in <%s>", path, root_name);
+
+        if (root != NULL) {
+            crm_log_xml_explicit(root, "no-match");
+        }
+        goto done;
+    }
+
+    do_crm_log(level, "Multiple matches for %s in <%s>", path, root_name);
+
+    for (int i = 0; i < num_results; i++) {
+        xmlNode *match = pcmk__xpath_result(xpath_obj, i);
+        xmlChar *match_path = NULL;
+
+        if (match == NULL) {
+            CRM_LOG_ASSERT(match != NULL);
+            continue;
+        }
+
+        match_path = xmlGetNodePath(match);
+        do_crm_log(level, "%s[%d] = %s",
+                   path, i, pcmk__s((const char *) match_path, "(unknown)"));
+        free(match_path);
+    }
+
+    if (root != NULL) {
+        crm_log_xml_explicit(root, "multiple-matches");
+    }
+
+done:
+    xmlXPathFreeObject(xpath_obj);
+    return result;
 }
 
 xmlNode *

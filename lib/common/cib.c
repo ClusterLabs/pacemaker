@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2024 the Pacemaker project contributors
+ * Later changes copyright 2008-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -171,7 +171,8 @@ pcmk_cib_parent_name_for(const char *element_name)
 xmlNode *
 pcmk_find_cib_element(xmlNode *cib, const char *element_name)
 {
-    return get_xpath_object(pcmk_cib_xpath_for(element_name), cib, LOG_TRACE);
+    return pcmk__xpath_find_one(cib->doc, pcmk_cib_xpath_for(element_name),
+                                LOG_TRACE);
 }
 
 /*!

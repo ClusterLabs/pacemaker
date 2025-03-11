@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include <libxml/tree.h>
+#include <libxml/tree.h>                // xmlNode, etc.
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
@@ -326,7 +326,8 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                   user);
 
     } else if (docpriv->acls == NULL) {
-        xmlNode *acls = get_xpath_object("//" PCMK_XE_ACLS, source, LOG_NEVER);
+        xmlNode *acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
+                                             LOG_NEVER);
 
         pcmk__str_update(&docpriv->user, user);
 

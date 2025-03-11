@@ -18,6 +18,7 @@
 #include <sys/types.h>
 
 #include <glib.h>
+#include <libxml/tree.h>            // xmlNode
 #include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
@@ -724,8 +725,9 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
     if (rc == 0) {
         xmlNode *op = NULL;
-        xmlNode *reply = get_xpath_object("//" PCMK__XE_ST_HISTORY, output,
-                                          LOG_NEVER);
+        xmlNode *reply = pcmk__xpath_find_one(output->doc,
+                                              "//" PCMK__XE_ST_HISTORY,
+                                              LOG_NEVER);
 
         for (op = pcmk__xe_first_child(reply, NULL, NULL, NULL); op != NULL;
              op = pcmk__xe_next(op, NULL)) {
@@ -1388,7 +1390,7 @@ static xmlNode *
 get_event_data_xml(xmlNode *msg, const char *ntype)
 {
     char *data_addr = crm_strdup_printf("//%s", ntype);
-    xmlNode *data = get_xpath_object(data_addr, msg, LOG_DEBUG);
+    xmlNode *data = pcmk__xpath_find_one(msg->doc, data_addr, LOG_DEBUG);
 
     free(data_addr);
     return data;

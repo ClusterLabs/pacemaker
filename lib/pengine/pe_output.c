@@ -11,6 +11,8 @@
 
 #include <stdint.h>
 
+#include <libxml/tree.h>                    // xmlNode
+
 #include <crm/common/xml_internal.h>
 #include <crm/common/output.h>
 #include <crm/common/scheduler_internal.h>
@@ -200,7 +202,8 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
 static const char *
 get_cluster_stack(pcmk_scheduler_t *scheduler)
 {
-    xmlNode *stack = get_xpath_object(XPATH_STACK, scheduler->input, LOG_DEBUG);
+    xmlNode *stack = pcmk__xpath_find_one(scheduler->input->doc, XPATH_STACK,
+                                          LOG_DEBUG);
 
     if (stack != NULL) {
         return crm_element_value(stack, PCMK_XA_VALUE);
@@ -418,8 +421,8 @@ cluster_summary(pcmk__output_t *out, va_list args) {
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_dc)) {
-        xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
-                                               scheduler->input, LOG_DEBUG);
+        xmlNode *dc_version = pcmk__xpath_find_one(scheduler->input->doc,
+                                                   XPATH_DC_VERSION, LOG_DEBUG);
         const char *dc_version_s = dc_version?
                                    crm_element_value(dc_version, PCMK_XA_VALUE)
                                    : NULL;
@@ -494,8 +497,8 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
     /* Always print DC if none, even if not requested */
     if ((scheduler->dc_node == NULL)
         || pcmk_is_set(section_opts, pcmk_section_dc)) {
-        xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
-                                               scheduler->input, LOG_DEBUG);
+        xmlNode *dc_version = pcmk__xpath_find_one(scheduler->input->doc,
+                                                   XPATH_DC_VERSION, LOG_DEBUG);
         const char *dc_version_s = dc_version?
                                    crm_element_value(dc_version, PCMK_XA_VALUE)
                                    : NULL;
