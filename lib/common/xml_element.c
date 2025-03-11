@@ -754,7 +754,7 @@ replace_node(xmlNode *old, xmlNode *new)
     // May be unnecessary but avoids slight changes to some test outputs
     pcmk__xml_tree_foreach(new, pcmk__xml_reset_node_flags, NULL);
 
-    if (xml_tracking_changes(new)) {
+    if (pcmk__xml_doc_all_flags_set(new->doc, pcmk__xf_tracking)) {
         // Replaced sections may have included relevant ACLs
         pcmk__apply_acl(new);
     }

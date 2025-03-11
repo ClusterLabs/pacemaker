@@ -435,9 +435,8 @@ xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enf
 
 bool xml_tracking_changes(xmlNode * xml)
 {
-    return (xml != NULL) && (xml->doc != NULL) && (xml->doc->_private != NULL)
-           && pcmk_is_set(((xml_doc_private_t *)(xml->doc->_private))->flags,
-                          pcmk__xf_tracking);
+    return (xml != NULL)
+           && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking);
 }
 
 bool xml_document_dirty(xmlNode *xml) 
@@ -1489,7 +1488,7 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
                               pcmk__str_none),
               return);
 
-    if(xml_tracking_changes(new_xml) == FALSE) {
+    if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
         xml_track_changes(new_xml, NULL, NULL, FALSE);
     }
 
