@@ -184,48 +184,6 @@ pcmk__xpath_foreach_result(xmlDoc *doc, const char *path,
     xmlXPathFreeObject(xpath_obj);
 }
 
-/*!
- * \brief Run a supplied function for each result of an xpath search
- *
- * \param[in,out] xml        XML to search
- * \param[in]     xpath      XPath search string
- * \param[in]     helper     Function to call for each result
- * \param[in,out] user_data  Data to pass to supplied function
- *
- * \note The helper function will be passed the XML node of the result,
- *       and the supplied user_data. This function does not otherwise
- *       use user_data.
- */
-void
-crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
-                         void (*helper)(xmlNode*, void*), void *user_data)
-{
-    xmlXPathObject *xpathObj = NULL;
-    int nresults = 0;
-
-    CRM_CHECK(xml != NULL, return);
-
-    xpathObj = pcmk__xpath_search(xml->doc, xpath);
-    nresults = pcmk__xpath_num_results(xpathObj);
-
-    for (int i = 0; i < nresults; i++) {
-        xmlNode *result = pcmk__xpath_result(xpathObj, i);
-
-        CRM_LOG_ASSERT(result != NULL);
-
-        if (result != NULL) {
-            result = pcmk__xpath_match_element(result);
-
-            CRM_LOG_ASSERT(result != NULL);
-
-            if (result != NULL) {
-                (*helper)(result, user_data);
-            }
-        }
-    }
-    xmlXPathFreeObject(xpathObj);
-}
-
 xmlNode *
 get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
 {
@@ -519,6 +477,36 @@ dedupXpathResults(xmlXPathObjectPtr xpathObj)
             }
         }
     }
+}
+
+void
+crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
+                         void (*helper)(xmlNode*, void*), void *user_data)
+{
+    xmlXPathObject *xpathObj = NULL;
+    int nresults = 0;
+
+    CRM_CHECK(xml != NULL, return);
+
+    xpathObj = pcmk__xpath_search(xml->doc, xpath);
+    nresults = pcmk__xpath_num_results(xpathObj);
+
+    for (int i = 0; i < nresults; i++) {
+        xmlNode *result = pcmk__xpath_result(xpathObj, i);
+
+        CRM_LOG_ASSERT(result != NULL);
+
+        if (result != NULL) {
+            result = pcmk__xpath_match_element(result);
+
+            CRM_LOG_ASSERT(result != NULL);
+
+            if (result != NULL) {
+                (*helper)(result, user_data);
+            }
+        }
+    }
+    xmlXPathFreeObject(xpathObj);
 }
 
 // LCOV_EXCL_STOP
