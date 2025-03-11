@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,7 @@
 #include <stdio.h>                      // NULL
 
 #include <libxml/tree.h>                // xmlDoc, xmlNode, etc.
+#include <libxml/xmlstring.h>           // xmlChar
 
 #include "crmcommon_private.h"
 
@@ -32,7 +33,7 @@ pcmk__xc_create(xmlDoc *doc, const char *content)
     // Pacemaker typically assumes every xmlNode has a doc
     pcmk__assert(doc != NULL);
 
-    node = xmlNewDocComment(doc, (pcmkXmlStr) content);
+    node = xmlNewDocComment(doc, (const xmlChar *) content);
     pcmk__mem_assert(node);
     pcmk__xml_new_private_data(node);
     return node;

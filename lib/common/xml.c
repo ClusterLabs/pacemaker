@@ -20,7 +20,7 @@
 #include <glib.h>                       // gboolean, GString
 #include <libxml/parser.h>              // xmlCleanupParser()
 #include <libxml/tree.h>                // xmlNode, etc.
-#include <libxml/xmlstring.h>           // xmlGetUTF8Char()
+#include <libxml/xmlstring.h>           // xmlChar, xmlGetUTF8Char()
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -28,7 +28,7 @@
 #include "crmcommon_private.h"
 
 //! libxml2 supports only XML version 1.0, at least as of libxml2-2.12.5
-#define XML_VERSION ((pcmkXmlStr) "1.0")
+#define XML_VERSION ((const xmlChar *) "1.0")
 
 /*!
  * \internal
@@ -581,7 +581,7 @@ pcmk__xml_is_name_start_char(const char *utf8, int *len)
     *len = 4;
 
     // Note: xmlGetUTF8Char() assumes a 32-bit int
-    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    c = xmlGetUTF8Char((const xmlChar *) utf8, len);
     if (c < 0) {
         GString *buf = g_string_sized_new(32);
 
@@ -642,7 +642,7 @@ pcmk__xml_is_name_char(const char *utf8, int *len)
     *len = 4;
 
     // Note: xmlGetUTF8Char() assumes a 32-bit int
-    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    c = xmlGetUTF8Char((const xmlChar *) utf8, len);
     if (c < 0) {
         GString *buf = g_string_sized_new(32);
 
@@ -1146,7 +1146,7 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Reset flags (so the attribute doesn't appear as newly created)
-    attr = xmlHasProp(new_xml, (pcmkXmlStr) attr_name);
+    attr = xmlHasProp(new_xml, (const xmlChar *) attr_name);
     nodepriv = attr->_private;
     nodepriv->flags = 0;
 

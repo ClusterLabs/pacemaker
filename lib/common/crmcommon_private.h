@@ -20,6 +20,7 @@
 
 #include <glib.h>           // G_GNUC_INTERNAL, G_GNUC_PRINTF, gchar, etc.
 #include <libxml/tree.h>    // xmlNode, xmlAttr
+#include <libxml/xmlstring.h>           // xmlChar
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
 
 #include <crm/common/ipc.h>             // pcmk_ipc_api_t, crm_ipc_t, etc.
@@ -29,7 +30,6 @@
 #include <crm/common/output_internal.h> // pcmk__output_t
 #include <crm/common/results.h>         // crm_exit_t
 #include <crm/common/rules.h>           // pcmk_rule_input_t
-#include <crm/common/xml.h>             // pcmkXmlStr
 #include <crm/common/xml_internal.h>    // enum xml_private_flags
 
 #ifdef __cplusplus

@@ -17,6 +17,7 @@
 #include <stdarg.h>
 
 #include <libxml/tree.h>                // xmlNode, etc.
+#include <libxml/xmlstring.h>           // xmlChar
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
@@ -764,7 +765,7 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name,
      */
 
     if (attr_name != NULL) {
-        xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) attr_name);
+        xmlAttr *attr = xmlHasProp(xml, (const xmlChar *) attr_name);
 
         if ((attr != NULL) && (mode == pcmk__xf_acl_create)) {
             mode = pcmk__xf_acl_write;
