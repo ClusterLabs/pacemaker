@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,7 @@ pcmk__is_privileged(const char *user)
 
 void pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user);
 
-bool pcmk__check_acl(xmlNode *xml, const char *name,
+bool pcmk__check_acl(xmlNode *xml, const char *attr_name,
                      enum xml_private_flags mode);
 
 #ifdef __cplusplus
