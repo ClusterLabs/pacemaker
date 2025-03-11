@@ -14,7 +14,7 @@
 #include <crm/common/xml.h>
 #include <pacemaker.h>
 
-#include <libxml/xpath.h>                   // xmlXPathObject
+#include <libxml/xpath.h>                   // xmlXPathObject, etc.
 
 static char *cib_path = NULL;
 
@@ -86,7 +86,7 @@ ticket_exists(void **state)
                                    "[@" PCMK_XA_ID "=\"ticketA\"]");
 
     assert_int_equal(pcmk__xpath_num_results(xpath_obj), 1);
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
     pcmk__xml_free(xml);
 }
 
@@ -121,7 +121,7 @@ multiple_tickets(void **state)
     ticket_node = pcmk__xpath_result(xpath_obj, 3);
     assert_string_equal(crm_element_value(ticket_node, PCMK_XA_ID), "ticketC");
 
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
     pcmk__xml_free(xml);
 }
 
@@ -142,7 +142,7 @@ duplicate_tickets(void **state)
                                    "[@" PCMK_XA_ID "=\"ticketC\"]");
 
     assert_int_equal(pcmk__xpath_num_results(xpath_obj), 2);
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
     pcmk__xml_free(xml);
 }
 

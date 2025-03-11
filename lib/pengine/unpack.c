@@ -14,7 +14,7 @@
 #include <time.h>
 
 #include <glib.h>
-#include <libxml/xpath.h>               // xmlXPathObject
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/services.h>
@@ -210,7 +210,7 @@ set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *scheduler)
         if (pcmk__xpath_num_results(result) > 0) {
             pcmk__set_scheduler_flags(scheduler, flag);
         }
-        freeXpathObject(result);
+        xmlXPathFreeObject(result);
     }
 }
 
@@ -3030,7 +3030,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
 
     search = pcmk__xpath_search(rsc->priv->scheduler->input->doc, xpath);
     result = (pcmk__xpath_num_results(search) == 0);
-    freeXpathObject(search);
+    xmlXPathFreeObject(search);
     free(xpath);
     return result;
 }

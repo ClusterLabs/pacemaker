@@ -15,7 +15,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 
-#include <libxml/xpath.h>               // xmlXPathObject
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <pacemaker-controld.h>
 
@@ -457,7 +457,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
             process_graph_event(rsc_op, node);
         }
     }
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 }
 
 void

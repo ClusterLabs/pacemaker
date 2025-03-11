@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <libxml/tree.h>
-#include <libxml/xpath.h>           // xmlXPathObject
+#include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -159,7 +159,7 @@ fencing_topology_init(void)
     xpathObj = pcmk__xpath_search(local_cib->doc, xpath);
     register_fencing_topology(xpathObj);
 
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 }
 
 #define XPATH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \

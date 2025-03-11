@@ -11,7 +11,7 @@
 #include <regex.h>
 
 #include <glib.h>
-#include <libxml/xpath.h>           // xmlXPathObject
+#include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -160,7 +160,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                         }
                     }
                 }
-                freeXpathObject(lrm_op_xpathObj);
+                xmlXPathFreeObject(lrm_op_xpathObj);
 
                 if (should_block) {
                     break;
@@ -170,7 +170,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
     }
 
     free(xml_name);
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 
     return should_block;
 }

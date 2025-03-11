@@ -19,7 +19,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_schedulerd.h>
 
-#include <libxml/xpath.h>               // xmlXPathObject
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <pacemaker-controld.h>
 
@@ -437,7 +437,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         crm_xml_add(xml, PCMK_XA_NAME, attr_name);
         crm_xml_add(xml, PCMK_XA_VALUE, attr_value);
     }
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 }
 
 static void

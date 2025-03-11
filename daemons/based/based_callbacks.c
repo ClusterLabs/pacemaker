@@ -22,7 +22,7 @@
 
 #include <glib.h>
 #include <libxml/tree.h>
-#include <libxml/xpath.h>               // xmlXPathObject
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -1027,7 +1027,7 @@ contains_config_change(xmlNode *diff)
         if (pcmk__xpath_num_results(xpathObj) > 0) {
             changed = true;
         }
-        freeXpathObject(xpathObj);
+        xmlXPathFreeObject(xpathObj);
     }
     return changed;
 }

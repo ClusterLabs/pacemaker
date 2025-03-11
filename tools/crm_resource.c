@@ -29,7 +29,7 @@
 #include <libgen.h>
 #include <time.h>
 
-#include <libxml/xpath.h>                   // xmlXPathObject
+#include <libxml/xpath.h>                   // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
@@ -302,7 +302,7 @@ build_constraint_list(xmlNode *root)
                                       (GCompareFunc) g_strcmp0);
     }
 
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
     return retval;
 }
 

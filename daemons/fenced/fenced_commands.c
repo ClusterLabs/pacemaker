@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #include <ctype.h>
 
-#include <libxml/xpath.h>               // xmlXPathObject
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
@@ -918,11 +918,11 @@ is_nodeid_required(xmlNode * xml)
                                "//" PCMK_XE_PARAMETER
                                "[@" PCMK_XA_NAME "='nodeid']");
     if (pcmk__xpath_num_results(xpath) <= 0) {
-        freeXpathObject(xpath);
+        xmlXPathFreeObject(xpath);
         return FALSE;
     }
 
-    freeXpathObject(xpath);
+    xmlXPathFreeObject(xpath);
     return TRUE;
 }
 
@@ -942,7 +942,7 @@ read_action_metadata(stonith_device_t *device)
     max = pcmk__xpath_num_results(xpath);
 
     if (max <= 0) {
-        freeXpathObject(xpath);
+        xmlXPathFreeObject(xpath);
         return;
     }
 
@@ -986,7 +986,7 @@ read_action_metadata(stonith_device_t *device)
         }
     }
 
-    freeXpathObject(xpath);
+    xmlXPathFreeObject(xpath);
 }
 
 static const char *
