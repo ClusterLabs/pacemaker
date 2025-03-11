@@ -11,7 +11,7 @@
 
 #include <sys/param.h>
 
-#include <libxml/xpath.h>                   // xmlXPathObject
+#include <libxml/xpath.h>                   // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -402,7 +402,7 @@ match_down_event(const char *target)
                 if (pcmk__xpath_num_results(xpath_ret) < 1) {
                     match = NULL;
                 }
-                freeXpathObject(xpath_ret);
+                xmlXPathFreeObject(xpath_ret);
             } else {
                 // Only actions that were actually started can match
                 match = NULL;

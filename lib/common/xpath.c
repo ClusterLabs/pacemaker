@@ -264,7 +264,7 @@ crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
             }
         }
     }
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 }
 
 xmlNode *
@@ -326,7 +326,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
         }
     }
 
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
     free(nodePath);
 
     return result;
