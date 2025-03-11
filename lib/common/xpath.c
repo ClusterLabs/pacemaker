@@ -264,71 +264,6 @@ done:
     return result;
 }
 
-xmlNode *
-get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
-{
-    int max;
-    xmlNode *result = NULL;
-    xmlXPathObject *xpathObj = NULL;
-    char *nodePath = NULL;
-    char *matchNodePath = NULL;
-
-    if (xpath == NULL) {
-        return xml_obj;         /* or return NULL? */
-    }
-
-    xpathObj = pcmk__xpath_search(xml_obj->doc, xpath);
-    nodePath = (char *)xmlGetNodePath(xml_obj);
-    max = pcmk__xpath_num_results(xpathObj);
-
-    if (max == 0) {
-        if (error_level < LOG_NEVER) {
-            do_crm_log(error_level, "No match for %s in %s",
-                       xpath, pcmk__s(nodePath, "unknown path"));
-            crm_log_xml_explicit(xml_obj, "Unexpected Input");
-        }
-
-    } else if (max > 1) {
-        if (error_level < LOG_NEVER) {
-            int lpc = 0;
-
-            do_crm_log(error_level, "Too many matches for %s in %s",
-                       xpath, pcmk__s(nodePath, "unknown path"));
-
-            for (lpc = 0; lpc < max; lpc++) {
-                xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
-
-                CRM_LOG_ASSERT(match != NULL);
-                if (match != NULL) {
-                    match = pcmk__xpath_match_element(match);
-
-                    CRM_LOG_ASSERT(match != NULL);
-                    if (match != NULL) {
-                        matchNodePath = (char *) xmlGetNodePath(match);
-                        do_crm_log(error_level, "%s[%d] = %s",
-                                   xpath, lpc,
-                                   pcmk__s(matchNodePath,
-                                           "unrecognizable match"));
-                        free(matchNodePath);
-                    }
-                }
-            }
-            crm_log_xml_explicit(xml_obj, "Bad Input");
-        }
-
-    } else {
-        result = pcmk__xpath_result(xpathObj, 0);
-        if (result != NULL) {
-            result = pcmk__xpath_match_element(result);
-        }
-    }
-
-    xmlXPathFreeObject(xpathObj);
-    free(nodePath);
-
-    return result;
-}
-
 /*!
  * \internal
  * \brief Get an XPath string that matches an XML element as closely as possible
@@ -587,6 +522,71 @@ crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
         }
     }
     xmlXPathFreeObject(xpathObj);
+}
+
+xmlNode *
+get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
+{
+    int max;
+    xmlNode *result = NULL;
+    xmlXPathObject *xpathObj = NULL;
+    char *nodePath = NULL;
+    char *matchNodePath = NULL;
+
+    if (xpath == NULL) {
+        return xml_obj;         /* or return NULL? */
+    }
+
+    xpathObj = pcmk__xpath_search(xml_obj->doc, xpath);
+    nodePath = (char *)xmlGetNodePath(xml_obj);
+    max = pcmk__xpath_num_results(xpathObj);
+
+    if (max == 0) {
+        if (error_level < LOG_NEVER) {
+            do_crm_log(error_level, "No match for %s in %s",
+                       xpath, pcmk__s(nodePath, "unknown path"));
+            crm_log_xml_explicit(xml_obj, "Unexpected Input");
+        }
+
+    } else if (max > 1) {
+        if (error_level < LOG_NEVER) {
+            int lpc = 0;
+
+            do_crm_log(error_level, "Too many matches for %s in %s",
+                       xpath, pcmk__s(nodePath, "unknown path"));
+
+            for (lpc = 0; lpc < max; lpc++) {
+                xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
+
+                CRM_LOG_ASSERT(match != NULL);
+                if (match != NULL) {
+                    match = pcmk__xpath_match_element(match);
+
+                    CRM_LOG_ASSERT(match != NULL);
+                    if (match != NULL) {
+                        matchNodePath = (char *) xmlGetNodePath(match);
+                        do_crm_log(error_level, "%s[%d] = %s",
+                                   xpath, lpc,
+                                   pcmk__s(matchNodePath,
+                                           "unrecognizable match"));
+                        free(matchNodePath);
+                    }
+                }
+            }
+            crm_log_xml_explicit(xml_obj, "Bad Input");
+        }
+
+    } else {
+        result = pcmk__xpath_result(xpathObj, 0);
+        if (result != NULL) {
+            result = pcmk__xpath_match_element(result);
+        }
+    }
+
+    xmlXPathFreeObject(xpathObj);
+    free(nodePath);
+
+    return result;
 }
 
 // LCOV_EXCL_STOP
