@@ -108,6 +108,9 @@ typedef const xmlChar *pcmkXmlStr;
 //! \deprecated Do not use
 bool xml_tracking_changes(xmlNode *xml);
 
+//! \deprecated Do not use
+bool xml_document_dirty(xmlNode *xml);
+
 #ifdef __cplusplus
 }
 #endif

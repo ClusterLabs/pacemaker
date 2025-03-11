@@ -433,12 +433,6 @@ xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enf
     }
 }
 
-bool xml_document_dirty(xmlNode *xml) 
-{
-    return (xml != NULL)
-           && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_dirty);
-}
-
 /*!
  * \internal
  * \brief Return ordinal position of an XML node among its siblings
@@ -1667,6 +1661,13 @@ xml_tracking_changes(xmlNode *xml)
 {
     return (xml != NULL)
            && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking);
+}
+
+bool
+xml_document_dirty(xmlNode *xml)
+{
+    return (xml != NULL)
+           && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_dirty);
 }
 
 // LCOV_EXCL_STOP
