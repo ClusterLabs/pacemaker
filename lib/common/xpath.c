@@ -16,47 +16,6 @@
 
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
 
-/*
- * From xpath2.c
- *
- * All the elements returned by an XPath query are pointers to
- * elements from the tree *except* namespace nodes where the XPath
- * semantic is different from the implementation in libxml2 tree.
- * As a result when a returned node set is freed when
- * xmlXPathFreeObject() is called, that routine must check the
- * element type. But node from the returned set may have been removed
- * by xmlNodeSetContent() resulting in access to freed data.
- *
- * This can be exercised by running
- *       valgrind xpath2 test3.xml '//discarded' discarded
- *
- * There is 2 ways around it:
- *   - make a copy of the pointers to the nodes from the result set
- *     then call xmlXPathFreeObject() and then modify the nodes
- * or
- * - remove the references from the node set, if they are not
-       namespace nodes, before calling xmlXPathFreeObject().
- */
-void
-freeXpathObject(xmlXPathObjectPtr xpathObj)
-{
-    int max = pcmk__xpath_num_results(xpathObj);
-
-    if (xpathObj == NULL) {
-        return;
-    }
-
-    for (int lpc = 0; lpc < max; lpc++) {
-        if (xpathObj->nodesetval->nodeTab[lpc] && xpathObj->nodesetval->nodeTab[lpc]->type != XML_NAMESPACE_DECL) {
-            xpathObj->nodesetval->nodeTab[lpc] = NULL;
-        }
-    }
-
-    /* _Now_ it's safe to free it */
-    xmlXPathFreeObject(xpathObj);
-}
-
-
 /*!
  * \internal
  * \brief Get a node from the result set of evaluating an XPath expression
@@ -504,6 +463,25 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
            crm_warn("Unsupported XPath match type %d (bug?)", match->type);
            return NULL;
     }
+}
+
+void
+freeXpathObject(xmlXPathObjectPtr xpathObj)
+{
+    int max = pcmk__xpath_num_results(xpathObj);
+
+    if (xpathObj == NULL) {
+        return;
+    }
+
+    for (int lpc = 0; lpc < max; lpc++) {
+        if (xpathObj->nodesetval->nodeTab[lpc] && xpathObj->nodesetval->nodeTab[lpc]->type != XML_NAMESPACE_DECL) {
+            xpathObj->nodesetval->nodeTab[lpc] = NULL;
+        }
+    }
+
+    /* _Now_ it's safe to free it */
+    xmlXPathFreeObject(xpathObj);
 }
 
 // LCOV_EXCL_STOP
