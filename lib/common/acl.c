@@ -707,7 +707,6 @@ xml_acl_enabled(const xmlNode *xml)
 bool
 pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
 {
-    xmlNode *parent = xml;
     xml_doc_private_t *docpriv = NULL;
     GString *xpath = NULL;
 
@@ -742,20 +741,25 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
      * - Creating a child requires write permissions for the parent
      */
 
-    if (name) {
+    if (name != NULL) {
         xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) name);
 
-        if (attr && mode == pcmk__xf_acl_create) {
+        if ((attr != NULL) && (mode == pcmk__xf_acl_create)) {
             mode = pcmk__xf_acl_write;
         }
     }
 
-    while (parent && parent->_private) {
-        xml_node_private_t *nodepriv = parent->_private;
+    for (const xmlNode *parent = xml;
+         (parent != NULL) && (parent->_private != NULL);
+         parent = parent->parent) {
+
+        const xml_node_private_t *nodepriv = parent->_private;
+
         if (test_acl_mode(nodepriv->flags, mode)) {
             return true;
+        }
 
-        } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
+        if (pcmk_is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
             pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
 
             pcmk__if_tracing({}, return false);
@@ -773,7 +777,6 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
             g_string_free(xpath, TRUE);
             return false;
         }
-        parent = parent->parent;
     }
 
     pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
