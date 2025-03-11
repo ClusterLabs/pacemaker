@@ -33,7 +33,6 @@ extern "C" {
  * Searching & Modifying
  */
 
-bool xml_tracking_changes(xmlNode * xml);
 bool xml_document_dirty(xmlNode *xml);
 void xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls);
 void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
