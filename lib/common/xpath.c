@@ -120,43 +120,6 @@ pcmk__xpath_match_element(xmlNode *match)
     }
 }
 
-void
-dedupXpathResults(xmlXPathObjectPtr xpathObj)
-{
-    int max = pcmk__xpath_num_results(xpathObj);
-
-    if (xpathObj == NULL) {
-        return;
-    }
-
-    for (int lpc = 0; lpc < max; lpc++) {
-        xmlNode *xml = NULL;
-        gboolean dedup = FALSE;
-
-        if (xpathObj->nodesetval->nodeTab[lpc] == NULL) {
-            continue;
-        }
-
-        xml = xpathObj->nodesetval->nodeTab[lpc]->parent;
-
-        for (; xml; xml = xml->parent) {
-            int lpc2 = 0;
-
-            for (lpc2 = 0; lpc2 < max; lpc2++) {
-                if (xpathObj->nodesetval->nodeTab[lpc2] == xml) {
-                    xpathObj->nodesetval->nodeTab[lpc] = NULL;
-                    dedup = TRUE;
-                    break;
-                }
-            }
-
-            if (dedup) {
-                break;
-            }
-        }
-    }
-}
-
 /*!
  * \internal
  * \brief Search an XML document using an XPath expression
@@ -482,6 +445,43 @@ freeXpathObject(xmlXPathObjectPtr xpathObj)
 
     /* _Now_ it's safe to free it */
     xmlXPathFreeObject(xpathObj);
+}
+
+void
+dedupXpathResults(xmlXPathObjectPtr xpathObj)
+{
+    int max = pcmk__xpath_num_results(xpathObj);
+
+    if (xpathObj == NULL) {
+        return;
+    }
+
+    for (int lpc = 0; lpc < max; lpc++) {
+        xmlNode *xml = NULL;
+        gboolean dedup = FALSE;
+
+        if (xpathObj->nodesetval->nodeTab[lpc] == NULL) {
+            continue;
+        }
+
+        xml = xpathObj->nodesetval->nodeTab[lpc]->parent;
+
+        for (; xml; xml = xml->parent) {
+            int lpc2 = 0;
+
+            for (lpc2 = 0; lpc2 < max; lpc2++) {
+                if (xpathObj->nodesetval->nodeTab[lpc2] == xml) {
+                    xpathObj->nodesetval->nodeTab[lpc] = NULL;
+                    dedup = TRUE;
+                    break;
+                }
+            }
+
+            if (dedup) {
+                break;
+            }
+        }
+    }
 }
 
 // LCOV_EXCL_STOP
