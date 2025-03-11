@@ -705,7 +705,8 @@ xml_acl_enabled(const xmlNode *xml)
 }
 
 bool
-pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
+pcmk__check_acl(xmlNode *xml, const char *attr_name,
+                enum xml_private_flags mode)
 {
     xml_doc_private_t *docpriv = NULL;
 
@@ -724,8 +725,8 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
             {
                 GString *xpath = pcmk__element_xpath(xml);
 
-                if (name != NULL) {
-                    pcmk__g_strcat(xpath, "[@", name, "]", NULL);
+                if (attr_name != NULL) {
+                    pcmk__g_strcat(xpath, "[@", attr_name, "]", NULL);
                 }
 
                 qb_log_from_external_source(__func__, __FILE__,
@@ -746,8 +747,8 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
      * - Creating a child requires write permissions for the parent
      */
 
-    if (name != NULL) {
-        xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) name);
+    if (attr_name != NULL) {
+        xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) attr_name);
 
         if ((attr != NULL) && (mode == pcmk__xf_acl_create)) {
             mode = pcmk__xf_acl_write;
@@ -771,8 +772,8 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
                 {
                     GString *xpath = pcmk__element_xpath(xml);
 
-                    if (name != NULL) {
-                        pcmk__g_strcat(xpath, "[@", name, "]", NULL);
+                    if (attr_name != NULL) {
+                        pcmk__g_strcat(xpath, "[@", attr_name, "]", NULL);
                     }
 
                     qb_log_from_external_source(__func__, __FILE__,
@@ -796,8 +797,8 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         {
             GString *xpath = pcmk__element_xpath(xml);
 
-            if (name != NULL) {
-                pcmk__g_strcat(xpath, "[@", name, "]", NULL);
+            if (attr_name != NULL) {
+                pcmk__g_strcat(xpath, "[@", attr_name, "]", NULL);
             }
 
             qb_log_from_external_source(__func__, __FILE__,
