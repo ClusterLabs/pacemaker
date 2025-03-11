@@ -29,9 +29,6 @@ extern "C" {
  * \ingroup core
  */
 
-typedef const xmlChar *pcmkXmlStr;
-
-
 /*
  * Searching & Modifying
  */
