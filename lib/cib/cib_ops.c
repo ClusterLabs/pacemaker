@@ -21,7 +21,7 @@
 
 #include <glib.h>
 #include <libxml/tree.h>
-#include <libxml/xpath.h>               // xmlXPathObject
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
@@ -808,6 +808,6 @@ cib_process_xpath(const char *op, int options, const char *section,
         }
     }
 
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
     return rc;
 }

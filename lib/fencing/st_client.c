@@ -18,7 +18,7 @@
 #include <sys/types.h>
 
 #include <glib.h>
-#include <libxml/xpath.h>           // xmlXPathObject
+#include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
@@ -582,7 +582,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
             }
         }
 
-        freeXpathObject(xpathObj);
+        xmlXPathFreeObject(xpathObj);
     }
 
     pcmk__xml_free(output);
@@ -2441,7 +2441,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
     max = pcmk__xpath_num_results(xpath);
 
     if (max <= 0) {
-        freeXpathObject(xpath);
+        xmlXPathFreeObject(xpath);
         return;
     }
 
@@ -2466,7 +2466,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
         }
     }
 
-    freeXpathObject(xpath);
+    xmlXPathFreeObject(xpath);
 }
 
 /*!

@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <libxml/xpath.h>   // xmlXPathObject
+#include <libxml/xpath.h>   // xmlXPathObject, etc.
 
 #include <crm_resource.h>
 
@@ -512,7 +512,7 @@ done:
     if (buf != NULL) {
         g_string_free(buf, TRUE);
     }
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
     crm_time_free(now);
     return rc;
 }

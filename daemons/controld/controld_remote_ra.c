@@ -16,7 +16,7 @@
 #include <crm/lrmd_internal.h>
 #include <crm/services.h>
 
-#include <libxml/xpath.h>               // xmlXPathObject
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <pacemaker-controld.h>
 
@@ -1394,7 +1394,7 @@ remote_ra_process_pseudo(xmlNode *xml)
             }
         }
     }
-    freeXpathObject(search);
+    xmlXPathFreeObject(search);
 }
 
 static void
@@ -1474,7 +1474,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
                   PCMK_OPT_MAINTENANCE_MODE,
                   cnt, cnt_remote);
     }
-    freeXpathObject(search);
+    xmlXPathFreeObject(search);
 }
 
 gboolean

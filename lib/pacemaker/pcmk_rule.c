@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <libxml/xpath.h>           // xmlXPathObject
+#include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/cib/internal.h>
 #include <crm/common/cib.h>
@@ -62,7 +62,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     num_results = pcmk__xpath_num_results(xpath_obj);
 
     free(xpath);
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
 
     if (num_results == 0) {
         *error = "Rule not found";
@@ -81,7 +81,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     num_results = pcmk__xpath_num_results(xpath_obj);
 
     free(xpath);
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
 
     if (num_results != 1) {
         if (num_results == 0) {
@@ -104,7 +104,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     free(xpath);
 
     if (num_results == 0) {
-        freeXpathObject(xpath_obj);
+        xmlXPathFreeObject(xpath_obj);
 
         xpath = crm_strdup_printf(XPATH_NODE_RULE
                                   "//" PCMK_XE_DATE_EXPRESSION
@@ -119,7 +119,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
         free(xpath);
 
         if (num_results == 0) {
-            freeXpathObject(xpath_obj);
+            xmlXPathFreeObject(xpath_obj);
             *error = "Rule must either not use " PCMK_XE_DATE_SPEC ", or use "
                      PCMK_XE_DATE_SPEC " with " PCMK_XA_YEARS "=";
             return EOPNOTSUPP;
@@ -140,7 +140,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
         *error = "Error parsing rule";
     }
 
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
     return rc;
 }
 
