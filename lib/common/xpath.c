@@ -148,6 +148,43 @@ pcmk__xpath_search(xmlDoc *doc, const char *path)
 }
 
 /*!
+ * \internal
+ * \brief Run a supplied function for each result of an XPath search
+ *
+ * \param[in,out] doc        XML document to search
+ * \param[in]     path       XPath expression to evaluate in the context of
+ *                           \p doc
+ * \param[in]     fn         Function to call for each result XML element
+ * \param[in,out] user_data  Data to pass to \p fn
+ *
+ * \note This function processes the result node set in forward order. If \p fn
+ *       may free any part of any result node, then it is safer to process the
+ *       result node set in reverse order. (The node set is in document order.)
+ *       See comments in libxml's <tt>examples/xpath2.c</tt> file.
+ */
+void
+pcmk__xpath_foreach_result(xmlDoc *doc, const char *path,
+                           void (*fn)(xmlNode *, void *), void *user_data)
+{
+    xmlXPathObject *xpath_obj = NULL;
+    int num_results = 0;
+
+    CRM_CHECK((doc != NULL) && !pcmk__str_empty(path) && (fn != NULL), return);
+
+    xpath_obj = pcmk__xpath_search(doc, path);
+    num_results = pcmk__xpath_num_results(xpath_obj);
+
+    for (int i = 0; i < num_results; i++) {
+        xmlNode *result = pcmk__xpath_result(xpath_obj, i);
+
+        if (result != NULL) {
+            (*fn)(result, user_data);
+        }
+    }
+    xmlXPathFreeObject(xpath_obj);
+}
+
+/*!
  * \brief Run a supplied function for each result of an xpath search
  *
  * \param[in,out] xml        XML to search
