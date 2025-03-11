@@ -683,7 +683,6 @@ cib_process_xpath(const char *op, int options, const char *section,
     }
 
     num_results = pcmk__xpath_num_results(xpathObj);
-
     if (num_results < 1) {
         if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
             crm_debug("%s was already removed", section);
@@ -692,8 +691,10 @@ cib_process_xpath(const char *op, int options, const char *section,
             crm_debug("%s: %s does not exist", op, section);
             rc = -ENXIO;
         }
+        goto done;
+    }
 
-    } else if (is_query && (num_results > 1)) {
+    if (is_query && (num_results > 1)) {
         *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
     }
 
@@ -806,6 +807,7 @@ cib_process_xpath(const char *op, int options, const char *section,
         }
     }
 
+done:
     xmlXPathFreeObject(xpathObj);
     return rc;
 }
