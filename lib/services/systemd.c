@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 
+#include <stdio.h>                  // fopen(), NULL, etc.
 #include <sys/stat.h>
 #include <gio/gio.h>
 #include <services_private.h>
@@ -207,7 +208,7 @@ systemd_unit_extension(const char *name)
 }
 
 static char *
-systemd_service_name(const char *name, bool add_instance_name)
+systemd_unit_name(const char *name, bool add_instance_name)
 {
     const char *dot = NULL;
 
@@ -228,16 +229,10 @@ systemd_service_name(const char *name, bool add_instance_name)
 
     if (dot) {
         if (dot != name && *(dot-1) == '@') {
-            char *s = NULL;
-
-            if (asprintf(&s, "%.*spacemaker%s", (int) (dot-name), name, dot) == -1) {
-                /* If asprintf fails, just return name. */
-                return strdup(name);
-            }
-
-            return s;
+            return crm_strdup_printf("%.*spacemaker%s",
+                                     (int) (dot - name), name, dot);
         } else {
-            return strdup(name);
+            return pcmk__str_copy(name);
         }
 
     } else if (add_instance_name && *(name+strlen(name)-1) == '@') {
@@ -440,6 +435,10 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     DBusPendingCall *pending = NULL;
     char *name = NULL;
 
+    if (pcmk__str_empty(arg_name)) {
+        return EINVAL;
+    }
+
     if (!systemd_init()) {
         if (op != NULL) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
@@ -460,11 +459,10 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     pcmk__assert(msg != NULL);
 
     // Add the (expanded) unit name as the argument
-    name = systemd_service_name(arg_name,
-                                (op == NULL)
-                                || pcmk__str_eq(op->action,
-                                                PCMK_ACTION_META_DATA,
-                                                pcmk__str_none));
+    name = systemd_unit_name(arg_name,
+                             (op == NULL)
+                             || pcmk__str_eq(op->action, PCMK_ACTION_META_DATA,
+                                             pcmk__str_none));
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name,
                                             DBUS_TYPE_INVALID));
     free(name);
@@ -635,18 +633,19 @@ systemd_unit_listall(void)
     return units;
 }
 
-gboolean
+bool
 systemd_unit_exists(const char *name)
 {
     char *path = NULL;
     char *state = NULL;
+    int rc = false;
 
     /* Note: Makes a blocking dbus calls
      * Used by resources_find_service_class() when resource class=service
      */
     if ((invoke_unit_by_name(name, NULL, &path) != pcmk_rc_ok)
         || (path == NULL)) {
-        return FALSE;
+        goto done;
     }
 
     /* A successful LoadUnit is not sufficient to determine the unit's
@@ -655,13 +654,12 @@ systemd_unit_exists(const char *name)
      */
     state = systemd_get_property(path, "LoadState", NULL, NULL, NULL,
                                  DBUS_TIMEOUT_USE_DEFAULT);
+    rc = pcmk__str_any_of(state, "loaded", "masked", NULL);
+
+done:
     free(path);
-    if (pcmk__str_any_of(state, "loaded", "masked", NULL)) {
-        free(state);
-        return TRUE;
-    }
     free(state);
-    return FALSE;
+    return rc;
 }
 
 // @TODO Use XML string constants and maybe a real XML object
@@ -797,8 +795,6 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
     }
 }
 
-#define SYSTEMD_OVERRIDE_ROOT "/run/systemd/system/"
-
 /* When the cluster manages a systemd resource, we create a unit file override
  * to order the service "before" pacemaker. The "before" relationship won't
  * actually be used, since systemd won't ever start the resource -- we're
@@ -808,93 +804,167 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
  *
  * @TODO Add start timeout
  */
-#define SYSTEMD_OVERRIDE_TEMPLATE                           \
+#define SYSTEMD_UNIT_OVERRIDE_TEMPLATE                      \
     "[Unit]\n"                                              \
     "Description=Cluster Controlled %s\n"                   \
-    "Before=pacemaker.service pacemaker_remote.service\n"   \
+    "Before=pacemaker.service pacemaker_remote.service\n"
+
+#define SYSTEMD_SERVICE_OVERRIDE                            \
     "\n"                                                    \
     "[Service]\n"                                           \
     "Restart=no\n"
 
-// Temporarily use rwxr-xr-x umask when opening a file for writing
-static FILE *
-create_world_readable(const char *filename)
+/*!
+ * \internal
+ * \brief Get runtime drop-in directory path for a systemd unit
+ *
+ * \param[in] unit_name  Systemd unit (with extension)
+ *
+ * \return Drop-in directory path
+ */
+static GString *
+get_override_dir(const char *unit_name)
 {
-    mode_t orig_umask = umask(S_IWGRP | S_IWOTH);
-    FILE *fp = fopen(filename, "w");
+    GString *buf = g_string_sized_new(128);
 
-    umask(orig_umask);
-    return fp;
+    pcmk__g_strcat(buf, "/run/systemd/system/", unit_name, ".d", NULL);
+    return buf;
 }
 
-static void
-create_override_dir(const char *agent)
+/*!
+ * \internal
+ * \brief Append systemd override filename to a directory path
+ *
+ * \param[in,out] buf  Buffer containing directory path to append to
+ */
+static inline void
+append_override_basename(GString *buf)
 {
-    char *override_dir = crm_strdup_printf(SYSTEMD_OVERRIDE_ROOT
-                                           "/%s.service.d", agent);
-    int rc = pcmk__build_path(override_dir, 0755);
-
-    if (rc != pcmk_rc_ok) {
-        crm_warn("Could not create systemd override directory %s: %s",
-                 override_dir, pcmk_rc_str(rc));
-    }
-    free(override_dir);
+    g_string_append(buf, "/50-pacemaker.conf");
 }
 
-static char *
-get_override_filename(const char *agent)
-{
-    return crm_strdup_printf(SYSTEMD_OVERRIDE_ROOT
-                             "/%s.service.d/50-pacemaker.conf", agent);
-}
-
-static void
+/*!
+ * \internal
+ * \brief Create a runtime override file for a systemd unit
+ *
+ * The systemd daemon is then reloaded. This file does not survive a reboot.
+ *
+ * \param[in] agent    Systemd resource agent
+ * \param[in] timeout  Timeout for systemd daemon reload
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note Any configuration in \c /etc takes precedence over our drop-in.
+ * \todo Document this in Pacemaker Explained or Administration?
+ */
+static int
 systemd_create_override(const char *agent, int timeout)
 {
-    FILE *file_strm = NULL;
-    char *override_file = get_override_filename(agent);
+    char *unit_name = NULL;
+    GString *filename = NULL;
+    GString *override = NULL;
+    FILE *fp = NULL;
+    int fd = 0;
+    int rc = pcmk_rc_ok;
 
-    create_override_dir(agent);
+    unit_name = systemd_unit_name(agent, false);
+    CRM_CHECK(!pcmk__str_empty(unit_name),
+              rc = EINVAL; goto done);
 
-    /* Ensure the override file is world-readable. This is not strictly
-     * necessary, but it avoids a systemd warning in the logs.
-     */
-    file_strm = create_world_readable(override_file);
-    if (file_strm == NULL) {
-        crm_err("Cannot open systemd override file %s for writing",
-                override_file);
-    } else {
-        char *override = crm_strdup_printf(SYSTEMD_OVERRIDE_TEMPLATE, agent);
-
-        int rc = fprintf(file_strm, "%s\n", override);
-
-        free(override);
-        if (rc < 0) {
-            crm_perror(LOG_WARNING, "Cannot write to systemd override file %s",
-                       override_file);
-        }
-        fflush(file_strm);
-        fclose(file_strm);
-        systemd_daemon_reload(timeout);
+    filename = get_override_dir(unit_name);
+    rc = pcmk__build_path(filename->str, 0755);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not create systemd override directory %s: %s",
+                filename->str, pcmk_rc_str(rc));
+        goto done;
     }
 
-    free(override_file);
+    append_override_basename(filename);
+    fp = fopen(filename->str, "w");
+    if (fp == NULL) {
+        rc = errno;
+        crm_err("Cannot open systemd override file %s for writing: %s",
+                filename->str, pcmk_rc_str(rc));
+        goto done;
+    }
+
+    // Ensure the override file is world-readable (avoid systemd warning in log)
+    fd = fileno(fp);
+    if ((fd < 0) || (fchmod(fd, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH) < 0)) {
+        rc = errno;
+        crm_err("Failed to set permissions on systemd override file %s: %s",
+                filename->str, pcmk_rc_str(rc));
+        goto done;
+    }
+
+    override = g_string_sized_new(2 * sizeof(SYSTEMD_UNIT_OVERRIDE_TEMPLATE));
+    g_string_printf(override, SYSTEMD_UNIT_OVERRIDE_TEMPLATE, unit_name);
+    if (pcmk__ends_with_ext(unit_name, ".service")) {
+        g_string_append(override, SYSTEMD_SERVICE_OVERRIDE);
+    }
+
+    if (fputs(override->str, fp) == EOF) {
+        rc = EIO;
+        crm_err("Cannot write to systemd override file %s", filename->str);
+    }
+
+done:
+    if (fp != NULL) {
+        fclose(fp);
+    }
+
+    if (rc == pcmk_rc_ok) {
+        // @TODO Make sure the reload succeeds
+        systemd_daemon_reload(timeout);
+
+    } else if (fp != NULL) {
+        // File was created, so remove it
+        unlink(filename->str);
+    }
+
+    free(unit_name);
+
+    // coverity[check_after_deref] False positive
+    if (filename != NULL) {
+        g_string_free(filename, TRUE);
+    }
+    if (override != NULL) {
+        g_string_free(override, TRUE);
+    }
+    return rc;
 }
 
 static void
 systemd_remove_override(const char *agent, int timeout)
 {
-    char *override_file = get_override_filename(agent);
-    int rc = unlink(override_file);
+    char *unit_name = systemd_unit_name(agent, false);
+    GString *filename = NULL;
 
-    if (rc < 0) {
-        // Stop may be called when already stopped, which is fine
-        crm_perror(LOG_DEBUG, "Cannot remove systemd override file %s",
-                   override_file);
+    CRM_CHECK(!pcmk__str_empty(unit_name), goto done);
+
+    filename = get_override_dir(unit_name);
+    append_override_basename(filename);
+
+    if (unlink(filename->str) < 0) {
+        int rc = errno;
+
+        if (rc != ENOENT) {
+            // Stop may be called when already stopped, which is fine
+            crm_warn("Cannot remove systemd override file %s: %s",
+                     filename->str, pcmk_rc_str(rc));
+        }
+
     } else {
         systemd_daemon_reload(timeout);
     }
-    free(override_file);
+
+done:
+    free(unit_name);
+
+    // coverity[check_after_deref] False positive
+    if (filename != NULL) {
+        g_string_free(filename, TRUE);
+    }
 }
 
 /*!
@@ -978,8 +1048,20 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         return;
 
     } else if (pcmk__str_eq(op->action, PCMK_ACTION_START, pcmk__str_none)) {
+        int rc = pcmk_rc_ok;
+
         method = "StartUnit";
-        systemd_create_override(op->agent, op->timeout);
+        rc = systemd_create_override(op->agent, op->timeout);
+        if (rc != pcmk_rc_ok) {
+            services__format_result(op, pcmk_rc2ocf(rc), PCMK_EXEC_ERROR,
+                                    "Failed to create systemd override file "
+                                    "for %s",
+                                    pcmk__s(op->agent, "(unspecified)"));
+            if (!(op->synchronous)) {
+                services__finalize_async_op(op);
+            }
+            return;
+        }
 
     } else if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_none)) {
         method = "StopUnit";
@@ -1010,10 +1092,10 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
     /* (ss) */
     {
         const char *replace_s = "replace";
-        char *name = systemd_service_name(op->agent,
-                                          pcmk__str_eq(op->action,
-                                                       PCMK_ACTION_META_DATA,
-                                                       pcmk__str_none));
+        char *name = systemd_unit_name(op->agent,
+                                       pcmk__str_eq(op->action,
+                                                    PCMK_ACTION_META_DATA,
+                                                    pcmk__str_none));
 
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID));
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &replace_s, DBUS_TYPE_INVALID));
@@ -1081,7 +1163,7 @@ services__execute_systemd(svc_action_t *op)
 {
     pcmk__assert(op != NULL);
 
-    if ((op->action == NULL) || (op->agent == NULL)) {
+    if (pcmk__str_empty(op->action) || pcmk__str_empty(op->agent)) {
         services__set_result(op, PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR_FATAL,
                              "Bug in action caller");
         goto done;

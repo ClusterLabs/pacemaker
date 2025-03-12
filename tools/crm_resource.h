@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -77,7 +77,7 @@ int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_optio
 void cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out);
 void cli_resource_print_cts_constraints(pcmk_scheduler_t *scheduler);
 
-int cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
+int cli_resource_print(const pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
                        bool expanded);
 int cli_resource_print_operations(const char *rsc_id, const char *host_uname,
                                   bool active, pcmk_scheduler_t *scheduler);
