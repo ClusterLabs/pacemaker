@@ -133,13 +133,20 @@ pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags)
     }
 }
 
+/*!
+ * \internal
+ * \brief Set flags for an XML document
+ *
+ * \param[in,out] doc    XML document
+ * \param[in]     flags  Group of <tt>enum xml_private_flags</tt>
+ */
 void
-pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag)
+pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags)
 {
-    if (xml != NULL) {
-        xml_doc_private_t *docpriv = xml->doc->_private;
+    if (doc != NULL) {
+        xml_doc_private_t *docpriv = doc->_private;
 
-        pcmk__set_xml_flags(docpriv, flag);
+        pcmk__set_xml_flags(docpriv, flags);
     }
 }
 
@@ -147,7 +154,10 @@ pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag)
 void
 pcmk__mark_xml_node_dirty(xmlNode *xml)
 {
-    pcmk__set_xml_doc_flag(xml, pcmk__xf_dirty);
+    if (xml == NULL) {
+        return;
+    }
+    pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_dirty);
     pcmk__xml_set_parent_flags(xml, pcmk__xf_dirty);
 }
 
@@ -386,14 +396,18 @@ pcmk__xml_free_private_data(xmlNode *xml)
 void
 xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls) 
 {
+    if (xml == NULL) {
+        return;
+    }
+
     xml_accept_changes(xml);
     crm_trace("Tracking changes%s to %p", enforce_acls?" with ACLs":"", xml);
-    pcmk__set_xml_doc_flag(xml, pcmk__xf_tracking);
+    pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_tracking);
     if(enforce_acls) {
         if(acl_source == NULL) {
             acl_source = xml;
         }
-        pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_enabled);
+        pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_acl_enabled);
         pcmk__unpack_acl(acl_source, xml, user);
         pcmk__apply_acl(xml);
     }
@@ -812,7 +826,7 @@ free_xml_with_position(xmlNode *node, int position)
 
             docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
                                                   deleted_obj);
-            pcmk__set_xml_doc_flag(node, pcmk__xf_dirty);
+            pcmk__xml_doc_set_flags(node->doc, pcmk__xf_dirty);
         }
     }
     pcmk__xml_free_node(node);
@@ -1439,7 +1453,9 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 void
 xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    pcmk__set_xml_doc_flag(new_xml, pcmk__xf_lazy);
+    if (new_xml != NULL) {
+        pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_lazy);
+    }
     xml_calculate_changes(old_xml, new_xml);
 }
 

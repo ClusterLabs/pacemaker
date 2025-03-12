@@ -377,8 +377,11 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 void
 pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
 {
+    if (target == NULL) {
+        return;
+    }
     pcmk__unpack_acl(acl_source, target, user);
-    pcmk__set_xml_doc_flag(target, pcmk__xf_acl_enabled);
+    pcmk__xml_doc_set_flags(target->doc, pcmk__xf_acl_enabled);
     pcmk__apply_acl(target);
 }
 
@@ -721,7 +724,7 @@ xml_acl_enabled(const xmlNode *xml)
 #define check_acl_deny(xml, attr_name, prefix, user, mode) do {             \
         xmlNode *tree = xml;                                                \
                                                                             \
-        pcmk__set_xml_doc_flag(tree, pcmk__xf_acl_denied);                  \
+        pcmk__xml_doc_set_flags(tree->doc, pcmk__xf_acl_denied);            \
         pcmk__if_tracing(                                                   \
             {                                                               \
                 GString *xpath = pcmk__element_xpath(tree);                 \
