@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,7 +46,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
         return;
     }
 
-    if (attrd_shutting_down(false)) {
+    if (attrd_shutting_down()) {
         /* If we're shutting down, we want to continue responding to election
          * ops as long as we're a cluster member (because our vote may be
          * needed). Ignore all other messages.
@@ -129,7 +129,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
 static void
 attrd_cpg_destroy(gpointer unused)
 {
-    if (attrd_shutting_down(false)) {
+    if (attrd_shutting_down()) {
         crm_info("Disconnected from Corosync process group");
 
     } else {
@@ -275,17 +275,6 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
                    pcmk__s(node_xml_id, "unknown"));
         pcmk__str_update(&v->current, value);
         attrd_set_attr_flags(a, attrd_attr_changed);
-
-        if (pcmk__str_eq(host, attrd_cluster->priv->node_name, pcmk__str_casei)
-            && pcmk__str_eq(attr, PCMK__NODE_ATTR_SHUTDOWN, pcmk__str_none)) {
-
-            if (!pcmk__str_eq(value, "0", pcmk__str_null_matches)) {
-                attrd_set_requesting_shutdown();
-
-            } else {
-                attrd_clear_requesting_shutdown();
-            }
-        }
 
         // Write out new value or start dampening timer
         if (a->timeout_ms && a->timer) {
@@ -534,12 +523,35 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
                host, source, (uncache? "and" : "without"));
 
     g_hash_table_iter_init(&aIter, attributes);
-    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
-        if(g_hash_table_remove(a->values, host)) {
-            crm_debug("Removed %s[%s] for peer %s", a->id, host, source);
+    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) &a)) {
+        /* If the attribute won't be written to the CIB, we can drop the value
+         * now. Otherwise we need to set it NULL and wait for a notification
+         * that it was erased, because if there's no writer or the current
+         * writer fails to write it then leaves, we may become the writer and
+         * need to do it.
+         */
+        if (attrd_for_cib(a)) {
+            attribute_value_t *v = g_hash_table_lookup(a->values, host);
+
+            if ((v != NULL) && (v->current != NULL)) {
+                crm_debug("Removed %s[%s] (by setting NULL) for %s",
+                          a->id, host, source);
+                pcmk__str_update(&(v->current), NULL);
+                attrd_set_attr_flags(a, attrd_attr_changed);
+            }
+        } else if (g_hash_table_remove(a->values, host)) {
+            crm_debug("Removed %s[%s] immediately for %s",
+                      a->id, host, source);
         }
     }
 
+    if (attrd_election_won()) {
+        attrd_cib_erase_transient_attrs(host); // Wipe from CIB
+    } else {
+        attrd_start_election_if_needed(); // Make sure CIB gets updated
+    }
+
+    // Remove node from caches if requested
     if (uncache) {
         pcmk__purge_node_from_cache(host, 0);
         attrd_forget_node_xml_id(host);

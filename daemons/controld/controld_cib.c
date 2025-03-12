@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -278,30 +278,18 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
                                 "[not(@" PCMK_OPT_SHUTDOWN_LOCK ") "        \
                                     "or " PCMK_OPT_SHUTDOWN_LOCK "<%lld]"
 
-// Node's PCMK__XE_TRANSIENT_ATTRIBUTES section (name 1x)
-#define XPATH_NODE_ATTRS XPATH_NODE_STATE "/" PCMK__XE_TRANSIENT_ATTRIBUTES
-
-// Everything under PCMK__XE_NODE_STATE (name 1x)
-#define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"
-
-/* Unlocked history + transient attributes
- * (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x, name 1x)
- */
-#define XPATH_NODE_ALL_UNLOCKED XPATH_NODE_LRM_UNLOCKED "|" XPATH_NODE_ATTRS
-
 /*!
  * \internal
- * \brief Get the XPath and description of a node state section to be deleted
+ * \brief Get the XPath and description of resource history to be deleted
  *
- * \param[in]  uname    Desired node
- * \param[in]  section  Subsection of \c PCMK__XE_NODE_STATE to be deleted
- * \param[out] xpath    Where to store XPath of \p section
- * \param[out] desc     If not \c NULL, where to store description of \p section
+ * \param[in]  uname          Name of node to delete resource history for
+ * \param[in]  unlocked_only  If true, delete history of only unlocked resources
+ * \param[out] xpath          Where to store XPath for history deletion
+ * \param[out] desc           If not NULL, where to store loggable description
  */
 void
-controld_node_state_deletion_strings(const char *uname,
-                                     enum controld_section_e section,
-                                     char **xpath, char **desc)
+controld_node_history_deletion_strings(const char *uname, bool unlocked_only,
+                                       char **xpath, char **desc)
 {
     const char *desc_pre = NULL;
 
@@ -309,33 +297,13 @@ controld_node_state_deletion_strings(const char *uname,
     long long expire = (long long) time(NULL)
                        - controld_globals.shutdown_lock_limit;
 
-    switch (section) {
-        case controld_section_lrm:
-            *xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
-            desc_pre = "resource history";
-            break;
-        case controld_section_lrm_unlocked:
-            *xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
-                                       uname, uname, expire);
-            desc_pre = "resource history (other than shutdown locks)";
-            break;
-        case controld_section_attrs:
-            *xpath = crm_strdup_printf(XPATH_NODE_ATTRS, uname);
-            desc_pre = "transient attributes";
-            break;
-        case controld_section_all:
-            *xpath = crm_strdup_printf(XPATH_NODE_ALL, uname);
-            desc_pre = "all state";
-            break;
-        case controld_section_all_unlocked:
-            *xpath = crm_strdup_printf(XPATH_NODE_ALL_UNLOCKED,
-                                       uname, uname, expire, uname);
-            desc_pre = "all state (other than shutdown locks)";
-            break;
-        default:
-            // We called this function incorrectly
-            pcmk__assert(false);
-            break;
+    if (unlocked_only) {
+        *xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
+                                   uname, uname, expire);
+        desc_pre = "resource history (other than shutdown locks)";
+    } else {
+        *xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
+        desc_pre = "resource history";
     }
 
     if (desc != NULL) {
@@ -343,17 +311,17 @@ controld_node_state_deletion_strings(const char *uname,
     }
 }
 
+
 /*!
  * \internal
- * \brief Delete subsection of a node's CIB \c PCMK__XE_NODE_STATE
+ * \brief Delete a node's resource history from the CIB
  *
- * \param[in] uname    Desired node
- * \param[in] section  Subsection of \c PCMK__XE_NODE_STATE to delete
- * \param[in] options  CIB call options to use
+ * \param[in] uname          Desired node
+ * \param[in] unlocked_only  If true, delete history of only unlocked resources
+ * \param[in] options        CIB call options to use
  */
 void
-controld_delete_node_state(const char *uname, enum controld_section_e section,
-                           int options)
+controld_delete_node_history(const char *uname, bool unlocked_only, int options)
 {
     cib_t *cib = controld_globals.cib_conn;
     char *xpath = NULL;
@@ -362,8 +330,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 
     pcmk__assert((uname != NULL) && (cib != NULL));
 
-    controld_node_state_deletion_strings(uname, section, &xpath, &desc);
-
+    controld_node_history_deletion_strings(uname, unlocked_only, &xpath, &desc);
     cib__set_call_options(options, "node state deletion",
                           cib_xpath|cib_multiple);
     cib_rc = cib->cmds->remove(cib, xpath, NULL, options);
