@@ -253,8 +253,7 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
     if (docpriv != NULL) {
         pcmk__assert(docpriv->check == PCMK__XML_DOC_PRIVATE_MAGIC);
 
-        free(docpriv->user);
-        docpriv->user = NULL;
+        pcmk__str_update(&(docpriv->acl_user), NULL);
 
         if (docpriv->acls != NULL) {
             pcmk__free_acls(docpriv->acls);

@@ -222,7 +222,7 @@ pcmk__apply_acl(xmlNode *xml)
 
     if (!xml_acl_enabled(xml)) {
         crm_trace("Skipping ACLs for user '%s' because not enabled for this XML",
-                  docpriv->user);
+                  docpriv->acl_user);
         return;
     }
 
@@ -330,7 +330,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
         xmlNode *acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
                                              LOG_NEVER);
 
-        pcmk__str_update(&docpriv->user, user);
+        pcmk__str_update(&(docpriv->acl_user), user);
 
         if (acls) {
             xmlNode *child = NULL;
@@ -759,7 +759,7 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name,
 
     docpriv = xml->doc->_private;
     if (docpriv->acls == NULL) {
-        check_acl_deny(xml, attr_name, "Lack of ", docpriv->user, mode);
+        check_acl_deny(xml, attr_name, "Lack of ", docpriv->acl_user, mode);
         return false;
     }
 
@@ -789,12 +789,12 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name,
         if (pcmk_is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
             const char *pfx = (parent != xml)? "Parent " : "";
 
-            check_acl_deny(xml, attr_name, pfx, docpriv->user, mode);
+            check_acl_deny(xml, attr_name, pfx, docpriv->acl_user, mode);
             return false;
         }
     }
 
-    check_acl_deny(xml, attr_name, "Default ", docpriv->user, mode);
+    check_acl_deny(xml, attr_name, "Default ", docpriv->acl_user, mode);
     return false;
 }
 
