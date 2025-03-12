@@ -563,7 +563,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
         return rc;
     }
 
-    xpathObj = pcmk__xpath_search(output->doc, "//@" PCMK_XA_AGENT);
+    xpathObj = pcmk__xpath_search(output->doc, "//*[@" PCMK_XA_AGENT "]");
     if (xpathObj) {
         max = pcmk__xpath_num_results(xpathObj);
 
@@ -574,7 +574,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
             if(match != NULL) {
                 xmlChar *match_path = xmlGetNodePath(match);
 
-                crm_info("%s[%d] = %s", "//@agent", lpc, match_path);
+                crm_info("//*[@" PCMK_XA_AGENT "][%d] = %s", lpc, match_path);
                 free(match_path);
                 *devices = stonith_key_value_add(*devices, NULL,
                                                  crm_element_value(match,
