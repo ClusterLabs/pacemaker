@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2024 the Pacemaker project contributors
+ * Copyright 2005-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -194,7 +194,7 @@ generate_patch(xmlNode *object_original, xmlNode *object_new, const char *xml_fi
     output = xml_create_patchset(0, object_original, object_new, NULL, FALSE);
 
     pcmk__log_xml_changes(LOG_INFO, object_new);
-    xml_accept_changes(object_new);
+    pcmk__xml_commit_changes(object_new->doc);
 
     if (output == NULL) {
         return pcmk_rc_ok;  // No changes

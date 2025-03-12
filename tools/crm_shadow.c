@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -950,7 +950,7 @@ show_shadow_diff(pcmk__output_t *out, GError **error)
     diff = xml_create_patchset(0, old_config, new_config, NULL, false);
 
     pcmk__log_xml_changes(LOG_INFO, new_config);
-    xml_accept_changes(new_config);
+    pcmk__xml_commit_changes(new_config->doc);
 
     out->quiet = true;
     out->message(out, "shadow",
