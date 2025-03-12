@@ -404,7 +404,7 @@ xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enf
         return;
     }
 
-    xml_accept_changes(xml);
+    pcmk__xml_commit_changes(xml->doc);
     crm_trace("Tracking changes%s to %p", enforce_acls?" with ACLs":"", xml);
     pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_tracking);
     if(enforce_acls) {
@@ -454,11 +454,52 @@ pcmk__xml_position(const xmlNode *xml, enum xml_private_flags ignore_if_set)
  * \note This is compatible with \c pcmk__xml_tree_foreach().
  */
 static bool
-accept_attr_deletions(xmlNode *xml, void *user_data)
+commit_attr_deletions(xmlNode *xml, void *user_data)
 {
     pcmk__xml_reset_node_flags(xml, NULL);
     pcmk__xe_remove_matching_attrs(xml, true, pcmk__marked_as_deleted, NULL);
     return true;
+}
+
+/*!
+ * \internal
+ * \brief Finalize all pending changes to an XML document and reset private data
+ *
+ * Clear the ACL user and all flags, unpacked ACLs, and deleted node records for
+ * the document; clear all flags on each node in the tree; and delete any
+ * attributes that are marked for deletion.
+ *
+ * \param[in,out] doc  XML document
+ *
+ * \note When change tracking is enabled, "deleting" an attribute simply marks
+ *       it for deletion (using \c pcmk__xf_deleted) until changes are
+ *       committed. Freeing a node (using \c pcmk__xml_free()) adds a deleted
+ *       node record (\c pcmk__deleted_xml_t) to the node's document before
+ *       freeing it.
+ * \note This function clears all flags, not just flags that indicate changes.
+ *       In particular, note that it clears the \c pcmk__xf_tracking flag, thus
+ *       disabling tracking.
+ */
+void
+pcmk__xml_commit_changes(xmlDoc *doc)
+{
+    xml_doc_private_t *docpriv = NULL;
+
+    if (doc == NULL) {
+        return;
+    }
+
+    docpriv = doc->_private;
+    if (docpriv == NULL) {
+        return;
+    }
+
+    if (pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
+        pcmk__xml_tree_foreach(xmlDocGetRootElement(doc), commit_attr_deletions,
+                               NULL);
+    }
+    reset_xml_private_data(docpriv);
+    docpriv->flags = pcmk__xf_none;
 }
 
 /*!
@@ -489,22 +530,9 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
 void
 xml_accept_changes(xmlNode * xml)
 {
-    xmlNode *top = NULL;
-    xml_doc_private_t *docpriv = NULL;
-
-    if(xml == NULL) {
-        return;
+    if (xml != NULL) {
+        pcmk__xml_commit_changes(xml->doc);
     }
-
-    crm_trace("Accepting changes to %p", xml);
-    docpriv = xml->doc->_private;
-    top = xmlDocGetRootElement(xml->doc);
-
-    if (pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
-        pcmk__xml_tree_foreach(top, accept_attr_deletions, NULL);
-    }
-    reset_xml_private_data(xml->doc->_private);
-    docpriv->flags = pcmk__xf_none;
 }
 
 /*!
