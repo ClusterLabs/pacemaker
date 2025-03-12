@@ -281,6 +281,11 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
 static bool
 new_private_data(xmlNode *node, void *user_data)
 {
+    /* @TODO Is it necessary to set pcmk__xf_dirty and pcmk__xf_created flags on
+     * new nodes when change tracking is not even enabled? This seems to be the
+     * main reason why committing changes before enabling tracking (by setting
+     * pcmk__xf_tracking) is so often required.
+     */
     CRM_CHECK(node != NULL, return true);
 
     if (node->_private != NULL) {
@@ -1474,7 +1479,8 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
               return);
 
     if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
-        xml_track_changes(new_xml, NULL, NULL, FALSE);
+        pcmk__xml_commit_changes(new_xml->doc);
+        pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
     }
 
     mark_xml_changes(old_xml, new_xml, FALSE);
