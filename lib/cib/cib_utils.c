@@ -308,7 +308,12 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         pcmk__xe_copy_attrs(top, scratch, pcmk__xaf_none);
         patchset_cib = top;
 
-        xml_track_changes(scratch, user, NULL, enable_acl);
+        pcmk__xml_commit_changes(scratch->doc);
+        pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
+        if (enable_acl) {
+            pcmk__enable_acl(*current_cib, scratch, user);
+        }
+
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
 
         /* If scratch points to a new object now (for example, after an erase
@@ -323,7 +328,12 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         scratch = pcmk__xml_copy(NULL, *current_cib);
         patchset_cib = *current_cib;
 
-        xml_track_changes(scratch, user, NULL, enable_acl);
+        pcmk__xml_commit_changes(scratch->doc);
+        pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
+        if (enable_acl) {
+            pcmk__enable_acl(*current_cib, scratch, user);
+        }
+
         rc = (*fn) (op, call_options, section, req, input, *current_cib,
                     &scratch, output);
 
@@ -333,7 +343,11 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
          */
         if (!pcmk__xml_doc_all_flags_set(scratch->doc, pcmk__xf_tracking)) {
             crm_trace("Inferring changes after %s op", op);
-            xml_track_changes(scratch, user, *current_cib, enable_acl);
+            pcmk__xml_commit_changes(scratch->doc);
+            pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
+            if (enable_acl) {
+                pcmk__enable_acl(*current_cib, scratch, user);
+            }
             xml_calculate_changes(*current_cib, scratch);
         }
         CRM_CHECK(*current_cib != scratch, return -EINVAL);

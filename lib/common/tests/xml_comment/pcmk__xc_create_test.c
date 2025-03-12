@@ -26,8 +26,8 @@ assert_comment(const char *content)
     xmlNode *node = NULL;
     xml_node_private_t *nodepriv = NULL;
 
-    // Also clears existing doc flags
-    xml_track_changes((xmlNode *) doc, NULL, NULL, false);
+    pcmk__xml_commit_changes(doc);  // Clear pcmk__xf_dirty and pcmk__xf_created
+    pcmk__xml_doc_set_flags(doc, pcmk__xf_tracking);
 
     node = pcmk__xc_create(doc, content);
     assert_non_null(node);
