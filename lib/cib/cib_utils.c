@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2024 the Pacemaker project contributors
+ * Later changes copyright 2008-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -407,7 +407,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                                      config_changed, manage_counters);
 
     pcmk__log_xml_changes(LOG_TRACE, scratch);
-    xml_accept_changes(scratch);
+    pcmk__xml_commit_changes(scratch->doc);
 
     if(local_diff) {
         patchset_process_digest(local_diff, patchset_cib, scratch, with_digest);
