@@ -44,25 +44,43 @@ extern "C" {
 #define G_GNUC_INTERNAL
 #endif
 
-/* When deleting portions of an XML tree, we keep a record so we can know later
- * (e.g. when checking differences) that something was deleted.
+/*!
+ * \internal
+ * \brief Information about an XML node that is marked as deleted
+ *
+ * When change tracking is enabled and we delete an XML node, we simply mark
+ * it as deleted. The node remains in the tree until changes are accepted.
+ * This allows us to display changes, generate patchsets, and revert
+ * deletions in case of ACL denial.
  */
 typedef struct pcmk__deleted_xml_s {
-    gchar *path;
-    int position;
+    gchar *path;        //!< XPath expression identifying the deleted node
+    int position;       //!< Position of the deleted node among its siblings
 } pcmk__deleted_xml_t;
 
+/*!
+ * \internal
+ * \brief Private data for an XML document
+ */
 typedef struct xml_node_private_s {
-        uint32_t check;
-        uint32_t flags;
+    uint32_t check;         //!< Magic number for checking integrity
+    uint32_t flags;         //!< Group of <tt>enum xml_private_flags</tt>
 } xml_node_private_t;
 
+/*!
+ * \internal
+ * \brief Private data for an XML document
+ */
 typedef struct xml_doc_private_s {
-        uint32_t check;
-        uint32_t flags;
-        char *user;
-        GList *acls;
-        GList *deleted_objs; // List of pcmk__deleted_xml_t
+    uint32_t check;         //!< Magic number for checking integrity
+    uint32_t flags;         //!< Group of <tt>enum xml_private_flags</tt>
+    char *acl_user;         //!< User affected by \c acls (for logging)
+
+    //! ACLs to check requested changes against (list of \c xml_acl_t)
+    GList *acls;
+
+    //! XML nodes marked as deleted (list of \c pcmk__deleted_xml_t)
+    GList *deleted_objs;
 } xml_doc_private_t;
 
 // XML private data magic numbers
