@@ -1482,7 +1482,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     /* Create a new <file path="..."> node with the contents of the file
      * as a CDATA block underneath it.
      */
-    file_node = pcmk__xe_create(parent, PCMK_XA_FILE);
+    file_node = pcmk__xe_create(parent, PCMK__XE_FILE);
     crm_xml_add(file_node, PCMK_XA_PATH, path);
     *already_included = g_list_prepend(*already_included, path);
 
