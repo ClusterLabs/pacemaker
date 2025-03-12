@@ -25,6 +25,9 @@
 
 static void invoke_unit_by_path(svc_action_t *op, const char *unit);
 
+/* Systemd D-Bus interface
+ * https://www.freedesktop.org/software/systemd/man/latest/org.freedesktop.systemd1.html
+ */
 #define BUS_NAME         "org.freedesktop.systemd1"
 #define BUS_NAME_MANAGER BUS_NAME ".Manager"
 #define BUS_NAME_UNIT    BUS_NAME ".Unit"
@@ -137,6 +140,50 @@ systemd_call_simple_method(const char *method)
     return reply;
 }
 
+/*!
+ * \internal
+ * \brief Subscribe to D-Bus signals from systemd
+ *
+ * Systemd does not broadcast signal messages unless at least one client has
+ * called the \c Subscribe() method. Also, a D-Bus client ignores broadcast
+ * messages unless an appropriate match rule is set, so we set one here.
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+subscribe_to_signals(void)
+{
+    const char *match_rule = "type='signal',"
+                             "sender='" BUS_NAME "',"
+                             "interface='" BUS_NAME_MANAGER "',"
+                             "path='" BUS_PATH "'";
+    DBusMessage *reply = NULL;
+    DBusError error;
+
+    /* Tell D-Bus to accept signal messages from systemd.
+     * https://dbus.freedesktop.org/doc/dbus-specification.html#message-bus-routing-match-rules
+     */
+    dbus_error_init(&error);
+    dbus_bus_add_match(systemd_proxy, match_rule, &error);
+
+    if (dbus_error_is_set(&error)) {
+        crm_err("Could not listen for systemd DBus signals: %s " QB_XS " (%s)",
+                error.message, error.name);
+        dbus_error_free(&error);
+        return ECOMM;
+    }
+
+    // Tell systemd to broadcast signals
+    reply = systemd_call_simple_method("Subscribe");
+    if (reply == NULL) {
+        dbus_bus_remove_match(systemd_proxy, match_rule, &error);
+        return ECOMM;
+    }
+
+    dbus_message_unref(reply);
+    return pcmk_rc_ok;
+}
+
 static bool
 systemd_init(void)
 {
@@ -154,11 +201,14 @@ systemd_init(void)
     if (need_init) {
         need_init = 0;
         systemd_proxy = pcmk_dbus_connect();
+
+        if (subscribe_to_signals() != pcmk_rc_ok) {
+            pcmk_dbus_disconnect(systemd_proxy);
+            systemd_proxy = NULL;
+        }
     }
-    if (systemd_proxy == NULL) {
-        return false;
-    }
-    return true;
+
+    return (systemd_proxy != NULL);
 }
 
 static inline char *
