@@ -527,14 +527,6 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
     }
 }
 
-void
-xml_accept_changes(xmlNode * xml)
-{
-    if (xml != NULL) {
-        pcmk__xml_commit_changes(xml->doc);
-    }
-}
-
 /*!
  * \internal
  * \brief Create a new XML document
@@ -1682,6 +1674,14 @@ xml_document_dirty(xmlNode *xml)
 {
     return (xml != NULL)
            && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_dirty);
+}
+
+void
+xml_accept_changes(xmlNode *xml)
+{
+    if (xml != NULL) {
+        pcmk__xml_commit_changes(xml->doc);
+    }
 }
 
 // LCOV_EXCL_STOP
