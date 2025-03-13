@@ -511,7 +511,7 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
 static char *
 delegate_from_xml(xmlNode *xml)
 {
-    xmlNode *match = get_xpath_object("//@" PCMK__XA_ST_DELEGATE, xml,
+    xmlNode *match = get_xpath_object("//*[@" PCMK__XA_ST_DELEGATE "]", xml,
                                       LOG_NEVER);
 
     if (match == NULL) {
@@ -1110,7 +1110,8 @@ int
 fenced_handle_manual_confirmation(const pcmk__client_t *client, xmlNode *msg)
 {
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//*[@" PCMK__XA_ST_TARGET "]", msg,
+                                    LOG_ERR);
 
     CRM_CHECK(dev != NULL, return EPROTO);
 
@@ -1149,7 +1150,7 @@ void *
 create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, request,
+    xmlNode *dev = get_xpath_object("//*[@" PCMK__XA_ST_TARGET "]", request,
                                     LOG_NEVER);
     int rc = pcmk_rc_ok;
     const char *operation = NULL;
@@ -2336,14 +2337,16 @@ process_remote_stonith_query(xmlNode *msg)
     remote_fencing_op_t *op = NULL;
     peer_device_info_t *peer = NULL;
     uint32_t replies_expected;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_REMOTE_OP, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//*[@" PCMK__XA_ST_REMOTE_OP "]", msg,
+                                    LOG_ERR);
 
     CRM_CHECK(dev != NULL, return -EPROTO);
 
     id = crm_element_value(dev, PCMK__XA_ST_REMOTE_OP);
     CRM_CHECK(id != NULL, return -EPROTO);
 
-    dev = get_xpath_object("//@" PCMK__XA_ST_AVAILABLE_DEVICES, msg, LOG_ERR);
+    dev = get_xpath_object("//*[@" PCMK__XA_ST_AVAILABLE_DEVICES "]", msg,
+                           LOG_ERR);
     CRM_CHECK(dev != NULL, return -EPROTO);
     crm_element_value_int(dev, PCMK__XA_ST_AVAILABLE_DEVICES, &ndevices);
 
@@ -2434,7 +2437,8 @@ fenced_process_fencing_reply(xmlNode *msg)
     const char *id = NULL;
     const char *device = NULL;
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_REMOTE_OP, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//*[@" PCMK__XA_ST_REMOTE_OP "]", msg,
+                                    LOG_ERR);
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(dev != NULL, return);
