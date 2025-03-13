@@ -402,26 +402,6 @@ pcmk__xml_free_private_data(xmlNode *xml)
     pcmk__xml_tree_foreach(xml, free_private_data, NULL);
 }
 
-void
-xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls) 
-{
-    if (xml == NULL) {
-        return;
-    }
-
-    pcmk__xml_commit_changes(xml->doc);
-    crm_trace("Tracking changes%s to %p", enforce_acls?" with ACLs":"", xml);
-    pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_tracking);
-    if(enforce_acls) {
-        if(acl_source == NULL) {
-            acl_source = xml;
-        }
-        pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_acl_enabled);
-        pcmk__unpack_acl(acl_source, xml, user);
-        pcmk__apply_acl(xml);
-    }
-}
-
 /*!
  * \internal
  * \brief Return ordinal position of an XML node among its siblings
@@ -1679,6 +1659,28 @@ xml_accept_changes(xmlNode *xml)
 {
     if (xml != NULL) {
         pcmk__xml_commit_changes(xml->doc);
+    }
+}
+
+void
+xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
+                  bool enforce_acls)
+{
+    if (xml == NULL) {
+        return;
+    }
+
+    pcmk__xml_commit_changes(xml->doc);
+    crm_trace("Tracking changes%s to %p",
+              (enforce_acls? " with ACLs" : ""), xml);
+    pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_tracking);
+    if (enforce_acls) {
+        if (acl_source == NULL) {
+            acl_source = xml;
+        }
+        pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_acl_enabled);
+        pcmk__unpack_acl(acl_source, xml, user);
+        pcmk__apply_acl(xml);
     }
 }
 
