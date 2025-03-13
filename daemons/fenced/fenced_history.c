@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -477,7 +477,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                       const char *remote_peer, int options)
 {
     const char *target = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, msg, LOG_NEVER);
+    xmlNode *dev = get_xpath_object("//*[@" PCMK__XA_ST_TARGET "]", msg,
+                                    LOG_NEVER);
     xmlNode *out_history = NULL;
 
     if (dev) {
