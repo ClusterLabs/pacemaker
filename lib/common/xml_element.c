@@ -369,12 +369,14 @@ pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data)
  * \brief Remove an XML element's attributes that match some criteria
  *
  * \param[in,out] element    XML element to modify
+ * \param[in]     force      If \c true, remove matching attributes immediately,
+ *                           ignoring ACLs and change tracking
  * \param[in]     match      If not NULL, only remove attributes for which
  *                           this function returns true
  * \param[in,out] user_data  Data to pass to \p match
  */
 void
-pcmk__xe_remove_matching_attrs(xmlNode *element,
+pcmk__xe_remove_matching_attrs(xmlNode *element, bool force,
                                bool (*match)(xmlAttrPtr, void *),
                                void *user_data)
 {
@@ -383,7 +385,7 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
     for (xmlAttrPtr a = pcmk__xe_first_attr(element); a != NULL; a = next) {
         next = a->next; // Grab now because attribute might get removed
         if ((match == NULL) || match(a, user_data)) {
-            if (pcmk__xa_remove(a, false) != pcmk_rc_ok) {
+            if (pcmk__xa_remove(a, force) != pcmk_rc_ok) {
                 return;
             }
         }

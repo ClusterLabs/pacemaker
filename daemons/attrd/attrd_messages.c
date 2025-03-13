@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,7 +31,7 @@ is_sync_point_attr(xmlAttrPtr attr, void *data)
 static int
 remove_sync_point_attribute(xmlNode *xml, void *data)
 {
-    pcmk__xe_remove_matching_attrs(xml, is_sync_point_attr, NULL);
+    pcmk__xe_remove_matching_attrs(xml, false, is_sync_point_attr, NULL);
     pcmk__xe_foreach_child(xml, PCMK_XE_OP, remove_sync_point_attribute, NULL);
     return pcmk_rc_ok;
 }

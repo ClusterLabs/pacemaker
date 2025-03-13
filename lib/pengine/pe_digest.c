@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -211,8 +211,8 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
     }
 
     if (secure_list != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_secure, attr_in_string,
-                                       (void *) secure_list);
+        pcmk__xe_remove_matching_attrs(data->params_secure, false,
+                                       attr_in_string, (void *) secure_list);
     }
     if (old_version
         && pcmk_is_set(pcmk_get_ra_caps(class),
@@ -222,8 +222,8 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
          * versions of DC, the controller will not hash them. That means we have
          * to filter them out before calculating our hash for comparison.
          */
-        pcmk__xe_remove_matching_attrs(data->params_secure, is_fence_param,
-                                       NULL);
+        pcmk__xe_remove_matching_attrs(data->params_secure, false,
+                                       is_fence_param, NULL);
     }
     pcmk__filter_op_for_digest(data->params_secure);
 
@@ -274,8 +274,8 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
     // Then filter out reloadable parameters, if any
     value = crm_element_value(xml_op, PCMK__XA_OP_FORCE_RESTART);
     if (value != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_restart, attr_not_in_string,
-                                       (void *) value);
+        pcmk__xe_remove_matching_attrs(data->params_restart, false,
+                                       attr_not_in_string, (void *) value);
     }
 
     value = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
