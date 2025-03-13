@@ -457,7 +457,7 @@ static bool
 accept_attr_deletions(xmlNode *xml, void *user_data)
 {
     pcmk__xml_reset_node_flags(xml, NULL);
-    pcmk__xe_remove_matching_attrs(xml, pcmk__marked_as_deleted, NULL);
+    pcmk__xe_remove_matching_attrs(xml, true, pcmk__marked_as_deleted, NULL);
     return true;
 }
 
@@ -500,15 +500,11 @@ xml_accept_changes(xmlNode * xml)
     docpriv = xml->doc->_private;
     top = xmlDocGetRootElement(xml->doc);
 
-    reset_xml_private_data(xml->doc->_private);
-
-    if (!pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
-        docpriv->flags = pcmk__xf_none;
-        return;
+    if (pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
+        pcmk__xml_tree_foreach(top, accept_attr_deletions, NULL);
     }
-
+    reset_xml_private_data(xml->doc->_private);
     docpriv->flags = pcmk__xf_none;
-    pcmk__xml_tree_foreach(top, accept_attr_deletions, NULL);
 }
 
 /*!

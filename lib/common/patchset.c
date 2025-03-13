@@ -649,7 +649,9 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 rc = ENOMSG;
                 continue;
             }
-            pcmk__xe_remove_matching_attrs(match, NULL, NULL); // Remove all
+
+            // Remove all attributes
+            pcmk__xe_remove_matching_attrs(match, false, NULL, NULL);
 
             for (xmlAttrPtr pIter = pcmk__xe_first_attr(attrs); pIter != NULL;
                  pIter = pIter->next) {
