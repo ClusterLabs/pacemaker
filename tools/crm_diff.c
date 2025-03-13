@@ -183,7 +183,6 @@ generate_patch(xmlNode *object_original, xmlNode *object_new, const char *xml_fi
         }
     }
 
-    xml_track_changes(object_new, NULL, object_new, FALSE);
     if(as_cib) {
         xml_calculate_significant_changes(object_original, object_new);
     } else {
