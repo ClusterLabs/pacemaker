@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,7 +37,6 @@ assert_in_patchset(const char *source_s, const char *target_s,
     xmlNode *target = pcmk__xml_parse(target_s);
     xmlNode *patchset = NULL;
 
-    xml_track_changes(target, NULL, NULL, false);
     xml_calculate_significant_changes(source, target);
     patchset = xml_create_patchset(2, source, target, NULL, false);
 

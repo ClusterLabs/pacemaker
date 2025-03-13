@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2024 the Pacemaker project contributors
+ * Copyright 2008-2025 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -9,7 +9,9 @@
 
 #include <sys/types.h>
 #include <regex.h>
+
 #include <glib.h>
+#include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -96,17 +98,17 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                         "='" PCMK_VALUE_BLOCK "']",
                                     xml_name);
 
-    xmlXPathObject *xpathObj = xpath_search(rsc->priv->xml, xpath);
+    xmlXPathObject *xpathObj = pcmk__xpath_search(rsc->priv->xml->doc, xpath);
     gboolean should_block = FALSE;
 
     free(xpath);
 
     if (xpathObj) {
-        int max = numXpathResults(xpathObj);
+        int max = pcmk__xpath_num_results(xpathObj);
         int lpc = 0;
 
         for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *pref = getXpathResult(xpathObj, lpc);
+            xmlNode *pref = pcmk__xpath_result(xpathObj, lpc);
 
             if (xml_op) {
                 should_block = is_matched_failure(xml_name, pref, xml_op);
@@ -118,6 +120,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                 const char *conf_op_name = NULL;
                 const char *conf_op_interval_spec = NULL;
                 guint conf_op_interval_ms = 0;
+                pcmk_scheduler_t *scheduler = rsc->priv->scheduler;
                 char *lrm_op_xpath = NULL;
                 xmlXPathObject *lrm_op_xpathObj = NULL;
 
@@ -137,19 +140,19 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                                  node->priv->name, xml_name,
                                                  conf_op_name,
                                                  conf_op_interval_ms);
-                lrm_op_xpathObj = xpath_search(rsc->priv->scheduler->input,
-                                               lrm_op_xpath);
+                lrm_op_xpathObj = pcmk__xpath_search(scheduler->input->doc,
+                                                     lrm_op_xpath);
 
                 free(lrm_op_xpath);
 
                 if (lrm_op_xpathObj) {
-                    int max2 = numXpathResults(lrm_op_xpathObj);
+                    int max2 = pcmk__xpath_num_results(lrm_op_xpathObj);
                     int lpc2 = 0;
 
                     for (lpc2 = 0; lpc2 < max2; lpc2++) {
-                        xmlNode *lrm_op_xml = getXpathResult(lrm_op_xpathObj,
-                                                             lpc2);
+                        xmlNode *lrm_op_xml = NULL;
 
+                        lrm_op_xml = pcmk__xpath_result(lrm_op_xpathObj, lpc2);
                         should_block = is_matched_failure(xml_name, pref,
                                                           lrm_op_xml);
                         if (should_block) {
@@ -157,7 +160,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                         }
                     }
                 }
-                freeXpathObject(lrm_op_xpathObj);
+                xmlXPathFreeObject(lrm_op_xpathObj);
 
                 if (should_block) {
                     break;
@@ -167,7 +170,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
     }
 
     free(xml_name);
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 
     return should_block;
 }

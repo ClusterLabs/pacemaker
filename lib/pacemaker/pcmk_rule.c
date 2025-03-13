@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/cib/internal.h>
 #include <crm/common/cib.h>
@@ -35,7 +37,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
 {
     xmlNodePtr cib_constraints = NULL;
     xmlNodePtr match = NULL;
-    xmlXPathObjectPtr xpath_obj = NULL;
+    xmlXPathObject *xpath_obj = NULL;
     char *xpath = NULL;
     int rc = pcmk_rc_ok;
     int num_results = 0;
@@ -56,11 +58,11 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
      * there's any rule with the given ID.
      */
     xpath = crm_strdup_printf(XPATH_NODE_RULE, rule_id);
-    xpath_obj = xpath_search(cib_constraints, xpath);
-    num_results = numXpathResults(xpath_obj);
+    xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
+    num_results = pcmk__xpath_num_results(xpath_obj);
 
     free(xpath);
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
 
     if (num_results == 0) {
         *error = "Rule not found";
@@ -75,11 +77,11 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
 
     /* Next, make sure it has exactly one date_expression. */
     xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression", rule_id);
-    xpath_obj = xpath_search(cib_constraints, xpath);
-    num_results = numXpathResults(xpath_obj);
+    xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
+    num_results = pcmk__xpath_num_results(xpath_obj);
 
     free(xpath);
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
 
     if (num_results != 1) {
         if (num_results == 0) {
@@ -96,13 +98,13 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
                               "[@" PCMK_XA_OPERATION
                                   "!='" PCMK_VALUE_DATE_SPEC "']",
                               rule_id);
-    xpath_obj = xpath_search(cib_constraints, xpath);
-    num_results = numXpathResults(xpath_obj);
+    xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
+    num_results = pcmk__xpath_num_results(xpath_obj);
 
     free(xpath);
 
     if (num_results == 0) {
-        freeXpathObject(xpath_obj);
+        xmlXPathFreeObject(xpath_obj);
 
         xpath = crm_strdup_printf(XPATH_NODE_RULE
                                   "//" PCMK_XE_DATE_EXPRESSION
@@ -111,20 +113,20 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
                                   "and " PCMK_XE_DATE_SPEC
                                       "/@" PCMK_XA_YEARS "]",
                                   rule_id);
-        xpath_obj = xpath_search(cib_constraints, xpath);
-        num_results = numXpathResults(xpath_obj);
+        xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
+        num_results = pcmk__xpath_num_results(xpath_obj);
 
         free(xpath);
 
         if (num_results == 0) {
-            freeXpathObject(xpath_obj);
+            xmlXPathFreeObject(xpath_obj);
             *error = "Rule must either not use " PCMK_XE_DATE_SPEC ", or use "
                      PCMK_XE_DATE_SPEC " with " PCMK_XA_YEARS "=";
             return EOPNOTSUPP;
         }
     }
 
-    match = getXpathResult(xpath_obj, 0);
+    match = pcmk__xpath_result(xpath_obj, 0);
 
     /* We should have ensured this with the xpath query above, but double-
      * checking can't hurt.
@@ -138,7 +140,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
         *error = "Error parsing rule";
     }
 
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
     return rc;
 }
 

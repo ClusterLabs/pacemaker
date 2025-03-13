@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 
 #include <errno.h>
 #include <glib.h>
-#include <libxml/tree.h>
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/cib/internal.h>
 #include <crm/common/mainloop.h>
@@ -42,7 +42,8 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 
     // Find node's resource history
     xpath = crm_strdup_printf(XPATH_OP_HISTORY, node->priv->name, rsc->id);
-    history = get_xpath_object(xpath, rsc->priv->scheduler->input, LOG_NEVER);
+    history = pcmk__xpath_find_one(rsc->priv->scheduler->input->doc, xpath,
+                                   LOG_NEVER);
     free(xpath);
 
     // Examine each history entry

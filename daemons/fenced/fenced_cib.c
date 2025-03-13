@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,8 +11,8 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <libxml/tree.h>
-#include <libxml/xpath.h>
+#include <libxml/tree.h>            // xmlNode
+#include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -61,7 +61,7 @@ node_has_attr(const char *node, const char *name, const char *value)
                    "[@" PCMK_XA_NAME "='", name, "' "
                    "and @" PCMK_XA_VALUE "='", value, "']", NULL);
 
-    match = get_xpath_object((const char *) xpath->str, local_cib, LOG_NEVER);
+    match = pcmk__xpath_find_one(local_cib->doc, xpath->str, LOG_NEVER);
 
     g_string_free(xpath, TRUE);
     return (match != NULL);
@@ -116,10 +116,10 @@ remove_topology_level(xmlNode *match)
 static void
 register_fencing_topology(xmlXPathObjectPtr xpathObj)
 {
-    int max = numXpathResults(xpathObj), lpc = 0;
+    int max = pcmk__xpath_num_results(xpathObj);
 
-    for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *match = getXpathResult(xpathObj, lpc);
+    for (int lpc = 0; lpc < max; lpc++) {
+        xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
 
         remove_topology_level(match);
         add_topology_level(match);
@@ -148,7 +148,7 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj)
 void
 fencing_topology_init(void)
 {
-    xmlXPathObjectPtr xpathObj = NULL;
+    xmlXPathObject *xpathObj = NULL;
     const char *xpath = "//" PCMK_XE_FENCING_LEVEL;
 
     crm_trace("Full topology refresh");
@@ -156,10 +156,10 @@ fencing_topology_init(void)
     init_topology_list();
 
     /* Grab everything */
-    xpathObj = xpath_search(local_cib, xpath);
+    xpathObj = pcmk__xpath_search(local_cib->doc, xpath);
     register_fencing_topology(xpathObj);
 
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 }
 
 #define XPATH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \
@@ -174,8 +174,9 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
     const char *value = NULL;
 
     // @TODO An XPath search can't handle multiple instances or rules
-    stonith_watchdog_xml = get_xpath_object(XPATH_WATCHDOG_TIMEOUT, cib,
-                                            LOG_NEVER);
+    stonith_watchdog_xml = pcmk__xpath_find_one(cib->doc,
+                                                XPATH_WATCHDOG_TIMEOUT,
+                                                LOG_NEVER);
     if (stonith_watchdog_xml) {
         value = crm_element_value(stonith_watchdog_xml, PCMK_XA_VALUE);
     }

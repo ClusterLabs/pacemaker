@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,7 +20,7 @@
 #include <glib.h>                       // gboolean, GString
 #include <libxml/parser.h>              // xmlCleanupParser()
 #include <libxml/tree.h>                // xmlNode, etc.
-#include <libxml/xmlstring.h>           // xmlGetUTF8Char()
+#include <libxml/xmlstring.h>           // xmlChar, xmlGetUTF8Char()
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -28,7 +28,48 @@
 #include "crmcommon_private.h"
 
 //! libxml2 supports only XML version 1.0, at least as of libxml2-2.12.5
-#define XML_VERSION ((pcmkXmlStr) "1.0")
+#define XML_VERSION ((const xmlChar *) "1.0")
+
+/*!
+ * \internal
+ * \brief Get a string representation of an XML element type for logging
+ *
+ * \param[in] type  XML element type
+ *
+ * \return String representation of \p type
+ */
+const char *
+pcmk__xml_element_type_text(xmlElementType type)
+{
+    static const char *const element_type_names[] = {
+        [XML_ELEMENT_NODE]       = "element",
+        [XML_ATTRIBUTE_NODE]     = "attribute",
+        [XML_TEXT_NODE]          = "text",
+        [XML_CDATA_SECTION_NODE] = "CDATA section",
+        [XML_ENTITY_REF_NODE]    = "entity reference",
+        [XML_ENTITY_NODE]        = "entity",
+        [XML_PI_NODE]            = "PI",
+        [XML_COMMENT_NODE]       = "comment",
+        [XML_DOCUMENT_NODE]      = "document",
+        [XML_DOCUMENT_TYPE_NODE] = "document type",
+        [XML_DOCUMENT_FRAG_NODE] = "document fragment",
+        [XML_NOTATION_NODE]      = "notation",
+        [XML_HTML_DOCUMENT_NODE] = "HTML document",
+        [XML_DTD_NODE]           = "DTD",
+        [XML_ELEMENT_DECL]       = "element declaration",
+        [XML_ATTRIBUTE_DECL]     = "attribute declaration",
+        [XML_ENTITY_DECL]        = "entity declaration",
+        [XML_NAMESPACE_DECL]     = "namespace declaration",
+        [XML_XINCLUDE_START]     = "XInclude start",
+        [XML_XINCLUDE_END]       = "XInclude end",
+    };
+
+    // Assumes the numeric values of the indices are in ascending order
+    if ((type < XML_ELEMENT_NODE) || (type > XML_XINCLUDE_END)) {
+        return "unrecognized type";
+    }
+    return element_type_names[type];
+}
 
 /*!
  * \internal
@@ -65,21 +106,6 @@ pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
     return true;
 }
 
-bool
-pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
-{
-    if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
-        return FALSE;
-    } else if (!pcmk_is_set(((xml_doc_private_t *)xml->doc->_private)->flags,
-                            pcmk__xf_tracking)) {
-        return FALSE;
-    } else if (lazy && !pcmk_is_set(((xml_doc_private_t *)xml->doc->_private)->flags,
-                                    pcmk__xf_lazy)) {
-        return FALSE;
-    }
-    return TRUE;
-}
-
 void
 pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags)
 {
@@ -92,21 +118,51 @@ pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags)
     }
 }
 
+/*!
+ * \internal
+ * \brief Set flags for an XML document
+ *
+ * \param[in,out] doc    XML document
+ * \param[in]     flags  Group of <tt>enum pcmk__xml_flags</tt>
+ */
 void
-pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag)
+pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags)
 {
-    if (xml != NULL) {
-        xml_doc_private_t *docpriv = xml->doc->_private;
+    if (doc != NULL) {
+        xml_doc_private_t *docpriv = doc->_private;
 
-        pcmk__set_xml_flags(docpriv, flag);
+        pcmk__set_xml_flags(docpriv, flags);
     }
+}
+
+/*!
+ * \internal
+ * \brief Check whether the given flags are set for an XML document
+ *
+ * \param[in] doc    XML document to check
+ * \param[in] flags  Group of <tt>enum pcmk__xml_flags</tt>
+ *
+ * \return \c true if all of \p flags are set for \p doc, or \c false otherwise
+ */
+bool
+pcmk__xml_doc_all_flags_set(const xmlDoc *doc, uint32_t flags)
+{
+    if (doc != NULL) {
+        xml_doc_private_t *docpriv = doc->_private;
+
+        return (docpriv != NULL) && pcmk_all_flags_set(docpriv->flags, flags);
+    }
+    return false;
 }
 
 // Mark document, element, and all element's parents as changed
 void
 pcmk__mark_xml_node_dirty(xmlNode *xml)
 {
-    pcmk__set_xml_doc_flag(xml, pcmk__xf_dirty);
+    if (xml == NULL) {
+        return;
+    }
+    pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_dirty);
     pcmk__xml_set_parent_flags(xml, pcmk__xf_dirty);
 }
 
@@ -167,7 +223,7 @@ mark_xml_tree_dirty_created(xmlNode *xml)
 {
     pcmk__assert(xml != NULL);
 
-    if (!pcmk__tracking_xml_changes(xml, false)) {
+    if (!pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking)) {
         // Tracking is disabled for entire document
         return;
     }
@@ -197,8 +253,7 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
     if (docpriv != NULL) {
         pcmk__assert(docpriv->check == PCMK__XML_DOC_PRIVATE_MAGIC);
 
-        free(docpriv->user);
-        docpriv->user = NULL;
+        pcmk__str_update(&(docpriv->acl_user), NULL);
 
         if (docpriv->acls != NULL) {
             pcmk__free_acls(docpriv->acls);
@@ -226,11 +281,15 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
 static bool
 new_private_data(xmlNode *node, void *user_data)
 {
+    bool tracking = false;
+
     CRM_CHECK(node != NULL, return true);
 
     if (node->_private != NULL) {
         return true;
     }
+
+    tracking = pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking);
 
     switch (node->type) {
         case XML_DOCUMENT_NODE:
@@ -240,7 +299,6 @@ new_private_data(xmlNode *node, void *user_data)
 
                 docpriv->check = PCMK__XML_DOC_PRIVATE_MAGIC;
                 node->_private = docpriv;
-                pcmk__set_xml_flags(docpriv, pcmk__xf_dirty|pcmk__xf_created);
             }
             break;
 
@@ -253,7 +311,9 @@ new_private_data(xmlNode *node, void *user_data)
 
                 nodepriv->check = PCMK__XML_NODE_PRIVATE_MAGIC;
                 node->_private = nodepriv;
-                pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
+                if (tracking) {
+                    pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
+                }
 
                 for (xmlAttr *iter = pcmk__xe_first_attr(node); iter != NULL;
                      iter = iter->next) {
@@ -273,7 +333,7 @@ new_private_data(xmlNode *node, void *user_data)
             return true;
     }
 
-    if (pcmk__tracking_xml_changes(node, false)) {
+    if (tracking) {
         pcmk__mark_xml_node_dirty(node);
     }
     return true;
@@ -342,36 +402,6 @@ pcmk__xml_free_private_data(xmlNode *xml)
     pcmk__xml_tree_foreach(xml, free_private_data, NULL);
 }
 
-void
-xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls) 
-{
-    xml_accept_changes(xml);
-    crm_trace("Tracking changes%s to %p", enforce_acls?" with ACLs":"", xml);
-    pcmk__set_xml_doc_flag(xml, pcmk__xf_tracking);
-    if(enforce_acls) {
-        if(acl_source == NULL) {
-            acl_source = xml;
-        }
-        pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_enabled);
-        pcmk__unpack_acl(acl_source, xml, user);
-        pcmk__apply_acl(xml);
-    }
-}
-
-bool xml_tracking_changes(xmlNode * xml)
-{
-    return (xml != NULL) && (xml->doc != NULL) && (xml->doc->_private != NULL)
-           && pcmk_is_set(((xml_doc_private_t *)(xml->doc->_private))->flags,
-                          pcmk__xf_tracking);
-}
-
-bool xml_document_dirty(xmlNode *xml) 
-{
-    return (xml != NULL) && (xml->doc != NULL) && (xml->doc->_private != NULL)
-           && pcmk_is_set(((xml_doc_private_t *)(xml->doc->_private))->flags,
-                          pcmk__xf_dirty);
-}
-
 /*!
  * \internal
  * \brief Return ordinal position of an XML node among its siblings
@@ -382,7 +412,7 @@ bool xml_document_dirty(xmlNode *xml)
  * \return Ordinal position of \p xml (starting with 0)
  */
 int
-pcmk__xml_position(const xmlNode *xml, enum xml_private_flags ignore_if_set)
+pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set)
 {
     int position = 0;
 
@@ -409,11 +439,52 @@ pcmk__xml_position(const xmlNode *xml, enum xml_private_flags ignore_if_set)
  * \note This is compatible with \c pcmk__xml_tree_foreach().
  */
 static bool
-accept_attr_deletions(xmlNode *xml, void *user_data)
+commit_attr_deletions(xmlNode *xml, void *user_data)
 {
     pcmk__xml_reset_node_flags(xml, NULL);
-    pcmk__xe_remove_matching_attrs(xml, pcmk__marked_as_deleted, NULL);
+    pcmk__xe_remove_matching_attrs(xml, true, pcmk__marked_as_deleted, NULL);
     return true;
+}
+
+/*!
+ * \internal
+ * \brief Finalize all pending changes to an XML document and reset private data
+ *
+ * Clear the ACL user and all flags, unpacked ACLs, and deleted node records for
+ * the document; clear all flags on each node in the tree; and delete any
+ * attributes that are marked for deletion.
+ *
+ * \param[in,out] doc  XML document
+ *
+ * \note When change tracking is enabled, "deleting" an attribute simply marks
+ *       it for deletion (using \c pcmk__xf_deleted) until changes are
+ *       committed. Freeing a node (using \c pcmk__xml_free()) adds a deleted
+ *       node record (\c pcmk__deleted_xml_t) to the node's document before
+ *       freeing it.
+ * \note This function clears all flags, not just flags that indicate changes.
+ *       In particular, note that it clears the \c pcmk__xf_tracking flag, thus
+ *       disabling tracking.
+ */
+void
+pcmk__xml_commit_changes(xmlDoc *doc)
+{
+    xml_doc_private_t *docpriv = NULL;
+
+    if (doc == NULL) {
+        return;
+    }
+
+    docpriv = doc->_private;
+    if (docpriv == NULL) {
+        return;
+    }
+
+    if (pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
+        pcmk__xml_tree_foreach(xmlDocGetRootElement(doc), commit_attr_deletions,
+                               NULL);
+    }
+    reset_xml_private_data(docpriv);
+    docpriv->flags = pcmk__xf_none;
 }
 
 /*!
@@ -439,31 +510,6 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
         return pcmk__xe_first_child(haystack, (const char *) needle->name, attr,
                                     id);
     }
-}
-
-void
-xml_accept_changes(xmlNode * xml)
-{
-    xmlNode *top = NULL;
-    xml_doc_private_t *docpriv = NULL;
-
-    if(xml == NULL) {
-        return;
-    }
-
-    crm_trace("Accepting changes to %p", xml);
-    docpriv = xml->doc->_private;
-    top = xmlDocGetRootElement(xml->doc);
-
-    reset_xml_private_data(xml->doc->_private);
-
-    if (!pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
-        docpriv->flags = pcmk__xf_none;
-        return;
-    }
-
-    docpriv->flags = pcmk__xf_none;
-    pcmk__xml_tree_foreach(top, accept_attr_deletions, NULL);
 }
 
 /*!
@@ -540,7 +586,7 @@ pcmk__xml_is_name_start_char(const char *utf8, int *len)
     *len = 4;
 
     // Note: xmlGetUTF8Char() assumes a 32-bit int
-    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    c = xmlGetUTF8Char((const xmlChar *) utf8, len);
     if (c < 0) {
         GString *buf = g_string_sized_new(32);
 
@@ -601,7 +647,7 @@ pcmk__xml_is_name_char(const char *utf8, int *len)
     *len = 4;
 
     // Note: xmlGetUTF8Char() assumes a 32-bit int
-    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    c = xmlGetUTF8Char((const xmlChar *) utf8, len);
     if (c < 0) {
         GString *buf = g_string_sized_new(32);
 
@@ -743,7 +789,7 @@ free_xml_with_position(xmlNode *node, int position)
         return;
     }
 
-    if ((doc != NULL) && pcmk__tracking_xml_changes(node, false)
+    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)
         && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
 
         xml_doc_private_t *docpriv = doc->_private;
@@ -771,7 +817,7 @@ free_xml_with_position(xmlNode *node, int position)
 
             docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
                                                   deleted_obj);
-            pcmk__set_xml_doc_flag(node, pcmk__xf_dirty);
+            pcmk__xml_doc_set_flags(node->doc, pcmk__xf_dirty);
         }
     }
     pcmk__xml_free_node(node);
@@ -1062,21 +1108,6 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
 
 /*!
  * \internal
- * \brief Set a flag on all attributes of an XML element
- *
- * \param[in,out] xml   XML node to set flags on
- * \param[in]     flag  XML private flag to set
- */
-static void
-set_attrs_flag(xmlNode *xml, enum xml_private_flags flag)
-{
-    for (xmlAttr *attr = pcmk__xe_first_attr(xml); attr; attr = attr->next) {
-        pcmk__set_xml_flags((xml_node_private_t *) (attr->_private), flag);
-    }
-}
-
-/*!
- * \internal
  * \brief Add an XML attribute to a node, marked as deleted
  *
  * When calculating XML changes, we need to know when an attribute has been
@@ -1105,7 +1136,7 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Reset flags (so the attribute doesn't appear as newly created)
-    attr = xmlHasProp(new_xml, (pcmkXmlStr) attr_name);
+    attr = xmlHasProp(new_xml, (const xmlChar *) attr_name);
     nodepriv = attr->_private;
     nodepriv->flags = 0;
 
@@ -1209,7 +1240,13 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
                                   old_value);
 
             } else if ((old_pos != new_pos)
-                       && !pcmk__tracking_xml_changes(new_xml, TRUE)) {
+                       && !pcmk__xml_doc_all_flags_set(new_xml->doc,
+                                                       pcmk__xf_ignore_attr_pos
+                                                       |pcmk__xf_tracking)) {
+                /* pcmk__xf_tracking is always set by xml_calculate_changes()
+                 * before this function is called, so only the
+                 * pcmk__xf_ignore_attr_pos check is truly relevant.
+                 */
                 mark_attr_moved(new_xml, (const char *) old_xml->name,
                                 old_attr, new_attr, old_pos, new_pos);
             }
@@ -1266,7 +1303,14 @@ mark_created_attrs(xmlNode *new_xml)
 static void
 xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
 {
-    set_attrs_flag(new_xml, pcmk__xf_created); // cleared later if not really new
+    // Cleared later if attributes are not really new
+    for (xmlAttr *attr = pcmk__xe_first_attr(new_xml); attr != NULL;
+         attr = attr->next) {
+        xml_node_private_t *nodepriv = attr->_private;
+
+        pcmk__set_xml_flags(nodepriv, pcmk__xf_created);
+    }
+
     xml_diff_old_attrs(old_xml, new_xml);
     mark_created_attrs(new_xml);
 }
@@ -1398,7 +1442,14 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 void
 xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    pcmk__set_xml_doc_flag(new_xml, pcmk__xf_lazy);
+    if (new_xml != NULL) {
+        /* BUG: If pcmk__xf_tracking is not set for new_xml when this function
+         * is called, then xml_calculate_changes() will unset
+         * pcmk__xf_ignore_attr_pos because pcmk__xml_commit_changes() will be
+         * in the call chain.
+         */
+        pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_ignore_attr_pos);
+    }
     xml_calculate_changes(old_xml, new_xml);
 }
 
@@ -1412,8 +1463,10 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
                               pcmk__str_none),
               return);
 
-    if(xml_tracking_changes(new_xml) == FALSE) {
-        xml_track_changes(new_xml, NULL, NULL, FALSE);
+    if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
+        // Ensure tracking has a clean start
+        pcmk__xml_commit_changes(new_xml->doc);
+        pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
     }
 
     mark_xml_changes(old_xml, new_xml, FALSE);
@@ -1590,6 +1643,50 @@ crm_xml_sanitize_id(char *id)
             case '#':
                 *c = '.';
         }
+    }
+}
+
+bool
+xml_tracking_changes(xmlNode *xml)
+{
+    return (xml != NULL)
+           && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking);
+}
+
+bool
+xml_document_dirty(xmlNode *xml)
+{
+    return (xml != NULL)
+           && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_dirty);
+}
+
+void
+xml_accept_changes(xmlNode *xml)
+{
+    if (xml != NULL) {
+        pcmk__xml_commit_changes(xml->doc);
+    }
+}
+
+void
+xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
+                  bool enforce_acls)
+{
+    if (xml == NULL) {
+        return;
+    }
+
+    pcmk__xml_commit_changes(xml->doc);
+    crm_trace("Tracking changes%s to %p",
+              (enforce_acls? " with ACLs" : ""), xml);
+    pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_tracking);
+    if (enforce_acls) {
+        if (acl_source == NULL) {
+            acl_source = xml;
+        }
+        pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_acl_enabled);
+        pcmk__unpack_acl(acl_source, xml, user);
+        pcmk__apply_acl(xml);
     }
 }
 

@@ -12,9 +12,10 @@
 #include <stdbool.h>                        // bool, true, false
 #include <stdio.h>
 #include <limits.h>
-#include <stdbool.h>                        // bool, true, false
+
 #include <glib.h>
-#include <libxml/tree.h>
+#include <libxml/tree.h>                    // xmlNode
+#include <libxml/xpath.h>                   // xmlXPathObject, etc.
 
 #include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/ipc_controld.h>
@@ -274,7 +275,7 @@ get_cib_rsc(xmlNode *cib_xml, const pcmk_resource_t *rsc)
     char *xpath = crm_strdup_printf("%s//*[@" PCMK_XA_ID "='%s']",
                                     pcmk_cib_xpath_for(PCMK_XE_RESOURCES),
                                     pcmk__xe_id(rsc->priv->xml));
-    xmlNode *rsc_xml = get_xpath_object(xpath, cib_xml, LOG_ERR);
+    xmlNode *rsc_xml = pcmk__xpath_find_one(cib_xml->doc, xpath, LOG_ERR);
 
     free(xpath);
     return rsc_xml;
@@ -2072,7 +2073,7 @@ int
 wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
 {
     pcmk_scheduler_t *scheduler = NULL;
-    xmlXPathObjectPtr search;
+    xmlXPathObject *search = NULL;
     int rc = pcmk_rc_ok;
     bool pending_unknown_state_resources;
     time_t expire_time = time(NULL);
@@ -2143,9 +2144,9 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
             }
         }
 
-        search = xpath_search(scheduler->input, xpath);
-        pending_unknown_state_resources = (numXpathResults(search) > 0);
-        freeXpathObject(search);
+        search = pcmk__xpath_search(scheduler->input->doc, xpath);
+        pending_unknown_state_resources = (pcmk__xpath_num_results(search) > 0);
+        xmlXPathFreeObject(search);
     } while (actions_are_pending(scheduler->priv->actions)
              || pending_unknown_state_resources);
 

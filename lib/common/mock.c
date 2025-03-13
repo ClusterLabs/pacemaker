@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,13 +13,12 @@
 #include <pwd.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
-#include <sys/types.h>
+#include <sys/types.h>                      // pid_t, size_t
 #include <sys/utsname.h>
 #include <unistd.h>
 #include <grp.h>

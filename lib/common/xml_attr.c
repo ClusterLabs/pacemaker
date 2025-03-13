@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -59,7 +59,9 @@ pcmk__xa_remove(xmlAttr *attr, bool force)
         return EPERM;
     }
 
-    if (!force && pcmk__tracking_xml_changes(element, false)) {
+    if (!force && (element != NULL)
+        && pcmk__xml_doc_all_flags_set(element->doc, pcmk__xf_tracking)) {
+
         // Leave in place (marked for removal) until after diff is calculated
         pcmk__xml_set_parent_flags(element, pcmk__xf_dirty);
         pcmk__set_xml_flags((xml_node_private_t *) attr->_private,

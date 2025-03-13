@@ -18,11 +18,14 @@
 #include <stdarg.h>
 
 #include <libxml/relaxng.h>
+#include <libxml/tree.h>                // xmlNode
+#include <libxml/xmlstring.h>           // xmlChar
 #include <libxslt/xslt.h>
 #include <libxslt/transform.h>
 #include <libxslt/security.h>
 #include <libxslt/xsltutils.h>
 
+#include <crm/common/schemas.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  /* PCMK__XML_LOG_BASE */
 
@@ -1017,7 +1020,7 @@ apply_transformation(const xmlNode *xml, const char *transform,
         xsltSetGenericErrorFunc(&crm_log_level, cib_upgrade_err);
     }
 
-    xslt = xsltParseStylesheetFile((pcmkXmlStr) xform);
+    xslt = xsltParseStylesheetFile((const xmlChar *) xform);
     CRM_CHECK(xslt != NULL, goto cleanup);
 
     /* Caller allocates private data for final result document. Intermediate
@@ -1427,7 +1430,7 @@ external_refs_in_schema(GList **list, const char *contents)
     const char *search = "//*[local-name()='externalRef'] | //*[local-name()='include']";
     xmlNode *xml = pcmk__xml_parse(contents);
 
-    crm_foreach_xpath_result(xml, search, append_href, list);
+    pcmk__xpath_foreach_result(xml->doc, search, append_href, list);
     pcmk__xml_free(xml);
 }
 
@@ -1482,12 +1485,13 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     /* Create a new <file path="..."> node with the contents of the file
      * as a CDATA block underneath it.
      */
-    file_node = pcmk__xe_create(parent, PCMK_XA_FILE);
+    file_node = pcmk__xe_create(parent, PCMK__XE_FILE);
     crm_xml_add(file_node, PCMK_XA_PATH, path);
     *already_included = g_list_prepend(*already_included, path);
 
-    xmlAddChild(file_node, xmlNewCDataBlock(parent->doc, (pcmkXmlStr) contents,
-                                            strlen(contents)));
+    xmlAddChild(file_node,
+                xmlNewCDataBlock(parent->doc, (const xmlChar *) contents,
+                                 strlen(contents)));
 
     /* Scan the file for any <externalRef> or <include> nodes and build up
      * a list of the files they reference.
