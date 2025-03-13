@@ -420,7 +420,7 @@ enum pcmk__xml_flags {
     pcmk__xf_acl_denied      = (UINT32_C(1) << 13),
 
     //! Ignore attribute moves within an element (set for document only)
-    pcmk__xf_lazy            = (UINT32_C(1) << 14),
+    pcmk__xf_ignore_attr_pos = (UINT32_C(1) << 14),
 };
 
 void pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags);
