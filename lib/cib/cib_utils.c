@@ -328,7 +328,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         scratch = pcmk__xml_copy(NULL, *current_cib);
         patchset_cib = *current_cib;
 
-        pcmk__xml_commit_changes(scratch->doc);
         pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
         if (enable_acl) {
             pcmk__enable_acl(*current_cib, scratch, user);
