@@ -123,7 +123,7 @@ pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags)
  * \brief Set flags for an XML document
  *
  * \param[in,out] doc    XML document
- * \param[in]     flags  Group of <tt>enum xml_private_flags</tt>
+ * \param[in]     flags  Group of <tt>enum pcmk__xml_flags</tt>
  */
 void
 pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags)
@@ -140,7 +140,7 @@ pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags)
  * \brief Check whether the given flags are set for an XML document
  *
  * \param[in] doc    XML document to check
- * \param[in] flags  Group of <tt>enum xml_private_flags</tt>
+ * \param[in] flags  Group of <tt>enum pcmk__xml_flags</tt>
  *
  * \return \c true if all of \p flags are set for \p doc, or \c false otherwise
  */
@@ -427,7 +427,7 @@ xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enf
  * \return Ordinal position of \p xml (starting with 0)
  */
 int
-pcmk__xml_position(const xmlNode *xml, enum xml_private_flags ignore_if_set)
+pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set)
 {
     int position = 0;
 
@@ -1123,21 +1123,6 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
 
 /*!
  * \internal
- * \brief Set a flag on all attributes of an XML element
- *
- * \param[in,out] xml   XML node to set flags on
- * \param[in]     flag  XML private flag to set
- */
-static void
-set_attrs_flag(xmlNode *xml, enum xml_private_flags flag)
-{
-    for (xmlAttr *attr = pcmk__xe_first_attr(xml); attr; attr = attr->next) {
-        pcmk__set_xml_flags((xml_node_private_t *) (attr->_private), flag);
-    }
-}
-
-/*!
- * \internal
  * \brief Add an XML attribute to a node, marked as deleted
  *
  * When calculating XML changes, we need to know when an attribute has been
@@ -1333,7 +1318,14 @@ mark_created_attrs(xmlNode *new_xml)
 static void
 xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
 {
-    set_attrs_flag(new_xml, pcmk__xf_created); // cleared later if not really new
+    // Cleared later if attributes are not really new
+    for (xmlAttr *attr = pcmk__xe_first_attr(new_xml); attr != NULL;
+         attr = attr->next) {
+        xml_node_private_t *nodepriv = attr->_private;
+
+        pcmk__set_xml_flags(nodepriv, pcmk__xf_created);
+    }
+
     xml_diff_old_attrs(old_xml, new_xml);
     mark_created_attrs(new_xml);
 }

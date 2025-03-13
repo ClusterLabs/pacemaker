@@ -347,26 +347,75 @@ void pcmk__xml_sanitize_id(char *id);
 
 /* internal XML-related utilities */
 
-enum xml_private_flags {
-     pcmk__xf_none        = 0x0000,
-     pcmk__xf_dirty       = 0x0001,
-     pcmk__xf_deleted     = 0x0002,
-     pcmk__xf_created     = 0x0004,
-     pcmk__xf_modified    = 0x0008,
+/*!
+ * \internal
+ * \brief Flags related to XML change tracking and ACLs
+ */
+enum pcmk__xml_flags {
+    //! This flag has no effect
+    pcmk__xf_none            = UINT32_C(0),
 
-     pcmk__xf_tracking    = 0x0010,
-     pcmk__xf_processed   = 0x0020,
-     pcmk__xf_skip        = 0x0040,
-     pcmk__xf_moved       = 0x0080,
+    /*!
+     * Node was created or modified, or one of its descendants was created,
+     * modified, moved, or deleted.
+     */
+    pcmk__xf_dirty           = (UINT32_C(1) << 0),
 
-     pcmk__xf_acl_enabled = 0x0100,
-     pcmk__xf_acl_read    = 0x0200,
-     pcmk__xf_acl_write   = 0x0400,
-     pcmk__xf_acl_deny    = 0x0800,
+    //! Node was deleted (set for attribute only)
+    pcmk__xf_deleted         = (UINT32_C(1) << 1),
 
-     pcmk__xf_acl_create  = 0x1000,
-     pcmk__xf_acl_denied  = 0x2000,
-     pcmk__xf_lazy        = 0x4000,
+    //! Node was created
+    pcmk__xf_created         = (UINT32_C(1) << 2),
+
+    //! Node was modified
+    pcmk__xf_modified        = (UINT32_C(1) << 3),
+
+    //! Tracking is enabled (set for document only)
+    pcmk__xf_tracking        = (UINT32_C(1) << 4),
+
+    //! Tree's changes compared to another XML tree have been marked
+    pcmk__xf_processed       = (UINT32_C(1) << 5),
+
+    //! Skip counting this node when getting a node's position among siblings
+    pcmk__xf_skip            = (UINT32_C(1) << 6),
+
+    //! Node was moved
+    pcmk__xf_moved           = (UINT32_C(1) << 7),
+
+    //! ACLs are enabled (set for document only)
+    pcmk__xf_acl_enabled     = (UINT32_C(1) << 8),
+
+    /* @TODO Consider splitting the ACL permission flags (pcmk__xf_acl_read,
+     * pcmk__xf_acl_write, pcmk__xf_acl_write, and pcmk__xf_acl_create) into a
+     * separate enum and reserving this enum for tracking-related flags.
+     *
+     * The ACL permission flags have various meanings in different contexts (for
+     * example, what permission an ACL grants or denies; what permissions the
+     * current ACL user has for a given XML node; and possibly others). And
+     * for xml_acl_t objects, they're used in exclusive mode (exactly one is
+     * set), rather than as flags.
+     */
+
+    //! ACL read permission
+    pcmk__xf_acl_read        = (UINT32_C(1) << 9),
+
+    //! ACL write permission (implies read permission in most or all contexts)
+    pcmk__xf_acl_write       = (UINT32_C(1) << 10),
+
+    //! ACL deny permission (that is, no permission)
+    pcmk__xf_acl_deny        = (UINT32_C(1) << 11),
+
+    /*!
+     * ACL create permission for attributes (if attribute exists, this is mapped
+     * to \c pcmk__xf_acl_write)
+     */
+    pcmk__xf_acl_create      = (UINT32_C(1) << 12),
+
+    //! ACLs deny the user access (set for document only)
+    pcmk__xf_acl_denied      = (UINT32_C(1) << 13),
+
+    //! Ignore attribute moves within an element (set for document only)
+    pcmk__xf_lazy            = (UINT32_C(1) << 14),
 };
 
 void pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags);
