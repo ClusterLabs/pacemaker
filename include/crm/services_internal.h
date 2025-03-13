@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,9 @@
 
 #ifndef PCMK__SERVICES_INTERNAL__H
 #  define PCMK__SERVICES_INTERNAL__H
+
+#include <crm/common/results_internal.h>    // pcmk__action_result_t
+#include <crm/services.h>                   // svc_action_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +53,8 @@ char *services__grab_stderr(svc_action_t *action);
 void services__set_result(svc_action_t *action, int agent_status,
                           enum pcmk_exec_status exec_status,
                           const char *exit_reason);
+void services__copy_result(const svc_action_t *action,
+                           pcmk__action_result_t *result);
 
 void services__format_result(svc_action_t *action, int agent_status,
                              enum pcmk_exec_status exec_status,

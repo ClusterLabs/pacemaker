@@ -2555,8 +2555,7 @@ metadata_complete(svc_action_t *action)
     struct metadata_cb *metadata_cb = (struct metadata_cb *) action->cb_data;
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
-    pcmk__set_result(&result, action->rc, action->status,
-                     services__exit_reason(action));
+    services__copy_result(action, &result);
     pcmk__set_result_output(&result, action->stdout_data, action->stderr_data);
 
     metadata_cb->callback(0, &result, metadata_cb->user_data);
@@ -2624,8 +2623,7 @@ lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
         return ENOMEM;
     }
     if (action->rc != PCMK_OCF_UNKNOWN) {
-        pcmk__set_result(&result, action->rc, action->status,
-                         services__exit_reason(action));
+        services__copy_result(action, &result);
         callback(0, &result, user_data);
         pcmk__reset_result(&result);
         services_action_free(action);
