@@ -1443,6 +1443,10 @@ void
 xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
     if (new_xml != NULL) {
+        /* BUG: If pcmk__xf_tracking is not set for new_xml when this function
+         * is called, then xml_calculate_changes() will unset the lazy flag
+         * because pcmk__xml_commit_changes() will be in the call chain.
+         */
         pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_lazy);
     }
     xml_calculate_changes(old_xml, new_xml);
