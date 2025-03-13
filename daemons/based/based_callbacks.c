@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <libxml/tree.h>
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -1020,12 +1021,13 @@ contains_config_change(xmlNode *diff)
     bool changed = false;
 
     if (diff) {
-        xmlXPathObject *xpathObj = xpath_search(diff, XPATH_CONFIG_CHANGE);
+        xmlXPathObject *xpathObj = pcmk__xpath_search(diff->doc,
+                                                      XPATH_CONFIG_CHANGE);
 
-        if (numXpathResults(xpathObj) > 0) {
+        if (pcmk__xpath_num_results(xpathObj) > 0) {
             changed = true;
         }
-        freeXpathObject(xpathObj);
+        xmlXPathFreeObject(xpathObj);
     }
     return changed;
 }
