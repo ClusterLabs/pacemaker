@@ -233,6 +233,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     xmlNode *local_diff = NULL;
 
     const char *user = crm_element_value(req, PCMK__XA_CIB_USER);
+    bool enable_acl = cib_acl_enabled(*current_cib, user);
     bool with_digest = false;
 
     crm_trace("Begin %s%s%s op",
@@ -259,7 +260,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         xmlNode *cib_ro = *current_cib;
         xmlNode *cib_filtered = NULL;
 
-        if (cib_acl_enabled(cib_ro, user)
+        if (enable_acl
             && xml_acl_filtered_copy(user, *current_cib, *current_cib,
                                      &cib_filtered)) {
 
@@ -307,11 +308,14 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         pcmk__xe_copy_attrs(top, scratch, pcmk__xaf_none);
         patchset_cib = top;
 
-        xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
+        xml_track_changes(scratch, user, NULL, enable_acl);
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
 
         /* If scratch points to a new object now (for example, after an erase
          * operation), then *current_cib should point to the same object.
+         *
+         * @TODO Enable tracking and ACLs and calculate changes? Change tracking
+         * and unpacked ACLs didn't carry over to new object.
          */
         *current_cib = scratch;
 
@@ -319,14 +323,17 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         scratch = pcmk__xml_copy(NULL, *current_cib);
         patchset_cib = *current_cib;
 
-        xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
+        xml_track_changes(scratch, user, NULL, enable_acl);
         rc = (*fn) (op, call_options, section, req, input, *current_cib,
                     &scratch, output);
 
+        /* @TODO This appears to be a hack to determine whether scratch points
+         * to a new object now, without saving the old pointer (which may be
+         * invalid now) for comparison. Confirm this, and check more clearly.
+         */
         if (!pcmk__xml_doc_all_flags_set(scratch->doc, pcmk__xf_tracking)) {
             crm_trace("Inferring changes after %s op", op);
-            xml_track_changes(scratch, user, *current_cib,
-                              cib_acl_enabled(*current_cib, user));
+            xml_track_changes(scratch, user, *current_cib, enable_acl);
             xml_calculate_changes(*current_cib, scratch);
         }
         CRM_CHECK(*current_cib != scratch, return -EINVAL);
