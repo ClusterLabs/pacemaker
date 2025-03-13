@@ -712,20 +712,6 @@ cib_process_xpath(const char *op, int options, const char *section,
             continue;
         }
 
-        /* @TODO This is a longstanding bug in the CIB API. If an XPath
-         * expression matches a non-element node (for example, an attribute),
-         * then we operate on the parent element. Similarly, if it matches the
-         * document itself, then we operate on the root element (which at least
-         * seems more reasonable).
-         *
-         * Some CIB operations might not make much sense for non-element nodes.
-         * However, operating on a matched node's parent is surprising behavior.
-         */
-        match = pcmk__xpath_match_element(match);
-        if (match == NULL) {
-            continue;
-        }
-
         path = xmlGetNodePath(match);
         crm_debug("Processing %s op for %s with %s", op, section, path);
         free(path);
