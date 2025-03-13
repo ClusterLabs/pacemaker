@@ -281,16 +281,15 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
 static bool
 new_private_data(xmlNode *node, void *user_data)
 {
-    /* @TODO Is it necessary to set pcmk__xf_dirty and pcmk__xf_created flags on
-     * new nodes when change tracking is not even enabled? This seems to be the
-     * main reason why committing changes before enabling tracking (by setting
-     * pcmk__xf_tracking) is so often required.
-     */
+    bool tracking = false;
+
     CRM_CHECK(node != NULL, return true);
 
     if (node->_private != NULL) {
         return true;
     }
+
+    tracking = pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking);
 
     switch (node->type) {
         case XML_DOCUMENT_NODE:
@@ -300,7 +299,6 @@ new_private_data(xmlNode *node, void *user_data)
 
                 docpriv->check = PCMK__XML_DOC_PRIVATE_MAGIC;
                 node->_private = docpriv;
-                pcmk__set_xml_flags(docpriv, pcmk__xf_dirty|pcmk__xf_created);
             }
             break;
 
@@ -313,7 +311,9 @@ new_private_data(xmlNode *node, void *user_data)
 
                 nodepriv->check = PCMK__XML_NODE_PRIVATE_MAGIC;
                 node->_private = nodepriv;
-                pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
+                if (tracking) {
+                    pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
+                }
 
                 for (xmlAttr *iter = pcmk__xe_first_attr(node); iter != NULL;
                      iter = iter->next) {
@@ -333,7 +333,7 @@ new_private_data(xmlNode *node, void *user_data)
             return true;
     }
 
-    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)) {
+    if (tracking) {
         pcmk__mark_xml_node_dirty(node);
     }
     return true;
@@ -1459,6 +1459,7 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
               return);
 
     if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
+        // Ensure tracking has a clean start
         pcmk__xml_commit_changes(new_xml->doc);
         pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
     }

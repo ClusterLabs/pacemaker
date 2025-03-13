@@ -373,12 +373,8 @@ enum pcmk__xml_flags {
     /*!
      * \brief Tracking is enabled (set for document only)
      *
-     * \c pcmk__xml_commit_changes() should usually be called before setting
-     * this flag. Creating a node initializes its private data, which sets
-     * \c pcmk__xf_dirty and \c pcmk__xf_created on the node even if tracking is
-     * not enabled for the document. If we don't commit changes before enabling
-     * tracking, then earlier node creations might appear in the later set of
-     * changes.
+     * Call \c pcmk__xml_commit_changes() before setting this flag if a clean
+     * start for tracking is needed.
      */
     pcmk__xf_tracking        = (UINT32_C(1) << 4),
 
