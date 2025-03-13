@@ -944,7 +944,6 @@ show_shadow_diff(pcmk__output_t *out, GError **error)
     if (read_xml(filename, &new_config, error) != pcmk_rc_ok) {
         goto done;
     }
-    xml_track_changes(new_config, NULL, new_config, false);
     xml_calculate_changes(old_config, new_config);
     diff = xml_create_patchset(0, old_config, new_config, NULL, false);
 
