@@ -30,7 +30,7 @@
 #include <crm/common/output_internal.h> // pcmk__output_t
 #include <crm/common/results.h>         // crm_exit_t
 #include <crm/common/rules.h>           // pcmk_rule_input_t
-#include <crm/common/xml_internal.h>    // enum xml_private_flags
+#include <crm/common/xml_internal.h>    // enum pcmk__xml_flags
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,7 +64,7 @@ typedef struct pcmk__deleted_xml_s {
  */
 typedef struct xml_node_private_s {
     uint32_t check;         //!< Magic number for checking integrity
-    uint32_t flags;         //!< Group of <tt>enum xml_private_flags</tt>
+    uint32_t flags;         //!< Group of <tt>enum pcmk__xml_flags</tt>
 } xml_node_private_t;
 
 /*!
@@ -73,7 +73,7 @@ typedef struct xml_node_private_s {
  */
 typedef struct xml_doc_private_s {
     uint32_t check;         //!< Magic number for checking integrity
-    uint32_t flags;         //!< Group of <tt>enum xml_private_flags</tt>
+    uint32_t flags;         //!< Group of <tt>enum pcmk__xml_flags</tt>
     char *acl_user;         //!< User affected by \c acls (for logging)
 
     //! ACLs to check requested changes against (list of \c xml_acl_t)
@@ -127,8 +127,7 @@ G_GNUC_INTERNAL
 xmlDoc *pcmk__xml_new_doc(void);
 
 G_GNUC_INTERNAL
-int pcmk__xml_position(const xmlNode *xml,
-                       enum xml_private_flags ignore_if_set);
+int pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set);
 
 G_GNUC_INTERNAL
 xmlNode *pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle,
