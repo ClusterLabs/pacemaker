@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,11 +19,12 @@
  */
 
 static void
-assert_comment(xmlDoc *doc, const char *content)
+assert_comment(const char *content)
 {
+    xmlDoc *doc = pcmk__xml_new_doc();
+    xml_doc_private_t *docpriv = doc->_private;
     xmlNode *node = NULL;
     xml_node_private_t *nodepriv = NULL;
-    xml_doc_private_t *docpriv = doc->_private;
 
     // Also clears existing doc flags
     xml_track_changes((xmlNode *) doc, NULL, NULL, false);
@@ -49,6 +50,7 @@ assert_comment(xmlDoc *doc, const char *content)
     assert_true(pcmk_is_set(docpriv->flags, pcmk__xf_dirty));
 
     pcmk__xml_free(node);
+    pcmk__xml_free_doc(doc);
 }
 
 static void
@@ -61,15 +63,8 @@ null_doc(void **state)
 static void
 with_doc(void **state)
 {
-    xmlDoc *doc = pcmk__xml_new_doc();
-
-    assert_non_null(doc);
-    assert_non_null(doc->_private);
-
-    assert_comment(doc, NULL);
-    assert_comment(doc, "some content");
-
-    pcmk__xml_free_doc(doc);
+    assert_comment(NULL);
+    assert_comment("some content");
 }
 
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
