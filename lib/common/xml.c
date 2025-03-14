@@ -1371,11 +1371,10 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
 static void
 mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 {
-    xmlNode *old_child = NULL;
-    xmlNode *new_child = NULL;
     xml_node_private_t *nodepriv = NULL;
 
     CRM_CHECK(new_xml != NULL, return);
+
     if (old_xml == NULL) {
         mark_xml_tree_dirty_created(new_xml);
         pcmk__apply_creation_acl(new_xml, check_top);
@@ -1385,19 +1384,19 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     nodepriv = new_xml->_private;
     CRM_CHECK(nodepriv != NULL, return);
 
-    if(nodepriv->flags & pcmk__xf_processed) {
-        /* Avoid re-comparing nodes */
+    if (pcmk_is_set(nodepriv->flags, pcmk__xf_processed)) {
+        // Avoid re-comparing nodes
         return;
     }
     pcmk__set_xml_flags(nodepriv, pcmk__xf_processed);
 
     xml_diff_attrs(old_xml, new_xml);
 
-    // Check for differences in the original children
-    for (old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
+    // Check for differences compared to the original children
+    for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
          old_child = pcmk__xml_next(old_child)) {
 
-        new_child = match_xml(new_xml, old_child);
+        xmlNode *new_child = match_xml(new_xml, old_child);
 
         if (new_child != NULL) {
             mark_xml_changes(old_child, new_child, true);
@@ -1408,31 +1407,31 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     }
 
     // Check for moved or created children
-    new_child = pcmk__xml_first_child(new_xml);
-    while (new_child != NULL) {
-        xmlNode *next = pcmk__xml_next(new_child);
+    for (xmlNode *new_child = pcmk__xml_first_child(new_xml),
+                 *next = pcmk__xml_next(new_child);
+         new_child != NULL;
+         new_child = next, next = pcmk__xml_next(new_child)) {
 
-        old_child = match_xml(old_xml, new_child);
+        xmlNode *old_child = match_xml(old_xml, new_child);
 
-        if (old_child == NULL) {
+        if (old_child != NULL) {
+            // Check for movement; we already marked other changes
+            int old_pos = pcmk__xml_position(old_child, pcmk__xf_skip);
+            int new_pos = pcmk__xml_position(new_child, pcmk__xf_skip);
+
+            if (old_pos != new_pos) {
+                mark_child_moved(old_child, new_xml, new_child, old_pos,
+                                 new_pos);
+            }
+
+        } else {
             // This is a newly created child
             nodepriv = new_child->_private;
             pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
 
             // May free new_child
             mark_xml_changes(old_child, new_child, true);
-
-        } else {
-            /* Check for movement, we already checked for differences */
-            int p_new = pcmk__xml_position(new_child, pcmk__xf_skip);
-            int p_old = pcmk__xml_position(old_child, pcmk__xf_skip);
-
-            if(p_old != p_new) {
-                mark_child_moved(old_child, new_xml, new_child, p_old, p_new);
-            }
         }
-
-        new_child = next;
     }
 }
 
