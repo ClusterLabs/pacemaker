@@ -23,11 +23,27 @@
 
 #include <crm_resource.h>
 
+/*!
+ * \internal
+ * \brief Resource with list of node info objects for its active nodes
+ */
 struct rsc_node_info {
-    const pcmk_resource_t *rsc;
+    const pcmk_resource_t *rsc; //!< Resource
+
+    //! Nodes where \c rsc is active (list of <tt>node_info_t *</tt>)
     GList *list;
 };
 
+/*!
+ * \internal
+ * \brief Prepend a given node to a resource node info object's list
+ *
+ * \param[in]     data       Node to prepend (<tt>const pcmk_node_t *</tt>)
+ * \param[in,out] user_data  Resource node info object whose list to prepend to
+ *                           (<tt>struct rsc_node_info *</tt>
+ *
+ * \note This is suitable for use with \c g_list_foreach().
+ */
 static void
 prepend_node_info(gpointer data, gpointer user_data)
 {
@@ -75,20 +91,19 @@ cli_resource_search(const pcmk_resource_t *rsc, const char *requested_name)
         }
     }
 
-    if (clone != NULL) {
-        for (const GList *iter = clone->priv->children; iter != NULL;
-             iter = iter->next) {
-
-            const pcmk_resource_t *child = iter->data;
-
-            rni.rsc = child;
-            g_list_foreach(child->priv->active_nodes, prepend_node_info, &rni);
-        }
-
-    } else {
+    if (clone == NULL) {
         g_list_foreach(rsc->priv->active_nodes, prepend_node_info, &rni);
+        return rni.list;
     }
 
+    for (const GList *iter = clone->priv->children; iter != NULL;
+         iter = iter->next) {
+
+        const pcmk_resource_t *child = iter->data;
+
+        rni.rsc = child;
+        g_list_foreach(child->priv->active_nodes, prepend_node_info, &rni);
+    }
     return rni.list;
 }
 
