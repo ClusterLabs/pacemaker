@@ -424,6 +424,7 @@ void pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags);
 bool pcmk__xml_doc_all_flags_set(const xmlDoc *xml, uint32_t flags);
 
 void pcmk__xml_commit_changes(xmlDoc *doc);
+void pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml);
 
 bool pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
                             void *user_data);

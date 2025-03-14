@@ -186,7 +186,7 @@ generate_patch(xmlNode *object_original, xmlNode *object_new, const char *xml_fi
     if(as_cib) {
         xml_calculate_significant_changes(object_original, object_new);
     } else {
-        xml_calculate_changes(object_original, object_new);
+        pcmk__xml_mark_changes(object_original, object_new);
     }
     crm_log_xml_debug(object_new, (xml_file_new? xml_file_new: "target"));
 
