@@ -325,10 +325,7 @@ pcmk_check_rule(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
     return pcmk_check_rules(xml, input, date, rule_ids);
 }
 
-/*!
- * \enum pcmk_rc_disp_flags
- * \brief Bit flags to control which fields of result code info are displayed
- */
+//! Bit flags to control which fields of result code info are displayed
 enum pcmk_rc_disp_flags {
     pcmk_rc_disp_none = 0,          //!< (Does nothing)
     pcmk_rc_disp_code = (1 << 0),   //!< Display result code number

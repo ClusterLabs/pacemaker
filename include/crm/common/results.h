@@ -96,7 +96,6 @@ extern "C" {
 #endif
 
 /*!
- * \enum pcmk_rc_e
  * \brief Return codes for Pacemaker API functions
  *
  * Any Pacemaker API function documented as returning a "standard Pacemaker
@@ -163,7 +162,6 @@ enum pcmk_rc_e {
 
 
 /*!
- * \enum ocf_exitcode
  * \brief Exit status codes for resource agents
  *
  * The OCF Resource Agent API standard enumerates the possible exit status codes
@@ -202,7 +200,6 @@ enum ocf_exitcode {
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 /*!
- * \enum crm_exit_e
  * \brief Exit status codes for tools and daemons
  *
  * We want well-specified (i.e. OS-invariant) exit status codes for our daemons
@@ -302,7 +299,6 @@ typedef enum crm_exit_e {
 } crm_exit_t;
 
 /*!
- * \enum pcmk_exec_status
  * \brief Execution status
  *
  * These codes are used to specify the result of the attempt to execute an
@@ -329,7 +325,6 @@ enum pcmk_exec_status {
 };
 
 /*!
- * \enum pcmk_result_type
  * \brief Types of Pacemaker result codes
  *
  * A particular integer can have different meanings within different Pacemaker

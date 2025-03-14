@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2024 the Pacemaker project contributors
+ * Copyright 2017-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -137,8 +137,8 @@ do {                                                                            
     }                                                                           \
 } while (0)
 
-/*
- * \enum pcmk__xml_fmt_options
+/*!
+ * \internal
  * \brief Bit flags to control format in XML logs and dumps
  */
 enum pcmk__xml_fmt_options {
@@ -207,7 +207,6 @@ GString *pcmk__element_xpath(const xmlNode *xml);
 
 /*!
  * \internal
- * \enum pcmk__xml_escape_type
  * \brief Indicators of which XML characters to escape
  *
  * XML allows the escaping of special characters by replacing them with entity
@@ -354,7 +353,6 @@ xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
 
 /*!
  * \internal
- * \enum pcmk__xa_flags
  * \brief Flags for operations affecting XML attributes
  */
 enum pcmk__xa_flags {

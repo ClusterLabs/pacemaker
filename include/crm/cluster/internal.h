@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,7 +37,6 @@ enum crm_proc_flag {
 
 /*!
  * \internal
- * \enum pcmk__node_status_flags
  * \brief Boolean flags for a \c pcmk__node_status_t object
  *
  * Some flags may not be related to status specifically. However, we keep these
@@ -76,7 +75,6 @@ enum pcmk__node_search_flags {
 
 /*!
  * \internal
- * \enum pcmk__node_update
  * \brief Type of update to a \c pcmk__node_status_t object
  */
 enum pcmk__node_update {

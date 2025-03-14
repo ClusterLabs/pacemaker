@@ -77,33 +77,31 @@ int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn,
 void cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out);
 void cli_resource_print_cts_constraints(pcmk_scheduler_t *scheduler);
 
-int cli_resource_print(const pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
-                       bool expanded);
+int cli_resource_print(pcmk_resource_t *rsc, bool expanded);
 int cli_resource_print_operations(const char *rsc_id, const char *host_uname,
                                   bool active, pcmk_scheduler_t *scheduler);
 
 /* runtime */
 int cli_resource_check(pcmk__output_t *out, pcmk_resource_t *rsc,
                        pcmk_node_t *node);
-int cli_resource_fail(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
-                      const char *rsc_id, pcmk_scheduler_t *scheduler);
-GList *cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
-                             pcmk_scheduler_t *scheduler);
-int cli_resource_delete(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
-                        const pcmk_resource_t *rsc, const char *operation,
+int cli_resource_fail(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
+                      const char *rsc_id, const pcmk_node_t *node);
+GList *cli_resource_search(const pcmk_resource_t *rsc,
+                           const char *requested_name);
+int cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
+                        pcmk_node_t *node, const char *operation,
                         const char *interval_spec, bool just_failures,
-                        pcmk_scheduler_t *scheduler, bool force);
-int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const pcmk_node_t *node,
+                        bool force);
+int cli_cleanup_all(pcmk_ipc_api_t *controld_api, pcmk_node_t *node,
                     const char *operation, const char *interval_spec,
                     pcmk_scheduler_t *scheduler);
 int cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                          const pcmk_node_t *node, const char *move_lifetime,
                          guint timeout_ms, cib_t *cib,
                          gboolean promoted_role_only, gboolean force);
-int cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
+int cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
                       const pcmk_node_t *node, const char *move_lifetime,
-                      cib_t *cib, pcmk_scheduler_t *scheduler,
-                      bool promoted_role_only, bool force);
+                      cib_t *cib, bool promoted_role_only, bool force);
 crm_exit_t cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                             const char *rsc_class, const char *rsc_prov,
                                             const char *rsc_type, const char *rsc_action,
@@ -113,10 +111,11 @@ crm_exit_t cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc
                                             gboolean force, int check_level);
 crm_exit_t cli_resource_execute(pcmk_resource_t *rsc,
                                 const char *requested_name,
-                                const char *rsc_action, GHashTable *override_hash,
+                                const char *rsc_action,
+                                GHashTable *override_hash,
                                 guint timeout_ms, cib_t *cib,
-                                pcmk_scheduler_t *scheduler,
-                                int resource_verbose, gboolean force, int check_level);
+                                int resource_verbose, bool force,
+                                int check_level);
 
 int cli_resource_update_attribute(pcmk_resource_t *rsc,
                                   const char *requested_name,

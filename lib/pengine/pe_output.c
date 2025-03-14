@@ -3109,6 +3109,9 @@ resource_list(pcmk__output_t *out, va_list args)
             printed_header = true;
         }
 
+        /* @FIXME It looks as if we can return pcmk_rc_no_output even after
+         * writing output here.
+         */
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
             out->list_item(out, NULL, "No inactive resources");
         } else if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {

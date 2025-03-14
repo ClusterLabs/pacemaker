@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -43,7 +43,6 @@ extern "C" {
 
 /*!
  * \internal
- * \enum cib__op_attr
  * \brief Flags for CIB operation attributes
  */
 enum cib__op_attr {
@@ -58,7 +57,6 @@ enum cib__op_attr {
 
 /*!
  * \internal
- * \enum cib__op_type
  * \brief Types of CIB operations
  */
 enum cib__op_type {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -65,10 +65,7 @@ int pcmk_cpg_set_deliver_fn(pcmk_cluster_t *cluster, cpg_deliver_fn_t fn);
 int pcmk_cpg_set_confchg_fn(pcmk_cluster_t *cluster, cpg_confchg_fn_t fn);
 #endif  // SUPPORT_COROSYNC
 
-/*!
- * \enum pcmk_cluster_layer
- * \brief Types of cluster layer
- */
+//! Types of cluster layer
 enum pcmk_cluster_layer {
     pcmk_cluster_layer_unknown  = 1,    //!< Unknown cluster layer
     pcmk_cluster_layer_invalid  = 2,    //!< Invalid cluster layer
