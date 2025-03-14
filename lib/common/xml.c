@@ -1225,7 +1225,7 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
                        && !pcmk__xml_doc_all_flags_set(new_xml->doc,
                                                        pcmk__xf_ignore_attr_pos
                                                        |pcmk__xf_tracking)) {
-                /* pcmk__xf_tracking is always set by xml_calculate_changes()
+                /* pcmk__xf_tracking is always set by pcmk__xml_mark_changes()
                  * before this function is called, so only the
                  * pcmk__xf_ignore_attr_pos check is truly relevant.
                  */
@@ -1517,9 +1517,19 @@ find_matching_children(xmlNode *old_xml, xmlNode *new_xml, bool comments_ids)
     }
 }
 
-// Given original and new XML, mark new XML portions that have changed
-static void
-mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml)
+/*!
+ * \internal
+ * \brief Mark changes between two XML trees
+ *
+ * Set flags in a new XML tree to indicate changes relative to an old XML tree.
+ *
+ * \param[in,out] old_xml  XML before changes
+ * \param[in,out] new_xml  XML after changes
+ *
+ * \note This may set \c pcmk__xf_skip on parts of \p old_xml.
+ */
+void
+pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
     /* This function may set the xml_node_private_t:match member on children of
      * old_xml and new_xml, but it clears that member before returning.
@@ -1534,6 +1544,7 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml)
         return;
     }
 
+    pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
     xml_diff_attrs(old_xml, new_xml);
 
     find_matching_children(old_xml, new_xml, true);
@@ -1569,7 +1580,7 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml)
             continue;
         }
 
-        mark_xml_changes(old_child, new_child);
+        pcmk__xml_mark_changes(old_child, new_child);
     }
 
     /* Mark unmatched new children as created, and mark matched new children as
@@ -1620,15 +1631,26 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml)
 void
 xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    if (new_xml != NULL) {
-        /* BUG: If pcmk__xf_tracking is not set for new_xml when this function
-         * is called, then xml_calculate_changes() will unset
-         * pcmk__xf_ignore_attr_pos because pcmk__xml_commit_changes() will be
-         * in the call chain.
-         */
-        pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_ignore_attr_pos);
+    CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
+              && pcmk__xe_is(old_xml, (const char *) new_xml->name)
+              && pcmk__str_eq(pcmk__xe_id(old_xml), pcmk__xe_id(new_xml),
+                              pcmk__str_none),
+              return);
+
+    /* BUG: If pcmk__xf_tracking is not set for new_xml when this function is
+     * called, then we unset pcmk__xf_ignore_attr_pos via
+     * pcmk__xml_commit_changes(). Since this function is about to be
+     * deprecated, it's not worth fixing this and changing the user-facing
+     * behavior.
+     */
+    pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_ignore_attr_pos);
+
+    if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
+        // Ensure tracking has a clean start (pcmk__xml_mark_changes() enables)
+        pcmk__xml_commit_changes(new_xml->doc);
     }
-    xml_calculate_changes(old_xml, new_xml);
+
+    pcmk__xml_mark_changes(old_xml, new_xml);
 }
 
 // Called functions may set the \p pcmk__xf_skip flag on parts of \p old_xml
@@ -1642,12 +1664,11 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
               return);
 
     if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
-        // Ensure tracking has a clean start
+        // Ensure tracking has a clean start (pcmk__xml_mark_changes() enables)
         pcmk__xml_commit_changes(new_xml->doc);
-        pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
     }
 
-    mark_xml_changes(old_xml, new_xml);
+    pcmk__xml_mark_changes(old_xml, new_xml);
 }
 
 /*!

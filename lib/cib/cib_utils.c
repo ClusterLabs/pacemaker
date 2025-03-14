@@ -343,11 +343,10 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         if (!pcmk__xml_doc_all_flags_set(scratch->doc, pcmk__xf_tracking)) {
             crm_trace("Inferring changes after %s op", op);
             pcmk__xml_commit_changes(scratch->doc);
-            pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
             if (enable_acl) {
                 pcmk__enable_acl(*current_cib, scratch, user);
             }
-            xml_calculate_changes(*current_cib, scratch);
+            pcmk__xml_mark_changes(*current_cib, scratch);
         }
         CRM_CHECK(*current_cib != scratch, return -EINVAL);
     }
