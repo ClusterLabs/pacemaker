@@ -38,7 +38,6 @@
 #define SUMMARY "crm_resource - perform tasks related to Pacemaker cluster resources"
 
 enum rsc_command {
-    cmd_none = 0,           // No command option given (yet)
     cmd_ban,
     cmd_cleanup,
     cmd_clear,
@@ -1772,10 +1771,6 @@ handle_why(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
 }
 
 static const crm_resource_cmd_info_t crm_resource_command_info[] = {
-    [cmd_none]              = {
-        NULL,
-        0,
-    },
     [cmd_ban]               = {
         handle_ban,
         crm_rsc_find_match_anon_basename
@@ -2328,9 +2323,6 @@ main(int argc, char **argv)
             goto done;
         }
 
-        /* The --ban, --clear, --delete, --move, and --restart commands do not
-         * support instances of clone resources
-         */
         if (pcmk_is_set(command_info->flags, crm_rsc_rejects_clone_instance)
             && pcmk__is_clone(rsc->priv->parent)
             && (strchr(options.rsc_id, ':') != NULL)) {
