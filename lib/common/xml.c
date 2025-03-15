@@ -493,15 +493,14 @@ pcmk__xml_commit_changes(xmlDoc *doc)
  *
  * \param[in] haystack  XML whose children should be checked
  * \param[in] needle    XML to match (comment content or element name and ID)
- * \param[in] exact     If true and needle is a comment, position must match
  */
-xmlNode *
-pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
+static xmlNode *
+match_xml(const xmlNode *haystack, const xmlNode *needle)
 {
     CRM_CHECK(needle != NULL, return NULL);
 
     if (needle->type == XML_COMMENT_NODE) {
-        return pcmk__xc_match(haystack, needle, exact);
+        return pcmk__xc_match(haystack, needle, true);
 
     } else {
         const char *id = pcmk__xe_id(needle);
@@ -1343,7 +1342,7 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
     free_xml_with_position(candidate,
                            pcmk__xml_position(old_child, pcmk__xf_skip));
 
-    if (pcmk__xml_match(new_parent, old_child, true) == NULL) {
+    if (match_xml(new_parent, old_child) == NULL) {
         pcmk__set_xml_flags((xml_node_private_t *) (old_child->_private),
                             pcmk__xf_skip);
     }
@@ -1400,7 +1399,7 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     for (old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
          old_child = pcmk__xml_next(old_child)) {
 
-        new_child = pcmk__xml_match(new_xml, old_child, true);
+        new_child = match_xml(new_xml, old_child);
 
         if (new_child != NULL) {
             mark_xml_changes(old_child, new_child, true);
@@ -1415,7 +1414,7 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     while (new_child != NULL) {
         xmlNode *next = pcmk__xml_next(new_child);
 
-        old_child = pcmk__xml_match(old_xml, new_child, true);
+        old_child = match_xml(old_xml, new_child);
 
         if (old_child == NULL) {
             // This is a newly created child

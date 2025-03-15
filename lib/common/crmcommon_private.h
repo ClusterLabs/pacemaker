@@ -136,10 +136,6 @@ G_GNUC_INTERNAL
 int pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set);
 
 G_GNUC_INTERNAL
-xmlNode *pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle,
-                         bool exact);
-
-G_GNUC_INTERNAL
 xmlNode *pcmk__xc_match(const xmlNode *root, const xmlNode *search_comment,
                         bool exact);
 
