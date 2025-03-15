@@ -1369,17 +1369,11 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
 
 // Given original and new XML, mark new XML portions that have changed
 static void
-mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
+mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
     xml_node_private_t *nodepriv = NULL;
 
     CRM_CHECK(new_xml != NULL, return);
-
-    if (old_xml == NULL) {
-        mark_xml_tree_dirty_created(new_xml);
-        pcmk__apply_creation_acl(new_xml, check_top);
-        return;
-    }
 
     nodepriv = new_xml->_private;
     CRM_CHECK(nodepriv != NULL, return);
@@ -1399,7 +1393,7 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
         xmlNode *new_child = match_xml(new_xml, old_child);
 
         if (new_child != NULL) {
-            mark_xml_changes(old_child, new_child, true);
+            mark_xml_changes(old_child, new_child);
 
         } else {
             mark_child_deleted(old_child, new_xml);
@@ -1428,9 +1422,10 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
             // This is a newly created child
             nodepriv = new_child->_private;
             pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
+            mark_xml_tree_dirty_created(new_child);
 
-            // May free new_child
-            mark_xml_changes(old_child, new_child, true);
+            // Check whether creation was allowed; may free new_child
+            pcmk__apply_creation_acl(new_child, true);
         }
     }
 }
@@ -1465,7 +1460,7 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
         pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
     }
 
-    mark_xml_changes(old_xml, new_xml, FALSE);
+    mark_xml_changes(old_xml, new_xml);
 }
 
 /*!
