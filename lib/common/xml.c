@@ -1342,10 +1342,8 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
     free_xml_with_position(candidate,
                            pcmk__xml_position(old_child, pcmk__xf_skip));
 
-    if (match_xml(new_parent, old_child) == NULL) {
-        pcmk__set_xml_flags((xml_node_private_t *) (old_child->_private),
-                            pcmk__xf_skip);
-    }
+    pcmk__set_xml_flags((xml_node_private_t *) old_child->_private,
+                        pcmk__xf_skip);
 }
 
 static void
