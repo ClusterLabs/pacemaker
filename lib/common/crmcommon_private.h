@@ -71,6 +71,7 @@ typedef struct pcmk__deleted_xml_s {
 typedef struct xml_node_private_s {
     uint32_t check;         //!< Magic number for checking integrity
     uint32_t flags;         //!< Group of <tt>enum pcmk__xml_flags</tt>
+    xmlNode *match;         //!< Pointer to matching node (defined by caller)
 } xml_node_private_t;
 
 /*!
