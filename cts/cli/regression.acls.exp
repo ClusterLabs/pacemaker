@@ -1437,6 +1437,40 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
 =#=#=#= Begin test: niceguy: Replace - remove acls =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib[@epoch]
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls
+pcmk__apply_creation_acl 	trace: Creation of <acls> scaffolding with id="<unset>" is implicitly allowed
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_target[@id='l33t-haxor']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_target> with id="l33t-haxor"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_target[@id='niceguy']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_target> with id="niceguy"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_target[@id='bob']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_target> with id="bob"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_target[@id='joe']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_target> with id="joe"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_target[@id='mike']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_target> with id="mike"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_target[@id='chris']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_target> with id="chris"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_role[@id='nothing']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_role> with id="nothing"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_role[@id='observer']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_role> with id="observer"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_role[@id='admin']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_role> with id="admin"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_role[@id='super_user']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_role> with id="super_user"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_role[@id='rsc_writer']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_role> with id="rsc_writer"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_role[@id='rsc_denied']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_role> with id="rsc_denied"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_role[@id='badidea-role']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_role> with id="badidea-role"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_target[@id='badidea']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_target> with id="badidea"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_role[@id='betteridea-role']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_role> with id="betteridea-role"
+pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls/acl_target[@id='betteridea']
+pcmk__apply_creation_acl 	trace: ACLs disallow creation of <acl_target> with id="betteridea"
+pcmk__apply_creation_acl 	trace: Creation of <acls> scaffolding with id="<unset>" is implicitly allowed
 Call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - remove acls - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - remove acls

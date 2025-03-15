@@ -489,30 +489,6 @@ pcmk__xml_commit_changes(xmlDoc *doc)
 
 /*!
  * \internal
- * \brief Find first child XML node matching another given XML node
- *
- * \param[in] haystack  XML whose children should be checked
- * \param[in] needle    XML to match (comment content or element name and ID)
- */
-static xmlNode *
-match_xml(const xmlNode *haystack, const xmlNode *needle)
-{
-    CRM_CHECK(needle != NULL, return NULL);
-
-    if (needle->type == XML_COMMENT_NODE) {
-        return pcmk__xc_match_child(haystack, needle, true);
-
-    } else {
-        const char *id = pcmk__xe_id(needle);
-        const char *attr = (id == NULL)? NULL : PCMK_XA_ID;
-
-        return pcmk__xe_first_child(haystack, (const char *) needle->name, attr,
-                                    id);
-    }
-}
-
-/*!
- * \internal
  * \brief Create a new XML document
  *
  * \return Newly allocated XML document (guaranteed not to be \c NULL)
@@ -1367,16 +1343,180 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
     pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
 }
 
+/*!
+ * \internal
+ * \brief Check whether a new XML child comment matches an old XML child comment
+ *
+ * Two comments match if they have the same position among their siblings and
+ * the same contents.
+ *
+ * If \p new_comment has the \c pcmk__xf_skip flag set, then it is automatically
+ * considered not to match.
+ *
+ * \param[in] old_comment  Old XML child element
+ * \param[in] new_comment  New XML child element
+ *
+ * \retval \c true   if \p new_comment matches \p old_comment
+ * \retval \c false  otherwise
+ */
+static bool
+new_comment_matches(const xmlNode *old_comment, const xmlNode *new_comment)
+{
+    xml_node_private_t *nodepriv = new_comment->_private;
+
+    if (pcmk_is_set(nodepriv->flags, pcmk__xf_skip)) {
+        /* @TODO Should we also return false if old_comment has pcmk__xf_skip
+         * set? This preserves existing behavior at time of writing.
+         */
+        return false;
+    }
+    if (pcmk__xml_position(old_comment, pcmk__xf_skip)
+        != pcmk__xml_position(new_comment, pcmk__xf_skip)) {
+        return false;
+    }
+    return pcmk__xc_matches(old_comment, new_comment);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a new XML child element matches an old XML child element
+ *
+ * Two elements match if they have the same name and, if \p match_ids is
+ * \c true, the same ID. (Both IDs can be \c NULL in this case.)
+ *
+ * \param[in] old_element  Old XML child element
+ * \param[in] new_element  New XML child element
+ * \param[in] match_ids    If \c true, require IDs to match (or both to be
+ *                         \c NULL)
+ *
+ * \retval \c true   if \p new_element matches \p old_element
+ * \retval \c false  otherwise
+ */
+static bool
+new_element_matches(const xmlNode *old_element, const xmlNode *new_element,
+                    bool match_ids)
+{
+    if (!pcmk__xe_is(new_element, (const char *) old_element->name)) {
+        return false;
+    }
+    return !match_ids
+           || pcmk__str_eq(pcmk__xe_id(old_element), pcmk__xe_id(new_element),
+                           pcmk__str_none);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a new XML child node matches an old XML child node
+ *
+ * Node types must be the same in order to match.
+ *
+ * For comments, a match is a comment at the same position with the same
+ * content.
+ *
+ * For elements, a match is an element with the same name and, if required, the
+ * same ID. (Both IDs can be \c NULL in this case.)
+ *
+ * For other node types, there is no match.
+ *
+ * \param[in] old_child  Child of old XML
+ * \param[in] new_child  Child of new XML
+ * \param[in] match_ids  If \c true, require element IDs to match (or both to be
+ *                       \c NULL)
+ *
+ * \retval \c true   if \p new_child matches \p old_child
+ * \retval \c false  otherwise
+ */
+static bool
+new_child_matches(const xmlNode *old_child, const xmlNode *new_child,
+                  bool match_ids)
+{
+    if (old_child->type != new_child->type) {
+        return false;
+    }
+
+    switch (old_child->type) {
+        case XML_COMMENT_NODE:
+            return new_comment_matches(old_child, new_child);
+        case XML_ELEMENT_NODE:
+            return new_element_matches(old_child, new_child, match_ids);
+        default:
+            return false;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Find matching XML node pairs between old and new XML's children
+ *
+ * A node that is part of a matching pair has its <tt>_private:match</tt> member
+ * set to the matching node.
+ *
+ * \param[in,out] old_xml       Old XML
+ * \param[in,out] new_xml       New XML
+ * \param[in]     comments_ids  If \c true, match comments and require element
+ *                              IDs to match; otherwise, skip comments and match
+ *                              elements by name only
+ */
+static void
+find_matching_children(xmlNode *old_xml, xmlNode *new_xml, bool comments_ids)
+{
+    for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
+         old_child = pcmk__xml_next(old_child)) {
+
+        xml_node_private_t *old_nodepriv = old_child->_private;
+
+        if ((old_nodepriv == NULL) || (old_nodepriv->match != NULL)) {
+            // Can't process, or we already found a match for this old child
+            continue;
+        }
+        if (!comments_ids && (old_child->type != XML_ELEMENT_NODE)) {
+            /* We only match comments and elements, and we're not matching
+             * comments during this call
+             */
+            continue;
+        }
+
+        for (xmlNode *new_child = pcmk__xml_first_child(new_xml);
+             new_child != NULL; new_child = pcmk__xml_next(new_child)) {
+
+            xml_node_private_t *new_nodepriv = new_child->_private;
+
+            if ((new_nodepriv == NULL) || (new_nodepriv->match != NULL)) {
+                /* Can't process, or this new child already matched some old
+                 * child
+                 */
+                continue;
+            }
+
+            if (new_child_matches(old_child, new_child, comments_ids)) {
+                old_nodepriv->match = new_child;
+                new_nodepriv->match = old_child;
+                break;
+            }
+        }
+    }
+}
+
 // Given original and new XML, mark new XML portions that have changed
 static void
 mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
+    /* This function may set the xml_node_private_t:match member on children of
+     * old_xml and new_xml, but it clears that member before returning.
+     *
+     * @TODO Ensure we handle (for example, by copying) or reject user-created
+     * XML that is missing xml_node_private_t at top level or in any children.
+     * Similarly, check handling of node types for which we don't create private
+     * data. For now, we'll skip them in the loops below.
+     */
     xml_node_private_t *nodepriv = NULL;
 
-    CRM_CHECK(new_xml != NULL, return);
+    CRM_CHECK((old_xml != NULL) && (new_xml != NULL), return);
+    if ((old_xml->_private == NULL) || (new_xml->_private == NULL)) {
+        return;
+    }
 
     nodepriv = new_xml->_private;
-    CRM_CHECK(nodepriv != NULL, return);
 
     if (pcmk_is_set(nodepriv->flags, pcmk__xf_processed)) {
         // Avoid re-comparing nodes
@@ -1386,30 +1526,66 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml)
 
     xml_diff_attrs(old_xml, new_xml);
 
-    // Check for differences compared to the original children
+    find_matching_children(old_xml, new_xml, true);
+    find_matching_children(old_xml, new_xml, false);
+
+    // Process matches (changed children) and deletions
     for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
          old_child = pcmk__xml_next(old_child)) {
 
-        xmlNode *new_child = match_xml(new_xml, old_child);
+        xmlNode *new_child = NULL;
 
-        if (new_child != NULL) {
-            mark_xml_changes(old_child, new_child);
-
-        } else {
-            mark_child_deleted(old_child, new_xml);
+        nodepriv = old_child->_private;
+        if (nodepriv == NULL) {
+            continue;
         }
+
+        if (nodepriv->match == NULL) {
+            // No match in new XML means the old child was deleted
+            mark_child_deleted(old_child, new_xml);
+            continue;
+        }
+
+        /* Fetch the match and clear old_child->_private's match member.
+         * new_child->_private's match member is handled in the new_xml loop.
+         */
+        new_child = nodepriv->match;
+        nodepriv->match = NULL;
+
+        pcmk__assert(old_child->type == new_child->type);
+
+        if (old_child->type == XML_COMMENT_NODE) {
+            // Comments match only if their positions and contents match
+            continue;
+        }
+
+        mark_xml_changes(old_child, new_child);
     }
 
-    // Check for moved or created children
+    /* Mark unmatched new children as created, and mark matched new children as
+     * moved if their positions changed. Grab the next new child in advance,
+     * since new_child may get freed in the loop body.
+     */
     for (xmlNode *new_child = pcmk__xml_first_child(new_xml),
                  *next = pcmk__xml_next(new_child);
          new_child != NULL;
          new_child = next, next = pcmk__xml_next(new_child)) {
 
-        xmlNode *old_child = match_xml(old_xml, new_child);
+        nodepriv = new_child->_private;
+        if (nodepriv == NULL) {
+            continue;
+        }
 
-        if (old_child != NULL) {
-            // Check for movement; we already marked other changes
+        if (nodepriv->match != NULL) {
+            /* Fetch the match and clear new_child->_private's match member. Any
+             * changes were marked in the old_xml loop. Mark the move.
+             *
+             * We might be able to mark the move earlier, when we mark changes
+             * for matches in the old_xml loop, consolidating both actions. We'd
+             * have to think about whether the timing of setting the
+             * pcmk__xf_skip flag makes any difference.
+             */
+            xmlNode *old_child = nodepriv->match;
             int old_pos = pcmk__xml_position(old_child, pcmk__xf_skip);
             int new_pos = pcmk__xml_position(new_child, pcmk__xf_skip);
 
@@ -1417,16 +1593,16 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml)
                 mark_child_moved(old_child, new_xml, new_child, old_pos,
                                  new_pos);
             }
-
-        } else {
-            // This is a newly created child
-            nodepriv = new_child->_private;
-            pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
-            mark_xml_tree_dirty_created(new_child);
-
-            // Check whether creation was allowed; may free new_child
-            pcmk__apply_creation_acl(new_child, true);
+            nodepriv->match = NULL;
+            continue;
         }
+
+        // No match in old XML means the new child is newly created
+        pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
+        mark_xml_tree_dirty_created(new_child);
+
+        // Check whether creation was allowed (may free new_child)
+        pcmk__apply_creation_acl(new_child, true);
     }
 }
 
