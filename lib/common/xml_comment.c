@@ -42,6 +42,26 @@ pcmk__xc_create(xmlDoc *doc, const char *content)
 
 /*!
  * \internal
+ * \brief Check whether two comments have matching content (case-insensitive)
+ *
+ * \param[in] comment1  First comment node to compare
+ * \param[in] comment2  Second comment node to compare
+ *
+ * \return \c true if \p comment1 and \p comment2 have matching content (by
+ *         case-insensitive string comparison), or \c false otherwise
+ */
+bool
+pcmk__xc_matches(const xmlNode *comment1, const xmlNode *comment2)
+{
+    pcmk__assert((comment1 != NULL) && (comment1->type == XML_COMMENT_NODE)
+                 && (comment2 != NULL) && (comment2->type == XML_COMMENT_NODE));
+
+    return pcmk__str_eq((const char *) comment1->content,
+                        (const char *) comment2->content, pcmk__str_casei);
+}
+
+/*!
+ * \internal
  * \brief Find a comment with matching content among children of specified XML
  *
  * \param[in] parent  XML whose children to search
@@ -86,8 +106,7 @@ pcmk__xc_match_child(const xmlNode *parent, const xmlNode *search, bool exact)
             // Position matches
         }
 
-        if (pcmk__str_eq((const char *) child->content,
-                         (const char *) search->content, pcmk__str_casei)) {
+        if (pcmk__xc_matches(child, search)) {
             return child;
         }
 
