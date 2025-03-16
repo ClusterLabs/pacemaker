@@ -500,7 +500,7 @@ match_xml(const xmlNode *haystack, const xmlNode *needle)
     CRM_CHECK(needle != NULL, return NULL);
 
     if (needle->type == XML_COMMENT_NODE) {
-        return pcmk__xc_match(haystack, needle, true);
+        return pcmk__xc_match_child(haystack, needle, true);
 
     } else {
         const char *id = pcmk__xe_id(needle);
