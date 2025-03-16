@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                    // bool, false
 #include <stdio.h>                      // NULL
 
 #include <libxml/tree.h>                // xmlDoc, xmlNode, etc.
@@ -41,43 +42,57 @@ pcmk__xc_create(xmlDoc *doc, const char *content)
 
 /*!
  * \internal
- * \brief Find a comment with matching content in specified XML
+ * \brief Find a comment with matching content among children of specified XML
  *
- * \param[in] root            XML to search
- * \param[in] search_comment  Comment whose content should be searched for
- * \param[in] exact           If true, comment must also be at same position
+ * \param[in] parent  XML whose children to search
+ * \param[in] search  Comment whose content should be searched for
+ * \param[in] exact   If true, comment must also be at same position
+ *
+ * \return Matching comment, or \c NULL if no match is found
  */
 xmlNode *
-pcmk__xc_match(const xmlNode *root, const xmlNode *search_comment, bool exact)
+pcmk__xc_match_child(const xmlNode *parent, const xmlNode *search, bool exact)
 {
-    xmlNode *a_child = NULL;
-    int search_offset = pcmk__xml_position(search_comment, pcmk__xf_skip);
+    int search_pos = 0;
 
-    CRM_CHECK(search_comment->type == XML_COMMENT_NODE, return NULL);
+    pcmk__assert((search != NULL) && (search->type == XML_COMMENT_NODE));
 
-    for (a_child = pcmk__xml_first_child(root); a_child != NULL;
-         a_child = pcmk__xml_next(a_child)) {
+    search_pos = pcmk__xml_position(search, pcmk__xf_skip);
+
+    for (xmlNode *child = pcmk__xml_first_child(parent); child != NULL;
+         child = pcmk__xml_next(child)) {
+
+        if (child->type != XML_COMMENT_NODE) {
+            continue;
+        }
+
         if (exact) {
-            int offset = pcmk__xml_position(a_child, pcmk__xf_skip);
-            xml_node_private_t *nodepriv = a_child->_private;
-
-            if (offset < search_offset) {
-                continue;
-
-            } else if (offset > search_offset) {
-                return NULL;
-            }
+            int pos = 0;
+            xml_node_private_t *nodepriv = child->_private;
 
             if (pcmk_is_set(nodepriv->flags, pcmk__xf_skip)) {
                 continue;
             }
+
+            pos = pcmk__xml_position(child, pcmk__xf_skip);
+            if (pos < search_pos) {
+                // We have not yet reached the matching position
+                continue;
+            }
+            if (pos > search_pos) {
+                // We have already passed the matching position
+                return NULL;
+            }
+            // Position matches
         }
 
-        if (a_child->type == XML_COMMENT_NODE
-            && pcmk__str_eq((const char *)a_child->content, (const char *)search_comment->content, pcmk__str_casei)) {
-            return a_child;
+        if (pcmk__str_eq((const char *) child->content,
+                         (const char *) search->content, pcmk__str_casei)) {
+            return child;
+        }
 
-        } else if (exact) {
+        if (exact) {
+            // We won't find another comment at the same position
             return NULL;
         }
     }
@@ -103,7 +118,7 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
     CRM_CHECK(update->type == XML_COMMENT_NODE, return);
 
     if (target == NULL) {
-        target = pcmk__xc_match(parent, update, false);
+        target = pcmk__xc_match_child(parent, update, false);
     }
 
     if (target == NULL) {
