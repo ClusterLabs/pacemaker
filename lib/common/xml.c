@@ -1529,20 +1529,10 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml)
      * Similarly, check handling of node types for which we don't create private
      * data. For now, we'll skip them in the loops below.
      */
-    xml_node_private_t *nodepriv = NULL;
-
     CRM_CHECK((old_xml != NULL) && (new_xml != NULL), return);
     if ((old_xml->_private == NULL) || (new_xml->_private == NULL)) {
         return;
     }
-
-    nodepriv = new_xml->_private;
-
-    if (pcmk_is_set(nodepriv->flags, pcmk__xf_processed)) {
-        // Avoid re-comparing nodes
-        return;
-    }
-    pcmk__set_xml_flags(nodepriv, pcmk__xf_processed);
 
     xml_diff_attrs(old_xml, new_xml);
 
@@ -1553,9 +1543,9 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml)
     for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
          old_child = pcmk__xml_next(old_child)) {
 
+        xml_node_private_t *nodepriv = old_child->_private;
         xmlNode *new_child = NULL;
 
-        nodepriv = old_child->_private;
         if (nodepriv == NULL) {
             continue;
         }
@@ -1591,7 +1581,8 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml)
          new_child != NULL;
          new_child = next, next = pcmk__xml_next(new_child)) {
 
-        nodepriv = new_child->_private;
+        xml_node_private_t *nodepriv = new_child->_private;
+
         if (nodepriv == NULL) {
             continue;
         }

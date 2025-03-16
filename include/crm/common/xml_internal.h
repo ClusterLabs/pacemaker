@@ -378,9 +378,6 @@ enum pcmk__xml_flags {
      */
     pcmk__xf_tracking        = (UINT32_C(1) << 4),
 
-    //! Tree's changes compared to another XML tree have been marked
-    pcmk__xf_processed       = (UINT32_C(1) << 5),
-
     //! Skip counting this node when getting a node's position among siblings
     pcmk__xf_skip            = (UINT32_C(1) << 6),
 
