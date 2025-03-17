@@ -436,17 +436,9 @@ pcmk__xml_attr_value(const xmlAttr *attr)
            : (const char *) attr->children->content;
 }
 
-/*!
- * \internal
- * \brief Check whether a given CIB element was modified in a CIB patchset
- *
- * \param[in] patchset  CIB XML patchset
- * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c PCMK_XE_CIB). Supported values include any CIB
- *                      element supported by \c pcmk__cib_abs_xpath_for().
- *
- * \return \c true if \p element was modified, or \c false otherwise
- */
+int pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
+                                int target[3]);
+
 bool pcmk__cib_element_in_patchset(const xmlNode *patchset,
                                    const char *element);
 

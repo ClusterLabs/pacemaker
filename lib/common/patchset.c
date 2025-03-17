@@ -310,6 +310,69 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
     return;
 }
 
+/*!
+ * \internal
+ * \brief Get the source and target CIB versions from an XML patchset
+ *
+ * Each output object will contain, in order, the following version fields from
+ * the source and target:
+ * * \c PCMK_XA_ADMIN_EPOCH
+ * * \c PCMK_XA_EPOCH
+ * * \c PCMK_XA_NUM_UPDATES
+ *
+ * \param[in]  patchset  XML patchset
+ * \param[out] source    Where to store versions from source CIB
+ * \param[out] target    Where to store versions from target CIB
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
+                            int target[3])
+{
+    static const char *const vfields[] = {
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
+    };
+
+    int format = 1;
+    const xmlNode *version = NULL;
+    const xmlNode *source_xml = NULL;
+    const xmlNode *target_xml = NULL;
+
+    CRM_CHECK((patchset != NULL) && (source != NULL) && (target != NULL),
+              return EINVAL);
+
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    if (format != 2) {
+        crm_err("Unknown patch format: %d", format);
+        return EINVAL;
+    }
+
+    version = pcmk__xe_first_child(patchset, PCMK_XE_VERSION, NULL, NULL);
+    source_xml = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL, NULL);
+    target_xml = pcmk__xe_first_child(version, PCMK_XE_TARGET, NULL, NULL);
+
+    if ((source_xml == NULL) || (target_xml == NULL)) {
+        return EINVAL;
+    }
+
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        if (crm_element_value_int(source_xml, vfields[i], &(source[i])) != 0) {
+            return EINVAL;
+        }
+        crm_trace("Got %d for source[%s]", source[i], vfields[i]);
+
+        if (crm_element_value_int(target_xml, vfields[i], &(target[i])) != 0) {
+            return EINVAL;
+        }
+        crm_trace("Got %d for target[%s]", target[i], vfields[i]);
+    }
+
+    return pcmk_rc_ok;
+}
+
 // Get CIB versions used for additions and deletions in a patchset
 // Return value of true means failure; false means success
 bool
@@ -369,6 +432,7 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
     int this[] = { 0, 0, 0 };
     int add[] = { 0, 0, 0 };
     int del[] = { 0, 0, 0 };
+    int rc = pcmk_rc_ok;
 
     const char *vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
@@ -392,7 +456,10 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
         del[lpc] = this[lpc];
     }
 
-    xml_patch_versions(patchset, add, del);
+    rc = pcmk__xml_patchset_versions(patchset, del, add);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         if (this[lpc] < del[lpc]) {
@@ -830,6 +897,18 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a given CIB element was modified in a CIB patchset
+ *
+ * \param[in] patchset  CIB XML patchset
+ * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
+ *                      to \c PCMK_XE_CIB). Supported values include any CIB
+ *                      element supported by \c pcmk__cib_abs_xpath_for().
+ *
+ * \retval \c true if \p element was modified
+ * \retval \c false otherwise
+ */
 bool
 pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
 {
