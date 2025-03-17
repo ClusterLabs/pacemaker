@@ -66,18 +66,13 @@ pcmk__xc_matches(const xmlNode *comment1, const xmlNode *comment2)
  *
  * \param[in] parent  XML whose children to search
  * \param[in] search  Comment whose content should be searched for
- * \param[in] exact   If true, comment must also be at same position
  *
  * \return Matching comment, or \c NULL if no match is found
  */
-xmlNode *
-pcmk__xc_match_child(const xmlNode *parent, const xmlNode *search, bool exact)
+static xmlNode *
+match_xc_child(const xmlNode *parent, const xmlNode *search)
 {
-    int search_pos = 0;
-
     pcmk__assert((search != NULL) && (search->type == XML_COMMENT_NODE));
-
-    search_pos = pcmk__xml_position(search, pcmk__xf_skip);
 
     for (xmlNode *child = pcmk__xml_first_child(parent); child != NULL;
          child = pcmk__xml_next(child)) {
@@ -86,33 +81,8 @@ pcmk__xc_match_child(const xmlNode *parent, const xmlNode *search, bool exact)
             continue;
         }
 
-        if (exact) {
-            int pos = 0;
-            xml_node_private_t *nodepriv = child->_private;
-
-            if (pcmk_is_set(nodepriv->flags, pcmk__xf_skip)) {
-                continue;
-            }
-
-            pos = pcmk__xml_position(child, pcmk__xf_skip);
-            if (pos < search_pos) {
-                // We have not yet reached the matching position
-                continue;
-            }
-            if (pos > search_pos) {
-                // We have already passed the matching position
-                return NULL;
-            }
-            // Position matches
-        }
-
         if (pcmk__xc_matches(child, search)) {
             return child;
-        }
-
-        if (exact) {
-            // We won't find another comment at the same position
-            return NULL;
         }
     }
 
@@ -137,7 +107,7 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
     CRM_CHECK(update->type == XML_COMMENT_NODE, return);
 
     if (target == NULL) {
-        target = pcmk__xc_match_child(parent, update, false);
+        target = match_xc_child(parent, update);
     }
 
     if (target == NULL) {
