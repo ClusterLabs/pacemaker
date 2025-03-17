@@ -436,6 +436,7 @@ pcmk__xml_attr_value(const xmlAttr *attr)
            : (const char *) attr->children->content;
 }
 
+void pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *target);
 int pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
                                 int target[3]);
 
