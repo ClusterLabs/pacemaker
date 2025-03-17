@@ -429,7 +429,9 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     pcmk__xml_commit_changes(scratch->doc);
 
     if(local_diff) {
-        patchset_process_digest(local_diff, patchset_cib, scratch, with_digest);
+        if (with_digest) {
+            pcmk__xml_patchset_add_digest(local_diff, scratch);
+        }
         pcmk__log_xml_patchset(LOG_INFO, local_diff);
         crm_log_xml_trace(local_diff, "raw patch");
     }
