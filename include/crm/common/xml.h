@@ -29,8 +29,8 @@ extern "C" {
  * \ingroup core
  */
 
-/*
- * Searching & Modifying
+/* @COMPAT Create and apply patchset functions must remain public until we
+ * create libpacemaker equivalents
  */
 
 xmlNode *xml_create_patchset(
