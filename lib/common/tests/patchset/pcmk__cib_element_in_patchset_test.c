@@ -37,7 +37,8 @@ assert_in_patchset(const char *source_s, const char *target_s,
     xmlNode *target = pcmk__xml_parse(target_s);
     xmlNode *patchset = NULL;
 
-    xml_calculate_significant_changes(source, target);
+    pcmk__xml_doc_set_flags(target->doc, pcmk__xf_ignore_attr_pos);
+    pcmk__xml_mark_changes(source, target);
     patchset = xml_create_patchset(2, source, target, NULL, false);
 
     if (reference) {
