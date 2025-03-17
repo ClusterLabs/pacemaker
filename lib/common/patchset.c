@@ -311,6 +311,7 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
 }
 
 // Get CIB versions used for additions and deletions in a patchset
+// Return value of true means failure; false means success
 bool
 xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
 {
@@ -331,7 +332,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
         crm_err("Unknown patch format: %d", format);
-        return -EINVAL;
+        return true;
     }
 
     if (source != NULL) {
@@ -347,7 +348,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
             crm_trace("Got %d for add[%s]", add[i], vfields[i]);
         }
     }
-    return pcmk_ok;
+    return false;
 }
 
 /*!
