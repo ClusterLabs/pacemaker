@@ -1653,24 +1653,6 @@ xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
     pcmk__xml_mark_changes(old_xml, new_xml);
 }
 
-// Called functions may set the \p pcmk__xf_skip flag on parts of \p old_xml
-void
-xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
-{
-    CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
-              && pcmk__xe_is(old_xml, (const char *) new_xml->name)
-              && pcmk__str_eq(pcmk__xe_id(old_xml), pcmk__xe_id(new_xml),
-                              pcmk__str_none),
-              return);
-
-    if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
-        // Ensure tracking has a clean start (pcmk__xml_mark_changes() enables)
-        pcmk__xml_commit_changes(new_xml->doc);
-    }
-
-    pcmk__xml_mark_changes(old_xml, new_xml);
-}
-
 /*!
  * \internal
  * \brief Initialize the Pacemaker XML environment
@@ -1887,6 +1869,23 @@ xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
         pcmk__unpack_acl(acl_source, xml, user);
         pcmk__apply_acl(xml);
     }
+}
+
+void
+xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
+{
+    CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
+              && pcmk__xe_is(old_xml, (const char *) new_xml->name)
+              && pcmk__str_eq(pcmk__xe_id(old_xml), pcmk__xe_id(new_xml),
+                              pcmk__str_none),
+              return);
+
+    if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
+        // Ensure tracking has a clean start (pcmk__xml_mark_changes() enables)
+        pcmk__xml_commit_changes(new_xml->doc);
+    }
+
+    pcmk__xml_mark_changes(old_xml, new_xml);
 }
 
 // LCOV_EXCL_STOP
