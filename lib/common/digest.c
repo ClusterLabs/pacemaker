@@ -58,7 +58,7 @@
  * \return Newly allocated buffer containing dumped XML
  */
 static GString *
-dump_xml_for_digest(xmlNodePtr xml)
+dump_xml_for_digest(const xmlNode *xml)
 {
     GString *buffer = g_string_sized_new(1024);
 
@@ -81,7 +81,7 @@ dump_xml_for_digest(xmlNodePtr xml)
  * \note Example return value: "c048eae664dba840e1d2060f00299e9d"
  */
 static char *
-calculate_xml_digest_v1(xmlNode *input)
+calculate_xml_digest_v1(const xmlNode *input)
 {
     GString *buffer = dump_xml_for_digest(input);
     char *digest = NULL;
@@ -107,7 +107,7 @@ calculate_xml_digest_v1(xmlNode *input)
  * \return Newly allocated string containing digest
  */
 char *
-pcmk__digest_on_disk_cib(xmlNode *input)
+pcmk__digest_on_disk_cib(const xmlNode *input)
 {
     /* Always use the v1 format for on-disk digests.
      * * Switching to v2 affects even full-restart upgrades, so it would be a
