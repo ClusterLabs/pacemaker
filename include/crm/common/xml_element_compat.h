@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,6 +34,10 @@ void crm_xml_set_id(xmlNode *xml, const char *format, ...) G_GNUC_PRINTF(2, 3);
 
 //! \deprecated Do not use
 xmlNode *sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive);
+
+//! \deprecated Do not use
+const char *crm_copy_xml_element(const xmlNode *obj1, xmlNode *obj2,
+                                 const char *element);
 
 #ifdef __cplusplus
 }
