@@ -171,8 +171,8 @@ log_patch_cib_versions(xmlNode *patch)
 
 // \return Standard Pacemaker return code
 static int
-generate_patch(xmlNode *object_original, xmlNode *object_new,
-               const char *target_file, bool as_cib, bool no_version)
+generate_patch(xmlNode *source, xmlNode *target, const char *target_file,
+               bool as_cib, bool no_version)
 {
     const char *vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
@@ -188,27 +188,27 @@ generate_patch(xmlNode *object_original, xmlNode *object_new,
         int lpc;
 
         for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_copy_xml_element(object_original, object_new, vfields[lpc]);
+            crm_copy_xml_element(source, target, vfields[lpc]);
         }
     }
 
     if (as_cib) {
-        pcmk__xml_doc_set_flags(object_new->doc, pcmk__xf_ignore_attr_pos);
+        pcmk__xml_doc_set_flags(target->doc, pcmk__xf_ignore_attr_pos);
     }
-    pcmk__xml_mark_changes(object_original, object_new);
-    crm_log_xml_debug(object_new, pcmk__s(target_file, "target"));
+    pcmk__xml_mark_changes(source, target);
+    crm_log_xml_debug(target, pcmk__s(target_file, "target"));
 
-    output = xml_create_patchset(0, object_original, object_new, NULL, FALSE);
+    output = xml_create_patchset(0, source, target, NULL, FALSE);
 
-    pcmk__log_xml_changes(LOG_INFO, object_new);
-    pcmk__xml_commit_changes(object_new->doc);
+    pcmk__log_xml_changes(LOG_INFO, target);
+    pcmk__xml_commit_changes(target->doc);
 
     if (output == NULL) {
         return pcmk_rc_ok;  // No changes
     }
 
     if (as_cib) {
-        pcmk__xml_patchset_add_digest(output, object_new);
+        pcmk__xml_patchset_add_digest(output, target);
         log_patch_cib_versions(output);
 
     } else if (no_version) {
@@ -257,8 +257,8 @@ build_arg_context(pcmk__common_args_t *args) {
 int
 main(int argc, char **argv)
 {
-    xmlNode *object_original = NULL;
-    xmlNode *object_new = NULL;
+    xmlNode *source = NULL;
+    xmlNode *target = NULL;
 
     crm_exit_t exit_code = CRM_EX_OK;
     GError *error = NULL;
@@ -292,43 +292,43 @@ main(int argc, char **argv)
     }
 
     if (options.source_string != NULL) {
-        object_original = pcmk__xml_parse(options.source_string);
+        source = pcmk__xml_parse(options.source_string);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input first XML fragment:");
-        object_original = pcmk__xml_read(NULL);
+        source = pcmk__xml_read(NULL);
 
     } else if (options.source_file != NULL) {
-        object_original = pcmk__xml_read(options.source_file);
+        source = pcmk__xml_read(options.source_file);
     }
 
     if (options.target_string != NULL) {
-        object_new = pcmk__xml_parse(options.target_string);
+        target = pcmk__xml_parse(options.target_string);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input second XML fragment:");
-        object_new = pcmk__xml_read(NULL);
+        target = pcmk__xml_read(NULL);
 
     } else if (options.target_file != NULL) {
-        object_new = pcmk__xml_read(options.target_file);
+        target = pcmk__xml_read(options.target_file);
     }
 
-    if (object_original == NULL) {
+    if (source == NULL) {
         fprintf(stderr, "Could not parse the first XML fragment\n");
         exit_code = CRM_EX_DATAERR;
         goto done;
     }
-    if (object_new == NULL) {
+    if (target == NULL) {
         fprintf(stderr, "Could not parse the second XML fragment\n");
         exit_code = CRM_EX_DATAERR;
         goto done;
     }
 
     if (options.patch) {
-        rc = apply_patch(object_original, object_new, options.as_cib);
+        rc = apply_patch(source, target, options.as_cib);
     } else {
-        rc = generate_patch(object_original, object_new, options.target_file,
-                            options.as_cib, options.no_version);
+        rc = generate_patch(source, target, options.target_file, options.as_cib,
+                            options.no_version);
     }
     exit_code = pcmk_rc2exitc(rc);
 
@@ -340,8 +340,8 @@ done:
     g_free(options.target_file);
     g_free(options.source_string);
     g_free(options.target_string);
-    pcmk__xml_free(object_original);
-    pcmk__xml_free(object_new);
+    pcmk__xml_free(source);
+    pcmk__xml_free(target);
 
     pcmk__output_and_clear_error(&error, NULL);
     crm_exit(exit_code);
