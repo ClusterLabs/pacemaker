@@ -169,26 +169,42 @@ log_patch_cib_versions(xmlNode *patch)
     }
 }
 
-// \return Standard Pacemaker return code
+/*!
+ * \internal
+ * \brief Create an XML patchset from the given source and target XML trees
+ *
+ * \param[in,out] source      Source XML
+ * \param[in,out] target      Target XML
+ * \param[in]     as_cib      If \c true, treat the XML trees as CIBs. In
+ *                            particular, ignore attribute position changes,
+ *                            include the target digest in the patchset, and log
+ *                            the source and target CIB versions.
+ * \param[in]     no_version  If \c true, ignore changes to the CIB version
+ *                            (must be \c false if \p as_cib is \c true)
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
 generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
 {
-    const char *vfields[] = {
+    static const char *const vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
         PCMK_XA_EPOCH,
         PCMK_XA_NUM_UPDATES,
     };
 
-    xmlNode *output = NULL;
+    xmlNode *patchset = NULL;
 
-    /* If we're ignoring the version, make the version information
-     * identical, so it isn't detected as a change. */
+    // Currently impossibly; just a reminder for when we move to libpacemaker
+    pcmk__assert(!as_cib || !no_version);
+
+    /* If we're ignoring the version, make the version information identical, so
+     * it isn't detected as a change.
+     */
     if (no_version) {
-        int lpc;
-
-        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_xml_add(target, vfields[lpc],
-                        crm_element_value(source, vfields[lpc]));
+        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+            crm_xml_add(target, vfields[i],
+                        crm_element_value(source, vfields[i]));
         }
     }
 
@@ -198,27 +214,27 @@ generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
     pcmk__xml_mark_changes(source, target);
     crm_log_xml_debug(target, "target");
 
-    output = xml_create_patchset(0, source, target, NULL, FALSE);
+    patchset = xml_create_patchset(0, source, target, NULL, false);
 
     pcmk__log_xml_changes(LOG_INFO, target);
     pcmk__xml_commit_changes(target->doc);
 
-    if (output == NULL) {
+    if (patchset == NULL) {
         return pcmk_rc_ok;  // No changes
     }
 
     if (as_cib) {
-        pcmk__xml_patchset_add_digest(output, target);
-        log_patch_cib_versions(output);
+        pcmk__xml_patchset_add_digest(patchset, target);
+        log_patch_cib_versions(patchset);
 
     } else if (no_version) {
-        pcmk__xml_free(pcmk__xe_first_child(output, PCMK_XE_VERSION, NULL,
+        pcmk__xml_free(pcmk__xe_first_child(patchset, PCMK_XE_VERSION, NULL,
                                             NULL));
     }
 
-    pcmk__log_xml_patchset(LOG_NOTICE, output);
-    print_patch(output);
-    pcmk__xml_free(output);
+    pcmk__log_xml_patchset(LOG_NOTICE, patchset);
+    print_patch(patchset);
+    pcmk__xml_free(patchset);
 
     /* pcmk_rc_error means there's a non-empty diff.
      * @COMPAT Choose a more descriptive return code, like one that maps to
