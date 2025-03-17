@@ -379,67 +379,72 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
  * \return Standard Pacemaker return code
  */
 static int
-xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
+check_patchset_versions(const xmlNode *xml, const xmlNode *patchset)
 {
     int lpc = 0;
     bool changed = FALSE;
 
-    int this[] = { 0, 0, 0 };
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
+    int current[] = { 0, 0, 0 };
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
     int rc = pcmk_rc_ok;
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        crm_element_value_int(xml, vfields[lpc], &(this[lpc]));
-        crm_trace("Got %d for this[%s]", this[lpc], vfields[lpc]);
-        if (this[lpc] < 0) {
-            this[lpc] = 0;
+        crm_element_value_int(xml, vfields[lpc], &(current[lpc]));
+        crm_trace("Got %d for current[%s]", current[lpc], vfields[lpc]);
+        if (current[lpc] < 0) {
+            current[lpc] = 0;
         }
     }
 
     /* Set some defaults in case nothing is present */
-    add[0] = this[0];
-    add[1] = this[1];
-    add[2] = this[2] + 1;
+    target[0] = current[0];
+    target[1] = current[1];
+    target[2] = current[2] + 1;
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        del[lpc] = this[lpc];
+        source[lpc] = current[lpc];
     }
 
-    rc = pcmk__xml_patchset_versions(patchset, del, add);
+    rc = pcmk__xml_patchset_versions(patchset, source, target);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        if (this[lpc] < del[lpc]) {
+        if (current[lpc] < source[lpc]) {
             crm_debug("Current %s is too low (%d.%d.%d < %d.%d.%d --> %d.%d.%d)",
-                      vfields[lpc], this[0], this[1], this[2],
-                      del[0], del[1], del[2], add[0], add[1], add[2]);
+                      vfields[lpc],
+                      current[0], current[1], current[2],
+                      source[0], source[1], source[2],
+                      target[0], target[1], target[2]);
             return pcmk_rc_diff_resync;
 
-        } else if (this[lpc] > del[lpc]) {
+        } else if (current[lpc] > source[lpc]) {
             crm_info("Current %s is too high (%d.%d.%d > %d.%d.%d --> %d.%d.%d) %p",
-                     vfields[lpc], this[0], this[1], this[2],
-                     del[0], del[1], del[2], add[0], add[1], add[2], patchset);
+                     vfields[lpc],
+                     current[0], current[1], current[2],
+                     source[0], source[1], source[2],
+                     target[0], target[1], target[2], patchset);
             crm_log_xml_info(patchset, "OldPatch");
             return pcmk_rc_old_data;
         }
     }
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        if (add[lpc] > del[lpc]) {
+        if (target[lpc] > source[lpc]) {
             changed = TRUE;
         }
     }
 
     if (!changed) {
         crm_notice("Versions did not change in patch %d.%d.%d",
-                   add[0], add[1], add[2]);
+                   target[0], target[1], target[2]);
         return pcmk_rc_old_data;
     }
 
     crm_debug("Can apply patch %d.%d.%d to %d.%d.%d",
-              add[0], add[1], add[2], this[0], this[1], this[2]);
+              target[0], target[1], target[2],
+              current[0], current[1], current[2]);
     return pcmk_rc_ok;
 }
 
@@ -793,7 +798,7 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
     pcmk__log_xml_patchset(LOG_TRACE, patchset);
 
     if (check_version) {
-        rc = pcmk_rc2legacy(xml_patch_version_check(xml, patchset));
+        rc = pcmk_rc2legacy(check_patchset_versions(xml, patchset));
         if (rc != pcmk_ok) {
             return rc;
         }
