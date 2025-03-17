@@ -373,47 +373,6 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
     return pcmk_rc_ok;
 }
 
-// Get CIB versions used for additions and deletions in a patchset
-// Return value of true means failure; false means success
-bool
-xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
-{
-    static const char *const vfields[] = {
-        PCMK_XA_ADMIN_EPOCH,
-        PCMK_XA_EPOCH,
-        PCMK_XA_NUM_UPDATES,
-    };
-
-    const xmlNode *version = pcmk__xe_first_child(patchset, PCMK_XE_VERSION,
-                                                  NULL, NULL);
-    const xmlNode *source = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL,
-                                                 NULL);
-    const xmlNode *target = pcmk__xe_first_child(version, PCMK_XE_TARGET, NULL,
-                                                 NULL);
-    int format = 1;
-
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
-    if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
-        return true;
-    }
-
-    if (source != NULL) {
-        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-            crm_element_value_int(source, vfields[i], &(del[i]));
-            crm_trace("Got %d for del[%s]", del[i], vfields[i]);
-        }
-    }
-
-    if (target != NULL) {
-        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-            crm_element_value_int(target, vfields[i], &(add[i]));
-            crm_trace("Got %d for add[%s]", add[i], vfields[i]);
-        }
-    }
-    return false;
-}
-
 /*!
  * \internal
  * \brief Check whether patchset can be applied to current CIB
@@ -963,3 +922,51 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
     free(element_regex);
     return rc;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
+
+// Return value of true means failure; false means success
+bool
+xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
+{
+    static const char *const vfields[] = {
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
+    };
+
+    const xmlNode *version = pcmk__xe_first_child(patchset, PCMK_XE_VERSION,
+                                                  NULL, NULL);
+    const xmlNode *source = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL,
+                                                 NULL);
+    const xmlNode *target = pcmk__xe_first_child(version, PCMK_XE_TARGET, NULL,
+                                                 NULL);
+    int format = 1;
+
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    if (format != 2) {
+        crm_err("Unknown patch format: %d", format);
+        return true;
+    }
+
+    if (source != NULL) {
+        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+            crm_element_value_int(source, vfields[i], &(del[i]));
+            crm_trace("Got %d for del[%s]", del[i], vfields[i]);
+        }
+    }
+
+    if (target != NULL) {
+        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+            crm_element_value_int(target, vfields[i], &(add[i]));
+            crm_trace("Got %d for add[%s]", add[i], vfields[i]);
+        }
+    }
+    return false;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
