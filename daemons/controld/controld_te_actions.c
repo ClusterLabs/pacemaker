@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -299,10 +299,11 @@ controld_record_action_event(pcmk__graph_action_t *action,
     rsc = pcmk__xe_create(rsc, PCMK__XE_LRM_RESOURCE);
     crm_xml_add(rsc, PCMK_XA_ID, rsc_id);
 
-
-    crm_copy_xml_element(action_rsc, rsc, PCMK_XA_TYPE);
-    crm_copy_xml_element(action_rsc, rsc, PCMK_XA_CLASS);
-    crm_copy_xml_element(action_rsc, rsc, PCMK_XA_PROVIDER);
+    crm_xml_add(rsc, PCMK_XA_TYPE, crm_element_value(action_rsc, PCMK_XA_TYPE));
+    crm_xml_add(rsc, PCMK_XA_CLASS,
+                crm_element_value(action_rsc, PCMK_XA_CLASS));
+    crm_xml_add(rsc, PCMK_XA_PROVIDER,
+                crm_element_value(action_rsc, PCMK_XA_PROVIDER));
 
     pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc, target,
                              __func__);
