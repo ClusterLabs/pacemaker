@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                        // bool
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -30,51 +31,36 @@
 #define INDENT "                                   "
 
 struct {
-    gboolean apply;
+    gchar *source_file;
+    gchar *target_file;
+    gchar *source_string;
+    gchar *target_string;
+    bool patch;
     gboolean as_cib;
     gboolean no_version;
-    gboolean raw_original;
-    gboolean raw_new;
     gboolean use_stdin;
-    char *xml_file_original;
-    char *xml_file_new;
 } options;
-
-static gboolean
-new_string_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-              GError **error)
-{
-    options.raw_new = TRUE;
-    pcmk__str_update(&options.xml_file_new, optarg);
-    return TRUE;
-}
-
-static gboolean
-original_string_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-                   GError **error)
-{
-    options.raw_original = TRUE;
-    pcmk__str_update(&options.xml_file_original, optarg);
-    return TRUE;
-}
 
 static gboolean
 patch_cb(const gchar *option_name, const gchar *optarg, gpointer data,
          GError **error)
 {
-    options.apply = TRUE;
-    pcmk__str_update(&options.xml_file_new, optarg);
+    options.patch = true;
+    g_free(options.target_file);
+    options.target_file = g_strdup(optarg);
     return TRUE;
 }
 
 // @COMPAT Use last-one-wins for original/new/patch input sources
 static GOptionEntry original_xml_entries[] = {
-    { "original", 'o', 0, G_OPTION_ARG_STRING, &options.xml_file_original,
+    { "original", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
+          &options.source_file,
       "XML is contained in the named file. Currently --original-string and\n"
       INDENT "--stdin both override this. In a future release, the last one\n"
       INDENT "specified will be used.",
       "FILE" },
-    { "original-string", 'O', 0, G_OPTION_ARG_CALLBACK, original_string_cb,
+    { "original-string", 'O', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+          &options.source_string,
       "XML is contained in the supplied string. Currently this takes\n"
       INDENT "precedence over both --stdin and --original. In a future\n"
       INDENT "release, the last one specified will be used.",
@@ -84,17 +70,18 @@ static GOptionEntry original_xml_entries[] = {
 };
 
 static GOptionEntry operation_entries[] = {
-    { "new", 'n', 0, G_OPTION_ARG_STRING, &options.xml_file_new,
+    { "new", 'n', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.target_file,
       "Compare the original XML to the contents of the named file. Currently\n"
       INDENT "--new-string and --stdin both override this. In a future\n"
       INDENT "release, the last one specified will be used.",
       "FILE" },
-    { "new-string", 'N', 0, G_OPTION_ARG_CALLBACK, new_string_cb,
+    { "new-string", 'N', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+          &options.target_string,
       "Compare the original XML with the contents of the supplied string.\n"
       INDENT "Currently this takes precedence over --stdin, --patch, and\n"
       INDENT "--new. In a future release, the last one specified will be used.",
       "STRING" },
-    { "patch", 'p', 0, G_OPTION_ARG_CALLBACK, patch_cb,
+    { "patch", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, patch_cb,
       "Patch the original XML with the contents of the named file. Currently\n"
       INDENT "--new-string, --stdin, and (if specified later) --new override\n"
       INDENT "the input source specified here. In a future release, the last\n"
@@ -107,16 +94,17 @@ static GOptionEntry operation_entries[] = {
 };
 
 static GOptionEntry addl_entries[] = {
-    { "cib", 'c', 0, G_OPTION_ARG_NONE, &options.as_cib,
+    { "cib", 'c', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.as_cib,
       "Compare/patch the inputs as a CIB (includes version details)",
       NULL },
-    { "stdin", 's', 0, G_OPTION_ARG_NONE, &options.use_stdin,
+    { "stdin", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.use_stdin,
       "Get the original XML and new (or patch) XML from stdin. Currently\n"
       INDENT "--original-string and --new-string override this for original\n"
       INDENT "and new/patch XML, respectively. In a future release, the last\n"
       INDENT "one specified will be used.",
       NULL },
-    { "no-version", 'u', 0, G_OPTION_ARG_NONE, &options.no_version,
+    { "no-version", 'u', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+          &options.no_version,
       "Generate the difference without version details",
       NULL },
 
@@ -183,8 +171,8 @@ log_patch_cib_versions(xmlNode *patch)
 
 // \return Standard Pacemaker return code
 static int
-generate_patch(xmlNode *object_original, xmlNode *object_new, const char *xml_file_new,
-               gboolean as_cib, gboolean no_version)
+generate_patch(xmlNode *object_original, xmlNode *object_new,
+               const char *target_file, bool as_cib, bool no_version)
 {
     const char *vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
@@ -208,7 +196,7 @@ generate_patch(xmlNode *object_original, xmlNode *object_new, const char *xml_fi
         pcmk__xml_doc_set_flags(object_new->doc, pcmk__xf_ignore_attr_pos);
     }
     pcmk__xml_mark_changes(object_original, object_new);
-    crm_log_xml_debug(object_new, (xml_file_new? xml_file_new: "target"));
+    crm_log_xml_debug(object_new, pcmk__s(target_file, "target"));
 
     output = xml_create_patchset(0, object_original, object_new, NULL, FALSE);
 
@@ -295,7 +283,7 @@ main(int argc, char **argv)
         pcmk__cli_help('v');
     }
 
-    if (options.apply && options.no_version) {
+    if (options.patch && options.no_version) {
         fprintf(stderr, "warning: -u/--no-version ignored with -p/--patch\n");
     } else if (options.as_cib && options.no_version) {
         fprintf(stderr, "error: -u/--no-version incompatible with -c/--cib\n");
@@ -303,26 +291,26 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (options.raw_original) {
-        object_original = pcmk__xml_parse(options.xml_file_original);
+    if (options.source_string != NULL) {
+        object_original = pcmk__xml_parse(options.source_string);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input first XML fragment:");
         object_original = pcmk__xml_read(NULL);
 
-    } else if (options.xml_file_original != NULL) {
-        object_original = pcmk__xml_read(options.xml_file_original);
+    } else if (options.source_file != NULL) {
+        object_original = pcmk__xml_read(options.source_file);
     }
 
-    if (options.raw_new) {
-        object_new = pcmk__xml_parse(options.xml_file_new);
+    if (options.target_string != NULL) {
+        object_new = pcmk__xml_parse(options.target_string);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input second XML fragment:");
         object_new = pcmk__xml_read(NULL);
 
-    } else if (options.xml_file_new != NULL) {
-        object_new = pcmk__xml_read(options.xml_file_new);
+    } else if (options.target_file != NULL) {
+        object_new = pcmk__xml_read(options.target_file);
     }
 
     if (object_original == NULL) {
@@ -336,18 +324,22 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (options.apply) {
+    if (options.patch) {
         rc = apply_patch(object_original, object_new, options.as_cib);
     } else {
-        rc = generate_patch(object_original, object_new, options.xml_file_new, options.as_cib, options.no_version);
+        rc = generate_patch(object_original, object_new, options.target_file,
+                            options.as_cib, options.no_version);
     }
     exit_code = pcmk_rc2exitc(rc);
 
 done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
-    free(options.xml_file_original);
-    free(options.xml_file_new);
+
+    g_free(options.source_file);
+    g_free(options.target_file);
+    g_free(options.source_string);
+    g_free(options.target_string);
     pcmk__xml_free(object_original);
     pcmk__xml_free(object_new);
 
