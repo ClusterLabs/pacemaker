@@ -285,6 +285,32 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
     return xml_create_patchset_v2(source, target);
 }
 
+/*!
+ * \internal
+ * \brief Add a digest of a patchset's target XML to the patchset
+ *
+ * \param[in,out] patchset  XML patchset
+ * \param[in]     target    Target XML
+ */
+void
+pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *target)
+{
+    char *digest = NULL;
+
+    CRM_CHECK((patchset != NULL) && (target != NULL), return);
+
+    /* If tracking is enabled and the document is dirty, we could get an
+     * incorrect digest. Call pcmk__xml_commit_changes() before calling this.
+     */
+    CRM_CHECK(!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty),
+              return);
+
+    digest = pcmk__digest_xml(target, true);
+
+    crm_xml_add(patchset, PCMK__XA_DIGEST, digest);
+    free(digest);
+}
+
 void
 patchset_process_digest(xmlNode *patch, const xmlNode *source,
                         const xmlNode *target, bool with_digest)
