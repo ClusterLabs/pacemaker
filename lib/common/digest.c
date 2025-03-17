@@ -197,7 +197,7 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
  * \return true if digests match, false on mismatch or error
  */
 bool
-pcmk__verify_digest(xmlNode *input, const char *expected)
+pcmk__verify_digest(const xmlNode *input, const char *expected)
 {
     char *calculated = NULL;
     bool passed;
