@@ -41,7 +41,7 @@ typedef struct {
     char *digest_restart_calc;      // Digest of params_restart
 } pcmk__op_digest_t;
 
-char *pcmk__digest_on_disk_cib(xmlNode *input);
+char *pcmk__digest_on_disk_cib(const xmlNode *input);
 char *pcmk__digest_operation(xmlNode *input);
 char *pcmk__digest_xml(const xmlNode *input, bool filter);
 
