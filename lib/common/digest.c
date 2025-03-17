@@ -157,7 +157,7 @@ pcmk__digest_operation(xmlNode *input)
  * \return Newly allocated string containing digest
  */
 char *
-pcmk__digest_xml(xmlNode *xml, bool filter)
+pcmk__digest_xml(const xmlNode *xml, bool filter)
 {
     /* @TODO Filtering accounts for significant CPU usage. Consider removing if
      * possible.
