@@ -187,7 +187,8 @@ generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
         int lpc;
 
         for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_copy_xml_element(source, target, vfields[lpc]);
+            crm_xml_add(target, vfields[lpc],
+                        crm_element_value(source, vfields[lpc]));
         }
     }
 
