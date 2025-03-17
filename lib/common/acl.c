@@ -216,13 +216,17 @@ void
 pcmk__apply_acl(xmlNode *xml)
 {
     GList *aIter = NULL;
-    xml_doc_private_t *docpriv = xml->doc->_private;
-    xml_node_private_t *nodepriv;
+    xml_doc_private_t *docpriv = NULL;
+    xml_node_private_t *nodepriv = NULL;
     xmlXPathObject *xpathObj = NULL;
 
-    if (!xml_acl_enabled(xml)) {
+    pcmk__assert(xml != NULL);
+
+    docpriv = xml->doc->_private;
+
+    if (!pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_enabled)) {
         crm_trace("Skipping ACLs for user '%s' because not enabled for this XML",
-                  docpriv->acl_user);
+                  pcmk__s(docpriv->acl_user, "(unknown)"));
         return;
     }
 
@@ -681,7 +685,9 @@ xml_acl_denied(const xmlNode *xml)
 void
 xml_acl_disable(xmlNode *xml)
 {
-    if (xml_acl_enabled(xml)) {
+    if ((xml != NULL)
+        && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_enabled)) {
+
         xml_doc_private_t *docpriv = xml->doc->_private;
 
         /* Catch anything that was created but shouldn't have been */
@@ -751,8 +757,8 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name, enum pcmk__xml_flags mode)
 
     pcmk__assert((xml != NULL) && (xml->doc->_private != NULL));
 
-    if (!pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking)
-        || !xml_acl_enabled(xml)) {
+    if (!pcmk__xml_doc_all_flags_set(xml->doc,
+                                     pcmk__xf_tracking|pcmk__xf_acl_enabled)) {
         return true;
     }
 
