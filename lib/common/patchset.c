@@ -26,6 +26,12 @@
 #include <crm/common/xml_internal.h>  // CRM_XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
+static const char *const vfields[] = {
+    PCMK_XA_ADMIN_EPOCH,
+    PCMK_XA_EPOCH,
+    PCMK_XA_NUM_UPDATES,
+};
+
 /* Add changes for specified XML to patchset.
  * For patchset format, refer to diff schema.
  */
@@ -185,11 +191,6 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     xmlNode *v = NULL;
     xmlNode *version = NULL;
     xmlNode *patchset = NULL;
-    const char *vfields[] = {
-        PCMK_XA_ADMIN_EPOCH,
-        PCMK_XA_EPOCH,
-        PCMK_XA_NUM_UPDATES,
-    };
 
     pcmk__assert(target != NULL);
 
@@ -331,12 +332,6 @@ int
 pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
                             int target[3])
 {
-    static const char *const vfields[] = {
-        PCMK_XA_ADMIN_EPOCH,
-        PCMK_XA_EPOCH,
-        PCMK_XA_NUM_UPDATES,
-    };
-
     int format = 1;
     const xmlNode *version = NULL;
     const xmlNode *source_xml = NULL;
@@ -393,12 +388,6 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
     int add[] = { 0, 0, 0 };
     int del[] = { 0, 0, 0 };
     int rc = pcmk_rc_ok;
-
-    const char *vfields[] = {
-        PCMK_XA_ADMIN_EPOCH,
-        PCMK_XA_EPOCH,
-        PCMK_XA_NUM_UPDATES,
-    };
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         crm_element_value_int(xml, vfields[lpc], &(this[lpc]));
@@ -933,12 +922,6 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
 bool
 xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
 {
-    static const char *const vfields[] = {
-        PCMK_XA_ADMIN_EPOCH,
-        PCMK_XA_EPOCH,
-        PCMK_XA_NUM_UPDATES,
-    };
-
     const xmlNode *version = pcmk__xe_first_child(patchset, PCMK_XE_VERSION,
                                                   NULL, NULL);
     const xmlNode *source = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL,
