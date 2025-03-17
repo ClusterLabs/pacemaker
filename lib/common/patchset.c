@@ -311,31 +311,6 @@ pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *target)
     free(digest);
 }
 
-void
-patchset_process_digest(xmlNode *patch, const xmlNode *source,
-                        const xmlNode *target, bool with_digest)
-{
-    char *digest = NULL;
-
-    if ((patch == NULL) || (source == NULL) || (target == NULL)
-        || !with_digest) {
-        return;
-    }
-
-    /* We should always call pcmk__xml_commit_changes() before calculating a
-     * digest. Otherwise, with an on-tracking dirty target, we could get a wrong
-     * digest.
-     */
-    CRM_LOG_ASSERT(!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty));
-
-    digest = pcmk__digest_xml(target, true);
-
-    crm_xml_add(patch, PCMK__XA_DIGEST, digest);
-    free(digest);
-
-    return;
-}
-
 /*!
  * \internal
  * \brief Get the source and target CIB versions from an XML patchset
@@ -992,6 +967,31 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
         }
     }
     return false;
+}
+
+void
+patchset_process_digest(xmlNode *patch, const xmlNode *source,
+                        const xmlNode *target, bool with_digest)
+{
+    char *digest = NULL;
+
+    if ((patch == NULL) || (source == NULL) || (target == NULL)
+        || !with_digest) {
+        return;
+    }
+
+    /* We should always call pcmk__xml_commit_changes() before calculating a
+     * digest. Otherwise, with an on-tracking dirty target, we could get a wrong
+     * digest.
+     */
+    CRM_LOG_ASSERT(!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty));
+
+    digest = pcmk__digest_xml(target, true);
+
+    crm_xml_add(patch, PCMK__XA_DIGEST, digest);
+    free(digest);
+
+    return;
 }
 
 // LCOV_EXCL_STOP
