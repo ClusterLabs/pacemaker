@@ -1628,31 +1628,6 @@ pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
     }
 }
 
-void
-xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
-{
-    CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
-              && pcmk__xe_is(old_xml, (const char *) new_xml->name)
-              && pcmk__str_eq(pcmk__xe_id(old_xml), pcmk__xe_id(new_xml),
-                              pcmk__str_none),
-              return);
-
-    /* BUG: If pcmk__xf_tracking is not set for new_xml when this function is
-     * called, then we unset pcmk__xf_ignore_attr_pos via
-     * pcmk__xml_commit_changes(). Since this function is about to be
-     * deprecated, it's not worth fixing this and changing the user-facing
-     * behavior.
-     */
-    pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_ignore_attr_pos);
-
-    if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
-        // Ensure tracking has a clean start (pcmk__xml_mark_changes() enables)
-        pcmk__xml_commit_changes(new_xml->doc);
-    }
-
-    pcmk__xml_mark_changes(old_xml, new_xml);
-}
-
 /*!
  * \internal
  * \brief Initialize the Pacemaker XML environment
@@ -1879,6 +1854,31 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
               && pcmk__str_eq(pcmk__xe_id(old_xml), pcmk__xe_id(new_xml),
                               pcmk__str_none),
               return);
+
+    if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
+        // Ensure tracking has a clean start (pcmk__xml_mark_changes() enables)
+        pcmk__xml_commit_changes(new_xml->doc);
+    }
+
+    pcmk__xml_mark_changes(old_xml, new_xml);
+}
+
+void
+xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
+{
+    CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
+              && pcmk__xe_is(old_xml, (const char *) new_xml->name)
+              && pcmk__str_eq(pcmk__xe_id(old_xml), pcmk__xe_id(new_xml),
+                              pcmk__str_none),
+              return);
+
+    /* BUG: If pcmk__xf_tracking is not set for new_xml when this function is
+     * called, then we unset pcmk__xf_ignore_attr_pos via
+     * pcmk__xml_commit_changes(). Since this function is about to be
+     * deprecated, it's not worth fixing this and changing the user-facing
+     * behavior.
+     */
+    pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_ignore_attr_pos);
 
     if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
         // Ensure tracking has a clean start (pcmk__xml_mark_changes() enables)
