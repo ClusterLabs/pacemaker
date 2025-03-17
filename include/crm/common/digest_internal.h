@@ -45,7 +45,7 @@ char *pcmk__digest_on_disk_cib(const xmlNode *input);
 char *pcmk__digest_operation(xmlNode *input);
 char *pcmk__digest_xml(const xmlNode *input, bool filter);
 
-bool pcmk__verify_digest(xmlNode *input, const char *expected);
+bool pcmk__verify_digest(const xmlNode *input, const char *expected);
 
 #ifdef __cplusplus
 }
