@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <inttypes.h>   // PRIu32
 
 #include <crm/cluster.h>
 #include <crm/cluster/internal.h>
@@ -169,23 +170,26 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
 
     switch (kind) {
         case crm_status_uname:
-            crm_debug("%s node %s is now %s",
+            crm_debug("%s node %s[%" PRIu32 "] is now %s",
                       (is_remote? "Remote" : "Cluster"),
-                      peer->uname, state_text(peer->state));
+                      pcmk__s(peer->uname, "unknown"), peer->id,
+                      state_text(peer->state));
             break;
 
         case crm_status_processes:
             if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
                 gone = true;
             }
-            crm_debug("Node %s is %s a peer",
-                      peer->uname, (gone? "no longer" : "now"));
+            crm_debug("Node %s[%" PRIu32 "] is %s a peer",
+                      pcmk__s(peer->uname, "unknown"), peer->id,
+                      (gone? "no longer" : "now"));
             break;
 
         case crm_status_nstate:
-            crm_debug("%s node %s is now %s (was %s)",
+            crm_debug("%s node %s[%" PRIu32 "] is now %s (was %s)",
                       (is_remote? "Remote" : "Cluster"),
-                      peer->uname, state_text(peer->state), state_text(data));
+                      pcmk__s(peer->uname, "unknown"), peer->id,
+                      state_text(peer->state), state_text(data));
             if (pcmk__str_eq(peer->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
