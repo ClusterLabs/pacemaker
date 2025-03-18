@@ -111,12 +111,24 @@ static GOptionEntry addl_entries[] = {
     { NULL }
 };
 
+/*!
+ * \internal
+ * \brief Print an XML tree serialized to text
+ *
+ * \param[in] xml  XML tree to print
+ *
+ * \todo Use pcmk__output_t with message functions and drop this.
+ *
+ * \note This is basically a simplified version of \c pcmk__xml_write_fd(), but
+ *       that function closes the stream before returning. We could modify it in
+ *       the future. But we don't want to close stdout.
+ */
 static void
-print_patch(xmlNode *patch)
+print_xml(const xmlNode *xml)
 {
     GString *buffer = g_string_sized_new(1024);
 
-    pcmk__xml_string(patch, pcmk__xml_fmt_pretty, buffer, 0);
+    pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buffer, 0);
 
     printf("%s", buffer->str);
     g_string_free(buffer, TRUE);
@@ -186,7 +198,7 @@ generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
     }
 
     pcmk__log_xml_patchset(LOG_NOTICE, patchset);
-    print_patch(patchset);
+    print_xml(patchset);
     pcmk__xml_free(patchset);
 
     /* pcmk_rc_error means there's a non-empty diff.
@@ -299,7 +311,7 @@ main(int argc, char **argv)
         if (rc != pcmk_rc_ok) {
             fprintf(stderr, "Could not apply patch: %s\n", pcmk_rc_str(rc));
         } else {
-            print_patch(source);
+            print_xml(source);
         }
 
     } else {
