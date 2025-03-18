@@ -257,12 +257,17 @@ main(int argc, char **argv)
         pcmk__cli_help('v');
     }
 
-    if (options.patch && options.no_version) {
-        fprintf(stderr, "warning: -u/--no-version ignored with -p/--patch\n");
-    } else if (options.as_cib && options.no_version) {
-        fprintf(stderr, "error: -u/--no-version incompatible with -c/--cib\n");
-        exit_code = CRM_EX_USAGE;
-        goto done;
+    if (options.no_version) {
+        if (options.as_cib) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "-u/--no-version incompatible with -c/--cib");
+            goto done;
+        }
+        if (options.patch) {
+            fprintf(stderr,
+                    "Warning: -u/--no-version ignored with -p/--patch\n");
+        }
     }
 
     if (options.source_string != NULL) {
