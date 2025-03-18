@@ -31,7 +31,7 @@ struct {
     bool patch;
     gboolean as_cib;
     gboolean no_version;
-    gboolean use_stdin;
+    gboolean use_stdin;     //!< \deprecated
 } options;
 
 static gboolean
@@ -44,41 +44,48 @@ patch_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     return TRUE;
 }
 
-// @COMPAT Use last-one-wins for original/new/patch input sources
+/* @COMPAT Use last-one-wins for original/new/patch input sources
+ *
+ * @COMPAT Precedence is --original-string > --stdin > --original. --stdin is
+ * now deprecated and hidden, so we don't mention it in the help text.
+ */
 static GOptionEntry original_xml_entries[] = {
     { "original", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
           &options.source_file,
-      "XML is contained in the named file. Currently --original-string and\n"
-      INDENT "--stdin both override this. In a future release, the last one\n"
-      INDENT "specified will be used.",
+      "XML is contained in the named file. Currently --original-string\n"
+      INDENT "overrides this. In a future release, the last one specified\n"
+      INDENT "will be used.",
       "FILE" },
     { "original-string", 'O', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
           &options.source_string,
       "XML is contained in the supplied string. Currently this takes\n"
-      INDENT "precedence over both --stdin and --original. In a future\n"
+      INDENT "precedence over --original. In a future release, the last one\n"
       INDENT "release, the last one specified will be used.",
       "STRING" },
 
     { NULL }
 };
 
+/* @COMPAT Precedence is --original-string > --stdin > --original. --stdin is
+ * now deprecated and hidden, so we don't mention it in the help text.
+ */
 static GOptionEntry operation_entries[] = {
     { "new", 'n', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.target_file,
       "Compare the original XML to the contents of the named file. Currently\n"
-      INDENT "--new-string and --stdin both override this. In a future\n"
-      INDENT "release, the last one specified will be used.",
+      INDENT "--new-string overrides this. In a future release, the last one\n"
+      INDENT "specified will be used.",
       "FILE" },
     { "new-string", 'N', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
           &options.target_string,
       "Compare the original XML with the contents of the supplied string.\n"
-      INDENT "Currently this takes precedence over --stdin, --patch, and\n"
-      INDENT "--new. In a future release, the last one specified will be used.",
+      INDENT "Currently this takes precedence over --patch and --new. In a \n"
+      INDENT "future release, the last one specified will be used.",
       "STRING" },
     { "patch", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, patch_cb,
       "Patch the original XML with the contents of the named file. Currently\n"
-      INDENT "--new-string, --stdin, and (if specified later) --new override\n"
-      INDENT "the input source specified here. In a future release, the last\n"
-      INDENT "one specified will be used. Note: even if this input source is\n"
+      INDENT "--new-string and (if specified later) --new override the input\n"
+      INDENT "source specified here. In a future release, the last one\n"
+      INDENT "specified will be used. Note: even if this input source is\n"
       INDENT "overridden, the input source will be applied as a patch to the\n"
       INDENT "original XML.",
       "FILE" },
@@ -90,15 +97,17 @@ static GOptionEntry addl_entries[] = {
     { "cib", 'c', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.as_cib,
       "Compare/patch the inputs as a CIB (includes version details)",
       NULL },
-    { "stdin", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.use_stdin,
+    { "no-version", 'u', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+          &options.no_version,
+      "Generate the difference without version details",
+      NULL },
+
+    // @COMPAT Deprecated
+    { "stdin", 's', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.use_stdin,
       "Get the original XML and new (or patch) XML from stdin. Currently\n"
       INDENT "--original-string and --new-string override this for original\n"
       INDENT "and new/patch XML, respectively. In a future release, the last\n"
       INDENT "one specified will be used.",
-      NULL },
-    { "no-version", 'u', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-          &options.no_version,
-      "Generate the difference without version details",
       NULL },
 
     { NULL }
@@ -301,8 +310,7 @@ main(int argc, char **argv)
     } else {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Either --original, --original-string, or --stdin must be "
-                    "specified");
+                    "Either --original or --original-string must be specified");
         goto done;
     }
 
@@ -318,8 +326,7 @@ main(int argc, char **argv)
     } else {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Either --new, --new-string, --patch, or --stdin must be "
-                    "specified");
+                    "Either --new, --new-string, or --patch must be specified");
         goto done;
     }
 
