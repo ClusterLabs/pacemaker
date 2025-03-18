@@ -196,14 +196,16 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
                 }
             } else {
                 // Remove all attribute values associated with lost nodes
-                attrd_peer_remove(peer->uname, false, "loss");
+                if (peer->uname != NULL) {
+                    attrd_peer_remove(peer->uname, false, "loss");
+                }
                 gone = true;
             }
             break;
     }
 
     // Remove votes from cluster nodes that leave, in case election in progress
-    if (gone && !is_remote) {
+    if (gone && !is_remote && peer->uname != NULL) {
         attrd_remove_voter(peer);
         attrd_remove_peer_protocol_ver(peer->uname);
         attrd_do_not_expect_from_peer(peer->uname);
