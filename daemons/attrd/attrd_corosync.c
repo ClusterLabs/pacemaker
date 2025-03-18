@@ -168,23 +168,26 @@ attrd_peer_change_cb(enum pcmk__node_update kind, pcmk__node_status_t *peer,
 
     switch (kind) {
         case pcmk__node_update_name:
-            crm_debug("%s node %s is now %s",
+            crm_debug("%s node %s[%" PRIu32 "] is now %s",
                       (is_remote? "Remote" : "Cluster"),
-                      peer->name, state_text(peer->state));
+                      pcmk__s(peer->name, "unknown"), peer->cluster_layer_id,
+                      state_text(peer->state));
             break;
 
         case pcmk__node_update_processes:
             if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
                 gone = true;
             }
-            crm_debug("Node %s is %s a peer",
-                      peer->name, (gone? "no longer" : "now"));
+            crm_debug("Node %s[%" PRIu32 "] is %s a peer",
+                      pcmk__s(peer->name, "unknown"), peer->cluster_layer_id,
+                      (gone? "no longer" : "now"));
             break;
 
         case pcmk__node_update_state:
-            crm_debug("%s node %s is now %s (was %s)",
+            crm_debug("%s node %s[%" PRIu32 "] is now %s (was %s)",
                       (is_remote? "Remote" : "Cluster"),
-                      peer->name, state_text(peer->state), state_text(data));
+                      pcmk__s(peer->name, "unknown"), peer->cluster_layer_id,
+                      state_text(peer->state), state_text(data));
             if (pcmk__str_eq(peer->state, PCMK_VALUE_MEMBER, pcmk__str_none)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
