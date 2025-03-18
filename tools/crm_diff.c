@@ -201,6 +201,14 @@ generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
     return pcmk_rc_error;
 }
 
+static const pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+
+    { NULL, NULL, NULL }
+};
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args) {
     GOptionContext *context = NULL;
@@ -231,17 +239,22 @@ build_arg_context(pcmk__common_args_t *args) {
 int
 main(int argc, char **argv)
 {
+    crm_exit_t exit_code = CRM_EX_OK;
+    int rc = pcmk_rc_ok;
+
     xmlNode *source = NULL;
     xmlNode *target = NULL;
 
-    crm_exit_t exit_code = CRM_EX_OK;
+    pcmk__output_t *out = NULL;
+
     GError *error = NULL;
 
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "nopNO");
     GOptionContext *context = build_arg_context(args);
 
-    int rc = pcmk_rc_ok;
+    pcmk__register_formats(output_group, formats);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
@@ -250,11 +263,18 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_diff", args->verbosity);
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s", args->output_ty,
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When crm_diff is converted to use formatted output, this can go. */
-        pcmk__cli_help('v');
+        out->version(out, false);
+        goto done;
     }
 
     if (options.no_version) {
@@ -345,6 +365,11 @@ done:
     pcmk__xml_free(source);
     pcmk__xml_free(target);
 
-    pcmk__output_and_clear_error(&error, NULL);
+    pcmk__output_and_clear_error(&error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
     crm_exit(exit_code);
 }
