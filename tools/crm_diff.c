@@ -9,21 +9,14 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>                        // bool
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/param.h>
-#include <sys/types.h>
+#include <stdbool.h>        // bool
+#include <stdio.h>          // NULL, printf(), fprintf(), etc.
+#include <stdlib.h>         // free()
 
-#include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/xml.h>
-#include <crm/common/ipc.h>
-#include <crm/cib.h>
+#include <glib.h>           // GOption, etc.
+#include <libxml/tree.h>    // xmlNode
+
+#include <crm/common/xml.h> // xml_{create,apply}_patchset()
 
 #define SUMMARY "Compare two Pacemaker configurations (in XML format) to "    \
                 "produce a custom diff-like output, or apply such an output " \
