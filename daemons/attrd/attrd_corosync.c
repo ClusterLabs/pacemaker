@@ -195,14 +195,16 @@ attrd_peer_change_cb(enum pcmk__node_update kind, pcmk__node_status_t *peer,
                 }
             } else {
                 // Remove all attribute values associated with lost nodes
-                attrd_peer_remove(peer->name, false, "loss");
+                if (peer->name != NULL) {
+                    attrd_peer_remove(peer->name, false, "loss");
+                }
                 gone = true;
             }
             break;
     }
 
     // Remove votes from cluster nodes that leave, in case election in progress
-    if (gone && !is_remote) {
+    if (gone && !is_remote && peer->name != NULL) {
         attrd_remove_voter(peer);
         attrd_remove_peer_protocol_ver(peer->name);
         attrd_do_not_expect_from_peer(peer->name);
