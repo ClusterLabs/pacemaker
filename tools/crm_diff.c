@@ -123,31 +123,6 @@ print_patch(xmlNode *patch)
     fflush(stdout);
 }
 
-static int
-apply_patchset(xmlNode *input, const xmlNode *patch, bool check_version)
-{
-    int rc = xml_apply_patchset(input, patch, check_version);
-
-    rc = pcmk_legacy2rc(rc);
-    if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not apply patch: %s\n", pcmk_rc_str(rc));
-        return rc;
-    }
-
-    print_patch(input);
-
-    pcmk__if_tracing(
-        {
-            char *digest = pcmk__digest_xml(input, true);
-
-            crm_trace("Digest: %s", pcmk__s(digest, "<null>"));
-            free(digest);
-        },
-        {}
-    );
-    return pcmk_rc_ok;
-}
-
 static void
 log_patch_cib_versions(xmlNode *patch)
 {
@@ -339,7 +314,14 @@ main(int argc, char **argv)
     }
 
     if (options.patch) {
-        rc = apply_patchset(source, target, options.as_cib);
+        rc = xml_apply_patchset(source, target, options.as_cib);
+        rc = pcmk_legacy2rc(rc);
+        if (rc != pcmk_rc_ok) {
+            fprintf(stderr, "Could not apply patch: %s\n", pcmk_rc_str(rc));
+        } else {
+            print_patch(source);
+        }
+
     } else {
         rc = generate_patch(source, target, options.as_cib, options.no_version);
     }
