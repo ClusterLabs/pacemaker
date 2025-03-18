@@ -171,6 +171,9 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
 
     pcmk__xml_string(xml, (filter? pcmk__xml_fmt_filtered : 0), buf, 0);
     digest = crm_md5sum(buf->str);
+    if (digest == NULL) {
+        goto done;
+    }
 
     pcmk__if_tracing(
         {
@@ -187,6 +190,8 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
         },
         {}
     );
+
+done:
     g_string_free(buf, TRUE);
     return digest;
 }
