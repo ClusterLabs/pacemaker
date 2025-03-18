@@ -115,32 +115,9 @@ static GOptionEntry addl_entries[] = {
 
 /*!
  * \internal
- * \brief Print an XML tree serialized to text
- *
- * \param[in] xml  XML tree to print
- *
- * \todo Use pcmk__output_t with message functions and drop this.
- *
- * \note This is basically a simplified version of \c pcmk__xml_write_fd(), but
- *       that function closes the stream before returning. We could modify it in
- *       the future. But we don't want to close stdout.
- */
-static void
-print_xml(const xmlNode *xml)
-{
-    GString *buffer = g_string_sized_new(1024);
-
-    pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buffer, 0);
-
-    printf("%s", buffer->str);
-    g_string_free(buffer, TRUE);
-    fflush(stdout);
-}
-
-/*!
- * \internal
  * \brief Create an XML patchset from the given source and target XML trees
  *
+ * \param[in,out] out         Output object
  * \param[in,out] source      Source XML
  * \param[in,out] target      Target XML
  * \param[in]     as_cib      If \c true, treat the XML trees as CIBs. In
@@ -153,7 +130,8 @@ print_xml(const xmlNode *xml)
  * \return Standard Pacemaker return code
  */
 static int
-generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
+generate_patch(pcmk__output_t *out, xmlNode *source, xmlNode *target,
+               bool as_cib, bool no_version)
 {
     static const char *const vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
@@ -162,6 +140,7 @@ generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
     };
 
     xmlNode *patchset = NULL;
+    GString *buffer = NULL;
 
     // Currently impossibly; just a reminder for when we move to libpacemaker
     pcmk__assert(!as_cib || !no_version);
@@ -200,8 +179,13 @@ generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
     }
 
     pcmk__log_xml_patchset(LOG_NOTICE, patchset);
-    print_xml(patchset);
+
+    buffer = g_string_sized_new(1024);
+    pcmk__xml_string(patchset, pcmk__xml_fmt_pretty, buffer, 0);
+    out->output_xml(out, PCMK_XE_DIFF, buffer->str);
+
     pcmk__xml_free(patchset);
+    g_string_free(buffer, TRUE);
 
     /* pcmk_rc_error means there's a non-empty diff.
      * @COMPAT Choose a more descriptive return code, like one that maps to
@@ -219,7 +203,8 @@ static const pcmk__supported_format_t formats[] = {
 };
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
+{
     GOptionContext *context = NULL;
 
     const char *description = "Examples:\n\n"
@@ -233,7 +218,7 @@ build_arg_context(pcmk__common_args_t *args) {
                               "Apply the patch to the running cluster:\n\n"
                               "\t# cibadmin --patch -x patch.xml\n";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "xml", "Original XML:",
@@ -261,7 +246,7 @@ main(int argc, char **argv)
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "nopNO");
-    GOptionContext *context = build_arg_context(args);
+    GOptionContext *context = build_arg_context(args, &output_group);
 
     pcmk__register_formats(output_group, formats);
 
@@ -350,11 +335,16 @@ main(int argc, char **argv)
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Could not apply patch: %s", pcmk_rc_str(rc));
         } else {
-            print_xml(source);
+            GString *buffer = g_string_sized_new(1024);
+
+            pcmk__xml_string(source, pcmk__xml_fmt_pretty, buffer, 0);
+            out->output_xml(out, PCMK_XE_DIFF, buffer->str);
+            g_string_free(buffer, TRUE);
         }
 
     } else {
-        rc = generate_patch(source, target, options.as_cib, options.no_version);
+        rc = generate_patch(out, source, target, options.as_cib,
+                            options.no_version);
     }
     exit_code = pcmk_rc2exitc(rc);
 
