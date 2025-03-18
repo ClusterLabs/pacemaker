@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdbool.h>        // bool
-#include <stdio.h>          // NULL, printf(), fprintf(), etc.
+#include <stdio.h>          // NULL, printf(), etc.
 #include <stdlib.h>         // free()
 
 #include <glib.h>           // GOption, etc.
@@ -285,8 +285,7 @@ main(int argc, char **argv)
             goto done;
         }
         if (options.patch) {
-            fprintf(stderr,
-                    "Warning: -u/--no-version ignored with -p/--patch\n");
+            out->err(out, "Warning: -u/--no-version ignored with -p/--patch");
         }
     }
 
@@ -294,7 +293,6 @@ main(int argc, char **argv)
         source = pcmk__xml_parse(options.source_string);
 
     } else if (options.use_stdin) {
-        fprintf(stderr, "Input first XML fragment:");
         source = pcmk__xml_read(NULL);
 
     } else if (options.source_file != NULL) {
@@ -312,7 +310,6 @@ main(int argc, char **argv)
         target = pcmk__xml_parse(options.target_string);
 
     } else if (options.use_stdin) {
-        fprintf(stderr, "Input second XML fragment:");
         target = pcmk__xml_read(NULL);
 
     } else if (options.target_file != NULL) {
