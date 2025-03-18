@@ -279,6 +279,13 @@ main(int argc, char **argv)
 
     } else if (options.source_file != NULL) {
         source = pcmk__xml_read(options.source_file);
+
+    } else {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Either --original, --original-string, or --stdin must be "
+                    "specified");
+        goto done;
     }
 
     if (options.target_string != NULL) {
@@ -290,16 +297,25 @@ main(int argc, char **argv)
 
     } else if (options.target_file != NULL) {
         target = pcmk__xml_read(options.target_file);
+
+    } else {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Either --new, --new-string, --patch, or --stdin must be "
+                    "specified");
+        goto done;
     }
 
     if (source == NULL) {
-        fprintf(stderr, "Could not parse the first XML fragment\n");
         exit_code = CRM_EX_DATAERR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Failed to parse original XML");
         goto done;
     }
     if (target == NULL) {
-        fprintf(stderr, "Could not parse the second XML fragment\n");
         exit_code = CRM_EX_DATAERR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Failed to parse %s XML", (options.patch? "patch" : "new"));
         goto done;
     }
 
@@ -307,7 +323,8 @@ main(int argc, char **argv)
         rc = xml_apply_patchset(source, target, options.as_cib);
         rc = pcmk_legacy2rc(rc);
         if (rc != pcmk_rc_ok) {
-            fprintf(stderr, "Could not apply patch: %s\n", pcmk_rc_str(rc));
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Could not apply patch: %s", pcmk_rc_str(rc));
         } else {
             print_xml(source);
         }
