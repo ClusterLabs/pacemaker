@@ -123,30 +123,18 @@ print_patch(xmlNode *patch)
     fflush(stdout);
 }
 
-// \return Standard Pacemaker return code
 static int
-apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
+apply_patchset(xmlNode *input, const xmlNode *patch, bool check_version)
 {
-    xmlNode *output = pcmk__xml_copy(NULL, input);
-    int rc = xml_apply_patchset(output, patch, as_cib);
+    int rc = xml_apply_patchset(input, patch, check_version);
 
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         fprintf(stderr, "Could not apply patch: %s\n", pcmk_rc_str(rc));
-        pcmk__xml_free(output);
         return rc;
     }
 
-    if (output != NULL) {
-        char *buffer;
-
-        print_patch(output);
-
-        buffer = pcmk__digest_xml(output, true);
-        crm_trace("Digest: %s", pcmk__s(buffer, "<null>\n"));
-        free(buffer);
-        pcmk__xml_free(output);
-    }
+    print_patch(input);
     return pcmk_rc_ok;
 }
 
@@ -341,7 +329,7 @@ main(int argc, char **argv)
     }
 
     if (options.patch) {
-        rc = apply_patch(source, target, options.as_cib);
+        rc = apply_patchset(source, target, options.as_cib);
     } else {
         rc = generate_patch(source, target, options.as_cib, options.no_version);
     }
