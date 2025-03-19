@@ -250,9 +250,8 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 
         time_t epoch = 0;
 
-        if ((pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                               &epoch) == pcmk_rc_ok)
-            && (epoch > 0)) {
+        pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE, &epoch);
+        if (epoch > 0) {
             char *epoch_str = pcmk__epoch2str(&epoch, 0);
 
             last_change_str = crm_strdup_printf(" %s=\"%s\"",
@@ -1631,10 +1630,8 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         NULL);
     free(rc_s);
 
-    if ((pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                           &epoch) == pcmk_rc_ok)
-        && (epoch > 0)) {
-
+    pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE, &epoch);
+    if (epoch > 0) {
         const char *queue_time = crm_element_value(xml_op, PCMK_XA_QUEUE_TIME);
         const char *exec = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
         const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
@@ -2846,10 +2843,8 @@ op_history_xml(pcmk__output_t *out, va_list args) {
         const char *value = NULL;
         time_t epoch = 0;
 
-        if ((pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                               &epoch) == pcmk_rc_ok)
-            && (epoch > 0)) {
-
+        pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE, &epoch);
+        if (epoch > 0) {
             char *s = pcmk__epoch2str(&epoch, 0);
             crm_xml_add(node, PCMK_XA_LAST_RC_CHANGE, s);
             free(s);

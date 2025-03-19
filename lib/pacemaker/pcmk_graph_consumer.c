@@ -773,10 +773,7 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
         new_graph->failed_start_offset =
             crm_element_value_copy(xml_graph, PCMK__XA_FAILED_START_OFFSET);
 
-        if (pcmk__xe_get_time(xml_graph, "recheck-by",
-                              &(new_graph->recheck_by)) != pcmk_rc_ok) {
-            new_graph->recheck_by = 0;
-        }
+        pcmk__xe_get_time(xml_graph, "recheck-by", &(new_graph->recheck_by));
     }
 
     // Unpack each child <synapse> element
