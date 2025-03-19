@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -260,8 +260,8 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
      * completes.
      */
     if (pcmk__action_locks_rsc_to_node(action)) {
-        crm_xml_add_ll(action_xml, PCMK_OPT_SHUTDOWN_LOCK,
-                       (long long) action->rsc->priv->lock_time);
+        pcmk__xe_set_time(action_xml, PCMK_OPT_SHUTDOWN_LOCK,
+                          action->rsc->priv->lock_time);
     }
 
     // List affected resource
@@ -1047,12 +1047,8 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     }
 
     if (scheduler->priv->recheck_by > 0) {
-        char *recheck_epoch = NULL;
-
-        recheck_epoch = crm_strdup_printf("%llu", (unsigned long long)
-                                          scheduler->priv->recheck_by);
-        crm_xml_add(scheduler->priv->graph, "recheck-by", recheck_epoch);
-        free(recheck_epoch);
+        pcmk__xe_set_time(scheduler->priv->graph, "recheck-by",
+                          scheduler->priv->recheck_by);
     }
 
     /* The following code will de-duplicate action inputs, so nothing past this

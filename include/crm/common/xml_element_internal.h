@@ -147,7 +147,9 @@ int pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
 int pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest);
 int pcmk__xe_get_int(const xmlNode *xml, const char *attr, int *dest);
 int pcmk__xe_get_ll(const xmlNode *xml, const char *attr, long long *dest);
+
 int pcmk__xe_get_time(const xmlNode *xml, const char *attr, time_t *dest);
+void pcmk__xe_set_time(xmlNode *xml, const char *attr, time_t value);
 
 int pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
                          const char *usec_attr, struct timeval *dest);
