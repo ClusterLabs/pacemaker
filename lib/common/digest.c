@@ -319,9 +319,7 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
      * removing meta-attributes
      */
     key = crm_meta_name(PCMK_META_INTERVAL);
-    if (crm_element_value_ms(param_set, key, &interval_ms) != pcmk_ok) {
-        interval_ms = 0;
-    }
+    pcmk__xe_get_guint(param_set, key, &interval_ms);
     free(key);
     key = NULL;
     if (interval_ms != 0) {

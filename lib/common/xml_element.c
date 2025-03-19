@@ -1278,6 +1278,37 @@ pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
 
 /*!
  * \internal
+ * \brief Retrieve a \c guint value from an XML attribute
+ *
+ * This is like \c crm_element_value() but returns the value as a \c guint.
+ *
+ * \param[in]  xml   XML element whose attribute to get
+ * \param[in]  attr  Attribute name
+ * \param[out] dest  Where to store attribute value (unchanged on error)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest)
+{
+    long long value_ll = 0;
+
+    CRM_CHECK((xml != NULL) && (attr != NULL) && (dest != NULL), return EINVAL);
+
+    errno = 0;
+    if (crm_element_value_ll(xml, attr, &value_ll) != 0) {
+        return (errno != 0)? errno : pcmk_rc_bad_nvpair;
+    }
+
+    if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
+        return ERANGE;
+    }
+    *dest = (guint) value_ll;
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Retrieve a \c time_t value from an XML attribute
  *
  * This is like \c crm_element_value() but returns the value as a \c time_t.

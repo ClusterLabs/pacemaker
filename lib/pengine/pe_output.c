@@ -1642,7 +1642,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                           |crm_time_log_timeofday
                                           |crm_time_log_with_timezone);
 
-        crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
+        pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
         interval_ms_s = crm_strdup_printf("%u", interval_ms);
 
         pcmk__xe_set_props(node,

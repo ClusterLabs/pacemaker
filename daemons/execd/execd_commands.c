@@ -317,8 +317,7 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
     cmd->client_id = pcmk__str_copy(client->id);
 
     crm_element_value_int(msg, PCMK__XA_LRMD_CALLID, &cmd->call_id);
-    crm_element_value_ms(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL,
-                         &cmd->interval_ms);
+    pcmk__xe_get_guint(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &cmd->interval_ms);
     crm_element_value_int(rsc_xml, PCMK__XA_LRMD_TIMEOUT, &cmd->timeout);
     crm_element_value_int(rsc_xml, PCMK__XA_LRMD_RSC_START_DELAY,
                           &cmd->start_delay);
@@ -1792,7 +1791,7 @@ process_lrmd_rsc_cancel(pcmk__client_t *client, uint32_t id, xmlNode *request)
     const char *action = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
     guint interval_ms = 0;
 
-    crm_element_value_ms(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &interval_ms);
+    pcmk__xe_get_guint(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &interval_ms);
 
     if (!rsc_id || !action) {
         return -EINVAL;

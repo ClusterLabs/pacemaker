@@ -406,7 +406,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
     digest_all = crm_element_value(xml_op, PCMK__XA_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, PCMK__XA_OP_RESTART_DIGEST);
 
-    crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
+    pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
     data = rsc_action_digest(rsc, task, interval_ms, node, xml_op,
                              pcmk_is_set(scheduler->flags,
                                          pcmk__sched_sanitized),
