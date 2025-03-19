@@ -395,8 +395,8 @@ pcmk__unpack_alerts(const xmlNode *alerts)
             pcmk__alert_t *recipient_entry = pcmk__dup_alert(entry);
 
             recipients++;
-            recipient_entry->recipient = crm_element_value_copy(recipient,
-                                                                PCMK_XA_VALUE);
+            recipient_entry->recipient = pcmk__xe_get_copy(recipient,
+                                                           PCMK_XA_VALUE);
 
             if (unpack_alert(recipient, recipient_entry,
                              &max_timeout) != pcmk_rc_ok) {

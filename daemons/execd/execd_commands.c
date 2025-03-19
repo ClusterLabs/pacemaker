@@ -289,10 +289,10 @@ build_rsc_from_xml(xmlNode * msg)
 
     pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLOPT, &rsc->call_opts);
 
-    rsc->rsc_id = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-    rsc->class = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_CLASS);
-    rsc->provider = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_PROVIDER);
-    rsc->type = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_TYPE);
+    rsc->rsc_id = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+    rsc->class = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_CLASS);
+    rsc->provider = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_PROVIDER);
+    rsc->type = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_TYPE);
     rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, execute_resource_action,
                                      rsc);
 
@@ -322,11 +322,11 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
     pcmk__xe_get_int(rsc_xml, PCMK__XA_LRMD_RSC_START_DELAY, &cmd->start_delay);
     cmd->timeout_orig = cmd->timeout;
 
-    cmd->origin = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_ORIGIN);
-    cmd->action = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
-    cmd->userdata_str = crm_element_value_copy(rsc_xml,
-                                               PCMK__XA_LRMD_RSC_USERDATA_STR);
-    cmd->rsc_id = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+    cmd->origin = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_ORIGIN);
+    cmd->action = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
+    cmd->userdata_str = pcmk__xe_get_copy(rsc_xml,
+                                          PCMK__XA_LRMD_RSC_USERDATA_STR);
+    cmd->rsc_id = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
     cmd->params = xml2list(rsc_xml);
 

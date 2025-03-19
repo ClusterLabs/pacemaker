@@ -563,7 +563,7 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
     }
 
     if (!c->name) {
-        c->name = crm_element_value_copy(msg, PCMK__XA_LRMD_CLIENTNAME);
+        c->name = pcmk__xe_get_copy(msg, PCMK__XA_LRMD_CLIENTNAME);
     }
 
     lrmd_call_id++;
@@ -592,7 +592,7 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value_copy(request.xml, PCMK__XA_LRMD_OP);
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_LRMD_OP);
         CRM_CHECK(request.op != NULL, return);
 
         crm_trace("Processing %s operation from %s", request.op, c->id);
