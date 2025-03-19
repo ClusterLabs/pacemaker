@@ -882,8 +882,8 @@ handle_node_list(const xmlNode *request)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
         xmlNode *xml = pcmk__xe_create(reply_data, PCMK_XE_NODE);
 
-        crm_xml_add_ll(xml, PCMK_XA_ID,
-                       (long long) node->cluster_layer_id); // uint32_t
+        pcmk__xe_set_ll(xml, PCMK_XA_ID,
+                        (long long) node->cluster_layer_id); // uint32_t
         crm_xml_add(xml, PCMK_XA_UNAME, node->name);
         crm_xml_add(xml, PCMK__XA_IN_CCM, node->state);
     }

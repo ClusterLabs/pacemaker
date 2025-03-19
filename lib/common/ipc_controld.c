@@ -430,7 +430,7 @@ pcmk_controld_api_node_info(pcmk_ipc_api_t *api, uint32_t nodeid)
         return EINVAL;
     }
     if (nodeid > 0) {
-        crm_xml_add_ll(request, PCMK_XA_ID, nodeid);
+        pcmk__xe_set_ll(request, PCMK_XA_ID, nodeid);
     }
 
     rc = send_controller_request(api, request, true);
