@@ -275,8 +275,10 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_CLIENT, pcmk__client_name(client));
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_USER, client->user);
-    crm_xml_add_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, id);
-    crm_xml_add_int(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, flags);
+    pcmk__xe_set_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, id);
+
+    // @TODO Use different setter for uint32_t
+    pcmk__xe_set_int(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, flags);
 
     wrapper = pcmk__xe_create(msg, PCMK__XE_LRMD_IPC_MSG);
 

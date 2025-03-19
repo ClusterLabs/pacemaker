@@ -76,8 +76,8 @@ handle_pecalc_request(pcmk__request_t *request)
     if (pcmk__update_configured_schema(&converted, true) != pcmk_rc_ok) {
         scheduler->priv->graph = pcmk__xe_create(NULL,
                                                  PCMK__XE_TRANSITION_GRAPH);
-        crm_xml_add_int(scheduler->priv->graph, "transition_id", 0);
-        crm_xml_add_int(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, 0);
+        pcmk__xe_set_int(scheduler->priv->graph, "transition_id", 0);
+        pcmk__xe_set_int(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, 0);
         process = false;
         free(digest);
 

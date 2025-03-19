@@ -246,19 +246,19 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_warn("Defaulting missing " PCMK_XA_ADMIN_EPOCH " to 0, but "
                  "cluster may get confused about which node's configuration "
                  "is most recent");
-        crm_xml_add_int(root, PCMK_XA_ADMIN_EPOCH, 0);
+        pcmk__xe_set_int(root, PCMK_XA_ADMIN_EPOCH, 0);
     }
 
     name = PCMK_XA_EPOCH;
     value = pcmk__xe_get(root, name);
     if (value == NULL) {
-        crm_xml_add_int(root, name, 0);
+        pcmk__xe_set_int(root, name, 0);
     }
 
     name = PCMK_XA_NUM_UPDATES;
     value = pcmk__xe_get(root, name);
     if (value == NULL) {
-        crm_xml_add_int(root, name, 0);
+        pcmk__xe_set_int(root, name, 0);
     }
 
     // Unset (DC should set appropriate value)

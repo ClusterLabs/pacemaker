@@ -50,7 +50,7 @@ stonith_send_broadcast_history(xmlNode *history,
     crm_xml_add(bcast, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
     crm_xml_add(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
     crm_xml_add(bcast, PCMK__XA_ST_OP, STONITH_OP_FENCE_HISTORY);
-    crm_xml_add_int(bcast, PCMK__XA_ST_CALLOPT, callopts);
+    pcmk__xe_set_int(bcast, PCMK__XA_ST_CALLOPT, callopts);
 
     pcmk__xml_copy(call_data, history);
     if (target != NULL) {
@@ -386,7 +386,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 pcmk__xe_set_time(entry, PCMK__XA_ST_DATE, op->completed);
                 pcmk__xe_set_ll(entry, PCMK__XA_ST_DATE_NSEC,
                                 op->completed_nsec);
-                crm_xml_add_int(entry, PCMK__XA_ST_STATE, op->state);
+                pcmk__xe_set_int(entry, PCMK__XA_ST_STATE, op->state);
                 stonith__xe_set_result(entry, &op->result);
             }
     }

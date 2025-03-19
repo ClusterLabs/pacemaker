@@ -270,7 +270,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 crm_xml_add(up, PCMK__XA_CIB_CLIENTID, client_id);
                 crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
                 crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
-                crm_xml_add_int(up, PCMK__XA_CIB_UPGRADE_RC, rc);
+                pcmk__xe_set_int(up, PCMK__XA_CIB_UPGRADE_RC, rc);
                 if (!pcmk__cluster_send_message(origin, pcmk_ipc_based, up)) {
                     crm_warn("Could not send CIB upgrade result to %s", host);
                 }

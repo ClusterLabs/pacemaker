@@ -429,7 +429,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         xmlNode *update = NULL;
 
         update = pcmk__xe_create(NULL, PCMK_XE_CIB);
-        crm_xml_add_int(update, PCMK_XA_HAVE_QUORUM, quorum);
+        pcmk__xe_set_int(update, PCMK_XA_HAVE_QUORUM, quorum);
         crm_xml_add(update, PCMK_XA_DC_UUID, controld_globals.our_uuid);
 
         crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));

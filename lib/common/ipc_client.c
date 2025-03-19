@@ -756,7 +756,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
             pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, true);
             crm_xml_add(request, PCMK__XA_ATTR_HOST, node_name);
             if (nodeid > 0) {
-                crm_xml_add_int(request, PCMK__XA_ATTR_HOST_ID, nodeid);
+                pcmk__xe_set_int(request, PCMK__XA_ATTR_HOST_ID, nodeid);
             }
             break;
 

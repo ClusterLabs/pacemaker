@@ -63,7 +63,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
             crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
-            crm_xml_add_int(change, PCMK_XE_POSITION, position);
+            pcmk__xe_set_int(change, PCMK_XE_POSITION, position);
             pcmk__xml_copy(change, xml);
             g_string_free(xpath, TRUE);
         }
@@ -144,8 +144,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
             crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
-            crm_xml_add_int(change, PCMK_XE_POSITION,
-                            pcmk__xml_position(xml, pcmk__xf_deleted));
+            pcmk__xe_set_int(change, PCMK_XE_POSITION,
+                             pcmk__xml_position(xml, pcmk__xf_deleted));
             g_string_free(xpath, TRUE);
         }
     }
@@ -202,7 +202,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     docpriv = target->doc->_private;
 
     patchset = pcmk__xe_create(NULL, PCMK_XE_DIFF);
-    crm_xml_add_int(patchset, PCMK_XA_FORMAT, 2);
+    pcmk__xe_set_int(patchset, PCMK_XA_FORMAT, 2);
 
     version = pcmk__xe_create(patchset, PCMK_XE_VERSION);
 
@@ -233,7 +233,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
         crm_xml_add(change, PCMK_XA_PATH, deleted_obj->path);
         if (deleted_obj->position >= 0) {
-            crm_xml_add_int(change, PCMK_XE_POSITION, deleted_obj->position);
+            pcmk__xe_set_int(change, PCMK_XE_POSITION, deleted_obj->position);
         }
     }
 
@@ -275,11 +275,11 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
             crm_xml_add(target, PCMK_XA_NUM_UPDATES, "0");
 
             pcmk__xe_get_int(target, PCMK_XA_EPOCH, &counter);
-            crm_xml_add_int(target, PCMK_XA_EPOCH, counter + 1);
+            pcmk__xe_set_int(target, PCMK_XA_EPOCH, counter + 1);
 
         } else {
             pcmk__xe_get_int(target, PCMK_XA_NUM_UPDATES, &counter);
-            crm_xml_add_int(target, PCMK_XA_NUM_UPDATES, counter + 1);
+            pcmk__xe_set_int(target, PCMK_XA_NUM_UPDATES, counter + 1);
         }
     }
 

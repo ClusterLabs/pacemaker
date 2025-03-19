@@ -551,8 +551,8 @@ create_lrmd_reply(const char *origin, int rc, int call_id)
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_LRMD_REPLY);
 
     crm_xml_add(reply, PCMK__XA_LRMD_ORIGIN, origin);
-    crm_xml_add_int(reply, PCMK__XA_LRMD_RC, rc);
-    crm_xml_add_int(reply, PCMK__XA_LRMD_CALLID, call_id);
+    pcmk__xe_set_int(reply, PCMK__XA_LRMD_RC, rc);
+    pcmk__xe_set_int(reply, PCMK__XA_LRMD_CALLID, call_id);
     return reply;
 }
 
@@ -630,20 +630,20 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     notify = pcmk__xe_create(NULL, PCMK__XE_LRMD_NOTIFY);
 
     crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_TIMEOUT, cmd->timeout);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_TIMEOUT, cmd->timeout);
     pcmk__xe_set_guint(notify, PCMK__XA_LRMD_RSC_INTERVAL, cmd->interval_ms);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_RSC_START_DELAY, cmd->start_delay);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_RC, cmd->result.exit_status);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_OP_STATUS,
-                    cmd->result.execution_status);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, cmd->call_id);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_RSC_DELETED, cmd->rsc_deleted);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_RSC_START_DELAY, cmd->start_delay);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_EXEC_RC, cmd->result.exit_status);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_EXEC_OP_STATUS,
+                     cmd->result.execution_status);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_CALLID, cmd->call_id);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
     pcmk__xe_set_time(notify, PCMK__XA_LRMD_RUN_TIME, cmd->epoch_last_run);
     pcmk__xe_set_time(notify, PCMK__XA_LRMD_RCCHANGE_TIME, cmd->epoch_rcchange);
 #ifdef PCMK__TIME_USE_CGT
-    crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_TIME, exec_time);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_QUEUE_TIME, queue_time);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_EXEC_TIME, exec_time);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_QUEUE_TIME, queue_time);
 #endif
 
     crm_xml_add(notify, PCMK__XA_LRMD_OP, LRMD_OP_RSC_EXEC);
@@ -708,8 +708,8 @@ send_generic_notify(int rc, xmlNode * request)
 
         notify = pcmk__xe_create(NULL, PCMK__XE_LRMD_NOTIFY);
         crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
-        crm_xml_add_int(notify, PCMK__XA_LRMD_RC, rc);
-        crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, call_id);
+        pcmk__xe_set_int(notify, PCMK__XA_LRMD_RC, rc);
+        pcmk__xe_set_int(notify, PCMK__XA_LRMD_CALLID, call_id);
         crm_xml_add(notify, PCMK__XA_LRMD_OP, op);
         crm_xml_add(notify, PCMK__XA_LRMD_RSC_ID, rsc_id);
 
@@ -1811,7 +1811,7 @@ add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
                     pcmk__s(cmd->real_action, cmd->action));
         pcmk__xe_set_guint(op_xml, PCMK__XA_LRMD_RSC_INTERVAL,
                            cmd->interval_ms);
-        crm_xml_add_int(op_xml, PCMK__XA_LRMD_TIMEOUT, cmd->timeout_orig);
+        pcmk__xe_set_int(op_xml, PCMK__XA_LRMD_TIMEOUT, cmd->timeout_orig);
     }
 }
 

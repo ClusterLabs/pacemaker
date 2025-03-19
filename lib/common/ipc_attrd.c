@@ -207,8 +207,8 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
     crm_xml_add(request, PCMK__XA_ATTR_RESOURCE, resource);
     crm_xml_add(request, PCMK__XA_ATTR_CLEAR_OPERATION, operation);
     crm_xml_add(request, PCMK__XA_ATTR_CLEAR_INTERVAL, interval_spec);
-    crm_xml_add_int(request, PCMK__XA_ATTR_IS_REMOTE,
-                    pcmk_is_set(options, pcmk__node_attr_remote));
+    pcmk__xe_set_int(request, PCMK__XA_ATTR_IS_REMOTE,
+                     pcmk_is_set(options, pcmk__node_attr_remote));
 
     rc = connect_and_send_attrd_request(api, request);
 
@@ -365,10 +365,10 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
     crm_xml_add(op, PCMK__XA_ATTR_DAMPENING, dampen);
     crm_xml_add(op, PCMK__XA_ATTR_HOST, node);
     crm_xml_add(op, PCMK__XA_ATTR_SET, set);
-    crm_xml_add_int(op, PCMK__XA_ATTR_IS_REMOTE,
-                    pcmk_is_set(options, pcmk__node_attr_remote));
-    crm_xml_add_int(op, PCMK__XA_ATTR_IS_PRIVATE,
-                    pcmk_is_set(options, pcmk__node_attr_private));
+    pcmk__xe_set_int(op, PCMK__XA_ATTR_IS_REMOTE,
+                     pcmk_is_set(options, pcmk__node_attr_remote));
+    pcmk__xe_set_int(op, PCMK__XA_ATTR_IS_PRIVATE,
+                     pcmk_is_set(options, pcmk__node_attr_private));
 
     if (pcmk_is_set(options, pcmk__node_attr_sync_local)) {
         crm_xml_add(op, PCMK__XA_ATTR_SYNC_POINT, PCMK__VALUE_LOCAL);

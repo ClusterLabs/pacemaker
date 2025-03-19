@@ -497,7 +497,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     if (pcmk_is_set(controld_globals.flags, controld_ever_had_quorum)
         && !pcmk__cluster_has_quorum()) {
 
-        crm_xml_add_int(output, PCMK_XA_NO_QUORUM_PANIC, 1);
+        pcmk__xe_set_int(output, PCMK_XA_NO_QUORUM_PANIC, 1);
     }
 
     rc = pcmk_schedulerd_api_graph(schedulerd_api, output, &ref);

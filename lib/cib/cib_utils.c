@@ -121,9 +121,9 @@ createEmptyCib(int cib_epoch)
     crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, pcmk__highest_schema_name());
 
-    crm_xml_add_int(cib_root, PCMK_XA_EPOCH, cib_epoch);
-    crm_xml_add_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
-    crm_xml_add_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
+    pcmk__xe_set_int(cib_root, PCMK_XA_EPOCH, cib_epoch);
+    pcmk__xe_set_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
+    pcmk__xe_set_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
     config = pcmk__xe_create(cib_root, PCMK_XE_CONFIGURATION);
     pcmk__xe_create(cib_root, PCMK_XE_STATUS);
@@ -142,8 +142,8 @@ createEmptyCib(int cib_epoch)
         crm_xml_add(meta, PCMK_XA_ID, "build-resource-defaults");
         crm_xml_add(nvpair, PCMK_XA_ID, "build-" PCMK_META_RESOURCE_STICKINESS);
         crm_xml_add(nvpair, PCMK_XA_NAME, PCMK_META_RESOURCE_STICKINESS);
-        crm_xml_add_int(nvpair, PCMK_XA_VALUE,
-                        PCMK__RESOURCE_STICKINESS_DEFAULT);
+        pcmk__xe_set_int(nvpair, PCMK_XA_VALUE,
+                         PCMK__RESOURCE_STICKINESS_DEFAULT);
     }
 #endif
     return cib_root;
@@ -576,10 +576,10 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     crm_xml_add(*op_msg, PCMK__XA_CIB_SECTION, section);
     crm_xml_add(*op_msg, PCMK__XA_CIB_USER, user_name);
     crm_xml_add(*op_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
-    crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLID, cib->call_id);
+    pcmk__xe_set_int(*op_msg, PCMK__XA_CIB_CALLID, cib->call_id);
 
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
-    crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
+    pcmk__xe_set_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
 
     if (data != NULL) {
         xmlNode *wrapper = pcmk__xe_create(*op_msg, PCMK__XE_CIB_CALLDATA);

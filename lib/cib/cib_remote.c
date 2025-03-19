@@ -558,7 +558,7 @@ cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
 
     crm_xml_add(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
     crm_xml_add(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
-    crm_xml_add_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
+    pcmk__xe_set_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
     pcmk__remote_send_xml(&private->callback, notify_msg);
     pcmk__xml_free(notify_msg);
     return pcmk_ok;

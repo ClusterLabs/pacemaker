@@ -560,8 +560,8 @@ lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
     op_msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_COMMAND);
     crm_xml_add(op_msg, PCMK__XA_T, PCMK__VALUE_LRMD);
     crm_xml_add(op_msg, PCMK__XA_LRMD_OP, op);
-    crm_xml_add_int(op_msg, PCMK__XA_LRMD_TIMEOUT, timeout);
-    crm_xml_add_int(op_msg, PCMK__XA_LRMD_CALLOPT, options);
+    pcmk__xe_set_int(op_msg, PCMK__XA_LRMD_TIMEOUT, timeout);
+    pcmk__xe_set_int(op_msg, PCMK__XA_LRMD_CALLOPT, options);
 
     if (data != NULL) {
         xmlNode *wrapper = pcmk__xe_create(op_msg, PCMK__XE_LRMD_CALLDATA);
@@ -659,7 +659,7 @@ int
 lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
                       const char *msg_type)
 {
-    crm_xml_add_int(msg, PCMK__XA_LRMD_REMOTE_MSG_ID, id);
+    pcmk__xe_set_int(msg, PCMK__XA_LRMD_REMOTE_MSG_ID, id);
     crm_xml_add(msg, PCMK__XA_LRMD_REMOTE_MSG_TYPE, msg_type);
     return pcmk__remote_send_xml(session, msg);
 }
@@ -2150,8 +2150,8 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ACTION, action);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
     pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
-    crm_xml_add_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
-    crm_xml_add_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
 
     for (tmp = params; tmp; tmp = tmp->next) {
         hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
@@ -2177,7 +2177,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_ALERT_ID, alert_id);
     crm_xml_add(data, PCMK__XA_LRMD_ALERT_PATH, alert_path);
-    crm_xml_add_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
 
     for (tmp = params; tmp; tmp = tmp->next) {
         hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);

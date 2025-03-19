@@ -386,7 +386,7 @@ stonith_api_remove_level_full(stonith_t *st, int options,
         crm_xml_add(data, PCMK_XA_TARGET_VALUE, value);
     }
 
-    crm_xml_add_int(data, PCMK_XA_INDEX, level);
+    pcmk__xe_set_int(data, PCMK_XA_INDEX, level);
     rc = stonith_send_command(st, STONITH_OP_LEVEL_DEL, data, NULL, options, 0);
     pcmk__xml_free(data);
 
@@ -428,8 +428,8 @@ create_level_registration_xml(const char *node, const char *pattern,
     data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
 
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add_int(data, PCMK_XA_ID, level);
-    crm_xml_add_int(data, PCMK_XA_INDEX, level);
+    pcmk__xe_set_int(data, PCMK_XA_ID, level);
+    pcmk__xe_set_int(data, PCMK_XA_INDEX, level);
 
     if (node) {
         crm_xml_add(data, PCMK_XA_TARGET, node);
@@ -676,9 +676,9 @@ stonith_api_fence_with_delay(stonith_t * stonith, int call_options, const char *
     data = pcmk__xe_create(NULL, __func__);
     crm_xml_add(data, PCMK__XA_ST_TARGET, node);
     crm_xml_add(data, PCMK__XA_ST_DEVICE_ACTION, action);
-    crm_xml_add_int(data, PCMK__XA_ST_TIMEOUT, timeout);
-    crm_xml_add_int(data, PCMK__XA_ST_TOLERANCE, tolerance);
-    crm_xml_add_int(data, PCMK__XA_ST_DELAY, delay);
+    pcmk__xe_set_int(data, PCMK__XA_ST_TIMEOUT, timeout);
+    pcmk__xe_set_int(data, PCMK__XA_ST_TOLERANCE, tolerance);
+    pcmk__xe_set_int(data, PCMK__XA_ST_DELAY, delay);
 
     rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, timeout);
     pcmk__xml_free(data);
@@ -820,9 +820,9 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
     op_msg = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
     crm_xml_add(op_msg, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
     crm_xml_add(op_msg, PCMK__XA_ST_OP, op);
-    crm_xml_add_int(op_msg, PCMK__XA_ST_CALLID, call_id);
+    pcmk__xe_set_int(op_msg, PCMK__XA_ST_CALLID, call_id);
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
-    crm_xml_add_int(op_msg, PCMK__XA_ST_CALLOPT, call_options);
+    pcmk__xe_set_int(op_msg, PCMK__XA_ST_CALLOPT, call_options);
 
     if (data != NULL) {
         xmlNode *wrapper = pcmk__xe_create(op_msg, PCMK__XE_ST_CALLDATA);
@@ -1582,7 +1582,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         return -EINVAL;
     }
 
-    crm_xml_add_int(op_msg, PCMK__XA_ST_TIMEOUT, timeout);
+    pcmk__xe_set_int(op_msg, PCMK__XA_ST_TIMEOUT, timeout);
     crm_trace("Sending %s message to fencer with timeout %ds", op, timeout);
 
     if (data) {

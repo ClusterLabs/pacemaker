@@ -447,8 +447,8 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
         rc = pcmk_rc2legacy(stonith__result2rc(result));
     }
 
-    crm_xml_add_int(xml, PCMK__XA_OP_STATUS, (int) execution_status);
-    crm_xml_add_int(xml, PCMK__XA_RC_CODE, exit_status);
+    pcmk__xe_set_int(xml, PCMK__XA_OP_STATUS, (int) execution_status);
+    pcmk__xe_set_int(xml, PCMK__XA_RC_CODE, exit_status);
     crm_xml_add(xml, PCMK_XA_EXIT_REASON, exit_reason);
     crm_xml_add(xml, PCMK__XA_ST_OUTPUT, action_stdout);
 
@@ -456,7 +456,7 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
      * code that use libstonithd <=2.1.2 don't check for the full result, and
      * need a legacy return code instead.
      */
-    crm_xml_add_int(xml, PCMK__XA_ST_RC, rc);
+    pcmk__xe_set_int(xml, PCMK__XA_ST_RC, rc);
 }
 
 /*!
