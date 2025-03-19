@@ -1277,6 +1277,55 @@ pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
 }
 
 /*!
+ * \internal
+ * \brief Retrieve the values of XML second/microsecond attributes as time
+ *
+ * This is like \c crm_element_value() but returns the value as a
+ * <tt>struct timeval</tt>.
+ *
+ * \param[in]  xml        XML element whose attributes to get
+ * \param[in]  sec_attr   Name of XML attribute for seconds
+ * \param[in]  usec_attr  Name of XML attribute for microseconds
+ * \param[out] dest       Where to store result (unchanged on error)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
+                     const char *usec_attr, struct timeval *dest)
+{
+    long long value_ll = 0;
+    struct timeval result = { 0, 0 };
+
+    // Could allow one of sec_attr and usec_attr to be NULL in the future
+    CRM_CHECK((xml != NULL) && (sec_attr != NULL) && (usec_attr != NULL)
+              && (dest != NULL), return EINVAL);
+
+    /* Unfortunately, we can't do any bounds checking, since there are no
+     * constants provided for the bounds of time_t and suseconds_t, and
+     * calculating them isn't worth the effort. If there are XML values
+     * beyond the native sizes, there will probably be worse problems anyway.
+     */
+
+    // Parse seconds
+    errno = 0;
+    if (crm_element_value_ll(xml, sec_attr, &value_ll) < 0) {
+        return (errno != 0)? errno : pcmk_rc_bad_nvpair;
+    }
+    result.tv_sec = (time_t) value_ll;
+
+    // Parse microseconds
+    errno = 0;
+    if (crm_element_value_ll(xml, usec_attr, &value_ll) < 0) {
+        return (errno != 0)? errno : pcmk_rc_bad_nvpair;
+    }
+    result.tv_usec = (suseconds_t) value_ll;
+
+    *dest = result;
+    return pcmk_rc_ok;
+}
+
+/*!
  * \brief Retrieve the long long integer value of an XML attribute
  *
  * This is like \c crm_element_value() but getting the value as a long long int.

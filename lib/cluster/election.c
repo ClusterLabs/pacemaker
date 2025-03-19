@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -451,9 +451,9 @@ parse_election_message(const xmlNode *message, struct vote *vote)
         /* Only vote ops have uptime.
            Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is in microseconds.
          */
-        if ((crm_element_value_timeval(message, PCMK__XA_ELECTION_AGE_SEC,
-                                       PCMK__XA_ELECTION_AGE_NANO_SEC,
-                                       &(vote->age)) != pcmk_ok)
+        if ((pcmk__xe_get_timeval(message, PCMK__XA_ELECTION_AGE_SEC,
+                                   PCMK__XA_ELECTION_AGE_NANO_SEC,
+                                   &(vote->age)) != pcmk_rc_ok)
             || (vote->age.tv_sec < 0) || (vote->age.tv_usec < 0)) {
 
             crm_warn("Cannot count election %s from %s because uptime is "
