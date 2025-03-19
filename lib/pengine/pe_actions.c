@@ -1628,8 +1628,8 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
         time_t last_a = -1;
         time_t last_b = -1;
 
-        crm_element_value_epoch(xml_a, PCMK_XA_LAST_RC_CHANGE, &last_a);
-        crm_element_value_epoch(xml_b, PCMK_XA_LAST_RC_CHANGE, &last_b);
+        pcmk__xe_get_time(xml_a, PCMK_XA_LAST_RC_CHANGE, &last_a);
+        pcmk__xe_get_time(xml_b, PCMK_XA_LAST_RC_CHANGE, &last_b);
 
         crm_trace("rc-change: %lld vs %lld",
                   (long long) last_a, (long long) last_b);

@@ -2688,8 +2688,9 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 {
     time_t lock_time = 0;   // When lock started (i.e. node shutdown time)
 
-    if ((crm_element_value_epoch(rsc_entry, PCMK_OPT_SHUTDOWN_LOCK,
-                                 &lock_time) == pcmk_ok) && (lock_time != 0)) {
+    if ((pcmk__xe_get_time(rsc_entry, PCMK_OPT_SHUTDOWN_LOCK,
+                           &lock_time) == pcmk_rc_ok)
+        && (lock_time != 0)) {
 
         if ((scheduler->priv->shutdown_lock_ms > 0U)
             && (pcmk__scheduler_epoch_time(scheduler)
@@ -3526,8 +3527,8 @@ last_change_str(const xmlNode *xml_op)
     time_t when;
     char *result = NULL;
 
-    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                                &when) == pcmk_ok) {
+    if (pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                          &when) == pcmk_rc_ok) {
         char *when_s = pcmk__epoch2str(&when, 0);
         const char *p = strchr(when_s, ' ');
 
@@ -4159,8 +4160,8 @@ check_operation_expiry(struct action_history *history)
     }
 
     if ((expiration_sec > 0)
-        && (crm_element_value_epoch(history->xml, PCMK_XA_LAST_RC_CHANGE,
-                                    &last_run) == 0)) {
+        && (pcmk__xe_get_time(history->xml, PCMK_XA_LAST_RC_CHANGE,
+                              &last_run) == pcmk_rc_ok)) {
 
         /* Resource has a PCMK_META_FAILURE_TIMEOUT and history entry has a
          * timestamp

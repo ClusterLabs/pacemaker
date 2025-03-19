@@ -156,6 +156,7 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
 int pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t);
 int pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
                        uint32_t default_value);
+int pcmk__xe_get_time(const xmlNode *xml, const char *attr, time_t *dest);
 int pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
                          const char *usec_attr, struct timeval *dest);
 

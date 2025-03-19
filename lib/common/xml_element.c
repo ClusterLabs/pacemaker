@@ -1278,6 +1278,39 @@ pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
 
 /*!
  * \internal
+ * \brief Retrieve a \c time_t value from an XML attribute
+ *
+ * This is like \c crm_element_value() but returns the value as a \c time_t.
+ *
+ * \param[in]  xml   XML element whose attribute to get
+ * \param[in]  attr  Attribute name
+ * \param[out] dest  Where to store attribute value (unchanged on error)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_get_time(const xmlNode *xml, const char *attr, time_t *dest)
+{
+    long long value_ll = 0;
+
+    CRM_CHECK((xml != NULL) && (attr != NULL) && (dest != NULL), return EINVAL);
+
+    errno = 0;
+    if (crm_element_value_ll(xml, attr, &value_ll) < 0) {
+        return (errno != 0)? errno : pcmk_rc_bad_nvpair;
+    }
+
+    /* We don't do any bounds checking, since there are no constants provided
+     * for the bounds of time_t, and calculating them isn't worth the effort. If
+     * there are XML values beyond the native sizes, there will likely be worse
+     * problems anyway.
+     */
+    *dest = (time_t) value_ll;
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Retrieve the values of XML second/microsecond attributes as time
  *
  * This is like \c crm_element_value() but returns the value as a
@@ -1301,11 +1334,7 @@ pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
     CRM_CHECK((xml != NULL) && (sec_attr != NULL) && (usec_attr != NULL)
               && (dest != NULL), return EINVAL);
 
-    /* Unfortunately, we can't do any bounds checking, since there are no
-     * constants provided for the bounds of time_t and suseconds_t, and
-     * calculating them isn't worth the effort. If there are XML values
-     * beyond the native sizes, there will probably be worse problems anyway.
-     */
+    // No bounds checking; see comment in pcmk__xe_get_time()
 
     // Parse seconds
     errno = 0;
@@ -1413,9 +1442,7 @@ crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest)
         return -1;
     }
 
-    /* Unfortunately, we can't do any bounds checking, since time_t has neither
-     * standardized bounds nor constants defined for them.
-     */
+    // No bounds checking; see comment in pcmk__xe_get_time()
     *dest = (time_t) value_ll;
     return pcmk_ok;
 }
@@ -1628,11 +1655,7 @@ crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
         return pcmk_ok;
     }
 
-    /* Unfortunately, we can't do any bounds checking, since there are no
-     * constants provided for the bounds of time_t and suseconds_t, and
-     * calculating them isn't worth the effort. If there are XML values
-     * beyond the native sizes, there will probably be worse problems anyway.
-     */
+    // No bounds checking; see comment in pcmk__xe_get_time()
 
     // Parse seconds
     errno = 0;

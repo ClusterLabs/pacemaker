@@ -500,8 +500,8 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
 
     pcmk__assert(out != NULL);
 
-    crm_element_value_epoch(scheduler->input, PCMK_XA_EXECUTION_DATE,
-                            &original_date);
+    pcmk__xe_get_time(scheduler->input, PCMK_XA_EXECUTION_DATE,
+                      &original_date);
 
     if (use_date) {
         scheduler->priv->now = crm_time_new(use_date);
