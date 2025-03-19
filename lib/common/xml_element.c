@@ -1077,29 +1077,6 @@ crm_xml_add_int(xmlNode *node, const char *name, int value)
 }
 
 /*!
- * \brief Create an XML attribute with specified name and long long int value
- *
- * This is like \c crm_xml_add() but taking a long long int value. It is a
- * useful equivalent for defined types like time_t, etc.
- *
- * \param[in,out] xml    XML node to modify
- * \param[in]     name   Attribute name to set
- * \param[in]     value  Attribute value to set
- *
- * \return New value as string on success, \c NULL otherwise
- * \note This does nothing if \p xml or \p name is \c NULL or empty.
- */
-const char *
-crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
-{
-    char *str = crm_strdup_printf("%lld", value);
-    const char *result = crm_xml_add(xml, name, str);
-
-    free(str);
-    return result;
-}
-
-/*!
  * \internal
  * \brief Retrieve the value of an XML attribute
  *
@@ -1789,6 +1766,16 @@ crm_element_value_copy(const xmlNode *data, const char *name)
 {
     CRM_CHECK((data != NULL) && (name != NULL), return NULL);
     return pcmk__str_copy(pcmk__xe_get(data, name));
+}
+
+const char *
+crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
+{
+    char *str = crm_strdup_printf("%lld", value);
+    const char *result = crm_xml_add(xml, name, str);
+
+    free(str);
+    return result;
 }
 
 const char *

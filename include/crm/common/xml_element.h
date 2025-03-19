@@ -27,7 +27,6 @@ extern "C" {
 
 const char *crm_xml_add(xmlNode *node, const char *name, const char *value);
 const char *crm_xml_add_int(xmlNode *node, const char *name, int value);
-const char *crm_xml_add_ll(xmlNode *node, const char *name, long long value);
 
 #ifdef __cplusplus
 }
