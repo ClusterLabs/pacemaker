@@ -1141,7 +1141,7 @@ get_pseudo_op(const char *name, pcmk_scheduler_t *scheduler)
 }
 
 static GList *
-find_unfencing_devices(GList *candidates, GList *matches) 
+find_unfencing_devices(GList *candidates, GList *matches)
 {
     for (GList *gIter = candidates; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *candidate = gIter->data;
@@ -1569,13 +1569,14 @@ pe__clear_resource_history(pcmk_resource_t *rsc, const pcmk_node_t *node)
                   PCMK_ACTION_LRM_DELETE, node, FALSE, rsc->priv->scheduler);
 }
 
-#define sort_return(an_int, why) do {					\
-	free(a_uuid);						\
-	free(b_uuid);						\
-	crm_trace("%s (%d) %c %s (%d) : %s",				\
-		  a_xml_id, a_call_id, an_int>0?'>':an_int<0?'<':'=',	\
-		  b_xml_id, b_call_id, why);				\
-	return an_int;							\
+#define sort_return(an_int, why) do {                                   \
+        free(a_uuid);                                                   \
+        free(b_uuid);                                                   \
+        crm_trace("%s (%d) %c %s (%d) : %s",                            \
+                  a_xml_id, a_call_id,                                  \
+                  (((an_int) > 0)? '>' : (((an_int) < 0)? '<' : '=')),  \
+                  b_xml_id, b_call_id, why);                            \
+        return an_int;                                                  \
     } while(0)
 
 int
