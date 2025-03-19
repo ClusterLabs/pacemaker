@@ -10,6 +10,8 @@
 #ifndef PCMK__CRM_COMMON_XML_ELEMENT_COMPAT__H
 #define PCMK__CRM_COMMON_XML_ELEMENT_COMPAT__H
 
+#include <sys/time.h>       // struct timeval
+
 #include <glib.h>           // gboolean
 #include <libxml/tree.h>    // xmlNode
 
@@ -38,6 +40,10 @@ xmlNode *sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive);
 //! \deprecated Do not use
 const char *crm_copy_xml_element(const xmlNode *obj1, xmlNode *obj2,
                                  const char *element);
+
+//! \deprecated Do not use
+int crm_element_value_timeval(const xmlNode *data, const char *name_sec,
+                              const char *name_usec, struct timeval *dest);
 
 #ifdef __cplusplus
 }
