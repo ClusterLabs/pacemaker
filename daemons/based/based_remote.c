@@ -399,7 +399,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     }
 
     if (pcmk__xe_get(command, PCMK__XA_CIB_CALLOPT) == NULL) {
-        crm_xml_add_int(command, PCMK__XA_CIB_CALLOPT, 0);
+        pcmk__xe_set_int(command, PCMK__XA_CIB_CALLOPT, 0);
     }
 
     crm_log_xml_trace(command, "Remote command: ");

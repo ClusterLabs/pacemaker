@@ -93,7 +93,7 @@ remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
 
     crm_xml_add(response, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_RESPONSE);
     crm_xml_add(response, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
-    crm_xml_add_int(response, PCMK__XA_LRMD_IPC_MSG_ID, msg_id);
+    pcmk__xe_set_int(response, PCMK__XA_LRMD_IPC_MSG_ID, msg_id);
 
     wrapper = pcmk__xe_create(response, PCMK__XE_LRMD_IPC_MSG);
     pcmk__xml_copy(wrapper, msg);
@@ -295,8 +295,8 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 
                 /* Send a n'ack so the caller doesn't block */
                 crm_xml_add(op_reply, PCMK_XA_FUNCTION, __func__);
-                crm_xml_add_int(op_reply, PCMK__XA_LINE, __LINE__);
-                crm_xml_add_int(op_reply, PCMK_XA_RC, rc);
+                pcmk__xe_set_int(op_reply, PCMK__XA_LINE, __LINE__);
+                pcmk__xe_set_int(op_reply, PCMK_XA_RC, rc);
                 remote_proxy_relay_response(proxy, op_reply, msg_id);
                 pcmk__xml_free(op_reply);
 

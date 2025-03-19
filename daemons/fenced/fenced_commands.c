@@ -2276,7 +2276,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     // PCMK__XA_ST_REQUIRED is currently used only for unfencing
     if (is_action_required(action, device)) {
         crm_trace("Action '%s' is required using %s", action, device->id);
-        crm_xml_add_int(xml, PCMK__XA_ST_REQUIRED, 1);
+        pcmk__xe_set_int(xml, PCMK__XA_ST_REQUIRED, 1);
     }
 
     // pcmk_<action>_timeout if configured
@@ -2284,20 +2284,20 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     if (action_specific_timeout) {
         crm_trace("Action '%s' has timeout %ds using %s",
                   action, action_specific_timeout, device->id);
-        crm_xml_add_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
-                        action_specific_timeout);
+        pcmk__xe_set_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
+                         action_specific_timeout);
     }
 
     delay_max = get_action_delay_max(device, action);
     if (delay_max > 0) {
         crm_trace("Action '%s' has maximum random delay %ds using %s",
                   action, delay_max, device->id);
-        crm_xml_add_int(xml, PCMK__XA_ST_DELAY_MAX, delay_max);
+        pcmk__xe_set_int(xml, PCMK__XA_ST_DELAY_MAX, delay_max);
     }
 
     delay_base = get_action_delay_base(device, action, target);
     if (delay_base > 0) {
-        crm_xml_add_int(xml, PCMK__XA_ST_DELAY_BASE, delay_base);
+        pcmk__xe_set_int(xml, PCMK__XA_ST_DELAY_BASE, delay_base);
     }
 
     if ((delay_max > 0) && (delay_base == 0)) {
@@ -2426,10 +2426,10 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         crm_xml_add(dev, PCMK_XA_AGENT, device->agent);
 
         // Has had successful monitor, list, or status on this node
-        crm_xml_add_int(dev, PCMK__XA_ST_MONITOR_VERIFIED,
-                        pcmk_is_set(device->flags, fenced_df_verified));
+        pcmk__xe_set_int(dev, PCMK__XA_ST_MONITOR_VERIFIED,
+                         pcmk_is_set(device->flags, fenced_df_verified));
 
-        crm_xml_add_int(dev, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS, device->flags);
+        pcmk__xe_set_int(dev, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS, device->flags);
 
         /* If the originating fencer wants to reboot the node, and we have a
          * capable device that doesn't support "reboot", remap to "off" instead.
@@ -2473,7 +2473,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         }
     }
 
-    crm_xml_add_int(list, PCMK__XA_ST_AVAILABLE_DEVICES, available_devices);
+    pcmk__xe_set_int(list, PCMK__XA_ST_AVAILABLE_DEVICES, available_devices);
     if (query->target) {
         crm_debug("Found %d matching device%s for target '%s'",
                   available_devices, pcmk__plural_s(available_devices),
@@ -2980,8 +2980,8 @@ construct_async_reply(const async_command_t *cmd,
     crm_xml_add(reply, PCMK__XA_ST_TARGET, cmd->target);
     crm_xml_add(reply, PCMK__XA_ST_DEVICE_ACTION, cmd->op);
     crm_xml_add(reply, PCMK__XA_ST_ORIGIN, cmd->origin);
-    crm_xml_add_int(reply, PCMK__XA_ST_CALLID, cmd->id);
-    crm_xml_add_int(reply, PCMK__XA_ST_CALLOPT, cmd->options);
+    pcmk__xe_set_int(reply, PCMK__XA_ST_CALLID, cmd->id);
+    pcmk__xe_set_int(reply, PCMK__XA_ST_CALLOPT, cmd->options);
 
     stonith__xe_set_result(reply, result);
     return reply;

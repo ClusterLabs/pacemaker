@@ -82,7 +82,7 @@ remove_topology_level(xmlNode *match)
     data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK_XA_TARGET, key);
-    crm_xml_add_int(data, PCMK_XA_INDEX, index);
+    pcmk__xe_set_int(data, PCMK_XA_INDEX, index);
 
     fenced_unregister_level(data, NULL);
 

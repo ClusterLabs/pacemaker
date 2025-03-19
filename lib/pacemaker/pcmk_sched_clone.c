@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -655,11 +655,11 @@ pcmk__clone_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     free(name);
 
     name = crm_meta_name(PCMK_META_CLONE_MAX);
-    crm_xml_add_int(xml, name, pe__clone_max(rsc));
+    pcmk__xe_set_int(xml, name, pe__clone_max(rsc));
     free(name);
 
     name = crm_meta_name(PCMK_META_CLONE_NODE_MAX);
-    crm_xml_add_int(xml, name, pe__clone_node_max(rsc));
+    pcmk__xe_set_int(xml, name, pe__clone_node_max(rsc));
     free(name);
 
     if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
@@ -667,22 +667,22 @@ pcmk__clone_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
         int promoted_node_max = pe__clone_promoted_node_max(rsc);
 
         name = crm_meta_name(PCMK_META_PROMOTED_MAX);
-        crm_xml_add_int(xml, name, promoted_max);
+        pcmk__xe_set_int(xml, name, promoted_max);
         free(name);
 
         name = crm_meta_name(PCMK_META_PROMOTED_NODE_MAX);
-        crm_xml_add_int(xml, name, promoted_node_max);
+        pcmk__xe_set_int(xml, name, promoted_node_max);
         free(name);
 
         /* @COMPAT Maintain backward compatibility with resource agents that
          * expect the old names (deprecated since 2.0.0).
          */
         name = crm_meta_name(PCMK__META_PROMOTED_MAX_LEGACY);
-        crm_xml_add_int(xml, name, promoted_max);
+        pcmk__xe_set_int(xml, name, promoted_max);
         free(name);
 
         name = crm_meta_name(PCMK__META_PROMOTED_NODE_MAX_LEGACY);
-        crm_xml_add_int(xml, name, promoted_node_max);
+        pcmk__xe_set_int(xml, name, promoted_node_max);
         free(name);
     }
 }

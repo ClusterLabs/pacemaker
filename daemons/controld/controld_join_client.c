@@ -318,7 +318,7 @@ do_cl_join_finalize_respond(long long action,
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);
 
-        crm_xml_add_int(join_confirm, PCMK__XA_JOIN_ID, join_id);
+        pcmk__xe_set_int(join_confirm, PCMK__XA_JOIN_ID, join_id);
 
         crm_debug("Confirming join-%d: sending local operation history to %s",
                   join_id, controld_globals.dc_name);

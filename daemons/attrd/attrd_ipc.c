@@ -344,7 +344,7 @@ handle_value_expansion(const char **value, xmlNode *xml, const char *op,
         int_value = attrd_expand_value(*value, (v? v->current : NULL));
 
         crm_info("Expanded %s=%s to %d", attr, *value, int_value);
-        crm_xml_add_int(xml, PCMK__XA_ATTR_VALUE, int_value);
+        pcmk__xe_set_int(xml, PCMK__XA_ATTR_VALUE, int_value);
 
         /* Replacing the value frees the previous memory, so re-query it */
         *value = pcmk__xe_get(xml, PCMK__XA_ATTR_VALUE);
