@@ -34,7 +34,6 @@ const char *crm_xml_add_timeval(xmlNode *xml, const char *name_sec,
                                 const struct timeval *value);
 
 const char *crm_element_value(const xmlNode *data, const char *name);
-int crm_element_value_int(const xmlNode *data, const char *name, int *dest);
 char *crm_element_value_copy(const xmlNode *data, const char *name);
 
 #ifdef __cplusplus
