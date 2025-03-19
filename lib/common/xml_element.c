@@ -1157,36 +1157,6 @@ crm_xml_add_timeval(xmlNode *xml, const char *name_sec, const char *name_usec,
 }
 
 /*!
- * \brief Retrieve the value of an XML attribute
- *
- * \param[in] data   XML node to check
- * \param[in] name   Attribute name to check
- *
- * \return Value of specified attribute (may be \c NULL)
- */
-const char *
-crm_element_value(const xmlNode *data, const char *name)
-{
-    xmlAttr *attr = NULL;
-
-    if (data == NULL) {
-        crm_err("Couldn't find %s in NULL", name ? name : "<null>");
-        CRM_LOG_ASSERT(data != NULL);
-        return NULL;
-
-    } else if (name == NULL) {
-        crm_err("Couldn't find NULL in %s", data->name);
-        return NULL;
-    }
-
-    attr = xmlHasProp(data, (const xmlChar *) name);
-    if (!attr || !attr->children) {
-        return NULL;
-    }
-    return (const char *) attr->children->content;
-}
-
-/*!
  * \internal
  * \brief Retrieve the value of an XML attribute
  *
@@ -1624,6 +1594,28 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     }
 
     return result;
+}
+
+const char *
+crm_element_value(const xmlNode *data, const char *name)
+{
+    xmlAttr *attr = NULL;
+
+    if (data == NULL) {
+        crm_err("Couldn't find %s in NULL", name ? name : "<null>");
+        CRM_LOG_ASSERT(data != NULL);
+        return NULL;
+
+    } else if (name == NULL) {
+        crm_err("Couldn't find NULL in %s", data->name);
+        return NULL;
+    }
+
+    attr = xmlHasProp(data, (const xmlChar *) name);
+    if (!attr || !attr->children) {
+        return NULL;
+    }
+    return (const char *) attr->children->content;
 }
 
 const char *
