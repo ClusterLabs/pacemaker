@@ -385,7 +385,7 @@ throttle_update(xmlNode *xml)
     int max = 0;
     int mode = 0;
     struct throttle_record_s *r = NULL;
-    const char *from = crm_element_value(xml, PCMK__XA_SRC);
+    const char *from = pcmk__xe_get(xml, PCMK__XA_SRC);
 
     pcmk__xe_get_int(xml, PCMK__XA_CRM_LIMIT_MODE, &mode);
     pcmk__xe_get_int(xml, PCMK__XA_CRM_LIMIT_MAX, &max);

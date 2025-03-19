@@ -36,12 +36,12 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
     }
 
     // Get name and interval from configured op
-    conf_op_name = crm_element_value(conf_op_xml, PCMK_XA_NAME);
-    conf_op_interval_spec = crm_element_value(conf_op_xml, PCMK_META_INTERVAL);
+    conf_op_name = pcmk__xe_get(conf_op_xml, PCMK_XA_NAME);
+    conf_op_interval_spec = pcmk__xe_get(conf_op_xml, PCMK_META_INTERVAL);
     pcmk_parse_interval_spec(conf_op_interval_spec, &conf_op_interval_ms);
 
     // Get name and interval from op history entry
-    lrm_op_task = crm_element_value(lrm_op_xml, PCMK_XA_OPERATION);
+    lrm_op_task = pcmk__xe_get(lrm_op_xml, PCMK_XA_OPERATION);
     pcmk__xe_get_guint(lrm_op_xml, PCMK_META_INTERVAL, &lrm_op_interval_ms);
 
     if ((conf_op_interval_ms != lrm_op_interval_ms)
@@ -125,9 +125,8 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                 xmlXPathObject *lrm_op_xpathObj = NULL;
 
                 // Get name and interval from configured op
-                conf_op_name = crm_element_value(pref, PCMK_XA_NAME);
-                conf_op_interval_spec = crm_element_value(pref,
-                                                          PCMK_META_INTERVAL);
+                conf_op_name = pcmk__xe_get(pref, PCMK_XA_NAME);
+                conf_op_interval_spec = pcmk__xe_get(pref, PCMK_META_INTERVAL);
                 pcmk_parse_interval_spec(conf_op_interval_spec,
                                          &conf_op_interval_ms);
 

@@ -270,7 +270,7 @@ static void
 remote_cache_refresh_helper(xmlNode *result, void *user_data)
 {
     const struct refresh_data *data = user_data;
-    const char *remote = crm_element_value(result, data->field);
+    const char *remote = pcmk__xe_get(result, data->field);
     const char *state = NULL;
     pcmk__node_status_t *node;
 
@@ -1457,8 +1457,8 @@ find_cib_cluster_node(const char *id, const char *uname)
 static void
 cluster_node_cib_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 {
-    const char *id = crm_element_value(xml_node, PCMK_XA_ID);
-    const char *uname = crm_element_value(xml_node, PCMK_XA_UNAME);
+    const char *id = pcmk__xe_get(xml_node, PCMK_XA_ID);
+    const char *uname = pcmk__xe_get(xml_node, PCMK_XA_UNAME);
     pcmk__node_status_t * node =  NULL;
 
     CRM_CHECK(id != NULL && uname !=NULL, return);

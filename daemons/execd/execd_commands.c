@@ -703,8 +703,8 @@ execd_send_generic_notify(int rc, xmlNode *request)
         xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                                 "//" PCMK__XE_LRMD_RSC,
                                                 LOG_ERR);
-        const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-        const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
+        const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+        const char *op = pcmk__xe_get(request, PCMK__XA_LRMD_OP);
 
         pcmk__xe_get_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
@@ -1516,8 +1516,8 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
 {
     int rc = pcmk_rc_ok;
     time_t now = time(NULL);
-    const char *protocol_version =
-        crm_element_value(request, PCMK__XA_LRMD_PROTOCOL_VERSION);
+    const char *protocol_version = pcmk__xe_get(request,
+                                                PCMK__XA_LRMD_PROTOCOL_VERSION);
     const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
 
     if (compare_version(protocol_version, LRMD_COMPATIBLE_PROTOCOL) < 0) {
@@ -1531,7 +1531,7 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
         if ((client->remote != NULL)
             && pcmk_is_set(client->flags,
                            pcmk__client_tls_handshake_complete)) {
-            const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
+            const char *op = pcmk__xe_get(request, PCMK__XA_LRMD_OP);
 
             // This is a remote connection from a cluster node's controller
             ipc_proxy_add_provider(client);
@@ -1602,7 +1602,7 @@ execd_process_get_rsc_info(xmlNode *request, int call_id, xmlNode **reply)
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+    const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
     lrmd_rsc_t *rsc = NULL;
 
     if (rsc_id == NULL) {
@@ -1636,7 +1636,7 @@ execd_process_rsc_unregister(pcmk__client_t *client, xmlNode *request)
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+    const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
     if (!rsc_id) {
         return ENODEV;
@@ -1669,7 +1669,7 @@ execd_process_rsc_exec(pcmk__client_t *client, xmlNode *request)
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+    const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
     if (!rsc_id) {
         return EINVAL;
@@ -1793,8 +1793,8 @@ execd_process_rsc_cancel(pcmk__client_t *client, xmlNode *request)
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-    const char *action = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
+    const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+    const char *action = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
     guint interval_ms = 0;
 
     pcmk__xe_get_guint(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &interval_ms);
@@ -1837,7 +1837,7 @@ execd_process_get_recurring(xmlNode *request, int call_id, xmlNode **reply)
         rsc_xml = pcmk__xe_first_child(rsc_xml, PCMK__XE_LRMD_RSC, NULL, NULL);
     }
     if (rsc_xml) {
-        rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+        rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
     }
 
     // If resource ID is specified, resource must exist

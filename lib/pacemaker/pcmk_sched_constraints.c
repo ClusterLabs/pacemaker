@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,7 +45,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
                                                  NULL);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj, NULL)) {
 
-        const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
+        const char *id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
         const char *tag = (const char *) xml_obj->name;
 
         if (id == NULL) {
@@ -368,7 +368,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         return false;
     }
 
-    id = crm_element_value(xml_obj, attr);
+    id = pcmk__xe_get(xml_obj, attr);
     if (id == NULL) {
         return true;
     }

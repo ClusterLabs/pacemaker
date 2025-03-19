@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -61,8 +61,8 @@ process_transaction_requests(xmlNodePtr transaction,
          request != NULL;
          request = pcmk__xe_next(request, PCMK__XE_CIB_COMMAND)) {
 
-        const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-        const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
+        const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+        const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
         const cib__operation_t *operation = NULL;
         int rc = cib__get_operation(op, &operation);
 

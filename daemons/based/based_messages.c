@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,11 +44,11 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
                          xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                          xmlNode ** answer)
 {
-    const char *host = crm_element_value(req, PCMK__XA_SRC);
+    const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
 
     *answer = NULL;
 
-    if (crm_element_value(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
+    if (pcmk__xe_get(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
         crm_info("Peer %s is requesting to shut down", host);
         return pcmk_ok;
     }
@@ -138,8 +138,8 @@ int
 cib_process_ping(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
-    const char *host = crm_element_value(req, PCMK__XA_SRC);
-    const char *seq = crm_element_value(req, PCMK__XA_CIB_PING_ID);
+    const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
+    const char *seq = pcmk__xe_get(req, PCMK__XA_CIB_PING_ID);
     char *digest = pcmk__digest_xml(the_cib, true);
 
     xmlNode *wrapper = NULL;
@@ -173,9 +173,9 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 
     crm_info("Reporting our current digest to %s: %s for %s.%s.%s",
              host, digest,
-             crm_element_value(existing_cib, PCMK_XA_ADMIN_EPOCH),
-             crm_element_value(existing_cib, PCMK_XA_EPOCH),
-             crm_element_value(existing_cib, PCMK_XA_NUM_UPDATES));
+             pcmk__xe_get(existing_cib, PCMK_XA_ADMIN_EPOCH),
+             pcmk__xe_get(existing_cib, PCMK_XA_EPOCH),
+             pcmk__xe_get(existing_cib, PCMK_XA_NUM_UPDATES));
 
     free(digest);
 
@@ -197,7 +197,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
     *answer = NULL;
 
-    if (crm_element_value(req, PCMK__XA_CIB_SCHEMA_MAX) != NULL) {
+    if (pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX) != NULL) {
         /* The originator of an upgrade request sends it to the DC, without
          * PCMK__XA_CIB_SCHEMA_MAX. If an upgrade is needed, the DC
          * re-broadcasts the request with PCMK__XA_CIB_SCHEMA_MAX, and each node
@@ -208,16 +208,15 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
     } else {
         xmlNode *scratch = pcmk__xml_copy(NULL, existing_cib);
-        const char *host = crm_element_value(req, PCMK__XA_SRC);
+        const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
         const char *original_schema = NULL;
         const char *new_schema = NULL;
-        const char *client_id = crm_element_value(req, PCMK__XA_CIB_CLIENTID);
-        const char *call_opts = crm_element_value(req, PCMK__XA_CIB_CALLOPT);
-        const char *call_id = crm_element_value(req, PCMK__XA_CIB_CALLID);
+        const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
+        const char *call_opts = pcmk__xe_get(req, PCMK__XA_CIB_CALLOPT);
+        const char *call_id = pcmk__xe_get(req, PCMK__XA_CIB_CALLID);
 
         crm_trace("Processing \"%s\" event", op);
-        original_schema = crm_element_value(existing_cib,
-                                            PCMK_XA_VALIDATE_WITH);
+        original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
         if (original_schema == NULL) {
             crm_info("Rejecting upgrade request from %s: No "
                      PCMK_XA_VALIDATE_WITH, host);
@@ -226,7 +225,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
         rc = pcmk__update_schema(&scratch, NULL, true, true);
         rc = pcmk_rc2legacy(rc);
-        new_schema = crm_element_value(scratch, PCMK_XA_VALIDATE_WITH);
+        new_schema = pcmk__xe_get(scratch, PCMK_XA_VALIDATE_WITH);
 
         if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
             xmlNode *up = pcmk__xe_create(NULL, __func__);
@@ -395,7 +394,7 @@ cib_msg_copy(xmlNode *msg)
 
     for (int lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
         const char *field = field_list[lpc];
-        const char *value = crm_element_value(msg, field);
+        const char *value = pcmk__xe_get(msg, field);
 
         if (value != NULL) {
             crm_xml_add(copy, field, value);
@@ -410,8 +409,8 @@ sync_our_cib(xmlNode * request, gboolean all)
 {
     int result = pcmk_ok;
     char *digest = NULL;
-    const char *host = crm_element_value(request, PCMK__XA_SRC);
-    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
+    const char *host = pcmk__xe_get(request, PCMK__XA_SRC);
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     pcmk__node_status_t *peer = NULL;
     xmlNode *replace_request = NULL;
     xmlNode *wrapper = NULL;
@@ -466,8 +465,8 @@ cib_process_commit_transaction(const char *op, int options, const char *section,
      * On failure, our caller will free *result_cib.
      */
     int rc = pcmk_rc_ok;
-    const char *client_id = crm_element_value(req, PCMK__XA_CIB_CLIENTID);
-    const char *origin = crm_element_value(req, PCMK__XA_SRC);
+    const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
+    const char *origin = pcmk__xe_get(req, PCMK__XA_SRC);
     pcmk__client_t *client = pcmk__find_client_by_id(client_id);
 
     rc = based_commit_transaction(input, client, origin, result_cib);
@@ -503,7 +502,7 @@ cib_process_schemas(const char *op, int options, const char *section, xmlNode *r
         return -EPROTO;
     }
 
-    after_ver = crm_element_value(data, PCMK_XA_VERSION);
+    after_ver = pcmk__xe_get(data, PCMK_XA_VERSION);
     if (after_ver == NULL) {
         crm_warn("No version specified in request");
         return -EPROTO;

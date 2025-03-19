@@ -1738,7 +1738,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
 
     id = pcmk__xe_history_key(rsc_op);
 
-    magic = crm_element_value(rsc_op, PCMK__XA_TRANSITION_MAGIC);
+    magic = pcmk__xe_get(rsc_op, PCMK__XA_TRANSITION_MAGIC);
     if (magic == NULL) {
         /* non-change */
         return pcmk_rc_ok;
@@ -1755,14 +1755,14 @@ handle_rsc_op(xmlNode *xml, void *userdata)
         goto bail;
     }
 
-    node = crm_element_value(rsc_op, PCMK__META_ON_NODE);
+    node = pcmk__xe_get(rsc_op, PCMK__META_ON_NODE);
 
     while ((n != NULL) && !pcmk__xe_is(n, PCMK__XE_NODE_STATE)) {
         n = n->parent;
     }
 
     if(node == NULL && n) {
-        node = crm_element_value(n, PCMK_XA_UNAME);
+        node = pcmk__xe_get(n, PCMK_XA_UNAME);
     }
 
     if (node == NULL && n) {
@@ -1819,7 +1819,7 @@ mon_trigger_refresh(gpointer user_data)
 static int
 handle_op_for_node(xmlNode *xml, void *userdata)
 {
-    const char *node = crm_element_value(xml, PCMK_XA_UNAME);
+    const char *node = pcmk__xe_get(xml, PCMK_XA_UNAME);
 
     if (node == NULL) {
         node = pcmk__xe_id(xml);
@@ -1833,8 +1833,8 @@ static int
 crm_diff_update_element(xmlNode *change, void *userdata)
 {
     const char *name = NULL;
-    const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-    const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+    const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+    const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
     xmlNode *match = NULL;
     const char *node = NULL;
 
@@ -1877,7 +1877,7 @@ crm_diff_update_element(xmlNode *change, void *userdata)
         pcmk__xe_foreach_child(match, NULL, handle_op_for_node, NULL);
 
     } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
-        node = crm_element_value(match, PCMK_XA_UNAME);
+        node = pcmk__xe_get(match, PCMK_XA_UNAME);
         if (node == NULL) {
             node = pcmk__xe_id(match);
         }

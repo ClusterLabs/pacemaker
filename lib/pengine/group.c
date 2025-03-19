@@ -200,7 +200,7 @@ group_unpack(pcmk_resource_t *rsc)
     set_group_flag(rsc, "collocated", pcmk__group_colocated,
                    pcmk__wo_group_coloc);
 
-    clone_id = crm_element_value(rsc->priv->xml, PCMK__META_CLONE);
+    clone_id = pcmk__xe_get(rsc->priv->xml, PCMK__META_CLONE);
 
     for (xml_native_rsc = pcmk__xe_first_child(xml_obj, PCMK_XE_PRIMITIVE,
                                                NULL, NULL);

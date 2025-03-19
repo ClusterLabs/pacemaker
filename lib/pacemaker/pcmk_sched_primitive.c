@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -789,7 +789,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     }
 
     if (multiply_active) {
-        const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+        const char *class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
 
         // Resource was (possibly) incorrectly multiply active
         pcmk__sched_err(rsc->priv->scheduler,

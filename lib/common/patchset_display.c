@@ -47,8 +47,8 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
     pcmk__xml_patchset_versions(patchset, del, add);
 
     if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
-        const char *fmt = crm_element_value(patchset, PCMK_XA_FORMAT);
-        const char *digest = crm_element_value(patchset, PCMK__XA_DIGEST);
+        const char *fmt = pcmk__xe_get(patchset, PCMK_XA_FORMAT);
+        const char *digest = pcmk__xe_get(patchset, PCMK__XA_DIGEST);
 
         out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
         rc = out->info(out, "Diff: +++ %d.%d.%d %s",
@@ -86,8 +86,8 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
                                                       NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
         if (op == NULL) {
             continue;
@@ -114,7 +114,7 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
             free(prefix);
 
         } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
-            const char *position = crm_element_value(change, PCMK_XE_POSITION);
+            const char *position = pcmk__xe_get(change, PCMK_XE_POSITION);
 
             temp_rc = out->info(out,
                                 PCMK__XML_PREFIX_MOVED " %s moved to offset %s",
@@ -131,15 +131,15 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
                                                              NULL);
                  child != NULL; child = pcmk__xe_next(child, NULL)) {
 
-                const char *name = crm_element_value(child, PCMK_XA_NAME);
+                const char *name = pcmk__xe_get(child, PCMK_XA_NAME);
 
-                op = crm_element_value(child, PCMK_XA_OPERATION);
+                op = pcmk__xe_get(child, PCMK_XA_OPERATION);
                 if (op == NULL) {
                     continue;
                 }
 
                 if (strcmp(op, "set") == 0) {
-                    const char *value = crm_element_value(child, PCMK_XA_VALUE);
+                    const char *value = pcmk__xe_get(child, PCMK_XA_VALUE);
 
                     pcmk__add_separated_word(&buffer_set, 256, "@", ", ");
                     pcmk__g_strcat(buffer_set, name, "=", value, NULL);

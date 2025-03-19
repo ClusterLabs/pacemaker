@@ -114,10 +114,10 @@ do_cl_join_offer_respond(long long action,
 
     CRM_CHECK(input != NULL, return);
 
-    welcome_from = crm_element_value(input->msg, PCMK__XA_SRC);
-    join_id = crm_element_value(input->msg, PCMK__XA_JOIN_ID);
+    welcome_from = pcmk__xe_get(input->msg, PCMK__XA_SRC);
+    join_id = pcmk__xe_get(input->msg, PCMK__XA_JOIN_ID);
     crm_trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
-              welcome_from, crm_element_value(input->msg, PCMK__XA_JOIN_ID));
+              welcome_from, pcmk__xe_get(input->msg, PCMK__XA_JOIN_ID));
 
     /* we only ever want the last one */
     if (query_call_id > 0) {
@@ -228,9 +228,9 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
 static int
 update_conn_host_cache(xmlNode *node, void *userdata)
 {
-    const char *remote = crm_element_value(node, PCMK_XA_ID);
-    const char *conn_host = crm_element_value(node, PCMK__XA_CONNECTION_HOST);
-    const char *state = crm_element_value(node, PCMK__XA_NODE_STATE);
+    const char *remote = pcmk__xe_get(node, PCMK_XA_ID);
+    const char *conn_host = pcmk__xe_get(node, PCMK__XA_CONNECTION_HOST);
+    const char *state = pcmk__xe_get(node, PCMK__XA_NODE_STATE);
 
     pcmk__node_status_t *remote_peer =
         pcmk__cluster_lookup_remote_node(remote);
@@ -265,8 +265,8 @@ do_cl_join_finalize_respond(long long action,
     const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
 
     int join_id = -1;
-    const char *op = crm_element_value(input->msg, PCMK__XA_CRM_TASK);
-    const char *welcome_from = crm_element_value(input->msg, PCMK__XA_SRC);
+    const char *op = pcmk__xe_get(input->msg, PCMK__XA_CRM_TASK);
+    const char *welcome_from = pcmk__xe_get(input->msg, PCMK__XA_SRC);
 
     if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_casei)) {
         crm_trace("Ignoring op=%s message", op);

@@ -28,7 +28,7 @@
 #include <crm/common/results.h>             // pcmk_rc_e, pcmk_rc_str
 #include <crm/common/strings.h>             // crm_strdup_printf
 #include <crm/common/util.h>                // pcmk_is_set
-#include <crm/common/xml_element.h>         // crm_xml_add, crm_element_value
+#include <crm/common/xml_element.h>         // crm_xml_add
 #include <crm/common/xml_internal.h>        // PCMK__XA_LRMD_*, pcmk__xe_is
 
 #include "pacemaker-execd.h"                // client_disconnect_cleanup
@@ -150,7 +150,7 @@ handle_check_request(pcmk__request_t *request)
         return NULL;
     }
 
-    timeout = crm_element_value(data, PCMK__XA_LRMD_WATCHDOG);
+    timeout = pcmk__xe_get(data, PCMK__XA_LRMD_WATCHDOG);
     /* FIXME: This just exits on certain conditions, which seems like a pretty
      * extreme reaction for a daemon to take.
      */
@@ -538,7 +538,7 @@ struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
 static bool
 invalid_msg(xmlNode *msg)
 {
-    const char *to = crm_element_value(msg, PCMK__XA_T);
+    const char *to = pcmk__xe_get(msg, PCMK__XA_T);
 
     /* IPC proxy messages do not get a t="" attribute set on them. */
     bool invalid = !pcmk__str_eq(to, CRM_SYSTEM_LRMD, pcmk__str_none) &&

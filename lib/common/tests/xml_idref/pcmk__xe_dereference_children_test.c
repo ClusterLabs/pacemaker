@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -59,8 +59,8 @@ assert_deref(const char *xml_string, const char *element_name, ...)
         assert_null(list);
     } else {
         while (list != NULL) {
-            const char *value = crm_element_value((xmlNode *) list->data,
-                                                  "testattr");
+            const char *value = pcmk__xe_get((xmlNode *) list->data,
+                                             "testattr");
 
             assert_true(g_hash_table_remove(table, value));
             list = list->next;

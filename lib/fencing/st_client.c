@@ -578,7 +578,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
 
             CRM_LOG_ASSERT(match != NULL);
             if(match != NULL) {
-                const char *match_id = crm_element_value(match, PCMK_XA_ID);
+                const char *match_id = pcmk__xe_get(match, PCMK_XA_ID);
                 xmlChar *match_path = xmlGetNodePath(match);
 
                 crm_info("//*[@" PCMK_XA_AGENT "][%d] = %s", lpc, match_path);
@@ -641,7 +641,7 @@ stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **l
     if (output && list_info) {
         const char *list_str;
 
-        list_str = crm_element_value(output, PCMK__XA_ST_OUTPUT);
+        list_str = pcmk__xe_get(output, PCMK__XA_ST_OUTPUT);
 
         if (list_str) {
             *list_info = strdup(list_str);
@@ -1088,7 +1088,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     }
 
     /* do callbacks */
-    type = crm_element_value(blob.xml, PCMK__XA_T);
+    type = pcmk__xe_get(blob.xml, PCMK__XA_T);
     crm_trace("Activating %s callbacks...", type);
 
     if (pcmk__str_eq(type, PCMK__VALUE_STONITH_NG, pcmk__str_none)) {
@@ -1183,7 +1183,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             rc = -EPROTO;
 
         } else {
-            const char *msg_type = crm_element_value(reply, PCMK__XA_ST_OP);
+            const char *msg_type = pcmk__xe_get(reply, PCMK__XA_ST_OP);
 
             native->token = crm_element_value_copy(reply, PCMK__XA_ST_CLIENTID);
             if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_none)) {
@@ -1505,7 +1505,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
         return;
     }
 
-    event = crm_element_value(blob->xml, PCMK__XA_SUBT);
+    event = pcmk__xe_get(blob->xml, PCMK__XA_SUBT);
 
     if (entry == NULL) {
         crm_warn("Skipping callback - NULL callback client");
@@ -1589,7 +1589,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     crm_trace("Sending %s message to fencer with timeout %ds", op, timeout);
 
     if (data) {
-        const char *delay_s = crm_element_value(data, PCMK__XA_ST_DELAY);
+        const char *delay_s = pcmk__xe_get(data, PCMK__XA_ST_DELAY);
 
         if (delay_s) {
             crm_xml_add(op_msg, PCMK__XA_ST_DELAY, delay_s);

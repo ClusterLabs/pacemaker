@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,6 @@
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/common/ipc.h>                 // pcmk_ipc_controld
-#include <crm/common/nvpair.h>              // crm_element_value()
 #include <crm/common/messages_internal.h>   // pcmk__new_message_as()
 #include <crm/common/servers_internal.h>    // pcmk__server_message_type()
 #include <crm/common/xml_internal.h>        // pcmk__xe_create(), etc.
@@ -42,19 +41,18 @@ optional_arguments_null(void **state)
     message = pcmk__new_message_as("fn", pcmk_ipc_controld, NULL, "ss", NULL,
                                    NULL, "op", NULL);
     assert_non_null(message);
-    assert_string_equal(crm_element_value(message, PCMK_XA_ORIGIN), "fn");
-    assert_string_equal(crm_element_value(message, PCMK__XA_T),
+    assert_string_equal(pcmk__xe_get(message, PCMK_XA_ORIGIN), "fn");
+    assert_string_equal(pcmk__xe_get(message, PCMK__XA_T),
                         pcmk__server_message_type(pcmk_ipc_controld));
-    assert_string_equal(crm_element_value(message, PCMK__XA_SUBT),
+    assert_string_equal(pcmk__xe_get(message, PCMK__XA_SUBT),
                         PCMK__VALUE_REQUEST);
-    assert_string_equal(crm_element_value(message, PCMK_XA_VERSION),
+    assert_string_equal(pcmk__xe_get(message, PCMK_XA_VERSION),
                         CRM_FEATURE_SET);
-    assert_non_null(crm_element_value(message, PCMK_XA_REFERENCE));
-    assert_string_equal(crm_element_value(message, PCMK__XA_CRM_SYS_FROM),
-                        "ss");
-    assert_null(crm_element_value(message, PCMK__XA_CRM_HOST_TO));
-    assert_null(crm_element_value(message, PCMK__XA_CRM_SYS_TO));
-    assert_string_equal(crm_element_value(message, PCMK__XA_CRM_TASK), "op");
+    assert_non_null(pcmk__xe_get(message, PCMK_XA_REFERENCE));
+    assert_string_equal(pcmk__xe_get(message, PCMK__XA_CRM_SYS_FROM), "ss");
+    assert_null(pcmk__xe_get(message, PCMK__XA_CRM_HOST_TO));
+    assert_null(pcmk__xe_get(message, PCMK__XA_CRM_SYS_TO));
+    assert_string_equal(pcmk__xe_get(message, PCMK__XA_CRM_TASK), "op");
     assert_null(message->children);
     pcmk__xml_free(message);
 }
@@ -70,10 +68,9 @@ optional_arguments_nonnull(void **state)
     pcmk__xml_free(data);
 
     assert_non_null(message);
-    assert_string_equal(crm_element_value(message, PCMK_XA_REFERENCE), "rt");
-    assert_string_equal(crm_element_value(message, PCMK__XA_CRM_HOST_TO),
-                        "node1");
-    assert_string_equal(crm_element_value(message, PCMK__XA_CRM_SYS_TO), "rs");
+    assert_string_equal(pcmk__xe_get(message, PCMK_XA_REFERENCE), "rt");
+    assert_string_equal(pcmk__xe_get(message, PCMK__XA_CRM_HOST_TO), "node1");
+    assert_string_equal(pcmk__xe_get(message, PCMK__XA_CRM_SYS_TO), "rs");
     assert_non_null(message->children);
     assert_null(message->children->next);
     assert_string_equal((const char *) (message->children->name),

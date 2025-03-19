@@ -233,7 +233,7 @@ pcmk_cib_node_shutdown(xmlNode *cib, const char *node)
 
         free(xpath);
         if (match != NULL) {
-            return crm_element_value(match, PCMK_XA_VALUE);
+            return pcmk__xe_get(match, PCMK_XA_VALUE);
         }
     }
     return NULL;
