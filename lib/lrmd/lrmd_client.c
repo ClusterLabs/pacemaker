@@ -295,7 +295,6 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
         int rc = 0;
         int exec_time = 0;
         int queue_time = 0;
-        time_t epoch = 0;
 
         crm_element_value_int(msg, PCMK__XA_LRMD_TIMEOUT, &event.timeout);
         crm_element_value_ms(msg, PCMK__XA_LRMD_RSC_INTERVAL,
@@ -311,11 +310,8 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
         crm_element_value_int(msg, PCMK__XA_LRMD_RSC_DELETED,
                               &event.rsc_deleted);
 
-        pcmk__xe_get_time(msg, PCMK__XA_LRMD_RUN_TIME, &epoch);
-        event.t_run = epoch;
-
-        pcmk__xe_get_time(msg, PCMK__XA_LRMD_RCCHANGE_TIME, &epoch);
-        event.t_rcchange = epoch;
+        pcmk__xe_get_time(msg, PCMK__XA_LRMD_RUN_TIME, &event.t_run);
+        pcmk__xe_get_time(msg, PCMK__XA_LRMD_RCCHANGE_TIME, &event.t_rcchange);
 
         crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_TIME, &exec_time);
         CRM_LOG_ASSERT(exec_time >= 0);
