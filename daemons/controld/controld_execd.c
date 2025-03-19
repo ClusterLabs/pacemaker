@@ -2005,10 +2005,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         pending->rsc_id = pcmk__str_copy(rsc->id);
         pending->start_time = time(NULL);
         pending->user_data = pcmk__str_copy(op->user_data);
-        if (pcmk__xe_get_time(msg, PCMK_OPT_SHUTDOWN_LOCK,
-                              &(pending->lock_time)) != pcmk_rc_ok) {
-            pending->lock_time = 0;
-        }
+        pcmk__xe_get_time(msg, PCMK_OPT_SHUTDOWN_LOCK, &(pending->lock_time));
         g_hash_table_replace(lrm_state->active_ops, call_id_s, pending);
 
         if ((op->interval_ms > 0)

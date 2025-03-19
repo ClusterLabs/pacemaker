@@ -2687,21 +2687,25 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                      const pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     time_t lock_time = 0;   // When lock started (i.e. node shutdown time)
+    time_t sched_time = 0;
+    guint shutdown_lock_ms = scheduler->priv->shutdown_lock_ms;
 
-    if ((pcmk__xe_get_time(rsc_entry, PCMK_OPT_SHUTDOWN_LOCK,
-                           &lock_time) == pcmk_rc_ok)
-        && (lock_time != 0)) {
+    pcmk__xe_get_time(rsc_entry, PCMK_OPT_SHUTDOWN_LOCK, &lock_time);
+    if (lock_time == 0) {
+        return;
+    }
 
-        if ((scheduler->priv->shutdown_lock_ms > 0U)
-            && (pcmk__scheduler_epoch_time(scheduler)
-                > (lock_time + pcmk__timeout_ms2s(scheduler->priv->shutdown_lock_ms)))) {
-            pcmk__rsc_info(rsc, "Shutdown lock for %s on %s expired",
-                           rsc->id, pcmk__node_name(node));
-            pe__clear_resource_history(rsc, node);
-        } else {
-            rsc->priv->lock_node = node;
-            rsc->priv->lock_time = lock_time;
-        }
+    sched_time = pcmk__scheduler_epoch_time(scheduler);
+    if ((shutdown_lock_ms > 0U)
+        && (sched_time > (lock_time + pcmk__timeout_ms2s(shutdown_lock_ms)))) {
+
+        pcmk__rsc_info(rsc, "Shutdown lock for %s on %s expired",
+                       rsc->id, pcmk__node_name(node));
+        pe__clear_resource_history(rsc, node);
+
+    } else {
+        rsc->priv->lock_node = node;
+        rsc->priv->lock_time = lock_time;
     }
 }
 
