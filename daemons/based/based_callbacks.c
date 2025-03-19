@@ -146,8 +146,8 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
     crm_xml_add(reply, PCMK__XA_CIB_OP, op);
     crm_xml_add(reply, PCMK__XA_CIB_CALLID, call_id);
     crm_xml_add(reply, PCMK__XA_CIB_CLIENTID, client_id);
-    crm_xml_add_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
-    crm_xml_add_int(reply, PCMK__XA_CIB_RC, rc);
+    pcmk__xe_set_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
+    pcmk__xe_set_int(reply, PCMK__XA_CIB_RC, rc);
 
     if (call_data != NULL) {
         xmlNode *wrapper = pcmk__xe_create(reply, PCMK__XE_CIB_CALLDATA);

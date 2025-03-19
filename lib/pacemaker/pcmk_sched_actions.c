@@ -1246,9 +1246,9 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     crm_xml_add(xml_op, PCMK_XA_EXIT_REASON, pcmk__s(exit_reason, ""));
     crm_xml_add(xml_op, PCMK__META_ON_NODE, node); // For context during triage
 
-    crm_xml_add_int(xml_op, PCMK__XA_CALL_ID, op->call_id);
-    crm_xml_add_int(xml_op, PCMK__XA_RC_CODE, op->rc);
-    crm_xml_add_int(xml_op, PCMK__XA_OP_STATUS, op->op_status);
+    pcmk__xe_set_int(xml_op, PCMK__XA_CALL_ID, op->call_id);
+    pcmk__xe_set_int(xml_op, PCMK__XA_RC_CODE, op->rc);
+    pcmk__xe_set_int(xml_op, PCMK__XA_OP_STATUS, op->op_status);
     pcmk__xe_set_guint(xml_op, PCMK_META_INTERVAL, op->interval_ms);
 
     if ((op->t_run > 0) || (op->t_rcchange > 0) || (op->exec_time > 0)
@@ -1267,8 +1267,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
             pcmk__xe_set_time(xml_op, PCMK_XA_LAST_RC_CHANGE, op->t_run);
         }
 
-        crm_xml_add_int(xml_op, PCMK_XA_EXEC_TIME, op->exec_time);
-        crm_xml_add_int(xml_op, PCMK_XA_QUEUE_TIME, op->queue_time);
+        pcmk__xe_set_int(xml_op, PCMK_XA_EXEC_TIME, op->exec_time);
+        pcmk__xe_set_int(xml_op, PCMK_XA_QUEUE_TIME, op->queue_time);
     }
 
     if (pcmk__str_any_of(op->op_type, PCMK_ACTION_MIGRATE_TO,

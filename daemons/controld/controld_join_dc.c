@@ -234,7 +234,7 @@ create_dc_message(const char *join_op, const char *host_to)
                                      CRM_SYSTEM_CRMD, join_op, NULL);
 
     /* Identify which election this is a part of */
-    crm_xml_add_int(msg, PCMK__XA_JOIN_ID, current_join_id);
+    pcmk__xe_set_int(msg, PCMK__XA_JOIN_ID, current_join_id);
 
     /* Add a field specifying whether the DC is shutting down. This keeps the
      * joining node from fencing the old DC if it becomes the new DC.

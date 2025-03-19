@@ -170,7 +170,7 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
     /* And then add the key to the request XML so we can uniquely identify
      * it when it comes time to issue the ACK.
      */
-    crm_xml_add_int(request->xml, PCMK__XA_CALL_ID, waitlist_client);
+    pcmk__xe_set_int(request->xml, PCMK__XA_CALL_ID, waitlist_client);
 }
 
 /*!

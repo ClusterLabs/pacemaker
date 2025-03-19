@@ -190,8 +190,8 @@ throttle_send_command(enum throttle_state_e mode)
 
         xml = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                                 CRM_SYSTEM_CRMD, CRM_OP_THROTTLE, NULL);
-        crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MODE, mode);
-        crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MAX, throttle_job_max);
+        pcmk__xe_set_int(xml, PCMK__XA_CRM_LIMIT_MODE, mode);
+        pcmk__xe_set_int(xml, PCMK__XA_CRM_LIMIT_MAX, throttle_job_max);
 
         pcmk__cluster_send_message(NULL, pcmk_ipc_controld, xml);
         pcmk__xml_free(xml);
