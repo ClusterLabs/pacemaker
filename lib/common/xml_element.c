@@ -1424,37 +1424,6 @@ pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
 }
 
 /*!
- * \brief Retrieve the long long integer value of an XML attribute
- *
- * This is like \c crm_element_value() but getting the value as a long long int.
- *
- * \param[in]  data  XML node to check
- * \param[in]  name  Attribute name to check
- * \param[out] dest  Where to store element value
- *
- * \return 0 on success, -1 otherwise
- */
-int
-crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
-{
-    const char *value = NULL;
-
-    CRM_CHECK(dest != NULL, return -1);
-    value = crm_element_value(data, name);
-    if (value != NULL) {
-        int rc = pcmk__scan_ll(value, dest, PCMK__PARSE_INT_DEFAULT);
-
-        if (rc == pcmk_rc_ok) {
-            return 0;
-        }
-        crm_warn("Using default for %s "
-                 "because '%s' is not a valid integer: %s",
-                 name, value, pcmk_rc_str(rc));
-    }
-    return -1;
-}
-
-/*!
  * \internal
  * \brief Get a date/time object from an XML attribute value
  *
@@ -1646,6 +1615,26 @@ crm_copy_xml_element(const xmlNode *obj1, xmlNode *obj2, const char *element)
 
     crm_xml_add(obj2, element, value);
     return value;
+}
+
+int
+crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
+{
+    const char *value = NULL;
+
+    CRM_CHECK(dest != NULL, return -1);
+    value = crm_element_value(data, name);
+    if (value != NULL) {
+        int rc = pcmk__scan_ll(value, dest, PCMK__PARSE_INT_DEFAULT);
+
+        if (rc == pcmk_rc_ok) {
+            return 0;
+        }
+        crm_warn("Using default for %s "
+                 "because '%s' is not a valid integer: %s",
+                 name, value, pcmk_rc_str(rc));
+    }
+    return -1;
 }
 
 int
