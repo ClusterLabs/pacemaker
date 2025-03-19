@@ -1417,43 +1417,6 @@ crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
 }
 
 /*!
- * \brief Retrieve the millisecond value of an XML attribute
- *
- * This is like \c crm_element_value() but returning the value as a guint.
- *
- * \param[in]  data   XML node to check
- * \param[in]  name   Attribute name to check
- * \param[out] dest   Where to store attribute value
- *
- * \return \c pcmk_ok on success, -1 otherwise
- */
-int
-crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
-{
-    const char *value = NULL;
-    long long value_ll;
-    int rc = pcmk_rc_ok;
-
-    CRM_CHECK(dest != NULL, return -1);
-    *dest = 0;
-    value = crm_element_value(data, name);
-    rc = pcmk__scan_ll(value, &value_ll, 0LL);
-    if (rc != pcmk_rc_ok) {
-        crm_warn("Using default for %s "
-                 "because '%s' is not valid milliseconds: %s",
-                 name, value, pcmk_rc_str(rc));
-        return -1;
-    }
-    if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
-        crm_warn("Using default for %s because '%s' is out of range",
-                 name, value);
-        return -1;
-    }
-    *dest = (guint) value_ll;
-    return pcmk_ok;
-}
-
-/*!
  * \internal
  * \brief Get a date/time object from an XML attribute value
  *
@@ -1690,6 +1653,32 @@ crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest)
 
     // No bounds checking; see comment in pcmk__xe_get_time()
     *dest = (time_t) value_ll;
+    return pcmk_ok;
+}
+
+int
+crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
+{
+    const char *value = NULL;
+    long long value_ll;
+    int rc = pcmk_rc_ok;
+
+    CRM_CHECK(dest != NULL, return -1);
+    *dest = 0;
+    value = crm_element_value(data, name);
+    rc = pcmk__scan_ll(value, &value_ll, 0LL);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Using default for %s "
+                 "because '%s' is not valid milliseconds: %s",
+                 name, value, pcmk_rc_str(rc));
+        return -1;
+    }
+    if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
+        crm_warn("Using default for %s because '%s' is out of range",
+                 name, value);
+        return -1;
+    }
+    *dest = (guint) value_ll;
     return pcmk_ok;
 }
 

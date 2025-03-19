@@ -12,7 +12,7 @@
 
 #include <sys/time.h>       // struct timeval
 
-#include <glib.h>           // gboolean
+#include <glib.h>           // gboolean, guint
 #include <libxml/tree.h>    // xmlNode
 
 #ifdef __cplusplus
@@ -47,6 +47,9 @@ int crm_element_value_timeval(const xmlNode *data, const char *name_sec,
 
 //! \deprecated Do not use
 int crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest);
+
+//! \deprecated Do not use
+int crm_element_value_ms(const xmlNode *data, const char *name, guint *dest);
 
 #ifdef __cplusplus
 }
