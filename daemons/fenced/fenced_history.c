@@ -251,7 +251,6 @@ stonith_xml_history_to_list(const xmlNode *history)
         int state;
         int exit_status = CRM_EX_OK;
         int execution_status = PCMK_EXEC_DONE;
-        long long completed;
         long long completed_nsec = 0L;
 
         if (!id) {
@@ -270,8 +269,7 @@ stonith_xml_history_to_list(const xmlNode *history)
         op->delegate = crm_element_value_copy(xml_op, PCMK__XA_ST_DELEGATE);
         op->client_name = crm_element_value_copy(xml_op,
                                                  PCMK__XA_ST_CLIENTNAME);
-        crm_element_value_ll(xml_op, PCMK__XA_ST_DATE, &completed);
-        op->completed = (time_t) completed;
+        pcmk__xe_get_time(xml_op, PCMK__XA_ST_DATE, &op->completed);
         crm_element_value_ll(xml_op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
         op->completed_nsec = completed_nsec;
         crm_element_value_int(xml_op, PCMK__XA_ST_STATE, &state);
