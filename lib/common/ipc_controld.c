@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -173,7 +173,7 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
         long long id_ll = 0;
 
         node_info = pcmk__assert_alloc(1, sizeof(pcmk_controld_api_node_t));
-        crm_element_value_ll(node, PCMK_XA_ID, &id_ll);
+        pcmk__xe_get_ll(node, PCMK_XA_ID, &id_ll);
         if (id_ll > 0) {
             node_info->id = id_ll;
         }
