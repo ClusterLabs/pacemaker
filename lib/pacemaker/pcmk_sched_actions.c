@@ -1249,7 +1249,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     crm_xml_add_int(xml_op, PCMK__XA_CALL_ID, op->call_id);
     crm_xml_add_int(xml_op, PCMK__XA_RC_CODE, op->rc);
     crm_xml_add_int(xml_op, PCMK__XA_OP_STATUS, op->op_status);
-    crm_xml_add_ms(xml_op, PCMK_META_INTERVAL, op->interval_ms);
+    pcmk__xe_set_guint(xml_op, PCMK_META_INTERVAL, op->interval_ms);
 
     if ((op->t_run > 0) || (op->t_rcchange > 0) || (op->exec_time > 0)
         || (op->queue_time > 0)) {
