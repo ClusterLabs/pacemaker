@@ -1077,28 +1077,6 @@ crm_xml_add_int(xmlNode *node, const char *name, int value)
 }
 
 /*!
- * \brief Create an XML attribute with specified name and unsigned value
- *
- * This is like \c crm_xml_add() but taking a guint value.
- *
- * \param[in,out] node   XML node to modify
- * \param[in]     name   Attribute name to set
- * \param[in]     ms     Attribute value to set
- *
- * \return New value as string on success, \c NULL otherwise
- * \note This does nothing if node or name are \c NULL or empty.
- */
-const char *
-crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
-{
-    char *number = crm_strdup_printf("%u", ms);
-    const char *added = crm_xml_add(node, name, number);
-
-    free(number);
-    return added;
-}
-
-/*!
  * \brief Create an XML attribute with specified name and long long int value
  *
  * This is like \c crm_xml_add() but taking a long long int value. It is a
@@ -1793,6 +1771,16 @@ crm_xml_add_timeval(xmlNode *xml, const char *name_sec, const char *name_usec,
             crm_xml_add_ll(xml, name_usec, (long long) value->tv_usec);
         }
     }
+    return added;
+}
+
+const char *
+crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
+{
+    char *number = crm_strdup_printf("%u", ms);
+    const char *added = crm_xml_add(node, name, number);
+
+    free(number);
     return added;
 }
 
