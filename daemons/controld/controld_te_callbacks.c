@@ -25,8 +25,8 @@ shutdown_lock_cleared(xmlNode *lrm_resource)
 {
     time_t shutdown_lock = 0;
 
-    return (crm_element_value_epoch(lrm_resource, PCMK_OPT_SHUTDOWN_LOCK,
-                                    &shutdown_lock) == pcmk_ok)
+    return (pcmk__xe_get_time(lrm_resource, PCMK_OPT_SHUTDOWN_LOCK,
+                              &shutdown_lock) == pcmk_rc_ok)
            && (shutdown_lock == 0);
 }
 
