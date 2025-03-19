@@ -228,7 +228,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
     CRM_CHECK(op != NULL, return);
     CRM_CHECK(session != NULL, return);
 
-    crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
+    pcmk__xe_get_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
     /* This is msg from remote ipc client going to real ipc server */
 
     if (pcmk__str_eq(op, LRMD_IPC_OP_DESTROY, pcmk__str_casei)) {

@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2024 the Pacemaker project contributors
+ * Later changes copyright 2008-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -235,7 +235,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     cib__get_operation(op, &operation);
     op_function = file_get_op_function(operation);
 
-    crm_element_value_int(request, PCMK__XA_CIB_CALLID, &call_id);
+    pcmk__xe_get_int(request, PCMK__XA_CIB_CALLID, &call_id);
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {

@@ -63,7 +63,7 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
             int rc = 0;
             int target_rc = pe__target_rc_from_xml(lrm_op_xml);
 
-            crm_element_value_int(lrm_op_xml, PCMK__XA_RC_CODE, &rc);
+            pcmk__xe_get_int(lrm_op_xml, PCMK__XA_RC_CODE, &rc);
             if (rc != target_rc) {
                 matched = TRUE;
             }

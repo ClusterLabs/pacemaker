@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -464,7 +464,7 @@ do_dc_join_filter_offer(long long action,
     join_node = pcmk__get_node(0, join_from, NULL,
                                pcmk__node_search_cluster_member);
 
-    crm_element_value_int(join_ack->msg, PCMK__XA_JOIN_ID, &join_id);
+    pcmk__xe_get_int(join_ack->msg, PCMK__XA_JOIN_ID, &join_id);
     if (join_id != current_join_id) {
         crm_debug("Ignoring join-%d request from %s because we are on join-%d",
                   join_id, join_from, current_join_id);
@@ -795,7 +795,8 @@ do_dc_join_ack(long long action,
         goto done;
     }
 
-    if (crm_element_value_int(join_ack->msg, PCMK__XA_JOIN_ID, &join_id) != 0) {
+    if (pcmk__xe_get_int(join_ack->msg, PCMK__XA_JOIN_ID,
+                         &join_id) != pcmk_rc_ok) {
         crm_warn("Ignoring join confirmation from %s without valid join ID",
                  join_from);
         goto done;

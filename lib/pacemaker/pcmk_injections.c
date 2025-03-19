@@ -121,7 +121,7 @@ pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn, xmlNode *cib_node,
                             pcmk__xe_id(cib_node), NULL, NULL, NULL, name,
                             NULL, &output) == pcmk_rc_ok) {
 
-        if (crm_element_value_int(output, PCMK_XA_VALUE, &failcount) != 0) {
+        if (pcmk__xe_get_int(output, PCMK_XA_VALUE, &failcount) != pcmk_rc_ok) {
             failcount = 0;
         }
     }
@@ -211,7 +211,7 @@ create_op(const xmlNode *cib_resource, const char *task, guint interval_ms,
 
         int tmp = 0;
 
-        crm_element_value_int(xop, PCMK__XA_CALL_ID, &tmp);
+        pcmk__xe_get_int(xop, PCMK__XA_CALL_ID, &tmp);
         if (tmp > op->call_id) {
             op->call_id = tmp;
         }

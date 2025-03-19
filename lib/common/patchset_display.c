@@ -166,7 +166,7 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
         } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             int position = -1;
 
-            crm_element_value_int(change, PCMK_XE_POSITION, &position);
+            pcmk__xe_get_int(change, PCMK_XE_POSITION, &position);
             if (position >= 0) {
                 temp_rc = out->info(out, "-- %s (%d)", xpath, position);
             } else {
@@ -207,7 +207,7 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
         crm_err("Unknown patch format: %d", format);
         return pcmk_rc_bad_xml_patch;
@@ -262,7 +262,7 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
         crm_err("Unknown patch format: %d", format);
         return pcmk_rc_bad_xml_patch;

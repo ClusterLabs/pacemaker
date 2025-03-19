@@ -270,16 +270,17 @@ stonith_xml_history_to_list(const xmlNode *history)
                                                  PCMK__XA_ST_CLIENTNAME);
         pcmk__xe_get_time(xml_op, PCMK__XA_ST_DATE, &op->completed);
         pcmk__xe_get_ll(xml_op, PCMK__XA_ST_DATE_NSEC, &op->completed_nsec);
-        crm_element_value_int(xml_op, PCMK__XA_ST_STATE, &state);
+        pcmk__xe_get_int(xml_op, PCMK__XA_ST_STATE, &state);
         op->state = (enum op_state) state;
 
         /* @COMPAT We can't use stonith__xe_get_result() here because
          * fencers <2.1.3 didn't include results, leading it to assume an error
          * status. Instead, set an unknown status in that case.
          */
-        if ((crm_element_value_int(xml_op, PCMK__XA_RC_CODE, &exit_status) < 0)
-            || (crm_element_value_int(xml_op, PCMK__XA_OP_STATUS,
-                                      &execution_status) < 0)) {
+        if ((pcmk__xe_get_int(xml_op, PCMK__XA_RC_CODE,
+                              &exit_status) != pcmk_rc_ok)
+            || (pcmk__xe_get_int(xml_op, PCMK__XA_OP_STATUS,
+                                 &execution_status) != pcmk_rc_ok)) {
             exit_status = CRM_EX_INDETERMINATE;
             execution_status = PCMK_EXEC_UNKNOWN;
         }

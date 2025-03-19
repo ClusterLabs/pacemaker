@@ -171,7 +171,7 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
 
     CRM_CHECK((notify_src != NULL) && (client_id != NULL), return);
 
-    crm_element_value_int(notify_src, PCMK__XA_CIB_CALLID, &msg_id);
+    pcmk__xe_get_int(notify_src, PCMK__XA_CIB_CALLID, &msg_id);
 
     client_obj = pcmk__find_client_by_id(client_id);
     if (client_obj == NULL) {
@@ -259,8 +259,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         const char *type = crm_element_value(op_request,
                                              PCMK__XA_CIB_NOTIFY_TYPE);
 
-        crm_element_value_int(op_request, PCMK__XA_CIB_NOTIFY_ACTIVATE,
-                              &on_off);
+        pcmk__xe_get_int(op_request, PCMK__XA_CIB_NOTIFY_ACTIVATE, &on_off);
 
         crm_debug("Setting %s callbacks %s for client %s",
                   type, (on_off? "on" : "off"), pcmk__client_name(cib_client));

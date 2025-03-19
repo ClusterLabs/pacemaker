@@ -127,7 +127,7 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
         return pcmk_ok;
     }
 
-    crm_element_value_int(alert_xml, PCMK__XA_LRMD_TIMEOUT, &alert_timeout);
+    pcmk__xe_get_int(alert_xml, PCMK__XA_LRMD_TIMEOUT, &alert_timeout);
 
     crm_info("Executing alert %s for %s", alert_id, client->id);
 
@@ -139,7 +139,7 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 
     cb_data->client_id = pcmk__str_copy(client->id);
 
-    crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &(cb_data->call_id));
+    pcmk__xe_get_int(request, PCMK__XA_LRMD_CALLID, &(cb_data->call_id));
 
     action = services_alert_create(alert_id, alert_path, alert_timeout, params,
                                    alert_sequence_no, cb_data);

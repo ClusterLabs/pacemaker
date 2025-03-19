@@ -139,7 +139,7 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
      * @TODO: Improve handling after pcmk__node_status_t is refactored to handle
      * layer-specific data better.
      */
-    crm_element_value_int(msg_data, PCMK_XA_ID, &(data->data.node_info.id));
+    pcmk__xe_get_int(msg_data, PCMK_XA_ID, &(data->data.node_info.id));
 
     data->data.node_info.uuid = crm_element_value(msg_data, PCMK_XA_ID);
     data->data.node_info.uname = crm_element_value(msg_data, PCMK_XA_UNAME);
