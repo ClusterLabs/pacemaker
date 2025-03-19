@@ -144,9 +144,12 @@ const char *pcmk__xe_get(const xmlNode *xml, const char *attr_name);
 int pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t);
 int pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
                        uint32_t default_value);
+
 int pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest);
-int pcmk__xe_get_int(const xmlNode *xml, const char *attr, int *dest);
-int pcmk__xe_get_ll(const xmlNode *xml, const char *attr, long long *dest);
+void pcmk__xe_set_guint(xmlNode *xml, const char *attr, guint value);
+
+int pcmk__xe_get_int(const xmlNode *xml, const char *name, int *dest);
+int pcmk__xe_get_ll(const xmlNode *xml, const char *name, long long *dest);
 
 int pcmk__xe_get_time(const xmlNode *xml, const char *attr, time_t *dest);
 void pcmk__xe_set_time(xmlNode *xml, const char *attr, time_t value);
