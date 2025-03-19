@@ -1262,11 +1262,9 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
         if ((op->interval_ms > 0) && (op->t_rcchange > 0)) {
             // Recurring ops may have changed rc after initial run
-            crm_xml_add_ll(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                           (long long) op->t_rcchange);
+            pcmk__xe_set_time(xml_op, PCMK_XA_LAST_RC_CHANGE, op->t_rcchange);
         } else {
-            crm_xml_add_ll(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                           (long long) op->t_run);
+            pcmk__xe_set_time(xml_op, PCMK_XA_LAST_RC_CHANGE, op->t_run);
         }
 
         crm_xml_add_int(xml_op, PCMK_XA_EXEC_TIME, op->exec_time);
