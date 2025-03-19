@@ -1421,55 +1421,6 @@ crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest)
 }
 
 /*!
- * \brief Retrieve the value of XML second/microsecond attributes as time
- *
- * This is like \c crm_element_value() but returning value as a struct timeval.
- *
- * \param[in]  xml        XML to parse
- * \param[in]  name_sec   Name of XML attribute for seconds
- * \param[in]  name_usec  Name of XML attribute for microseconds
- * \param[out] dest       Where to store result
- *
- * \return \c pcmk_ok on success, -errno on error
- * \note Values default to 0 if XML or XML attribute does not exist
- */
-int
-crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
-                          const char *name_usec, struct timeval *dest)
-{
-    long long value_i = 0;
-
-    CRM_CHECK(dest != NULL, return -EINVAL);
-    dest->tv_sec = 0;
-    dest->tv_usec = 0;
-
-    if (xml == NULL) {
-        return pcmk_ok;
-    }
-
-    /* Unfortunately, we can't do any bounds checking, since there are no
-     * constants provided for the bounds of time_t and suseconds_t, and
-     * calculating them isn't worth the effort. If there are XML values
-     * beyond the native sizes, there will probably be worse problems anyway.
-     */
-
-    // Parse seconds
-    errno = 0;
-    if (crm_element_value_ll(xml, name_sec, &value_i) < 0) {
-        return -errno;
-    }
-    dest->tv_sec = (time_t) value_i;
-
-    // Parse microseconds
-    if (crm_element_value_ll(xml, name_usec, &value_i) < 0) {
-        return -errno;
-    }
-    dest->tv_usec = (suseconds_t) value_i;
-
-    return pcmk_ok;
-}
-
-/*!
  * \internal
  * \brief Get a date/time object from an XML attribute value
  *
@@ -1661,6 +1612,42 @@ crm_copy_xml_element(const xmlNode *obj1, xmlNode *obj2, const char *element)
 
     crm_xml_add(obj2, element, value);
     return value;
+}
+
+int
+crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
+                          const char *name_usec, struct timeval *dest)
+{
+    long long value_i = 0;
+
+    CRM_CHECK(dest != NULL, return -EINVAL);
+    dest->tv_sec = 0;
+    dest->tv_usec = 0;
+
+    if (xml == NULL) {
+        return pcmk_ok;
+    }
+
+    /* Unfortunately, we can't do any bounds checking, since there are no
+     * constants provided for the bounds of time_t and suseconds_t, and
+     * calculating them isn't worth the effort. If there are XML values
+     * beyond the native sizes, there will probably be worse problems anyway.
+     */
+
+    // Parse seconds
+    errno = 0;
+    if (crm_element_value_ll(xml, name_sec, &value_i) < 0) {
+        return -errno;
+    }
+    dest->tv_sec = (time_t) value_i;
+
+    // Parse microseconds
+    if (crm_element_value_ll(xml, name_usec, &value_i) < 0) {
+        return -errno;
+    }
+    dest->tv_usec = (suseconds_t) value_i;
+
+    return pcmk_ok;
 }
 
 // LCOV_EXCL_STOP
