@@ -1236,6 +1236,28 @@ pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest)
 
 /*!
  * \internal
+ * \brief Set an XML attribute using a \c guint value
+ *
+ * This is like \c crm_xml_add() but takes a \c guint.
+ *
+ * \param[in,out] xml    XML node to modify
+ * \param[in]     attr   Attribute name
+ * \param[in]     value  Attribute value to set
+ */
+void
+pcmk__xe_set_guint(xmlNode *xml, const char *attr, guint value)
+{
+    char *value_s = NULL;
+
+    CRM_CHECK((xml != NULL) && (attr != NULL), return);
+
+    value_s = crm_strdup_printf("%u", value);
+    crm_xml_add(xml, attr, value_s);
+    free(value_s);
+}
+
+/*!
+ * \internal
  * \brief Retrieve an \c int value from an XML attribute
  *
  * This is like \c pcmk__xe_get() but returns the value as an \c int.
