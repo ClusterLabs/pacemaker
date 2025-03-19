@@ -982,7 +982,7 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
         crm_info("Deletion of resource '%s' from executor is pending", id);
         if (request) {
             struct pending_deletion_op_s *op = NULL;
-            char *ref = crm_element_value_copy(request->msg, PCMK_XA_REFERENCE);
+            char *ref = pcmk__xe_get_copy(request->msg, PCMK_XA_REFERENCE);
 
             op = pcmk__assert_alloc(1, sizeof(struct pending_deletion_op_s));
             op->rsc = pcmk__str_copy(rsc->id);

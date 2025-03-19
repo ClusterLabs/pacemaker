@@ -247,7 +247,7 @@ stonith_xml_history_to_list(const xmlNode *history)
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op, NULL)) {
 
         remote_fencing_op_t *op = NULL;
-        char *id = crm_element_value_copy(xml_op, PCMK__XA_ST_REMOTE_OP);
+        char *id = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_REMOTE_OP);
         int state;
         int exit_status = CRM_EX_OK;
         int execution_status = PCMK_EXEC_DONE;
@@ -262,12 +262,11 @@ stonith_xml_history_to_list(const xmlNode *history)
         op = pcmk__assert_alloc(1, sizeof(remote_fencing_op_t));
 
         op->id = id;
-        op->target = crm_element_value_copy(xml_op, PCMK__XA_ST_TARGET);
-        op->action = crm_element_value_copy(xml_op, PCMK__XA_ST_DEVICE_ACTION);
-        op->originator = crm_element_value_copy(xml_op, PCMK__XA_ST_ORIGIN);
-        op->delegate = crm_element_value_copy(xml_op, PCMK__XA_ST_DELEGATE);
-        op->client_name = crm_element_value_copy(xml_op,
-                                                 PCMK__XA_ST_CLIENTNAME);
+        op->target = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_TARGET);
+        op->action = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_DEVICE_ACTION);
+        op->originator = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_ORIGIN);
+        op->delegate = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_DELEGATE);
+        op->client_name = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_CLIENTNAME);
         pcmk__xe_get_time(xml_op, PCMK__XA_ST_DATE, &op->completed);
         pcmk__xe_get_ll(xml_op, PCMK__XA_ST_DATE_NSEC, &op->completed_nsec);
         pcmk__xe_get_int(xml_op, PCMK__XA_ST_STATE, &state);
@@ -287,8 +286,7 @@ stonith_xml_history_to_list(const xmlNode *history)
         pcmk__set_result(&op->result, exit_status, execution_status,
                          pcmk__xe_get(xml_op, PCMK_XA_EXIT_REASON));
         pcmk__set_result_output(&op->result,
-                                crm_element_value_copy(xml_op,
-                                                       PCMK__XA_ST_OUTPUT),
+                                pcmk__xe_get_copy(xml_op, PCMK__XA_ST_OUTPUT),
                                 NULL);
 
 

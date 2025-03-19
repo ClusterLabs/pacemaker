@@ -324,7 +324,7 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
     key = NULL;
     if (interval_ms != 0) {
         key = crm_meta_name(PCMK_META_TIMEOUT);
-        timeout = crm_element_value_copy(param_set, key);
+        timeout = pcmk__xe_get_copy(param_set, key);
     }
 
     // Remove all CRM_meta_* attributes and certain other attributes

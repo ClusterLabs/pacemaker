@@ -219,7 +219,7 @@ update_counter(xmlNode *xml_obj, const char *field, bool reset)
     int int_value = -1;
 
     if (!reset && pcmk__xe_get(xml_obj, field) != NULL) {
-        old_value = crm_element_value_copy(xml_obj, field);
+        old_value = pcmk__xe_get_copy(xml_obj, field);
     }
     if (old_value != NULL) {
         int_value = atoi(old_value);

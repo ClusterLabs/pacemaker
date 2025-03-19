@@ -502,7 +502,7 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
     CRM_CHECK((xml != NULL) && (result != NULL), return);
 
     exit_reason = pcmk__xe_get(xml, PCMK_XA_EXIT_REASON);
-    action_stdout = crm_element_value_copy(xml, PCMK__XA_ST_OUTPUT);
+    action_stdout = pcmk__xe_get_copy(xml, PCMK__XA_ST_OUTPUT);
 
     // A result must include an exit status and execution status
     if ((pcmk__xe_get_int(xml, PCMK__XA_RC_CODE, &exit_status) != pcmk_rc_ok)

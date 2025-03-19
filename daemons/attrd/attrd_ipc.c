@@ -586,7 +586,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         pcmk__assert(client->user != NULL);
         pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
 
-        request.op = crm_element_value_copy(request.xml, PCMK_XA_TASK);
+        request.op = pcmk__xe_get_copy(request.xml, PCMK_XA_TASK);
         CRM_CHECK(request.op != NULL, return 0);
 
         attrd_handle_request(&request);

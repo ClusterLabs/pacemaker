@@ -322,7 +322,7 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
         event.type = lrmd_event_exec_complete;
 
         /* output and exit_reason may be freed by a callback */
-        event.output = crm_element_value_copy(msg, PCMK__XA_LRMD_RSC_OUTPUT);
+        event.output = pcmk__xe_get_copy(msg, PCMK__XA_LRMD_RSC_OUTPUT);
         lrmd__set_result(&event, event.rc, event.op_status,
                          pcmk__xe_get(msg, PCMK__XA_LRMD_RSC_EXIT_REASON));
 
@@ -1993,12 +1993,12 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
                 break;
             }
             op_info->rsc_id = strdup(rsc_id);
-            op_info->action = crm_element_value_copy(op_xml,
-                                                     PCMK__XA_LRMD_RSC_ACTION);
+            op_info->action = pcmk__xe_get_copy(op_xml,
+                                                PCMK__XA_LRMD_RSC_ACTION);
             op_info->interval_ms_s =
-                crm_element_value_copy(op_xml, PCMK__XA_LRMD_RSC_INTERVAL);
-            op_info->timeout_ms_s =
-                crm_element_value_copy(op_xml, PCMK__XA_LRMD_TIMEOUT);
+                pcmk__xe_get_copy(op_xml, PCMK__XA_LRMD_RSC_INTERVAL);
+            op_info->timeout_ms_s = pcmk__xe_get_copy(op_xml,
+                                                      PCMK__XA_LRMD_TIMEOUT);
             *output = g_list_prepend(*output, op_info);
         }
     }

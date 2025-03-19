@@ -769,9 +769,9 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
         pcmk__scan_min_int(buf, &(new_graph->migration_limit), -1);
 
         new_graph->failed_stop_offset =
-            crm_element_value_copy(xml_graph, PCMK__XA_FAILED_STOP_OFFSET);
+            pcmk__xe_get_copy(xml_graph, PCMK__XA_FAILED_STOP_OFFSET);
         new_graph->failed_start_offset =
-            crm_element_value_copy(xml_graph, PCMK__XA_FAILED_START_OFFSET);
+            pcmk__xe_get_copy(xml_graph, PCMK__XA_FAILED_START_OFFSET);
 
         pcmk__xe_get_time(xml_graph, "recheck-by", &(new_graph->recheck_by));
     }

@@ -767,7 +767,7 @@ do_dc_join_ack(long long action,
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
     const char *op = pcmk__xe_get(join_ack->msg, PCMK__XA_CRM_TASK);
-    char *join_from = crm_element_value_copy(join_ack->msg, PCMK__XA_SRC);
+    char *join_from = pcmk__xe_get_copy(join_ack->msg, PCMK__XA_SRC);
     pcmk__node_status_t *peer = NULL;
     enum controld_join_phase phase = controld_join_none;
 

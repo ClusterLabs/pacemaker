@@ -1412,7 +1412,7 @@ static void
 append_href(xmlNode *xml, void *user_data)
 {
     GList **list = user_data;
-    char *href = crm_element_value_copy(xml, "href");
+    char *href = pcmk__xe_get_copy(xml, "href");
 
     if (href == NULL) {
         return;

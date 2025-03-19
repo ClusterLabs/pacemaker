@@ -341,7 +341,7 @@ resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
             if (rc == pcmk_rc_ok || rc == ENOTUNIQ) {
                 char *found_attr_id = NULL;
 
-                found_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
+                found_attr_id = pcmk__xe_get_copy(xml_search, PCMK_XA_ID);
 
                 if (!out->is_quiet(out)) {
                     out->err(out,
@@ -448,7 +448,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
         switch (rc) {
             case pcmk_rc_ok:
-                found_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
+                found_attr_id = pcmk__xe_get_copy(xml_search, PCMK_XA_ID);
                 crm_debug("Found a match for " PCMK_XA_NAME "='%s': "
                           PCMK_XA_ID "='%s'", attr_name, found_attr_id);
                 rsc_attr_id = found_attr_id;
@@ -678,7 +678,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                                 attr_set, attr_id, attr_name, &xml_search);
         switch (rc) {
             case pcmk_rc_ok:
-                found_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
+                found_attr_id = pcmk__xe_get_copy(xml_search, PCMK_XA_ID);
                 pcmk__xml_free(xml_search);
                 break;
 
@@ -1813,7 +1813,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                                 PCMK_META_TARGET_ROLE, &xml_search);
 
         if (rc == pcmk_rc_ok) {
-            orig_target_role = crm_element_value_copy(xml_search, PCMK_XA_VALUE);
+            orig_target_role = pcmk__xe_get_copy(xml_search, PCMK_XA_VALUE);
         }
 
         pcmk__xml_free(xml_search);

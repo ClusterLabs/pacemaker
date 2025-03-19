@@ -518,9 +518,9 @@ delegate_from_xml(xmlNode *xml)
                                           LOG_NEVER);
 
     if (match == NULL) {
-        return crm_element_value_copy(xml, PCMK__XA_SRC);
+        return pcmk__xe_get_copy(xml, PCMK__XA_SRC);
     } else {
-        return crm_element_value_copy(match, PCMK__XA_ST_DELEGATE);
+        return pcmk__xe_get_copy(match, PCMK__XA_ST_DELEGATE);
     }
 }
 
@@ -1185,7 +1185,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     pcmk__xe_get_int(request, PCMK__XA_ST_DELAY, &(op->client_delay));
 
     if (peer && dev) {
-        op->id = crm_element_value_copy(dev, PCMK__XA_ST_REMOTE_OP);
+        op->id = pcmk__xe_get_copy(dev, PCMK__XA_ST_REMOTE_OP);
     } else {
         op->id = crm_generate_uuid();
     }
@@ -1194,7 +1194,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     op->state = st_query;
     op->replies_expected = fencing_active_peers();
-    op->action = crm_element_value_copy(dev, PCMK__XA_ST_DEVICE_ACTION);
+    op->action = pcmk__xe_get_copy(dev, PCMK__XA_ST_DEVICE_ACTION);
 
     /* The node initiating the stonith operation. If an operation is relayed,
      * this is the last node the operation lands on. When in standalone mode,
@@ -1202,14 +1202,14 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
      *
      * Or may be the name of the function that created the operation.
      */
-    op->originator = crm_element_value_copy(dev, PCMK__XA_ST_ORIGIN);
+    op->originator = pcmk__xe_get_copy(dev, PCMK__XA_ST_ORIGIN);
     if (op->originator == NULL) {
         /* Local or relayed request */
         op->originator = pcmk__str_copy(fenced_get_local_node());
     }
 
     // Delegate may not be set
-    op->delegate = crm_element_value_copy(dev, PCMK__XA_ST_DELEGATE);
+    op->delegate = pcmk__xe_get_copy(dev, PCMK__XA_ST_DELEGATE);
     op->created = time(NULL);
 
     CRM_LOG_ASSERT(client != NULL);
@@ -1222,11 +1222,10 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         op->client_name = crm_strdup_printf("%s.%lu", crm_system_name,
                                          (unsigned long) getpid());
     } else {
-        op->client_name = crm_element_value_copy(request,
-                                                 PCMK__XA_ST_CLIENTNAME);
+        op->client_name = pcmk__xe_get_copy(request, PCMK__XA_ST_CLIENTNAME);
     }
 
-    op->target = crm_element_value_copy(dev, PCMK__XA_ST_TARGET);
+    op->target = pcmk__xe_get_copy(dev, PCMK__XA_ST_TARGET);
 
     // @TODO Figure out how to avoid copying XML here
     op->request = pcmk__xml_copy(NULL, request);

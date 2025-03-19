@@ -575,7 +575,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     xmlNode *action_rsc = pcmk__xe_first_child(action->xml, PCMK_XE_PRIMITIVE,
                                                NULL, NULL);
 
-    char *node = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
+    char *node = pcmk__xe_get_copy(action->xml, PCMK__META_ON_NODE);
     char *uuid = NULL;
     const char *router_node = pcmk__xe_get(action->xml, PCMK__XA_ROUTER_NODE);
 
@@ -630,7 +630,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                        cib_sync_call) == pcmk_ok);
 
     // Ensure the action node is in the CIB
-    uuid = crm_element_value_copy(action->xml, PCMK__META_ON_NODE_UUID);
+    uuid = pcmk__xe_get_copy(action->xml, PCMK__META_ON_NODE_UUID);
     cib_node = pcmk__inject_node(fake_cib, node,
                                  ((router_node == NULL)? uuid: node));
     free(uuid);
@@ -763,7 +763,7 @@ static int
 simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *op = crm_meta_value(action->params, PCMK__META_STONITH_ACTION);
-    char *target = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
+    char *target = pcmk__xe_get_copy(action->xml, PCMK__META_ON_NODE);
 
     out->message(out, "inject-fencing-action", target, op);
 

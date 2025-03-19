@@ -735,11 +735,11 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
                 pcmk__assert_alloc(1, sizeof(stonith_history_t));
             long long completed_nsec = 0LL;
 
-            kvp->target = crm_element_value_copy(op, PCMK__XA_ST_TARGET);
-            kvp->action = crm_element_value_copy(op, PCMK__XA_ST_DEVICE_ACTION);
-            kvp->origin = crm_element_value_copy(op, PCMK__XA_ST_ORIGIN);
-            kvp->delegate = crm_element_value_copy(op, PCMK__XA_ST_DELEGATE);
-            kvp->client = crm_element_value_copy(op, PCMK__XA_ST_CLIENTNAME);
+            kvp->target = pcmk__xe_get_copy(op, PCMK__XA_ST_TARGET);
+            kvp->action = pcmk__xe_get_copy(op, PCMK__XA_ST_DEVICE_ACTION);
+            kvp->origin = pcmk__xe_get_copy(op, PCMK__XA_ST_ORIGIN);
+            kvp->delegate = pcmk__xe_get_copy(op, PCMK__XA_ST_DELEGATE);
+            kvp->client = pcmk__xe_get_copy(op, PCMK__XA_ST_CLIENTNAME);
             pcmk__xe_get_time(op, PCMK__XA_ST_DATE, &kvp->completed);
 
             pcmk__xe_get_ll(op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
@@ -748,7 +748,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             }
 
             pcmk__xe_get_int(op, PCMK__XA_ST_STATE, &kvp->state);
-            kvp->exit_reason = crm_element_value_copy(op, PCMK_XA_EXIT_REASON);
+            kvp->exit_reason = pcmk__xe_get_copy(op, PCMK_XA_EXIT_REASON);
 
             if (last) {
                 last->next = kvp;
@@ -1165,7 +1165,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         } else {
             const char *msg_type = pcmk__xe_get(reply, PCMK__XA_ST_OP);
 
-            native->token = crm_element_value_copy(reply, PCMK__XA_ST_CLIENTID);
+            native->token = pcmk__xe_get_copy(reply, PCMK__XA_ST_CLIENTID);
             if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_none)) {
                 crm_debug("Couldn't register with the fencer: invalid reply type '%s'",
                           (msg_type? msg_type : "(missing)"));
@@ -1430,7 +1430,7 @@ xml_to_event(xmlNode *msg)
 
     // All notification types have the operation result and notification subtype
     stonith__xe_get_result(msg, &event_private->result);
-    event->operation = crm_element_value_copy(msg, PCMK__XA_ST_OP);
+    event->operation = pcmk__xe_get_copy(msg, PCMK__XA_ST_OP);
 
     // @COMPAT The API originally provided the result as a legacy return code
     event->result = pcmk_rc2legacy(stonith__result2rc(&event_private->result));
@@ -1445,16 +1445,14 @@ xml_to_event(xmlNode *msg)
             crm_err("No data for %s event", event->operation);
             crm_log_xml_notice(msg, "BadEvent");
         } else {
-            event->origin = crm_element_value_copy(data, PCMK__XA_ST_ORIGIN);
-            event->action = crm_element_value_copy(data,
-                                                   PCMK__XA_ST_DEVICE_ACTION);
-            event->target = crm_element_value_copy(data, PCMK__XA_ST_TARGET);
-            event->executioner = crm_element_value_copy(data,
-                                                        PCMK__XA_ST_DELEGATE);
-            event->id = crm_element_value_copy(data, PCMK__XA_ST_REMOTE_OP);
-            event->client_origin =
-                crm_element_value_copy(data, PCMK__XA_ST_CLIENTNAME);
-            event->device = crm_element_value_copy(data, PCMK__XA_ST_DEVICE_ID);
+            event->origin = pcmk__xe_get_copy(data, PCMK__XA_ST_ORIGIN);
+            event->action = pcmk__xe_get_copy(data, PCMK__XA_ST_DEVICE_ACTION);
+            event->target = pcmk__xe_get_copy(data, PCMK__XA_ST_TARGET);
+            event->executioner = pcmk__xe_get_copy(data, PCMK__XA_ST_DELEGATE);
+            event->id = pcmk__xe_get_copy(data, PCMK__XA_ST_REMOTE_OP);
+            event->client_origin = pcmk__xe_get_copy(data,
+                                                     PCMK__XA_ST_CLIENTNAME);
+            event->device = pcmk__xe_get_copy(data, PCMK__XA_ST_DEVICE_ID);
         }
 
     } else if (pcmk__str_any_of(event->operation,
@@ -1467,7 +1465,7 @@ xml_to_event(xmlNode *msg)
             crm_err("No data for %s event", event->operation);
             crm_log_xml_notice(msg, "BadEvent");
         } else {
-            event->device = crm_element_value_copy(data, PCMK__XA_ST_DEVICE_ID);
+            event->device = pcmk__xe_get_copy(data, PCMK__XA_ST_DEVICE_ID);
         }
     }
 
