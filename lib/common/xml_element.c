@@ -1128,35 +1128,6 @@ crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
 }
 
 /*!
- * \brief Create XML attributes for seconds and microseconds
- *
- * This is like \c crm_xml_add() but taking a struct timeval.
- *
- * \param[in,out] xml        XML node to modify
- * \param[in]     name_sec   Name of XML attribute for seconds
- * \param[in]     name_usec  Name of XML attribute for microseconds (or NULL)
- * \param[in]     value      Time value to set
- *
- * \return New seconds value as string on success, \c NULL otherwise
- * \note This does nothing if xml, name_sec, or value is \c NULL.
- */
-const char *
-crm_xml_add_timeval(xmlNode *xml, const char *name_sec, const char *name_usec,
-                    const struct timeval *value)
-{
-    const char *added = NULL;
-
-    if (xml && name_sec && value) {
-        added = crm_xml_add_ll(xml, name_sec, (long long) value->tv_sec);
-        if (added && name_usec) {
-            // Any error is ignored (we successfully added seconds)
-            crm_xml_add_ll(xml, name_usec, (long long) value->tv_usec);
-        }
-    }
-    return added;
-}
-
-/*!
  * \internal
  * \brief Retrieve the value of an XML attribute
  *
@@ -1772,6 +1743,22 @@ crm_element_value_copy(const xmlNode *data, const char *name)
 {
     CRM_CHECK((data != NULL) && (name != NULL), return NULL);
     return pcmk__str_copy(pcmk__xe_get(data, name));
+}
+
+const char *
+crm_xml_add_timeval(xmlNode *xml, const char *name_sec, const char *name_usec,
+                    const struct timeval *value)
+{
+    const char *added = NULL;
+
+    if (xml && name_sec && value) {
+        added = crm_xml_add_ll(xml, name_sec, (long long) value->tv_sec);
+        if (added && name_usec) {
+            // Any error is ignored (we successfully added seconds)
+            crm_xml_add_ll(xml, name_usec, (long long) value->tv_usec);
+        }
+    }
+    return added;
 }
 
 // LCOV_EXCL_STOP
