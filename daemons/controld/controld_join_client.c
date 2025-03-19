@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -278,7 +278,7 @@ do_cl_join_finalize_respond(long long action,
         was_nack = FALSE;
     }
 
-    crm_element_value_int(input->msg, PCMK__XA_JOIN_ID, &join_id);
+    pcmk__xe_get_int(input->msg, PCMK__XA_JOIN_ID, &join_id);
 
     if (was_nack) {
         crm_err("Shutting down because cluster join with leader %s failed "

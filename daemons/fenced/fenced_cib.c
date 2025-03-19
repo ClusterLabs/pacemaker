@@ -77,7 +77,7 @@ remove_topology_level(xmlNode *match)
     CRM_CHECK(match != NULL, return);
 
     key = stonith_level_key(match, fenced_target_by_unknown);
-    crm_element_value_int(match, PCMK_XA_INDEX, &index);
+    pcmk__xe_get_int(match, PCMK_XA_INDEX, &index);
 
     data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
@@ -402,7 +402,7 @@ update_fencing_topology(const char *event, xmlNode *msg)
 
     CRM_CHECK(patchset != NULL, return);
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
         crm_warn("Unknown patch format: %d", format);
         return;
@@ -503,7 +503,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         int rc = pcmk_ok;
         xmlNode *wrapper = NULL;
 
-        crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
+        pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
         if (rc != pcmk_ok) {
             return;
         }

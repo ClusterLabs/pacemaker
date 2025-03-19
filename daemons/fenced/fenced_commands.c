@@ -423,9 +423,9 @@ create_async_command(xmlNode *msg)
         return NULL;
     }
 
-    crm_element_value_int(msg, PCMK__XA_ST_CALLID, &(cmd->id));
-    crm_element_value_int(msg, PCMK__XA_ST_DELAY, &(cmd->start_delay));
-    crm_element_value_int(msg, PCMK__XA_ST_TIMEOUT, &(cmd->default_timeout));
+    pcmk__xe_get_int(msg, PCMK__XA_ST_CALLID, &(cmd->id));
+    pcmk__xe_get_int(msg, PCMK__XA_ST_DELAY, &(cmd->start_delay));
+    pcmk__xe_get_int(msg, PCMK__XA_ST_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
 
     rc = pcmk__xe_get_flags(msg, PCMK__XA_ST_CALLOPT, &(cmd->options),
@@ -1637,7 +1637,7 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
     if (xml != NULL) {
         local_mode = unpack_level_kind(xml);
         local_target = stonith_level_key(xml, local_mode);
-        crm_element_value_int(xml, PCMK_XA_INDEX, &local_id);
+        pcmk__xe_get_int(xml, PCMK_XA_INDEX, &local_id);
     }
 
     if (mode != NULL) {
@@ -3152,7 +3152,7 @@ handle_update_timeout_request(pcmk__request_t *request)
                                               PCMK__XA_ST_CLIENTID);
     int op_timeout = 0;
 
-    crm_element_value_int(request->xml, PCMK__XA_ST_TIMEOUT, &op_timeout);
+    pcmk__xe_get_int(request->xml, PCMK__XA_ST_TIMEOUT, &op_timeout);
     do_stonith_async_timeout_update(client_id, call_id, op_timeout);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
@@ -3204,7 +3204,7 @@ handle_query_request(pcmk__request_t *request)
     query->action = pcmk__str_copy(action);
     query->call_options = request->call_options;
 
-    crm_element_value_int(request->xml, PCMK__XA_ST_TIMEOUT, &timeout);
+    pcmk__xe_get_int(request->xml, PCMK__XA_ST_TIMEOUT, &timeout);
     get_capable_devices(target, action, timeout,
                         pcmk_is_set(query->call_options,
                                     st_opt_allow_self_fencing),
@@ -3304,7 +3304,7 @@ handle_fence_request(pcmk__request_t *request)
             crm_notice("Client %s wants to fence (%s) %s using %s",
                        pcmk__request_origin(request), action,
                        target, (device? device : "any device"));
-            crm_element_value_int(dev, PCMK__XA_ST_TOLERANCE, &tolerance);
+            pcmk__xe_get_int(dev, PCMK__XA_ST_TOLERANCE, &tolerance);
             if (stonith_check_fence_tolerance(tolerance, target, action)) {
                 pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE,
                                  NULL);
@@ -3474,7 +3474,7 @@ handle_cache_request(pcmk__request_t *request)
     int node_id = 0;
     const char *name = NULL;
 
-    crm_element_value_int(request->xml, PCMK_XA_ID, &node_id);
+    pcmk__xe_get_int(request->xml, PCMK_XA_ID, &node_id);
     name = crm_element_value(request->xml, PCMK_XA_UNAME);
     pcmk__cluster_forget_cluster_node(node_id, name);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);

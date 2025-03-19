@@ -433,7 +433,7 @@ parse_election_message(const xmlNode *message, struct vote *vote)
     vote->version = crm_element_value(message, PCMK_XA_VERSION);
     vote->election_owner = crm_element_value(message, PCMK__XA_ELECTION_OWNER);
 
-    crm_element_value_int(message, PCMK__XA_ELECTION_ID, &(vote->election_id));
+    pcmk__xe_get_int(message, PCMK__XA_ELECTION_ID, &(vote->election_id));
 
     if ((vote->op == NULL) || (vote->from == NULL) || (vote->version == NULL)
         || (vote->election_owner == NULL) || (vote->election_id < 0)) {

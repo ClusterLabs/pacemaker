@@ -933,7 +933,7 @@ handle_node_info_request(const xmlNode *msg)
      * @TODO A Corosync-layer node ID is of type uint32_t. We should be able to
      * handle legitimate node IDs greater than INT_MAX, but currently we do not.
      */
-    crm_element_value_int(msg, PCMK_XA_ID, &node_id);
+    pcmk__xe_get_int(msg, PCMK_XA_ID, &node_id);
     if (node_id < 0) {
         node_id = 0;
     }
@@ -1175,7 +1175,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         int id = 0;
         const char *name = NULL;
 
-        crm_element_value_int(stored_msg, PCMK_XA_ID, &id);
+        pcmk__xe_get_int(stored_msg, PCMK_XA_ID, &id);
         name = crm_element_value(stored_msg, PCMK_XA_UNAME);
 
         if(cause == C_IPC_MESSAGE) {

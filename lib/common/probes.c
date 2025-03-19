@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -76,8 +76,8 @@ pcmk_xe_mask_probe_failure(const xmlNode *xml)
         return false;
     }
 
-    crm_element_value_int(xml, PCMK__XA_OP_STATUS, &exec_status);
-    crm_element_value_int(xml, PCMK__XA_RC_CODE, &exit_status);
+    pcmk__xe_get_int(xml, PCMK__XA_OP_STATUS, &exec_status);
+    pcmk__xe_get_int(xml, PCMK__XA_RC_CODE, &exit_status);
 
     return (exit_status == PCMK_OCF_NOT_INSTALLED)
            || (exit_status == PCMK_OCF_INVALID_PARAM)

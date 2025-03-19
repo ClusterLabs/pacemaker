@@ -128,7 +128,7 @@ lrmd_remote_client_msg(gpointer data)
         return 0;
     }
 
-    crm_element_value_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
+    pcmk__xe_get_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
     crm_trace("Processing remote client request %d", id);
 
     execd_process_message(client, id, client->flags, request);
