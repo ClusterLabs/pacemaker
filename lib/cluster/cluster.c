@@ -306,7 +306,7 @@ pcmk__cluster_node_name(uint32_t nodeid)
     }
 
     crm_notice("Could not obtain a node name for node with "
-               PCMK_XA_ID "=" PRIu32,
+               PCMK_XA_ID "=%" PRIu32,
                nodeid);
     return NULL;
 }
