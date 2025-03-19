@@ -61,6 +61,9 @@ int crm_element_value_int(const xmlNode *data, const char *name, int *dest);
 //! \deprecated Do not use
 const char *crm_element_value(const xmlNode *data, const char *name);
 
+//! \deprecated Do not use
+char *crm_element_value_copy(const xmlNode *data, const char *name);
+
 #ifdef __cplusplus
 }
 #endif
