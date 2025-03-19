@@ -1053,29 +1053,6 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
     return (char *)attr->children->content;
 }
 
-
-/*!
- * \brief Create an XML attribute with specified name and integer value
- *
- * This is like \c crm_xml_add() but taking an integer value.
- *
- * \param[in,out] node   XML node to modify
- * \param[in]     name   Attribute name to set
- * \param[in]     value  Attribute value to set
- *
- * \return New value as string on success, \c NULL otherwise
- * \note This does nothing if node or name are \c NULL or empty.
- */
-const char *
-crm_xml_add_int(xmlNode *node, const char *name, int value)
-{
-    char *number = pcmk__itoa(value);
-    const char *added = crm_xml_add(node, name, number);
-
-    free(number);
-    return added;
-}
-
 /*!
  * \internal
  * \brief Retrieve the value of an XML attribute
@@ -1825,6 +1802,16 @@ const char *
 crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
 {
     char *number = crm_strdup_printf("%u", ms);
+    const char *added = crm_xml_add(node, name, number);
+
+    free(number);
+    return added;
+}
+
+const char *
+crm_xml_add_int(xmlNode *node, const char *name, int value)
+{
+    char *number = pcmk__itoa(value);
     const char *added = crm_xml_add(node, name, number);
 
     free(number);
