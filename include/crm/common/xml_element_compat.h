@@ -72,6 +72,9 @@ const char *crm_xml_add_timeval(xmlNode *xml, const char *name_sec,
 //! \deprecated Do not use
 const char *crm_xml_add_ms(xmlNode *node, const char *name, guint ms);
 
+//! \deprecated Do not use
+const char *crm_xml_add_ll(xmlNode *node, const char *name, long long value);
+
 #ifdef __cplusplus
 }
 #endif
