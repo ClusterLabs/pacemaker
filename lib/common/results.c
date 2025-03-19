@@ -426,6 +426,10 @@ static const struct pcmk__rc_info {
       "Compression/decompression error",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_no_dc",
+      "DC is not yet elected",
+      -pcmk_err_generic,
+    },
 };
 
 /*!
