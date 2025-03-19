@@ -24,6 +24,7 @@
 #include <libxml/tree.h>                    // xmlNode, etc.
 
 #include <crm/common/iso8601.h>             // crm_time_t
+#include <crm/common/strings_internal.h>    // pcmk__str_copy()
 #include <crm/common/xml_names.h>           // PCMK_XA_ID
 
 #ifdef __cplusplus
@@ -154,6 +155,25 @@ int pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
 void pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value);
 int pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value);
 bool pcmk__xe_attr_is_true(const xmlNode *node, const char *name);
+
+/*!
+ * \internal
+ * \brief Retrieve a copy of the value of an XML attribute
+ *
+ * This is like \c pcmk__xe_get() but allocates new memory for the result.
+ *
+ * \param[in] xml   XML element whose attribute to get
+ * \param[in] attr  Attribute name
+ *
+ * \return Value of specified attribute (or \c NULL if not set)
+ *
+ * \note The caller is responsible for freeing the result using \c free().
+ */
+static inline char *
+pcmk__xe_get_copy(const xmlNode *xml, const char *attr)
+{
+    return pcmk__str_copy(pcmk__xe_get(xml, attr));
+}
 
 /*!
  * \internal

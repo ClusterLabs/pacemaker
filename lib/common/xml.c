@@ -1137,7 +1137,7 @@ mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
                   const char *old_value)
 {
     xml_doc_private_t *docpriv = new_xml->doc->_private;
-    char *vcopy = crm_element_value_copy(new_xml, attr_name);
+    char *vcopy = pcmk__xe_get_copy(new_xml, attr_name);
 
     crm_trace("XML attribute %s was changed from '%s' to '%s' in %s",
               attr_name, old_value, vcopy, element);

@@ -480,7 +480,7 @@ cib_remote_msg(gpointer data)
         pcmk__set_client_flags(client, pcmk__client_authenticated);
         g_source_remove(client->remote->auth_timeout);
         client->remote->auth_timeout = 0;
-        client->name = crm_element_value_copy(command, PCMK_XA_NAME);
+        client->name = pcmk__xe_get_copy(command, PCMK_XA_NAME);
 
         user = pcmk__xe_get(command, PCMK_XA_USER);
         if (user) {

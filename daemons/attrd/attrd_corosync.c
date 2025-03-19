@@ -64,7 +64,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value_copy(request.xml, PCMK_XA_TASK);
+        request.op = pcmk__xe_get_copy(request.xml, PCMK_XA_TASK);
         CRM_CHECK(request.op != NULL, return);
 
         attrd_handle_request(&request);

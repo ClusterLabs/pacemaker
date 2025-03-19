@@ -1013,25 +1013,24 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
     }
 
-    bundle_data->container_command =
-        crm_element_value_copy(xml_obj, PCMK_XA_RUN_COMMAND);
-    bundle_data->launcher_options = crm_element_value_copy(xml_obj,
-                                                           PCMK_XA_OPTIONS);
-    bundle_data->image = crm_element_value_copy(xml_obj, PCMK_XA_IMAGE);
-    bundle_data->container_network = crm_element_value_copy(xml_obj,
-                                                            PCMK_XA_NETWORK);
+    bundle_data->container_command = pcmk__xe_get_copy(xml_obj,
+                                                       PCMK_XA_RUN_COMMAND);
+    bundle_data->launcher_options = pcmk__xe_get_copy(xml_obj, PCMK_XA_OPTIONS);
+    bundle_data->image = pcmk__xe_get_copy(xml_obj, PCMK_XA_IMAGE);
+    bundle_data->container_network = pcmk__xe_get_copy(xml_obj,
+                                                       PCMK_XA_NETWORK);
 
     xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_NETWORK, NULL,
                                    NULL);
     if(xml_obj) {
-        bundle_data->ip_range_start =
-            crm_element_value_copy(xml_obj, PCMK_XA_IP_RANGE_START);
-        bundle_data->host_netmask =
-            crm_element_value_copy(xml_obj, PCMK_XA_HOST_NETMASK);
-        bundle_data->host_network =
-            crm_element_value_copy(xml_obj, PCMK_XA_HOST_INTERFACE);
-        bundle_data->control_port =
-            crm_element_value_copy(xml_obj, PCMK_XA_CONTROL_PORT);
+        bundle_data->ip_range_start = pcmk__xe_get_copy(xml_obj,
+                                                        PCMK_XA_IP_RANGE_START);
+        bundle_data->host_netmask = pcmk__xe_get_copy(xml_obj,
+                                                      PCMK_XA_HOST_NETMASK);
+        bundle_data->host_network = pcmk__xe_get_copy(xml_obj,
+                                                      PCMK_XA_HOST_INTERFACE);
+        bundle_data->control_port = pcmk__xe_get_copy(xml_obj,
+                                                      PCMK_XA_CONTROL_PORT);
         value = pcmk__xe_get(xml_obj, PCMK_XA_ADD_HOST);
         if (crm_str_to_boolean(value, &bundle_data->add_host) != 1) {
             bundle_data->add_host = TRUE;
@@ -1045,13 +1044,13 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
             pe__bundle_port_t *port =
                 pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
 
-            port->source = crm_element_value_copy(xml_child, PCMK_XA_PORT);
+            port->source = pcmk__xe_get_copy(xml_child, PCMK_XA_PORT);
 
             if(port->source == NULL) {
-                port->source = crm_element_value_copy(xml_child, PCMK_XA_RANGE);
+                port->source = pcmk__xe_get_copy(xml_child, PCMK_XA_RANGE);
             } else {
-                port->target = crm_element_value_copy(xml_child,
-                                                      PCMK_XA_INTERNAL_PORT);
+                port->target = pcmk__xe_get_copy(xml_child,
+                                                 PCMK_XA_INTERNAL_PORT);
             }
 
             if(port->source != NULL && strlen(port->source) > 0) {

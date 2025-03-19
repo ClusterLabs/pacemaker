@@ -51,8 +51,8 @@ attrd_create_attribute(xmlNode *xml)
 
     a->id = pcmk__str_copy(name);
     a->set_type = pcmk__str_copy(set_type);
-    a->set_id = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
-    a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
+    a->set_id = pcmk__xe_get_copy(xml, PCMK__XA_ATTR_SET);
+    a->user = pcmk__xe_get_copy(xml, PCMK__XA_ATTR_USER);
     a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
 
     if (is_private) {
