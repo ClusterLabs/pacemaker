@@ -1187,44 +1187,6 @@ crm_element_value(const xmlNode *data, const char *name)
 }
 
 /*!
- * \brief Retrieve the integer value of an XML attribute
- *
- * This is like \c crm_element_value() but getting the value as an integer.
- *
- * \param[in]  data  XML node to check
- * \param[in]  name  Attribute name to check
- * \param[out] dest  Where to store element value
- *
- * \return 0 on success, -1 otherwise
- */
-int
-crm_element_value_int(const xmlNode *data, const char *name, int *dest)
-{
-    const char *value = NULL;
-
-    CRM_CHECK(dest != NULL, return -1);
-    value = crm_element_value(data, name);
-    if (value) {
-        long long value_ll;
-        int rc = pcmk__scan_ll(value, &value_ll, 0LL);
-
-        *dest = PCMK__PARSE_INT_DEFAULT;
-        if (rc != pcmk_rc_ok) {
-            crm_warn("Using default for %s "
-                     "because '%s' is not a valid integer: %s",
-                     name, value, pcmk_rc_str(rc));
-        } else if ((value_ll < INT_MIN) || (value_ll > INT_MAX)) {
-            crm_warn("Using default for %s because '%s' is out of range",
-                     name, value);
-        } else {
-            *dest = (int) value_ll;
-            return 0;
-        }
-    }
-    return -1;
-}
-
-/*!
  * \internal
  * \brief Retrieve a flag group from an XML attribute value
  *
@@ -1740,6 +1702,33 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
     }
     *dest = (guint) value_ll;
     return pcmk_ok;
+}
+
+int
+crm_element_value_int(const xmlNode *data, const char *name, int *dest)
+{
+    const char *value = NULL;
+
+    CRM_CHECK(dest != NULL, return -1);
+    value = crm_element_value(data, name);
+    if (value) {
+        long long value_ll;
+        int rc = pcmk__scan_ll(value, &value_ll, 0LL);
+
+        *dest = PCMK__PARSE_INT_DEFAULT;
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Using default for %s "
+                     "because '%s' is not a valid integer: %s",
+                     name, value, pcmk_rc_str(rc));
+        } else if ((value_ll < INT_MIN) || (value_ll > INT_MAX)) {
+            crm_warn("Using default for %s because '%s' is out of range",
+                     name, value);
+        } else {
+            *dest = (int) value_ll;
+            return 0;
+        }
+    }
+    return -1;
 }
 
 // LCOV_EXCL_STOP
