@@ -206,7 +206,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
     nodePath = (char *)xmlGetNodePath(xml_obj);
     max = pcmk__xpath_num_results(xpathObj);
 
-    if (max < 1) {
+    if (max == 0) {
         if (error_level < LOG_NEVER) {
             do_crm_log(error_level, "No match for %s in %s",
                        xpath, pcmk__s(nodePath, "unknown path"));

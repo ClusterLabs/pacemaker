@@ -13,6 +13,7 @@
 #include <glib.h>                       // GString
 #include <libxml/tree.h>                // xmlDoc, xmlNode
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
+#include <qb/qbdefs.h>                      // QB_MAX()
 
 #include <crm/common/options.h>             // PCMK_META_*, PCMK_VALUE_*
 #include <crm/common/output_internal.h>     // pcmk__output_t
@@ -55,15 +56,20 @@
  *
  * \param[in] xpath_obj  XPath object
  *
- * \return Number of nodes in <tt>xpath_obj->nodesetval</tt>
+ * \return Number of nodes in <tt>xpath_obj->nodesetval</tt> (guaranteed
+ *         nonnegative)
  */
 static inline int
 pcmk__xpath_num_results(const xmlXPathObject *xpath_obj)
 {
-    if (xpath_obj == NULL) {
-        return 0;
+    int num_results = 0;
+
+    if (xpath_obj != NULL) {
+        num_results = xmlXPathNodeSetGetLength(xpath_obj->nodesetval);
     }
-    return xmlXPathNodeSetGetLength(xpath_obj->nodesetval);
+
+    // Negative num_results doesn't make sense
+    return QB_MAX(num_results, 0);
 }
 
 GString *pcmk__element_xpath(const xmlNode *xml);

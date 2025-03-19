@@ -685,7 +685,7 @@ cib_process_xpath(const char *op, int options, const char *section,
     }
 
     num_results = pcmk__xpath_num_results(xpathObj);
-    if (num_results < 1) {
+    if (num_results == 0) {
         if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
             crm_debug("%s was already removed", section);
 

@@ -181,7 +181,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
     xpathObj = pcmk__xpath_search(xml->doc,
                                   "//" PCMK_XE_ACTION
                                   "[@" PCMK_XA_NAME "='" PCMK_ACTION_STOP "']");
-    if (pcmk__xpath_num_results(xpathObj) <= 0) {
+    if (pcmk__xpath_num_results(xpathObj) == 0) {
         xmlNode *tmp = NULL;
         const char *timeout_str = NULL;
 

@@ -917,7 +917,7 @@ is_nodeid_required(xmlNode * xml)
     xpath = pcmk__xpath_search(xml->doc,
                                "//" PCMK_XE_PARAMETER
                                "[@" PCMK_XA_NAME "='nodeid']");
-    if (pcmk__xpath_num_results(xpath) <= 0) {
+    if (pcmk__xpath_num_results(xpath) == 0) {
         xmlXPathFreeObject(xpath);
         return FALSE;
     }
@@ -941,7 +941,7 @@ read_action_metadata(stonith_device_t *device)
                                "//" PCMK_XE_ACTION);
     max = pcmk__xpath_num_results(xpath);
 
-    if (max <= 0) {
+    if (max == 0) {
         xmlXPathFreeObject(xpath);
         return;
     }

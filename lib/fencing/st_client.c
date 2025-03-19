@@ -2440,7 +2440,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
     xpath = pcmk__xpath_search(metadata->doc, "//" PCMK_XE_PARAMETER);
     max = pcmk__xpath_num_results(xpath);
 
-    if (max <= 0) {
+    if (max == 0) {
         xmlXPathFreeObject(xpath);
         return;
     }
