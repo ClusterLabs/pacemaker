@@ -1412,6 +1412,45 @@ pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
 
 /*!
  * \internal
+ * \brief Set XML attribute values for seconds and microseconds
+ *
+ * This is like \c crm_xml_add() but takes a <tt>struct timeval *</tt>.
+ *
+ * \param[in,out] xml        XML element whose attributes to set
+ * \param[in]     sec_attr   Name of XML attribute for seconds
+ * \param[in]     usec_attr  Name of XML attribute for microseconds
+ * \param[in]     value      Attribute values to set
+ *
+ * \note This does nothing if \p value is \c NULL.
+ */
+void
+pcmk__xe_set_timeval(xmlNode *xml, const char *sec_attr, const char *usec_attr,
+                     const struct timeval *value)
+{
+    CRM_CHECK((xml != NULL) && (sec_attr != NULL) && (usec_attr != NULL),
+              return);
+
+    if (value == NULL) {
+        return;
+    }
+    if (crm_xml_add_ll(xml, sec_attr, (long long) value->tv_sec) == NULL) {
+        return;
+    }
+
+    /* Seconds were added successfully. Ignore any errors adding microseconds.
+     *
+     * It would be nice to make this atomic: revert the seconds attribute if
+     * adding the microseconds attribute fails. That's somewhat complicated due
+     * to change tracking: the chain of parents is already marked dirty, etc. In
+     * practice, microseconds should succeed if seconds succeeded, unless it's
+     * due to memory allocation failure. Nothing checks the return values of
+     * these setter functions at time of writing, anyway.
+     */
+    crm_xml_add_ll(xml, usec_attr, (long long) value->tv_usec);
+}
+
+/*!
+ * \internal
  * \brief Get a date/time object from an XML attribute value
  *
  * \param[in]  xml   XML with attribute to parse (from CIB)
