@@ -51,6 +51,10 @@ int crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest);
 //! \deprecated Do not use
 int crm_element_value_ms(const xmlNode *data, const char *name, guint *dest);
 
+//! \deprecated Do not use
+int crm_element_value_ll(const xmlNode *data, const char *name,
+                         long long *dest);
+
 #ifdef __cplusplus
 }
 #endif
