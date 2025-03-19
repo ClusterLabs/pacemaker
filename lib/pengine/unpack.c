@@ -314,8 +314,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             int do_panic = 0;
 
-            crm_element_value_int(scheduler->input, PCMK_XA_NO_QUORUM_PANIC,
-                                  &do_panic);
+            pcmk__xe_get_int(scheduler->input, PCMK_XA_NO_QUORUM_PANIC,
+                             &do_panic);
             if (do_panic
                 || pcmk_is_set(scheduler->flags, pcmk__sched_quorate)) {
                 scheduler->no_quorum_policy = pcmk_no_quorum_fence;
@@ -908,7 +908,7 @@ pcmk__validate_fencing_topology(const xmlNode *xml)
             continue;
         }
 
-        if (crm_element_value_int(level, PCMK_XA_INDEX, &index) != 0) {
+        if (pcmk__xe_get_int(level, PCMK_XA_INDEX, &index) != pcmk_rc_ok) {
             pcmk__config_err("Ignoring fencing level %s with invalid index",
                              id);
             continue;
@@ -2980,8 +2980,8 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
         int rc = PCMK_OCF_UNKNOWN_ERROR;
         int status = PCMK_EXEC_ERROR;
 
-        crm_element_value_int(xml, PCMK__XA_RC_CODE, &rc);
-        crm_element_value_int(xml, PCMK__XA_OP_STATUS, &status);
+        pcmk__xe_get_int(xml, PCMK__XA_RC_CODE, &rc);
+        pcmk__xe_get_int(xml, PCMK__XA_OP_STATUS, &status);
         if ((rc != target_rc) || (status != PCMK_EXEC_DONE)) {
             return NULL;
         }
@@ -3293,8 +3293,8 @@ unpack_migrate_to_success(struct action_history *history)
              */
             return;
         }
-        crm_element_value_int(migrate_from, PCMK__XA_RC_CODE, &from_rc);
-        crm_element_value_int(migrate_from, PCMK__XA_OP_STATUS, &from_status);
+        pcmk__xe_get_int(migrate_from, PCMK__XA_RC_CODE, &from_rc);
+        pcmk__xe_get_int(migrate_from, PCMK__XA_OP_STATUS, &from_status);
     }
 
     /* If the resource has newer state on both the source and target after the
@@ -4441,8 +4441,8 @@ can_affect_state(struct action_history *history)
 static int
 unpack_action_result(struct action_history *history)
 {
-    if ((crm_element_value_int(history->xml, PCMK__XA_OP_STATUS,
-                               &(history->execution_status)) < 0)
+    if ((pcmk__xe_get_int(history->xml, PCMK__XA_OP_STATUS,
+                          &(history->execution_status)) != pcmk_rc_ok)
         || (history->execution_status < PCMK_EXEC_PENDING)
         || (history->execution_status > PCMK_EXEC_MAX)
         || (history->execution_status == PCMK_EXEC_CANCELLED)) {
@@ -4455,8 +4455,8 @@ unpack_action_result(struct action_history *history)
                                  ""));
         return pcmk_rc_unpack_error;
     }
-    if ((crm_element_value_int(history->xml, PCMK__XA_RC_CODE,
-                               &(history->exit_status)) < 0)
+    if ((pcmk__xe_get_int(history->xml, PCMK__XA_RC_CODE,
+                          &(history->exit_status)) != pcmk_rc_ok)
         || (history->exit_status < 0) || (history->exit_status > CRM_EX_MAX)) {
         pcmk__config_err("Ignoring resource history entry %s for %s on %s "
                          "with invalid " PCMK__XA_RC_CODE " '%s'",
@@ -4734,7 +4734,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
     history.expected_exit_status = pe__target_rc_from_xml(xml_op);
     history.key = pcmk__xe_history_key(xml_op);
-    crm_element_value_int(xml_op, PCMK__XA_CALL_ID, &(history.call_id));
+    pcmk__xe_get_int(xml_op, PCMK__XA_CALL_ID, &(history.call_id));
 
     pcmk__rsc_trace(rsc, "Unpacking %s (%s call %d on %s): %s (%s)",
                     history.id, history.task, history.call_id,

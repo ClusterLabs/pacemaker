@@ -125,7 +125,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
             break;
         }
 
-        crm_element_value_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
+        pcmk__xe_get_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
 
         if (reply_id == msg_id) {
             break;
@@ -160,7 +160,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     crm_trace("Synchronous reply received");
 
     /* Start processing the reply... */
-    if (crm_element_value_int(op_reply, PCMK__XA_CIB_RC, &rc) != 0) {
+    if (pcmk__xe_get_int(op_reply, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok) {
         rc = -EPROTO;
     }
 

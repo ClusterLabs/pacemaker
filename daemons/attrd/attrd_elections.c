@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -108,7 +108,7 @@ attrd_check_for_new_writer(const pcmk__node_status_t *peer, const xmlNode *xml)
 {
     int peer_state = 0;
 
-    crm_element_value_int(xml, PCMK__XA_ATTR_WRITER, &peer_state);
+    pcmk__xe_get_int(xml, PCMK__XA_ATTR_WRITER, &peer_state);
     if (peer_state == election_won) {
         if ((election_state(attrd_cluster) == election_won)
             && !pcmk__str_eq(peer->name, attrd_cluster->priv->node_name,

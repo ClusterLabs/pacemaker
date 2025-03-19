@@ -284,7 +284,7 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
 
     event.remote_nodename = native->remote_nodename;
     type = crm_element_value(msg, PCMK__XA_LRMD_OP);
-    crm_element_value_int(msg, PCMK__XA_LRMD_CALLID, &event.call_id);
+    pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLID, &event.call_id);
     event.rsc_id = crm_element_value(msg, PCMK__XA_LRMD_RSC_ID);
 
     if (pcmk__str_eq(type, LRMD_OP_RSC_REG, pcmk__str_none)) {
@@ -296,27 +296,25 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
         int exec_time = 0;
         int queue_time = 0;
 
-        crm_element_value_int(msg, PCMK__XA_LRMD_TIMEOUT, &event.timeout);
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_TIMEOUT, &event.timeout);
         pcmk__xe_get_guint(msg, PCMK__XA_LRMD_RSC_INTERVAL, &event.interval_ms);
-        crm_element_value_int(msg, PCMK__XA_LRMD_RSC_START_DELAY,
-                              &event.start_delay);
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_RSC_START_DELAY,
+                         &event.start_delay);
 
-        crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_RC, &rc);
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_EXEC_RC, &rc);
         event.rc = (enum ocf_exitcode) rc;
 
-        crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_OP_STATUS,
-                              &event.op_status);
-        crm_element_value_int(msg, PCMK__XA_LRMD_RSC_DELETED,
-                              &event.rsc_deleted);
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_EXEC_OP_STATUS, &event.op_status);
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_RSC_DELETED, &event.rsc_deleted);
 
         pcmk__xe_get_time(msg, PCMK__XA_LRMD_RUN_TIME, &event.t_run);
         pcmk__xe_get_time(msg, PCMK__XA_LRMD_RCCHANGE_TIME, &event.t_rcchange);
 
-        crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_TIME, &exec_time);
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_EXEC_TIME, &exec_time);
         CRM_LOG_ASSERT(exec_time >= 0);
         event.exec_time = QB_MAX(0, exec_time);
 
-        crm_element_value_int(msg, PCMK__XA_LRMD_QUEUE_TIME, &queue_time);
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_QUEUE_TIME, &queue_time);
         CRM_LOG_ASSERT(queue_time >= 0);
         event.queue_time = QB_MAX(0, queue_time);
 
@@ -402,7 +400,8 @@ handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
             }
         } else {
             int reply_id = 0;
-            crm_element_value_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
+
+            pcmk__xe_get_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
             /* if this happens, we want to know about it */
             crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
         }
@@ -710,7 +709,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
             }
         }
 
-        crm_element_value_int(*reply, PCMK__XA_LRMD_REMOTE_MSG_ID, &reply_id);
+        pcmk__xe_get_int(*reply, PCMK__XA_LRMD_REMOTE_MSG_ID, &reply_id);
         msg_type = crm_element_value(*reply, PCMK__XA_LRMD_REMOTE_MSG_TYPE);
 
         if (!msg_type) {
@@ -935,7 +934,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
 
     rc = pcmk_ok;
     crm_trace("%s op reply received", op);
-    if (crm_element_value_int(op_reply, PCMK__XA_LRMD_RC, &rc) != 0) {
+    if (pcmk__xe_get_int(op_reply, PCMK__XA_LRMD_RC, &rc) != pcmk_rc_ok) {
         rc = -ENOMSG;
         goto done;
     }
@@ -1022,7 +1021,7 @@ process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
     const char *tmp_ticket = crm_element_value(reply, PCMK__XA_LRMD_CLIENTID);
     const char *start_state = crm_element_value(reply, PCMK__XA_NODE_START_STATE);
 
-    crm_element_value_int(reply, PCMK__XA_LRMD_RC, &rc);
+    pcmk__xe_get_int(reply, PCMK__XA_LRMD_RC, &rc);
     rc = pcmk_legacy2rc(rc);
 
     /* The remote executor may add its uptime to the XML reply, which is useful

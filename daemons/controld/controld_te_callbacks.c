@@ -365,7 +365,7 @@ te_update_diff(const char *event, xmlNode * msg)
     int p_del[] = { 0, 0, 0 };
 
     CRM_CHECK(msg != NULL, return);
-    crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
+    pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
 
     if (controld_globals.transition_graph == NULL) {
         crm_trace("No graph");
@@ -394,7 +394,7 @@ te_update_diff(const char *event, xmlNode * msg)
               p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
               fsa_state2string(controld_globals.fsa_state));
 
-    crm_element_value_int(diff, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(diff, PCMK_XA_FORMAT, &format);
 
     if (format == 2) {
         crm_log_xml_trace(diff, "patch");

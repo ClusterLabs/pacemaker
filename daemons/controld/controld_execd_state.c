@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -571,7 +571,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
                          CRM_OP_NODE_INFO, pcmk__str_none)) {
             int node_id = 0;
 
-            crm_element_value_int(request, PCMK_XA_ID, &node_id);
+            pcmk__xe_get_int(request, PCMK_XA_ID, &node_id);
             if ((node_id <= 0)
                 && (crm_element_value(request, PCMK_XA_UNAME) == NULL)) {
                 crm_xml_add(request, PCMK_XA_UNAME, lrm_state->node_name);
@@ -592,7 +592,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             crm_xml_add(op_reply, PCMK_XA_FUNCTION, __func__);
             crm_xml_add_int(op_reply, PCMK__XA_LINE, __LINE__);
 
-            crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
+            pcmk__xe_get_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
             remote_proxy_relay_response(proxy, op_reply, msg_id);
 
             pcmk__xml_free(op_reply);

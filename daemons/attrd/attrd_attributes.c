@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -38,7 +38,7 @@ attrd_create_attribute(xmlNode *xml)
     /* Set type is meaningful only when writing to the CIB. Private
      * attributes are not written.
      */
-    crm_element_value_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &is_private);
+    pcmk__xe_get_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &is_private);
     if (!is_private && !pcmk__str_any_of(set_type,
                                          PCMK_XE_INSTANCE_ATTRIBUTES,
                                          PCMK_XE_UTILIZATION, NULL)) {

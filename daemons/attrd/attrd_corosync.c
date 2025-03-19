@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -81,7 +81,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
              * response so the originating peer knows what they're a confirmation
              * for.
              */
-            crm_element_value_int(xml, PCMK__XA_CALL_ID, &callid);
+            pcmk__xe_get_int(xml, PCMK__XA_CALL_ID, &callid);
             reply = attrd_confirmation(callid);
 
             /* And then send the confirmation back to the originating peer.  This
@@ -243,7 +243,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     }
 
     // If value is for a Pacemaker Remote node, remember that
-    crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
+    pcmk__xe_get_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
     if (is_remote) {
         attrd_set_value_flags(v, attrd_value_remote);
         pcmk__assert(pcmk__cluster_lookup_remote_node(host) != NULL);
@@ -299,8 +299,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     } else {
         int is_force_write = 0;
 
-        crm_element_value_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE,
-                              &is_force_write);
+        pcmk__xe_get_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE, &is_force_write);
 
         if (is_force_write == 1 && a->timeout_ms && a->timer) {
             /* Save forced writing and set change flag. */

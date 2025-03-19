@@ -32,12 +32,11 @@ cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
 
     if (cib == NULL) {
         return FALSE;
-
-    } else {
-        crm_element_value_int(cib, PCMK_XA_EPOCH, epoch);
-        crm_element_value_int(cib, PCMK_XA_NUM_UPDATES, updates);
-        crm_element_value_int(cib, PCMK_XA_ADMIN_EPOCH, admin_epoch);
     }
+
+    pcmk__xe_get_int(cib, PCMK_XA_EPOCH, epoch);
+    pcmk__xe_get_int(cib, PCMK_XA_NUM_UPDATES, updates);
+    pcmk__xe_get_int(cib, PCMK_XA_ADMIN_EPOCH, admin_epoch);
     return TRUE;
 }
 
@@ -84,7 +83,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
         return ENOMSG;
     }
 
-    if ((crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc) != 0)
+    if ((pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok)
         || (rc != pcmk_ok)) {
 
         crm_warn("Ignore failed CIB update: %s " QB_XS " rc=%d",
@@ -386,8 +385,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         int old = 0;
         int new = 0;
 
-        crm_element_value_int(scratch, PCMK_XA_ADMIN_EPOCH, &new);
-        crm_element_value_int(patchset_cib, PCMK_XA_ADMIN_EPOCH, &old);
+        pcmk__xe_get_int(scratch, PCMK_XA_ADMIN_EPOCH, &new);
+        pcmk__xe_get_int(patchset_cib, PCMK_XA_ADMIN_EPOCH, &old);
 
         if (old > new) {
             crm_err("%s went backwards: %d -> %d (Opts: %#x)",
@@ -397,8 +396,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             rc = -pcmk_err_old_data;
 
         } else if (old == new) {
-            crm_element_value_int(scratch, PCMK_XA_EPOCH, &new);
-            crm_element_value_int(patchset_cib, PCMK_XA_EPOCH, &old);
+            pcmk__xe_get_int(scratch, PCMK_XA_EPOCH, &new);
+            pcmk__xe_get_int(patchset_cib, PCMK_XA_EPOCH, &old);
             if (old > new) {
                 crm_err("%s went backwards: %d -> %d (Opts: %#x)",
                         PCMK_XA_EPOCH, old, new, call_options);
@@ -445,7 +444,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                 int format = 1;
                 xmlNode *cib_copy = pcmk__xml_copy(NULL, patchset_cib);
 
-                crm_element_value_int(local_diff, PCMK_XA_FORMAT, &format);
+                pcmk__xe_get_int(local_diff, PCMK_XA_FORMAT, &format);
                 test_rc = xml_apply_patchset(cib_copy, local_diff,
                                              manage_counters);
 
@@ -672,8 +671,8 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     if (msg != NULL) {
         xmlNode *wrapper = NULL;
 
-        crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
-        crm_element_value_int(msg, PCMK__XA_CIB_CALLID, &call_id);
+        pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
+        pcmk__xe_get_int(msg, PCMK__XA_CIB_CALLID, &call_id);
         wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_CALLDATA, NULL, NULL);
         output = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     }
@@ -820,7 +819,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
 
     pcmk__assert((event != NULL) && (input != NULL) && (output != NULL));
 
-    crm_element_value_int(event, PCMK__XA_CIB_RC, &rc);
+    pcmk__xe_get_int(event, PCMK__XA_CIB_RC, &rc);
     wrapper = pcmk__xe_first_child(event, PCMK__XE_CIB_UPDATE_RESULT, NULL,
                                    NULL);
     diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);

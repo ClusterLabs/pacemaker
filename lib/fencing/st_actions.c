@@ -505,16 +505,16 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
     action_stdout = crm_element_value_copy(xml, PCMK__XA_ST_OUTPUT);
 
     // A result must include an exit status and execution status
-    if ((crm_element_value_int(xml, PCMK__XA_RC_CODE, &exit_status) < 0)
-        || (crm_element_value_int(xml, PCMK__XA_OP_STATUS,
-                                  &execution_status) < 0)) {
+    if ((pcmk__xe_get_int(xml, PCMK__XA_RC_CODE, &exit_status) != pcmk_rc_ok)
+        || (pcmk__xe_get_int(xml, PCMK__XA_OP_STATUS,
+                             &execution_status) != pcmk_rc_ok)) {
         int rc = pcmk_ok;
         exit_status = CRM_EX_ERROR;
 
         /* @COMPAT Peers <=2.1.2 in rolling upgrades provide only a legacy
          * return code, not a full result, so check for that.
          */
-        if (crm_element_value_int(xml, PCMK__XA_ST_RC, &rc) == 0) {
+        if (pcmk__xe_get_int(xml, PCMK__XA_ST_RC, &rc) == pcmk_rc_ok) {
             if ((rc == pcmk_ok) || (rc == -EINPROGRESS)) {
                 exit_status = CRM_EX_OK;
             }

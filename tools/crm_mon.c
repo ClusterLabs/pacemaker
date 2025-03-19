@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1949,7 +1949,8 @@ crm_diff_update(const char *event, xmlNode * msg)
 
     if (options.external_agent) {
         int format = 0;
-        crm_element_value_int(diff, PCMK_XA_FORMAT, &format);
+
+        pcmk__xe_get_int(diff, PCMK_XA_FORMAT, &format);
 
         if (format == 2) {
             xmlNode *wrapper = pcmk__xe_first_child(msg,

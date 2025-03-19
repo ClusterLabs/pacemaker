@@ -1310,6 +1310,39 @@ pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest)
 
 /*!
  * \internal
+ * \brief Retrieve an \c int value from an XML attribute
+ *
+ * This is like \c crm_element_value() but returns the value as an \c int.
+ *
+ * \param[in]  xml   XML element whose attribute to get
+ * \param[in]  attr  Attribute name
+ * \param[out] dest  Where to store element value (unchanged on error)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_get_int(const xmlNode *xml, const char *attr, int *dest)
+{
+    long long value_ll = 0;
+    int rc = pcmk_rc_ok;
+
+    CRM_CHECK((xml != NULL) && (attr != NULL) && (dest != NULL), return EINVAL);
+
+    rc = pcmk__xe_get_ll(xml, attr, &value_ll);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    if ((value_ll < INT_MIN) || (value_ll > INT_MAX)) {
+        return ERANGE;
+    }
+
+    *dest = (int) value_ll;
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Retrieve a <tt>long long</tt> value from an XML attribute
  *
  * This is like \c crm_element_value() but returns the value as a

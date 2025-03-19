@@ -450,14 +450,14 @@ process_graph_event(xmlNode *event, const char *event_node)
         return;
     }
 
-    crm_element_value_int(event, PCMK__XA_OP_STATUS, &status);
+    pcmk__xe_get_int(event, PCMK__XA_OP_STATUS, &status);
     if (status == PCMK_EXEC_PENDING) {
         return;
     }
 
     id = crm_element_value(event, PCMK__XA_OPERATION_KEY);
-    crm_element_value_int(event, PCMK__XA_RC_CODE, &rc);
-    crm_element_value_int(event, PCMK__XA_CALL_ID, &callid);
+    pcmk__xe_get_int(event, PCMK__XA_RC_CODE, &rc);
+    pcmk__xe_get_int(event, PCMK__XA_CALL_ID, &callid);
 
     rc = pcmk__effective_rc(rc);
 

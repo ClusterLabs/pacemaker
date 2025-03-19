@@ -287,7 +287,7 @@ build_rsc_from_xml(xmlNode * msg)
 
     rsc = pcmk__assert_alloc(1, sizeof(lrmd_rsc_t));
 
-    crm_element_value_int(msg, PCMK__XA_LRMD_CALLOPT, &rsc->call_opts);
+    pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLOPT, &rsc->call_opts);
 
     rsc->rsc_id = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
     rsc->class = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_CLASS);
@@ -312,15 +312,14 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
 
     cmd = pcmk__assert_alloc(1, sizeof(lrmd_cmd_t));
 
-    crm_element_value_int(msg, PCMK__XA_LRMD_CALLOPT, &call_options);
+    pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLOPT, &call_options);
     cmd->call_opts = call_options;
     cmd->client_id = pcmk__str_copy(client->id);
 
-    crm_element_value_int(msg, PCMK__XA_LRMD_CALLID, &cmd->call_id);
+    pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLID, &cmd->call_id);
     pcmk__xe_get_guint(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &cmd->interval_ms);
-    crm_element_value_int(rsc_xml, PCMK__XA_LRMD_TIMEOUT, &cmd->timeout);
-    crm_element_value_int(rsc_xml, PCMK__XA_LRMD_RSC_START_DELAY,
-                          &cmd->start_delay);
+    pcmk__xe_get_int(rsc_xml, PCMK__XA_LRMD_TIMEOUT, &cmd->timeout);
+    pcmk__xe_get_int(rsc_xml, PCMK__XA_LRMD_RSC_START_DELAY, &cmd->start_delay);
     cmd->timeout_orig = cmd->timeout;
 
     cmd->origin = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_ORIGIN);
@@ -707,7 +706,7 @@ send_generic_notify(int rc, xmlNode * request)
         const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
         const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
 
-        crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
+        pcmk__xe_get_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
         notify = pcmk__xe_create(NULL, PCMK__XE_LRMD_NOTIFY);
         crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
@@ -1880,7 +1879,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     bool allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
 
     crm_trace("Processing %s operation from %s", op, client->id);
-    crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
+    pcmk__xe_get_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
     if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
 #ifdef PCMK__COMPILE_REMOTE

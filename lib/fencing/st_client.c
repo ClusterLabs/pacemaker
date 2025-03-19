@@ -747,7 +747,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
                 kvp->completed_nsec = (long) completed_nsec;
             }
 
-            crm_element_value_int(op, PCMK__XA_ST_STATE, &kvp->state);
+            pcmk__xe_get_int(op, PCMK__XA_ST_STATE, &kvp->state);
             kvp->exit_reason = crm_element_value_copy(op, PCMK_XA_EXIT_REASON);
 
             if (last) {
@@ -950,7 +950,7 @@ invoke_registered_callbacks(stonith_t *stonith, const xmlNode *msg, int call_id)
 
     } else {
         // We have the fencer reply
-        if ((crm_element_value_int(msg, PCMK__XA_ST_CALLID, &call_id) != 0)
+        if ((pcmk__xe_get_int(msg, PCMK__XA_ST_CALLID, &call_id) != pcmk_rc_ok)
             || (call_id <= 0)) {
             crm_log_xml_warn(msg, "Bad fencer reply");
         }
@@ -1082,8 +1082,8 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
         int call_id = 0;
         int timeout = 0;
 
-        crm_element_value_int(blob.xml, PCMK__XA_ST_TIMEOUT, &timeout);
-        crm_element_value_int(blob.xml, PCMK__XA_ST_CALLID, &call_id);
+        pcmk__xe_get_int(blob.xml, PCMK__XA_ST_TIMEOUT, &timeout);
+        pcmk__xe_get_int(blob.xml, PCMK__XA_ST_CALLID, &call_id);
 
         update_callback_timeout(call_id, timeout, st);
     } else {
@@ -1621,7 +1621,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         return stonith->call_id;
     }
 
-    crm_element_value_int(op_reply, PCMK__XA_ST_CALLID, &reply_id);
+    pcmk__xe_get_int(op_reply, PCMK__XA_ST_CALLID, &reply_id);
 
     if (reply_id == stonith->call_id) {
         pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;

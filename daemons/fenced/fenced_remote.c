@@ -1179,9 +1179,10 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     op = pcmk__assert_alloc(1, sizeof(remote_fencing_op_t));
 
-    crm_element_value_int(request, PCMK__XA_ST_TIMEOUT, &(op->base_timeout));
+    pcmk__xe_get_int(request, PCMK__XA_ST_TIMEOUT, &(op->base_timeout));
+
     // Value -1 means disable any static/random fencing delays
-    crm_element_value_int(request, PCMK__XA_ST_DELAY, &(op->client_delay));
+    pcmk__xe_get_int(request, PCMK__XA_ST_DELAY, &(op->client_delay));
 
     if (peer && dev) {
         op->id = crm_element_value_copy(dev, PCMK__XA_ST_REMOTE_OP);
@@ -1237,7 +1238,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
                  op->id, pcmk_rc_str(rc));
     }
 
-    crm_element_value_int(request, PCMK__XA_ST_CALLID, &(op->client_callid));
+    pcmk__xe_get_int(request, PCMK__XA_ST_CALLID, &(op->client_callid));
 
     crm_trace("%s new fencing op %s ('%s' targeting %s for client %s, "
               "base timeout %ds, %u %s expected)",
@@ -2172,23 +2173,22 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
                       enum st_remap_phase phase, device_properties_t *props)
 {
     props->custom_action_timeout[phase] = 0;
-    crm_element_value_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
-                          &props->custom_action_timeout[phase]);
+    pcmk__xe_get_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
+                     &props->custom_action_timeout[phase]);
     if (props->custom_action_timeout[phase]) {
         crm_trace("Peer %s with device %s returned %s action timeout %ds",
                   peer, device, action, props->custom_action_timeout[phase]);
     }
 
     props->delay_max[phase] = 0;
-    crm_element_value_int(xml, PCMK__XA_ST_DELAY_MAX, &props->delay_max[phase]);
+    pcmk__xe_get_int(xml, PCMK__XA_ST_DELAY_MAX, &props->delay_max[phase]);
     if (props->delay_max[phase]) {
         crm_trace("Peer %s with device %s returned maximum of random delay %ds for %s",
                   peer, device, props->delay_max[phase], action);
     }
 
     props->delay_base[phase] = 0;
-    crm_element_value_int(xml, PCMK__XA_ST_DELAY_BASE,
-                          &props->delay_base[phase]);
+    pcmk__xe_get_int(xml, PCMK__XA_ST_DELAY_BASE, &props->delay_base[phase]);
     if (props->delay_base[phase]) {
         crm_trace("Peer %s with device %s returned base delay %ds for %s",
                   peer, device, props->delay_base[phase], action);
@@ -2198,7 +2198,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
         int required = 0;
 
-        crm_element_value_int(xml, PCMK__XA_ST_REQUIRED, &required);
+        pcmk__xe_get_int(xml, PCMK__XA_ST_REQUIRED, &required);
         if (required) {
             crm_trace("Peer %s requires device %s to execute for action %s",
                       peer, device, action);
@@ -2239,7 +2239,7 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
     g_hash_table_insert(peer->devices, pcmk__str_copy(device), props);
 
     /* Peers with verified (monitored) access will be preferred */
-    crm_element_value_int(xml, PCMK__XA_ST_MONITOR_VERIFIED, &verified);
+    pcmk__xe_get_int(xml, PCMK__XA_ST_MONITOR_VERIFIED, &verified);
     if (verified) {
         crm_trace("Peer %s has confirmed a verified device %s",
                   peer->host, device);
@@ -2355,7 +2355,7 @@ process_remote_stonith_query(xmlNode *msg)
                                "//*[@" PCMK__XA_ST_AVAILABLE_DEVICES "]",
                                LOG_ERR);
     CRM_CHECK(dev != NULL, return -EPROTO);
-    crm_element_value_int(dev, PCMK__XA_ST_AVAILABLE_DEVICES, &ndevices);
+    pcmk__xe_get_int(dev, PCMK__XA_ST_AVAILABLE_DEVICES, &ndevices);
 
     op = g_hash_table_lookup(stonith_remote_op_list, id);
     if (op == NULL) {
