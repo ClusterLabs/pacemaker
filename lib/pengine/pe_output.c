@@ -250,8 +250,8 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 
         time_t epoch = 0;
 
-        if ((crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                                     &epoch) == pcmk_ok)
+        if ((pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                               &epoch) == pcmk_rc_ok)
             && (epoch > 0)) {
             char *epoch_str = pcmk__epoch2str(&epoch, 0);
 
@@ -1459,8 +1459,8 @@ failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
     }
 
 
-    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                                &last_change_epoch) == pcmk_ok) {
+    if (pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                          &last_change_epoch) == pcmk_rc_ok) {
         char *s = pcmk__epoch2str(&last_change_epoch, 0);
 
         pcmk__g_strcat(str, " at ", s, NULL);
@@ -1529,8 +1529,8 @@ failed_action_technical(pcmk__output_t *out, const xmlNode *xml_op,
         pcmk__g_strcat(str, ", exitreason='", exit_reason, "'", NULL);
     }
 
-    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                                &last_change_epoch) == pcmk_ok) {
+    if (pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                          &last_change_epoch) == pcmk_rc_ok) {
         char *last_change_str = pcmk__epoch2str(&last_change_epoch, 0);
 
         pcmk__g_strcat(str,
@@ -1631,8 +1631,9 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         NULL);
     free(rc_s);
 
-    if ((crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                                 &epoch) == pcmk_ok) && (epoch > 0)) {
+    if ((pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                           &epoch) == pcmk_rc_ok)
+        && (epoch > 0)) {
 
         const char *queue_time = crm_element_value(xml_op, PCMK_XA_QUEUE_TIME);
         const char *exec = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
@@ -2228,8 +2229,8 @@ node_and_op(pcmk__output_t *out, va_list args) {
         node_str = crm_strdup_printf("Unknown resource %s", op_rsc);
     }
 
-    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                                &last_change) == pcmk_ok) {
+    if (pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                          &last_change) == pcmk_rc_ok) {
         const char *exec_time = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
 
         last_change_str = crm_strdup_printf(", %s='%s', exec=%sms",
@@ -2301,8 +2302,8 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
         free(agent_tuple);
     }
 
-    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                                &last_change) == pcmk_ok) {
+    if (pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                          &last_change) == pcmk_rc_ok) {
         const char *last_rc_change = pcmk__trim(ctime(&last_change));
         const char *exec_time = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
 
@@ -2845,8 +2846,10 @@ op_history_xml(pcmk__output_t *out, va_list args) {
         const char *value = NULL;
         time_t epoch = 0;
 
-        if ((crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                                     &epoch) == pcmk_ok) && (epoch > 0)) {
+        if ((pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                               &epoch) == pcmk_rc_ok)
+            && (epoch > 0)) {
+
             char *s = pcmk__epoch2str(&epoch, 0);
             crm_xml_add(node, PCMK_XA_LAST_RC_CHANGE, s);
             free(s);

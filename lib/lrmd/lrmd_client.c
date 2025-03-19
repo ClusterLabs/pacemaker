@@ -311,10 +311,10 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
         crm_element_value_int(msg, PCMK__XA_LRMD_RSC_DELETED,
                               &event.rsc_deleted);
 
-        crm_element_value_epoch(msg, PCMK__XA_LRMD_RUN_TIME, &epoch);
+        pcmk__xe_get_time(msg, PCMK__XA_LRMD_RUN_TIME, &epoch);
         event.t_run = epoch;
 
-        crm_element_value_epoch(msg, PCMK__XA_LRMD_RCCHANGE_TIME, &epoch);
+        pcmk__xe_get_time(msg, PCMK__XA_LRMD_RCCHANGE_TIME, &epoch);
         event.t_rcchange = epoch;
 
         crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_TIME, &exec_time);

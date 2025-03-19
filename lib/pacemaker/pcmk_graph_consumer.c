@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -773,8 +773,8 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
         new_graph->failed_start_offset =
             crm_element_value_copy(xml_graph, PCMK__XA_FAILED_START_OFFSET);
 
-        if (crm_element_value_epoch(xml_graph, "recheck-by",
-                                    &(new_graph->recheck_by)) != pcmk_ok) {
+        if (pcmk__xe_get_time(xml_graph, "recheck-by",
+                              &(new_graph->recheck_by)) != pcmk_rc_ok) {
             new_graph->recheck_by = 0;
         }
     }
