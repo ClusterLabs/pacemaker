@@ -45,6 +45,9 @@ const char *crm_copy_xml_element(const xmlNode *obj1, xmlNode *obj2,
 int crm_element_value_timeval(const xmlNode *data, const char *name_sec,
                               const char *name_usec, struct timeval *dest);
 
+//! \deprecated Do not use
+int crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest);
+
 #ifdef __cplusplus
 }
 #endif
