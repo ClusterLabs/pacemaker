@@ -118,7 +118,8 @@ attrd_cpg_dispatch(cpg_handle_t handle,
     }
 
     if (xml == NULL) {
-        crm_err("Bad message of class %d received from %s[%u]: '%.120s'", kind, from, nodeid, data);
+        crm_err("Bad message of class %d received from %s[%" PRIu32 "]: '%.120s'",
+                kind, from, nodeid, data);
     } else {
         attrd_peer_message(pcmk__get_node(nodeid, from, NULL,
                                           pcmk__node_search_cluster_member),
