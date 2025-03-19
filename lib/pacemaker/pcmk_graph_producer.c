@@ -432,7 +432,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
         action_xml = pcmk__xe_create(parent, PCMK__XE_RSC_OP);
     }
 
-    crm_xml_add_int(action_xml, PCMK_XA_ID, action->id);
+    pcmk__xe_set_int(action_xml, PCMK_XA_ID, action->id);
     crm_xml_add(action_xml, PCMK_XA_OPERATION, action->task);
 
     if ((action->rsc != NULL) && (action->rsc->priv->history_id != NULL)) {
@@ -852,7 +852,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
     int synapse_priority = 0;
     xmlNode *syn = pcmk__xe_create(scheduler->priv->graph, PCMK__XE_SYNAPSE);
 
-    crm_xml_add_int(syn, PCMK_XA_ID, scheduler->priv->synapse_count++);
+    pcmk__xe_set_int(syn, PCMK_XA_ID, scheduler->priv->synapse_count++);
 
     if (action->rsc != NULL) {
         synapse_priority = action->rsc->priv->priority;
@@ -861,7 +861,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
         synapse_priority = action->priority;
     }
     if (synapse_priority > 0) {
-        crm_xml_add_int(syn, PCMK__XA_PRIORITY, synapse_priority);
+        pcmk__xe_set_int(syn, PCMK__XA_PRIORITY, synapse_priority);
     }
     return syn;
 }
@@ -1035,7 +1035,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     value = pcmk__cluster_option(config_hash, PCMK_OPT_BATCH_LIMIT);
     crm_xml_add(scheduler->priv->graph, PCMK_OPT_BATCH_LIMIT, value);
 
-    crm_xml_add_int(scheduler->priv->graph, "transition_id", transition_id);
+    pcmk__xe_set_int(scheduler->priv->graph, "transition_id", transition_id);
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_MIGRATION_LIMIT);
     rc = pcmk__scan_ll(value, &limit, 0LL);

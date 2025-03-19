@@ -573,7 +573,7 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
 
     crm_xml_add(msg, PCMK__XA_LRMD_CLIENTID, c->id);
     crm_xml_add(msg, PCMK__XA_LRMD_CLIENTNAME, c->name);
-    crm_xml_add_int(msg, PCMK__XA_LRMD_CALLID, lrmd_call_id);
+    pcmk__xe_set_int(msg, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
     if (invalid_msg(msg)) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);

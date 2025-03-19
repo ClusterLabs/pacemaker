@@ -172,5 +172,5 @@ attrd_remove_voter(const pcmk__node_status_t *peer)
 void
 attrd_xml_add_writer(xmlNode *xml)
 {
-    crm_xml_add_int(xml, PCMK__XA_ATTR_WRITER, election_state(attrd_cluster));
+    pcmk__xe_set_int(xml, PCMK__XA_ATTR_WRITER, election_state(attrd_cluster));
 }

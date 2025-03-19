@@ -221,7 +221,7 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
                 }
             }
 
-            crm_xml_add_int(target, name, pcmk__add_scores(old_value_i, add));
+            pcmk__xe_set_int(target, name, pcmk__add_scores(old_value_i, add));
             return pcmk_rc_ok;
         }
     }
@@ -1236,6 +1236,28 @@ pcmk__xe_get_int(const xmlNode *xml, const char *attr, int *dest)
 
     *dest = (int) value_ll;
     return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Set an XML attribute using an \c int value.
+ *
+ * This is like \c crm_xml_add() but takes an \c int.
+ *
+ * \param[in,out] xml    XML node to modify
+ * \param[in]     attr   Attribute name
+ * \param[in]     value  Attribute value to set
+ */
+void
+pcmk__xe_set_int(xmlNode *xml, const char *attr, int value)
+{
+    char *value_s = NULL;
+
+    CRM_CHECK((xml != NULL) && (attr != NULL), return);
+
+    value_s = pcmk__itoa(value);
+    crm_xml_add(xml, attr, value_s);
+    free(value_s);
 }
 
 /*!
