@@ -639,10 +639,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, cmd->call_id);
     crm_xml_add_int(notify, PCMK__XA_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
-    crm_xml_add_ll(notify, PCMK__XA_LRMD_RUN_TIME,
-                   (long long) cmd->epoch_last_run);
-    crm_xml_add_ll(notify, PCMK__XA_LRMD_RCCHANGE_TIME,
-                   (long long) cmd->epoch_rcchange);
+    pcmk__xe_set_time(notify, PCMK__XA_LRMD_RUN_TIME, cmd->epoch_last_run);
+    pcmk__xe_set_time(notify, PCMK__XA_LRMD_RCCHANGE_TIME, cmd->epoch_rcchange);
 #ifdef PCMK__TIME_USE_CGT
     crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_TIME, exec_time);
     crm_xml_add_int(notify, PCMK__XA_LRMD_QUEUE_TIME, queue_time);
@@ -1558,7 +1556,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     crm_xml_add(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
     crm_xml_add(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
     crm_xml_add(*reply, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
-    crm_xml_add_ll(*reply, PCMK__XA_UPTIME, now - start_time);
+    pcmk__xe_set_time(*reply, PCMK__XA_UPTIME, now - start_time);
 
     if (start_state) {
         crm_xml_add(*reply, PCMK__XA_NODE_START_STATE, start_state);

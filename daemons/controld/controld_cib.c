@@ -918,7 +918,7 @@ controld_update_resource_history(const char *node_name,
         if (!should_preserve_lock(op)) {
             lock_time = 0;
         }
-        crm_xml_add_ll(xml, PCMK_OPT_SHUTDOWN_LOCK, (long long) lock_time);
+        pcmk__xe_set_time(xml, PCMK_OPT_SHUTDOWN_LOCK, lock_time);
     }
     if (op->params != NULL) {
         container = g_hash_table_lookup(op->params,

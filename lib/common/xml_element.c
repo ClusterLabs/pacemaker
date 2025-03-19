@@ -1338,6 +1338,25 @@ pcmk__xe_get_time(const xmlNode *xml, const char *attr, time_t *dest)
 
 /*!
  * \internal
+ * \brief Set an XML attribute using a \c time_t value
+ *
+ * This is like \c crm_xml_add() but takes a \c time_t.
+ *
+ * \param[in,out] xml    XML element whose attribute to set
+ * \param[in]     attr   Attribute name
+ * \param[in]     value  Attribute value to set (in seconds)
+ */
+void
+pcmk__xe_set_time(xmlNode *xml, const char *attr, time_t value)
+{
+    // Could be inline, but keep it underneath pcmk__xe_get_time()
+    CRM_CHECK((xml != NULL) && (attr != NULL), return);
+
+    crm_xml_add_ll(xml, attr, (long long) value);
+}
+
+/*!
+ * \internal
  * \brief Retrieve the values of XML second/microsecond attributes as time
  *
  * This is like \c pcmk__xe_get() but returns the value as a
