@@ -68,6 +68,10 @@ char *crm_element_value_copy(const xmlNode *data, const char *name);
 const char *crm_xml_add_timeval(xmlNode *xml, const char *name_sec,
                                 const char *name_usec,
                                 const struct timeval *value);
+
+//! \deprecated Do not use
+const char *crm_xml_add_ms(xmlNode *node, const char *name, guint ms);
+
 #ifdef __cplusplus
 }
 #endif
