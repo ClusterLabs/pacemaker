@@ -158,8 +158,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
     } else {
         unlink(filename);
-        crm_xml_add_ll(xml_data, PCMK_XA_EXECUTION_DATE,
-                       (long long) execution_date);
+        pcmk__xe_set_time(xml_data, PCMK_XA_EXECUTION_DATE, execution_date);
         pcmk__xml_write_file(xml_data, filename, true);
         pcmk__write_series_sequence(PCMK_SCHEDULER_INPUT_DIR, series[series_id].name,
                                     ++seq, series_wrap);
