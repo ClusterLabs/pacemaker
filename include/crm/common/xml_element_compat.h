@@ -55,6 +55,9 @@ int crm_element_value_ms(const xmlNode *data, const char *name, guint *dest);
 int crm_element_value_ll(const xmlNode *data, const char *name,
                          long long *dest);
 
+//! \deprecated Do not use
+int crm_element_value_int(const xmlNode *data, const char *name, int *dest);
+
 #ifdef __cplusplus
 }
 #endif
