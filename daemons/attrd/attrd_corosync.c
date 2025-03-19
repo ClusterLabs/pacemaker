@@ -114,7 +114,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
     xml = pcmk__xml_parse(data);
 
     if (xml == NULL) {
-        crm_err("Bad message received from %s[%u]: '%.120s'",
+        crm_err("Bad message received from %s[%" PRIu32 "]: '%.120s'",
                 from, nodeid, data);
     } else {
         attrd_peer_message(pcmk__get_node(nodeid, from, NULL,
