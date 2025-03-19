@@ -218,7 +218,7 @@ update_counter(xmlNode *xml_obj, const char *field, bool reset)
     char *old_value = NULL;
     int int_value = -1;
 
-    if (!reset && crm_element_value(xml_obj, field) != NULL) {
+    if (!reset && pcmk__xe_get(xml_obj, field) != NULL) {
         old_value = crm_element_value_copy(xml_obj, field);
     }
     if (old_value != NULL) {
@@ -263,18 +263,18 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
                     xmlNode ** answer)
 {
     int rc = 0;
-    const char *max_schema = crm_element_value(req, PCMK__XA_CIB_SCHEMA_MAX);
+    const char *max_schema = pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX);
     const char *original_schema = NULL;
     const char *new_schema = NULL;
 
     *answer = NULL;
     crm_trace("Processing \"%s\" event with max=%s", op, max_schema);
 
-    original_schema = crm_element_value(existing_cib, PCMK_XA_VALIDATE_WITH);
+    original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
     rc = pcmk__update_schema(result_cib, max_schema, true,
                              !pcmk_is_set(options, cib_verbose));
     rc = pcmk_rc2legacy(rc);
-    new_schema = crm_element_value(*result_cib, PCMK_XA_VALIDATE_WITH);
+    new_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
         update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
@@ -293,7 +293,7 @@ cib_process_bump(const char *op, int options, const char *section, xmlNode * req
     int result = pcmk_ok;
 
     crm_trace("Processing %s for epoch='%s'", op,
-              pcmk__s(crm_element_value(existing_cib, PCMK_XA_EPOCH), ""));
+              pcmk__s(pcmk__xe_get(existing_cib, PCMK_XA_EPOCH), ""));
 
     *answer = NULL;
     update_counter(*result_cib, PCMK_XA_EPOCH, false);
@@ -339,8 +339,8 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         int replace_admin_epoch = 0;
 
         const char *reason = NULL;
-        const char *peer = crm_element_value(req, PCMK__XA_SRC);
-        const char *digest = crm_element_value(req, PCMK__XA_DIGEST);
+        const char *peer = pcmk__xe_get(req, PCMK__XA_SRC);
+        const char *digest = pcmk__xe_get(req, PCMK__XA_DIGEST);
 
         if (digest) {
             char *digest_verify = pcmk__digest_xml(input, true);
@@ -648,7 +648,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
     const char *originator = NULL;
 
     if (req != NULL) {
-        originator = crm_element_value(req, PCMK__XA_SRC);
+        originator = pcmk__xe_get(req, PCMK__XA_SRC);
     }
 
     crm_trace("Processing \"%s\" event from %s%s",
@@ -781,7 +781,7 @@ cib_process_xpath(const char *op, int options, const char *section,
                 xmlNode *parent = match;
 
                 while (parent && parent->type == XML_ELEMENT_NODE) {
-                    const char *id = crm_element_value(parent, PCMK_XA_ID);
+                    const char *id = pcmk__xe_get(parent, PCMK_XA_ID);
                     char *new_path = NULL;
 
                     if (id) {

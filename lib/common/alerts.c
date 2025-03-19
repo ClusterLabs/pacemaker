@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -233,8 +233,8 @@ unpack_alert_parameters(const xmlNode *xml, pcmk__alert_t *entry)
     for (child = pcmk__xe_first_child(child, PCMK_XE_NVPAIR, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, PCMK_XE_NVPAIR)) {
 
-        const char *name = crm_element_value(child, PCMK_XA_NAME);
-        const char *value = crm_element_value(child, PCMK_XA_VALUE);
+        const char *name = pcmk__xe_get(child, PCMK_XA_NAME);
+        const char *value = pcmk__xe_get(child, PCMK_XA_VALUE);
 
         if (value == NULL) {
             value = "";
@@ -282,7 +282,7 @@ unpack_alert_filter(xmlNode *xml, pcmk__alert_t *entry)
                                              NULL, NULL);
                  attr != NULL; attr = pcmk__xe_next(attr, PCMK_XE_ATTRIBUTE)) {
 
-                attr_name = crm_element_value(attr, PCMK_XA_NAME);
+                attr_name = pcmk__xe_get(attr, PCMK_XA_NAME);
                 if (attr_name) {
                     if (nattrs == 0) {
                         g_strfreev(entry->select_attribute_name);
@@ -355,7 +355,7 @@ pcmk__unpack_alerts(const xmlNode *alerts)
         xmlNode *recipient = NULL;
         int recipients = 0;
         const char *alert_id = pcmk__xe_id(alert);
-        const char *alert_path = crm_element_value(alert, PCMK_XA_PATH);
+        const char *alert_path = pcmk__xe_get(alert, PCMK_XA_PATH);
 
         // Not possible with schema validation enabled
         if (alert_id == NULL) {

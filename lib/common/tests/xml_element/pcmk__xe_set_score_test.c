@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -35,7 +35,7 @@ assert_set_score(const char *initial, const char *new,
 
     crm_xml_add(test_xml, name, initial);
     assert_int_equal(pcmk__xe_set_score(test_xml, name, new), reference_rc);
-    assert_string_equal(crm_element_value(test_xml, name), reference_val);
+    assert_string_equal(pcmk__xe_get(test_xml, name), reference_val);
 
     pcmk__xml_free(test_xml);
 }
@@ -70,7 +70,7 @@ name_is_NULL(void **state)
 
     // Dumps core via CRM_CHECK()
     assert_int_equal(pcmk__xe_set_score(test_xml, NULL, "X++"), EINVAL);
-    assert_string_equal(crm_element_value(test_xml, "X"), "5");
+    assert_string_equal(pcmk__xe_get(test_xml, "X"), "5");
 
     pcmk__xml_free(test_xml);
 }

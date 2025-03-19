@@ -153,8 +153,8 @@ cib_proxy_accept_ro(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 void
 ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
 {
-    const char *session = crm_element_value(xml, PCMK__XA_LRMD_IPC_SESSION);
-    const char *msg_type = crm_element_value(xml, PCMK__XA_LRMD_IPC_OP);
+    const char *session = pcmk__xe_get(xml, PCMK__XA_LRMD_IPC_SESSION);
+    const char *msg_type = pcmk__xe_get(xml, PCMK__XA_LRMD_IPC_OP);
 
     xmlNode *wrapper = pcmk__xe_first_child(xml, PCMK__XE_LRMD_IPC_MSG, NULL,
                                             NULL);

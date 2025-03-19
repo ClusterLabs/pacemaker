@@ -194,7 +194,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
     }
 
     /* do callbacks */
-    type = crm_element_value(msg, PCMK__XA_T);
+    type = pcmk__xe_get(msg, PCMK__XA_T);
     crm_trace("Activating %s callbacks...", type);
     crm_log_xml_explicit(msg, "cib-reply");
 
@@ -316,7 +316,7 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
         if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1,
                          &reply) > 0) {
-            const char *msg_type = crm_element_value(reply, PCMK__XA_CIB_OP);
+            const char *msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
 
             crm_log_xml_trace(reply, "reg-reply");
 

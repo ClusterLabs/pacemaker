@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -255,7 +255,7 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk__ticket_t *ticket,
         return pcmk_rc_unpack_error;
     }
 
-    role = crm_element_value(set, PCMK_XA_ROLE);
+    role = pcmk__xe_get(set, PCMK_XA_ROLE);
 
     for (xmlNode *xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF,
                                                  NULL, NULL);
@@ -283,13 +283,13 @@ static void
 unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     const char *id = NULL;
-    const char *ticket_str = crm_element_value(xml_obj, PCMK_XA_TICKET);
-    const char *loss_policy = crm_element_value(xml_obj, PCMK_XA_LOSS_POLICY);
+    const char *ticket_str = pcmk__xe_get(xml_obj, PCMK_XA_TICKET);
+    const char *loss_policy = pcmk__xe_get(xml_obj, PCMK_XA_LOSS_POLICY);
 
     pcmk__ticket_t *ticket = NULL;
 
-    const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
-    const char *state = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
+    const char *rsc_id = pcmk__xe_get(xml_obj, PCMK_XA_RSC);
+    const char *state = pcmk__xe_get(xml_obj, PCMK_XA_RSC_ROLE);
 
     pcmk_resource_t *rsc = NULL;
 
@@ -366,7 +366,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
+    rsc_id = pcmk__xe_get(xml_obj, PCMK_XA_RSC);
     if (rsc_id == NULL) {
         return pcmk_rc_ok;
     }
@@ -381,7 +381,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    state = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
+    state = pcmk__xe_get(xml_obj, PCMK_XA_RSC_ROLE);
 
     *expanded_xml = pcmk__xml_copy(NULL, xml_obj);
 
@@ -440,7 +440,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             pcmk__strkey_table(free, destroy_ticket);
     }
 
-    ticket_str = crm_element_value(xml_obj, PCMK_XA_TICKET);
+    ticket_str = pcmk__xe_get(xml_obj, PCMK_XA_TICKET);
     if (ticket_str == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without ticket", id);
         return;
@@ -472,7 +472,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
         any_sets = true;
         set = pcmk__xe_resolve_idref(set, scheduler->input);
-        loss_policy = crm_element_value(xml_obj, PCMK_XA_LOSS_POLICY);
+        loss_policy = pcmk__xe_get(xml_obj, PCMK_XA_LOSS_POLICY);
 
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_rsc_ticket_set(set, ticket, loss_policy,

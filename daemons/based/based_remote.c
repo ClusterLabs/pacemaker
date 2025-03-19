@@ -205,7 +205,7 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    tmp = crm_element_value(login, PCMK_XA_OP);
+    tmp = pcmk__xe_get(login, PCMK_XA_OP);
     if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
         crm_warn("Rejecting remote client: Unrecognizable message "
                  "(operation '%s' not 'authenticate')", tmp);
@@ -213,8 +213,8 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    user = crm_element_value(login, PCMK_XA_USER);
-    pass = crm_element_value(login, PCMK__XA_PASSWORD);
+    user = pcmk__xe_get(login, PCMK_XA_USER);
+    pass = pcmk__xe_get(login, PCMK__XA_PASSWORD);
     if (!user || !pass) {
         crm_warn("Rejecting remote client: No %s given",
                  ((user == NULL)? "username" : "password"));
@@ -390,7 +390,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     crm_xml_add(command, PCMK__XA_CIB_CLIENTNAME, client->name);
     crm_xml_add(command, PCMK__XA_CIB_USER, client->user);
 
-    if (crm_element_value(command, PCMK__XA_CIB_CALLID) == NULL) {
+    if (pcmk__xe_get(command, PCMK__XA_CIB_CALLID) == NULL) {
         char *call_uuid = crm_generate_uuid();
 
         /* fix the command */
@@ -398,7 +398,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
         free(call_uuid);
     }
 
-    if (crm_element_value(command, PCMK__XA_CIB_CALLOPT) == NULL) {
+    if (pcmk__xe_get(command, PCMK__XA_CIB_CALLOPT) == NULL) {
         crm_xml_add_int(command, PCMK__XA_CIB_CALLOPT, 0);
     }
 
@@ -482,7 +482,7 @@ cib_remote_msg(gpointer data)
         client->remote->auth_timeout = 0;
         client->name = crm_element_value_copy(command, PCMK_XA_NAME);
 
-        user = crm_element_value(command, PCMK_XA_USER);
+        user = pcmk__xe_get(command, PCMK_XA_USER);
         if (user) {
             client->user = pcmk__str_copy(user);
         }

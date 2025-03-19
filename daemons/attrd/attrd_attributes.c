@@ -26,9 +26,9 @@ attrd_create_attribute(xmlNode *xml)
 {
     int is_private = 0;
     long long dampen = 0;
-    const char *name = crm_element_value(xml, PCMK__XA_ATTR_NAME);
-    const char *set_type = crm_element_value(xml, PCMK__XA_ATTR_SET_TYPE);
-    const char *dampen_s = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
+    const char *name = pcmk__xe_get(xml, PCMK__XA_ATTR_NAME);
+    const char *set_type = pcmk__xe_get(xml, PCMK__XA_ATTR_SET_TYPE);
+    const char *dampen_s = pcmk__xe_get(xml, PCMK__XA_ATTR_DAMPENING);
     attribute_t *a = NULL;
 
     if (set_type == NULL) {
@@ -82,7 +82,7 @@ attrd_create_attribute(xmlNode *xml)
 static int
 attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
 {
-    const char *dvalue = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
+    const char *dvalue = pcmk__xe_get(xml, PCMK__XA_ATTR_DAMPENING);
     long long dampen = 0;
 
     if (dvalue == NULL) {
@@ -187,7 +187,7 @@ attrd_populate_attribute(xmlNode *xml, const char *attr)
     attribute_t *a = NULL;
     bool update_both = false;
 
-    const char *op = crm_element_value(xml, PCMK_XA_TASK);
+    const char *op = pcmk__xe_get(xml, PCMK_XA_TASK);
 
     // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK_XA_TASK
     update_both = pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH,

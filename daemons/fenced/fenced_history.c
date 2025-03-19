@@ -285,7 +285,7 @@ stonith_xml_history_to_list(const xmlNode *history)
             execution_status = PCMK_EXEC_UNKNOWN;
         }
         pcmk__set_result(&op->result, exit_status, execution_status,
-                         crm_element_value(xml_op, PCMK_XA_EXIT_REASON));
+                         pcmk__xe_get(xml_op, PCMK_XA_EXIT_REASON));
         pcmk__set_result_output(&op->result,
                                 crm_element_value_copy(xml_op,
                                                        PCMK__XA_ST_OUTPUT),
@@ -482,7 +482,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     xmlNode *out_history = NULL;
 
     if (dev) {
-        target = crm_element_value(dev, PCMK__XA_ST_TARGET);
+        target = pcmk__xe_get(dev, PCMK__XA_ST_TARGET);
         if (target && (options & st_opt_cs_nodeid)) {
             int nodeid;
             pcmk__node_status_t *node = NULL;
@@ -498,7 +498,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     }
 
     if (options & st_opt_cleanup) {
-        const char *call_id = crm_element_value(msg, PCMK__XA_ST_CALLID);
+        const char *call_id = pcmk__xe_get(msg, PCMK__XA_ST_CALLID);
 
         crm_trace("Cleaning up operations on %s in %p", target,
                   stonith_remote_op_list);
@@ -511,7 +511,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
          */
         fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED, NULL,
                                  NULL);
-        if (crm_element_value(msg, PCMK__XA_ST_CALLID) != NULL) {
+        if (pcmk__xe_get(msg, PCMK__XA_ST_CALLID) != NULL) {
             /* this is coming from the stonith-API
             *
             * craft a broadcast with node's history

@@ -532,8 +532,8 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
 static int
 simulate_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *node = crm_element_value(action->xml, PCMK__META_ON_NODE);
-    const char *task = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
+    const char *node = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
+    const char *task = pcmk__xe_get(action->xml, PCMK__XA_OPERATION_KEY);
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-pseudo-action", node, task);
@@ -563,7 +563,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     const char *resource = NULL;
     const char *rprovider = NULL;
     const char *resource_config_name = NULL;
-    const char *operation = crm_element_value(action->xml, PCMK_XA_OPERATION);
+    const char *operation = pcmk__xe_get(action->xml, PCMK_XA_OPERATION);
     const char *target_rc_s = crm_meta_value(action->params,
                                              PCMK__META_OP_TARGET_RC);
 
@@ -574,8 +574,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     char *node = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
     char *uuid = NULL;
-    const char *router_node = crm_element_value(action->xml,
-                                                PCMK__XA_ROUTER_NODE);
+    const char *router_node = pcmk__xe_get(action->xml, PCMK__XA_ROUTER_NODE);
 
     // Certain actions don't need to be displayed or history entries
     if (pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
@@ -594,7 +593,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
      * (which is preferred when writing history), and if necessary, the instance
      * name.
      */
-    resource_config_name = crm_element_value(action_rsc, PCMK_XA_ID);
+    resource_config_name = pcmk__xe_get(action_rsc, PCMK_XA_ID);
     if (resource_config_name == NULL) { // Shouldn't be possible
         crm_log_xml_err(action->xml, "No ID");
         free(node);
@@ -602,7 +601,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
     resource = resource_config_name;
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
-        const char *longname = crm_element_value(action_rsc, PCMK__XA_LONG_ID);
+        const char *longname = pcmk__xe_get(action_rsc, PCMK__XA_LONG_ID);
 
         if ((longname != NULL)
             && (pe_find_resource(fake_resource_list, longname) != NULL)) {
@@ -618,9 +617,9 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         goto done; // Confirm action and update graph
     }
 
-    rclass = crm_element_value(action_rsc, PCMK_XA_CLASS);
-    rtype = crm_element_value(action_rsc, PCMK_XA_TYPE);
-    rprovider = crm_element_value(action_rsc, PCMK_XA_PROVIDER);
+    rclass = pcmk__xe_get(action_rsc, PCMK_XA_CLASS);
+    rtype = pcmk__xe_get(action_rsc, PCMK_XA_TYPE);
+    rprovider = pcmk__xe_get(action_rsc, PCMK_XA_PROVIDER);
 
     pcmk__scan_min_int(target_rc_s, &target_outcome, 0);
 
@@ -737,8 +736,8 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 static int
 simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *node = crm_element_value(action->xml, PCMK__META_ON_NODE);
-    const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
+    const char *node = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
+    const char *task = pcmk__xe_get(action->xml, PCMK_XA_OPERATION);
     xmlNode *rsc = pcmk__xe_first_child(action->xml, PCMK_XE_PRIMITIVE, NULL,
                                         NULL);
 

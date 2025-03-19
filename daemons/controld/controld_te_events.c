@@ -111,17 +111,15 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
                 || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
                 continue;
             } else if (action->type == pcmk__cluster_graph_action) {
-                const char *task = crm_element_value(action->xml,
-                                                     PCMK_XA_OPERATION);
+                const char *task = pcmk__xe_get(action->xml, PCMK_XA_OPERATION);
 
                 if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
                     continue;
                 }
             }
 
-            target_uuid = crm_element_value(action->xml,
-                                            PCMK__META_ON_NODE_UUID);
-            router = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
+            target_uuid = pcmk__xe_get(action->xml, PCMK__META_ON_NODE_UUID);
+            router = pcmk__xe_get(action->xml, PCMK__XA_ROUTER_NODE);
             if (router) {
                 const pcmk__node_status_t *node =
                     pcmk__get_node(0, router, NULL,
@@ -142,13 +140,13 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
                 if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
                     crm_notice("Action %d (%s) was pending on %s (offline)",
                                action->id,
-                               crm_element_value(action->xml,
-                                                 PCMK__XA_OPERATION_KEY),
+                               pcmk__xe_get(action->xml,
+                                            PCMK__XA_OPERATION_KEY),
                                down_node);
                 } else {
                     crm_info("Action %d (%s) is scheduled for %s (offline)",
                              action->id,
-                             crm_element_value(action->xml, PCMK__XA_OPERATION_KEY),
+                             pcmk__xe_get(action->xml, PCMK__XA_OPERATION_KEY),
                              down_node);
                 }
             }
@@ -188,9 +186,9 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
     char *rsc_id = NULL;
 
     const char *value = NULL;
-    const char *id = crm_element_value(event, PCMK__XA_OPERATION_KEY);
+    const char *id = pcmk__xe_get(event, PCMK__XA_OPERATION_KEY);
     const char *on_uname = pcmk__node_name_from_uuid(event_node_uuid);
-    const char *origin = crm_element_value(event, PCMK_XA_CRM_DEBUG_ORIGIN);
+    const char *origin = pcmk__xe_get(event, PCMK_XA_CRM_DEBUG_ORIGIN);
 
     // Nothing needs to be done for success or status refresh
     if (rc == target_rc) {
@@ -323,17 +321,17 @@ get_cancel_action(const char *id, const char *node)
             const char *target = NULL;
             pcmk__graph_action_t *action = (pcmk__graph_action_t *) gIter2->data;
 
-            task = crm_element_value(action->xml, PCMK_XA_OPERATION);
+            task = pcmk__xe_get(action->xml, PCMK_XA_OPERATION);
             if (!pcmk__str_eq(PCMK_ACTION_CANCEL, task, pcmk__str_casei)) {
                 continue;
             }
 
-            task = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
+            task = pcmk__xe_get(action->xml, PCMK__XA_OPERATION_KEY);
             if (!pcmk__str_eq(task, id, pcmk__str_casei)) {
                 continue;
             }
 
-            target = crm_element_value(action->xml, PCMK__META_ON_NODE_UUID);
+            target = pcmk__xe_get(action->xml, PCMK__META_ON_NODE_UUID);
             if (node && !pcmk__str_eq(target, node, pcmk__str_casei)) {
                 crm_trace("Wrong node %s for %s on %s", target, id, node);
                 continue;
@@ -357,8 +355,8 @@ confirm_cancel_action(const char *id, const char *node_id)
     if (cancel == NULL) {
         return FALSE;
     }
-    op_key = crm_element_value(cancel->xml, PCMK__XA_OPERATION_KEY);
-    node_name = crm_element_value(cancel->xml, PCMK__META_ON_NODE);
+    op_key = pcmk__xe_get(cancel->xml, PCMK__XA_OPERATION_KEY);
+    node_name = pcmk__xe_get(cancel->xml, PCMK__META_ON_NODE);
 
     stop_te_timer(cancel);
     te_action_confirmed(cancel, controld_globals.transition_graph);
@@ -414,8 +412,7 @@ match_down_event(const char *target)
 
     if (match != NULL) {
         crm_debug("Shutdown action %d (%s) found for node %s", match->id,
-                  crm_element_value(match->xml, PCMK__XA_OPERATION_KEY),
-                  target);
+                  pcmk__xe_get(match->xml, PCMK__XA_OPERATION_KEY), target);
     } else {
         crm_debug("No reason to expect node %s to be down", target);
     }
@@ -444,7 +441,7 @@ process_graph_event(xmlNode *event, const char *event_node)
 <lrm_rsc_op id="rsc_east-05_last_0" operation_key="rsc_east-05_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" transition-magic="0:7;9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" call-id="17" rc-code="7" op-status="0" interval="0" last-rc-change="1355361636" exec-time="128" queue-time="0" op-digest="c81f5f40b1c9e859c992e800b1aa6972"/>
 */
 
-    magic = crm_element_value(event, PCMK__XA_TRANSITION_KEY);
+    magic = pcmk__xe_get(event, PCMK__XA_TRANSITION_KEY);
     if (magic == NULL) {
         /* non-change */
         return;
@@ -455,7 +452,7 @@ process_graph_event(xmlNode *event, const char *event_node)
         return;
     }
 
-    id = crm_element_value(event, PCMK__XA_OPERATION_KEY);
+    id = pcmk__xe_get(event, PCMK__XA_OPERATION_KEY);
     pcmk__xe_get_int(event, PCMK__XA_RC_CODE, &rc);
     pcmk__xe_get_int(event, PCMK__XA_CALL_ID, &callid);
 
@@ -567,7 +564,7 @@ process_graph_event(xmlNode *event, const char *event_node)
     if (id == NULL) {
         id = "unknown action";
     }
-    uname = crm_element_value(event, PCMK__META_ON_NODE);
+    uname = pcmk__xe_get(event, PCMK__META_ON_NODE);
     if (uname == NULL) {
         uname = "unknown node";
     }

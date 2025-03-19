@@ -495,12 +495,12 @@ static void
 crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 {
     lrm_state_t *lrm_state = userdata;
-    const char *session = crm_element_value(msg, PCMK__XA_LRMD_IPC_SESSION);
+    const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
-    const char *op = crm_element_value(msg, PCMK__XA_LRMD_IPC_OP);
+    const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
     if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_casei)) {
-        const char *channel = crm_element_value(msg, PCMK__XA_LRMD_IPC_SERVER);
+        const char *channel = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SERVER);
 
         proxy = crmd_remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
         if (!remote_ra_controlling_guest(lrm_state)) {
@@ -567,13 +567,13 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
          * the name, so we don't return info for ourselves instead of the
          * Pacemaker Remote node.
          */
-        if (pcmk__str_eq(crm_element_value(request, PCMK__XA_CRM_TASK),
+        if (pcmk__str_eq(pcmk__xe_get(request, PCMK__XA_CRM_TASK),
                          CRM_OP_NODE_INFO, pcmk__str_none)) {
             int node_id = 0;
 
             pcmk__xe_get_int(request, PCMK_XA_ID, &node_id);
             if ((node_id <= 0)
-                && (crm_element_value(request, PCMK_XA_UNAME) == NULL)) {
+                && (pcmk__xe_get(request, PCMK_XA_UNAME) == NULL)) {
                 crm_xml_add(request, PCMK_XA_UNAME, lrm_state->node_name);
             }
         }

@@ -221,8 +221,8 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
         return pcmk_rc_already;
     }
 
-    validation = crm_element_value(xmlDocGetRootElement(cib_doc),
-                                   PCMK_XA_VALIDATE_WITH);
+    validation = pcmk__xe_get(xmlDocGetRootElement(cib_doc),
+                              PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(PCMK__COMPAT_ACL_2_MIN_INCL,
                                   validation) > 0) {

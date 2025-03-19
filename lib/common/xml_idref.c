@@ -92,7 +92,7 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
         return NULL;
     }
 
-    ref = crm_element_value(xml, PCMK_XA_ID_REF);
+    ref = pcmk__xe_get(xml, PCMK_XA_ID_REF);
     if (ref == NULL) {
         return xml;
     }

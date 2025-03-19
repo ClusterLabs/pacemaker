@@ -386,7 +386,7 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
 static xmlNode *
 find_resource_xml(xmlNode *cib_node, const char *resource)
 {
-    const char *node = crm_element_value(cib_node, PCMK_XA_UNAME);
+    const char *node = pcmk__xe_get(cib_node, PCMK_XA_UNAME);
     char *xpath = crm_strdup_printf(XPATH_RSC_HISTORY, node, resource);
     xmlNode *match = pcmk__xpath_find_one(cib_node->doc, xpath, LOG_TRACE);
 
@@ -598,9 +598,9 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
         goto done;
     }
 
-    rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-    rtype = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
-    rprovider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
+    rclass = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
+    rtype = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
+    rprovider = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
 
     cib_node = pcmk__inject_node(cib, node, NULL);
     pcmk__assert(cib_node != NULL);

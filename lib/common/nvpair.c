@@ -214,7 +214,7 @@ hash2smartfield(gpointer key, gpointer value, gpointer user_data)
         crm_xml_add(tmp, PCMK_XA_NAME, name);
         crm_xml_add(tmp, PCMK_XA_VALUE, s_value);
 
-    } else if (crm_element_value(xml_node, name) == NULL) {
+    } else if (pcmk__xe_get(xml_node, name) == NULL) {
         crm_xml_add(xml_node, name, s_value);
         crm_trace("dumped: %s=%s", name, s_value);
 
@@ -242,7 +242,7 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
 
     xmlNode *xml_node = user_data;
 
-    if (crm_element_value(xml_node, name) == NULL) {
+    if (pcmk__xe_get(xml_node, name) == NULL) {
         crm_xml_add(xml_node, name, s_value);
 
     } else {
@@ -367,8 +367,8 @@ xml2list(const xmlNode *parent)
     for (child = pcmk__xe_first_child(nvpair_list, PCMK__XE_PARAM, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, PCMK__XE_PARAM)) {
 
-        const char *key = crm_element_value(child, PCMK_XA_NAME);
-        const char *value = crm_element_value(child, PCMK_XA_VALUE);
+        const char *key = pcmk__xe_get(child, PCMK_XA_NAME);
+        const char *value = pcmk__xe_get(child, PCMK_XA_VALUE);
 
         crm_trace("Added %s=%s", key, value);
         if (key != NULL && value != NULL) {
@@ -405,8 +405,8 @@ unpack_nvpair(xmlNode *nvpair, void *userdata)
         return pcmk_rc_ok;
     }
 
-    name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
-    value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
+    name = pcmk__xe_get(ref_nvpair, PCMK_XA_NAME);
+    value = pcmk__xe_get(ref_nvpair, PCMK_XA_VALUE);
     if ((name == NULL) || (value == NULL)) {
         return pcmk_rc_ok; // Not possible with schema validation enabled
     }
@@ -631,8 +631,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
         pcmk__config_warn("Using 0 as %s score because '%s' "
                           "is not a valid score: %s",
                           pcmk__xe_id(pair_a),
-                          crm_element_value(pair_a, PCMK_XA_SCORE),
-                          pcmk_rc_str(rc));
+                          pcmk__xe_get(pair_a, PCMK_XA_SCORE), pcmk_rc_str(rc));
     }
 
     rc = pcmk__xe_get_score(pair_b, PCMK_XA_SCORE, &score_b, 0);
@@ -640,8 +639,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
         pcmk__config_warn("Using 0 as %s score because '%s' "
                           "is not a valid score: %s",
                           pcmk__xe_id(pair_b),
-                          crm_element_value(pair_b, PCMK_XA_SCORE),
-                          pcmk_rc_str(rc));
+                          pcmk__xe_get(pair_b, PCMK_XA_SCORE), pcmk_rc_str(rc));
     }
 
     if (score_a < score_b) {

@@ -1524,7 +1524,7 @@ only_sanitized_changed(const xmlNode *xml_op,
         return false;
     }
 
-    digest_secure = crm_element_value(xml_op, PCMK__XA_OP_SECURE_DIGEST);
+    digest_secure = pcmk__xe_get(xml_op, PCMK__XA_OP_SECURE_DIGEST);
 
     return (digest_data->rc != pcmk__digest_match) && (digest_secure != NULL)
            && (digest_data->digest_secure_calc != NULL)
@@ -1638,7 +1638,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
     CRM_CHECK((rsc != NULL) && (node != NULL) && (xml_op != NULL),
               return false);
 
-    task = crm_element_value(xml_op, PCMK_XA_OPERATION);
+    task = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);
     CRM_CHECK(task != NULL, return false);
 
     pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
@@ -1652,8 +1652,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                             pcmk__node_name(node));
         } else if (pcmk_is_set(rsc->priv->scheduler->flags,
                                pcmk__sched_cancel_removed_actions)) {
-            pcmk__schedule_cancel(rsc,
-                                  crm_element_value(xml_op, PCMK__XA_CALL_ID),
+            pcmk__schedule_cancel(rsc, pcmk__xe_get(xml_op, PCMK__XA_CALL_ID),
                                   task, interval_ms, node, "orphan");
             return true;
         } else {
@@ -1680,7 +1679,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                       "on %s changed: %s",
                       pcmk__readable_interval(interval_ms), task, rsc->id,
                       pcmk__node_name(node),
-                      crm_element_value(xml_op, PCMK__XA_TRANSITION_MAGIC));
+                      pcmk__xe_get(xml_op, PCMK__XA_TRANSITION_MAGIC));
         }
         return false;
     }
@@ -1703,8 +1702,8 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                 crm_log_xml_debug(digest_data->params_all, "params:reschedule");
                 pcmk__reschedule_recurring(rsc, task, interval_ms, node);
 
-            } else if (crm_element_value(xml_op,
-                                         PCMK__XA_OP_RESTART_DIGEST) != NULL) {
+            } else if (pcmk__xe_get(xml_op,
+                                    PCMK__XA_OP_RESTART_DIGEST) != NULL) {
                 // Agent supports reload, so use it
                 trigger_unfencing(rsc, node,
                                   "Device parameters changed (reload)", NULL,
@@ -1828,15 +1827,14 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
             continue;
         }
 
-        task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
+        task = pcmk__xe_get(rsc_op, PCMK_XA_OPERATION);
         pcmk__xe_get_guint(rsc_op, PCMK_META_INTERVAL, &interval_ms);
 
         if ((interval_ms > 0)
             && (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)
                 || node->details->maintenance)) {
             // Maintenance mode cancels recurring operations
-            pcmk__schedule_cancel(rsc,
-                                  crm_element_value(rsc_op, PCMK__XA_CALL_ID),
+            pcmk__schedule_cancel(rsc, pcmk__xe_get(rsc_op, PCMK__XA_CALL_ID),
                                   task, interval_ms, node, "maintenance mode");
 
         } else if ((interval_ms > 0)

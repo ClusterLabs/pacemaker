@@ -1211,7 +1211,7 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
                                              pcmk__xf_skip);
             int old_pos = pcmk__xml_position((xmlNode*) old_attr,
                                              pcmk__xf_skip);
-            const char *new_value = crm_element_value(new_xml, name);
+            const char *new_value = pcmk__xe_get(new_xml, name);
 
             // This attribute isn't new
             pcmk__clear_xml_flags(nodepriv, pcmk__xf_created);

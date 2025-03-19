@@ -740,7 +740,7 @@ create_shadow_empty(pcmk__output_t *out, GError **error)
     output = createEmptyCib(0);
     crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
     out->info(out, "Created new %s configuration",
-              crm_element_value(output, PCMK_XA_VALIDATE_WITH));
+              pcmk__xe_get(output, PCMK_XA_VALIDATE_WITH));
 
     if (write_shadow_file(output, filename, false, error) != pcmk_rc_ok) {
         goto done;

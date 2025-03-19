@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -422,13 +422,12 @@ startCib(const char *filename)
 
         cib_read_config(config_hash, cib);
 
-        pcmk__scan_port(crm_element_value(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
+        pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
         if (port >= 0) {
             remote_tls_fd = init_remote_listener(port, TRUE);
         }
 
-        pcmk__scan_port(crm_element_value(cib, PCMK_XA_REMOTE_CLEAR_PORT),
-                        &port);
+        pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
         if (port >= 0) {
             remote_fd = init_remote_listener(port, FALSE);
         }

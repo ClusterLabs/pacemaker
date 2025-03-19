@@ -315,13 +315,13 @@ attrd_request_sync_point(xmlNode *xml)
                                               PCMK__XA_ATTR_SYNC_POINT, NULL);
 
         if (child) {
-            return crm_element_value(child, PCMK__XA_ATTR_SYNC_POINT);
+            return pcmk__xe_get(child, PCMK__XA_ATTR_SYNC_POINT);
         } else {
             return NULL;
         }
 
     } else {
-        return crm_element_value(xml, PCMK__XA_ATTR_SYNC_POINT);
+        return pcmk__xe_get(xml, PCMK__XA_ATTR_SYNC_POINT);
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -441,7 +441,7 @@ find_nvpair_attr_delegate(cib_t *cib, const char *attr, const char *section,
         rc = handle_multiples(out, xml_search, attr_name);
 
         if (rc == pcmk_rc_ok) {
-            pcmk__str_update(value, crm_element_value(xml_search, attr));
+            pcmk__str_update(value, pcmk__xe_get(xml_search, attr));
         }
     }
 
@@ -494,8 +494,7 @@ read_attr_delegate(cib_t *cib, const char *section, const char *node_uuid,
 
     if (rc == pcmk_rc_ok) {
         if (result->children == NULL) {
-            pcmk__str_update(attr_value,
-                             crm_element_value(result, PCMK_XA_VALUE));
+            pcmk__str_update(attr_value, pcmk__xe_get(result, PCMK_XA_VALUE));
         } else {
             rc = ENOTUNIQ;
         }
@@ -559,9 +558,9 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
     if (pcmk__xe_is(result, PCMK_XE_NODE)) {
         // Result is PCMK_XE_NODE element from PCMK_XE_NODES section
 
-        if (pcmk__str_eq(crm_element_value(result, PCMK_XA_TYPE),
-                         PCMK_VALUE_REMOTE, pcmk__str_casei)) {
-            parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
+        if (pcmk__str_eq(pcmk__xe_get(result, PCMK_XA_TYPE), PCMK_VALUE_REMOTE,
+                         pcmk__str_casei)) {
+            parsed_uuid = pcmk__xe_get(result, PCMK_XA_UNAME);
             parsed_is_remote = TRUE;
         } else {
             parsed_uuid = pcmk__xe_id(result);
@@ -579,13 +578,13 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
          * node
          */
 
-        parsed_uuid = crm_element_value(result, PCMK_XA_VALUE);
+        parsed_uuid = pcmk__xe_get(result, PCMK_XA_VALUE);
         parsed_is_remote = TRUE;
 
     } else if (pcmk__xe_is(result, PCMK__XE_NODE_STATE)) {
         // Result is PCMK__XE_NODE_STATE element from PCMK_XE_STATUS section
 
-        parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
+        parsed_uuid = pcmk__xe_get(result, PCMK_XA_UNAME);
         if (pcmk__xe_attr_is_true(result, PCMK_XA_REMOTE_NODE)) {
             parsed_is_remote = TRUE;
         }

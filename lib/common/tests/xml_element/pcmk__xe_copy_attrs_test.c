@@ -1,5 +1,5 @@
  /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -42,7 +42,7 @@ no_source_attrs(void **state)
     crm_xml_add(target, "attr", "value");
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_none),
                      pcmk_rc_ok);
-    assert_string_equal(crm_element_value(target, "attr"), "value");
+    assert_string_equal(pcmk__xe_get(target, "attr"), "value");
 
     pcmk__xml_free(src);
     pcmk__xml_free(target);
@@ -58,8 +58,8 @@ copy_one(void **state)
 
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_none),
                      pcmk_rc_ok);
-    assert_string_equal(crm_element_value(src, "attr"),
-                        crm_element_value(target, "attr"));
+    assert_string_equal(pcmk__xe_get(src, "attr"),
+                        pcmk__xe_get(target, "attr"));
 
     pcmk__xml_free(src);
     pcmk__xml_free(target);
@@ -79,12 +79,12 @@ copy_multiple(void **state)
 
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_none),
                      pcmk_rc_ok);
-    assert_string_equal(crm_element_value(src, "attr1"),
-                        crm_element_value(target, "attr1"));
-    assert_string_equal(crm_element_value(src, "attr2"),
-                        crm_element_value(target, "attr2"));
-    assert_string_equal(crm_element_value(src, "attr3"),
-                        crm_element_value(target, "attr3"));
+    assert_string_equal(pcmk__xe_get(src, "attr1"),
+                        pcmk__xe_get(target, "attr1"));
+    assert_string_equal(pcmk__xe_get(src, "attr2"),
+                        pcmk__xe_get(target, "attr2"));
+    assert_string_equal(pcmk__xe_get(src, "attr3"),
+                        pcmk__xe_get(target, "attr3"));
 
     pcmk__xml_free(src);
     pcmk__xml_free(target);
@@ -102,8 +102,8 @@ overwrite(void **state)
     // Overwrite enabled by default
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_none),
                      pcmk_rc_ok);
-    assert_string_equal(crm_element_value(src, "attr"),
-                        crm_element_value(target, "attr"));
+    assert_string_equal(pcmk__xe_get(src, "attr"),
+                        pcmk__xe_get(target, "attr"));
     pcmk__xml_free(src);
     pcmk__xml_free(target);
 }
@@ -119,16 +119,16 @@ no_overwrite(void **state)
 
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_no_overwrite),
                      pcmk_rc_ok);
-    assert_string_not_equal(crm_element_value(src, "attr"),
-                            crm_element_value(target, "attr"));
+    assert_string_not_equal(pcmk__xe_get(src, "attr"),
+                            pcmk__xe_get(target, "attr"));
 
     // no_overwrite doesn't prevent copy if there's no conflict
     pcmk__xe_remove_attr(target, "attr");
 
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_no_overwrite),
                      pcmk_rc_ok);
-    assert_string_equal(crm_element_value(src, "attr"),
-                        crm_element_value(target, "attr"));
+    assert_string_equal(pcmk__xe_get(src, "attr"),
+                        pcmk__xe_get(target, "attr"));
 
     pcmk__xml_free(src);
     pcmk__xml_free(target);
@@ -147,8 +147,8 @@ score_update(void **state)
 
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_score_update),
                      pcmk_rc_ok);
-    assert_string_equal(crm_element_value(target, "plus_plus_attr"), "2");
-    assert_string_equal(crm_element_value(target, "plus_two_attr"), "3");
+    assert_string_equal(pcmk__xe_get(target, "plus_plus_attr"), "2");
+    assert_string_equal(pcmk__xe_get(target, "plus_two_attr"), "3");
 
     pcmk__xml_free(src);
     pcmk__xml_free(target);
@@ -168,9 +168,9 @@ no_score_update(void **state)
     // Score update disabled by default
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_none),
                      pcmk_rc_ok);
-    assert_string_equal(crm_element_value(target, "plus_plus_attr"),
+    assert_string_equal(pcmk__xe_get(target, "plus_plus_attr"),
                         "plus_plus_attr++");
-    assert_string_equal(crm_element_value(target, "plus_two_attr"),
+    assert_string_equal(pcmk__xe_get(target, "plus_two_attr"),
                         "plus_two_attr+=2");
 
     pcmk__xml_free(src);
