@@ -105,7 +105,9 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
     if (pcmk__xpath_num_results(xpathObj) > 0) {
         xmlNode *tmp = pcmk__xpath_result(xpathObj, 0);
 
-        crm_xml_add(tmp, "required", "0");
+        if (tmp != NULL) {
+            crm_xml_add(tmp, "required", "0");
+        }
     }
     xmlXPathFreeObject(xpathObj);
     free(xpath);

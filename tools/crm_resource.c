@@ -298,8 +298,11 @@ build_constraint_list(xmlNode *root)
 
     for (ndx = 0; ndx < num_results; ndx++) {
         xmlNode *match = pcmk__xpath_result(xpathObj, ndx);
-        retval = g_list_insert_sorted(retval, (gpointer) pcmk__xe_id(match),
-                                      (GCompareFunc) g_strcmp0);
+
+        if (match != NULL) {
+            retval = g_list_insert_sorted(retval, (gpointer) pcmk__xe_id(match),
+                                          (GCompareFunc) g_strcmp0);
+        }
     }
 
     xmlXPathFreeObject(xpathObj);

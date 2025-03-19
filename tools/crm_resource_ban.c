@@ -458,6 +458,10 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
         crm_time_t *end = NULL;
         int rc = pcmk_rc_ok;
 
+        if (constraint_node == NULL) {
+            continue;
+        }
+
         if (buf == NULL) {
             buf = g_string_sized_new(1024);
         }

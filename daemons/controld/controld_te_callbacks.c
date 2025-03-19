@@ -452,9 +452,12 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     } else {
         for (int lpc = 0; lpc < nmatches; lpc++) {
             xmlNode *rsc_op = pcmk__xpath_result(xpathObj, lpc);
-            const char *node = get_node_id(rsc_op);
 
-            process_graph_event(rsc_op, node);
+            if (rsc_op != NULL) {
+                const char *node = get_node_id(rsc_op);
+
+                process_graph_event(rsc_op, node);
+            }
         }
     }
     xmlXPathFreeObject(xpathObj);

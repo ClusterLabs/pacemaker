@@ -91,6 +91,7 @@ verify_results(xmlNode *xml, const char *ticket_id, const char *attr_name,
     assert_int_equal(pcmk__xpath_num_results(xpath_obj), 1);
 
     node = pcmk__xpath_result(xpath_obj, 0);
+    assert_non_null(node);
     assert_string_equal(crm_element_value(node, PCMK_XA_ID), ticket_id);
     xmlXPathFreeObject(xpath_obj);
 
@@ -104,6 +105,7 @@ verify_results(xmlNode *xml, const char *ticket_id, const char *attr_name,
     assert_int_equal(pcmk__xpath_num_results(xpath_obj), 1);
 
     node = pcmk__xpath_result(xpath_obj, 0);
+    assert_non_null(node);
     assert_string_equal(crm_element_value(node, PCMK_XA_NAME), attr_name);
     assert_string_equal(crm_element_value(node, PCMK_XA_VALUE), attr_value);
 
