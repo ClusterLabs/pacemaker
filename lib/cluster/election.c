@@ -313,8 +313,8 @@ election_vote(pcmk_cluster_t *cluster)
 
     // Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is actually microseconds
     get_uptime(&age);
-    crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
-                        PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
+    pcmk__xe_set_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
+                         PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
 
     pcmk__cluster_send_message(NULL, cluster->priv->server, vote);
     pcmk__xml_free(vote);
