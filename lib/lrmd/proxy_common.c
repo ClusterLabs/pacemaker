@@ -216,8 +216,8 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
 void
 remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 {
-    const char *op = crm_element_value(msg, PCMK__XA_LRMD_IPC_OP);
-    const char *session = crm_element_value(msg, PCMK__XA_LRMD_IPC_SESSION);
+    const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
+    const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
     int msg_id = 0;
 
@@ -237,7 +237,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei)) {
         uint32_t flags = 0U;
         int rc = pcmk_rc_ok;
-        const char *name = crm_element_value(msg, PCMK__XA_LRMD_IPC_CLIENT);
+        const char *name = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_CLIENT);
 
         xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_LRMD_IPC_MSG,
                                                 NULL, NULL);
@@ -272,12 +272,12 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
         pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER, node_name);
 
         if (pcmk_is_set(flags, crm_ipc_proxied)) {
-            const char *type = crm_element_value(request, PCMK__XA_T);
+            const char *type = pcmk__xe_get(request, PCMK__XA_T);
             int rc = 0;
 
             if (pcmk__str_eq(type, PCMK__VALUE_ATTRD, pcmk__str_none)
-                && (crm_element_value(request, PCMK__XA_ATTR_HOST) == NULL)
-                && pcmk__str_any_of(crm_element_value(request, PCMK_XA_TASK),
+                && (pcmk__xe_get(request, PCMK__XA_ATTR_HOST) == NULL)
+                && pcmk__str_any_of(pcmk__xe_get(request, PCMK_XA_TASK),
                                     PCMK__ATTRD_CMD_UPDATE,
                                     PCMK__ATTRD_CMD_UPDATE_BOTH,
                                     PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {

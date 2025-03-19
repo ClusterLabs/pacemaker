@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -42,19 +42,19 @@ handle_ping_request(pcmk__request_t *request)
     const char *value = NULL;
     xmlNode *ping = NULL;
     xmlNode *reply = NULL;
-    const char *from = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
+    const char *from = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_FROM);
 
     /* Pinged for status */
     crm_trace("Pinged from " PCMK__XA_CRM_SYS_FROM "='%s' "
               PCMK_XA_ORIGIN "='%s'",
               pcmk__s(from, ""),
-              pcmk__s(crm_element_value(msg, PCMK_XA_ORIGIN), ""));
+              pcmk__s(pcmk__xe_get(msg, PCMK_XA_ORIGIN), ""));
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
     ping = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
-    value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
+    value = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_TO);
     crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
     crm_xml_add(ping, PCMK__XA_PACEMAKERD_STATE, pacemakerd_state);
     crm_xml_add_ll(ping, PCMK_XA_CRM_TIMESTAMP,
@@ -114,8 +114,8 @@ handle_shutdown_request(pcmk__request_t *request)
 
     if (allowed) {
         crm_notice("Shutting down in response to IPC request %s from %s",
-                   crm_element_value(msg, PCMK_XA_REFERENCE),
-                   crm_element_value(msg, PCMK_XA_ORIGIN));
+                   pcmk__xe_get(msg, PCMK_XA_REFERENCE),
+                   pcmk__xe_get(msg, PCMK_XA_ORIGIN));
         crm_xml_add_int(shutdown, PCMK__XA_OP_STATUS, CRM_EX_OK);
     } else {
         crm_warn("Ignoring shutdown request from unprivileged client %s",

@@ -68,7 +68,7 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
             return child;
         }
 
-        value = crm_element_value(child, attr_n);
+        value = pcmk__xe_get(child, attr_n);
 
         if ((attr_v == NULL) && (value != NULL)) {
             // attr_v == NULL: Attribute attr_n must be set (to any value)
@@ -133,7 +133,7 @@ pcmk__xe_get_score(const xmlNode *xml, const char *name, int *score,
     const char *value = NULL;
 
     CRM_CHECK((xml != NULL) && (name != NULL), return EINVAL);
-    value = crm_element_value(xml, name);
+    value = pcmk__xe_get(xml, name);
     return pcmk_parse_score(value, score, default_score);
 }
 
@@ -180,7 +180,7 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
         return pcmk_rc_ok;
     }
 
-    old_value = crm_element_value(target, name);
+    old_value = pcmk__xe_get(target, name);
 
     // If no previous value, skip to default case and set the value unexpanded.
     if (old_value != NULL) {
@@ -258,7 +258,7 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
         const char *value = pcmk__xml_attr_value(attr);
 
         if (pcmk_is_set(flags, pcmk__xaf_no_overwrite)
-            && (crm_element_value(target, name) != NULL)) {
+            && (pcmk__xe_get(target, name) != NULL)) {
             continue;
         }
 
@@ -595,7 +595,7 @@ update_xe(xmlNode *parent, xmlNode *target, xmlNode *update, uint32_t flags)
         update_id_attr = PCMK_XA_ID;
 
     } else {
-        update_id_val = crm_element_value(update, PCMK_XA_ID_REF);
+        update_id_val = pcmk__xe_get(update, PCMK_XA_ID_REF);
         if (update_id_val != NULL) {
             update_id_attr = PCMK_XA_ID_REF;
         }
@@ -679,7 +679,7 @@ delete_xe_if_matching(xmlNode *xml, void *user_data)
          attr = attr->next) {
 
         const char *search_val = pcmk__xml_attr_value(attr);
-        const char *xml_val = crm_element_value(xml, (const char *) attr->name);
+        const char *xml_val = pcmk__xe_get(xml, (const char *) attr->name);
 
         if (!pcmk__str_eq(search_val, xml_val, pcmk__str_casei)) {
             // No match: an attr in xml doesn't match the attr in search
@@ -1026,7 +1026,7 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
     }
 
     if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)) {
-        const char *old = crm_element_value(node, name);
+        const char *old = pcmk__xe_get(node, name);
 
         if (old == NULL || value == NULL || strcmp(old, value) != 0) {
             dirty = TRUE;
@@ -1188,10 +1188,33 @@ crm_element_value(const xmlNode *data, const char *name)
 
 /*!
  * \internal
+ * \brief Retrieve the value of an XML attribute
+ *
+ * \param[in] xml        XML element whose attribute to get
+ * \param[in] attr_name  Attribute name
+ *
+ * \return Value of specified attribute (may be \c NULL)
+ */
+const char *
+pcmk__xe_get(const xmlNode *xml, const char *attr_name)
+{
+    xmlAttr *attr = NULL;
+
+    CRM_CHECK((xml != NULL) && (attr_name != NULL), return NULL);
+
+    attr = xmlHasProp(xml, (const xmlChar *) attr_name);
+    if ((attr == NULL) || (attr->children == NULL)) {
+        return NULL;
+    }
+
+    return (const char *) attr->children->content;
+}
+
+/*!
+ * \internal
  * \brief Retrieve a flag group from an XML attribute value
  *
- * This is like \c crm_element_value() except getting the value as a 32-bit
- * unsigned integer.
+ * This is like \c pcmk__xe_get() but returns the value as a \c uint32_t.
  *
  * \param[in]  xml            XML node to check
  * \param[in]  name           Attribute name to check (must not be NULL)
@@ -1219,7 +1242,7 @@ pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
     if (xml == NULL) {
         return pcmk_rc_ok;
     }
-    value = crm_element_value(xml, name);
+    value = pcmk__xe_get(xml, name);
     if (value == NULL) {
         return pcmk_rc_ok;
     }
@@ -1242,7 +1265,7 @@ pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
  * \internal
  * \brief Retrieve a \c guint value from an XML attribute
  *
- * This is like \c crm_element_value() but returns the value as a \c guint.
+ * This is like \c pcmk__xe_get() but returns the value as a \c guint.
  *
  * \param[in]  xml   XML element whose attribute to get
  * \param[in]  attr  Attribute name
@@ -1274,7 +1297,7 @@ pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest)
  * \internal
  * \brief Retrieve an \c int value from an XML attribute
  *
- * This is like \c crm_element_value() but returns the value as an \c int.
+ * This is like \c pcmk__xe_get() but returns the value as an \c int.
  *
  * \param[in]  xml   XML element whose attribute to get
  * \param[in]  attr  Attribute name
@@ -1307,8 +1330,7 @@ pcmk__xe_get_int(const xmlNode *xml, const char *attr, int *dest)
  * \internal
  * \brief Retrieve a <tt>long long</tt> value from an XML attribute
  *
- * This is like \c crm_element_value() but returns the value as a
- * <tt>long long</tt>
+ * This is like \c pcmk__xe_get() but returns the value as a <tt>long long</tt>.
  *
  * \param[in]  xml   XML element whose attribute to get
  * \param[in]  attr  Attribute name
@@ -1325,7 +1347,7 @@ pcmk__xe_get_ll(const xmlNode *xml, const char *attr, long long *dest)
 
     CRM_CHECK((xml != NULL) && (attr != NULL) && (dest != NULL), return EINVAL);
 
-    value = crm_element_value(xml, attr);
+    value = pcmk__xe_get(xml, attr);
     if (value == NULL) {
         return ENXIO;
     }
@@ -1343,7 +1365,7 @@ pcmk__xe_get_ll(const xmlNode *xml, const char *attr, long long *dest)
  * \internal
  * \brief Retrieve a \c time_t value from an XML attribute
  *
- * This is like \c crm_element_value() but returns the value as a \c time_t.
+ * This is like \c pcmk__xe_get() but returns the value as a \c time_t.
  *
  * \param[in]  xml   XML element whose attribute to get
  * \param[in]  attr  Attribute name
@@ -1377,7 +1399,7 @@ pcmk__xe_get_time(const xmlNode *xml, const char *attr, time_t *dest)
  * \internal
  * \brief Retrieve the values of XML second/microsecond attributes as time
  *
- * This is like \c crm_element_value() but returns the value as a
+ * This is like \c pcmk__xe_get() but returns the value as a
  * <tt>struct timeval</tt>.
  *
  * \param[in]  xml        XML element whose attributes to get
@@ -1439,7 +1461,7 @@ pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t)
         return EINVAL;
     }
 
-    value = crm_element_value(xml, attr);
+    value = pcmk__xe_get(xml, attr);
     if (value != NULL) {
         *t = crm_time_new(value);
         if (*t == NULL) {
@@ -1452,7 +1474,7 @@ pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t)
 /*!
  * \brief Retrieve a copy of the value of an XML attribute
  *
- * This is like \c crm_element_value() but allocating new memory for the result.
+ * This is like \c pcmk__xe_get() but allocating new memory for the result.
  *
  * \param[in] data   XML node to check
  * \param[in] name   Attribute name to check
@@ -1463,7 +1485,8 @@ pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t)
 char *
 crm_element_value_copy(const xmlNode *data, const char *name)
 {
-    return pcmk__str_copy(crm_element_value(data, name));
+    CRM_CHECK((data != NULL) && (name != NULL), return NULL);
+    return pcmk__str_copy(pcmk__xe_get(data, name));
 }
 
 /*!
@@ -1507,7 +1530,7 @@ pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value)
         return EINVAL;
     }
 
-    xml_value = crm_element_value(node, name);
+    xml_value = pcmk__xe_get(node, name);
 
     if (xml_value == NULL) {
         return ENODATA;

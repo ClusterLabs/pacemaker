@@ -1464,8 +1464,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
                 int in_maint;
 
                 cnt_remote++;
-                in_maint_s = crm_element_value(node,
-                                               PCMK__XA_NODE_IN_MAINTENANCE);
+                in_maint_s = pcmk__xe_get(node, PCMK__XA_NODE_IN_MAINTENANCE);
                 pcmk__scan_min_int(in_maint_s, &in_maint, 0);
                 remote_ra_maintenance(lrm_state, in_maint);
             }

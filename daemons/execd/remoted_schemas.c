@@ -91,7 +91,7 @@ write_extra_schema_file(xmlNode *xml, void *user_data)
     char *path = NULL;
     int rc;
 
-    file = crm_element_value(xml, PCMK_XA_PATH);
+    file = pcmk__xe_get(xml, PCMK_XA_PATH);
     if (file == NULL) {
         crm_warn("No destination path given in schema request");
         return;

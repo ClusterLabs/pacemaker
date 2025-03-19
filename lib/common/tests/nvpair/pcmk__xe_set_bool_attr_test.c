@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,8 +21,8 @@ set_attr(void **state)
     pcmk__xe_set_bool_attr(node, "a", true);
     pcmk__xe_set_bool_attr(node, "b", false);
 
-    assert_string_equal(crm_element_value(node, "a"), PCMK_VALUE_TRUE);
-    assert_string_equal(crm_element_value(node, "b"), PCMK_VALUE_FALSE);
+    assert_string_equal(pcmk__xe_get(node, "a"), PCMK_VALUE_TRUE);
+    assert_string_equal(pcmk__xe_get(node, "b"), PCMK_VALUE_FALSE);
 
     pcmk__xml_free(node);
 }

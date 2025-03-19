@@ -150,8 +150,7 @@ generate_patch(pcmk__output_t *out, xmlNode *source, xmlNode *target,
      */
     if (no_version) {
         for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-            crm_xml_add(target, vfields[i],
-                        crm_element_value(source, vfields[i]));
+            crm_xml_add(target, vfields[i], pcmk__xe_get(source, vfields[i]));
         }
     }
 

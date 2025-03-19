@@ -136,7 +136,7 @@ static xmlNode *
 handle_remove_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
-        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_HOST);
+        const char *host = pcmk__xe_get(request->xml, PCMK__XA_ATTR_HOST);
         bool reap = false;
 
         if (pcmk__xe_get_bool_attr(request->xml, PCMK__XA_REAP,
@@ -188,7 +188,7 @@ static xmlNode *
 handle_update_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
-        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_HOST);
+        const char *host = pcmk__xe_get(request->xml, PCMK__XA_ATTR_HOST);
         pcmk__node_status_t *peer =
             pcmk__get_node(0, request->peer, NULL,
                            pcmk__node_search_cluster_member);
@@ -330,7 +330,7 @@ attrd_broadcast_protocol(void)
 gboolean
 attrd_send_message(pcmk__node_status_t *node, xmlNode *data, bool confirm)
 {
-    const char *op = crm_element_value(data, PCMK_XA_TASK);
+    const char *op = pcmk__xe_get(data, PCMK_XA_TASK);
 
     crm_xml_add(data, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);

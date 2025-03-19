@@ -108,13 +108,13 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
             continue;
         }
 
-        interval_spec = crm_element_value(operation, PCMK_META_INTERVAL);
+        interval_spec = pcmk__xe_get(operation, PCMK_META_INTERVAL);
         pcmk_parse_interval_spec(interval_spec, &tmp_ms);
         if (tmp_ms != interval_ms) {
             continue;
         }
 
-        config_name = crm_element_value(operation, PCMK_XA_NAME);
+        config_name = pcmk__xe_get(operation, PCMK_XA_NAME);
         if (pcmk__str_eq(action_name, config_name, pcmk__str_none)) {
             return operation;
         }
@@ -466,20 +466,20 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             /* We only care about explicit on-fail (if promote uses default, so
              * can demote)
              */
-            promote_on_fail = crm_element_value(operation, PCMK_META_ON_FAIL);
+            promote_on_fail = pcmk__xe_get(operation, PCMK_META_ON_FAIL);
             if (promote_on_fail == NULL) {
                 continue;
             }
 
             // We only care about recurring monitors for the promoted role
-            name = crm_element_value(operation, PCMK_XA_NAME);
-            role = crm_element_value(operation, PCMK_XA_ROLE);
+            name = pcmk__xe_get(operation, PCMK_XA_NAME);
+            role = pcmk__xe_get(operation, PCMK_XA_ROLE);
             if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
                 || !pcmk__strcase_any_of(role, PCMK_ROLE_PROMOTED,
                                          PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
                 continue;
             }
-            interval_spec = crm_element_value(operation, PCMK_META_INTERVAL);
+            interval_spec = pcmk__xe_get(operation, PCMK_META_INTERVAL);
             pcmk_parse_interval_spec(interval_spec, &interval_ms);
             if (interval_ms == 0U) {
                 continue;
@@ -514,9 +514,9 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
     // PCMK_META_ON_FAIL=PCMK_VALUE_DEMOTE is allowed only for certain actions
     if (pcmk__str_eq(value, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
-        name = crm_element_value(action_config, PCMK_XA_NAME);
-        role = crm_element_value(action_config, PCMK_XA_ROLE);
-        interval_spec = crm_element_value(action_config, PCMK_META_INTERVAL);
+        name = pcmk__xe_get(action_config, PCMK_XA_NAME);
+        role = pcmk__xe_get(action_config, PCMK_XA_ROLE);
+        interval_spec = pcmk__xe_get(action_config, PCMK_META_INTERVAL);
         pcmk_parse_interval_spec(interval_spec, &interval_ms);
 
         if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_none)
@@ -631,11 +631,10 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
 
         bool enabled = false;
         guint interval_ms = 0U;
-        const char *interval_spec = crm_element_value(operation,
-                                                      PCMK_META_INTERVAL);
+        const char *interval_spec = pcmk__xe_get(operation, PCMK_META_INTERVAL);
 
         // We only care about enabled recurring monitors
-        if (!pcmk__str_eq(crm_element_value(operation, PCMK_XA_NAME),
+        if (!pcmk__str_eq(pcmk__xe_get(operation, PCMK_XA_NAME),
                           PCMK_ACTION_MONITOR, pcmk__str_none)) {
             continue;
         }
@@ -689,9 +688,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
          * for meta-attributes
          */
         .now = rsc->priv->scheduler->priv->now,
-        .rsc_standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS),
-        .rsc_provider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER),
-        .rsc_agent = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE),
+        .rsc_standard = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS),
+        .rsc_provider = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER),
+        .rsc_agent = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE),
         .op_name = action_name,
         .op_interval_ms = interval_ms,
     };
@@ -726,8 +725,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
              * PCMK_XE_META_ATTRIBUTES blocks (which may also have rules that
              * need to be evaluated).
              */
-            timeout_spec = crm_element_value(min_interval_mon,
-                                             PCMK_META_TIMEOUT);
+            timeout_spec = pcmk__xe_get(min_interval_mon, PCMK_META_TIMEOUT);
             if (timeout_spec != NULL) {
                 pcmk__rsc_trace(rsc,
                                 "Setting default timeout for %s probe to "
@@ -1588,11 +1586,11 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
     char *a_uuid = NULL;
     char *b_uuid = NULL;
 
-    const char *a_xml_id = crm_element_value(xml_a, PCMK_XA_ID);
-    const char *b_xml_id = crm_element_value(xml_b, PCMK_XA_ID);
+    const char *a_xml_id = pcmk__xe_get(xml_a, PCMK_XA_ID);
+    const char *b_xml_id = pcmk__xe_get(xml_b, PCMK_XA_ID);
 
-    const char *a_node = crm_element_value(xml_a, PCMK__META_ON_NODE);
-    const char *b_node = crm_element_value(xml_b, PCMK__META_ON_NODE);
+    const char *a_node = pcmk__xe_get(xml_a, PCMK__META_ON_NODE);
+    const char *b_node = pcmk__xe_get(xml_b, PCMK__META_ON_NODE);
     bool same_node = pcmk__str_eq(a_node, b_node, pcmk__str_casei);
 
     if (same_node && pcmk__str_eq(a_xml_id, b_xml_id, pcmk__str_none)) {
@@ -1651,10 +1649,8 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
         int a_id = -1;
         int b_id = -1;
 
-        const char *a_magic = crm_element_value(xml_a,
-                                                PCMK__XA_TRANSITION_MAGIC);
-        const char *b_magic = crm_element_value(xml_b,
-                                                PCMK__XA_TRANSITION_MAGIC);
+        const char *a_magic = pcmk__xe_get(xml_a, PCMK__XA_TRANSITION_MAGIC);
+        const char *b_magic = pcmk__xe_get(xml_b, PCMK__XA_TRANSITION_MAGIC);
 
         CRM_CHECK(a_magic != NULL && b_magic != NULL, sort_return(0, "No magic"));
         if (!decode_transition_magic(a_magic, &a_uuid, &a_id, NULL, NULL, NULL,

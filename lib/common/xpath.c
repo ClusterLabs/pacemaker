@@ -357,7 +357,7 @@ output_attr_child(xmlNode *child, void *userdata)
     pcmk__output_t *out = userdata;
 
     out->info(out, "  Value: %s \t(id=%s)",
-              crm_element_value(child, PCMK_XA_VALUE),
+              pcmk__xe_get(child, PCMK_XA_VALUE),
               pcmk__s(pcmk__xe_id(child), "<none>"));
     return pcmk_rc_ok;
 }

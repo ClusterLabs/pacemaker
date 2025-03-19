@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -144,8 +144,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
      */
 
     if (!client->name) {
-        const char *value = crm_element_value(request,
-                                              PCMK__XA_LRMD_CLIENTNAME);
+        const char *value = pcmk__xe_get(request, PCMK__XA_LRMD_CLIENTNAME);
 
         if (value == NULL) {
             client->name = pcmk__itoa(pcmk__client_pid(c));

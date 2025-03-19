@@ -81,7 +81,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
         return TRUE;
     }
 
-    new_version = crm_element_value(scheduler->input, PCMK_XA_CRM_FEATURE_SET);
+    new_version = pcmk__xe_get(scheduler->input, PCMK_XA_CRM_FEATURE_SET);
 
     if (pcmk__check_feature_set(new_version) != pcmk_rc_ok) {
         pcmk__config_err("Can't process CIB with feature set '%s' greater than our own '%s'",

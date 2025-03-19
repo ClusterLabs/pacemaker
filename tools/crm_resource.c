@@ -1444,7 +1444,7 @@ handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
 
     } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT,
                             pcmk__str_none)) {
-        value = crm_element_value(rsc->priv->xml, options.prop_name);
+        value = pcmk__xe_get(rsc->priv->xml, options.prop_name);
         free_params = false;
 
     } else {

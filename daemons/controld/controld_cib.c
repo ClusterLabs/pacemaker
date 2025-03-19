@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -69,7 +69,7 @@ do_cib_updated(const char *event, xmlNode * msg)
         return;
     }
 
-    client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTNAME);
+    client_name = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME);
     if (!cib__client_triggers_refresh(client_name)) {
         // The CIB is still accurate
         return;
@@ -83,7 +83,7 @@ do_cib_updated(const char *event, xmlNode * msg)
          * process again so we get everyone's current resource history.
          */
         if (client_name == NULL) {
-            client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTID);
+            client_name = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTID);
         }
         crm_notice("Populating nodes and starting an election after %s event "
                    "triggered by %s",

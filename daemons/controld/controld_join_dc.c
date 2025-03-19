@@ -366,7 +366,7 @@ do_dc_join_offer_one(long long action,
         return;
     }
 
-    join_to = crm_element_value(welcome->msg, PCMK__XA_SRC);
+    join_to = pcmk__xe_get(welcome->msg, PCMK__XA_SRC);
     if (join_to == NULL) {
         crm_err("Can't make join-%d offer to unknown node", current_join_id);
         return;
@@ -405,8 +405,8 @@ do_dc_join_offer_one(long long action,
 static int
 compare_int_fields(xmlNode * left, xmlNode * right, const char *field)
 {
-    const char *elem_l = crm_element_value(left, field);
-    const char *elem_r = crm_element_value(right, field);
+    const char *elem_l = pcmk__xe_get(left, field);
+    const char *elem_r = pcmk__xe_get(right, field);
 
     long long int_elem_l;
     long long int_elem_r;
@@ -451,10 +451,10 @@ do_dc_join_filter_offer(long long action,
     gboolean ack_nack_bool = TRUE;
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
-    const char *join_from = crm_element_value(join_ack->msg, PCMK__XA_SRC);
-    const char *ref = crm_element_value(join_ack->msg, PCMK_XA_REFERENCE);
-    const char *join_version = crm_element_value(join_ack->msg,
-                                                 PCMK_XA_CRM_FEATURE_SET);
+    const char *join_from = pcmk__xe_get(join_ack->msg, PCMK__XA_SRC);
+    const char *ref = pcmk__xe_get(join_ack->msg, PCMK_XA_REFERENCE);
+    const char *join_version = pcmk__xe_get(join_ack->msg,
+                                            PCMK_XA_CRM_FEATURE_SET);
     pcmk__node_status_t *join_node = NULL;
 
     if (join_from == NULL) {
@@ -537,8 +537,8 @@ do_dc_join_filter_offer(long long action,
         ack_nack_bool = FALSE;
 
     } else if (max_generation_xml == NULL) {
-        const char *validation = crm_element_value(generation,
-                                                   PCMK_XA_VALIDATE_WITH);
+        const char *validation = pcmk__xe_get(generation,
+                                              PCMK_XA_VALIDATE_WITH);
 
         if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with first CIB "
@@ -558,8 +558,8 @@ do_dc_join_filter_offer(long long action,
 
     } else if ((cmp < 0)
                || ((cmp == 0) && controld_is_local_node(join_from))) {
-        const char *validation = crm_element_value(generation,
-                                                   PCMK_XA_VALIDATE_WITH);
+        const char *validation = pcmk__xe_get(generation,
+                                              PCMK_XA_VALIDATE_WITH);
 
         if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with better CIB "
@@ -665,11 +665,11 @@ do_dc_join_finalize(long long action,
                "with schema %s and feature set %s from %s)",
                current_join_id, count_finalizable,
                pcmk__plural_s(count_finalizable),
-               crm_element_value(max_generation_xml, PCMK_XA_ADMIN_EPOCH),
-               crm_element_value(max_generation_xml, PCMK_XA_EPOCH),
-               crm_element_value(max_generation_xml, PCMK_XA_NUM_UPDATES),
-               crm_element_value(max_generation_xml, PCMK_XA_VALIDATE_WITH),
-               crm_element_value(max_generation_xml, PCMK_XA_CRM_FEATURE_SET),
+               pcmk__xe_get(max_generation_xml, PCMK_XA_ADMIN_EPOCH),
+               pcmk__xe_get(max_generation_xml, PCMK_XA_EPOCH),
+               pcmk__xe_get(max_generation_xml, PCMK_XA_NUM_UPDATES),
+               pcmk__xe_get(max_generation_xml, PCMK_XA_VALIDATE_WITH),
+               pcmk__xe_get(max_generation_xml, PCMK_XA_CRM_FEATURE_SET),
                sync_from);
     crmd_join_phase_log(LOG_DEBUG);
 
@@ -766,7 +766,7 @@ do_dc_join_ack(long long action,
     int join_id = -1;
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
-    const char *op = crm_element_value(join_ack->msg, PCMK__XA_CRM_TASK);
+    const char *op = pcmk__xe_get(join_ack->msg, PCMK__XA_CRM_TASK);
     char *join_from = crm_element_value_copy(join_ack->msg, PCMK__XA_SRC);
     pcmk__node_status_t *peer = NULL;
     enum controld_join_phase phase = controld_join_none;

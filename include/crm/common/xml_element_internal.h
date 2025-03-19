@@ -24,7 +24,6 @@
 #include <libxml/tree.h>                    // xmlNode, etc.
 
 #include <crm/common/iso8601.h>             // crm_time_t
-#include <crm/common/xml_element.h>         // crm_element_value()
 #include <crm/common/xml_names.h>           // PCMK_XA_ID
 
 #ifdef __cplusplus
@@ -44,20 +43,6 @@ void pcmk__xe_remove_matching_attrs(xmlNode *element, bool force,
 int pcmk__xe_delete_match(xmlNode *xml, xmlNode *search);
 int pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace);
 int pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags);
-
-/*!
- * \internal
- * \brief Retrieve the value of the \c PCMK_XA_ID XML attribute
- *
- * \param[in] xml  XML element to check
- *
- * \return Value of the \c PCMK_XA_ID attribute (may be \c NULL)
- */
-static inline const char *
-pcmk__xe_id(const xmlNode *xml)
-{
-    return crm_element_value(xml, PCMK_XA_ID);
-}
 
 /*!
  * \internal
@@ -154,6 +139,7 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
                        int (*handler)(xmlNode *xml, void *userdata),
                        void *userdata);
 
+const char *pcmk__xe_get(const xmlNode *xml, const char *attr_name);
 int pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t);
 int pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
                        uint32_t default_value);
@@ -168,6 +154,20 @@ int pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
 void pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value);
 int pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value);
 bool pcmk__xe_attr_is_true(const xmlNode *node, const char *name);
+
+/*!
+ * \internal
+ * \brief Retrieve the value of the \c PCMK_XA_ID XML attribute
+ *
+ * \param[in] xml  XML element to check
+ *
+ * \return Value of the \c PCMK_XA_ID attribute (may be \c NULL)
+ */
+static inline const char *
+pcmk__xe_id(const xmlNode *xml)
+{
+    return pcmk__xe_get(xml, PCMK_XA_ID);
+}
 
 #ifdef __cplusplus
 }

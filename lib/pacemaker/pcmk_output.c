@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2496,7 +2496,7 @@ static int
 add_ticket_element_with_constraints(xmlNode *node, void *userdata)
 {
     pcmk__output_t *out = (pcmk__output_t *) userdata;
-    const char *ticket_id = crm_element_value(node, PCMK_XA_TICKET);
+    const char *ticket_id = pcmk__xe_get(node, PCMK_XA_TICKET);
 
     pcmk__output_xml_create_parent(out, PCMK_XE_TICKET,
                                    PCMK_XA_ID, ticket_id, NULL);
@@ -2514,7 +2514,7 @@ static int
 add_resource_element(xmlNode *node, void *userdata)
 {
     pcmk__output_t *out = (pcmk__output_t *) userdata;
-    const char *rsc = crm_element_value(node, PCMK_XA_RSC);
+    const char *rsc = pcmk__xe_get(node, PCMK_XA_RSC);
 
     pcmk__output_create_xml_node(out, PCMK_XE_RESOURCE,
                                  PCMK_XA_ID, rsc, NULL);

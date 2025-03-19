@@ -141,9 +141,9 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
      */
     pcmk__xe_get_int(msg_data, PCMK_XA_ID, &(data->data.node_info.id));
 
-    data->data.node_info.uuid = crm_element_value(msg_data, PCMK_XA_ID);
-    data->data.node_info.uname = crm_element_value(msg_data, PCMK_XA_UNAME);
-    data->data.node_info.state = crm_element_value(msg_data, PCMK_XA_CRMD);
+    data->data.node_info.uuid = pcmk__xe_get(msg_data, PCMK_XA_ID);
+    data->data.node_info.uname = pcmk__xe_get(msg_data, PCMK_XA_UNAME);
+    data->data.node_info.state = pcmk__xe_get(msg_data, PCMK_XA_CRMD);
 }
 
 static void
@@ -153,11 +153,9 @@ set_ping_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     if (msg_data == NULL) {
         return;
     }
-    data->data.ping.sys_from = crm_element_value(msg_data,
-                                                 PCMK__XA_CRM_SUBSYSTEM);
-    data->data.ping.fsa_state = crm_element_value(msg_data,
-                                                  PCMK__XA_CRMD_STATE);
-    data->data.ping.result = crm_element_value(msg_data, PCMK_XA_RESULT);
+    data->data.ping.sys_from = pcmk__xe_get(msg_data, PCMK__XA_CRM_SUBSYSTEM);
+    data->data.ping.fsa_state = pcmk__xe_get(msg_data, PCMK__XA_CRMD_STATE);
+    data->data.ping.result = pcmk__xe_get(msg_data, PCMK_XA_RESULT);
 }
 
 static void
@@ -177,8 +175,8 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
         if (id_ll > 0) {
             node_info->id = id_ll;
         }
-        node_info->uname = crm_element_value(node, PCMK_XA_UNAME);
-        node_info->state = crm_element_value(node, PCMK__XA_IN_CCM);
+        node_info->uname = pcmk__xe_get(node, PCMK_XA_UNAME);
+        node_info->state = pcmk__xe_get(node, PCMK__XA_IN_CCM);
         data->data.nodes = g_list_prepend(data->data.nodes, node_info);
     }
 }
@@ -187,7 +185,7 @@ static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     // We only need to handle commands that API functions can send
-    return pcmk__str_any_of(crm_element_value(request, PCMK__XA_CRM_TASK),
+    return pcmk__str_any_of(pcmk__xe_get(request, PCMK__XA_CRM_TASK),
                             PCMK__CONTROLD_CMD_NODES,
                             CRM_OP_LRM_DELETE,
                             CRM_OP_LRM_FAIL,
@@ -224,7 +222,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     // Do some basic validation of the reply
 
-    value = crm_element_value(reply, PCMK__XA_SUBT);
+    value = pcmk__xe_get(reply, PCMK__XA_SUBT);
     if (pcmk__str_eq(value, PCMK__VALUE_REQUEST, pcmk__str_none)) {
         /* @COMPAT Controllers <3.0.0 set PCMK__XA_SUBT to PCMK__VALUE_REQUEST
          * for certain replies. Once we no longer support Pacemaker Remote nodes
@@ -241,13 +239,13 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    if (pcmk__str_empty(crm_element_value(reply, PCMK_XA_REFERENCE))) {
+    if (pcmk__str_empty(pcmk__xe_get(reply, PCMK_XA_REFERENCE))) {
         crm_info("Unrecognizable message from controller: no reference");
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    value = crm_element_value(reply, PCMK__XA_CRM_TASK);
+    value = pcmk__xe_get(reply, PCMK__XA_CRM_TASK);
     if (pcmk__str_empty(value)) {
         crm_info("Unrecognizable message from controller: no command name");
         status = CRM_EX_PROTOCOL;
@@ -256,8 +254,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     // Parse useful info from reply
 
-    reply_data.feature_set = crm_element_value(reply, PCMK_XA_VERSION);
-    reply_data.host_from = crm_element_value(reply, PCMK__XA_SRC);
+    reply_data.feature_set = pcmk__xe_get(reply, PCMK_XA_VERSION);
+    reply_data.host_from = pcmk__xe_get(reply, PCMK__XA_SRC);
 
     wrapper = pcmk__xe_first_child(reply, PCMK__XE_CRM_XML, NULL, NULL);
     msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
@@ -352,7 +350,7 @@ static int
 send_controller_request(pcmk_ipc_api_t *api, const xmlNode *request,
                         bool reply_is_expected)
 {
-    if (crm_element_value(request, PCMK_XA_REFERENCE) == NULL) {
+    if (pcmk__xe_get(request, PCMK_XA_REFERENCE) == NULL) {
         return EINVAL;
     }
     if (reply_is_expected) {

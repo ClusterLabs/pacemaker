@@ -119,7 +119,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
              pIter = pIter->next) {
             nodepriv = pIter->_private;
             if (!pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                value = crm_element_value(xml, (const char *) pIter->name);
+                value = pcmk__xe_get(xml, (const char *) pIter->name);
                 crm_xml_add(result, (const char *)pIter->name, value);
             }
         }
@@ -208,7 +208,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 
     v = pcmk__xe_create(version, PCMK_XE_SOURCE);
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = crm_element_value(source, vfields[lpc]);
+        const char *value = pcmk__xe_get(source, vfields[lpc]);
 
         if (value == NULL) {
             value = "1";
@@ -218,7 +218,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 
     v = pcmk__xe_create(version, PCMK_XE_TARGET);
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = crm_element_value(target, vfields[lpc]);
+        const char *value = pcmk__xe_get(target, vfields[lpc]);
 
         if (value == NULL) {
             value = "1";
@@ -630,8 +630,8 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
     for (change = pcmk__xml_first_child(patchset); change != NULL;
          change = pcmk__xml_next(change)) {
         xmlNode *match = NULL;
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
         int position = -1;
 
         if (op == NULL) {
@@ -718,8 +718,8 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
         change = change_obj->change;
 
-        op = crm_element_value(change, PCMK_XA_OPERATION);
-        xpath = crm_element_value(change, PCMK_XA_PATH);
+        op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
         crm_trace("Continue performing %s on %s with %p", op, xpath, match);
 
@@ -821,7 +821,7 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
         }
     }
 
-    digest = crm_element_value(patchset, PCMK__XA_DIGEST);
+    digest = pcmk__xe_get(patchset, PCMK__XA_DIGEST);
     if (digest != NULL) {
         /* Make original XML available for logging in case result doesn't have
          * expected digest
@@ -912,8 +912,8 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
                                                       NULL, NULL);
          change != NULL; change = pcmk__xe_next(change, PCMK_XE_CHANGE)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *diff_xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
         if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
             // Change to an existing element

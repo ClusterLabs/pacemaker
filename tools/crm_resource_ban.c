@@ -361,7 +361,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
                          bool promoted_role_only)
 {
     const char *cons_id = pcmk__xe_id(constraint_node);
-    const char *cons_rsc = crm_element_value(constraint_node, PCMK_XA_RSC);
+    const char *cons_rsc = pcmk__xe_get(constraint_node, PCMK_XA_RSC);
     GString *rsc_role_substr = NULL;
     const char *promoted_role_rule = "@" PCMK_XA_ROLE "='" PCMK_ROLE_PROMOTED
                                      "' or @" PCMK_XA_ROLE "='"

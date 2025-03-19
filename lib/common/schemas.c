@@ -832,7 +832,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return false);
 
     if (validation == NULL) {
-        validation = crm_element_value(xml_blob, PCMK_XA_VALIDATE_WITH);
+        validation = pcmk__xe_get(xml_blob, PCMK_XA_VALIDATE_WITH);
     }
     pcmk__warn_if_schema_deprecated(validation);
 
@@ -1120,7 +1120,7 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
 static GList *
 get_configured_schema(const xmlNode *xml)
 {
-    const char *schema_name = crm_element_value(xml, PCMK_XA_VALIDATE_WITH);
+    const char *schema_name = pcmk__xe_get(xml, PCMK_XA_VALIDATE_WITH);
 
     pcmk__warn_if_schema_deprecated(schema_name);
     return pcmk__get_schema(schema_name);
@@ -1278,8 +1278,7 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
         entry = NULL;
         converted = pcmk__xml_copy(NULL, *xml);
         if (pcmk__update_schema(&converted, NULL, true, to_logs) == pcmk_rc_ok) {
-            new_schema_name = crm_element_value(converted,
-                                                PCMK_XA_VALIDATE_WITH);
+            new_schema_name = pcmk__xe_get(converted, PCMK_XA_VALIDATE_WITH);
             entry = pcmk__get_schema(new_schema_name);
         }
         schema = (entry == NULL)? NULL : entry->data;
@@ -1585,7 +1584,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
     int rc = pcmk__update_configured_schema(xml, to_logs);
 
     if (best_version != NULL) {
-        const char *name = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);
+        const char *name = pcmk__xe_get(*xml, PCMK_XA_VALIDATE_WITH);
 
         if (name == NULL) {
             *best_version = -1;

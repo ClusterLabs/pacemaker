@@ -181,9 +181,9 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
                                                  pcmk__get_tmpdir(), digest);
 
             crm_trace("Saving %s.%s.%s to %s",
-                      crm_element_value(xml, PCMK_XA_ADMIN_EPOCH),
-                      crm_element_value(xml, PCMK_XA_EPOCH),
-                      crm_element_value(xml, PCMK_XA_NUM_UPDATES),
+                      pcmk__xe_get(xml, PCMK_XA_ADMIN_EPOCH),
+                      pcmk__xe_get(xml, PCMK_XA_EPOCH),
+                      pcmk__xe_get(xml, PCMK_XA_NUM_UPDATES),
                       trace_file);
             save_xml_to_file(xml, "digest input", trace_file);
             free(trace_file);

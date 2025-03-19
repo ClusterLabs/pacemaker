@@ -241,10 +241,10 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         return 0;
     }
 
-    sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
+    sys_to = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_TO);
 
-    if (pcmk__str_eq(crm_element_value(msg, PCMK__XA_SUBT),
-                     PCMK__VALUE_RESPONSE, pcmk__str_none)) {
+    if (pcmk__str_eq(pcmk__xe_get(msg, PCMK__XA_SUBT), PCMK__VALUE_RESPONSE,
+                     pcmk__str_none)) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL,
                            CRM_EX_INDETERMINATE);
         crm_info("Ignoring IPC reply from %s", pcmk__client_name(c));

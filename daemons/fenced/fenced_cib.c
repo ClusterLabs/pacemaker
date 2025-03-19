@@ -181,7 +181,7 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
                                                 XPATH_WATCHDOG_TIMEOUT,
                                                 LOG_NEVER);
     if (stonith_watchdog_xml) {
-        value = crm_element_value(stonith_watchdog_xml, PCMK_XA_VALUE);
+        value = pcmk__xe_get(stonith_watchdog_xml, PCMK_XA_VALUE);
     }
     if (value) {
         timeout_ms = crm_get_msec(value);
@@ -205,9 +205,9 @@ cib_devices_update(void)
     stonith_device_t *device = NULL;
 
     crm_info("Updating devices to version %s.%s.%s",
-             crm_element_value(local_cib, PCMK_XA_ADMIN_EPOCH),
-             crm_element_value(local_cib, PCMK_XA_EPOCH),
-             crm_element_value(local_cib, PCMK_XA_NUM_UPDATES));
+             pcmk__xe_get(local_cib, PCMK_XA_ADMIN_EPOCH),
+             pcmk__xe_get(local_cib, PCMK_XA_EPOCH),
+             pcmk__xe_get(local_cib, PCMK_XA_NUM_UPDATES));
 
     g_hash_table_iter_init(&iter, device_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
@@ -252,8 +252,8 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
         const char *shortpath = NULL;
 
         if (pcmk__str_eq(op, PCMK_VALUE_MOVE, pcmk__str_null_matches)
@@ -395,8 +395,8 @@ update_fencing_topology(const char *event, xmlNode *msg)
     for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
         if (op == NULL) {
             continue;

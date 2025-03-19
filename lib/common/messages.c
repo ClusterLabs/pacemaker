@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -123,17 +123,15 @@ xmlNode *
 pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
                    xmlNode *data)
 {
-    const char *message_type = crm_element_value(original_request, PCMK__XA_T);
-    const char *host_from = crm_element_value(original_request, PCMK__XA_SRC);
-    const char *sys_from = crm_element_value(original_request,
-                                             PCMK__XA_CRM_SYS_FROM);
-    const char *sys_to = crm_element_value(original_request,
-                                           PCMK__XA_CRM_SYS_TO);
-    const char *type = crm_element_value(original_request, PCMK__XA_SUBT);
-    const char *operation = crm_element_value(original_request,
-                                              PCMK__XA_CRM_TASK);
-    const char *crm_msg_reference = crm_element_value(original_request,
-                                                      PCMK_XA_REFERENCE);
+    const char *message_type = pcmk__xe_get(original_request, PCMK__XA_T);
+    const char *host_from = pcmk__xe_get(original_request, PCMK__XA_SRC);
+    const char *sys_from = pcmk__xe_get(original_request,
+                                        PCMK__XA_CRM_SYS_FROM);
+    const char *sys_to = pcmk__xe_get(original_request, PCMK__XA_CRM_SYS_TO);
+    const char *type = pcmk__xe_get(original_request, PCMK__XA_SUBT);
+    const char *operation = pcmk__xe_get(original_request, PCMK__XA_CRM_TASK);
+    const char *crm_msg_reference = pcmk__xe_get(original_request,
+                                                 PCMK_XA_REFERENCE);
     enum pcmk_ipc_server server = pcmk__parse_server(message_type);
 
     if (server == pcmk_ipc_unknown) {

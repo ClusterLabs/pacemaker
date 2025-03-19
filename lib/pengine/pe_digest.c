@@ -187,14 +187,14 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                         GHashTable *params, const xmlNode *xml_op,
                         const char *op_version, GHashTable *overrides)
 {
-    const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+    const char *class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
     const char *secure_list = NULL;
     bool old_version = (compare_version(op_version, "3.16.0") < 0);
 
     if (xml_op == NULL) {
         secure_list = " passwd password user ";
     } else {
-        secure_list = crm_element_value(xml_op, PCMK__XA_OP_SECURE_PARAMS);
+        secure_list = pcmk__xe_get(xml_op, PCMK__XA_OP_SECURE_PARAMS);
     }
 
     if (old_version) {
@@ -264,7 +264,7 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
     }
 
     // And the history must have a restart digest to compare against
-    if (crm_element_value(xml_op, PCMK__XA_OP_RESTART_DIGEST) == NULL) {
+    if (pcmk__xe_get(xml_op, PCMK__XA_OP_RESTART_DIGEST) == NULL) {
         return;
     }
 
@@ -272,13 +272,13 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
     data->params_restart = pcmk__xml_copy(NULL, data->params_all);
 
     // Then filter out reloadable parameters, if any
-    value = crm_element_value(xml_op, PCMK__XA_OP_FORCE_RESTART);
+    value = pcmk__xe_get(xml_op, PCMK__XA_OP_FORCE_RESTART);
     if (value != NULL) {
         pcmk__xe_remove_matching_attrs(data->params_restart, false,
                                        attr_not_in_string, (void *) value);
     }
 
-    value = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
+    value = pcmk__xe_get(xml_op, PCMK_XA_CRM_FEATURE_SET);
     data->digest_restart_calc = pcmk__digest_operation(data->params_restart);
 }
 
@@ -321,12 +321,11 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
     data->rc = pcmk__digest_match;
 
     if (xml_op != NULL) {
-        op_version = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
+        op_version = pcmk__xe_get(xml_op, PCMK_XA_CRM_FEATURE_SET);
     }
 
     if ((op_version == NULL) && (scheduler->input != NULL)) {
-        op_version = crm_element_value(scheduler->input,
-                                       PCMK_XA_CRM_FEATURE_SET);
+        op_version = pcmk__xe_get(scheduler->input, PCMK_XA_CRM_FEATURE_SET);
     }
 
     if (op_version == NULL) {
@@ -396,15 +395,15 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
     guint interval_ms = 0;
 
     const char *op_version;
-    const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
+    const char *task = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);
     const char *digest_all;
     const char *digest_restart;
 
     pcmk__assert(node != NULL);
 
-    op_version = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
-    digest_all = crm_element_value(xml_op, PCMK__XA_OP_DIGEST);
-    digest_restart = crm_element_value(xml_op, PCMK__XA_OP_RESTART_DIGEST);
+    op_version = pcmk__xe_get(xml_op, PCMK_XA_CRM_FEATURE_SET);
+    digest_all = pcmk__xe_get(xml_op, PCMK__XA_OP_DIGEST);
+    digest_restart = pcmk__xe_get(xml_op, PCMK__XA_OP_RESTART_DIGEST);
 
     pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
     data = rsc_action_digest(rsc, task, interval_ms, node, xml_op,
@@ -421,7 +420,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                        pcmk__readable_interval(interval_ms), task, rsc->id,
                        pcmk__node_name(node), data->digest_restart_calc,
                        pcmk__s(digest_restart, "missing"), op_version,
-                       crm_element_value(xml_op, PCMK__XA_TRANSITION_MAGIC));
+                       pcmk__xe_get(xml_op, PCMK__XA_TRANSITION_MAGIC));
         data->rc = pcmk__digest_restart;
 
     } else if (digest_all == NULL) {
@@ -446,8 +445,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                            interval_ms, task, rsc->id, pcmk__node_name(node),
                            pcmk__s(digest_all, "missing"),
                            data->digest_all_calc, op_version,
-                           crm_element_value(xml_op,
-                                             PCMK__XA_TRANSITION_MAGIC));
+                           pcmk__xe_get(xml_op, PCMK__XA_TRANSITION_MAGIC));
 
         } else {
             pcmk__rsc_info(rsc,
@@ -458,8 +456,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                            data->digest_all_calc,
                            (interval_ms > 0)? "reschedule" : "reload",
                            op_version,
-                           crm_element_value(xml_op,
-                                             PCMK__XA_TRANSITION_MAGIC));
+                           pcmk__xe_get(xml_op, PCMK__XA_TRANSITION_MAGIC));
             data->rc = pcmk__digest_mismatch;
         }
 

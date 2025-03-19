@@ -860,8 +860,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                     if (probe_op != NULL) {
                         int rc;
 
-                        pcmk__scan_min_int(crm_element_value(probe_op,
-                                                             PCMK__XA_RC_CODE),
+                        pcmk__scan_min_int(pcmk__xe_get(probe_op,
+                                                        PCMK__XA_RC_CODE),
                                            &rc, 0);
                         g_hash_table_insert(stopped, strdup(node->priv->name),
                                             crm_strdup_printf("Stopped (%s)",

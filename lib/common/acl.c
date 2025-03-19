@@ -52,10 +52,10 @@ create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
 {
     xml_acl_t *acl = NULL;
 
-    const char *tag = crm_element_value(xml, PCMK_XA_OBJECT_TYPE);
-    const char *ref = crm_element_value(xml, PCMK_XA_REFERENCE);
-    const char *xpath = crm_element_value(xml, PCMK_XA_XPATH);
-    const char *attr = crm_element_value(xml, PCMK_XA_ATTRIBUTE);
+    const char *tag = pcmk__xe_get(xml, PCMK_XA_OBJECT_TYPE);
+    const char *ref = pcmk__xe_get(xml, PCMK_XA_REFERENCE);
+    const char *xpath = pcmk__xe_get(xml, PCMK_XA_XPATH);
+    const char *attr = pcmk__xe_get(xml, PCMK_XA_ATTRIBUTE);
 
     if ((tag == NULL) && (ref == NULL) && (xpath == NULL)) {
         // Schema should prevent this, but to be safe ...
@@ -121,7 +121,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
          child != NULL; child = pcmk__xe_next(child, NULL)) {
 
         if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
-            const char *kind = crm_element_value(child, PCMK_XA_KIND);
+            const char *kind = pcmk__xe_get(child, PCMK_XA_KIND);
 
             pcmk__assert(kind != NULL);
             crm_trace("Unpacking <" PCMK_XE_ACL_PERMISSION "> element of "
@@ -142,7 +142,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
             }
 
         } else if (pcmk__xe_is(child, PCMK_XE_ROLE)) {
-            const char *ref_role = crm_element_value(child, PCMK_XA_ID);
+            const char *ref_role = pcmk__xe_get(child, PCMK_XA_ID);
 
             crm_trace("Unpacking <" PCMK_XE_ROLE "> element");
 
@@ -160,7 +160,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
                     continue;
                 }
 
-                role_id = crm_element_value(role, PCMK_XA_ID);
+                role_id = pcmk__xe_get(role, PCMK_XA_ID);
 
                 if (pcmk__str_eq(ref_role, role_id, pcmk__str_none)) {
                     crm_trace("Unpacking referenced role '%s' in <%s> element",
@@ -343,10 +343,10 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                  child != NULL; child = pcmk__xe_next(child, NULL)) {
 
                 if (pcmk__xe_is(child, PCMK_XE_ACL_TARGET)) {
-                    const char *id = crm_element_value(child, PCMK_XA_NAME);
+                    const char *id = pcmk__xe_get(child, PCMK_XA_NAME);
 
                     if (id == NULL) {
-                        id = crm_element_value(child, PCMK_XA_ID);
+                        id = pcmk__xe_get(child, PCMK_XA_ID);
                     }
 
                     if (id && strcmp(id, user) == 0) {
@@ -354,10 +354,10 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                         docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
                     }
                 } else if (pcmk__xe_is(child, PCMK_XE_ACL_GROUP)) {
-                    const char *id = crm_element_value(child, PCMK_XA_NAME);
+                    const char *id = pcmk__xe_get(child, PCMK_XA_NAME);
 
                     if (id == NULL) {
-                        id = crm_element_value(child, PCMK_XA_ID);
+                        id = pcmk__xe_get(child, PCMK_XA_ID);
                     }
 
                     if (id && pcmk__is_user_in_group(user,id)) {
@@ -853,7 +853,7 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
         }
     }
 
-    requested_user = crm_element_value(request, PCMK__XA_ACL_TARGET);
+    requested_user = pcmk__xe_get(request, PCMK__XA_ACL_TARGET);
     if (requested_user == NULL) {
         /* Currently, different XML attribute names are used for the ACL user in
          * different contexts (PCMK__XA_ATTR_USER, PCMK__XA_CIB_USER, etc.).
@@ -863,7 +863,7 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
          * others once rolling upgrades from versions older than that are no
          * longer supported.
          */
-        requested_user = crm_element_value(request, field);
+        requested_user = pcmk__xe_get(request, field);
     }
 
     if (!pcmk__is_privileged(effective_user)) {
@@ -898,11 +898,11 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
     }
 
     // This requires pointer comparison, not string comparison
-    if (user != crm_element_value(request, PCMK__XA_ACL_TARGET)) {
+    if (user != pcmk__xe_get(request, PCMK__XA_ACL_TARGET)) {
         crm_xml_add(request, PCMK__XA_ACL_TARGET, user);
     }
 
-    if (field != NULL && user != crm_element_value(request, field)) {
+    if ((field != NULL) && (user != pcmk__xe_get(request, field))) {
         crm_xml_add(request, field, user);
     }
 
