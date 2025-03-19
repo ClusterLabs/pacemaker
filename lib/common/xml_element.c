@@ -1423,31 +1423,6 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
 }
 
 /*!
- * \brief Retrieve the seconds-since-epoch value of an XML attribute
- *
- * This is like \c crm_element_value() but returning the value as a time_t.
- *
- * \param[in]  xml    XML node to check
- * \param[in]  name   Attribute name to check
- * \param[out] dest   Where to store attribute value
- *
- * \return \c pcmk_ok on success, -1 otherwise
- */
-int
-crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest)
-{
-    long long value_ll = 0;
-
-    if (crm_element_value_ll(xml, name, &value_ll) < 0) {
-        return -1;
-    }
-
-    // No bounds checking; see comment in pcmk__xe_get_time()
-    *dest = (time_t) value_ll;
-    return pcmk_ok;
-}
-
-/*!
  * \internal
  * \brief Get a date/time object from an XML attribute value
  *
@@ -1670,6 +1645,20 @@ crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
     }
     dest->tv_usec = (suseconds_t) value_i;
 
+    return pcmk_ok;
+}
+
+int
+crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest)
+{
+    long long value_ll = 0;
+
+    if (crm_element_value_ll(xml, name, &value_ll) < 0) {
+        return -1;
+    }
+
+    // No bounds checking; see comment in pcmk__xe_get_time()
+    *dest = (time_t) value_ll;
     return pcmk_ok;
 }
 
