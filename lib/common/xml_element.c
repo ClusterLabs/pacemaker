@@ -1360,6 +1360,7 @@ pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
 {
     long long value_ll = 0;
     struct timeval result = { 0, 0 };
+    int rc = pcmk_rc_ok;
 
     // Could allow one of sec_attr and usec_attr to be NULL in the future
     CRM_CHECK((xml != NULL) && (sec_attr != NULL) && (usec_attr != NULL)
@@ -1368,11 +1369,10 @@ pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
     // No bounds checking; see comment in pcmk__xe_get_time()
 
     // Parse seconds
-    errno = 0;
-    if (crm_element_value_ll(xml, sec_attr, &value_ll) < 0) {
-        return (errno != 0)? errno : pcmk_rc_bad_nvpair;
+    rc = pcmk__xe_get_time(xml, sec_attr, &(result.tv_sec));
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
-    result.tv_sec = (time_t) value_ll;
 
     // Parse microseconds
     errno = 0;

@@ -1021,7 +1021,6 @@ process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
     const char *msg_type = crm_element_value(reply, PCMK__XA_LRMD_OP);
     const char *tmp_ticket = crm_element_value(reply, PCMK__XA_LRMD_CLIENTID);
     const char *start_state = crm_element_value(reply, PCMK__XA_NODE_START_STATE);
-    long long uptime = -1;
 
     crm_element_value_int(reply, PCMK__XA_LRMD_RC, &rc);
     rc = pcmk_legacy2rc(rc);
@@ -1030,8 +1029,8 @@ process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
      * in handling transient attributes when the connection to the remote node
      * unexpectedly drops.  If no parameter is given, just default to -1.
      */
-    crm_element_value_ll(reply, PCMK__XA_UPTIME, &uptime);
-    native->remote->uptime = uptime;
+    native->remote->uptime = -1;
+    pcmk__xe_get_time(reply, PCMK__XA_UPTIME, &native->remote->uptime);
 
     if (start_state) {
         native->remote->start_state = strdup(start_state);

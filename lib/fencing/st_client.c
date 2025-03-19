@@ -732,7 +732,6 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
         for (op = pcmk__xe_first_child(reply, NULL, NULL, NULL); op != NULL;
              op = pcmk__xe_next(op, NULL)) {
             stonith_history_t *kvp;
-            long long completed;
             long long completed_nsec = 0L;
 
             kvp = pcmk__assert_alloc(1, sizeof(stonith_history_t));
@@ -741,8 +740,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             kvp->origin = crm_element_value_copy(op, PCMK__XA_ST_ORIGIN);
             kvp->delegate = crm_element_value_copy(op, PCMK__XA_ST_DELEGATE);
             kvp->client = crm_element_value_copy(op, PCMK__XA_ST_CLIENTNAME);
-            crm_element_value_ll(op, PCMK__XA_ST_DATE, &completed);
-            kvp->completed = (time_t) completed;
+            pcmk__xe_get_time(op, PCMK__XA_ST_DATE, &kvp->completed);
             crm_element_value_ll(op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
             kvp->completed_nsec = completed_nsec;
             crm_element_value_int(op, PCMK__XA_ST_STATE, &kvp->state);

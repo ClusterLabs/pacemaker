@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -200,7 +200,6 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         pcmk_pacemakerd_reply_unknown
     };
     const char *value = NULL;
-    long long value_ll = 0;
 
     if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         long long int ack_status = 0;
@@ -248,8 +247,6 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     wrapper = pcmk__xe_first_child(reply, PCMK__XE_CRM_XML, NULL, NULL);
     msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    crm_element_value_ll(msg_data, PCMK_XA_CRM_TIMESTAMP, &value_ll);
-
     if (pcmk__str_eq(value, CRM_OP_PING, pcmk__str_none)) {
         reply_data.reply_type = pcmk_pacemakerd_reply_ping;
         reply_data.data.ping.state =
@@ -258,7 +255,13 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         reply_data.data.ping.status =
             pcmk__str_eq(crm_element_value(msg_data, PCMK_XA_RESULT), "ok",
                          pcmk__str_casei)?pcmk_rc_ok:pcmk_rc_error;
-        reply_data.data.ping.last_good = (value_ll < 0)? 0 : (time_t) value_ll;
+
+        pcmk__xe_get_time(msg_data, PCMK_XA_CRM_TIMESTAMP,
+                          &reply_data.data.ping.last_good);
+        if (reply_data.data.ping.last_good < 0) {
+            reply_data.data.ping.last_good = 0;
+        }
+
         reply_data.data.ping.sys_from =
             crm_element_value(msg_data, PCMK__XA_CRM_SUBSYSTEM);
     } else if (pcmk__str_eq(value, CRM_OP_QUIT, pcmk__str_none)) {
