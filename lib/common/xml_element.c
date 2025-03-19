@@ -1076,35 +1076,6 @@ crm_xml_add_int(xmlNode *node, const char *name, int value)
     return added;
 }
 
-// Maximum size of null-terminated string representation of 64-bit integer
-// -9223372036854775808
-#define LLSTRSIZE 21
-
-/*!
- * \brief Create an XML attribute with specified name and long long int value
- *
- * This is like \c crm_xml_add() but taking a long long int value. It is a
- * useful equivalent for defined types like time_t, etc.
- *
- * \param[in,out] xml    XML node to modify
- * \param[in]     name   Attribute name to set
- * \param[in]     value  Attribute value to set
- *
- * \return New value as string on success, \c NULL otherwise
- * \note This does nothing if xml or name are \c NULL or empty.
- *       This does not support greater than 64-bit values.
- */
-const char *
-crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
-{
-    char s[LLSTRSIZE] = { '\0', };
-
-    if (snprintf(s, LLSTRSIZE, "%lld", (long long) value) == LLSTRSIZE) {
-        return NULL;
-    }
-    return crm_xml_add(xml, name, s);
-}
-
 /*!
  * \internal
  * \brief Retrieve the value of an XML attribute
@@ -1795,6 +1766,21 @@ crm_element_value_copy(const xmlNode *data, const char *name)
 {
     CRM_CHECK((data != NULL) && (name != NULL), return NULL);
     return pcmk__str_copy(pcmk__xe_get(data, name));
+}
+
+// Maximum size of null-terminated string representation of 64-bit integer
+// -9223372036854775808
+#define LLSTRSIZE 21
+
+const char *
+crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
+{
+    char s[LLSTRSIZE] = { '\0', };
+
+    if (snprintf(s, LLSTRSIZE, "%lld", (long long) value) == LLSTRSIZE) {
+        return NULL;
+    }
+    return crm_xml_add(xml, name, s);
 }
 
 const char *
