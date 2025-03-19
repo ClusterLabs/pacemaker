@@ -384,8 +384,8 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 crm_xml_add(entry, PCMK__XA_ST_DELEGATE, op->delegate);
                 crm_xml_add(entry, PCMK__XA_ST_CLIENTNAME, op->client_name);
                 pcmk__xe_set_time(entry, PCMK__XA_ST_DATE, op->completed);
-                crm_xml_add_ll(entry, PCMK__XA_ST_DATE_NSEC,
-                               op->completed_nsec);
+                pcmk__xe_set_ll(entry, PCMK__XA_ST_DATE_NSEC,
+                                op->completed_nsec);
                 crm_xml_add_int(entry, PCMK__XA_ST_STATE, op->state);
                 stonith__xe_set_result(entry, &op->result);
             }

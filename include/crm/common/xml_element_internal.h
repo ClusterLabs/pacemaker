@@ -149,7 +149,9 @@ int pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest);
 void pcmk__xe_set_guint(xmlNode *xml, const char *attr, guint value);
 
 int pcmk__xe_get_int(const xmlNode *xml, const char *name, int *dest);
+
 int pcmk__xe_get_ll(const xmlNode *xml, const char *name, long long *dest);
+int pcmk__xe_set_ll(xmlNode *xml, const char *attr, long long value);
 
 int pcmk__xe_get_time(const xmlNode *xml, const char *attr, time_t *dest);
 void pcmk__xe_set_time(xmlNode *xml, const char *attr, time_t value);

@@ -153,7 +153,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
     if ((flags & node_update_cluster) && node->state) {
         if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
             // A value 0 means the node is not a cluster member.
-            crm_xml_add_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
+            pcmk__xe_set_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
 
         } else {
             pcmk__xe_set_bool_attr(node_state, PCMK__XA_IN_CCM,
@@ -166,7 +166,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
         if (flags & node_update_peer) {
             if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
                 // A value 0 means the peer is offline in CPG.
-                crm_xml_add_ll(node_state, PCMK_XA_CRMD, node->when_online);
+                pcmk__xe_set_ll(node_state, PCMK_XA_CRMD, node->when_online);
 
             } else {
                 // @COMPAT DCs < 2.1.7 use online/offline rather than timestamp

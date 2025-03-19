@@ -767,7 +767,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
                                         pcmk_ipc_name(api, false),
                                         CRM_OP_RM_NODE_CACHE, NULL);
             if (nodeid > 0) {
-                crm_xml_add_ll(request, PCMK_XA_ID, (long long) nodeid);
+                pcmk__xe_set_ll(request, PCMK_XA_ID, (long long) nodeid);
             }
             crm_xml_add(request, PCMK_XA_UNAME, node_name);
             break;

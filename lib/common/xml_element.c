@@ -1304,6 +1304,38 @@ pcmk__xe_get_ll(const xmlNode *xml, const char *attr, long long *dest)
 
 /*!
  * \internal
+ * \brief Set an XML attribute using a <tt>long long</tt> value
+ *
+ * This is like \c crm_xml_add() but takes a <tt>long long</tt>.
+ *
+ * \param[in,out] xml    XML node to modify
+ * \param[in]     attr   Attribute name
+ * \param[in]     value  Attribute value to set
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_set_ll(xmlNode *xml, const char *attr, long long value)
+{
+    char *value_s = NULL;
+    int rc = pcmk_rc_ok;
+
+    CRM_CHECK((xml != NULL) && (attr != NULL), return EINVAL);
+
+    value_s = crm_strdup_printf("%lld", value);
+
+    errno = 0;
+    if (crm_xml_add(xml, attr, value_s) == NULL) {
+        // ACL denial
+        rc = (errno != 0)? errno : EACCES;
+    }
+
+    free(value_s);
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Retrieve a \c time_t value from an XML attribute
  *
  * This is like \c pcmk__xe_get() but returns the value as a \c time_t.
@@ -1352,7 +1384,7 @@ pcmk__xe_set_time(xmlNode *xml, const char *attr, time_t value)
     // Could be inline, but keep it underneath pcmk__xe_get_time()
     CRM_CHECK((xml != NULL) && (attr != NULL), return);
 
-    crm_xml_add_ll(xml, attr, (long long) value);
+    pcmk__xe_set_ll(xml, attr, (long long) value);
 }
 
 /*!
@@ -1423,7 +1455,8 @@ pcmk__xe_set_timeval(xmlNode *xml, const char *sec_attr, const char *usec_attr,
     if (value == NULL) {
         return;
     }
-    if (crm_xml_add_ll(xml, sec_attr, (long long) value->tv_sec) == NULL) {
+    if (pcmk__xe_set_ll(xml, sec_attr,
+                        (long long) value->tv_sec) != pcmk_rc_ok) {
         return;
     }
 
@@ -1436,7 +1469,7 @@ pcmk__xe_set_timeval(xmlNode *xml, const char *sec_attr, const char *usec_attr,
      * due to memory allocation failure. Nothing checks the return values of
      * these setter functions at time of writing, anyway.
      */
-    crm_xml_add_ll(xml, usec_attr, (long long) value->tv_usec);
+    pcmk__xe_set_ll(xml, usec_attr, (long long) value->tv_usec);
 }
 
 /*!

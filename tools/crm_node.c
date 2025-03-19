@@ -549,7 +549,7 @@ remove_from_section(cib_t *cib, const char *element, const char *section,
 
     crm_xml_add(xml, PCMK_XA_UNAME, node_name);
     if (node_id > 0) {
-        crm_xml_add_ll(xml, PCMK_XA_ID, node_id);
+        pcmk__xe_set_ll(xml, PCMK_XA_ID, (long long) node_id);
     }
 
     rc = cib->cmds->remove(cib, section, xml, cib_transaction);
@@ -689,7 +689,7 @@ purge_node_from_fencer(const char *node_name, long node_id)
     cmd = pcmk__new_request(pcmk_ipc_fenced, crm_system_name, NULL,
                             PCMK__VALUE_STONITH_NG, CRM_OP_RM_NODE_CACHE, NULL);
     if (node_id > 0) {
-        crm_xml_add_ll(cmd, PCMK_XA_ID, node_id);
+        pcmk__xe_set_ll(cmd, PCMK_XA_ID, (long long) node_id);
     }
     crm_xml_add(cmd, PCMK_XA_UNAME, node_name);
 
