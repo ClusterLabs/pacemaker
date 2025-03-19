@@ -1641,7 +1641,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
     task = crm_element_value(xml_op, PCMK_XA_OPERATION);
     CRM_CHECK(task != NULL, return false);
 
-    crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
+    pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
 
     // If this is a recurring action, check whether it has been orphaned
     if (interval_ms > 0) {
@@ -1829,7 +1829,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
         }
 
         task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
-        crm_element_value_ms(rsc_op, PCMK_META_INTERVAL, &interval_ms);
+        pcmk__xe_get_guint(rsc_op, PCMK_META_INTERVAL, &interval_ms);
 
         if ((interval_ms > 0)
             && (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)
