@@ -1442,24 +1442,6 @@ pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t)
 }
 
 /*!
- * \brief Retrieve a copy of the value of an XML attribute
- *
- * This is like \c pcmk__xe_get() but allocating new memory for the result.
- *
- * \param[in] data   XML node to check
- * \param[in] name   Attribute name to check
- *
- * \return Value of specified attribute (may be \c NULL)
- * \note The caller is responsible for freeing the result.
- */
-char *
-crm_element_value_copy(const xmlNode *data, const char *name)
-{
-    CRM_CHECK((data != NULL) && (name != NULL), return NULL);
-    return pcmk__str_copy(pcmk__xe_get(data, name));
-}
-
-/*!
  * \internal
  * \brief Add a boolean attribute to an XML node.
  *
@@ -1744,6 +1726,13 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
         }
     }
     return -1;
+}
+
+char *
+crm_element_value_copy(const xmlNode *data, const char *name)
+{
+    CRM_CHECK((data != NULL) && (name != NULL), return NULL);
+    return pcmk__str_copy(pcmk__xe_get(data, name));
 }
 
 // LCOV_EXCL_STOP
