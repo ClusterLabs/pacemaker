@@ -1292,18 +1292,55 @@ int
 pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest)
 {
     long long value_ll = 0;
+    int rc = pcmk_rc_ok;
 
     CRM_CHECK((xml != NULL) && (attr != NULL) && (dest != NULL), return EINVAL);
 
-    errno = 0;
-    if (crm_element_value_ll(xml, attr, &value_ll) != 0) {
-        return (errno != 0)? errno : pcmk_rc_bad_nvpair;
+    rc = pcmk__xe_get_ll(xml, attr, &value_ll);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
     if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
         return ERANGE;
     }
     *dest = (guint) value_ll;
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Retrieve a <tt>long long</tt> value from an XML attribute
+ *
+ * This is like \c crm_element_value() but returns the value as a
+ * <tt>long long</tt>
+ *
+ * \param[in]  xml   XML element whose attribute to get
+ * \param[in]  attr  Attribute name
+ * \param[out] dest  Where to store element value (unchanged on error)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_get_ll(const xmlNode *xml, const char *attr, long long *dest)
+{
+    const char *value = NULL;
+    long long value_ll = 0;
+    int rc = pcmk_rc_ok;
+
+    CRM_CHECK((xml != NULL) && (attr != NULL) && (dest != NULL), return EINVAL);
+
+    value = crm_element_value(xml, attr);
+    if (value == NULL) {
+        return ENXIO;
+    }
+
+    rc = pcmk__scan_ll(value, &value_ll, PCMK__PARSE_INT_DEFAULT);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    *dest = value_ll;
     return pcmk_rc_ok;
 }
 
@@ -1323,12 +1360,13 @@ int
 pcmk__xe_get_time(const xmlNode *xml, const char *attr, time_t *dest)
 {
     long long value_ll = 0;
+    int rc = pcmk_rc_ok;
 
     CRM_CHECK((xml != NULL) && (attr != NULL) && (dest != NULL), return EINVAL);
 
-    errno = 0;
-    if (crm_element_value_ll(xml, attr, &value_ll) < 0) {
-        return (errno != 0)? errno : pcmk_rc_bad_nvpair;
+    rc = pcmk__xe_get_ll(xml, attr, &value_ll);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
     /* We don't do any bounds checking, since there are no constants provided
@@ -1375,9 +1413,9 @@ pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
     }
 
     // Parse microseconds
-    errno = 0;
-    if (crm_element_value_ll(xml, usec_attr, &value_ll) < 0) {
-        return (errno != 0)? errno : pcmk_rc_bad_nvpair;
+    rc = pcmk__xe_get_ll(xml, usec_attr, &value_ll);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
     result.tv_usec = (suseconds_t) value_ll;
 

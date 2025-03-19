@@ -731,18 +731,22 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
         for (op = pcmk__xe_first_child(reply, NULL, NULL, NULL); op != NULL;
              op = pcmk__xe_next(op, NULL)) {
-            stonith_history_t *kvp;
-            long long completed_nsec = 0L;
+            stonith_history_t *kvp =
+                pcmk__assert_alloc(1, sizeof(stonith_history_t));
+            long long completed_nsec = 0LL;
 
-            kvp = pcmk__assert_alloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, PCMK__XA_ST_TARGET);
             kvp->action = crm_element_value_copy(op, PCMK__XA_ST_DEVICE_ACTION);
             kvp->origin = crm_element_value_copy(op, PCMK__XA_ST_ORIGIN);
             kvp->delegate = crm_element_value_copy(op, PCMK__XA_ST_DELEGATE);
             kvp->client = crm_element_value_copy(op, PCMK__XA_ST_CLIENTNAME);
             pcmk__xe_get_time(op, PCMK__XA_ST_DATE, &kvp->completed);
-            crm_element_value_ll(op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
-            kvp->completed_nsec = completed_nsec;
+
+            pcmk__xe_get_ll(op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
+            if ((completed_nsec >= LONG_MIN) && (completed_nsec <= LONG_MAX)) {
+                kvp->completed_nsec = (long) completed_nsec;
+            }
+
             crm_element_value_int(op, PCMK__XA_ST_STATE, &kvp->state);
             kvp->exit_reason = crm_element_value_copy(op, PCMK_XA_EXIT_REASON);
 
