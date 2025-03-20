@@ -28,9 +28,9 @@ attrd_confirmation(int callid)
 {
     xmlNode *node = pcmk__xe_create(NULL, __func__);
 
-    crm_xml_add(node, PCMK__XA_T, PCMK__VALUE_ATTRD);
-    crm_xml_add(node, PCMK__XA_SRC, pcmk__cluster_local_node_name());
-    crm_xml_add(node, PCMK_XA_TASK, PCMK__ATTRD_CMD_CONFIRM);
+    pcmk__xe_set(node, PCMK__XA_T, PCMK__VALUE_ATTRD);
+    pcmk__xe_set(node, PCMK__XA_SRC, pcmk__cluster_local_node_name());
+    pcmk__xe_set(node, PCMK_XA_TASK, PCMK__ATTRD_CMD_CONFIRM);
     pcmk__xe_set_int(node, PCMK__XA_CALL_ID, callid);
 
     return node;
@@ -151,7 +151,7 @@ attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v)
 {
     xmlNode *op = pcmk__xe_create(NULL, PCMK_XE_OP);
 
-    crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     attrd_add_value_xml(op, a, v, false);
     attrd_send_message(NULL, op, false);
     pcmk__xml_free(op);
@@ -396,7 +396,8 @@ broadcast_unseen_local_values(void)
                           a->id, v->nodename, readable_value(v));
                 if (sync == NULL) {
                     sync = pcmk__xe_create(NULL, __func__);
-                    crm_xml_add(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
+                    pcmk__xe_set(sync, PCMK_XA_TASK,
+                                 PCMK__ATTRD_CMD_SYNC_RESPONSE);
                 }
                 attrd_add_value_xml(sync, a, v, a->timeout_ms && a->timer);
             }
@@ -457,7 +458,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
         return;
     }
 
-    crm_xml_add(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    pcmk__xe_set(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
 
     /* Make sure value is not set, so we delete */
     pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_VALUE);
@@ -467,7 +468,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
         if (regexec(&regex, attr, 0, NULL, 0) == 0) {
             crm_trace("Matched %s when clearing %s",
                       attr, pcmk__s(rsc, "all resources"));
-            crm_xml_add(xml, PCMK__XA_ATTR_NAME, attr);
+            pcmk__xe_set(xml, PCMK__XA_ATTR_NAME, attr);
             attrd_peer_update(peer, xml, host, false);
         }
     }
@@ -560,7 +561,7 @@ attrd_peer_sync(pcmk__node_status_t *peer)
     attribute_value_t *v = NULL;
     xmlNode *sync = pcmk__xe_create(NULL, __func__);
 
-    crm_xml_add(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
+    pcmk__xe_set(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {

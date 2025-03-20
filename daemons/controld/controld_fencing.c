@@ -249,12 +249,12 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
     crmd_peer_down(peer, TRUE);
 
     node_state = create_node_state_update(peer, flags, NULL, __func__);
-    crm_xml_add(node_state, PCMK_XA_ID, target_xml_id);
+    pcmk__xe_set(node_state, PCMK_XA_ID, target_xml_id);
 
     if (pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
         char *now_s = pcmk__ttoa(time(NULL));
 
-        crm_xml_add(node_state, PCMK__XA_NODE_FENCED, now_s);
+        pcmk__xe_set(node_state, PCMK__XA_NODE_FENCED, now_s);
         free(now_s);
     }
 

@@ -541,10 +541,10 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
         GList *gIter = NULL;
         xmlNode *xml_rsc = pcmk__xe_create(rsc_list, PCMK__XE_LRM_RESOURCE);
 
-        crm_xml_add(xml_rsc, PCMK_XA_ID, entry->id);
-        crm_xml_add(xml_rsc, PCMK_XA_TYPE, entry->rsc.type);
-        crm_xml_add(xml_rsc, PCMK_XA_CLASS, entry->rsc.standard);
-        crm_xml_add(xml_rsc, PCMK_XA_PROVIDER, entry->rsc.provider);
+        pcmk__xe_set(xml_rsc, PCMK_XA_ID, entry->id);
+        pcmk__xe_set(xml_rsc, PCMK_XA_TYPE, entry->rsc.type);
+        pcmk__xe_set(xml_rsc, PCMK_XA_CLASS, entry->rsc.standard);
+        pcmk__xe_set(xml_rsc, PCMK_XA_PROVIDER, entry->rsc.provider);
 
         if (entry->last && entry->last->params) {
             static const char *name = CRM_META "_" PCMK__META_CONTAINER;
@@ -553,7 +553,7 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
 
             if (container) {
                 crm_trace("Resource %s is a part of container resource %s", entry->id, container);
-                crm_xml_add(xml_rsc, PCMK__META_CONTAINER, container);
+                pcmk__xe_set(xml_rsc, PCMK__META_CONTAINER, container);
             }
         }
         controld_add_resource_history_xml(xml_rsc, &(entry->rsc), entry->failed,
@@ -595,7 +595,7 @@ controld_query_executor_state(void)
     }
 
     xml_data = pcmk__xe_create(xml_state, PCMK__XE_LRM);
-    crm_xml_add(xml_data, PCMK_XA_ID, peer->xml_id);
+    pcmk__xe_set(xml_data, PCMK_XA_ID, peer->xml_id);
     rsc_list = pcmk__xe_create(xml_data, PCMK__XE_LRM_RESOURCES);
 
     // Build a list of active (not necessarily running) resources
@@ -1732,11 +1732,11 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
                                       __func__);
 
     iter = pcmk__xe_create(update, PCMK__XE_LRM);
-    crm_xml_add(iter, PCMK_XA_ID, controld_globals.our_uuid);
+    pcmk__xe_set(iter, PCMK_XA_ID, controld_globals.our_uuid);
     iter = pcmk__xe_create(iter, PCMK__XE_LRM_RESOURCES);
     iter = pcmk__xe_create(iter, PCMK__XE_LRM_RESOURCE);
 
-    crm_xml_add(iter, PCMK_XA_ID, op->rsc_id);
+    pcmk__xe_set(iter, PCMK_XA_ID, op->rsc_id);
 
     controld_add_resource_history_xml(iter, rsc, op,
                                       controld_globals.cluster->priv->node_name);

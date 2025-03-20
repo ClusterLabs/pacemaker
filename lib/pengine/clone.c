@@ -243,7 +243,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     child_copy = pcmk__xml_copy(NULL, clone_data->xml_obj_child);
 
-    crm_xml_add(child_copy, PCMK__META_CLONE, inc_num);
+    pcmk__xe_set(child_copy, PCMK__META_CLONE, inc_num);
 
     if (pe__unpack_resource(child_copy, &child_rsc, rsc,
                             scheduler) != pcmk_rc_ok) {

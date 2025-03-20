@@ -55,10 +55,10 @@ handle_ping_request(pcmk__request_t *request)
 
     ping = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
     value = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_TO);
-    crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
-    crm_xml_add(ping, PCMK__XA_PACEMAKERD_STATE, pacemakerd_state);
+    pcmk__xe_set(ping, PCMK__XA_CRM_SUBSYSTEM, value);
+    pcmk__xe_set(ping, PCMK__XA_PACEMAKERD_STATE, pacemakerd_state);
     pcmk__xe_set_time(ping, PCMK_XA_CRM_TIMESTAMP, subdaemon_check_progress);
-    crm_xml_add(ping, PCMK_XA_RESULT, "ok");
+    pcmk__xe_set(ping, PCMK_XA_RESULT, "ok");
     reply = pcmk__new_reply(msg, ping);
 
     pcmk__xml_free(ping);

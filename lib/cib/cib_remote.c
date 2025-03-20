@@ -412,10 +412,10 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     /* login to server */
     login = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
-    crm_xml_add(login, PCMK_XA_OP, "authenticate");
-    crm_xml_add(login, PCMK_XA_USER, private->user);
-    crm_xml_add(login, PCMK__XA_PASSWORD, private->passwd);
-    crm_xml_add(login, PCMK__XA_HIDDEN, PCMK__VALUE_PASSWORD);
+    pcmk__xe_set(login, PCMK_XA_OP, "authenticate");
+    pcmk__xe_set(login, PCMK_XA_USER, private->user);
+    pcmk__xe_set(login, PCMK__XA_PASSWORD, private->passwd);
+    pcmk__xe_set(login, PCMK__XA_HIDDEN, PCMK__VALUE_PASSWORD);
 
     pcmk__remote_send_xml(connection, login);
     pcmk__xml_free(login);
@@ -556,8 +556,8 @@ cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
     xmlNode *notify_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    crm_xml_add(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
-    crm_xml_add(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
+    pcmk__xe_set(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
+    pcmk__xe_set(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
     pcmk__xe_set_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
     pcmk__remote_send_xml(&private->callback, notify_msg);
     pcmk__xml_free(notify_msg);

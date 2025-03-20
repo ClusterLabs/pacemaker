@@ -209,7 +209,7 @@ group_unpack(pcmk_resource_t *rsc)
 
         pcmk_resource_t *new_rsc = NULL;
 
-        crm_xml_add(xml_native_rsc, PCMK__META_CLONE, clone_id);
+        pcmk__xe_set(xml_native_rsc, PCMK__META_CLONE, clone_id);
         if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
                                 rsc->priv->scheduler) != pcmk_rc_ok) {
             continue;

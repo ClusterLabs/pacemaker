@@ -284,8 +284,8 @@ stonith_connection_destroy(gpointer user_data)
 
     free(native->token); native->token = NULL;
     stonith->state = stonith_disconnected;
-    crm_xml_add(blob.xml, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
-    crm_xml_add(blob.xml, PCMK__XA_SUBT, PCMK__VALUE_ST_NOTIFY_DISCONNECT);
+    pcmk__xe_set(blob.xml, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
+    pcmk__xe_set(blob.xml, PCMK__XA_SUBT, PCMK__VALUE_ST_NOTIFY_DISCONNECT);
 
     foreach_notify_entry(native, stonith_send_notification, &blob);
     pcmk__xml_free(blob.xml);
@@ -310,15 +310,15 @@ create_device_registration_xml(const char *id, enum stonith_namespace standard,
     }
 #endif
 
-    crm_xml_add(data, PCMK_XA_ID, id);
-    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add(data, PCMK_XA_AGENT, agent);
+    pcmk__xe_set(data, PCMK_XA_ID, id);
+    pcmk__xe_set(data, PCMK__XA_ST_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK_XA_AGENT, agent);
     if ((standard != st_namespace_any) && (standard != st_namespace_invalid)) {
-        crm_xml_add(data, PCMK__XA_NAMESPACE,
-                    stonith_namespace2text(standard));
+        pcmk__xe_set(data, PCMK__XA_NAMESPACE,
+                     stonith_namespace2text(standard));
     }
     if (rsc_provides) {
-        crm_xml_add(data, PCMK__XA_RSC_PROVIDES, rsc_provides);
+        pcmk__xe_set(data, PCMK__XA_RSC_PROVIDES, rsc_provides);
     }
 
     for (; params; params = params->next) {
@@ -354,8 +354,8 @@ stonith_api_remove_device(stonith_t * st, int call_options, const char *name)
     xmlNode *data = NULL;
 
     data = pcmk__xe_create(NULL, PCMK__XE_ST_DEVICE_ID);
-    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add(data, PCMK_XA_ID, name);
+    pcmk__xe_set(data, PCMK__XA_ST_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK_XA_ID, name);
     rc = stonith_send_command(st, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
     pcmk__xml_free(data);
 
@@ -373,17 +373,17 @@ stonith_api_remove_level_full(stonith_t *st, int options,
     CRM_CHECK(node || pattern || (attr && value), return -EINVAL);
 
     data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
-    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK__XA_ST_ORIGIN, __func__);
 
     if (node) {
-        crm_xml_add(data, PCMK_XA_TARGET, node);
+        pcmk__xe_set(data, PCMK_XA_TARGET, node);
 
     } else if (pattern) {
-        crm_xml_add(data, PCMK_XA_TARGET_PATTERN, pattern);
+        pcmk__xe_set(data, PCMK_XA_TARGET_PATTERN, pattern);
 
     } else {
-        crm_xml_add(data, PCMK_XA_TARGET_ATTRIBUTE, attr);
-        crm_xml_add(data, PCMK_XA_TARGET_VALUE, value);
+        pcmk__xe_set(data, PCMK_XA_TARGET_ATTRIBUTE, attr);
+        pcmk__xe_set(data, PCMK_XA_TARGET_VALUE, value);
     }
 
     pcmk__xe_set_int(data, PCMK_XA_INDEX, level);
@@ -427,19 +427,19 @@ create_level_registration_xml(const char *node, const char *pattern,
 
     data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
 
-    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK__XA_ST_ORIGIN, __func__);
     pcmk__xe_set_int(data, PCMK_XA_ID, level);
     pcmk__xe_set_int(data, PCMK_XA_INDEX, level);
 
     if (node) {
-        crm_xml_add(data, PCMK_XA_TARGET, node);
+        pcmk__xe_set(data, PCMK_XA_TARGET, node);
 
     } else if (pattern) {
-        crm_xml_add(data, PCMK_XA_TARGET_PATTERN, pattern);
+        pcmk__xe_set(data, PCMK_XA_TARGET_PATTERN, pattern);
 
     } else {
-        crm_xml_add(data, PCMK_XA_TARGET_ATTRIBUTE, attr);
-        crm_xml_add(data, PCMK_XA_TARGET_VALUE, value);
+        pcmk__xe_set(data, PCMK_XA_TARGET_ATTRIBUTE, attr);
+        pcmk__xe_set(data, PCMK_XA_TARGET_VALUE, value);
     }
 
     for (; device_list; device_list = device_list->next) {
@@ -447,7 +447,7 @@ create_level_registration_xml(const char *node, const char *pattern,
     }
 
     if (list != NULL) {
-        crm_xml_add(data, PCMK_XA_DEVICES, (const char *) list->str);
+        pcmk__xe_set(data, PCMK_XA_DEVICES, (const char *) list->str);
         g_string_free(list, TRUE);
     }
     return data;
@@ -555,9 +555,9 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
     CRM_CHECK(devices != NULL, return -EINVAL);
 
     data = pcmk__xe_create(NULL, PCMK__XE_ST_DEVICE_ID);
-    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add(data, PCMK__XA_ST_TARGET, target);
-    crm_xml_add(data, PCMK__XA_ST_DEVICE_ACTION, PCMK_ACTION_OFF);
+    pcmk__xe_set(data, PCMK__XA_ST_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK__XA_ST_TARGET, target);
+    pcmk__xe_set(data, PCMK__XA_ST_DEVICE_ACTION, PCMK_ACTION_OFF);
     rc = stonith_send_command(stonith, STONITH_OP_QUERY, data, &output, call_options, timeout);
 
     if (rc < 0) {
@@ -612,10 +612,10 @@ stonith_api_call(stonith_t *stonith, int call_options, const char *id,
     xmlNode *data = NULL;
 
     data = pcmk__xe_create(NULL, PCMK__XE_ST_DEVICE_ID);
-    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add(data, PCMK__XA_ST_DEVICE_ID, id);
-    crm_xml_add(data, PCMK__XA_ST_DEVICE_ACTION, action);
-    crm_xml_add(data, PCMK__XA_ST_TARGET, target);
+    pcmk__xe_set(data, PCMK__XA_ST_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK__XA_ST_DEVICE_ID, id);
+    pcmk__xe_set(data, PCMK__XA_ST_DEVICE_ACTION, action);
+    pcmk__xe_set(data, PCMK__XA_ST_TARGET, target);
 
     rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, output,
                               call_options, timeout_sec);
@@ -674,8 +674,8 @@ stonith_api_fence_with_delay(stonith_t * stonith, int call_options, const char *
     xmlNode *data = NULL;
 
     data = pcmk__xe_create(NULL, __func__);
-    crm_xml_add(data, PCMK__XA_ST_TARGET, node);
-    crm_xml_add(data, PCMK__XA_ST_DEVICE_ACTION, action);
+    pcmk__xe_set(data, PCMK__XA_ST_TARGET, node);
+    pcmk__xe_set(data, PCMK__XA_ST_DEVICE_ACTION, action);
     pcmk__xe_set_int(data, PCMK__XA_ST_TIMEOUT, timeout);
     pcmk__xe_set_int(data, PCMK__XA_ST_TOLERANCE, tolerance);
     pcmk__xe_set_int(data, PCMK__XA_ST_DELAY, delay);
@@ -715,7 +715,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
     if (node) {
         data = pcmk__xe_create(NULL, __func__);
-        crm_xml_add(data, PCMK__XA_ST_TARGET, node);
+        pcmk__xe_set(data, PCMK__XA_ST_TARGET, node);
     }
 
     stonith__set_call_options(call_options, node, st_opt_sync_call);
@@ -818,8 +818,8 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
     CRM_CHECK(token != NULL, return NULL);
 
     op_msg = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
-    crm_xml_add(op_msg, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-    crm_xml_add(op_msg, PCMK__XA_ST_OP, op);
+    pcmk__xe_set(op_msg, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+    pcmk__xe_set(op_msg, PCMK__XA_ST_OP, op);
     pcmk__xe_set_int(op_msg, PCMK__XA_ST_CALLID, call_id);
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
     pcmk__xe_set_int(op_msg, PCMK__XA_ST_CALLOPT, call_options);
@@ -1148,9 +1148,9 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         xmlNode *reply = NULL;
         xmlNode *hello = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
 
-        crm_xml_add(hello, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-        crm_xml_add(hello, PCMK__XA_ST_OP, CRM_OP_REGISTER);
-        crm_xml_add(hello, PCMK__XA_ST_CLIENTNAME, name);
+        pcmk__xe_set(hello, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+        pcmk__xe_set(hello, PCMK__XA_ST_OP, CRM_OP_REGISTER);
+        pcmk__xe_set(hello, PCMK__XA_ST_CLIENTNAME, name);
         rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);
 
         if (rc < 0) {
@@ -1205,11 +1205,11 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
 
     if (stonith->state != stonith_disconnected) {
 
-        crm_xml_add(notify_msg, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
+        pcmk__xe_set(notify_msg, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
         if (enabled) {
-            crm_xml_add(notify_msg, PCMK__XA_ST_NOTIFY_ACTIVATE, callback);
+            pcmk__xe_set(notify_msg, PCMK__XA_ST_NOTIFY_ACTIVATE, callback);
         } else {
-            crm_xml_add(notify_msg, PCMK__XA_ST_NOTIFY_DEACTIVATE, callback);
+            pcmk__xe_set(notify_msg, PCMK__XA_ST_NOTIFY_DEACTIVATE, callback);
         }
 
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response, -1, NULL);
@@ -1589,7 +1589,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         const char *delay_s = pcmk__xe_get(data, PCMK__XA_ST_DELAY);
 
         if (delay_s) {
-            crm_xml_add(op_msg, PCMK__XA_ST_DELAY, delay_s);
+            pcmk__xe_set(op_msg, PCMK__XA_ST_DELAY, delay_s);
         }
     }
 

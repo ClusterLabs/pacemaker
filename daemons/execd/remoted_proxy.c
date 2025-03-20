@@ -103,9 +103,9 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     g_hash_table_insert(ipc_clients, client->id, client);
 
     msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
-    crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_NEW);
-    crm_xml_add(msg, PCMK__XA_LRMD_IPC_SERVER, ipc_channel);
-    crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_NEW);
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SERVER, ipc_channel);
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
     lrmd_server_send_notify(ipc_proxy, msg);
     pcmk__xml_free(msg);
     crm_debug("Accepted IPC proxy connection (session ID %s) "
@@ -176,8 +176,8 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
     ipc_client = pcmk__find_client_by_id(session);
     if (ipc_client == NULL) {
         xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
-        crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
-        crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, session);
+        pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
+        pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, session);
         lrmd_server_send_notify(ipc_proxy, msg);
         pcmk__xml_free(msg);
         return;
@@ -271,10 +271,10 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     client->request_id = id;
 
     msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
-    crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_REQUEST);
-    crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
-    crm_xml_add(msg, PCMK__XA_LRMD_IPC_CLIENT, pcmk__client_name(client));
-    crm_xml_add(msg, PCMK__XA_LRMD_IPC_USER, client->user);
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_REQUEST);
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_CLIENT, pcmk__client_name(client));
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_USER, client->user);
     pcmk__xe_set_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, id);
 
     // @TODO Use different setter for uint32_t
@@ -305,12 +305,12 @@ ipc_proxy_shutdown_req(pcmk__client_t *ipc_proxy)
     xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
     int rc;
 
-    crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_REQ);
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_REQ);
 
     /* We don't really have a session, but the controller needs this attribute
      * to recognize this as proxy communication.
      */
-    crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, "0");
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, "0");
 
     rc = (lrmd_server_send_notify(ipc_proxy, msg) != pcmk_rc_ok)? -1 : 0;
     pcmk__xml_free(msg);
@@ -333,8 +333,8 @@ ipc_proxy_closed(qb_ipcs_connection_t * c)
 
     if (ipc_proxy) {
         xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
-        crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
-        crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
+        pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
+        pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
         lrmd_server_send_notify(ipc_proxy, msg);
         pcmk__xml_free(msg);
     }

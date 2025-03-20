@@ -750,11 +750,11 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
     switch (api->server) {
         case pcmk_ipc_attrd:
             request = pcmk__xe_create(NULL, __func__);
-            crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_ATTRD);
-            crm_xml_add(request, PCMK__XA_SRC, crm_system_name);
-            crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+            pcmk__xe_set(request, PCMK__XA_T, PCMK__VALUE_ATTRD);
+            pcmk__xe_set(request, PCMK__XA_SRC, crm_system_name);
+            pcmk__xe_set(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
             pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, true);
-            crm_xml_add(request, PCMK__XA_ATTR_HOST, node_name);
+            pcmk__xe_set(request, PCMK__XA_ATTR_HOST, node_name);
             if (nodeid > 0) {
                 pcmk__xe_set_int(request, PCMK__XA_ATTR_HOST_ID, nodeid);
             }
@@ -769,7 +769,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
             if (nodeid > 0) {
                 pcmk__xe_set_ll(request, PCMK_XA_ID, (long long) nodeid);
             }
-            crm_xml_add(request, PCMK_XA_UNAME, node_name);
+            pcmk__xe_set(request, PCMK_XA_UNAME, node_name);
             break;
 
         case pcmk_ipc_based:

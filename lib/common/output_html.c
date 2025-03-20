@@ -118,7 +118,7 @@ html_init(pcmk__output_t *out) {
     priv->root = pcmk__xe_create(NULL, "html");
     xmlCreateIntSubset(priv->root->doc, (const xmlChar *) "html", NULL, NULL);
 
-    crm_xml_add(priv->root, PCMK_XA_LANG, PCMK__VALUE_EN);
+    pcmk__xe_set(priv->root, PCMK_XA_LANG, PCMK__VALUE_EN);
     g_queue_push_tail(priv->parent_q, priv->root);
     priv->errors = NULL;
 
@@ -172,7 +172,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     }
 
     charset_node = pcmk__xe_create(head_node, PCMK__XE_META);
-    crm_xml_add(charset_node, "charset", "utf-8");
+    pcmk__xe_set(charset_node, "charset", "utf-8");
 
     /* Add any extra header nodes the caller might have created. */
     for (GSList *iter = extra_headers; iter != NULL; iter = iter->next) {
@@ -300,7 +300,7 @@ html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     pcmk__assert(out != NULL);
 
     node = pcmk__output_create_html_node(out, "pre", NULL, NULL, buf);
-    crm_xml_add(node, PCMK_XA_LANG, "xml");
+    pcmk__xe_set(node, PCMK_XA_LANG, "xml");
 }
 
 G_GNUC_PRINTF(4, 5)
@@ -365,7 +365,7 @@ html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     free(buf);
 
     if (name != NULL) {
-        crm_xml_add(item_node, PCMK_XA_CLASS, name);
+        pcmk__xe_set(item_node, PCMK_XA_CLASS, name);
     }
 }
 
@@ -459,11 +459,11 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
     node = pcmk__output_create_xml_text_node(out, element_name, text);
 
     if (class_name != NULL) {
-        crm_xml_add(node, PCMK_XA_CLASS, class_name);
+        pcmk__xe_set(node, PCMK_XA_CLASS, class_name);
     }
 
     if (id != NULL) {
-        crm_xml_add(node, PCMK_XA_ID, id);
+        pcmk__xe_set(node, PCMK_XA_ID, id);
     }
 
     return node;
@@ -512,7 +512,7 @@ pcmk__html_add_header(const char *name, ...) {
         }
 
         value = va_arg(ap, char *);
-        crm_xml_add(header_node, key, value);
+        pcmk__xe_set(header_node, key, value);
     }
 
     extra_headers = g_slist_append(extra_headers, header_node);

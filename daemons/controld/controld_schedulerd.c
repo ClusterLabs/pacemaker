@@ -145,9 +145,9 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
          * The name of the top level element here is irrelevant.  Nothing checks it.
          */
         fsa_input.msg = pcmk__xe_create(NULL, "dummy-reply");
-        crm_xml_add(fsa_input.msg, PCMK_XA_REFERENCE, msg_ref);
-        crm_xml_add(fsa_input.msg, PCMK__XA_CRM_TGRAPH_IN,
-                    reply->data.graph.input);
+        pcmk__xe_set(fsa_input.msg, PCMK_XA_REFERENCE, msg_ref);
+        pcmk__xe_set(fsa_input.msg, PCMK__XA_CRM_TGRAPH_IN,
+                     reply->data.graph.input);
 
         crm_data_node = pcmk__xe_create(fsa_input.msg, PCMK__XE_CRM_XML);
         pcmk__xml_copy(crm_data_node, reply->data.graph.tgraph);
@@ -400,7 +400,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         }
         crm_trace("Forcing %s/%s = %s",
                   pcmk__xe_id(match), attr_name, attr_value);
-        crm_xml_add(match, PCMK_XA_VALUE, attr_value);
+        pcmk__xe_set(match, PCMK_XA_VALUE, attr_value);
     }
 
     if(max == 0) {
@@ -430,16 +430,16 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         if (cluster_property_set == NULL) {
             cluster_property_set =
                 pcmk__xe_create(crm_config, PCMK_XE_CLUSTER_PROPERTY_SET);
-            crm_xml_add(cluster_property_set, PCMK_XA_ID,
-                        PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS);
+            pcmk__xe_set(cluster_property_set, PCMK_XA_ID,
+                         PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS);
         }
 
         xml = pcmk__xe_create(cluster_property_set, PCMK_XE_NVPAIR);
 
         pcmk__xe_set_id(xml, "%s-%s",
                         PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name);
-        crm_xml_add(xml, PCMK_XA_NAME, attr_name);
-        crm_xml_add(xml, PCMK_XA_VALUE, attr_value);
+        pcmk__xe_set(xml, PCMK_XA_NAME, attr_name);
+        pcmk__xe_set(xml, PCMK_XA_VALUE, attr_value);
     }
     xmlXPathFreeObject(xpathObj);
 }
@@ -487,7 +487,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
      * scheduler is invoked */
     pcmk__refresh_node_caches_from_cib(output);
 
-    crm_xml_add(output, PCMK_XA_DC_UUID, controld_globals.our_uuid);
+    pcmk__xe_set(output, PCMK_XA_DC_UUID, controld_globals.our_uuid);
     pcmk__xe_set_bool_attr(output, PCMK_XA_HAVE_QUORUM,
                            pcmk_is_set(controld_globals.flags,
                                        controld_has_quorum));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,7 +34,7 @@ build_ticket_modify_xml(cib_t *cib, const char *ticket_id, xmlNode **ticket_stat
         *xml_top = pcmk__xe_create(NULL, PCMK_XE_STATUS);
         xml_obj = pcmk__xe_create(*xml_top, PCMK_XE_TICKETS);
         *ticket_state_xml = pcmk__xe_create(xml_obj, PCMK__XE_TICKET_STATE);
-        crm_xml_add(*ticket_state_xml, PCMK_XA_ID, ticket_id);
+        pcmk__xe_set(*ticket_state_xml, PCMK_XA_ID, ticket_id);
 
         rc = pcmk_rc_ok;
 
@@ -59,7 +59,7 @@ add_attribute_xml(pcmk_scheduler_t *scheduler, const char *ticket_id,
                                  ticket_id);
     g_hash_table_iter_init(&hash_iter, attr_set);
     while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
-        crm_xml_add(*ticket_state_xml, key, value);
+        pcmk__xe_set(*ticket_state_xml, key, value);
 
         if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)
             && ((ticket == NULL)
@@ -68,7 +68,7 @@ add_attribute_xml(pcmk_scheduler_t *scheduler, const char *ticket_id,
 
             char *now = pcmk__ttoa(time(NULL));
 
-            crm_xml_add(*ticket_state_xml, PCMK_XA_LAST_GRANTED, now);
+            pcmk__xe_set(*ticket_state_xml, PCMK_XA_LAST_GRANTED, now);
             free(now);
         }
     }

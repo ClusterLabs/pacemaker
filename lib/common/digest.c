@@ -333,7 +333,7 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
 
     // Add timeout back for recurring operation digests
     if (timeout != NULL) {
-        crm_xml_add(param_set, key, timeout);
+        pcmk__xe_set(param_set, key, timeout);
     }
     free(timeout);
     free(key);

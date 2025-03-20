@@ -550,7 +550,7 @@ create_lrmd_reply(const char *origin, int rc, int call_id)
 {
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_LRMD_REPLY);
 
-    crm_xml_add(reply, PCMK__XA_LRMD_ORIGIN, origin);
+    pcmk__xe_set(reply, PCMK__XA_LRMD_ORIGIN, origin);
     pcmk__xe_set_int(reply, PCMK__XA_LRMD_RC, rc);
     pcmk__xe_set_int(reply, PCMK__XA_LRMD_CALLID, call_id);
     return reply;
@@ -629,7 +629,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     notify = pcmk__xe_create(NULL, PCMK__XE_LRMD_NOTIFY);
 
-    crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
+    pcmk__xe_set(notify, PCMK__XA_LRMD_ORIGIN, __func__);
     pcmk__xe_set_int(notify, PCMK__XA_LRMD_TIMEOUT, cmd->timeout);
     pcmk__xe_set_guint(notify, PCMK__XA_LRMD_RSC_INTERVAL, cmd->interval_ms);
     pcmk__xe_set_int(notify, PCMK__XA_LRMD_RSC_START_DELAY, cmd->start_delay);
@@ -646,23 +646,23 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     pcmk__xe_set_int(notify, PCMK__XA_LRMD_QUEUE_TIME, queue_time);
 #endif
 
-    crm_xml_add(notify, PCMK__XA_LRMD_OP, LRMD_OP_RSC_EXEC);
-    crm_xml_add(notify, PCMK__XA_LRMD_RSC_ID, cmd->rsc_id);
+    pcmk__xe_set(notify, PCMK__XA_LRMD_OP, LRMD_OP_RSC_EXEC);
+    pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_ID, cmd->rsc_id);
     if(cmd->real_action) {
-        crm_xml_add(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->real_action);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->real_action);
     } else {
-        crm_xml_add(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->action);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->action);
     }
-    crm_xml_add(notify, PCMK__XA_LRMD_RSC_USERDATA_STR, cmd->userdata_str);
-    crm_xml_add(notify, PCMK__XA_LRMD_RSC_EXIT_REASON, cmd->result.exit_reason);
+    pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_USERDATA_STR, cmd->userdata_str);
+    pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_EXIT_REASON, cmd->result.exit_reason);
 
     if (cmd->result.action_stderr != NULL) {
-        crm_xml_add(notify, PCMK__XA_LRMD_RSC_OUTPUT,
-                    cmd->result.action_stderr);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_OUTPUT,
+                     cmd->result.action_stderr);
 
     } else if (cmd->result.action_stdout != NULL) {
-        crm_xml_add(notify, PCMK__XA_LRMD_RSC_OUTPUT,
-                    cmd->result.action_stdout);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_OUTPUT,
+                     cmd->result.action_stdout);
     }
 
     if (cmd->params) {
@@ -707,11 +707,11 @@ send_generic_notify(int rc, xmlNode * request)
         pcmk__xe_get_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
         notify = pcmk__xe_create(NULL, PCMK__XE_LRMD_NOTIFY);
-        crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_ORIGIN, __func__);
         pcmk__xe_set_int(notify, PCMK__XA_LRMD_RC, rc);
         pcmk__xe_set_int(notify, PCMK__XA_LRMD_CALLID, call_id);
-        crm_xml_add(notify, PCMK__XA_LRMD_OP, op);
-        crm_xml_add(notify, PCMK__XA_LRMD_RSC_ID, rsc_id);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_OP, op);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_ID, rsc_id);
 
         pcmk__foreach_ipc_client(send_client_notify, notify);
 
@@ -795,8 +795,8 @@ notify_of_new_client(pcmk__client_t *new_client)
 
     data.new_client = new_client;
     data.notify = pcmk__xe_create(NULL, PCMK__XE_LRMD_NOTIFY);
-    crm_xml_add(data.notify, PCMK__XA_LRMD_ORIGIN, __func__);
-    crm_xml_add(data.notify, PCMK__XA_LRMD_OP, LRMD_OP_NEW_CLIENT);
+    pcmk__xe_set(data.notify, PCMK__XA_LRMD_ORIGIN, __func__);
+    pcmk__xe_set(data.notify, PCMK__XA_LRMD_OP, LRMD_OP_NEW_CLIENT);
     pcmk__foreach_ipc_client(notify_one_client, &data);
     pcmk__xml_free(data.notify);
 }
@@ -1553,13 +1553,13 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     }
 
     *reply = create_lrmd_reply(__func__, rc, call_id);
-    crm_xml_add(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
-    crm_xml_add(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
-    crm_xml_add(*reply, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
+    pcmk__xe_set(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
+    pcmk__xe_set(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
+    pcmk__xe_set(*reply, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
     pcmk__xe_set_time(*reply, PCMK__XA_UPTIME, now - start_time);
 
     if (start_state) {
-        crm_xml_add(*reply, PCMK__XA_NODE_START_STATE, start_state);
+        pcmk__xe_set(*reply, PCMK__XA_NODE_START_STATE, start_state);
     }
 
     return rc;
@@ -1609,10 +1609,10 @@ process_lrmd_get_rsc_info(xmlNode *request, int call_id)
 
     reply = create_lrmd_reply(__func__, rc, call_id);
     if (rsc) {
-        crm_xml_add(reply, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
-        crm_xml_add(reply, PCMK__XA_LRMD_CLASS, rsc->class);
-        crm_xml_add(reply, PCMK__XA_LRMD_PROVIDER, rsc->provider);
-        crm_xml_add(reply, PCMK__XA_LRMD_TYPE, rsc->type);
+        pcmk__xe_set(reply, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
+        pcmk__xe_set(reply, PCMK__XA_LRMD_CLASS, rsc->class);
+        pcmk__xe_set(reply, PCMK__XA_LRMD_PROVIDER, rsc->provider);
+        pcmk__xe_set(reply, PCMK__XA_LRMD_TYPE, rsc->type);
     }
     return reply;
 }
@@ -1802,13 +1802,13 @@ add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
 {
     xmlNode *rsc_xml = pcmk__xe_create(reply, PCMK__XE_LRMD_RSC);
 
-    crm_xml_add(rsc_xml, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
+    pcmk__xe_set(rsc_xml, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
     for (GList *item = rsc->recurring_ops; item != NULL; item = item->next) {
         lrmd_cmd_t *cmd = item->data;
         xmlNode *op_xml = pcmk__xe_create(rsc_xml, PCMK__XE_LRMD_RSC_OP);
 
-        crm_xml_add(op_xml, PCMK__XA_LRMD_RSC_ACTION,
-                    pcmk__s(cmd->real_action, cmd->action));
+        pcmk__xe_set(op_xml, PCMK__XA_LRMD_RSC_ACTION,
+                     pcmk__s(cmd->real_action, cmd->action));
         pcmk__xe_set_guint(op_xml, PCMK__XA_LRMD_RSC_INTERVAL,
                            cmd->interval_ms);
         pcmk__xe_set_int(op_xml, PCMK__XA_LRMD_TIMEOUT, cmd->timeout_orig);

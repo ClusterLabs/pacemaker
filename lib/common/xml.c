@@ -1114,7 +1114,7 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
      * checking ACLs)
      */
     pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
-    crm_xml_add(new_xml, attr_name, old_value);
+    pcmk__xe_set(new_xml, attr_name, old_value);
     pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Reset flags (so the attribute doesn't appear as newly created)
@@ -1145,11 +1145,11 @@ mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
 
     // Restore the original value (without checking ACLs)
     pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
-    crm_xml_add(new_xml, attr_name, old_value);
+    pcmk__xe_set(new_xml, attr_name, old_value);
     pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Change it back to the new value, to check ACLs
-    crm_xml_add(new_xml, attr_name, vcopy);
+    pcmk__xe_set(new_xml, attr_name, vcopy);
     free(vcopy);
 }
 

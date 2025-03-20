@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -547,7 +547,7 @@ remove_from_section(cib_t *cib, const char *element, const char *section,
     int rc = pcmk_rc_ok;
     xmlNode *xml = pcmk__xe_create(NULL, element);
 
-    crm_xml_add(xml, PCMK_XA_UNAME, node_name);
+    pcmk__xe_set(xml, PCMK_XA_UNAME, node_name);
     if (node_id > 0) {
         pcmk__xe_set_ll(xml, PCMK_XA_ID, (long long) node_id);
     }
@@ -691,7 +691,7 @@ purge_node_from_fencer(const char *node_name, long node_id)
     if (node_id > 0) {
         pcmk__xe_set_ll(cmd, PCMK_XA_ID, (long long) node_id);
     }
-    crm_xml_add(cmd, PCMK_XA_UNAME, node_name);
+    pcmk__xe_set(cmd, PCMK_XA_UNAME, node_name);
 
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
     if (rc >= 0) {

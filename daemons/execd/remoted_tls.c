@@ -140,8 +140,8 @@ lrmd_remote_client_msg(gpointer data)
         lrmd_call_id = 1;
     }
 
-    crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
-    crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
+    pcmk__xe_set(request, PCMK__XA_LRMD_CLIENTID, client->id);
+    pcmk__xe_set(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
     pcmk__xe_set_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
     process_lrmd_message(client, id, request);

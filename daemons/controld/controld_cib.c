@@ -527,7 +527,7 @@ build_parameter_list(const lrmd_event_data_t *op,
 
             if (v != NULL) {
                 crm_trace("Adding attr %s=%s to the xml result", param->rap_name, v);
-                crm_xml_add(*result, param->rap_name, v);
+                pcmk__xe_set(*result, param->rap_name, v);
             }
 
         } else {
@@ -584,9 +584,9 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
      * the resource supports reload, no matter if it actually supports any
      * reloadable parameters
      */
-    crm_xml_add(update, PCMK__XA_OP_FORCE_RESTART,
-                (list == NULL)? "" : (const char *) list->str);
-    crm_xml_add(update, PCMK__XA_OP_RESTART_DIGEST, digest);
+    pcmk__xe_set(update, PCMK__XA_OP_FORCE_RESTART,
+                 (list == NULL)? "" : (const char *) list->str);
+    pcmk__xe_set(update, PCMK__XA_OP_RESTART_DIGEST, digest);
 
     if ((list != NULL) && (list->len > 0)) {
         crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
@@ -618,9 +618,9 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
 
     if (list != NULL) {
         digest = pcmk__digest_operation(secure);
-        crm_xml_add(update, PCMK__XA_OP_SECURE_PARAMS,
-                    (const char *) list->str);
-        crm_xml_add(update, PCMK__XA_OP_SECURE_DIGEST, digest);
+        pcmk__xe_set(update, PCMK__XA_OP_SECURE_PARAMS,
+                     (const char *) list->str);
+        pcmk__xe_set(update, PCMK__XA_OP_SECURE_DIGEST, digest);
 
         crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
         g_string_free(list, TRUE);
@@ -894,23 +894,23 @@ controld_update_resource_history(const char *node_name,
         node_id = node_name;
         pcmk__xe_set_bool_attr(xml, PCMK_XA_REMOTE_NODE, true);
     }
-    crm_xml_add(xml, PCMK_XA_ID, node_id);
-    crm_xml_add(xml, PCMK_XA_UNAME, node_name);
-    crm_xml_add(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
+    pcmk__xe_set(xml, PCMK_XA_ID, node_id);
+    pcmk__xe_set(xml, PCMK_XA_UNAME, node_name);
+    pcmk__xe_set(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
 
     //     <lrm ...>
     xml = pcmk__xe_create(xml, PCMK__XE_LRM);
-    crm_xml_add(xml, PCMK_XA_ID, node_id);
+    pcmk__xe_set(xml, PCMK_XA_ID, node_id);
 
     //       <lrm_resources>
     xml = pcmk__xe_create(xml, PCMK__XE_LRM_RESOURCES);
 
     //         <lrm_resource ...>
     xml = pcmk__xe_create(xml, PCMK__XE_LRM_RESOURCE);
-    crm_xml_add(xml, PCMK_XA_ID, op->rsc_id);
-    crm_xml_add(xml, PCMK_XA_CLASS, rsc->standard);
-    crm_xml_add(xml, PCMK_XA_PROVIDER, rsc->provider);
-    crm_xml_add(xml, PCMK_XA_TYPE, rsc->type);
+    pcmk__xe_set(xml, PCMK_XA_ID, op->rsc_id);
+    pcmk__xe_set(xml, PCMK_XA_CLASS, rsc->standard);
+    pcmk__xe_set(xml, PCMK_XA_PROVIDER, rsc->provider);
+    pcmk__xe_set(xml, PCMK_XA_TYPE, rsc->type);
     if (lock_time != 0) {
         /* Actions on a locked resource should either preserve the lock by
          * recording it with the action result, or clear it.
@@ -926,7 +926,7 @@ controld_update_resource_history(const char *node_name,
         if (container != NULL) {
             crm_trace("Resource %s is a part of container resource %s",
                       op->rsc_id, container);
-            crm_xml_add(xml, PCMK__META_CONTAINER, container);
+            pcmk__xe_set(xml, PCMK__META_CONTAINER, container);
         }
     }
 
@@ -957,13 +957,13 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
     xml_top = pcmk__xe_create(NULL, PCMK__XE_LRM_RSC_OP);
     pcmk__xe_set_int(xml_top, PCMK__XA_CALL_ID, op->call_id);
-    crm_xml_add(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
+    pcmk__xe_set(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
 
     if (op->interval_ms > 0) {
         char *op_id = pcmk__op_key(op->rsc_id, op->op_type, op->interval_ms);
 
         /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
-        crm_xml_add(xml_top, PCMK_XA_ID, op_id);
+        pcmk__xe_set(xml_top, PCMK_XA_ID, op_id);
         free(op_id);
     }
 

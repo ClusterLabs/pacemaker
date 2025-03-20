@@ -292,7 +292,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
 
     } else if (origin == NULL) {
         /* Starting a resource */
-        crm_xml_add(xml, PCMK_XA_NODE, destination->priv->name);
+        pcmk__xe_set(xml, PCMK_XA_NODE, destination->priv->name);
 
     } else if (need_role && (destination == NULL)) {
         /* Stopping a promotable clone instance */
@@ -304,7 +304,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
 
     } else if (destination == NULL) {
         /* Stopping a resource */
-        crm_xml_add(xml, PCMK_XA_NODE, origin->priv->name);
+        pcmk__xe_set(xml, PCMK_XA_NODE, origin->priv->name);
 
     } else if (need_role && same_role && same_host) {
         /* Recovering, restarting or re-promoting a promotable clone instance */
@@ -316,7 +316,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
 
     } else if (same_role && same_host) {
         /* Recovering or Restarting a normal resource */
-        crm_xml_add(xml, PCMK_XA_SOURCE, origin->priv->name);
+        pcmk__xe_set(xml, PCMK_XA_SOURCE, origin->priv->name);
 
     } else if (need_role && same_role) {
         /* Moving a promotable clone instance */
@@ -364,7 +364,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
                            NULL);
 
     } else if (source->reason != NULL) {
-        crm_xml_add(xml, PCMK_XA_REASON, source->reason);
+        pcmk__xe_set(xml, PCMK_XA_REASON, source->reason);
 
     } else if (!pcmk_is_set(action->flags, pcmk__action_runnable)) {
         pcmk__xe_set_bool_attr(xml, PCMK_XA_BLOCKED, true);
@@ -1038,8 +1038,8 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
     if (digest != NULL) {
         xmlNodePtr digest_xml = pcmk__xe_create(parent, PCMK_XE_DIGEST);
 
-        crm_xml_add(digest_xml, PCMK_XA_TYPE, pcmk__s(type, "unspecified"));
-        crm_xml_add(digest_xml, PCMK_XA_HASH, digest);
+        pcmk__xe_set(digest_xml, PCMK_XA_TYPE, pcmk__s(type, "unspecified"));
+        pcmk__xe_set(digest_xml, PCMK_XA_HASH, digest);
         pcmk__xml_copy(digest_xml, digest_source);
     }
 }
@@ -1452,7 +1452,7 @@ inject_cluster_action_xml(pcmk__output_t *out, va_list args)
                                             NULL);
 
     if (rsc) {
-        crm_xml_add(xml_node, PCMK_XA_ID, pcmk__xe_id(rsc));
+        pcmk__xe_set(xml_node, PCMK_XA_ID, pcmk__xe_id(rsc));
     }
 
     return pcmk_rc_ok;
@@ -1610,11 +1610,11 @@ inject_modify_config_xml(pcmk__output_t *out, va_list args)
     node = pcmk__output_xml_create_parent(out, PCMK_XE_MODIFICATIONS, NULL);
 
     if (quorum) {
-        crm_xml_add(node, PCMK_XA_QUORUM, quorum);
+        pcmk__xe_set(node, PCMK_XA_QUORUM, quorum);
     }
 
     if (watchdog) {
-        crm_xml_add(node, PCMK_XA_WATCHDOG, watchdog);
+        pcmk__xe_set(node, PCMK_XA_WATCHDOG, watchdog);
     }
 
     pcmk__output_xml_pop_parent(out);
@@ -1735,7 +1735,7 @@ inject_pseudo_action_xml(pcmk__output_t *out, va_list args)
                                             PCMK_XA_TASK, task,
                                             NULL);
     if (node) {
-        crm_xml_add(xml_node, PCMK_XA_NODE, node);
+        pcmk__xe_set(xml_node, PCMK_XA_NODE, node);
     }
 
     return pcmk_rc_ok;
@@ -1791,7 +1791,7 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
     if (interval_ms) {
         char *interval_s = pcmk__itoa(interval_ms);
 
-        crm_xml_add(xml_node, PCMK_XA_INTERVAL, interval_s);
+        pcmk__xe_set(xml_node, PCMK_XA_INTERVAL, interval_s);
         free(interval_s);
     }
 
@@ -2249,15 +2249,15 @@ attribute_xml(pcmk__output_t *out, va_list args)
                                         NULL);
 
     if (!pcmk__str_empty(scope)) {
-        crm_xml_add(node, PCMK_XA_SCOPE, scope);
+        pcmk__xe_set(node, PCMK_XA_SCOPE, scope);
     }
 
     if (!pcmk__str_empty(instance)) {
-        crm_xml_add(node, PCMK_XA_ID, instance);
+        pcmk__xe_set(node, PCMK_XA_ID, instance);
     }
 
     if (!pcmk__str_empty(host)) {
-        crm_xml_add(node, PCMK_XA_HOST, host);
+        pcmk__xe_set(node, PCMK_XA_HOST, host);
     }
 
     return pcmk_rc_ok;

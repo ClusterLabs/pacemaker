@@ -47,14 +47,14 @@ stonith_send_broadcast_history(xmlNode *history,
     xmlNode *wrapper = pcmk__xe_create(bcast, PCMK__XE_ST_CALLDATA);
     xmlNode *call_data = pcmk__xe_create(wrapper, __func__);
 
-    crm_xml_add(bcast, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-    crm_xml_add(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
-    crm_xml_add(bcast, PCMK__XA_ST_OP, STONITH_OP_FENCE_HISTORY);
+    pcmk__xe_set(bcast, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+    pcmk__xe_set(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
+    pcmk__xe_set(bcast, PCMK__XA_ST_OP, STONITH_OP_FENCE_HISTORY);
     pcmk__xe_set_int(bcast, PCMK__XA_ST_CALLOPT, callopts);
 
     pcmk__xml_copy(call_data, history);
     if (target != NULL) {
-        crm_xml_add(call_data, PCMK__XA_ST_TARGET, target);
+        pcmk__xe_set(call_data, PCMK__XA_ST_TARGET, target);
     }
 
     pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, bcast);
@@ -376,13 +376,13 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 crm_trace("Attaching op %s", op->id);
                 entry = pcmk__xe_create(history, STONITH_OP_EXEC);
                 if (add_id) {
-                    crm_xml_add(entry, PCMK__XA_ST_REMOTE_OP, op->id);
+                    pcmk__xe_set(entry, PCMK__XA_ST_REMOTE_OP, op->id);
                 }
-                crm_xml_add(entry, PCMK__XA_ST_TARGET, op->target);
-                crm_xml_add(entry, PCMK__XA_ST_DEVICE_ACTION, op->action);
-                crm_xml_add(entry, PCMK__XA_ST_ORIGIN, op->originator);
-                crm_xml_add(entry, PCMK__XA_ST_DELEGATE, op->delegate);
-                crm_xml_add(entry, PCMK__XA_ST_CLIENTNAME, op->client_name);
+                pcmk__xe_set(entry, PCMK__XA_ST_TARGET, op->target);
+                pcmk__xe_set(entry, PCMK__XA_ST_DEVICE_ACTION, op->action);
+                pcmk__xe_set(entry, PCMK__XA_ST_ORIGIN, op->originator);
+                pcmk__xe_set(entry, PCMK__XA_ST_DELEGATE, op->delegate);
+                pcmk__xe_set(entry, PCMK__XA_ST_CLIENTNAME, op->client_name);
                 pcmk__xe_set_time(entry, PCMK__XA_ST_DATE, op->completed);
                 pcmk__xe_set_ll(entry, PCMK__XA_ST_DATE_NSEC,
                                 op->completed_nsec);

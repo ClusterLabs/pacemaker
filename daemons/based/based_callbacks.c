@@ -142,10 +142,10 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
 {
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_CIB_REPLY);
 
-    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_CIB);
-    crm_xml_add(reply, PCMK__XA_CIB_OP, op);
-    crm_xml_add(reply, PCMK__XA_CIB_CALLID, call_id);
-    crm_xml_add(reply, PCMK__XA_CIB_CLIENTID, client_id);
+    pcmk__xe_set(reply, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(reply, PCMK__XA_CIB_OP, op);
+    pcmk__xe_set(reply, PCMK__XA_CIB_CALLID, call_id);
+    pcmk__xe_set(reply, PCMK__XA_CIB_CLIENTID, client_id);
     pcmk__xe_set_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
     pcmk__xe_set_int(reply, PCMK__XA_CIB_RC, rc);
 
@@ -243,8 +243,8 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         if (flags & crm_ipc_client_response) {
             xmlNode *ack = pcmk__xe_create(NULL, __func__);
 
-            crm_xml_add(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
-            crm_xml_add(ack, PCMK__XA_CIB_CLIENTID, cib_client->id);
+            pcmk__xe_set(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
+            pcmk__xe_set(ack, PCMK__XA_CIB_CLIENTID, cib_client->id);
             pcmk__ipc_send_xml(cib_client, id, ack, flags);
             cib_client->request_id = 0;
             pcmk__xml_free(ack);
@@ -354,8 +354,8 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         pcmk__set_client_queue_max(cib_client, qmax);
     }
 
-    crm_xml_add(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
-    crm_xml_add(op_request, PCMK__XA_CIB_CLIENTNAME, cib_client->name);
+    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
+    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTNAME, cib_client->name);
 
     CRM_LOG_ASSERT(cib_client->user != NULL);
     pcmk__update_acl_user(op_request, PCMK__XA_CIB_USER, cib_client->user);
@@ -384,11 +384,11 @@ cib_digester_cb(gpointer data)
         snprintf(buffer, 32, "%" PRIu64, ping_seq);
         crm_trace("Requesting peer digests (%s)", buffer);
 
-        crm_xml_add(ping, PCMK__XA_T, PCMK__VALUE_CIB);
-        crm_xml_add(ping, PCMK__XA_CIB_OP, CRM_OP_PING);
-        crm_xml_add(ping, PCMK__XA_CIB_PING_ID, buffer);
+        pcmk__xe_set(ping, PCMK__XA_T, PCMK__VALUE_CIB);
+        pcmk__xe_set(ping, PCMK__XA_CIB_OP, CRM_OP_PING);
+        pcmk__xe_set(ping, PCMK__XA_CIB_PING_ID, buffer);
 
-        crm_xml_add(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+        pcmk__xe_set(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
         pcmk__cluster_send_message(NULL, pcmk_ipc_based, ping);
 
         pcmk__xml_free(ping);
@@ -599,7 +599,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
         if (upgrade_rc != NULL) {
             // Our upgrade request was rejected by DC, notify clients of result
-            crm_xml_add(request, PCMK__XA_CIB_RC, upgrade_rc);
+            pcmk__xe_set(request, PCMK__XA_CIB_RC, upgrade_rc);
 
         } else if ((max == NULL) && based_is_primary) {
             /* We are the DC, check if this upgrade is allowed */
@@ -705,7 +705,7 @@ forward_request(xmlNode *request)
                pcmk__s(client_name, "unspecified"),
                pcmk__s(call_id, "unspecified"));
 
-    crm_xml_add(request, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
+    pcmk__xe_set(request, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
 
     if (host != NULL) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
@@ -730,7 +730,7 @@ send_peer_reply(xmlNode *msg, const char *originator)
                           pcmk__node_search_cluster_member);
 
     crm_trace("Sending request result to %s only", originator);
-    crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
+    pcmk__xe_set(msg, PCMK__XA_CIB_ISREPLYTO, originator);
     pcmk__cluster_send_message(node, pcmk_ipc_based, msg);
 }
 
@@ -788,7 +788,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
                   op, pcmk__s(client_name, "client"), call_id, originator,
                   pcmk__s(host, "all"), reply_to);
     } else {
-        crm_xml_add(request, PCMK__XA_SRC, OUR_NODENAME);
+        pcmk__xe_set(request, PCMK__XA_SRC, OUR_NODENAME);
         crm_trace("Processing local %s operation from %s/%s intended for %s",
                   op, pcmk__s(client_name, "client"), call_id,
                   pcmk__s(host, "all"));
@@ -1212,7 +1212,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     }
 
     if (pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME) == NULL) {
-        crm_xml_add(msg, PCMK__XA_CIB_CLIENTNAME, originator);
+        pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, originator);
     }
 
     /* crm_log_xml_trace(msg, "Peer[inbound]"); */
@@ -1261,8 +1261,8 @@ initiate_exit(void)
     crm_info("Sending shutdown request to %d peers", active);
 
     leaving = pcmk__xe_create(NULL, PCMK__XE_EXIT_NOTIFICATION);
-    crm_xml_add(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
-    crm_xml_add(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
+    pcmk__xe_set(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
 
     pcmk__cluster_send_message(NULL, pcmk_ipc_based, leaving);
     pcmk__xml_free(leaving);

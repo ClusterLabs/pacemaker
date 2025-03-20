@@ -1986,7 +1986,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
     xmlNode *xml_rsc = pcmk__xe_create(NULL, PCMK_XE_PRIMITIVE);
 
     pcmk__xe_copy_attrs(xml_rsc, rsc_entry, pcmk__xaf_none);
-    crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
+    pcmk__xe_set(xml_rsc, PCMK_XA_ID, rsc_id);
     crm_log_xml_debug(xml_rsc, "Orphan resource");
 
     if (pe__unpack_resource(xml_rsc, &rsc, NULL, scheduler) != pcmk_rc_ok) {
@@ -3519,8 +3519,8 @@ record_failed_op(struct action_history *history)
 
     crm_trace("Adding entry for %s on %s to failed action list",
               history->key, pcmk__node_name(history->node));
-    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->priv->name);
-    crm_xml_add(history->xml, PCMK__XA_RSC_ID, history->rsc->id);
+    pcmk__xe_set(history->xml, PCMK_XA_UNAME, history->node->priv->name);
+    pcmk__xe_set(history->xml, PCMK__XA_RSC_ID, history->rsc->id);
     pcmk__xml_copy(scheduler->priv->failed, history->xml);
 }
 
@@ -4522,8 +4522,8 @@ process_expired_result(struct action_history *history, int orig_exit_status)
                    "after failure expired",
                    pcmk__readable_interval(history->interval_ms), history->task,
                    history->rsc->id, pcmk__node_name(history->node));
-        crm_xml_add(history->xml, PCMK__XA_OP_RESTART_DIGEST,
-                    "calculated-failure-timeout");
+        pcmk__xe_set(history->xml, PCMK__XA_OP_RESTART_DIGEST,
+                     "calculated-failure-timeout");
         return pcmk_rc_ok;
     }
 
@@ -4555,7 +4555,7 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
                pcmk__node_name(history->node));
     update_resource_state(history, history->expected_exit_status, last_failure,
                           on_fail);
-    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->priv->name);
+    pcmk__xe_set(history->xml, PCMK_XA_UNAME, history->node->priv->name);
 
     record_failed_op(history);
     resource_location(ban_rsc, history->node, -PCMK_SCORE_INFINITY,
@@ -4836,7 +4836,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
         update_resource_state(&history, history.expected_exit_status,
                               *last_failure, on_fail);
-        crm_xml_add(xml_op, PCMK_XA_UNAME, node->priv->name);
+        pcmk__xe_set(xml_op, PCMK_XA_UNAME, node->priv->name);
         pcmk__set_rsc_flags(rsc, pcmk__rsc_ignore_failure);
 
         record_failed_op(&history);
@@ -4995,8 +4995,8 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
                                        NULL);
          rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op, PCMK__XE_LRM_RSC_OP)) {
 
-        crm_xml_add(rsc_op, PCMK_XA_RESOURCE, rsc);
-        crm_xml_add(rsc_op, PCMK_XA_UNAME, node);
+        pcmk__xe_set(rsc_op, PCMK_XA_RESOURCE, rsc);
+        pcmk__xe_set(rsc_op, PCMK_XA_UNAME, node);
         op_list = g_list_prepend(op_list, rsc_op);
     }
 

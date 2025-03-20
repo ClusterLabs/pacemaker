@@ -309,15 +309,15 @@ attrd_broadcast_protocol(void)
 {
     xmlNode *attrd_op = pcmk__xe_create(NULL, __func__);
 
-    crm_xml_add(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
-    crm_xml_add(attrd_op, PCMK__XA_SRC, crm_system_name);
-    crm_xml_add(attrd_op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
-    crm_xml_add(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
-    crm_xml_add(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
+    pcmk__xe_set(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
+    pcmk__xe_set(attrd_op, PCMK__XA_SRC, crm_system_name);
+    pcmk__xe_set(attrd_op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    pcmk__xe_set(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
+    pcmk__xe_set(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
     pcmk__xe_set_int(attrd_op, PCMK__XA_ATTR_IS_PRIVATE, 1);
-    crm_xml_add(attrd_op, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
-    crm_xml_add(attrd_op, PCMK__XA_ATTR_HOST_ID,
-                attrd_cluster->priv->node_xml_id);
+    pcmk__xe_set(attrd_op, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
+    pcmk__xe_set(attrd_op, PCMK__XA_ATTR_HOST_ID,
+                 attrd_cluster->priv->node_xml_id);
 
     crm_debug("Broadcasting attrd protocol version %s for node %s",
               ATTRD_PROTOCOL_VERSION, attrd_cluster->priv->node_name);
@@ -332,8 +332,8 @@ attrd_send_message(pcmk__node_status_t *node, xmlNode *data, bool confirm)
 {
     const char *op = pcmk__xe_get(data, PCMK_XA_TASK);
 
-    crm_xml_add(data, PCMK__XA_T, PCMK__VALUE_ATTRD);
-    crm_xml_add(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
+    pcmk__xe_set(data, PCMK__XA_T, PCMK__VALUE_ATTRD);
+    pcmk__xe_set(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
 
     /* Request a confirmation from the destination peer node (which could
      * be all if node is NULL) that the message has been received and

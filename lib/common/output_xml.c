@@ -115,11 +115,11 @@ add_root_node(pcmk__output_t *out)
 
     if (priv->legacy_xml) {
         priv->root = pcmk__xe_create(NULL, PCMK_XE_CRM_MON);
-        crm_xml_add(priv->root, PCMK_XA_VERSION, PACEMAKER_VERSION);
+        pcmk__xe_set(priv->root, PCMK_XA_VERSION, PACEMAKER_VERSION);
     } else {
         priv->root = pcmk__xe_create(NULL, PCMK_XE_PACEMAKER_RESULT);
-        crm_xml_add(priv->root, PCMK_XA_API_VERSION, PCMK__API_VERSION);
-        crm_xml_add(priv->root, PCMK_XA_REQUEST,
+        pcmk__xe_set(priv->root, PCMK_XA_API_VERSION, PCMK__API_VERSION);
+        pcmk__xe_set(priv->root, PCMK_XA_REQUEST,
                     pcmk__s(out->request, "libpacemaker"));
     }
 
@@ -262,13 +262,13 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
     if (proc_stdout != NULL) {
         child_node = pcmk__xe_create(node, PCMK_XE_OUTPUT);
         pcmk__xe_set_content(child_node, "%s", proc_stdout);
-        crm_xml_add(child_node, PCMK_XA_SOURCE, "stdout");
+        pcmk__xe_set(child_node, PCMK_XA_SOURCE, "stdout");
     }
 
     if (proc_stderr != NULL) {
         child_node = pcmk__xe_create(node, PCMK_XE_OUTPUT);
         pcmk__xe_set_content(child_node, "%s", proc_stderr);
-        crm_xml_add(child_node, PCMK_XA_SOURCE, "stderr");
+        pcmk__xe_set(child_node, PCMK_XA_SOURCE, "stderr");
     }
 
     free(rc_as_str);
@@ -391,7 +391,7 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     item_node = pcmk__output_create_xml_text_node(out, PCMK_XE_ITEM, buf);
 
     if (name != NULL) {
-        crm_xml_add(item_node, PCMK_XA_NAME, name);
+        pcmk__xe_set(item_node, PCMK_XA_NAME, name);
     }
 
     free(buf);
@@ -416,7 +416,7 @@ xml_end_list(pcmk__output_t *out) {
         /* Do not free node here - it's still part of the document */
         node = g_queue_pop_tail(priv->parent_q);
         buf = crm_strdup_printf("%lu", xmlChildElementCount(node));
-        crm_xml_add(node, PCMK_XA_COUNT, buf);
+        pcmk__xe_set(node, PCMK_XA_COUNT, buf);
         free(buf);
     } else {
         /* Do not free this result - it's still part of the document */

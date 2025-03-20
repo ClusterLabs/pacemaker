@@ -335,7 +335,7 @@ remote_node_up(const char *node_name)
      * needs to be fenced, this flag will allow various actions to determine
      * whether the fencing has happened yet.
      */
-    crm_xml_add(state, PCMK__XA_NODE_FENCED, "0");
+    pcmk__xe_set(state, PCMK__XA_NODE_FENCED, "0");
 
     /* TODO: If the remote connection drops, and this (async) CIB update either
      * failed or has not yet completed, later actions could mistakenly think the
@@ -1410,7 +1410,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
     state = create_node_state_update(node, node_update_none, update,
                                      __func__);
-    crm_xml_add(state, PCMK__XA_NODE_IN_MAINTENANCE, (maintenance? "1" : "0"));
+    pcmk__xe_set(state, PCMK__XA_NODE_IN_MAINTENANCE, (maintenance? "1" : "0"));
     if (controld_update_cib(PCMK_XE_STATUS, update, call_opt,
                             NULL) == pcmk_rc_ok) {
         /* TODO: still not 100% sure that async update will succeed ... */

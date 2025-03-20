@@ -899,11 +899,11 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
 
     // This requires pointer comparison, not string comparison
     if (user != pcmk__xe_get(request, PCMK__XA_ACL_TARGET)) {
-        crm_xml_add(request, PCMK__XA_ACL_TARGET, user);
+        pcmk__xe_set(request, PCMK__XA_ACL_TARGET, user);
     }
 
     if ((field != NULL) && (user != pcmk__xe_get(request, field))) {
-        crm_xml_add(request, field, user);
+        pcmk__xe_set(request, field, user);
     }
 
     return requested_user;

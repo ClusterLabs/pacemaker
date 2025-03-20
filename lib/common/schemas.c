@@ -1232,7 +1232,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
         crm_info("%s the configuration schema to %s",
                  (transform? "Transformed" : "Upgraded"),
                  best_schema->name);
-        crm_xml_add(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
+        pcmk__xe_set(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
     }
     return rc;
 }
@@ -1485,7 +1485,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
      * as a CDATA block underneath it.
      */
     file_node = pcmk__xe_create(parent, PCMK__XE_FILE);
-    crm_xml_add(file_node, PCMK_XA_PATH, path);
+    pcmk__xe_set(file_node, PCMK_XA_PATH, path);
     *already_included = g_list_prepend(*already_included, path);
 
     xmlAddChild(file_node,
@@ -1527,7 +1527,7 @@ pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_i
 {
     xmlNode *schema_node = pcmk__xe_create(parent, PCMK__XA_SCHEMA);
 
-    crm_xml_add(schema_node, PCMK_XA_VERSION, name);
+    pcmk__xe_set(schema_node, PCMK_XA_VERSION, name);
     add_schema_file_to_xml(schema_node, name, already_included);
 
     if (schema_node->children == NULL) {

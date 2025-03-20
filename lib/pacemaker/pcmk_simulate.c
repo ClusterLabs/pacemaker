@@ -776,7 +776,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                                            false);
 
         pcmk__assert(cib_node != NULL);
-        crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
+        pcmk__xe_set(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
         rc = fake_cib->cmds->replace(fake_cib, PCMK_XE_STATUS, cib_node,
                                      cib_sync_call);
         pcmk__assert(rc == pcmk_ok);

@@ -140,9 +140,9 @@ create_attrd_op(const char *user_name)
 {
     xmlNode *attrd_op = pcmk__xe_create(NULL, __func__);
 
-    crm_xml_add(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
-    crm_xml_add(attrd_op, PCMK__XA_SRC, pcmk__s(crm_system_name, "unknown"));
-    crm_xml_add(attrd_op, PCMK__XA_ATTR_USER, user_name);
+    pcmk__xe_set(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
+    pcmk__xe_set(attrd_op, PCMK__XA_SRC, pcmk__s(crm_system_name, "unknown"));
+    pcmk__xe_set(attrd_op, PCMK__XA_ATTR_USER, user_name);
 
     return attrd_op;
 }
@@ -202,11 +202,11 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
               pcmk_ipc_name(api, true), interval_desc, op_desc,
               pcmk__s(resource, "all resources"), pcmk__s(node, "all nodes"));
 
-    crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
-    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
-    crm_xml_add(request, PCMK__XA_ATTR_RESOURCE, resource);
-    crm_xml_add(request, PCMK__XA_ATTR_CLEAR_OPERATION, operation);
-    crm_xml_add(request, PCMK__XA_ATTR_CLEAR_INTERVAL, interval_spec);
+    pcmk__xe_set(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
+    pcmk__xe_set(request, PCMK__XA_ATTR_HOST, node);
+    pcmk__xe_set(request, PCMK__XA_ATTR_RESOURCE, resource);
+    pcmk__xe_set(request, PCMK__XA_ATTR_CLEAR_OPERATION, operation);
+    pcmk__xe_set(request, PCMK__XA_ATTR_CLEAR_INTERVAL, interval_spec);
     pcmk__xe_set_int(request, PCMK__XA_ATTR_IS_REMOTE,
                      pcmk_is_set(options, pcmk__node_attr_remote));
 
@@ -257,9 +257,9 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
 
     request = create_attrd_op(NULL);
 
-    crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+    pcmk__xe_set(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
     pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, reap);
-    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
+    pcmk__xe_set(request, PCMK__XA_ATTR_HOST, node);
 
     rc = connect_and_send_attrd_request(api, request);
 
@@ -297,9 +297,9 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
 
     request = create_attrd_op(NULL);
 
-    crm_xml_add(request, PCMK__XA_ATTR_NAME, name);
-    crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_QUERY);
-    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
+    pcmk__xe_set(request, PCMK__XA_ATTR_NAME, name);
+    pcmk__xe_set(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_QUERY);
+    pcmk__xe_set(request, PCMK__XA_ATTR_HOST, node);
 
     rc = connect_and_send_attrd_request(api, request);
     pcmk__xml_free(request);
@@ -322,8 +322,8 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
 
     request = create_attrd_op(NULL);
 
-    crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_REFRESH);
-    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
+    pcmk__xe_set(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_REFRESH);
+    pcmk__xe_set(request, PCMK__XA_ATTR_HOST, node);
 
     rc = connect_and_send_attrd_request(api, request);
 
@@ -335,11 +335,11 @@ static void
 add_op_attr(xmlNode *op, uint32_t options)
 {
     if (pcmk_all_flags_set(options, pcmk__node_attr_value | pcmk__node_attr_delay)) {
-        crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE_BOTH);
+        pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE_BOTH);
     } else if (pcmk_is_set(options, pcmk__node_attr_value)) {
-        crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+        pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     } else if (pcmk_is_set(options, pcmk__node_attr_delay)) {
-        crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE_DELAY);
+        pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE_DELAY);
     }
 }
 
@@ -348,32 +348,32 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
                    const char *dampen, const char *set, uint32_t options)
 {
     if (pcmk_is_set(options, pcmk__node_attr_pattern)) {
-        crm_xml_add(op, PCMK__XA_ATTR_REGEX, name);
+        pcmk__xe_set(op, PCMK__XA_ATTR_REGEX, name);
     } else {
-        crm_xml_add(op, PCMK__XA_ATTR_NAME, name);
+        pcmk__xe_set(op, PCMK__XA_ATTR_NAME, name);
     }
 
     if (pcmk_is_set(options, pcmk__node_attr_utilization)) {
-        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_UTILIZATION);
+        pcmk__xe_set(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_UTILIZATION);
     } else {
-        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_INSTANCE_ATTRIBUTES);
+        pcmk__xe_set(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_INSTANCE_ATTRIBUTES);
     }
 
     add_op_attr(op, options);
 
-    crm_xml_add(op, PCMK__XA_ATTR_VALUE, value);
-    crm_xml_add(op, PCMK__XA_ATTR_DAMPENING, dampen);
-    crm_xml_add(op, PCMK__XA_ATTR_HOST, node);
-    crm_xml_add(op, PCMK__XA_ATTR_SET, set);
+    pcmk__xe_set(op, PCMK__XA_ATTR_VALUE, value);
+    pcmk__xe_set(op, PCMK__XA_ATTR_DAMPENING, dampen);
+    pcmk__xe_set(op, PCMK__XA_ATTR_HOST, node);
+    pcmk__xe_set(op, PCMK__XA_ATTR_SET, set);
     pcmk__xe_set_int(op, PCMK__XA_ATTR_IS_REMOTE,
                      pcmk_is_set(options, pcmk__node_attr_remote));
     pcmk__xe_set_int(op, PCMK__XA_ATTR_IS_PRIVATE,
                      pcmk_is_set(options, pcmk__node_attr_private));
 
     if (pcmk_is_set(options, pcmk__node_attr_sync_local)) {
-        crm_xml_add(op, PCMK__XA_ATTR_SYNC_POINT, PCMK__VALUE_LOCAL);
+        pcmk__xe_set(op, PCMK__XA_ATTR_SYNC_POINT, PCMK__VALUE_LOCAL);
     } else if (pcmk_is_set(options, pcmk__node_attr_sync_cluster)) {
-        crm_xml_add(op, PCMK__XA_ATTR_SYNC_POINT, PCMK__VALUE_CLUSTER);
+        pcmk__xe_set(op, PCMK__XA_ATTR_SYNC_POINT, PCMK__VALUE_CLUSTER);
     }
 }
 

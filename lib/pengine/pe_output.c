@@ -877,19 +877,19 @@ cluster_counts_xml(pcmk__output_t *out, va_list args) {
                                                   NULL);
 
     s = pcmk__itoa(nnodes);
-    crm_xml_add(nodes_node, PCMK_XA_NUMBER, s);
+    pcmk__xe_set(nodes_node, PCMK_XA_NUMBER, s);
     free(s);
 
     s = pcmk__itoa(nresources);
-    crm_xml_add(resources_node, PCMK_XA_NUMBER, s);
+    pcmk__xe_set(resources_node, PCMK_XA_NUMBER, s);
     free(s);
 
     s = pcmk__itoa(ndisabled);
-    crm_xml_add(resources_node, PCMK_XA_DISABLED, s);
+    pcmk__xe_set(resources_node, PCMK_XA_DISABLED, s);
     free(s);
 
     s = pcmk__itoa(nblocked);
-    crm_xml_add(resources_node, PCMK_XA_BLOCKED, s);
+    pcmk__xe_set(resources_node, PCMK_XA_BLOCKED, s);
     free(s);
 
     return pcmk_rc_ok;
@@ -2089,8 +2089,8 @@ node_xml(pcmk__output_t *out, va_list args) {
 
         if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
-            crm_xml_add(xml_node, PCMK_XA_ID_AS_RESOURCE,
-                        node->priv->remote->priv->launcher->id);
+            pcmk__xe_set(xml_node, PCMK_XA_ID_AS_RESOURCE,
+                         node->priv->remote->priv->launcher->id);
         }
 
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
@@ -2320,7 +2320,7 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
 
     if (add_extra) {
         char *buf = pcmk__itoa(expected_score);
-        crm_xml_add(node, PCMK_XA_EXPECTED, buf);
+        pcmk__xe_set(node, PCMK_XA_EXPECTED, buf);
         free(buf);
     }
 
@@ -2779,7 +2779,7 @@ node_weight_xml(pcmk__output_t *out, va_list args)
                                                    NULL);
 
     if (rsc) {
-        crm_xml_add(node, PCMK_XA_ID, rsc->id);
+        pcmk__xe_set(node, PCMK_XA_ID, rsc->id);
     }
 
     return pcmk_rc_ok;
@@ -2827,7 +2827,7 @@ op_history_xml(pcmk__output_t *out, va_list args) {
 
     if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
         char *s = crm_strdup_printf("%sms", interval_ms_s);
-        crm_xml_add(node, PCMK_XA_INTERVAL, s);
+        pcmk__xe_set(node, PCMK_XA_INTERVAL, s);
         free(s);
     }
 
@@ -2838,20 +2838,20 @@ op_history_xml(pcmk__output_t *out, va_list args) {
         pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE, &epoch);
         if (epoch > 0) {
             char *s = pcmk__epoch2str(&epoch, 0);
-            crm_xml_add(node, PCMK_XA_LAST_RC_CHANGE, s);
+            pcmk__xe_set(node, PCMK_XA_LAST_RC_CHANGE, s);
             free(s);
         }
 
         value = pcmk__xe_get(xml_op, PCMK_XA_EXEC_TIME);
         if (value) {
             char *s = crm_strdup_printf("%sms", value);
-            crm_xml_add(node, PCMK_XA_EXEC_TIME, s);
+            pcmk__xe_set(node, PCMK_XA_EXEC_TIME, s);
             free(s);
         }
         value = pcmk__xe_get(xml_op, PCMK_XA_QUEUE_TIME);
         if (value) {
             char *s = crm_strdup_printf("%sms", value);
-            crm_xml_add(node, PCMK_XA_QUEUE_TIME, s);
+            pcmk__xe_set(node, PCMK_XA_QUEUE_TIME, s);
             free(s);
         }
     }
@@ -2893,7 +2893,7 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
                                                    NULL);
 
     if (chosen) {
-        crm_xml_add(node, PCMK_XA_NODE, chosen->priv->name);
+        pcmk__xe_set(node, PCMK_XA_NODE, chosen->priv->name);
     }
 
     return pcmk_rc_ok;
@@ -2974,14 +2974,14 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
         if (failcount > 0) {
             char *s = pcmk__itoa(failcount);
 
-            crm_xml_add(node, PCMK_XA_FAIL_COUNT, s);
+            pcmk__xe_set(node, PCMK_XA_FAIL_COUNT, s);
             free(s);
         }
 
         if (last_failure > 0) {
             char *s = pcmk__epoch2str(&last_failure, 0);
 
-            crm_xml_add(node, PCMK_XA_LAST_FAILURE, s);
+            pcmk__xe_set(node, PCMK_XA_LAST_FAILURE, s);
             free(s);
         }
     }
@@ -3341,7 +3341,7 @@ ticket_xml(pcmk__output_t *out, va_list args) {
     if (ticket->last_granted > -1) {
         char *buf = pcmk__epoch2str(&ticket->last_granted, 0);
 
-        crm_xml_add(node, PCMK_XA_LAST_GRANTED, buf);
+        pcmk__xe_set(node, PCMK_XA_LAST_GRANTED, buf);
         free(buf);
     }
 
@@ -3355,7 +3355,7 @@ ticket_xml(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        crm_xml_add(node, name, value);
+        pcmk__xe_set(node, name, value);
     }
 
     return pcmk_rc_ok;

@@ -309,7 +309,7 @@ update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
         return ENXIO;
     }
 
-    crm_xml_add(rsc_xml, attr_name, attr_value);
+    pcmk__xe_set(rsc_xml, attr_name, attr_value);
 
     rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc_xml, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
@@ -481,10 +481,10 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                 }
 
                 xml_top = pcmk__xe_create(NULL, (const char *) rsc_xml->name);
-                crm_xml_add(xml_top, PCMK_XA_ID, lookup_id);
+                pcmk__xe_set(xml_top, PCMK_XA_ID, lookup_id);
 
                 xml_obj = pcmk__xe_create(xml_top, attr_set_type);
-                crm_xml_add(xml_obj, PCMK_XA_ID, rsc_attr_set);
+                pcmk__xe_set(xml_obj, PCMK_XA_ID, rsc_attr_set);
                 break;
 
             default:

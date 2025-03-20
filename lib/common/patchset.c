@@ -61,8 +61,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
             change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
-            crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
-            crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
+            pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
+            pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
             pcmk__xe_set_int(change, PCMK_XE_POSITION, position);
             pcmk__xml_copy(change, xml);
             g_string_free(xpath, TRUE);
@@ -87,8 +87,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             if (xpath != NULL) {
                 change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
-                crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
-                crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
+                pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
+                pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
 
                 change = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
                 g_string_free(xpath, TRUE);
@@ -97,15 +97,15 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
         attr = pcmk__xe_create(change, PCMK_XE_CHANGE_ATTR);
 
-        crm_xml_add(attr, PCMK_XA_NAME, (const char *) pIter->name);
+        pcmk__xe_set(attr, PCMK_XA_NAME, (const char *) pIter->name);
         if (nodepriv->flags & pcmk__xf_deleted) {
-            crm_xml_add(attr, PCMK_XA_OPERATION, "unset");
+            pcmk__xe_set(attr, PCMK_XA_OPERATION, "unset");
 
         } else {
-            crm_xml_add(attr, PCMK_XA_OPERATION, "set");
+            pcmk__xe_set(attr, PCMK_XA_OPERATION, "set");
 
             value = pcmk__xml_attr_value(pIter);
-            crm_xml_add(attr, PCMK_XA_VALUE, value);
+            pcmk__xe_set(attr, PCMK_XA_VALUE, value);
         }
     }
 
@@ -120,7 +120,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             nodepriv = pIter->_private;
             if (!pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 value = pcmk__xe_get(xml, (const char *) pIter->name);
-                crm_xml_add(result, (const char *)pIter->name, value);
+                pcmk__xe_set(result, (const char *)pIter->name, value);
             }
         }
     }
@@ -142,8 +142,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         if (xpath != NULL) {
             change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
-            crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
-            crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
+            pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
+            pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
             pcmk__xe_set_int(change, PCMK_XE_POSITION,
                              pcmk__xml_position(xml, pcmk__xf_deleted));
             g_string_free(xpath, TRUE);
@@ -213,7 +213,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         if (value == NULL) {
             value = "1";
         }
-        crm_xml_add(v, vfields[lpc], value);
+        pcmk__xe_set(v, vfields[lpc], value);
     }
 
     v = pcmk__xe_create(version, PCMK_XE_TARGET);
@@ -223,15 +223,15 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         if (value == NULL) {
             value = "1";
         }
-        crm_xml_add(v, vfields[lpc], value);
+        pcmk__xe_set(v, vfields[lpc], value);
     }
 
     for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
         pcmk__deleted_xml_t *deleted_obj = gIter->data;
         xmlNode *change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
-        crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
-        crm_xml_add(change, PCMK_XA_PATH, deleted_obj->path);
+        pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
+        pcmk__xe_set(change, PCMK_XA_PATH, deleted_obj->path);
         if (deleted_obj->position >= 0) {
             pcmk__xe_set_int(change, PCMK_XE_POSITION, deleted_obj->position);
         }
@@ -272,7 +272,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
         int counter = 0;
 
         if (*config_changed) {
-            crm_xml_add(target, PCMK_XA_NUM_UPDATES, "0");
+            pcmk__xe_set(target, PCMK_XA_NUM_UPDATES, "0");
 
             pcmk__xe_get_int(target, PCMK_XA_EPOCH, &counter);
             pcmk__xe_set_int(target, PCMK_XA_EPOCH, counter + 1);
@@ -308,7 +308,7 @@ pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *target)
 
     digest = pcmk__digest_xml(target, true);
 
-    crm_xml_add(patchset, PCMK__XA_DIGEST, digest);
+    pcmk__xe_set(patchset, PCMK__XA_DIGEST, digest);
     free(digest);
 }
 
@@ -698,7 +698,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 const char *name = (const char *) pIter->name;
                 const char *value = pcmk__xml_attr_value(pIter);
 
-                crm_xml_add(match, name, value);
+                pcmk__xe_set(match, name, value);
             }
 
         } else {
@@ -993,7 +993,7 @@ patchset_process_digest(xmlNode *patch, const xmlNode *source,
 
     digest = pcmk__digest_xml(target, true);
 
-    crm_xml_add(patch, PCMK__XA_DIGEST, digest);
+    pcmk__xe_set(patch, PCMK__XA_DIGEST, digest);
     free(digest);
 
     return;

@@ -807,10 +807,10 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
 
     if (pcmk_is_set(flags, crm_ipc_client_response)) {
         ack = pcmk__xe_create(NULL, tag);
-        crm_xml_add(ack, PCMK_XA_FUNCTION, function);
+        pcmk__xe_set(ack, PCMK_XA_FUNCTION, function);
         pcmk__xe_set_int(ack, PCMK__XA_LINE, line);
         pcmk__xe_set_int(ack, PCMK_XA_STATUS, (int) status);
-        crm_xml_add(ack, PCMK__XA_IPC_PROTO_VERSION, ver);
+        pcmk__xe_set(ack, PCMK__XA_IPC_PROTO_VERSION, ver);
     }
     return ack;
 }
