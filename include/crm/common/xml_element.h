@@ -10,11 +10,6 @@
 #ifndef PCMK__CRM_COMMON_XML_ELEMENT__H
 #define PCMK__CRM_COMMON_XML_ELEMENT__H
 
-#include <sys/time.h>     // struct timeval
-
-#include <glib.h>         // guint
-#include <libxml/tree.h>  // xmlNode
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,8 +19,6 @@ extern "C" {
  * \brief Wrappers for and extensions to libxml2 for XML elements
  * \ingroup core
  */
-
-const char *crm_xml_add(xmlNode *node, const char *name, const char *value);
 
 #ifdef __cplusplus
 }
