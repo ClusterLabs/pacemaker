@@ -998,58 +998,6 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
 // XML attribute handling
 
 /*!
- * \brief Create an XML attribute with specified name and value
- *
- * \param[in,out] node   XML node to modify
- * \param[in]     name   Attribute name to set
- * \param[in]     value  Attribute value to set
- *
- * \return New value on success, \c NULL otherwise
- * \note This does nothing if node, name, or value are \c NULL or empty.
- */
-const char *
-crm_xml_add(xmlNode *node, const char *name, const char *value)
-{
-    // @TODO Replace with internal function that returns the new attribute
-    bool dirty = FALSE;
-    xmlAttr *attr = NULL;
-
-    CRM_CHECK(node != NULL, return NULL);
-    CRM_CHECK(name != NULL, return NULL);
-
-    if (value == NULL) {
-        return NULL;
-    }
-
-    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)) {
-        const char *old = pcmk__xe_get(node, name);
-
-        if (old == NULL || value == NULL || strcmp(old, value) != 0) {
-            dirty = TRUE;
-        }
-    }
-
-    if (dirty && (pcmk__check_acl(node, name, pcmk__xf_acl_create) == FALSE)) {
-        crm_trace("Cannot add %s=%s to %s", name, value, node->name);
-        return NULL;
-    }
-
-    attr = xmlSetProp(node, (const xmlChar *) name, (const xmlChar *) value);
-
-    /* If the attribute already exists, this does nothing. Attribute values
-     * don't get private data.
-     */
-    pcmk__xml_new_private_data((xmlNode *) attr);
-
-    if (dirty) {
-        pcmk__mark_xml_attr_dirty(attr);
-    }
-
-    CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
-    return (char *)attr->children->content;
-}
-
-/*!
  * \internal
  * \brief Retrieve the value of an XML attribute
  *
@@ -1618,6 +1566,47 @@ xmlNode *
 expand_idref(xmlNode *input, xmlNode *top)
 {
     return pcmk__xe_resolve_idref(input, top);
+}
+
+const char *
+crm_xml_add(xmlNode *node, const char *name, const char *value)
+{
+    bool dirty = FALSE;
+    xmlAttr *attr = NULL;
+
+    CRM_CHECK(node != NULL, return NULL);
+    CRM_CHECK(name != NULL, return NULL);
+
+    if (value == NULL) {
+        return NULL;
+    }
+
+    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)) {
+        const char *old = pcmk__xe_get(node, name);
+
+        if (old == NULL || value == NULL || strcmp(old, value) != 0) {
+            dirty = TRUE;
+        }
+    }
+
+    if (dirty && (pcmk__check_acl(node, name, pcmk__xf_acl_create) == FALSE)) {
+        crm_trace("Cannot add %s=%s to %s", name, value, node->name);
+        return NULL;
+    }
+
+    attr = xmlSetProp(node, (const xmlChar *) name, (const xmlChar *) value);
+
+    /* If the attribute already exists, this does nothing. Attribute values
+     * don't get private data.
+     */
+    pcmk__xml_new_private_data((xmlNode *) attr);
+
+    if (dirty) {
+        pcmk__mark_xml_attr_dirty(attr);
+    }
+
+    CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
+    return (char *)attr->children->content;
 }
 
 void
