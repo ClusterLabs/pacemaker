@@ -210,7 +210,7 @@ cibadmin_pre_empty(pcmk__output_t *out, int *call_options, xmlNode *input,
      */
     xmlNode *output = createEmptyCib(1);
 
-    crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
+    pcmk__xe_set(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
 
     cibadmin_output_basic_xml(out, output);
 

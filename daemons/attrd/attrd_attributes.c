@@ -138,11 +138,11 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
 {
     xmlNode *xml = pcmk__xe_create(parent, __func__);
 
-    crm_xml_add(xml, PCMK__XA_ATTR_NAME, a->id);
-    crm_xml_add(xml, PCMK__XA_ATTR_SET_TYPE, a->set_type);
-    crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set_id);
-    crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
-    crm_xml_add(xml, PCMK__XA_ATTR_HOST, v->nodename);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_NAME, a->id);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_SET_TYPE, a->set_type);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_SET, a->set_id);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_USER, a->user);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, v->nodename);
 
     /* @COMPAT Prior to 2.1.10 and 3.0.1, the node's cluster ID was added
      * instead of its XML ID. For Corosync and Pacemaker Remote nodes, those are
@@ -150,9 +150,10 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
      * cluster IDs, we will have to drop support for rolling upgrades from
      * versions before those.
      */
-    crm_xml_add(xml, PCMK__XA_ATTR_HOST_ID, attrd_get_node_xml_id(v->nodename));
+    pcmk__xe_set(xml, PCMK__XA_ATTR_HOST_ID,
+                 attrd_get_node_xml_id(v->nodename));
 
-    crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_VALUE, v->current);
     pcmk__xe_set_int(xml, PCMK__XA_ATTR_DAMPENING,
                      pcmk__timeout_ms2s(a->timeout_ms));
     pcmk__xe_set_int(xml, PCMK__XA_ATTR_IS_PRIVATE,

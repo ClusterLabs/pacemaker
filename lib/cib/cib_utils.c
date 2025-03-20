@@ -118,8 +118,8 @@ createEmptyCib(int cib_epoch)
     xmlNode *cib_root = NULL, *config = NULL;
 
     cib_root = pcmk__xe_create(NULL, PCMK_XE_CIB);
-    crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-    crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, pcmk__highest_schema_name());
+    pcmk__xe_set(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+    pcmk__xe_set(cib_root, PCMK_XA_VALIDATE_WITH, pcmk__highest_schema_name());
 
     pcmk__xe_set_int(cib_root, PCMK_XA_EPOCH, cib_epoch);
     pcmk__xe_set_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
@@ -139,9 +139,10 @@ createEmptyCib(int cib_epoch)
         xmlNode *meta = pcmk__xe_create(rsc_defaults, PCMK_XE_META_ATTRIBUTES);
         xmlNode *nvpair = pcmk__xe_create(meta, PCMK_XE_NVPAIR);
 
-        crm_xml_add(meta, PCMK_XA_ID, "build-resource-defaults");
-        crm_xml_add(nvpair, PCMK_XA_ID, "build-" PCMK_META_RESOURCE_STICKINESS);
-        crm_xml_add(nvpair, PCMK_XA_NAME, PCMK_META_RESOURCE_STICKINESS);
+        pcmk__xe_set(meta, PCMK_XA_ID, "build-resource-defaults");
+        pcmk__xe_set(nvpair, PCMK_XA_ID,
+                     "build-" PCMK_META_RESOURCE_STICKINESS);
+        pcmk__xe_set(nvpair, PCMK_XA_NAME, PCMK_META_RESOURCE_STICKINESS);
         pcmk__xe_set_int(nvpair, PCMK_XA_VALUE,
                          PCMK__RESOURCE_STICKINESS_DEFAULT);
     }
@@ -503,19 +504,19 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             const char *client = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTNAME);
 
             if (origin != NULL) {
-                crm_xml_add(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
+                pcmk__xe_set(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
             } else {
                 pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_ORIGIN);
             }
 
             if (client != NULL) {
-                crm_xml_add(scratch, PCMK_XA_UPDATE_CLIENT, user);
+                pcmk__xe_set(scratch, PCMK_XA_UPDATE_CLIENT, user);
             } else {
                 pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_CLIENT);
             }
 
             if (user != NULL) {
-                crm_xml_add(scratch, PCMK_XA_UPDATE_USER, user);
+                pcmk__xe_set(scratch, PCMK_XA_UPDATE_USER, user);
             } else {
                 pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_USER);
             }
@@ -570,12 +571,12 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
         cib->call_id = 1;
     }
 
-    crm_xml_add(*op_msg, PCMK__XA_T, PCMK__VALUE_CIB);
-    crm_xml_add(*op_msg, PCMK__XA_CIB_OP, op);
-    crm_xml_add(*op_msg, PCMK__XA_CIB_HOST, host);
-    crm_xml_add(*op_msg, PCMK__XA_CIB_SECTION, section);
-    crm_xml_add(*op_msg, PCMK__XA_CIB_USER, user_name);
-    crm_xml_add(*op_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
+    pcmk__xe_set(*op_msg, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(*op_msg, PCMK__XA_CIB_OP, op);
+    pcmk__xe_set(*op_msg, PCMK__XA_CIB_HOST, host);
+    pcmk__xe_set(*op_msg, PCMK__XA_CIB_SECTION, section);
+    pcmk__xe_set(*op_msg, PCMK__XA_CIB_USER, user_name);
+    pcmk__xe_set(*op_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
     pcmk__xe_set_int(*op_msg, PCMK__XA_CIB_CALLID, cib->call_id);
 
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);

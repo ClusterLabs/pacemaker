@@ -385,16 +385,16 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     pcmk__xe_remove_attr(command, PCMK__XA_CIB_HOST);
     pcmk__xe_remove_attr(command, PCMK__XA_CIB_UPDATE);
 
-    crm_xml_add(command, PCMK__XA_T, PCMK__VALUE_CIB);
-    crm_xml_add(command, PCMK__XA_CIB_CLIENTID, client->id);
-    crm_xml_add(command, PCMK__XA_CIB_CLIENTNAME, client->name);
-    crm_xml_add(command, PCMK__XA_CIB_USER, client->user);
+    pcmk__xe_set(command, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(command, PCMK__XA_CIB_CLIENTID, client->id);
+    pcmk__xe_set(command, PCMK__XA_CIB_CLIENTNAME, client->name);
+    pcmk__xe_set(command, PCMK__XA_CIB_USER, client->user);
 
     if (pcmk__xe_get(command, PCMK__XA_CIB_CALLID) == NULL) {
         char *call_uuid = crm_generate_uuid();
 
         /* fix the command */
-        crm_xml_add(command, PCMK__XA_CIB_CALLID, call_uuid);
+        pcmk__xe_set(command, PCMK__XA_CIB_CALLID, call_uuid);
         free(call_uuid);
     }
 
@@ -493,8 +493,8 @@ cib_remote_msg(gpointer data)
 
         /* send ACK */
         reg = pcmk__xe_create(NULL, PCMK__XE_CIB_RESULT);
-        crm_xml_add(reg, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
-        crm_xml_add(reg, PCMK__XA_CIB_CLIENTID, client->id);
+        pcmk__xe_set(reg, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
+        pcmk__xe_set(reg, PCMK__XA_CIB_CLIENTID, client->id);
         pcmk__remote_send_xml(client->remote, reg);
         pcmk__xml_free(reg);
         pcmk__xml_free(command);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -229,7 +229,7 @@ add_desc_xml(pcmk__output_t *out, bool for_long, const char *desc)
     const char *tag = (for_long? PCMK_XE_LONGDESC : PCMK_XE_SHORTDESC);
     xmlNode *node = pcmk__output_create_xml_text_node(out, tag, desc);
 
-    crm_xml_add(node, PCMK_XA_LANG, PCMK__VALUE_EN);
+    pcmk__xe_set(node, PCMK_XA_LANG, PCMK__VALUE_EN);
 
 #ifdef ENABLE_NLS
     {
@@ -243,7 +243,7 @@ add_desc_xml(pcmk__output_t *out, bool for_long, const char *desc)
             locale = strtok(setlocale(LC_ALL, NULL), "_");
         }
         node = pcmk__output_create_xml_text_node(out, tag, _(desc));
-        crm_xml_add(node, PCMK_XA_LANG, locale);
+        pcmk__xe_set(node, PCMK_XA_LANG, locale);
     }
 #endif
 }

@@ -47,7 +47,7 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
     xmlNode *node_xml;
 
     node_xml = pcmk__xe_create(xml, PCMK_XE_NODE);
-    crm_xml_add(node_xml, PCMK_XA_ID, id);
+    pcmk__xe_set(node_xml, PCMK_XA_ID, id);
 
     return node_xml;
 }
@@ -97,10 +97,10 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *scheduler)
                 && pcmk_is_set(node->priv->flags, pcmk__node_remote_maint))) {
 
             if (maintenance != NULL) {
-                crm_xml_add(add_node_to_xml_by_id(node->priv->id,
-                                                  maintenance),
-                            PCMK__XA_NODE_IN_MAINTENANCE,
-                            (node->details->maintenance? "1" : "0"));
+                pcmk__xe_set(add_node_to_xml_by_id(node->priv->id,
+                                                   maintenance),
+                             PCMK__XA_NODE_IN_MAINTENANCE,
+                             (node->details->maintenance? "1" : "0"));
             }
             count++;
         }
@@ -231,10 +231,10 @@ add_node_details(const pcmk_action_t *action, xmlNode *xml)
 {
     pcmk_node_t *router_node = pcmk__connection_host_for_action(action);
 
-    crm_xml_add(xml, PCMK__META_ON_NODE, action->node->priv->name);
-    crm_xml_add(xml, PCMK__META_ON_NODE_UUID, action->node->priv->id);
+    pcmk__xe_set(xml, PCMK__META_ON_NODE, action->node->priv->name);
+    pcmk__xe_set(xml, PCMK__META_ON_NODE_UUID, action->node->priv->id);
     if (router_node != NULL) {
-        crm_xml_add(xml, PCMK__XA_ROUTER_NODE, router_node->priv->name);
+        pcmk__xe_set(xml, PCMK__XA_ROUTER_NODE, router_node->priv->name);
     }
 }
 
@@ -280,8 +280,8 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          */
         crm_debug("Using orphan clone name %s instead of history ID %s",
                   action->rsc->id, action->rsc->priv->history_id);
-        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->priv->history_id);
-        crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
+        pcmk__xe_set(rsc_xml, PCMK_XA_ID, action->rsc->priv->history_id);
+        pcmk__xe_set(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
 
     } else if (!pcmk_is_set(action->rsc->flags, pcmk__rsc_unique)) {
         const char *xml_id = pcmk__xe_id(action->rsc->priv->xml);
@@ -303,25 +303,25 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * 'instance free' name will correspond to an orphan
          * and fall into the clause above instead
          */
-        crm_xml_add(rsc_xml, PCMK_XA_ID, xml_id);
+        pcmk__xe_set(rsc_xml, PCMK_XA_ID, xml_id);
         if ((action->rsc->priv->history_id != NULL)
             && !pcmk__str_eq(xml_id, action->rsc->priv->history_id,
                              pcmk__str_none)) {
-            crm_xml_add(rsc_xml, PCMK__XA_LONG_ID,
-                        action->rsc->priv->history_id);
+            pcmk__xe_set(rsc_xml, PCMK__XA_LONG_ID,
+                         action->rsc->priv->history_id);
         } else {
-            crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
+            pcmk__xe_set(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
         }
 
     } else {
         pcmk__assert(action->rsc->priv->history_id == NULL);
-        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->id);
+        pcmk__xe_set(rsc_xml, PCMK_XA_ID, action->rsc->id);
     }
 
     for (int lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
-        crm_xml_add(rsc_xml, attr_list[lpc],
-                    g_hash_table_lookup(action->rsc->priv->meta,
-                                        attr_list[lpc]));
+        pcmk__xe_set(rsc_xml, attr_list[lpc],
+                     g_hash_table_lookup(action->rsc->priv->meta,
+                                         attr_list[lpc]));
     }
 }
 
@@ -344,7 +344,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
      */
     args_xml = pcmk__xe_create(action_xml, PCMK__XE_ATTRIBUTES);
 
-    crm_xml_add(args_xml, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+    pcmk__xe_set(args_xml, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     g_hash_table_foreach(action->extra, hash2field, args_xml);
 
     if ((rsc != NULL) && (action->node != NULL)) {
@@ -418,7 +418,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
                             pcmk__str_none)) {
         // CIB-only clean-up for shutdown locks
         action_xml = pcmk__xe_create(parent, PCMK__XE_CRM_EVENT);
-        crm_xml_add(action_xml, PCMK__XA_MODE, PCMK__VALUE_CIB);
+        pcmk__xe_set(action_xml, PCMK__XA_MODE, PCMK__VALUE_CIB);
 
     } else if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
         if (pcmk__str_eq(action->task, PCMK_ACTION_MAINTENANCE_NODES,
@@ -433,7 +433,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
     }
 
     pcmk__xe_set_int(action_xml, PCMK_XA_ID, action->id);
-    crm_xml_add(action_xml, PCMK_XA_OPERATION, action->task);
+    pcmk__xe_set(action_xml, PCMK_XA_OPERATION, action->task);
 
     if ((action->rsc != NULL) && (action->rsc->priv->history_id != NULL)) {
         char *clone_key = NULL;
@@ -444,12 +444,12 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
             interval_ms = 0;
         }
         clone_key = clone_op_key(action, interval_ms);
-        crm_xml_add(action_xml, PCMK__XA_OPERATION_KEY, clone_key);
-        crm_xml_add(action_xml, "internal_" PCMK__XA_OPERATION_KEY,
-                    action->uuid);
+        pcmk__xe_set(action_xml, PCMK__XA_OPERATION_KEY, clone_key);
+        pcmk__xe_set(action_xml, "internal_" PCMK__XA_OPERATION_KEY,
+                     action->uuid);
         free(clone_key);
     } else {
-        crm_xml_add(action_xml, PCMK__XA_OPERATION_KEY, action->uuid);
+        pcmk__xe_set(action_xml, PCMK__XA_OPERATION_KEY, action->uuid);
     }
 
     if (needs_node_info && (action->node != NULL)) {
@@ -1017,23 +1017,23 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     scheduler->priv->graph = pcmk__xe_create(NULL, PCMK__XE_TRANSITION_GRAPH);
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_CLUSTER_DELAY);
-    crm_xml_add(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, value);
+    pcmk__xe_set(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, value);
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
-    crm_xml_add(scheduler->priv->graph, PCMK_OPT_STONITH_TIMEOUT, value);
+    pcmk__xe_set(scheduler->priv->graph, PCMK_OPT_STONITH_TIMEOUT, value);
 
-    crm_xml_add(scheduler->priv->graph, PCMK__XA_FAILED_STOP_OFFSET,
-                PCMK_VALUE_INFINITY);
+    pcmk__xe_set(scheduler->priv->graph, PCMK__XA_FAILED_STOP_OFFSET,
+                 PCMK_VALUE_INFINITY);
 
     if (pcmk_is_set(scheduler->flags, pcmk__sched_start_failure_fatal)) {
-        crm_xml_add(scheduler->priv->graph, PCMK__XA_FAILED_START_OFFSET,
-                    PCMK_VALUE_INFINITY);
+        pcmk__xe_set(scheduler->priv->graph, PCMK__XA_FAILED_START_OFFSET,
+                     PCMK_VALUE_INFINITY);
     } else {
-        crm_xml_add(scheduler->priv->graph, PCMK__XA_FAILED_START_OFFSET, "1");
+        pcmk__xe_set(scheduler->priv->graph, PCMK__XA_FAILED_START_OFFSET, "1");
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_BATCH_LIMIT);
-    crm_xml_add(scheduler->priv->graph, PCMK_OPT_BATCH_LIMIT, value);
+    pcmk__xe_set(scheduler->priv->graph, PCMK_OPT_BATCH_LIMIT, value);
 
     pcmk__xe_set_int(scheduler->priv->graph, "transition_id", transition_id);
 
@@ -1043,7 +1043,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         crm_warn("Ignoring invalid value '%s' for " PCMK_OPT_MIGRATION_LIMIT
                  ": %s", value, pcmk_rc_str(rc));
     } else if (limit > 0) {
-        crm_xml_add(scheduler->priv->graph, PCMK_OPT_MIGRATION_LIMIT, value);
+        pcmk__xe_set(scheduler->priv->graph, PCMK_OPT_MIGRATION_LIMIT, value);
     }
 
     if (scheduler->priv->recheck_by > 0) {

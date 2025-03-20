@@ -60,7 +60,7 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
     enum election_result rc = 0;
     enum election_result previous = election_state(attrd_cluster);
 
-    crm_xml_add(xml, PCMK__XA_SRC, peer->name);
+    pcmk__xe_set(xml, PCMK__XA_SRC, peer->name);
 
     // Don't become writer if we're shutting down
     rc = election_count_vote(attrd_cluster, xml, !attrd_shutting_down(false));

@@ -91,36 +91,36 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
               pcmk__xe_id(location), rsc_id, host, rsc_id,
               (promoted_role_only? "being promoted" : "running"), host, host);
 
-    crm_xml_add(location, PCMK_XA_RSC, rsc_id);
+    pcmk__xe_set(location, PCMK_XA_RSC, rsc_id);
     if(promoted_role_only) {
-        crm_xml_add(location, PCMK_XA_ROLE, promoted_role);
+        pcmk__xe_set(location, PCMK_XA_ROLE, promoted_role);
     } else {
-        crm_xml_add(location, PCMK_XA_ROLE, PCMK_ROLE_STARTED);
+        pcmk__xe_set(location, PCMK_XA_ROLE, PCMK_ROLE_STARTED);
     }
 
     if (later_s == NULL) {
         /* Short form */
-        crm_xml_add(location, PCMK_XE_NODE, host);
-        crm_xml_add(location, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
+        pcmk__xe_set(location, PCMK_XE_NODE, host);
+        pcmk__xe_set(location, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
 
     } else {
         xmlNode *rule = pcmk__xe_create(location, PCMK_XE_RULE);
         xmlNode *expr = pcmk__xe_create(rule, PCMK_XE_EXPRESSION);
 
         pcmk__xe_set_id(rule, "cli-ban-%s-on-%s-rule", rsc_id, host);
-        crm_xml_add(rule, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
-        crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, PCMK_VALUE_AND);
+        pcmk__xe_set(rule, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
+        pcmk__xe_set(rule, PCMK_XA_BOOLEAN_OP, PCMK_VALUE_AND);
 
         pcmk__xe_set_id(expr, "cli-ban-%s-on-%s-expr", rsc_id, host);
-        crm_xml_add(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
-        crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_EQ);
-        crm_xml_add(expr, PCMK_XA_VALUE, host);
-        crm_xml_add(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
+        pcmk__xe_set(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
+        pcmk__xe_set(expr, PCMK_XA_OPERATION, PCMK_VALUE_EQ);
+        pcmk__xe_set(expr, PCMK_XA_VALUE, host);
+        pcmk__xe_set(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
 
         expr = pcmk__xe_create(rule, PCMK_XE_DATE_EXPRESSION);
         pcmk__xe_set_id(expr, "cli-ban-%s-on-%s-lifetime", rsc_id, host);
-        crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
-        crm_xml_add(expr, PCMK_XA_END, later_s);
+        pcmk__xe_set(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
+        pcmk__xe_set(expr, PCMK_XA_END, later_s);
     }
 
     crm_log_xml_notice(fragment, "Modify");
@@ -171,36 +171,36 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
     location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
     pcmk__xe_set_id(location, "cli-prefer-%s", rsc_id);
 
-    crm_xml_add(location, PCMK_XA_RSC, rsc_id);
+    pcmk__xe_set(location, PCMK_XA_RSC, rsc_id);
     if(promoted_role_only) {
-        crm_xml_add(location, PCMK_XA_ROLE, promoted_role);
+        pcmk__xe_set(location, PCMK_XA_ROLE, promoted_role);
     } else {
-        crm_xml_add(location, PCMK_XA_ROLE, PCMK_ROLE_STARTED);
+        pcmk__xe_set(location, PCMK_XA_ROLE, PCMK_ROLE_STARTED);
     }
 
     if (later_s == NULL) {
         /* Short form */
-        crm_xml_add(location, PCMK_XE_NODE, host);
-        crm_xml_add(location, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
+        pcmk__xe_set(location, PCMK_XE_NODE, host);
+        pcmk__xe_set(location, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
 
     } else {
         xmlNode *rule = pcmk__xe_create(location, PCMK_XE_RULE);
         xmlNode *expr = pcmk__xe_create(rule, PCMK_XE_EXPRESSION);
 
         pcmk__xe_set_id(rule, "cli-prefer-rule-%s", rsc_id);
-        crm_xml_add(rule, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
-        crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, PCMK_VALUE_AND);
+        pcmk__xe_set(rule, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
+        pcmk__xe_set(rule, PCMK_XA_BOOLEAN_OP, PCMK_VALUE_AND);
 
         pcmk__xe_set_id(expr, "cli-prefer-expr-%s", rsc_id);
-        crm_xml_add(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
-        crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_EQ);
-        crm_xml_add(expr, PCMK_XA_VALUE, host);
-        crm_xml_add(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
+        pcmk__xe_set(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
+        pcmk__xe_set(expr, PCMK_XA_OPERATION, PCMK_VALUE_EQ);
+        pcmk__xe_set(expr, PCMK_XA_VALUE, host);
+        pcmk__xe_set(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
 
         expr = pcmk__xe_create(rule, PCMK_XE_DATE_EXPRESSION);
         pcmk__xe_set_id(expr, "cli-prefer-lifetime-end-%s", rsc_id);
-        crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
-        crm_xml_add(expr, PCMK_XA_END, later_s);
+        pcmk__xe_set(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
+        pcmk__xe_set(expr, PCMK_XA_END, later_s);
     }
 
     crm_log_xml_info(fragment, "Modify");
@@ -296,7 +296,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
     location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
     pcmk__xe_set_id(location, "cli-prefer-%s", rsc_id);
     if (force == FALSE) {
-        crm_xml_add(location, PCMK_XE_NODE, host);
+        pcmk__xe_set(location, PCMK_XE_NODE, host);
     }
 
     crm_log_xml_info(fragment, "Delete");

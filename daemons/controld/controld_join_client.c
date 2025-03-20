@@ -181,8 +181,8 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
                                          CRM_SYSTEM_DC, CRM_OP_JOIN_REQUEST,
                                          generation);
 
-        crm_xml_add(join_request, PCMK__XA_JOIN_ID, join_id);
-        crm_xml_add(join_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+        pcmk__xe_set(join_request, PCMK__XA_JOIN_ID, join_id);
+        pcmk__xe_set(join_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
         pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, join_request);
         pcmk__xml_free(join_request);
     }

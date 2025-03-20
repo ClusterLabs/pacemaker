@@ -146,7 +146,7 @@ handle_pecalc_request(pcmk__request_t *request)
                                          series[series_id].name, seq, true);
     }
 
-    crm_xml_add(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
+    pcmk__xe_set(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
 
     pcmk__log_transition_summary(scheduler, filename);
 

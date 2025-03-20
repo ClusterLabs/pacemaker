@@ -332,7 +332,7 @@ cib_cs_dispatch(cpg_handle_t handle,
         free(data);
         return;
     }
-    crm_xml_add(xml, PCMK__XA_SRC, from);
+    pcmk__xe_set(xml, PCMK__XA_SRC, from);
     cib_peer_callback(xml, NULL);
 
     pcmk__xml_free(xml);
