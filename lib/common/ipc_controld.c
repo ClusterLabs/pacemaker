@@ -367,9 +367,9 @@ create_reprobe_message_data(const char *target_node, const char *router_node)
     xmlNode *msg_data;
 
     msg_data = pcmk__xe_create(NULL, "data_for_" CRM_OP_REPROBE);
-    crm_xml_add(msg_data, PCMK__META_ON_NODE, target_node);
+    pcmk__xe_set(msg_data, PCMK__META_ON_NODE, target_node);
     if ((router_node != NULL) && !pcmk__str_eq(router_node, target_node, pcmk__str_casei)) {
-        crm_xml_add(msg_data, PCMK__XA_ROUTER_NODE, router_node);
+        pcmk__xe_set(msg_data, PCMK__XA_ROUTER_NODE, router_node);
     }
     return msg_data;
 }
@@ -512,32 +512,32 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
      */
     key = pcmk__transition_key(0, getpid(), 0,
                                "xxxxxxxx-xrsc-opxx-xcrm-resourcexxxx");
-    crm_xml_add(msg_data, PCMK__XA_TRANSITION_KEY, key);
+    pcmk__xe_set(msg_data, PCMK__XA_TRANSITION_KEY, key);
     free(key);
 
-    crm_xml_add(msg_data, PCMK__META_ON_NODE, target_node);
+    pcmk__xe_set(msg_data, PCMK__META_ON_NODE, target_node);
     if (!pcmk__str_eq(router_node, target_node, pcmk__str_casei)) {
-        crm_xml_add(msg_data, PCMK__XA_ROUTER_NODE, router_node);
+        pcmk__xe_set(msg_data, PCMK__XA_ROUTER_NODE, router_node);
     }
 
     if (cib_only) {
         // Indicate that only the CIB needs to be cleaned
-        crm_xml_add(msg_data, PCMK__XA_MODE, PCMK__VALUE_CIB);
+        pcmk__xe_set(msg_data, PCMK__XA_MODE, PCMK__VALUE_CIB);
     }
 
     xml_rsc = pcmk__xe_create(msg_data, PCMK_XE_PRIMITIVE);
-    crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
-    crm_xml_add(xml_rsc, PCMK__XA_LONG_ID, rsc_long_id);
-    crm_xml_add(xml_rsc, PCMK_XA_CLASS, standard);
-    crm_xml_add(xml_rsc, PCMK_XA_PROVIDER, provider);
-    crm_xml_add(xml_rsc, PCMK_XA_TYPE, type);
+    pcmk__xe_set(xml_rsc, PCMK_XA_ID, rsc_id);
+    pcmk__xe_set(xml_rsc, PCMK__XA_LONG_ID, rsc_long_id);
+    pcmk__xe_set(xml_rsc, PCMK_XA_CLASS, standard);
+    pcmk__xe_set(xml_rsc, PCMK_XA_PROVIDER, provider);
+    pcmk__xe_set(xml_rsc, PCMK_XA_TYPE, type);
 
     params = pcmk__xe_create(msg_data, PCMK__XE_ATTRIBUTES);
-    crm_xml_add(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+    pcmk__xe_set(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     // The controller parses the timeout from the request
     key = crm_meta_name(PCMK_META_TIMEOUT);
-    crm_xml_add(params, key, "60000");  /* 1 minute */ //@TODO pass as arg
+    pcmk__xe_set(params, key, "60000");  /* 1 minute */ //@TODO pass as arg
     free(key);
 
     request = create_controller_request(api, op, router_node, msg_data);
@@ -649,12 +649,12 @@ create_hello_message(const char *uuid, const char *client_name,
     }
 
     hello_node = pcmk__xe_create(NULL, PCMK__XE_OPTIONS);
-    crm_xml_add(hello_node, PCMK__XA_MAJOR_VERSION, major_version);
-    crm_xml_add(hello_node, PCMK__XA_MINOR_VERSION, minor_version);
-    crm_xml_add(hello_node, PCMK__XA_CLIENT_NAME, client_name);
+    pcmk__xe_set(hello_node, PCMK__XA_MAJOR_VERSION, major_version);
+    pcmk__xe_set(hello_node, PCMK__XA_MINOR_VERSION, minor_version);
+    pcmk__xe_set(hello_node, PCMK__XA_CLIENT_NAME, client_name);
 
     // @TODO Nothing uses this. Drop, or keep for debugging?
-    crm_xml_add(hello_node, PCMK__XA_CLIENT_UUID, uuid);
+    pcmk__xe_set(hello_node, PCMK__XA_CLIENT_UUID, uuid);
 
     sender_system = crm_strdup_printf("%s_%s", uuid, client_name);
     hello = pcmk__new_request(pcmk_ipc_controld, sender_system, NULL, NULL,

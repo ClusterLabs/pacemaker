@@ -10,12 +10,11 @@
 #ifndef PCMK__CRM_COMMON_XML_COMPAT__H
 #define PCMK__CRM_COMMON_XML_COMPAT__H
 
+#include <stdbool.h>                // bool
+
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
 #include <libxml/xpath.h>           // xmlXPathObject
-
-#include <crm/common/nvpair.h>  // crm_xml_add()
-#include <crm/common/xml_names.h>   // PCMK_XE_CLONE
 
 #ifdef __cplusplus
 extern "C" {

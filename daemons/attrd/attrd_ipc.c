@@ -44,9 +44,9 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
     xmlNode *reply = pcmk__xe_create(NULL, __func__);
     attribute_t *a;
 
-    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_ATTRD);
-    crm_xml_add(reply, PCMK__XA_SUBT, PCMK__ATTRD_CMD_QUERY);
-    crm_xml_add(reply, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
+    pcmk__xe_set(reply, PCMK__XA_T, PCMK__VALUE_ATTRD);
+    pcmk__xe_set(reply, PCMK__XA_SUBT, PCMK__ATTRD_CMD_QUERY);
+    pcmk__xe_set(reply, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
 
     /* If desired attribute exists, add its value(s) to the reply */
     a = g_hash_table_lookup(attributes, attr);
@@ -54,7 +54,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         attribute_value_t *v;
         xmlNode *host_value;
 
-        crm_xml_add(reply, PCMK__XA_ATTR_NAME, attr);
+        pcmk__xe_set(reply, PCMK__XA_ATTR_NAME, attr);
 
         /* Allow caller to use "localhost" to refer to local node */
         if (pcmk__str_eq(host, "localhost", pcmk__str_casei)) {
@@ -66,9 +66,9 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         if (host) {
             v = g_hash_table_lookup(a->values, host);
             host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
-            crm_xml_add(host_value, PCMK__XA_ATTR_HOST, host);
-            crm_xml_add(host_value, PCMK__XA_ATTR_VALUE,
-                        (v? v->current : NULL));
+            pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, host);
+            pcmk__xe_set(host_value, PCMK__XA_ATTR_VALUE,
+                         ((v != NULL)? v->current : NULL));
 
         /* Otherwise, add all nodes' values */
         } else {
@@ -77,8 +77,8 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
             g_hash_table_iter_init(&iter, a->values);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
                 host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
-                crm_xml_add(host_value, PCMK__XA_ATTR_HOST, v->nodename);
-                crm_xml_add(host_value, PCMK__XA_ATTR_VALUE, v->current);
+                pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, v->nodename);
+                pcmk__xe_set(host_value, PCMK__XA_ATTR_VALUE, v->current);
             }
         }
     }
@@ -105,7 +105,7 @@ attrd_client_clear_failure(pcmk__request_t *request)
     interval_spec = pcmk__xe_get(xml, PCMK__XA_ATTR_CLEAR_INTERVAL);
 
     /* Map this to an update */
-    crm_xml_add(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    pcmk__xe_set(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
 
     /* Add regular expression matching desired attributes */
 
@@ -123,11 +123,11 @@ attrd_client_clear_failure(pcmk__request_t *request)
                                         rsc, op, interval_ms);
         }
 
-        crm_xml_add(xml, PCMK__XA_ATTR_REGEX, pattern);
+        pcmk__xe_set(xml, PCMK__XA_ATTR_REGEX, pattern);
         free(pattern);
 
     } else {
-        crm_xml_add(xml, PCMK__XA_ATTR_REGEX, ATTRD_RE_CLEAR_ALL);
+        pcmk__xe_set(xml, PCMK__XA_ATTR_REGEX, ATTRD_RE_CLEAR_ALL);
     }
 
     /* Make sure attribute and value are not set, so we delete via regex */
@@ -166,7 +166,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
                 host_alloc = pcmk__cluster_node_name(nodeid);
                 host = host_alloc;
             }
-            crm_xml_add(xml, PCMK__XA_ATTR_HOST, host);
+            pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, host);
         }
     }
 
@@ -236,9 +236,9 @@ handle_missing_host(xmlNode *xml)
         crm_trace("Inferring local node %s with XML ID %s",
                   attrd_cluster->priv->node_name,
                   attrd_cluster->priv->node_xml_id);
-        crm_xml_add(xml, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
-        crm_xml_add(xml, PCMK__XA_ATTR_HOST_ID,
-                    attrd_cluster->priv->node_xml_id);
+        pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
+        pcmk__xe_set(xml, PCMK__XA_ATTR_HOST_ID,
+                     attrd_cluster->priv->node_xml_id);
     }
 }
 
@@ -273,7 +273,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
                  */
                 pcmk__xe_copy_attrs(child, xml, pcmk__xaf_no_overwrite);
                 pcmk__xe_remove_attr(child, PCMK__XA_ATTR_REGEX);
-                crm_xml_add(child, PCMK__XA_ATTR_NAME, attr);
+                pcmk__xe_set(child, PCMK__XA_ATTR_NAME, attr);
             }
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -81,7 +81,7 @@ lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
                                           NULL);
 
     if (!pcmk__str_empty(provider)) {
-        crm_xml_add(node, PCMK_XA_PROVIDER, provider);
+        pcmk__xe_set(node, PCMK_XA_PROVIDER, provider);
     }
 
     rc = xml_list(out, list, PCMK_XE_AGENT);
@@ -116,7 +116,7 @@ lrmd__providers_list_xml(pcmk__output_t *out, va_list args) {
                                                      NULL);
 
     if (agent_spec != NULL) {
-        crm_xml_add(node, PCMK_XA_AGENT, agent_spec);
+        pcmk__xe_set(node, PCMK_XA_AGENT, agent_spec);
     }
 
     rc = xml_list(out, list, PCMK_XE_PROVIDER);

@@ -211,11 +211,11 @@ hash2smartfield(gpointer key, gpointer value, gpointer user_data)
     if (isdigit(name[0])) {
         xmlNode *tmp = pcmk__xe_create(xml_node, PCMK__XE_PARAM);
 
-        crm_xml_add(tmp, PCMK_XA_NAME, name);
-        crm_xml_add(tmp, PCMK_XA_VALUE, s_value);
+        pcmk__xe_set(tmp, PCMK_XA_NAME, name);
+        pcmk__xe_set(tmp, PCMK_XA_VALUE, s_value);
 
     } else if (pcmk__xe_get(xml_node, name) == NULL) {
-        crm_xml_add(xml_node, name, s_value);
+        pcmk__xe_set(xml_node, name, s_value);
         crm_trace("dumped: %s=%s", name, s_value);
 
     } else {
@@ -243,7 +243,7 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
     xmlNode *xml_node = user_data;
 
     if (pcmk__xe_get(xml_node, name) == NULL) {
-        crm_xml_add(xml_node, name, s_value);
+        pcmk__xe_set(xml_node, name, s_value);
 
     } else {
         crm_trace("duplicate: %s=%s", name, s_value);
@@ -311,13 +311,13 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
     nvp = pcmk__xe_create(parent, PCMK_XE_NVPAIR);
 
     if (id) {
-        crm_xml_add(nvp, PCMK_XA_ID, id);
+        pcmk__xe_set(nvp, PCMK_XA_ID, id);
     } else {
         pcmk__xe_set_id(nvp, "%s-%s",
                         pcmk__s(pcmk__xe_id(parent), PCMK_XE_NVPAIR), name);
     }
-    crm_xml_add(nvp, PCMK_XA_NAME, name);
-    crm_xml_add(nvp, PCMK_XA_VALUE, value);
+    pcmk__xe_set(nvp, PCMK_XA_NAME, name);
+    pcmk__xe_set(nvp, PCMK_XA_VALUE, value);
     return nvp;
 }
 
@@ -702,7 +702,7 @@ pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
     pcmk_nvpair_t *pair = data;
     xmlNode *parent = user_data;
 
-    crm_xml_add(parent, pair->name, pair->value);
+    pcmk__xe_set(parent, pair->name, pair->value);
 }
 
 void

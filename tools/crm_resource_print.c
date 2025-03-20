@@ -357,7 +357,7 @@ override_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (rsc_name != NULL) {
-        crm_xml_add(node, PCMK_XA_RSC, rsc_name);
+        pcmk__xe_set(node, PCMK_XA_RSC, rsc_name);
     }
 
     return pcmk_rc_ok;
@@ -453,10 +453,10 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
                                           NULL);
 
     if (rsc_name) {
-        crm_xml_add(node, PCMK_XA_RSC, rsc_name);
+        pcmk__xe_set(node, PCMK_XA_RSC, rsc_name);
     }
 
-    crm_xml_add(node, PCMK_XA_PROVIDER, provider);
+    pcmk__xe_set(node, PCMK_XA_PROVIDER, provider);
 
     if (overrides) {
         GHashTableIter iter;
@@ -565,7 +565,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     }
 
     if (pcmk_is_set(checks->flags, rsc_locked)) {
-        crm_xml_add(node, PCMK_XA_LOCKED_TO_HYPHEN, checks->lock_node);
+        pcmk__xe_set(node, PCMK_XA_LOCKED_TO_HYPHEN, checks->lock_node);
     }
 
     if (pcmk_is_set(checks->flags, rsc_node_health)) {
@@ -637,7 +637,7 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
                                                                 ni->node_name);
 
         if (ni->promoted) {
-            crm_xml_add(sub_node, PCMK_XA_STATE, "promoted");
+            pcmk__xe_set(sub_node, PCMK_XA_STATE, "promoted");
         }
     }
 
@@ -770,7 +770,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
     } else if ((rsc != NULL) && (host_uname != NULL)) {
         if (resource_is_running_on(rsc, host_uname)) {
-            crm_xml_add(xml_node, PCMK_XA_RUNNING_ON, host_uname);
+            pcmk__xe_set(xml_node, PCMK_XA_RUNNING_ON, host_uname);
         }
 
         cli_resource_check(out, rsc, node);
@@ -819,7 +819,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         GList *hosts = NULL;
 
         rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
-        crm_xml_add(xml_node, PCMK_XA_RUNNING, pcmk__btoa(hosts != NULL));
+        pcmk__xe_set(xml_node, PCMK_XA_RUNNING, pcmk__btoa(hosts != NULL));
         cli_resource_check(out, rsc, NULL);
         g_list_free(hosts);
     }

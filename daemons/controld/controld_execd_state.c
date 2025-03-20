@@ -453,7 +453,7 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
 {
     crm_trace("Processing proxied IPC message from session %s", session);
     crm_log_xml_trace(msg, "controller[inbound]");
-    crm_xml_add(msg, PCMK__XA_CRM_SYS_FROM, session);
+    pcmk__xe_set(msg, PCMK__XA_CRM_SYS_FROM, session);
     if (controld_authorize_ipc_message(msg, NULL, session)) {
         route_message(C_IPC_MESSAGE, msg);
     }
@@ -558,7 +558,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
         CRM_CHECK(request != NULL, return);
         CRM_CHECK(lrm_state->node_name, return);
-        crm_xml_add(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
+        pcmk__xe_set(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
         pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER,
                               lrm_state->node_name);
 
@@ -574,7 +574,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             pcmk__xe_get_int(request, PCMK_XA_ID, &node_id);
             if ((node_id <= 0)
                 && (pcmk__xe_get(request, PCMK_XA_UNAME) == NULL)) {
-                crm_xml_add(request, PCMK_XA_UNAME, lrm_state->node_name);
+                pcmk__xe_set(request, PCMK_XA_UNAME, lrm_state->node_name);
             }
         }
 
@@ -589,7 +589,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             int msg_id = 0;
             xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_ACK);
 
-            crm_xml_add(op_reply, PCMK_XA_FUNCTION, __func__);
+            pcmk__xe_set(op_reply, PCMK_XA_FUNCTION, __func__);
             pcmk__xe_set_int(op_reply, PCMK__XA_LINE, __LINE__);
 
             pcmk__xe_get_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);

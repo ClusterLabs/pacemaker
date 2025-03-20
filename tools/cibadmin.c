@@ -198,7 +198,7 @@ cibadmin_pre_empty(int *call_options, xmlNode *input, GError **error)
     GString *buf = g_string_sized_new(1024);
     xmlNode *output = createEmptyCib(1);
 
-    crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
+    pcmk__xe_set(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
 
     pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
     printf("%s", buf->str);

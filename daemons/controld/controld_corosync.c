@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -49,7 +49,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
         return;
     }
 
-    crm_xml_add(xml, PCMK__XA_SRC, from);
+    pcmk__xe_set(xml, PCMK__XA_SRC, from);
 
     peer = pcmk__get_node(0, from, NULL, pcmk__node_search_cluster_member);
     if (!pcmk_is_set(peer->processes, crm_proc_cpg)) {
