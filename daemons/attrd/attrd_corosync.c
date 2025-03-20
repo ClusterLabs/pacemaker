@@ -327,8 +327,13 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
     // Remember node's XML ID if we're just learning it
     if ((node_xml_id != NULL)
         && !pcmk__str_eq(node_xml_id, prev_xml_id, pcmk__str_none)) {
+        // Remember node's name in case unknown in the membership cache
+        crm_node_t *known_peer =
+            pcmk__get_node(0, host, node_xml_id,
+                           pcmk__node_search_cluster_member);
+
         crm_trace("Learned %s[%s] node XML ID is %s (was %s)",
-                  a->id, v->nodename, node_xml_id,
+                  a->id, known_peer->uname, node_xml_id,
                   pcmk__s(prev_xml_id, "unknown"));
         attrd_set_node_xml_id(v->nodename, node_xml_id);
         if (attrd_election_won()) {
