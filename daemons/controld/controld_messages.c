@@ -715,7 +715,7 @@ handle_lrm_delete(xmlNode *stored_msg)
     mode = pcmk__xe_get(msg_data, PCMK__XA_MODE);
     if (!pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
         // Relay to affected node
-        crm_xml_add(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
+        pcmk__xe_set(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
         return I_ROUTER;
 
     } else {
@@ -832,16 +832,16 @@ create_ping_reply(const xmlNode *msg)
 
     ping = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
     value = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_TO);
-    crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
+    pcmk__xe_set(ping, PCMK__XA_CRM_SUBSYSTEM, value);
 
     // Add controller state
     value = fsa_state2string(controld_globals.fsa_state);
-    crm_xml_add(ping, PCMK__XA_CRMD_STATE, value);
+    pcmk__xe_set(ping, PCMK__XA_CRMD_STATE, value);
     crm_notice("Current ping state: %s", value); // CTS needs this
 
     // Add controller health
     // @TODO maybe do some checks to determine meaningful status
-    crm_xml_add(ping, PCMK_XA_RESULT, "ok");
+    pcmk__xe_set(ping, PCMK_XA_RESULT, "ok");
 
     reply = pcmk__new_reply(msg, ping);
     pcmk__xml_free(ping);
@@ -884,8 +884,8 @@ handle_node_list(const xmlNode *request)
 
         pcmk__xe_set_ll(xml, PCMK_XA_ID,
                         (long long) node->cluster_layer_id); // uint32_t
-        crm_xml_add(xml, PCMK_XA_UNAME, node->name);
-        crm_xml_add(xml, PCMK__XA_IN_CCM, node->state);
+        pcmk__xe_set(xml, PCMK_XA_UNAME, node->name);
+        pcmk__xe_set(xml, PCMK__XA_IN_CCM, node->state);
     }
 
     // Create and send reply
@@ -919,7 +919,7 @@ handle_node_info_request(const xmlNode *msg)
     // Build reply
 
     reply_data = pcmk__xe_create(NULL, PCMK_XE_NODE);
-    crm_xml_add(reply_data, PCMK__XA_CRM_SUBSYSTEM, CRM_SYSTEM_CRMD);
+    pcmk__xe_set(reply_data, PCMK__XA_CRM_SUBSYSTEM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
     pcmk__xe_set_bool_attr(reply_data, PCMK_XA_HAVE_QUORUM,
@@ -945,9 +945,9 @@ handle_node_info_request(const xmlNode *msg)
     node = pcmk__search_node_caches(node_id, value, NULL,
                                     pcmk__node_search_any);
     if (node) {
-        crm_xml_add(reply_data, PCMK_XA_ID, node->xml_id);
-        crm_xml_add(reply_data, PCMK_XA_UNAME, node->name);
-        crm_xml_add(reply_data, PCMK_XA_CRMD, node->state);
+        pcmk__xe_set(reply_data, PCMK_XA_ID, node->xml_id);
+        pcmk__xe_set(reply_data, PCMK_XA_UNAME, node->name);
+        pcmk__xe_set(reply_data, PCMK_XA_CRMD, node->state);
         pcmk__xe_set_bool_attr(reply_data, PCMK_XA_REMOTE_NODE,
                                pcmk_is_set(node->flags,
                                            pcmk__node_status_remote));
@@ -1157,7 +1157,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
     } else if ((strcmp(op, CRM_OP_LRM_FAIL) == 0)
                || (strcmp(op, CRM_OP_REPROBE) == 0)) {
 
-        crm_xml_add(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
+        pcmk__xe_set(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
         return I_ROUTER;
 
     } else if (strcmp(op, CRM_OP_NOOP) == 0) {
@@ -1301,7 +1301,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys, const char *src)
     client_channel = pcmk__find_client_by_id(sys);
 
     if (pcmk__xe_get(msg, PCMK__XA_SRC) == NULL) {
-        crm_xml_add(msg, PCMK__XA_SRC, src);
+        pcmk__xe_set(msg, PCMK__XA_SRC, src);
     }
 
     if (client_channel != NULL) {
@@ -1371,12 +1371,12 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
     crm_info("Notifying cluster of Pacemaker Remote node %s %s",
              node_name, node_up? "coming up" : "going down");
 
-    crm_xml_add(msg, PCMK_XA_ID, node_name);
+    pcmk__xe_set(msg, PCMK_XA_ID, node_name);
     pcmk__xe_set_bool_attr(msg, PCMK__XA_IN_CCM, node_up);
 
     if (node_up) {
-        crm_xml_add(msg, PCMK__XA_CONNECTION_HOST,
-                    controld_globals.cluster->priv->node_name);
+        pcmk__xe_set(msg, PCMK__XA_CONNECTION_HOST,
+                     controld_globals.cluster->priv->node_name);
     }
 
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg);

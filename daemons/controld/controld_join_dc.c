@@ -302,7 +302,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     offer = create_dc_message(CRM_OP_JOIN_OFFER, member->name);
 
     // Advertise our feature set so the joining node can bail if not compatible
-    crm_xml_add(offer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+    pcmk__xe_set(offer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     crm_info("Sending join-%d offer to %s", current_join_id, member->name);
     pcmk__cluster_send_message(member, pcmk_ipc_controld, offer);
@@ -922,8 +922,8 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
      */
     crm_trace("Updating node name and UUID in CIB for %s", join_to);
     tmp1 = pcmk__xe_create(NULL, PCMK_XE_NODE);
-    crm_xml_add(tmp1, PCMK_XA_ID, pcmk__cluster_get_xml_id(join_node));
-    crm_xml_add(tmp1, PCMK_XA_UNAME, join_to);
+    pcmk__xe_set(tmp1, PCMK_XA_ID, pcmk__cluster_get_xml_id(join_node));
+    pcmk__xe_set(tmp1, PCMK_XA_UNAME, join_to);
     fsa_cib_anon_update(PCMK_XE_NODES, tmp1);
     pcmk__xml_free(tmp1);
 

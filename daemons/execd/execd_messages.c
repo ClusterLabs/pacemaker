@@ -28,7 +28,6 @@
 #include <crm/common/results.h>             // pcmk_rc_e, pcmk_rc_str
 #include <crm/common/strings.h>             // crm_strdup_printf
 #include <crm/common/util.h>                // pcmk_is_set
-#include <crm/common/xml_element.h>         // crm_xml_add
 #include <crm/common/xml_internal.h>        // PCMK__XA_LRMD_*, pcmk__xe_is
 
 #include "pacemaker-execd.h"                // client_disconnect_cleanup
@@ -571,8 +570,8 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
         lrmd_call_id = 1;
     }
 
-    crm_xml_add(msg, PCMK__XA_LRMD_CLIENTID, c->id);
-    crm_xml_add(msg, PCMK__XA_LRMD_CLIENTNAME, c->name);
+    pcmk__xe_set(msg, PCMK__XA_LRMD_CLIENTID, c->id);
+    pcmk__xe_set(msg, PCMK__XA_LRMD_CLIENTNAME, c->name);
     pcmk__xe_set_int(msg, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
     if (invalid_msg(msg)) {

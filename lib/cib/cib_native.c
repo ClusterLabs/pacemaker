@@ -381,8 +381,8 @@ cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
     cib_native_opaque_t *native = cib->variant_opaque;
 
     if (cib->state != cib_disconnected) {
-        crm_xml_add(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
-        crm_xml_add(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
+        pcmk__xe_set(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
+        pcmk__xe_set(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
         pcmk__xe_set_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response,
                           1000 * cib->call_timeout, NULL);
