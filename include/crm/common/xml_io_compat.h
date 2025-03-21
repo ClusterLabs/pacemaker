@@ -25,6 +25,9 @@ extern "C" {
  */
 
 //! \deprecated Do not use
+#define CRM_BZ2_BLOCKS 4
+
+//! \deprecated Do not use
 void save_xml_to_file(const xmlNode *xml, const char *desc,
                       const char *filename);
 
