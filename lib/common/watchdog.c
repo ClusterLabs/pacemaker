@@ -250,13 +250,18 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
      * specific string like "auto" (but not both) to mean "auto-calculate the
      * timeout." Reject other values that aren't parsable as timeouts.
      */
-    long st_timeout = value? crm_get_msec(value) : 0;
+    long long st_timeout = 0;
+
+    if (value != NULL) {
+        st_timeout = crm_get_msec(value);
+        st_timeout = QB_MIN(st_timeout, LONG_MAX);
+    }
 
     if (st_timeout < 0) {
         st_timeout = pcmk__auto_stonith_watchdog_timeout();
 
         // At this point, 0 <= sbd_timeout <= st_timeout
-        crm_debug("Using calculated value %ld for "
+        crm_debug("Using calculated value %lld for "
                   PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " (%s)",
                   st_timeout, value);
     }
