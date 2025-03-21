@@ -506,7 +506,10 @@ print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 
 static gboolean
 reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    if (pcmk__parse_ms(optarg, NULL) != pcmk_rc_ok) {
+    long long reconnect_ms = 0;
+
+    if ((pcmk__parse_ms(optarg, &reconnect_ms) != pcmk_rc_ok)
+        || (reconnect_ms < 0)) {
         g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM,
                     "Invalid value for -i: %s", optarg);
         return FALSE;
