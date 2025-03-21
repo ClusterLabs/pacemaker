@@ -23,6 +23,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     char *ns = NULL;
     guint res = 0U;
+    long long msec = 0LL;
 
     if (size < 10) {
         return -1; // Do not add input to testing corpus
@@ -33,7 +34,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     pcmk__numeric_strcasecmp(ns, ns);
     pcmk_parse_interval_spec(ns, &res);
-    crm_get_msec(ns);
+    pcmk__parse_ms(ns, &msec);
 
     free(ns);
     return 0;

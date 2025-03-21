@@ -50,6 +50,7 @@ int pcmk__scan_ll(const char *text, long long *result, long long default_value);
 int pcmk__scan_min_int(const char *text, int *result, int minimum);
 int pcmk__scan_port(const char *text, int *port);
 int pcmk__parse_ll_range(const char *text, long long *start, long long *end);
+int pcmk__parse_ms(const char *input, long long *result);
 
 GHashTable *pcmk__strkey_table(GDestroyNotify key_destroy_func,
                                GDestroyNotify value_destroy_func);

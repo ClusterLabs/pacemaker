@@ -215,13 +215,21 @@ pcmk__locate_sbd(void)
 long
 pcmk__get_sbd_watchdog_timeout(void)
 {
-    static long sbd_timeout = -2;
+    static long sbd_timeout = -1;
 
-    if (sbd_timeout == -2) {
-        long long timeout = crm_get_msec(getenv("SBD_WATCHDOG_TIMEOUT"));
+    if (sbd_timeout == -1) {
+        const char *timeout = getenv("SBD_WATCHDOG_TIMEOUT");
+        long long timeout_ms = 0;
 
-        timeout = QB_MAX(timeout, 0);
-        sbd_timeout = (long) QB_MIN(timeout, LONG_MAX);
+        if ((timeout != NULL)
+            && (pcmk__parse_ms(timeout, &timeout_ms) == pcmk_rc_ok)
+            && (timeout_ms >= 0)) {
+
+            sbd_timeout = (long) QB_MIN(timeout_ms, LONG_MAX);
+
+        } else {
+            sbd_timeout = 0;
+        }
     }
     return sbd_timeout;
 }
@@ -269,14 +277,17 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
     long long st_timeout = 0;
 
     if (value != NULL) {
-        /* @COMPAT So far it has been documented that a negative value is
-         * valid. Parse it as an integer first to avoid the warning from
-         * crm_get_msec().
+        /* @COMPAT So far it has been documented that a negative value is valid.
+         * Parse it as an integer first to avoid the warning from
+         * pcmk__parse_ms(). Skip pcmk__parse_ms() if we successfully parsed a
+         * negative value.
          */
         int rc = pcmk__scan_ll(value, &st_timeout, PCMK__PARSE_INT_DEFAULT);
 
         if ((rc != pcmk_rc_ok) || (st_timeout >= 0)) {
-            st_timeout = crm_get_msec(value);
+            rc = pcmk__parse_ms(value, &st_timeout);
+        }
+        if (rc == pcmk_rc_ok) {
             st_timeout = QB_MIN(st_timeout, LONG_MAX);
         }
     }

@@ -12,8 +12,7 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = crm_get_msec_test 		\
-		 crm_is_true_test 		\
+check_PROGRAMS = crm_is_true_test 		\
 		 crm_str_to_boolean_test 	\
 		 pcmk__add_word_test		\
 		 pcmk__btoa_test		\
@@ -22,6 +21,7 @@ check_PROGRAMS = crm_get_msec_test 		\
 		 pcmk__guint_from_hash_test	\
 		 pcmk__numeric_strcasecmp_test 	\
 		 pcmk__parse_ll_range_test	\
+		 pcmk__parse_ms_test		\
 		 pcmk__s_test			\
 		 pcmk__scan_double_test		\
 		 pcmk__scan_ll_test		\
