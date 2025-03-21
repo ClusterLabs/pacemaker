@@ -339,7 +339,7 @@ attrd_broadcast_protocol(void)
 }
 
 gboolean
-attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
+attrd_send_message(const crm_node_t *node, xmlNode *data, bool confirm)
 {
     const char *op = crm_element_value(data, PCMK_XA_TASK);
 

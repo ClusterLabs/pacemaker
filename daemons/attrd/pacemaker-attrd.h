@@ -205,7 +205,8 @@ xmlNode *attrd_client_clear_failure(pcmk__request_t *request);
 xmlNode *attrd_client_update(pcmk__request_t *request);
 xmlNode *attrd_client_refresh(pcmk__request_t *request);
 xmlNode *attrd_client_query(pcmk__request_t *request);
-gboolean attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm);
+gboolean attrd_send_message(const crm_node_t *node, xmlNode *data,
+                            bool confirm);
 
 xmlNode *attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
                              const attribute_value_t *v, bool force_write);
