@@ -69,7 +69,7 @@ good_input(void **state) {
 
 static void
 overflow(void **state) {
-    assert_int_equal(crm_get_msec("9223372036854775807s"), LLONG_MAX);
+    assert_int_equal(crm_get_msec("9223372036854775808s"), LLONG_MAX);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
