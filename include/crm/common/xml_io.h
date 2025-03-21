@@ -20,16 +20,6 @@ extern "C" {
  * \ingroup core
  */
 
-/* Define compression parameters for IPC messages
- *
- * Compression costs a LOT, so we don't want to do it unless we're hitting
- * message limits. Currently, we use 128KB as the threshold, because higher
- * values don't play well with the heartbeat stack. With an earlier limit of
- * 10KB, compressing 184 of 1071 messages accounted for 23% of the total CPU
- * used by the cib.
- */
-#define CRM_BZ2_THRESHOLD   (128 * 1024)
-
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/common/xml_io_compat.h>
 #endif
