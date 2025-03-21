@@ -115,6 +115,11 @@ local_node_allowed_for(const pcmk_resource_t *rsc)
     if ((rsc != NULL) && (scheduler->priv->local_node_name != NULL)) {
         GHashTableIter iter;
         pcmk_node_t *node = NULL;
+        /* If there is no placement node (e.g., no placement constraint), 
+         * registration on the local node is permitted. */
+        if (g_hash_table_size(rsc->priv->allowed_nodes) == 0) {
+            return pcmk_find_node(scheduler, scheduler->priv->local_node_name);	
+        }
 
         g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
