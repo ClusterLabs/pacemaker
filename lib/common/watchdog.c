@@ -275,8 +275,9 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
          */
         int rc = pcmk__scan_ll(value, &st_timeout, PCMK__PARSE_INT_DEFAULT);
 
-        if (rc != pcmk_rc_ok || st_timeout >= 0) {
+        if ((rc != pcmk_rc_ok) || (st_timeout >= 0)) {
             st_timeout = crm_get_msec(value);
+            st_timeout = QB_MIN(st_timeout, LONG_MAX);
         }
     }
 
