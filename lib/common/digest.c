@@ -177,15 +177,14 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
 
     pcmk__if_tracing(
         {
-            char *trace_file = crm_strdup_printf("%s/digest-%s",
-                                                 pcmk__get_tmpdir(), digest);
+            char *trace_file = crm_strdup_printf("digest-%s", digest);
 
             crm_trace("Saving %s.%s.%s to %s",
                       pcmk__xe_get(xml, PCMK_XA_ADMIN_EPOCH),
                       pcmk__xe_get(xml, PCMK_XA_EPOCH),
                       pcmk__xe_get(xml, PCMK_XA_NUM_UPDATES),
                       trace_file);
-            save_xml_to_file(xml, "digest input", trace_file);
+            pcmk__xml_write_temp_file(xml, "digest input", trace_file);
             free(trace_file);
         },
         {}

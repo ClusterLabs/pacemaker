@@ -851,9 +851,10 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
             rc = -pcmk_err_diff_failed;
             pcmk__if_tracing(
                 {
-                    save_xml_to_file(old, "PatchDigest:input", NULL);
-                    save_xml_to_file(xml, "PatchDigest:result", NULL);
-                    save_xml_to_file(patchset, "PatchDigest:diff", NULL);
+                    pcmk__xml_write_temp_file(old, "PatchDigest:input", NULL);
+                    pcmk__xml_write_temp_file(xml, "PatchDigest:result", NULL);
+                    pcmk__xml_write_temp_file(patchset, "PatchDigest:diff",
+                                              NULL);
                 },
                 {}
             );
