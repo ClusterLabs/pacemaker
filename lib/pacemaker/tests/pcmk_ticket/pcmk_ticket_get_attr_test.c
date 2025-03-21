@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,9 @@
 #include <crm/cib/internal.h>
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml.h>
+
+#include <libxml/xpath.h>                   // xmlXPathObject, etc.
+
 #include <pacemaker.h>
 
 static char *cib_path = NULL;
@@ -82,25 +85,31 @@ verify_results(xmlNode *xml, const char *ticket_id, const char *attr_name,
     /* Verify that the XML result has only one <ticket>, and that its ID is
      * what we asked for.
      */
-    xpath_obj = xpath_search(xml, "//" PCMK_XE_PACEMAKER_RESULT "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET);
-    assert_int_equal(numXpathResults(xpath_obj), 1);
+    xpath_obj = pcmk__xpath_search(xml->doc,
+                                   "//" PCMK_XE_PACEMAKER_RESULT
+                                   "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET);
+    assert_int_equal(pcmk__xpath_num_results(xpath_obj), 1);
 
-    node = getXpathResult(xpath_obj, 0);
+    node = pcmk__xpath_result(xpath_obj, 0);
+    assert_non_null(node);
     assert_string_equal(crm_element_value(node, PCMK_XA_ID), ticket_id);
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
 
     /* Verify that it has an <attribute> child whose name and value are what
      * we expect.
      */
-    xpath_obj = xpath_search(xml, "//" PCMK_XE_PACEMAKER_RESULT "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
-                                  "/" PCMK_XE_ATTRIBUTE);
-    assert_int_equal(numXpathResults(xpath_obj), 1);
+    xpath_obj = pcmk__xpath_search(xml->doc,
+                                   "//" PCMK_XE_PACEMAKER_RESULT
+                                   "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
+                                   "/" PCMK_XE_ATTRIBUTE);
+    assert_int_equal(pcmk__xpath_num_results(xpath_obj), 1);
 
-    node = getXpathResult(xpath_obj, 0);
+    node = pcmk__xpath_result(xpath_obj, 0);
+    assert_non_null(node);
     assert_string_equal(crm_element_value(node, PCMK_XA_NAME), attr_name);
     assert_string_equal(crm_element_value(node, PCMK_XA_VALUE), attr_value);
 
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
 }
 
 static void

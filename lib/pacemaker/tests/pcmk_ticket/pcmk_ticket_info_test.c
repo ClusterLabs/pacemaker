@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,8 @@
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml.h>
 #include <pacemaker.h>
+
+#include <libxml/xpath.h>                   // xmlXPathObject, etc.
 
 static char *cib_path = NULL;
 
@@ -67,40 +69,51 @@ all_tickets(void **state)
      * scheduler's hash table, the duplicate IDs will collide leaving us with
      * three.
      */
-    xpath_obj = xpath_search(xml, "//" PCMK_XE_PACEMAKER_RESULT "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET);
-    assert_int_equal(numXpathResults(xpath_obj), 3);
-    freeXpathObject(xpath_obj);
+    xpath_obj = pcmk__xpath_search(xml->doc,
+                                   "//" PCMK_XE_PACEMAKER_RESULT
+                                   "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET);
+    assert_int_equal(pcmk__xpath_num_results(xpath_obj), 3);
+    xmlXPathFreeObject(xpath_obj);
 
-    xpath_obj = xpath_search(xml, "//" PCMK_XE_PACEMAKER_RESULT "/" PCMK_XE_TICKETS
-                                  "/" PCMK_XE_TICKET "[@" PCMK_XA_ID "=\"ticketA\"]");
+    xpath_obj = pcmk__xpath_search(xml->doc,
+                                   "//" PCMK_XE_PACEMAKER_RESULT
+                                   "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
+                                   "[@" PCMK_XA_ID "=\"ticketA\"]");
 
-    node = getXpathResult(xpath_obj, 0);
+    node = pcmk__xpath_result(xpath_obj, 0);
+    assert_non_null(node);
     assert_string_equal(crm_element_value(node, PCMK_XA_STATUS), PCMK_VALUE_REVOKED);
     assert_string_equal(crm_element_value(node, PCMK__XA_GRANTED), "false");
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
     assert_string_equal(crm_element_value(node, "owner"), "1");
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
 
-    xpath_obj = xpath_search(xml, "//" PCMK_XE_PACEMAKER_RESULT "/" PCMK_XE_TICKETS
-                                  "/" PCMK_XE_TICKET "[@" PCMK_XA_ID "=\"ticketB\"]");
+    xpath_obj = pcmk__xpath_search(xml->doc,
+                                   "//" PCMK_XE_PACEMAKER_RESULT
+                                   "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
+                                   "[@" PCMK_XA_ID "=\"ticketB\"]");
 
-    node = getXpathResult(xpath_obj, 0);
+    node = pcmk__xpath_result(xpath_obj, 0);
+    assert_non_null(node);
     assert_string_equal(crm_element_value(node, PCMK_XA_STATUS), PCMK_VALUE_GRANTED);
     assert_string_equal(crm_element_value(node, PCMK__XA_GRANTED), "true");
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
     assert_null(crm_element_value(node, "owner"));
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
 
-    xpath_obj = xpath_search(xml, "//" PCMK_XE_PACEMAKER_RESULT "/" PCMK_XE_TICKETS
-                                  "/" PCMK_XE_TICKET "[@" PCMK_XA_ID "=\"ticketC\"]");
+    xpath_obj = pcmk__xpath_search(xml->doc,
+                                   "//" PCMK_XE_PACEMAKER_RESULT
+                                   "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
+                                   "[@" PCMK_XA_ID "=\"ticketC\"]");
 
-    node = getXpathResult(xpath_obj, 0);
+    node = pcmk__xpath_result(xpath_obj, 0);
+    assert_non_null(node);
     assert_string_equal(crm_element_value(node, PCMK_XA_STATUS), PCMK_VALUE_GRANTED);
     assert_string_equal(crm_element_value(node, PCMK__XA_GRANTED), "true");
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
     assert_null(crm_element_value(node, "owner"));
 
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
     pcmk__xml_free(xml);
 }
 
@@ -117,17 +130,20 @@ single_ticket(void **state)
     /* Verify that the XML result has only one <ticket>, with the attributes
      * we expect.
      */
-    xpath_obj = xpath_search(xml, "//" PCMK_XE_PACEMAKER_RESULT "/" PCMK_XE_TICKETS
-                                  "/" PCMK_XE_TICKET "[@" PCMK_XA_ID "=\"ticketA\"]");
-    assert_int_equal(numXpathResults(xpath_obj), 1);
+    xpath_obj = pcmk__xpath_search(xml->doc,
+                                   "//" PCMK_XE_PACEMAKER_RESULT
+                                   "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
+                                   "[@" PCMK_XA_ID "=\"ticketA\"]");
+    assert_int_equal(pcmk__xpath_num_results(xpath_obj), 1);
 
-    node = getXpathResult(xpath_obj, 0);
+    node = pcmk__xpath_result(xpath_obj, 0);
+    assert_non_null(node);
     assert_string_equal(crm_element_value(node, PCMK_XA_STATUS), PCMK_VALUE_REVOKED);
     assert_string_equal(crm_element_value(node, PCMK__XA_GRANTED), "false");
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
     assert_string_equal(crm_element_value(node, "owner"), "1");
 
-    freeXpathObject(xpath_obj);
+    xmlXPathFreeObject(xpath_obj);
     pcmk__xml_free(xml);
 }
 

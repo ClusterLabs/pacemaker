@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,6 +21,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <ctype.h>
+
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
@@ -906,27 +908,28 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
 static gboolean
 is_nodeid_required(xmlNode * xml)
 {
-    xmlXPathObjectPtr xpath = NULL;
+    xmlXPathObject *xpath = NULL;
 
     if (!xml) {
         return FALSE;
     }
 
-    xpath = xpath_search(xml,
-                         "//" PCMK_XE_PARAMETER "[@" PCMK_XA_NAME "='nodeid']");
-    if (numXpathResults(xpath)  <= 0) {
-        freeXpathObject(xpath);
+    xpath = pcmk__xpath_search(xml->doc,
+                               "//" PCMK_XE_PARAMETER
+                               "[@" PCMK_XA_NAME "='nodeid']");
+    if (pcmk__xpath_num_results(xpath) == 0) {
+        xmlXPathFreeObject(xpath);
         return FALSE;
     }
 
-    freeXpathObject(xpath);
+    xmlXPathFreeObject(xpath);
     return TRUE;
 }
 
 static void
 read_action_metadata(stonith_device_t *device)
 {
-    xmlXPathObjectPtr xpath = NULL;
+    xmlXPathObject *xpath = NULL;
     int max = 0;
     int lpc = 0;
 
@@ -934,17 +937,18 @@ read_action_metadata(stonith_device_t *device)
         return;
     }
 
-    xpath = xpath_search(device->agent_metadata, "//action");
-    max = numXpathResults(xpath);
+    xpath = pcmk__xpath_search(device->agent_metadata->doc,
+                               "//" PCMK_XE_ACTION);
+    max = pcmk__xpath_num_results(xpath);
 
-    if (max <= 0) {
-        freeXpathObject(xpath);
+    if (max == 0) {
+        xmlXPathFreeObject(xpath);
         return;
     }
 
     for (lpc = 0; lpc < max; lpc++) {
         const char *action = NULL;
-        xmlNode *match = getXpathResult(xpath, lpc);
+        xmlNode *match = pcmk__xpath_result(xpath, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
         if(match == NULL) { continue; };
@@ -982,7 +986,7 @@ read_action_metadata(stonith_device_t *device)
         }
     }
 
-    freeXpathObject(xpath);
+    xmlXPathFreeObject(xpath);
 }
 
 static const char *

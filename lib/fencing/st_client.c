@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,7 +16,9 @@
 #include <ctype.h>
 #include <inttypes.h>
 #include <sys/types.h>
+
 #include <glib.h>
+#include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
@@ -547,7 +549,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
 
     xmlNode *data = NULL;
     xmlNode *output = NULL;
-    xmlXPathObjectPtr xpathObj = NULL;
+    xmlXPathObject *xpathObj = NULL;
 
     CRM_CHECK(devices != NULL, return -EINVAL);
 
@@ -561,18 +563,18 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
         return rc;
     }
 
-    xpathObj = xpath_search(output, "//@agent");
+    xpathObj = pcmk__xpath_search(output->doc, "//*[@" PCMK_XA_AGENT "]");
     if (xpathObj) {
-        max = numXpathResults(xpathObj);
+        max = pcmk__xpath_num_results(xpathObj);
 
         for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpathObj, lpc);
+            xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
 
             CRM_LOG_ASSERT(match != NULL);
             if(match != NULL) {
                 xmlChar *match_path = xmlGetNodePath(match);
 
-                crm_info("%s[%d] = %s", "//@agent", lpc, match_path);
+                crm_info("//*[@" PCMK_XA_AGENT "][%d] = %s", lpc, match_path);
                 free(match_path);
                 *devices = stonith_key_value_add(*devices, NULL,
                                                  crm_element_value(match,
@@ -580,7 +582,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
             }
         }
 
-        freeXpathObject(xpathObj);
+        xmlXPathFreeObject(xpathObj);
     }
 
     pcmk__xml_free(output);
@@ -2429,23 +2431,23 @@ void
 stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
                                 xmlNode *metadata)
 {
-    xmlXPathObjectPtr xpath = NULL;
+    xmlXPathObject *xpath = NULL;
     int max = 0;
     int lpc = 0;
 
     CRM_CHECK((device_flags != NULL) && (metadata != NULL), return);
 
-    xpath = xpath_search(metadata, "//" PCMK_XE_PARAMETER);
-    max = numXpathResults(xpath);
+    xpath = pcmk__xpath_search(metadata->doc, "//" PCMK_XE_PARAMETER);
+    max = pcmk__xpath_num_results(xpath);
 
-    if (max <= 0) {
-        freeXpathObject(xpath);
+    if (max == 0) {
+        xmlXPathFreeObject(xpath);
         return;
     }
 
     for (lpc = 0; lpc < max; lpc++) {
         const char *parameter = NULL;
-        xmlNode *match = getXpathResult(xpath, lpc);
+        xmlNode *match = pcmk__xpath_result(xpath, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
         if (match == NULL) {
@@ -2464,7 +2466,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
         }
     }
 
-    freeXpathObject(xpath);
+    xmlXPathFreeObject(xpath);
 }
 
 /*!

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,6 +17,7 @@
 #include <stdarg.h>
 
 #include <libxml/tree.h>
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -216,7 +217,7 @@ pcmk__apply_acl(xmlNode *xml)
     GList *aIter = NULL;
     xml_doc_private_t *docpriv = xml->doc->_private;
     xml_node_private_t *nodepriv;
-    xmlXPathObjectPtr xpathObj = NULL;
+    xmlXPathObject *xpathObj = NULL;
 
     if (!xml_acl_enabled(xml)) {
         crm_trace("Skipping ACLs for user '%s' because not enabled for this XML",
@@ -228,11 +229,52 @@ pcmk__apply_acl(xmlNode *xml)
         int max = 0, lpc = 0;
         xml_acl_t *acl = aIter->data;
 
-        xpathObj = xpath_search(xml, acl->xpath);
-        max = numXpathResults(xpathObj);
+        xpathObj = pcmk__xpath_search(xml->doc, acl->xpath);
+        max = pcmk__xpath_num_results(xpathObj);
 
         for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpathObj, lpc);
+            xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
+
+            if (match == NULL) {
+                continue;
+            }
+
+            /* @COMPAT If the ACL's XPath matches a node that is neither an
+             * element nor a document, we apply the ACL to the parent element
+             * rather than to the matched node. For example, if the XPath
+             * matches a "score" attribute, then it applies to every element
+             * that contains a "score" attribute. That is, the XPath expression
+             * "//@score" matches all attributes named "score", but we apply the
+             * ACL to all elements containing such an attribute.
+             *
+             * This behavior is incorrect from an XPath standpoint and is thus
+             * confusing and counterintuitive. The correct way to match all
+             * elements containing a "score" attribute is to use an XPath
+             * predicate: "// *[@score]". (Space inserted after slashes so that
+             * GCC doesn't throw an error about nested comments.)
+             *
+             * Additionally, if an XPath expression matches the entire document
+             * (for example, "/"), then the ACL applies to the document's root
+             * element if it exists.
+             *
+             * These behaviors should be changed so that the ACL applies to the
+             * nodes matched by the XPath expression, or so that it doesn't
+             * apply at all if applying an ACL to an attribute doesn't make
+             * sense.
+             *
+             * Unfortunately, we document in Pacemaker Explained that matching
+             * attributes is a valid way to match elements: "Attributes may be
+             * specified in the XPath to select particular elements, but the
+             * permissions apply to the entire element."
+             *
+             * So we have to keep this behavior at least until a compatibility
+             * break. Even then, it's not feasible in the general case to
+             * transform such XPath expressions using XSLT.
+             */
+            match = pcmk__xpath_match_element(match);
+            if (match == NULL) {
+                continue;
+            }
 
             nodepriv = match->_private;
             pcmk__set_xml_flags(nodepriv, acl->mode);
@@ -251,7 +293,7 @@ pcmk__apply_acl(xmlNode *xml)
         crm_trace("Applied %s ACL %s (%d match%s)",
                   acl_to_text(acl->mode), acl->xpath, max,
                   ((max == 1)? "" : "es"));
-        freeXpathObject(xpathObj);
+        xmlXPathFreeObject(xpathObj);
     }
 }
 
@@ -455,23 +497,34 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 
         } else if (acl->xpath) {
             int lpc = 0;
-            xmlXPathObjectPtr xpathObj = xpath_search(target, acl->xpath);
+            xmlXPathObject *xpathObj = pcmk__xpath_search(target->doc,
+                                                          acl->xpath);
 
-            max = numXpathResults(xpathObj);
+            max = pcmk__xpath_num_results(xpathObj);
             for(lpc = 0; lpc < max; lpc++) {
-                xmlNode *match = getXpathResult(xpathObj, lpc);
+                xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
+
+                if (match == NULL) {
+                    continue;
+                }
+
+                // @COMPAT See COMPAT comment in pcmk__apply_acl()
+                match = pcmk__xpath_match_element(match);
+                if (match == NULL) {
+                    continue;
+                }
 
                 if (!purge_xml_attributes(match) && (match == target)) {
                     crm_trace("ACLs deny user '%s' access to entire XML document",
                               user);
-                    freeXpathObject(xpathObj);
+                    xmlXPathFreeObject(xpathObj);
                     return true;
                 }
             }
             crm_trace("ACLs deny user '%s' access to %s (%d %s)",
                       user, acl->xpath, max,
                       pcmk__plural_alt(max, "match", "matches"));
-            freeXpathObject(xpathObj);
+            xmlXPathFreeObject(xpathObj);
         }
     }
 
@@ -651,92 +704,92 @@ xml_acl_enabled(const xmlNode *xml)
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Deny access to an XML tree's document based on ACLs
+ *
+ * \param[in,out] xml        XML tree
+ * \param[in]     attr_name  Name of attribute being accessed in \p xml (for
+ *                           logging only)
+ * \param[in]     prefix     Prefix describing ACL that denied access (for
+ *                           logging only)
+ * \param[in]     user       User accessing \p xml (for logging only)
+ * \param[in]     mode       Access mode
+ */
+#define check_acl_deny(xml, attr_name, prefix, user, mode) do {             \
+        xmlNode *tree = xml;                                                \
+                                                                            \
+        pcmk__set_xml_doc_flag(tree, pcmk__xf_acl_denied);                  \
+        pcmk__if_tracing(                                                   \
+            {                                                               \
+                GString *xpath = pcmk__element_xpath(tree);                 \
+                                                                            \
+                if ((attr_name) != NULL) {                                  \
+                    pcmk__g_strcat(xpath, "[@", attr_name, "]", NULL);      \
+                }                                                           \
+                qb_log_from_external_source(__func__, __FILE__,             \
+                                            "%sACL denies user '%s' %s "    \
+                                            "access to %s",                 \
+                                            LOG_TRACE, __LINE__, 0 ,        \
+                                            prefix, user,                   \
+                                            acl_to_text(mode), xpath->str); \
+                g_string_free(xpath, TRUE);                                 \
+            },                                                              \
+            {}                                                              \
+        );                                                                  \
+    } while (false);
+
 bool
-pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
+pcmk__check_acl(xmlNode *xml, const char *attr_name,
+                enum xml_private_flags mode)
 {
-    pcmk__assert((xml != NULL) && (xml->doc != NULL)
-                 && (xml->doc->_private != NULL));
+    xml_doc_private_t *docpriv = NULL;
 
-    if (pcmk__tracking_xml_changes(xml, false) && xml_acl_enabled(xml)) {
-        xmlNode *parent = xml;
-        xml_doc_private_t *docpriv = xml->doc->_private;
-        GString *xpath = NULL;
+    pcmk__assert((xml != NULL) && (xml->doc->_private != NULL));
 
-        if (docpriv->acls == NULL) {
-            pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
+    if (!pcmk__tracking_xml_changes(xml, false) || !xml_acl_enabled(xml)) {
+        return true;
+    }
 
-            pcmk__if_tracing({}, return false);
-            xpath = pcmk__element_xpath(xml);
-            if (name != NULL) {
-                pcmk__g_strcat(xpath, "[@", name, "]", NULL);
-            }
-
-            qb_log_from_external_source(__func__, __FILE__,
-                                        "User '%s' without ACLs denied %s "
-                                        "access to %s", LOG_TRACE, __LINE__, 0,
-                                        docpriv->user, acl_to_text(mode),
-                                        (const char *) xpath->str);
-            g_string_free(xpath, TRUE);
-            return false;
-        }
-
-        /* Walk the tree upwards looking for xml_acl_* flags
-         * - Creating an attribute requires write permissions for the node
-         * - Creating a child requires write permissions for the parent
-         */
-
-        if (name) {
-            xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) name);
-
-            if (attr && mode == pcmk__xf_acl_create) {
-                mode = pcmk__xf_acl_write;
-            }
-        }
-
-        while (parent && parent->_private) {
-            xml_node_private_t *nodepriv = parent->_private;
-            if (test_acl_mode(nodepriv->flags, mode)) {
-                return true;
-
-            } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
-                pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
-
-                pcmk__if_tracing({}, return false);
-                xpath = pcmk__element_xpath(xml);
-                if (name != NULL) {
-                    pcmk__g_strcat(xpath, "[@", name, "]", NULL);
-                }
-
-                qb_log_from_external_source(__func__, __FILE__,
-                                            "%sACL denies user '%s' %s access "
-                                            "to %s", LOG_TRACE, __LINE__, 0,
-                                            (parent != xml)? "Parent ": "",
-                                            docpriv->user, acl_to_text(mode),
-                                            (const char *) xpath->str);
-                g_string_free(xpath, TRUE);
-                return false;
-            }
-            parent = parent->parent;
-        }
-
-        pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
-
-        pcmk__if_tracing({}, return false);
-        xpath = pcmk__element_xpath(xml);
-        if (name != NULL) {
-            pcmk__g_strcat(xpath, "[@", name, "]", NULL);
-        }
-
-        qb_log_from_external_source(__func__, __FILE__,
-                                    "Default ACL denies user '%s' %s access to "
-                                    "%s", LOG_TRACE, __LINE__, 0,
-                                    docpriv->user, acl_to_text(mode),
-                                    (const char *) xpath->str);
-        g_string_free(xpath, TRUE);
+    docpriv = xml->doc->_private;
+    if (docpriv->acls == NULL) {
+        check_acl_deny(xml, attr_name, "Lack of ", docpriv->user, mode);
         return false;
     }
 
-    return true;
+    /* Walk the tree upwards looking for xml_acl_* flags
+     * - Creating an attribute requires write permissions for the node
+     * - Creating a child requires write permissions for the parent
+     */
+
+    if (attr_name != NULL) {
+        xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) attr_name);
+
+        if ((attr != NULL) && (mode == pcmk__xf_acl_create)) {
+            mode = pcmk__xf_acl_write;
+        }
+    }
+
+    for (const xmlNode *parent = xml;
+         (parent != NULL) && (parent->_private != NULL);
+         parent = parent->parent) {
+
+        const xml_node_private_t *nodepriv = parent->_private;
+
+        if (test_acl_mode(nodepriv->flags, mode)) {
+            return true;
+        }
+
+        if (pcmk_is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
+            const char *pfx = (parent != xml)? "Parent " : "";
+
+            check_acl_deny(xml, attr_name, pfx, docpriv->user, mode);
+            return false;
+        }
+    }
+
+    check_acl_deny(xml, attr_name, "Default ", docpriv->user, mode);
+    return false;
 }
 
 /*!

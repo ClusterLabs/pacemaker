@@ -13,8 +13,10 @@
 #include <stdio.h>
 #include <limits.h>
 #include <stdbool.h>                        // bool, true, false
+
 #include <glib.h>
 #include <libxml/tree.h>
+#include <libxml/xpath.h>                   // xmlXPathObject, etc.
 
 #include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/ipc_controld.h>
@@ -2098,7 +2100,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
 {
     // @FIXME This should bail out when run with CIB_file
     pcmk_scheduler_t *scheduler = NULL;
-    xmlXPathObjectPtr search;
+    xmlXPathObject *search = NULL;
     int rc = pcmk_rc_ok;
     bool pending_unknown_state_resources;
     time_t expire_time = time(NULL);
@@ -2169,9 +2171,9 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
             }
         }
 
-        search = xpath_search(scheduler->input, xpath);
-        pending_unknown_state_resources = (numXpathResults(search) > 0);
-        freeXpathObject(search);
+        search = pcmk__xpath_search(scheduler->input->doc, xpath);
+        pending_unknown_state_resources = (pcmk__xpath_num_results(search) > 0);
+        xmlXPathFreeObject(search);
     } while (actions_are_pending(scheduler->priv->actions)
              || pending_unknown_state_resources);
 

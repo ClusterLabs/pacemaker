@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,9 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
+
+#include <libxml/xpath.h>                   // xmlXPathObject, etc.
+
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/xml.h>
@@ -380,7 +383,7 @@ pcmk__graph_action_t *
 match_down_event(const char *target)
 {
     pcmk__graph_action_t *match = NULL;
-    xmlXPathObjectPtr xpath_ret = NULL;
+    xmlXPathObject *xpath_ret = NULL;
     GList *gIter, *gIter2;
 
     char *xpath = crm_strdup_printf(XPATH_DOWNED, target);
@@ -395,11 +398,11 @@ match_down_event(const char *target)
 
             match = (pcmk__graph_action_t *) gIter2->data;
             if (pcmk_is_set(match->flags, pcmk__graph_action_executed)) {
-                xpath_ret = xpath_search(match->xml, xpath);
-                if (numXpathResults(xpath_ret) < 1) {
+                xpath_ret = pcmk__xpath_search(match->xml->doc, xpath);
+                if (pcmk__xpath_num_results(xpath_ret) == 0) {
                     match = NULL;
                 }
-                freeXpathObject(xpath_ret);
+                xmlXPathFreeObject(xpath_ret);
             } else {
                 // Only actions that were actually started can match
                 match = NULL;

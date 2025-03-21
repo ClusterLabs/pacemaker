@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <libxml/xpath.h>   // xmlXPathObject, etc.
 
 #include <crm_resource.h>
 
@@ -442,17 +444,23 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
     xmlXPathObject *xpathObj = NULL;
     xmlNode *cib_constraints = NULL;
     crm_time_t *now = crm_time_new(NULL);
-    int i;
+    int num_results = 0;
     int rc = pcmk_rc_ok;
 
     cib_constraints = pcmk_find_cib_element(root, PCMK_XE_CONSTRAINTS);
-    xpathObj = xpath_search(cib_constraints, "//" PCMK_XE_RSC_LOCATION);
+    xpathObj = pcmk__xpath_search(cib_constraints->doc,
+                                  "//" PCMK_XE_RSC_LOCATION);
+    num_results = pcmk__xpath_num_results(xpathObj);
 
-    for (i = 0; i < numXpathResults(xpathObj); i++) {
-        xmlNode *constraint_node = getXpathResult(xpathObj, i);
+    for (int i = 0; i < num_results; i++) {
+        xmlNode *constraint_node = pcmk__xpath_result(xpathObj, i);
         xmlNode *date_expr_node = NULL;
         crm_time_t *end = NULL;
         int rc = pcmk_rc_ok;
+
+        if (constraint_node == NULL) {
+            continue;
+        }
 
         if (buf == NULL) {
             buf = g_string_sized_new(1024);
@@ -508,7 +516,7 @@ done:
     if (buf != NULL) {
         g_string_free(buf, TRUE);
     }
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
     crm_time_free(now);
     return rc;
 }

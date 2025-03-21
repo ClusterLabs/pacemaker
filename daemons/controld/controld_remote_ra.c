@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,6 +15,8 @@
 #include <crm/lrmd.h>
 #include <crm/lrmd_internal.h>
 #include <crm/services.h>
+
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <pacemaker-controld.h>
 
@@ -1365,10 +1367,10 @@ remote_ra_fail(const char *node_name)
 void
 remote_ra_process_pseudo(xmlNode *xml)
 {
-    xmlXPathObjectPtr search = xpath_search(xml, XPATH_PSEUDO_FENCE);
+    xmlXPathObject *search = pcmk__xpath_search(xml->doc, XPATH_PSEUDO_FENCE);
 
-    if (numXpathResults(search) == 1) {
-        xmlNode *result = getXpathResult(search, 0);
+    if (pcmk__xpath_num_results(search) == 1) {
+        xmlNode *result = pcmk__xpath_result(search, 0);
 
         /* Normally, we handle the necessary side effects of a guest node stop
          * action when reporting the remote agent's result. However, if the stop
@@ -1392,7 +1394,7 @@ remote_ra_process_pseudo(xmlNode *xml)
             }
         }
     }
-    freeXpathObject(search);
+    xmlXPathFreeObject(search);
 }
 
 static void
@@ -1434,13 +1436,14 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 void
 remote_ra_process_maintenance_nodes(xmlNode *xml)
 {
-    xmlXPathObjectPtr search = xpath_search(xml, XPATH_PSEUDO_MAINTENANCE);
+    xmlXPathObject *search = pcmk__xpath_search(xml->doc,
+                                                XPATH_PSEUDO_MAINTENANCE);
 
-    if (numXpathResults(search) == 1) {
+    if (pcmk__xpath_num_results(search) == 1) {
         xmlNode *node;
         int cnt = 0, cnt_remote = 0;
 
-        for (node = pcmk__xe_first_child(getXpathResult(search, 0),
+        for (node = pcmk__xe_first_child(pcmk__xpath_result(search, 0),
                                          PCMK_XE_NODE, NULL, NULL);
              node != NULL; node = pcmk__xe_next(node, PCMK_XE_NODE)) {
 
@@ -1471,7 +1474,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
                   PCMK_OPT_MAINTENANCE_MODE,
                   cnt, cnt_remote);
     }
-    freeXpathObject(search);
+    xmlXPathFreeObject(search);
 }
 
 gboolean

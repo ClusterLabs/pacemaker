@@ -9,11 +9,13 @@
 
 #include <crm_internal.h>
 
+#include <dirent.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+
 #include <glib.h>
-#include <dirent.h>
+#include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -99,13 +101,15 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
                               parameter);
     /* Fudge metadata so that the parameter isn't required in config
      * Pacemaker handles and adds it */
-    xpathObj = xpath_search(metadata, xpath);
-    if (numXpathResults(xpathObj) > 0) {
-        xmlNode *tmp = getXpathResult(xpathObj, 0);
+    xpathObj = pcmk__xpath_search(metadata->doc, xpath);
+    if (pcmk__xpath_num_results(xpathObj) > 0) {
+        xmlNode *tmp = pcmk__xpath_result(xpathObj, 0);
 
-        crm_xml_add(tmp, "required", "0");
+        if (tmp != NULL) {
+            crm_xml_add(tmp, "required", "0");
+        }
     }
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
     free(xpath);
 }
 
@@ -169,17 +173,17 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         return -pcmk_err_schema_validation;
     }
 
-    xpathObj = xpath_search(xml, "//" PCMK_XE_ACTIONS);
-    if (numXpathResults(xpathObj) > 0) {
-        actions = getXpathResult(xpathObj, 0);
+    xpathObj = pcmk__xpath_search(xml->doc, "//" PCMK_XE_ACTIONS);
+    if (pcmk__xpath_num_results(xpathObj) > 0) {
+        actions = pcmk__xpath_result(xpathObj, 0);
     }
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 
     // Add start and stop (implemented by pacemaker, not agent) to meta-data
-    xpathObj = xpath_search(xml,
-                            "//" PCMK_XE_ACTION
-                            "[@" PCMK_XA_NAME "='" PCMK_ACTION_STOP "']");
-    if (numXpathResults(xpathObj) <= 0) {
+    xpathObj = pcmk__xpath_search(xml->doc,
+                                  "//" PCMK_XE_ACTION
+                                  "[@" PCMK_XA_NAME "='" PCMK_ACTION_STOP "']");
+    if (pcmk__xpath_num_results(xpathObj) == 0) {
         xmlNode *tmp = NULL;
         const char *timeout_str = NULL;
 
@@ -193,7 +197,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
         crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
     }
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 
     // Fudge metadata so parameters are not required in config (pacemaker adds them)
     stonith_rhcs_parameter_not_required(xml, STONITH_ATTR_ACTION_OP);

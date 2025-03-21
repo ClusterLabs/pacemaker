@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <libxml/tree.h>
-#include <libxml/xpath.h>
+#include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -116,11 +116,14 @@ remove_topology_level(xmlNode *match)
 static void
 register_fencing_topology(xmlXPathObjectPtr xpathObj)
 {
-    int max = numXpathResults(xpathObj), lpc = 0;
+    int max = pcmk__xpath_num_results(xpathObj);
 
-    for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *match = getXpathResult(xpathObj, lpc);
+    for (int lpc = 0; lpc < max; lpc++) {
+        xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
 
+        if (match == NULL) {
+            continue;
+        }
         remove_topology_level(match);
         add_topology_level(match);
     }
@@ -148,7 +151,7 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj)
 void
 fencing_topology_init(void)
 {
-    xmlXPathObjectPtr xpathObj = NULL;
+    xmlXPathObject *xpathObj = NULL;
     const char *xpath = "//" PCMK_XE_FENCING_LEVEL;
 
     crm_trace("Full topology refresh");
@@ -156,10 +159,10 @@ fencing_topology_init(void)
     init_topology_list();
 
     /* Grab everything */
-    xpathObj = xpath_search(local_cib, xpath);
+    xpathObj = pcmk__xpath_search(local_cib->doc, xpath);
     register_fencing_topology(xpathObj);
 
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 }
 
 #define XPATH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \

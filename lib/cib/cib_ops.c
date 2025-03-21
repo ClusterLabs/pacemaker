@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,6 +21,7 @@
 
 #include <glib.h>
 #include <libxml/tree.h>
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
@@ -667,45 +668,63 @@ cib_process_xpath(const char *op, int options, const char *section,
                   const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                   xmlNode **result_cib, xmlNode **answer)
 {
-    int lpc = 0;
-    int max = 0;
+    int num_results = 0;
     int rc = pcmk_ok;
     bool is_query = pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none);
-
-    xmlXPathObjectPtr xpathObj = NULL;
+    bool delete_multiple = pcmk_is_set(options, cib_multiple)
+                           && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE,
+                                           pcmk__str_none);
+    xmlXPathObject *xpathObj = NULL;
 
     crm_trace("Processing \"%s\" event", op);
 
     if (is_query) {
-        xpathObj = xpath_search(existing_cib, section);
+        xpathObj = pcmk__xpath_search(existing_cib->doc, section);
     } else {
-        xpathObj = xpath_search(*result_cib, section);
+        xpathObj = pcmk__xpath_search((*result_cib)->doc, section);
     }
 
-    max = numXpathResults(xpathObj);
+    num_results = pcmk__xpath_num_results(xpathObj);
+    if (num_results == 0) {
+        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
+            crm_debug("%s was already removed", section);
 
-    if ((max < 1)
-        && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
-        crm_debug("%s was already removed", section);
-
-    } else if (max < 1) {
-        crm_debug("%s: %s does not exist", op, section);
-        rc = -ENXIO;
-
-    } else if (is_query) {
-        if (max > 1) {
-            *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
+        } else {
+            crm_debug("%s: %s does not exist", op, section);
+            rc = -ENXIO;
         }
+        goto done;
     }
 
-    if (pcmk_is_set(options, cib_multiple)
-        && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
-        dedupXpathResults(xpathObj);
+    if (is_query && (num_results > 1)) {
+        *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
     }
 
-    for (lpc = 0; lpc < max; lpc++) {
+    for (int i = 0; i < num_results; i++) {
+        xmlNode *match = NULL;
         xmlChar *path = NULL;
-        xmlNode *match = getXpathResult(xpathObj, lpc);
+
+        /* If we're deleting multiple nodes, go in reverse document order.
+         * If we go in forward order and the node set contains both a parent and
+         * its descendant, then deleting the parent frees the descendant before
+         * the loop reaches the descendant. This is a use-after-free error.
+         *
+         * @COMPAT cib_multiple is only ever used with delete operations. The
+         * correct order to process multiple nodes for operations other than
+         * query (forward) and delete (reverse) is less clear but likely should
+         * be reverse. If we ever replace the CIB public API with libpacemaker
+         * functions, revisit this. For now, we keep forward order for other
+         * operations to preserve backward compatibility, even though external
+         * callers of other ops with cib_multiple might segfault.
+         *
+         * For more info, see comment in xpath2.c:update_xpath_nodes() in
+         * libxml2.
+         */
+        if (delete_multiple) {
+            match = pcmk__xpath_result(xpathObj, num_results - 1 - i);
+        } else {
+            match = pcmk__xpath_result(xpathObj, i);
+        }
 
         if (match == NULL) {
             continue;
@@ -807,6 +826,7 @@ cib_process_xpath(const char *op, int options, const char *section,
         }
     }
 
-    freeXpathObject(xpathObj);
+done:
+    xmlXPathFreeObject(xpathObj);
     return rc;
 }
