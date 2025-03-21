@@ -1002,16 +1002,16 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 bool
 controld_verify_stonith_watchdog_timeout(const char *value)
 {
-    long long st_timeout = (value != NULL)? crm_get_msec(value) : 0;
     const char *our_nodename = controld_globals.cluster->priv->node_name;
 
-    if (st_timeout == 0
-        || (stonith_api && (stonith_api->state != stonith_disconnected) &&
-            stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
-                                                           our_nodename))) {
-        return pcmk__valid_stonith_watchdog_timeout(value);
+    if ((stonith_api == NULL) || (stonith_api->state == stonith_disconnected)
+        || !stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
+                                                           our_nodename)) {
+        // Anything is valid since it won't be used
+        return true;
     }
-    return true;
+
+    return pcmk__valid_stonith_watchdog_timeout(value);
 }
 
 /* end stonith API client functions */
