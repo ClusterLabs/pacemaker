@@ -195,10 +195,16 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
                  */
-                if (attrd_election_won()
-                    && !pcmk_is_set(peer->flags, crm_remote_node)) {
-                    attrd_peer_sync(peer);
+                if (!is_remote) {
+                   if (attrd_election_won()) {
+                       attrd_peer_sync(peer);
+
+                   } else {
+                       // Anyway send a message so that the peer learns our name
+                       attrd_send_protocol(peer);
+                   }
                 }
+
             } else {
                 // Remove all attribute values associated with lost nodes
                 if (peer->uname != NULL) {
