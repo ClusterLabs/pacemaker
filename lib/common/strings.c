@@ -817,11 +817,6 @@ pcmk__parse_ms(const char *input, long long *result)
 
     rc = scan_ll(input, &local_result, 0, &units);
 
-    if (local_result < 0) {
-        crm_warn("'%s' is not a valid time duration: Negative", input);
-        return pcmk_rc_bad_input;
-    }
-
     if (rc == ERANGE) {
         crm_warn("'%s' will be clipped to %lld", input, local_result);
 
@@ -891,6 +886,8 @@ pcmk__parse_ms(const char *input, long long *result)
     // Apply units, capping at LLONG_MAX
     if (local_result > (LLONG_MAX / multiplier)) {
         *result = LLONG_MAX;
+    } else if (local_result < (LLONG_MIN / multiplier)) {
+        *result = LLONG_MIN;
     } else {
         *result = (local_result * multiplier) / divisor;
     }

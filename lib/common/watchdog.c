@@ -276,20 +276,8 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
      */
     long long st_timeout = 0;
 
-    if (value != NULL) {
-        /* @COMPAT So far it has been documented that a negative value is valid.
-         * Parse it as an integer first to avoid the warning from
-         * pcmk__parse_ms(). Skip pcmk__parse_ms() if we successfully parsed a
-         * negative value.
-         */
-        int rc = pcmk__scan_ll(value, &st_timeout, PCMK__PARSE_INT_DEFAULT);
-
-        if ((rc != pcmk_rc_ok) || (st_timeout >= 0)) {
-            rc = pcmk__parse_ms(value, &st_timeout);
-        }
-        if (rc == pcmk_rc_ok) {
-            st_timeout = QB_MIN(st_timeout, LONG_MAX);
-        }
+    if ((value != NULL) && (pcmk__parse_ms(value, &st_timeout) == pcmk_rc_ok)) {
+        st_timeout = QB_MIN(st_timeout, LONG_MAX);
     }
 
     if (st_timeout < 0) {

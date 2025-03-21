@@ -514,12 +514,20 @@ print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 
 static gboolean
 reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    if (pcmk__parse_ms(optarg, NULL) != pcmk_rc_ok) {
+    long long reconnect_ms = 0;
+
+    if ((pcmk__parse_ms(optarg, &reconnect_ms) != pcmk_rc_ok)
+        || (reconnect_ms < 0)) {
         g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM,
                     "Invalid value for -i: %s", optarg);
         return FALSE;
     }
 
+    /* @FIXME Why do we call this instead of just clipping the pcmk__parse_ms()
+     * result to guint range? This was added by e4aff648 so that we could accept
+     * more formats. However, if pcmk__parse_ms() would reject optarg, then
+     * we've already returned by now.
+     */
     pcmk_parse_interval_spec(optarg, &options.reconnect_ms);
 
     if (options.exec_mode != mon_exec_daemonized) {

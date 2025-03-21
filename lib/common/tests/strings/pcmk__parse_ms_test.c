@@ -32,9 +32,6 @@ bad_input(void **state)
     assert_parse_ms("100xs", pcmk_rc_bad_input, magic);
     assert_parse_ms(" 100 xs ", pcmk_rc_bad_input, magic);
 
-    // @FIXME Should parse successfully as negative value
-    assert_parse_ms("-100ms", pcmk_rc_bad_input, magic);
-
     assert_parse_ms("3.xs", pcmk_rc_bad_input, magic);
     assert_parse_ms("  3.   xs  ", pcmk_rc_bad_input, magic);
     assert_parse_ms("3.14xs", pcmk_rc_bad_input, magic);
@@ -51,6 +48,7 @@ good_input(void **state)
     assert_parse_ms("100ms", pcmk_rc_ok, 100);
     assert_parse_ms(" 100 ms ", pcmk_rc_ok, 100);
     assert_parse_ms("100 MSEC", pcmk_rc_ok, 100);
+    assert_parse_ms("-100ms", pcmk_rc_ok, -100);
     assert_parse_ms("1000US", pcmk_rc_ok, 1);
     assert_parse_ms("1000usec", pcmk_rc_ok, 1);
     assert_parse_ms("12s", pcmk_rc_ok, 12000);
@@ -92,10 +90,9 @@ overflow(void **state)
     assert_parse_ms(input, ERANGE, LLONG_MAX);
     free(input);
 
-    // @FIXME Should parse successfully with ERANGE
     // Hopefully we can rely on two's complement integers
     input = crm_strdup_printf("-%llu", (unsigned long long) LLONG_MIN + 1);
-    assert_parse_ms(input, pcmk_rc_bad_input, magic);
+    assert_parse_ms(input, ERANGE, LLONG_MIN);
     free(input);
 }
 

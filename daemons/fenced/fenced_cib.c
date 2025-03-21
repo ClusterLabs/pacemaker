@@ -166,16 +166,7 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
         return;
     }
 
-    /* @COMPAT So far it has been documented that a negative value is valid.
-     * Parse it as an integer first to avoid the warning from pcmk__parse_ms().
-     * Skip pcmk__parse_ms() if we successfully parsed a negative value.
-     */
-    rc = pcmk__scan_ll(value, &stonith_watchdog_timeout_ms,
-                       PCMK__PARSE_INT_DEFAULT);
-
-    if ((rc != pcmk_rc_ok) || (stonith_watchdog_timeout_ms >= 0)) {
-        rc = pcmk__parse_ms(value, &stonith_watchdog_timeout_ms);
-    }
+    rc = pcmk__parse_ms(value, &stonith_watchdog_timeout_ms);
 
     if ((rc != pcmk_rc_ok) || (stonith_watchdog_timeout_ms < 0)) {
         stonith_watchdog_timeout_ms = pcmk__auto_stonith_watchdog_timeout();
