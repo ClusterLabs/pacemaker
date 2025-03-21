@@ -738,7 +738,7 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
 
     *result_len = max;
     rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length,
-                                  CRM_BZ2_BLOCKS, 0, CRM_BZ2_WORK);
+                                  PCMK__BZ2_BLOCKS, 0, PCMK__BZ2_WORK);
     rc = pcmk__bzlib2rc(rc);
 
     free(uncompressed);
