@@ -451,10 +451,14 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                                              manage_counters);
 
                 if (test_rc != pcmk_ok) {
-                    save_xml_to_file(cib_copy, "PatchApply:calculated", NULL);
-                    save_xml_to_file(patchset_cib, "PatchApply:input", NULL);
-                    save_xml_to_file(scratch, "PatchApply:actual", NULL);
-                    save_xml_to_file(local_diff, "PatchApply:diff", NULL);
+                    pcmk__xml_write_temp_file(cib_copy, "PatchApply:calculated",
+                                              NULL);
+                    pcmk__xml_write_temp_file(patchset_cib, "PatchApply:input",
+                                              NULL);
+                    pcmk__xml_write_temp_file(scratch, "PatchApply:actual",
+                                              NULL);
+                    pcmk__xml_write_temp_file(local_diff, "PatchApply:diff",
+                                              NULL);
                     crm_err("v%d patchset error, patch failed to apply: %s "
                             "(%d)",
                             format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
