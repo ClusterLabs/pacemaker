@@ -28,7 +28,6 @@ extern "C" {
  * 10KB, compressing 184 of 1071 messages accounted for 23% of the total CPU
  * used by the cib.
  */
-#define CRM_BZ2_WORK        20
 #define CRM_BZ2_THRESHOLD   (128 * 1024)
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
