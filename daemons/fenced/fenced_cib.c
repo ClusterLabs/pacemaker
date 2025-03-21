@@ -172,7 +172,6 @@ fencing_topology_init(void)
 static void
 update_stonith_watchdog_timeout_ms(xmlNode *cib)
 {
-    long long timeout_ms = 0;
     xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
 
@@ -183,15 +182,13 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
     if (stonith_watchdog_xml) {
         value = pcmk__xe_get(stonith_watchdog_xml, PCMK_XA_VALUE);
     }
-    if (value) {
-        timeout_ms = crm_get_msec(value);
-    }
 
-    if (timeout_ms < 0) {
-        timeout_ms = pcmk__auto_stonith_watchdog_timeout();
-    }
+    if ((value != NULL)
+        && ((pcmk__parse_ms(value, &stonith_watchdog_timeout_ms) != pcmk_rc_ok)
+            || (stonith_watchdog_timeout_ms < 0))) {
 
-    stonith_watchdog_timeout_ms = timeout_ms;
+        stonith_watchdog_timeout_ms = pcmk__auto_stonith_watchdog_timeout();
+    }
 }
 
 /*!

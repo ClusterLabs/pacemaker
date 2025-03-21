@@ -506,20 +506,18 @@ print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 
 static gboolean
 reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    int rc = crm_get_msec(optarg);
-
-    if (rc == -1) {
-        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
+    if (pcmk__parse_ms(optarg, NULL) != pcmk_rc_ok) {
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM,
+                    "Invalid value for -i: %s", optarg);
         return FALSE;
-    } else {
-        pcmk_parse_interval_spec(optarg, &options.reconnect_ms);
-
-        if (options.exec_mode != mon_exec_daemonized) {
-            // Reconnect interval applies to daemonized too, so don't override
-            options.exec_mode = mon_exec_update;
-        }
     }
 
+    pcmk_parse_interval_spec(optarg, &options.reconnect_ms);
+
+    if (options.exec_mode != mon_exec_daemonized) {
+        // Reconnect interval applies to daemonized too, so don't override
+        options.exec_mode = mon_exec_update;
+    }
     return TRUE;
 }
 

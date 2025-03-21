@@ -272,11 +272,13 @@ add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     // pcmk__request_fencing() expects an unsigned int
-    long long tolerance_ms = crm_get_msec(optarg);
+    long long tolerance_ms = 0;
 
-    if (tolerance_ms < 0) {
+    if ((pcmk__parse_ms(optarg, &tolerance_ms) != pcmk_rc_ok)
+        || (tolerance_ms < 0)) {
+
+        // @COMPAT Treat as an error and return FALSE?
         crm_warn("Ignoring invalid tolerance '%s'", optarg);
-        options.tolerance_ms = 0;
     } else {
         options.tolerance_ms = (unsigned int) QB_MIN(tolerance_ms, UINT_MAX);
     }

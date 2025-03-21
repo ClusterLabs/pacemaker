@@ -60,14 +60,14 @@ attrd_create_attribute(xmlNode *xml)
     }
 
     if (dampen_s != NULL) {
-        dampen = crm_get_msec(dampen_s);
-    }
+        if ((pcmk__parse_ms(dampen_s, &dampen) != pcmk_rc_ok) || (dampen < 0)) {
+            crm_warn("Ignoring invalid delay %s for attribute %s", dampen_s,
+                     a->id);
 
-    if (dampen > 0) {
-        a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
-        a->timer = attrd_add_timer(a->id, a->timeout_ms, a);
-    } else if (dampen < 0) {
-        crm_warn("Ignoring invalid delay %s for attribute %s", dampen_s, a->id);
+        } else if (dampen > 0) {
+            a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
+            a->timer = attrd_add_timer(a->id, a->timeout_ms, a);
+        }
     }
 
     crm_trace("Created attribute %s with %s write delay and %s CIB user",
@@ -91,8 +91,7 @@ attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
         return EINVAL;
     }
 
-    dampen = crm_get_msec(dvalue);
-    if (dampen < 0) {
+    if ((pcmk__parse_ms(dvalue, &dampen) != pcmk_rc_ok) || (dampen < 0)) {
         crm_warn("Could not update %s: invalid delay value %dms (%s)",
                  attr, dampen, dvalue);
         return EINVAL;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -256,7 +256,7 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
                                                   pcmk__xml_escape_text);
         }
 
-        /* @TODO This needs a string that's parsable by crm_get_msec(). In
+        /* @TODO This needs a string that's parsable by pcmk__parse_ms(). In
          * general, pcmk__readable_interval() doesn't provide that. It works
          * here because PCMK_DEFAULT_ACTION_TIMEOUT_MS is 20000 -> "20s".
          */

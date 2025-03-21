@@ -537,9 +537,11 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 static int
 unpack_timeout(const char *value)
 {
-    long long timeout_ms = crm_get_msec(value);
+    long long timeout_ms = 0;
 
-    if (timeout_ms <= 0) {
+    if ((value == NULL) || (pcmk__parse_ms(value, &timeout_ms) != pcmk_rc_ok)
+        || (timeout_ms <= 0)) {
+
         timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
     return (int) QB_MIN(timeout_ms, INT_MAX);
@@ -596,15 +598,14 @@ unpack_start_delay(const char *value, GHashTable *meta)
         return 0;
     }
 
-    start_delay_ms = crm_get_msec(value);
-    start_delay_ms = QB_MIN(start_delay_ms, INT_MAX);
-    if (start_delay_ms < 0) {
-        start_delay_ms = 0;
+    if (pcmk__parse_ms(value, &start_delay_ms) == pcmk_rc_ok) {
+        start_delay_ms = QB_MAX(start_delay_ms, 0);
+        start_delay_ms = QB_MIN(start_delay_ms, INT_MAX);
     }
 
     if (meta != NULL) {
         g_hash_table_replace(meta, strdup(PCMK_META_START_DELAY),
-                             pcmk__itoa(start_delay_ms));
+                             pcmk__itoa((int) start_delay_ms));
     }
 
     return (int) start_delay_ms;

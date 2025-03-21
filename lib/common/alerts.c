@@ -167,9 +167,11 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
 
     value = g_hash_table_lookup(config_hash, PCMK_META_TIMEOUT);
     if (value != NULL) {
-        long long timeout_ms = crm_get_msec(value);
+        long long timeout_ms = 0;
 
-        if (timeout_ms <= 0) {
+        if ((pcmk__parse_ms(value, &timeout_ms) != pcmk_rc_ok)
+            || (timeout_ms <= 0)) {
+
             entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
 
             if (timeout_ms == 0) {

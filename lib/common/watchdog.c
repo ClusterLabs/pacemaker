@@ -199,13 +199,21 @@ pcmk__locate_sbd(void)
 long
 pcmk__get_sbd_watchdog_timeout(void)
 {
-    static long sbd_timeout = -2;
+    static long sbd_timeout = -1;
 
-    if (sbd_timeout == -2) {
-        long long timeout = crm_get_msec(getenv("SBD_WATCHDOG_TIMEOUT"));
+    if (sbd_timeout == -1) {
+        const char *timeout = getenv("SBD_WATCHDOG_TIMEOUT");
+        long long timeout_ms = 0;
 
-        timeout = QB_MAX(timeout, 0);
-        sbd_timeout = (long) QB_MIN(timeout, LONG_MAX);
+        if ((timeout != NULL)
+            && (pcmk__parse_ms(timeout, &timeout_ms) == pcmk_rc_ok)
+            && (timeout_ms >= 0)) {
+
+            sbd_timeout = (long) QB_MIN(timeout_ms, LONG_MAX);
+
+        } else {
+            sbd_timeout = 0;
+        }
     }
     return sbd_timeout;
 }
@@ -252,8 +260,7 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
      */
     long long st_timeout = 0;
 
-    if (value != NULL) {
-        st_timeout = crm_get_msec(value);
+    if ((value != NULL) && (pcmk__parse_ms(value, &st_timeout) == pcmk_rc_ok)) {
         st_timeout = QB_MIN(st_timeout, LONG_MAX);
     }
 

@@ -235,9 +235,11 @@ get_action_timeout(const stonith_device_t *device, const char *action,
         snprintf(buffer, sizeof(buffer), "pcmk_%s_timeout", action);
         value = g_hash_table_lookup(device->params, buffer);
         if (value) {
-            long long timeout_ms = crm_get_msec(value);
+            long long timeout_ms = 0;
 
-            if (timeout_ms >= 0) {
+            if ((pcmk__parse_ms(value, &timeout_ms) == pcmk_rc_ok)
+                && (timeout_ms >= 0)) {
+
                 int timeout_sec = 0;
 
                 timeout_ms = QB_MIN(timeout_ms, UINT_MAX);

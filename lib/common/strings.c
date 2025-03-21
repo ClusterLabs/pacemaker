@@ -440,13 +440,12 @@ crm_get_msec(const char *input)
  * \param[in]  input      Pacemaker time interval specification (a bare number
  *                        of seconds; a number with a unit, optionally with
  *                        whitespace before and/or after the number; or an ISO
- *                        8601 duration)
+ *                        8601 duration) (can be \c NULL)
  * \param[out] result_ms  Where to store milliseconds equivalent of \p input on
  *                        success (limited to the range of an unsigned integer),
  *                        or 0 if \p input is \c NULL or invalid
  *
- * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok if
- *         \p input is valid or \c NULL, and \c EINVAL otherwise)
+ * \return Standard Pacemaker return code
  */
 int
 pcmk_parse_interval_spec(const char *input, guint *result_ms)
@@ -469,14 +468,18 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
         }
 
     } else {
-        msec = crm_get_msec(input);
+        rc = pcmk__parse_ms(input, &msec);
     }
 
     if (msec < 0) {
         crm_warn("Using 0 instead of invalid interval specification '%s'",
                  input);
         msec = 0;
-        rc = EINVAL;
+
+        if (rc == pcmk_rc_ok) {
+            // Preserve any error from pcmk__parse_ms()
+            rc = EINVAL;
+        }
     }
 
 done:
@@ -962,6 +965,115 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     }
 
     return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Parse a time and units string into a milliseconds value
+ *
+ * \param[in]  input   String with a nonnegative number and optional unit
+ *                     (optionally with whitespace before and/or after the
+ *                     number). If absent, the unit defaults to seconds.
+ * \param[out] result  Where to store result in milliseconds (unchanged on error
+ *                     except \c ERANGE)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__parse_ms(const char *input, long long *result)
+{
+    long long local_result = 0;
+    char *units = NULL; // Do not free; will point to part of input
+    long long multiplier = 1000;
+    long long divisor = 1;
+    int rc = pcmk_rc_ok;
+
+    CRM_CHECK(input != NULL, return EINVAL);
+
+    // Skip initial whitespace
+    for (; isspace(*input); input++);
+
+    rc = scan_ll(input, &local_result, 0, &units);
+
+    if (local_result < 0) {
+        crm_warn("'%s' is not a valid time duration: Negative", input);
+        return pcmk_rc_bad_input;
+    }
+
+    if (rc == ERANGE) {
+        crm_warn("'%s' will be clipped to %lld", input, local_result);
+
+        /* Continue through rest of body before returning ERANGE
+         *
+         * @COMPAT Improve handling of overflow. Units won't necessarily be
+         * respected right now, for one thing.
+         */
+
+    } else if (rc != pcmk_rc_ok) {
+        crm_warn("'%s' is not a valid time duration: %s", input,
+                 pcmk_rc_str(rc));
+        return rc;
+    }
+
+    /* If the number is a decimal, scan_ll() reads only the integer part. Skip
+     * any remaining digits or decimal characters.
+     *
+     * @COMPAT Well-formed and malformed decimals are both accepted inputs. For
+     * example, "3.14 ms" and "3.1.4 ms" are treated the same as "3ms" and
+     * parsed successfully. At a compatibility break, decide if this is still
+     * desired.
+     */
+    for (; isdigit(*units) || (*units == '.'); units++);
+
+    // Skip any additional whitespace after the number
+    for (; isspace(*units); units++);
+
+    /* @COMPAT Use exact comparisons. Currently, we match too liberally, and the
+     * second strncasecmp() in each case is redundant.
+     */
+    if ((*units == '\0')
+        || (strncasecmp(units, "s", 1) == 0)
+        || (strncasecmp(units, "sec", 3) == 0)) {
+        multiplier = 1000;
+        divisor = 1;
+
+    } else if ((strncasecmp(units, "ms", 2) == 0)
+               || (strncasecmp(units, "msec", 4) == 0)) {
+        multiplier = 1;
+        divisor = 1;
+
+    } else if ((strncasecmp(units, "us", 2) == 0)
+               || (strncasecmp(units, "usec", 4) == 0)) {
+        multiplier = 1;
+        divisor = 1000;
+
+    } else if ((strncasecmp(units, "m", 1) == 0)
+               || (strncasecmp(units, "min", 3) == 0)) {
+        multiplier = 60 * 1000;
+        divisor = 1;
+
+    } else if ((strncasecmp(units, "h", 1) == 0)
+               || (strncasecmp(units, "hr", 2) == 0)) {
+        multiplier = 60 * 60 * 1000;
+        divisor = 1;
+
+    } else {
+        // Invalid units
+        return pcmk_rc_bad_input;
+    }
+
+    if (result == NULL) {
+        return rc;
+    }
+
+    // Apply units, capping at LLONG_MAX
+    if (local_result > (LLONG_MAX / multiplier)) {
+        *result = LLONG_MAX;
+    } else {
+        *result = (local_result * multiplier) / divisor;
+    }
+
+    return rc;
 }
 
 /*!

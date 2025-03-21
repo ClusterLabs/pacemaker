@@ -1635,9 +1635,11 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
 
         op_timeout = g_hash_table_lookup(params, "pcmk_monitor_timeout");
         if (op_timeout != NULL) {
-            long long timeout_ms = crm_get_msec(op_timeout);
+            long long timeout_ms = 0;
 
-            if (timeout_ms >= 0) {
+            if ((pcmk__parse_ms(op_timeout, &timeout_ms) == pcmk_rc_ok)
+                && (timeout_ms >= 0)) {
+
                 op->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
             }
         }
