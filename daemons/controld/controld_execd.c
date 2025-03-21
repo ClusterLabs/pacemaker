@@ -1637,7 +1637,9 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
         if (op_timeout != NULL) {
             long long timeout_ms = crm_get_msec(op_timeout);
 
-            op->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
+            if (timeout_ms >= 0) {
+                op->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
+            }
         }
     }
 
