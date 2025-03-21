@@ -292,7 +292,10 @@ get_action_timeout(const fenced_device_t *device, const char *action,
 
         if (value) {
             long long timeout_ms = crm_get_msec(value);
-            return (int) QB_MIN(pcmk__timeout_ms2s(timeout_ms), INT_MAX);
+
+            if (timeout_ms >= 0) {
+                return (int) QB_MIN(pcmk__timeout_ms2s(timeout_ms), INT_MAX);
+            }
         }
     }
     return default_timeout;
