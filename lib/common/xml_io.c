@@ -631,6 +631,11 @@ pcmk__xml_write_temp_file(const xmlNode *xml, const char *desc,
     free(uuid);
 }
 
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_io_compat.h>
+
 void
 save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
 {
@@ -648,3 +653,6 @@ save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
     pcmk__xml_write_file(xml, filename, false);
     free(f);
 }
+
+// LCOV_EXCL_STOP
+// End deprecated API
