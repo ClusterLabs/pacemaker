@@ -16,7 +16,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include <libxml/tree.h>
+#include <libxml/tree.h>                // xmlNode, etc.
+#include <libxml/xmlstring.h>           // xmlChar
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
@@ -221,7 +222,7 @@ pcmk__apply_acl(xmlNode *xml)
 
     if (!xml_acl_enabled(xml)) {
         crm_trace("Skipping ACLs for user '%s' because not enabled for this XML",
-                  docpriv->user);
+                  docpriv->acl_user);
         return;
     }
 
@@ -326,9 +327,10 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                   user);
 
     } else if (docpriv->acls == NULL) {
-        xmlNode *acls = get_xpath_object("//" PCMK_XE_ACLS, source, LOG_NEVER);
+        xmlNode *acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
+                                             LOG_NEVER);
 
-        pcmk__str_update(&docpriv->user, user);
+        pcmk__str_update(&(docpriv->acl_user), user);
 
         if (acls) {
             xmlNode *child = NULL;
@@ -375,8 +377,11 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 void
 pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
 {
+    if (target == NULL) {
+        return;
+    }
     pcmk__unpack_acl(acl_source, target, user);
-    pcmk__set_xml_doc_flag(target, pcmk__xf_acl_enabled);
+    pcmk__xml_doc_set_flags(target->doc, pcmk__xf_acl_enabled);
     pcmk__apply_acl(target);
 }
 
@@ -719,7 +724,7 @@ xml_acl_enabled(const xmlNode *xml)
 #define check_acl_deny(xml, attr_name, prefix, user, mode) do {             \
         xmlNode *tree = xml;                                                \
                                                                             \
-        pcmk__set_xml_doc_flag(tree, pcmk__xf_acl_denied);                  \
+        pcmk__xml_doc_set_flags(tree->doc, pcmk__xf_acl_denied);            \
         pcmk__if_tracing(                                                   \
             {                                                               \
                 GString *xpath = pcmk__element_xpath(tree);                 \
@@ -747,13 +752,14 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name,
 
     pcmk__assert((xml != NULL) && (xml->doc->_private != NULL));
 
-    if (!pcmk__tracking_xml_changes(xml, false) || !xml_acl_enabled(xml)) {
+    if (!pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking)
+        || !xml_acl_enabled(xml)) {
         return true;
     }
 
     docpriv = xml->doc->_private;
     if (docpriv->acls == NULL) {
-        check_acl_deny(xml, attr_name, "Lack of ", docpriv->user, mode);
+        check_acl_deny(xml, attr_name, "Lack of ", docpriv->acl_user, mode);
         return false;
     }
 
@@ -763,7 +769,7 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name,
      */
 
     if (attr_name != NULL) {
-        xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) attr_name);
+        xmlAttr *attr = xmlHasProp(xml, (const xmlChar *) attr_name);
 
         if ((attr != NULL) && (mode == pcmk__xf_acl_create)) {
             mode = pcmk__xf_acl_write;
@@ -783,12 +789,12 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name,
         if (pcmk_is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
             const char *pfx = (parent != xml)? "Parent " : "";
 
-            check_acl_deny(xml, attr_name, pfx, docpriv->user, mode);
+            check_acl_deny(xml, attr_name, pfx, docpriv->acl_user, mode);
             return false;
         }
     }
 
-    check_acl_deny(xml, attr_name, "Default ", docpriv->user, mode);
+    check_acl_deny(xml, attr_name, "Default ", docpriv->acl_user, mode);
     return false;
 }
 

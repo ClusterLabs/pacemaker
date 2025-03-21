@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
@@ -477,7 +479,9 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                       const char *remote_peer, int options)
 {
     const char *target = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, msg, LOG_NEVER);
+    xmlNode *dev = pcmk__xpath_find_one(msg->doc,
+                                        "//*[@" PCMK__XA_ST_TARGET "]",
+                                        LOG_NEVER);
     xmlNode *out_history = NULL;
 
     if (dev) {
@@ -525,8 +529,9 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
         } else if (remote_peer &&
                    !pcmk__str_eq(remote_peer, fenced_get_local_node(),
                                  pcmk__str_casei)) {
-            xmlNode *history = get_xpath_object("//" PCMK__XE_ST_HISTORY, msg,
-                                                LOG_NEVER);
+            xmlNode *history = pcmk__xpath_find_one(msg->doc,
+                                                    "//" PCMK__XE_ST_HISTORY,
+                                                    LOG_NEVER);
 
             /* either a broadcast created directly upon stonith-API request
             * or a diff as response to such a thing

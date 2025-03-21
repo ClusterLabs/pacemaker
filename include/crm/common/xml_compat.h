@@ -94,6 +94,23 @@ void freeXpathObject(xmlXPathObjectPtr xpathObj);
 //! \deprecated Do not use
 void dedupXpathResults(xmlXPathObjectPtr xpathObj);
 
+//! \deprecated Do not use
+void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
+                              void (*helper)(xmlNode*, void*), void *user_data);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+xmlNode *get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level);
+
+//! \deprecated Do not use
+typedef const xmlChar *pcmkXmlStr;
+
+//! \deprecated Do not use
+bool xml_tracking_changes(xmlNode *xml);
+
+//! \deprecated Do not use
+bool xml_document_dirty(xmlNode *xml);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -35,6 +35,7 @@ extern "C" {
 #define PCMK__XE_DOWNED                 "downed"
 #define PCMK__XE_EXIT_NOTIFICATION      "exit-notification"
 #define PCMK__XE_FAILED_UPDATE          "failed_update"
+#define PCMK__XE_FILE                   "file"
 #define PCMK__XE_GENERATION_TUPLE       "generation_tuple"
 #define PCMK__XE_INPUTS                 "inputs"
 #define PCMK__XE_LRM                    "lrm"

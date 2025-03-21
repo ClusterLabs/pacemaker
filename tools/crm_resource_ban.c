@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <libxml/tree.h>    // xmlNode
 #include <libxml/xpath.h>   // xmlXPathObject, etc.
 
 #include <crm_resource.h>
@@ -472,8 +473,8 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
             continue;
         }
 
-        date_expr_node = get_xpath_object((const char *) buf->str,
-                                          constraint_node, LOG_DEBUG);
+        date_expr_node = pcmk__xpath_find_one(constraint_node->doc, buf->str,
+                                              LOG_DEBUG);
         if (date_expr_node == NULL) {
             continue;
         }

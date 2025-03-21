@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,8 @@
 #include <crm/common/unittest_internal.h>
 
 #include <glib.h>                           // GHashTable, etc.
+#include <libxml/tree.h>                    // xmlNode
+#include <libxml/xmlstring.h>               // xmlChar
 
 #include "crmcommon_private.h"              // xml_node_private_t
 
@@ -121,7 +123,7 @@ already_sorted(void **state)
     crm_xml_add(test_xml, "location", "usa");
 
     // Set flags in test_xml's attributes for testing flag preservation
-    attr = xmlHasProp(test_xml, (pcmkXmlStr) "admin");
+    attr = xmlHasProp(test_xml, (const xmlChar *) "admin");
     if (attr != NULL) {
         xml_node_private_t *nodepriv = attr->_private;
 
@@ -130,7 +132,7 @@ already_sorted(void **state)
         }
     }
 
-    attr = xmlHasProp(test_xml, (pcmkXmlStr) "location");
+    attr = xmlHasProp(test_xml, (const xmlChar *) "location");
     if (attr != NULL) {
         xml_node_private_t *nodepriv = attr->_private;
 
@@ -164,7 +166,7 @@ need_sort(void **state)
     crm_xml_add(test_xml, "dummy", "value");
 
     // Set flags in test_xml's attributes for testing flag preservation
-    attr = xmlHasProp(test_xml, (pcmkXmlStr) "location");
+    attr = xmlHasProp(test_xml, (const xmlChar *) "location");
     if (attr != NULL) {
         xml_node_private_t *nodepriv = attr->_private;
 
@@ -173,7 +175,7 @@ need_sort(void **state)
         }
     }
 
-    attr = xmlHasProp(test_xml, (pcmkXmlStr) "admin");
+    attr = xmlHasProp(test_xml, (const xmlChar *) "admin");
     if (attr != NULL) {
         xml_node_private_t *nodepriv = attr->_private;
 
