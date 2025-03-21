@@ -238,7 +238,12 @@ get_action_timeout(const stonith_device_t *device, const char *action,
             long long timeout_ms = crm_get_msec(value);
 
             if (timeout_ms >= 0) {
-                return (int) QB_MIN(pcmk__timeout_ms2s(timeout_ms), INT_MAX);
+                int timeout_sec = 0;
+
+                timeout_ms = QB_MIN(timeout_ms, UINT_MAX);
+                timeout_sec = pcmk__timeout_ms2s((guint) timeout_ms);
+
+                return QB_MIN(timeout_sec, INT_MAX);
             }
         }
     }
