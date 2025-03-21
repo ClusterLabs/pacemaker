@@ -54,7 +54,7 @@ struct {
     GHashTable *params;
     int fence_level;
     int timeout ;
-    long long tolerance_ms;
+    unsigned int tolerance_ms;
     int delay;
     char *agent;
     char *confirm_host;
@@ -272,13 +272,13 @@ add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     // pcmk__request_fencing() expects an unsigned int
-    options.tolerance_ms = crm_get_msec(optarg);
+    long long tolerance_ms = crm_get_msec(optarg);
 
-    if (options.tolerance_ms < 0) {
+    if (tolerance_ms < 0) {
         crm_warn("Ignoring invalid tolerance '%s'", optarg);
         options.tolerance_ms = 0;
     } else {
-        options.tolerance_ms = QB_MIN(options.tolerance_ms, UINT_MAX);
+        options.tolerance_ms = (unsigned int) QB_MIN(tolerance_ms, UINT_MAX);
     }
     return TRUE;
 }
