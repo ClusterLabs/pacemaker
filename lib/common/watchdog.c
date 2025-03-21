@@ -20,7 +20,8 @@
 #include <dirent.h>
 #include <signal.h>
 
-#include <glib.h>		// g_str_has_prefix()
+#include <glib.h>           // g_str_has_prefix()
+#include <qb/qbdefs.h>      // QB_MIN(), QB_MAX()
 
 static pid_t sbd_pid = 0;
 
@@ -210,13 +211,17 @@ pcmk__locate_sbd(void)
     return sbd_pid;
 }
 
+// 0 <= return value <= LONG_MAX
 long
 pcmk__get_sbd_watchdog_timeout(void)
 {
     static long sbd_timeout = -2;
 
     if (sbd_timeout == -2) {
-        sbd_timeout = crm_get_msec(getenv("SBD_WATCHDOG_TIMEOUT"));
+        long long timeout = crm_get_msec(getenv("SBD_WATCHDOG_TIMEOUT"));
+
+        timeout = QB_MAX(timeout, 0);
+        sbd_timeout = (long) QB_MIN(timeout, LONG_MAX);
     }
     return sbd_timeout;
 }
@@ -244,12 +249,14 @@ pcmk__get_sbd_sync_resource_startup(void)
     return sync_resource_startup != 0;
 }
 
+// 0 <= return value <= min(LONG_MAX, (2 * SBD timeout))
 long
 pcmk__auto_stonith_watchdog_timeout(void)
 {
     long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
+    long long st_timeout = 2 * (long long) sbd_timeout;
 
-    return (sbd_timeout <= 0)? 0 : (2 * sbd_timeout);
+    return (long) QB_MIN(st_timeout, LONG_MAX);
 }
 
 bool
@@ -275,6 +282,8 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
 
     if (st_timeout < 0) {
         st_timeout = pcmk__auto_stonith_watchdog_timeout();
+
+        // At this point, 0 <= sbd_timeout <= st_timeout
         crm_debug("Using calculated value %lld for "
                   PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " (%s)",
                   st_timeout, value);
@@ -296,6 +305,9 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
         long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
 
         if (st_timeout < sbd_timeout) {
+            /* Passed-in value for PCMK_OPT_STONITH_WATCHDOG_TIMEOUT was
+             * parsable, positive, and less than the SBD_WATCHDOG_TIMEOUT
+             */
             crm_emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
                       " (%s) too short (must be >%ldms)",
                       value, sbd_timeout);
