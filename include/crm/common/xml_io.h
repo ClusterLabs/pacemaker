@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,8 +9,6 @@
 
 #ifndef PCMK__CRM_COMMON_XML_IO__H
 #define PCMK__CRM_COMMON_XML_IO__H
-
-#include <libxml/tree.h>    // xmlNode
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,8 +32,9 @@ extern "C" {
 #define CRM_BZ2_WORK        20
 #define CRM_BZ2_THRESHOLD   (128 * 1024)
 
-void save_xml_to_file(const xmlNode *xml, const char *desc,
-                      const char *filename);
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/xml_io_compat.h>
+#endif
 
 #ifdef __cplusplus
 }
