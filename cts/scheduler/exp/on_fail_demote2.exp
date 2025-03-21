@@ -1,7 +1,45 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="1">
   <synapse id="0">
     <action_set>
-      <rsc_op id="17" operation="monitor" operation_key="rsc1_monitor_11000" internal_operation_key="rsc1:0_monitor_11000" on_node="rhel7-4" on_node_uuid="4">
+      <rsc_op id="18" operation="monitor" operation_key="rsc1_monitor_10000" internal_operation_key="rsc1:1_monitor_10000" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="17" operation="promote" operation_key="rsc1_promote_0" internal_operation_key="rsc1:1_promote_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="17" operation="promote" operation_key="rsc1_promote_0" internal_operation_key="rsc1:1_promote_0" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="10000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="4" operation="cancel" operation_key="rsc1_monitor_11000" internal_operation_key="rsc1:1_monitor_11000" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="32" operation="promote" operation_key="rsc1-clone_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="4" operation="cancel" operation_key="rsc1_monitor_11000" internal_operation_key="rsc1:1_monitor_11000" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="27" operation="monitor" operation_key="rsc1_monitor_11000" internal_operation_key="rsc1:0_monitor_11000" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="rsc1" long-id="rsc1:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -12,7 +50,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="1">
+  <synapse id="4">
     <action_set>
       <rsc_op id="2" operation="demote" operation_key="rsc1_demote_0" internal_operation_key="rsc1:0_demote_0" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="rsc1" long-id="rsc1:0" class="ocf" provider="pacemaker" type="Stateful"/>
@@ -28,49 +66,11 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="2">
+  <synapse id="5">
     <action_set>
       <rsc_op id="1" operation="cancel" operation_key="rsc1_monitor_10000" internal_operation_key="rsc1:0_monitor_10000" on_node="rhel7-4" on_node_uuid="4">
         <primitive id="rsc1" long-id="rsc1:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="3">
-    <action_set>
-      <rsc_op id="21" operation="monitor" operation_key="rsc1_monitor_10000" internal_operation_key="rsc1:1_monitor_10000" on_node="rhel7-3" on_node_uuid="3">
-        <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="20" operation="promote" operation_key="rsc1_promote_0" internal_operation_key="rsc1:1_promote_0" on_node="rhel7-3" on_node_uuid="3"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="4">
-    <action_set>
-      <rsc_op id="20" operation="promote" operation_key="rsc1_promote_0" internal_operation_key="rsc1:1_promote_0" on_node="rhel7-3" on_node_uuid="3">
-        <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="10000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="4" operation="cancel" operation_key="rsc1_monitor_11000" internal_operation_key="rsc1:1_monitor_11000" on_node="rhel7-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="32" operation="promote" operation_key="rsc1-clone_promote_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="5">
-    <action_set>
-      <rsc_op id="4" operation="cancel" operation_key="rsc1_monitor_11000" internal_operation_key="rsc1:1_monitor_11000" on_node="rhel7-3" on_node_uuid="3">
-        <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -106,7 +106,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="20" operation="promote" operation_key="rsc1_promote_0" internal_operation_key="rsc1:1_promote_0" on_node="rhel7-3" on_node_uuid="3"/>
+        <rsc_op id="17" operation="promote" operation_key="rsc1_promote_0" internal_operation_key="rsc1:1_promote_0" on_node="rhel7-3" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>

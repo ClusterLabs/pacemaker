@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -206,7 +206,9 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                             pcmk__node_name(chosen), rsc->id);
             chosen = NULL;
 
-        } else if (!pcmk__node_available(chosen, true, false)) {
+        } else if (!pcmk__node_available(chosen, pcmk__node_alive
+                                                 |pcmk__node_usable
+                                                 |pcmk__node_no_banned)) {
             pcmk__rsc_trace(rsc, "Preferred node %s for %s was unavailable",
                             pcmk__node_name(chosen), rsc->id);
             chosen = NULL;
@@ -228,8 +230,10 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         chosen = best;
 
         if (!pcmk__is_unique_clone(rsc->priv->parent)
-            && (chosen->assign->score > 0) // Zero not acceptable
-            && pcmk__node_available(chosen, false, false)) {
+            && pcmk__node_available(chosen, pcmk__node_alive
+                                            |pcmk__node_usable
+                                            |pcmk__node_no_zero
+                                            |pcmk__node_no_negative)) {
             /* If the resource is already running on a node, prefer that node if
              * it is just as good as the chosen node.
              *
@@ -244,7 +248,9 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
             if (running == NULL) {
                 // Nothing to do
 
-            } else if (!pcmk__node_available(running, true, false)) {
+            } else if (!pcmk__node_available(running, pcmk__node_alive
+                                                      |pcmk__node_usable
+                                                      |pcmk__node_no_banned)) {
                 pcmk__rsc_trace(rsc,
                                 "Current node for %s (%s) can't run resources",
                                 rsc->id, pcmk__node_name(running));
@@ -323,7 +329,10 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
     // Apply the colocation score to this resource's allowed node scores
     rsc->priv->cmds->apply_coloc_score(rsc, other, colocation, true);
     if ((archive != NULL)
-        && !pcmk__any_node_available(rsc->priv->allowed_nodes)) {
+        && !pcmk__any_node_available(rsc->priv->allowed_nodes,
+                                     pcmk__node_alive
+                                     |pcmk__node_usable
+                                     |pcmk__node_no_negative)) {
         pcmk__rsc_info(rsc,
                        "%s: Reverting scores from colocation with %s "
                        "because no nodes allowed",
@@ -1506,7 +1515,7 @@ pcmk__schedule_cleanup(pcmk_resource_t *rsc, const pcmk_node_t *node,
         return;
     }
 
-    if (node->details->unclean || !node->details->online) {
+    if (!pcmk__node_available(node, pcmk__node_alive)) {
         pcmk__rsc_trace(rsc, "Skipping clean-up of %s on %s: node unavailable",
                         rsc->id, pcmk__node_name(node));
         return;

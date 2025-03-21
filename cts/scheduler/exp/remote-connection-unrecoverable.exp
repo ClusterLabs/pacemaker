@@ -103,7 +103,7 @@
   </synapse>
   <synapse id="8">
     <action_set>
-      <pseudo_event id="14" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:0_stop_0">
+      <pseudo_event id="18" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -112,7 +112,7 @@
         <crm_event id="1" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="13" operation="demote" operation_key="rsc2_demote_0" internal_operation_key="rsc2:0_demote_0"/>
+        <pseudo_event id="17" operation="demote" operation_key="rsc2_demote_0" internal_operation_key="rsc2:0_demote_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="21" operation="stop" operation_key="rsc2-master_stop_0"/>
@@ -121,7 +121,7 @@
   </synapse>
   <synapse id="9">
     <action_set>
-      <pseudo_event id="13" operation="demote" operation_key="rsc2_demote_0" internal_operation_key="rsc2:0_demote_0">
+      <pseudo_event id="17" operation="demote" operation_key="rsc2_demote_0" internal_operation_key="rsc2:0_demote_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -142,7 +142,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="13" operation="demote" operation_key="rsc2_demote_0" internal_operation_key="rsc2:0_demote_0"/>
+        <pseudo_event id="17" operation="demote" operation_key="rsc2_demote_0" internal_operation_key="rsc2:0_demote_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="25" operation="demote" operation_key="rsc2-master_demote_0"/>
@@ -172,7 +172,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:0_stop_0"/>
+        <pseudo_event id="18" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:0_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="21" operation="stop" operation_key="rsc2-master_stop_0"/>
