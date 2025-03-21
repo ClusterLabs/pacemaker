@@ -42,6 +42,7 @@ header_HEADERS = acl.h 			\
 		 scores.h		\
 		 scores_compat.h	\
 		 strings.h		\
+		 strings_compat.h	\
 		 util.h 		\
 		 util_compat.h 		\
 		 xml.h 			\
