@@ -142,12 +142,12 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
 {
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_CIB_REPLY);
 
-    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_CIB);
-    crm_xml_add(reply, PCMK__XA_CIB_OP, op);
-    crm_xml_add(reply, PCMK__XA_CIB_CALLID, call_id);
-    crm_xml_add(reply, PCMK__XA_CIB_CLIENTID, client_id);
-    crm_xml_add_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
-    crm_xml_add_int(reply, PCMK__XA_CIB_RC, rc);
+    pcmk__xe_set(reply, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(reply, PCMK__XA_CIB_OP, op);
+    pcmk__xe_set(reply, PCMK__XA_CIB_CALLID, call_id);
+    pcmk__xe_set(reply, PCMK__XA_CIB_CLIENTID, client_id);
+    pcmk__xe_set_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
+    pcmk__xe_set_int(reply, PCMK__XA_CIB_RC, rc);
 
     if (call_data != NULL) {
         xmlNode *wrapper = pcmk__xe_create(reply, PCMK__XE_CIB_CALLDATA);
@@ -171,7 +171,7 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
 
     CRM_CHECK((notify_src != NULL) && (client_id != NULL), return);
 
-    crm_element_value_int(notify_src, PCMK__XA_CIB_CALLID, &msg_id);
+    pcmk__xe_get_int(notify_src, PCMK__XA_CIB_CALLID, &msg_id);
 
     client_obj = pcmk__find_client_by_id(client_id);
     if (client_obj == NULL) {
@@ -222,7 +222,7 @@ void
 cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
                            pcmk__client_t *cib_client, gboolean privileged)
 {
-    const char *op = crm_element_value(op_request, PCMK__XA_CIB_OP);
+    const char *op = pcmk__xe_get(op_request, PCMK__XA_CIB_OP);
     uint32_t call_options = cib_none;
     int rc = pcmk_rc_ok;
 
@@ -243,8 +243,8 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         if (flags & crm_ipc_client_response) {
             xmlNode *ack = pcmk__xe_create(NULL, __func__);
 
-            crm_xml_add(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
-            crm_xml_add(ack, PCMK__XA_CIB_CLIENTID, cib_client->id);
+            pcmk__xe_set(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
+            pcmk__xe_set(ack, PCMK__XA_CIB_CLIENTID, cib_client->id);
             pcmk__ipc_send_xml(cib_client, id, ack, flags);
             cib_client->request_id = 0;
             pcmk__xml_free(ack);
@@ -256,11 +256,9 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         int on_off = 0;
         crm_exit_t status = CRM_EX_OK;
         uint64_t bit = UINT64_C(0);
-        const char *type = crm_element_value(op_request,
-                                             PCMK__XA_CIB_NOTIFY_TYPE);
+        const char *type = pcmk__xe_get(op_request, PCMK__XA_CIB_NOTIFY_TYPE);
 
-        crm_element_value_int(op_request, PCMK__XA_CIB_NOTIFY_ACTIVATE,
-                              &on_off);
+        pcmk__xe_get_int(op_request, PCMK__XA_CIB_NOTIFY_ACTIVATE, &on_off);
 
         crm_debug("Setting %s callbacks %s for client %s",
                   type, (on_off? "on" : "off"), pcmk__client_name(cib_client));
@@ -337,8 +335,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     }
 
     if (cib_client->name == NULL) {
-        const char *value = crm_element_value(op_request,
-                                              PCMK__XA_CIB_CLIENTNAME);
+        const char *value = pcmk__xe_get(op_request, PCMK__XA_CIB_CLIENTNAME);
 
         if (value == NULL) {
             cib_client->name = pcmk__itoa(cib_client->pid);
@@ -357,8 +354,8 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         pcmk__set_client_queue_max(cib_client, qmax);
     }
 
-    crm_xml_add(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
-    crm_xml_add(op_request, PCMK__XA_CIB_CLIENTNAME, cib_client->name);
+    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
+    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTNAME, cib_client->name);
 
     CRM_LOG_ASSERT(cib_client->user != NULL);
     pcmk__update_acl_user(op_request, PCMK__XA_CIB_USER, cib_client->user);
@@ -387,11 +384,11 @@ cib_digester_cb(gpointer data)
         snprintf(buffer, 32, "%" PRIu64, ping_seq);
         crm_trace("Requesting peer digests (%s)", buffer);
 
-        crm_xml_add(ping, PCMK__XA_T, PCMK__VALUE_CIB);
-        crm_xml_add(ping, PCMK__XA_CIB_OP, CRM_OP_PING);
-        crm_xml_add(ping, PCMK__XA_CIB_PING_ID, buffer);
+        pcmk__xe_set(ping, PCMK__XA_T, PCMK__VALUE_CIB);
+        pcmk__xe_set(ping, PCMK__XA_CIB_OP, CRM_OP_PING);
+        pcmk__xe_set(ping, PCMK__XA_CIB_PING_ID, buffer);
 
-        crm_xml_add(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+        pcmk__xe_set(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
         pcmk__cluster_send_message(NULL, pcmk_ipc_based, ping);
 
         pcmk__xml_free(ping);
@@ -403,14 +400,14 @@ static void
 process_ping_reply(xmlNode *reply) 
 {
     uint64_t seq = 0;
-    const char *host = crm_element_value(reply, PCMK__XA_SRC);
+    const char *host = pcmk__xe_get(reply, PCMK__XA_SRC);
 
     xmlNode *wrapper = pcmk__xe_first_child(reply, PCMK__XE_CIB_CALLDATA, NULL,
                                             NULL);
     xmlNode *pong = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    const char *seq_s = crm_element_value(pong, PCMK__XA_CIB_PING_ID);
-    const char *digest = crm_element_value(pong, PCMK__XA_DIGEST);
+    const char *seq_s = pcmk__xe_get(pong, PCMK__XA_CIB_PING_ID);
+    const char *digest = pcmk__xe_get(pong, PCMK__XA_DIGEST);
 
     if (seq_s == NULL) {
         crm_debug("Ignoring ping reply with no " PCMK__XA_CIB_PING_ID);
@@ -454,17 +451,15 @@ process_ping_reply(xmlNode *reply)
             const char *num_updates_s = NULL;
 
             if (remote_cib != NULL) {
-                admin_epoch_s = crm_element_value(remote_cib,
-                                                  PCMK_XA_ADMIN_EPOCH);
-                epoch_s = crm_element_value(remote_cib, PCMK_XA_EPOCH);
-                num_updates_s = crm_element_value(remote_cib,
-                                                  PCMK_XA_NUM_UPDATES);
+                admin_epoch_s = pcmk__xe_get(remote_cib, PCMK_XA_ADMIN_EPOCH);
+                epoch_s = pcmk__xe_get(remote_cib, PCMK_XA_EPOCH);
+                num_updates_s = pcmk__xe_get(remote_cib, PCMK_XA_NUM_UPDATES);
             }
 
             crm_notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s %p",
-                       crm_element_value(the_cib, PCMK_XA_ADMIN_EPOCH),
-                       crm_element_value(the_cib, PCMK_XA_EPOCH),
-                       crm_element_value(the_cib, PCMK_XA_NUM_UPDATES),
+                       pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
+                       pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
+                       pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
                        ping_digest, host,
                        pcmk__s(admin_epoch_s, "_"),
                        pcmk__s(epoch_s, "_"),
@@ -473,7 +468,7 @@ process_ping_reply(xmlNode *reply)
 
             if(remote_cib && remote_cib->children) {
                 // Additional debug
-                xml_calculate_changes(the_cib, remote_cib);
+                pcmk__xml_mark_changes(the_cib, remote_cib);
                 pcmk__log_xml_changes(LOG_INFO, remote_cib);
                 crm_trace("End of differences");
             }
@@ -557,11 +552,10 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
      * trace code more closely to check.)
      */
     const char *host = NULL;
-    const char *delegated = crm_element_value(request,
-                                              PCMK__XA_CIB_DELEGATED_FROM);
-    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-    const char *originator = crm_element_value(request, PCMK__XA_SRC);
-    const char *reply_to = crm_element_value(request, PCMK__XA_CIB_ISREPLYTO);
+    const char *delegated = pcmk__xe_get(request, PCMK__XA_CIB_DELEGATED_FROM);
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
+    const char *reply_to = pcmk__xe_get(request, PCMK__XA_CIB_ISREPLYTO);
 
     gboolean is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
 
@@ -595,9 +589,8 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
          * Except this time PCMK__XA_CIB_SCHEMA_MAX will be set which puts a
          * limit on how far newer nodes will go
          */
-        const char *max = crm_element_value(request, PCMK__XA_CIB_SCHEMA_MAX);
-        const char *upgrade_rc = crm_element_value(request,
-                                                   PCMK__XA_CIB_UPGRADE_RC);
+        const char *max = pcmk__xe_get(request, PCMK__XA_CIB_SCHEMA_MAX);
+        const char *upgrade_rc = pcmk__xe_get(request, PCMK__XA_CIB_UPGRADE_RC);
 
         crm_trace("Parsing upgrade %s for %s with max=%s and upgrade_rc=%s",
                   (is_reply? "reply" : "request"),
@@ -606,7 +599,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
         if (upgrade_rc != NULL) {
             // Our upgrade request was rejected by DC, notify clients of result
-            crm_xml_add(request, PCMK__XA_CIB_RC, upgrade_rc);
+            pcmk__xe_set(request, PCMK__XA_CIB_RC, upgrade_rc);
 
         } else if ((max == NULL) && based_is_primary) {
             /* We are the DC, check if this upgrade is allowed */
@@ -657,7 +650,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
     *local_notify = pcmk__str_eq(delegated, OUR_NODENAME, pcmk__str_casei);
 
-    host = crm_element_value(request, PCMK__XA_CIB_HOST);
+    host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         crm_trace("Processing %s request sent to us from %s", op, originator);
         *needs_reply = TRUE;
@@ -674,10 +667,8 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
     crm_trace("Processing %s request broadcast by %s call %s on %s "
               "(local clients will%s be notified)", op,
-              pcmk__s(crm_element_value(request, PCMK__XA_CIB_CLIENTNAME),
-                      "client"),
-              pcmk__s(crm_element_value(request, PCMK__XA_CIB_CALLID),
-                      "without ID"),
+              pcmk__s(pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME), "client"),
+              pcmk__s(pcmk__xe_get(request, PCMK__XA_CIB_CALLID), "without ID"),
               originator, (*local_notify? "" : "not"));
     return TRUE;
 }
@@ -691,13 +682,12 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 static void
 forward_request(xmlNode *request)
 {
-    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-    const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
-    const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
-    const char *originator = crm_element_value(request, PCMK__XA_SRC);
-    const char *client_name = crm_element_value(request,
-                                                PCMK__XA_CIB_CLIENTNAME);
-    const char *call_id = crm_element_value(request, PCMK__XA_CIB_CALLID);
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
+    const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
+    const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
+    const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
+    const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
     pcmk__node_status_t *peer = NULL;
 
     int log_level = LOG_INFO;
@@ -715,7 +705,7 @@ forward_request(xmlNode *request)
                pcmk__s(client_name, "unspecified"),
                pcmk__s(call_id, "unspecified"));
 
-    crm_xml_add(request, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
+    pcmk__xe_set(request, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
 
     if (host != NULL) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
@@ -740,7 +730,7 @@ send_peer_reply(xmlNode *msg, const char *originator)
                           pcmk__node_search_cluster_member);
 
     crm_trace("Sending request result to %s only", originator);
-    crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
+    pcmk__xe_set(msg, PCMK__XA_CIB_ISREPLYTO, originator);
     pcmk__cluster_send_message(node, pcmk_ipc_based, msg);
 }
 
@@ -772,14 +762,13 @@ cib_process_request(xmlNode *request, gboolean privileged,
     xmlNode *result_diff = NULL;
 
     int rc = pcmk_ok;
-    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-    const char *originator = crm_element_value(request, PCMK__XA_SRC);
-    const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
-    const char *call_id = crm_element_value(request, PCMK__XA_CIB_CALLID);
-    const char *client_id = crm_element_value(request, PCMK__XA_CIB_CLIENTID);
-    const char *client_name = crm_element_value(request,
-                                                PCMK__XA_CIB_CLIENTNAME);
-    const char *reply_to = crm_element_value(request, PCMK__XA_CIB_ISREPLYTO);
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
+    const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
+    const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
+    const char *client_id = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID);
+    const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
+    const char *reply_to = pcmk__xe_get(request, PCMK__XA_CIB_ISREPLYTO);
 
     const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
@@ -799,7 +788,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
                   op, pcmk__s(client_name, "client"), call_id, originator,
                   pcmk__s(host, "all"), reply_to);
     } else {
-        crm_xml_add(request, PCMK__XA_SRC, OUR_NODENAME);
+        pcmk__xe_set(request, PCMK__XA_SRC, OUR_NODENAME);
         crm_trace("Processing local %s operation from %s/%s intended for %s",
                   op, pcmk__s(client_name, "client"), call_id,
                   pcmk__s(host, "all"));
@@ -871,7 +860,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         time_t finished = 0;
         time_t now = time(NULL);
         int level = LOG_INFO;
-        const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
+        const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
         const char *admin_epoch_s = NULL;
         const char *epoch_s = NULL;
         const char *num_updates_s = NULL;
@@ -901,9 +890,9 @@ cib_process_request(xmlNode *request, gboolean privileged,
         }
 
         if (the_cib != NULL) {
-            admin_epoch_s = crm_element_value(the_cib, PCMK_XA_ADMIN_EPOCH);
-            epoch_s = crm_element_value(the_cib, PCMK_XA_EPOCH);
-            num_updates_s = crm_element_value(the_cib, PCMK_XA_NUM_UPDATES);
+            admin_epoch_s = pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH);
+            epoch_s = pcmk__xe_get(the_cib, PCMK_XA_EPOCH);
+            num_updates_s = pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES);
         }
 
         do_crm_log(level,
@@ -1000,7 +989,7 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
     if (type == cib__op_apply_patch) {
         *section = NULL;
     } else {
-        *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
+        *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
     }
 
     // Grab the specified section
@@ -1045,11 +1034,10 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     const char *op = NULL;
     const char *section = NULL;
-    const char *call_id = crm_element_value(request, PCMK__XA_CIB_CALLID);
-    const char *client_id = crm_element_value(request, PCMK__XA_CIB_CLIENTID);
-    const char *client_name = crm_element_value(request,
-                                                PCMK__XA_CIB_CLIENTNAME);
-    const char *originator = crm_element_value(request, PCMK__XA_SRC);
+    const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
+    const char *client_id = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID);
+    const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
+    const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
 
     int rc = pcmk_ok;
 
@@ -1068,7 +1056,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     *cib_diff = NULL;
 
     /* Start processing the request... */
-    op = crm_element_value(request, PCMK__XA_CIB_OP);
+    op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
@@ -1135,8 +1123,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
             }
 
             crm_trace("Activating %s->%s%s",
-                      crm_element_value(the_cib, PCMK_XA_NUM_UPDATES),
-                      crm_element_value(result_cib, PCMK_XA_NUM_UPDATES),
+                      pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
+                      pcmk__xe_get(result_cib, PCMK_XA_NUM_UPDATES),
                       (config_changed? " changed" : ""));
 
             rc = activateCibXml(result_cib, config_changed, op);
@@ -1160,8 +1148,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
          */
         if ((operation->type == cib__op_commit_transact)
             && pcmk__str_eq(originator, OUR_NODENAME, pcmk__str_casei)
-            && compare_version(crm_element_value(the_cib,
-                                                 PCMK_XA_CRM_FEATURE_SET),
+            && compare_version(pcmk__xe_get(the_cib, PCMK_XA_CRM_FEATURE_SET),
                                "3.19.0") < 0) {
 
             sync_our_cib(request, TRUE);
@@ -1183,7 +1170,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     } else {
         crm_trace("Not activating %d %d %s", rc,
                   pcmk_is_set(call_options, cib_dryrun),
-                  crm_element_value(result_cib, PCMK_XA_NUM_UPDATES));
+                  pcmk__xe_get(result_cib, PCMK_XA_NUM_UPDATES));
 
         if (result_cib != the_cib) {
             pcmk__xml_free(result_cib);
@@ -1217,15 +1204,15 @@ void
 cib_peer_callback(xmlNode * msg, void *private_data)
 {
     const char *reason = NULL;
-    const char *originator = crm_element_value(msg, PCMK__XA_SRC);
+    const char *originator = pcmk__xe_get(msg, PCMK__XA_SRC);
 
     if (pcmk__peer_cache == NULL) {
         reason = "membership not established";
         goto bail;
     }
 
-    if (crm_element_value(msg, PCMK__XA_CIB_CLIENTNAME) == NULL) {
-        crm_xml_add(msg, PCMK__XA_CIB_CLIENTNAME, originator);
+    if (pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME) == NULL) {
+        pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, originator);
     }
 
     /* crm_log_xml_trace(msg, "Peer[inbound]"); */
@@ -1234,7 +1221,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
 
   bail:
     if (reason) {
-        const char *op = crm_element_value(msg, PCMK__XA_CIB_OP);
+        const char *op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
 
         crm_warn("Discarding %s message from %s: %s", op, originator, reason);
     }
@@ -1274,8 +1261,8 @@ initiate_exit(void)
     crm_info("Sending shutdown request to %d peers", active);
 
     leaving = pcmk__xe_create(NULL, PCMK__XE_EXIT_NOTIFICATION);
-    crm_xml_add(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
-    crm_xml_add(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
+    pcmk__xe_set(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
 
     pcmk__cluster_send_message(NULL, pcmk_ipc_based, leaving);
     pcmk__xml_free(leaving);

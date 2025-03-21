@@ -16,7 +16,9 @@
 #include <libgen.h>
 #include <inttypes.h>
 #include <sys/types.h>
+
 #include <glib.h>
+#include <libxml/tree.h>            // xmlNode
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
@@ -445,16 +447,16 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
         rc = pcmk_rc2legacy(stonith__result2rc(result));
     }
 
-    crm_xml_add_int(xml, PCMK__XA_OP_STATUS, (int) execution_status);
-    crm_xml_add_int(xml, PCMK__XA_RC_CODE, exit_status);
-    crm_xml_add(xml, PCMK_XA_EXIT_REASON, exit_reason);
-    crm_xml_add(xml, PCMK__XA_ST_OUTPUT, action_stdout);
+    pcmk__xe_set_int(xml, PCMK__XA_OP_STATUS, (int) execution_status);
+    pcmk__xe_set_int(xml, PCMK__XA_RC_CODE, exit_status);
+    pcmk__xe_set(xml, PCMK_XA_EXIT_REASON, exit_reason);
+    pcmk__xe_set(xml, PCMK__XA_ST_OUTPUT, action_stdout);
 
     /* @COMPAT Peers in rolling upgrades, Pacemaker Remote nodes, and external
      * code that use libstonithd <=2.1.2 don't check for the full result, and
      * need a legacy return code instead.
      */
-    crm_xml_add_int(xml, PCMK__XA_ST_RC, rc);
+    pcmk__xe_set_int(xml, PCMK__XA_ST_RC, rc);
 }
 
 /*!
@@ -468,13 +470,16 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
 xmlNode *
 stonith__find_xe_with_result(xmlNode *xml)
 {
-    xmlNode *match = get_xpath_object("//@" PCMK__XA_RC_CODE, xml, LOG_NEVER);
+    xmlNode *match = pcmk__xpath_find_one(xml->doc,
+                                          "//*[@" PCMK__XA_RC_CODE "]",
+                                          LOG_NEVER);
 
     if (match == NULL) {
         /* @COMPAT Peers <=2.1.2 in a rolling upgrade provide only a legacy
          * return code, not a full result, so check for that.
          */
-        match = get_xpath_object("//@" PCMK__XA_ST_RC, xml, LOG_ERR);
+        match = pcmk__xpath_find_one(xml->doc, "//*[@" PCMK__XA_ST_RC "]",
+                                     LOG_ERR);
     }
     return match;
 }
@@ -496,20 +501,20 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
 
     CRM_CHECK((xml != NULL) && (result != NULL), return);
 
-    exit_reason = crm_element_value(xml, PCMK_XA_EXIT_REASON);
-    action_stdout = crm_element_value_copy(xml, PCMK__XA_ST_OUTPUT);
+    exit_reason = pcmk__xe_get(xml, PCMK_XA_EXIT_REASON);
+    action_stdout = pcmk__xe_get_copy(xml, PCMK__XA_ST_OUTPUT);
 
     // A result must include an exit status and execution status
-    if ((crm_element_value_int(xml, PCMK__XA_RC_CODE, &exit_status) < 0)
-        || (crm_element_value_int(xml, PCMK__XA_OP_STATUS,
-                                  &execution_status) < 0)) {
+    if ((pcmk__xe_get_int(xml, PCMK__XA_RC_CODE, &exit_status) != pcmk_rc_ok)
+        || (pcmk__xe_get_int(xml, PCMK__XA_OP_STATUS,
+                             &execution_status) != pcmk_rc_ok)) {
         int rc = pcmk_ok;
         exit_status = CRM_EX_ERROR;
 
         /* @COMPAT Peers <=2.1.2 in rolling upgrades provide only a legacy
          * return code, not a full result, so check for that.
          */
-        if (crm_element_value_int(xml, PCMK__XA_ST_RC, &rc) == 0) {
+        if (pcmk__xe_get_int(xml, PCMK__XA_ST_RC, &rc) == pcmk_rc_ok) {
             if ((rc == pcmk_ok) || (rc == -EINPROGRESS)) {
                 exit_status = CRM_EX_OK;
             }

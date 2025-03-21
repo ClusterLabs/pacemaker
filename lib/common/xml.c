@@ -20,7 +20,7 @@
 #include <glib.h>                       // gboolean, GString
 #include <libxml/parser.h>              // xmlCleanupParser()
 #include <libxml/tree.h>                // xmlNode, etc.
-#include <libxml/xmlstring.h>           // xmlGetUTF8Char()
+#include <libxml/xmlstring.h>           // xmlChar, xmlGetUTF8Char()
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -28,7 +28,7 @@
 #include "crmcommon_private.h"
 
 //! libxml2 supports only XML version 1.0, at least as of libxml2-2.12.5
-#define XML_VERSION ((pcmkXmlStr) "1.0")
+#define XML_VERSION ((const xmlChar *) "1.0")
 
 /*!
  * \internal
@@ -106,21 +106,6 @@ pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
     return true;
 }
 
-bool
-pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
-{
-    if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
-        return FALSE;
-    } else if (!pcmk_is_set(((xml_doc_private_t *)xml->doc->_private)->flags,
-                            pcmk__xf_tracking)) {
-        return FALSE;
-    } else if (lazy && !pcmk_is_set(((xml_doc_private_t *)xml->doc->_private)->flags,
-                                    pcmk__xf_lazy)) {
-        return FALSE;
-    }
-    return TRUE;
-}
-
 void
 pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags)
 {
@@ -133,21 +118,51 @@ pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags)
     }
 }
 
+/*!
+ * \internal
+ * \brief Set flags for an XML document
+ *
+ * \param[in,out] doc    XML document
+ * \param[in]     flags  Group of <tt>enum pcmk__xml_flags</tt>
+ */
 void
-pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag)
+pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags)
 {
-    if (xml != NULL) {
-        xml_doc_private_t *docpriv = xml->doc->_private;
+    if (doc != NULL) {
+        xml_doc_private_t *docpriv = doc->_private;
 
-        pcmk__set_xml_flags(docpriv, flag);
+        pcmk__set_xml_flags(docpriv, flags);
     }
+}
+
+/*!
+ * \internal
+ * \brief Check whether the given flags are set for an XML document
+ *
+ * \param[in] doc    XML document to check
+ * \param[in] flags  Group of <tt>enum pcmk__xml_flags</tt>
+ *
+ * \return \c true if all of \p flags are set for \p doc, or \c false otherwise
+ */
+bool
+pcmk__xml_doc_all_flags_set(const xmlDoc *doc, uint32_t flags)
+{
+    if (doc != NULL) {
+        xml_doc_private_t *docpriv = doc->_private;
+
+        return (docpriv != NULL) && pcmk_all_flags_set(docpriv->flags, flags);
+    }
+    return false;
 }
 
 // Mark document, element, and all element's parents as changed
 void
 pcmk__mark_xml_node_dirty(xmlNode *xml)
 {
-    pcmk__set_xml_doc_flag(xml, pcmk__xf_dirty);
+    if (xml == NULL) {
+        return;
+    }
+    pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_dirty);
     pcmk__xml_set_parent_flags(xml, pcmk__xf_dirty);
 }
 
@@ -208,7 +223,7 @@ mark_xml_tree_dirty_created(xmlNode *xml)
 {
     pcmk__assert(xml != NULL);
 
-    if (!pcmk__tracking_xml_changes(xml, false)) {
+    if (!pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking)) {
         // Tracking is disabled for entire document
         return;
     }
@@ -238,8 +253,7 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
     if (docpriv != NULL) {
         pcmk__assert(docpriv->check == PCMK__XML_DOC_PRIVATE_MAGIC);
 
-        free(docpriv->user);
-        docpriv->user = NULL;
+        pcmk__str_update(&(docpriv->acl_user), NULL);
 
         if (docpriv->acls != NULL) {
             pcmk__free_acls(docpriv->acls);
@@ -267,11 +281,15 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
 static bool
 new_private_data(xmlNode *node, void *user_data)
 {
+    bool tracking = false;
+
     CRM_CHECK(node != NULL, return true);
 
     if (node->_private != NULL) {
         return true;
     }
+
+    tracking = pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking);
 
     switch (node->type) {
         case XML_DOCUMENT_NODE:
@@ -281,7 +299,6 @@ new_private_data(xmlNode *node, void *user_data)
 
                 docpriv->check = PCMK__XML_DOC_PRIVATE_MAGIC;
                 node->_private = docpriv;
-                pcmk__set_xml_flags(docpriv, pcmk__xf_dirty|pcmk__xf_created);
             }
             break;
 
@@ -294,7 +311,9 @@ new_private_data(xmlNode *node, void *user_data)
 
                 nodepriv->check = PCMK__XML_NODE_PRIVATE_MAGIC;
                 node->_private = nodepriv;
-                pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
+                if (tracking) {
+                    pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
+                }
 
                 for (xmlAttr *iter = pcmk__xe_first_attr(node); iter != NULL;
                      iter = iter->next) {
@@ -314,7 +333,7 @@ new_private_data(xmlNode *node, void *user_data)
             return true;
     }
 
-    if (pcmk__tracking_xml_changes(node, false)) {
+    if (tracking) {
         pcmk__mark_xml_node_dirty(node);
     }
     return true;
@@ -383,36 +402,6 @@ pcmk__xml_free_private_data(xmlNode *xml)
     pcmk__xml_tree_foreach(xml, free_private_data, NULL);
 }
 
-void
-xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls) 
-{
-    xml_accept_changes(xml);
-    crm_trace("Tracking changes%s to %p", enforce_acls?" with ACLs":"", xml);
-    pcmk__set_xml_doc_flag(xml, pcmk__xf_tracking);
-    if(enforce_acls) {
-        if(acl_source == NULL) {
-            acl_source = xml;
-        }
-        pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_enabled);
-        pcmk__unpack_acl(acl_source, xml, user);
-        pcmk__apply_acl(xml);
-    }
-}
-
-bool xml_tracking_changes(xmlNode * xml)
-{
-    return (xml != NULL) && (xml->doc != NULL) && (xml->doc->_private != NULL)
-           && pcmk_is_set(((xml_doc_private_t *)(xml->doc->_private))->flags,
-                          pcmk__xf_tracking);
-}
-
-bool xml_document_dirty(xmlNode *xml) 
-{
-    return (xml != NULL) && (xml->doc != NULL) && (xml->doc->_private != NULL)
-           && pcmk_is_set(((xml_doc_private_t *)(xml->doc->_private))->flags,
-                          pcmk__xf_dirty);
-}
-
 /*!
  * \internal
  * \brief Return ordinal position of an XML node among its siblings
@@ -423,7 +412,7 @@ bool xml_document_dirty(xmlNode *xml)
  * \return Ordinal position of \p xml (starting with 0)
  */
 int
-pcmk__xml_position(const xmlNode *xml, enum xml_private_flags ignore_if_set)
+pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set)
 {
     int position = 0;
 
@@ -450,61 +439,52 @@ pcmk__xml_position(const xmlNode *xml, enum xml_private_flags ignore_if_set)
  * \note This is compatible with \c pcmk__xml_tree_foreach().
  */
 static bool
-accept_attr_deletions(xmlNode *xml, void *user_data)
+commit_attr_deletions(xmlNode *xml, void *user_data)
 {
     pcmk__xml_reset_node_flags(xml, NULL);
-    pcmk__xe_remove_matching_attrs(xml, pcmk__marked_as_deleted, NULL);
+    pcmk__xe_remove_matching_attrs(xml, true, pcmk__marked_as_deleted, NULL);
     return true;
 }
 
 /*!
  * \internal
- * \brief Find first child XML node matching another given XML node
+ * \brief Finalize all pending changes to an XML document and reset private data
  *
- * \param[in] haystack  XML whose children should be checked
- * \param[in] needle    XML to match (comment content or element name and ID)
- * \param[in] exact     If true and needle is a comment, position must match
+ * Clear the ACL user and all flags, unpacked ACLs, and deleted node records for
+ * the document; clear all flags on each node in the tree; and delete any
+ * attributes that are marked for deletion.
+ *
+ * \param[in,out] doc  XML document
+ *
+ * \note When change tracking is enabled, "deleting" an attribute simply marks
+ *       it for deletion (using \c pcmk__xf_deleted) until changes are
+ *       committed. Freeing a node (using \c pcmk__xml_free()) adds a deleted
+ *       node record (\c pcmk__deleted_xml_t) to the node's document before
+ *       freeing it.
+ * \note This function clears all flags, not just flags that indicate changes.
+ *       In particular, note that it clears the \c pcmk__xf_tracking flag, thus
+ *       disabling tracking.
  */
-xmlNode *
-pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
-{
-    CRM_CHECK(needle != NULL, return NULL);
-
-    if (needle->type == XML_COMMENT_NODE) {
-        return pcmk__xc_match(haystack, needle, exact);
-
-    } else {
-        const char *id = pcmk__xe_id(needle);
-        const char *attr = (id == NULL)? NULL : PCMK_XA_ID;
-
-        return pcmk__xe_first_child(haystack, (const char *) needle->name, attr,
-                                    id);
-    }
-}
-
 void
-xml_accept_changes(xmlNode * xml)
+pcmk__xml_commit_changes(xmlDoc *doc)
 {
-    xmlNode *top = NULL;
     xml_doc_private_t *docpriv = NULL;
 
-    if(xml == NULL) {
+    if (doc == NULL) {
         return;
     }
 
-    crm_trace("Accepting changes to %p", xml);
-    docpriv = xml->doc->_private;
-    top = xmlDocGetRootElement(xml->doc);
-
-    reset_xml_private_data(xml->doc->_private);
-
-    if (!pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
-        docpriv->flags = pcmk__xf_none;
+    docpriv = doc->_private;
+    if (docpriv == NULL) {
         return;
     }
 
+    if (pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
+        pcmk__xml_tree_foreach(xmlDocGetRootElement(doc), commit_attr_deletions,
+                               NULL);
+    }
+    reset_xml_private_data(docpriv);
     docpriv->flags = pcmk__xf_none;
-    pcmk__xml_tree_foreach(top, accept_attr_deletions, NULL);
 }
 
 /*!
@@ -581,7 +561,7 @@ pcmk__xml_is_name_start_char(const char *utf8, int *len)
     *len = 4;
 
     // Note: xmlGetUTF8Char() assumes a 32-bit int
-    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    c = xmlGetUTF8Char((const xmlChar *) utf8, len);
     if (c < 0) {
         GString *buf = g_string_sized_new(32);
 
@@ -642,7 +622,7 @@ pcmk__xml_is_name_char(const char *utf8, int *len)
     *len = 4;
 
     // Note: xmlGetUTF8Char() assumes a 32-bit int
-    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    c = xmlGetUTF8Char((const xmlChar *) utf8, len);
     if (c < 0) {
         GString *buf = g_string_sized_new(32);
 
@@ -784,7 +764,7 @@ free_xml_with_position(xmlNode *node, int position)
         return;
     }
 
-    if ((doc != NULL) && pcmk__tracking_xml_changes(node, false)
+    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)
         && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
 
         xml_doc_private_t *docpriv = doc->_private;
@@ -812,7 +792,7 @@ free_xml_with_position(xmlNode *node, int position)
 
             docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
                                                   deleted_obj);
-            pcmk__set_xml_doc_flag(node, pcmk__xf_dirty);
+            pcmk__xml_doc_set_flags(node->doc, pcmk__xf_dirty);
         }
     }
     pcmk__xml_free_node(node);
@@ -1103,21 +1083,6 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
 
 /*!
  * \internal
- * \brief Set a flag on all attributes of an XML element
- *
- * \param[in,out] xml   XML node to set flags on
- * \param[in]     flag  XML private flag to set
- */
-static void
-set_attrs_flag(xmlNode *xml, enum xml_private_flags flag)
-{
-    for (xmlAttr *attr = pcmk__xe_first_attr(xml); attr; attr = attr->next) {
-        pcmk__set_xml_flags((xml_node_private_t *) (attr->_private), flag);
-    }
-}
-
-/*!
- * \internal
  * \brief Add an XML attribute to a node, marked as deleted
  *
  * When calculating XML changes, we need to know when an attribute has been
@@ -1142,11 +1107,11 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
      * checking ACLs)
      */
     pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
-    crm_xml_add(new_xml, attr_name, old_value);
+    pcmk__xe_set(new_xml, attr_name, old_value);
     pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Reset flags (so the attribute doesn't appear as newly created)
-    attr = xmlHasProp(new_xml, (pcmkXmlStr) attr_name);
+    attr = xmlHasProp(new_xml, (const xmlChar *) attr_name);
     nodepriv = attr->_private;
     nodepriv->flags = 0;
 
@@ -1166,18 +1131,18 @@ mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
                   const char *old_value)
 {
     xml_doc_private_t *docpriv = new_xml->doc->_private;
-    char *vcopy = crm_element_value_copy(new_xml, attr_name);
+    char *vcopy = pcmk__xe_get_copy(new_xml, attr_name);
 
     crm_trace("XML attribute %s was changed from '%s' to '%s' in %s",
               attr_name, old_value, vcopy, element);
 
     // Restore the original value (without checking ACLs)
     pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
-    crm_xml_add(new_xml, attr_name, old_value);
+    pcmk__xe_set(new_xml, attr_name, old_value);
     pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Change it back to the new value, to check ACLs
-    crm_xml_add(new_xml, attr_name, vcopy);
+    pcmk__xe_set(new_xml, attr_name, vcopy);
     free(vcopy);
 }
 
@@ -1240,7 +1205,7 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
                                              pcmk__xf_skip);
             int old_pos = pcmk__xml_position((xmlNode*) old_attr,
                                              pcmk__xf_skip);
-            const char *new_value = crm_element_value(new_xml, name);
+            const char *new_value = pcmk__xe_get(new_xml, name);
 
             // This attribute isn't new
             pcmk__clear_xml_flags(nodepriv, pcmk__xf_created);
@@ -1250,7 +1215,13 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
                                   old_value);
 
             } else if ((old_pos != new_pos)
-                       && !pcmk__tracking_xml_changes(new_xml, TRUE)) {
+                       && !pcmk__xml_doc_all_flags_set(new_xml->doc,
+                                                       pcmk__xf_ignore_attr_pos
+                                                       |pcmk__xf_tracking)) {
+                /* pcmk__xf_tracking is always set by pcmk__xml_mark_changes()
+                 * before this function is called, so only the
+                 * pcmk__xf_ignore_attr_pos check is truly relevant.
+                 */
                 mark_attr_moved(new_xml, (const char *) old_xml->name,
                                 old_attr, new_attr, old_pos, new_pos);
             }
@@ -1307,7 +1278,14 @@ mark_created_attrs(xmlNode *new_xml)
 static void
 xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
 {
-    set_attrs_flag(new_xml, pcmk__xf_created); // cleared later if not really new
+    // Cleared later if attributes are not really new
+    for (xmlAttr *attr = pcmk__xe_first_attr(new_xml); attr != NULL;
+         attr = attr->next) {
+        xml_node_private_t *nodepriv = attr->_private;
+
+        pcmk__set_xml_flags(nodepriv, pcmk__xf_created);
+    }
+
     xml_diff_old_attrs(old_xml, new_xml);
     mark_created_attrs(new_xml);
 }
@@ -1340,10 +1318,8 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
     free_xml_with_position(candidate,
                            pcmk__xml_position(old_child, pcmk__xf_skip));
 
-    if (pcmk__xml_match(new_parent, old_child, true) == NULL) {
-        pcmk__set_xml_flags((xml_node_private_t *) (old_child->_private),
-                            pcmk__xf_skip);
-    }
+    pcmk__set_xml_flags((xml_node_private_t *) old_child->_private,
+                        pcmk__xf_skip);
 }
 
 static void
@@ -1367,97 +1343,302 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
     pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
 }
 
-// Given original and new XML, mark new XML portions that have changed
-static void
-mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
+/*!
+ * \internal
+ * \brief Create a \c GList containing all children of an XML node
+ *
+ * \param[in] xml  XML node
+ *
+ * \return List of children of \p xml, in document order
+ */
+static GList *
+children_to_list(const xmlNode *xml)
 {
-    xmlNode *old_child = NULL;
-    xmlNode *new_child = NULL;
-    xml_node_private_t *nodepriv = NULL;
+    GList *child_list = NULL;
 
-    CRM_CHECK(new_xml != NULL, return);
-    if (old_xml == NULL) {
-        mark_xml_tree_dirty_created(new_xml);
-        pcmk__apply_creation_acl(new_xml, check_top);
-        return;
+    for (xmlNode *child = pcmk__xml_first_child(xml); child != NULL;
+         child = pcmk__xml_next(child)) {
+
+        child_list = g_list_prepend(child_list, child);
+    }
+    return g_list_reverse(child_list);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a new XML child comment matches an old XML child comment
+ *
+ * Two comments match if they have the same position among their siblings and
+ * the same contents.
+ *
+ * If \p new_comment has the \c pcmk__xf_skip flag set, then it is automatically
+ * considered not to match.
+ *
+ * \param[in] old_comment  Old XML child element
+ * \param[in] new_comment  New XML child element
+ *
+ * \retval \c true if \p old_comment matches \p new_comment
+ * \retval \c false otherwise
+ */
+static bool
+new_comment_matches(const xmlNode *old_comment, const xmlNode *new_comment)
+{
+    xml_node_private_t *nodepriv = new_comment->_private;
+
+    if (pcmk_is_set(nodepriv->flags, pcmk__xf_skip)) {
+        /* @TODO Should we also return false if old_coment has pcmk__xf_skip
+         * set? This preserves existing behavior at time of writing.
+         */
+        return false;
+    }
+    if (pcmk__xml_position(old_comment, pcmk__xf_skip)
+        != pcmk__xml_position(new_comment, pcmk__xf_skip)) {
+        return false;
+    }
+    return pcmk__xc_matches(old_comment, new_comment);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a new XML child element matches an old XML child element
+ *
+ * Two elements match if they have the same name and, if \p match_ids is
+ * \c true, the same ID. (Both IDs can be \c NULL in this case.)
+ *
+ * \param[in] old_element  Old XML child element
+ * \param[in] new_element  New XML child element
+ * \param[in] match_ids    If \c true, require IDs to match (or both be \c NULL)
+ *
+ * \retval \c true if \p old_element matches \p new_element
+ * \retval \c false otherwise
+ */
+static bool
+new_element_matches(const xmlNode *old_element, const xmlNode *new_element,
+                    bool match_ids)
+{
+    if (!pcmk__xe_is(new_element, (const char *) old_element->name)) {
+        return false;
+    }
+    return !match_ids
+           || pcmk__str_eq(pcmk__xe_id(old_element), pcmk__xe_id(new_element),
+                           pcmk__str_none);
+}
+
+/*!
+ * \internal
+ * \brief User data for \c new_child_matches()
+ */
+struct new_child_matches_data {
+    xmlNode *old_child; //!< Old child to match against
+    bool match_ids;     //!< Require element IDs to match
+};
+
+/*!
+ * \internal
+ * \brief Check whether a new XML child node matches an old XML child node
+ *
+ * Node types must be the same in order to match.
+ *
+ * For comments, a match is a comment at the same position with the same
+ * content.
+ *
+ * For elements, a match is an element with the same name and, if required, the
+ * same ID. (Both IDs can be \c NULL in this case.)
+ *
+ * For other node types, there is no match.
+ *
+ * \param[in] a  New XML child node (<tt>xmlNode *</tt>)
+ * \param[in] b  Old XML child node and whether to require IDs to match
+ *               (<tt>struct new_child_matches_data *</tt>)
+ *
+ * \retval 0 if \p a matches according to \p b
+ * \retval 1 otherwise
+ *
+ * \note This function is suitable for use with \c g_list_find_custom().
+ */
+static int
+new_child_matches(gconstpointer a, gconstpointer b)
+{
+    const xmlNode *new_child = a;
+    struct new_child_matches_data *data = (struct new_child_matches_data *) b;
+    const xmlNode *old_child = data->old_child;
+    const bool match_ids = data->match_ids;
+
+    if (old_child->type != new_child->type) {
+        return 1;
     }
 
-    nodepriv = new_xml->_private;
-    CRM_CHECK(nodepriv != NULL, return);
-
-    if(nodepriv->flags & pcmk__xf_processed) {
-        /* Avoid re-comparing nodes */
-        return;
+    switch (old_child->type) {
+        case XML_COMMENT_NODE:
+            return new_comment_matches(old_child, new_child)? 0 : 1;
+        case XML_ELEMENT_NODE:
+            return new_element_matches(old_child, new_child, match_ids)? 0 : 1;
+        default:
+            return 1;
     }
-    pcmk__set_xml_flags(nodepriv, pcmk__xf_processed);
+}
 
+/*!
+ * \internal
+ * \brief Find matching XML node pairs between old and new XML's children
+ *
+ * A node that is part of a matching pair is removed from its respective list
+ * (\p *old_children or \p *new_children) and added to \p *matches with its
+ * match.
+ *
+ * \param[in,out]  old_children  Children of old XML
+ * \param[in,out]  new_children  Children of new XML
+ * \param[in,out]  matches       Where to prepend pairs of matching nodes from
+ *                               \p old_children and \p new_children
+ * \param[in]      comments_ids  If \c true, match comments and require element
+ *                               IDs to match; otherwise, skip comments and
+ *                               match elements by name only
+ */
+static void
+find_matching_children(GList **old_children, GList **new_children,
+                       GList **matches, bool comments_ids)
+{
+    // Save next pointer because we unlink iter on match
+    for (GList *iter = *old_children, *next = g_list_next(*old_children);
+         iter != NULL;
+         iter = next, next = g_list_next(next)) {
+
+        xmlNode *old_child = iter->data;
+
+        struct new_child_matches_data data = {
+            .old_child = old_child,
+            .match_ids = comments_ids,
+        };
+        GList *match = NULL;
+
+        if (!comments_ids && (old_child->type == XML_COMMENT_NODE)) {
+            continue;
+        }
+
+        match = g_list_find_custom(*new_children, &data, new_child_matches);
+        if (match == NULL) {
+            continue;
+        }
+
+        /* Steal iter and match from *old_children and *new_children,
+         * respectively, and prepend to *matches.
+         *
+         * Order should eventually be (iter, match), with pairs appearing in
+         * document order. We will reverse the order of *matches in the caller
+         * after finding all matches.
+         */
+        *old_children = g_list_remove_link(*old_children, iter);
+        *new_children = g_list_remove_link(*new_children, match);
+
+        *matches = g_list_concat(iter, *matches);
+        *matches = g_list_concat(match, *matches);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Find changed XML node pairs between old and new XML's children
+ *
+ * \param[in]  old_xml  Old XML
+ * \param[in]  new_xml  New XML
+ * \param[out] matches  Pairs of matching nodes from \p old_xml and \p new_xml
+ * \param[out] deleted  Nodes in \p old_xml that have no match in \p new_xml
+ * \param[out] created  Nodes in \p new_xml that have no match in \p old_xml
+ */
+static void
+find_changed_children(const xmlNode *old_xml, const xmlNode *new_xml,
+                      GList **matches, GList **deleted, GList **created)
+{
+    GList *old_children = children_to_list(old_xml);
+    GList *new_children = children_to_list(new_xml);
+
+    find_matching_children(&old_children, &new_children, matches, true);
+    find_matching_children(&old_children, &new_children, matches, false);
+
+    // Matches were prepended (via concat) in (new_child, old_child) order
+    *matches = g_list_reverse(*matches);
+
+    // Nodes remaining in old_children had no match among new_children
+    *deleted = old_children;
+
+    // Nodes remaining in new_children had no match among old_children
+    *created = new_children;
+}
+
+/*!
+ * \internal
+ * \brief Mark changes between two XML trees
+ *
+ * Set flags in a new XML tree to indicate changes relative to an old XML tree.
+ *
+ * \param[in,out] old_xml  XML before changes
+ * \param[in,out] new_xml  XML after changes
+ *
+ * \note This may set \c pcmk__xf_skip on parts of \p old_xml.
+ */
+void
+pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
+{
+    GList *matches = NULL;
+    GList *deleted = NULL;
+    GList *created = NULL;
+
+    CRM_CHECK((old_xml != NULL) && (new_xml != NULL), return);
+
+    pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
     xml_diff_attrs(old_xml, new_xml);
 
-    // Check for differences in the original children
-    for (old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
-         old_child = pcmk__xml_next(old_child)) {
+    find_changed_children(old_xml, new_xml, &matches, &deleted, &created);
 
-        new_child = pcmk__xml_match(new_xml, old_child, true);
+    // Recurse through matching children (iterate in pairs)
+    for (GList *iter = matches; (iter != NULL) && (iter->next != NULL);
+         iter = iter->next->next) {
 
-        if (new_child != NULL) {
-            mark_xml_changes(old_child, new_child, true);
+        xmlNode *old_child = iter->data;
+        xmlNode *new_child = iter->next->data;
+        int old_pos = 0;
+        int new_pos = 0;
 
-        } else {
-            mark_child_deleted(old_child, new_xml);
+        pcmk__assert((old_child != NULL) && (new_child != NULL)
+                     && (old_child->type == new_child->type));
+
+        if (old_child->type == XML_COMMENT_NODE) {
+            // Comments don't match unless their positions and contents match
+            continue;
+        }
+
+        pcmk__xml_mark_changes(old_child, new_child);
+
+        old_pos = pcmk__xml_position(old_child, pcmk__xf_skip);
+        new_pos = pcmk__xml_position(new_child, pcmk__xf_skip);
+
+        if (old_pos != new_pos) {
+            mark_child_moved(old_child, new_xml, new_child, old_pos, new_pos);
         }
     }
 
-    // Check for moved or created children
-    new_child = pcmk__xml_first_child(new_xml);
-    while (new_child != NULL) {
-        xmlNode *next = pcmk__xml_next(new_child);
+    // Mark unmatched old children as deleted
+    for (GList *iter = deleted; iter != NULL; iter = iter->next) {
+        xmlNode *old_child = iter->data;
 
-        old_child = pcmk__xml_match(old_xml, new_child, true);
-
-        if (old_child == NULL) {
-            // This is a newly created child
-            nodepriv = new_child->_private;
-            pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
-
-            // May free new_child
-            mark_xml_changes(old_child, new_child, true);
-
-        } else {
-            /* Check for movement, we already checked for differences */
-            int p_new = pcmk__xml_position(new_child, pcmk__xf_skip);
-            int p_old = pcmk__xml_position(old_child, pcmk__xf_skip);
-
-            if(p_old != p_new) {
-                mark_child_moved(old_child, new_xml, new_child, p_old, p_new);
-            }
-        }
-
-        new_child = next;
-    }
-}
-
-void
-xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
-{
-    pcmk__set_xml_doc_flag(new_xml, pcmk__xf_lazy);
-    xml_calculate_changes(old_xml, new_xml);
-}
-
-// Called functions may set the \p pcmk__xf_skip flag on parts of \p old_xml
-void
-xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
-{
-    CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
-              && pcmk__xe_is(old_xml, (const char *) new_xml->name)
-              && pcmk__str_eq(pcmk__xe_id(old_xml), pcmk__xe_id(new_xml),
-                              pcmk__str_none),
-              return);
-
-    if(xml_tracking_changes(new_xml) == FALSE) {
-        xml_track_changes(new_xml, NULL, NULL, FALSE);
+        mark_child_deleted(old_child, new_xml);
     }
 
-    mark_xml_changes(old_xml, new_xml, FALSE);
+    // Mark unmatched new children as created
+    for (GList *iter = created; iter != NULL; iter = iter->next) {
+        xmlNode *new_child = iter->data;
+        xml_node_private_t *nodepriv = new_child->_private;
+
+        pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
+        mark_xml_tree_dirty_created(new_child);
+
+        // Check whether creation was allowed; may free new_child
+        pcmk__apply_creation_acl(new_child, true);
+    }
+
+    g_list_free(matches);
+    g_list_free(deleted);
+    g_list_free(created);
 }
 
 /*!
@@ -1632,6 +1813,94 @@ crm_xml_sanitize_id(char *id)
                 *c = '.';
         }
     }
+}
+
+bool
+xml_tracking_changes(xmlNode *xml)
+{
+    return (xml != NULL)
+           && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking);
+}
+
+bool
+xml_document_dirty(xmlNode *xml)
+{
+    return (xml != NULL)
+           && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_dirty);
+}
+
+void
+xml_accept_changes(xmlNode *xml)
+{
+    if (xml != NULL) {
+        pcmk__xml_commit_changes(xml->doc);
+    }
+}
+
+void
+xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
+                  bool enforce_acls)
+{
+    if (xml == NULL) {
+        return;
+    }
+
+    pcmk__xml_commit_changes(xml->doc);
+    crm_trace("Tracking changes%s to %p",
+              (enforce_acls? " with ACLs" : ""), xml);
+    pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_tracking);
+    if (enforce_acls) {
+        if (acl_source == NULL) {
+            acl_source = xml;
+        }
+        pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_acl_enabled);
+        pcmk__unpack_acl(acl_source, xml, user);
+        pcmk__apply_acl(xml);
+    }
+}
+
+void
+xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
+{
+    CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
+              && pcmk__xe_is(old_xml, (const char *) new_xml->name)
+              && pcmk__str_eq(pcmk__xe_id(old_xml), pcmk__xe_id(new_xml),
+                              pcmk__str_none),
+              return);
+
+    if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
+        // Ensure tracking has a clean start
+        pcmk__xml_commit_changes(new_xml->doc);
+        pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
+    }
+
+    pcmk__xml_mark_changes(old_xml, new_xml);
+}
+
+void
+xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
+{
+    CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
+              && pcmk__xe_is(old_xml, (const char *) new_xml->name)
+              && pcmk__str_eq(pcmk__xe_id(old_xml), pcmk__xe_id(new_xml),
+                              pcmk__str_none),
+              return);
+
+    /* BUG: If pcmk__xf_tracking is not set for new_xml when this function is
+     * called, then we unset pcmk__xf_ignore_attr_pos via
+     * pcmk__xml_commit_changes(). Since this function is about to be
+     * deprecated, it's not worth fixing this and changing the user-facing
+     * behavior.
+     */
+    pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_ignore_attr_pos);
+
+    if (!pcmk__xml_doc_all_flags_set(new_xml->doc, pcmk__xf_tracking)) {
+        // Ensure tracking has a clean start
+        pcmk__xml_commit_changes(new_xml->doc);
+        pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
+    }
+
+    pcmk__xml_mark_changes(old_xml, new_xml);
 }
 
 // LCOV_EXCL_STOP

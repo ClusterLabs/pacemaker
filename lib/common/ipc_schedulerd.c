@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -63,7 +63,7 @@ post_connect(pcmk_ipc_api_t *api)
 static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
-    const char *command = crm_element_value(request, PCMK__XA_CRM_TASK);
+    const char *command = pcmk__xe_get(request, PCMK__XA_CRM_TASK);
 
     if (command == NULL) {
         return false;
@@ -88,7 +88,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         return false;
     }
 
-    value = crm_element_value(reply, PCMK__XA_T);
+    value = pcmk__xe_get(reply, PCMK__XA_T);
     if (pcmk__parse_server(value) != pcmk_ipc_schedulerd) {
         crm_info("Unrecognizable message from schedulerd: "
                   "unexpected message type '%s'",
@@ -97,7 +97,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    value = crm_element_value(reply, PCMK__XA_SUBT);
+    value = pcmk__xe_get(reply, PCMK__XA_SUBT);
     if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         crm_info("Unrecognizable message from schedulerd: "
                  "message type '%s' not '" PCMK__VALUE_RESPONSE "'",
@@ -106,7 +106,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    if (pcmk__str_empty(crm_element_value(reply, PCMK_XA_REFERENCE))) {
+    if (pcmk__str_empty(pcmk__xe_get(reply, PCMK_XA_REFERENCE))) {
         crm_info("Unrecognizable message from schedulerd: no reference");
         status = CRM_EX_PROTOCOL;
         goto done;
@@ -116,14 +116,14 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     wrapper = pcmk__xe_first_child(reply, PCMK__XE_CRM_XML, NULL, NULL);
     msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    value = crm_element_value(reply, PCMK__XA_CRM_TASK);
+    value = pcmk__xe_get(reply, PCMK__XA_CRM_TASK);
 
     if (pcmk__str_eq(value, CRM_OP_PECALC, pcmk__str_none)) {
         reply_data.reply_type = pcmk_schedulerd_reply_graph;
-        reply_data.data.graph.reference = crm_element_value(reply,
-                                                            PCMK_XA_REFERENCE);
-        reply_data.data.graph.input = crm_element_value(reply,
-                                                        PCMK__XA_CRM_TGRAPH_IN);
+        reply_data.data.graph.reference = pcmk__xe_get(reply,
+                                                       PCMK_XA_REFERENCE);
+        reply_data.data.graph.input = pcmk__xe_get(reply,
+                                                   PCMK__XA_CRM_TGRAPH_IN);
         reply_data.data.graph.tgraph = msg_data;
     } else {
         crm_info("Unrecognizable message from schedulerd: "
@@ -180,7 +180,7 @@ do_schedulerd_api_call(pcmk_ipc_api_t *api, const char *task, xmlNode *cib, char
                       pcmk_rc_str(rc), rc);
         }
 
-        *ref = strdup(crm_element_value(cmd, PCMK_XA_REFERENCE));
+        *ref = strdup(pcmk__xe_get(cmd, PCMK_XA_REFERENCE));
         pcmk__xml_free(cmd);
     } else {
         rc = ENOMSG;

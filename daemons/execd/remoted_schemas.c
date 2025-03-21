@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -91,7 +91,7 @@ write_extra_schema_file(xmlNode *xml, void *user_data)
     char *path = NULL;
     int rc;
 
-    file = crm_element_value(xml, PCMK_XA_PATH);
+    file = pcmk__xe_get(xml, PCMK_XA_PATH);
     if (file == NULL) {
         crm_warn("No destination path given in schema request");
         return;
@@ -185,8 +185,8 @@ get_schema_files(void)
          * than what the cluster supports, we'll get back an empty <schemas> node,
          * so all this will continue to work.  It just won't do anything.
          */
-        crm_foreach_xpath_result(reply, "//" PCMK_XA_FILE,
-                                 write_extra_schema_file, NULL);
+        pcmk__xpath_foreach_result(reply->doc, "//" PCMK__XE_FILE,
+                                   write_extra_schema_file, NULL);
     }
 
     pcmk__xml_free(reply);

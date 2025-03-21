@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -54,17 +54,17 @@ xml_contains_remote_node(xmlNode *xml)
         return false;
     }
 
-    value = crm_element_value(xml, PCMK_XA_TYPE);
+    value = pcmk__xe_get(xml, PCMK_XA_TYPE);
     if (!pcmk__str_eq(value, "remote", pcmk__str_casei)) {
         return false;
     }
 
-    value = crm_element_value(xml, PCMK_XA_CLASS);
+    value = pcmk__xe_get(xml, PCMK_XA_CLASS);
     if (!pcmk__str_eq(value, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
         return false;
     }
 
-    value = crm_element_value(xml, PCMK_XA_PROVIDER);
+    value = pcmk__xe_get(xml, PCMK_XA_PROVIDER);
     if (!pcmk__str_eq(value, "pacemaker", pcmk__str_casei)) {
         return false;
     }
@@ -136,10 +136,10 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     remote = pcmk__xe_create(parent, PCMK_XE_PRIMITIVE);
 
     // Add identity
-    crm_xml_add(remote, PCMK_XA_ID, uname);
-    crm_xml_add(remote, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
-    crm_xml_add(remote, PCMK_XA_PROVIDER, "pacemaker");
-    crm_xml_add(remote, PCMK_XA_TYPE, "remote");
+    pcmk__xe_set(remote, PCMK_XA_ID, uname);
+    pcmk__xe_set(remote, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
+    pcmk__xe_set(remote, PCMK_XA_PROVIDER, "pacemaker");
+    pcmk__xe_set(remote, PCMK_XA_TYPE, "remote");
 
     // Add meta-attributes
     xml_sub = pcmk__xe_create(remote, PCMK_XE_META_ATTRIBUTES);

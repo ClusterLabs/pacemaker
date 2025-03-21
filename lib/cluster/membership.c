@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -270,7 +270,7 @@ static void
 remote_cache_refresh_helper(xmlNode *result, void *user_data)
 {
     const struct refresh_data *data = user_data;
-    const char *remote = crm_element_value(result, data->field);
+    const char *remote = pcmk__xe_get(result, data->field);
     const char *state = NULL;
     pcmk__node_status_t *node;
 
@@ -337,8 +337,8 @@ refresh_remote_nodes(xmlNode *cib)
     /* Look for guest nodes and remote nodes in the status section */
     data.field = PCMK_XA_ID;
     data.has_state = TRUE;
-    crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_STATUS,
-                             remote_cache_refresh_helper, &data);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_REMOTE_NODE_STATUS,
+                               remote_cache_refresh_helper, &data);
 
     /* Look for guest nodes and remote nodes in the configuration section,
      * because they may have just been added and not have a status entry yet.
@@ -348,12 +348,12 @@ refresh_remote_nodes(xmlNode *cib)
      */
     data.field = PCMK_XA_VALUE;
     data.has_state = FALSE;
-    crm_foreach_xpath_result(cib, PCMK__XP_GUEST_NODE_CONFIG,
-                             remote_cache_refresh_helper, &data);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_GUEST_NODE_CONFIG,
+                               remote_cache_refresh_helper, &data);
     data.field = PCMK_XA_ID;
     data.has_state = FALSE;
-    crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_CONFIG,
-                             remote_cache_refresh_helper, &data);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_REMOTE_NODE_CONFIG,
+                               remote_cache_refresh_helper, &data);
 
     /* Remove all old cache entries that weren't seen in the CIB */
     g_hash_table_foreach_remove(pcmk__remote_peer_cache, is_dirty, NULL);
@@ -1457,8 +1457,8 @@ find_cib_cluster_node(const char *id, const char *uname)
 static void
 cluster_node_cib_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 {
-    const char *id = crm_element_value(xml_node, PCMK_XA_ID);
-    const char *uname = crm_element_value(xml_node, PCMK_XA_UNAME);
+    const char *id = pcmk__xe_get(xml_node, PCMK_XA_ID);
+    const char *uname = pcmk__xe_get(xml_node, PCMK_XA_UNAME);
     pcmk__node_status_t * node =  NULL;
 
     CRM_CHECK(id != NULL && uname !=NULL, return);
@@ -1490,8 +1490,8 @@ refresh_cluster_node_cib_cache(xmlNode *cib)
 
     g_hash_table_foreach(cluster_node_cib_cache, mark_dirty, NULL);
 
-    crm_foreach_xpath_result(cib, PCMK__XP_MEMBER_NODE_CONFIG,
-                             cluster_node_cib_cache_refresh_helper, NULL);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_MEMBER_NODE_CONFIG,
+                               cluster_node_cib_cache_refresh_helper, NULL);
 
     // Remove all old cache entries that weren't seen in the CIB
     g_hash_table_foreach_remove(cluster_node_cib_cache, is_dirty, NULL);

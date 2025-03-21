@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 International Business Machines
- * Later changes copyright 2004-2024 the Pacemaker project contributors
+ * Later changes copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -97,14 +97,14 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     }
 
     rc = pcmk_ok;
-    crm_element_value_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
+    pcmk__xe_get_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
     if (reply_id == cib->call_id) {
         xmlNode *wrapper = pcmk__xe_first_child(op_reply, PCMK__XE_CIB_CALLDATA,
                                                 NULL, NULL);
         xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         crm_trace("Synchronous reply %d received", reply_id);
-        if (crm_element_value_int(op_reply, PCMK__XA_CIB_RC, &rc) != 0) {
+        if (pcmk__xe_get_int(op_reply, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok) {
             rc = -EPROTO;
         }
 
@@ -194,7 +194,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
     }
 
     /* do callbacks */
-    type = crm_element_value(msg, PCMK__XA_T);
+    type = pcmk__xe_get(msg, PCMK__XA_T);
     crm_trace("Activating %s callbacks...", type);
     crm_log_xml_explicit(msg, "cib-reply");
 
@@ -316,7 +316,7 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
         if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1,
                          &reply) > 0) {
-            const char *msg_type = crm_element_value(reply, PCMK__XA_CIB_OP);
+            const char *msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
 
             crm_log_xml_trace(reply, "reg-reply");
 
@@ -327,8 +327,7 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
                 rc = -EPROTO;
 
             } else {
-                native->token = crm_element_value_copy(reply,
-                                                       PCMK__XA_CIB_CLIENTID);
+                native->token = pcmk__xe_get_copy(reply, PCMK__XA_CIB_CLIENTID);
                 if (native->token == NULL) {
                     rc = -EPROTO;
                 }
@@ -382,9 +381,9 @@ cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
     cib_native_opaque_t *native = cib->variant_opaque;
 
     if (cib->state != cib_disconnected) {
-        crm_xml_add(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
-        crm_xml_add(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
-        crm_xml_add_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
+        pcmk__xe_set(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
+        pcmk__xe_set(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
+        pcmk__xe_set_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response,
                           1000 * cib->call_timeout, NULL);
         if (rc <= 0) {

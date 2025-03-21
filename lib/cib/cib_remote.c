@@ -125,7 +125,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
             break;
         }
 
-        crm_element_value_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
+        pcmk__xe_get_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
 
         if (reply_id == msg_id) {
             break;
@@ -160,7 +160,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     crm_trace("Synchronous reply received");
 
     /* Start processing the reply... */
-    if (crm_element_value_int(op_reply, PCMK__XA_CIB_RC, &rc) != 0) {
+    if (pcmk__xe_get_int(op_reply, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok) {
         rc = -EPROTO;
     }
 
@@ -245,7 +245,7 @@ cib_remote_callback_dispatch(gpointer user_data)
         return 0;
     }
 
-    type = crm_element_value(msg, PCMK__XA_T);
+    type = pcmk__xe_get(msg, PCMK__XA_T);
 
     crm_trace("Activating %s callbacks...", type);
 
@@ -412,10 +412,10 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     /* login to server */
     login = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
-    crm_xml_add(login, PCMK_XA_OP, "authenticate");
-    crm_xml_add(login, PCMK_XA_USER, private->user);
-    crm_xml_add(login, PCMK__XA_PASSWORD, private->passwd);
-    crm_xml_add(login, PCMK__XA_HIDDEN, PCMK__VALUE_PASSWORD);
+    pcmk__xe_set(login, PCMK_XA_OP, "authenticate");
+    pcmk__xe_set(login, PCMK_XA_USER, private->user);
+    pcmk__xe_set(login, PCMK__XA_PASSWORD, private->passwd);
+    pcmk__xe_set(login, PCMK__XA_HIDDEN, PCMK__VALUE_PASSWORD);
 
     pcmk__remote_send_xml(connection, login);
     pcmk__xml_free(login);
@@ -433,9 +433,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     } else {
         /* grab the token */
-        const char *msg_type = crm_element_value(answer, PCMK__XA_CIB_OP);
-        const char *tmp_ticket = crm_element_value(answer,
-                                                   PCMK__XA_CIB_CLIENTID);
+        const char *msg_type = pcmk__xe_get(answer, PCMK__XA_CIB_OP);
+        const char *tmp_ticket = pcmk__xe_get(answer, PCMK__XA_CIB_CLIENTID);
 
         if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
             crm_err("Invalid registration message: %s", msg_type);
@@ -557,9 +556,9 @@ cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
     xmlNode *notify_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    crm_xml_add(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
-    crm_xml_add(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
-    crm_xml_add_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
+    pcmk__xe_set(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
+    pcmk__xe_set(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
+    pcmk__xe_set_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
     pcmk__remote_send_xml(&private->callback, notify_msg);
     pcmk__xml_free(notify_msg);
     return pcmk_ok;

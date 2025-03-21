@@ -11,7 +11,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <libxml/tree.h>
+#include <libxml/tree.h>            // xmlNode
 #include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
@@ -61,7 +61,7 @@ node_has_attr(const char *node, const char *name, const char *value)
                    "[@" PCMK_XA_NAME "='", name, "' "
                    "and @" PCMK_XA_VALUE "='", value, "']", NULL);
 
-    match = get_xpath_object((const char *) xpath->str, local_cib, LOG_NEVER);
+    match = pcmk__xpath_find_one(local_cib->doc, xpath->str, LOG_NEVER);
 
     g_string_free(xpath, TRUE);
     return (match != NULL);
@@ -88,9 +88,9 @@ topology_remove_helper(const char *node, int level)
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
     xmlNode *data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
 
-    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add_int(data, PCMK_XA_INDEX, level);
-    crm_xml_add(data, PCMK_XA_TARGET, node);
+    pcmk__xe_set(data, PCMK__XA_ST_ORIGIN, __func__);
+    pcmk__xe_set_int(data, PCMK_XA_INDEX, level);
+    pcmk__xe_set(data, PCMK_XA_TARGET, node);
 
     fenced_unregister_level(data, &desc, &result);
     fenced_send_config_notification(STONITH_OP_LEVEL_DEL, &result, desc);
@@ -108,7 +108,7 @@ remove_topology_level(xmlNode *match)
     CRM_CHECK(match != NULL, return);
 
     key = stonith_level_key(match, fenced_target_by_unknown);
-    crm_element_value_int(match, PCMK_XA_INDEX, &index);
+    pcmk__xe_get_int(match, PCMK_XA_INDEX, &index);
     topology_remove_helper(key, index);
     free(key);
 }
@@ -172,25 +172,23 @@ fencing_topology_init(void)
 static void
 update_stonith_watchdog_timeout_ms(xmlNode *cib)
 {
-    long long timeout_ms = 0;
     xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
 
     // @TODO An XPath search can't handle multiple instances or rules
-    stonith_watchdog_xml = get_xpath_object(XPATH_WATCHDOG_TIMEOUT, cib,
-                                            LOG_NEVER);
+    stonith_watchdog_xml = pcmk__xpath_find_one(cib->doc,
+                                                XPATH_WATCHDOG_TIMEOUT,
+                                                LOG_NEVER);
     if (stonith_watchdog_xml) {
-        value = crm_element_value(stonith_watchdog_xml, PCMK_XA_VALUE);
-    }
-    if (value) {
-        timeout_ms = crm_get_msec(value);
+        value = pcmk__xe_get(stonith_watchdog_xml, PCMK_XA_VALUE);
     }
 
-    if (timeout_ms < 0) {
-        timeout_ms = pcmk__auto_stonith_watchdog_timeout();
-    }
+    if ((value != NULL)
+        && ((pcmk__parse_ms(value, &stonith_watchdog_timeout_ms) != pcmk_rc_ok)
+            || (stonith_watchdog_timeout_ms < 0))) {
 
-    stonith_watchdog_timeout_ms = timeout_ms;
+        stonith_watchdog_timeout_ms = pcmk__auto_stonith_watchdog_timeout();
+    }
 }
 
 /*!
@@ -204,9 +202,9 @@ cib_devices_update(void)
     stonith_device_t *device = NULL;
 
     crm_info("Updating devices to version %s.%s.%s",
-             crm_element_value(local_cib, PCMK_XA_ADMIN_EPOCH),
-             crm_element_value(local_cib, PCMK_XA_EPOCH),
-             crm_element_value(local_cib, PCMK_XA_NUM_UPDATES));
+             pcmk__xe_get(local_cib, PCMK_XA_ADMIN_EPOCH),
+             pcmk__xe_get(local_cib, PCMK_XA_EPOCH),
+             pcmk__xe_get(local_cib, PCMK_XA_NUM_UPDATES));
 
     g_hash_table_iter_init(&iter, device_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
@@ -241,7 +239,7 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     char *reason = NULL;
 
     CRM_CHECK(patchset != NULL, return);
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
 
     if (format != 2) {
         crm_warn("Unknown patch format: %d", format);
@@ -251,8 +249,8 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
         const char *shortpath = NULL;
 
         if (pcmk__str_eq(op, PCMK_VALUE_MOVE, pcmk__str_null_matches)
@@ -383,19 +381,19 @@ update_fencing_topology(const char *event, xmlNode *msg)
 
     CRM_CHECK(patchset != NULL, return);
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
         crm_warn("Unknown patch format: %d", format);
         return;
     }
 
-    xml_patch_versions(patchset, add, del);
+    pcmk__xml_patchset_versions(patchset, del, add);
 
     for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
         if (op == NULL) {
             continue;
@@ -484,7 +482,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         xmlNode *wrapper = NULL;
         xmlNode *patchset = NULL;
 
-        crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
+        pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
         if (rc != pcmk_ok) {
             return;
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -395,7 +395,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     pcmk__assert(client->user != NULL);
     pcmk__update_acl_user(msg, PCMK__XA_CRM_USER, client->user);
 
-    crm_xml_add(msg, PCMK__XA_CRM_SYS_FROM, client->id);
+    pcmk__xe_set(msg, PCMK__XA_CRM_SYS_FROM, client->id);
     if (controld_authorize_ipc_message(msg, client, NULL)) {
         crm_trace("Processing IPC message from client %s",
                   pcmk__client_name(client));

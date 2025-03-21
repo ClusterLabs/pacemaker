@@ -10,12 +10,11 @@
 #ifndef PCMK__CRM_COMMON_XML_COMPAT__H
 #define PCMK__CRM_COMMON_XML_COMPAT__H
 
+#include <stdbool.h>                // bool
+
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
 #include <libxml/xpath.h>           // xmlXPathObject
-
-#include <crm/common/nvpair.h>  // crm_xml_add()
-#include <crm/common/xml_names.h>   // PCMK_XE_CLONE
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,6 +92,43 @@ void freeXpathObject(xmlXPathObjectPtr xpathObj);
 
 //! \deprecated Do not use
 void dedupXpathResults(xmlXPathObjectPtr xpathObj);
+
+//! \deprecated Do not use
+void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
+                              void (*helper)(xmlNode*, void*), void *user_data);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+xmlNode *get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level);
+
+//! \deprecated Do not use
+typedef const xmlChar *pcmkXmlStr;
+
+//! \deprecated Do not use
+bool xml_tracking_changes(xmlNode *xml);
+
+//! \deprecated Do not use
+bool xml_document_dirty(xmlNode *xml);
+
+//! \deprecated Do not use
+void xml_accept_changes(xmlNode *xml);
+
+//! \deprecated Do not use
+void xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
+                       bool enforce_acls);
+
+//! \deprecated Do not use
+void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
+
+//! \deprecated Do not use
+void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
+
+//! \deprecated Do not use
+bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
+
+//! \deprecated Do not use
+void patchset_process_digest(xmlNode *patch, const xmlNode *source,
+                             const xmlNode *target, bool with_digest);
 
 #ifdef __cplusplus
 }

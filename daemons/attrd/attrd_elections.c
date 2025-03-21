@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -60,7 +60,7 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
     enum election_result rc = 0;
     enum election_result previous = election_state(attrd_cluster);
 
-    crm_xml_add(xml, PCMK__XA_SRC, peer->name);
+    pcmk__xe_set(xml, PCMK__XA_SRC, peer->name);
 
     // Don't become writer if we're shutting down
     rc = election_count_vote(attrd_cluster, xml, !attrd_shutting_down(false));
@@ -108,7 +108,7 @@ attrd_check_for_new_writer(const pcmk__node_status_t *peer, const xmlNode *xml)
 {
     int peer_state = 0;
 
-    crm_element_value_int(xml, PCMK__XA_ATTR_WRITER, &peer_state);
+    pcmk__xe_get_int(xml, PCMK__XA_ATTR_WRITER, &peer_state);
     if (peer_state == election_won) {
         if ((election_state(attrd_cluster) == election_won)
             && !pcmk__str_eq(peer->name, attrd_cluster->priv->node_name,
@@ -172,5 +172,5 @@ attrd_remove_voter(const pcmk__node_status_t *peer)
 void
 attrd_xml_add_writer(xmlNode *xml)
 {
-    crm_xml_add_int(xml, PCMK__XA_ATTR_WRITER, election_state(attrd_cluster));
+    pcmk__xe_set_int(xml, PCMK__XA_ATTR_WRITER, election_state(attrd_cluster));
 }

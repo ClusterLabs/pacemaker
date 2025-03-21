@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,9 +10,11 @@
 #ifndef PCMK__CRM_COMMON_IPC__H
 #define PCMK__CRM_COMMON_IPC__H
 
-
 #include <sys/uio.h>
+
 #include <qb/qbipcc.h>
+
+#include <crm/common/results.h>     // crm_exit_t
 #include <crm/common/xml.h>
 
 #ifdef __cplusplus

@@ -521,9 +521,10 @@ static gboolean
 timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
-    long long timeout_ms = crm_get_msec(optarg);
+    long long timeout_ms = 0;
 
-    if (timeout_ms < 0) {
+    if ((pcmk__parse_ms(optarg, &timeout_ms) != pcmk_rc_ok)
+        || (timeout_ms < 0)) {
         return FALSE;
     }
     options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
@@ -1444,7 +1445,7 @@ handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
 
     } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT,
                             pcmk__str_none)) {
-        value = crm_element_value(rsc->priv->xml, options.prop_name);
+        value = pcmk__xe_get(rsc->priv->xml, options.prop_name);
         free_params = false;
 
     } else {

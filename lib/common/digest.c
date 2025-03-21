@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -58,7 +58,7 @@
  * \return Newly allocated buffer containing dumped XML
  */
 static GString *
-dump_xml_for_digest(xmlNodePtr xml)
+dump_xml_for_digest(const xmlNode *xml)
 {
     GString *buffer = g_string_sized_new(1024);
 
@@ -81,7 +81,7 @@ dump_xml_for_digest(xmlNodePtr xml)
  * \note Example return value: "c048eae664dba840e1d2060f00299e9d"
  */
 static char *
-calculate_xml_digest_v1(xmlNode *input)
+calculate_xml_digest_v1(const xmlNode *input)
 {
     GString *buffer = dump_xml_for_digest(input);
     char *digest = NULL;
@@ -107,7 +107,7 @@ calculate_xml_digest_v1(xmlNode *input)
  * \return Newly allocated string containing digest
  */
 char *
-pcmk__digest_on_disk_cib(xmlNode *input)
+pcmk__digest_on_disk_cib(const xmlNode *input)
 {
     /* Always use the v1 format for on-disk digests.
      * * Switching to v2 affects even full-restart upgrades, so it would be a
@@ -122,25 +122,29 @@ pcmk__digest_on_disk_cib(xmlNode *input)
  * \internal
  * \brief Calculate and return digest of an operation XML element
  *
- * The digest is invariant to changes in the order of XML attributes, provided
- * that \p input has no children.
+ * The digest is invariant to changes in the order of XML attributes.
  *
- * \param[in] input  Root of XML to digest
+ * \param[in] input  Root of XML to digest (must have no children)
  *
  * \return Newly allocated string containing digest
  */
 char *
-pcmk__digest_operation(xmlNode *input)
+pcmk__digest_operation(const xmlNode *input)
 {
     /* Switching to v2 digests would likely cause restarts during rolling
      * upgrades.
      *
      * @TODO Confirm this. Switch to v2 if safe, or drop this TODO otherwise.
      */
-    xmlNode *sorted = pcmk__xml_copy(NULL, input);
     char *digest = NULL;
+    xmlNode *sorted = NULL;
 
+    pcmk__assert(input->children == NULL);
+
+    sorted = pcmk__xe_create(NULL, (const char *) input->name);
+    pcmk__xe_copy_attrs(sorted, input, pcmk__xaf_none);
     pcmk__xe_sort_attrs(sorted);
+
     digest = calculate_xml_digest_v1(sorted);
 
     pcmk__xml_free(sorted);
@@ -157,7 +161,7 @@ pcmk__digest_operation(xmlNode *input)
  * \return Newly allocated string containing digest
  */
 char *
-pcmk__digest_xml(xmlNode *xml, bool filter)
+pcmk__digest_xml(const xmlNode *xml, bool filter)
 {
     /* @TODO Filtering accounts for significant CPU usage. Consider removing if
      * possible.
@@ -167,22 +171,26 @@ pcmk__digest_xml(xmlNode *xml, bool filter)
 
     pcmk__xml_string(xml, (filter? pcmk__xml_fmt_filtered : 0), buf, 0);
     digest = crm_md5sum(buf->str);
+    if (digest == NULL) {
+        goto done;
+    }
 
     pcmk__if_tracing(
         {
-            char *trace_file = crm_strdup_printf("%s/digest-%s",
-                                                 pcmk__get_tmpdir(), digest);
+            char *trace_file = crm_strdup_printf("digest-%s", digest);
 
             crm_trace("Saving %s.%s.%s to %s",
-                      crm_element_value(xml, PCMK_XA_ADMIN_EPOCH),
-                      crm_element_value(xml, PCMK_XA_EPOCH),
-                      crm_element_value(xml, PCMK_XA_NUM_UPDATES),
+                      pcmk__xe_get(xml, PCMK_XA_ADMIN_EPOCH),
+                      pcmk__xe_get(xml, PCMK_XA_EPOCH),
+                      pcmk__xe_get(xml, PCMK_XA_NUM_UPDATES),
                       trace_file);
-            save_xml_to_file(xml, "digest input", trace_file);
+            pcmk__xml_write_temp_file(xml, "digest input", trace_file);
             free(trace_file);
         },
         {}
     );
+
+done:
     g_string_free(buf, TRUE);
     return digest;
 }
@@ -197,7 +205,7 @@ pcmk__digest_xml(xmlNode *xml, bool filter)
  * \return true if digests match, false on mismatch or error
  */
 bool
-pcmk__verify_digest(xmlNode *input, const char *expected)
+pcmk__verify_digest(const xmlNode *input, const char *expected)
 {
     char *calculated = NULL;
     bool passed;
@@ -310,22 +318,21 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
      * removing meta-attributes
      */
     key = crm_meta_name(PCMK_META_INTERVAL);
-    if (crm_element_value_ms(param_set, key, &interval_ms) != pcmk_ok) {
-        interval_ms = 0;
-    }
+    pcmk__xe_get_guint(param_set, key, &interval_ms);
     free(key);
     key = NULL;
     if (interval_ms != 0) {
         key = crm_meta_name(PCMK_META_TIMEOUT);
-        timeout = crm_element_value_copy(param_set, key);
+        timeout = pcmk__xe_get_copy(param_set, key);
     }
 
     // Remove all CRM_meta_* attributes and certain other attributes
-    pcmk__xe_remove_matching_attrs(param_set, should_filter_for_digest, NULL);
+    pcmk__xe_remove_matching_attrs(param_set, false, should_filter_for_digest,
+                                   NULL);
 
     // Add timeout back for recurring operation digests
     if (timeout != NULL) {
-        crm_xml_add(param_set, key, timeout);
+        pcmk__xe_set(param_set, key, timeout);
     }
     free(timeout);
     free(key);

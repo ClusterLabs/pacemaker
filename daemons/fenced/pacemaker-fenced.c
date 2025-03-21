@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -107,13 +107,13 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     }
 
 
-    op = crm_element_value(request, PCMK__XA_CRM_TASK);
+    op = pcmk__xe_get(request, PCMK__XA_CRM_TASK);
     if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
-        crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-        crm_xml_add(request, PCMK__XA_ST_OP, op);
-        crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
-        crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
-        crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
+        pcmk__xe_set(request, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+        pcmk__xe_set(request, PCMK__XA_ST_OP, op);
+        pcmk__xe_set(request, PCMK__XA_ST_CLIENTID, c->id);
+        pcmk__xe_set(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
+        pcmk__xe_set(request, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
         pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, request);
         pcmk__xml_free(request);
@@ -121,7 +121,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     }
 
     if (c->name == NULL) {
-        const char *value = crm_element_value(request, PCMK__XA_ST_CLIENTNAME);
+        const char *value = pcmk__xe_get(request, PCMK__XA_ST_CLIENTNAME);
 
         c->name = crm_strdup_printf("%s.%u", pcmk__s(value, "unknown"), c->pid);
     }
@@ -142,9 +142,9 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         c->request_id = id;     /* Reply only to the last one */
     }
 
-    crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
-    crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
-    crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
+    pcmk__xe_set(request, PCMK__XA_ST_CLIENTID, c->id);
+    pcmk__xe_set(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
+    pcmk__xe_set(request, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
     crm_log_xml_trace(request, "ipc-received");
     stonith_command(c, id, flags, request, NULL);
@@ -180,8 +180,8 @@ st_ipc_destroy(qb_ipcs_connection_t * c)
 static void
 stonith_peer_callback(xmlNode * msg, void *private_data)
 {
-    const char *remote_peer = crm_element_value(msg, PCMK__XA_SRC);
-    const char *op = crm_element_value(msg, PCMK__XA_ST_OP);
+    const char *remote_peer = pcmk__xe_get(msg, PCMK__XA_SRC);
+    const char *op = pcmk__xe_get(msg, PCMK__XA_ST_OP);
 
     if (pcmk__str_eq(op, STONITH_OP_POKE, pcmk__str_none)) {
         return;
@@ -210,7 +210,7 @@ handle_cpg_message(cpg_handle_t handle, const struct cpg_name *groupName,
         free(data);
         return;
     }
-    crm_xml_add(xml, PCMK__XA_SRC, from);
+    pcmk__xe_set(xml, PCMK__XA_SRC, from);
     stonith_peer_callback(xml, NULL);
 
     pcmk__xml_free(xml);
@@ -287,7 +287,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     CRM_CHECK(client != NULL, return);
     CRM_CHECK(update_msg != NULL, return);
 
-    type = crm_element_value(update_msg, PCMK__XA_SUBT);
+    type = pcmk__xe_get(update_msg, PCMK__XA_SUBT);
     CRM_CHECK(type != NULL, crm_log_xml_err(update_msg, "notify"); return);
 
     if (client->ipcs == NULL) {
@@ -326,9 +326,9 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
     }
 
     notify_data = pcmk__xe_create(NULL, PCMK__XE_ST_ASYNC_TIMEOUT_VALUE);
-    crm_xml_add(notify_data, PCMK__XA_T, PCMK__VALUE_ST_ASYNC_TIMEOUT_VALUE);
-    crm_xml_add(notify_data, PCMK__XA_ST_CALLID, call_id);
-    crm_xml_add_int(notify_data, PCMK__XA_ST_TIMEOUT, timeout);
+    pcmk__xe_set(notify_data, PCMK__XA_T, PCMK__VALUE_ST_ASYNC_TIMEOUT_VALUE);
+    pcmk__xe_set(notify_data, PCMK__XA_ST_CALLID, call_id);
+    pcmk__xe_set_int(notify_data, PCMK__XA_ST_TIMEOUT, timeout);
 
     crm_trace("timeout update is %d for client %s and call id %s", timeout, client_id, call_id);
 
@@ -356,9 +356,9 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
 
     CRM_LOG_ASSERT(type != NULL);
 
-    crm_xml_add(update_msg, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
-    crm_xml_add(update_msg, PCMK__XA_SUBT, type);
-    crm_xml_add(update_msg, PCMK__XA_ST_OP, type);
+    pcmk__xe_set(update_msg, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
+    pcmk__xe_set(update_msg, PCMK__XA_SUBT, type);
+    pcmk__xe_set(update_msg, PCMK__XA_ST_OP, type);
     stonith__xe_set_result(update_msg, result);
 
     if (data != NULL) {
@@ -392,7 +392,7 @@ fenced_send_config_notification(const char *op,
 {
     xmlNode *notify_data = pcmk__xe_create(NULL, op);
 
-    crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ID, desc);
+    pcmk__xe_set(notify_data, PCMK__XA_ST_DEVICE_ID, desc);
 
     fenced_send_notification(op, result, notify_data);
     pcmk__xml_free(notify_data);
@@ -470,8 +470,8 @@ st_peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
          */
         xmlNode *query = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
 
-        crm_xml_add(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-        crm_xml_add(query, PCMK__XA_ST_OP, STONITH_OP_POKE);
+        pcmk__xe_set(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+        pcmk__xe_set(query, PCMK__XA_ST_OP, STONITH_OP_POKE);
 
         crm_debug("Broadcasting our uname because of node %" PRIu32,
                   node->cluster_layer_id);

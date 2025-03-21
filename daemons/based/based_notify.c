@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -52,7 +52,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    type = crm_element_value(update->msg, PCMK__XA_SUBT);
+    type = pcmk__xe_get(update->msg, PCMK__XA_SUBT);
     CRM_LOG_ASSERT(type != NULL);
 
     if (pcmk_is_set(client->flags, cib_notify_diff)
@@ -180,14 +180,14 @@ cib_diff_notify(const char *op, int result, const char *call_id,
 
     update_msg = pcmk__xe_create(NULL, PCMK__XE_NOTIFY);
 
-    crm_xml_add(update_msg, PCMK__XA_T, PCMK__VALUE_CIB_NOTIFY);
-    crm_xml_add(update_msg, PCMK__XA_SUBT, PCMK__VALUE_CIB_DIFF_NOTIFY);
-    crm_xml_add(update_msg, PCMK__XA_CIB_OP, op);
-    crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTID, client_id);
-    crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
-    crm_xml_add(update_msg, PCMK__XA_CIB_CALLID, call_id);
-    crm_xml_add(update_msg, PCMK__XA_SRC, origin);
-    crm_xml_add_int(update_msg, PCMK__XA_CIB_RC, result);
+    pcmk__xe_set(update_msg, PCMK__XA_T, PCMK__VALUE_CIB_NOTIFY);
+    pcmk__xe_set(update_msg, PCMK__XA_SUBT, PCMK__VALUE_CIB_DIFF_NOTIFY);
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_OP, op);
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_CLIENTID, client_id);
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_CALLID, call_id);
+    pcmk__xe_set(update_msg, PCMK__XA_SRC, origin);
+    pcmk__xe_set_int(update_msg, PCMK__XA_CIB_RC, result);
 
     wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE_RESULT);
     pcmk__xml_copy(wrapper, diff);

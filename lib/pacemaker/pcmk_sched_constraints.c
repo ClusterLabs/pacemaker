@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,7 +45,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
                                                  NULL);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj, NULL)) {
 
-        const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
+        const char *id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
         const char *tag = (const char *) xml_obj->name;
 
         if (id == NULL) {
@@ -296,7 +296,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
                     xmlNode *new_ref = pcmk__xe_create(set,
                                                        PCMK_XE_RESOURCE_REF);
 
-                    crm_xml_add(new_ref, PCMK_XA_ID, ref_id);
+                    pcmk__xe_set(new_ref, PCMK_XA_ID, ref_id);
                     xmlAddNextSibling(last_ref, new_ref);
 
                     last_ref = new_ref;
@@ -368,7 +368,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         return false;
     }
 
-    id = crm_element_value(xml_obj, attr);
+    id = pcmk__xe_get(xml_obj, attr);
     if (id == NULL) {
         return true;
     }
@@ -384,14 +384,14 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
          * containing the resources derived from or tagged with it.
          */
         *rsc_set = pcmk__xe_create(xml_obj, PCMK_XE_RESOURCE_SET);
-        crm_xml_add(*rsc_set, PCMK_XA_ID, id);
+        pcmk__xe_set(*rsc_set, PCMK_XA_ID, id);
 
         for (GList *iter = tag->refs; iter != NULL; iter = iter->next) {
             const char *obj_ref = iter->data;
             xmlNode *rsc_ref = NULL;
 
             rsc_ref = pcmk__xe_create(*rsc_set, PCMK_XE_RESOURCE_REF);
-            crm_xml_add(rsc_ref, PCMK_XA_ID, obj_ref);
+            pcmk__xe_set(rsc_ref, PCMK_XA_ID, obj_ref);
         }
 
         // Set PCMK_XA_SEQUENTIAL=PCMK_VALUE_FALSE for the PCMK_XE_RESOURCE_SET
@@ -405,10 +405,10 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         xmlNode *rsc_ref = NULL;
 
         *rsc_set = pcmk__xe_create(xml_obj, PCMK_XE_RESOURCE_SET);
-        crm_xml_add(*rsc_set, PCMK_XA_ID, id);
+        pcmk__xe_set(*rsc_set, PCMK_XA_ID, id);
 
         rsc_ref = pcmk__xe_create(*rsc_set, PCMK_XE_RESOURCE_REF);
-        crm_xml_add(rsc_ref, PCMK_XA_ID, id);
+        pcmk__xe_set(rsc_ref, PCMK_XA_ID, id);
 
     } else {
         return true;

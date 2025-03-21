@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -167,11 +167,14 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
 
     value = g_hash_table_lookup(config_hash, PCMK_META_TIMEOUT);
     if (value != NULL) {
-        long long timeout_ms = crm_get_msec(value);
+        long long timeout_ms = 0;
 
-        entry->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
-        if (entry->timeout <= 0) {
-            if (entry->timeout == 0) {
+        if ((pcmk__parse_ms(value, &timeout_ms) != pcmk_rc_ok)
+            || (timeout_ms <= 0)) {
+
+            entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
+
+            if (timeout_ms == 0) {
                 crm_trace("Alert %s uses default timeout (%s)",
                           entry->id, READABLE_DEFAULT);
             } else {
@@ -179,8 +182,9 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
                                   "because '%s' is not a valid timeout",
                                   entry->id, value, READABLE_DEFAULT);
             }
-            entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
+
         } else {
+            entry->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
             crm_trace("Alert %s uses timeout of %s",
                       entry->id, pcmk__readable_interval(entry->timeout));
         }
@@ -233,8 +237,8 @@ unpack_alert_parameters(const xmlNode *xml, pcmk__alert_t *entry)
     for (child = pcmk__xe_first_child(child, PCMK_XE_NVPAIR, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, PCMK_XE_NVPAIR)) {
 
-        const char *name = crm_element_value(child, PCMK_XA_NAME);
-        const char *value = crm_element_value(child, PCMK_XA_VALUE);
+        const char *name = pcmk__xe_get(child, PCMK_XA_NAME);
+        const char *value = pcmk__xe_get(child, PCMK_XA_VALUE);
 
         if (value == NULL) {
             value = "";
@@ -282,7 +286,7 @@ unpack_alert_filter(xmlNode *xml, pcmk__alert_t *entry)
                                              NULL, NULL);
                  attr != NULL; attr = pcmk__xe_next(attr, PCMK_XE_ATTRIBUTE)) {
 
-                attr_name = crm_element_value(attr, PCMK_XA_NAME);
+                attr_name = pcmk__xe_get(attr, PCMK_XA_NAME);
                 if (attr_name) {
                     if (nattrs == 0) {
                         g_strfreev(entry->select_attribute_name);
@@ -355,7 +359,7 @@ pcmk__unpack_alerts(const xmlNode *alerts)
         xmlNode *recipient = NULL;
         int recipients = 0;
         const char *alert_id = pcmk__xe_id(alert);
-        const char *alert_path = crm_element_value(alert, PCMK_XA_PATH);
+        const char *alert_path = pcmk__xe_get(alert, PCMK_XA_PATH);
 
         // Not possible with schema validation enabled
         if (alert_id == NULL) {
@@ -395,8 +399,8 @@ pcmk__unpack_alerts(const xmlNode *alerts)
             pcmk__alert_t *recipient_entry = pcmk__dup_alert(entry);
 
             recipients++;
-            recipient_entry->recipient = crm_element_value_copy(recipient,
-                                                                PCMK_XA_VALUE);
+            recipient_entry->recipient = pcmk__xe_get_copy(recipient,
+                                                           PCMK_XA_VALUE);
 
             if (unpack_alert(recipient, recipient_entry,
                              &max_timeout) != pcmk_rc_ok) {

@@ -211,11 +211,11 @@ hash2smartfield(gpointer key, gpointer value, gpointer user_data)
     if (isdigit(name[0])) {
         xmlNode *tmp = pcmk__xe_create(xml_node, PCMK__XE_PARAM);
 
-        crm_xml_add(tmp, PCMK_XA_NAME, name);
-        crm_xml_add(tmp, PCMK_XA_VALUE, s_value);
+        pcmk__xe_set(tmp, PCMK_XA_NAME, name);
+        pcmk__xe_set(tmp, PCMK_XA_VALUE, s_value);
 
-    } else if (crm_element_value(xml_node, name) == NULL) {
-        crm_xml_add(xml_node, name, s_value);
+    } else if (pcmk__xe_get(xml_node, name) == NULL) {
+        pcmk__xe_set(xml_node, name, s_value);
         crm_trace("dumped: %s=%s", name, s_value);
 
     } else {
@@ -242,8 +242,8 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
 
     xmlNode *xml_node = user_data;
 
-    if (crm_element_value(xml_node, name) == NULL) {
-        crm_xml_add(xml_node, name, s_value);
+    if (pcmk__xe_get(xml_node, name) == NULL) {
+        pcmk__xe_set(xml_node, name, s_value);
 
     } else {
         crm_trace("duplicate: %s=%s", name, s_value);
@@ -311,13 +311,13 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
     nvp = pcmk__xe_create(parent, PCMK_XE_NVPAIR);
 
     if (id) {
-        crm_xml_add(nvp, PCMK_XA_ID, id);
+        pcmk__xe_set(nvp, PCMK_XA_ID, id);
     } else {
         pcmk__xe_set_id(nvp, "%s-%s",
                         pcmk__s(pcmk__xe_id(parent), PCMK_XE_NVPAIR), name);
     }
-    crm_xml_add(nvp, PCMK_XA_NAME, name);
-    crm_xml_add(nvp, PCMK_XA_VALUE, value);
+    pcmk__xe_set(nvp, PCMK_XA_NAME, name);
+    pcmk__xe_set(nvp, PCMK_XA_VALUE, value);
     return nvp;
 }
 
@@ -367,8 +367,8 @@ xml2list(const xmlNode *parent)
     for (child = pcmk__xe_first_child(nvpair_list, PCMK__XE_PARAM, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, PCMK__XE_PARAM)) {
 
-        const char *key = crm_element_value(child, PCMK_XA_NAME);
-        const char *value = crm_element_value(child, PCMK_XA_VALUE);
+        const char *key = pcmk__xe_get(child, PCMK_XA_NAME);
+        const char *value = pcmk__xe_get(child, PCMK_XA_VALUE);
 
         crm_trace("Added %s=%s", key, value);
         if (key != NULL && value != NULL) {
@@ -405,8 +405,8 @@ unpack_nvpair(xmlNode *nvpair, void *userdata)
         return pcmk_rc_ok;
     }
 
-    name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
-    value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
+    name = pcmk__xe_get(ref_nvpair, PCMK_XA_NAME);
+    value = pcmk__xe_get(ref_nvpair, PCMK_XA_VALUE);
     if ((name == NULL) || (value == NULL)) {
         return pcmk_rc_ok; // Not possible with schema validation enabled
     }
@@ -631,8 +631,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
         pcmk__config_warn("Using 0 as %s score because '%s' "
                           "is not a valid score: %s",
                           pcmk__xe_id(pair_a),
-                          crm_element_value(pair_a, PCMK_XA_SCORE),
-                          pcmk_rc_str(rc));
+                          pcmk__xe_get(pair_a, PCMK_XA_SCORE), pcmk_rc_str(rc));
     }
 
     rc = pcmk__xe_get_score(pair_b, PCMK_XA_SCORE, &score_b, 0);
@@ -640,8 +639,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
         pcmk__config_warn("Using 0 as %s score because '%s' "
                           "is not a valid score: %s",
                           pcmk__xe_id(pair_b),
-                          crm_element_value(pair_b, PCMK_XA_SCORE),
-                          pcmk_rc_str(rc));
+                          pcmk__xe_get(pair_b, PCMK_XA_SCORE), pcmk_rc_str(rc));
     }
 
     if (score_a < score_b) {
@@ -704,7 +702,7 @@ pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
     pcmk_nvpair_t *pair = data;
     xmlNode *parent = user_data;
 
-    crm_xml_add(parent, pair->name, pair->value);
+    pcmk__xe_set(parent, pair->name, pair->value);
 }
 
 void

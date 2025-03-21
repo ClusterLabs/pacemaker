@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -219,7 +219,7 @@ do_dc_takeover(long long action,
                                                  cib_none);
 
     cib = pcmk__xe_create(NULL, PCMK_XE_CIB);
-    crm_xml_add(cib, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+    pcmk__xe_set(cib, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     controld_update_cib(PCMK_XE_CIB, cib, cib_none, feature_update_callback);
 
     dc_takeover_update_attr(PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));

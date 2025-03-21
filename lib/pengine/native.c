@@ -205,7 +205,7 @@ bool
 native_unpack(pcmk_resource_t *rsc)
 {
     pcmk_resource_t *parent = uber_parent(rsc);
-    const char *standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+    const char *standard = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
     uint32_t ra_caps = pcmk_get_ra_caps(standard);
 
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
@@ -474,9 +474,9 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
                            const pcmk_node_t *node, uint32_t show_opts,
                            const char *target_role, bool show_nodes)
 {
-    const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+    const char *class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
     const char *provider = NULL;
-    const char *kind = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
+    const char *kind = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
     GString *outstr = NULL;
     bool have_flags = false;
 
@@ -489,7 +489,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     CRM_CHECK(class != NULL, class = "unknown");
 
     if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
-        provider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
+        provider = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
     }
 
     if ((node == NULL) && (rsc->priv->lock_node != NULL)) {
@@ -534,8 +534,8 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
         if (probe_op != NULL) {
             int rc;
 
-            pcmk__scan_min_int(crm_element_value(probe_op, PCMK__XA_RC_CODE),
-                               &rc, 0);
+            pcmk__scan_min_int(pcmk__xe_get(probe_op, PCMK__XA_RC_CODE), &rc,
+                               0);
             pcmk__g_strcat(outstr, " (", crm_exit_str(rc), ") ", NULL);
         }
     }
@@ -609,8 +609,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     // User-supplied description
     if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)
         || pcmk__list_of_multiple(rsc->priv->active_nodes)) {
-        const char *desc = crm_element_value(rsc->priv->xml,
-                                             PCMK_XA_DESCRIPTION);
+        const char *desc = pcmk__xe_get(rsc->priv->xml, PCMK_XA_DESCRIPTION);
 
         if (desc) {
             g_string_append(outstr, " (");
@@ -644,7 +643,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
                        const char *name, const pcmk_node_t *node,
                        uint32_t show_opts)
 {
-    const char *kind = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
+    const char *kind = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
     const char *target_role = NULL;
     const char *cl = NULL;
 
@@ -735,8 +734,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     int rc = pcmk_rc_no_output;
     bool print_pending = pcmk_is_set(show_opts, pcmk_show_pending);
-    const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-    const char *prov = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
+    const char *class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
+    const char *prov = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
 
     char ra_name[LINE_MAX];
     const char *rsc_state = native_displayable_state(rsc, print_pending);
@@ -763,7 +762,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     // Resource information
     snprintf(ra_name, LINE_MAX, "%s%s%s:%s", class,
              ((prov == NULL)? "" : ":"), ((prov == NULL)? "" : prov),
-             crm_element_value(rsc->priv->xml, PCMK_XA_TYPE));
+             pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE));
 
     target_role = g_hash_table_lookup(rsc->priv->meta,
                                       PCMK_META_TARGET_ROLE);
@@ -953,8 +952,8 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
 
-        const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-        const char *kind = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
+        const char *class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
+        const char *kind = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
 
         int offset = 0;
         char buffer[LINE_MAX];
@@ -968,8 +967,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
 
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
         if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
-            const char *prov = crm_element_value(rsc->priv->xml,
-                                                 PCMK_XA_PROVIDER);
+            const char *prov = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
 
             if (prov != NULL) {
                 offset += snprintf(buffer + offset, LINE_MAX - offset,

@@ -200,7 +200,7 @@ group_unpack(pcmk_resource_t *rsc)
     set_group_flag(rsc, "collocated", pcmk__group_colocated,
                    pcmk__wo_group_coloc);
 
-    clone_id = crm_element_value(rsc->priv->xml, PCMK__META_CLONE);
+    clone_id = pcmk__xe_get(rsc->priv->xml, PCMK__META_CLONE);
 
     for (xml_native_rsc = pcmk__xe_first_child(xml_obj, PCMK_XE_PRIMITIVE,
                                                NULL, NULL);
@@ -209,7 +209,7 @@ group_unpack(pcmk_resource_t *rsc)
 
         pcmk_resource_t *new_rsc = NULL;
 
-        crm_xml_add(xml_native_rsc, PCMK__META_CLONE, clone_id);
+        pcmk__xe_set(xml_native_rsc, PCMK__META_CLONE, clone_id);
         if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
                                 rsc->priv->scheduler) != pcmk_rc_ok) {
             continue;

@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2024 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,6 +12,7 @@ include $(top_srcdir)/mk/common.mk
 headerdir=$(pkgincludedir)/crm/common
 
 header_HEADERS = acl.h 			\
+		 acl_compat.h		\
 		 actions.h		\
 		 agents.h 		\
 		 cib.h 			\
@@ -41,6 +42,7 @@ header_HEADERS = acl.h 			\
 		 scores.h		\
 		 scores_compat.h	\
 		 strings.h		\
+		 strings_compat.h	\
 		 util.h 		\
 		 util_compat.h 		\
 		 xml.h 			\
@@ -48,6 +50,7 @@ header_HEADERS = acl.h 			\
 		 xml_element.h		\
 		 xml_element_compat.h	\
 		 xml_io.h		\
+		 xml_io_compat.h	\
 		 xml_names.h
 
 noinst_HEADERS = $(wildcard *internal.h)

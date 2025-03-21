@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -506,20 +506,21 @@ print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 
 static gboolean
 reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    int rc = crm_get_msec(optarg);
+    long long reconnect_ms = 0;
 
-    if (rc == -1) {
-        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
+    if ((pcmk__parse_ms(optarg, &reconnect_ms) != pcmk_rc_ok)
+        || (reconnect_ms < 0)) {
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM,
+                    "Invalid value for -i: %s", optarg);
         return FALSE;
-    } else {
-        pcmk_parse_interval_spec(optarg, &options.reconnect_ms);
-
-        if (options.exec_mode != mon_exec_daemonized) {
-            // Reconnect interval applies to daemonized too, so don't override
-            options.exec_mode = mon_exec_update;
-        }
     }
 
+    pcmk_parse_interval_spec(optarg, &options.reconnect_ms);
+
+    if (options.exec_mode != mon_exec_daemonized) {
+        // Reconnect interval applies to daemonized too, so don't override
+        options.exec_mode = mon_exec_update;
+    }
     return TRUE;
 }
 
@@ -1738,7 +1739,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
 
     id = pcmk__xe_history_key(rsc_op);
 
-    magic = crm_element_value(rsc_op, PCMK__XA_TRANSITION_MAGIC);
+    magic = pcmk__xe_get(rsc_op, PCMK__XA_TRANSITION_MAGIC);
     if (magic == NULL) {
         /* non-change */
         return pcmk_rc_ok;
@@ -1755,14 +1756,14 @@ handle_rsc_op(xmlNode *xml, void *userdata)
         goto bail;
     }
 
-    node = crm_element_value(rsc_op, PCMK__META_ON_NODE);
+    node = pcmk__xe_get(rsc_op, PCMK__META_ON_NODE);
 
     while ((n != NULL) && !pcmk__xe_is(n, PCMK__XE_NODE_STATE)) {
         n = n->parent;
     }
 
     if(node == NULL && n) {
-        node = crm_element_value(n, PCMK_XA_UNAME);
+        node = pcmk__xe_get(n, PCMK_XA_UNAME);
     }
 
     if (node == NULL && n) {
@@ -1819,7 +1820,7 @@ mon_trigger_refresh(gpointer user_data)
 static int
 handle_op_for_node(xmlNode *xml, void *userdata)
 {
-    const char *node = crm_element_value(xml, PCMK_XA_UNAME);
+    const char *node = pcmk__xe_get(xml, PCMK_XA_UNAME);
 
     if (node == NULL) {
         node = pcmk__xe_id(xml);
@@ -1833,8 +1834,8 @@ static int
 crm_diff_update_element(xmlNode *change, void *userdata)
 {
     const char *name = NULL;
-    const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-    const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+    const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+    const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
     xmlNode *match = NULL;
     const char *node = NULL;
 
@@ -1877,7 +1878,7 @@ crm_diff_update_element(xmlNode *change, void *userdata)
         pcmk__xe_foreach_child(match, NULL, handle_op_for_node, NULL);
 
     } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
-        node = crm_element_value(match, PCMK_XA_UNAME);
+        node = pcmk__xe_get(match, PCMK_XA_UNAME);
         if (node == NULL) {
             node = pcmk__xe_id(match);
         }
@@ -1949,7 +1950,8 @@ crm_diff_update(const char *event, xmlNode * msg)
 
     if (options.external_agent) {
         int format = 0;
-        crm_element_value_int(diff, PCMK_XA_FORMAT, &format);
+
+        pcmk__xe_get_int(diff, PCMK_XA_FORMAT, &format);
 
         if (format == 2) {
             xmlNode *wrapper = pcmk__xe_first_child(msg,

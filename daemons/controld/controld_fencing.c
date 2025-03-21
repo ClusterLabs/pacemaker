@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -249,12 +249,12 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
     crmd_peer_down(peer, TRUE);
 
     node_state = create_node_state_update(peer, flags, NULL, __func__);
-    crm_xml_add(node_state, PCMK_XA_ID, target_xml_id);
+    pcmk__xe_set(node_state, PCMK_XA_ID, target_xml_id);
 
     if (pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
         char *now_s = pcmk__ttoa(time(NULL));
 
-        crm_xml_add(node_state, PCMK__XA_NODE_FENCED, now_s);
+        pcmk__xe_set(node_state, PCMK__XA_NODE_FENCED, now_s);
         free(now_s);
     }
 
@@ -421,7 +421,7 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
                 continue;
             }
 
-            task = crm_element_value(action->xml, PCMK_XA_OPERATION);
+            task = pcmk__xe_get(action->xml, PCMK_XA_OPERATION);
             if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
                 pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
                 last_action = action->xml;
@@ -827,7 +827,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         goto bail;
     }
 
-    target = crm_element_value(action->xml, PCMK__META_ON_NODE);
+    target = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
     if (target == NULL) {
         crm_err("Ignoring fence operation %d result: No target given (bug?)",
                 data->call_id);
@@ -836,8 +836,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
 
     stop_te_timer(action);
     if (stonith__exit_status(data) == CRM_EX_OK) {
-        const char *uuid = crm_element_value(action->xml,
-                                             PCMK__META_ON_NODE_UUID);
+        const char *uuid = pcmk__xe_get(action->xml, PCMK__META_ON_NODE_UUID);
         const char *op = crm_meta_value(action->params,
                                         PCMK__META_STONITH_ACTION);
 
@@ -954,8 +953,8 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 {
     int rc = 0;
     const char *id = pcmk__xe_id(action->xml);
-    const char *uuid = crm_element_value(action->xml, PCMK__META_ON_NODE_UUID);
-    const char *target = crm_element_value(action->xml, PCMK__META_ON_NODE);
+    const char *uuid = pcmk__xe_get(action->xml, PCMK__META_ON_NODE_UUID);
+    const char *target = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
     const char *type = crm_meta_value(action->params,
                                       PCMK__META_STONITH_ACTION);
     char *transition_key = NULL;
@@ -1003,16 +1002,16 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 bool
 controld_verify_stonith_watchdog_timeout(const char *value)
 {
-    long long st_timeout = (value != NULL)? crm_get_msec(value) : 0;
     const char *our_nodename = controld_globals.cluster->priv->node_name;
 
-    if (st_timeout == 0
-        || (stonith_api && (stonith_api->state != stonith_disconnected) &&
-            stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
-                                                           our_nodename))) {
-        return pcmk__valid_stonith_watchdog_timeout(value);
+    if ((stonith_api == NULL) || (stonith_api->state == stonith_disconnected)
+        || !stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
+                                                           our_nodename)) {
+        // Anything is valid since it won't be used
+        return true;
     }
-    return true;
+
+    return pcmk__valid_stonith_watchdog_timeout(value);
 }
 
 /* end stonith API client functions */

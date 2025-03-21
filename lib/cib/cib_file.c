@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2024 the Pacemaker project contributors
+ * Later changes copyright 2008-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -218,8 +218,8 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     int call_id = 0;
     uint32_t call_options = cib_none;
-    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-    const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
     xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
                                             NULL, NULL);
     xmlNode *data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
@@ -235,7 +235,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     cib__get_operation(op, &operation);
     op_function = file_get_op_function(operation);
 
-    crm_element_value_int(request, PCMK__XA_CIB_CALLID, &call_id);
+    pcmk__xe_get_int(request, PCMK__XA_CIB_CALLID, &call_id);
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
@@ -328,8 +328,8 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     if (rc != pcmk_ok) {
         return rc;
     }
-    crm_xml_add(request, PCMK__XA_ACL_TARGET, user_name);
-    crm_xml_add(request, PCMK__XA_CIB_CLIENTID, private->id);
+    pcmk__xe_set(request, PCMK__XA_ACL_TARGET, user_name);
+    pcmk__xe_set(request, PCMK__XA_CIB_CLIENTID, private->id);
 
     if (pcmk_is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, request);
@@ -892,7 +892,7 @@ cib_file_prepare_xml(xmlNode *root)
     xmlNode *cib_status_root = NULL;
 
     /* Always write out with num_updates=0 and current last-written timestamp */
-    crm_xml_add(root, PCMK_XA_NUM_UPDATES, "0");
+    pcmk__xe_set(root, PCMK_XA_NUM_UPDATES, "0");
     pcmk__xe_add_last_written(root);
 
     /* Delete status section before writing to file, because
@@ -924,8 +924,8 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     char *digest = NULL;
 
     /* Detect CIB version for diagnostic purposes */
-    const char *epoch = crm_element_value(cib_root, PCMK_XA_EPOCH);
-    const char *admin_epoch = crm_element_value(cib_root, PCMK_XA_ADMIN_EPOCH);
+    const char *epoch = pcmk__xe_get(cib_root, PCMK_XA_EPOCH);
+    const char *admin_epoch = pcmk__xe_get(cib_root, PCMK_XA_ADMIN_EPOCH);
 
     /* Determine full CIB and signature pathnames */
     char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);
@@ -1067,7 +1067,7 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
          request = pcmk__xe_next(request, PCMK__XE_CIB_COMMAND)) {
 
         xmlNode *output = NULL;
-        const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
+        const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
 
         int rc = cib_file_process_request(cib, request, &output);
 
@@ -1158,7 +1158,7 @@ cib_file_process_commit_transaction(const char *op, int options,
                                     xmlNode **result_cib, xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
-    const char *client_id = crm_element_value(req, PCMK__XA_CIB_CLIENTID);
+    const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
     cib_t *cib = NULL;
 
     CRM_CHECK(client_id != NULL, return -EINVAL);

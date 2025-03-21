@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -474,7 +474,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
             break;
 
         case st_done:
-            crm_xml_add(node, PCMK_XA_STATUS, PCMK_VALUE_SUCCESS);
+            pcmk__xe_set(node, PCMK_XA_STATUS, PCMK_VALUE_SUCCESS);
             break;
 
         default: {
@@ -489,14 +489,14 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     }
 
     if (event->delegate != NULL) {
-        crm_xml_add(node, PCMK_XA_DELEGATE, event->delegate);
+        pcmk__xe_set(node, PCMK_XA_DELEGATE, event->delegate);
     }
 
     if ((event->state == st_failed) || (event->state == st_done)) {
         char *time_s = timespec_string(event->completed, event->completed_nsec,
                                        true);
 
-        crm_xml_add(node, PCMK_XA_COMPLETED, time_s);
+        pcmk__xe_set(node, PCMK_XA_COMPLETED, time_s);
         free(time_s);
     }
 
@@ -568,7 +568,7 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (device != NULL) {
-        crm_xml_add(node, PCMK_XA_DEVICE, device);
+        pcmk__xe_set(node, PCMK_XA_DEVICE, device);
     }
 
     pcmk__output_xml_push_parent(out, node);

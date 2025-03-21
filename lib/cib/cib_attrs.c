@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -187,7 +187,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             pcmk__xml_free(xml_search);
             return ENOTUNIQ;
         } else {
-            local_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
+            local_attr_id = pcmk__xe_get_copy(xml_search, PCMK_XA_ID);
             attr_id = local_attr_id;
             pcmk__xml_free(xml_search);
             goto do_modify;
@@ -220,9 +220,9 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             if (pcmk__str_eq(node_type, PCMK_VALUE_REMOTE, pcmk__str_casei)) {
                 xml_top = pcmk__xe_create(xml_obj, PCMK_XE_NODES);
                 xml_obj = pcmk__xe_create(xml_top, PCMK_XE_NODE);
-                crm_xml_add(xml_obj, PCMK_XA_TYPE, PCMK_VALUE_REMOTE);
-                crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
-                crm_xml_add(xml_obj, PCMK_XA_UNAME, node_uuid);
+                pcmk__xe_set(xml_obj, PCMK_XA_TYPE, PCMK_VALUE_REMOTE);
+                pcmk__xe_set(xml_obj, PCMK_XA_ID, node_uuid);
+                pcmk__xe_set(xml_obj, PCMK_XA_UNAME, node_uuid);
             } else {
                 tag = PCMK_XE_NODE;
             }
@@ -234,7 +234,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             }
 
             xml_top = pcmk__xe_create(xml_obj, PCMK__XE_NODE_STATE);
-            crm_xml_add(xml_top, PCMK_XA_ID, node_uuid);
+            pcmk__xe_set(xml_top, PCMK_XA_ID, node_uuid);
             xml_obj = xml_top;
 
         } else {
@@ -280,7 +280,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         crm_trace("Creating %s/%s", section, tag);
         if (tag != NULL) {
             xml_obj = pcmk__xe_create(xml_obj, tag);
-            crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
+            pcmk__xe_set(xml_obj, PCMK_XA_ID, node_uuid);
             if (xml_top == NULL) {
                 xml_top = xml_obj;
             }
@@ -302,7 +302,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         } else {
             xml_obj = pcmk__xe_create(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES);
         }
-        crm_xml_add(xml_obj, PCMK_XA_ID, set_name);
+        pcmk__xe_set(xml_obj, PCMK_XA_ID, set_name);
 
         if (xml_top == NULL) {
             xml_top = xml_obj;
@@ -389,7 +389,7 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
             pcmk__xml_free(xml_search);
             return rc;
         } else {
-            local_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
+            local_attr_id = pcmk__xe_get_copy(xml_search, PCMK_XA_ID);
             attr_id = local_attr_id;
             pcmk__xml_free(xml_search);
         }
@@ -441,7 +441,7 @@ find_nvpair_attr_delegate(cib_t *cib, const char *attr, const char *section,
         rc = handle_multiples(out, xml_search, attr_name);
 
         if (rc == pcmk_rc_ok) {
-            pcmk__str_update(value, crm_element_value(xml_search, attr));
+            pcmk__str_update(value, pcmk__xe_get(xml_search, attr));
         }
     }
 
@@ -494,8 +494,7 @@ read_attr_delegate(cib_t *cib, const char *section, const char *node_uuid,
 
     if (rc == pcmk_rc_ok) {
         if (result->children == NULL) {
-            pcmk__str_update(attr_value,
-                             crm_element_value(result, PCMK_XA_VALUE));
+            pcmk__str_update(attr_value, pcmk__xe_get(result, PCMK_XA_VALUE));
         } else {
             rc = ENOTUNIQ;
         }
@@ -559,9 +558,9 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
     if (pcmk__xe_is(result, PCMK_XE_NODE)) {
         // Result is PCMK_XE_NODE element from PCMK_XE_NODES section
 
-        if (pcmk__str_eq(crm_element_value(result, PCMK_XA_TYPE),
-                         PCMK_VALUE_REMOTE, pcmk__str_casei)) {
-            parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
+        if (pcmk__str_eq(pcmk__xe_get(result, PCMK_XA_TYPE), PCMK_VALUE_REMOTE,
+                         pcmk__str_casei)) {
+            parsed_uuid = pcmk__xe_get(result, PCMK_XA_UNAME);
             parsed_is_remote = TRUE;
         } else {
             parsed_uuid = pcmk__xe_id(result);
@@ -579,13 +578,13 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
          * node
          */
 
-        parsed_uuid = crm_element_value(result, PCMK_XA_VALUE);
+        parsed_uuid = pcmk__xe_get(result, PCMK_XA_VALUE);
         parsed_is_remote = TRUE;
 
     } else if (pcmk__xe_is(result, PCMK__XE_NODE_STATE)) {
         // Result is PCMK__XE_NODE_STATE element from PCMK_XE_STATUS section
 
-        parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
+        parsed_uuid = pcmk__xe_get(result, PCMK_XA_UNAME);
         if (pcmk__xe_attr_is_true(result, PCMK_XA_REMOTE_NODE)) {
             parsed_is_remote = TRUE;
         }

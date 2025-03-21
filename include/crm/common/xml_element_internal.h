@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2024 the Pacemaker project contributors
+ * Copyright 2017-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,10 +20,11 @@
 #include <stdio.h>                          // NULL
 #include <string.h>                         // strcmp()
 
+#include <glib.h>                           // guint
 #include <libxml/tree.h>                    // xmlNode, etc.
 
 #include <crm/common/iso8601.h>             // crm_time_t
-#include <crm/common/xml_element.h>         // crm_element_value()
+#include <crm/common/strings_internal.h>    // pcmk__str_copy()
 #include <crm/common/xml_names.h>           // PCMK_XA_ID
 
 #ifdef __cplusplus
@@ -37,26 +38,12 @@ xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
 
 void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 bool pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data);
-void pcmk__xe_remove_matching_attrs(xmlNode *element,
+void pcmk__xe_remove_matching_attrs(xmlNode *element, bool force,
                                     bool (*match)(xmlAttrPtr, void *),
                                     void *user_data);
 int pcmk__xe_delete_match(xmlNode *xml, xmlNode *search);
 int pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace);
 int pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags);
-
-/*!
- * \internal
- * \brief Retrieve the value of the \c PCMK_XA_ID XML attribute
- *
- * \param[in] xml  XML element to check
- *
- * \return Value of the \c PCMK_XA_ID attribute (may be \c NULL)
- */
-static inline const char *
-pcmk__xe_id(const xmlNode *xml)
-{
-    return crm_element_value(xml, PCMK_XA_ID);
-}
 
 /*!
  * \internal
@@ -153,13 +140,66 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
                        int (*handler)(xmlNode *xml, void *userdata),
                        void *userdata);
 
+const char *pcmk__xe_get(const xmlNode *xml, const char *attr_name);
+int pcmk__xe_set(xmlNode *xml, const char *attr_name, const char *value);
+
 int pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t);
 int pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
                        uint32_t default_value);
 
+int pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest);
+void pcmk__xe_set_guint(xmlNode *xml, const char *attr, guint value);
+
+int pcmk__xe_get_int(const xmlNode *xml, const char *name, int *dest);
+void pcmk__xe_set_int(xmlNode *xml, const char *attr, int value);
+
+int pcmk__xe_get_ll(const xmlNode *xml, const char *name, long long *dest);
+int pcmk__xe_set_ll(xmlNode *xml, const char *attr, long long value);
+
+int pcmk__xe_get_time(const xmlNode *xml, const char *attr, time_t *dest);
+void pcmk__xe_set_time(xmlNode *xml, const char *attr, time_t value);
+
+int pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
+                         const char *usec_attr, struct timeval *dest);
+void pcmk__xe_set_timeval(xmlNode *xml, const char *sec_attr,
+                          const char *usec_attr, const struct timeval *value);
+
 void pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value);
 int pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value);
 bool pcmk__xe_attr_is_true(const xmlNode *node, const char *name);
+
+/*!
+ * \internal
+ * \brief Retrieve a copy of the value of an XML attribute
+ *
+ * This is like \c pcmk__xe_get() but allocates new memory for the result.
+ *
+ * \param[in] xml   XML element whose attribute to get
+ * \param[in] attr  Attribute name
+ *
+ * \return Value of specified attribute (or \c NULL if not set)
+ *
+ * \note The caller is responsible for freeing the result using \c free().
+ */
+static inline char *
+pcmk__xe_get_copy(const xmlNode *xml, const char *attr)
+{
+    return pcmk__str_copy(pcmk__xe_get(xml, attr));
+}
+
+/*!
+ * \internal
+ * \brief Retrieve the value of the \c PCMK_XA_ID XML attribute
+ *
+ * \param[in] xml  XML element to check
+ *
+ * \return Value of the \c PCMK_XA_ID attribute (may be \c NULL)
+ */
+static inline const char *
+pcmk__xe_id(const xmlNode *xml)
+{
+    return pcmk__xe_get(xml, PCMK_XA_ID);
+}
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -190,8 +190,8 @@ throttle_send_command(enum throttle_state_e mode)
 
         xml = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                                 CRM_SYSTEM_CRMD, CRM_OP_THROTTLE, NULL);
-        crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MODE, mode);
-        crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MAX, throttle_job_max);
+        pcmk__xe_set_int(xml, PCMK__XA_CRM_LIMIT_MODE, mode);
+        pcmk__xe_set_int(xml, PCMK__XA_CRM_LIMIT_MAX, throttle_job_max);
 
         pcmk__cluster_send_message(NULL, pcmk_ipc_controld, xml);
         pcmk__xml_free(xml);
@@ -385,10 +385,10 @@ throttle_update(xmlNode *xml)
     int max = 0;
     int mode = 0;
     struct throttle_record_s *r = NULL;
-    const char *from = crm_element_value(xml, PCMK__XA_SRC);
+    const char *from = pcmk__xe_get(xml, PCMK__XA_SRC);
 
-    crm_element_value_int(xml, PCMK__XA_CRM_LIMIT_MODE, &mode);
-    crm_element_value_int(xml, PCMK__XA_CRM_LIMIT_MAX, &max);
+    pcmk__xe_get_int(xml, PCMK__XA_CRM_LIMIT_MODE, &mode);
+    pcmk__xe_get_int(xml, PCMK__XA_CRM_LIMIT_MAX, &max);
 
     r = g_hash_table_lookup(throttle_records, from);
 

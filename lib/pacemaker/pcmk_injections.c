@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,6 +17,8 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <dirent.h>
+
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -64,14 +66,14 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
                                  NULL);
     if (attrs == NULL) {
         attrs = pcmk__xe_create(cib_node, PCMK__XE_TRANSIENT_ATTRIBUTES);
-        crm_xml_add(attrs, PCMK_XA_ID, node_uuid);
+        pcmk__xe_set(attrs, PCMK_XA_ID, node_uuid);
     }
 
     instance_attrs = pcmk__xe_first_child(attrs, PCMK_XE_INSTANCE_ATTRIBUTES,
                                           NULL, NULL);
     if (instance_attrs == NULL) {
         instance_attrs = pcmk__xe_create(attrs, PCMK_XE_INSTANCE_ATTRIBUTES);
-        crm_xml_add(instance_attrs, PCMK_XA_ID, node_uuid);
+        pcmk__xe_set(instance_attrs, PCMK_XA_ID, node_uuid);
     }
 
     crm_create_nvpair_xml(instance_attrs, NULL, name, value);
@@ -119,7 +121,7 @@ pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn, xmlNode *cib_node,
                             pcmk__xe_id(cib_node), NULL, NULL, NULL, name,
                             NULL, &output) == pcmk_rc_ok) {
 
-        if (crm_element_value_int(output, PCMK_XA_VALUE, &failcount) != 0) {
+        if (pcmk__xe_get_int(output, PCMK_XA_VALUE, &failcount) != pcmk_rc_ok) {
             failcount = 0;
         }
     }
@@ -163,8 +165,8 @@ create_node_entry(cib_t *cib_conn, const char *node)
     if (rc == -ENXIO) { // Only add if not already existing
         xmlNode *cib_object = pcmk__xe_create(NULL, PCMK_XE_NODE);
 
-        crm_xml_add(cib_object, PCMK_XA_ID, node); // Use node name as ID
-        crm_xml_add(cib_object, PCMK_XA_UNAME, node);
+        pcmk__xe_set(cib_object, PCMK_XA_ID, node); // Use node name as ID
+        pcmk__xe_set(cib_object, PCMK_XA_UNAME, node);
         cib_conn->cmds->create(cib_conn, PCMK_XE_NODES, cib_object,
                                cib_sync_call);
         /* Not bothering with subsequent query to see if it exists,
@@ -209,7 +211,7 @@ create_op(const xmlNode *cib_resource, const char *task, guint interval_ms,
 
         int tmp = 0;
 
-        crm_element_value_int(xop, PCMK__XA_CALL_ID, &tmp);
+        pcmk__xe_get_int(xop, PCMK__XA_CALL_ID, &tmp);
         if (tmp > op->call_id) {
             op->call_id = tmp;
         }
@@ -300,7 +302,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
                 goto done;
 
             } else if (cib_object != NULL) {
-                crm_xml_add(cib_object, PCMK_XA_UNAME, node);
+                pcmk__xe_set(cib_object, PCMK_XA_UNAME, node);
 
                 rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_STATUS,
                                             cib_object, cib_sync_call);
@@ -312,8 +314,8 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
 
     if (rc == -ENXIO) {
         cib_object = pcmk__xe_create(NULL, PCMK__XE_NODE_STATE);
-        crm_xml_add(cib_object, PCMK_XA_ID, found_uuid);
-        crm_xml_add(cib_object, PCMK_XA_UNAME, node);
+        pcmk__xe_set(cib_object, PCMK_XA_ID, found_uuid);
+        pcmk__xe_set(cib_object, PCMK_XA_UNAME, node);
         cib_conn->cmds->create(cib_conn, PCMK_XE_STATUS, cib_object,
                                cib_sync_call);
         pcmk__xml_free(cib_object);
@@ -367,7 +369,7 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
                            PCMK_XA_EXPECTED, CRMD_JOINSTATE_DOWN,
                            NULL);
     }
-    crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, crm_system_name);
+    pcmk__xe_set(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, crm_system_name);
     return cib_node;
 }
 
@@ -384,9 +386,9 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
 static xmlNode *
 find_resource_xml(xmlNode *cib_node, const char *resource)
 {
-    const char *node = crm_element_value(cib_node, PCMK_XA_UNAME);
+    const char *node = pcmk__xe_get(cib_node, PCMK_XA_UNAME);
     char *xpath = crm_strdup_printf(XPATH_RSC_HISTORY, node, resource);
-    xmlNode *match = get_xpath_object(xpath, cib_node, LOG_TRACE);
+    xmlNode *match = pcmk__xpath_find_one(cib_node->doc, xpath, LOG_TRACE);
 
     free(xpath);
     return match;
@@ -466,7 +468,7 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
         const char *node_uuid = pcmk__xe_id(cib_node);
 
         lrm = pcmk__xe_create(cib_node, PCMK__XE_LRM);
-        crm_xml_add(lrm, PCMK_XA_ID, node_uuid);
+        pcmk__xe_set(lrm, PCMK_XA_ID, node_uuid);
     }
 
     container = pcmk__xe_first_child(lrm, PCMK__XE_LRM_RESOURCES, NULL, NULL);
@@ -477,11 +479,11 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
     cib_resource = pcmk__xe_create(container, PCMK__XE_LRM_RESOURCE);
 
     // If we're creating a new entry, use the preferred name
-    crm_xml_add(cib_resource, PCMK_XA_ID, lrm_name);
+    pcmk__xe_set(cib_resource, PCMK_XA_ID, lrm_name);
 
-    crm_xml_add(cib_resource, PCMK_XA_CLASS, rclass);
-    crm_xml_add(cib_resource, PCMK_XA_PROVIDER, rprovider);
-    crm_xml_add(cib_resource, PCMK_XA_TYPE, rtype);
+    pcmk__xe_set(cib_resource, PCMK_XA_CLASS, rclass);
+    pcmk__xe_set(cib_resource, PCMK_XA_PROVIDER, rprovider);
+    pcmk__xe_set(cib_resource, PCMK_XA_TYPE, rtype);
 
     return cib_resource;
 }
@@ -526,7 +528,7 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
         xml_top = pcmk__xe_create(NULL, PCMK_XE_STATUS);
         xml_obj = pcmk__xe_create(xml_top, PCMK_XE_TICKETS);
         ticket_state_xml = pcmk__xe_create(xml_obj, PCMK__XE_TICKET_STATE);
-        crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
+        pcmk__xe_set(ticket_state_xml, PCMK_XA_ID, ticket_id);
 
     } else { // Error
         return rc;
@@ -596,9 +598,9 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
         goto done;
     }
 
-    rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-    rtype = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
-    rprovider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
+    rclass = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
+    rtype = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
+    rprovider = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
 
     cib_node = pcmk__inject_node(cib, node, NULL);
     pcmk__assert(cib_node != NULL);
@@ -658,8 +660,8 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     if (injections->quorum != NULL) {
         xmlNode *top = pcmk__xe_create(NULL, PCMK_XE_CIB);
 
-        /* crm_xml_add(top, PCMK_XA_DC_UUID, dc_uuid);      */
-        crm_xml_add(top, PCMK_XA_HAVE_QUORUM, injections->quorum);
+        /* pcmk__xe_set(top, PCMK_XA_DC_UUID, dc_uuid);      */
+        pcmk__xe_set(top, PCMK_XA_HAVE_QUORUM, injections->quorum);
 
         rc = cib->cmds->modify(cib, NULL, top, cib_sync_call);
         pcmk__assert(rc == pcmk_ok);
@@ -720,7 +722,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         out->message(out, "inject-modify-node", "Failing", node);
 
         cib_node = pcmk__inject_node_state_change(cib, node, true);
-        crm_xml_add(cib_node, PCMK__XA_IN_CCM, PCMK_VALUE_FALSE);
+        pcmk__xe_set(cib_node, PCMK__XA_IN_CCM, PCMK_VALUE_FALSE);
         pcmk__assert(cib_node != NULL);
 
         rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node, cib_sync_call);

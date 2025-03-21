@@ -12,10 +12,9 @@
 #include <stdbool.h>                        // bool, true, false
 #include <stdio.h>
 #include <limits.h>
-#include <stdbool.h>                        // bool, true, false
 
 #include <glib.h>
-#include <libxml/tree.h>
+#include <libxml/tree.h>                    // xmlNode
 #include <libxml/xpath.h>                   // xmlXPathObject, etc.
 
 #include <crm/common/ipc_attrd_internal.h>
@@ -291,7 +290,7 @@ get_cib_rsc(xmlNode *cib_xml, const pcmk_resource_t *rsc)
     char *xpath = crm_strdup_printf("%s//*[@" PCMK_XA_ID "='%s']",
                                     pcmk_cib_xpath_for(PCMK_XE_RESOURCES),
                                     pcmk__xe_id(rsc->priv->xml));
-    xmlNode *rsc_xml = get_xpath_object(xpath, cib_xml, LOG_ERR);
+    xmlNode *rsc_xml = pcmk__xpath_find_one(cib_xml->doc, xpath, LOG_ERR);
 
     free(xpath);
     return rsc_xml;
@@ -310,7 +309,7 @@ update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
         return ENXIO;
     }
 
-    crm_xml_add(rsc_xml, attr_name, attr_value);
+    pcmk__xe_set(rsc_xml, attr_name, attr_value);
 
     rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc_xml, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
@@ -342,7 +341,7 @@ resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
             if (rc == pcmk_rc_ok || rc == ENOTUNIQ) {
                 char *found_attr_id = NULL;
 
-                found_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
+                found_attr_id = pcmk__xe_get_copy(xml_search, PCMK_XA_ID);
 
                 if (!out->is_quiet(out)) {
                     out->err(out,
@@ -449,7 +448,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
         switch (rc) {
             case pcmk_rc_ok:
-                found_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
+                found_attr_id = pcmk__xe_get_copy(xml_search, PCMK_XA_ID);
                 crm_debug("Found a match for " PCMK_XA_NAME "='%s': "
                           PCMK_XA_ID "='%s'", attr_name, found_attr_id);
                 rsc_attr_id = found_attr_id;
@@ -482,10 +481,10 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                 }
 
                 xml_top = pcmk__xe_create(NULL, (const char *) rsc_xml->name);
-                crm_xml_add(xml_top, PCMK_XA_ID, lookup_id);
+                pcmk__xe_set(xml_top, PCMK_XA_ID, lookup_id);
 
                 xml_obj = pcmk__xe_create(xml_top, attr_set_type);
-                crm_xml_add(xml_obj, PCMK_XA_ID, rsc_attr_set);
+                pcmk__xe_set(xml_obj, PCMK_XA_ID, rsc_attr_set);
                 break;
 
             default:
@@ -514,7 +513,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
             }
 
             if (rsc_attr_set == NULL) {
-                rsc_attr_set = crm_element_value(xml_search->parent, PCMK_XA_ID);
+                rsc_attr_set = pcmk__xe_get(xml_search->parent, PCMK_XA_ID);
             }
 
             ud->attr_set_type = pcmk__str_copy(attr_set_type);
@@ -679,7 +678,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                                 attr_set, attr_id, attr_name, &xml_search);
         switch (rc) {
             case pcmk_rc_ok:
-                found_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
+                found_attr_id = pcmk__xe_get_copy(xml_search, PCMK_XA_ID);
                 pcmk__xml_free(xml_search);
                 break;
 
@@ -748,9 +747,9 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         return EINVAL;
     }
 
-    rsc_class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-    rsc_provider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
-    rsc_type = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
+    rsc_class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
+    rsc_provider = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
+    rsc_type = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
     if ((rsc_class == NULL) || (rsc_type == NULL)) {
         out->err(out, "Resource %s does not have a class and type", rsc_id);
         return EINVAL;
@@ -880,7 +879,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
                                                 NULL, NULL);
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op, NULL)) {
 
-        failed_id = crm_element_value(xml_op, PCMK__XA_RSC_ID);
+        failed_id = pcmk__xe_get(xml_op, PCMK__XA_RSC_ID);
         if (failed_id == NULL) {
             // Malformed history entry, should never happen
             continue;
@@ -901,20 +900,20 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         }
 
         // Host name should always have been provided by this point
-        failed_value = crm_element_value(xml_op, PCMK_XA_UNAME);
+        failed_value = pcmk__xe_get(xml_op, PCMK_XA_UNAME);
         if (!pcmk__str_eq(node->priv->name, failed_value, pcmk__str_casei)) {
             continue;
         }
 
         // No operation specified means all operations match
         if (operation) {
-            failed_value = crm_element_value(xml_op, PCMK_XA_OPERATION);
+            failed_value = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);
             if (!pcmk__str_eq(operation, failed_value, pcmk__str_casei)) {
                 continue;
             }
 
             // Interval (if operation was specified) defaults to 0 (not all)
-            failed_value = crm_element_value(xml_op, PCMK_META_INTERVAL);
+            failed_value = pcmk__xe_get(xml_op, PCMK_META_INTERVAL);
             if (!pcmk__str_eq(interval_ms_s, failed_value, pcmk__str_casei)) {
                 continue;
             }
@@ -1814,7 +1813,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                                 PCMK_META_TARGET_ROLE, &xml_search);
 
         if (rc == pcmk_rc_ok) {
-            orig_target_role = crm_element_value_copy(xml_search, PCMK_XA_VALUE);
+            orig_target_role = pcmk__xe_get_copy(xml_search, PCMK_XA_VALUE);
         }
 
         pcmk__xml_free(xml_search);
@@ -2415,9 +2414,9 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         return CRM_EX_UNIMPLEMENT_FEATURE;
     }
 
-    rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-    rprov = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
-    rtype = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
+    rclass = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
+    rprov = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
+    rtype = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
 
     params = generate_resource_params(rsc); // @TODO use local node
 

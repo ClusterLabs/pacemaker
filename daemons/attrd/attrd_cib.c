@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -66,7 +66,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
 
     status_changed = pcmk__cib_element_in_patchset(patchset, PCMK_XE_STATUS);
 
-    client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTNAME);
+    client_name = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME);
     if (!cib__client_triggers_refresh(client_name)) {
         /* This change came from a source that ensured the CIB is consistent
          * with our attributes table, so we don't need to write anything out.
@@ -92,7 +92,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
          * the CIB.
          */
         if (client_name == NULL) {
-            client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTID);
+            client_name = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTID);
         }
         crm_notice("Updating all attributes after %s event triggered by %s",
                    event, pcmk__s(client_name, "unidentified client"));
@@ -356,18 +356,18 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
     xmlNode *child = update;
     int rc = ENOMEM;
 
-    crm_xml_add(child, PCMK_XA_ID, node_id);
+    pcmk__xe_set(child, PCMK_XA_ID, node_id);
 
     child = pcmk__xe_create(child, PCMK__XE_TRANSIENT_ATTRIBUTES);
-    crm_xml_add(child, PCMK_XA_ID, node_id);
+    pcmk__xe_set(child, PCMK_XA_ID, node_id);
 
     child = pcmk__xe_create(child, attr->set_type);
-    crm_xml_add(child, PCMK_XA_ID, set_id);
+    pcmk__xe_set(child, PCMK_XA_ID, set_id);
 
     child = pcmk__xe_create(child, PCMK_XE_NVPAIR);
-    crm_xml_add(child, PCMK_XA_ID, attr_id);
-    crm_xml_add(child, PCMK_XA_NAME, attr->id);
-    crm_xml_add(child, PCMK_XA_VALUE, value);
+    pcmk__xe_set(child, PCMK_XA_ID, attr_id);
+    pcmk__xe_set(child, PCMK_XA_NAME, attr->id);
+    pcmk__xe_set(child, PCMK_XA_VALUE, value);
 
     rc = the_cib->cmds->modify(the_cib, PCMK_XE_STATUS, update,
                                cib_can_create|cib_transaction);

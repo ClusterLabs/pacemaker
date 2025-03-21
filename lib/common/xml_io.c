@@ -18,6 +18,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xmlIO.h>               // xmlOutputBuffer*
+#include <libxml/xmlstring.h>           // xmlChar
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -120,7 +121,7 @@ pcmk__xml_read(const char *filename)
         char *input = decompress_file(filename);
 
         if (input != NULL) {
-            output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
+            output = xmlCtxtReadDoc(ctxt, (const xmlChar *) input, NULL, NULL,
                                     XML_PARSE_NOBLANKS);
             free(input);
         }
@@ -182,7 +183,7 @@ pcmk__xml_parse(const char *input)
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
-    output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
+    output = xmlCtxtReadDoc(ctxt, (const xmlChar *) input, NULL, NULL,
                             XML_PARSE_NOBLANKS);
     if (output != NULL) {
         pcmk__xml_new_private_data((xmlNode *) output);
@@ -599,6 +600,42 @@ pcmk__xml2fd(int fd, xmlNode *cur)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Write XML to a file in a temporary directory
+ *
+ * \param[in] xml       XML to write
+ * \param[in] desc      Description of \p xml
+ * \param[in] filename  Base name of file to write (\c NULL to create a name
+ *                      based on a generated UUID)
+ */
+void
+pcmk__xml_write_temp_file(const xmlNode *xml, const char *desc,
+                          const char *filename)
+{
+    char *path = NULL;
+    char *uuid = NULL;
+
+    CRM_CHECK((xml != NULL) && (desc != NULL), return);
+
+    if (filename == NULL) {
+        uuid = crm_generate_uuid();
+        filename = uuid;
+    }
+    path = crm_strdup_printf("%s/%s", pcmk__get_tmpdir(), filename);
+
+    crm_info("Saving %s to %s", desc, path);
+    pcmk__xml_write_file(xml, filename, false);
+
+    free(path);
+    free(uuid);
+}
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_io_compat.h>
+
 void
 save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
 {
@@ -616,3 +653,6 @@ save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
     pcmk__xml_write_file(xml, filename, false);
     free(f);
 }
+
+// LCOV_EXCL_STOP
+// End deprecated API

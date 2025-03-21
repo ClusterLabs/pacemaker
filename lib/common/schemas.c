@@ -18,11 +18,14 @@
 #include <stdarg.h>
 
 #include <libxml/relaxng.h>
+#include <libxml/tree.h>                // xmlNode
+#include <libxml/xmlstring.h>           // xmlChar
 #include <libxslt/xslt.h>
 #include <libxslt/transform.h>
 #include <libxslt/security.h>
 #include <libxslt/xsltutils.h>
 
+#include <crm/common/schemas.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  /* PCMK__XML_LOG_BASE */
 
@@ -829,7 +832,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return false);
 
     if (validation == NULL) {
-        validation = crm_element_value(xml_blob, PCMK_XA_VALIDATE_WITH);
+        validation = pcmk__xe_get(xml_blob, PCMK_XA_VALIDATE_WITH);
     }
     pcmk__warn_if_schema_deprecated(validation);
 
@@ -1017,7 +1020,7 @@ apply_transformation(const xmlNode *xml, const char *transform,
         xsltSetGenericErrorFunc(&crm_log_level, cib_upgrade_err);
     }
 
-    xslt = xsltParseStylesheetFile((pcmkXmlStr) xform);
+    xslt = xsltParseStylesheetFile((const xmlChar *) xform);
     CRM_CHECK(xslt != NULL, goto cleanup);
 
     /* Caller allocates private data for final result document. Intermediate
@@ -1117,7 +1120,7 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
 static GList *
 get_configured_schema(const xmlNode *xml)
 {
-    const char *schema_name = crm_element_value(xml, PCMK_XA_VALIDATE_WITH);
+    const char *schema_name = pcmk__xe_get(xml, PCMK_XA_VALIDATE_WITH);
 
     pcmk__warn_if_schema_deprecated(schema_name);
     return pcmk__get_schema(schema_name);
@@ -1229,7 +1232,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
         crm_info("%s the configuration schema to %s",
                  (transform? "Transformed" : "Upgraded"),
                  best_schema->name);
-        crm_xml_add(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
+        pcmk__xe_set(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
     }
     return rc;
 }
@@ -1275,8 +1278,7 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
         entry = NULL;
         converted = pcmk__xml_copy(NULL, *xml);
         if (pcmk__update_schema(&converted, NULL, true, to_logs) == pcmk_rc_ok) {
-            new_schema_name = crm_element_value(converted,
-                                                PCMK_XA_VALIDATE_WITH);
+            new_schema_name = pcmk__xe_get(converted, PCMK_XA_VALIDATE_WITH);
             entry = pcmk__get_schema(new_schema_name);
         }
         schema = (entry == NULL)? NULL : entry->data;
@@ -1410,7 +1412,7 @@ static void
 append_href(xmlNode *xml, void *user_data)
 {
     GList **list = user_data;
-    char *href = crm_element_value_copy(xml, "href");
+    char *href = pcmk__xe_get_copy(xml, "href");
 
     if (href == NULL) {
         return;
@@ -1427,7 +1429,7 @@ external_refs_in_schema(GList **list, const char *contents)
     const char *search = "//*[local-name()='externalRef'] | //*[local-name()='include']";
     xmlNode *xml = pcmk__xml_parse(contents);
 
-    crm_foreach_xpath_result(xml, search, append_href, list);
+    pcmk__xpath_foreach_result(xml->doc, search, append_href, list);
     pcmk__xml_free(xml);
 }
 
@@ -1482,12 +1484,13 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     /* Create a new <file path="..."> node with the contents of the file
      * as a CDATA block underneath it.
      */
-    file_node = pcmk__xe_create(parent, PCMK_XA_FILE);
-    crm_xml_add(file_node, PCMK_XA_PATH, path);
+    file_node = pcmk__xe_create(parent, PCMK__XE_FILE);
+    pcmk__xe_set(file_node, PCMK_XA_PATH, path);
     *already_included = g_list_prepend(*already_included, path);
 
-    xmlAddChild(file_node, xmlNewCDataBlock(parent->doc, (pcmkXmlStr) contents,
-                                            strlen(contents)));
+    xmlAddChild(file_node,
+                xmlNewCDataBlock(parent->doc, (const xmlChar *) contents,
+                                 strlen(contents)));
 
     /* Scan the file for any <externalRef> or <include> nodes and build up
      * a list of the files they reference.
@@ -1524,7 +1527,7 @@ pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_i
 {
     xmlNode *schema_node = pcmk__xe_create(parent, PCMK__XA_SCHEMA);
 
-    crm_xml_add(schema_node, PCMK_XA_VERSION, name);
+    pcmk__xe_set(schema_node, PCMK_XA_VERSION, name);
     add_schema_file_to_xml(schema_node, name, already_included);
 
     if (schema_node->children == NULL) {
@@ -1581,7 +1584,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
     int rc = pcmk__update_configured_schema(xml, to_logs);
 
     if (best_version != NULL) {
-        const char *name = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);
+        const char *name = pcmk__xe_get(*xml, PCMK_XA_VALIDATE_WITH);
 
         if (name == NULL) {
             *best_version = -1;

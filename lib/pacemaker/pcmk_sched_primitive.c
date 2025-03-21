@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -789,7 +789,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     }
 
     if (multiply_active) {
-        const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+        const char *class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
 
         // Resource was (possibly) incorrectly multiply active
         pcmk__sched_err(rsc->priv->scheduler,
@@ -1546,7 +1546,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     value = g_hash_table_lookup(rsc->priv->meta, PCMK__META_CLONE);
     if (value != NULL) {
         name = crm_meta_name(PCMK__META_CLONE);
-        crm_xml_add(xml, name, value);
+        pcmk__xe_set(xml, name, value);
         free(name);
     }
 
@@ -1554,7 +1554,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     value = g_hash_table_lookup(rsc->priv->meta, PCMK_META_REMOTE_NODE);
     if (value != NULL) {
         name = crm_meta_name(PCMK_META_REMOTE_NODE);
-        crm_xml_add(xml, name, value);
+        pcmk__xe_set(xml, name, value);
         free(name);
     }
 
@@ -1563,7 +1563,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
      */
     for (parent = rsc; parent != NULL; parent = parent->priv->parent) {
         if (parent->priv->launcher != NULL) {
-            crm_xml_add(xml, CRM_META "_" PCMK__META_CONTAINER,
+            pcmk__xe_set(xml, CRM_META "_" PCMK__META_CONTAINER,
                         parent->priv->launcher->id);
         }
     }
@@ -1574,7 +1574,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
      */
     value = g_hash_table_lookup(rsc->priv->meta, "external-ip");
     if (value != NULL) {
-        crm_xml_add(xml, "pcmk_external_ip", value);
+        pcmk__xe_set(xml, "pcmk_external_ip", value);
     }
 }
 

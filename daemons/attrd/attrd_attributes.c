@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,9 +26,9 @@ attrd_create_attribute(xmlNode *xml)
 {
     int is_private = 0;
     long long dampen = 0;
-    const char *name = crm_element_value(xml, PCMK__XA_ATTR_NAME);
-    const char *set_type = crm_element_value(xml, PCMK__XA_ATTR_SET_TYPE);
-    const char *dampen_s = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
+    const char *name = pcmk__xe_get(xml, PCMK__XA_ATTR_NAME);
+    const char *set_type = pcmk__xe_get(xml, PCMK__XA_ATTR_SET_TYPE);
+    const char *dampen_s = pcmk__xe_get(xml, PCMK__XA_ATTR_DAMPENING);
     attribute_t *a = NULL;
 
     if (set_type == NULL) {
@@ -38,7 +38,7 @@ attrd_create_attribute(xmlNode *xml)
     /* Set type is meaningful only when writing to the CIB. Private
      * attributes are not written.
      */
-    crm_element_value_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &is_private);
+    pcmk__xe_get_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &is_private);
     if (!is_private && !pcmk__str_any_of(set_type,
                                          PCMK_XE_INSTANCE_ATTRIBUTES,
                                          PCMK_XE_UTILIZATION, NULL)) {
@@ -51,8 +51,8 @@ attrd_create_attribute(xmlNode *xml)
 
     a->id = pcmk__str_copy(name);
     a->set_type = pcmk__str_copy(set_type);
-    a->set_id = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
-    a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
+    a->set_id = pcmk__xe_get_copy(xml, PCMK__XA_ATTR_SET);
+    a->user = pcmk__xe_get_copy(xml, PCMK__XA_ATTR_USER);
     a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
 
     if (is_private) {
@@ -60,14 +60,14 @@ attrd_create_attribute(xmlNode *xml)
     }
 
     if (dampen_s != NULL) {
-        dampen = crm_get_msec(dampen_s);
-    }
+        if ((pcmk__parse_ms(dampen_s, &dampen) != pcmk_rc_ok) || (dampen < 0)) {
+            crm_warn("Ignoring invalid delay %s for attribute %s", dampen_s,
+                     a->id);
 
-    if (dampen > 0) {
-        a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
-        a->timer = attrd_add_timer(a->id, a->timeout_ms, a);
-    } else if (dampen < 0) {
-        crm_warn("Ignoring invalid delay %s for attribute %s", dampen_s, a->id);
+        } else if (dampen > 0) {
+            a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
+            a->timer = attrd_add_timer(a->id, a->timeout_ms, a);
+        }
     }
 
     crm_trace("Created attribute %s with %s write delay and %s CIB user",
@@ -82,7 +82,7 @@ attrd_create_attribute(xmlNode *xml)
 static int
 attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
 {
-    const char *dvalue = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
+    const char *dvalue = pcmk__xe_get(xml, PCMK__XA_ATTR_DAMPENING);
     long long dampen = 0;
 
     if (dvalue == NULL) {
@@ -91,8 +91,7 @@ attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
         return EINVAL;
     }
 
-    dampen = crm_get_msec(dvalue);
-    if (dampen < 0) {
+    if ((pcmk__parse_ms(dvalue, &dampen) != pcmk_rc_ok) || (dampen < 0)) {
         crm_warn("Could not update %s: invalid delay value %dms (%s)",
                  attr, dampen, dvalue);
         return EINVAL;
@@ -138,11 +137,11 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
 {
     xmlNode *xml = pcmk__xe_create(parent, __func__);
 
-    crm_xml_add(xml, PCMK__XA_ATTR_NAME, a->id);
-    crm_xml_add(xml, PCMK__XA_ATTR_SET_TYPE, a->set_type);
-    crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set_id);
-    crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
-    crm_xml_add(xml, PCMK__XA_ATTR_HOST, v->nodename);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_NAME, a->id);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_SET_TYPE, a->set_type);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_SET, a->set_id);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_USER, a->user);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, v->nodename);
 
     /* @COMPAT Prior to 2.1.10 and 3.0.1, the node's cluster ID was added
      * instead of its XML ID. For Corosync and Pacemaker Remote nodes, those are
@@ -150,16 +149,17 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
      * cluster IDs, we will have to drop support for rolling upgrades from
      * versions before those.
      */
-    crm_xml_add(xml, PCMK__XA_ATTR_HOST_ID, attrd_get_node_xml_id(v->nodename));
+    pcmk__xe_set(xml, PCMK__XA_ATTR_HOST_ID,
+                 attrd_get_node_xml_id(v->nodename));
 
-    crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
-    crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING,
-                    pcmk__timeout_ms2s(a->timeout_ms));
-    crm_xml_add_int(xml, PCMK__XA_ATTR_IS_PRIVATE,
-                    pcmk_is_set(a->flags, attrd_attr_is_private));
-    crm_xml_add_int(xml, PCMK__XA_ATTR_IS_REMOTE,
-                    pcmk_is_set(v->flags, attrd_value_remote));
-    crm_xml_add_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE, force_write);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_VALUE, v->current);
+    pcmk__xe_set_int(xml, PCMK__XA_ATTR_DAMPENING,
+                     pcmk__timeout_ms2s(a->timeout_ms));
+    pcmk__xe_set_int(xml, PCMK__XA_ATTR_IS_PRIVATE,
+                     pcmk_is_set(a->flags, attrd_attr_is_private));
+    pcmk__xe_set_int(xml, PCMK__XA_ATTR_IS_REMOTE,
+                     pcmk_is_set(v->flags, attrd_value_remote));
+    pcmk__xe_set_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE, force_write);
 
     return xml;
 }
@@ -187,7 +187,7 @@ attrd_populate_attribute(xmlNode *xml, const char *attr)
     attribute_t *a = NULL;
     bool update_both = false;
 
-    const char *op = crm_element_value(xml, PCMK_XA_TASK);
+    const char *op = pcmk__xe_get(xml, PCMK_XA_TASK);
 
     // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK_XA_TASK
     update_both = pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH,

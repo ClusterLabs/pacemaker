@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -307,14 +307,15 @@ election_vote(pcmk_cluster_t *cluster)
                              NULL, message_type, CRM_OP_VOTE, NULL);
 
     cluster->priv->election->count++;
-    crm_xml_add(vote, PCMK__XA_ELECTION_OWNER,
-                pcmk__cluster_get_xml_id(our_node));
-    crm_xml_add_int(vote, PCMK__XA_ELECTION_ID, cluster->priv->election->count);
+    pcmk__xe_set(vote, PCMK__XA_ELECTION_OWNER,
+                 pcmk__cluster_get_xml_id(our_node));
+    pcmk__xe_set_int(vote, PCMK__XA_ELECTION_ID,
+                     cluster->priv->election->count);
 
     // Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is actually microseconds
     get_uptime(&age);
-    crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
-                        PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
+    pcmk__xe_set_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
+                         PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
 
     pcmk__cluster_send_message(NULL, cluster->priv->server, vote);
     pcmk__xml_free(vote);
@@ -428,12 +429,12 @@ parse_election_message(const xmlNode *message, struct vote *vote)
     vote->age.tv_sec = -1;
     vote->age.tv_usec = -1;
 
-    vote->op = crm_element_value(message, PCMK__XA_CRM_TASK);
-    vote->from = crm_element_value(message, PCMK__XA_SRC);
-    vote->version = crm_element_value(message, PCMK_XA_VERSION);
-    vote->election_owner = crm_element_value(message, PCMK__XA_ELECTION_OWNER);
+    vote->op = pcmk__xe_get(message, PCMK__XA_CRM_TASK);
+    vote->from = pcmk__xe_get(message, PCMK__XA_SRC);
+    vote->version = pcmk__xe_get(message, PCMK_XA_VERSION);
+    vote->election_owner = pcmk__xe_get(message, PCMK__XA_ELECTION_OWNER);
 
-    crm_element_value_int(message, PCMK__XA_ELECTION_ID, &(vote->election_id));
+    pcmk__xe_get_int(message, PCMK__XA_ELECTION_ID, &(vote->election_id));
 
     if ((vote->op == NULL) || (vote->from == NULL) || (vote->version == NULL)
         || (vote->election_owner == NULL) || (vote->election_id < 0)) {
@@ -451,11 +452,14 @@ parse_election_message(const xmlNode *message, struct vote *vote)
         /* Only vote ops have uptime.
            Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is in microseconds.
          */
-        crm_element_value_timeval(message, PCMK__XA_ELECTION_AGE_SEC,
-                                  PCMK__XA_ELECTION_AGE_NANO_SEC, &(vote->age));
-        if ((vote->age.tv_sec < 0) || (vote->age.tv_usec < 0)) {
-            crm_warn("Cannot count election %s from %s "
-                     "because it is missing uptime", vote->op, vote->from);
+        if ((pcmk__xe_get_timeval(message, PCMK__XA_ELECTION_AGE_SEC,
+                                   PCMK__XA_ELECTION_AGE_NANO_SEC,
+                                   &(vote->age)) != pcmk_rc_ok)
+            || (vote->age.tv_sec < 0) || (vote->age.tv_usec < 0)) {
+
+            crm_warn("Cannot count election %s from %s because uptime is "
+                     "missing or invalid",
+                     vote->op, vote->from);
             return FALSE;
         }
 
@@ -497,8 +501,8 @@ send_no_vote(pcmk_cluster_t *cluster, pcmk__node_status_t *peer,
     message_type = pcmk__server_message_type(cluster->priv->server);
     novote = pcmk__new_request(cluster->priv->server, message_type,
                                vote->from, message_type, CRM_OP_NOVOTE, NULL);
-    crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
-    crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
+    pcmk__xe_set(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
+    pcmk__xe_set_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
 
     pcmk__cluster_send_message(peer, cluster->priv->server, novote);
     pcmk__xml_free(novote);

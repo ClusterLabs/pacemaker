@@ -243,7 +243,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     child_copy = pcmk__xml_copy(NULL, clone_data->xml_obj_child);
 
-    crm_xml_add(child_copy, PCMK__META_CLONE, inc_num);
+    pcmk__xe_set(child_copy, PCMK__META_CLONE, inc_num);
 
     if (pe__unpack_resource(child_copy, &child_rsc, rsc,
                             scheduler) != pcmk_rc_ok) {
@@ -860,8 +860,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                     if (probe_op != NULL) {
                         int rc;
 
-                        pcmk__scan_min_int(crm_element_value(probe_op,
-                                                             PCMK__XA_RC_CODE),
+                        pcmk__scan_min_int(pcmk__xe_get(probe_op,
+                                                        PCMK__XA_RC_CODE),
                                            &rc, 0);
                         g_hash_table_insert(stopped, strdup(node->priv->name),
                                             crm_strdup_printf("Stopped (%s)",

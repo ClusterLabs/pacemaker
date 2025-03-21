@@ -76,8 +76,8 @@ handle_pecalc_request(pcmk__request_t *request)
     if (pcmk__update_configured_schema(&converted, true) != pcmk_rc_ok) {
         scheduler->priv->graph = pcmk__xe_create(NULL,
                                                  PCMK__XE_TRANSITION_GRAPH);
-        crm_xml_add_int(scheduler->priv->graph, "transition_id", 0);
-        crm_xml_add_int(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, 0);
+        pcmk__xe_set_int(scheduler->priv->graph, "transition_id", 0);
+        pcmk__xe_set_int(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, 0);
         process = false;
         free(digest);
 
@@ -146,7 +146,7 @@ handle_pecalc_request(pcmk__request_t *request)
                                          series[series_id].name, seq, true);
     }
 
-    crm_xml_add(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
+    pcmk__xe_set(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
 
     pcmk__log_transition_summary(scheduler, filename);
 
@@ -158,8 +158,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
     } else {
         unlink(filename);
-        crm_xml_add_ll(xml_data, PCMK_XA_EXECUTION_DATE,
-                       (long long) execution_date);
+        pcmk__xe_set_time(xml_data, PCMK_XA_EXECUTION_DATE, execution_date);
         pcmk__xml_write_file(xml_data, filename, true);
         pcmk__write_series_sequence(PCMK_SCHEDULER_INPUT_DIR, series[series_id].name,
                                     ++seq, series_wrap);
@@ -241,10 +240,10 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         return 0;
     }
 
-    sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
+    sys_to = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_TO);
 
-    if (pcmk__str_eq(crm_element_value(msg, PCMK__XA_SUBT),
-                     PCMK__VALUE_RESPONSE, pcmk__str_none)) {
+    if (pcmk__str_eq(pcmk__xe_get(msg, PCMK__XA_SUBT), PCMK__VALUE_RESPONSE,
+                     pcmk__str_none)) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL,
                            CRM_EX_INDETERMINATE);
         crm_info("Ignoring IPC reply from %s", pcmk__client_name(c));
@@ -270,7 +269,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value_copy(request.xml, PCMK__XA_CRM_TASK);
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CRM_TASK);
         CRM_CHECK(request.op != NULL, return 0);
 
         reply = pcmk__process_request(&request, schedulerd_handlers);

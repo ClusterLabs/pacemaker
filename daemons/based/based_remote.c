@@ -205,7 +205,7 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    tmp = crm_element_value(login, PCMK_XA_OP);
+    tmp = pcmk__xe_get(login, PCMK_XA_OP);
     if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
         crm_warn("Rejecting remote client: Unrecognizable message "
                  "(operation '%s' not 'authenticate')", tmp);
@@ -213,8 +213,8 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    user = crm_element_value(login, PCMK_XA_USER);
-    pass = crm_element_value(login, PCMK__XA_PASSWORD);
+    user = pcmk__xe_get(login, PCMK_XA_USER);
+    pass = pcmk__xe_get(login, PCMK__XA_PASSWORD);
     if (!user || !pass) {
         crm_warn("Rejecting remote client: No %s given",
                  ((user == NULL)? "username" : "password"));
@@ -385,21 +385,21 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     pcmk__xe_remove_attr(command, PCMK__XA_CIB_HOST);
     pcmk__xe_remove_attr(command, PCMK__XA_CIB_UPDATE);
 
-    crm_xml_add(command, PCMK__XA_T, PCMK__VALUE_CIB);
-    crm_xml_add(command, PCMK__XA_CIB_CLIENTID, client->id);
-    crm_xml_add(command, PCMK__XA_CIB_CLIENTNAME, client->name);
-    crm_xml_add(command, PCMK__XA_CIB_USER, client->user);
+    pcmk__xe_set(command, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(command, PCMK__XA_CIB_CLIENTID, client->id);
+    pcmk__xe_set(command, PCMK__XA_CIB_CLIENTNAME, client->name);
+    pcmk__xe_set(command, PCMK__XA_CIB_USER, client->user);
 
-    if (crm_element_value(command, PCMK__XA_CIB_CALLID) == NULL) {
+    if (pcmk__xe_get(command, PCMK__XA_CIB_CALLID) == NULL) {
         char *call_uuid = crm_generate_uuid();
 
         /* fix the command */
-        crm_xml_add(command, PCMK__XA_CIB_CALLID, call_uuid);
+        pcmk__xe_set(command, PCMK__XA_CIB_CALLID, call_uuid);
         free(call_uuid);
     }
 
-    if (crm_element_value(command, PCMK__XA_CIB_CALLOPT) == NULL) {
-        crm_xml_add_int(command, PCMK__XA_CIB_CALLOPT, 0);
+    if (pcmk__xe_get(command, PCMK__XA_CIB_CALLOPT) == NULL) {
+        pcmk__xe_set_int(command, PCMK__XA_CIB_CALLOPT, 0);
     }
 
     crm_log_xml_trace(command, "Remote command: ");
@@ -480,9 +480,9 @@ cib_remote_msg(gpointer data)
         pcmk__set_client_flags(client, pcmk__client_authenticated);
         g_source_remove(client->remote->auth_timeout);
         client->remote->auth_timeout = 0;
-        client->name = crm_element_value_copy(command, PCMK_XA_NAME);
+        client->name = pcmk__xe_get_copy(command, PCMK_XA_NAME);
 
-        user = crm_element_value(command, PCMK_XA_USER);
+        user = pcmk__xe_get(command, PCMK_XA_USER);
         if (user) {
             client->user = pcmk__str_copy(user);
         }
@@ -493,8 +493,8 @@ cib_remote_msg(gpointer data)
 
         /* send ACK */
         reg = pcmk__xe_create(NULL, PCMK__XE_CIB_RESULT);
-        crm_xml_add(reg, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
-        crm_xml_add(reg, PCMK__XA_CIB_CLIENTID, client->id);
+        pcmk__xe_set(reg, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
+        pcmk__xe_set(reg, PCMK__XA_CIB_CLIENTID, client->id);
         pcmk__remote_send_xml(client->remote, reg);
         pcmk__xml_free(reg);
         pcmk__xml_free(command);
