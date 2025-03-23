@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -323,7 +323,7 @@ pcmk_process_exit(pcmk_child_t * child)
     } else if (!pcmk_is_set(child->flags, child_respawn)) {
         /* nothing to do */
 
-    } else if (crm_is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
+    } else if (pcmk__is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
         pcmk__panic("Subdaemon failed");
 
     } else if (child_liveness(child) == pcmk_rc_ok) {
@@ -431,7 +431,7 @@ start_child(pcmk_child_t * child)
     child->flags &= ~child_active_before_startup;
     child->check_count = 0;
 
-    if (env_callgrind != NULL && crm_is_true(env_callgrind)) {
+    if (pcmk__is_true(env_callgrind)) {
         use_callgrind = TRUE;
         use_valgrind = TRUE;
 
@@ -440,7 +440,7 @@ start_child(pcmk_child_t * child)
         use_callgrind = TRUE;
         use_valgrind = TRUE;
 
-    } else if (env_valgrind != NULL && crm_is_true(env_valgrind)) {
+    } else if (pcmk__is_true(env_valgrind)) {
         use_valgrind = TRUE;
 
     } else if ((env_valgrind != NULL)
@@ -727,7 +727,10 @@ find_and_track_existing_processes(void)
             switch (rc) {
                 case pcmk_rc_ok:
                     if (pcmk_children[i].pid == PCMK__SPECIAL_PID) {
-                        if (crm_is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
+                        const char *fail_fast =
+                            pcmk__env_option(PCMK__ENV_FAIL_FAST);
+
+                        if (pcmk__is_true(fail_fast)) {
                             crm_crit("Cannot reliably track pre-existing"
                                      " authentic process behind %s IPC on this"
                                      " platform and PCMK_" PCMK__ENV_FAIL_FAST

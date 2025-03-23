@@ -16,6 +16,7 @@
 #include <glib.h>               // guint, GList, GHashTable
 
 #include <crm/common/options.h> // PCMK_VALUE_TRUE, PCMK_VALUE_FALSE
+#include <crm/common/results.h> // pcmk_rc_ok
 #include <crm/common/strings.h> // crm_strdup_printf()
 
 #ifdef __cplusplus
@@ -56,6 +57,25 @@ int pcmk__scan_port(const char *text, int *port);
 int pcmk__parse_bool(const char *input, bool *result);
 int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end);
 int pcmk__parse_ms(const char *input, long long *result);
+
+/*!
+ * \internal
+ * \brief Check whether a string parses to \c true
+ *
+ * \param[in] input  Input string
+ *
+ * \retval \c true   if \p input is not \c NULL and \c pcmk__parse_bool() parses
+ *                   it to \c true
+ * \retval \c false  otherwise
+ */
+static inline bool
+pcmk__is_true(const char *input)
+{
+    bool result = false;
+
+    return (input != NULL) && (pcmk__parse_bool(input, &result) == pcmk_rc_ok)
+           && result;
+}
 
 GHashTable *pcmk__strkey_table(GDestroyNotify key_destroy_func,
                                GDestroyNotify value_destroy_func);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1500,8 +1500,8 @@ can_interleave_actions(const pcmk_action_t *first, const pcmk_action_t *then)
         rsc = then->rsc;
     }
 
-    interleave = crm_is_true(g_hash_table_lookup(rsc->priv->meta,
-                                                 PCMK_META_INTERLEAVE));
+    interleave = pcmk__is_true(g_hash_table_lookup(rsc->priv->meta,
+                                                   PCMK_META_INTERLEAVE));
     pcmk__rsc_trace(rsc, "'%s then %s' will %sbe interleaved (based on %s)",
                     first->uuid, then->uuid, (interleave? "" : "not "),
                     rsc->id);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -340,7 +340,7 @@ pacemakerd_read_config(void)
         get_config_opt(config, local_handle, "logging.debug", &debug_enabled,
                        PCMK_VALUE_OFF);
 
-        if (crm_is_true(debug_enabled)) {
+        if (pcmk__is_true(debug_enabled)) {
             pcmk__set_env_option(PCMK__ENV_DEBUG, "1", true);
             if (get_crm_log_level() < LOG_DEBUG) {
                 set_crm_log_level(LOG_DEBUG);

@@ -1184,8 +1184,8 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
     const char *value = pcmk__env_option(option);
 
     return (value != NULL)
-        && (crm_is_true(value)
-            || ((daemon != NULL) && (strstr(value, daemon) != NULL)));
+            && (pcmk__is_true(value)
+                || ((daemon != NULL) && (strstr(value, daemon) != NULL)));
 }
 
 

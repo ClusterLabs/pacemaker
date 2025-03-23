@@ -589,7 +589,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_SHUTDOWN_LOCK);
-    if (crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         controld_set_global_flags(controld_shutdown_lock_enabled);
     } else {
         controld_clear_global_flags(controld_shutdown_lock_enabled);

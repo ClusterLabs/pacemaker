@@ -159,7 +159,7 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
     crm_time_free(now);
 
     value = g_hash_table_lookup(config_hash, PCMK_META_ENABLED);
-    if ((value != NULL) && !crm_is_true(value)) {
+    if ((value != NULL) && !pcmk__is_true(value)) {
         // No need to continue unpacking
         rc = pcmk_rc_disabled;
         goto done;

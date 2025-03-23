@@ -55,7 +55,7 @@ struct action_history {
         const char *scf_value = pcmk__cluster_option(config_hash, (option));  \
                                                                               \
         if (scf_value != NULL) {                                              \
-            if (crm_is_true(scf_value)) {                                     \
+            if (pcmk__is_true(scf_value)) {                                   \
                 (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,   \
                                     LOG_TRACE, "Scheduler",                   \
                                     crm_system_name, (scheduler)->flags,      \
@@ -240,7 +240,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_HAVE_WATCHDOG);
-    if (value && crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         crm_info("Watchdog-based self-fencing will be performed via SBD if "
                  "fencing is required and " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
                  " is nonzero");
@@ -1009,7 +1009,7 @@ unpack_ticket_state(xmlNode *xml_ticket, void *userdata)
     }
 
     granted = g_hash_table_lookup(ticket->state, PCMK__XA_GRANTED);
-    if (granted && crm_is_true(granted)) {
+    if (pcmk__is_true(granted)) {
         pcmk__set_ticket_flags(ticket, pcmk__ticket_granted);
         crm_info("We have ticket '%s'", ticket->id);
     } else {
@@ -1032,7 +1032,7 @@ unpack_ticket_state(xmlNode *xml_ticket, void *userdata)
     }
 
     standby = g_hash_table_lookup(ticket->state, PCMK_XA_STANDBY);
-    if (standby && crm_is_true(standby)) {
+    if (pcmk__is_true(standby)) {
         pcmk__set_ticket_flags(ticket, pcmk__ticket_standby);
         if (pcmk_is_set(ticket->flags, pcmk__ticket_granted)) {
             crm_info("Granted ticket '%s' is in standby-mode", ticket->id);
@@ -1087,14 +1087,14 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->shutdown = TRUE;
     }
 
-    if (crm_is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_STANDBY, NULL,
-                                    pcmk__rsc_node_current))) {
+    if (pcmk__is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_STANDBY, NULL,
+                                      pcmk__rsc_node_current))) {
         crm_info("%s is in standby mode", pcmk__node_name(this_node));
         pcmk__set_node_flags(this_node, pcmk__node_standby);
     }
 
-    if (crm_is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_MAINTENANCE, NULL,
-                                    pcmk__rsc_node_current))
+    if (pcmk__is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_MAINTENANCE,
+                                      NULL, pcmk__rsc_node_current))
         || ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk__rsc_managed))) {
         crm_info("%s is in maintenance mode", pcmk__node_name(this_node));
         this_node->details->maintenance = TRUE;
@@ -1103,7 +1103,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     discovery = pcmk__node_attr(this_node,
                                 PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED,
                                 NULL, pcmk__rsc_node_current);
-    if ((discovery != NULL) && !crm_is_true(discovery)) {
+    if ((discovery != NULL) && !pcmk__is_true(discovery)) {
         pcmk__warn_once(pcmk__wo_rdisc_enabled,
                         "Support for the "
                         PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
@@ -1149,14 +1149,14 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
 
     add_node_attrs(attrs, node, TRUE, scheduler);
 
-    if (crm_is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_STANDBY, NULL,
-                                    pcmk__rsc_node_current))) {
+    if (pcmk__is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_STANDBY, NULL,
+                                      pcmk__rsc_node_current))) {
         crm_info("%s is in standby mode", pcmk__node_name(node));
         pcmk__set_node_flags(node, pcmk__node_standby);
     }
 
-    if (crm_is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_MAINTENANCE, NULL,
-                                    pcmk__rsc_node_current))) {
+    if (pcmk__is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_MAINTENANCE, NULL,
+                                      pcmk__rsc_node_current))) {
         crm_info("%s is in maintenance mode", pcmk__node_name(node));
         node->details->maintenance = TRUE;
     }
@@ -1164,7 +1164,7 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
     discovery = pcmk__node_attr(node,
                                 PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED,
                                 NULL, pcmk__rsc_node_current);
-    if ((discovery != NULL) && !crm_is_true(discovery)) {
+    if ((discovery != NULL) && !pcmk__is_true(discovery)) {
         pcmk__config_warn("Ignoring "
                           PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
                           " attribute for %s because disabling resource"

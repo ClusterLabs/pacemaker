@@ -144,7 +144,7 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
     rc = pcmk__xe_get_bool_attr(xml_obj, PCMK_XA_SYMMETRICAL, &symmetric);
 
     if (rc != pcmk_rc_ok && parent_symmetrical_s != NULL) {
-        symmetric = crm_is_true(parent_symmetrical_s);
+        symmetric = pcmk__is_true(parent_symmetrical_s);
         rc = pcmk_rc_ok;
     }
 
@@ -583,7 +583,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
         sequential_s = "1";
     }
 
-    sequential = crm_is_true(sequential_s);
+    sequential = pcmk__is_true(sequential_s);
 
     symmetry = get_ordering_symmetry(set, parent_kind, parent_symmetrical_s);
     flags = ordering_flags_for_kind(local_kind, action, symmetry);

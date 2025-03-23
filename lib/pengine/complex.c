@@ -437,7 +437,7 @@ detect_unique(const pcmk_resource_t *rsc)
         }
         return false;
     }
-    return crm_is_true(value);
+    return pcmk__is_true(value);
 }
 
 static void
@@ -795,12 +795,12 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     unpack_priority(*rsc);
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_CRITICAL);
-    if ((value == NULL) || crm_is_true(value)) {
+    if ((value == NULL) || pcmk__is_true(value)) {
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_critical);
     }
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_NOTIFY);
-    if (crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_notify);
     }
 
@@ -814,7 +814,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_ALLOW_MIGRATE);
-    if (crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_migratable);
     } else if ((value == NULL) && remote_node) {
         /* By default, we want remote nodes to be able
@@ -835,7 +835,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                               " to the explicit value '" PCMK_VALUE_DEFAULT
                               "' is deprecated and will be removed in a "
                               "future release (just leave it unset)");
-        } else if (crm_is_true(value)) {
+        } else if (pcmk__is_true(value)) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);
         } else {
             pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
@@ -843,7 +843,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_MAINTENANCE);
-    if (crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_maintenance);
     }
@@ -856,8 +856,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         if (detect_unique(*rsc)) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_unique);
         }
-        if (crm_is_true(g_hash_table_lookup((*rsc)->priv->meta,
-                                            PCMK_META_PROMOTABLE))) {
+        if (pcmk__is_true(g_hash_table_lookup((*rsc)->priv->meta,
+                                              PCMK_META_PROMOTABLE))) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_promotable);
         }
     } else {
