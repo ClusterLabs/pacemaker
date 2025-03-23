@@ -15,6 +15,6 @@ include $(top_srcdir)/mk/unittest.mk
 check_PROGRAMS = pcmk__clear_flags_as_test	\
 		 pcmk__set_flags_as_test	\
 		 pcmk__all_flags_set_test	\
-		 pcmk_any_flags_set_test
+		 pcmk__any_flags_set_test
 
 TESTS = $(check_PROGRAMS)

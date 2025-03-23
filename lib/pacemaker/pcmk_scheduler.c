@@ -724,7 +724,7 @@ log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
 
         const pcmk_action_t *action = (const pcmk_action_t *) iter->data;
 
-        if (!pcmk_any_flags_set(action->flags, flags)) {
+        if (!pcmk__any_flags_set(action->flags, flags)) {
             pcmk__log_action("\t", action, true);
         }
     }

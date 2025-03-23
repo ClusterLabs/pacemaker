@@ -617,7 +617,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
         goto done;
     }
 
-    if (pcmk_any_flags_set(flags, crm_time_seconds|crm_time_epoch)) {
+    if (pcmk__any_flags_set(flags, crm_time_seconds|crm_time_epoch)) {
         long long seconds = 0;
 
         if (pcmk__is_set(flags, crm_time_seconds)) {

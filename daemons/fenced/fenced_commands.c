@@ -1490,9 +1490,9 @@ stonith_device_remove(const char *id, bool from_cib)
                                   fenced_df_api_registered|fenced_df_verified);
     }
 
-    if (!pcmk_any_flags_set(device->flags,
-                            fenced_df_api_registered
-                            |fenced_df_cib_registered)) {
+    if (!pcmk__any_flags_set(device->flags,
+                             fenced_df_api_registered
+                             |fenced_df_cib_registered)) {
         g_hash_table_remove(device_table, id);
         ndevices = g_hash_table_size(device_table);
         crm_info("Removed '%s' from device list (%u active device%s)",

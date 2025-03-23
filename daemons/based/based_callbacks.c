@@ -1147,7 +1147,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     }
 
     if ((rc == pcmk_ok)
-        && !pcmk_any_flags_set(call_options, cib_dryrun|cib_transaction)) {
+        && !pcmk__any_flags_set(call_options, cib_dryrun|cib_transaction)) {
 
         if (result_cib != the_cib) {
             if (pcmk__is_set(operation->flags, cib__op_attr_writes_through)) {
@@ -1209,8 +1209,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         }
     }
 
-    if (!pcmk_any_flags_set(call_options,
-                            cib_dryrun|cib_inhibit_notify|cib_transaction)) {
+    if (!pcmk__any_flags_set(call_options,
+                             cib_dryrun|cib_inhibit_notify|cib_transaction)) {
         crm_trace("Sending notifications %d",
                   pcmk__is_set(call_options, cib_dryrun));
         cib_diff_notify(op, rc, call_id, client_id, client_name, originator,

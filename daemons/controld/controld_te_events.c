@@ -98,7 +98,8 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) gIter->data;
 
-        if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_failed)) {
+        if (pcmk__any_flags_set(synapse->flags,
+                                pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             /* We've already been here */
             continue;
         }
