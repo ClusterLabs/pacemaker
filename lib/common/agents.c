@@ -94,10 +94,11 @@ crm_generate_ra_key(const char *standard, const char *provider,
         return NULL;
     }
 
-    return crm_strdup_printf("%s%s%s:%s",
-                             standard,
-                             (prov_empty ? "" : ":"), (prov_empty ? "" : provider),
-                             type);
+    return pcmk__assert_asprintf("%s%s%s:%s",
+                                 standard,
+                                 (prov_empty ? "" : ":"),
+                                 (prov_empty ? "" : provider),
+                                 type);
 }
 
 /*!

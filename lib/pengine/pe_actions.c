@@ -747,7 +747,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     // Normalize interval to milliseconds
     if (interval_ms > 0) {
         g_hash_table_insert(meta, pcmk__str_copy(PCMK_META_INTERVAL),
-                            crm_strdup_printf("%u", interval_ms));
+                            pcmk__assert_asprintf("%u", interval_ms));
     } else {
         g_hash_table_remove(meta, PCMK_META_INTERVAL);
     }
@@ -800,7 +800,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
                                    rsc->priv->scheduler->priv->now,
                                    &start_delay)) {
             g_hash_table_insert(meta, pcmk__str_copy(PCMK_META_START_DELAY),
-                                crm_strdup_printf("%lld", start_delay));
+                                pcmk__assert_asprintf("%lld", start_delay));
         }
     }
     return meta;
@@ -1244,8 +1244,8 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
         op = scheduler->priv->fence_action;
     }
 
-    op_key = crm_strdup_printf("%s-%s-%s",
-                               PCMK_ACTION_STONITH, node->priv->name, op);
+    op_key = pcmk__assert_asprintf("%s-%s-%s",
+                                   PCMK_ACTION_STONITH, node->priv->name, op);
 
     fencing_op = lookup_singleton(scheduler, op_key);
     if (fencing_op == NULL) {
@@ -1527,10 +1527,10 @@ pe__action2reason(const pcmk_action_t *action, enum pcmk__action_flags flag)
             CRM_CHECK(change != NULL, change = "");
             break;
     }
-    return crm_strdup_printf("%s%s%s %s", change,
-                             (action->rsc == NULL)? "" : " ",
-                             (action->rsc == NULL)? "" : action->rsc->id,
-                             action->task);
+    return pcmk__assert_asprintf("%s%s%s %s", change,
+                                 (action->rsc == NULL)? "" : " ",
+                                 (action->rsc == NULL)? "" : action->rsc->id,
+                                 action->task);
 }
 
 void pe_action_set_reason(pcmk_action_t *action, const char *reason,

@@ -90,10 +90,10 @@ create_action_name(const pcmk_action_t *action, bool verbose)
         }
 
         if (action_host != NULL) {
-            action_name = crm_strdup_printf("%s%s %s",
-                                            prefix, key, action_host);
+            action_name = pcmk__assert_asprintf("%s%s %s",
+                                                prefix, key, action_host);
         } else {
-            action_name = crm_strdup_printf("%s%s", prefix, key);
+            action_name = pcmk__assert_asprintf("%s%s", prefix, key);
         }
         free(key);
 
@@ -102,23 +102,25 @@ create_action_name(const pcmk_action_t *action, bool verbose)
         const char *op = g_hash_table_lookup(action->meta,
                                              PCMK__META_STONITH_ACTION);
 
-        action_name = crm_strdup_printf("%s%s '%s' %s",
-                                        prefix, action->task, op, action_host);
+        action_name = pcmk__assert_asprintf("%s%s '%s' %s",
+                                            prefix, action->task, op,
+                                            action_host);
 
     } else if (action->rsc && action_host) {
-        action_name = crm_strdup_printf("%s%s %s",
-                                        prefix, action->uuid, action_host);
+        action_name = pcmk__assert_asprintf("%s%s %s",
+                                            prefix, action->uuid, action_host);
 
     } else if (action_host) {
-        action_name = crm_strdup_printf("%s%s %s",
-                                        prefix, action->task, action_host);
+        action_name = pcmk__assert_asprintf("%s%s %s",
+                                            prefix, action->task, action_host);
 
     } else {
-        action_name = crm_strdup_printf("%s", action->uuid);
+        action_name = pcmk__assert_asprintf("%s", action->uuid);
     }
 
     if (verbose) {
-        char *with_id = crm_strdup_printf("%s (%d)", action_name, action->id);
+        char *with_id = pcmk__assert_asprintf("%s (%d)", action_name,
+                                              action->id);
 
         free(action_name);
         action_name = with_id;
@@ -349,7 +351,7 @@ profile_filter(const struct dirent *entry)
         goto done;
     }
 
-    buf = crm_strdup_printf("%s/%s", profiling_dir, filename);
+    buf = pcmk__assert_asprintf("%s/%s", profiling_dir, filename);
     if ((stat(buf, &sb) != 0) || !S_ISREG(sb.st_mode)) {
         crm_trace("Not profiling file '%s': not a regular file", filename);
         goto done;
@@ -462,7 +464,7 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
 
     for (int i = 0; i < num_files; i++) {
         // glibc doesn't enforce PATH_MAX, so don't limit the buffer size
-        char *path = crm_strdup_printf("%s/%s", dir, namelist[i]->d_name);
+        char *path = pcmk__assert_asprintf("%s/%s", dir, namelist[i]->d_name);
 
         profile_file(path, repeat, scheduler, scheduler_flags, use_date);
         free(path);
@@ -661,8 +663,8 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         const char *offset = NULL;
 
         // Allow user to specify anonymous clone with or without instance number
-        key = crm_strdup_printf(PCMK__OP_FMT "@%s=", resource, op->op_type,
-                                op->interval_ms, node);
+        key = pcmk__assert_asprintf(PCMK__OP_FMT "@%s=", resource, op->op_type,
+                                    op->interval_ms, node);
         if (strncasecmp(key, spec, strlen(key)) == 0) {
             match_name = resource;
         }
@@ -672,8 +674,9 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         if ((match_name == NULL)
             && (strcmp(resource, resource_config_name) != 0)) {
 
-            key = crm_strdup_printf(PCMK__OP_FMT "@%s=", resource_config_name,
-                                    op->op_type, op->interval_ms, node);
+            key = pcmk__assert_asprintf(PCMK__OP_FMT "@%s=",
+                                        resource_config_name, op->op_type,
+                                        op->interval_ms, node);
             if (strncasecmp(key, spec, strlen(key)) == 0) {
                 match_name = resource_config_name;
             }

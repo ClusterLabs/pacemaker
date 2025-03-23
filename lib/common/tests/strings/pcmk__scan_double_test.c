@@ -94,12 +94,12 @@ typical_case(void **state)
     assert_int_equal(pcmk__scan_double("-1.0", &result, NULL, NULL), pcmk_rc_ok);
     assert_float_equal(result, -1.0, DBL_EPSILON);
 
-    buf = crm_strdup_printf("%f", DBL_MAX);
+    buf = pcmk__assert_asprintf("%f", DBL_MAX);
     assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL), pcmk_rc_ok);
     assert_float_equal(result, DBL_MAX, DBL_EPSILON);
     free(buf);
 
-    buf = crm_strdup_printf("%f", -DBL_MAX);
+    buf = pcmk__assert_asprintf("%f", -DBL_MAX);
     assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL), pcmk_rc_ok);
     assert_float_equal(result, -DBL_MAX, DBL_EPSILON);
     free(buf);
@@ -115,12 +115,12 @@ double_overflow(void **state)
      * 1e(DBL_MAX_10_EXP + 1) produces an inf value
      * Can't use assert_float_equal() because (inf - inf) == NaN
      */
-    buf = crm_strdup_printf("1e%d", DBL_MAX_10_EXP + 1);
+    buf = pcmk__assert_asprintf("1e%d", DBL_MAX_10_EXP + 1);
     assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL), EOVERFLOW);
     assert_true(result > DBL_MAX);
     free(buf);
 
-    buf = crm_strdup_printf("-1e%d", DBL_MAX_10_EXP + 1);
+    buf = pcmk__assert_asprintf("-1e%d", DBL_MAX_10_EXP + 1);
     assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL), EOVERFLOW);
     assert_true(result < -DBL_MAX);
     free(buf);
@@ -138,14 +138,14 @@ double_underflow(void **state)
      *
      * C99/C11: result will be **no greater than** DBL_MIN
      */
-    buf = crm_strdup_printf("1e%d", DBL_MIN_10_EXP - 1);
+    buf = pcmk__assert_asprintf("1e%d", DBL_MIN_10_EXP - 1);
     assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL),
                      pcmk_rc_underflow);
     assert_true(result >= 0.0);
     assert_true(result <= DBL_MIN);
     free(buf);
 
-    buf = crm_strdup_printf("-1e%d", DBL_MIN_10_EXP - 1);
+    buf = pcmk__assert_asprintf("-1e%d", DBL_MIN_10_EXP - 1);
     assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL),
                      pcmk_rc_underflow);
     assert_true(result <= 0.0);

@@ -272,7 +272,7 @@ next_ip(const char *last_ip)
         ++oct4;
     }
 
-    return crm_strdup_printf("%u.%u.%u.%u", oct1, oct2, oct3, oct4);
+    return pcmk__assert_asprintf("%u.%u.%u.%u", oct1, oct2, oct3, oct4);
 }
 
 static void
@@ -363,7 +363,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         xmlNode *xml_ip = NULL;
         xmlNode *xml_obj = NULL;
 
-        id = crm_strdup_printf("%s-ip-%s", data->prefix, replica->ipaddr);
+        id = pcmk__assert_asprintf("%s-ip-%s", data->prefix, replica->ipaddr);
         pcmk__xml_sanitize_id(id);
         xml_ip = create_resource(id, "heartbeat", "IPaddr2");
         free(id);
@@ -445,8 +445,8 @@ create_container_resource(pcmk_resource_t *parent,
 
     buffer = g_string_sized_new(4096);
 
-    id = crm_strdup_printf("%s-%s-%d", data->prefix, agent_str,
-                           replica->offset);
+    id = pcmk__assert_asprintf("%s-%s-%d", data->prefix, agent_str,
+                               replica->offset);
     pcmk__xml_sanitize_id(id);
     xml_container = create_resource(id, "heartbeat", agent_str);
     free(id);
@@ -491,8 +491,8 @@ create_container_resource(pcmk_resource_t *parent,
         char *source = NULL;
 
         if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
-            source = crm_strdup_printf("%s/%s-%d", mount->source, data->prefix,
-                                       replica->offset);
+            source = pcmk__assert_asprintf("%s/%s-%d", mount->source,
+                                           data->prefix, replica->offset);
             pcmk__add_separated_word(&dbuffer, 1024, source, ",");
         }
 
@@ -652,7 +652,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         GHashTableIter gIter;
         pcmk_node_t *node = NULL;
         xmlNode *xml_remote = NULL;
-        char *id = crm_strdup_printf("%s-%d", data->prefix, replica->offset);
+        char *id = pcmk__assert_asprintf("%s-%d", data->prefix,
+                                         replica->offset);
         char *port_s = NULL;
         const char *uname = NULL;
         const char *connect_name = NULL;
@@ -661,8 +662,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         if (pe_find_resource(scheduler->priv->resources, id) != NULL) {
             free(id);
             // The biggest hammer we have
-            id = crm_strdup_printf("pcmk-internal-%s-remote-%d",
-                                   replica->child->id, replica->offset);
+            id = pcmk__assert_asprintf("pcmk-internal-%s-remote-%d",
+                                       replica->child->id, replica->offset);
             //@TODO return error instead of asserting?
             pcmk__assert(pe_find_resource(scheduler->priv->resources,
                                           id) == NULL);

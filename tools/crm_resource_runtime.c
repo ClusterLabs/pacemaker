@@ -287,9 +287,9 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
 static xmlNode *
 get_cib_rsc(xmlNode *cib_xml, const pcmk_resource_t *rsc)
 {
-    char *xpath = crm_strdup_printf("%s//*[@" PCMK_XA_ID "='%s']",
-                                    pcmk_cib_xpath_for(PCMK_XE_RESOURCES),
-                                    pcmk__xe_id(rsc->priv->xml));
+    char *xpath = pcmk__assert_asprintf("%s//*[@" PCMK_XA_ID "='%s']",
+                                        pcmk_cib_xpath_for(PCMK_XE_RESOURCES),
+                                        pcmk__xe_id(rsc->priv->xml));
     xmlNode *rsc_xml = pcmk__xpath_find_one(cib_xml->doc, xpath, LOG_ERR);
 
     free(xpath);
@@ -455,13 +455,14 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
             case ENXIO:
                 if (rsc_attr_set == NULL) {
-                    local_attr_set = crm_strdup_printf("%s-%s", lookup_id,
-                                                       attr_set_type);
+                    local_attr_set = pcmk__assert_asprintf("%s-%s", lookup_id,
+                                                           attr_set_type);
                     rsc_attr_set = local_attr_set;
                 }
                 if (rsc_attr_id == NULL) {
-                    found_attr_id = crm_strdup_printf("%s-%s",
-                                                      rsc_attr_set, attr_name);
+                    found_attr_id = pcmk__assert_asprintf("%s-%s",
+                                                          rsc_attr_set,
+                                                          attr_name);
                     rsc_attr_id = found_attr_id;
                 }
 
@@ -870,7 +871,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         guint interval_ms = 0U;
 
         pcmk_parse_interval_spec(interval_spec, &interval_ms);
-        interval_ms_s = crm_strdup_printf("%u", interval_ms);
+        interval_ms_s = pcmk__assert_asprintf("%u", interval_ms);
     }
 
     for (xmlNode *xml_op = pcmk__xe_first_child(scheduler->priv->failed, NULL,
@@ -2116,13 +2117,13 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         return ENOMEM;
     }
 
-    xpath = crm_strdup_printf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS
-                              "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM
-                              "/" PCMK__XE_LRM_RESOURCES
-                              "/" PCMK__XE_LRM_RESOURCE
-                              "/" PCMK__XE_LRM_RSC_OP
-                              "[@" PCMK__XA_RC_CODE "='%d']",
-                              PCMK_OCF_UNKNOWN);
+    xpath = pcmk__assert_asprintf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS
+                                  "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM
+                                  "/" PCMK__XE_LRM_RESOURCES
+                                  "/" PCMK__XE_LRM_RESOURCE
+                                  "/" PCMK__XE_LRM_RSC_OP
+                                  "[@" PCMK__XA_RC_CODE "='%d']",
+                                  PCMK_OCF_UNKNOWN);
     do {
         /* Abort if timeout is reached */
         time_diff = expire_time - time(NULL);
@@ -2217,12 +2218,12 @@ set_agent_environment(GHashTable *params, guint timeout_ms, int check_level,
                       int verbosity)
 {
     g_hash_table_insert(params, crm_meta_name(PCMK_META_TIMEOUT),
-                        crm_strdup_printf("%u", timeout_ms));
+                        pcmk__assert_asprintf("%u", timeout_ms));
 
     pcmk__insert_dup(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     if (check_level >= 0) {
-        char *level = crm_strdup_printf("%d", check_level);
+        char *level = pcmk__assert_asprintf("%d", check_level);
 
         setenv("OCF_CHECK_LEVEL", level, 1);
         free(level);

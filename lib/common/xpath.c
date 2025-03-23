@@ -332,7 +332,7 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
         return retval;
     }
 
-    patt = crm_strdup_printf("/%s[@" PCMK_XA_ID "=", node);
+    patt = pcmk__assert_asprintf("/%s[@" PCMK_XA_ID "=", node);
     start = strstr(xpath, patt);
 
     if (!start) {

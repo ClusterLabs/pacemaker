@@ -20,7 +20,8 @@
 static void
 has_pids(void **state)
 {
-    char *exe_path = crm_strdup_printf("/proc/%lld/exe", (long long) getpid());
+    char *exe_path = pcmk__assert_asprintf("/proc/%lld/exe",
+                                           (long long) getpid());
 
     // Set readlink() errno and link contents (for /proc/PID/exe)
     pcmk__mock_readlink = true;

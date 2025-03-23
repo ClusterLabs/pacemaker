@@ -234,7 +234,7 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
 
     pcmk__assert(out != NULL);
 
-    rc_buf = crm_strdup_printf("Return code: %d", exit_status);
+    rc_buf = pcmk__assert_asprintf("Return code: %d", exit_status);
 
     pcmk__output_create_xml_text_node(out, "h2", "Command Output");
     pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, rc_buf);

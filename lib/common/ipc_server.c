@@ -784,15 +784,18 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
         CRM_LOG_ASSERT(header->qb.id != 0);     /* Replying to a specific request */
 
         if (pcmk_is_set(header->flags, crm_ipc_multipart_end)) {
-            part_text = crm_strdup_printf(" (final part %d) ", header->part_id);
+            part_text = pcmk__assert_asprintf(" (final part %d) ",
+                                              header->part_id);
         } else if (pcmk_is_set(header->flags, crm_ipc_multipart)) {
             if (header->part_id == 0) {
-                part_text = crm_strdup_printf(" (initial part %d) ", header->part_id);
+                part_text = pcmk__assert_asprintf(" (initial part %d) ",
+                                                  header->part_id);
             } else {
-                part_text = crm_strdup_printf(" (part %d) ", header->part_id);
+                part_text = pcmk__assert_asprintf(" (part %d) ",
+                                                  header->part_id);
             }
         } else {
-            part_text = crm_strdup_printf(" ");
+            part_text = pcmk__str_copy(" ");
         }
 
         qb_rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);

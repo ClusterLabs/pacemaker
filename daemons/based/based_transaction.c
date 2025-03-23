@@ -29,11 +29,11 @@ char *
 based_transaction_source_str(const pcmk__client_t *client, const char *origin)
 {
     if (client != NULL) {
-        return crm_strdup_printf("client %s (%s)%s%s",
-                                 pcmk__client_name(client),
-                                 pcmk__s(client->id, "unidentified"),
-                                 ((origin != NULL)? " on " : ""),
-                                 pcmk__s(origin, ""));
+        return pcmk__assert_asprintf("client %s (%s)%s%s",
+                                     pcmk__client_name(client),
+                                     pcmk__s(client->id, "unidentified"),
+                                     ((origin != NULL)? " on " : ""),
+                                     pcmk__s(origin, ""));
     } else {
         return pcmk__str_copy(pcmk__s(origin, "unknown source"));
     }

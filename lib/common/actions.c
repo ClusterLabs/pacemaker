@@ -225,7 +225,7 @@ char *
 pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms)
 {
     pcmk__assert((rsc_id != NULL) && (op_type != NULL));
-    return crm_strdup_printf(PCMK__OP_FMT, rsc_id, op_type, interval_ms);
+    return pcmk__assert_asprintf(PCMK__OP_FMT, rsc_id, op_type, interval_ms);
 }
 
 static inline gboolean
@@ -368,8 +368,8 @@ pcmk__notify_key(const char *rsc_id, const char *notify_type,
     CRM_CHECK(rsc_id != NULL, return NULL);
     CRM_CHECK(op_type != NULL, return NULL);
     CRM_CHECK(notify_type != NULL, return NULL);
-    return crm_strdup_printf("%s_%s_notify_%s_0",
-                             rsc_id, notify_type, op_type);
+    return pcmk__assert_asprintf("%s_%s_notify_%s_0",
+                                 rsc_id, notify_type, op_type);
 }
 
 /*!
@@ -433,8 +433,8 @@ pcmk__transition_key(int transition_id, int action_id, int target_rc,
                      const char *node)
 {
     CRM_CHECK(node != NULL, return NULL);
-    return crm_strdup_printf("%d:%d:%d:%-*s",
-                             action_id, transition_id, target_rc, 36, node);
+    return pcmk__assert_asprintf("%d:%d:%d:%-*s",
+                                 action_id, transition_id, target_rc, 36, node);
 }
 
 /*!

@@ -214,8 +214,8 @@ option_list_default(pcmk__output_t *out, va_list args)
 
         for (const GSList *iter = aliased; iter != NULL; iter = iter->next) {
             const pcmk__cluster_option_t *option = iter->data;
-            char *desc = crm_strdup_printf(_("Deprecated alias for %s"),
-                                           option->name);
+            char *desc = pcmk__assert_asprintf(_("Deprecated alias for %s"),
+                                               option->name);
             pcmk__cluster_option_t alias = *option;
 
             alias.name = option->alt_name;
@@ -380,8 +380,8 @@ add_option_metadata_xml(pcmk__output_t *out,
         type = map_legacy_option_type(type);
 
         if (option->values != NULL) {
-            desc_long_legacy = crm_strdup_printf("%s  Allowed values: %s",
-                                                 desc_long, option->values);
+            desc_long_legacy = pcmk__assert_asprintf("%s  Allowed values: %s",
+                                                     desc_long, option->values);
             desc_long = desc_long_legacy;
         }
 
@@ -515,8 +515,8 @@ option_list_xml(pcmk__output_t *out, va_list args)
 
         if (option->alt_name != NULL) {
             pcmk__cluster_option_t alias = *option;
-            char *desc = crm_strdup_printf(_("Deprecated alias for %s"),
-                                           option->name);
+            char *desc = pcmk__assert_asprintf(_("Deprecated alias for %s"),
+                                               option->name);
 
             alias.name = option->alt_name;
             alias.alt_name = NULL;

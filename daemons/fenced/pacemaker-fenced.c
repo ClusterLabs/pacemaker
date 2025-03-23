@@ -149,7 +149,8 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     if (c->name == NULL) {
         const char *value = pcmk__xe_get(request, PCMK__XA_ST_CLIENTNAME);
 
-        c->name = crm_strdup_printf("%s.%u", pcmk__s(value, "unknown"), c->pid);
+        c->name = pcmk__assert_asprintf("%s.%u", pcmk__s(value, "unknown"),
+                                        c->pid);
     }
 
     rc = pcmk__xe_get_flags(request, PCMK__XA_ST_CALLOPT, &call_options,

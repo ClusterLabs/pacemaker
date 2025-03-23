@@ -261,13 +261,13 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
          * here because PCMK_DEFAULT_ACTION_TIMEOUT_MS is 20000 -> "20s".
          */
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
-        buffer = crm_strdup_printf(META_TEMPLATE, agent,
-                                   ((meta_longdesc_esc != NULL) ?
-                                    meta_longdesc_esc : meta_longdesc),
-                                   ((meta_shortdesc_esc != NULL) ?
-                                    meta_shortdesc_esc : meta_shortdesc),
-                                   meta_param, timeout_str, timeout_str,
-                                   timeout_str);
+        buffer = pcmk__assert_asprintf(META_TEMPLATE, agent,
+                                       pcmk__s(meta_longdesc_esc,
+                                               meta_longdesc),
+                                       pcmk__s(meta_shortdesc_esc,
+                                               meta_shortdesc),
+                                       meta_param, timeout_str, timeout_str,
+                                       timeout_str);
 
         g_free(meta_longdesc_esc);
         g_free(meta_shortdesc_esc);

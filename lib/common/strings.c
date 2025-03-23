@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <regex.h>
+#include <stdarg.h>     // va_list, etc.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -1245,6 +1246,34 @@ pcmk__str_update(char **str, const char *value)
         free(*str);
         *str = pcmk__str_copy(value);
     }
+}
+
+/*!
+ * \internal
+ * \brief Print to an allocated string using \c printf()-style formatting
+ *
+ * This is like \c asprintf() but asserts on any error. The return value cannot
+ * be \c NULL, but it may be an empty string, depending on the format string and
+ * variadic arguments.
+ *
+ * \param[in] format  \c printf() format string
+ * \param[in] ...     \c printf() format arguments
+ *
+ * \return Newly allocated string (guaranteed not to be \c NULL).
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+char *
+pcmk__assert_asprintf(const char *format, ...)
+{
+    char *result = NULL;
+    va_list ap;
+
+    va_start(ap, format);
+    pcmk__assert(vasprintf(&result, format, ap) >= 0);
+    va_end(ap);
+
+    return result;
 }
 
 /*!

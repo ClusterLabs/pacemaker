@@ -1228,8 +1228,8 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     operation = pcmk__xe_get(request, PCMK__XA_ST_OP);
 
     if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
-        op->client_name = crm_strdup_printf("%s.%lu", crm_system_name,
-                                         (unsigned long) getpid());
+        op->client_name = pcmk__assert_asprintf("%s.%lu", crm_system_name,
+                                                (unsigned long) getpid());
     } else {
         op->client_name = pcmk__xe_get_copy(request, PCMK__XA_ST_CLIENTNAME);
     }

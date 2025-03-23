@@ -482,10 +482,10 @@ pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
     search.name = pcmk__str_copy(node_name);    // May log after original freed
 
     if (id > 0) {
-        criterion = crm_strdup_printf("cluster layer ID %" PRIu32, id);
+        criterion = pcmk__assert_asprintf("cluster layer ID %" PRIu32, id);
 
     } else if (node_name != NULL) {
-        criterion = crm_strdup_printf("name %s", node_name);
+        criterion = pcmk__assert_asprintf("name %s", node_name);
     }
 
     matches = g_hash_table_foreach_remove(pcmk__peer_cache,
@@ -835,7 +835,7 @@ pcmk__search_node_caches(unsigned int id, const char *uname,
             node = find_cib_cluster_node(xml_id, uname);
         } else {
             // Assumes XML ID is node ID as string (as with Corosync)
-            char *id_str = (id == 0)? NULL : crm_strdup_printf("%u", id);
+            char *id_str = (id == 0)? NULL : pcmk__assert_asprintf("%u", id);
 
             node = find_cib_cluster_node(id_str, uname);
             free(id_str);

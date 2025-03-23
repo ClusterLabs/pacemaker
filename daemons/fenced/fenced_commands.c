@@ -286,7 +286,7 @@ get_action_timeout(const fenced_device_t *device, const char *action,
         }
 
         /* If the device config specified an action-specific timeout, use it */
-        timeout_param = crm_strdup_printf("pcmk_%s_timeout", action);
+        timeout_param = pcmk__assert_asprintf("pcmk_%s_timeout", action);
         value = g_hash_table_lookup(device->params, timeout_param);
         free(timeout_param);
 
@@ -1582,14 +1582,14 @@ stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
             return pcmk__xe_get_copy(level, PCMK_XA_TARGET_PATTERN);
 
         case fenced_target_by_attribute:
-            return crm_strdup_printf("%s=%s",
-                                     pcmk__xe_get(level,
-					          PCMK_XA_TARGET_ATTRIBUTE),
-                                     pcmk__xe_get(level,
-					          PCMK_XA_TARGET_VALUE));
+            return pcmk__assert_asprintf("%s=%s",
+                                         pcmk__xe_get(level,
+                                                      PCMK_XA_TARGET_ATTRIBUTE),
+                                         pcmk__xe_get(level,
+                                                      PCMK_XA_TARGET_VALUE));
 
         default:
-            return crm_strdup_printf("unknown-%s", pcmk__xe_id(level));
+            return pcmk__assert_asprintf("unknown-%s", pcmk__xe_id(level));
     }
 }
 
@@ -2590,7 +2590,7 @@ log_async_result(const async_command_t *cmd,
 
     // Log the output (which may have multiple lines), if appropriate
     if (output_log_level != LOG_NEVER) {
-        char *prefix = crm_strdup_printf("%s[%d]", cmd->device, pid);
+        char *prefix = pcmk__assert_asprintf("%s[%d]", cmd->device, pid);
 
         crm_log_output(output_log_level, prefix, result->action_stdout);
         free(prefix);

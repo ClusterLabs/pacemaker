@@ -336,8 +336,8 @@ pcmk__order_vs_unfencing(const pcmk_resource_t *rsc, pcmk_node_t *node,
 
         if (!pcmk__node_unfenced(node)) {
             // But unfencing is required if it has never been done
-            char *reason = crm_strdup_printf("required by %s %s",
-                                             rsc->id, action->task);
+            char *reason = pcmk__assert_asprintf("required by %s %s",
+                                                 rsc->id, action->task);
 
             trigger_unfencing(NULL, node, reason, NULL,
                               node->priv->scheduler);

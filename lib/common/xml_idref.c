@@ -101,7 +101,7 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
         search = xml;
     }
 
-    xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", xml->name, ref);
+    xpath = pcmk__assert_asprintf("//%s[@" PCMK_XA_ID "='%s']", xml->name, ref);
     result = pcmk__xpath_find_one(search->doc, xpath, LOG_DEBUG);
     if (result == NULL) {
         // Not possible with schema validation enabled

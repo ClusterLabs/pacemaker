@@ -1079,7 +1079,7 @@ pcmk__env_option(const char *option)
     CRM_CHECK(!pcmk__str_empty(option), return NULL);
 
     for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
-        char *env_name = crm_strdup_printf("%s_%s", prefixes[i], option);
+        char *env_name = pcmk__assert_asprintf("%s_%s", prefixes[i], option);
         const char *value = getenv(env_name);
 
         if (value != NULL) {
@@ -1120,7 +1120,7 @@ pcmk__set_env_option(const char *option, const char *value, bool compat)
     CRM_CHECK(!pcmk__str_empty(option), return);
 
     for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
-        char *env_name = crm_strdup_printf("%s_%s", prefixes[i], option);
+        char *env_name = pcmk__assert_asprintf("%s_%s", prefixes[i], option);
         int rc = 0;
 
         if (value != NULL) {

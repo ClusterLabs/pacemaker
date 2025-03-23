@@ -312,25 +312,25 @@ controld_node_state_deletion_strings(const char *uname,
 
     switch (section) {
         case controld_section_lrm:
-            *xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
+            *xpath = pcmk__assert_asprintf(XPATH_NODE_LRM, uname);
             desc_pre = "resource history";
             break;
         case controld_section_lrm_unlocked:
-            *xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
-                                       uname, uname, expire);
+            *xpath = pcmk__assert_asprintf(XPATH_NODE_LRM_UNLOCKED, uname,
+                                           uname, expire);
             desc_pre = "resource history (other than shutdown locks)";
             break;
         case controld_section_attrs:
-            *xpath = crm_strdup_printf(XPATH_NODE_ATTRS, uname);
+            *xpath = pcmk__assert_asprintf(XPATH_NODE_ATTRS, uname);
             desc_pre = "transient attributes";
             break;
         case controld_section_all:
-            *xpath = crm_strdup_printf(XPATH_NODE_ALL, uname);
+            *xpath = pcmk__assert_asprintf(XPATH_NODE_ALL, uname);
             desc_pre = "all state";
             break;
         case controld_section_all_unlocked:
-            *xpath = crm_strdup_printf(XPATH_NODE_ALL_UNLOCKED,
-                                       uname, uname, expire, uname);
+            *xpath = pcmk__assert_asprintf(XPATH_NODE_ALL_UNLOCKED, uname,
+                                           uname, expire, uname);
             desc_pre = "all state (other than shutdown locks)";
             break;
         default:
@@ -340,7 +340,7 @@ controld_node_state_deletion_strings(const char *uname,
     }
 
     if (desc != NULL) {
-        *desc = crm_strdup_printf("%s for node %s", desc_pre, uname);
+        *desc = pcmk__assert_asprintf("%s for node %s", desc_pre, uname);
     }
 }
 
@@ -406,7 +406,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     CRM_CHECK((rsc_id != NULL) && (node != NULL), return EINVAL);
 
-    desc = crm_strdup_printf("resource history for %s on %s", rsc_id, node);
+    desc = pcmk__assert_asprintf("resource history for %s on %s", rsc_id, node);
     if (cib == NULL) {
         crm_err("Unable to clear %s: no CIB connection", desc);
         free(desc);
@@ -414,7 +414,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
     }
 
     // Ask CIB to delete the entry
-    xpath = crm_strdup_printf(XPATH_RESOURCE_HISTORY, node, rsc_id);
+    xpath = pcmk__assert_asprintf(XPATH_RESOURCE_HISTORY, node, rsc_id);
 
     cib->cmds->set_user(cib, user_name);
     rc = cib->cmds->remove(cib, xpath, NULL, call_options|cib_xpath);
@@ -1015,13 +1015,13 @@ controld_cib_delete_last_failure(const char *rsc_id, const char *node,
     // Generate XPath to match desired entry
     last_failure_key = pcmk__op_key(rsc_id, "last_failure", 0);
     if (action == NULL) {
-        xpath = crm_strdup_printf(XPATH_HISTORY_ID, node, rsc_id,
-                                  last_failure_key);
+        xpath = pcmk__assert_asprintf(XPATH_HISTORY_ID, node, rsc_id,
+                                      last_failure_key);
     } else {
         char *action_key = pcmk__op_key(rsc_id, action, interval_ms);
 
-        xpath = crm_strdup_printf(XPATH_HISTORY_ORIG, node, rsc_id,
-                                  last_failure_key, action_key);
+        xpath = pcmk__assert_asprintf(XPATH_HISTORY_ORIG, node, rsc_id,
+                                      last_failure_key, action_key);
         free(action_key);
     }
     free(last_failure_key);
@@ -1049,10 +1049,10 @@ controld_delete_action_history_by_key(const char *rsc_id, const char *node,
     CRM_CHECK((rsc_id != NULL) && (node != NULL) && (key != NULL), return);
 
     if (call_id > 0) {
-        xpath = crm_strdup_printf(XPATH_HISTORY_CALL, node, rsc_id, key,
-                                  call_id);
+        xpath = pcmk__assert_asprintf(XPATH_HISTORY_CALL, node, rsc_id, key,
+                                     call_id);
     } else {
-        xpath = crm_strdup_printf(XPATH_HISTORY_ID, node, rsc_id, key);
+        xpath = pcmk__assert_asprintf(XPATH_HISTORY_ID, node, rsc_id, key);
     }
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, xpath,
                                             NULL, cib_xpath);

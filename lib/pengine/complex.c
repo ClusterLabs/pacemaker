@@ -259,7 +259,7 @@ template_op_key(xmlNode * op)
         role = PCMK__ROLE_UNKNOWN;
     }
 
-    key = crm_strdup_printf("%s-%s", name, role);
+    key = pcmk__assert_asprintf("%s-%s", name, role);
     return key;
 }
 
@@ -774,7 +774,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     value = pcmk__xe_get(rsc_private->xml, PCMK__META_CLONE);
     if (value) {
-        (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
+        (*rsc)->id = pcmk__assert_asprintf("%s:%s", id, value);
         pcmk__insert_meta(rsc_private, PCMK__META_CLONE, value);
 
     } else {

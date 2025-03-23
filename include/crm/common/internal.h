@@ -20,7 +20,6 @@
 
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
-#include <crm/common/strings.h>  // crm_strdup_printf()
 #include <crm/common/actions_internal.h>
 #include <crm/common/digest_internal.h>
 #include <crm/common/health_internal.h>
@@ -30,7 +29,7 @@
 #include <crm/common/messages_internal.h>
 #include <crm/common/nvpair_internal.h>
 #include <crm/common/scores_internal.h>
-#include <crm/common/strings_internal.h>
+#include <crm/common/strings_internal.h>    // pcmk__assert_asprintf()
 #include <crm/common/acl_internal.h>
 
 #ifdef __cplusplus
@@ -271,7 +270,7 @@ pcmk__realloc(void *ptr, size_t size)
 static inline char *
 pcmk__getpid_s(void)
 {
-    return crm_strdup_printf("%lu", (unsigned long) getpid());
+    return pcmk__assert_asprintf("%lu", (unsigned long) getpid());
 }
 
 // More efficient than g_list_length(list) == 1
@@ -315,7 +314,8 @@ pcmk__fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
                    guint interval_ms)
 {
     CRM_CHECK(prefix && rsc_id && op, return NULL);
-    return crm_strdup_printf("%s-%s#%s_%u", prefix, rsc_id, op, interval_ms);
+    return pcmk__assert_asprintf("%s-%s#%s_%u", prefix, rsc_id, op,
+                                 interval_ms);
 }
 
 static inline char *

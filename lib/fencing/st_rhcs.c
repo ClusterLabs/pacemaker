@@ -45,7 +45,7 @@ rhcs_agent_filter(const struct dirent *entry)
     }
 
     // glibc doesn't enforce PATH_MAX, so don't limit buf size
-    buf = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s", entry->d_name);
+    buf = pcmk__assert_asprintf(PCMK__FENCE_BINDIR "/%s", entry->d_name);
     if ((stat(buf, &sb) != 0) || !S_ISREG(sb.st_mode)) {
         goto done;
     }
@@ -97,8 +97,9 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
     CRM_CHECK(metadata != NULL, return);
     CRM_CHECK(parameter != NULL, return);
 
-    xpath = crm_strdup_printf("//" PCMK_XE_PARAMETER "[@" PCMK_XA_NAME "='%s']",
-                              parameter);
+    xpath = pcmk__assert_asprintf("//" PCMK_XE_PARAMETER
+                                  "[@" PCMK_XA_NAME "='%s']",
+                                  parameter);
     /* Fudge metadata so that the parameter isn't required in config
      * Pacemaker handles and adds it */
     xpathObj = pcmk__xpath_search(metadata->doc, xpath);
@@ -257,7 +258,7 @@ bool
 stonith__agent_is_rhcs(const char *agent)
 {
     struct stat prop;
-    char *buffer = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s", agent);
+    char *buffer = pcmk__assert_asprintf(PCMK__FENCE_BINDIR "/%s", agent);
     int rc = stat(buffer, &prop);
 
     free(buffer);

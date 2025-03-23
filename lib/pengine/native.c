@@ -763,10 +763,10 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     }
 
     // Resource information
-    ra_name = crm_strdup_printf("%s%s%s:%s", class,
-                                ((prov == NULL)? "" : ":"),
-                                ((prov == NULL)? "" : prov),
-                                pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE));
+    ra_name = pcmk__assert_asprintf("%s%s%s:%s", class,
+                                    ((prov == NULL)? "" : ":"),
+                                    ((prov == NULL)? "" : prov),
+                                    pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE));
 
     target_role = g_hash_table_lookup(rsc->priv->meta,
                                       PCMK_META_TARGET_ROLE);

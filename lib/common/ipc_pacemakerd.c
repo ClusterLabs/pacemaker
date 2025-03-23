@@ -312,8 +312,9 @@ do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *ta
     private = api->api_data;
     pcmk__assert(private != NULL);
 
-    sender_system = crm_strdup_printf("%s_%s", private->client_uuid,
-                                      pcmk__ipc_sys_name(ipc_name, "client"));
+    sender_system = pcmk__assert_asprintf("%s_%s", private->client_uuid,
+                                          pcmk__ipc_sys_name(ipc_name,
+                                                             "client"));
     cmd = pcmk__new_request(pcmk_ipc_pacemakerd, sender_system, NULL,
                             CRM_SYSTEM_MCP, task, NULL);
     free(sender_system);
