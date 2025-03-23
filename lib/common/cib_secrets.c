@@ -78,7 +78,7 @@ validate_hash(const char *filename, const char *secret_value,
               const char *rsc_id, const char *param)
 {
     char *stored = NULL;
-    char *calculated = NULL;
+    gchar *calculated = NULL;
     int rc = pcmk_rc_ok;
 
     stored = read_file_trimmed(filename);
@@ -90,7 +90,7 @@ validate_hash(const char *filename, const char *secret_value,
         goto done;
     }
 
-    calculated = crm_md5sum(secret_value);
+    calculated = pcmk__md5sum(secret_value);
     if (calculated == NULL) {
         // Should be impossible
         rc = EINVAL;
@@ -108,7 +108,7 @@ validate_hash(const char *filename, const char *secret_value,
 
 done:
     free(stored);
-    free(calculated);
+    g_free(calculated);
     return rc;
 }
 

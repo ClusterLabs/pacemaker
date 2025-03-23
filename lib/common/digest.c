@@ -72,6 +72,46 @@ dump_xml_for_digest(const xmlNode *xml)
 
 /*!
  * \internal
+ * \brief Compute an MD5 checksum for a given input string
+ *
+ * \param[in] input  Input string (can be \c NULL)
+ *
+ * \return Newly allocated string containing MD5 checksum for \p input, or
+ *         \c NULL on error or if \p input is \c NULL
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+char *
+pcmk__md5sum(const char *input)
+{
+    /* This function makes two copies of the same string: one inside
+     * g_compute_checksum_for_string() and one from pcmk__str_copy(). The first
+     * one gets freed before return.
+     *
+     * We could avoid this by calling g_checksum_new(), g_checksum_get_string()
+     * (copying the return value with pcmk__str_copy(), and g_checksum_free()
+     * directly; or by updating our own call chains to use (gchar *) strings.
+     * However, the below is much more readable.
+     */
+    char *checksum = NULL;
+    gchar *checksum_g = NULL;
+
+    if (input == NULL) {
+        return NULL;
+    }
+
+    checksum_g = g_compute_checksum_for_string(G_CHECKSUM_MD5, input, -1);
+    if (checksum_g == NULL) {
+        crm_err("Failed to compute MD5 checksum for %s", input);
+    }
+
+    checksum = pcmk__str_copy(checksum_g);
+    g_free(checksum_g);
+    return checksum;
+}
+
+/*!
+ * \internal
  * \brief Calculate and return v1 digest of XML tree
  *
  * \param[in] input  Root of XML to digest
@@ -84,6 +124,7 @@ static char *
 calculate_xml_digest_v1(const xmlNode *input)
 {
     GString *buffer = dump_xml_for_digest(input);
+    gchar *digest_g = NULL;
     char *digest = NULL;
 
     // buffer->len > 2 for initial space and trailing newline
@@ -91,10 +132,11 @@ calculate_xml_digest_v1(const xmlNode *input)
               g_string_free(buffer, TRUE);
               return NULL);
 
-    digest = crm_md5sum((const char *) buffer->str);
-    crm_log_xml_trace(input, "digest:source");
+    digest_g = pcmk__md5sum(buffer->str);
+    digest = pcmk__str_copy(digest_g);
 
     g_string_free(buffer, TRUE);
+    g_free(digest_g);
     return digest;
 }
 
@@ -166,14 +208,17 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
     /* @TODO Filtering accounts for significant CPU usage. Consider removing if
      * possible.
      */
-    char *digest = NULL;
     GString *buf = g_string_sized_new(1024);
+    gchar *digest_g = NULL;
+    char *digest = NULL;
 
     pcmk__xml_string(xml, (filter? pcmk__xml_fmt_filtered : 0), buf, 0);
-    digest = crm_md5sum(buf->str);
-    if (digest == NULL) {
+    digest_g = pcmk__md5sum(buf->str);
+    if (digest_g == NULL) {
         goto done;
     }
+
+    digest = pcmk__str_copy(digest_g);
 
     pcmk__if_tracing(
         {
@@ -192,6 +237,7 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
 
 done:
     g_string_free(buf, TRUE);
+    g_free(digest_g);
     return digest;
 }
 

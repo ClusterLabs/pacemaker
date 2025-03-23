@@ -214,6 +214,11 @@ int pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
 G_GNUC_INTERNAL
 void pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source);
 
+/*
+ * Digests
+ */
+
+char *pcmk__md5sum(const char *input);
 
 /*
  * IPC
