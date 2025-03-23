@@ -77,7 +77,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         xmlNode *attr = NULL;
 
         nodepriv = pIter->_private;
-        if (!pcmk_any_flags_set(nodepriv->flags, pcmk__xf_deleted|pcmk__xf_dirty)) {
+        if (!pcmk__any_flags_set(nodepriv->flags,
+                                 pcmk__xf_deleted|pcmk__xf_dirty)) {
             continue;
         }
 

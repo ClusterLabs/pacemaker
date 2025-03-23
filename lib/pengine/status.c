@@ -117,8 +117,8 @@ cluster_status(pcmk_scheduler_t * scheduler)
                                    "//" PCMK_XE_CRM_CONFIG, LOG_TRACE);
     unpack_config(section, scheduler);
 
-   if (!pcmk_any_flags_set(scheduler->flags,
-                           pcmk__sched_location_only|pcmk__sched_quorate)
+   if (!pcmk__any_flags_set(scheduler->flags,
+                            pcmk__sched_location_only|pcmk__sched_quorate)
        && (scheduler->no_quorum_policy != pcmk_no_quorum_ignore)) {
         pcmk__sched_warn(scheduler,
                          "Fencing and resource management disabled "

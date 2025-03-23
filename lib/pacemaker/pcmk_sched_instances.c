@@ -955,8 +955,9 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
              * is implied rather than actually executed.
              */
             if (!optional
-                && pcmk_any_flags_set(action->flags, pcmk__action_pseudo
-                                                     |pcmk__action_runnable)) {
+                && pcmk__any_flags_set(action->flags,
+                                       pcmk__action_pseudo
+                                       |pcmk__action_runnable)) {
                 pcmk__rsc_trace(instance, "Instance is stopping due to %s",
                                 action->uuid);
                 instance_state |= instance_stopping;
@@ -1012,7 +1013,7 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
                                         !pcmk__is_set(state, instance_starting),
                                         false);
     started->priority = PCMK_SCORE_INFINITY;
-    if (pcmk_any_flags_set(state, instance_active|instance_starting)) {
+    if (pcmk__any_flags_set(state, instance_active|instance_starting)) {
         pcmk__set_action_flags(started, pcmk__action_runnable);
     }
 
@@ -1255,8 +1256,9 @@ unassign_if_mandatory(const pcmk_action_t *first, const pcmk_action_t *then,
     /* If the "first" action must be runnable, but there is no "first"
      * instance, the "then" instance must not be allowed to come up.
      */
-    } else if (pcmk_any_flags_set(type, pcmk__ar_unrunnable_first_blocks
-                                        |pcmk__ar_first_implies_then)) {
+    } else if (pcmk__any_flags_set(type,
+                                   pcmk__ar_unrunnable_first_blocks
+                                   |pcmk__ar_first_implies_then)) {
         pcmk__rsc_info(then->rsc,
                        "Inhibiting %s from being active "
                        "because there is no %s instance to interleave",

@@ -472,7 +472,7 @@ order_actions(pcmk_action_t *first, pcmk_action_t *then, uint32_t flags)
         pcmk__related_action_t *after = gIter->data;
 
         if ((after->action == then)
-            && pcmk_any_flags_set(after->flags, flags)) {
+            && pcmk__any_flags_set(after->flags, flags)) {
             return FALSE;
         }
     }

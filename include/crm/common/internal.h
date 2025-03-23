@@ -175,6 +175,24 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
 /*!
  * \internal
+ * \brief Check whether any of specified flags are set in a flag group
+ *
+ * \param[in] flag_group      Flag group to check whether \p flags_to_check are
+ *                            set
+ * \param[in] flags_to_check  Flags to check whether set in \p flag_group
+ *
+ * \retval \c true   if \p flags_to_check is nonzero and any of its flags are
+ *                   set in \p flag_group
+ * \retval \c false  otherwise
+ */
+static inline bool
+pcmk__any_flags_set(uint64_t flag_group, uint64_t flags_to_check)
+{
+    return (flag_group & flags_to_check) != 0;
+}
+
+/*!
+ * \internal
  * \brief Check whether all of specified flags are set in a flag group
  *
  * \param[in] flag_group      Flag group to check whether \p flags_to_check are
