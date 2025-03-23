@@ -573,7 +573,7 @@ cib_new(void)
      */
     pcmk__scan_port(value, &port);
 
-    if (!crm_is_true(getenv("CIB_encrypted"))) {
+    if (!pcmk__is_true(getenv("CIB_encrypted"))) {
         encrypted = FALSE;
     }
 

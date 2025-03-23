@@ -153,7 +153,7 @@ createEmptyCib(int cib_epoch)
 static bool
 cib_acl_enabled(xmlNode *xml, const char *user)
 {
-    bool rc = FALSE;
+    bool rc = false;
 
     if(pcmk_acl_required(user)) {
         const char *value = NULL;
@@ -161,7 +161,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 
         cib_read_config(options, xml);
         value = pcmk__cluster_option(options, PCMK_OPT_ENABLE_ACL);
-        rc = crm_is_true(value);
+        rc = pcmk__is_true(value);
         g_hash_table_destroy(options);
     }
 
