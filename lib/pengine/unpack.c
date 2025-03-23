@@ -1366,9 +1366,9 @@ unpack_node_history(const xmlNode *status, bool fence,
          * nodes have been unpacked. This allows us to number active clone
          * instances first.
          */
-        } else if (!pcmk_any_flags_set(scheduler->flags,
-                                       pcmk__sched_fencing_enabled
-                                       |pcmk__sched_shutdown_lock)
+        } else if (!pcmk__any_flags_set(scheduler->flags,
+                                        pcmk__sched_fencing_enabled
+                                        |pcmk__sched_shutdown_lock)
                    && !this_node->details->online) {
             crm_trace("Not unpacking resource history for offline "
                       "cluster node %s", id);

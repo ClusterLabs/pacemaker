@@ -1660,8 +1660,9 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
     scheduler = rsc->priv->scheduler;
 
     // Fence devices and remote connections can't be locked
-    if (pcmk_any_flags_set(rsc->flags, pcmk__rsc_fence_device
-                                       |pcmk__rsc_is_remote_connection)) {
+    if (pcmk__any_flags_set(rsc->flags,
+                            pcmk__rsc_fence_device
+                            |pcmk__rsc_is_remote_connection)) {
         return;
     }
 

@@ -942,7 +942,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         }
     }
 
-    if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
+    if (pcmk__any_flags_set(flags, pcmk_sim_process|pcmk_sim_simulate)) {
         pcmk__output_t *logger_out = NULL;
 
         if (pcmk__all_flags_set(scheduler->flags,

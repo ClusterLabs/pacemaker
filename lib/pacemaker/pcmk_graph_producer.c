@@ -590,10 +590,10 @@ should_add_action_to_graph(pcmk_action_t *action)
 static bool
 ordering_can_change_actions(const pcmk__related_action_t *ordering)
 {
-    return pcmk_any_flags_set(ordering->flags,
-                              ~(pcmk__ar_then_implies_first_graphed
-                                |pcmk__ar_first_implies_then_graphed
-                                |pcmk__ar_ordered));
+    return pcmk__any_flags_set(ordering->flags,
+                               ~(pcmk__ar_then_implies_first_graphed
+                                 |pcmk__ar_first_implies_then_graphed
+                                 |pcmk__ar_ordered));
 }
 
 /*!
@@ -738,9 +738,9 @@ should_add_input_to_graph(const pcmk_action_t *action,
         return false;
 
     } else if (pcmk__is_set(input->action->flags, pcmk__action_optional)
-               && !pcmk_any_flags_set(input->action->flags,
-                                      pcmk__action_always_in_graph
-                                      |pcmk__action_added_to_graph)
+               && !pcmk__any_flags_set(input->action->flags,
+                                       pcmk__action_always_in_graph
+                                       |pcmk__action_added_to_graph)
                && !should_add_action_to_graph(input->action)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "input optional",
@@ -1075,8 +1075,8 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
             && (action->node != NULL)
             && action->node->details->shutdown
             && !pcmk__is_set(action->rsc->flags, pcmk__rsc_maintenance)
-            && !pcmk_any_flags_set(action->flags,
-                                   pcmk__action_optional|pcmk__action_runnable)
+            && !pcmk__any_flags_set(action->flags,
+                                    pcmk__action_optional|pcmk__action_runnable)
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             /* Eventually we should just ignore the 'fence' case, but for now
              * it's the best way to detect (in CTS) when CIB resource updates

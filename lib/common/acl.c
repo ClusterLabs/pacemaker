@@ -203,7 +203,8 @@ acl_to_text(enum pcmk__xml_flags flags)
     if (pcmk__is_set(flags, pcmk__xf_acl_deny)) {
         return "deny";
 
-    } else if (pcmk_any_flags_set(flags, pcmk__xf_acl_write|pcmk__xf_acl_create)) {
+    } else if (pcmk__any_flags_set(flags,
+                                   pcmk__xf_acl_write|pcmk__xf_acl_create)) {
         return "read/write";
 
     } else if (pcmk__is_set(flags, pcmk__xf_acl_read)) {
@@ -403,7 +404,8 @@ test_acl_mode(enum pcmk__xml_flags allowed, enum pcmk__xml_flags requested)
         return true;
 
     } else if (pcmk__is_set(requested, pcmk__xf_acl_create)
-               && pcmk_any_flags_set(allowed, pcmk__xf_acl_write|pcmk__xf_created)) {
+               && pcmk__any_flags_set(allowed,
+                                      pcmk__xf_acl_write|pcmk__xf_created)) {
         return true;
     }
     return false;

@@ -499,7 +499,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     if ((node == NULL) && (rsc->priv->lock_node != NULL)) {
         node = rsc->priv->lock_node;
     }
-    if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only)
+    if (pcmk__any_flags_set(show_opts, pcmk_show_rsc_only)
         || pcmk__list_of_multiple(rsc->priv->active_nodes)) {
         node = NULL;
     }
@@ -592,8 +592,8 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     }
 
     // Blocked or maintenance implies unmanaged
-    if (pcmk_any_flags_set(rsc->flags,
-                           pcmk__rsc_blocked|pcmk__rsc_maintenance)) {
+    if (pcmk__any_flags_set(rsc->flags,
+                            pcmk__rsc_blocked|pcmk__rsc_maintenance)) {
         if (pcmk__is_set(rsc->flags, pcmk__rsc_blocked)) {
             have_flags = add_output_flag(outstr, "blocked", have_flags);
 
@@ -614,7 +614,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     }
 
     // User-supplied description
-    if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)
+    if (pcmk__any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)
         || pcmk__list_of_multiple(rsc->priv->active_nodes)) {
         const char *desc = pcmk__xe_get(rsc->priv->xml, PCMK_XA_DESCRIPTION);
 

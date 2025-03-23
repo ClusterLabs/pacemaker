@@ -1853,8 +1853,8 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (pcmk_any_flags_set(section_opts,
-                           pcmk_section_operations|pcmk_section_failcounts)) {
+    if (pcmk__any_flags_set(section_opts,
+                            pcmk_section_operations|pcmk_section_failcounts)) {
         CHECK_RC(rc, out->message(out, "node-summary", scheduler, unames,
                                   resources, section_opts, show_opts,
                                   (rc == pcmk_rc_ok)));
@@ -1909,8 +1909,9 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     }
 
     // Print fencing history
-    if (pcmk_any_flags_set(section_opts, pcmk_section_fencing_all) &&
-        fence_history != pcmk__fence_history_none) {
+    if (pcmk__any_flags_set(section_opts, pcmk_section_fencing_all)
+        && (fence_history != pcmk__fence_history_none)) {
+
         if (history_rc != 0) {
             if (!already_printed_failure) {
                 PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
@@ -1993,8 +1994,8 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (pcmk_any_flags_set(section_opts,
-                           pcmk_section_operations|pcmk_section_failcounts)) {
+    if (pcmk__any_flags_set(section_opts,
+                            pcmk_section_operations|pcmk_section_failcounts)) {
         out->message(out, "node-summary", scheduler, unames,
                      resources, section_opts, show_opts, false);
     }
@@ -2075,8 +2076,8 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (pcmk_any_flags_set(section_opts,
-                           pcmk_section_operations|pcmk_section_failcounts)) {
+    if (pcmk__any_flags_set(section_opts,
+                            pcmk_section_operations|pcmk_section_failcounts)) {
         out->message(out, "node-summary", scheduler, unames,
                      resources, section_opts, show_opts, false);
     }
@@ -2113,8 +2114,9 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     }
 
     // Print fencing history
-    if (pcmk_any_flags_set(section_opts, pcmk_section_fencing_all) &&
-        fence_history != pcmk__fence_history_none) {
+    if (pcmk__any_flags_set(section_opts, pcmk_section_fencing_all)
+        && (fence_history != pcmk__fence_history_none)) {
+
         if (history_rc != 0) {
             if (!already_printed_failure) {
                 out->begin_list(out, NULL, NULL, "Failed Fencing Actions");

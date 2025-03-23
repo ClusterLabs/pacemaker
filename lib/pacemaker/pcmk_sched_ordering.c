@@ -1159,8 +1159,8 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
          *
          * @TODO This "if" looks wrong, create a regression test for these cases
          */
-        if (!pcmk_any_flags_set(action->rsc->flags,
-                                pcmk__rsc_managed|pcmk__rsc_blocked)) {
+        if (!pcmk__any_flags_set(action->rsc->flags,
+                                 pcmk__rsc_managed|pcmk__rsc_blocked)) {
             pcmk__rsc_trace(action->rsc,
                             "Not ordering %s before shutdown of %s because "
                             "resource is unmanaged or blocked",

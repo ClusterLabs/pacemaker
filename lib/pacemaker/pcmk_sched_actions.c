@@ -467,9 +467,10 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         // Don't bother marking 'first' as changed just for this
     }
 
-    if (pcmk_any_flags_set(order->flags, pcmk__ar_first_implies_then
-                                         |pcmk__ar_then_implies_first
-                                         |pcmk__ar_intermediate_stop)
+    if (pcmk__any_flags_set(order->flags,
+                            pcmk__ar_first_implies_then
+                            |pcmk__ar_then_implies_first
+                            |pcmk__ar_intermediate_stop)
         && (first->rsc != NULL)
         && !pcmk__is_set(first->rsc->flags, pcmk__rsc_managed)
         && pcmk__is_set(first->rsc->flags, pcmk__rsc_blocked)
