@@ -35,6 +35,10 @@ gboolean crm_is_true(const char *s);
 //! \deprecated Do not use
 int crm_str_to_boolean(const char *s, int *ret);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+char *crm_strdup_printf(char const *format, ...) G_GNUC_PRINTF(1, 2);
+
 #ifdef __cplusplus
 }
 #endif
