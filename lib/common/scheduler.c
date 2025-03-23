@@ -266,7 +266,7 @@ pcmk_has_quorum(const pcmk_scheduler_t *scheduler)
     if (scheduler == NULL) {
         return false;
     }
-    return pcmk_is_set(scheduler->flags, pcmk__sched_quorate);
+    return pcmk__is_set(scheduler->flags, pcmk__sched_quorate);
 }
 
 /*!

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,9 +23,9 @@ all_set(void **state) {
 
 static void
 one_is_set(void **state) {
-    // pcmk_is_set() is a simple macro alias for pcmk_all_flags_set()
-    assert_true(pcmk_is_set(0x00f, 0x001));
-    assert_false(pcmk_is_set(0x00f, 0x010));
+    // pcmk__is_set() is a simple macro alias for pcmk_all_flags_set()
+    assert_true(pcmk__is_set(0x00f, 0x001));
+    assert_false(pcmk__is_set(0x00f, 0x010));
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

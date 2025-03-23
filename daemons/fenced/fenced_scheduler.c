@@ -164,7 +164,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         return;
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
         return; // Not a fencing device
     }
 

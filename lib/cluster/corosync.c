@@ -543,7 +543,7 @@ pcmk__corosync_is_peer_active(const pcmk__node_status_t *node)
                   node->name, node->state);
         return false;
     }
-    if (!pcmk_is_set(node->processes, crm_proc_cpg)) {
+    if (!pcmk__is_set(node->processes, crm_proc_cpg)) {
         crm_trace("Corosync peer %s inactive " QB_XS " processes=%.16" PRIx32,
                   node->name, node->processes);
         return false;

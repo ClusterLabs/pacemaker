@@ -345,7 +345,7 @@ lrm_state_disconnect_only(lrm_state_t * lrm_state)
 
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
 
-    if (!pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         removed = g_hash_table_foreach_remove(lrm_state->active_ops,
                                               fail_pending_op, lrm_state);
         crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
@@ -585,7 +585,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             crm_warn("Couldn't parse controller flags from remote request: %s",
                      pcmk_rc_str(rc));
         }
-        if (pcmk_is_set(flags, crm_ipc_client_response)) {
+        if (pcmk__is_set(flags, crm_ipc_client_response)) {
             int msg_id = 0;
             xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_ACK);
 

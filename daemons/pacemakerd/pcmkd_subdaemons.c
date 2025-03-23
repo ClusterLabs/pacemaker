@@ -170,7 +170,7 @@ check_next_subdaemon(gpointer user_data)
             break;
 
         case pcmk_rc_ipc_pid_only: // Child was previously OK
-            if (pcmk_is_set(child->flags, child_shutting_down)) {
+            if (pcmk__is_set(child->flags, child_shutting_down)) {
                 crm_notice("Subdaemon %s[%lld] has stopped accepting IPC "
                            "connections during shutdown", name, pid);
 
@@ -181,7 +181,7 @@ check_next_subdaemon(gpointer user_data)
                          name, pid, child->check_count,
                          pcmk__plural_s(child->check_count));
                 stop_child(child, SIGKILL);
-                if (pcmk_is_set(child->flags, child_respawn)) {
+                if (pcmk__is_set(child->flags, child_respawn)) {
                     // Respawn limit hasn't been reached, so retry another round
                     child->check_count = 0;
                 }
@@ -191,7 +191,7 @@ check_next_subdaemon(gpointer user_data)
                            "after %d attempt%s (will recheck later)",
                            name, pid, child->check_count,
                            pcmk__plural_s(child->check_count));
-                if (pcmk_is_set(child->flags, child_respawn)) {
+                if (pcmk__is_set(child->flags, child_respawn)) {
                     /* as long as the respawn-limit isn't reached
                        and we haven't run out of connect retries
                        we account this as progress we are willing
@@ -205,7 +205,7 @@ check_next_subdaemon(gpointer user_data)
              */
             break;
         case pcmk_rc_ipc_unresponsive:
-            if (!pcmk_is_set(child->flags, child_respawn)) {
+            if (!pcmk__is_set(child->flags, child_respawn)) {
                 /* if a subdaemon is down and we don't want it
                    to be restarted this is a success during
                    shutdown. if it isn't restarted anymore
@@ -216,11 +216,11 @@ check_next_subdaemon(gpointer user_data)
                     subdaemon_check_progress = time(NULL);
                 }
             }
-            if (!pcmk_is_set(child->flags, child_active_before_startup)) {
+            if (!pcmk__is_set(child->flags, child_active_before_startup)) {
                 crm_trace("Subdaemon %s[%lld] terminated", name, pid);
                 break;
             }
-            if (pcmk_is_set(child->flags, child_respawn)) {
+            if (pcmk__is_set(child->flags, child_respawn)) {
                 // cts-lab looks for this message
                 crm_err("Subdaemon %s[%lld] terminated", name, pid);
             } else {
@@ -333,7 +333,7 @@ pcmk_process_exit(pcmk_child_t * child)
         /* resume step-wise shutdown (returned TRUE yields no parallelizing) */
         mainloop_set_trigger(shutdown_trigger);
 
-    } else if (!pcmk_is_set(child->flags, child_respawn)) {
+    } else if (!pcmk__is_set(child->flags, child_respawn)) {
         /* nothing to do */
 
     } else if (pcmk__is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
@@ -343,7 +343,8 @@ pcmk_process_exit(pcmk_child_t * child)
         crm_warn("Not respawning subdaemon %s because IPC endpoint %s is OK",
                  name, pcmk__server_ipc_name(child->server));
 
-    } else if (pcmk_is_set(child->flags, child_needs_cluster) && !pcmkd_cluster_connected()) {
+    } else if (pcmk__is_set(child->flags, child_needs_cluster)
+               && !pcmkd_cluster_connected()) {
         crm_notice("Not respawning subdaemon %s until cluster returns", name);
         child->flags |= child_needs_retry;
 
@@ -379,7 +380,7 @@ pcmk_shutdown_worker(gpointer user_data)
 
         now = time(NULL);
 
-        if (pcmk_is_set(child->flags, child_respawn)) {
+        if (pcmk__is_set(child->flags, child_respawn)) {
             if (child->pid == PCMK__SPECIAL_PID) {
                 crm_warn("Subdaemon %s cannot be terminated (shutdown "
                          "will be escalated after %ld seconds if it does "
@@ -886,7 +887,7 @@ pcmk_shutdown(int nsig)
 static void
 restart_subdaemon(pcmk_child_t *child)
 {
-    if (!pcmk_is_set(child->flags, child_needs_retry) || child->pid != 0) {
+    if (!pcmk__is_set(child->flags, child_needs_retry) || child->pid != 0) {
         return;
     }
 

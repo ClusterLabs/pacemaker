@@ -1829,7 +1829,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     if (!class || !type || !rsc_id) {
         return -EINVAL;
     }
-    if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
+    if (pcmk__is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
         && (provider == NULL)) {
         return -EINVAL;
     }
@@ -1920,8 +1920,8 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     if (!class || !type) {
         pcmk__xml_free(output);
         return NULL;
-    } else if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
-               && !provider) {
+    } else if (pcmk__is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
+               && (provider == NULL)) {
         pcmk__xml_free(output);
         return NULL;
     }

@@ -91,7 +91,7 @@ handle_disconnect(void)
     // If we aren't connected to the scheduler, we can't expect a reply
     controld_expect_sched_reply(NULL);
 
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_PE_REQUIRED)) {
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_PE_REQUIRED)) {
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
 
@@ -223,13 +223,13 @@ do_pe_control(long long action,
               enum crmd_fsa_state cur_state,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    if (pcmk_is_set(action, A_PE_STOP)) {
+    if (pcmk__is_set(action, A_PE_STOP)) {
         controld_clear_fsa_input_flags(R_PE_REQUIRED);
         pcmk_disconnect_ipc(schedulerd_api);
         handle_disconnect();
     }
-    if (pcmk_is_set(action, A_PE_START)
-        && !pcmk_is_set(controld_globals.fsa_input_register, R_PE_CONNECTED)) {
+    if (pcmk__is_set(action, A_PE_START)
+        && !pcmk__is_set(controld_globals.fsa_input_register, R_PE_CONNECTED)) {
 
         if (cur_state == S_STOPPING) {
             crm_info("Ignoring request to connect to scheduler while shutting down");
@@ -338,8 +338,8 @@ do_pe_invoke(long long action,
         return;
     }
 
-    if (!pcmk_is_set(controld_globals.fsa_input_register, R_PE_CONNECTED)) {
-        if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_PE_CONNECTED)) {
+        if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_err("Cannot shut down gracefully without the scheduler");
             register_fsa_input_before(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
@@ -357,7 +357,7 @@ do_pe_invoke(long long action,
                    fsa_state2string(cur_state));
         return;
     }
-    if (!pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
         crm_err("Attempted to invoke scheduler without consistent Cluster Information Base!");
 
         /* start the join from scratch */
@@ -480,8 +480,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         return;
 
     } else if (!AM_I_DC
-               || !pcmk_is_set(controld_globals.fsa_input_register,
-                               R_PE_CONNECTED)) {
+               || !pcmk__is_set(controld_globals.fsa_input_register,
+                                R_PE_CONNECTED)) {
         crm_debug("No need to invoke the scheduler anymore");
         return;
 
@@ -508,12 +508,12 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     pcmk__xe_set(output, PCMK_XA_DC_UUID, controld_globals.our_uuid);
     pcmk__xe_set_bool_attr(output, PCMK_XA_HAVE_QUORUM,
-                           pcmk_is_set(controld_globals.flags,
-                                       controld_has_quorum));
+                           pcmk__is_set(controld_globals.flags,
+                                        controld_has_quorum));
 
     force_local_option(output, PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));
 
-    if (pcmk_is_set(controld_globals.flags, controld_ever_had_quorum)
+    if (pcmk__is_set(controld_globals.flags, controld_ever_had_quorum)
         && !pcmk__cluster_has_quorum()) {
 
         pcmk__xe_set_int(output, PCMK_XA_NO_QUORUM_PANIC, 1);

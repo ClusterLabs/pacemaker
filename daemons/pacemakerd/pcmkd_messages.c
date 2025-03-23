@@ -104,7 +104,8 @@ handle_shutdown_request(pcmk__request_t *request)
      * Pacemaker from the command line (or direct IPC), so that other users
      * are forced to go through the CIB and have ACLs applied.
      */
-    bool allowed = pcmk_is_set(request->ipc_client->flags, pcmk__client_privileged);
+    bool allowed = pcmk__is_set(request->ipc_client->flags,
+                                pcmk__client_privileged);
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);

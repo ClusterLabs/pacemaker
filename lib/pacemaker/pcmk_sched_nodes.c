@@ -32,7 +32,7 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
 {
     if ((node == NULL) || (node->details == NULL) || !node->details->online
             || node->details->shutdown || node->details->unclean
-            || pcmk_is_set(node->priv->flags, pcmk__node_standby)
+            || pcmk__is_set(node->priv->flags, pcmk__node_standby)
             || node->details->maintenance) {
         return false;
     }

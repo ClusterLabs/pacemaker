@@ -35,7 +35,7 @@ handle_cib_disconnect(gpointer user_data)
     controld_trigger_fsa();
     controld_globals.cib_conn->state = cib_disconnected;
 
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
         // @TODO This should trigger a reconnect, not a shutdown
         crm_crit("Lost connection to the CIB manager, shutting down");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
@@ -134,7 +134,7 @@ do_cib_control(long long action,
 
     pcmk__assert(cib_conn != NULL);
 
-    if (pcmk_is_set(action, A_CIB_STOP)) {
+    if (pcmk__is_set(action, A_CIB_STOP)) {
         if ((cib_conn->state != cib_disconnected)
             && (pending_rsc_update != 0)) {
 
@@ -146,7 +146,7 @@ do_cib_control(long long action,
         controld_disconnect_cib_manager();
     }
 
-    if (!pcmk_is_set(action, A_CIB_START)) {
+    if (!pcmk__is_set(action, A_CIB_START)) {
         return;
     }
 
@@ -183,7 +183,7 @@ do_cib_control(long long action,
         cib_retries = 0;
     }
 
-    if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
         cib_retries++;
 
         if (cib_retries < 30) {
@@ -431,8 +431,8 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
         return rc;
     }
 
-    if (pcmk_is_set(call_options, cib_sync_call)) {
-        if (pcmk_is_set(call_options, cib_dryrun)) {
+    if (pcmk__is_set(call_options, cib_sync_call)) {
+        if (pcmk__is_set(call_options, cib_dryrun)) {
             crm_debug("Deletion of %s would succeed", desc);
         } else {
             crm_debug("Deletion of %s succeeded", desc);
@@ -495,17 +495,17 @@ build_parameter_list(const lrmd_event_data_t *op,
 
         switch (param_type) {
             case ra_param_reloadable:
-                accept_for_list = !pcmk_is_set(param->rap_flags, param_type);
+                accept_for_list = !pcmk__is_set(param->rap_flags, param_type);
                 accept_for_xml = accept_for_list;
                 break;
 
             case ra_param_unique:
-                accept_for_list = pcmk_is_set(param->rap_flags, param_type);
+                accept_for_list = pcmk__is_set(param->rap_flags, param_type);
                 accept_for_xml = accept_for_list;
                 break;
 
             case ra_param_private:
-                accept_for_list = pcmk_is_set(param->rap_flags, param_type);
+                accept_for_list = pcmk__is_set(param->rap_flags, param_type);
                 accept_for_xml = !accept_for_list;
                 break;
         }
@@ -559,14 +559,14 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
         return;
     }
 
-    if (pcmk_is_set(metadata->ra_flags, ra_supports_reload_agent)) {
+    if (pcmk__is_set(metadata->ra_flags, ra_supports_reload_agent)) {
         /* Add parameters not marked reloadable to the PCMK__XA_OP_FORCE_RESTART
          * list
          */
         list = build_parameter_list(op, metadata, ra_param_reloadable,
                                     &restart);
 
-    } else if (pcmk_is_set(metadata->ra_flags, ra_supports_legacy_reload)) {
+    } else if (pcmk__is_set(metadata->ra_flags, ra_supports_legacy_reload)) {
         /* @COMPAT pre-OCF-1.1 resource agents
          *
          * Before OCF 1.1, Pacemaker abused "unique=0" to indicate
@@ -788,7 +788,7 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
 static bool
 should_preserve_lock(lrmd_event_data_t *op)
 {
-    if (!pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
+    if (!pcmk__is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
         return false;
     }
     if (!strcmp(op->op_type, PCMK_ACTION_STOP) && (op->rc == PCMK_OCF_OK)) {

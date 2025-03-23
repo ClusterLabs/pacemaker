@@ -175,7 +175,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         prefer = most_free_node;
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unassigned)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_unassigned)) {
         // We've already finished assignment of resources to nodes
         return rsc->priv->assigned_node != NULL;
     }
@@ -310,7 +310,7 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
         archive = pcmk__copy_node_table(rsc->priv->allowed_nodes);
     }
 
-    if (pcmk_is_set(other->flags, pcmk__rsc_unassigned)) {
+    if (pcmk__is_set(other->flags, pcmk__rsc_unassigned)) {
         pcmk__rsc_trace(rsc,
                         "%s: Assigning colocation %s primary %s first"
                         "(score=%d role=%s)",
@@ -357,7 +357,7 @@ remote_connection_assigned(const pcmk_resource_t *connection)
         crm_trace("Pacemaker Remote node %s will be online",
                   remote_node->priv->id);
         remote_node->details->online = TRUE;
-        if (!pcmk_is_set(remote_node->priv->flags, pcmk__node_seen)) {
+        if (!pcmk__is_set(remote_node->priv->flags, pcmk__node_seen)) {
             // Avoid unnecessary fence, since we will attempt connection
             remote_node->details->unclean = FALSE;
         }
@@ -406,13 +406,13 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     parent = rsc->priv->parent;
 
     // Never assign a child without parent being assigned first
-    if ((parent != NULL) && !pcmk_is_set(parent->flags, pcmk__rsc_assigning)) {
+    if ((parent != NULL) && !pcmk__is_set(parent->flags, pcmk__rsc_assigning)) {
         pcmk__rsc_debug(rsc, "%s: Assigning parent %s first",
                         rsc->id, parent->id);
         parent->priv->cmds->assign(parent, prefer, stop_if_fail);
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unassigned)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_unassigned)) {
         // Assignment has already been done
         const char *node_name = "no node";
 
@@ -424,7 +424,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     }
 
     // Ensure we detect assignment loops
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_assigning)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_assigning)) {
         pcmk__rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
         return NULL;
     }
@@ -486,7 +486,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                           PCMK_META_TARGET_ROLE, scheduler);
 
     } else if ((rsc->priv->next_role > rsc->priv->orig_role)
-               && !pcmk_is_set(scheduler->flags, pcmk__sched_quorate)
+               && !pcmk__is_set(scheduler->flags, pcmk__sched_quorate)
                && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Resource %s cannot be elevated from %s to %s due to "
                    PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE,
@@ -496,17 +496,17 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                           PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE);
     }
 
-    pe__show_node_scores(!pcmk_is_set(scheduler->flags,
-                                      pcmk__sched_output_scores),
+    pe__show_node_scores(!pcmk__is_set(scheduler->flags,
+                                       pcmk__sched_output_scores),
                          rsc, __func__, rsc->priv->allowed_nodes, scheduler);
 
     // Unmanage resource if fencing is enabled but no device is configured
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)
-        && !pcmk_is_set(scheduler->flags, pcmk__sched_have_fencing)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)
+        && !pcmk__is_set(scheduler->flags, pcmk__sched_have_fencing)) {
         pcmk__clear_rsc_flags(rsc, pcmk__rsc_managed);
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         // Unmanaged resources stay on their current node
         const char *reason = NULL;
         pcmk_node_t *assign_to = NULL;
@@ -517,7 +517,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
             reason = "inactive";
         } else if (rsc->priv->orig_role == pcmk_role_promoted) {
             reason = "promoted";
-        } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
+        } else if (pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
             reason = "failed";
         } else {
             reason = "active";
@@ -527,7 +527,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                        reason);
         pcmk__assign_resource(rsc, assign_to, true, stop_if_fail);
 
-    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_all)) {
+    } else if (pcmk__is_set(scheduler->flags, pcmk__sched_stop_all)) {
         // Must stop at some point, but be consistent with stop_if_fail
         if (stop_if_fail) {
             pcmk__rsc_debug(rsc,
@@ -538,7 +538,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     } else if (!assign_best_node(rsc, prefer, stop_if_fail)) {
         // Assignment failed
-        if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
+        if (!pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
             pcmk__rsc_info(rsc, "Resource %s cannot run anywhere", rsc->id);
         } else if ((rsc->priv->active_nodes != NULL) && stop_if_fail) {
             pcmk__rsc_info(rsc, "Stopping removed resource %s", rsc->id);
@@ -547,7 +547,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     pcmk__clear_rsc_flags(rsc, pcmk__rsc_assigning);
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
         remote_connection_assigned(rsc);
     }
 
@@ -592,7 +592,7 @@ schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
     // Bring resource up to its next role on its next node
     while ((rsc->priv->orig_role <= rsc->priv->next_role)
            && (role != rsc->priv->orig_role)
-           && !pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
+           && !pcmk__is_set(rsc->flags, pcmk__rsc_blocked)) {
         bool required = need_stop;
 
         next_role = rsc_state_matrix[role][rsc->priv->orig_role];
@@ -775,7 +775,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
         rsc->priv->partial_migration_target = NULL;
         allow_migrate = false;
 
-    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
+    } else if (pcmk__is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
         multiply_active = (num_all_active > 1);
     } else {
         /* If a resource has PCMK_META_REQUIRES set to PCMK_VALUE_NOTHING or
@@ -816,15 +816,15 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
         pcmk__clear_rsc_flags(rsc, pcmk__rsc_stop_unexpected);
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_start_pending)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_start_pending)) {
         create_pending_start(rsc);
     }
 
     if (is_moving) {
         // Remaining tests are only for resources staying where they are
 
-    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_stop_if_failed)) {
+    } else if (pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_stop_if_failed)) {
             need_stop = true;
             pcmk__rsc_trace(rsc, "Recovering %s", rsc->id);
         } else {
@@ -834,7 +834,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
             }
         }
 
-    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
+    } else if (pcmk__is_set(rsc->flags, pcmk__rsc_blocked)) {
         pcmk__rsc_trace(rsc, "Blocking further actions on %s", rsc->id);
         need_stop = true;
 
@@ -846,7 +846,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
         pcmk__rsc_trace(rsc, "Creating start action for promoted resource %s",
                         rsc->id);
         start = start_action(rsc, rsc->priv->assigned_node, TRUE);
-        if (!pcmk_is_set(start->flags, pcmk__action_optional)) {
+        if (!pcmk__is_set(start->flags, pcmk__action_optional)) {
             // Recovery of a promoted resource
             pcmk__rsc_trace(rsc, "%s restart is required for recovery", rsc->id);
             need_stop = true;
@@ -932,7 +932,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
     pcmk__assert(pcmk__is_primitive(rsc));
     scheduler = rsc->priv->scheduler;
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__rsc_trace(rsc,
                         "Skipping implicit constraints for unmanaged resource "
                         "%s", rsc->id);
@@ -940,10 +940,10 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
     }
 
     // Whether resource requires unfencing
-    check_unfencing = !pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)
-                      && pcmk_is_set(scheduler->flags,
-                                     pcmk__sched_enable_unfencing)
-                      && pcmk_is_set(rsc->flags, pcmk__rsc_needs_unfencing);
+    check_unfencing = !pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)
+                      && pcmk__is_set(scheduler->flags,
+                                      pcmk__sched_enable_unfencing)
+                      && pcmk__is_set(rsc->flags, pcmk__rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used
     check_utilization = (g_hash_table_size(rsc->priv->utilization) > 0)
@@ -958,8 +958,8 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                        |pcmk__ar_intermediate_stop, scheduler);
 
     // Promotable ordering: demote before stop, start before promote
-    if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                    pcmk__rsc_promotable)
+    if (pcmk__is_set(pe__const_top_resource(rsc, false)->flags,
+                     pcmk__rsc_promotable)
         || (rsc->priv->orig_role > pcmk_role_unpromoted)) {
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTE, 0),
@@ -1001,13 +1001,13 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
     if (rsc->priv->launcher != NULL) {
         pcmk_resource_t *remote_rsc = NULL;
 
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
             // rsc is the implicit remote connection for a guest or bundle node
 
             /* Guest resources are not allowed to run on Pacemaker Remote nodes,
              * to avoid nesting remotes. However, bundles are allowed.
              */
-            if (!pcmk_is_set(rsc->flags, pcmk__rsc_remote_nesting_allowed)) {
+            if (!pcmk__is_set(rsc->flags, pcmk__rsc_remote_nesting_allowed)) {
                 rsc_avoids_remote_nodes(rsc->priv->launcher);
             }
 
@@ -1029,8 +1029,8 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
          * we check whether a resource (that is not itself a remote connection)
          * has PCMK__META_CONTAINER set to a remote node or guest node resource.
          */
-        } else if (pcmk_is_set(rsc->priv->launcher->flags,
-                               pcmk__rsc_is_remote_connection)) {
+        } else if (pcmk__is_set(rsc->priv->launcher->flags,
+                                pcmk__rsc_is_remote_connection)) {
             remote_rsc = rsc->priv->launcher;
         } else  {
             remote_rsc =
@@ -1077,7 +1077,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                                             PCMK_ACTION_STOP, 0),
                                NULL, pcmk__ar_then_implies_first, scheduler);
 
-            if (pcmk_is_set(rsc->flags, pcmk__rsc_remote_nesting_allowed)
+            if (pcmk__is_set(rsc->flags, pcmk__rsc_remote_nesting_allowed)
                 /* @TODO: && non-bundle Pacemaker Remote nodes exist */) {
                 score = 10000;    /* Highly preferred but not essential */
             } else {
@@ -1089,8 +1089,8 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
         }
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)
-        || pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_is_remote_connection)
+        || pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
         /* Remote connections and fencing devices are not allowed to run on
          * Pacemaker Remote nodes
          */
@@ -1180,7 +1180,7 @@ pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
              iter != NULL; iter = iter->next) {
             pcmk__colocation_t *colocation = iter->data;
 
-            if (pcmk_is_set(colocation->flags, pcmk__coloc_explicit)) {
+            if (pcmk__is_set(colocation->flags, pcmk__coloc_explicit)) {
                 pcmk__add_with_this(list, colocation, orig_rsc);
             }
         }
@@ -1214,7 +1214,7 @@ pcmk__primitive_with_colocations(const pcmk_resource_t *rsc,
              iter != NULL; iter = iter->next) {
             pcmk__colocation_t *colocation = iter->data;
 
-            if (pcmk_is_set(colocation->flags, pcmk__coloc_explicit)) {
+            if (pcmk__is_set(colocation->flags, pcmk__coloc_explicit)) {
                 pcmk__add_this_with(list, colocation, orig_rsc);
             }
         }
@@ -1322,11 +1322,11 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
             pe_action_set_reason(stop, "being multiply active", true);
         }
 
-        if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+        if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
             pcmk__clear_action_flags(stop, pcmk__action_runnable);
         }
 
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_unfencing)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_needs_unfencing)) {
             pcmk_action_t *unfence = pe_fence_op(current, PCMK_ACTION_ON, true,
                                                  NULL, false,
                                                  rsc->priv->scheduler);
@@ -1363,7 +1363,7 @@ start_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 
     pcmk__order_vs_unfence(rsc, node, start, pcmk__ar_first_implies_then);
 
-    if (pcmk_is_set(start->flags, pcmk__action_runnable) && !optional) {
+    if (pcmk__is_set(start->flags, pcmk__action_runnable) && !optional) {
         pcmk__clear_action_flags(start, pcmk__action_optional);
     }
 
@@ -1401,7 +1401,7 @@ promote_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
     for (iter = action_list; iter != NULL; iter = iter->next) {
         pcmk_action_t *start = (pcmk_action_t *) iter->data;
 
-        if (!pcmk_is_set(start->flags, pcmk__action_runnable)) {
+        if (!pcmk__is_set(start->flags, pcmk__action_runnable)) {
             runnable = false;
         }
     }
@@ -1500,7 +1500,7 @@ pcmk__schedule_cleanup(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     CRM_CHECK((rsc != NULL) && (node != NULL), return);
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
         pcmk__rsc_trace(rsc, "Skipping clean-up of %s on %s: resource failed",
                         rsc->id, pcmk__node_name(node));
         return;
@@ -1587,7 +1587,7 @@ pcmk__primitive_add_utilization(const pcmk_resource_t *rsc,
     pcmk__assert(pcmk__is_primitive(rsc) && (orig_rsc != NULL)
                  && (utilization != NULL));
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unassigned)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_unassigned)) {
         return;
     }
 

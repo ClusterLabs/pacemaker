@@ -303,14 +303,24 @@ unpack_alert_filter(xmlNode *xml, pcmk__alert_t *entry)
     }
 
     if (flags != pcmk__alert_none) {
+        const bool attribute = pcmk__is_set(flags, pcmk__alert_attribute);
+        const bool fencing = pcmk__is_set(flags, pcmk__alert_fencing);
+        const bool node = pcmk__is_set(flags, pcmk__alert_node);
+        const bool resource = pcmk__is_set(flags, pcmk__alert_resource);
+        const char *which_attrs = "none";
+
+        if (attribute) {
+            if (entry->select_attribute_name != NULL) {
+                which_attrs = "some";
+            } else {
+                which_attrs = "all";
+            }
+        }
+
         entry->flags = flags;
         crm_debug("Alert %s receives events: attributes:%s%s%s%s",
-                  entry->id,
-                  (pcmk_is_set(flags, pcmk__alert_attribute)?
-                   (entry->select_attribute_name? "some" : "all") : "none"),
-                  (pcmk_is_set(flags, pcmk__alert_fencing)? " fencing" : ""),
-                  (pcmk_is_set(flags, pcmk__alert_node)? " nodes" : ""),
-                  (pcmk_is_set(flags, pcmk__alert_resource)? " resources" : ""));
+                  entry->id, which_attrs, (fencing? " fencing" : ""),
+                  (node? " nodes" : ""), (resource? " resources" : ""));
     }
 }
 
