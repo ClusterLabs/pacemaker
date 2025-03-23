@@ -634,20 +634,6 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
     return pcmk_rc_ok;
 }
 
-char *
-crm_strdup_printf(char const *format, ...)
-{
-    va_list ap;
-    int len = 0;
-    char *string = NULL;
-
-    va_start(ap, format);
-    len = vasprintf(&string, format, ap);
-    pcmk__assert(len > 0);
-    va_end(ap);
-    return string;
-}
-
 /*!
  * \internal
  * \brief Parse a boolean value from a string
@@ -1427,6 +1413,20 @@ crm_str_to_boolean(const char *s, int *ret)
         return 1;
     }
     return -1;
+}
+
+char *
+crm_strdup_printf(char const *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *string = NULL;
+
+    va_start(ap, format);
+    len = vasprintf(&string, format, ap);
+    pcmk__assert(len > 0);
+    va_end(ap);
+    return string;
 }
 
 // LCOV_EXCL_STOP
