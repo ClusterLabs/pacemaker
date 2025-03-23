@@ -90,7 +90,7 @@ validate_hash(const char *filename, const char *secret_value,
         goto done;
     }
 
-    calculated = crm_md5sum(secret_value);
+    calculated = pcmk__md5sum(secret_value);
     if (calculated == NULL) {
         // Should be impossible
         rc = EINVAL;

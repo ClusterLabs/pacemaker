@@ -27,7 +27,6 @@
 #include <crm/cib/internal.h>   // cib__signon_query
 #include <crm/common/internal.h>
 #include <crm/common/results.h>
-#include <crm/common/util.h>    // crm_md5sum
 #include <crm/common/xml.h>     // crm_element_value, PCMK_XA_*
 
 #include <pacemaker-internal.h> // pcmk__query_node_name
@@ -667,7 +666,7 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     free(contents);
 
     sign_file = pcmk__assert_asprintf("%s/%s.sign", lf_dir, param);
-    calc_sum = crm_md5sum(value);
+    calc_sum = pcmk__md5sum(value);
     contents = pcmk__assert_asprintf("%s\n", calc_sum);
 
     if (!g_file_set_contents(sign_file, contents, -1, NULL)) {
@@ -723,7 +722,7 @@ subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     local_value = local_files_get(rsc, param);
     if (local_value != NULL) {
-        calc_sum = crm_md5sum(local_value);
+        calc_sum = pcmk__md5sum(local_value);
     }
 
     if ((local_value == NULL) || !pcmk__str_eq(calc_sum, local_sum, pcmk__str_none)) {
