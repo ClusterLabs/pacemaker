@@ -893,9 +893,6 @@ pcmk__parse_ms(const char *input, long long *result)
 
     CRM_CHECK((input != NULL) && (result != NULL), return EINVAL);
 
-    // Skip initial whitespace
-    for (; isspace(*input); input++);
-
     rc = scan_ll(input, &local_result, 0, &units);
 
     if (rc == ERANGE) {
