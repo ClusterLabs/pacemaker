@@ -164,7 +164,7 @@ attrd_peer_change_cb(enum pcmk__node_update kind, pcmk__node_status_t *peer,
                      const void *data)
 {
     bool gone = false;
-    bool is_remote = pcmk_is_set(peer->flags, pcmk__node_status_remote);
+    bool is_remote = pcmk__is_set(peer->flags, pcmk__node_status_remote);
 
     switch (kind) {
         case pcmk__node_update_name:
@@ -174,7 +174,7 @@ attrd_peer_change_cb(enum pcmk__node_update kind, pcmk__node_status_t *peer,
             break;
 
         case pcmk__node_update_processes:
-            if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
+            if (!pcmk__is_set(peer->processes, crm_get_cluster_proc())) {
                 gone = true;
             }
             crm_debug("Node %s is %s a peer",
@@ -190,7 +190,7 @@ attrd_peer_change_cb(enum pcmk__node_update kind, pcmk__node_status_t *peer,
                  * (unless it's a remote node, which doesn't run its own attrd)
                  */
                 if (attrd_election_won()
-                    && !pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
+                    && !pcmk__is_set(peer->flags, pcmk__node_status_remote)) {
                     attrd_peer_sync(peer);
                 }
             } else {
@@ -389,7 +389,7 @@ broadcast_unseen_local_values(void)
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
 
-            if (!pcmk_is_set(v->flags, attrd_value_from_peer)
+            if (!pcmk__is_set(v->flags, attrd_value_from_peer)
                 && pcmk__str_eq(v->nodename, attrd_cluster->priv->node_name,
                                 pcmk__str_casei)) {
                 crm_trace("* %s[%s]='%s' is local-only",

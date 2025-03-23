@@ -137,8 +137,8 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     crm_trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
               " from client %s", flags, call_options, id, pcmk__client_name(c));
 
-    if (pcmk_is_set(call_options, st_opt_sync_call)) {
-        pcmk__assert(pcmk_is_set(flags, crm_ipc_client_response));
+    if (pcmk__is_set(call_options, st_opt_sync_call)) {
+        pcmk__assert(pcmk__is_set(flags, crm_ipc_client_response));
         CRM_LOG_ASSERT(c->request_id == 0);     /* This means the client has two synchronous events in-flight */
         c->request_id = id;     /* Reply only to the last one */
     }
@@ -235,7 +235,7 @@ do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
     int rid = 0;
     uint32_t ipc_flags = crm_ipc_server_event;
 
-    if (pcmk_is_set(call_options, st_opt_sync_call)) {
+    if (pcmk__is_set(call_options, st_opt_sync_call)) {
         CRM_LOG_ASSERT(client->request_id);
         rid = client->request_id;
         client->request_id = 0;
@@ -248,7 +248,7 @@ do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
                   rid, pcmk__client_name(client));
     } else {
         crm_warn("%synchronous reply to client %s failed: %s",
-                 (pcmk_is_set(call_options, st_opt_sync_call)? "S" : "As"),
+                 (pcmk__is_set(call_options, st_opt_sync_call)? "S" : "As"),
                  pcmk__client_name(client), pcmk_rc_str(local_rc));
     }
 }
@@ -296,7 +296,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (pcmk_is_set(client->flags, get_stonith_flag(type))) {
+    if (pcmk__is_set(client->flags, get_stonith_flag(type))) {
         int rc = pcmk__ipc_send_xml(client, 0, update_msg,
                                     crm_ipc_server_event);
 
@@ -464,7 +464,7 @@ st_peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                         const void *data)
 {
     if ((type != pcmk__node_update_processes)
-        && !pcmk_is_set(node->flags, pcmk__node_status_remote)) {
+        && !pcmk__is_set(node->flags, pcmk__node_status_remote)) {
         /*
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()

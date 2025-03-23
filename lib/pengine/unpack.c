@@ -99,8 +99,8 @@ is_dangling_guest_node(pcmk_node_t *node)
     return pcmk__is_pacemaker_remote_node(node)
            && (node->priv->remote != NULL)
            && (node->priv->remote->priv->launcher == NULL)
-           && pcmk_is_set(node->priv->remote->flags,
-                          pcmk__rsc_removed_launched);
+           && pcmk__is_set(node->priv->remote->flags,
+                           pcmk__rsc_removed_launched);
 }
 
 /*!
@@ -122,8 +122,8 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
         // Fence a guest or bundle node by marking its launcher as failed
         pcmk_resource_t *rsc = node->priv->remote->priv->launcher;
 
-        if (!pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
-            if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+        if (!pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
+            if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
                 crm_notice("Not fencing guest node %s "
                            "(otherwise would because %s): "
                            "its guest resource %s is unmanaged",
@@ -155,11 +155,11 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
     } else if (pcmk__is_remote_node(node)) {
         pcmk_resource_t *rsc = node->priv->remote;
 
-        if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+        if ((rsc != NULL) && !pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
             crm_notice("Not fencing remote node %s "
                        "(otherwise would because %s): connection is unmanaged",
                        pcmk__node_name(node), reason);
-        } else if (!pcmk_is_set(node->priv->flags, pcmk__node_remote_reset)) {
+        } else if (!pcmk__is_set(node->priv->flags, pcmk__node_remote_reset)) {
             pcmk__set_node_flags(node, pcmk__node_remote_reset);
             pcmk__sched_warn(scheduler, "Remote node %s %s: %s",
                              pcmk__node_name(node),
@@ -206,7 +206,7 @@ set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *scheduler)
 {
     xmlXPathObject *result = NULL;
 
-    if (!pcmk_is_set(scheduler->flags, flag)) {
+    if (!pcmk__is_set(scheduler->flags, flag)) {
         result = pcmk__xpath_search(scheduler->input->doc, xpath);
         if (pcmk__xpath_num_results(result) > 0) {
             pcmk__set_scheduler_flags(scheduler, flag);
@@ -235,7 +235,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     set_config_flag(scheduler, PCMK_OPT_ENABLE_STARTUP_PROBES,
                     pcmk__sched_probe_resources);
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_probe_resources)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_probe_resources)) {
         crm_info("Startup probes: disabled (dangerous)");
     }
 
@@ -261,7 +261,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     set_config_flag(scheduler, PCMK_OPT_STONITH_ENABLED,
                     pcmk__sched_fencing_enabled);
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
         crm_debug("STONITH of failed nodes is enabled");
     } else {
         crm_debug("STONITH of failed nodes is disabled");
@@ -273,7 +273,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     set_config_flag(scheduler, PCMK_OPT_CONCURRENT_FENCING,
                     pcmk__sched_concurrent_fencing);
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_concurrent_fencing)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_concurrent_fencing)) {
         crm_debug("Concurrent fencing is enabled");
     } else {
         crm_debug("Concurrent fencing is disabled");
@@ -294,7 +294,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     set_config_flag(scheduler, PCMK_OPT_SYMMETRIC_CLUSTER,
                     pcmk__sched_symmetric_cluster);
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
         crm_debug("Cluster is symmetric" " - resources can run anywhere by default");
     }
 
@@ -311,13 +311,13 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     } else if (pcmk__strcase_any_of(value, PCMK_VALUE_FENCE,
                                     PCMK_VALUE_FENCE_LEGACY, NULL)) {
-        if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+        if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             int do_panic = 0;
 
             pcmk__xe_get_int(scheduler->input, PCMK_XA_NO_QUORUM_PANIC,
                              &do_panic);
             if (do_panic
-                || pcmk_is_set(scheduler->flags, pcmk__sched_quorate)) {
+                || pcmk__is_set(scheduler->flags, pcmk__sched_quorate)) {
                 scheduler->no_quorum_policy = pcmk_no_quorum_fence;
             } else {
                 crm_notice("Resetting " PCMK_OPT_NO_QUORUM_POLICY
@@ -357,7 +357,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     set_config_flag(scheduler, PCMK_OPT_STOP_ORPHAN_RESOURCES,
                     pcmk__sched_stop_removed_resources);
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_removed_resources)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_stop_removed_resources)) {
         crm_trace("Orphan resources are stopped");
     } else {
         crm_trace("Orphan resources are ignored");
@@ -365,7 +365,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     set_config_flag(scheduler, PCMK_OPT_STOP_ORPHAN_ACTIONS,
                     pcmk__sched_cancel_removed_actions);
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_cancel_removed_actions)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_cancel_removed_actions)) {
         crm_trace("Orphan resource actions are stopped");
     } else {
         crm_trace("Orphan resource actions are ignored");
@@ -378,17 +378,17 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     set_config_flag(scheduler, PCMK_OPT_START_FAILURE_IS_FATAL,
                     pcmk__sched_start_failure_fatal);
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_start_failure_fatal)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_start_failure_fatal)) {
         crm_trace("Start failures are always fatal");
     } else {
         crm_trace("Start failures are handled by failcount");
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
         set_config_flag(scheduler, PCMK_OPT_STARTUP_FENCING,
                         pcmk__sched_startup_fencing);
     }
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_startup_fencing)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_startup_fencing)) {
         crm_trace("Unseen nodes will be fenced");
     } else {
         pcmk__warn_once(pcmk__wo_blind,
@@ -403,7 +403,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     set_config_flag(scheduler, PCMK_OPT_SHUTDOWN_LOCK,
                     pcmk__sched_shutdown_lock);
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_shutdown_lock)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_shutdown_lock)) {
         value = pcmk__cluster_option(config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
         pcmk_parse_interval_spec(value, &(scheduler->priv->shutdown_lock_ms));
         crm_trace("Resources will be locked to nodes that were cleanly "
@@ -588,7 +588,7 @@ handle_startup_fencing(pcmk_scheduler_t *scheduler, pcmk_node_t *new_node)
         return;
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_startup_fencing)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_startup_fencing)) {
         // All nodes are unclean until we've seen their status entry
         new_node->details->unclean = TRUE;
 
@@ -768,11 +768,11 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
 {
     pcmk_node_t *remote_node = NULL;
 
-    if (!pcmk_is_set(new_rsc->flags, pcmk__rsc_is_remote_connection)) {
+    if (!pcmk__is_set(new_rsc->flags, pcmk__rsc_is_remote_connection)) {
         return;
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_location_only)) {
         /* remote_nodes and remote_resources are not linked in quick location calculations */
         return;
     }
@@ -865,11 +865,11 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
 
     scheduler->priv->resources = g_list_sort(scheduler->priv->resources,
                                              pe__cmp_rsc_priority);
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_location_only)) {
         /* Ignore */
 
-    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)
-               && !pcmk_is_set(scheduler->flags, pcmk__sched_have_fencing)) {
+    } else if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)
+               && !pcmk__is_set(scheduler->flags, pcmk__sched_have_fencing)) {
 
         pcmk__config_err("Resource start-up disabled since no STONITH resources have been defined");
         pcmk__config_err("Either configure some or disable STONITH with the "
@@ -1034,7 +1034,7 @@ unpack_ticket_state(xmlNode *xml_ticket, void *userdata)
     standby = g_hash_table_lookup(ticket->state, PCMK_XA_STANDBY);
     if (pcmk__is_true(standby)) {
         pcmk__set_ticket_flags(ticket, pcmk__ticket_standby);
-        if (pcmk_is_set(ticket->flags, pcmk__ticket_granted)) {
+        if (pcmk__is_set(ticket->flags, pcmk__ticket_granted)) {
             crm_info("Granted ticket '%s' is in standby-mode", ticket->id);
         }
     } else {
@@ -1074,7 +1074,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     }
 
     rsc = this_node->priv->remote;
-    if (!pcmk_is_set(this_node->priv->flags, pcmk__node_remote_reset)) {
+    if (!pcmk__is_set(this_node->priv->flags, pcmk__node_remote_reset)) {
         this_node->details->unclean = FALSE;
         pcmk__set_node_flags(this_node, pcmk__node_seen);
     }
@@ -1095,7 +1095,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
 
     if (pcmk__is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_MAINTENANCE,
                                       NULL, pcmk__rsc_node_current))
-        || ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk__rsc_managed))) {
+        || ((rsc != NULL) && !pcmk__is_set(rsc->flags, pcmk__rsc_managed))) {
         crm_info("%s is in maintenance mode", pcmk__node_name(this_node));
         this_node->details->maintenance = TRUE;
     }
@@ -1111,7 +1111,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
                         " (and behave as 'true') in a future release.");
 
         if (pcmk__is_remote_node(this_node)
-            && !pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+            && !pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             pcmk__config_warn("Ignoring "
                               PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
                               " attribute on Pacemaker Remote node %s"
@@ -1250,7 +1250,7 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
               pcmk__node_name(this_node), id);
     determine_online_status(state, this_node, scheduler);
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_quorate)
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_quorate)
         && this_node->details->online
         && (scheduler->no_quorum_policy == pcmk_no_quorum_fence)) {
         /* Everything else should flow from this automatically
@@ -1310,7 +1310,7 @@ unpack_node_history(const xmlNode *status, bool fence,
             continue;
         }
 
-        if (pcmk_is_set(this_node->priv->flags, pcmk__node_unpacked)) {
+        if (pcmk__is_set(this_node->priv->flags, pcmk__node_unpacked)) {
             crm_trace("Not unpacking resource history for node %s because "
                       "already unpacked", id);
             continue;
@@ -1344,7 +1344,7 @@ unpack_node_history(const xmlNode *status, bool fence,
             pcmk_resource_t *rsc = this_node->priv->remote;
 
             if ((rsc == NULL)
-                || (!pcmk_is_set(scheduler->flags, pcmk__sched_shutdown_lock)
+                || (!pcmk__is_set(scheduler->flags, pcmk__sched_shutdown_lock)
                     && (rsc->priv->orig_role != pcmk_role_started))) {
                 crm_trace("Not unpacking resource history for remote node %s "
                           "because connection is not known to be up", id);
@@ -1414,8 +1414,8 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
 
     // Now catch any nodes we didn't see
     unpack_node_history(status,
-                        pcmk_is_set(scheduler->flags,
-                                    pcmk__sched_fencing_enabled),
+                        pcmk__is_set(scheduler->flags,
+                                     pcmk__sched_fencing_enabled),
                         scheduler);
 
     /* Now that we know where resources are, we can schedule stops of containers
@@ -1451,7 +1451,7 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
             pe__set_next_role(this_node->priv->remote, pcmk_role_stopped,
                               "remote shutdown");
         }
-        if (!pcmk_is_set(this_node->priv->flags, pcmk__node_unpacked)) {
+        if (!pcmk__is_set(this_node->priv->flags, pcmk__node_unpacked)) {
             determine_remote_online_status(scheduler, this_node);
         }
     }
@@ -1596,8 +1596,8 @@ determine_online_status_no_fencing(pcmk_scheduler_t *scheduler,
                       pcmk__node_name(this_node), join);
         }
 
-    } else if (!pcmk_is_set(this_node->priv->flags,
-                            pcmk__node_expected_up)) {
+    } else if (!pcmk__is_set(this_node->priv->flags,
+                             pcmk__node_expected_up)) {
         crm_trace("Node %s controller is down: "
                   "member@%lld online@%lld join=%s expected=%s",
                   pcmk__node_name(this_node), when_member, when_online,
@@ -1797,13 +1797,13 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
     }
 
     /* Now check all the failure conditions. */
-    if ((launcher != NULL) && pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
+    if ((launcher != NULL) && pcmk__is_set(launcher->flags, pcmk__rsc_failed)) {
         crm_trace("Guest node %s UNCLEAN because guest resource failed",
                   this_node->priv->id);
         this_node->details->online = FALSE;
         pcmk__set_node_flags(this_node, pcmk__node_remote_reset);
 
-    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
+    } else if (pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
         crm_trace("%s node %s OFFLINE because connection resource failed",
                   node_type, this_node->priv->id);
         this_node->details->online = FALSE;
@@ -1849,7 +1849,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
         pcmk__set_node_flags(this_node, pcmk__node_expected_up);
     }
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
         online = determine_online_status_no_fencing(scheduler, node_state,
                                                     this_node);
 
@@ -1884,7 +1884,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
     } else if (this_node->details->pending) {
         crm_info("%s is pending", pcmk__node_name(this_node));
 
-    } else if (pcmk_is_set(this_node->priv->flags, pcmk__node_standby)) {
+    } else if (pcmk__is_set(this_node->priv->flags, pcmk__node_standby)) {
         crm_info("%s is in standby", pcmk__node_name(this_node));
 
     } else if (this_node->details->maintenance) {
@@ -2144,7 +2144,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         } else {
             pcmk__rsc_trace(parent, "Resource %s, skip inactive", child->id);
             if (!skip_inactive && !inactive_instance
-                && !pcmk_is_set(child->flags, pcmk__rsc_blocked)) {
+                && !pcmk__is_set(child->flags, pcmk__rsc_blocked)) {
                 // Remember one inactive instance in case we don't find active
                 inactive_instance =
                     parent->priv->fns->find_rsc(child, rsc_id, NULL,
@@ -2185,7 +2185,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
      * @TODO Ideally, we'd use an inactive instance number if it is not needed
      * for any clean instances. However, we don't know that at this point.
      */
-    if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)
+    if ((rsc != NULL) && !pcmk__is_set(rsc->flags, pcmk__rsc_needs_fencing)
         && (!node->details->online || node->details->unclean)
         && !pcmk__is_guest_or_bundle_node(node)
         && !pe__is_universal_clone(parent, scheduler)) {
@@ -2219,7 +2219,9 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         pcmk_resource_t *clone0 = pe_find_resource(scheduler->priv->resources,
                                                    clone0_id);
 
-        if (clone0 && !pcmk_is_set(clone0->flags, pcmk__rsc_unique)) {
+        if ((clone0 != NULL)
+            && !pcmk__is_set(clone0->flags, pcmk__rsc_unique)) {
+
             rsc = clone0;
             parent = uber_parent(clone0);
             crm_trace("%s found as %s (%s)", rsc_id, clone0_id, parent->id);
@@ -2254,10 +2256,12 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     if (rsc && !pcmk__str_eq(rsc_id, rsc->id, pcmk__str_none)
         && !pcmk__str_eq(rsc_id, rsc->priv->history_id, pcmk__str_none)) {
 
+        const bool removed = pcmk__is_set(rsc->flags, pcmk__rsc_removed);
+
         pcmk__str_update(&(rsc->priv->history_id), rsc_id);
         pcmk__rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
                         rsc_id, pcmk__node_name(node), rsc->id,
-                        pcmk_is_set(rsc->flags, pcmk__rsc_removed)? " (ORPHAN)" : "");
+                        (removed? " (ORPHAN)" : ""));
     }
     return rsc;
 }
@@ -2276,7 +2280,7 @@ process_orphan_resource(const xmlNode *rsc_entry, const pcmk_node_t *node,
         return NULL;
     }
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_stop_removed_resources)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_stop_removed_resources)) {
         pcmk__clear_rsc_flags(rsc, pcmk__rsc_managed);
 
     } else {
@@ -2321,7 +2325,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                 g_hash_table_insert(iter->priv->probed_nodes,
                                     (gpointer) n->priv->id, n);
             }
-            if (pcmk_is_set(iter->flags, pcmk__rsc_unique)) {
+            if (pcmk__is_set(iter->flags, pcmk__rsc_unique)) {
                 break;
             }
             iter = iter->priv->parent;
@@ -2330,7 +2334,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     /* If a managed resource is believed to be running, but node is down ... */
     if (known_active && !node->details->online && !node->details->maintenance
-        && pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+        && pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
 
         gboolean should_fence = FALSE;
 
@@ -2345,11 +2349,12 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             pcmk__set_rsc_flags(rsc, pcmk__rsc_failed|pcmk__rsc_stop_if_failed);
             should_fence = TRUE;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+        } else if (pcmk__is_set(scheduler->flags,
+                                pcmk__sched_fencing_enabled)) {
             if (pcmk__is_remote_node(node)
                 && (node->priv->remote != NULL)
-                && !pcmk_is_set(node->priv->remote->flags,
-                                pcmk__rsc_failed)) {
+                && !pcmk__is_set(node->priv->remote->flags,
+                                 pcmk__rsc_failed)) {
 
                 /* Setting unseen means that fencing of the remote node will
                  * occur only if the connection resource is not going to start
@@ -2461,14 +2466,14 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         case pcmk__on_fail_reset_remote:
             pcmk__set_rsc_flags(rsc, pcmk__rsc_failed|pcmk__rsc_stop_if_failed);
-            if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+            if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
                 tmpnode = NULL;
-                if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
+                if (pcmk__is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
                     tmpnode = pcmk_find_node(scheduler, rsc->id);
                 }
                 if (pcmk__is_remote_node(tmpnode)
-                    && !pcmk_is_set(tmpnode->priv->flags,
-                                    pcmk__node_remote_fenced)) {
+                    && !pcmk__is_set(tmpnode->priv->flags,
+                                     pcmk__node_remote_fenced)) {
                     /* The remote connection resource failed in a way that
                      * should result in fencing the remote node.
                      */
@@ -2504,8 +2509,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     if (known_active) {
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
-            if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
+            if (pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
                 crm_notice("Removed resource %s is active on %s and will be "
                            "stopped when possible",
                            rsc->id, pcmk__node_name(node));
@@ -2763,7 +2768,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
         op_list = g_list_prepend(op_list, rsc_op);
     }
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_shutdown_lock)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_shutdown_lock)) {
         if (op_list == NULL) {
             // If there are no operations, there is nothing to do
             return NULL;
@@ -2783,7 +2788,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     pcmk__assert(rsc != NULL);
 
     // Check whether the resource is "shutdown-locked" to this node
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_shutdown_lock)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_shutdown_lock)) {
         unpack_shutdown_lock(lrm_resource, rsc, node, scheduler);
     }
 
@@ -2858,7 +2863,7 @@ handle_removed_launched_resources(const xmlNode *lrm_rsc_list,
 
         rsc = pe_find_resource(scheduler->priv->resources, rsc_id);
         if ((rsc == NULL) || (rsc->priv->launcher != NULL)
-            || !pcmk_is_set(rsc->flags, pcmk__rsc_removed_launched)) {
+            || !pcmk__is_set(rsc->flags, pcmk__rsc_removed_launched)) {
             continue;
         }
 
@@ -2904,7 +2909,7 @@ unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
         pcmk_resource_t *rsc = unpack_lrm_resource(node, rsc_entry, scheduler);
 
         if ((rsc != NULL)
-            && pcmk_is_set(rsc->flags, pcmk__rsc_removed_launched)) {
+            && pcmk__is_set(rsc->flags, pcmk__rsc_removed_launched)) {
             found_removed_launched_resource = true;
         }
     }
@@ -2922,7 +2927,7 @@ set_active(pcmk_resource_t *rsc)
 {
     const pcmk_resource_t *top = pe__const_top_resource(rsc, false);
 
-    if (top && pcmk_is_set(top->flags, pcmk__rsc_promotable)) {
+    if ((top != NULL) && pcmk__is_set(top->flags, pcmk__rsc_promotable)) {
         rsc->priv->orig_role = pcmk_role_unpromoted;
     } else {
         rsc->priv->orig_role = pcmk_role_started;
@@ -3642,7 +3647,7 @@ unpack_rsc_op_failure(struct action_history *history,
     is_probe = pcmk_xe_is_probe(history->xml);
     last_change_s = last_change_str(history->xml);
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_symmetric_cluster)
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_symmetric_cluster)
         && (history->exit_status == PCMK_OCF_NOT_INSTALLED)) {
         crm_trace("Unexpected result (%s%s%s) was recorded for "
                   "%s of %s on %s at %s " QB_XS " exit-status=%d id=%s",
@@ -3937,7 +3942,7 @@ remap_operation(struct action_history *history,
         case PCMK_OCF_NOT_RUNNING:
             if (is_probe
                 || (history->expected_exit_status == history->exit_status)
-                || !pcmk_is_set(history->rsc->flags, pcmk__rsc_managed)) {
+                || !pcmk__is_set(history->rsc->flags, pcmk__rsc_managed)) {
 
                 /* For probes, recurring monitors for the Stopped role, and
                  * unmanaged resources, "not running" is not considered a
@@ -4110,16 +4115,16 @@ should_ignore_failure_timeout(const pcmk_resource_t *rsc, const char *task,
      * if the remote node hasn't been fenced.
      */
     if ((rsc->priv->remote_reconnect_ms > 0U)
-        && pcmk_is_set(rsc->priv->scheduler->flags,
-                       pcmk__sched_fencing_enabled)
+        && pcmk__is_set(rsc->priv->scheduler->flags,
+                        pcmk__sched_fencing_enabled)
         && (interval_ms != 0)
         && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
 
         pcmk_node_t *remote_node = pcmk_find_node(rsc->priv->scheduler,
                                                   rsc->id);
 
-        if (remote_node && !pcmk_is_set(remote_node->priv->flags,
-                                        pcmk__node_remote_fenced)) {
+        if (remote_node && !pcmk__is_set(remote_node->priv->flags,
+                                         pcmk__node_remote_fenced)) {
             if (is_last_failure) {
                 crm_info("Waiting to clear monitor failure for remote node %s"
                          " until fencing has occurred", rsc->id);
@@ -4252,7 +4257,7 @@ check_operation_expiry(struct action_history *history)
         clear_op = pe__clear_failcount(history->rsc, history->node,
                                        clear_reason, scheduler);
 
-        if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)
+        if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)
             && (history->rsc->priv->remote_reconnect_ms > 0)) {
             /* If we're clearing a remote connection due to a reconnect
              * interval, we want to wait until any scheduled fencing
@@ -4552,7 +4557,7 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
 {
     pcmk_resource_t *ban_rsc = history->rsc;
 
-    if (!pcmk_is_set(history->rsc->flags, pcmk__rsc_unique)) {
+    if (!pcmk__is_set(history->rsc->flags, pcmk__rsc_unique)) {
         ban_rsc = uber_parent(history->rsc);
     }
 
@@ -4764,7 +4769,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
         goto done;
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
         parent = uber_parent(rsc);
     }
 
@@ -4800,8 +4805,8 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
         case PCMK_EXEC_NOT_CONNECTED:
             if (pcmk__is_pacemaker_remote_node(node)
-                && pcmk_is_set(node->priv->remote->flags,
-                               pcmk__rsc_managed)) {
+                && pcmk__is_set(node->priv->remote->flags,
+                                pcmk__rsc_managed)) {
                 /* We should never get into a situation where a managed remote
                  * connection resource is considered OK but a resource action
                  * behind the connection gets a "not connected" status. But as a
@@ -5083,7 +5088,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
         }
 
         if (this_node->details->online
-            || pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+            || pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             /* offline nodes run no resources...
              * unless stonith is enabled in which case we need to
              *   make sure rsc start events happen after the stonith

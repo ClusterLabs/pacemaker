@@ -78,7 +78,7 @@ do_cl_join_announce(long long action,
         return;
     }
 
-    if (!pcmk_is_set(controld_globals.fsa_input_register, R_STARTING)) {
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_STARTING)) {
         /* send as a broadcast */
         xmlNode *req = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
                                          NULL, CRM_SYSTEM_DC,
@@ -336,7 +336,7 @@ do_cl_join_finalize_respond(long long action,
          * clones and end up with multiple active instances on the machine.
          */
         if (first_join
-            && !pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+            && !pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
 
             first_join = FALSE;
             if (start_state) {

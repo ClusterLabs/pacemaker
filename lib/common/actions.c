@@ -582,7 +582,7 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
     CRM_CHECK((rsc_class != NULL) || (op != NULL), return false);
 
     if ((rsc_class != NULL)
-        && !pcmk_is_set(pcmk_get_ra_caps(rsc_class), pcmk_ra_cap_params)) {
+        && !pcmk__is_set(pcmk_get_ra_caps(rsc_class), pcmk_ra_cap_params)) {
         // Metadata is needed only for resource classes that use parameters
         return false;
     }

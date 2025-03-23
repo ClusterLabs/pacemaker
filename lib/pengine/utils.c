@@ -50,13 +50,13 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
         }
         return true;
 
-    } else if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+    } else if (!pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
         return false; /* Turned off */
 
-    } else if (!pcmk_is_set(scheduler->flags, pcmk__sched_have_fencing)) {
+    } else if (!pcmk__is_set(scheduler->flags, pcmk__sched_have_fencing)) {
         return false; /* No devices */
 
-    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_quorate)) {
+    } else if (pcmk__is_set(scheduler->flags, pcmk__sched_quorate)) {
         return true;
 
     } else if (scheduler->no_quorum_policy == pcmk_no_quorum_ignore) {
@@ -253,7 +253,7 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
                         const char *comment, GHashTable *nodes,
                         pcmk_scheduler_t *scheduler)
 {
-    if ((rsc != NULL) && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
+    if ((rsc != NULL) && pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
         // Don't show allocation scores for orphans
         return;
     }
@@ -327,7 +327,7 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
 {
     pcmk_node_t *match = NULL;
 
-    if ((pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
+    if ((pcmk__is_set(rsc->flags, pcmk__rsc_exclusive_probes)
          || (node->assign->probe_mode == pcmk__probe_never))
         && pcmk__str_eq(tag, "symmetric_default", pcmk__str_casei)) {
         /* This string comparision may be fragile, but exclusive resources and
@@ -426,8 +426,8 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
         return FALSE;
 
     } else if (local_role > pcmk_role_started) {
-        if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                        pcmk__rsc_promotable)) {
+        if (pcmk__is_set(pe__const_top_resource(rsc, false)->flags,
+                         pcmk__rsc_promotable)) {
             if (local_role > pcmk_role_unpromoted) {
                 /* This is what we'd do anyway, just leave the default to avoid messing up the placement algorithm */
                 return FALSE;
@@ -546,7 +546,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 const char *
 rsc_printable_id(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
         return rsc->id;
     }
     return pcmk__xe_id(rsc->priv->xml);
@@ -594,12 +594,12 @@ void
 trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
                   pcmk_action_t *dependency, pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
         /* No resources require it */
         return;
 
     } else if ((rsc != NULL)
-               && !pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
+               && !pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
         /* Wasn't a stonith device */
         return;
 
@@ -704,8 +704,8 @@ pe__resource_is_disabled(const pcmk_resource_t *rsc)
 
         if ((target_role_e == pcmk_role_stopped)
             || ((target_role_e == pcmk_role_unpromoted)
-                && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                               pcmk__rsc_promotable))) {
+                && pcmk__is_set(pe__const_top_resource(rsc, false)->flags,
+                                pcmk__rsc_promotable))) {
             return true;
         }
     }

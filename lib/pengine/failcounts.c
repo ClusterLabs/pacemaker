@@ -188,7 +188,10 @@ rsc_fail_name(const pcmk_resource_t *rsc)
 {
     const char *name = pcmk__s(rsc->priv->history_id, rsc->id);
 
-    return pcmk_is_set(rsc->flags, pcmk__rsc_unique)? strdup(name) : clone_strip(name);
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
+        return strdup(name);
+    }
+    return clone_strip(name);
 }
 
 /*!
@@ -248,12 +251,12 @@ generate_fail_regexes(const pcmk_resource_t *rsc, regex_t *failcount_re,
     char *rsc_name = rsc_fail_name(rsc);
 
     if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name,
-                            pcmk_is_set(rsc->flags, pcmk__rsc_unique),
+                            pcmk__is_set(rsc->flags, pcmk__rsc_unique),
                             failcount_re) != pcmk_rc_ok) {
         rc = EINVAL;
 
     } else if (generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name,
-                                   pcmk_is_set(rsc->flags, pcmk__rsc_unique),
+                                   pcmk__is_set(rsc->flags, pcmk__rsc_unique),
                                    lastfailure_re) != pcmk_rc_ok) {
         rc = EINVAL;
         regfree(failcount_re);
@@ -396,7 +399,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
     }
 
     // If all failures have expired, ignore fail count
-    if (pcmk_is_set(flags, pcmk__fc_effective) && (fc_data.failcount > 0)
+    if (pcmk__is_set(flags, pcmk__fc_effective) && (fc_data.failcount > 0)
         && (fc_data.last_failure > 0)
         && (rsc->priv->failure_expiration_ms > 0)) {
 
@@ -421,7 +424,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * container's fail count on that node could lead to attempting to stop the
      * container on the wrong node.
      */
-    if (pcmk_is_set(flags, pcmk__fc_launched)
+    if (pcmk__is_set(flags, pcmk__fc_launched)
         && (rsc->priv->launched != NULL) && !pcmk__is_bundled(rsc)) {
 
         g_list_foreach(rsc->priv->launched, update_launched_failcount,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -113,7 +113,7 @@ get_remote_node_state(const pcmk_node_t *node)
             return remote_state_failed;
         }
 
-        if (!pcmk_is_set(remote_rsc->flags, pcmk__rsc_failed)) {
+        if (!pcmk__is_set(remote_rsc->flags, pcmk__rsc_failed)) {
             /* Connection resource is cleanly stopped */
             return remote_state_stopped;
         }
@@ -122,7 +122,7 @@ get_remote_node_state(const pcmk_node_t *node)
 
         if ((remote_rsc->priv->next_role == pcmk_role_stopped)
             && (remote_rsc->priv->remote_reconnect_ms > 0U)
-            && pcmk_is_set(node->priv->flags, pcmk__node_remote_fenced)
+            && pcmk__is_set(node->priv->flags, pcmk__node_remote_fenced)
             && !pe__shutdown_requested(node)) {
 
             /* We won't know whether the connection is recoverable until the
@@ -186,7 +186,7 @@ apply_remote_ordering(pcmk_action_t *action)
 
     crm_trace("Order %s action %s relative to %s%s (state: %s)",
               action->task, action->uuid,
-              pcmk_is_set(remote_rsc->flags, pcmk__rsc_failed)? "failed " : "",
+              pcmk__is_set(remote_rsc->flags, pcmk__rsc_failed)? "failed " : "",
               remote_rsc->id, state2text(state));
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
@@ -313,16 +313,16 @@ apply_launcher_ordering(pcmk_action_t *action)
     launcher = remote_rsc->priv->launcher;
     pcmk__assert(launcher != NULL);
 
-    if (pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
+    if (pcmk__is_set(launcher->flags, pcmk__rsc_failed)) {
         pe_fence_node(action->rsc->priv->scheduler, action->node,
                       "container failed", FALSE);
     }
 
     crm_trace("Order %s action %s relative to %s%s for %s%s",
               action->task, action->uuid,
-              pcmk_is_set(remote_rsc->flags, pcmk__rsc_failed)? "failed " : "",
+              pcmk__is_set(remote_rsc->flags, pcmk__rsc_failed)? "failed " : "",
               remote_rsc->id,
-              pcmk_is_set(launcher->flags, pcmk__rsc_failed)? "failed " : "",
+              pcmk__is_set(launcher->flags, pcmk__rsc_failed)? "failed " : "",
               launcher->id);
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
@@ -346,7 +346,7 @@ apply_launcher_ordering(pcmk_action_t *action)
 
         case pcmk__action_stop:
         case pcmk__action_demote:
-            if (pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
+            if (pcmk__is_set(launcher->flags, pcmk__rsc_failed)) {
                 /* When the launcher representing a guest node fails, any stop
                  * or demote actions for resources running on the guest node
                  * are implied by the launcher stopping. This is similar to
@@ -393,7 +393,7 @@ apply_launcher_ordering(pcmk_action_t *action)
 void
 pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
         return;
     }
 
@@ -413,7 +413,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * remote connection resource, then make sure this happens before
          * any start of the resource in this transition.
          */
-        if (pcmk_is_set(action->rsc->flags, pcmk__rsc_is_remote_connection)
+        if (pcmk__is_set(action->rsc->flags, pcmk__rsc_is_remote_connection)
             && pcmk__str_eq(action->task, PCMK_ACTION_CLEAR_FAILCOUNT,
                             pcmk__str_none)) {
 
@@ -440,7 +440,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * real actions and vice versa later in update_actions() at the end of
          * pcmk__apply_orderings().
          */
-        if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
+        if (pcmk__is_set(action->flags, pcmk__action_pseudo)) {
             continue;
         }
 

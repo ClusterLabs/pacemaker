@@ -161,7 +161,7 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
     CRM_CHECK(node != NULL, return);
 
     /* Remote nodes do not participate in joins */
-    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
+    if (pcmk__is_set(node->flags, pcmk__node_status_remote)) {
         return;
     }
 
@@ -240,8 +240,8 @@ create_dc_message(const char *join_op, const char *host_to)
      * joining node from fencing the old DC if it becomes the new DC.
      */
     pcmk__xe_set_bool_attr(msg, PCMK__XA_DC_LEAVING,
-                           pcmk_is_set(controld_globals.fsa_input_register,
-                                       R_SHUTDOWN));
+                           pcmk__is_set(controld_globals.fsa_input_register,
+                                        R_SHUTDOWN));
     return msg;
 }
 
@@ -654,7 +654,7 @@ do_dc_join_finalize(long long action,
         return;
     }
 
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
         // Send our CIB out to everyone
         sync_from = pcmk__str_copy(controld_globals.cluster->priv->node_name);
     } else {
@@ -833,7 +833,7 @@ do_dc_join_ack(long long action,
     }
 
     // Delete relevant parts of node's current executor state from CIB
-    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
+    if (pcmk__is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
         section = controld_section_lrm_unlocked;
     }
     controld_node_state_deletion_strings(join_from, section, &xpath, NULL);
@@ -1015,7 +1015,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
         }
 
     } else if (cur_state == S_FINALIZE_JOIN) {
-        if (!pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
+        if (!pcmk__is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
             crm_debug("join-%d: Delaying finalization until we have CIB "
                       QB_XS " state=%s for=%s",
                       current_join_id, fsa_state2string(cur_state), source);

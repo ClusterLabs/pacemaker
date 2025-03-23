@@ -419,7 +419,7 @@ pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set)
     for (const xmlNode *cIter = xml; cIter->prev; cIter = cIter->prev) {
         xml_node_private_t *nodepriv = ((xmlNode*)cIter->prev)->_private;
 
-        if (!pcmk_is_set(nodepriv->flags, ignore_if_set)) {
+        if (!pcmk__is_set(nodepriv->flags, ignore_if_set)) {
             position++;
         }
     }
@@ -479,7 +479,7 @@ pcmk__xml_commit_changes(xmlDoc *doc)
         return;
     }
 
-    if (pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
+    if (pcmk__is_set(docpriv->flags, pcmk__xf_dirty)) {
         pcmk__xml_tree_foreach(xmlDocGetRootElement(doc), commit_attr_deletions,
                                NULL);
     }
@@ -771,7 +771,7 @@ free_xml_with_position(xmlNode *node, int position)
     }
 
     if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)
-        && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+        && !pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
 
         xml_doc_private_t *docpriv = doc->_private;
         GString *xpath = pcmk__element_xpath(node);
@@ -1255,7 +1255,7 @@ mark_created_attrs(xmlNode *new_xml)
         xml_node_private_t *nodepriv = attr_iter->_private;
 
         attr_iter = attr_iter->next;
-        if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+        if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
             const char *attr_name = (const char *) new_attr->name;
 
             crm_trace("Created new attribute %s=%s in %s",
@@ -1397,7 +1397,7 @@ new_comment_matches(const xmlNode *old_comment, const xmlNode *new_comment)
 {
     xml_node_private_t *nodepriv = new_comment->_private;
 
-    if (pcmk_is_set(nodepriv->flags, pcmk__xf_skip)) {
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_skip)) {
         /* @TODO Should we also return false if old_comment has pcmk__xf_skip
          * set? This preserves existing behavior at time of writing.
          */

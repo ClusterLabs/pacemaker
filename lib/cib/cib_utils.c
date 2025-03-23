@@ -182,7 +182,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 static bool
 should_copy_cib(const char *op, const char *section, int call_options)
 {
-    if (pcmk_is_set(call_options, cib_dryrun)) {
+    if (pcmk__is_set(call_options, cib_dryrun)) {
         // cib_dryrun implies a scratch copy by definition; no side effects
         return true;
     }
@@ -195,7 +195,7 @@ should_copy_cib(const char *op, const char *section, int call_options)
         return true;
     }
 
-    if (pcmk_is_set(call_options, cib_transaction)) {
+    if (pcmk__is_set(call_options, cib_transaction)) {
         /* If cib_transaction is set, then we're in the process of committing a
          * transaction. The commit-transaction request already made a scratch
          * copy, and we're accumulating changes in that copy.
@@ -237,7 +237,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     bool with_digest = false;
 
     crm_trace("Begin %s%s%s op",
-              (pcmk_is_set(call_options, cib_dryrun)? "dry run of " : ""),
+              (pcmk__is_set(call_options, cib_dryrun)? "dry run of " : ""),
               (is_query? "read-only " : ""), op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
@@ -490,7 +490,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
      };
      */
 
-    if (*config_changed && !pcmk_is_set(call_options, cib_no_mtime)) {
+    if (*config_changed && !pcmk__is_set(call_options, cib_no_mtime)) {
         const char *schema = pcmk__xe_get(scratch, PCMK_XA_VALIDATE_WITH);
 
         if (schema == NULL) {
@@ -616,7 +616,7 @@ validate_transaction_request(const xmlNode *request)
         return rc;
     }
 
-    if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)) {
+    if (!pcmk__is_set(operation->flags, cib__op_attr_transaction)) {
         crm_err("Operation %s is not supported in CIB transactions", op);
         return EOPNOTSUPP;
     }

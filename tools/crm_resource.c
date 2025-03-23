@@ -867,7 +867,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc, cib_t *cib_conn,
                               move_lifetime, cib_conn,
                               options.promoted_role_only, PCMK_ROLE_PROMOTED);
 
-    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
+    } else if (pcmk__is_set(rsc->flags, pcmk__rsc_promotable)) {
         int count = 0;
         GList *iter = NULL;
 
@@ -2204,7 +2204,7 @@ main(int argc, char **argv)
     }
 
     // Ensure --resource is set if it's required
-    if (pcmk_is_set(command_info->flags, crm_rsc_requires_resource)
+    if (pcmk__is_set(command_info->flags, crm_rsc_requires_resource)
         && !has_cmdline_config()
         && !options.clear_expired
         && (options.rsc_id == NULL)) {
@@ -2216,7 +2216,7 @@ main(int argc, char **argv)
     }
 
     // Ensure --node is set if it's required
-    if (pcmk_is_set(command_info->flags, crm_rsc_requires_node)
+    if (pcmk__is_set(command_info->flags, crm_rsc_requires_node)
         && (options.host_uname == NULL)) {
 
         exit_code = CRM_EX_USAGE;
@@ -2226,7 +2226,7 @@ main(int argc, char **argv)
     }
 
     // Establish a connection to the CIB if needed
-    if (pcmk_is_set(command_info->flags, crm_rsc_requires_cib)
+    if (pcmk__is_set(command_info->flags, crm_rsc_requires_cib)
         && !has_cmdline_config()) {
 
         cib_conn = cib_new();
@@ -2247,7 +2247,7 @@ main(int argc, char **argv)
     }
 
     // Populate scheduler data from CIB query if needed
-    if (pcmk_is_set(command_info->flags, crm_rsc_requires_scheduler)
+    if (pcmk__is_set(command_info->flags, crm_rsc_requires_scheduler)
         && !has_cmdline_config()) {
 
         rc = initialize_scheduler_data(&scheduler, cib_conn, out,
@@ -2259,7 +2259,7 @@ main(int argc, char **argv)
     }
 
     // Establish a connection to the controller if needed
-    if (pcmk_is_set(command_info->flags, crm_rsc_requires_controller)
+    if (pcmk__is_set(command_info->flags, crm_rsc_requires_controller)
         && (getenv("CIB_file") == NULL)) {
 
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
@@ -2311,13 +2311,13 @@ main(int argc, char **argv)
      * @TODO Consider stricter validation. See comment above for --node.
      * @TODO Setter macro for tracing?
      */
-    if (pcmk_is_set(command_info->flags, crm_rsc_find_match_anon_basename)) {
+    if (pcmk__is_set(command_info->flags, crm_rsc_find_match_anon_basename)) {
         find_flags |= pcmk_rsc_match_anon_basename;
     }
-    if (pcmk_is_set(command_info->flags, crm_rsc_find_match_basename)) {
+    if (pcmk__is_set(command_info->flags, crm_rsc_find_match_basename)) {
         find_flags |= pcmk_rsc_match_basename;
     }
-    if (pcmk_is_set(command_info->flags, crm_rsc_find_match_history)) {
+    if (pcmk__is_set(command_info->flags, crm_rsc_find_match_history)) {
         find_flags |= pcmk_rsc_match_history;
     }
     if ((find_flags != 0) && (options.rsc_id != NULL)) {
@@ -2332,7 +2332,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        if (pcmk_is_set(command_info->flags, crm_rsc_rejects_clone_instance)
+        if (pcmk__is_set(command_info->flags, crm_rsc_rejects_clone_instance)
             && pcmk__is_clone(rsc->priv->parent)
             && (strchr(options.rsc_id, ':') != NULL)) {
 

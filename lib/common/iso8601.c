@@ -604,8 +604,8 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
      * These never depend on time zone.
      */
 
-    if (pcmk_is_set(flags, crm_time_log_duration)) {
-        crm_duration_as_string(dt, usec, pcmk_is_set(flags, crm_time_usecs),
+    if (pcmk__is_set(flags, crm_time_log_duration)) {
+        crm_duration_as_string(dt, usec, pcmk__is_set(flags, crm_time_usecs),
                                result);
         return;
     }
@@ -613,13 +613,13 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
     if (pcmk_any_flags_set(flags, crm_time_seconds|crm_time_epoch)) {
         long long seconds = 0;
 
-        if (pcmk_is_set(flags, crm_time_seconds)) {
+        if (pcmk__is_set(flags, crm_time_seconds)) {
             seconds = crm_time_get_seconds(dt);
         } else {
             seconds = crm_time_get_seconds_since_epoch(dt);
         }
 
-        if (pcmk_is_set(flags, crm_time_usecs)) {
+        if (pcmk__is_set(flags, crm_time_usecs)) {
             sec_usec_as_string(seconds, usec, result, &offset);
         } else {
             snprintf(result, DATE_MAX, "%lld", seconds);
@@ -628,7 +628,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
     }
 
     // Convert to UTC if local timezone was not requested
-    if ((dt->offset != 0) && !pcmk_is_set(flags, crm_time_log_with_timezone)) {
+    if ((dt->offset != 0) && !pcmk__is_set(flags, crm_time_log_with_timezone)) {
         crm_trace("UTC conversion");
         utc = crm_get_utc_time(dt);
         dt = utc;
@@ -636,8 +636,8 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
 
     // As readable string
 
-    if (pcmk_is_set(flags, crm_time_log_date)) {
-        if (pcmk_is_set(flags, crm_time_weeks)) { // YYYY-WW-D
+    if (pcmk__is_set(flags, crm_time_log_date)) {
+        if (pcmk__is_set(flags, crm_time_weeks)) { // YYYY-WW-D
             uint32_t y = 0;
             uint32_t w = 0;
             uint32_t d = 0;
@@ -648,7 +648,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
                                    y, w, d);
             }
 
-        } else if (pcmk_is_set(flags, crm_time_ordinal)) { // YYYY-DDD
+        } else if (pcmk__is_set(flags, crm_time_ordinal)) { // YYYY-DDD
             uint32_t y = 0;
             uint32_t d = 0;
 
@@ -670,7 +670,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
         }
     }
 
-    if (pcmk_is_set(flags, crm_time_log_timeofday)) {
+    if (pcmk__is_set(flags, crm_time_log_timeofday)) {
         uint32_t h = 0, m = 0, s = 0;
 
         if (offset > 0) {
@@ -682,13 +682,13 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
                                "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
                                h, m, s);
 
-            if (pcmk_is_set(flags, crm_time_usecs)) {
+            if (pcmk__is_set(flags, crm_time_usecs)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
                                    ".%06" PRIu32, QB_ABS(usec));
             }
         }
 
-        if (pcmk_is_set(flags, crm_time_log_with_timezone)
+        if (pcmk__is_set(flags, crm_time_log_with_timezone)
             && (dt->offset != 0)) {
             crm_time_get_sec(dt->offset, &h, &m, &s);
             offset += snprintf(result + offset, DATE_MAX - offset,

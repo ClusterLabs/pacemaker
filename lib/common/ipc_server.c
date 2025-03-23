@@ -346,7 +346,7 @@ pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
 
     orig_value = client->queue_max;
 
-    if (pcmk_is_set(client->flags, pcmk__client_privileged)) {
+    if (pcmk__is_set(client->flags, pcmk__client_privileged)) {
         rc = pcmk__scan_ll(qmax, &qmax_ll, 0LL);
         if (rc == pcmk_rc_ok) {
             if ((qmax_ll <= 0LL) || (qmax_ll > UINT_MAX)) {
@@ -412,7 +412,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         *flags = header->flags;
     }
 
-    if (pcmk_is_set(header->flags, crm_ipc_proxied)) {
+    if (pcmk__is_set(header->flags, crm_ipc_proxied)) {
         /* Mark this client as being the endpoint of a proxy connection.
          * Proxy connections responses are sent on the event channel, to avoid
          * blocking the controller serving as proxy.
@@ -690,7 +690,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
     if (c->flags & pcmk__client_proxied) {
         /* _ALL_ replies to proxied connections need to be sent as events */
-        if (!pcmk_is_set(flags, crm_ipc_server_event)) {
+        if (!pcmk__is_set(flags, crm_ipc_server_event)) {
             /* The proxied flag lets us know this was originally meant to be a
              * response, even though we're sending it over the event channel.
              */
@@ -805,7 +805,7 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
 {
     xmlNode *ack = NULL;
 
-    if (pcmk_is_set(flags, crm_ipc_client_response)) {
+    if (pcmk__is_set(flags, crm_ipc_client_response)) {
         ack = pcmk__xe_create(NULL, tag);
         pcmk__xe_set(ack, PCMK_XA_FUNCTION, function);
         pcmk__xe_set_int(ack, PCMK__XA_LINE, line);

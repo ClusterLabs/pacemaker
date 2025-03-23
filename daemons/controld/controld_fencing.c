@@ -251,7 +251,7 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
     node_state = create_node_state_update(peer, flags, NULL, __func__);
     pcmk__xe_set(node_state, PCMK_XA_ID, target_xml_id);
 
-    if (pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
+    if (pcmk__is_set(peer->flags, pcmk__node_status_remote)) {
         char *now_s = pcmk__ttoa(time(NULL));
 
         pcmk__xe_set(node_state, PCMK__XA_NODE_FENCED, now_s);
@@ -409,7 +409,7 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
         GList *lpc2 = NULL;
         pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) lpc->data;
 
-        if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
+        if (pcmk__is_set(synapse->flags, pcmk__synapse_confirmed)) {
             continue;
         }
 
@@ -417,7 +417,7 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
             pcmk__graph_action_t *action = (pcmk__graph_action_t *) lpc2->data;
 
             if ((action->type != pcmk__cluster_graph_action)
-                || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
+                || pcmk__is_set(action->flags, pcmk__graph_action_confirmed)) {
                 continue;
             }
 
@@ -446,7 +446,7 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
 {
     te_cleanup_stonith_history_sync(st, FALSE);
 
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
         crm_err("Lost fencer connection (will attempt to reconnect)");
         if (!mainloop_timer_running(controld_fencer_connect_timer)) {
             mainloop_timer_start(controld_fencer_connect_timer);
@@ -612,7 +612,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
 
         } else if (pcmk__str_eq(controld_globals.dc_name, event->target,
                                 pcmk__str_null_matches|pcmk__str_casei)
-                   && !pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
+                   && !pcmk__is_set(peer->flags, pcmk__node_status_remote)) {
             // Assume the target was our DC if we don't currently have one
 
             if (controld_globals.dc_name != NULL) {
@@ -637,7 +637,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
          * The connection won't necessarily drop when a remote node is fenced,
          * so the failure might not otherwise be detected until the next poke.
          */
-        if (pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
+        if (pcmk__is_set(peer->flags, pcmk__node_status_remote)) {
             remote_ra_fail(event->target);
         }
 
@@ -691,8 +691,8 @@ controld_timer_fencer_connect(gpointer user_data)
         }
 
         if (rc != pcmk_ok) {
-            if (pcmk_is_set(controld_globals.fsa_input_register,
-                            R_ST_REQUIRED)) {
+            if (pcmk__is_set(controld_globals.fsa_input_register,
+                             R_ST_REQUIRED)) {
                 crm_notice("Fencer connection failed (will retry): %s "
                            QB_XS " rc=%d", pcmk_strerror(rc), rc);
 
@@ -841,7 +841,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                                         PCMK__META_STONITH_ACTION);
 
         crm_info("Fence operation %d for %s succeeded", data->call_id, target);
-        if (!(pcmk_is_set(action->flags, pcmk__graph_action_confirmed))) {
+        if (!(pcmk__is_set(action->flags, pcmk__graph_action_confirmed))) {
             te_action_confirmed(action, NULL);
             if (pcmk__str_eq(PCMK_ACTION_ON, op, pcmk__str_casei)) {
                 const char *value = NULL;
@@ -873,7 +873,8 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                 update_attrd(target, CRM_ATTR_DIGESTS_SECURE, value, NULL,
                              is_remote_node);
 
-            } else if (!(pcmk_is_set(action->flags, pcmk__graph_action_sent_update))) {
+            } else if (!pcmk__is_set(action->flags,
+                                     pcmk__graph_action_sent_update)) {
                 update_node_state_after_fencing(target, uuid);
                 pcmk__set_graph_action_flags(action,
                                              pcmk__graph_action_sent_update);

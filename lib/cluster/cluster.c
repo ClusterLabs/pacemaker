@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -53,7 +53,8 @@ pcmk__cluster_get_xml_id(pcmk__node_status_t *node)
     }
 
     // xml_id is always set when a Pacemaker Remote node entry is created
-    CRM_CHECK(!pcmk_is_set(node->flags, pcmk__node_status_remote), return NULL);
+    CRM_CHECK(!pcmk__is_set(node->flags, pcmk__node_status_remote),
+              return NULL);
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC

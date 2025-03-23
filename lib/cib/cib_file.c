@@ -242,7 +242,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
-    read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);
+    read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
 
     // Mirror the logic in prepare_input() in the CIB manager
     if ((section != NULL) && pcmk__xe_is(data, PCMK_XE_CIB)) {
@@ -254,7 +254,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
                         request, data, true, &changed, &private->cib_xml,
                         &result_cib, &cib_diff, output);
 
-    if (pcmk_is_set(call_options, cib_transaction)) {
+    if (pcmk__is_set(call_options, cib_transaction)) {
         /* The rest of the logic applies only to the transaction as a whole, not
          * to individual requests.
          */
@@ -331,7 +331,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     pcmk__xe_set(request, PCMK__XA_ACL_TARGET, user_name);
     pcmk__xe_set(request, PCMK__XA_CIB_CLIENTID, private->id);
 
-    if (pcmk_is_set(call_options, cib_transaction)) {
+    if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, request);
         goto done;
     }
@@ -536,10 +536,10 @@ cib_file_signoff(cib_t *cib)
     cib->cmds->end_transaction(cib, false, cib_none);
 
     /* If the in-memory CIB has been changed, write it to disk */
-    if (pcmk_is_set(private->flags, cib_file_flag_dirty)) {
+    if (pcmk__is_set(private->flags, cib_file_flag_dirty)) {
 
         /* If this is the live CIB, write it out with a digest */
-        if (pcmk_is_set(private->flags, cib_file_flag_live)) {
+        if (pcmk__is_set(private->flags, cib_file_flag_live)) {
             if (cib_file_write_live(private->cib_xml, private->filename) < 0) {
                 rc = pcmk_err_generic;
             }

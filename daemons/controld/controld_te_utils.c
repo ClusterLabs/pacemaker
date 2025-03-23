@@ -263,7 +263,7 @@ controld_node_pending_timer(const pcmk__node_status_t *node)
      * already part of CPG, or PCMK_OPT_NODE_PENDING_TIMEOUT is disabled, free
      * any node pending timer for it.
      */
-    if (pcmk_is_set(node->flags, pcmk__node_status_remote)
+    if (pcmk__is_set(node->flags, pcmk__node_status_remote)
         || (node->when_member <= 1) || (node->when_online > 0)
         || (controld_globals.node_pending_timeout == 0)) {
 

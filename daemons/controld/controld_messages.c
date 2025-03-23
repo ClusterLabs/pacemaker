@@ -923,8 +923,8 @@ handle_node_info_request(const xmlNode *msg)
 
     // Add whether current partition has quorum
     pcmk__xe_set_bool_attr(reply_data, PCMK_XA_HAVE_QUORUM,
-                           pcmk_is_set(controld_globals.flags,
-                                       controld_has_quorum));
+                           pcmk__is_set(controld_globals.flags,
+                                        controld_has_quorum));
 
     /* Check whether client requested node info by ID and/or name
      *
@@ -949,8 +949,8 @@ handle_node_info_request(const xmlNode *msg)
         pcmk__xe_set(reply_data, PCMK_XA_UNAME, node->name);
         pcmk__xe_set(reply_data, PCMK_XA_CRMD, node->state);
         pcmk__xe_set_bool_attr(reply_data, PCMK_XA_REMOTE_NODE,
-                               pcmk_is_set(node->flags,
-                                           pcmk__node_status_remote));
+                               pcmk__is_set(node->flags,
+                                            pcmk__node_status_remote));
     }
 
     // Send reply
@@ -996,7 +996,7 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
 {
     const char *host_from = pcmk__xe_get(stored_msg, PCMK__XA_SRC);
 
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         // The expected case -- we initiated own shutdown sequence
         crm_info("Shutting down controller");
         return I_STOP;
@@ -1037,7 +1037,7 @@ handle_shutdown_ack(xmlNode *stored_msg)
     if (pcmk__str_eq(host_from, controld_globals.dc_name,
                      pcmk__str_null_matches|pcmk__str_casei)) {
 
-        if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+        if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_info("Shutting down controller after confirmation from %s",
                      host_from);
         } else {

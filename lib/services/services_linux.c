@@ -1245,7 +1245,7 @@ services__execute_file(svc_action_t *op)
         goto done;
     }
 
-    if (pcmk_is_set(pcmk_get_ra_caps(op->standard), pcmk_ra_cap_stdin)) {
+    if (pcmk__is_set(pcmk_get_ra_caps(op->standard), pcmk_ra_cap_stdin)) {
         if (pipe(stdin_fd) < 0) {
             rc = errno;
 
@@ -1377,9 +1377,14 @@ services__execute_file(svc_action_t *op)
     }
 
     crm_trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
-    mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op,
-                                  pcmk_is_set(op->flags, SVC_ACTION_LEAVE_GROUP)? mainloop_leave_pid_group : 0,
-                                  async_action_complete);
+    if (pcmk__is_set(op->flags, SVC_ACTION_LEAVE_GROUP)) {
+        mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op,
+                                      mainloop_leave_pid_group,
+                                      async_action_complete);
+    } else {
+        mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op, 0,
+                                      async_action_complete);
+    }
 
     op->opaque->stdout_gsource = mainloop_add_fd(op->id,
                                                  G_PRIORITY_LOW,

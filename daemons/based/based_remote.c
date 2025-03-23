@@ -235,7 +235,7 @@ remote_auth_timeout_cb(gpointer data)
 
     client->remote->auth_timeout = 0;
 
-    if (pcmk_is_set(client->flags, pcmk__client_authenticated)) {
+    if (pcmk__is_set(client->flags, pcmk__client_authenticated)) {
         return FALSE;
     }
 
@@ -340,8 +340,8 @@ cib_remote_connection_destroy(gpointer user_data)
             if (client->remote->tls_session) {
                 csock = pcmk__tls_get_client_sock(client->remote);
 
-                if (pcmk_is_set(client->flags,
-                                pcmk__client_tls_handshake_complete)) {
+                if (pcmk__is_set(client->flags,
+                                 pcmk__client_tls_handshake_complete)) {
                     gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_WR);
                 }
                 gnutls_deinit(client->remote->tls_session);
@@ -418,7 +418,7 @@ cib_remote_msg(gpointer data)
               pcmk__client_type_str(PCMK__CLIENT_TYPE(client)), client_name);
 
     if ((PCMK__CLIENT_TYPE(client) == pcmk__client_tls)
-        && !pcmk_is_set(client->flags, pcmk__client_tls_handshake_complete)) {
+        && !pcmk__is_set(client->flags, pcmk__client_tls_handshake_complete)) {
 
         int rc = pcmk__read_handshake_data(client);
 
@@ -467,7 +467,7 @@ cib_remote_msg(gpointer data)
     }
 
     /* must pass auth before we will process anything else */
-    if (!pcmk_is_set(client->flags, pcmk__client_authenticated)) {
+    if (!pcmk__is_set(client->flags, pcmk__client_authenticated)) {
         xmlNode *reg;
         const char *user = NULL;
 

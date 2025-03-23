@@ -102,7 +102,7 @@ stonith__history_description(const stonith_history_t *history,
                    stonith_action_str(history->action), " of ", history->target,
                    NULL);
 
-    if (!pcmk_is_set(show_opts, pcmk_show_failed_detail)) {
+    if (!pcmk__is_set(show_opts, pcmk_show_failed_detail)) {
         // More human-friendly
         if (((history->state == st_failed) || (history->state == st_done))
             && (history->delegate != NULL)) {
@@ -123,7 +123,7 @@ stonith__history_description(const stonith_history_t *history,
         pcmk__g_strcat(str, " (", history->exit_reason, ")", NULL);
     }
 
-    if (pcmk_is_set(show_opts, pcmk_show_failed_detail)) {
+    if (pcmk__is_set(show_opts, pcmk_show_failed_detail)) {
         // More technical
         g_string_append(str, ": ");
 

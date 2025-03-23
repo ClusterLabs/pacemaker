@@ -82,7 +82,7 @@ crmd_ha_msg_filter(xmlNode * msg)
 static int
 node_alive(const pcmk__node_status_t *node)
 {
-    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
+    if (pcmk__is_set(node->flags, pcmk__node_status_remote)) {
         // Pacemaker Remote nodes can't be partially alive
         if (pcmk__str_eq(node->state, PCMK_VALUE_MEMBER, pcmk__str_none)) {
             return 1;
@@ -93,7 +93,7 @@ node_alive(const pcmk__node_status_t *node)
         // Completely up cluster node: both cluster member and peer
         return 1;
 
-    } else if (!pcmk_is_set(node->processes, crm_get_cluster_proc())
+    } else if (!pcmk__is_set(node->processes, crm_get_cluster_proc())
                && !pcmk__str_eq(node->state, PCMK_VALUE_MEMBER,
                                 pcmk__str_none)) {
         // Completely down cluster node: neither cluster member nor peer
@@ -113,7 +113,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 {
     uint32_t old = 0;
     bool appeared = FALSE;
-    bool is_remote = pcmk_is_set(node->flags, pcmk__node_status_remote);
+    bool is_remote = pcmk__is_set(node->flags, pcmk__node_status_remote);
 
     controld_node_pending_timer(node);
 
@@ -126,7 +126,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
     }
 
     if ((type == pcmk__node_update_processes)
-        && pcmk_is_set(node->processes, crm_get_cluster_proc())
+        && pcmk__is_set(node->processes, crm_get_cluster_proc())
         && !AM_I_DC
         && !is_remote) {
         /* relay_message() on the recipient ignores these messages, but
@@ -182,7 +182,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
         case pcmk__node_update_processes:
             CRM_CHECK(data != NULL, return);
             old = *(const uint32_t *)data;
-            appeared = pcmk_is_set(node->processes, crm_get_cluster_proc());
+            appeared = pcmk__is_set(node->processes, crm_get_cluster_proc());
 
             {
                 const char *dc_s = controld_globals.dc_name;
@@ -197,7 +197,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                          pcmk__s(dc_s, "<none>"), old, node->processes);
             }
 
-            if (!pcmk_is_set((node->processes ^ old), crm_get_cluster_proc())) {
+            if (!pcmk__is_set((node->processes ^ old),
+                              crm_get_cluster_proc())) {
                 /* Peer status did not change. This should not be possible,
                  * since we don't track process flags other than peer status.
                  */
@@ -213,8 +214,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                 controld_remove_voter(node->name);
             }
 
-            if (!pcmk_is_set(controld_globals.fsa_input_register,
-                             R_CIB_CONNECTED)) {
+            if (!pcmk__is_set(controld_globals.fsa_input_register,
+                              R_CIB_CONNECTED)) {
                 crm_trace("Ignoring peer status change because not connected to CIB");
                 return;
 
@@ -247,7 +248,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                                            cib_none);
 
             } else if (AM_I_DC
-                       || pcmk_is_set(controld_globals.flags, controld_dc_left)
+                       || pcmk__is_set(controld_globals.flags, controld_dc_left)
                        || (controld_globals.dc_name == NULL)) {
                 /* This only needs to be done once, so normally the DC should do
                  * it. However if there is no DC, every node must do it, since
@@ -282,7 +283,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
             if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
                 const bool confirmed =
-                    pcmk_is_set(down->flags, pcmk__graph_action_confirmed);
+                    pcmk__is_set(down->flags, pcmk__graph_action_confirmed);
 
                 /* tengine_stonith_callback() confirms fence actions */
                 crm_trace("Updating CIB %s fencer reported fencing of %s complete",

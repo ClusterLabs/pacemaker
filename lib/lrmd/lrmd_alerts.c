@@ -141,7 +141,7 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         lrmd_key_value_t *head = NULL;
         int rc;
 
-        if (!pcmk_is_set(entry->flags, kind)) {
+        if (!pcmk__is_set(entry->flags, kind)) {
             crm_trace("Filtering unwanted %s alert to %s via %s",
                       kind_s, entry->recipient, entry->id);
             continue;

@@ -272,7 +272,7 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
 
     original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
     rc = pcmk__update_schema(result_cib, max_schema, true,
-                             !pcmk_is_set(options, cib_verbose));
+                             !pcmk__is_set(options, cib_verbose));
     rc = pcmk_rc2legacy(rc);
     new_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
 
@@ -488,7 +488,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 
     CRM_CHECK(obj_root != NULL, return -EINVAL);
 
-    if (pcmk_is_set(options, cib_score_update)) {
+    if (pcmk__is_set(options, cib_score_update)) {
         flags |= pcmk__xaf_score_update;
     }
 
@@ -654,7 +654,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
 
     crm_trace("Processing \"%s\" event from %s%s",
               op, originator,
-              (pcmk_is_set(options, cib_force_diff)? " (global update)" : ""));
+              (pcmk__is_set(options, cib_force_diff)? " (global update)" : ""));
 
     if (*result_cib != existing_cib) {
         pcmk__xml_free(*result_cib);
@@ -672,7 +672,7 @@ cib_process_xpath(const char *op, int options, const char *section,
     int num_results = 0;
     int rc = pcmk_ok;
     bool is_query = pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none);
-    bool delete_multiple = pcmk_is_set(options, cib_multiple)
+    bool delete_multiple = pcmk__is_set(options, cib_multiple)
                            && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE,
                                            pcmk__str_none);
     xmlXPathObject *xpathObj = NULL;
@@ -751,7 +751,7 @@ cib_process_xpath(const char *op, int options, const char *section,
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_MODIFY, pcmk__str_none)) {
             uint32_t flags = pcmk__xaf_none;
 
-            if (pcmk_is_set(options, cib_score_update)) {
+            if (pcmk__is_set(options, cib_score_update)) {
                 flags |= pcmk__xaf_score_update;
             }
 

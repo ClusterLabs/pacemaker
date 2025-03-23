@@ -125,8 +125,8 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     pcmk__rsc_trace(rsc, "Assigning bundle %s", rsc->id);
     pcmk__set_rsc_flags(rsc, pcmk__rsc_assigning);
 
-    pe__show_node_scores(!pcmk_is_set(rsc->priv->scheduler->flags,
-                                      pcmk__sched_output_scores),
+    pe__show_node_scores(!pcmk__is_set(rsc->priv->scheduler->flags,
+                                       pcmk__sched_output_scores),
                          rsc, __func__, rsc->priv->allowed_nodes,
                          rsc->priv->scheduler);
 
@@ -210,7 +210,7 @@ pcmk__bundle_create_actions(pcmk_resource_t *rsc)
     if (bundled_resource != NULL) {
         bundled_resource->priv->cmds->create_actions(bundled_resource);
 
-        if (pcmk_is_set(bundled_resource->flags, pcmk__rsc_promotable)) {
+        if (pcmk__is_set(bundled_resource->flags, pcmk__rsc_promotable)) {
             pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTED,
                                                true, true);
@@ -336,7 +336,7 @@ pcmk__bundle_internal_constraints(pcmk_resource_t *rsc)
 
     bundled_resource->priv->cmds->internal_constraints(bundled_resource);
 
-    if (!pcmk_is_set(bundled_resource->flags, pcmk__rsc_promotable)) {
+    if (!pcmk__is_set(bundled_resource->flags, pcmk__rsc_promotable)) {
         return;
     }
     pcmk__promotable_restart_ordering(rsc);
@@ -548,7 +548,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
     pcmk__assert(pcmk__is_bundle(primary) && pcmk__is_primitive(dependent)
                  && (colocation != NULL) && !for_dependent);
 
-    if (pcmk_is_set(primary->flags, pcmk__rsc_unassigned)) {
+    if (pcmk__is_set(primary->flags, pcmk__rsc_unassigned)) {
         pcmk__rsc_trace(primary,
                         "Skipping applying colocation %s "
                         "because %s is still provisional",
@@ -612,7 +612,7 @@ pcmk__with_bundle_colocations(const pcmk_resource_t *rsc,
 
     // The bundle itself and its containers always get its colocations
     if ((orig_rsc == rsc)
-        || pcmk_is_set(orig_rsc->flags, pcmk__rsc_replica_container)) {
+        || pcmk__is_set(orig_rsc->flags, pcmk__rsc_replica_container)) {
 
         pcmk__add_with_this_list(list, rsc->priv->with_this_colocations,
                                  orig_rsc);
@@ -624,7 +624,7 @@ pcmk__with_bundle_colocations(const pcmk_resource_t *rsc,
      */
     bundled_rsc = pe__bundled_resource(rsc);
     if ((bundled_rsc == NULL)
-        || !pcmk_is_set(bundled_rsc->flags, pcmk__rsc_promotable)
+        || !pcmk__is_set(bundled_rsc->flags, pcmk__rsc_promotable)
         || (pe__const_top_resource(orig_rsc, false) != bundled_rsc)) {
         return;
     }
@@ -639,7 +639,7 @@ pcmk__with_bundle_colocations(const pcmk_resource_t *rsc,
                                      orig_rsc);
         }
 
-    } else if (!pcmk_is_set(orig_rsc->flags, pcmk__rsc_unassigned)) {
+    } else if (!pcmk__is_set(orig_rsc->flags, pcmk__rsc_unassigned)) {
         /* orig_rsc is an instance and is already assigned. If something
          * requests colocations for orig_rsc now, it's for setting roles.
          */
@@ -659,7 +659,7 @@ pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
 
     // The bundle itself and its containers always get its colocations
     if ((orig_rsc == rsc)
-        || pcmk_is_set(orig_rsc->flags, pcmk__rsc_replica_container)) {
+        || pcmk__is_set(orig_rsc->flags, pcmk__rsc_replica_container)) {
 
         pcmk__add_this_with_list(list, rsc->priv->this_with_colocations,
                                  orig_rsc);
@@ -671,7 +671,7 @@ pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
      */
     bundled_rsc = pe__bundled_resource(rsc);
     if ((bundled_rsc == NULL)
-        || !pcmk_is_set(bundled_rsc->flags, pcmk__rsc_promotable)
+        || !pcmk__is_set(bundled_rsc->flags, pcmk__rsc_promotable)
         || (pe__const_top_resource(orig_rsc, false) != bundled_rsc)) {
         return;
     }
@@ -686,7 +686,7 @@ pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
                                      orig_rsc);
         }
 
-    } else if (!pcmk_is_set(orig_rsc->flags, pcmk__rsc_unassigned)) {
+    } else if (!pcmk__is_set(orig_rsc->flags, pcmk__rsc_unassigned)) {
         /* orig_rsc is an instance and is already assigned. If something
          * requests colocations for orig_rsc now, it's for setting roles.
          */
@@ -1056,7 +1056,7 @@ pcmk__bundle_add_utilization(const pcmk_resource_t *rsc,
 
     pcmk__assert(pcmk__is_bundle(rsc));
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unassigned)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_unassigned)) {
         return;
     }
 

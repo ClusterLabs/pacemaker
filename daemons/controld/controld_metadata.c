@@ -195,7 +195,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
                 reason = "Could not allocate memory";
                 goto err;
             }
-            if (pcmk_is_set(p->rap_flags, ra_param_private)) {
+            if (pcmk__is_set(p->rap_flags, ra_param_private)) {
                 any_private_params = true;
             }
             md->ra_params = g_list_prepend(md->ra_params, p);
@@ -254,7 +254,7 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
 
     CRM_CHECK((lrm_state != NULL) && (rsc != NULL), return NULL);
 
-    if (pcmk_is_set(source, controld_metadata_from_cache)) {
+    if (pcmk__is_set(source, controld_metadata_from_cache)) {
         key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
         if (key != NULL) {
             metadata = g_hash_table_lookup(lrm_state->metadata_cache, key);
@@ -270,7 +270,7 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
         }
     }
 
-    if (!pcmk_is_set(source, controld_metadata_from_agent)) {
+    if (!pcmk__is_set(source, controld_metadata_from_agent)) {
         return NULL;
     }
 

@@ -1346,7 +1346,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     header = iov[0].iov_base;
     pcmk__set_ipc_flags(header->flags, client->server_name, flags);
 
-    if (pcmk_is_set(flags, crm_ipc_proxied)) {
+    if (pcmk__is_set(flags, crm_ipc_proxied)) {
         /* Don't look for a synchronous response */
         pcmk__clear_ipc_flags(flags, "client", crm_ipc_client_response);
     }
@@ -1379,7 +1379,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     }
 
     /* If we should not wait for a response, bail now */
-    if (!pcmk_is_set(flags, crm_ipc_client_response)) {
+    if (!pcmk__is_set(flags, crm_ipc_client_response)) {
         crm_trace("Not waiting for reply to %s IPC request %d",
                   client->server_name, header->qb.id);
         goto send_cleanup;

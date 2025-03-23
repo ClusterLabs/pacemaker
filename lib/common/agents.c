@@ -132,7 +132,7 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
     *standard = strndup(spec, colon - spec);
     spec = colon + 1;
 
-    if (pcmk_is_set(pcmk_get_ra_caps(*standard), pcmk_ra_cap_provider)) {
+    if (pcmk__is_set(pcmk_get_ra_caps(*standard), pcmk_ra_cap_provider)) {
         colon = strchr(spec, ':');
         if ((colon == NULL) || (colon == spec)) {
             free(*standard);

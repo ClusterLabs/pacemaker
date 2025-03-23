@@ -1199,7 +1199,7 @@ int
 pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 {
     /* If this flag is set, the second string is a regex. */
-    if (pcmk_is_set(flags, pcmk__str_regex)) {
+    if (pcmk__is_set(flags, pcmk__str_regex)) {
         regex_t r_patt;
         int reg_flags = REG_EXTENDED | REG_NOSUB;
         int regcomp_rc = 0;
@@ -1209,7 +1209,7 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
             return 1;
         }
 
-        if (pcmk_is_set(flags, pcmk__str_casei)) {
+        if (pcmk__is_set(flags, pcmk__str_casei)) {
             reg_flags |= REG_ICASE;
         }
         regcomp_rc = regcomp(&r_patt, s2, reg_flags);
@@ -1235,7 +1235,7 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
      * are NULL.  If neither one is NULL, we need to continue and compare
      * them normally.
      */
-    if (pcmk_is_set(flags, pcmk__str_null_matches)) {
+    if (pcmk__is_set(flags, pcmk__str_null_matches)) {
         if (s1 == NULL || s2 == NULL) {
             return 0;
         }
@@ -1254,13 +1254,13 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
      * are "*".  If neither one is, we need to continue and compare them
      * normally.
      */
-    if (pcmk_is_set(flags, pcmk__str_star_matches)) {
+    if (pcmk__is_set(flags, pcmk__str_star_matches)) {
         if (strcmp(s1, "*") == 0 || strcmp(s2, "*") == 0) {
             return 0;
         }
     }
 
-    if (pcmk_is_set(flags, pcmk__str_casei)) {
+    if (pcmk__is_set(flags, pcmk__str_casei)) {
         return strcasecmp(s1, s2);
     } else {
         return strcmp(s1, s2);

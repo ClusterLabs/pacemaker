@@ -54,7 +54,7 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
     /* Otherwise (i.e., for clone resource actions on a specific node), first
      * remember whether the non-node-specific action is runnable.
      */
-    runnable = pcmk_is_set(flags, pcmk__action_runnable);
+    runnable = pcmk__is_set(flags, pcmk__action_runnable);
 
     // Then recheck the resource method with the node
     flags = action->rsc->priv->cmds->action_flags(action, node);
@@ -67,7 +67,7 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
      * function shouldn't be used for other types of constraints without
      * changes. Not very satisfying, but it's logical and appears to work well.
      */
-    if (runnable && !pcmk_is_set(flags, pcmk__action_runnable)) {
+    if (runnable && !pcmk__is_set(flags, pcmk__action_runnable)) {
         pcmk__set_raw_action_flags(flags, action->rsc->id,
                                    pcmk__action_runnable);
     }
@@ -144,7 +144,7 @@ action_uuid_for_ordering(const char *first_uuid,
         /* If a clone or bundle has notifications enabled, the ordering will be
          * relative to when notifications have been sent for the remapped task.
          */
-        if (pcmk_is_set(first_rsc->flags, pcmk__rsc_notify)
+        if (pcmk__is_set(first_rsc->flags, pcmk__rsc_notify)
             && (pcmk__is_clone(first_rsc) || pcmk__is_bundled(first_rsc))) {
             uuid = pcmk__notify_key(rid, "confirmed-post",
                                     pcmk__action_text(remapped_task));
@@ -259,7 +259,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
      */
     pcmk_node_t *node = then->node;
 
-    if (pcmk_is_set(order->flags, pcmk__ar_first_implies_same_node_then)) {
+    if (pcmk__is_set(order->flags, pcmk__ar_first_implies_same_node_then)) {
         /* For unfencing, only instances of 'then' on the same node as 'first'
          * (the unfencing operation) should restart, so reset node to
          * first->node, at which point this case is handled like a normal
@@ -276,14 +276,14 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         first->uuid, then->uuid, pcmk__node_name(node));
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_first_implies_then)) {
+    if (pcmk__is_set(order->flags, pcmk__ar_first_implies_then)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node,
                               first_flags & pcmk__action_optional,
                               pcmk__action_optional,
                               pcmk__ar_first_implies_then, scheduler);
-        } else if (!pcmk_is_set(first_flags, pcmk__action_optional)
-                   && pcmk_is_set(then->flags, pcmk__action_optional)) {
+        } else if (!pcmk__is_set(first_flags, pcmk__action_optional)
+                   && pcmk__is_set(then->flags, pcmk__action_optional)) {
             pcmk__clear_action_flags(then, pcmk__action_optional);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
@@ -293,7 +293,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_intermediate_stop)
+    if (pcmk__is_set(order->flags, pcmk__ar_intermediate_stop)
         && (then->rsc != NULL)) {
         enum pcmk__action_flags restart = pcmk__action_optional
                                           |pcmk__action_runnable;
@@ -306,13 +306,13 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_then_implies_first)) {
+    if (pcmk__is_set(order->flags, pcmk__ar_then_implies_first)) {
         if (first->rsc != NULL) {
             changed |= update(first->rsc, first, then, node, first_flags,
                               pcmk__action_optional,
                               pcmk__ar_then_implies_first, scheduler);
-        } else if (!pcmk_is_set(first_flags, pcmk__action_optional)
-                   && pcmk_is_set(first->flags, pcmk__action_runnable)) {
+        } else if (!pcmk__is_set(first_flags, pcmk__action_optional)
+                   && pcmk__is_set(first->flags, pcmk__action_runnable)) {
             pcmk__clear_action_flags(first, pcmk__action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_first);
         }
@@ -322,7 +322,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_promoted_then_implies_first)) {
+    if (pcmk__is_set(order->flags, pcmk__ar_promoted_then_implies_first)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node,
                               first_flags & pcmk__action_optional,
@@ -336,13 +336,13 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_min_runnable)) {
+    if (pcmk__is_set(order->flags, pcmk__ar_min_runnable)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk__action_runnable, pcmk__ar_min_runnable,
                               scheduler);
 
-        } else if (pcmk_is_set(first_flags, pcmk__action_runnable)) {
+        } else if (pcmk__is_set(first_flags, pcmk__action_runnable)) {
             // We have another runnable instance of "first"
             then->runnable_before++;
 
@@ -350,7 +350,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
              * "before" instances to be runnable, and they now are.
              */
             if ((then->runnable_before >= then->required_runnable_before)
-                && !pcmk_is_set(then->flags, pcmk__action_runnable)) {
+                && !pcmk__is_set(then->flags, pcmk__action_runnable)) {
 
                 pcmk__set_action_flags(then, pcmk__action_runnable);
                 pcmk__set_updated_flags(changed, first, pcmk__updated_then);
@@ -361,10 +361,10 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_nested_remote_probe)
+    if (pcmk__is_set(order->flags, pcmk__ar_nested_remote_probe)
         && (then->rsc != NULL)) {
 
-        if (!pcmk_is_set(first_flags, pcmk__action_runnable)
+        if (!pcmk__is_set(first_flags, pcmk__action_runnable)
             && (first->rsc != NULL)
             && (first->rsc->priv->active_nodes != NULL)) {
 
@@ -383,14 +383,14 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_unrunnable_first_blocks)) {
+    if (pcmk__is_set(order->flags, pcmk__ar_unrunnable_first_blocks)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk__action_runnable,
                               pcmk__ar_unrunnable_first_blocks, scheduler);
 
-        } else if (!pcmk_is_set(first_flags, pcmk__action_runnable)
-                   && pcmk_is_set(then->flags, pcmk__action_runnable)) {
+        } else if (!pcmk__is_set(first_flags, pcmk__action_runnable)
+                   && pcmk__is_set(then->flags, pcmk__action_runnable)) {
 
             pcmk__clear_action_flags(then, pcmk__action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
@@ -401,7 +401,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_unmigratable_then_blocks)) {
+    if (pcmk__is_set(order->flags, pcmk__ar_unmigratable_then_blocks)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk__action_optional,
@@ -414,7 +414,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_first_else_then)) {
+    if (pcmk__is_set(order->flags, pcmk__ar_first_else_then)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk__action_optional, pcmk__ar_first_else_then,
@@ -426,7 +426,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_ordered)) {
+    if (pcmk__is_set(order->flags, pcmk__ar_ordered)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk__action_runnable, pcmk__ar_ordered,
@@ -437,7 +437,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_asymmetric)) {
+    if (pcmk__is_set(order->flags, pcmk__ar_asymmetric)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk__action_runnable, pcmk__ar_asymmetric,
@@ -448,9 +448,9 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(first->flags, pcmk__action_runnable)
-        && pcmk_is_set(order->flags, pcmk__ar_first_implies_then_graphed)
-        && !pcmk_is_set(first_flags, pcmk__action_optional)) {
+    if (pcmk__is_set(first->flags, pcmk__action_runnable)
+        && pcmk__is_set(order->flags, pcmk__ar_first_implies_then_graphed)
+        && !pcmk__is_set(first_flags, pcmk__action_optional)) {
 
         pcmk__rsc_trace(then->rsc, "%s will be in graph because %s is required",
                         then->uuid, first->uuid);
@@ -458,8 +458,8 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         // Don't bother marking 'then' as changed just for this
     }
 
-    if (pcmk_is_set(order->flags, pcmk__ar_then_implies_first_graphed)
-        && !pcmk_is_set(then_flags, pcmk__action_optional)) {
+    if (pcmk__is_set(order->flags, pcmk__ar_then_implies_first_graphed)
+        && !pcmk__is_set(then_flags, pcmk__action_optional)) {
 
         pcmk__rsc_trace(then->rsc, "%s will be in graph because %s is required",
                         first->uuid, then->uuid);
@@ -471,9 +471,9 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                                          |pcmk__ar_then_implies_first
                                          |pcmk__ar_intermediate_stop)
         && (first->rsc != NULL)
-        && !pcmk_is_set(first->rsc->flags, pcmk__rsc_managed)
-        && pcmk_is_set(first->rsc->flags, pcmk__rsc_blocked)
-        && !pcmk_is_set(first->flags, pcmk__action_runnable)
+        && !pcmk__is_set(first->rsc->flags, pcmk__rsc_managed)
+        && pcmk__is_set(first->rsc->flags, pcmk__rsc_blocked)
+        && !pcmk__is_set(first->flags, pcmk__action_runnable)
         && pcmk__str_eq(first->task, PCMK_ACTION_STOP, pcmk__str_none)) {
 
         /* @TODO This seems odd; why wouldn't an unrunnable "first" already
@@ -482,7 +482,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
          * "stop then stop" relations that would be good for checking any
          * changes.
          */
-        if (pcmk_is_set(then->flags, pcmk__action_runnable)) {
+        if (pcmk__is_set(then->flags, pcmk__action_runnable)) {
             pcmk__clear_action_flags(then, pcmk__action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
@@ -499,13 +499,13 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
 // Convenience macros for logging action properties
 
 #define action_type_str(flags) \
-    (pcmk_is_set((flags), pcmk__action_pseudo)? "pseudo-action" : "action")
+    (pcmk__is_set((flags), pcmk__action_pseudo)? "pseudo-action" : "action")
 
 #define action_optional_str(flags) \
-    (pcmk_is_set((flags), pcmk__action_optional)? "optional" : "required")
+    (pcmk__is_set((flags), pcmk__action_optional)? "optional" : "required")
 
 #define action_runnable_str(flags) \
-    (pcmk_is_set((flags), pcmk__action_runnable)? "runnable" : "unrunnable")
+    (pcmk__is_set((flags), pcmk__action_runnable)? "runnable" : "unrunnable")
 
 #define action_node_str(a) \
     (((a)->node == NULL)? "no node" : (a)->node->priv->name)
@@ -577,7 +577,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         }
 
         // Disable constraint if it only applies when on same node, but isn't
-        if (pcmk_is_set(other->flags, pcmk__ar_if_on_same_node)
+        if (pcmk__is_set(other->flags, pcmk__ar_if_on_same_node)
             && (first_node != NULL) && (then_node != NULL)
             && !pcmk__same_node(first_node, then_node)) {
 
@@ -593,8 +593,8 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         pcmk__clear_updated_flags(changed, then, pcmk__updated_first);
 
         if ((first->rsc != NULL)
-            && pcmk_is_set(other->flags, pcmk__ar_then_cancels_first)
-            && !pcmk_is_set(then->flags, pcmk__action_optional)) {
+            && pcmk__is_set(other->flags, pcmk__ar_then_cancels_first)
+            && !pcmk__is_set(then->flags, pcmk__action_optional)) {
 
             /* 'then' is required, so we must abandon 'first'
              * (e.g. a required stop cancels any agent reload).
@@ -650,7 +650,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         }
 
 
-        if (pcmk_is_set(changed, pcmk__updated_first)) {
+        if (pcmk__is_set(changed, pcmk__updated_first)) {
             crm_trace("Re-processing %s and its 'after' actions "
                       "because it changed", first->uuid);
             for (GList *lpc2 = first->actions_after; lpc2 != NULL;
@@ -671,11 +671,11 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         }
     }
 
-    if (pcmk_is_set(changed, pcmk__updated_then)) {
+    if (pcmk__is_set(changed, pcmk__updated_then)) {
         crm_trace("Re-processing %s and its 'after' actions because it changed",
                   then->uuid);
-        if (pcmk_is_set(last_flags, pcmk__action_runnable)
-            && !pcmk_is_set(then->flags, pcmk__action_runnable)) {
+        if (pcmk__is_set(last_flags, pcmk__action_runnable)
+            && !pcmk__is_set(then->flags, pcmk__action_runnable)) {
             pcmk__block_colocation_dependents(then);
         }
         pcmk__update_action_for_orderings(then, scheduler);
@@ -702,7 +702,7 @@ is_primitive_action(const pcmk_action_t *action)
  * \param[in]     reason  Action that is the reason why flag is being cleared
  */
 #define clear_action_flag_because(action, flag, reason) do {                \
-        if (pcmk_is_set((action)->flags, (flag))) {                         \
+        if (pcmk__is_set((action)->flags, (flag))) {                        \
             pcmk__clear_action_flags(action, flag);                         \
             if ((action)->rsc != (reason)->rsc) {                           \
                 char *reason_text = pe__action2reason((reason), (flag));    \
@@ -729,12 +729,12 @@ handle_asymmetric_ordering(const pcmk_action_t *first, pcmk_action_t *then)
      * asymmetric ordering.
      */
     if ((then->rsc == NULL)
-        || pcmk_is_set(first->flags, pcmk__action_runnable)) {
+        || pcmk__is_set(first->flags, pcmk__action_runnable)) {
         return;
     }
 
     // Certain optional 'then' actions are unaffected by unrunnable 'first'
-    if (pcmk_is_set(then->flags, pcmk__action_optional)) {
+    if (pcmk__is_set(then->flags, pcmk__action_optional)) {
         enum rsc_role_e then_rsc_role;
 
         then_rsc_role = then->rsc->priv->fns->state(then->rsc, true);
@@ -782,17 +782,17 @@ handle_restart_ordering(pcmk_action_t *first, pcmk_action_t *then,
     // We need to update the action in two cases:
 
     // ... if 'then' is required
-    if (pcmk_is_set(filter, pcmk__action_optional)
-        && !pcmk_is_set(then->flags, pcmk__action_optional)) {
+    if (pcmk__is_set(filter, pcmk__action_optional)
+        && !pcmk__is_set(then->flags, pcmk__action_optional)) {
         reason = "restart";
     }
 
     /* ... if 'then' is unrunnable action on same resource (if a resource
      * should restart but can't start, we still want to stop)
      */
-    if (pcmk_is_set(filter, pcmk__action_runnable)
-        && !pcmk_is_set(then->flags, pcmk__action_runnable)
-        && pcmk_is_set(then->rsc->flags, pcmk__rsc_managed)
+    if (pcmk__is_set(filter, pcmk__action_runnable)
+        && !pcmk__is_set(then->flags, pcmk__action_runnable)
+        && pcmk__is_set(then->rsc->flags, pcmk__rsc_managed)
         && (first->rsc == then->rsc)) {
         reason = "stop";
     }
@@ -805,23 +805,23 @@ handle_restart_ordering(pcmk_action_t *first, pcmk_action_t *then,
                     first->uuid, then->uuid, reason);
 
     // Make 'first' required if it is runnable
-    if (pcmk_is_set(first->flags, pcmk__action_runnable)) {
+    if (pcmk__is_set(first->flags, pcmk__action_runnable)) {
         clear_action_flag_because(first, pcmk__action_optional, then);
     }
 
     // Make 'first' required if 'then' is required
-    if (!pcmk_is_set(then->flags, pcmk__action_optional)) {
+    if (!pcmk__is_set(then->flags, pcmk__action_optional)) {
         clear_action_flag_because(first, pcmk__action_optional, then);
     }
 
     // Make 'first' unmigratable if 'then' is unmigratable
-    if (!pcmk_is_set(then->flags, pcmk__action_migratable)) {
+    if (!pcmk__is_set(then->flags, pcmk__action_migratable)) {
         clear_action_flag_because(first, pcmk__action_migratable, then);
     }
 
     // Make 'then' unrunnable if 'first' is required but unrunnable
-    if (!pcmk_is_set(first->flags, pcmk__action_optional)
-        && !pcmk_is_set(first->flags, pcmk__action_runnable)) {
+    if (!pcmk__is_set(first->flags, pcmk__action_optional)
+        && !pcmk__is_set(first->flags, pcmk__action_runnable)) {
         clear_action_flag_because(then, pcmk__action_runnable, first);
     }
 }
@@ -862,80 +862,80 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
 
     then_flags = then->flags;
     first_flags = first->flags;
-    if (pcmk_is_set(type, pcmk__ar_asymmetric)) {
+    if (pcmk__is_set(type, pcmk__ar_asymmetric)) {
         handle_asymmetric_ordering(first, then);
     }
 
-    if (pcmk_is_set(type, pcmk__ar_then_implies_first)
-        && !pcmk_is_set(then_flags, pcmk__action_optional)) {
+    if (pcmk__is_set(type, pcmk__ar_then_implies_first)
+        && !pcmk__is_set(then_flags, pcmk__action_optional)) {
         // Then is required, and implies first should be, too
 
-        if (pcmk_is_set(filter, pcmk__action_optional)
-            && !pcmk_is_set(flags, pcmk__action_optional)
-            && pcmk_is_set(first_flags, pcmk__action_optional)) {
+        if (pcmk__is_set(filter, pcmk__action_optional)
+            && !pcmk__is_set(flags, pcmk__action_optional)
+            && pcmk__is_set(first_flags, pcmk__action_optional)) {
             clear_action_flag_because(first, pcmk__action_optional, then);
         }
 
-        if (pcmk_is_set(flags, pcmk__action_migratable)
-            && !pcmk_is_set(then->flags, pcmk__action_migratable)) {
+        if (pcmk__is_set(flags, pcmk__action_migratable)
+            && !pcmk__is_set(then->flags, pcmk__action_migratable)) {
             clear_action_flag_because(first, pcmk__action_migratable, then);
         }
     }
 
-    if (pcmk_is_set(type, pcmk__ar_promoted_then_implies_first)
+    if (pcmk__is_set(type, pcmk__ar_promoted_then_implies_first)
         && (then->rsc != NULL)
         && (then->rsc->priv->orig_role == pcmk_role_promoted)
-        && pcmk_is_set(filter, pcmk__action_optional)
-        && !pcmk_is_set(then->flags, pcmk__action_optional)) {
+        && pcmk__is_set(filter, pcmk__action_optional)
+        && !pcmk__is_set(then->flags, pcmk__action_optional)) {
 
         clear_action_flag_because(first, pcmk__action_optional, then);
 
-        if (pcmk_is_set(first->flags, pcmk__action_migratable)
-            && !pcmk_is_set(then->flags, pcmk__action_migratable)) {
+        if (pcmk__is_set(first->flags, pcmk__action_migratable)
+            && !pcmk__is_set(then->flags, pcmk__action_migratable)) {
             clear_action_flag_because(first, pcmk__action_migratable, then);
         }
     }
 
-    if (pcmk_is_set(type, pcmk__ar_unmigratable_then_blocks)
-        && pcmk_is_set(filter, pcmk__action_optional)) {
+    if (pcmk__is_set(type, pcmk__ar_unmigratable_then_blocks)
+        && pcmk__is_set(filter, pcmk__action_optional)) {
 
         if (!pcmk_all_flags_set(then->flags, pcmk__action_migratable
                                              |pcmk__action_runnable)) {
             clear_action_flag_because(first, pcmk__action_runnable, then);
         }
 
-        if (!pcmk_is_set(then->flags, pcmk__action_optional)) {
+        if (!pcmk__is_set(then->flags, pcmk__action_optional)) {
             clear_action_flag_because(first, pcmk__action_optional, then);
         }
     }
 
-    if (pcmk_is_set(type, pcmk__ar_first_else_then)
-        && pcmk_is_set(filter, pcmk__action_optional)
-        && !pcmk_is_set(first->flags, pcmk__action_runnable)) {
+    if (pcmk__is_set(type, pcmk__ar_first_else_then)
+        && pcmk__is_set(filter, pcmk__action_optional)
+        && !pcmk__is_set(first->flags, pcmk__action_runnable)) {
 
         clear_action_flag_because(then, pcmk__action_migratable, first);
         pcmk__clear_action_flags(then, pcmk__action_pseudo);
     }
 
-    if (pcmk_is_set(type, pcmk__ar_unrunnable_first_blocks)
-        && pcmk_is_set(filter, pcmk__action_runnable)
-        && pcmk_is_set(then->flags, pcmk__action_runnable)
-        && !pcmk_is_set(flags, pcmk__action_runnable)) {
+    if (pcmk__is_set(type, pcmk__ar_unrunnable_first_blocks)
+        && pcmk__is_set(filter, pcmk__action_runnable)
+        && pcmk__is_set(then->flags, pcmk__action_runnable)
+        && !pcmk__is_set(flags, pcmk__action_runnable)) {
 
         clear_action_flag_because(then, pcmk__action_runnable, first);
         clear_action_flag_because(then, pcmk__action_migratable, first);
     }
 
-    if (pcmk_is_set(type, pcmk__ar_first_implies_then)
-        && pcmk_is_set(filter, pcmk__action_optional)
-        && pcmk_is_set(then->flags, pcmk__action_optional)
-        && !pcmk_is_set(flags, pcmk__action_optional)
-        && !pcmk_is_set(first->flags, pcmk__action_migratable)) {
+    if (pcmk__is_set(type, pcmk__ar_first_implies_then)
+        && pcmk__is_set(filter, pcmk__action_optional)
+        && pcmk__is_set(then->flags, pcmk__action_optional)
+        && !pcmk__is_set(flags, pcmk__action_optional)
+        && !pcmk__is_set(first->flags, pcmk__action_migratable)) {
 
         clear_action_flag_because(then, pcmk__action_optional, first);
     }
 
-    if (pcmk_is_set(type, pcmk__ar_intermediate_stop)) {
+    if (pcmk__is_set(type, pcmk__ar_intermediate_stop)) {
         handle_restart_ordering(first, then, filter);
     }
 
@@ -983,7 +983,7 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
 
     CRM_CHECK(action != NULL, return);
 
-    if (!pcmk_is_set(action->flags, pcmk__action_pseudo)) {
+    if (!pcmk__is_set(action->flags, pcmk__action_pseudo)) {
         if (action->node != NULL) {
             node_uname = action->node->priv->name;
             node_uuid = action->node->priv->id;
@@ -995,11 +995,11 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
     switch (pcmk__parse_action(action->task)) {
         case pcmk__action_fence:
         case pcmk__action_shutdown:
-            if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
+            if (pcmk__is_set(action->flags, pcmk__action_pseudo)) {
                 desc = "Pseudo ";
-            } else if (pcmk_is_set(action->flags, pcmk__action_optional)) {
+            } else if (pcmk__is_set(action->flags, pcmk__action_optional)) {
                 desc = "Optional ";
-            } else if (!pcmk_is_set(action->flags, pcmk__action_runnable)) {
+            } else if (!pcmk__is_set(action->flags, pcmk__action_runnable)) {
                 desc = "!!Non-Startable!! ";
             } else {
                desc = "(Provisional) ";
@@ -1013,11 +1013,11 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
                       (node_uuid? ")" : ""));
             break;
         default:
-            if (pcmk_is_set(action->flags, pcmk__action_optional)) {
+            if (pcmk__is_set(action->flags, pcmk__action_optional)) {
                 desc = "Optional ";
-            } else if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
+            } else if (pcmk__is_set(action->flags, pcmk__action_pseudo)) {
                 desc = "Pseudo ";
-            } else if (!pcmk_is_set(action->flags, pcmk__action_runnable)) {
+            } else if (!pcmk__is_set(action->flags, pcmk__action_runnable)) {
                 desc = "!!Non-Startable!! ";
             } else {
                desc = "(Provisional) ";
@@ -1425,7 +1425,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
         if (action->rsc != NULL) {
             continue; // Resource actions will be output later
 
-        } else if (pcmk_is_set(action->flags, pcmk__action_optional)) {
+        } else if (pcmk__is_set(action->flags, pcmk__action_optional)) {
             continue; // This action was not scheduled
         }
 
@@ -1518,7 +1518,7 @@ only_sanitized_changed(const xmlNode *xml_op,
 {
     const char *digest_secure = NULL;
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_sanitized)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_sanitized)) {
         // The scheduler is not being run as a simulation
         return false;
     }
@@ -1575,12 +1575,14 @@ schedule_reload(gpointer data, gpointer user_data)
 
     // Skip the reload in certain situations
     if ((node == NULL)
-        || !pcmk_is_set(rsc->flags, pcmk__rsc_managed)
-        || pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
-        pcmk__rsc_trace(rsc, "Skip reload of %s:%s%s %s",
-                        rsc->id,
-                        pcmk_is_set(rsc->flags, pcmk__rsc_managed)? "" : " unmanaged",
-                        pcmk_is_set(rsc->flags, pcmk__rsc_failed)? " failed" : "",
+        || !pcmk__is_set(rsc->flags, pcmk__rsc_managed)
+        || pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
+
+        const bool managed = pcmk__is_set(rsc->flags, pcmk__rsc_managed);
+        const bool failed = pcmk__is_set(rsc->flags, pcmk__rsc_failed);
+
+        pcmk__rsc_trace(rsc, "Skip reload of %s:%s%s %s", rsc->id,
+                        (managed? "" : " unmanaged"), (failed? " failed" : ""),
                         (node == NULL)? "inactive" : node->priv->name);
         return;
     }
@@ -1588,7 +1590,7 @@ schedule_reload(gpointer data, gpointer user_data)
     /* If a resource's configuration changed while a start was pending,
      * force a full restart instead of a reload.
      */
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_start_pending)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_start_pending)) {
         pcmk__rsc_trace(rsc,
                         "%s: preventing agent reload because start pending",
                         rsc->id);
@@ -1649,8 +1651,8 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                             "%s-interval %s for %s on %s is in configuration",
                             pcmk__readable_interval(interval_ms), task, rsc->id,
                             pcmk__node_name(node));
-        } else if (pcmk_is_set(rsc->priv->scheduler->flags,
-                               pcmk__sched_cancel_removed_actions)) {
+        } else if (pcmk__is_set(rsc->priv->scheduler->flags,
+                                pcmk__sched_cancel_removed_actions)) {
             pcmk__schedule_cancel(rsc, pcmk__xe_get(xml_op, PCMK__XA_CALL_ID),
                                   task, interval_ms, node, "orphan");
             return true;
@@ -1774,7 +1776,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
     int start_index = 0;
     GList *sorted_op_list = NULL;
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
         if (pcmk__is_anonymous_clone(pe__const_top_resource(rsc, false))) {
             /* @TODO Should this be done for bundled primitives as well? Added
              * by 2ac43ae31
@@ -1830,7 +1832,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
         pcmk__xe_get_guint(rsc_op, PCMK_META_INTERVAL, &interval_ms);
 
         if ((interval_ms > 0)
-            && (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)
+            && (pcmk__is_set(rsc->flags, pcmk__rsc_maintenance)
                 || node->details->maintenance)) {
             // Maintenance mode cancels recurring operations
             pcmk__schedule_cancel(rsc, pcmk__xe_get(rsc_op, PCMK__XA_CALL_ID),

@@ -212,7 +212,7 @@ pcmk__process_request(pcmk__request_t *request, GHashTable *handlers)
     CRM_CHECK((request != NULL) && (request->op != NULL) && (handlers != NULL),
               return NULL);
 
-    if (pcmk_is_set(request->flags, pcmk__request_sync)
+    if (pcmk__is_set(request->flags, pcmk__request_sync)
         && (request->ipc_client != NULL)) {
         CRM_CHECK(request->ipc_client->request_id == request->ipc_id,
                   return NULL);

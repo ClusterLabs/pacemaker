@@ -138,7 +138,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
 
     node_state = pcmk__xe_create(parent, PCMK__XE_NODE_STATE);
 
-    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
+    if (pcmk__is_set(node->flags, pcmk__node_status_remote)) {
         pcmk__xe_set_bool_attr(node_state, PCMK_XA_REMOTE_NODE, true);
     }
 
@@ -165,7 +165,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
         }
     }
 
-    if (!pcmk_is_set(node->flags, pcmk__node_status_remote)) {
+    if (!pcmk__is_set(node->flags, pcmk__node_status_remote)) {
         if (flags & node_update_peer) {
             if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
                 // A value 0 means the peer is offline in CPG.
@@ -174,7 +174,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
             } else {
                 // @COMPAT DCs < 2.1.7 use online/offline rather than timestamp
                 value = PCMK_VALUE_OFFLINE;
-                if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
+                if (pcmk__is_set(node->processes, crm_get_cluster_proc())) {
                     value = PCMK_VALUE_ONLINE;
                 }
                 pcmk__xe_set(node_state, PCMK_XA_CRMD, value);
@@ -314,7 +314,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     xmlNode *node_list = pcmk__xe_create(NULL, PCMK_XE_NODES);
 
 #if SUPPORT_COROSYNC
-    if (!pcmk_is_set(flags, node_update_quick)
+    if (!pcmk__is_set(flags, node_update_quick)
         && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
 
         from_hashtable = pcmk__corosync_add_nodes(node_list);
@@ -415,7 +415,7 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
 void
 crm_update_quorum(gboolean quorum, gboolean force_update)
 {
-    bool has_quorum = pcmk_is_set(controld_globals.flags, controld_has_quorum);
+    bool has_quorum = pcmk__is_set(controld_globals.flags, controld_has_quorum);
 
     if (quorum) {
         controld_set_global_flags(controld_ever_had_quorum);
