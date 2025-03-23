@@ -40,6 +40,9 @@ is_set(long long word, long long bit)
     return ((word & bit) == bit);
 }
 
+//! \deprecated Do not use
+#define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
+
 #ifdef __cplusplus
 }
 #endif
