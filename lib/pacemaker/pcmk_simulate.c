@@ -945,9 +945,9 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
         pcmk__output_t *logger_out = NULL;
 
-        if (pcmk_all_flags_set(scheduler->flags,
-                               pcmk__sched_output_scores
-                               |pcmk__sched_show_utilization)) {
+        if (pcmk__all_flags_set(scheduler->flags,
+                                pcmk__sched_output_scores
+                                |pcmk__sched_show_utilization)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL,
                             "Assignment Scores and Utilization Information");

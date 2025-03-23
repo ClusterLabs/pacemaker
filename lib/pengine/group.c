@@ -62,7 +62,7 @@ pe__group_flag_is_set(const pcmk_resource_t *group, uint32_t flags)
 
     CRM_CHECK(pcmk__is_group(group), return false);
     group_data = group->priv->variant_opaque;
-    return pcmk_all_flags_set(group_data->flags, flags);
+    return pcmk__all_flags_set(group_data->flags, flags);
 }
 
 /*!

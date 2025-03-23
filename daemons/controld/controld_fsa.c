@@ -338,20 +338,20 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             do_fsa_action(fsa_data, A_EXIT_1, do_exit);
 
             /* sub-system restart */
-        } else if (pcmk_all_flags_set(controld_globals.fsa_actions,
-                                      O_LRM_RECONNECT)) {
+        } else if (pcmk__all_flags_set(controld_globals.fsa_actions,
+                                       O_LRM_RECONNECT)) {
             do_fsa_action(fsa_data, O_LRM_RECONNECT, do_lrm_control);
 
-        } else if (pcmk_all_flags_set(controld_globals.fsa_actions,
-                                      O_CIB_RESTART)) {
+        } else if (pcmk__all_flags_set(controld_globals.fsa_actions,
+                                       O_CIB_RESTART)) {
             do_fsa_action(fsa_data, O_CIB_RESTART, do_cib_control);
 
-        } else if (pcmk_all_flags_set(controld_globals.fsa_actions,
-                                      O_PE_RESTART)) {
+        } else if (pcmk__all_flags_set(controld_globals.fsa_actions,
+                                       O_PE_RESTART)) {
             do_fsa_action(fsa_data, O_PE_RESTART, do_pe_control);
 
-        } else if (pcmk_all_flags_set(controld_globals.fsa_actions,
-                                      O_TE_RESTART)) {
+        } else if (pcmk__all_flags_set(controld_globals.fsa_actions,
+                                       O_TE_RESTART)) {
             do_fsa_action(fsa_data, O_TE_RESTART, do_te_control);
 
             /* essential start tasks */

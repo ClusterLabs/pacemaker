@@ -170,9 +170,27 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
 /*!
  * \internal
- * \brief Convenience alias for \c pcmk_all_flags_set(), to check single flag
+ * \brief Check whether all of specified flags are set in a flag group
  *
- * This is truly identical to \c pcmk_all_flags_set() but allows a call that's
+ * \param[in] flag_group      Flag group to check whether \p flags_to_check are
+ *                            set
+ * \param[in] flags_to_check  Flags to check whether set in \p flag_group
+ *
+ * \retval \c true   if all flags in \p flags_to_check are set in \p flag_group
+ *                   or if \p flags_to_check is 0
+ * \retval \c false  otherwise
+ */
+static inline bool
+pcmk__all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
+{
+    return (flag_group & flags_to_check) == flags_to_check;
+}
+
+/*!
+ * \internal
+ * \brief Convenience alias for \c pcmk__all_flags_set(), to check single flag
+ *
+ * This is truly identical to \c pcmk__all_flags_set() but allows a call that's
  * shorter and semantically clearer for checking a single flag.
  *
  * \param[in] flag_group  Flag group (check whether \p flag is set in this)
@@ -184,7 +202,7 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 static inline bool
 pcmk__is_set(uint64_t flag_group, uint64_t flag)
 {
-    return pcmk_all_flags_set(flag_group, flag);
+    return pcmk__all_flags_set(flag_group, flag);
 }
 
 /*!
@@ -199,7 +217,7 @@ pcmk__is_set(uint64_t flag_group, uint64_t flag)
 static inline const char *
 pcmk__flag_text(uint64_t flag_group, uint64_t flags)
 {
-    return pcmk__btoa(pcmk_all_flags_set(flag_group, flags));
+    return pcmk__btoa(pcmk__all_flags_set(flag_group, flags));
 }
 
 

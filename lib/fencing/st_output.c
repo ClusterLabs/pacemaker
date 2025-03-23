@@ -209,7 +209,8 @@ failed_history(pcmk__output_t *out, va_list args)
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Fencing Actions");
         out->message(out, "stonith-event", hp,
-                     pcmk_all_flags_set(section_opts, pcmk_section_fencing_all),
+                     pcmk__all_flags_set(section_opts,
+                                         pcmk_section_fencing_all),
                      false, stonith__later_succeeded(hp, history), show_opts);
         out->increment_list(out);
     }
@@ -239,8 +240,8 @@ stonith_history(pcmk__output_t *out, va_list args)
         if (hp->state != st_failed) {
             PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Fencing History");
             out->message(out, "stonith-event", hp,
-                         pcmk_all_flags_set(section_opts,
-                                            pcmk_section_fencing_all),
+                         pcmk__all_flags_set(section_opts,
+                                             pcmk_section_fencing_all),
                          false, stonith__later_succeeded(hp, history), show_opts);
             out->increment_list(out);
         }
@@ -271,7 +272,8 @@ full_history(pcmk__output_t *out, va_list args)
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Fencing History");
         out->message(out, "stonith-event", hp,
-                     pcmk_all_flags_set(section_opts, pcmk_section_fencing_all),
+                     pcmk__all_flags_set(section_opts,
+                                         pcmk_section_fencing_all),
                      false, stonith__later_succeeded(hp, history), show_opts);
         out->increment_list(out);
     }
@@ -302,8 +304,8 @@ full_history_xml(pcmk__output_t *out, va_list args)
 
             PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Fencing History");
             out->message(out, "stonith-event", hp,
-                         pcmk_all_flags_set(section_opts,
-                                            pcmk_section_fencing_all),
+                         pcmk__all_flags_set(section_opts,
+                                             pcmk_section_fencing_all),
                          false, stonith__later_succeeded(hp, history), show_opts);
             out->increment_list(out);
         }
@@ -401,7 +403,8 @@ pending_actions(pcmk__output_t *out, va_list args)
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Pending Fencing Actions");
         out->message(out, "stonith-event", hp,
-                     pcmk_all_flags_set(section_opts, pcmk_section_fencing_all),
+                     pcmk__all_flags_set(section_opts,
+                                         pcmk_section_fencing_all),
                      false, stonith__later_succeeded(hp, history), show_opts);
         out->increment_list(out);
     }

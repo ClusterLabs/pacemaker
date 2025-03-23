@@ -156,7 +156,7 @@ option_list_default(pcmk__output_t *out, va_list args)
     for (const pcmk__cluster_option_t *option = option_list;
          option->name != NULL; option++) {
 
-        if (!pcmk_all_flags_set(option->flags, filter)) {
+        if (!pcmk__all_flags_set(option->flags, filter)) {
             continue;
         }
 
@@ -507,7 +507,7 @@ option_list_xml(pcmk__output_t *out, va_list args)
     for (const pcmk__cluster_option_t *option = option_list;
          option->name != NULL; option++) {
 
-        if (!pcmk_all_flags_set(option->flags, filter)) {
+        if (!pcmk__all_flags_set(option->flags, filter)) {
             continue;
         }
 

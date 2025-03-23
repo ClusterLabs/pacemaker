@@ -2515,8 +2515,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
      * in a fencing operation regardless if we're going to attempt to reconnect
      * in this transition.
      */
-    if (pcmk_all_flags_set(rsc->flags,
-                           pcmk__rsc_failed|pcmk__rsc_is_remote_connection)) {
+    if (pcmk__all_flags_set(rsc->flags,
+                            pcmk__rsc_failed|pcmk__rsc_is_remote_connection)) {
         tmpnode = pcmk_find_node(scheduler, rsc->id);
         if (tmpnode && tmpnode->details->unclean) {
             pcmk__set_node_flags(tmpnode, pcmk__node_seen);
