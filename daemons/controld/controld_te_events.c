@@ -384,7 +384,7 @@ match_down_event(const char *target)
     xmlXPathObject *xpath_ret = NULL;
     GList *gIter, *gIter2;
 
-    char *xpath = crm_strdup_printf(XPATH_DOWNED, target);
+    char *xpath = pcmk__assert_asprintf(XPATH_DOWNED, target);
 
     for (gIter = controld_globals.transition_graph->synapses;
          gIter != NULL && match == NULL;

@@ -96,10 +96,11 @@ lrmd__agents_list(pcmk__output_t *out, va_list args) {
     const char *agent_spec = va_arg(args, const char *);
     const char *provider = va_arg(args, const char *);
 
-    int rc;
-    char *title = crm_strdup_printf("%s agents", pcmk__str_empty(provider) ? agent_spec : provider);
+    const char *desc = pcmk__str_empty(provider)? agent_spec : provider;
+    char *title = pcmk__assert_asprintf("%s agents",
+                                        pcmk__s(desc, "(unknown)"));
+    int rc = default_list(out, list, title);
 
-    rc = default_list(out, list, title);
     free(title);
     return rc;
 }

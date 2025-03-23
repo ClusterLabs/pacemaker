@@ -322,7 +322,7 @@ clone_min_ordering(const char *id,
                    uint32_t flags, int clone_min)
 {
     // Create a pseudo-action for when the minimum instances are active
-    char *task = crm_strdup_printf(PCMK_ACTION_CLONE_ONE_OR_MORE ":%s", id);
+    char *task = pcmk__assert_asprintf(PCMK_ACTION_CLONE_ONE_OR_MORE ":%s", id);
     pcmk_action_t *clone_min_met = get_pseudo_op(task,
                                                  rsc_first->priv->scheduler);
 
@@ -722,8 +722,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
      * irrelevant in regards to set2.
      */
     if (!require_all) {
-        char *task = crm_strdup_printf(PCMK_ACTION_ONE_OR_MORE ":%s",
-                                       pcmk__xe_id(set1));
+        char *task = pcmk__assert_asprintf(PCMK_ACTION_ONE_OR_MORE ":%s",
+                                           pcmk__xe_id(set1));
         pcmk_action_t *unordered_action = get_pseudo_op(task, scheduler);
 
         free(task);

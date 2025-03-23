@@ -421,7 +421,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
         set_ocf_env(ckey, value, user_data);
 
     } else {
-        char *buffer = crm_strdup_printf("OCF_RESKEY_%s", ckey);
+        char *buffer = pcmk__assert_asprintf("OCF_RESKEY_%s", ckey);
 
         set_ocf_env(buffer, value, user_data);
         free(buffer);
@@ -507,7 +507,8 @@ static void
 pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
 {
     svc_action_t *op = user_data;
-    char *buffer = crm_strdup_printf("%s=%s\n", (char *)key, (char *) value);
+    char *buffer = pcmk__assert_asprintf("%s=%s\n", (const char *) key,
+                                         (const char *) value);
     size_t len = strlen(buffer);
     size_t total = 0;
     ssize_t ret = 0;
@@ -646,7 +647,8 @@ finish_op_output(svc_action_t *op, bool is_stderr)
 static void
 log_op_output(svc_action_t *op)
 {
-    char *prefix = crm_strdup_printf("%s[%d] error output", op->id, op->pid);
+    char *prefix = pcmk__assert_asprintf("%s[%d] error output", op->id,
+                                         op->pid);
 
     /* The library caller has better context to know how important the output
      * is, so log it at info and debug severity here. They can log it again at
@@ -1443,7 +1445,7 @@ services_os_get_single_directory_list(const char *root, gboolean files, gboolean
             continue;
         }
 
-        buffer = crm_strdup_printf("%s/%s", root, namelist[lpc]->d_name);
+        buffer = pcmk__assert_asprintf("%s/%s", root, namelist[lpc]->d_name);
         rc = stat(buffer, &sb);
         free(buffer);
 

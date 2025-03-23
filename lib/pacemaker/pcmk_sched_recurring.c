@@ -670,7 +670,7 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
     pcmk__str_update(&(cancel_op->task), PCMK_ACTION_CANCEL);
     pcmk__str_update(&(cancel_op->cancel_task), task);
 
-    interval_ms_s = crm_strdup_printf("%u", interval_ms);
+    interval_ms_s = pcmk__assert_asprintf("%u", interval_ms);
     pcmk__insert_meta(cancel_op, PCMK_XA_OPERATION, task);
     pcmk__insert_meta(cancel_op, PCMK_META_INTERVAL, interval_ms_s);
     free(interval_ms_s);

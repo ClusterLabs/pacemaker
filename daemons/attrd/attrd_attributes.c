@@ -243,7 +243,7 @@ attrd_set_id(const attribute_t *attr, const char *node_state_id)
          * not limited by the schema in any way, but it's still unfortunate.
          * For backward compatibility reasons, we can't change this.
          */
-        set_id = crm_strdup_printf("%s-%s", PCMK_XE_STATUS, node_state_id);
+        set_id = pcmk__assert_asprintf("%s-%s", PCMK_XE_STATUS, node_state_id);
     } else {
         /* @COMPAT When the user specifies a set ID for an attribute, it is the
          * same for every node. That is less than ideal, but again, the schema
@@ -273,11 +273,11 @@ attrd_nvpair_id(const attribute_t *attr, const char *node_state_id)
     char *nvpair_id = NULL;
 
     if (attr->set_id != NULL) {
-        nvpair_id = crm_strdup_printf("%s-%s", attr->set_id, attr->id);
+        nvpair_id = pcmk__assert_asprintf("%s-%s", attr->set_id, attr->id);
 
     } else {
-        nvpair_id = crm_strdup_printf(PCMK_XE_STATUS "-%s-%s",
-                                      node_state_id, attr->id);
+        nvpair_id = pcmk__assert_asprintf(PCMK_XE_STATUS "-%s-%s",
+                                          node_state_id, attr->id);
     }
     pcmk__xml_sanitize_id(nvpair_id);
     return nvpair_id;

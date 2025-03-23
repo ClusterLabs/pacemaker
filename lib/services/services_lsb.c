@@ -121,7 +121,7 @@ services__get_lsb_metadata(const char *type, char **output)
     if (type[0] == '/') {
         ra_pathname = pcmk__str_copy(type);
     } else {
-        ra_pathname = crm_strdup_printf(PCMK__LSB_INIT_DIR "/%s", type);
+        ra_pathname = pcmk__assert_asprintf(PCMK__LSB_INIT_DIR "/%s", type);
     }
 
     crm_trace("Looking into %s", ra_pathname);
@@ -218,16 +218,16 @@ services__get_lsb_metadata(const char *type, char **output)
     }
     fclose(fp);
 
-    *output = crm_strdup_printf(lsb_metadata_template, type,
-                                pcmk__s(long_desc, type),
-                                pcmk__s(short_desc, type),
-                                pcmk__s(provides, ""),
-                                pcmk__s(required_start, ""),
-                                pcmk__s(required_stop, ""),
-                                pcmk__s(should_start, ""),
-                                pcmk__s(should_stop, ""),
-                                pcmk__s(default_start, ""),
-                                pcmk__s(default_stop, ""));
+    *output = pcmk__assert_asprintf(lsb_metadata_template, type,
+                                    pcmk__s(long_desc, type),
+                                    pcmk__s(short_desc, type),
+                                    pcmk__s(provides, ""),
+                                    pcmk__s(required_start, ""),
+                                    pcmk__s(required_stop, ""),
+                                    pcmk__s(should_start, ""),
+                                    pcmk__s(should_stop, ""),
+                                    pcmk__s(default_start, ""),
+                                    pcmk__s(default_stop, ""));
 
     g_free(long_desc);
     g_free(short_desc);

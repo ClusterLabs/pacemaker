@@ -94,8 +94,9 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
         }
 
         if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
-            char *prefix = crm_strdup_printf(PCMK__XML_PREFIX_CREATED " %s: ",
-                                             xpath);
+            char *prefix = pcmk__assert_asprintf(PCMK__XML_PREFIX_CREATED
+                                                 " %s: ",
+                                                 xpath);
 
             temp_rc = pcmk__xml_show(out, prefix, change->children, 0,
                                      pcmk__xml_fmt_pretty|pcmk__xml_fmt_open);

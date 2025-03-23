@@ -242,7 +242,7 @@ static char *name = NULL;
 
 gboolean
 add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    char *key = crm_strdup_printf("OCF_RESKEY_%s", optarg);
+    char *key = pcmk__assert_asprintf("OCF_RESKEY_%s", optarg);
     const char *env = getenv(key);
     gboolean retval = TRUE;
 
@@ -317,7 +317,7 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 set_tag(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     free(name);
-    name = crm_strdup_printf("%s.%s", crm_system_name, optarg);
+    name = pcmk__assert_asprintf("%s.%s", crm_system_name, optarg);
     return TRUE;
 }
 

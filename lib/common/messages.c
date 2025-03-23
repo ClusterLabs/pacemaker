@@ -73,9 +73,9 @@ pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
 
     if (reply_to == NULL) {
         subtype = PCMK__VALUE_REQUEST;
-        message_id = crm_strdup_printf("%s-%s-%llu-%u", task, sender_system,
-                                       (unsigned long long) time(NULL),
-                                       message_counter++);
+        message_id = pcmk__assert_asprintf("%s-%s-%llu-%u", task, sender_system,
+                                           (unsigned long long) time(NULL),
+                                           message_counter++);
         reply_to = message_id;
     }
 

@@ -56,7 +56,7 @@ pcmk__corosync_uuid(const pcmk__node_status_t *node)
 
     if (node != NULL) {
         if (node->cluster_layer_id > 0) {
-            return crm_strdup_printf("%" PRIu32, node->cluster_layer_id);
+            return pcmk__assert_asprintf("%" PRIu32, node->cluster_layer_id);
         } else {
             crm_info("Node %s is not yet known by Corosync", node->name);
         }
@@ -167,7 +167,7 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         uint32_t id = 0;
         char *key = NULL;
 
-        key = crm_strdup_printf("nodelist.node.%d.nodeid", lpc);
+        key = pcmk__assert_asprintf("nodelist.node.%d.nodeid", lpc);
         rc = cmap_get_uint32(cmap_handle, key, &id);
         crm_trace("Checking %u vs %u from %s", nodeid, id, key);
         free(key);
@@ -180,13 +180,13 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
             crm_trace("Searching for node name for %u in nodelist.node.%d %s",
                       nodeid, lpc, pcmk__s(name, "<null>"));
             if (name == NULL) {
-                key = crm_strdup_printf("nodelist.node.%d.name", lpc);
+                key = pcmk__assert_asprintf("nodelist.node.%d.name", lpc);
                 cmap_get_string(cmap_handle, key, &name);
                 crm_trace("%s = %s", key, pcmk__s(name, "<null>"));
                 free(key);
             }
             if (name == NULL) {
-                key = crm_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
+                key = pcmk__assert_asprintf("nodelist.node.%d.ring0_addr", lpc);
                 cmap_get_string(cmap_handle, key, &name);
                 crm_trace("%s = %s", key, pcmk__s(name, "<null>"));
 
@@ -617,7 +617,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
         char *name = NULL;
         char *key = NULL;
 
-        key = crm_strdup_printf("nodelist.node.%d.nodeid", lpc);
+        key = pcmk__assert_asprintf("nodelist.node.%d.nodeid", lpc);
         rc = cmap_get_uint32(cmap_handle, key, &nodeid);
         free(key);
 

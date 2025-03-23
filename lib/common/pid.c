@@ -78,7 +78,7 @@ pcmk__pid_active(pid_t pid, const char *daemon)
         }
 
         if (daemon[0] != '/') {
-            myexe_path = crm_strdup_printf(CRM_DAEMON_DIR "/%s", daemon);
+            myexe_path = pcmk__assert_asprintf(CRM_DAEMON_DIR "/%s", daemon);
         } else {
             myexe_path = pcmk__str_copy(daemon);
         }
