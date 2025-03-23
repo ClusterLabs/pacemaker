@@ -872,6 +872,64 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
 
 /*!
  * \internal
+ * \brief Get multiplier and divisor corresponding to given units string
+ *
+ * Multiplier and divisor convert from a number of seconds to an equivalent
+ * number of the unit described by the units string.
+ *
+ * \param[in]  units       String describing a unit of time (may be empty,
+ *                         \c "s", \c "sec", \c "ms", \c "msec", \c "us",
+ *                         \c "usec", \c "m", \c "min", \c "h", or \c "hr")
+ * \param[out] multiplier  Number of units in one second, if unit is smaller
+ *                         than one second, or 1 otherwise (unchanged on error)
+ * \param[out] divisor     Number of seconds in one unit, if unit is larger
+ *                         than one second, or 1 otherwise (unchanged on error)
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+get_multiplier_divisor(const char *units, long long *multiplier,
+                       long long *divisor)
+{
+    /* @COMPAT Use exact comparisons. Currently, we match too liberally, and the
+     * second strncasecmp() in each case is redundant.
+     */
+    if ((*units == '\0')
+        || (strncasecmp(units, "s", 1) == 0)
+        || (strncasecmp(units, "sec", 3) == 0)) {
+        *multiplier = 1000;
+        *divisor = 1;
+
+    } else if ((strncasecmp(units, "ms", 2) == 0)
+               || (strncasecmp(units, "msec", 4) == 0)) {
+        *multiplier = 1;
+        *divisor = 1;
+
+    } else if ((strncasecmp(units, "us", 2) == 0)
+               || (strncasecmp(units, "usec", 4) == 0)) {
+        *multiplier = 1;
+        *divisor = 1000;
+
+    } else if ((strncasecmp(units, "m", 1) == 0)
+               || (strncasecmp(units, "min", 3) == 0)) {
+        *multiplier = 60 * 1000;
+        *divisor = 1;
+
+    } else if ((strncasecmp(units, "h", 1) == 0)
+               || (strncasecmp(units, "hr", 2) == 0)) {
+        *multiplier = 60 * 60 * 1000;
+        *divisor = 1;
+
+    } else {
+        // Invalid units
+        return pcmk_rc_bad_input;
+    }
+
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Parse a time and units string into a milliseconds value
  *
  * \param[in]  input   String with a nonnegative number and optional unit
@@ -894,6 +952,28 @@ pcmk__parse_ms(const char *input, long long *result)
     CRM_CHECK((input != NULL) && (result != NULL), return EINVAL);
 
     rc = scan_ll(input, &local_result, 0, &units);
+    if ((rc == pcmk_rc_ok) || (rc == ERANGE)) {
+        int units_rc = pcmk_rc_ok;
+
+        /* If the number is a decimal, scan_ll() reads only the integer part.
+         * Skip any remaining digits or decimal characters.
+         *
+         * @COMPAT Well-formed and malformed decimals are both accepted inputs.
+         * For example, "3.14 ms" and "3.1.4 ms" are treated the same as "3ms"
+         * and parsed successfully. At a compatibility break, decide if this is
+         * still desired.
+         */
+        for (; isdigit(*units) || (*units == '.'); units++);
+
+        // Skip any additional whitespace after the number
+        for (; isspace(*units); units++);
+
+        // Validate units and get conversion constants
+        units_rc = get_multiplier_divisor(units, &multiplier, &divisor);
+        if (units_rc != pcmk_rc_ok) {
+            rc = units_rc;
+        }
+    }
 
     if (rc == ERANGE) {
         crm_warn("'%s' will be clipped to %lld", input, local_result);
@@ -908,53 +988,6 @@ pcmk__parse_ms(const char *input, long long *result)
         crm_warn("'%s' is not a valid time duration: %s", input,
                  pcmk_rc_str(rc));
         return rc;
-    }
-
-    /* If the number is a decimal, scan_ll() reads only the integer part. Skip
-     * any remaining digits or decimal characters.
-     *
-     * @COMPAT Well-formed and malformed decimals are both accepted inputs. For
-     * example, "3.14 ms" and "3.1.4 ms" are treated the same as "3ms" and
-     * parsed successfully. At a compatibility break, decide if this is still
-     * desired.
-     */
-    for (; isdigit(*units) || (*units == '.'); units++);
-
-    // Skip any additional whitespace after the number
-    for (; isspace(*units); units++);
-
-    /* @COMPAT Use exact comparisons. Currently, we match too liberally, and the
-     * second strncasecmp() in each case is redundant.
-     */
-    if ((*units == '\0')
-        || (strncasecmp(units, "s", 1) == 0)
-        || (strncasecmp(units, "sec", 3) == 0)) {
-        multiplier = 1000;
-        divisor = 1;
-
-    } else if ((strncasecmp(units, "ms", 2) == 0)
-               || (strncasecmp(units, "msec", 4) == 0)) {
-        multiplier = 1;
-        divisor = 1;
-
-    } else if ((strncasecmp(units, "us", 2) == 0)
-               || (strncasecmp(units, "usec", 4) == 0)) {
-        multiplier = 1;
-        divisor = 1000;
-
-    } else if ((strncasecmp(units, "m", 1) == 0)
-               || (strncasecmp(units, "min", 3) == 0)) {
-        multiplier = 60 * 1000;
-        divisor = 1;
-
-    } else if ((strncasecmp(units, "h", 1) == 0)
-               || (strncasecmp(units, "hr", 2) == 0)) {
-        multiplier = 60 * 60 * 1000;
-        divisor = 1;
-
-    } else {
-        // Invalid units
-        return pcmk_rc_bad_input;
     }
 
     // Apply units, capping at LLONG_MAX
