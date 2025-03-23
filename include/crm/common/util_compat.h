@@ -11,6 +11,8 @@
 #define PCMK__CRM_COMMON_UTIL_COMPAT__H
 
 #include <stdbool.h>    // bool
+#include <stdint.h>     // uint64_t
+
 #include <glib.h>       // gboolean
 
 #ifdef __cplusplus
@@ -38,6 +40,13 @@ static inline gboolean
 is_set(long long word, long long bit)
 {
     return ((word & bit) == bit);
+}
+
+//! \deprecated Do not use
+static inline bool
+pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
+{
+    return (flag_group & flags_to_check) == flags_to_check;
 }
 
 //! \deprecated Do not use
