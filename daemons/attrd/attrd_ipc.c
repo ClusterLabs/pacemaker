@@ -113,14 +113,14 @@ attrd_client_clear_failure(pcmk__request_t *request)
         char *pattern;
 
         if (op == NULL) {
-            pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
+            pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_ONE, rsc);
 
         } else {
             guint interval_ms = 0U;
 
             pcmk_parse_interval_spec(interval_spec, &interval_ms);
-            pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP,
-                                        rsc, op, interval_ms);
+            pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_OP, rsc, op,
+                                            interval_ms);
         }
 
         pcmk__xe_set(xml, PCMK__XA_ATTR_REGEX, pattern);

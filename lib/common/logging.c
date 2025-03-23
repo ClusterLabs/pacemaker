@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -450,10 +450,9 @@ crm_control_blackbox(int nsig, bool enable)
     if (blackbox_file_prefix == NULL) {
         pid_t pid = getpid();
 
-        blackbox_file_prefix = crm_strdup_printf("%s/%s-%lu",
-                                                 CRM_BLACKBOX_DIR,
-                                                 crm_system_name,
-                                                 (unsigned long) pid);
+        blackbox_file_prefix = pcmk__assert_asprintf(CRM_BLACKBOX_DIR "/%s-%lu",
+                                                     crm_system_name,
+                                                     (unsigned long) pid);
     }
 
     if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
@@ -600,7 +599,8 @@ crm_log_filter_source(int source, const char *trace_files, const char *trace_fns
             qb_bit_set(cs->targets, source);
 
         } else if (trace_blackbox) {
-            char *key = crm_strdup_printf("%s:%d", cs->function, cs->lineno);
+            char *key = pcmk__assert_asprintf("%s:%d", cs->function,
+                                              cs->lineno);
 
             if (strstr(trace_blackbox, key) != NULL) {
                 qb_bit_set(cs->targets, source);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,10 @@ find_cib_loadfile(const char *server)
 {
     pid_t pid = pcmk__procfs_pid_of(server);
 
-    return pid? crm_strdup_printf("/proc/%lld/stat", (long long) pid) : NULL;
+    if (pid == 0) {
+        return NULL;
+    }
+    return pcmk__assert_asprintf("/proc/%lld/stat", (long long) pid);
 }
 
 /*!

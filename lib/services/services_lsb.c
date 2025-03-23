@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -215,16 +215,16 @@ services__get_lsb_metadata(const char *type, char **output)
     }
     fclose(fp);
 
-    *output = crm_strdup_printf(lsb_metadata_template, type,
-                                pcmk__s(long_desc, type),
-                                pcmk__s(short_desc, type),
-                                pcmk__s(provides, ""),
-                                pcmk__s(required_start, ""),
-                                pcmk__s(required_stop, ""),
-                                pcmk__s(should_start, ""),
-                                pcmk__s(should_stop, ""),
-                                pcmk__s(default_start, ""),
-                                pcmk__s(default_stop, ""));
+    *output = pcmk__assert_asprintf(lsb_metadata_template, type,
+                                    pcmk__s(long_desc, type),
+                                    pcmk__s(short_desc, type),
+                                    pcmk__s(provides, ""),
+                                    pcmk__s(required_start, ""),
+                                    pcmk__s(required_stop, ""),
+                                    pcmk__s(should_start, ""),
+                                    pcmk__s(should_stop, ""),
+                                    pcmk__s(default_start, ""),
+                                    pcmk__s(default_stop, ""));
 
     g_free(long_desc);
     g_free(short_desc);

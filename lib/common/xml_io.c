@@ -622,7 +622,7 @@ pcmk__xml_write_temp_file(const xmlNode *xml, const char *desc,
         uuid = crm_generate_uuid();
         filename = uuid;
     }
-    path = crm_strdup_printf("%s/%s", pcmk__get_tmpdir(), filename);
+    path = pcmk__assert_asprintf("%s/%s", pcmk__get_tmpdir(), filename);
 
     crm_info("Saving %s to %s", desc, path);
     pcmk__xml_write_file(xml, filename, false);
@@ -644,7 +644,7 @@ save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
     if (filename == NULL) {
         char *uuid = crm_generate_uuid();
 
-        f = crm_strdup_printf("%s/%s", pcmk__get_tmpdir(), uuid);
+        f = pcmk__assert_asprintf("%s/%s", pcmk__get_tmpdir(), uuid);
         filename = f;
         free(uuid);
     }

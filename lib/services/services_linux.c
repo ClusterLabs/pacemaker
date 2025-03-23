@@ -484,7 +484,8 @@ static void
 pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
 {
     svc_action_t *op = user_data;
-    char *buffer = crm_strdup_printf("%s=%s\n", (char *)key, (char *) value);
+    char *buffer = pcmk__assert_asprintf("%s=%s\n", (const char *) key,
+                                         (const char *) value);
     size_t len = strlen(buffer);
     size_t total = 0;
     ssize_t ret = 0;
@@ -623,7 +624,8 @@ finish_op_output(svc_action_t *op, bool is_stderr)
 static void
 log_op_output(svc_action_t *op)
 {
-    char *prefix = crm_strdup_printf("%s[%d] error output", op->id, op->pid);
+    char *prefix = pcmk__assert_asprintf("%s[%d] error output", op->id,
+                                         op->pid);
 
     /* The library caller has better context to know how important the output
      * is, so log it at info and debug severity here. They can log it again at

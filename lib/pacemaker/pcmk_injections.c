@@ -158,7 +158,7 @@ static void
 create_node_entry(cib_t *cib_conn, const char *node)
 {
     int rc = pcmk_ok;
-    char *xpath = crm_strdup_printf(XPATH_NODE_CONFIG, node);
+    char *xpath = pcmk__assert_asprintf(XPATH_NODE_CONFIG, node);
 
     rc = cib_conn->cmds->query(cib_conn, xpath, NULL, cib_xpath|cib_sync_call);
 
@@ -258,7 +258,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
 {
     int rc = pcmk_ok;
     xmlNode *cib_object = NULL;
-    char *xpath = crm_strdup_printf(XPATH_NODE_STATE, node);
+    char *xpath = pcmk__assert_asprintf(XPATH_NODE_STATE, node);
     bool duplicate = false;
     char *found_uuid = NULL;
 
@@ -285,8 +285,8 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
         }
 
         if (found_uuid) {
-            char *xpath_by_uuid = crm_strdup_printf(XPATH_NODE_STATE_BY_ID,
-                                                    found_uuid);
+            char *xpath_by_uuid = pcmk__assert_asprintf(XPATH_NODE_STATE_BY_ID,
+                                                        found_uuid);
 
             /* It's possible that a PCMK__XE_NODE_STATE entry doesn't have a
              * PCMK_XA_UNAME yet
@@ -387,7 +387,7 @@ static xmlNode *
 find_resource_xml(xmlNode *cib_node, const char *resource)
 {
     const char *node = pcmk__xe_get(cib_node, PCMK_XA_UNAME);
-    char *xpath = crm_strdup_printf(XPATH_RSC_HISTORY, node, resource);
+    char *xpath = pcmk__assert_asprintf(XPATH_RSC_HISTORY, node, resource);
     xmlNode *match = pcmk__xpath_find_one(cib_node->doc, xpath, LOG_TRACE);
 
     free(xpath);
@@ -701,17 +701,17 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         pcmk__assert(rc == pcmk_ok);
         pcmk__xml_free(cib_node);
 
-        xpath = crm_strdup_printf("//" PCMK__XE_NODE_STATE
-                                  "[@" PCMK_XA_UNAME "='%s']"
-                                  "/" PCMK__XE_LRM,
-                                  node);
+        xpath = pcmk__assert_asprintf("//" PCMK__XE_NODE_STATE
+                                      "[@" PCMK_XA_UNAME "='%s']"
+                                      "/" PCMK__XE_LRM,
+                                      node);
         cib->cmds->remove(cib, xpath, NULL, cib_xpath|cib_sync_call);
         free(xpath);
 
-        xpath = crm_strdup_printf("//" PCMK__XE_NODE_STATE
-                                  "[@" PCMK_XA_UNAME "='%s']"
-                                  "/" PCMK__XE_TRANSIENT_ATTRIBUTES,
-                                  node);
+        xpath = pcmk__assert_asprintf("//" PCMK__XE_NODE_STATE
+                                      "[@" PCMK_XA_UNAME "='%s']"
+                                      "/" PCMK__XE_TRANSIENT_ATTRIBUTES,
+                                      node);
         cib->cmds->remove(cib, xpath, NULL, cib_xpath|cib_sync_call);
         free(xpath);
     }

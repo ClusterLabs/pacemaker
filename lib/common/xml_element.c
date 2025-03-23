@@ -602,11 +602,11 @@ update_xe(xmlNode *parent, xmlNode *target, xmlNode *update, uint32_t flags)
     pcmk__if_tracing(
         {
             if (update_id_attr != NULL) {
-                trace_s = crm_strdup_printf("<%s %s=%s/>",
-                                            update_name, update_id_attr,
-                                            update_id_val);
+                trace_s = pcmk__assert_asprintf("<%s %s=%s/>",
+                                                update_name, update_id_attr,
+                                                update_id_val);
             } else {
-                trace_s = crm_strdup_printf("<%s/>", update_name);
+                trace_s = pcmk__assert_asprintf("<%s/>", update_name);
             }
         },
         {}
@@ -1186,7 +1186,7 @@ pcmk__xe_set_guint(xmlNode *xml, const char *attr, guint value)
 
     CRM_CHECK((xml != NULL) && (attr != NULL), return);
 
-    value_s = crm_strdup_printf("%u", value);
+    value_s = pcmk__assert_asprintf("%u", value);
     pcmk__xe_set(xml, attr, value_s);
     free(value_s);
 }
@@ -1301,7 +1301,7 @@ pcmk__xe_set_ll(xmlNode *xml, const char *attr, long long value)
 
     CRM_CHECK((xml != NULL) && (attr != NULL), return EINVAL);
 
-    value_s = crm_strdup_printf("%lld", value);
+    value_s = pcmk__assert_asprintf("%lld", value);
 
     rc = pcmk__xe_set(xml, attr, value_s);
     free(value_s);
@@ -1609,7 +1609,7 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
     int len = 0;
     char *id = NULL;
 
-    /* equivalent to crm_strdup_printf() */
+    // Equivalent to pcmk__assert_asprintf()
     va_start(ap, format);
     len = vasprintf(&id, format, ap);
     va_end(ap);
@@ -1839,7 +1839,7 @@ crm_xml_add_timeval(xmlNode *xml, const char *name_sec, const char *name_usec,
 const char *
 crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
 {
-    char *number = crm_strdup_printf("%u", ms);
+    char *number = pcmk__assert_asprintf("%u", ms);
     const char *added = crm_xml_add(node, name, number);
 
     free(number);

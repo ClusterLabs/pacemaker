@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2024 the Pacemaker project contributors
+ * Copyright 2011-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -93,7 +93,7 @@ pcmk_promotion_score_name(const char *rsc_id)
             return NULL;
         }
     }
-    return crm_strdup_printf("master-%s", rsc_id);
+    return pcmk__assert_asprintf("master-%s", rsc_id);
 }
 
 /*!

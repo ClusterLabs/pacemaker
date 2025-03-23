@@ -94,12 +94,12 @@ overflow(void **state)
 {
     char *input = NULL;
 
-    input = crm_strdup_printf("%llu", (unsigned long long) LLONG_MAX + 1);
+    input = pcmk__assert_asprintf("%llu", (unsigned long long) LLONG_MAX + 1);
     assert_parse_ms(input, ERANGE, LLONG_MAX);
     free(input);
 
     // Hopefully we can rely on two's complement integers
-    input = crm_strdup_printf("-%llu", (unsigned long long) LLONG_MIN + 1);
+    input = pcmk__assert_asprintf("-%llu", (unsigned long long) LLONG_MIN + 1);
     assert_parse_ms(input, ERANGE, LLONG_MIN);
     free(input);
 }

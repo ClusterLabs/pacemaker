@@ -292,7 +292,7 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
                    || strstr(xpath, "/" PCMK_XE_RSC_DEFAULTS)) {
             shortpath = strrchr(xpath, '/');
             pcmk__assert(shortpath != NULL);
-            reason = crm_strdup_printf("%s %s", op, shortpath+1);
+            reason = pcmk__assert_asprintf("%s %s", op, shortpath + 1);
             break;
         }
     }

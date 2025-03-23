@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -116,8 +116,8 @@ pcmk__series_filename(const char *directory, const char *series,
                       unsigned int sequence, bool bzip)
 {
     pcmk__assert((directory != NULL) && (series != NULL));
-    return crm_strdup_printf("%s/%s-%u.%s", directory, series, sequence,
-                             (bzip? "bz2" : "raw"));
+    return pcmk__assert_asprintf("%s/%s-%u.%s", directory, series, sequence,
+                                 (bzip? "bz2" : "raw"));
 }
 
 /*!
@@ -142,7 +142,7 @@ pcmk__read_series_sequence(const char *directory, const char *series,
         return EINVAL;
     }
 
-    series_file = crm_strdup_printf("%s/%s.last", directory, series);
+    series_file = pcmk__assert_asprintf("%s/%s.last", directory, series);
     fp = fopen(series_file, "r");
     if (fp == NULL) {
         rc = errno;
@@ -195,7 +195,7 @@ pcmk__write_series_sequence(const char *directory, const char *series,
         sequence = 0;
     }
 
-    series_file = crm_strdup_printf("%s/%s.last", directory, series);
+    series_file = pcmk__assert_asprintf("%s/%s.last", directory, series);
     file_strm = fopen(series_file, "w");
     if (file_strm != NULL) {
         rc = fprintf(file_strm, "%u", sequence);
@@ -238,7 +238,7 @@ pcmk__chown_series_sequence(const char *directory, const char *series,
     if ((directory == NULL) || (series == NULL)) {
         return EINVAL;
     }
-    series_file = crm_strdup_printf("%s/%s.last", directory, series);
+    series_file = pcmk__assert_asprintf("%s/%s.last", directory, series);
     if (chown(series_file, uid, gid) < 0) {
         rc = errno;
     }
@@ -331,7 +331,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
 
     // If file is given, check whether it exists as a regular file
     if (file != NULL) {
-        full_file = crm_strdup_printf("%s/%s", dir, file);
+        full_file = pcmk__assert_asprintf("%s/%s", dir, file);
         target = full_file;
 
         s_res = stat(full_file, &buf);
@@ -629,5 +629,5 @@ pcmk__full_path(const char *filename, const char *dirname)
         return pcmk__str_copy(filename);
     }
     pcmk__assert(dirname != NULL);
-    return crm_strdup_printf("%s/%s", dirname, filename);
+    return pcmk__assert_asprintf("%s/%s", dirname, filename);
 }

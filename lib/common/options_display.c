@@ -349,8 +349,8 @@ add_option_metadata_xml(pcmk__output_t *out,
         type = map_legacy_option_type(type);
 
         if (option->values != NULL) {
-            desc_long_legacy = crm_strdup_printf("%s  Allowed values: %s",
-                                                 desc_long, option->values);
+            desc_long_legacy = pcmk__assert_asprintf("%s  Allowed values: %s",
+                                                     desc_long, option->values);
             desc_long = desc_long_legacy;
         }
 

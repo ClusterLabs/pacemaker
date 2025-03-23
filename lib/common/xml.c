@@ -1700,7 +1700,7 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
             break;
         case pcmk__xml_artefact_ns_base_rng:
         case pcmk__xml_artefact_ns_base_xslt:
-            ret = crm_strdup_printf("%s/base", base);
+            ret = pcmk__assert_asprintf("%s/base", base);
             break;
         default:
             crm_err("XML artefact family specified as %u not recognized", ns);
@@ -1717,17 +1717,17 @@ find_artefact(enum pcmk__xml_artefact_ns ns, const char *path, const char *files
         case pcmk__xml_artefact_ns_legacy_rng:
         case pcmk__xml_artefact_ns_base_rng:
             if (pcmk__ends_with(filespec, ".rng")) {
-                ret = crm_strdup_printf("%s/%s", path, filespec);
+                ret = pcmk__assert_asprintf("%s/%s", path, filespec);
             } else {
-                ret = crm_strdup_printf("%s/%s.rng", path, filespec);
+                ret = pcmk__assert_asprintf("%s/%s.rng", path, filespec);
             }
             break;
         case pcmk__xml_artefact_ns_legacy_xslt:
         case pcmk__xml_artefact_ns_base_xslt:
             if (pcmk__ends_with(filespec, ".xsl")) {
-                ret = crm_strdup_printf("%s/%s", path, filespec);
+                ret = pcmk__assert_asprintf("%s/%s", path, filespec);
             } else {
-                ret = crm_strdup_printf("%s/%s.xsl", path, filespec);
+                ret = pcmk__assert_asprintf("%s/%s.xsl", path, filespec);
             }
             break;
         default:

@@ -157,7 +157,7 @@ static int
 node_id_xml(pcmk__output_t *out, va_list args) {
     uint32_t node_id = va_arg(args, uint32_t);
 
-    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+    char *id_s = pcmk__assert_asprintf("%" PRIu32, node_id);
 
     pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
                                  PCMK_XA_NODEID, id_s,
@@ -192,7 +192,7 @@ simple_node_list_xml(pcmk__output_t *out, va_list args)
 
     for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
         pcmk_controld_api_node_t *node = node_iter->data;
-        char *id_s = crm_strdup_printf("%" PRIu32, node->id);
+        char *id_s = pcmk__assert_asprintf("%" PRIu32, node->id);
 
         pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                      PCMK_XA_ID, id_s,
@@ -224,7 +224,7 @@ node_name_xml(pcmk__output_t *out, va_list args) {
     uint32_t node_id = va_arg(args, uint32_t);
     const char *node_name = va_arg(args, const char *);
 
-    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+    char *id_s = pcmk__assert_asprintf("%" PRIu32, node_id);
 
     pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
                                  PCMK_XA_NODEID, id_s,
@@ -271,7 +271,7 @@ partition_list_xml(pcmk__output_t *out, va_list args)
         pcmk_controld_api_node_t *node = node_iter->data;
 
         if (pcmk__str_eq(node->state, "member", pcmk__str_none)) {
-            char *id_s = crm_strdup_printf("%" PRIu32, node->id);
+            char *id_s = pcmk__assert_asprintf("%" PRIu32, node->id);
 
             pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                          PCMK_XA_ID, id_s,

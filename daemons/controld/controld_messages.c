@@ -680,7 +680,7 @@ handle_failcount_op(xmlNode * stored_msg)
               pcmk__readable_interval(interval_ms), rsc, uname);
 
     if (interval_ms) {
-        interval_spec = crm_strdup_printf("%ums", interval_ms);
+        interval_spec = pcmk__assert_asprintf("%ums", interval_ms);
     }
     update_attrd_clear_failures(uname, rsc, op, interval_spec, is_remote_node);
     free(interval_spec);

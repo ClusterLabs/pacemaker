@@ -1546,14 +1546,14 @@ stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
             return pcmk__xe_get_copy(level, PCMK_XA_TARGET_PATTERN);
 
         case fenced_target_by_attribute:
-            return crm_strdup_printf("%s=%s",
-                                     pcmk__xe_get(level,
-					          PCMK_XA_TARGET_ATTRIBUTE),
-                                     pcmk__xe_get(level,
-					          PCMK_XA_TARGET_VALUE));
+            return pcmk__assert_asprintf("%s=%s",
+                                         pcmk__xe_get(level,
+                                                      PCMK_XA_TARGET_ATTRIBUTE),
+                                         pcmk__xe_get(level,
+                                                      PCMK_XA_TARGET_VALUE));
 
         default:
-            return crm_strdup_printf("unknown-%s", pcmk__xe_id(level));
+            return pcmk__assert_asprintf("unknown-%s", pcmk__xe_id(level));
     }
 }
 
@@ -1640,14 +1640,14 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
 
     if (xml == NULL) {
         if (desc != NULL) {
-            *desc = crm_strdup_printf("missing");
+            *desc = pcmk__assert_asprintf("missing");
         }
     } else {
         local_mode = unpack_level_kind(xml);
         local_target = stonith_level_key(xml, local_mode);
         pcmk__xe_get_int(xml, PCMK_XA_INDEX, &local_id);
         if (desc != NULL) {
-            *desc = crm_strdup_printf("%s[%d]", local_target, local_id);
+            *desc = pcmk__assert_asprintf("%s[%d]", local_target, local_id);
         }
     }
 
@@ -2587,7 +2587,7 @@ log_async_result(const async_command_t *cmd,
 
     // Log the output (which may have multiple lines), if appropriate
     if (output_log_level != LOG_NEVER) {
-        char *prefix = crm_strdup_printf("%s[%d]", cmd->device, pid);
+        char *prefix = pcmk__assert_asprintf("%s[%d]", cmd->device, pid);
 
         crm_log_output(output_log_level, prefix, result->action_stdout);
         free(prefix);

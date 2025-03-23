@@ -284,17 +284,17 @@ systemd_unit_name(const char *name, bool add_instance_name)
 
     if (dot) {
         if (dot != name && *(dot-1) == '@') {
-            return crm_strdup_printf("%.*spacemaker%s",
-                                     (int) (dot - name), name, dot);
+            return pcmk__assert_asprintf("%.*spacemaker%s",
+                                         (int) (dot - name), name, dot);
         } else {
             return pcmk__str_copy(name);
         }
 
     } else if (add_instance_name && *(name+strlen(name)-1) == '@') {
-        return crm_strdup_printf("%spacemaker.service", name);
+        return pcmk__assert_asprintf("%spacemaker.service", name);
 
     } else {
-        return crm_strdup_printf("%s.service", name);
+        return pcmk__assert_asprintf("%s.service", name);
     }
 }
 
@@ -759,17 +759,17 @@ systemd_unit_metadata(const char *name, int timeout)
         desc = systemd_get_property(path, "Description", NULL, NULL, NULL,
                                     timeout);
     } else {
-        desc = crm_strdup_printf("Systemd unit file for %s", name);
+        desc = pcmk__assert_asprintf("Systemd unit file for %s", name);
     }
 
     if (pcmk__xml_needs_escape(desc, pcmk__xml_escape_text)) {
         gchar *escaped = pcmk__xml_escape(desc, pcmk__xml_escape_text);
 
-        meta = crm_strdup_printf(METADATA_FORMAT, name, escaped, name);
+        meta = pcmk__assert_asprintf(METADATA_FORMAT, name, escaped, name);
         g_free(escaped);
 
     } else {
-        meta = crm_strdup_printf(METADATA_FORMAT, name, desc, name);
+        meta = pcmk__assert_asprintf(METADATA_FORMAT, name, desc, name);
     }
 
     free(desc);

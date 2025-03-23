@@ -64,7 +64,9 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
     CRM_CHECK(id != NULL, return);
 
     if (rc == pcmk_ok) {
-        char *filename = crm_strdup_printf(PCMK_SCHEDULER_INPUT_DIR "/pe-core-%s.bz2", id);
+        char *filename = pcmk__assert_asprintf(PCMK_SCHEDULER_INPUT_DIR
+                                               "/pe-core-%s.bz2",
+                                               id);
 
         if (pcmk__xml_write_file(output, filename, true) != pcmk_rc_ok) {
             crm_err("Could not save Cluster Information Base to %s after scheduler crash",
@@ -385,9 +387,10 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         return;
     }
 
-    xpath_string = crm_strdup_printf("%s//%s//nvpair[@name='%s']",
-                                     xpath_base, PCMK_XE_CLUSTER_PROPERTY_SET,
-                                     attr_name);
+    xpath_string = pcmk__assert_asprintf("%s//%s//nvpair[@name='%s']",
+                                         xpath_base,
+                                         PCMK_XE_CLUSTER_PROPERTY_SET,
+                                         attr_name);
     xpathObj = pcmk__xpath_search(xml->doc, xpath_string);
     max = pcmk__xpath_num_results(xpathObj);
     free(xpath_string);

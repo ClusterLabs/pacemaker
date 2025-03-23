@@ -2358,17 +2358,20 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                  * remote nodes to be fenced as well.
                  */
                 pcmk__clear_node_flags(node, pcmk__node_seen);
-                reason = crm_strdup_printf("%s is active there (fencing will be"
-                                           " revoked if remote connection can "
-                                           "be re-established elsewhere)",
-                                           rsc->id);
+                reason = pcmk__assert_asprintf("%s is active there (fencing "
+                                               "will be revoked if remote "
+                                               "connection can be "
+                                               "re-established elsewhere)",
+                                               rsc->id);
             }
             should_fence = TRUE;
         }
 
         if (should_fence) {
             if (reason == NULL) {
-               reason = crm_strdup_printf("%s is thought to be active there", rsc->id);
+               reason = pcmk__assert_asprintf("%s is thought to be active "
+                                              "there",
+                                              rsc->id);
             }
             pe_fence_node(scheduler, node, reason, FALSE);
         }
@@ -2399,7 +2402,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             /* treat it as if it is still running
              * but also mark the node as unclean
              */
-            reason = crm_strdup_printf("%s failed there", rsc->id);
+            reason = pcmk__assert_asprintf("%s failed there", rsc->id);
             pe_fence_node(scheduler, node, reason, FALSE);
             free(reason);
             break;
@@ -3027,11 +3030,12 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
     xmlXPathObject *search;
     char *xpath = NULL;
 
-    xpath = crm_strdup_printf(XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
-                              SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"
-                              SUB_XPATH_LRM_RSC_OP
-                              "[@" PCMK__XA_RC_CODE "!='%d']",
-                              node_name, rsc->id, PCMK_OCF_UNKNOWN);
+    xpath = pcmk__assert_asprintf(XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
+                                  SUB_XPATH_LRM_RESOURCE
+                                  "[@" PCMK_XA_ID "='%s']"
+                                  SUB_XPATH_LRM_RSC_OP
+                                  "[@" PCMK__XA_RC_CODE "!='%d']",
+                                  node_name, rsc->id, PCMK_OCF_UNKNOWN);
 
     search = pcmk__xpath_search(rsc->priv->scheduler->input->doc, xpath);
     result = (pcmk__xpath_num_results(search) == 0);

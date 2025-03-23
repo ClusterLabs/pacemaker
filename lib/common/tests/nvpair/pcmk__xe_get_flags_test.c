@@ -92,7 +92,7 @@ no_attr_default(void **state)
 static void
 invalid_attr_default(void **state)
 {
-    char *too_big = crm_strdup_printf("%lld", UINT32_MAX + 1LL);
+    char *too_big = pcmk__assert_asprintf("%lld", UINT32_MAX + 1LL);
 
     assert_flags("x", pcmk_rc_bad_input, DEFAULT_VALUE);
     assert_flags("-1", pcmk_rc_bad_input, DEFAULT_VALUE);

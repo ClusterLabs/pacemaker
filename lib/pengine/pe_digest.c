@@ -52,7 +52,7 @@ static bool
 attr_not_in_string(xmlAttrPtr a, void *user_data)
 {
     bool filter = false;
-    char *name = crm_strdup_printf(" %s ", (const char *) a->name);
+    char *name = pcmk__assert_asprintf(" %s ", (const char *) a->name);
 
     if (strstr((const char *) user_data, name) == NULL) {
         crm_trace("Filtering %s (not found in '%s')",
@@ -68,7 +68,7 @@ static bool
 attr_in_string(xmlAttrPtr a, void *user_data)
 {
     bool filter = false;
-    char *name = crm_strdup_printf(" %s ", (const char *) a->name);
+    char *name = pcmk__assert_asprintf(" %s ", (const char *) a->name);
 
     if (strstr((const char *) user_data, name) != NULL) {
         crm_trace("Filtering %s (found in '%s')",
@@ -487,7 +487,7 @@ static inline char *
 create_unfencing_summary(const char *rsc_id, const char *agent_type,
                          const char *param_digest)
 {
-    return crm_strdup_printf("%s:%s:%s", rsc_id, agent_type, param_digest);
+    return pcmk__assert_asprintf("%s:%s:%s", rsc_id, agent_type, param_digest);
 }
 
 /*!

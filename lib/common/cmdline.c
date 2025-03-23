@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -100,7 +100,8 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
             *output_group = g_option_group_new("output", N_("Output Options:"), N_("Show output help"), NULL, NULL);
         }
 
-        common_args->output_as_descr = crm_strdup_printf("Specify output format as one of: %s", fmts);
+        common_args->output_as_descr =
+            pcmk__assert_asprintf("Specify output format as one of: %s", fmts);
         output_entries[0].description = common_args->output_as_descr;
         g_option_group_add_entries(*output_group, output_entries);
         g_option_context_add_group(context, *output_group);

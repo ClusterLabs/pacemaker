@@ -194,7 +194,7 @@ attrd_cib_erase_transient_attrs(const char *node)
 
     CRM_CHECK(node != NULL, return);
 
-    xpath = crm_strdup_printf(XPATH_TRANSIENT, node);
+    xpath = pcmk__assert_asprintf(XPATH_TRANSIENT, node);
 
     crm_debug("Clearing transient node attributes for %s from CIB using %s",
               node, xpath);
@@ -392,18 +392,18 @@ static int
 add_unset_attr_update(const attribute_t *attr, const char *attr_id,
                       const char *node_id, const char *set_id)
 {
-    char *xpath = crm_strdup_printf("/" PCMK_XE_CIB
-                                    "/" PCMK_XE_STATUS
-                                    "/" PCMK__XE_NODE_STATE
-                                        "[@" PCMK_XA_ID "='%s']"
-                                    "/" PCMK__XE_TRANSIENT_ATTRIBUTES
-                                        "[@" PCMK_XA_ID "='%s']"
-                                    "/%s[@" PCMK_XA_ID "='%s']"
-                                    "/" PCMK_XE_NVPAIR
-                                        "[@" PCMK_XA_ID "='%s' "
-                                         "and @" PCMK_XA_NAME "='%s']",
-                                    node_id, node_id, attr->set_type, set_id,
-                                    attr_id, attr->id);
+    char *xpath = pcmk__assert_asprintf("/" PCMK_XE_CIB
+                                        "/" PCMK_XE_STATUS
+                                        "/" PCMK__XE_NODE_STATE
+                                            "[@" PCMK_XA_ID "='%s']"
+                                        "/" PCMK__XE_TRANSIENT_ATTRIBUTES
+                                            "[@" PCMK_XA_ID "='%s']"
+                                        "/%s[@" PCMK_XA_ID "='%s']"
+                                        "/" PCMK_XE_NVPAIR
+                                            "[@" PCMK_XA_ID "='%s' "
+                                             "and @" PCMK_XA_NAME "='%s']",
+                                        node_id, node_id, attr->set_type,
+                                        set_id, attr_id, attr->id);
 
     int rc = the_cib->cmds->remove(the_cib, xpath, NULL,
                                    cib_xpath|cib_transaction);

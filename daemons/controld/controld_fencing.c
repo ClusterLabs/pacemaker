@@ -488,8 +488,8 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
     int exec_status;
 
     if (te_client_id == NULL) {
-        te_client_id = crm_strdup_printf("%s.%lu", crm_system_name,
-                                         (unsigned long) getpid());
+        te_client_id = pcmk__assert_asprintf("%s.%lu", crm_system_name,
+                                             (unsigned long) getpid());
     }
 
     if (event == NULL) {

@@ -2351,8 +2351,10 @@ done:
     // For CRM_EX_USAGE, error is already set satisfactorily
     if ((exit_code != CRM_EX_OK) && (exit_code != CRM_EX_USAGE)) {
         if (error != NULL) {
-            char *msg = crm_strdup_printf("%s\nError performing operation: %s",
-                                          error->message, crm_exit_str(exit_code));
+            char *msg = pcmk__assert_asprintf("%s\nError performing operation: "
+                                              "%s",
+                                              error->message,
+                                              crm_exit_str(exit_code));
             g_clear_error(&error);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "%s", msg);
             free(msg);

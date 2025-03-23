@@ -260,6 +260,7 @@ attrd_handle_request(pcmk__request_t *request)
 {
     xmlNode *reply = NULL;
     char *log_msg = NULL;
+    const char *exec_status_s = NULL;
     const char *reason = NULL;
 
     if (attrd_handlers == NULL) {
@@ -281,14 +282,16 @@ attrd_handle_request(pcmk__request_t *request)
         pcmk__xml_free(reply);
     }
 
+    exec_status_s = pcmk_exec_status_str(request->result.execution_status);
     reason = request->result.exit_reason;
-    log_msg = crm_strdup_printf("Processed %s request from %s %s: %s%s%s%s",
-                                request->op, pcmk__request_origin_type(request),
-                                pcmk__request_origin(request),
-                                pcmk_exec_status_str(request->result.execution_status),
-                                (reason == NULL)? "" : " (",
-                                pcmk__s(reason, ""),
-                                (reason == NULL)? "" : ")");
+    log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: %s%s%s%s",
+                                    request->op,
+                                    pcmk__request_origin_type(request),
+                                    pcmk__request_origin(request),
+                                    exec_status_s,
+                                    (reason == NULL)? "" : " (",
+                                    pcmk__s(reason, ""),
+                                    (reason == NULL)? "" : ")");
 
     if (!pcmk__result_ok(&request->result)) {
         crm_warn("%s", log_msg);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,8 +26,8 @@ symlink_schema(const char *tmpdir, const char *target_file, const char *link_fil
     char *oldpath = NULL;
     char *newpath = NULL;
 
-    oldpath = crm_strdup_printf("%s/%s", PCMK__TEST_SCHEMA_DIR, target_file);
-    newpath = crm_strdup_printf("%s/%s", tmpdir, link_file);
+    oldpath = pcmk__assert_asprintf(PCMK__TEST_SCHEMA_DIR "/%s", target_file);
+    newpath = pcmk__assert_asprintf("%s/%s", tmpdir, link_file);
 
     rc = symlink(oldpath, newpath);
 
@@ -57,7 +57,7 @@ setup(void **state)
      * to be anything special - we can just copy existing schemas but give
      * them new names.
      */
-    dir = crm_strdup_printf("%s/test-schemas.XXXXXX", pcmk__get_tmpdir());
+    dir = pcmk__assert_asprintf("%s/test-schemas.XXXXXX", pcmk__get_tmpdir());
     remote_schema_dir = mkdtemp(dir);
 
     if (remote_schema_dir == NULL) {

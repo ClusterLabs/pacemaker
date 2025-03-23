@@ -177,7 +177,7 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
 
     pcmk__if_tracing(
         {
-            char *trace_file = crm_strdup_printf("digest-%s", digest);
+            char *trace_file = pcmk__assert_asprintf("digest-%s", digest);
 
             crm_trace("Saving %s.%s.%s to %s",
                       pcmk__xe_get(xml, PCMK_XA_ADMIN_EPOCH),

@@ -404,7 +404,7 @@ apply_include_exclude(GSList *lst, GError **error) {
 
 static gboolean
 user_include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    char *s = crm_strdup_printf("%s=%s", option_name, optarg);
+    char *s = pcmk__assert_asprintf("%s=%s", option_name, optarg);
 
     options.user_includes_excludes = g_slist_append(options.user_includes_excludes, s);
     return TRUE;
@@ -412,7 +412,7 @@ user_include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer 
 
 static gboolean
 include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    char *s = crm_strdup_printf("%s=%s", option_name, optarg);
+    char *s = pcmk__assert_asprintf("%s=%s", option_name, optarg);
 
     options.includes_excludes = g_slist_append(options.includes_excludes, s);
     return TRUE;
@@ -566,7 +566,7 @@ show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 static gboolean
 show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (optarg != NULL) {
-        char *s = crm_strdup_printf("bans:%s", optarg);
+        char *s = pcmk__assert_asprintf("bans:%s", optarg);
         gboolean rc = user_include_exclude_cb("--include", s, data, err);
         free(s);
         return rc;

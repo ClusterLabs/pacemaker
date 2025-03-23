@@ -786,13 +786,13 @@ cib_process_xpath(const char *op, int options, const char *section,
                     char *new_path = NULL;
 
                     if (id) {
-                        new_path = crm_strdup_printf("/%s[@" PCMK_XA_ID "='%s']"
-                                                     "%s",
-                                                     parent->name, id,
-                                                     pcmk__s(path, ""));
+                        new_path =
+                            pcmk__assert_asprintf("/%s[@" PCMK_XA_ID "='%s']%s",
+                                                  parent->name, id,
+                                                  pcmk__s(path, ""));
                     } else {
-                        new_path = crm_strdup_printf("/%s%s", parent->name,
-                                                     pcmk__s(path, ""));
+                        new_path = pcmk__assert_asprintf("/%s%s", parent->name,
+                                                         pcmk__s(path, ""));
                     }
                     free(path);
                     path = new_path;

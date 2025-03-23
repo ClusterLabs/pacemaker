@@ -445,7 +445,7 @@ get_shadow_file(const char *suffix)
 {
     char *cib_home = NULL;
     char *fullname = NULL;
-    char *name = crm_strdup_printf("shadow.%s", suffix);
+    char *name = pcmk__assert_asprintf("shadow.%s", suffix);
     const char *dir = getenv("CIB_shadow_dir");
 
     if (dir == NULL) {
@@ -478,7 +478,7 @@ get_shadow_file(const char *suffix)
             if (home && home[0] == '/') {
                 int rc = 0;
 
-                cib_home = crm_strdup_printf("%s/.cib", home);
+                cib_home = pcmk__assert_asprintf("%s/.cib", home);
 
                 rc = mkdir(cib_home, 0700);
                 if (rc < 0 && errno != EEXIST) {
@@ -493,7 +493,7 @@ get_shadow_file(const char *suffix)
         }
     }
 
-    fullname = crm_strdup_printf("%s/%s", dir, name);
+    fullname = pcmk__assert_asprintf("%s/%s", dir, name);
     free(cib_home);
     free(name);
 

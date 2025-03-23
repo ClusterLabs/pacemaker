@@ -130,8 +130,8 @@ static gboolean stop_child(pcmk_child_t * child, int signal);
 static inline char *
 subdaemon_path(pcmk_child_t *subdaemon)
 {
-    return crm_strdup_printf(CRM_DAEMON_DIR "/%s",
-                             pcmk__server_name(subdaemon->server));
+    return pcmk__assert_asprintf(CRM_DAEMON_DIR "/%s",
+                                 pcmk__server_name(subdaemon->server));
 }
 
 static bool
@@ -281,8 +281,9 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
 
                     child->flags &= ~child_respawn;
                     fatal_error = TRUE;
-                    msg = crm_strdup_printf("Subdaemon %s[%d] requested panic",
-                                            name, pid);
+                    msg = pcmk__assert_asprintf("Subdaemon %s[%d] requested "
+                                                "panic",
+                                                name, pid);
                     pcmk__panic(msg);
 
                     // Should never get here

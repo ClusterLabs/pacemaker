@@ -1439,8 +1439,8 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake)
     lrmd_private_t *native = lrmd->lrmd_private;
     int rc = pcmk_rc_ok;
 
-    char *name = crm_strdup_printf("pacemaker-remote-%s:%d",
-                                   native->server, native->port);
+    char *name = pcmk__assert_asprintf("pacemaker-remote-%s:%d",
+                                       native->server, native->port);
 
     struct mainloop_fd_callbacks tls_fd_callbacks = {
         .dispatch = lrmd_tls_dispatch,

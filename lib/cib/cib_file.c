@@ -775,7 +775,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
 
     /* If sigfile is not specified, use original file name plus .sig */
     if (sigfile == NULL) {
-        sigfile = local_sigfile = crm_strdup_printf("%s.sig", filename);
+        sigfile = local_sigfile = pcmk__assert_asprintf("%s.sig", filename);
     }
 
     /* Verify that digests match */
@@ -808,8 +808,8 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
 {
     int rc = 0;
     unsigned int seq = 0U;
-    char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);
-    char *cib_digest = crm_strdup_printf("%s.sig", cib_path);
+    char *cib_path = pcmk__assert_asprintf("%s/%s", cib_dirname, cib_filename);
+    char *cib_digest = pcmk__assert_asprintf("%s.sig", cib_path);
     char *backup_path;
     char *backup_digest;
 
@@ -821,7 +821,7 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
     }
     backup_path = pcmk__series_filename(cib_dirname, CIB_SERIES, seq,
                                         CIB_SERIES_BZIP);
-    backup_digest = crm_strdup_printf("%s.sig", backup_path);
+    backup_digest = pcmk__assert_asprintf("%s.sig", backup_path);
 
     /* Remove the old backups if they exist */
     unlink(backup_path);
@@ -928,12 +928,12 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     const char *admin_epoch = pcmk__xe_get(cib_root, PCMK_XA_ADMIN_EPOCH);
 
     /* Determine full CIB and signature pathnames */
-    char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);
-    char *digest_path = crm_strdup_printf("%s.sig", cib_path);
+    char *cib_path = pcmk__assert_asprintf("%s/%s", cib_dirname, cib_filename);
+    char *digest_path = pcmk__assert_asprintf("%s.sig", cib_path);
 
     /* Create temporary file name patterns for writing out CIB and signature */
-    char *tmp_cib = crm_strdup_printf("%s/cib.XXXXXX", cib_dirname);
-    char *tmp_digest = crm_strdup_printf("%s/cib.XXXXXX", cib_dirname);
+    char *tmp_cib = pcmk__assert_asprintf("%s/cib.XXXXXX", cib_dirname);
+    char *tmp_digest = pcmk__assert_asprintf("%s/cib.XXXXXX", cib_dirname);
 
     /* Ensure the admin didn't modify the existing CIB underneath us */
     crm_trace("Reading cluster configuration file %s", cib_path);

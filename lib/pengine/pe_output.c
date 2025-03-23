@@ -188,8 +188,9 @@ static void
 append_dump_text(gpointer key, gpointer value, gpointer user_data)
 {
     char **dump_text = user_data;
-    char *new_text = crm_strdup_printf("%s %s=%s",
-                                       *dump_text, (char *)key, (char *)value);
+    char *new_text = pcmk__assert_asprintf("%s %s=%s",
+                                           *dump_text, (const char *) key,
+                                           (const char *)value);
 
     free(*dump_text);
     *dump_text = new_text;
@@ -215,14 +216,14 @@ static char *
 last_changed_string(const char *last_written, const char *user,
                     const char *client, const char *origin) {
     if (last_written != NULL || user != NULL || client != NULL || origin != NULL) {
-        return crm_strdup_printf("%s%s%s%s%s%s%s",
-                                 last_written ? last_written : "",
-                                 user ? " by " : "",
-                                 user ? user : "",
-                                 client ? " via " : "",
-                                 client ? client : "",
-                                 origin ? " on " : "",
-                                 origin ? origin : "");
+        return pcmk__assert_asprintf("%s%s%s%s%s%s%s",
+                                     pcmk__s(last_written, ""),
+                                     ((user != NULL)? " by " : ""),
+                                     pcmk__s(user, ""),
+                                     ((client != NULL) ? " via " : ""),
+                                     pcmk__s(client, ""),
+                                     ((origin != NULL)? " on " : ""),
+                                     pcmk__s(origin, ""));
     } else {
         return strdup("");
     }
@@ -237,7 +238,7 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 
     if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
         char *pair = pcmk__format_nvpair(PCMK_XA_INTERVAL, interval_ms_s, "ms");
-        interval_str = crm_strdup_printf(" %s", pair);
+        interval_str = pcmk__assert_asprintf(" %s", pair);
         free(pair);
     }
 
@@ -254,32 +255,32 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
         if (epoch > 0) {
             char *epoch_str = pcmk__epoch2str(&epoch, 0);
 
-            last_change_str = crm_strdup_printf(" %s=\"%s\"",
-                                                PCMK_XA_LAST_RC_CHANGE,
-                                                pcmk__s(epoch_str, ""));
+            last_change_str = pcmk__assert_asprintf(" %s=\"%s\"",
+                                                    PCMK_XA_LAST_RC_CHANGE,
+                                                    pcmk__s(epoch_str, ""));
             free(epoch_str);
         }
 
         value = pcmk__xe_get(xml_op, PCMK_XA_EXEC_TIME);
         if (value) {
             char *pair = pcmk__format_nvpair(PCMK_XA_EXEC_TIME, value, "ms");
-            exec_str = crm_strdup_printf(" %s", pair);
+            exec_str = pcmk__assert_asprintf(" %s", pair);
             free(pair);
         }
 
         value = pcmk__xe_get(xml_op, PCMK_XA_QUEUE_TIME);
         if (value) {
             char *pair = pcmk__format_nvpair(PCMK_XA_QUEUE_TIME, value, "ms");
-            queue_str = crm_strdup_printf(" %s", pair);
+            queue_str = pcmk__assert_asprintf(" %s", pair);
             free(pair);
         }
 
-        buf = crm_strdup_printf("(%s) %s:%s%s%s%s rc=%d (%s)", call, task,
-                                interval_str ? interval_str : "",
-                                last_change_str ? last_change_str : "",
-                                exec_str ? exec_str : "",
-                                queue_str ? queue_str : "",
-                                rc, crm_exit_str(rc));
+        buf = pcmk__assert_asprintf("(%s) %s:%s%s%s%s rc=%d (%s)", call, task,
+                                    pcmk__s(interval_str, ""),
+                                    pcmk__s(last_change_str, ""),
+                                    pcmk__s(exec_str, ""),
+                                    pcmk__s(queue_str, ""),
+                                    rc, crm_exit_str(rc));
 
         if (last_change_str) {
             free(last_change_str);
@@ -293,9 +294,9 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
             free(queue_str);
         }
     } else {
-        buf = crm_strdup_printf("(%s) %s%s%s", call, task,
-                                interval_str ? ":" : "",
-                                interval_str ? interval_str : "");
+        buf = pcmk__assert_asprintf("(%s) %s%s%s", call, task,
+                                    ((interval_str != NULL)? ":" : ""),
+                                    pcmk__s(interval_str, ""));
     }
 
     if (interval_str) {
@@ -311,31 +312,32 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
     char *buf = NULL;
 
     if (rsc == NULL) {
-        buf = crm_strdup_printf("%s: orphan", rsc_id);
+        buf = pcmk__assert_asprintf("%s: orphan", rsc_id);
     } else if (all || failcount || last_failure > 0) {
         char *failcount_s = NULL;
         char *lastfail_s = NULL;
 
         if (failcount > 0) {
-            failcount_s = crm_strdup_printf(" %s=%d",
-                                            PCMK_XA_FAIL_COUNT, failcount);
+            failcount_s = pcmk__assert_asprintf(" " PCMK_XA_FAIL_COUNT "=%d",
+                                                failcount);
         } else {
             failcount_s = strdup("");
         }
         if (last_failure > 0) {
             buf = pcmk__epoch2str(&last_failure, 0);
-            lastfail_s = crm_strdup_printf(" %s='%s'",
-                                           PCMK_XA_LAST_FAILURE, buf);
+            lastfail_s = pcmk__assert_asprintf(" " PCMK_XA_LAST_FAILURE "='%s'",
+                                               buf);
             free(buf);
         }
 
-        buf = crm_strdup_printf("%s: " PCMK_META_MIGRATION_THRESHOLD "=%d%s%s",
-                                rsc_id, rsc->priv->ban_after_failures,
-                                failcount_s, pcmk__s(lastfail_s, ""));
+        buf = pcmk__assert_asprintf("%s: " PCMK_META_MIGRATION_THRESHOLD
+                                    "=%d%s%s",
+                                    rsc_id, rsc->priv->ban_after_failures,
+                                    failcount_s, pcmk__s(lastfail_s, ""));
         free(failcount_s);
         free(lastfail_s);
     } else {
-        buf = crm_strdup_printf("%s:", rsc_id);
+        buf = pcmk__assert_asprintf("%s:", rsc_id);
     }
 
     return buf;
@@ -653,9 +655,10 @@ ban_html(pcmk__output_t *out, va_list args) {
 
     char *node_name = pe__node_display_name(pe_node,
                                             pcmk_is_set(show_opts, pcmk_show_node_id));
-    char *buf = crm_strdup_printf("%s\tprevents %s from running %son %s",
-                                  location->id, location->rsc->id,
-                                  role_desc(location->role_filter), node_name);
+    char *buf = pcmk__assert_asprintf("%s\tprevents %s from running %son %s",
+                                      location->id, location->rsc->id,
+                                      role_desc(location->role_filter),
+                                      node_name);
 
     pcmk__output_create_html_node(out, "li", NULL, NULL, buf);
 
@@ -1207,10 +1210,10 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     const char *stop_all_resources = pcmk__flag_text(scheduler->flags,
                                                      pcmk__sched_stop_all);
     char *stonith_timeout_ms_s =
-        crm_strdup_printf("%u", scheduler->priv->fence_timeout_ms);
+        pcmk__assert_asprintf("%u", scheduler->priv->fence_timeout_ms);
 
     char *priority_fencing_delay_ms_s =
-        crm_strdup_printf("%u", scheduler->priv->priority_fencing_ms);
+        pcmk__assert_asprintf("%u", scheduler->priv->priority_fencing_ms);
 
     pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_OPTIONS,
                                  PCMK_XA_STONITH_ENABLED, stonith_enabled,
@@ -1637,7 +1640,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                           |crm_time_log_with_timezone);
 
         pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
-        interval_ms_s = crm_strdup_printf("%u", interval_ms);
+        interval_ms_s = pcmk__assert_asprintf("%u", interval_ms);
 
         pcmk__xe_set_props(node,
                            PCMK_XA_LAST_RC_CHANGE, rc_change,
@@ -2216,17 +2219,17 @@ node_and_op(pcmk__output_t *out, va_list args) {
         node_str = pcmk__native_output_string(rsc, rsc_printable_id(rsc), node,
                                               show_opts, target_role, false);
     } else {
-        node_str = crm_strdup_printf("Unknown resource %s", op_rsc);
+        node_str = pcmk__assert_asprintf("Unknown resource %s", op_rsc);
     }
 
     if (pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
                           &last_change) == pcmk_rc_ok) {
         const char *exec_time = pcmk__xe_get(xml_op, PCMK_XA_EXEC_TIME);
 
-        last_change_str = crm_strdup_printf(", %s='%s', exec=%sms",
-                                            PCMK_XA_LAST_RC_CHANGE,
-                                            pcmk__trim(ctime(&last_change)),
-                                            exec_time);
+        last_change_str = pcmk__assert_asprintf(", " PCMK_XA_LAST_RC_CHANGE
+                                                "='%s', exec=%sms",
+                                                pcmk__trim(ctime(&last_change)),
+                                                exec_time);
     }
 
     out->list_item(out, NULL, "%s: %s (node=%s, call=%s, rc=%s%s): %s",
@@ -2279,10 +2282,10 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
         bool has_provider = pcmk_is_set(pcmk_get_ra_caps(class),
                                         pcmk_ra_cap_provider);
 
-        char *agent_tuple = crm_strdup_printf("%s:%s:%s",
-                                              class,
-                                              (has_provider? provider : ""),
-                                              kind);
+        char *agent_tuple = pcmk__assert_asprintf("%s:%s:%s",
+                                                  class,
+                                                  (has_provider? provider : ""),
+                                                  kind);
 
         pcmk__xe_set_props(node,
                            PCMK_XA_RSC, rsc_printable_id(rsc),
@@ -2402,8 +2405,8 @@ node_capacity(pcmk__output_t *out, va_list args)
     const pcmk_node_t *node = va_arg(args, pcmk_node_t *);
     const char *comment = va_arg(args, const char *);
 
-    char *dump_text = crm_strdup_printf("%s: %s capacity:",
-                                        comment, pcmk__node_name(node));
+    char *dump_text = pcmk__assert_asprintf("%s: %s capacity:",
+                                            comment, pcmk__node_name(node));
 
     g_hash_table_foreach(node->priv->utilization, append_dump_text,
                          &dump_text);
@@ -2826,7 +2829,7 @@ op_history_xml(pcmk__output_t *out, va_list args) {
     free(rc_s);
 
     if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
-        char *s = crm_strdup_printf("%sms", interval_ms_s);
+        char *s = pcmk__assert_asprintf("%sms", interval_ms_s);
         pcmk__xe_set(node, PCMK_XA_INTERVAL, s);
         free(s);
     }
@@ -2844,13 +2847,13 @@ op_history_xml(pcmk__output_t *out, va_list args) {
 
         value = pcmk__xe_get(xml_op, PCMK_XA_EXEC_TIME);
         if (value) {
-            char *s = crm_strdup_printf("%sms", value);
+            char *s = pcmk__assert_asprintf("%sms", value);
             pcmk__xe_set(node, PCMK_XA_EXEC_TIME, s);
             free(s);
         }
         value = pcmk__xe_get(xml_op, PCMK_XA_QUEUE_TIME);
         if (value) {
-            char *s = crm_strdup_printf("%sms", value);
+            char *s = pcmk__assert_asprintf("%sms", value);
             pcmk__xe_set(node, PCMK_XA_QUEUE_TIME, s);
             free(s);
         }
@@ -3184,8 +3187,8 @@ resource_util(pcmk__output_t *out, va_list args)
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
     const char *fn = va_arg(args, const char *);
 
-    char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
-                                        fn, rsc->id, pcmk__node_name(node));
+    char *dump_text = pcmk__assert_asprintf("%s: %s utilization on %s:",
+                                            fn, rsc->id, pcmk__node_name(node));
 
     g_hash_table_foreach(rsc->priv->utilization, append_dump_text,
                          &dump_text);

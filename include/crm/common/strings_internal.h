@@ -17,7 +17,6 @@
 
 #include <crm/common/options.h> // PCMK_VALUE_TRUE, PCMK_VALUE_FALSE
 #include <crm/common/results.h> // pcmk_rc_ok
-#include <crm/common/strings.h> // crm_strdup_printf()
 
 #ifdef __cplusplus
 extern "C" {
@@ -190,6 +189,8 @@ char *pcmk__str_copy_as(const char *file, const char *function, uint32_t line,
 
 void pcmk__str_update(char **str, const char *value);
 
+char *pcmk__assert_asprintf(const char *format, ...) G_GNUC_PRINTF(1, 2);
+
 void pcmk__g_strcat(GString *buffer, ...) G_GNUC_NULL_TERMINATED;
 
 static inline bool
@@ -237,19 +238,19 @@ pcmk__str_empty(const char *s)
 static inline char *
 pcmk__itoa(int an_int)
 {
-    return crm_strdup_printf("%d", an_int);
+    return pcmk__assert_asprintf("%d", an_int);
 }
 
 static inline char *
 pcmk__ftoa(double a_float)
 {
-    return crm_strdup_printf("%f", a_float);
+    return pcmk__assert_asprintf("%f", a_float);
 }
 
 static inline char *
 pcmk__ttoa(time_t epoch_time)
 {
-    return crm_strdup_printf("%lld", (long long) epoch_time);
+    return pcmk__assert_asprintf("%lld", (long long) epoch_time);
 }
 
 // note this returns const not allocated

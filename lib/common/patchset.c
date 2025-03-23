@@ -907,7 +907,7 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
      * @TODO Use POSIX word boundary instead of (/|$), if it works:
      * https://www.regular-expressions.info/wordboundaries.html.
      */
-    element_regex = crm_strdup_printf("^%s(/|$)", element_xpath);
+    element_regex = pcmk__assert_asprintf("^%s(/|$)", element_xpath);
 
     for (const xmlNode *change = pcmk__xe_first_child(patchset, PCMK_XE_CHANGE,
                                                       NULL, NULL);

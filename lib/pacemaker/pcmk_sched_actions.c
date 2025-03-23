@@ -1072,8 +1072,8 @@ pcmk__new_shutdown_action(pcmk_node_t *node)
 
     pcmk__assert(node != NULL);
 
-    shutdown_id = crm_strdup_printf("%s-%s", PCMK_ACTION_DO_SHUTDOWN,
-                                    node->priv->name);
+    shutdown_id = pcmk__assert_asprintf("%s-%s", PCMK_ACTION_DO_SHUTDOWN,
+                                        node->priv->name);
 
     shutdown_op = custom_action(NULL, shutdown_id, PCMK_ACTION_DO_SHUTDOWN,
                                 node, FALSE, node->priv->scheduler);
@@ -1232,8 +1232,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
     if (magic == NULL) {
-        magic = crm_strdup_printf("%d:%d;%s", op->op_status, op->rc,
-                                  (const char *) op->user_data);
+        magic = pcmk__assert_asprintf("%d:%d;%s", op->op_status, op->rc,
+                                      (const char *) op->user_data);
     }
 
     pcmk__xe_set(xml_op, PCMK_XA_ID, op_id);
@@ -1438,7 +1438,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
             const char *op = g_hash_table_lookup(action->meta,
                                                  PCMK__META_STONITH_ACTION);
 
-            task = crm_strdup_printf("Fence (%s)", op);
+            task = pcmk__assert_asprintf("Fence (%s)", op);
 
         } else {
             continue; // Don't display other node action types
@@ -1447,11 +1447,12 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
         if (pcmk__is_guest_or_bundle_node(action->node)) {
             const pcmk_resource_t *remote = action->node->priv->remote;
 
-            node_name = crm_strdup_printf("%s (resource: %s)",
-                                          pcmk__node_name(action->node),
-                                          remote->priv->launcher->id);
+            node_name = pcmk__assert_asprintf("%s (resource: %s)",
+                                              pcmk__node_name(action->node),
+                                              remote->priv->launcher->id);
         } else if (action->node != NULL) {
-            node_name = crm_strdup_printf("%s", pcmk__node_name(action->node));
+            node_name = pcmk__assert_asprintf("%s",
+                                              pcmk__node_name(action->node));
         }
 
         out->message(out, "node-action", task, node_name, action->reason);
@@ -1944,7 +1945,7 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
             char *xpath = NULL;
             xmlNode *history = NULL;
 
-            xpath = crm_strdup_printf(XPATH_NODE_HISTORY, node->priv->name);
+            xpath = pcmk__assert_asprintf(XPATH_NODE_HISTORY, node->priv->name);
             history = pcmk__xpath_find_one(scheduler->input->doc, xpath,
                                            LOG_NEVER);
             free(xpath);

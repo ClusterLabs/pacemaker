@@ -239,8 +239,8 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
     ret = annotate_with_siblings(target);
 
     if (ret == pcmk_rc_ok) {
-        char *content = crm_strdup_printf("ACLs as evaluated for user %s",
-                                          cred);
+        char *content = pcmk__assert_asprintf("ACLs as evaluated for user %s",
+                                              cred);
 
         comment = pcmk__xc_create(target->doc, content);
         xmlAddPrevSibling(xmlDocGetRootElement(target->doc), comment);

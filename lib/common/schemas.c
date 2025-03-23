@@ -34,7 +34,7 @@
 #define SCHEMA_ZERO { .v = { 0, 0 } }
 
 #define schema_strdup_printf(prefix, version, suffix) \
-    crm_strdup_printf(prefix "%u.%u" suffix, (version).v[0], (version).v[1])
+    pcmk__assert_asprintf(prefix "%u.%u" suffix, (version).v[0], (version).v[1])
 
 typedef struct {
     xmlRelaxNGPtr rng;
@@ -418,8 +418,8 @@ load_transforms_from_dir(const char *dir)
         if (sscanf(namelist[i]->d_name, "upgrade-%hhu.%hhu-%hhu.xsl",
                    &(version.v[0]), &(version.v[1]), &order) == 3) {
 
-            char *version_s = crm_strdup_printf("%hhu.%hhu",
-                                                version.v[0], version.v[1]);
+            char *version_s = pcmk__assert_asprintf("%hhu.%hhu",
+                                                    version.v[0], version.v[1]);
             GList *list = g_hash_table_lookup(transforms, version_s);
 
             if (list == NULL) {
@@ -471,8 +471,8 @@ pcmk__load_schemas_from_dir(const char *dir)
         pcmk__schema_version_t version = SCHEMA_ZERO;
 
         if (version_from_filename(namelist[lpc]->d_name, &version)) {
-            char *version_s = crm_strdup_printf("%hhu.%hhu",
-                                                version.v[0], version.v[1]);
+            char *version_s = pcmk__assert_asprintf("%hhu.%hhu",
+                                                    version.v[0], version.v[1]);
             char *orig_key = NULL;
             GList *transform_list = NULL;
 
@@ -1402,7 +1402,8 @@ pcmk__schema_files_later_than(const char *name)
             lst = g_list_prepend(lst, pcmk__str_copy(entry->d_name));
         }
 
-        lst = g_list_prepend(lst, crm_strdup_printf("%s.rng", schema->name));
+        lst = g_list_prepend(lst,
+                             pcmk__assert_asprintf("%s.rng", schema->name));
     }
 
     return lst;
@@ -1469,7 +1470,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
      * just assume it's an RNG file.
      */
     if (!pcmk__ends_with(file, ".rng") && !pcmk__ends_with(file, ".xsl")) {
-        path = crm_strdup_printf("%s.rng", file);
+        path = pcmk__assert_asprintf("%s.rng", file);
     } else {
         path = pcmk__str_copy(file);
     }
