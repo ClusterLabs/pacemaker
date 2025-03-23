@@ -1069,7 +1069,7 @@ ordering_is_invalid(pcmk_action_t *action, pcmk__related_action_t *input)
     /* Prevent user-defined ordering constraints between resources
      * running in a guest node and the resource that defines that node.
      */
-    if (!pcmk_is_set(input->flags, pcmk__ar_guest_allowed)
+    if (!pcmk__is_set(input->flags, pcmk__ar_guest_allowed)
         && (input->action->rsc != NULL)
         && pcmk__rsc_corresponds_to_guest(action->rsc, input->action->node)) {
 
@@ -1138,7 +1138,7 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
 
         // Resources and nodes in maintenance mode won't be touched
 
-        if (pcmk_is_set(action->rsc->flags, pcmk__rsc_maintenance)) {
+        if (pcmk__is_set(action->rsc->flags, pcmk__rsc_maintenance)) {
             pcmk__rsc_trace(action->rsc,
                             "Not ordering %s before shutdown of %s because "
                             "resource in maintenance mode",
@@ -1246,7 +1246,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
     }
 
     if ((first_action != NULL) && (first_action->rsc == rsc)
-        && pcmk_is_set(first_action->flags, pcmk__action_migration_abort)) {
+        && pcmk__is_set(first_action->flags, pcmk__action_migration_abort)) {
 
         pcmk__rsc_trace(rsc,
                         "Detected dangling migration ordering (%s then %s %s)",
@@ -1255,7 +1255,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
     }
 
     if ((first_action == NULL)
-        && !pcmk_is_set(flags, pcmk__ar_first_implies_then)) {
+        && !pcmk__is_set(flags, pcmk__ar_first_implies_then)) {
 
         pcmk__rsc_debug(rsc,
                         "Ignoring ordering %d for %s: No first action found",

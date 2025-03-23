@@ -102,10 +102,10 @@ handle_pecalc_request(pcmk__request_t *request)
     }
 
     // Get appropriate index into series[] array
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_error)
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_processing_error)
         || pcmk__config_has_error) {
         series_id = 0;
-    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_warning)
+    } else if (pcmk__is_set(scheduler->flags, pcmk__sched_processing_warning)
                || pcmk__config_has_warning) {
         series_id = 1;
     } else {

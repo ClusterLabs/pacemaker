@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,6 @@
 #define PCMK__CRM_PENGINE_STATUS_COMPAT__H
 
 #include <stdbool.h>                // bool
-#include <crm/common/util.h>        // pcmk_is_set()
 #include <crm/common/scheduler.h>   // pcmk_resource_t, pcmk__rsc_unique, etc.
 
 #ifdef __cplusplus

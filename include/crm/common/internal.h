@@ -170,6 +170,25 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
 /*!
  * \internal
+ * \brief Convenience alias for \c pcmk_all_flags_set(), to check single flag
+ *
+ * This is truly identical to \c pcmk_all_flags_set() but allows a call that's
+ * shorter and semantically clearer for checking a single flag.
+ *
+ * \param[in] flag_group  Flag group (check whether \p flag is set in this)
+ * \param[in] flag        Flag (check whether this is set in \p flag_group)
+ *
+ * \retval \c true   if \p flag is set in \p flag_group or if \p flag is 0
+ * \retval \c false  otherwise
+ */
+static inline bool
+pcmk__is_set(uint64_t flag_group, uint64_t flag)
+{
+    return pcmk_all_flags_set(flag_group, flag);
+}
+
+/*!
+ * \internal
  * \brief Get readable string for whether specified flags are set
  *
  * \param[in] flag_group    Group of flags to check

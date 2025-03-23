@@ -321,7 +321,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_MODIFY, NULL, section, xml_top,
                          NULL, call_options, user_name);
 
-    if (!pcmk_is_set(call_options, cib_sync_call) && (cib->variant != cib_file)
+    if (!pcmk__is_set(call_options, cib_sync_call) && (cib->variant != cib_file)
         && (rc >= 0)) {
         // For async call, positive rc is the call ID (file always synchronous)
         rc = pcmk_rc_ok;
@@ -402,7 +402,7 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_DELETE, NULL, section, xml_obj,
                          NULL, options, user_name);
 
-    if (!pcmk_is_set(options, cib_sync_call) && (cib->variant != cib_file)
+    if (!pcmk__is_set(options, cib_sync_call) && (cib->variant != cib_file)
         && (rc >= 0)) {
         // For async call, positive rc is the call ID (file always synchronous)
         rc = pcmk_rc_ok;

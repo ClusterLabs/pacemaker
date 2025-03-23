@@ -453,7 +453,7 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
         out->err(out, "Invalid class for %s: %s", resource, rclass);
         return NULL;
 
-    } else if (pcmk_is_set(pcmk_get_ra_caps(rclass), pcmk_ra_cap_provider)
+    } else if (pcmk__is_set(pcmk_get_ra_caps(rclass), pcmk_ra_cap_provider)
                && (rprovider == NULL)) {
         // @TODO query configuration for provider
         out->err(out, "Please specify the provider for resource %s", resource);
@@ -609,8 +609,8 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
         infinity = true;
 
     } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_none)
-               && pcmk_is_set(scheduler->flags,
-                              pcmk__sched_start_failure_fatal)) {
+               && pcmk__is_set(scheduler->flags,
+                               pcmk__sched_start_failure_fatal)) {
         infinity = true;
     }
 

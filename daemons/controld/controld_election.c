@@ -94,7 +94,7 @@ do_election_vote(long long action,
     }
 
     if (not_voting == FALSE) {
-        if (pcmk_is_set(controld_globals.fsa_input_register, R_STARTING)) {
+        if (pcmk__is_set(controld_globals.fsa_input_register, R_STARTING)) {
             not_voting = TRUE;
         }
     }
@@ -137,7 +137,7 @@ do_election_count_vote(long long action,
     ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
     if (pcmk__peer_cache == NULL) {
-        if (!pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+        if (!pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_err("Internal error, no peer cache");
         }
         return;
@@ -154,7 +154,7 @@ do_election_count_vote(long long action,
         case election_lost:
             update_dc(NULL);
 
-            if (pcmk_is_set(controld_globals.fsa_input_register, R_THE_DC)) {
+            if (pcmk__is_set(controld_globals.fsa_input_register, R_THE_DC)) {
                 cib_t *cib_conn = controld_globals.cib_conn;
 
                 register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
@@ -258,7 +258,7 @@ do_dc_release(long long action,
 
     } else if (action & A_DC_RELEASED) {
         crm_info("DC role released");
-        if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+        if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
             pcmk__node_status_t *node = controld_get_local_node_status();
 

@@ -56,7 +56,7 @@ prepend_node_info(gpointer data, gpointer user_data)
 
     ni = pcmk__assert_alloc(1, sizeof(node_info_t));
     ni->node_name = node->priv->name;
-    ni->promoted = pcmk_is_set(rni->rsc->flags, pcmk__rsc_promotable)
+    ni->promoted = pcmk__is_set(rni->rsc->flags, pcmk__rsc_promotable)
                    && (rni->rsc->priv->fns->state(rni->rsc, true)
                        == pcmk_role_promoted);
 
@@ -81,7 +81,7 @@ cli_resource_search(const pcmk_resource_t *rsc, const char *requested_name)
         const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
 
         if (pcmk__is_clone(parent)
-            && !pcmk_is_set(rsc->flags, pcmk__rsc_unique)
+            && !pcmk__is_set(rsc->flags, pcmk__rsc_unique)
             && (rsc->priv->history_id != NULL)
             && pcmk__str_eq(requested_name, rsc->priv->history_id,
                             pcmk__str_none)
@@ -549,7 +549,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
                 crm_debug("Checking %s %d", cons->id, cons->score);
 
-                if (pcmk_is_set(cons->dependent->flags, pcmk__rsc_detect_loop)
+                if (pcmk__is_set(cons->dependent->flags, pcmk__rsc_detect_loop)
                     || (cons->score <= 0)) {
                     continue;
                 }
@@ -808,7 +808,7 @@ rsc_fail_name(const pcmk_resource_t *rsc)
 {
     const char *name = pcmk__s(rsc->priv->history_id, rsc->id);
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
         return strdup(name);
     }
     return clone_strip(name);
@@ -1002,7 +1002,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
             if (force) {
                 nodes = g_list_copy(scheduler->nodes);
 
-            } else if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)) {
+            } else if (pcmk__is_set(rsc->flags, pcmk__rsc_exclusive_probes)) {
                 GHashTableIter iter;
 
                 g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
@@ -1036,7 +1036,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
         return rc;
     }
 
-    if (!pcmk_is_set(node->priv->flags, pcmk__node_probes_allowed)) {
+    if (!pcmk__is_set(node->priv->flags, pcmk__node_probes_allowed)) {
         out->err(out,
                  "Unable to clean up %s because resource discovery disabled on "
                  "%s",
@@ -1156,8 +1156,8 @@ check_role(resource_checks_t *checks)
             break;
 
         case pcmk_role_unpromoted:
-            if (pcmk_is_set(pe__const_top_resource(checks->rsc, false)->flags,
-                            pcmk__rsc_promotable)) {
+            if (pcmk__is_set(pe__const_top_resource(checks->rsc, false)->flags,
+                             pcmk__rsc_promotable)) {
                 checks->flags |= rsc_unpromotable;
             }
             break;
@@ -1733,7 +1733,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         return ENXIO;
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         out->err(out, "Unmanaged resources cannot be restarted.");
         return EAGAIN;
     }
@@ -2020,7 +2020,7 @@ action_is_pending(const pcmk_action_t *action)
 {
     if (pcmk_any_flags_set(action->flags,
                            pcmk__action_optional|pcmk__action_pseudo)
-        || !pcmk_is_set(action->flags, pcmk__action_runnable)
+        || !pcmk__is_set(action->flags, pcmk__action_runnable)
         || pcmk__str_eq(PCMK_ACTION_NOTIFY, action->task, pcmk__str_casei)) {
         return false;
     }
@@ -2307,7 +2307,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     }
 #endif
 
-    if (!pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_cli_exec)) {
+    if (!pcmk__is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_cli_exec)) {
         services__format_result(op, CRM_EX_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
                                 "Manual execution of the %s standard is "
                                 "unsupported", pcmk__s(class, "unspecified"));
@@ -2453,11 +2453,11 @@ cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
     out = scheduler->priv->out;
 
     if (promoted_role_only
-        && !pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
+        && !pcmk__is_set(rsc->flags, pcmk__rsc_promotable)) {
 
         pcmk_resource_t *p = uber_parent(rsc);
 
-        if (pcmk_is_set(p->flags, pcmk__rsc_promotable)) {
+        if (pcmk__is_set(p->flags, pcmk__rsc_promotable)) {
             /* @TODO This is dead code. If rsc is part of a promotable clone,
              * then it has the pcmk__rsc_promotable flag set.
              *
@@ -2489,7 +2489,7 @@ cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
 
     current = pe__find_active_requires(rsc, &count);
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_promotable)) {
         unsigned int promoted_count = 0;
         pcmk_node_t *promoted_node = NULL;
 

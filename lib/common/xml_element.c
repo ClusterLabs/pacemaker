@@ -256,12 +256,12 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
         const char *name = (const char *) attr->name;
         const char *value = pcmk__xml_attr_value(attr);
 
-        if (pcmk_is_set(flags, pcmk__xaf_no_overwrite)
+        if (pcmk__is_set(flags, pcmk__xaf_no_overwrite)
             && (pcmk__xe_get(target, name) != NULL)) {
             continue;
         }
 
-        if (pcmk_is_set(flags, pcmk__xaf_score_update)) {
+        if (pcmk__is_set(flags, pcmk__xaf_score_update)) {
             pcmk__xe_set_score(target, name, value);
         } else {
             pcmk__xe_set(target, name, value);

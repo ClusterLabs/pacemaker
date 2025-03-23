@@ -34,7 +34,7 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
 {
     pcmk_node_t *allowed_node = NULL;
 
-    if (pcmk_is_set(instance->flags, pcmk__rsc_removed)) {
+    if (pcmk__is_set(instance->flags, pcmk__rsc_removed)) {
         pcmk__rsc_trace(instance, "%s cannot run on %s: removed",
                         instance->id, pcmk__node_name(node));
         return false;
@@ -252,7 +252,7 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
 static bool
 did_fail(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
         return true;
     }
 
@@ -542,7 +542,7 @@ increment_parent_count(pcmk_resource_t *instance,
          * shouldn't be possible if the resource is managed, and we won't be
          * able to limit the number of instances assigned to the node.
          */
-        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pcmk__rsc_managed));
+        CRM_LOG_ASSERT(!pcmk__is_set(instance->flags, pcmk__rsc_managed));
 
     } else {
         allowed->assign->count++;
@@ -570,7 +570,7 @@ assign_instance(pcmk_resource_t *instance, const pcmk_node_t *prefer,
     pcmk__rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                     ((prefer == NULL)? "no node" : prefer->priv->name));
 
-    if (pcmk_is_set(instance->flags, pcmk__rsc_assigning)) {
+    if (pcmk__is_set(instance->flags, pcmk__rsc_assigning)) {
         pcmk__rsc_debug(instance,
                         "Assignment loop detected involving %s colocations",
                         instance->id);
@@ -752,8 +752,8 @@ preferred_node(const pcmk_resource_t *instance, int optimal_per_node)
 
     // Check whether instance is active, healthy, and not yet assigned
     if ((instance->priv->active_nodes == NULL)
-        || !pcmk_is_set(instance->flags, pcmk__rsc_unassigned)
-        || pcmk_is_set(instance->flags, pcmk__rsc_failed)) {
+        || !pcmk__is_set(instance->flags, pcmk__rsc_unassigned)
+        || pcmk__is_set(instance->flags, pcmk__rsc_failed)) {
         return NULL;
     }
 
@@ -821,7 +821,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
         int available = max_total - assigned;
 
         instance = iter->data;
-        if (!pcmk_is_set(instance->flags, pcmk__rsc_unassigned)) {
+        if (!pcmk__is_set(instance->flags, pcmk__rsc_unassigned)) {
             continue;   // Already assigned
         }
 
@@ -839,7 +839,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
     for (iter = instances; iter != NULL; iter = iter->next) {
         instance = (pcmk_resource_t *) iter->data;
 
-        if (!pcmk_is_set(instance->flags, pcmk__rsc_unassigned)) {
+        if (!pcmk__is_set(instance->flags, pcmk__rsc_unassigned)) {
             continue; // Already assigned
         }
 
@@ -848,7 +848,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
             if (pcmk__top_allowed_node(instance, current) == NULL) {
                 const char *unmanaged = "";
 
-                if (!pcmk_is_set(instance->flags, pcmk__rsc_managed)) {
+                if (!pcmk__is_set(instance->flags, pcmk__rsc_managed)) {
                     unmanaged = "Unmanaged resource ";
                 }
                 crm_notice("%s%s is running on %s which is no longer allowed",
@@ -934,11 +934,12 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
          iter = iter->next) {
 
         const pcmk_action_t *action = (const pcmk_action_t *) iter->data;
-        const bool optional = pcmk_is_set(action->flags, pcmk__action_optional);
+        const bool optional = pcmk__is_set(action->flags,
+                                           pcmk__action_optional);
 
         if (pcmk__str_eq(PCMK_ACTION_START, action->task, pcmk__str_none)) {
             if (!optional
-                && pcmk_is_set(action->flags, pcmk__action_runnable)) {
+                && pcmk__is_set(action->flags, pcmk__action_runnable)) {
 
                 pcmk__rsc_trace(instance, "Instance is starting due to %s",
                                 action->uuid);
@@ -1007,10 +1008,10 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
 
     // Create pseudo-actions for rsc start and started
     start = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_START,
-                                      !pcmk_is_set(state, instance_starting),
+                                      !pcmk__is_set(state, instance_starting),
                                       true);
     started = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_RUNNING,
-                                        !pcmk_is_set(state, instance_starting),
+                                        !pcmk__is_set(state, instance_starting),
                                         false);
     started->priority = PCMK_SCORE_INFINITY;
     if (pcmk_any_flags_set(state, instance_active|instance_starting)) {
@@ -1019,13 +1020,13 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
 
     // Create pseudo-actions for rsc stop and stopped
     stop = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOP,
-                                     !pcmk_is_set(state, instance_stopping),
+                                     !pcmk__is_set(state, instance_stopping),
                                      true);
     stopped = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOPPED,
-                                        !pcmk_is_set(state, instance_stopping),
+                                        !pcmk__is_set(state, instance_stopping),
                                         true);
     stopped->priority = PCMK_SCORE_INFINITY;
-    if (!pcmk_is_set(state, instance_restarting)) {
+    if (!pcmk__is_set(state, instance_restarting)) {
         pcmk__set_action_flags(stop, pcmk__action_migratable);
     }
 
@@ -1327,12 +1328,16 @@ find_instance_action(const pcmk_action_t *action, const pcmk_resource_t *instanc
         return matching_action;
     }
 
-    if (pcmk_is_set(instance->flags, pcmk__rsc_removed)
+    if (pcmk__is_set(instance->flags, pcmk__rsc_removed)
         || pcmk__is_down_action(action_name)) {
-        crm_trace("No %s action found for %s%s",
-                  action_name,
-                  pcmk_is_set(instance->flags, pcmk__rsc_removed)? "removed " : "",
-                  instance->id);
+
+        const bool removed = pcmk__is_set(instance->flags, pcmk__rsc_removed);
+
+        crm_trace("No %s action found for %s%s", action_name,
+                  (removed? "removed " : ""), instance->id);
+
+    } else if (pcmk__is_down_action(action_name)) {
+        crm_trace("No %s action found for %s", action_name, instance->id);
     } else {
         crm_err("No %s action found for %s to interleave (bug?)",
                 action_name, instance->id);
@@ -1553,7 +1558,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
 
     // Check whether action is runnable
     instance_flags = instance->priv->cmds->action_flags(instance_action, node);
-    if (!pcmk_is_set(instance_flags, pcmk__action_runnable)) {
+    if (!pcmk__is_set(instance_flags, pcmk__action_runnable)) {
         return changed;
     }
 
@@ -1564,7 +1569,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
                                                            type, scheduler);
 
     // Propagate any changes to later actions
-    if (pcmk_is_set(changed, pcmk__updated_then)) {
+    if (pcmk__is_set(changed, pcmk__updated_then)) {
         for (GList *after_iter = instance_action->actions_after;
              after_iter != NULL; after_iter = after_iter->next) {
             pcmk__related_action_t *after = after_iter->data;
@@ -1688,8 +1693,8 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
                                                             node);
 
         // If any instance action is mandatory, so is the collective action
-        if (pcmk_is_set(flags, pcmk__action_optional)
-            && !pcmk_is_set(instance_flags, pcmk__action_optional)) {
+        if (pcmk__is_set(flags, pcmk__action_optional)
+            && !pcmk__is_set(instance_flags, pcmk__action_optional)) {
             pcmk__rsc_trace(instance, "%s is mandatory because %s is",
                             action->uuid, instance_action->uuid);
             pe__clear_action_summary_flags(flags, action,
@@ -1698,7 +1703,7 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
         }
 
         // If any instance action is runnable, so is the collective action
-        if (pcmk_is_set(instance_flags, pcmk__action_runnable)) {
+        if (pcmk__is_set(instance_flags, pcmk__action_runnable)) {
             any_runnable = true;
         }
     }

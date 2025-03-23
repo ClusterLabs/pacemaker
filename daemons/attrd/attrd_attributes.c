@@ -156,9 +156,9 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
     pcmk__xe_set_int(xml, PCMK__XA_ATTR_DAMPENING,
                      pcmk__timeout_ms2s(a->timeout_ms));
     pcmk__xe_set_int(xml, PCMK__XA_ATTR_IS_PRIVATE,
-                     pcmk_is_set(a->flags, attrd_attr_is_private));
+                     pcmk__is_set(a->flags, attrd_attr_is_private));
     pcmk__xe_set_int(xml, PCMK__XA_ATTR_IS_REMOTE,
-                     pcmk_is_set(v->flags, attrd_value_remote));
+                     pcmk__is_set(v->flags, attrd_value_remote));
     pcmk__xe_set_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE, force_write);
 
     return xml;

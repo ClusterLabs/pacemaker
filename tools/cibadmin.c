@@ -392,7 +392,7 @@ cibadmin_output_xml(pcmk__output_t *out, xmlNode *xml, int call_options,
         out->message(out, "cibadmin-rendered-acls", (const char *) rendered);
         xmlFree(rendered);
 
-    } else if (pcmk_is_set(call_options, cib_xpath_address)
+    } else if (pcmk__is_set(call_options, cib_xpath_address)
                && pcmk__xe_is(xml, PCMK__XE_XPATH_QUERY)) {
 
         // @COMPAT Remove when -e/--node-path is removed
@@ -1138,7 +1138,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (pcmk_is_set(cmd_info->flags, cibadmin_cf_unsafe) && !options.force) {
+    if (pcmk__is_set(cmd_info->flags, cibadmin_cf_unsafe) && !options.force) {
         exit_code = CRM_EX_UNSAFE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "The supplied command is considered dangerous. To prevent "
@@ -1198,9 +1198,9 @@ main(int argc, char **argv)
         }
     }
 
-    if (pcmk_is_set(cmd_info->flags, cibadmin_cf_requires_input)) {
-        bool accepts_xpath = pcmk_is_set(cmd_info->flags,
-                                         cibadmin_cf_xpath_input);
+    if (pcmk__is_set(cmd_info->flags, cibadmin_cf_requires_input)) {
+        bool accepts_xpath = pcmk__is_set(cmd_info->flags,
+                                          cibadmin_cf_xpath_input);
 
         /* If true, use options.cib_section (an XPath expression) instead of
          * input XML

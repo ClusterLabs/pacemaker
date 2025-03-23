@@ -87,16 +87,16 @@ find_graph_action_by_id(const pcmk__graph_t *graph, int id)
 static const char *
 synapse_state_str(pcmk__graph_synapse_t *synapse)
 {
-    if (pcmk_is_set(synapse->flags, pcmk__synapse_failed)) {
+    if (pcmk__is_set(synapse->flags, pcmk__synapse_failed)) {
         return "Failed";
 
-    } else if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
+    } else if (pcmk__is_set(synapse->flags, pcmk__synapse_confirmed)) {
         return "Completed";
 
-    } else if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
+    } else if (pcmk__is_set(synapse->flags, pcmk__synapse_executed)) {
         return "In-flight";
 
-    } else if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
+    } else if (pcmk__is_set(synapse->flags, pcmk__synapse_ready)) {
         return "Ready";
     }
     return "Pending";
@@ -124,10 +124,10 @@ synapse_pending_inputs(const pcmk__graph_t *graph,
     for (const GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         const pcmk__graph_action_t *input = (pcmk__graph_action_t *) lpc->data;
 
-        if (pcmk_is_set(input->flags, pcmk__graph_action_failed)) {
+        if (pcmk__is_set(input->flags, pcmk__graph_action_failed)) {
             pcmk__add_word(&pending, 1024, pcmk__xe_id(input->xml));
 
-        } else if (pcmk_is_set(input->flags, pcmk__graph_action_confirmed)) {
+        } else if (pcmk__is_set(input->flags, pcmk__graph_action_confirmed)) {
             // Confirmed successful inputs are not pending
 
         } else if (find_graph_action_by_id(graph, input->id) != NULL) {
@@ -181,7 +181,7 @@ log_synapse(unsigned int log_level, pcmk__graph_t *graph,
     GString *g_pending = NULL;
     const char *pending = "none";
 
-    if (!pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
+    if (!pcmk__is_set(synapse->flags, pcmk__synapse_executed)) {
         g_pending = synapse_pending_inputs(graph, synapse);
 
         if (g_pending != NULL) {
@@ -198,7 +198,7 @@ log_synapse(unsigned int log_level, pcmk__graph_t *graph,
         g_string_free(g_pending, TRUE);
     }
 
-    if (!pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
+    if (!pcmk__is_set(synapse->flags, pcmk__synapse_executed)) {
         log_unresolved_inputs(log_level, graph, synapse);
     }
 }

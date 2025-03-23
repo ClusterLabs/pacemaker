@@ -54,7 +54,7 @@ create_action_name(const pcmk_action_t *action, bool verbose)
 
     if (action->node != NULL) {
         action_host = action->node->priv->name;
-    } else if (!pcmk_is_set(action->flags, pcmk__action_pseudo)) {
+    } else if (!pcmk__is_set(action->flags, pcmk__action_pseudo)) {
         action_host = "<none>";
     }
 
@@ -200,13 +200,13 @@ reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
     scheduler->input = input;
     scheduler->priv->out = out;
     set_effective_date(scheduler, true, use_date);
-    if (pcmk_is_set(flags, pcmk_sim_sanitized)) {
+    if (pcmk__is_set(flags, pcmk_sim_sanitized)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_sanitized);
     }
-    if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_scores)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_output_scores);
     }
-    if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_utilization)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
     cluster_status(scheduler);
@@ -244,23 +244,23 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         const char *color = NULL;
         char *action_name = create_action_name(action, verbose);
 
-        if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
+        if (pcmk__is_set(action->flags, pcmk__action_pseudo)) {
             font = "orange";
         }
 
-        if (pcmk_is_set(action->flags, pcmk__action_added_to_graph)) {
+        if (pcmk__is_set(action->flags, pcmk__action_added_to_graph)) {
             style = PCMK__VALUE_BOLD;
             color = "green";
 
         } else if ((action->rsc != NULL)
-                   && !pcmk_is_set(action->rsc->flags, pcmk__rsc_managed)) {
+                   && !pcmk__is_set(action->rsc->flags, pcmk__rsc_managed)) {
             color = "red";
             font = "purple";
             if (!all_actions) {
                 goto do_not_write;
             }
 
-        } else if (pcmk_is_set(action->flags, pcmk__action_optional)) {
+        } else if (pcmk__is_set(action->flags, pcmk__action_optional)) {
             color = "blue";
             if (!all_actions) {
                 goto do_not_write;
@@ -268,7 +268,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
 
         } else {
             color = "red";
-            CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pcmk__action_runnable));
+            CRM_LOG_ASSERT(!pcmk__is_set(action->flags, pcmk__action_runnable));
         }
 
         pcmk__set_action_flags(action, pcmk__action_added_to_graph);
@@ -296,9 +296,10 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
                 style = PCMK__VALUE_BOLD;
             } else if (before->flags == pcmk__ar_none) {
                 continue;
-            } else if (pcmk_is_set(before->action->flags,
-                                   pcmk__action_added_to_graph)
-                       && pcmk_is_set(action->flags, pcmk__action_added_to_graph)
+            } else if (pcmk__is_set(before->action->flags,
+                                    pcmk__action_added_to_graph)
+                       && pcmk__is_set(action->flags,
+                                       pcmk__action_added_to_graph)
                        && before->flags != pcmk__ar_if_on_same_node_or_target) {
                 optional = false;
             }
@@ -440,10 +441,10 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
     }
 
     scheduler->priv->out = out;
-    if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_scores)) {
         scheduler_flags |= pcmk__sched_output_scores;
     }
-    if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_utilization)) {
         scheduler_flags |= pcmk__sched_show_utilization;
     }
 
@@ -883,9 +884,9 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     reset(scheduler, input, out, use_date, flags);
 
     if (!out->is_quiet(out)) {
-        const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
+        const bool show_pending = pcmk__is_set(flags, pcmk_sim_show_pending);
 
-        if (pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
+        if (pcmk__is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
             printed = out->message(out, "maint-mode", scheduler->flags);
         }
 
@@ -952,12 +953,13 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
                             "Assignment Scores and Utilization Information");
             printed = pcmk_rc_ok;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
+        } else if (pcmk__is_set(scheduler->flags, pcmk__sched_output_scores)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Assignment Scores");
             printed = pcmk_rc_ok;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
+        } else if (pcmk__is_set(scheduler->flags,
+                                pcmk__sched_show_utilization)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Utilization Information");
             printed = pcmk_rc_ok;
@@ -995,8 +997,8 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
         if (dot_file != NULL) {
             rc = write_sim_dotfile(scheduler, dot_file,
-                                   pcmk_is_set(flags, pcmk_sim_all_actions),
-                                   pcmk_is_set(flags, pcmk_sim_verbose));
+                                   pcmk__is_set(flags, pcmk_sim_all_actions),
+                                   pcmk__is_set(flags, pcmk_sim_verbose));
             if (rc != pcmk_rc_ok) {
                 rc = pcmk_rc_dot_error;
                 goto simulate_done;
@@ -1010,7 +1012,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     rc = pcmk_rc_ok;
 
-    if (!pcmk_is_set(flags, pcmk_sim_simulate)) {
+    if (!pcmk__is_set(flags, pcmk_sim_simulate)) {
         goto simulate_done;
     }
 
@@ -1026,10 +1028,10 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     set_effective_date(scheduler, true, use_date);
 
-    if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_scores)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_output_scores);
     }
-    if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_utilization)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
 

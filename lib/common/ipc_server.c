@@ -352,7 +352,7 @@ pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
 
     orig_value = client->queue_max;
 
-    if (pcmk_is_set(client->flags, pcmk__client_privileged)) {
+    if (pcmk__is_set(client->flags, pcmk__client_privileged)) {
         rc = pcmk__scan_ll(qmax, &qmax_ll, 0LL);
         if (rc == pcmk_rc_ok) {
             if ((qmax_ll <= 0LL) || (qmax_ll > UINT_MAX)) {
@@ -416,7 +416,7 @@ pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags)
         *flags = header->flags;
     }
 
-    if (pcmk_is_set(header->flags, crm_ipc_proxied)) {
+    if (pcmk__is_set(header->flags, crm_ipc_proxied)) {
         /* Mark this client as being the endpoint of a proxy connection.
          * Proxy connections responses are sent on the event channel, to avoid
          * blocking the controller serving as proxy.
@@ -718,7 +718,8 @@ id_for_server_event(pcmk__ipc_header_t *header)
 {
     static uint32_t id = 1;
 
-    if (pcmk_is_set(header->flags, crm_ipc_multipart) && (header->part_id != 0)) {
+    if (pcmk__is_set(header->flags, crm_ipc_multipart)
+        && (header->part_id != 0)) {
         return id;
     } else {
         id++;
@@ -733,8 +734,8 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
     pcmk__ipc_header_t *header = iov[0].iov_base;
 
     /* _ALL_ replies to proxied connections need to be sent as events */
-    if (pcmk_is_set(c->flags, pcmk__client_proxied)
-        && !pcmk_is_set(flags, crm_ipc_server_event)) {
+    if (pcmk__is_set(c->flags, pcmk__client_proxied)
+        && !pcmk__is_set(flags, crm_ipc_server_event)) {
         /* The proxied flag lets us know this was originally meant to be a
          * response, even though we're sending it over the event channel.
          */
@@ -743,7 +744,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
     }
 
     pcmk__set_ipc_flags(header->flags, "server event", flags);
-    if (pcmk_is_set(flags, crm_ipc_server_event)) {
+    if (pcmk__is_set(flags, crm_ipc_server_event)) {
         /* Server events don't use an ID, though we do set one in
          * pcmk__ipc_prepare_iov if the event is in response to a particular
          * request.  In that case, we don't want to set a new ID here that
@@ -756,7 +757,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
             header->qb.id = id_for_server_event(header);
         }
 
-        if (pcmk_is_set(flags, crm_ipc_server_free)) {
+        if (pcmk__is_set(flags, crm_ipc_server_free)) {
             crm_trace("Sending the original to %p[%d]", c->ipcs, c->pid);
             add_event(c, iov);
 
@@ -783,10 +784,10 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
         CRM_LOG_ASSERT(header->qb.id != 0);     /* Replying to a specific request */
 
-        if (pcmk_is_set(header->flags, crm_ipc_multipart_end)) {
+        if (pcmk__is_set(header->flags, crm_ipc_multipart_end)) {
             part_text = pcmk__assert_asprintf(" (final part %d) ",
                                               header->part_id);
-        } else if (pcmk_is_set(header->flags, crm_ipc_multipart)) {
+        } else if (pcmk__is_set(header->flags, crm_ipc_multipart)) {
             if (header->part_id == 0) {
                 part_text = pcmk__assert_asprintf(" (initial part %d) ",
                                                   header->part_id);
@@ -817,7 +818,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
         free(part_text);
 
-        if (pcmk_is_set(flags, crm_ipc_server_free)) {
+        if (pcmk__is_set(flags, crm_ipc_server_free)) {
             pcmk_free_ipc_event(iov);
         }
 
@@ -857,8 +858,8 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
      * in processes on the Pacemaker Remote node (like cibadmin or crm_mon)
      * timing out when waiting for a reply.
      */
-    event_or_proxied = pcmk_is_set(flags, crm_ipc_server_event)
-                       || pcmk_is_set(c->flags, pcmk__client_proxied);
+    event_or_proxied = pcmk__is_set(flags, crm_ipc_server_event)
+                       || pcmk__is_set(c->flags, pcmk__client_proxied);
 
     do {
         rc = pcmk__ipc_prepare_iov(request, iov_buffer, index, &iov, NULL);
@@ -967,7 +968,7 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
 {
     xmlNode *ack = NULL;
 
-    if (pcmk_is_set(flags, crm_ipc_client_response)) {
+    if (pcmk__is_set(flags, crm_ipc_client_response)) {
         ack = pcmk__xe_create(NULL, tag);
         pcmk__xe_set(ack, PCMK_XA_FUNCTION, function);
         pcmk__xe_set_int(ack, PCMK__XA_LINE, line);
