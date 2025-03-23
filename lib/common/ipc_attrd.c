@@ -345,10 +345,14 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
 static void
 add_op_attr(xmlNode *op, uint32_t options)
 {
-    if (pcmk_all_flags_set(options, pcmk__node_attr_value | pcmk__node_attr_delay)) {
+    if (pcmk__all_flags_set(options,
+                            pcmk__node_attr_value|pcmk__node_attr_delay)) {
+
         pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE_BOTH);
+
     } else if (pcmk__is_set(options, pcmk__node_attr_value)) {
         pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+
     } else if (pcmk__is_set(options, pcmk__node_attr_delay)) {
         pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE_DELAY);
     }

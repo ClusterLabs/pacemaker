@@ -1254,8 +1254,8 @@ pcmk__primitive_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 static bool
 is_expected_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
-    return pcmk_all_flags_set(rsc->flags,
-                              pcmk__rsc_stop_unexpected|pcmk__rsc_restarting)
+    return pcmk__all_flags_set(rsc->flags,
+                               pcmk__rsc_stop_unexpected|pcmk__rsc_restarting)
            && (rsc->priv->next_role > pcmk_role_stopped)
            && pcmk__same_node(rsc->priv->assigned_node, node);
 }
@@ -1313,8 +1313,9 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 
         if (rsc->priv->assigned_node == NULL) {
             pe_action_set_reason(stop, "node availability", true);
-        } else if (pcmk_all_flags_set(rsc->flags, pcmk__rsc_restarting
-                                                  |pcmk__rsc_stop_unexpected)) {
+        } else if (pcmk__all_flags_set(rsc->flags,
+                                       pcmk__rsc_restarting
+                                       |pcmk__rsc_stop_unexpected)) {
             /* We are stopping a multiply active resource on a node that is
              * not its expected node, and we are still scheduling restart
              * actions, so the stop is for being multiply active.

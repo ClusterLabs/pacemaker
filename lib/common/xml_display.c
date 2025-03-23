@@ -271,7 +271,7 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
         return pcmk_rc_no_output;
     }
 
-    if (pcmk_all_flags_set(nodepriv->flags, pcmk__xf_dirty|pcmk__xf_created)) {
+    if (pcmk__all_flags_set(nodepriv->flags, pcmk__xf_dirty|pcmk__xf_created)) {
         // Newly created
         return pcmk__xml_show(out, PCMK__XML_PREFIX_CREATED, data, depth,
                               options

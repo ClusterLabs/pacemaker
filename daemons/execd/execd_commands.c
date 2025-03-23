@@ -810,7 +810,7 @@ client_disconnect_cleanup(const char *client_id)
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
-        if (pcmk_all_flags_set(rsc->call_opts, lrmd_opt_drop_recurring)) {
+        if (pcmk__is_set(rsc->call_opts, lrmd_opt_drop_recurring)) {
             /* This client is disconnecting, drop any recurring operations
              * it may have initiated on the resource */
             cancel_all_recurring(rsc, client_id);

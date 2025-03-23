@@ -906,14 +906,14 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
     uint32_t instance_state = 0; // State of just this instance
 
     // No need to check further if all conditions have already been detected
-    if (pcmk_all_flags_set(*state, instance_all)) {
+    if (pcmk__all_flags_set(*state, instance_all)) {
         return;
     }
 
     // If instance is a collective (a cloned group), check its children instead
     if (instance->priv->variant > pcmk__rsc_variant_primitive) {
         for (iter = instance->priv->children;
-             (iter != NULL) && !pcmk_all_flags_set(*state, instance_all);
+             (iter != NULL) && !pcmk__all_flags_set(*state, instance_all);
              iter = iter->next) {
             check_instance_state((const pcmk_resource_t *) iter->data, state);
         }
@@ -928,9 +928,9 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
 
     // Check each of the instance's actions for runnable start or stop
     for (iter = instance->priv->actions;
-         (iter != NULL) && !pcmk_all_flags_set(instance_state,
-                                               instance_starting
-                                               |instance_stopping);
+         (iter != NULL)
+         && !pcmk__all_flags_set(instance_state,
+                                 instance_starting|instance_stopping);
          iter = iter->next) {
 
         const pcmk_action_t *action = (const pcmk_action_t *) iter->data;
@@ -970,8 +970,8 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
         }
     }
 
-    if (pcmk_all_flags_set(instance_state,
-                           instance_starting|instance_stopping)) {
+    if (pcmk__all_flags_set(instance_state,
+                            instance_starting|instance_stopping)) {
         instance_state |= instance_restarting;
     }
     *state |= instance_state;

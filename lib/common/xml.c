@@ -149,7 +149,7 @@ pcmk__xml_doc_all_flags_set(const xmlDoc *doc, uint32_t flags)
     if (doc != NULL) {
         xml_doc_private_t *docpriv = doc->_private;
 
-        return (docpriv != NULL) && pcmk_all_flags_set(docpriv->flags, flags);
+        return (docpriv != NULL) && pcmk__all_flags_set(docpriv->flags, flags);
     }
     return false;
 }
