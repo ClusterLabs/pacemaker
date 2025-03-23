@@ -59,21 +59,6 @@ pcmk_any_flags_set(uint64_t flag_group, uint64_t flags_to_check)
     return (flag_group & flags_to_check) != 0;
 }
 
-/*!
- * \brief Check whether all of specified flags are set in a flag group
- *
- * \param[in] flag_group        The flag group being examined
- * \param[in] flags_to_check    Which flags in flag_group should be checked
- *
- * \return true if \p flags_to_check is zero or all of its flags are set in
- *         \p flag_group, or false otherwise
- */
-static inline bool
-pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
-{
-    return (flag_group & flags_to_check) == flags_to_check;
-}
-
 void pcmk_common_cleanup(void);
 char *crm_md5sum(const char *buffer);
 char *crm_generate_uuid(void);
