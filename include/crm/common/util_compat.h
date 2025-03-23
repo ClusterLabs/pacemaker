@@ -44,6 +44,13 @@ is_set(long long word, long long bit)
 
 //! \deprecated Do not use
 static inline bool
+pcmk_any_flags_set(uint64_t flag_group, uint64_t flags_to_check)
+{
+    return (flag_group & flags_to_check) != 0;
+}
+
+//! \deprecated Do not use
+static inline bool
 pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
 {
     return (flag_group & flags_to_check) == flags_to_check;
