@@ -1482,24 +1482,13 @@ static long long
 unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
 {
     const char *member_time = pcmk__xe_get(node_state, PCMK__XA_IN_CCM);
-    int member = 0;
+    bool is_member = false;
 
     if (member_time == NULL) {
         return -1LL;
+    }
 
-    } else if (crm_str_to_boolean(member_time, &member) == 1) {
-        /* If in_ccm=0, we'll return 0 here. If in_ccm=1, either the entry was
-         * recorded as a boolean for a DC < 2.1.7, or the node is pending
-         * shutdown and has left the CPG, in which case it was set to 1 to avoid
-         * fencing for PCMK_OPT_NODE_PENDING_TIMEOUT.
-         *
-         * We return the effective time for in_ccm=1 because what's important to
-         * avoid fencing is that effective time minus this value is less than
-         * the pending node timeout.
-         */
-        return member? (long long) pcmk__scheduler_epoch_time(scheduler) : 0LL;
-
-    } else {
+    if (pcmk__parse_bool(member_time, &is_member) != pcmk_rc_ok) {
         long long when_member = 0LL;
 
         if ((pcmk__scan_ll(member_time, &when_member,
@@ -1510,6 +1499,17 @@ unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
         }
         return when_member;
     }
+
+    /* If in_ccm=0, we'll return 0 here. If in_ccm=1, either the entry was
+     * recorded as a boolean for a DC < 2.1.7, or the node is pending shutdown
+     * and has left the CPG, in which case it was set to 1 to avoid fencing for
+     * PCMK_OPT_NODE_PENDING_TIMEOUT.
+     *
+     * We return the effective time for in_ccm=1 because what's important to
+     * avoid fencing is that effective time minus this value is less than the
+     * pending node timeout.
+     */
+    return is_member? (long long) pcmk__scheduler_epoch_time(scheduler) : 0LL;
 }
 
 /*!
@@ -1559,19 +1559,21 @@ unpack_node_online(const xmlNode *node_state)
 static bool
 unpack_node_terminate(const pcmk_node_t *node, const xmlNode *node_state)
 {
-    long long value = 0LL;
-    int value_i = 0;
+    bool value_b = false;
+    long long value_ll = 0LL;
     int rc = pcmk_rc_ok;
     const char *value_s = pcmk__node_attr(node, PCMK_NODE_ATTR_TERMINATE,
                                           NULL, pcmk__rsc_node_current);
 
     // Value may be boolean or an epoch time
-    if (crm_str_to_boolean(value_s, &value_i) == 1) {
-        return (value_i != 0);
+    if ((value_s != NULL)
+        && (pcmk__parse_bool(value_s, &value_b) == pcmk_rc_ok)) {
+        return value_b;
     }
-    rc = pcmk__scan_ll(value_s, &value, 0LL);
+
+    rc = pcmk__scan_ll(value_s, &value_ll, 0LL);
     if (rc == pcmk_rc_ok) {
-        return (value > 0);
+        return (value_ll > 0);
     }
     crm_warn("Ignoring unrecognized value '%s' for " PCMK_NODE_ATTR_TERMINATE
              "node attribute for %s: %s",

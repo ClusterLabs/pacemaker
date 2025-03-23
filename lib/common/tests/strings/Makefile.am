@@ -13,13 +13,13 @@ include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = crm_is_true_test 		\
-		 crm_str_to_boolean_test 	\
 		 pcmk__add_word_test		\
 		 pcmk__btoa_test		\
 		 pcmk__compress_test		\
 		 pcmk__g_strcat_test		\
 		 pcmk__guint_from_hash_test	\
 		 pcmk__numeric_strcasecmp_test 	\
+		 pcmk__parse_bool_test	 	\
 		 pcmk__parse_ll_range_test	\
 		 pcmk__parse_ms_test		\
 		 pcmk__s_test			\

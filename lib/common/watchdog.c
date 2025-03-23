@@ -237,7 +237,7 @@ pcmk__get_sbd_watchdog_timeout(void)
 bool
 pcmk__get_sbd_sync_resource_startup(void)
 {
-    static int sync_resource_startup = PCMK__SBD_SYNC_DEFAULT;
+    static bool sync_resource_startup = PCMK__SBD_SYNC_DEFAULT;
     static bool checked_sync_resource_startup = false;
 
     if (!checked_sync_resource_startup) {
@@ -247,14 +247,15 @@ pcmk__get_sbd_sync_resource_startup(void)
             crm_trace("Defaulting to %sstart-up synchronization with sbd",
                       (PCMK__SBD_SYNC_DEFAULT? "" : "no "));
 
-        } else if (crm_str_to_boolean(sync_env, &sync_resource_startup) < 0) {
+        } else if (pcmk__parse_bool(sync_env,
+                                    &sync_resource_startup) != pcmk_rc_ok) {
             crm_warn("Defaulting to %sstart-up synchronization with sbd "
                      "because environment value '%s' is invalid",
                      (PCMK__SBD_SYNC_DEFAULT? "" : "no "), sync_env);
         }
         checked_sync_resource_startup = true;
     }
-    return sync_resource_startup != 0;
+    return sync_resource_startup;
 }
 
 // 0 <= return value <= min(LONG_MAX, (2 * SBD timeout))

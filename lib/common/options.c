@@ -1196,7 +1196,7 @@ pcmk__valid_interval_spec(const char *value)
 bool
 pcmk__valid_boolean(const char *value)
 {
-    return crm_str_to_boolean(value, NULL) == 1;
+    return pcmk__parse_bool(value, NULL) == pcmk_rc_ok;
 }
 
 /*!

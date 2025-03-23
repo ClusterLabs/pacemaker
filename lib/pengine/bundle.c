@@ -61,7 +61,7 @@ typedef struct pe__bundle_variant_data_s {
         char *control_port;
         char *container_network;
         char *ip_range_start;
-        gboolean add_host;
+        bool add_host;
         gchar *container_host_options;
         char *container_command;
         char *launcher_options;
@@ -1034,9 +1034,14 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
                                                       PCMK_XA_HOST_INTERFACE);
         bundle_data->control_port = pcmk__xe_get_copy(xml_obj,
                                                       PCMK_XA_CONTROL_PORT);
+
         value = pcmk__xe_get(xml_obj, PCMK_XA_ADD_HOST);
-        if (crm_str_to_boolean(value, &bundle_data->add_host) != 1) {
-            bundle_data->add_host = TRUE;
+        if ((value == NULL)
+            || (pcmk__parse_bool(value,
+                                 &bundle_data->add_host) != pcmk_rc_ok)) {
+
+            // Default to true if unset or invaid
+            bundle_data->add_host = true;
         }
 
         for (xml_child = pcmk__xe_first_child(xml_obj, PCMK_XE_PORT_MAPPING,
