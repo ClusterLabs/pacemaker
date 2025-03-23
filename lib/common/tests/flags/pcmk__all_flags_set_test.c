@@ -13,17 +13,17 @@
 
 static void
 all_set(void **state) {
-    assert_false(pcmk_all_flags_set(0x000, 0x003));
-    assert_true(pcmk_all_flags_set(0x00f, 0x003));
-    assert_false(pcmk_all_flags_set(0x00f, 0x010));
-    assert_false(pcmk_all_flags_set(0x00f, 0x011));
-    assert_true(pcmk_all_flags_set(0x000, 0x000));
-    assert_true(pcmk_all_flags_set(0x00f, 0x000));
+    assert_false(pcmk__all_flags_set(0x000, 0x003));
+    assert_true(pcmk__all_flags_set(0x00f, 0x003));
+    assert_false(pcmk__all_flags_set(0x00f, 0x010));
+    assert_false(pcmk__all_flags_set(0x00f, 0x011));
+    assert_true(pcmk__all_flags_set(0x000, 0x000));
+    assert_true(pcmk__all_flags_set(0x00f, 0x000));
 }
 
 static void
 one_is_set(void **state) {
-    // pcmk__is_set() is a simple macro alias for pcmk_all_flags_set()
+    // pcmk__is_set() is a simple macro alias for pcmk__all_flags_set()
     assert_true(pcmk__is_set(0x00f, 0x001));
     assert_false(pcmk__is_set(0x00f, 0x010));
 }

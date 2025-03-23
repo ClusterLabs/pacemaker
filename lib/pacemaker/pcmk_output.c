@@ -1282,9 +1282,9 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         free(key);
 
     } else if ((stop != NULL)
-               && pcmk_all_flags_set(rsc->flags,
-                                     pcmk__rsc_failed
-                                     |pcmk__rsc_stop_if_failed)) {
+               && pcmk__all_flags_set(rsc->flags,
+                                      pcmk__rsc_failed
+                                      |pcmk__rsc_stop_if_failed)) {
         /* 'stop' may be NULL if the failure was ignored */
         rc = out->message(out, "rsc-action-item", "Recover", rsc, current,
                           next, stop, start);

@@ -395,7 +395,7 @@ test_acl_mode(enum pcmk__xml_flags allowed, enum pcmk__xml_flags requested)
     if (pcmk__is_set(allowed, pcmk__xf_acl_deny)) {
         return false;
 
-    } else if (pcmk_all_flags_set(allowed, requested)) {
+    } else if (pcmk__all_flags_set(allowed, requested)) {
         return true;
 
     } else if (pcmk__is_set(requested, pcmk__xf_acl_read)
