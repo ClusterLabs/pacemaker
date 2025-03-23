@@ -392,14 +392,6 @@ done:
     return rc;
 }
 
-gboolean
-crm_is_true(const char *s)
-{
-    gboolean ret = FALSE;
-
-    return (crm_str_to_boolean(s, &ret) < 0)? FALSE : ret;
-}
-
 int
 crm_str_to_boolean(const char *s, int *ret)
 {
@@ -1482,6 +1474,14 @@ crm_get_msec(const char *input)
         return LLONG_MAX;
     }
     return (msec * multiplier) / divisor;
+}
+
+gboolean
+crm_is_true(const char *s)
+{
+    gboolean ret = FALSE;
+
+    return (crm_str_to_boolean(s, &ret) < 0)? FALSE : ret;
 }
 
 // LCOV_EXCL_STOP

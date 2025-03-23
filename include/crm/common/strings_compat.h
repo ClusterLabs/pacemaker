@@ -7,6 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <glib.h>       // gboolean
+
 #ifndef PCMK__CRM_COMMON_STRINGS_COMPAT__H
 #define PCMK__CRM_COMMON_STRINGS_COMPAT__H
 
@@ -25,6 +27,10 @@ extern "C" {
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 long long crm_get_msec(const char *input);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+gboolean crm_is_true(const char *s);
 
 #ifdef __cplusplus
 }
