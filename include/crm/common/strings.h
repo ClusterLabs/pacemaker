@@ -24,9 +24,6 @@ extern "C" {
 
 int pcmk_parse_interval_spec(const char *input, guint *result_ms);
 
-// NOTE: sbd (as of at least 1.5.2) uses this
-gboolean crm_is_true(const char *s);
-
 int crm_str_to_boolean(const char *s, int *ret);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
