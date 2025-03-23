@@ -59,6 +59,9 @@ pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
 //! \deprecated Do not use
 #define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
 
+//! \deprecated Do not use
+char *crm_md5sum(const char *buffer);
+
 #ifdef __cplusplus
 }
 #endif
