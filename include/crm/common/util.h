@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -73,11 +73,6 @@ pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
 {
     return (flag_group & flags_to_check) == flags_to_check;
 }
-
-/*!
- * \brief Convenience alias for pcmk_all_flags_set(), to check single flag
- */
-#define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
 
 void pcmk_common_cleanup(void);
 char *crm_md5sum(const char *buffer);
