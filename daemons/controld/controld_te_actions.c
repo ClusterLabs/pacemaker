@@ -449,7 +449,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         pcmk__update_graph(controld_globals.transition_graph, action);
         trigger_graph();
 
-    } else if (pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
+    } else if (pcmk__is_set(action->flags, pcmk__graph_action_confirmed)) {
         crm_debug("Action %d: %s %s on %s(timeout %dms) was already confirmed.",
                   action->id, task, task_uuid, on_node, action->timeout);
     } else {
@@ -662,7 +662,7 @@ graph_action_allowed(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 void
 te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph)
 {
-    if (!pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
+    if (!pcmk__is_set(action->flags, pcmk__graph_action_confirmed)) {
         if ((action->type == pcmk__rsc_graph_action)
             && (pcmk__xe_get(action->xml, PCMK__META_ON_NODE) != NULL)) {
             te_update_job_count(action, -1);
@@ -736,7 +736,7 @@ notify_crmd(pcmk__graph_t *graph)
 
         case pcmk__graph_shutdown:
             type = "shutdown";
-            if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+            if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
                 event = I_STOP;
 
             } else {

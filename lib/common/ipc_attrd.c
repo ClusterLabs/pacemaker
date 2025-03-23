@@ -219,7 +219,7 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
     pcmk__xe_set(request, PCMK__XA_ATTR_CLEAR_OPERATION, operation);
     pcmk__xe_set(request, PCMK__XA_ATTR_CLEAR_INTERVAL, interval_spec);
     pcmk__xe_set_int(request, PCMK__XA_ATTR_IS_REMOTE,
-                     pcmk_is_set(options, pcmk__node_attr_remote));
+                     pcmk__is_set(options, pcmk__node_attr_remote));
 
     rc = connect_and_send_attrd_request(api, request);
 
@@ -290,7 +290,7 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
         return EINVAL;
     }
 
-    if (pcmk_is_set(options, pcmk__node_attr_query_all)) {
+    if (pcmk__is_set(options, pcmk__node_attr_query_all)) {
         node = NULL;
     } else {
         target = pcmk__node_attr_target(node);
@@ -347,9 +347,9 @@ add_op_attr(xmlNode *op, uint32_t options)
 {
     if (pcmk_all_flags_set(options, pcmk__node_attr_value | pcmk__node_attr_delay)) {
         pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE_BOTH);
-    } else if (pcmk_is_set(options, pcmk__node_attr_value)) {
+    } else if (pcmk__is_set(options, pcmk__node_attr_value)) {
         pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
-    } else if (pcmk_is_set(options, pcmk__node_attr_delay)) {
+    } else if (pcmk__is_set(options, pcmk__node_attr_delay)) {
         pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE_DELAY);
     }
 }
@@ -358,13 +358,13 @@ static void
 populate_update_op(xmlNode *op, const char *node, const char *name, const char *value,
                    const char *dampen, const char *set, uint32_t options)
 {
-    if (pcmk_is_set(options, pcmk__node_attr_pattern)) {
+    if (pcmk__is_set(options, pcmk__node_attr_pattern)) {
         pcmk__xe_set(op, PCMK__XA_ATTR_REGEX, name);
     } else {
         pcmk__xe_set(op, PCMK__XA_ATTR_NAME, name);
     }
 
-    if (pcmk_is_set(options, pcmk__node_attr_utilization)) {
+    if (pcmk__is_set(options, pcmk__node_attr_utilization)) {
         pcmk__xe_set(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_UTILIZATION);
     } else {
         pcmk__xe_set(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_INSTANCE_ATTRIBUTES);
@@ -377,13 +377,13 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
     pcmk__xe_set(op, PCMK__XA_ATTR_HOST, node);
     pcmk__xe_set(op, PCMK__XA_ATTR_SET, set);
     pcmk__xe_set_int(op, PCMK__XA_ATTR_IS_REMOTE,
-                     pcmk_is_set(options, pcmk__node_attr_remote));
+                     pcmk__is_set(options, pcmk__node_attr_remote));
     pcmk__xe_set_int(op, PCMK__XA_ATTR_IS_PRIVATE,
-                     pcmk_is_set(options, pcmk__node_attr_private));
+                     pcmk__is_set(options, pcmk__node_attr_private));
 
-    if (pcmk_is_set(options, pcmk__node_attr_sync_local)) {
+    if (pcmk__is_set(options, pcmk__node_attr_sync_local)) {
         pcmk__xe_set(op, PCMK__XA_ATTR_SYNC_POINT, PCMK__VALUE_LOCAL);
-    } else if (pcmk_is_set(options, pcmk__node_attr_sync_cluster)) {
+    } else if (pcmk__is_set(options, pcmk__node_attr_sync_cluster)) {
         pcmk__xe_set(op, PCMK__XA_ATTR_SYNC_POINT, PCMK__VALUE_CLUSTER);
     }
 }

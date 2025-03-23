@@ -67,7 +67,7 @@ process_transaction_requests(xmlNodePtr transaction,
         int rc = cib__get_operation(op, &operation);
 
         if (rc == pcmk_rc_ok) {
-            if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)
+            if (!pcmk__is_set(operation->flags, cib__op_attr_transaction)
                 || (host != NULL)) {
 
                 rc = EOPNOTSUPP;

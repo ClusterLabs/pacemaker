@@ -166,11 +166,11 @@ clone_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
 {
     GString *attrs = NULL;
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_promotable)) {
         pcmk__add_separated_word(&attrs, 64, "promotable", ", ");
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
         pcmk__add_separated_word(&attrs, 64, "unique", ", ");
     }
 
@@ -178,10 +178,10 @@ clone_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
         pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_maintenance)) {
         pcmk__add_separated_word(&attrs, 64, "maintenance", ", ");
 
-    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+    } else if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
     }
 
@@ -335,7 +335,7 @@ clone_unpack(pcmk_resource_t *rsc)
     clone_data = pcmk__assert_alloc(1, sizeof(clone_variant_data_t));
     rsc->priv->variant_opaque = clone_data;
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_promotable)) {
         // Use 1 as default but 0 for minimum and invalid
         // @COMPAT PCMK__META_PROMOTED_MAX_LEGACY deprecated since 2.0.0
         clone_data->promoted_max =
@@ -370,7 +370,7 @@ clone_unpack(pcmk_resource_t *rsc)
                                                "pcmk__clone_ordered");
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_unique)
         && (clone_data->clone_node_max > 1)) {
 
         pcmk__config_err("Ignoring " PCMK_META_CLONE_NODE_MAX " of %d for %s "
@@ -503,7 +503,7 @@ is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any)
 {
     bool all = !any;
 
-    if (pcmk_is_set(rsc->flags, flag)) {
+    if (pcmk__is_set(rsc->flags, flag)) {
         if(any) {
             return TRUE;
         }
@@ -662,20 +662,20 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
+        if (pcmk__is_set(show_opts, pcmk_show_clone_detail)) {
             print_full = TRUE;
         }
 
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
             // Print individual instance when unique, unless stopped and removed
             if (partially_active
-                || !pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
+                || !pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
                 print_full = TRUE;
             }
 
         // Everything else in this block is for anonymous clones
 
-        } else if (pcmk_is_set(show_opts, pcmk_show_pending)
+        } else if (pcmk__is_set(show_opts, pcmk_show_pending)
                    && (child_rsc->priv->pending_action != NULL)
                    && (strcmp(child_rsc->priv->pending_action,
                               "probe") != 0)) {
@@ -684,9 +684,9 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
         } else if (partially_active == FALSE) {
             // List stopped instances when requested (except removed instances)
-            if (!pcmk_is_set(child_rsc->flags, pcmk__rsc_removed)
-                && !pcmk_is_set(show_opts, pcmk_show_clone_detail)
-                && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
+            if (!pcmk__is_set(child_rsc->flags, pcmk__rsc_removed)
+                && !pcmk__is_set(show_opts, pcmk_show_clone_detail)
+                && pcmk__is_set(show_opts, pcmk_show_inactive_rscs)) {
                 if (stopped == NULL) {
                     stopped = pcmk__strkey_table(free, free);
                 }
@@ -747,7 +747,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         }
     }
 
-    if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
+    if (pcmk__is_set(show_opts, pcmk_show_clone_detail)) {
         PCMK__OUTPUT_LIST_FOOTER(out, rc);
         return pcmk_rc_ok;
     }
@@ -793,7 +793,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     if ((list_text != NULL) && (list_text->len > 0)) {
         clone_header(out, &rc, rsc, clone_data, desc);
 
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
             if (role == pcmk_role_unpromoted) {
@@ -816,8 +816,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         g_string_free(list_text, TRUE);
     }
 
-    if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
-        if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)
+    if (pcmk__is_set(show_opts, pcmk_show_inactive_rscs)) {
+        if (!pcmk__is_set(rsc->flags, pcmk__rsc_unique)
             && (clone_data->clone_max > active_instances)) {
 
             GList *nIter;
@@ -1050,7 +1050,7 @@ pe__clone_is_ordered(const pcmk_resource_t *clone)
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, clone);
-    return pcmk_is_set(clone_data->flags, pcmk__clone_ordered);
+    return pcmk__is_set(clone_data->flags, pcmk__clone_ordered);
 }
 
 /*!
@@ -1069,7 +1069,7 @@ pe__set_clone_flag(pcmk_resource_t *clone, enum pcmk__clone_flags flag)
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, clone);
-    if (pcmk_is_set(clone_data->flags, flag)) {
+    if (pcmk__is_set(clone_data->flags, flag)) {
         return pcmk_rc_already;
     }
     clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,

@@ -130,10 +130,10 @@ group_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
         pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_maintenance)) {
         pcmk__add_separated_word(&attrs, 64, "maintenance", ", ");
 
-    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+    } else if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
     }
 
@@ -155,11 +155,13 @@ static bool
 skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
                gboolean parent_passes, GList *only_rsc, uint32_t show_opts)
 {
-    bool star_list = pcmk__list_of_1(only_rsc) &&
-                     pcmk__str_eq("*", g_list_first(only_rsc)->data, pcmk__str_none);
-    bool child_filtered = child->priv->fns->is_filtered(child, only_rsc, false);
-    bool child_active = child->priv->fns->active(child, false);
-    bool show_inactive = pcmk_is_set(show_opts, pcmk_show_inactive_rscs);
+    const bool star_list = pcmk__list_of_1(only_rsc)
+                           && pcmk__str_eq("*", g_list_first(only_rsc)->data,
+                                           pcmk__str_none);
+    const bool child_filtered = child->priv->fns->is_filtered(child, only_rsc,
+                                                              false);
+    const bool child_active = child->priv->fns->active(child, false);
+    const bool show_inactive = pcmk__is_set(show_opts, pcmk_show_inactive_rscs);
 
     /* If the resource is in only_rsc by name (so, ignoring "*") then allow
      * it regardless of if it's active or not.
@@ -334,8 +336,9 @@ pe__group_default(pcmk__output_t *out, va_list args)
     gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
                              (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
 
-    bool active = rsc->priv->fns->active(rsc, true);
-    bool partially_active = rsc->priv->fns->active(rsc, false);
+    const bool active = rsc->priv->fns->active(rsc, true);
+    const bool partially_active = rsc->priv->fns->active(rsc, false);
+    const bool count_inactive = !active && partially_active;
 
     desc = pe__resource_description(rsc, show_opts);
 
@@ -343,12 +346,14 @@ pe__group_default(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    if (pcmk_is_set(show_opts, pcmk_show_brief)) {
+    if (pcmk__is_set(show_opts, pcmk_show_brief)) {
         GList *rscs = pe__filter_rsc_list(rsc->priv->children, only_rsc);
 
         if (rscs != NULL) {
-            group_header(out, &rc, rsc, !active && partially_active ? inactive_resources(rsc) : 0,
-                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs), desc);
+            group_header(out, &rc, rsc,
+                         (count_inactive? inactive_resources(rsc) : 0),
+                         pcmk__is_set(show_opts, pcmk_show_inactive_rscs),
+                         desc);
             pe__rscs_brief_output(out, rscs, show_opts | pcmk_show_inactive_rscs);
 
             rc = pcmk_rc_ok;
@@ -364,8 +369,10 @@ pe__group_default(pcmk__output_t *out, va_list args)
                 continue;
             }
 
-            group_header(out, &rc, rsc, !active && partially_active ? inactive_resources(rsc) : 0,
-                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs), desc);
+            group_header(out, &rc, rsc,
+                         (count_inactive? inactive_resources(rsc) : 0),
+                         pcmk__is_set(show_opts, pcmk_show_inactive_rscs),
+                         desc);
             out->message(out, (const char *) child_rsc->priv->xml->name,
                          show_opts, child_rsc, only_node, only_rsc);
         }

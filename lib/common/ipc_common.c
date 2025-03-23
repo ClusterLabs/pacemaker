@@ -107,7 +107,7 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
         return EBADMSG;
     }
 
-    if (pcmk_is_set(header->flags, crm_ipc_multipart_end)) {
+    if (pcmk__is_set(header->flags, crm_ipc_multipart_end)) {
         full_header = (pcmk__ipc_header_t *) (void *) (*buffer)->data;
 
         /* This is the end of a multipart IPC message.  Add the payload of the
@@ -123,7 +123,7 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
                   PRId32 " bytes",
                   header->qb.id, header->part_id, header->qb.size);
 
-    } else if (pcmk_is_set(header->flags, crm_ipc_multipart)) {
+    } else if (pcmk__is_set(header->flags, crm_ipc_multipart)) {
         if (header->part_id == 0) {
             /* This is the first part of a multipart IPC message.  Initialize
              * the buffer with the entire message, including its header.  Do

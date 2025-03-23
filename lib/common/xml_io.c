@@ -214,9 +214,9 @@ static void
 dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
                  int depth)
 {
-    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
-    bool filtered = pcmk_is_set(options, pcmk__xml_fmt_filtered);
-    int spaces = pretty? (2 * depth) : 0;
+    const bool pretty = pcmk__is_set(options, pcmk__xml_fmt_pretty);
+    const bool filtered = pcmk__is_set(options, pcmk__xml_fmt_filtered);
+    const int spaces = pretty? (2 * depth) : 0;
 
     for (int lpc = 0; lpc < spaces; lpc++) {
         g_string_append_c(buffer, ' ');
@@ -274,8 +274,8 @@ static void
 dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
               int depth)
 {
-    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
-    int spaces = pretty? (2 * depth) : 0;
+    const bool pretty = pcmk__is_set(options, pcmk__xml_fmt_pretty);
+    const int spaces = pretty? (2 * depth) : 0;
     const char *content = (const char *) data->content;
     gchar *content_esc = NULL;
 
@@ -309,8 +309,8 @@ static void
 dump_xml_cdata(const xmlNode *data, uint32_t options, GString *buffer,
                int depth)
 {
-    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
-    int spaces = pretty? (2 * depth) : 0;
+    const bool pretty = pcmk__is_set(options, pcmk__xml_fmt_pretty);
+    const int spaces = pretty? (2 * depth) : 0;
 
     for (int lpc = 0; lpc < spaces; lpc++) {
         g_string_append_c(buffer, ' ');
@@ -337,8 +337,8 @@ static void
 dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
                  int depth)
 {
-    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
-    int spaces = pretty? (2 * depth) : 0;
+    const bool pretty = pcmk__is_set(options, pcmk__xml_fmt_pretty);
+    const int spaces = pretty? (2 * depth) : 0;
 
     for (int lpc = 0; lpc < spaces; lpc++) {
         g_string_append_c(buffer, ' ');
@@ -384,7 +384,7 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
             dump_xml_element(data, options, buffer, depth);
             break;
         case XML_TEXT_NODE:
-            if (pcmk_is_set(options, pcmk__xml_fmt_text)) {
+            if (pcmk__is_set(options, pcmk__xml_fmt_text)) {
                 dump_xml_text(data, options, buffer, depth);
             }
             break;

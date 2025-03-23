@@ -354,7 +354,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
         }
     }
 
-    if ((current == NULL) && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
+    if ((current == NULL) && pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
         // Don't log stopped removed resources
         return;
     }
@@ -520,7 +520,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     node->assign->count++;
     pcmk__consume_node_capacity(node->priv->utilization, rsc);
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_show_utilization)) {
         pcmk__output_t *out = scheduler->priv->out;
 
         out->message(out, "resource-util", rsc, node, __func__);
@@ -600,7 +600,7 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     // If we're ignoring failures, also ignore the migration threshold
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_ignore_failure)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_ignore_failure)) {
         return false;
     }
 
@@ -612,7 +612,7 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     // If failed resource is anonymous clone instance, we'll force clone away
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
         rsc_to_ban = uber_parent(rsc);
     }
 

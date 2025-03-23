@@ -52,7 +52,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
     pcmk__xe_set(xml, PCMK__XA_SRC, from);
 
     peer = pcmk__get_node(0, from, NULL, pcmk__node_search_cluster_member);
-    if (!pcmk_is_set(peer->processes, crm_proc_cpg)) {
+    if (!pcmk__is_set(peer->processes, crm_proc_cpg)) {
         /* If we can still talk to our peer process on that node, then it must
          * be part of the corosync membership
          */
@@ -78,7 +78,7 @@ crmd_quorum_callback(unsigned long long seq, gboolean quorate)
 static void
 crmd_cs_destroy(gpointer user_data)
 {
-    if (!pcmk_is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
         crm_crit("Lost connection to cluster layer, shutting down");
         crmd_exit(CRM_EX_DISCONNECT);
     }

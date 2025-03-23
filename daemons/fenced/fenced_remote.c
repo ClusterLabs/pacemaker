@@ -140,7 +140,7 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
     if (!props->executed[data->op->phase]
         && (!data->verified_only || props->verified)
         && ((data->support_action_only == fenced_df_none)
-            || pcmk_is_set(props->device_support_flags,
+            || pcmk__is_set(props->device_support_flags,
                            data->support_action_only))) {
         ++(data->count);
     }
@@ -193,7 +193,7 @@ find_peer_device(const remote_fencing_op_t *op, const peer_device_info_t *peer,
         return NULL;
     }
     if ((support_action_only != fenced_df_none)
-        && !pcmk_is_set(props->device_support_flags, support_action_only)) {
+        && !pcmk__is_set(props->device_support_flags, support_action_only)) {
         return NULL;
     }
     if (props->executed[op->phase] || props->disallowed[op->phase]) {
@@ -1405,7 +1405,7 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
     GList *iter = NULL;
     gboolean verified_devices_only = (options & FIND_PEER_VERIFIED_ONLY) ? TRUE : FALSE;
 
-    if (!device && pcmk_is_set(op->call_options, st_opt_topology)) {
+    if ((device == NULL) && pcmk__is_set(op->call_options, st_opt_topology)) {
         return NULL;
     }
 
@@ -1422,8 +1422,7 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
             continue;
         }
 
-        if (pcmk_is_set(op->call_options, st_opt_topology)) {
-
+        if (pcmk__is_set(op->call_options, st_opt_topology)) {
             if (grab_peer_device(op, peer, device, verified_devices_only)) {
                 return peer;
             }
@@ -1491,7 +1490,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
          * phase of a remapped "reboot", because we ignore errors in that case)
          */
     } while ((op->phase != st_phase_on)
-             && pcmk_is_set(op->call_options, st_opt_topology)
+             && pcmk__is_set(op->call_options, st_opt_topology)
              && (advance_topology_level(op, false) == pcmk_rc_ok));
 
     /* With a simple watchdog fencing configuration without a topology,
@@ -1622,7 +1621,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
     long long total_timeout = 0;
     stonith_topology_t *tp = find_topology_for_host(op->target);
 
-    if (pcmk_is_set(op->call_options, st_opt_topology) && tp) {
+    if (pcmk__is_set(op->call_options, st_opt_topology) && (tp != NULL)) {
         int i;
         GList *device_list = NULL;
         GList *iter = NULL;
@@ -1908,7 +1907,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
     }
 
     timeout = op->base_timeout;
-    if ((peer == NULL) && !pcmk_is_set(op->call_options, st_opt_topology)) {
+    if ((peer == NULL) && !pcmk__is_set(op->call_options, st_opt_topology)) {
         peer = stonith_choose_peer(op);
     }
 
@@ -1921,7 +1920,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                  op->total_timeout, op->target, op->client_name, op->id);
     }
 
-    if (pcmk_is_set(op->call_options, st_opt_topology) && op->devices) {
+    if (pcmk__is_set(op->call_options, st_opt_topology)
+        && (op->devices != NULL)) {
         /* Ignore the caller's peer preference if topology is in use, because
          * that peer might not have access to the required device. With
          * topology, stonith_choose_peer() removes the device from further
@@ -2067,7 +2067,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             pcmk__set_result(&op->result, CRM_EX_ERROR,
                              PCMK_EXEC_NO_FENCE_DEVICE, NULL);
         } else {
-            if (pcmk_is_set(op->call_options, st_opt_topology)) {
+            if (pcmk__is_set(op->call_options, st_opt_topology)) {
                 pcmk__reset_result(&op->result);
                 pcmk__set_result(&op->result, CRM_EX_ERROR,
                                  PCMK_EXEC_NO_FENCE_DEVICE, NULL);
@@ -2391,7 +2391,7 @@ process_remote_stonith_query(xmlNode *msg)
 
     pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 
-    if (pcmk_is_set(op->call_options, st_opt_topology)) {
+    if (pcmk__is_set(op->call_options, st_opt_topology)) {
         /* If we start the fencing before all the topology results are in,
          * it is possible fencing levels will be skipped because of the missing
          * query results. */
@@ -2519,7 +2519,7 @@ fenced_process_fencing_reply(xmlNode *msg)
         return;
     }
 
-    if (pcmk_is_set(op->call_options, st_opt_topology)) {
+    if (pcmk__is_set(op->call_options, st_opt_topology)) {
         const char *device = NULL;
         const char *reason = op->result.exit_reason;
 
