@@ -1811,7 +1811,8 @@ node_html(pcmk__output_t *out, va_list args) {
         xmlNode *item_node = NULL;
         xmlNode *child = NULL;
 
-        if (pcmk_all_flags_set(show_opts, pcmk_show_brief | pcmk_show_rscs_by_node)) {
+        if (pcmk__all_flags_set(show_opts,
+                                pcmk_show_brief|pcmk_show_rscs_by_node)) {
             GList *rscs = pe__filter_rsc_list(node->details->running_rsc, only_rsc);
 
             out->begin_list(out, NULL, NULL, "%s:", node_name);

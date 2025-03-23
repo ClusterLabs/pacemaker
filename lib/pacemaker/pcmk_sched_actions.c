@@ -899,8 +899,9 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
     if (pcmk__is_set(type, pcmk__ar_unmigratable_then_blocks)
         && pcmk__is_set(filter, pcmk__action_optional)) {
 
-        if (!pcmk_all_flags_set(then->flags, pcmk__action_migratable
-                                             |pcmk__action_runnable)) {
+        if (!pcmk__all_flags_set(then->flags,
+                                 pcmk__action_migratable
+                                 |pcmk__action_runnable)) {
             clear_action_flag_because(first, pcmk__action_runnable, then);
         }
 

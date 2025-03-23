@@ -156,7 +156,7 @@ option_list_default(pcmk__output_t *out, va_list args)
          option->name != NULL; option++) {
 
         // Store deprecated and advanced options to display later if appropriate
-        if (pcmk_all_flags_set(option->flags, filter)) {
+        if (pcmk__all_flags_set(option->flags, filter)) {
             if (pcmk__is_set(option->flags, pcmk__opt_deprecated)) {
                 if (show_deprecated) {
                     deprecated = g_slist_prepend(deprecated, (gpointer) option);
@@ -464,7 +464,7 @@ option_list_xml(pcmk__output_t *out, va_list args)
     for (const pcmk__cluster_option_t *option = option_list;
          option->name != NULL; option++) {
 
-        if (pcmk_all_flags_set(option->flags, filter)) {
+        if (pcmk__all_flags_set(option->flags, filter)) {
             add_option_metadata_xml(out, option);
         }
     }

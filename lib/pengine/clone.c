@@ -1093,7 +1093,7 @@ pe__clone_flag_is_set(const pcmk_resource_t *clone, uint32_t flags)
     get_clone_variant_data(clone_data, clone);
     pcmk__assert(clone_data != NULL);
 
-    return pcmk_all_flags_set(clone_data->flags, flags);
+    return pcmk__all_flags_set(clone_data->flags, flags);
 }
 
 /*!

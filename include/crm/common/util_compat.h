@@ -33,7 +33,7 @@ void crm_gnutls_global_init(void);
 bool crm_is_daemon_name(const char *name);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-//! \deprecated Use pcmk_all_flags_set() instead
+//! \deprecated Do not use
 static inline gboolean
 is_set(long long word, long long bit)
 {

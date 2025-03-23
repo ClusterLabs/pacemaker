@@ -420,9 +420,9 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
     if (quorum) {
         controld_set_global_flags(controld_ever_had_quorum);
 
-    } else if (pcmk_all_flags_set(controld_globals.flags,
-                                  controld_ever_had_quorum
-                                  |controld_no_quorum_panic)) {
+    } else if (pcmk__all_flags_set(controld_globals.flags,
+                                   controld_ever_had_quorum
+                                   |controld_no_quorum_panic)) {
         pcmk__panic("Quorum lost");
     }
 

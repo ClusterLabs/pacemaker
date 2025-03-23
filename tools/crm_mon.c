@@ -1563,7 +1563,7 @@ main(int argc, char **argv)
     /* Sync up the initial value of interactive_fence_level with whatever was set with
      * --include/--exclude= options.
      */
-    if (pcmk_all_flags_set(show, pcmk_section_fencing_all)) {
+    if (pcmk__all_flags_set(show, pcmk_section_fencing_all)) {
         interactive_fence_level = 3;
     } else if (pcmk__is_set(show, pcmk_section_fence_worked)) {
         interactive_fence_level = 2;
@@ -1997,9 +1997,10 @@ mon_refresh_display(gpointer user_data)
         return G_SOURCE_REMOVE;
     }
 
-    if (fence_history == pcmk__fence_history_full &&
-        !pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
-        output_format != mon_output_xml) {
+    if ((fence_history == pcmk__fence_history_full)
+        && !pcmk__all_flags_set(show, pcmk_section_fencing_all)
+        && (output_format != mon_output_xml)) {
+
         fence_history = pcmk__fence_history_reduced;
     }
 
