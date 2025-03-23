@@ -1510,7 +1510,6 @@ int
 pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value)
 {
     const char *xml_value = NULL;
-    int ret, rc;
 
     if (node == NULL) {
         return ENODATA;
@@ -1524,13 +1523,7 @@ pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value)
         return ENODATA;
     }
 
-    rc = crm_str_to_boolean(xml_value, &ret);
-    if (rc == 1) {
-        *value = ret;
-        return pcmk_rc_ok;
-    } else {
-        return pcmk_rc_bad_input;
-    }
+    return pcmk__parse_bool(xml_value, value);
 }
 
 /*!

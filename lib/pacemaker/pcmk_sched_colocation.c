@@ -457,15 +457,14 @@ unpack_influence(const char *coloc_id, const pcmk_resource_t *rsc,
                  const char *influence_s)
 {
     if (influence_s != NULL) {
-        int influence_i = 0;
+        bool influence = false;
 
-        if (crm_str_to_boolean(influence_s, &influence_i) < 0) {
-            pcmk__config_err("Constraint '%s' has invalid value for "
-                             PCMK_XA_INFLUENCE " (using default)",
-                             coloc_id);
-        } else {
-            return (influence_i == 0)? pcmk__coloc_none : pcmk__coloc_influence;
+        if (pcmk__parse_bool(influence_s, &influence) == pcmk_rc_ok) {
+            return (influence? pcmk__coloc_influence : pcmk__coloc_none);
         }
+        pcmk__config_err("Constraint '%s' has invalid value for "
+                         PCMK_XA_INFLUENCE " (using default)",
+                         coloc_id);
     }
     if (pcmk_is_set(rsc->flags, pcmk__rsc_critical)) {
         return pcmk__coloc_influence;

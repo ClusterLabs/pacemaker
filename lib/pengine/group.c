@@ -78,14 +78,12 @@ static void
 set_group_flag(pcmk_resource_t *group, const char *option, uint32_t flag,
                uint32_t wo_bit)
 {
-    const char *value_s = NULL;
-    int value = 0;
+    const char *value_s = g_hash_table_lookup(group->priv->meta, option);
+    bool value = false;
 
-    value_s = g_hash_table_lookup(group->priv->meta, option);
-
-    // We don't actually need the null check but it speeds up the common case
-    if ((value_s == NULL) || (crm_str_to_boolean(value_s, &value) < 0)
-        || (value != 0)) {
+    if ((value_s == NULL) || (pcmk__parse_bool(value_s, &value) != pcmk_rc_ok)
+        || value) {
+        // Set flag if value is unset, invalid, or true
         group_variant_data_t *group_data = group->priv->variant_opaque;
 
         group_data->flags |= flag;

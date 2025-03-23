@@ -807,6 +807,46 @@ crm_strdup_printf(char const *format, ...)
     return string;
 }
 
+/*!
+ * \internal
+ * \brief Parse a boolean value from a string
+ *
+ * Valid input strings (case-insensitive) are as follows:
+ * * \c PCMK_VALUE_TRUE, \c "on", \c "yes", \c "y", or \c "1" for \c true
+ * * \c PCMK_VALUE_FALSE, \c PCMK_VALUE_OFF, \c "no", \c "n", or \c "0" for
+ *   \c false
+ *
+ * \param[in]  input   Input string
+ * \param[out] result  Where to store parsed boolean value (can be \c NULL)
+ *
+ * \retval \c true if \p input was successfully parsed to a boolean value
+ * \retval \c false otherwise
+ */
+int
+pcmk__parse_bool(const char *input, bool *result)
+{
+    bool local_result = false;
+
+    CRM_CHECK(input != NULL, return EINVAL);
+
+    if (pcmk__strcase_any_of(input, PCMK_VALUE_TRUE, "on", "yes", "y", "1",
+                             NULL)) {
+        local_result = true;
+
+    } else if (pcmk__strcase_any_of(input, PCMK_VALUE_FALSE, PCMK_VALUE_OFF,
+                                    "no", "n", "0", NULL)) {
+        local_result = false;
+
+    } else {
+        return pcmk_rc_bad_input;
+    }
+
+    if (result != NULL) {
+        *result = local_result;
+    }
+    return pcmk_rc_ok;
+}
+
 int
 pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
 {
