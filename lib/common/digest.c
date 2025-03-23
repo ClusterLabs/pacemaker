@@ -301,30 +301,6 @@ pcmk__xa_filterable(const char *name)
     return false;
 }
 
-char *
-crm_md5sum(const char *buffer)
-{
-    char *digest = NULL;
-    gchar *raw_digest = NULL;
-
-    if (buffer == NULL) {
-        return NULL;
-    }
-
-    raw_digest = g_compute_checksum_for_string(G_CHECKSUM_MD5, buffer, -1);
-
-    if (raw_digest == NULL) {
-        crm_err("Failed to calculate hash");
-        return NULL;
-    }
-
-    digest = pcmk__str_copy(raw_digest);
-    g_free(raw_digest);
-
-    crm_trace("Digest %s.", digest);
-    return digest;
-}
-
 // Return true if a is an attribute that should be filtered
 static bool
 should_filter_for_digest(xmlAttrPtr a, void *user_data)
@@ -387,6 +363,7 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
+#include <crm/common/util_compat.h>         // crm_md5sum()
 #include <crm/common/xml_compat.h>
 #include <crm/common/xml_element_compat.h>
 
@@ -430,6 +407,30 @@ calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
     }
     crm_trace("Using v2 digest algorithm for %s", version);
     return pcmk__digest_xml(input, do_filter);
+}
+
+char *
+crm_md5sum(const char *buffer)
+{
+    char *digest = NULL;
+    gchar *raw_digest = NULL;
+
+    if (buffer == NULL) {
+        return NULL;
+    }
+
+    raw_digest = g_compute_checksum_for_string(G_CHECKSUM_MD5, buffer, -1);
+
+    if (raw_digest == NULL) {
+        crm_err("Failed to calculate hash");
+        return NULL;
+    }
+
+    digest = pcmk__str_copy(raw_digest);
+    g_free(raw_digest);
+
+    crm_trace("Digest %s.", digest);
+    return digest;
 }
 
 // LCOV_EXCL_STOP
