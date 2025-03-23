@@ -392,30 +392,6 @@ done:
     return rc;
 }
 
-int
-crm_str_to_boolean(const char *s, int *ret)
-{
-    if (s == NULL) {
-        return -1;
-    }
-
-    if (pcmk__strcase_any_of(s, PCMK_VALUE_TRUE, "on", "yes", "y", "1", NULL)) {
-        if (ret != NULL) {
-            *ret = TRUE;
-        }
-        return 1;
-    }
-
-    if (pcmk__strcase_any_of(s, PCMK_VALUE_FALSE, PCMK_VALUE_OFF, "no", "n",
-                             "0", NULL)) {
-        if (ret != NULL) {
-            *ret = FALSE;
-        }
-        return 1;
-    }
-    return -1;
-}
-
 /*!
  * \internal
  * \brief Replace any trailing newlines in a string with \0's
@@ -1482,6 +1458,30 @@ crm_is_true(const char *s)
     gboolean ret = FALSE;
 
     return (crm_str_to_boolean(s, &ret) < 0)? FALSE : ret;
+}
+
+int
+crm_str_to_boolean(const char *s, int *ret)
+{
+    if (s == NULL) {
+        return -1;
+    }
+
+    if (pcmk__strcase_any_of(s, PCMK_VALUE_TRUE, "on", "yes", "y", "1", NULL)) {
+        if (ret != NULL) {
+            *ret = TRUE;
+        }
+        return 1;
+    }
+
+    if (pcmk__strcase_any_of(s, PCMK_VALUE_FALSE, PCMK_VALUE_OFF, "no", "n",
+                             "0", NULL)) {
+        if (ret != NULL) {
+            *ret = FALSE;
+        }
+        return 1;
+    }
+    return -1;
 }
 
 // LCOV_EXCL_STOP
