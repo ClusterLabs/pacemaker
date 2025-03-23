@@ -59,7 +59,7 @@ lrm_connection_destroy(void)
 static char *
 make_stop_id(const char *rsc, int call_id)
 {
-    return crm_strdup_printf("%s:%d", rsc, call_id);
+    return pcmk__assert_asprintf("%s:%d", rsc, call_id);
 }
 
 static void
@@ -650,7 +650,7 @@ void
 controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id)
 {
     if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
-        char *now_s = crm_strdup_printf("%lld", (long long) time(NULL));
+        char *now_s = pcmk__assert_asprintf("%lld", (long long) time(NULL));
 
         crm_debug("Triggering a refresh after %s cleaned %s", from_sys, rsc_id);
         cib__update_node_attr(controld_globals.logger_out,
@@ -2164,9 +2164,9 @@ log_executor_event(const lrmd_event_data_t *op, const char *op_key,
      * level, so just raise to notice if it looks like a failure.
      */
     if ((op->output != NULL) && (op->rc != PCMK_OCF_OK)) {
-        char *prefix = crm_strdup_printf(PCMK__OP_FMT "@%s output",
-                                         op->rsc_id, op->op_type,
-                                         op->interval_ms, node_name);
+        char *prefix = pcmk__assert_asprintf(PCMK__OP_FMT "@%s output",
+                                             op->rsc_id, op->op_type,
+                                             op->interval_ms, node_name);
 
         crm_log_output(LOG_NOTICE, prefix, op->output);
         free(prefix);

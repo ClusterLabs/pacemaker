@@ -26,15 +26,17 @@ colocations_header(pcmk_resource_t *rsc, pcmk__colocation_t *cons,
     char *retval = NULL;
 
     if (cons->primary_role > pcmk_role_started) {
-        retval = crm_strdup_printf("%s (score=%s, %s role=%s, id=%s)",
-                                   rsc->id, pcmk_readable_score(cons->score),
-                                   (dependents? "needs" : "with"),
-                                   pcmk_role_text(cons->primary_role),
-                                   cons->id);
+        retval = pcmk__assert_asprintf("%s (score=%s, %s role=%s, id=%s)",
+                                       rsc->id,
+                                       pcmk_readable_score(cons->score),
+                                       (dependents? "needs" : "with"),
+                                       pcmk_role_text(cons->primary_role),
+                                       cons->id);
     } else {
-        retval = crm_strdup_printf("%s (score=%s, id=%s)",
-                                   rsc->id, pcmk_readable_score(cons->score),
-                                   cons->id);
+        retval = pcmk__assert_asprintf("%s (score=%s, id=%s)",
+                                       rsc->id,
+                                       pcmk_readable_score(cons->score),
+                                       cons->id);
     }
     return retval;
 }
@@ -151,60 +153,60 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     if (need_role && (origin == NULL)) {
         /* Starting and promoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s",
-                                    pcmk_role_text(rsc->priv->orig_role),
-                                    pcmk_role_text(rsc->priv->next_role),
-                                    pcmk__node_name(destination));
+        details = pcmk__assert_asprintf("%s -> %s %s",
+                                        pcmk_role_text(rsc->priv->orig_role),
+                                        pcmk_role_text(rsc->priv->next_role),
+                                        pcmk__node_name(destination));
 
     } else if (origin == NULL) {
         /* Starting a resource */
-        details = crm_strdup_printf("%s", pcmk__node_name(destination));
+        details = pcmk__assert_asprintf("%s", pcmk__node_name(destination));
 
     } else if (need_role && (destination == NULL)) {
         /* Stopping a promotable clone instance */
-        details = crm_strdup_printf("%s %s",
-                                    pcmk_role_text(rsc->priv->orig_role),
-                                    pcmk__node_name(origin));
+        details = pcmk__assert_asprintf("%s %s",
+                                        pcmk_role_text(rsc->priv->orig_role),
+                                        pcmk__node_name(origin));
 
     } else if (destination == NULL) {
         /* Stopping a resource */
-        details = crm_strdup_printf("%s", pcmk__node_name(origin));
+        details = pcmk__assert_asprintf("%s", pcmk__node_name(origin));
 
     } else if (need_role && same_role && same_host) {
         /* Recovering, restarting or re-promoting a promotable clone instance */
-        details = crm_strdup_printf("%s %s",
-                                    pcmk_role_text(rsc->priv->orig_role),
-                                    pcmk__node_name(origin));
+        details = pcmk__assert_asprintf("%s %s",
+                                        pcmk_role_text(rsc->priv->orig_role),
+                                        pcmk__node_name(origin));
 
     } else if (same_role && same_host) {
         /* Recovering or Restarting a normal resource */
-        details = crm_strdup_printf("%s", pcmk__node_name(origin));
+        details = pcmk__assert_asprintf("%s", pcmk__node_name(origin));
 
     } else if (need_role && same_role) {
         /* Moving a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", pcmk__node_name(origin),
-                                    pcmk__node_name(destination),
-                                    pcmk_role_text(rsc->priv->orig_role));
+        details = pcmk__assert_asprintf("%s -> %s %s", pcmk__node_name(origin),
+                                        pcmk__node_name(destination),
+                                        pcmk_role_text(rsc->priv->orig_role));
 
     } else if (same_role) {
         /* Moving a normal resource */
-        details = crm_strdup_printf("%s -> %s", pcmk__node_name(origin),
-                                    pcmk__node_name(destination));
+        details = pcmk__assert_asprintf("%s -> %s", pcmk__node_name(origin),
+                                        pcmk__node_name(destination));
 
     } else if (same_host) {
         /* Promoting or demoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s",
-                                    pcmk_role_text(rsc->priv->orig_role),
-                                    pcmk_role_text(rsc->priv->next_role),
-                                    pcmk__node_name(origin));
+        details = pcmk__assert_asprintf("%s -> %s %s",
+                                        pcmk_role_text(rsc->priv->orig_role),
+                                        pcmk_role_text(rsc->priv->next_role),
+                                        pcmk__node_name(origin));
 
     } else {
         /* Moving and promoting/demoting */
-        details = crm_strdup_printf("%s %s -> %s %s",
-                                    pcmk_role_text(rsc->priv->orig_role),
-                                    pcmk__node_name(origin),
-                                    pcmk_role_text(rsc->priv->next_role),
-                                    pcmk__node_name(destination));
+        details = pcmk__assert_asprintf("%s %s -> %s %s",
+                                        pcmk_role_text(rsc->priv->orig_role),
+                                        pcmk__node_name(origin),
+                                        pcmk_role_text(rsc->priv->next_role),
+                                        pcmk__node_name(destination));
     }
 
     len = strlen(details);
@@ -214,10 +216,10 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     if ((source->reason != NULL)
         && !pcmk_is_set(action->flags, pcmk__action_runnable)) {
-        reason = crm_strdup_printf("due to %s (blocked)", source->reason);
+        reason = pcmk__assert_asprintf("due to %s (blocked)", source->reason);
 
     } else if (source->reason) {
-        reason = crm_strdup_printf("due to %s", source->reason);
+        reason = pcmk__assert_asprintf("due to %s", source->reason);
 
     } else if (!pcmk_is_set(action->flags, pcmk__action_runnable)) {
         reason = strdup("blocked");
@@ -777,9 +779,9 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
                                          |crm_time_log_with_timezone);
     }
 
-    msg = crm_strdup_printf("Status of %s: '%s' (last updated %s)",
-                            sys_from, state_s,
-                            pcmk__s(last_updated_s, "at unknown time"));
+    msg = pcmk__assert_asprintf("Status of %s: '%s' (last updated %s)",
+                                sys_from, state_s,
+                                pcmk__s(last_updated_s, "at unknown time"));
     pcmk__output_create_html_node(out, "li", NULL, NULL, msg);
 
     free(msg);
@@ -992,13 +994,14 @@ digests_text(pcmk__output_t *out, va_list args)
     const char *node_desc = "unknown node";
 
     if (interval_ms != 0) {
-        action_desc = crm_strdup_printf("%ums-interval %s action", interval_ms,
-                                        ((task == NULL)? "unknown" : task));
+        action_desc = pcmk__assert_asprintf("%ums-interval %s action",
+                                            interval_ms,
+                                            pcmk__s(task, "unknown"));
     } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         action_desc = strdup("probe action");
     } else {
-        action_desc = crm_strdup_printf("%s action",
-                                        ((task == NULL)? "unknown" : task));
+        action_desc = pcmk__assert_asprintf("%s action",
+                                            pcmk__s(task, "unknown"));
     }
     if ((rsc != NULL) && (rsc->id != NULL)) {
         rsc_desc = rsc->id;
@@ -1055,7 +1058,7 @@ digests_xml(pcmk__output_t *out, va_list args)
     guint interval_ms = va_arg(args, guint);
     const pcmk__op_digest_t *digests = va_arg(args, const pcmk__op_digest_t *);
 
-    char *interval_s = crm_strdup_printf("%ums", interval_ms);
+    char *interval_s = pcmk__assert_asprintf("%ums", interval_ms);
     xmlNode *xml = NULL;
 
     xml = pcmk__output_create_xml_node(out, PCMK_XE_DIGESTS,
@@ -1394,7 +1397,7 @@ node_info_xml(pcmk__output_t *out, va_list args)
     bool have_quorum = (bool) va_arg(args, int);
     bool is_remote = (bool) va_arg(args, int);
 
-    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+    char *id_s = pcmk__assert_asprintf("%" PRIu32, node_id);
 
     pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
                                  PCMK_XA_NODEID, id_s,

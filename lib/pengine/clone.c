@@ -860,14 +860,17 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                     probe_op = pe__failed_probe_for_rsc(rsc,
                                                         node->priv->name);
                     if (probe_op != NULL) {
-                        int rc;
+                        int rc = pcmk_rc_ok;
+                        char *key = pcmk__str_copy(node->priv->name);
+                        char *value = NULL;
 
                         pcmk__scan_min_int(pcmk__xe_get(probe_op,
                                                         PCMK__XA_RC_CODE),
                                            &rc, 0);
-                        g_hash_table_insert(stopped, strdup(node->priv->name),
-                                            crm_strdup_printf("Stopped (%s)",
-                                                              crm_exit_str(rc)));
+                        value = pcmk__assert_asprintf("Stopped (%s)",
+                                                      crm_exit_str(rc));
+                        g_hash_table_insert(stopped, key, value);
+
                     } else {
                         pcmk__insert_dup(stopped, node->priv->name, state);
                     }

@@ -232,8 +232,9 @@ synthesize_timeout_event(const pcmk__graph_action_t *action, int target_rc)
         if (router_node == NULL) {
             router_node = target;
         }
-        dynamic_reason = crm_strdup_printf("Controller on %s did not return "
-                                           "result in time", router_node);
+        dynamic_reason = pcmk__assert_asprintf("Controller on %s did not "
+                                               "return result in time",
+                                               router_node);
         reason = dynamic_reason;
     }
 

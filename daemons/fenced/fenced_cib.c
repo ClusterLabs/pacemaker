@@ -308,7 +308,7 @@ update_cib_stonith_devices(const xmlNode *patchset)
 
             const char *shortpath = strrchr(xpath, '/');
 
-            reason = crm_strdup_printf("%s %s", op, shortpath + 1);
+            reason = pcmk__assert_asprintf("%s %s", op, shortpath + 1);
             break;
         }
     }

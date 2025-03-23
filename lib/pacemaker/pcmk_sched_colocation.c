@@ -1100,7 +1100,7 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
                     const pcmk_resource_t *reason)
 {
     GList *iter = NULL;
-    char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
+    char *reason_text = pcmk__assert_asprintf("colocation with %s", reason->id);
 
     for (iter = rsc->priv->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;

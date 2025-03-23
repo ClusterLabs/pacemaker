@@ -358,10 +358,10 @@ set_danger_error(const char *reason, bool for_shadow, bool show_mismatch,
     if (show_mismatch
         && !pcmk__str_eq(active, options.instance, pcmk__str_null_matches)) {
 
-        full = crm_strdup_printf("%s.\nAdditionally, the supplied shadow "
-                                 "instance (%s) is not the same as the active "
-                                 "one (%s)",
-                                reason, options.instance, active);
+        full = pcmk__assert_asprintf("%s.\nAdditionally, the supplied shadow "
+                                     "instance (%s) is not the same as the "
+                                     "active one (%s)",
+                                     reason, options.instance, active);
         reason = full;
     }
 
@@ -412,8 +412,9 @@ check_file_exists(const char *filename, bool should_exist, GError **error)
     struct stat buf;
 
     if (!should_exist && (stat(filename, &buf) == 0)) {
-        char *reason = crm_strdup_printf("A shadow instance '%s' already "
-                                         "exists", options.instance);
+        char *reason = pcmk__assert_asprintf("A shadow instance '%s' already "
+                                             "exists",
+                                             options.instance);
 
         exit_code = CRM_EX_CANTCREAT;
         set_danger_error(reason, true, false, error);
@@ -557,7 +558,7 @@ write_shadow_file(const xmlNode *xml, const char *filename, bool reset,
 static inline char *
 get_shadow_prompt(void)
 {
-    return crm_strdup_printf("shadow[%.40s] # ", options.instance);
+    return pcmk__assert_asprintf("shadow[%.40s] # ", options.instance);
 }
 
 /*!
@@ -611,9 +612,9 @@ shadow_setup(pcmk__output_t *out, bool do_switch, GError **error)
             prefix = "To switch to the named shadow instance";
         }
 
-        msg = crm_strdup_printf("%s, enter the following into your shell:\n"
-                                "\texport CIB_shadow=%s",
-                                prefix, options.instance);
+        msg = pcmk__assert_asprintf("%s, enter the following into your shell:\n"
+                                    "\texport CIB_shadow=%s",
+                                    prefix, options.instance);
         out->message(out, "instruction", msg);
         free(msg);
     }

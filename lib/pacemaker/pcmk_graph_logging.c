@@ -163,9 +163,9 @@ log_synapse_action(unsigned int log_level, pcmk__graph_synapse_t *synapse,
 {
     const char *key = pcmk__xe_get(action->xml, PCMK__XA_OPERATION_KEY);
     const char *host = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
-    char *desc = crm_strdup_printf("%s %s op %s",
-                                   synapse_state_str(synapse),
-                                   actiontype2text(action->type), key);
+    char *desc = pcmk__assert_asprintf("%s %s op %s",
+                                       synapse_state_str(synapse),
+                                       actiontype2text(action->type), key);
 
     do_crm_log(log_level,
                "[Action %4d]: %-50s%s%s (priority: %d, waiting: %s)",

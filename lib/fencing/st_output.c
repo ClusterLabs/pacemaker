@@ -330,7 +330,8 @@ last_fenced_html(pcmk__output_t *out, va_list args) {
     time_t when = va_arg(args, time_t);
 
     if (when) {
-        char *buf = crm_strdup_printf("Node %s last fenced at: %s", target, ctime(&when));
+        char *buf = pcmk__assert_asprintf("Node %s last fenced at: %s", target,
+                                          ctime(&when));
         pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
         return pcmk_rc_ok;
@@ -531,15 +532,17 @@ validate_agent_html(pcmk__output_t *out, va_list args) {
     const char *output = va_arg(args, const char *);
     const char *error_output = va_arg(args, const char *);
     int rc = va_arg(args, int);
+    const char *rc_s = (rc == pcmk_rc_ok)? "succeeded" : "failed";
 
     if (device) {
-        char *buf = crm_strdup_printf("Validation of %s on %s %s", agent, device,
-                                      rc ? "failed" : "succeeded");
+        char *buf = pcmk__assert_asprintf("Validation of %s on %s %s", agent,
+                                          device, rc_s);
+
         pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
     } else {
-        char *buf = crm_strdup_printf("Validation of %s %s", agent,
-                                      rc ? "failed" : "succeeded");
+        char *buf = pcmk__assert_asprintf("Validation of %s %s", agent, rc_s);
+
         pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
     }

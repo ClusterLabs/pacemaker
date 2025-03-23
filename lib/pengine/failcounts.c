@@ -91,12 +91,12 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * Ideally, we'd unpack the operation before this point, and pass in a
      * meta-attributes table that takes all that into consideration.
      */
-    char *xpath = crm_strdup_printf("//" PCMK_XE_PRIMITIVE
-                                    "[@" PCMK_XA_ID "='%s']"
-                                    "//" PCMK_XE_OP
-                                    "[@" PCMK_META_ON_FAIL
-                                        "='" PCMK_VALUE_BLOCK "']",
-                                    xml_name);
+    char *xpath = pcmk__assert_asprintf("//" PCMK_XE_PRIMITIVE
+                                        "[@" PCMK_XA_ID "='%s']"
+                                        "//" PCMK_XE_OP
+                                        "[@" PCMK_META_ON_FAIL
+                                            "='" PCMK_VALUE_BLOCK "']",
+                                        xml_name);
 
     xmlXPathObject *xpathObj = pcmk__xpath_search(rsc->priv->xml->doc, xpath);
     gboolean should_block = FALSE;
@@ -135,10 +135,10 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                   "/" PCMK__XE_LRM_RSC_OP "[@" PCMK_XA_OPERATION "='%s']"   \
                   "[@" PCMK_META_INTERVAL "='%u']"
 
-                lrm_op_xpath = crm_strdup_printf(XPATH_FMT,
-                                                 node->priv->name, xml_name,
-                                                 conf_op_name,
-                                                 conf_op_interval_ms);
+                lrm_op_xpath = pcmk__assert_asprintf(XPATH_FMT,
+                                                     node->priv->name, xml_name,
+                                                     conf_op_name,
+                                                     conf_op_interval_ms);
                 lrm_op_xpathObj = pcmk__xpath_search(scheduler->input->doc,
                                                      lrm_op_xpath);
 
@@ -217,8 +217,8 @@ generate_fail_regex(const char *prefix, const char *rsc_name, bool is_unique,
      */
     const char *instance_pattern = (is_unique? "" : "(:[0-9]+)?");
 
-    pattern = crm_strdup_printf("^%s-%s%s%s$", prefix, rsc_name,
-                                instance_pattern, op_pattern);
+    pattern = pcmk__assert_asprintf("^%s-%s%s%s$", prefix, rsc_name,
+                                    instance_pattern, op_pattern);
     if (regcomp(re, pattern, REG_EXTENDED|REG_NOSUB) != 0) {
         free(pattern);
         return EINVAL;

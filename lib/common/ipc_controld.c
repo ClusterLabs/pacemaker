@@ -337,8 +337,8 @@ create_controller_request(const pcmk_ipc_api_t *api, const char *op,
     } else {
         sys_to = CRM_SYSTEM_CRMD;
     }
-    sender_system = crm_strdup_printf("%s_%s", private->client_uuid,
-                                      pcmk__s(crm_system_name, "client"));
+    sender_system = pcmk__assert_asprintf("%s_%s", private->client_uuid,
+                                          pcmk__s(crm_system_name, "client"));
     request = pcmk__new_request(pcmk_ipc_controld, sender_system, node, sys_to,
                                 op, msg_data);
     free(sender_system);
@@ -656,7 +656,7 @@ create_hello_message(const char *uuid, const char *client_name,
     // @TODO Nothing uses this. Drop, or keep for debugging?
     pcmk__xe_set(hello_node, PCMK__XA_CLIENT_UUID, uuid);
 
-    sender_system = crm_strdup_printf("%s_%s", uuid, client_name);
+    sender_system = pcmk__assert_asprintf("%s_%s", uuid, client_name);
     hello = pcmk__new_request(pcmk_ipc_controld, sender_system, NULL, NULL,
                               CRM_OP_HELLO, hello_node);
     free(sender_system);

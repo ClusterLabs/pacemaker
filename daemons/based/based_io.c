@@ -43,7 +43,7 @@ static void
 cib_rename(const char *old)
 {
     int new_fd;
-    char *new = crm_strdup_printf("%s/cib.auto.XXXXXX", cib_root);
+    char *new = pcmk__assert_asprintf("%s/cib.auto.XXXXXX", cib_root);
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     new_fd = mkstemp(new);
@@ -91,7 +91,7 @@ static int cib_archive_filter(const struct dirent * a)
     int rc = 0;
     // Looking for regular files starting with "cib-" and not ending in .sig
     struct stat s;
-    char *a_path = crm_strdup_printf("%s/%s", cib_root, a->d_name);
+    char *a_path = pcmk__assert_asprintf("%s/%s", cib_root, a->d_name);
 
     if(stat(a_path, &s) != 0) {
         rc = errno;
@@ -126,8 +126,8 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
     time_t a_age = 0;
     time_t b_age = 0;
 
-    char *a_path = crm_strdup_printf("%s/%s", cib_root, a[0]->d_name);
-    char *b_path = crm_strdup_printf("%s/%s", cib_root, b[0]->d_name);
+    char *a_path = pcmk__assert_asprintf("%s/%s", cib_root, a[0]->d_name);
+    char *b_path = pcmk__assert_asprintf("%s/%s", cib_root, b[0]->d_name);
 
     if(stat(a_path, &buf) == 0) {
         a_age = buf.st_ctime;
@@ -167,15 +167,15 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    sigfile = crm_strdup_printf("%s.sig", file);
+    sigfile = pcmk__assert_asprintf("%s.sig", file);
     if (pcmk__daemon_can_write(dir, file) == FALSE
             || pcmk__daemon_can_write(dir, sigfile) == FALSE) {
         cib_status = -EACCES;
         return NULL;
     }
 
-    filename = crm_strdup_printf("%s/%s", dir, file);
-    sigfilepath = crm_strdup_printf("%s/%s", dir, sigfile);
+    filename = pcmk__assert_asprintf("%s/%s", dir, file);
+    sigfilepath = pcmk__assert_asprintf("%s/%s", dir, sigfile);
     free(sigfile);
 
     cib_status = pcmk_ok;
@@ -196,8 +196,9 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
         lpc--;
 
-        filename = crm_strdup_printf("%s/%s", cib_root, namelist[lpc]->d_name);
-        sigfile = crm_strdup_printf("%s.sig", filename);
+        filename = pcmk__assert_asprintf("%s/%s", cib_root,
+                                         namelist[lpc]->d_name);
+        sigfile = pcmk__assert_asprintf("%s.sig", filename);
 
         rc = cib_file_read_and_verify(filename, sigfile, &root);
         if (rc == pcmk_ok) {
