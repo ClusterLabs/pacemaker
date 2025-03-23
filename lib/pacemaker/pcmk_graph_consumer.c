@@ -179,8 +179,8 @@ pcmk__update_graph(pcmk__graph_t *graph, const pcmk__graph_action_t *action)
     for (GList *lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) lpc->data;
 
-        if (pcmk_any_flags_set(synapse->flags,
-                               pcmk__synapse_confirmed|pcmk__synapse_failed)) {
+        if (pcmk__any_flags_set(synapse->flags,
+                                pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             continue; // This synapse already completed
 
         } else if (pcmk__is_set(synapse->flags, pcmk__synapse_executed)) {
@@ -462,9 +462,9 @@ pcmk__execute_graph(pcmk__graph_t *graph)
             graph->skipped++;
             continue;
 
-        } else if (pcmk_any_flags_set(synapse->flags,
-                                      pcmk__synapse_confirmed
-                                      |pcmk__synapse_executed)) {
+        } else if (pcmk__any_flags_set(synapse->flags,
+                                       pcmk__synapse_confirmed
+                                       |pcmk__synapse_executed)) {
             continue; // Already handled
 
         } else if (should_fire_synapse(graph, synapse)) {

@@ -1125,7 +1125,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'D':
                 /* If any header is shown, clear them all, otherwise set them all */
-                if (pcmk_any_flags_set(show, pcmk_section_summary)) {
+                if (pcmk__any_flags_set(show, pcmk_section_summary)) {
                     show &= ~pcmk_section_summary;
                 } else {
                     show |= pcmk_section_summary;
@@ -1169,7 +1169,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'L', pcmk__is_set(show, pcmk_section_bans));
         print_option_help(out, 'D', !pcmk__is_set(show, pcmk_section_summary));
         print_option_help(out, 'R',
-                          pcmk_any_flags_set(show_opts, pcmk_show_details));
+                          pcmk__any_flags_set(show_opts, pcmk_show_details));
         print_option_help(out, 'b', pcmk__is_set(show_opts, pcmk_show_brief));
         print_option_help(out, 'j', pcmk__is_set(show_opts, pcmk_show_pending));
         curses_formatted_printf(out, "%d m: \t%s\n", interactive_fence_level, get_option_desc('m'));
@@ -1517,7 +1517,9 @@ main(int argc, char **argv)
         interactive_fence_level = 3;
     } else if (pcmk__is_set(show, pcmk_section_fence_worked)) {
         interactive_fence_level = 2;
-    } else if (pcmk_any_flags_set(show, pcmk_section_fence_failed | pcmk_section_fence_pending)) {
+    } else if (pcmk__any_flags_set(show,
+                                   pcmk_section_fence_failed
+                                   |pcmk_section_fence_pending)) {
         interactive_fence_level = 1;
     } else {
         interactive_fence_level = 0;
